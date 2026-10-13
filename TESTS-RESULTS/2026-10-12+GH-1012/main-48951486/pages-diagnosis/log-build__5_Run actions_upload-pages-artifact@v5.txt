@@ -1,0 +1,92 @@
+﻿2026-10-13T00:23:11.2180873Z ##[group]Run actions/upload-pages-artifact@v5
+2026-10-13T00:23:11.2181228Z with:
+2026-10-13T00:23:11.2181426Z   path: PAGES
+2026-10-13T00:23:11.2181637Z   name: github-pages
+2026-10-13T00:23:11.2181868Z   retention-days: 1
+2026-10-13T00:23:11.2182092Z   include-hidden-files: false
+2026-10-13T00:23:11.2182326Z env:
+2026-10-13T00:23:11.2182584Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:11.2183026Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib/pkgconfig
+2026-10-13T00:23:11.2183450Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:11.2183826Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:11.2184198Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:11.2184761Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib
+2026-10-13T00:23:11.2185084Z ##[endgroup]
+2026-10-13T00:23:11.2246448Z ##[start-action display=Archive artifact;id=__actions_upload-pages-artifact.__run]
+2026-10-13T00:23:11.2300891Z ##[group]Run echo ::group::Archive artifact
+2026-10-13T00:23:11.2301237Z [36;1mecho ::group::Archive artifact[0m
+2026-10-13T00:23:11.2301497Z [36;1mtar \[0m
+2026-10-13T00:23:11.2301742Z [36;1m  --dereference --hard-dereference \[0m
+2026-10-13T00:23:11.2302061Z [36;1m  --directory "$INPUT_PATH" \[0m
+2026-10-13T00:23:11.2302361Z [36;1m  -cvf "$RUNNER_TEMP/artifact.tar" \[0m
+2026-10-13T00:23:11.2302641Z [36;1m  --exclude=.git \[0m
+2026-10-13T00:23:11.2302886Z [36;1m  --exclude=.github \[0m
+2026-10-13T00:23:11.2303126Z [36;1m  --exclude=.[^/]* \[0m
+2026-10-13T00:23:11.2303347Z [36;1m  .[0m
+2026-10-13T00:23:11.2303568Z [36;1mecho ::endgroup::[0m
+2026-10-13T00:23:11.2332468Z shell: /usr/bin/sh -e {0}
+2026-10-13T00:23:11.2332727Z env:
+2026-10-13T00:23:11.2333003Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:11.2333438Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib/pkgconfig
+2026-10-13T00:23:11.2333873Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:11.2334252Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:11.2334633Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:11.2335016Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib
+2026-10-13T00:23:11.2335351Z   INPUT_PATH: PAGES
+2026-10-13T00:23:11.2335559Z ##[endgroup]
+2026-10-13T00:23:11.2378090Z ##[group]Archive artifact
+2026-10-13T00:23:11.2392174Z ./
+2026-10-13T00:23:11.2392586Z ./use-cases.html
+2026-10-13T00:23:11.2392871Z ./contact.html
+2026-10-13T00:23:11.2393193Z ./googlea4ea1e510b018714.html
+2026-10-13T00:23:11.2393571Z ./skills.html
+2026-10-13T00:23:11.2393826Z ./issues.html
+2026-10-13T00:23:11.2394126Z ./assets/
+2026-10-13T00:23:11.2394410Z ./assets/style.css
+2026-10-13T00:23:11.2394731Z ./index.html
+2026-10-13T00:23:11.2395071Z ./how-it-works.html
+2026-10-13T00:23:11.2395402Z ./apple-silicon-testing.html
+2026-10-13T00:23:11.2396120Z ./robots.txt
+2026-10-13T00:23:11.2396330Z ./faq.html
+2026-10-13T00:23:11.2396549Z ./sitemap.xml
+2026-10-13T00:23:11.2396759Z ./models-harnesses.html
+2026-10-13T00:23:11.2397005Z ./roadmap.html
+2026-10-13T00:23:11.2397581Z ./other-apps-tools.html
+2026-10-13T00:23:11.2400724Z ##[endgroup]
+2026-10-13T00:23:11.2413360Z ##[end-action id=__actions_upload-pages-artifact.__run;outcome=success;conclusion=success;duration_ms=16]
+2026-10-13T00:23:11.2416880Z ##[start-action display=Archive artifact;id=__actions_upload-pages-artifact.__run_2]
+2026-10-13T00:23:11.2421796Z ##[end-action id=__actions_upload-pages-artifact.__run_2;outcome=skipped;conclusion=skipped;duration_ms=0]
+2026-10-13T00:23:11.2424610Z ##[start-action display=Archive artifact;id=__actions_upload-pages-artifact.__run_3]
+2026-10-13T00:23:11.2428686Z ##[end-action id=__actions_upload-pages-artifact.__run_3;outcome=skipped;conclusion=skipped;duration_ms=0]
+2026-10-13T00:23:11.2430766Z ##[start-action display=Upload artifact;id=__actions_upload-pages-artifact.upload-artifact]
+2026-10-13T00:23:11.2477651Z ##[group]Run actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+2026-10-13T00:23:11.2478273Z with:
+2026-10-13T00:23:11.2478466Z   name: github-pages
+2026-10-13T00:23:11.2478711Z   path: /home/runner/work/_temp/artifact.tar
+2026-10-13T00:23:11.2479020Z   retention-days: 1
+2026-10-13T00:23:11.2479278Z   if-no-files-found: error
+2026-10-13T00:23:11.2479512Z   compression-level: 6
+2026-10-13T00:23:11.2479731Z   overwrite: false
+2026-10-13T00:23:11.2479946Z   include-hidden-files: false
+2026-10-13T00:23:11.2480188Z   archive: true
+2026-10-13T00:23:11.2480376Z env:
+2026-10-13T00:23:11.2480621Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:11.2481031Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib/pkgconfig
+2026-10-13T00:23:11.2481600Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:11.2481972Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:11.2482342Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:11.2482724Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib
+2026-10-13T00:23:11.2483041Z ##[endgroup]
+2026-10-13T00:23:11.3931689Z With the provided path, there will be 1 file uploaded
+2026-10-13T00:23:11.3932827Z Artifact name is valid!
+2026-10-13T00:23:11.3933253Z Root directory input is valid!
+2026-10-13T00:23:11.7713297Z Uploading artifact: github-pages.zip
+2026-10-13T00:23:11.7765227Z Beginning upload of artifact content to blob storage
+2026-10-13T00:23:12.1912663Z Uploaded bytes 50661
+2026-10-13T00:23:12.2613241Z Finished uploading artifact content to blob storage!
+2026-10-13T00:23:12.2614427Z SHA256 digest of uploaded artifact is dae8f68ee478d51198dd12de5483e7a94daa5a072da748e7de4d5f9041c0bc5d
+2026-10-13T00:23:12.2615437Z Finalizing artifact upload
+2026-10-13T00:23:12.6780344Z Artifact github-pages successfully finalized. Artifact ID 11781540120
+2026-10-13T00:23:12.6781376Z Artifact github-pages has been successfully uploaded! Final size is 50661 bytes. Artifact ID is 11781540120
+2026-10-13T00:23:12.6784562Z Artifact download URL: https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38326961150/artifacts/11781540120
+2026-10-13T00:23:12.6886482Z ##[end-action id=__actions_upload-pages-artifact.upload-artifact;outcome=success;conclusion=success;duration_ms=1445]
