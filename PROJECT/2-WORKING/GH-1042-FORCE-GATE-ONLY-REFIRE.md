@@ -1,6 +1,6 @@
 ---
 title: "GH-1042 + GH-1045: trusted phase completion recovery"
-status: Verified — PR publication pending
+status: PR ready — awaiting merge
 created: 2026-10-13
 updated: 2026-10-13
 owner: Codex
@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Fresh clone, live issue intake, graph/source trace and reproduced recovery defects. | Publish repair PR against development; await merge/reconciliation. |
+| Fresh clone, live issue intake, graph/source trace and reproduced recovery defects. | Await PR #1054 merge and hosted reconciliation; then safe clone cleanup. |
 
 ## Scope and per-issue acceptance
 
@@ -88,3 +88,5 @@ At source9b392b35, all34 manual expected outcomes and the existing Marathon suit
 ## Verified handoff
 
 Final Codex QA round2 Approved with driver exit0 (relay-system/2026-10-13/gh1042-final.codex.md). Full macOS pre-push gate409/409, zero retries at d37140db; clone identity unchanged. Runtime source remains9b392b35's exact blobs; subsequent changes are retained receipts and handoff metadata. PR publication follows the final documentation gate. Awaiting merge is not shipped; both issues stay open until landing. Jog was not dispatched.
+
+PR: [https://github.com/HiQS-Labs/XYZ-forge/pull/1054](https://github.com/HiQS-Labs/XYZ-forge/pull/1054). Base development; GitHub MERGEABLE; issues remain open pending landing.

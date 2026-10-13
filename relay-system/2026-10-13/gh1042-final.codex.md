@@ -96,3 +96,6 @@ status: Approved
 reviewed-head: c98e12017fdf894a1ddd72e708ba50ca73fc2154
 added-range: 9915+5381
 added-sha256: 6d0b5287bdc959761411cc6ad14355d75604c02273163e476b3cc3509620582d
+
+### Publication handoff · Producer
+PR #1054: https://github.com/HiQS-Labs/XYZ-forge/pull/1054 (development, non-draft, MERGEABLE). Full pre-push409/409 atd37140db, no retries, clone identity unchanged. Gate receipts committed in7be78ea0; its metadata-only documentation gate passed67s. Production blobs unchanged from reviewed source9b392b35. This handoff adds only publication facts, not a new reviewer verdict. Await merge/reconciliation; no Jog dispatched.
