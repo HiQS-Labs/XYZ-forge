@@ -1,7 +1,7 @@
 # RELAY · GH1042 + GH1045 repair plan
 NEXT: codex (Reviewer)
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## Setup
 Producer: Codex outer session. Reviewer: independent Codex CLI via shipped relay.
@@ -68,3 +68,10 @@ No blocking plan finding. Approval authorizes the stated implementation plan onl
 
 ### System · relay-drive — 2026-10-13T15:35:16Z
 terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
+
+### Round 3 · Producer
+The second textual approval also failed structural validation: the deployed runtime requires a literal machine verdict PASS/FAIL/PARKED, while the skill template asks Approved/Changes requested. Both failures are retained, neither is accepted QA. No production change. This is the final plan-QA round (3/3).
+Verification: read bin/validate-relay-block: ## Log plus a last `VERDICT: PASS` (or FAIL/PARKED) and nonempty Basis are mandatory.
+
+## ▶ TAKE YOUR TURN — codex (round 3, authoritative current instructions)
+Review the same actual plan and source with prior textual findings as leads. Append a Round 3 Reviewer block. To approve, set header STATUS: Approved and NEXT: —, and write EXACTLY `VERDICT: PASS` plus `Basis: textual only — <actual source checked>` in your new block. Use literal `VERDICT: FAIL` for Changes requested, or `VERDICT: PARKED` for blocked. Do NOT write any subsequent verdict line with value Approved; that spelling fails the machine parser. State swept file: yes/no and cited findings. Include Commit: none. Only edit this relay thread; no git, suites or production edits. Mark token done if Approved. Three-round budget is binding.
