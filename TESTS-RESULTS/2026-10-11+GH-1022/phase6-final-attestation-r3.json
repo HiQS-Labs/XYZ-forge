@@ -1,0 +1,19 @@
+{
+  "added_len": 11030,
+  "added_sha256": "2f715295741a830193a6a445863105f25687091790d0cf84a6785096f71c939e",
+  "added_start": 30818,
+  "artifact_sha256": null,
+  "attested_at": "2026-10-12T04:18:14Z",
+  "driver_pid": 20327,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/relay-system/2026-10-12/gh1022-phase6-final.codex.md",
+  "relay_file_rel": "relay-system/2026-10-12/gh1022-phase6-final.codex.md",
+  "reviewed_head": "a87ac64a9d6439cdae5baae5505779244cc983a7",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022",
+  "task": "GH1022-PHASE6-FINAL-R1",
+  "trailer_sha256": "2a7e3ba6369f8074971384ecc757f0fc1d124094fbf13581c0329f05add962b5",
+  "transcript_repo": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022"
+}

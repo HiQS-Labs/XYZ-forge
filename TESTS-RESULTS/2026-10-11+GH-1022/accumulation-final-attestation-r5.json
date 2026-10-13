@@ -1,0 +1,19 @@
+{
+  "added_len": 7707,
+  "added_sha256": "f9e235d4faa540e8cd108ceb1b8c034866053288b71e2c023ba3427d00ba0de7",
+  "added_start": 53169,
+  "artifact_sha256": null,
+  "attested_at": "2026-10-11T21:52:45Z",
+  "driver_pid": 6419,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/relay-system/2026-10-11/gh1022-accumulation-final.codex.md",
+  "relay_file_rel": "relay-system/2026-10-11/gh1022-accumulation-final.codex.md",
+  "reviewed_head": "e016d29a4f79ec5d8014fafc5476e8224c3b4a4e",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022",
+  "task": "GH1022-ACCUMULATION-FINAL-R5",
+  "trailer_sha256": "0c84a37511e44b781c88b4d7d1203e20d5a5640feeed16f58f15221f5728e308",
+  "transcript_repo": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022"
+}

@@ -1,0 +1,20 @@
+{
+  "source_sha256": "3413458de128271e5b080cc3799717b6c769389401ddeafb7541ac311b46758d",
+  "controls": [
+    {
+      "boundary": "staging",
+      "safe": true,
+      "reason": "target/HEAD drift immediately before commit; preserve partial state",
+      "checkpoint_complete": null,
+      "commit_preserved": "06c8ea27d35c59a518bff9605aa849a36f63294c"
+    },
+    {
+      "boundary": "committed",
+      "safe": true,
+      "reason": "committed accounting/branch drift; preserve commit without complete checkpoint",
+      "checkpoint_complete": null,
+      "commit_preserved": "5213fa4e71aa100bcae8b8c0f4376ec4c477b30d"
+    }
+  ],
+  "local_effects": "temporary full fixture clones/captures/ledger, local locks/receipts, staged files and preserved post-drift commit; GH reads stubbed, no push/dispatch"
+}

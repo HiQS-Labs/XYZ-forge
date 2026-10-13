@@ -1,0 +1,10 @@
+{'name': 'ordinary-rated', 'expected': 210, 'actual': 210, 'matches': True, 'identity_ambiguous': False}
+{'name': 'owner-override', 'expected': 320, 'actual': 210, 'matches': False, 'identity_ambiguous': False}
+{'name': 'partial-rating-override', 'expected': None, 'actual': None, 'matches': True, 'identity_ambiguous': False}
+{'name': 'unrated-override', 'expected': None, 'actual': None, 'matches': True, 'identity_ambiguous': False}
+{'name': 'doc-only-override', 'expected': 320, 'actual': 210, 'matches': False, 'identity_ambiguous': False}
+{'name': 'doc-only-unrated', 'expected': None, 'actual': None, 'matches': True, 'identity_ambiguous': False}
+{'name': 'old-schema-no-override', 'expected': 210, 'actual': 210, 'matches': True, 'identity_ambiguous': False}
+{'name': 'duplicate-doc-identity', 'expected': None, 'actual': None, 'matches': True, 'identity_ambiguous': True}
+{'name': 'historical-text-axes', 'expected': 210, 'actual': 210, 'matches': True, 'identity_ambiguous': False}
+{'name': 'missing-required-column', 'expected': 'read-error-3', 'actual': 'read-error-3', 'matches': True, 'identity_ambiguous': False}

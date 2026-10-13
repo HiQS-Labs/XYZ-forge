@@ -1,0 +1,9 @@
+[
+  {
+    "control": "S9-concurrent-empty-manifest",
+    "injected": true,
+    "rc": 3,
+    "baseline_count": null,
+    "safe": true
+  }
+]

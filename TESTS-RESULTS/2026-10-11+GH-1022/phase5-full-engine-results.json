@@ -1,0 +1,30 @@
+{
+  "source_sha256": "a2321cbd839db8b7287fc34706eb61a6d5cc16588d5b10bfd9d0ae9fe75790e4",
+  "before_revision": "45d55239",
+  "controls": [
+    {
+      "revision": "before",
+      "rc": 0,
+      "order": [
+        778,
+        777
+      ],
+      "owner_row": "| [#777] GH-777 \u00b7 owner | db pri/sev/app/eff = \u2014/\u2014/\u2014/\u2014 \u00b7 rank 210 | independent | \u2014 | -210 | 1 |",
+      "report_sha256": "a86923ee9cc28a7f44aff85fd5b6b98a43dfb3fefe0dfb02626acf7bbcffa0d7",
+      "ledger_unchanged": true
+    },
+    {
+      "revision": "candidate",
+      "rc": 0,
+      "order": [
+        777,
+        778
+      ],
+      "owner_row": "| [#777] GH-777 \u00b7 owner | db pri/sev/app/eff = \u2014/\u2014/\u2014/\u2014 \u00b7 rank 320 | independent | \u2014 | -320 | 1 |",
+      "report_sha256": "0420d920f54e897cae61797948057acd66d44fdd7629c21d961be93540e1a869",
+      "ledger_unchanged": true
+    }
+  ],
+  "local_effects": "temporary independent Git repo,canonical init/add/rate/check fixture DB/dump/receipts and fixture commit;actual full engine writes only local report files,stubbed GH state/branch inventory,no deep preflight/driver/dispatch/GH writes/push;ledger bytes unchanged during engines",
+  "display_limit": "DB axes70/65/50/25 retain historical dash formatter;canonical effective rank and ordering verified"
+}

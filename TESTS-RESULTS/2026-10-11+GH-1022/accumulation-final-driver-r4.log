@@ -1,0 +1,19 @@
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022) changed-files=0
+codex-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.XZ9Bif)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.XZ9Bif) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.XZ9Bif) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.XZ9Bif) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.XZ9Bif) changed-files=1
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/relay-system/2026-10-11/gh1022-accumulation-final.codex.md
+codex-turn: committed codex turn (file-scoped, no push)
+relay-drive: relay escalated to human by design (STATUS: Escalated, token open:author) after 1 turn(s)
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/4 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 46m 27s
+per done-task: ≥0 tokens, 11m 37s wall-clock
+  turn peak RSS: codex: 282MB peak RSS
+

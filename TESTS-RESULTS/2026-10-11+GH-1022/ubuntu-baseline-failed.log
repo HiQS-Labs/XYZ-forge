@@ -1,0 +1,916 @@
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	﻿2026-10-12T03:16:48.6647548Z ##[group]Run set -euo pipefail
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.6647908Z ^[[36;1mset -euo pipefail^[[0m
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.6648200Z ^[[36;1m./validate.sh --parallel 6 \^[[0m
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.6648536Z ^[[36;1m  --skip acorn-extract.sh \^[[0m
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.6648858Z ^[[36;1m  --skip pdda-repo-contract.sh^[[0m
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.6711284Z shell: /usr/bin/bash -e {0}
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.6711605Z env:
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.6711860Z   RELAY_SELF_SUFFICIENCY_SKIP: 1
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.6712186Z ##[endgroup]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.7314881Z githooks: NOT INSTALLED in this clone.
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.7315921Z   /home/runner/work/XYZ-forge/XYZ-forge/.git/hooks/pre-push does not exist.
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.7316881Z   This clone will push WITHOUT running the gate. Fix: bash githooks/install.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.7318593Z validate.sh: continuing WITHOUT the push gate installed — this run is unaffected, but a future push from this clone will not be verified.
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.7473058Z validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.8788210Z 
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.8788674Z ===============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.8789456Z QUARANTINE (GH-379): 2 suite(s) skipped by request
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.8790258Z   SKIPPED: pdda-repo-contract.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.8790958Z   SKIPPED: acorn-extract.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.8791837Z NOT promotion evidence: a run that omits suites cannot qualify one.
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:48.8792592Z ===============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:49.1221864Z runner-envelope: validate.sh — harness registry at scratch (/tmp/runner-envelope.mDs7GF/harnesses.db), envelope state captured
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:49.1309204Z validate.sh: PARALLEL mode 6-wide — explicit --parallel 6
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:49.1310056Z   388 pooled suites + 16 in the sequential driver-lock lane (GH-528)
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:49.1310986Z   NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:49.3530768Z [parallel] gh732-l3-gate-summary.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:49.9737301Z [parallel] projection-idempotent.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:50.2036184Z [parallel] concurrent-claim.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:50.3194977Z [parallel] path-overlap.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:51.1311869Z [parallel] scope-change.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:51.3824050Z [parallel] tick-foreign-cwd.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:51.3900818Z [parallel] chaos-stale-writer.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:51.4411732Z [parallel] chaos-midturn-kill.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:51.7282893Z [parallel] gh411-tick-log-foreign-cwd.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:53.5015649Z [parallel] gh412-transient-claim-exit.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:56.7410758Z [parallel] chaos-concurrent-pollers.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:57.7224505Z [parallel] gh554-tick-unknown-flags.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:57.7506921Z [parallel] handoff.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:58.1954039Z [parallel] gh415-guard-hook-entrypoints.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:58.7915592Z [parallel] circuit-break.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:59.2391478Z [parallel] handoff-exclusive.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:16:59.3954202Z [parallel] terminality-seal.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:00.0641709Z [parallel] auto-sync.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:00.7418790Z [parallel] write-ops-log.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:01.7149888Z [parallel] verdict-edge.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:01.9644481Z [parallel] workstealing-verdict.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:02.4198987Z [parallel] analyze.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:03.1184623Z [parallel] claim-cap.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:03.2316375Z [parallel] reap.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:04.2167424Z [parallel] take.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:04.3424653Z [parallel] poll-relay.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:05.2516819Z [parallel] heartbeat.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:05.6186969Z [parallel] watchdog-liveness.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:07.0833862Z [parallel] gh346-gateway-allowlists.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:07.4176964Z [parallel] cost.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:09.4584467Z [parallel] gh391-emit-marathon-yaml.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:10.8486745Z [parallel] gh414-comment-reference-check.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:11.3214734Z [parallel] gh322-unknown-arg-rejection.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:11.9167864Z [parallel] runner-loop.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:12.5257721Z [parallel] watchdog-relay.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:17.0478287Z [parallel] relay-loop.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:18.3986782Z [parallel] poll-driver.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:19.3049414Z [parallel] gh413-launch-artifact-destination-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:21.5316533Z [parallel] gh331-cost-summary.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:26.3347264Z [parallel] relay-turn-trace.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:32.1312165Z [parallel] gh278-turn-timeout-parity.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:36.0025006Z [parallel] gh308-frozen-twin-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:36.4880337Z [parallel] gh245-agy-probe-verb-invariant.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:39.5407221Z [parallel] relay-target-root.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:44.2926507Z [parallel] relay-target-root-paths.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:45.8446578Z [parallel] relay-target-root-relayfile.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:46.5065126Z [parallel] pi-turn.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:47.2567796Z [parallel] gh788-python-path-space.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:50.5560853Z [parallel] relay-target-root-newfile.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:50.7667432Z [parallel] gh777-start-task-prior-art.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:51.7467769Z [parallel] gh777-inventory-ratchet.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:52.4811185Z [parallel] gh289-target-root-build-turn.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:53.1006663Z [parallel] gh609-sdlc-agent-gaps.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:54.0251773Z [parallel] ate-run-variations.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:54.2745008Z [parallel] codex-turn.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:54.8696734Z [parallel] relay-token-collision.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:57.4782063Z [parallel] aider-turn.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:58.1007319Z [parallel] relay-escalation-not-stall.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:17:59.6477064Z [parallel] model-alias.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:03.0310606Z [parallel] gh450-model-catalog-pin.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:03.5152569Z [parallel] relay-untracked-file-warn.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:04.0071778Z [parallel] gh346-model-telemetry-honesty.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:06.4187584Z [parallel] gh460-fuzz-resolver-smoke.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:11.2396734Z [parallel] relay-review-once.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:13.7994250Z [parallel] gh267-express-skill.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:14.6934918Z [parallel] gh346-resolver-fallback.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:15.8536316Z [parallel] gh346-telemetry-row-written.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:16.6241158Z [parallel] relay-artifact-file.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:17.8069873Z [parallel] relay-xyz-skill-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:18.8332118Z [parallel] gh478-runaway-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:19.0585632Z [parallel] gh346-registry-view-freshness.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:19.4509372Z [parallel] gh496-telemetry-isolation.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:19.6238725Z [parallel] gh368-same-lane-routing.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:19.7716905Z [parallel] gh373-reviewer-validation.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:20.2962152Z [parallel] gh518-muse-model-policy.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:22.1119458Z [parallel] gh369-group-kill.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:22.5160882Z [parallel] gh346-profile-resolve.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:23.1951497Z [parallel] gh371-interrupt-snapshot.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:23.2294819Z [parallel] gh518-muse-adapter-containment.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:23.5993275Z [parallel] gh370-progress-telemetry.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:23.8555271Z [parallel] gh374-drift-path-filter.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:24.1246415Z [parallel] gh648-l8-zero-output-handback.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:24.5834040Z [parallel] swe-diagram.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:25.2268283Z [parallel] gh698-planner-db-ratings.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:25.3336330Z [parallel] gh372-escalation-log-tail.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:25.8533477Z [parallel] gh708-vendored-suite-skips.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:27.3169863Z [parallel] gh648-l9-369-regression.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:27.5830703Z [parallel] agy-turn.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:37.8394690Z [parallel] commandcode-turn.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:38.6668370Z [parallel] marathon-yaml.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:48.4206712Z [parallel] worktree-isolation.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:48.6210327Z [parallel] claude-turn.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:52.4453744Z [parallel] gh284-runlog-heartbeat.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:52.6437071Z [parallel] gh307-gate-env-scrub.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:56.4462360Z [parallel] gh319-gate-path-with-space.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:56.8744964Z [parallel] gh320-twin-timeout-parity.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:57.8139748Z [parallel] gh115-round-cap.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:59.0017969Z [parallel] gh308-poll-guards.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:59.6482950Z [parallel] shim-worktree.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:59.7357088Z [parallel] gh251-validate-pytest-skip.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:18:59.7905335Z [parallel] gh308-swarm-gate-path.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:01.2874939Z [parallel] gh343-gate-program-target-root.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:02.3726815Z [parallel] gh610-claude-subscription.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:02.4926685Z [parallel] gh342-sentinel-debug-log-python.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:02.8556911Z [parallel] gh369-find-doc-root-resolution.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:02.9516192Z [parallel] gh308-turn-shim-parity.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:04.2506884Z [parallel] gh400-source-url.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:04.7110908Z [parallel] gh557-unknown-blocks-manifest.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:04.9884454Z [parallel] gh322-runlog-python-lane.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:05.1599952Z [parallel] gh419-gate-inventory.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:05.1986733Z [parallel] gh400-acceptance-fidelity.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:05.9875530Z [parallel] gh418-issue-state-frozen.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:06.1062118Z [parallel] gh422-backfill-source-url.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:06.6127210Z [parallel] gh308-consult-guards.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:06.8476928Z [parallel] litmus-release.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:07.1473611Z [parallel] gh425-source-url-slug.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:08.1670191Z [parallel] gh410-relay-block-driven-path.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:10.6257352Z [parallel] gh399-packet-acceptance-continuation.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:13.1455151Z [parallel] gh410-containment-advisory.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:14.7683647Z [parallel] gh90-allowlist-directory.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:16.7561124Z [parallel] gh417-turn-root-symlink-prefix.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:20.3886768Z [parallel] gh407-gate-ran-attribution.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:22.2828128Z [parallel] gh457-gate-tiers.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:23.0496883Z [parallel] gh387-gate-not-first-executor.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:23.1302202Z [parallel] gh441-gate-env-contract.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:23.2046108Z [parallel] gh218-synthetic-nested-driver-lock.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:23.8027203Z [parallel] gh448-driver-lock-resolver.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:25.2820095Z [parallel] gh390-timeout-attribution.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:25.5223689Z [parallel] gh376-relay-drive-lock-parity.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:26.0769920Z [parallel] gh397-reviewer-turn-role.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:26.6746813Z [parallel] gh401-dry-run-no-mutation.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:27.1886796Z [parallel] gh432-failed-turn-persist.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:27.5246841Z [parallel] gh375-agy-auth-preflight.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:30.1566021Z [parallel] gh217-gate-env-plan-outside.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:32.1874226Z [parallel] gh408-tick-failure-visibility.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:33.3912568Z [parallel] nightwatch-release.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:36.5555055Z [parallel] gh375-auth-timeout-verdict.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:38.7415977Z [parallel] gh379-claude-builder-diagnosis.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:39.1245225Z [parallel] gh380-claude-trust.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:41.1387057Z [parallel] gh378-gate-requires-green-suite.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:42.8016868Z [parallel] gh382-marathon-memory-telemetry.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:43.3537198Z [parallel] gh551-resolver-refuses.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:43.8046858Z [parallel] meter-release.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:44.5507831Z [parallel] ballast-release.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:46.1233317Z [parallel] gh385-retry-token-satisfied.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:46.4448931Z [parallel] gh386-turn-budget-honesty.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:48.4267349Z [parallel] gh390-gate-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:48.7655953Z [parallel] gh255-remedy-ordering.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:48.9946867Z [parallel] gh256-target-root-guard-root.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:49.2417968Z [parallel] gh491-gate-only-refire.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:50.1152358Z [parallel] gh384-crash-recovery.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:52.5175058Z [parallel] gh426-worktree-leak.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:19:55.0696906Z [parallel] gh388-run-log-durability.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:00.4828453Z [parallel] gh514-write-set-trackable.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:02.3571680Z [parallel] gh438-removal-is-progress.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:04.9176772Z [parallel] gh467-index-only-lane-blocked.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:05.3576446Z [parallel] hq-marathon-live.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:06.7016617Z [parallel] debug-mantra.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:06.9693133Z [parallel] lane-attempt-cap.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:07.6968057Z [parallel] driver-lock.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:07.9446694Z [parallel] gh505-relay-attest.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:08.1306774Z [parallel] measure.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:08.2242884Z [parallel] loop-stop.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:08.5799765Z [parallel] champion.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:08.7600239Z [parallel] oracle-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:08.8838598Z [parallel] heldout-check.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:08.9356641Z [parallel] loop-cost.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:09.7346515Z [parallel] gh409-claim-leak.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:11.1192506Z [parallel] improve-loop-dogfood.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:11.4508567Z [parallel] improve-loop.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:11.7166785Z [parallel] gh438-acceptance-recheck.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:11.8848432Z [parallel] gh430-state-dir-tracked-default.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:12.1676794Z [parallel] gh536-evidence-detail.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:13.3361373Z [parallel] improve-loop-qa.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:15.2796799Z [parallel] gh402-board-sync.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:18.5436043Z [parallel] gh405-mock-board-harness.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:18.8910420Z [parallel] gh544-parallel-default.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:22.2851323Z [parallel] gh379-canary-uses-validate.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:27.0512128Z [parallel] gh544-pre-push-gate.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:29.2065987Z [parallel] gh365-runner-envelope.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:31.8740970Z [parallel] gh646-status-label.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:32.2010961Z [parallel] gh365-validate-telemetry.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:37.7815347Z [parallel] gh365-driver-lane-registry.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:38.8909937Z [parallel] gh35-test-tiers.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:41.3157404Z [parallel] gh365-shellcheck-parallel.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:41.4604084Z [parallel] marathon-drive.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:42.2357287Z [parallel] gh1-fixture-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:44.4244548Z [parallel] gh1-adoption-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:45.0597374Z [parallel] gh520-default-reviewer-stub.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:46.5654110Z [parallel] gh527-destructive-git-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:46.9757851Z [parallel] gh50-sandboxed-git-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:50.7826645Z [parallel] gh314-transcript-writeset.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:52.4898788Z [parallel] marathon-closeout.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:54.2088697Z [parallel] gh484-phase-dir-default.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:55.0863198Z [parallel] gh402-branch-enforcement.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:55.3552704Z [parallel] rtl-orphan-backup.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:56.3086865Z [parallel] gh2-orphan-backup-repro.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:56.8120595Z [parallel] marathon.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:57.5847471Z [parallel] gh91-relay-scratch.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:20:59.3902009Z [parallel] gh113-headless-scratch.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:01.3624285Z [parallel] gh124-closeout.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:03.6197218Z [parallel] gh129-relay-tick-root.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:04.4587102Z [parallel] gh130-agy-auth-whoami.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:09.3913501Z [parallel] gh114-headless-tty.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:11.7857561Z [parallel] gh131-marathon-target-root.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:11.8769722Z [parallel] synthetic/gh101-consult-programmatic.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:11.9632242Z [parallel] synthetic/gh101-relay-programmatic-stress.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:13.3946839Z [parallel] gh139-pipe-grep-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:13.5600214Z [parallel] synthetic/gh102-telemetry-schema.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:14.2699073Z [parallel] synthetic/gh94-containment-invariants.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:14.3939762Z [parallel] synthetic/synthetic-claude-target-root.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:14.6003255Z [parallel] synthetic/synthetic-marathon-env-leak.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:14.7937706Z [parallel] synthetic/synthetic-marathon-worktree-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:14.9474815Z [parallel] synthetic/synthetic-pi-model-unset.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:15.0877278Z [parallel] synthetic/synthetic-pi-provider-unsupported.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:16.8537395Z [parallel] synthetic/gh94-script-serialization.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:17.6230343Z [parallel] gh141-fuzz-inputs.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:20.9028129Z [parallel] gh141-synthetic-registry.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:24.7746679Z [parallel] gh142-ate-exit-contract.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:25.0668595Z [parallel] gh608-deepseek-effort.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:27.0103370Z [parallel] gh648-l7-checkout-aftermath.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:29.5866922Z [parallel] gh148-deepseek-turn.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:34.6827411Z [parallel] gh648-l6-muse-attribution.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:45.3801827Z [parallel] gh648-l5-gh237-repro.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:21:46.0650186Z [parallel] gh648-l4-285-revalidate.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:01.2168692Z [parallel] gh648-l2-token-aftermath.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:03.4996378Z [parallel] gh648-l1-turn-termination.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:04.1322754Z [parallel] gh654-offlane-log.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:04.7977083Z [parallel] gh660-skill-drift.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:06.4514631Z [parallel] gh156-turn-shims-help.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:07.9080871Z [parallel] gh648-l3-consult-cap.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:14.2876886Z [parallel] gh155-phase1-metamorphic-invariants.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:16.8138185Z [parallel] gh155-phase3-repro-builder.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:17.7676838Z [parallel] gh155-phase4-self-healer.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:20.6370184Z [parallel] gh155-phase5-active-explorer.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:22.3777122Z [parallel] gh365-pdda-gov-scan.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:22.5387885Z [parallel] gh168-wave-reconcile-scope.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:23.2967442Z [parallel] gh180-repro-timeout-crash.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:23.5419445Z [parallel] gh174-harness-registry.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:24.2506715Z [parallel] gh181-repro-adapter-fidelity.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:26.1146860Z [parallel] gh183-explorer-env-soundness.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:26.3137472Z [parallel] gh184-no-tracked-scratch.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:27.1967742Z [parallel] gh182-healer-facade-safety.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:28.5961320Z [parallel] gh232-wave-reconcile-multiphase.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:31.5198119Z [parallel] gh202-wave-reconcile-issue-state.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:35.4080033Z [parallel] gh155-phase2-differential-oracle.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:35.6693697Z [parallel] relay-pkg-freshness.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:35.9954097Z [parallel] skill-extract.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:36.2093046Z [parallel] releases-skill.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:40.8668936Z [parallel] deep-research.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:42.1860904Z [parallel] gh75-dashboard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:43.7092801Z [parallel] gh103-timeline-exporter.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:49.0672422Z [parallel] gh525-unshipped-version-tokens.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:50.0676710Z [parallel] gh32-releases-artifacts.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:22:57.9181067Z [parallel] gh53-releases-merge-resolve.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:04.3802435Z [parallel] gh54-merged-dump-refusals.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:06.0853019Z [parallel] gh360-dump-multiline-values.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:08.1123205Z [parallel] consult.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:27.4210376Z [parallel] gh57-live-merge-resolve.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:27.6277039Z [parallel] gh57-releases-fuzz.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:32.2842612Z [parallel] gh32-releases-app.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:33.2485582Z [parallel] gh351-manifest-unship.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:37.3646970Z [parallel] gh349-releases-roadmap-vendored.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:39.2572250Z [parallel] gh362-marathon-plan-link-bullets.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:40.1320959Z [parallel] gh360-scoped-receipt-chain-rebuild.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:41.2443344Z [parallel] gh358-wave-reconcile-vendored-paths.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:41.6153556Z [parallel] gh429-wave-reconcile-vendored-observe.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:44.8514129Z [parallel] gh69-roadmap-shadow.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:46.1939953Z [parallel] gh32-release-target-advisory.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:49.9317182Z [parallel] gh39-releases-project-sync.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:53.2567487Z [parallel] path-integrity.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:23:53.8011588Z [parallel] archive-root.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:01.3298024Z [parallel] archive-writers.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:05.3300117Z [parallel] relay-turn-timeout.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:06.3427092Z [parallel] archive-commit.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:06.4042546Z [parallel] archive-telemetry.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:06.8567056Z [parallel] relay-file-seeding-visibility.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:07.1577462Z [parallel] gh304-vendored-relay-path.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:08.6094758Z [parallel] relay-dep-drift.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:08.9979253Z [parallel] relay-turn-handoff.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:09.5396908Z [parallel] new-relay.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:12.8418653Z [parallel] gh678-installer-live-links.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:25.6027210Z [parallel] gh365-tier-fail-closed.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:39.5322714Z [parallel] gh620-skills-army-mini-sync.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:41.0929972Z [parallel] agent-chorus.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:43.2144216Z [parallel] skills-army-hq.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:45.1075648Z [parallel] gh233-agent-chorus-concurrency.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:48.3671502Z [parallel] agent-chorus-bridge.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:50.5267858Z [parallel] xyz-sync-check.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:51.9127256Z [parallel] gh293-vendored-guard-drift.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:52.8683850Z [parallel] relay-concurrent-commit.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:53.0226708Z [parallel] gh642-consumer-fruit.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:53.4446888Z [parallel] relay-case-insensitive.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:53.8130542Z [parallel] xyz-vendor.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:54.2074864Z [parallel] gh77-standup-triage.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:54.3017145Z [parallel] relay-commit-pathspec.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:54.5777136Z [parallel] gh292-worktree-vendored-discovery.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:57.8456698Z [parallel] find-harness.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:24:58.9861222Z [parallel] pdda-changelog.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:02.1720975Z [parallel] pdda-roadmap-coverage.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:03.2226763Z [parallel] marathon-root-audit.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:08.8066861Z [parallel] gh460-pipe-buffer-sigpipe.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:10.8354000Z [parallel] gh784-marathon-qa-gate.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:13.1547599Z [parallel] gh284-p3-release-milestone.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:13.3008914Z [parallel] gh284-p4-release-lanes.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:13.8789788Z [parallel] ci-workflow.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:17.5640587Z [parallel] ci-route.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:18.4467164Z [parallel] gh509-gate-evidence.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:25.0947502Z [parallel] pdda-local-checks.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:29.1411681Z [parallel] swarm-preflight.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:30.7695553Z [parallel] xyz-completion.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:32.2757289Z [parallel] gh649-pdda-migration.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:32.7452099Z [parallel] gh14-atomic-append.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:34.4713937Z [parallel] gh23-path-overlap-enforcement.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:39.1285432Z [parallel] gh123-lock-progress-bound.sh rc=1
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:44.6325057Z [parallel] gh358-lock-instrumentation.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:56.0811041Z [parallel] marathon-plan.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:25:59.0596067Z [parallel] hq.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:00.3966335Z [parallel] hq-park.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:01.4466786Z [parallel] hq-park-synthesis.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:03.0024297Z [parallel] hq-dispatch.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:03.4717240Z [parallel] hq-next.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:03.7754797Z [parallel] hq-locator.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:05.6102261Z [parallel] hq-hardening.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:07.2607661Z [parallel] hq-promote.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:09.8354724Z [parallel] preflight-docs.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:11.0219134Z [parallel] xyz-harness-hooks.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:13.8259602Z [parallel] hq-marathon-scan.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:17.7366854Z [parallel] hq-rollup.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:18.0325353Z [parallel] gh238-hq-releases-mode.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:19.2406973Z [parallel] gh567-roadmap-dashboard-retired.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:20.3644819Z [parallel] gh239-hq-status-releases-mode.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:21.9275395Z [parallel] gh703-raw-text-asterisk.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:26.2436794Z [parallel] gh257-roadmap-ledger-fixes.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:30.4807723Z [parallel] gh568-releases-md-retired.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:31.6327736Z [parallel] gh423-roadmap-render.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:33.3394388Z [parallel] gh454-reconciler-defects.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:36.6031523Z [parallel] gh424-roadmap-status-marker.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:38.1046956Z [parallel] gh418-planner-ledger-source.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:44.5649301Z [parallel] gh425-gate-provenance-pr.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:45.2828514Z [parallel] mktemp-trap-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:47.2319478Z [parallel] gh684-hosted-lane-report.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:51.1474932Z [parallel] gh740-hosted-lane-publish.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:26:56.8671624Z [parallel] gh269-roadmap-retired.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:01.3434455Z [parallel] gh421-auto-wave-reconcile.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:04.0556980Z [parallel] pdda-install-startup-docs.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:05.8752208Z [parallel] gh605-work-state.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:06.3126411Z [parallel] gh605-board-policy.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:06.7137885Z [parallel] gh645-merge-cleanup-xyz-tools.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:07.0616052Z [parallel] gh674-merge-cleanup-hosted-lookup.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:07.4889497Z [parallel] gh492-roadmap-state-sweep.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:08.3714803Z [parallel] gh681-reviewer-probe-rules.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:11.6317163Z [parallel] gh527-issue-url-repair.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:15.1188501Z [parallel] gh491-roadmap-section-validation.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:21.0070863Z [parallel] jog-queue.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:22.2649930Z [parallel] gh353-vendored-router-audit.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:23.8218751Z [parallel] gh291-contract-goldens.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:24.7052126Z [parallel] gh205-gate-idempotency.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:25.2419421Z [parallel] gh204-sed-portability.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:25.7952741Z [parallel] gh290-ate-variation-grid.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:26.1304013Z [parallel] transcript-audit.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:26.3039587Z [parallel] gh153-releases-sidebar-rollup.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:26.8649843Z [parallel] sentinel-tier1.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:27.2508559Z [parallel] sentinel-network-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:27.4766778Z [parallel] sentinel-driver-hooks.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:44.6536646Z [parallel] gh528-parallel-contention-retry.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:44.7409439Z [parallel] security-scan.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:46.0692897Z [parallel] checkjs.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:46.3365479Z [parallel] marathon-monitor.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:46.6141414Z [parallel] fixtures/canary-token-reuse/verify-fixture.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:46.8480715Z [parallel] signal-triage.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:46.9561131Z [parallel] fixtures/canary-peer-orphan/verify-fixture.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:47.1078383Z [parallel] fixtures/canary-reviewer-overstep/verify-fixture.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:47.2086635Z [parallel] relay-self-sufficiency.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:47.5228701Z [parallel] phase3-signoff-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:47.9846852Z [parallel] agy-tui-takeover-verdict.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:48.5977885Z [parallel] gh105-vendor-releases-addon.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:48.6202880Z [parallel] gh107-timeline-json-seam.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:48.9777406Z [parallel] gh165-governance-canonical-paths-guard.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:58.3086932Z [parallel] gh132-review-xyz-skill.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:58.7539337Z [parallel] sentinel-overlay.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:59.4689207Z [parallel] gh273-marathon-root-audit-python-shape.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:27:59.9656769Z [parallel] relay-uncited-findings.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:01.2588094Z [parallel] gh312-vendor-preserves-state.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:02.3712259Z [parallel] wave-reconcile.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:04.5465530Z [parallel] gh693-lessons-learned-advisory.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:07.4207192Z [parallel] gh496-phase2-reconciliation-views.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:07.7457127Z [parallel] gh197-vendor-tier-split.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:08.6335113Z [parallel] gh306-registry-bidirectional.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:10.5250618Z [parallel] gh298-ate-gen4-ci-smoke.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:20.0067652Z [parallel] gh-gen4-phase2-adaptive-ate.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:39.7177426Z [parallel] gh-gen4-phase5-campaign.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:41.2761173Z [parallel] gh712-jev-triage.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:43.9776904Z [parallel] gh396-find-harness-roots.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:45.1487224Z [parallel] gh393-deepseek-readiness.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:45.4456726Z [parallel] gh591-prepush-commit-boundary.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:46.9496747Z [parallel] gh-gen4-phase4-repro-synth.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:50.8468252Z [parallel] gh589-consult-no-tick.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:52.0666931Z [parallel] gh589-skill-viewer.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:28:54.5201446Z [parallel] gh-gen4-phase3-fuzz-engine.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:29:00.4811488Z [parallel] gh589-xyz-mini-sync.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:29:13.3901425Z [parallel] gh549-work-events.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:29:28.5423048Z [parallel] gh280-jog-marathon-adapter.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:10.5265954Z [parallel] gh436-merge-cleanup.sh rc=0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:10.6199197Z 
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:10.6199951Z ===============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:10.6201267Z FAILED in parallel (rc=1): gh123-lock-progress-bound.sh — re-running it alone to see if that verdict survives
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:10.6202171Z ===============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:18.7720986Z   ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:18.7730614Z == test: gh123-lock-progress-bound ==
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:18.7731358Z   PASS: stuck holder still exits 75 (lock starvation stays loud), after 2s
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:18.7732270Z   PASS: stuck holder failed promptly (2s), it did not wait out the total cap
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:18.7733948Z   FAIL: a MOVING queue exited 75 after 2s — progress did not re-arm the bound (this is the GH-123 regression)
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:18.7735067Z   FAIL: acquired in 2s, within the 2s bound — the probe did not exercise re-arm
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:18.7735581Z   FAIL: writer returned 0 but wrote no file
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:18.7736411Z   PASS: defaults unchanged — gh358's verbatim bound assertions still hold
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:18.7736936Z   gh123-lock-progress-bound: 3 pass, 3 fail
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:19.3393433Z 
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:19.3394088Z ===============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:19.3394924Z Running python3 -m pytest test/test_python_layer.py
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:19.3395461Z ===============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:19.6443667Z ============================= test session starts ==============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:19.6444712Z platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:19.6445486Z cachedir: .pytest_cache
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:19.6446272Z rootdir: /home/runner/work/XYZ-forge/XYZ-forge
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:19.6446849Z configfile: pytest.ini
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:19.6447297Z plugins: platformdirs-4.12.3
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:19.7250020Z collecting ... collected 21 items
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:19.7250443Z 
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.7487030Z test/test_python_layer.py::test_deploy_skills_behavioral_suite PASSED    [  4%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.7495262Z test/test_python_layer.py::test_rtl_module_load PASSED                   [  9%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.7535820Z test/test_python_layer.py::test_poll_module_load PASSED                  [ 14%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.7637243Z test/test_python_layer.py::test_consult_module_load PASSED               [ 19%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.7707853Z test/test_python_layer.py::test_marathon_drive_module_load PASSED        [ 23%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.7730283Z test/test_python_layer.py::test_swarm_preflight_module_load PASSED       [ 28%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8446914Z test/test_python_layer.py::test_marathon_plan_module_load PASSED         [ 33%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8471299Z test/test_python_layer.py::test_codex_turn_default_flags_match_bash_default PASSED [ 38%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8493261Z test/test_python_layer.py::test_pi_turn_module_load PASSED               [ 42%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8517809Z test/test_python_layer.py::test_pi_turn_parse_usage_keeps_last_event_gh295 PASSED [ 47%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8538981Z test/test_python_layer.py::test_pi_turn_parse_usage_missing_file_returns_zero PASSED [ 52%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8572966Z test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_builder_binary_missing PASSED [ 57%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8601376Z test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_pi_builder_binary_missing PASSED [ 61%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8613172Z test/test_python_layer.py::test_swarm_preflight_gh108_bundle_helpers PASSED [ 66%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8620195Z test/test_python_layer.py::test_swarm_preflight_default_root_gh267 PASSED [ 71%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8796128Z test/test_python_layer.py::test_rtl_bridge_honors_containment_ignore_in_python_mode PASSED [ 76%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8807989Z test/test_python_layer.py::test_rtl_run_rtl_returns_code_without_exiting PASSED [ 80%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8819586Z test/test_python_layer.py::test_rtl_run_checked_fails_fast PASSED        [ 85%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8830920Z test/test_python_layer.py::test_poll_relay_field PASSED                  [ 90%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8854516Z test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137 PASSED [ 95%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8981603Z test/test_python_layer.py::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated PASSED [100%]
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8982445Z 
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.8982696Z ============================= 21 passed in 13.24s ==============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.9384505Z 
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.9385056Z ===============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.9386024Z Running clone-identity invariant (GH-1)
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.9386519Z ===============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:32.9990664Z runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0136431Z 
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0136865Z ===============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0137568Z Running gamma-poison fixture staleness probe
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0138073Z ===============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0365183Z 
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0365906Z ===============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0366229Z Summary
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0366422Z ===============================
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0546999Z telemetry: /home/runner/work/XYZ-forge/XYZ-forge/.tick/telemetry/validate-parallel-1791775008848-61066.jsonl (407 suite events, 406 registered)
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0965115Z 10 slowest suites:
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0965947Z   name  duration_s  rc
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0966450Z   gh549-work-events.sh  541.625  0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0967034Z   marathon-root-audit.sh  248.934  0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0967562Z   gh365-tier-fail-closed.sh  227.743  0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0967925Z   gh436-merge-cleanup.sh  184.601  0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0968312Z   gh528-parallel-contention-retry.sh  146.140  0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0968738Z   pdda-install-startup-docs.sh  129.404  0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0969211Z   gh251-validate-pytest-skip.sh  128.277  0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0969885Z   gh280-jog-marathon-adapter.sh  126.232  0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0970488Z   marathon-drive.sh  122.709  0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0971022Z   gh365-pdda-gov-scan.sh  110.092  0
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0971592Z re-run ladder: 1 suite(s), 8.167s total
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0973136Z QUARANTINED (GH-379): 2 suite(s) did NOT run — pdda-repo-contract.sh acorn-extract.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0973887Z   this run is NOT promotion evidence.
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0974227Z passed: 406 / 407
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0977011Z   + gh732-l3-gate-summary.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0977480Z   + projection-idempotent.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0977895Z   + concurrent-claim.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0978273Z   + path-overlap.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0978624Z   + scope-change.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0978975Z   + tick-foreign-cwd.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0979364Z   + chaos-stale-writer.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0979753Z   + chaos-midturn-kill.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0980153Z   + gh411-tick-log-foreign-cwd.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0980594Z   + gh412-transient-claim-exit.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0981034Z   + chaos-concurrent-pollers.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0981467Z   + gh554-tick-unknown-flags.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0981872Z   + handoff.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0982099Z   + gh415-guard-hook-entrypoints.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0982368Z   + circuit-break.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0982600Z   + handoff-exclusive.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0982836Z   + terminality-seal.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0983053Z   + auto-sync.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0983268Z   + write-ops-log.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0983473Z   + verdict-edge.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0983685Z   + workstealing-verdict.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0983917Z   + analyze.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0985963Z   + claim-cap.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0986389Z   + reap.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0986769Z   + take.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0987111Z   + poll-relay.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0987485Z   + heartbeat.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0987859Z   + watchdog-liveness.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0988299Z   + gh346-gateway-allowlists.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0988758Z   + cost.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0989164Z   + gh391-emit-marathon-yaml.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0989667Z   + gh414-comment-reference-check.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0990250Z   + gh322-unknown-arg-rejection.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0990764Z   + runner-loop.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0991162Z   + watchdog-relay.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0991564Z   + relay-loop.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0991979Z   + poll-driver.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0992471Z   + gh413-launch-artifact-destination-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0993443Z   + gh331-cost-summary.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0993884Z   + relay-turn-trace.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0994359Z   + gh278-turn-timeout-parity.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0994848Z   + gh308-frozen-twin-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0995359Z   + gh245-agy-probe-verb-invariant.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0996050Z   + relay-target-root.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0996493Z   + relay-target-root-paths.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0996960Z   + relay-target-root-relayfile.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0997453Z   + pi-turn.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0997821Z   + gh788-python-path-space.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0998354Z   + relay-target-root-newfile.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0998878Z   + gh777-start-task-prior-art.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0999395Z   + gh777-inventory-ratchet.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.0999926Z   + gh289-target-root-build-turn.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1000472Z   + gh609-sdlc-agent-gaps.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1000909Z   + ate-run-variations.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1001343Z   + codex-turn.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1001782Z   + relay-token-collision.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1002124Z   + aider-turn.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1002349Z   + relay-escalation-not-stall.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1002777Z   + model-alias.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1003000Z   + gh450-model-catalog-pin.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1003250Z   + relay-untracked-file-warn.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1003514Z   + gh346-model-telemetry-honesty.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1003784Z   + gh460-fuzz-resolver-smoke.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1004023Z   + relay-review-once.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1004250Z   + gh267-express-skill.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1004478Z   + gh346-resolver-fallback.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1004720Z   + gh346-telemetry-row-written.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1004970Z   + relay-artifact-file.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1005233Z   + relay-xyz-skill-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1005868Z   + gh478-runaway-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1006780Z   + gh346-registry-view-freshness.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1007354Z   + gh496-telemetry-isolation.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1007781Z   + gh368-same-lane-routing.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1008217Z   + gh373-reviewer-validation.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1008477Z   + gh518-muse-model-policy.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1008717Z   + gh369-group-kill.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1008944Z   + gh346-profile-resolve.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1009191Z   + gh371-interrupt-snapshot.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1009453Z   + gh518-muse-adapter-containment.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1009725Z   + gh370-progress-telemetry.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1009970Z   + gh374-drift-path-filter.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1010220Z   + gh648-l8-zero-output-handback.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1010474Z   + swe-diagram.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1010680Z   + gh698-planner-db-ratings.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1010929Z   + gh372-escalation-log-tail.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1011186Z   + gh708-vendored-suite-skips.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1011437Z   + gh648-l9-369-regression.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1011664Z   + agy-turn.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1011862Z   + commandcode-turn.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1012076Z   + marathon-yaml.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1012294Z   + worktree-isolation.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1012521Z   + claude-turn.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1012730Z   + gh284-runlog-heartbeat.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1012973Z   + gh307-gate-env-scrub.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1013218Z   + gh319-gate-path-with-space.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1013487Z   + gh320-twin-timeout-parity.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1013729Z   + gh115-round-cap.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1013946Z   + gh308-poll-guards.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1014162Z   + shim-worktree.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1014384Z   + gh251-validate-pytest-skip.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1014639Z   + gh308-swarm-gate-path.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1014893Z   + gh343-gate-program-target-root.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1015173Z   + gh610-claude-subscription.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1015437Z   + gh342-sentinel-debug-log-python.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1016070Z   + gh369-find-doc-root-resolution.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1016551Z   + gh308-turn-shim-parity.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1016955Z   + gh400-source-url.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1017215Z   + gh557-unknown-blocks-manifest.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1017825Z   + gh322-runlog-python-lane.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1018073Z   + gh419-gate-inventory.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1018312Z   + gh400-acceptance-fidelity.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1018559Z   + gh418-issue-state-frozen.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1018890Z   + gh422-backfill-source-url.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1019143Z   + gh308-consult-guards.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1019365Z   + litmus-release.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1019582Z   + gh425-source-url-slug.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1019827Z   + gh410-relay-block-driven-path.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1020119Z   + gh399-packet-acceptance-continuation.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1020418Z   + gh410-containment-advisory.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1020680Z   + gh90-allowlist-directory.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1020977Z   + gh417-turn-root-symlink-prefix.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1021255Z   + gh407-gate-ran-attribution.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1021501Z   + gh457-gate-tiers.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1021724Z   + gh387-gate-not-first-executor.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1021991Z   + gh441-gate-env-contract.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1022303Z   + gh218-synthetic-nested-driver-lock.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1022664Z   + gh448-driver-lock-resolver.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1022997Z   + gh390-timeout-attribution.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1023350Z   + gh376-relay-drive-lock-parity.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1023661Z   + gh397-reviewer-turn-role.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1023904Z   + gh401-dry-run-no-mutation.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1024147Z   + gh432-failed-turn-persist.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1024399Z   + gh375-agy-auth-preflight.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1024650Z   + gh217-gate-env-plan-outside.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1024914Z   + gh408-tick-failure-visibility.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1025179Z   + nightwatch-release.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1025413Z   + gh375-auth-timeout-verdict.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1025960Z   + gh379-claude-builder-diagnosis.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1026392Z   + gh380-claude-trust.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1026648Z   + gh378-gate-requires-green-suite.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1026934Z   + gh382-marathon-memory-telemetry.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1027206Z   + gh551-resolver-refuses.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1027439Z   + meter-release.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1027649Z   + ballast-release.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1027870Z   + gh385-retry-token-satisfied.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1028125Z   + gh386-turn-budget-honesty.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1028369Z   + gh390-gate-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1028593Z   + gh255-remedy-ordering.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1028834Z   + gh256-target-root-guard-root.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1029092Z   + gh491-gate-only-refire.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1029328Z   + gh384-crash-recovery.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1029559Z   + gh426-worktree-leak.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1029790Z   + gh388-run-log-durability.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1030034Z   + gh514-write-set-trackable.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1030280Z   + gh438-removal-is-progress.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1030539Z   + gh467-index-only-lane-blocked.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1030792Z   + hq-marathon-live.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1031009Z   + debug-mantra.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1031221Z   + lane-attempt-cap.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1031430Z   + driver-lock.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1031636Z   + gh505-relay-attest.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1031954Z   + measure.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1032141Z   + loop-stop.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1032331Z   + champion.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1032517Z   + oracle-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1032710Z   + heldout-check.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1032987Z   + loop-cost.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1033179Z   + gh409-claim-leak.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1033395Z   + improve-loop-dogfood.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1033630Z   + improve-loop.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1033840Z   + gh438-acceptance-recheck.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1034177Z   + gh430-state-dir-tracked-default.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1034441Z   + gh536-evidence-detail.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1034671Z   + improve-loop-qa.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1034888Z   + gh402-board-sync.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1035102Z   + gh405-mock-board-harness.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1035342Z   + gh544-parallel-default.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1036127Z   + gh379-canary-uses-validate.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1036411Z   + gh544-pre-push-gate.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1036653Z   + gh365-runner-envelope.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1036891Z   + gh646-status-label.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1037117Z   + gh365-validate-telemetry.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1037363Z   + gh365-driver-lane-registry.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1037636Z   + gh35-test-tiers.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1037894Z   + gh365-shellcheck-parallel.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1038217Z   + marathon-drive.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1038493Z   + gh1-fixture-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1038797Z   + gh1-adoption-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1039103Z   + gh520-default-reviewer-stub.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1039382Z   + gh527-destructive-git-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1039640Z   + gh50-sandboxed-git-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1039898Z   + gh314-transcript-writeset.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1040150Z   + marathon-closeout.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1040382Z   + gh484-phase-dir-default.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1040631Z   + gh402-branch-enforcement.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1040878Z   + rtl-orphan-backup.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1041111Z   + gh2-orphan-backup-repro.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1041337Z   + marathon.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1041540Z   + gh91-relay-scratch.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1041771Z   + gh113-headless-scratch.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1042006Z   + gh124-closeout.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1042224Z   + gh129-relay-tick-root.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1042464Z   + gh130-agy-auth-whoami.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1042695Z   + gh114-headless-tty.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1042925Z   + gh131-marathon-target-root.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1043201Z   + synthetic/gh101-consult-programmatic.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1043533Z   + synthetic/gh101-relay-programmatic-stress.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1043886Z   + gh139-pipe-grep-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1044139Z   + synthetic/gh102-telemetry-schema.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1044585Z   + synthetic/gh94-containment-invariants.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1044898Z   + synthetic/synthetic-claude-target-root.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1045204Z   + synthetic/synthetic-marathon-env-leak.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1045532Z   + synthetic/synthetic-marathon-worktree-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1046102Z   + synthetic/synthetic-pi-model-unset.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1046560Z   + synthetic/synthetic-pi-provider-unsupported.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1046910Z   + synthetic/gh94-script-serialization.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1047189Z   + gh141-fuzz-inputs.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1047425Z   + gh141-synthetic-registry.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1047674Z   + gh142-ate-exit-contract.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1047916Z   + gh608-deepseek-effort.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1048157Z   + gh648-l7-checkout-aftermath.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1048414Z   + gh148-deepseek-turn.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1048647Z   + gh648-l6-muse-attribution.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1048890Z   + gh648-l5-gh237-repro.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1049119Z   + gh648-l4-285-revalidate.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1049358Z   + gh648-l2-token-aftermath.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1049604Z   + gh648-l1-turn-termination.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1049954Z   + gh654-offlane-log.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1050186Z   + gh660-skill-drift.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1050431Z   + gh156-turn-shims-help.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1050734Z   + gh648-l3-consult-cap.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1050991Z   + gh155-phase1-metamorphic-invariants.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1051281Z   + gh155-phase3-repro-builder.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1051619Z   + gh155-phase4-self-healer.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1051872Z   + gh155-phase5-active-explorer.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1052198Z   + gh365-pdda-gov-scan.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1052435Z   + gh168-wave-reconcile-scope.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1052686Z   + gh180-repro-timeout-crash.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1053007Z   + gh174-harness-registry.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1053263Z   + gh181-repro-adapter-fidelity.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1053601Z   + gh183-explorer-env-soundness.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1053864Z   + gh184-no-tracked-scratch.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1054108Z   + gh182-healer-facade-safety.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1054369Z   + gh232-wave-reconcile-multiphase.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1054875Z   + gh202-wave-reconcile-issue-state.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1055240Z   + gh155-phase2-differential-oracle.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1055508Z   + relay-pkg-freshness.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1056069Z   + skill-extract.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1056289Z   + releases-skill.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1056507Z   + deep-research.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1056713Z   + gh75-dashboard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1057011Z   + gh103-timeline-exporter.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1057273Z   + gh525-unshipped-version-tokens.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1057617Z   + gh32-releases-artifacts.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1057872Z   + gh53-releases-merge-resolve.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1058137Z   + gh54-merged-dump-refusals.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1058465Z   + gh360-dump-multiline-values.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1058705Z   + consult.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1058979Z   + gh57-live-merge-resolve.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1059232Z   + gh57-releases-fuzz.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1059536Z   + gh32-releases-app.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1059775Z   + gh351-manifest-unship.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1060031Z   + gh349-releases-roadmap-vendored.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1060379Z   + gh362-marathon-plan-link-bullets.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1060675Z   + gh360-scoped-receipt-chain-rebuild.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1061045Z   + gh358-wave-reconcile-vendored-paths.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1061348Z   + gh429-wave-reconcile-vendored-observe.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1061708Z   + gh69-roadmap-shadow.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1061954Z   + gh32-release-target-advisory.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1062295Z   + gh39-releases-project-sync.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1062540Z   + path-integrity.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1062833Z   + archive-root.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1063038Z   + archive-writers.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1063260Z   + relay-turn-timeout.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1063545Z   + archive-commit.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1063758Z   + archive-telemetry.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1064215Z   + relay-file-seeding-visibility.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1064489Z   + gh304-vendored-relay-path.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1064816Z   + relay-dep-drift.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1065033Z   + relay-turn-handoff.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1065248Z   + new-relay.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1065520Z   + gh678-installer-live-links.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1065994Z   + gh365-tier-fail-closed.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1066333Z   + gh620-skills-army-mini-sync.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1066586Z   + agent-chorus.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1066789Z   + skills-army-hq.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1067020Z   + gh233-agent-chorus-concurrency.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1067368Z   + agent-chorus-bridge.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1067590Z   + xyz-sync-check.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1067805Z   + gh293-vendored-guard-drift.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1068132Z   + relay-concurrent-commit.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1068370Z   + gh642-consumer-fruit.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1068676Z   + relay-case-insensitive.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1068909Z   + xyz-vendor.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1069120Z   + gh77-standup-triage.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1069428Z   + relay-commit-pathspec.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1069681Z   + gh292-worktree-vendored-discovery.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1070024Z   + find-harness.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1070228Z   + pdda-changelog.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1070442Z   + pdda-roadmap-coverage.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1070754Z   + marathon-root-audit.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1070987Z   + gh460-pipe-buffer-sigpipe.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1071238Z   + gh784-marathon-qa-gate.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1071550Z   + gh284-p3-release-milestone.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1071800Z   + gh284-p4-release-lanes.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1072099Z   + ci-workflow.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1072293Z   + ci-route.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1072492Z   + gh509-gate-evidence.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1072785Z   + pdda-local-checks.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1073009Z   + swarm-preflight.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1073224Z   + xyz-completion.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1073507Z   + gh649-pdda-migration.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1073745Z   + gh14-atomic-append.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1074059Z   + gh23-path-overlap-enforcement.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1074326Z   + gh358-lock-instrumentation.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1074789Z   + marathon-plan.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1074989Z   + hq.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1075174Z   + hq-park.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1075440Z   + hq-park-synthesis.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1075772Z   + hq-dispatch.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1076065Z   + hq-next.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1076340Z   + hq-locator.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1076534Z   + hq-hardening.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1076725Z   + hq-promote.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1076990Z   + preflight-docs.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1077202Z   + xyz-harness-hooks.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1077489Z   + hq-marathon-scan.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1077825Z   + hq-rollup.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1078034Z   + gh238-hq-releases-mode.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1078295Z   + gh567-roadmap-dashboard-retired.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1078643Z   + gh239-hq-status-releases-mode.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1078945Z   + gh703-raw-text-asterisk.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1079258Z   + gh257-roadmap-ledger-fixes.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1079518Z   + gh568-releases-md-retired.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1079771Z   + gh423-roadmap-render.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1080079Z   + gh454-reconciler-defects.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1080333Z   + gh424-roadmap-status-marker.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1080660Z   + gh418-planner-ledger-source.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1080917Z   + gh425-gate-provenance-pr.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1081242Z   + mktemp-trap-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1081477Z   + gh684-hosted-lane-report.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1081726Z   + gh740-hosted-lane-publish.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1082059Z   + gh269-roadmap-retired.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1082331Z   + gh421-auto-wave-reconcile.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1082589Z   + pdda-install-startup-docs.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1082904Z   + gh605-work-state.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1083148Z   + gh605-board-policy.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1083459Z   + gh645-merge-cleanup-xyz-tools.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1083888Z   + gh674-merge-cleanup-hosted-lookup.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1084247Z   + gh492-roadmap-state-sweep.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1084512Z   + gh681-reviewer-probe-rules.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1084843Z   + gh527-issue-url-repair.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1085096Z   + gh491-roadmap-section-validation.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1085419Z   + jog-queue.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1085752Z   + gh353-vendored-router-audit.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1096574Z   + gh291-contract-goldens.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1097063Z   + gh205-gate-idempotency.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1097526Z   + gh204-sed-portability.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1097796Z   + gh290-ate-variation-grid.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1098129Z   + transcript-audit.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1098378Z   + gh153-releases-sidebar-rollup.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1098722Z   + sentinel-tier1.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1098948Z   + sentinel-network-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1099265Z   + sentinel-driver-hooks.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1099531Z   + gh528-parallel-contention-retry.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1099890Z   + security-scan.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1100105Z   + checkjs.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1100312Z   + marathon-monitor.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1100651Z   + fixtures/canary-token-reuse/verify-fixture.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1100954Z   + signal-triage.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1101276Z   + fixtures/canary-peer-orphan/verify-fixture.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1101634Z   + fixtures/canary-reviewer-overstep/verify-fixture.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1102041Z   + relay-self-sufficiency.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1102294Z   + phase3-signoff-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1102613Z   + agy-tui-takeover-verdict.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1102869Z   + gh105-vendor-releases-addon.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1103205Z   + gh107-timeline-json-seam.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1103490Z   + gh165-governance-canonical-paths-guard.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1103802Z   + gh132-review-xyz-skill.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1104119Z   + sentinel-overlay.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1104374Z   + gh273-marathon-root-audit-python-shape.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1104739Z   + relay-uncited-findings.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1105008Z   + gh312-vendor-preserves-state.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1105266Z   + wave-reconcile.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1105566Z   + gh693-lessons-learned-advisory.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1106285Z   + gh496-phase2-reconciliation-views.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1106681Z   + gh197-vendor-tier-split.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1106948Z   + gh306-registry-bidirectional.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1107295Z   + gh298-ate-gen4-ci-smoke.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1107573Z   + gh-gen4-phase2-adaptive-ate.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1107930Z   + gh-gen4-phase5-campaign.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1108182Z   + gh712-jev-triage.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1108486Z   + gh396-find-harness-roots.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1108743Z   + gh393-deepseek-readiness.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1109073Z   + gh591-prepush-commit-boundary.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1109359Z   + gh-gen4-phase4-repro-synth.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1109704Z   + gh589-consult-no-tick.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1109943Z   + gh589-skill-viewer.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1110254Z   + gh-gen4-phase3-fuzz-engine.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1110518Z   + gh589-xyz-mini-sync.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1110761Z   + gh549-work-events.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1111067Z   + gh280-jog-marathon-adapter.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1111321Z   + gh436-merge-cleanup.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1111633Z   + python:test_python_layer.py
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1111887Z   + clone-identity-invariant
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1112207Z   + gamma-poison-staleness-probe
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1112454Z failed:
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1112654Z   - gh123-lock-progress-bound.sh
+portability canary (ubuntu — advisory, never breakage)	Run validate.sh suite (with documented skips)	2026-10-12T03:30:33.1369534Z ##[error]Process completed with exit code 1.

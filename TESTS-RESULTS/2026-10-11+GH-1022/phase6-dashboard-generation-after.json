@@ -1,0 +1,38 @@
+{
+  "source_sha256": "77e99f1783313347ad8f672d31751759731f466af7c8fba6f62d98e2d5a46960",
+  "method": "actual renderer/parser with in-memory read tables and owned temp dump bytes; no DB/source/browser/connector writes or CI additions",
+  "controls": [
+    {
+      "case": "matching",
+      "parser_generation": 1,
+      "error": null,
+      "renders": true,
+      "stale": false,
+      "unavailable": false
+    },
+    {
+      "case": "different",
+      "parser_generation": 2,
+      "error": null,
+      "renders": true,
+      "stale": true,
+      "unavailable": false
+    },
+    {
+      "case": "no-header",
+      "parser_generation": null,
+      "error": null,
+      "renders": true,
+      "stale": true,
+      "unavailable": true
+    },
+    {
+      "case": "empty",
+      "parser_generation": null,
+      "error": null,
+      "renders": true,
+      "stale": true,
+      "unavailable": true
+    }
+  ]
+}

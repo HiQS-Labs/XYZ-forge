@@ -1,0 +1,38 @@
+{
+  "source_sha256": "d7efd6d5e620c9518adf91ff78929c79bab2df9cb9d4f9a645dae3d5faf56694",
+  "method": "actual unmodified CLI crash/recovery plus sanctioned predating owner connection; ephemeral full local Git fixtures; connectors0; local fixture files/audit/journal writes only; no CI cases",
+  "controls": [
+    {
+      "boundary": "post-commit",
+      "owner_file": "dump",
+      "rc": 0,
+      "owner_bytes_preserved": false,
+      "intent_preserved": false,
+      "db_preserved": true,
+      "stdout": "RECOVERED: completed crash (txn 68374ec8245b) \u2014 the committed operation is preserved; dump/generated regenerated from the DB\nOK: crash recovery completed; continuing the consistency checks\nOK: foreign_keys pragma asserted per connection\nOK: generation trio consistent at 1590 (DB <-> dump)\nOK: receipt chain intact (1773 receipt(s), business-state digest matches, 180 merge fork(s) tolerated under the merge-rebuild receipt)\nwarn: rule=mig-ref-stale: MIG-F1CCB6 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D7D2C4 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D248B2 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-79F036 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-A993B3 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-751A4C is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-7AFFE1 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-AC68FA is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 16 day(s) past its target of 2026-09-26 \u2014 the plan has drifted from the calendar\ninfo: 24 grandfather_entries pending disposition (the strict flip requires none pending)\ncheck: clean (0 failures, 9 warning(s))\n",
+      "stderr": ""
+    },
+    {
+      "boundary": "post-stage",
+      "owner_file": "staged_dump",
+      "rc": 0,
+      "owner_bytes_preserved": false,
+      "intent_preserved": false,
+      "db_preserved": true,
+      "stdout": "RECOVERED: completed crash (txn 014f253500fd) \u2014 the committed operation is preserved; dump/generated regenerated from the DB\nOK: crash recovery completed; continuing the consistency checks\nOK: foreign_keys pragma asserted per connection\nOK: generation trio consistent at 1590 (DB <-> dump)\nOK: receipt chain intact (1773 receipt(s), business-state digest matches, 180 merge fork(s) tolerated under the merge-rebuild receipt)\nwarn: rule=mig-ref-stale: MIG-F1CCB6 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D7D2C4 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D248B2 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-79F036 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-A993B3 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-751A4C is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-7AFFE1 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-AC68FA is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 16 day(s) past its target of 2026-09-26 \u2014 the plan has drifted from the calendar\ninfo: 24 grandfather_entries pending disposition (the strict flip requires none pending)\ncheck: clean (0 failures, 9 warning(s))\n",
+      "stderr": ""
+    },
+    {
+      "control": "writer-open-before-db-swap",
+      "old_generation": 1589,
+      "current_generation": 1590,
+      "result": {
+        "kind": "OperationalError",
+        "error": "attempt to write a readonly database"
+      },
+      "canonical_db_preserved": true,
+      "dump_preserved": true,
+      "pending_intent": null
+    }
+  ]
+}

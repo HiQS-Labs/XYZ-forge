@@ -58,6 +58,7 @@ import argparse
 import datetime as _dt
 import fcntl
 import hashlib
+from html import escape as html_escape
 import json
 import os
 import re
@@ -429,12 +430,16 @@ class WriterLock:
 
 # ── DB connection (PRAGMA foreign_keys asserted per connection) ─────────────────────────────────
 
-def connect(db_path, must_exist=True):
+def connect(db_path, must_exist=True, readonly=False):
     if must_exist and not os.path.exists(db_path):
         refuse("not-initialized", "no %s here; run `releases init` first" % DB_NAME)
     # isolation_level=None: transactions are BEGIN/COMMIT'd explicitly by perform_write, so the
     # intent journal -> COMMIT -> stage -> rename ordering is the ONLY ordering that exists.
-    conn = sqlite3.connect(db_path, isolation_level=None)
+    if readonly:
+        db_uri = "file:%s?mode=ro" % urllib.parse.quote(os.path.abspath(db_path), safe="/")
+        conn = sqlite3.connect(db_uri, uri=True, isolation_level=None)
+    else:
+        conn = sqlite3.connect(db_path, isolation_level=None)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     if conn.execute("PRAGMA foreign_keys").fetchone()[0] != 1:
@@ -1324,9 +1329,9 @@ def _crash(boundary):
         os._exit(EXIT_CRASH_INJECTED)
 
 
-def _stage_write(final_path, content):
+def _stage_write(final_path, content, tmp_path=None):
     """Staged temp-name write; the caller renames (atomic) only once the DB commit is durable."""
-    tmp = "%s.tmp-%s" % (final_path, new_txn_id()[:12])
+    tmp = tmp_path or "%s.tmp-%s" % (final_path, new_txn_id()[:12])
     with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
         fh.write(content)
         fh.flush()
@@ -1909,6 +1914,8 @@ def recover_from_journal(root, conn):
         return None
     with open(journal_path, encoding="utf-8") as fh:
         journal = json.load(fh)
+    if journal.get('kind') == 'ledger-merge@1':
+        return _recover_ledger_merge(root, conn, journal, journal_path)
     txn_id = journal.get("txn_id", "?")
     jgen = int(journal.get("generation", 0))
 
@@ -2456,6 +2463,11 @@ def cmd_update(args):
                                 exit_criterion=args.exit_criterion, editing_gid=args.gid)
 
         def mutate(conn):
+            # Validation used a pre-lock snapshot. Never use its unspecified
+            # fallback fields after another sanctioned writer changed this row.
+            if dict(find_release(conn, args.gid)) != dict(row):
+                refuse("release-update-stale",
+                       "release changed after validation; owner state preserved; retry against current state")
             tracking_ref_id = row["tracking_ref_id"]
             if new_tracking_url is not None:
                 ref = issue_ref_for_token(conn, new_tracking_url)
@@ -2561,7 +2573,19 @@ def cmd_baseline(args):
                    % args.gid)
 
         def mutate(conn):
-            count = _capture_baseline(conn, row["id"], "observed")
+            # Pre-lock checks are advisory. A competing baseline or manifest
+            # writer may have committed since they ran; preserve that snapshot
+            # and refuse through the CLI contract rather than a SQL traceback.
+            current = find_release(conn, args.gid)
+            if current["baseline_count"] is not None:
+                refuse("baseline-already-set",
+                       "release %s already has a write-once baseline; owner state preserved"
+                       % args.gid)
+            if not _live_manifest_count(conn, current["id"]):
+                refuse("baseline-empty-manifest",
+                       "release %s has no dialed-in or shipped members; owner state preserved"
+                       % args.gid)
+            count = _capture_baseline(conn, current["id"], "observed")
             print("baseline for %s captured at %d (observed)" % (args.gid, count))
 
         perform_write(root, conn, "baseline", args.gid, mutate)
@@ -3715,7 +3739,7 @@ def cmd_roadmap_rate(args):
         else:
             where, param, label = "global_id = ?", args.gid, args.gid
         rows = conn.execute(
-            "SELECT global_id, title, raw_text, rating_pri, complexity, risk, effort "
+            "SELECT * "
             "FROM roadmap_items WHERE " + where + " LIMIT 2", (param,)).fetchall()
         if not rows:
             refuse("no-such-row", "no roadmap row for %s; park it with `roadmap add` first" % label)
@@ -3752,6 +3776,11 @@ def cmd_roadmap_rate(args):
             return
 
         def mutate(conn):
+            current = conn.execute("SELECT * FROM roadmap_items WHERE global_id = ?",
+                                   (row["global_id"],)).fetchone()
+            if current is None or dict(current) != dict(row):
+                refuse("roadmap-rate-stale",
+                       "roadmap row changed after validation; owner state preserved; retry against current state")
             conn.execute(
                 "UPDATE roadmap_items SET raw_text = ?, updated_at = ?, %s WHERE %s"
                 % (", ".join("%s = ?" % c for c in RATING_COLUMNS), where),
@@ -3781,7 +3810,7 @@ def cmd_roadmap_repoint(args):
             refuse("selector", "pass exactly one of --issue-num or --gid")
         where, param, label = (("gh_number = ?", args.issue_num, "GH-%d" % args.issue_num)
                                if args.issue_num is not None else ("global_id = ?", gid, gid))
-        rows = conn.execute("SELECT global_id, gh_number, doc_path, raw_text FROM roadmap_items "
+        rows = conn.execute("SELECT * FROM roadmap_items "
                             "WHERE %s LIMIT 2" % where, (param,)).fetchall()
         if not rows:
             refuse("no-such-row", "no roadmap row for %s" % label)
@@ -3801,6 +3830,11 @@ def cmd_roadmap_repoint(args):
             return
 
         def mutate(conn):
+            current = conn.execute("SELECT * FROM roadmap_items WHERE global_id = ?",
+                                   (row["global_id"],)).fetchone()
+            if current is None or dict(current) != dict(row):
+                refuse("roadmap-repoint-stale",
+                       "roadmap row changed after validation; owner state preserved; retry against current state")
             conn.execute("UPDATE roadmap_items SET doc_path = ?, raw_text = ?, updated_at = ? "
                          "WHERE global_id = ?", (new, raw_text, now_iso(), row["global_id"]))
 
@@ -4426,6 +4460,20 @@ def cmd_roadmap_render(args):
         sys.stdout.write(rendered)
 
 
+def roadmap_rating_view(row):
+    """One canonical rating projection for machine and human ledger readers.
+
+    An override replaces the calculated rank only for a fully rated row. This
+    exposes owner state; it does not rate an issue or establish readiness.
+    """
+    result = {column: _col(row, column) for column in RATING_COLUMNS}
+    axes = [result[column] for column in RATING_COLUMNS[:4]]
+    calc = sum(axes) if all(axis is not None for axis in axes) else None
+    result["rating_calc"] = calc
+    result["rating_rank"] = (result["rating_ovr"] if result["rating_ovr"] is not None else calc) if calc is not None else None
+    return result
+
+
 def cmd_roadmap_list(args):
     root = resolve_root(args.root)
     conn = connect(artifact_paths(root)["db"])
@@ -4443,6 +4491,7 @@ def cmd_roadmap_list(args):
                                  "raw_text": _col(r, "raw_text")})
                     rows[-1]["status_label_supported"] = _has_column(conn, "roadmap_items", "status_label")
                     rows[-1]["status_label"] = _col(r, "status_label")
+                    rows[-1].update(roadmap_rating_view(r))
             print(json.dumps(rows, ensure_ascii=False))
             return
         if not _table_exists(conn, "roadmap_items"):
@@ -4455,8 +4504,9 @@ def cmd_roadmap_list(args):
             # calc is DERIVED here, never stored — the equal-weighted sum of the four axes, and
             # the override wins over it for ranking wherever both exist.
             score = "-"
-            if _col(r, "rating_pri") is not None:
-                calc = sum(_col(r, c) for c in RATING_COLUMNS[:4])
+            rating = roadmap_rating_view(r)
+            if rating["rating_calc"] is not None:
+                calc = rating["rating_calc"]
                 score = str(calc)
                 if _col(r, "rating_ovr") is not None:
                     score = "%s>%d" % (score, r["rating_ovr"])
@@ -4550,8 +4600,228 @@ def cmd_jog_add(args):
         conn.close()
 
 
+def _jog_rows(conn, show_all=False, inventory=False):
+    where_clause = "" if show_all else "WHERE jq.status IN ('pending', 'running')"
+    has_rm = _table_exists(conn, "roadmap_items")
+    qualified = has_rm and _has_column(conn, "jog_queue", "repo_id") and _has_column(conn, "roadmap_items", "repo_id")
+    if has_rm:
+        query = """
+            SELECT jq.id, jq.global_id, jq.gh_number, jq.position, jq.status,
+                   jq.attempt_count, jq.lease_pid, jq.failure_reason, jq.created_at, jq.updated_at,
+                   ri.title, ri.doc_path, ri.issue_url
+            FROM jog_queue jq
+            LEFT JOIN roadmap_items ri ON %s
+            %s
+            ORDER BY CASE WHEN jq.status IN ('running', 'pending') THEN 0 ELSE 1 END, jq.position ASC, jq.id ASC
+        """ % ("ri.repo_id = jq.repo_id AND ri.gh_number = jq.gh_number" if qualified else "ri.gh_number = jq.gh_number", where_clause)
+        if not qualified:
+            print("Jog list: legacy unqualified schema; advisory view only.", file=sys.stderr)
+    else:
+        query = """
+            SELECT jq.id, jq.global_id, jq.gh_number, jq.position, jq.status,
+                   jq.attempt_count, jq.lease_pid, jq.failure_reason, jq.created_at, jq.updated_at,
+                   NULL AS title, NULL AS doc_path, NULL AS issue_url
+            FROM jog_queue jq
+            %s
+            ORDER BY CASE WHEN jq.status IN ('running', 'pending') THEN 0 ELSE 1 END, jq.position ASC, jq.id ASC
+        """ % where_clause
+
+    if inventory:
+        query = query.replace("jq.id, jq.global_id", "jq.repo_id, r.global_id AS repo_global_id, r.slug AS repo_slug, ri.global_id AS roadmap_global_id, jq.id, jq.global_id")
+        query = query.replace("FROM jog_queue jq", "FROM jog_queue jq LEFT JOIN repos r ON r.id = jq.repo_id")
+    return [dict(r) for r in conn.execute(query).fetchall()]
+
+
+def _read_work_inventory(root, show_all=False, include_work=False):
+    """One declared root's held queue observation; never recovery or execution approval."""
+    result = {"status": "UNKNOWN", "initialized": False, "read_complete": False,
+              "root": root, "include_terminal": show_all, "generation": None,
+              "repositories": [], "rows": [], "held_reasons": [], "dispatch": False}
+    if include_work:
+        result.update(schema="releases/work-inventory@1", schema_version=None,
+                      marathons=[], lifecycle=[], driver_lock=None, git_head=None)
+    conn = None
+    try:
+        db = artifact_paths(root)["db"]
+        _, _, intent = lock_paths(root)
+        def stable_file():
+            if os.path.islink(db) or not os.path.isfile(db):
+                raise ValueError("missing or symlinked releases.db")
+            if _sqlite_header_uses_wal(db) or any(os.path.lexists(p) for p in
+                    (intent, db + "-wal", db + "-shm", db + "-journal")):
+                raise ValueError("live or ambiguous canonical journal/SQLite state")
+            st = os.stat(db)
+            return (st.st_dev, st.st_ino, st.st_size, st.st_mtime_ns)
+        before = stable_file()
+        conn = connect(db, readonly=True)
+        required = {
+            "settings": ("key", "value"), "schema_migrations": ("version",),
+            "repos": ("id", "global_id", "slug"),
+            "roadmap_items": ("repo_id", "global_id", "gh_number", "title", "doc_path", "issue_url"),
+            "jog_queue": ("id", "global_id", "repo_id", "gh_number", "position", "status",
+                          "attempt_count", "lease_pid", "failure_reason", "created_at", "updated_at"),
+        }
+        if include_work:
+            required.update({
+                "marathons": ("id", "global_id", "repo_id", "tracking_ref_id", "status", "created_at"),
+                "issue_refs": ("id", "global_id", "url", "temp_id"),
+                "work_events": ("id", "global_id", "repo_id", "gh_number", "txn_id", "event", "payload", "at"),
+            })
+        for table, columns in required.items():
+            if not _table_exists(conn, table) or any(not _has_column(conn, table, c) for c in columns):
+                raise ValueError("required queue inventory schema unavailable: " + table)
+        if conn.execute("SELECT 1 FROM schema_migrations WHERE version = 6").fetchone() is None:
+            raise ValueError("Jog schema migration 6 not recorded")
+        def generation():
+            value = get_setting(conn, GENERATION_KEY)
+            if not isinstance(value, str) or not re.fullmatch(r"[1-9][0-9]*", value):
+                raise ValueError("missing or invalid canonical generation")
+            return int(value)
+        initial = generation()
+        result.update(initialized=True, generation=initial)
+        if include_work:
+            versions = [r[0] for r in conn.execute("SELECT version FROM schema_migrations")]
+            if any(type(v) is not int for v in versions) or 8 not in versions:
+                raise ValueError("work schema migration 8 not recorded")
+            result["schema_version"] = max(versions)
+            def head():
+                value = subprocess.check_output(["git", "-C", root, "rev-parse", "--verify", "HEAD^{commit}"],
+                                                text=True, stderr=subprocess.DEVNULL, timeout=10).strip()
+                if not re.fullmatch(r"[0-9a-f]{40}(?:[0-9a-f]{24})?", value):
+                    raise ValueError("declared-root Git HEAD unavailable")
+                return value
+            initial_head = head()
+            # Reuse the shared owner resolver. Presence is uncertainty/contention evidence,
+            # never a licence to reap an owner or declare a fleet idle.
+            rtl_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rtl.py")
+            with open(rtl_path, "rb") as stream:
+                rtl_bytes = stream.read()
+            rtl_owner = {"__name__": "work_inventory_lock_owner", "__file__": rtl_path}
+            exec(compile(rtl_bytes, rtl_path, "exec"), rtl_owner)
+            driver_path, driver_label = rtl_owner["driver_lock_path"](root)
+            result["lock_resolver"] = {"path": rtl_path, "sha256": hashlib.sha256(rtl_bytes).hexdigest()}
+            def lock_observation():
+                if not os.path.lexists(driver_path):
+                    return {"path": driver_path, "label": driver_label, "present": False}
+                st = os.lstat(driver_path)
+                return {"path": driver_path, "label": driver_label, "present": True,
+                        "identity": [st.st_dev, st.st_ino, st.st_mtime_ns, st.st_size]}
+            initial_lock = lock_observation()
+        repo_records = [dict(r) for r in conn.execute("SELECT id, global_id, slug FROM repos")]
+        repos = {r["id"]: r["slug"] for r in repo_records}
+        if not repos:
+            raise ValueError("canonical repository ownership unavailable")
+        origin = _origin_repo_identity(root)
+        for repo in repo_records:
+            identity = resolve_roadmap_identity({"repo_id": repo["id"], "gh_number": None,
+                                                 "issue_url": None}, repos, origin)
+            if (not identity["repo"]
+                    or not GH_ISSUE_URL_RE.fullmatch("https://github.com/%s/issues/1" % identity["repo"])
+                    or not isinstance(repo["global_id"], str)
+                    or not re.fullmatch("repo-" + CROCKFORD_GLOB_CLASS + "{26}", repo["global_id"])):
+                raise ValueError("canonical repository identity/GID unavailable")
+            repo["repository"] = identity["repo"]
+        rows = _jog_rows(conn, show_all, inventory=True)
+        if len({row["global_id"] for row in rows}) != len(rows):
+            raise ValueError("duplicate owned queue observations")
+        for row in rows:
+            for field, prefix in (("global_id", "jog-"), ("repo_global_id", "repo-"),
+                                  ("roadmap_global_id", "rmi-")):
+                gid = row[field]
+                if field == "roadmap_global_id" and gid is None:
+                    continue
+                if not isinstance(gid, str) or not re.fullmatch(prefix + CROCKFORD_GLOB_CLASS + "{26}", gid):
+                    raise ValueError("queue repository/GID ownership unavailable")
+            if row["status"] not in ("pending", "running", "completed", "parked", "failed", "dropped", "archived"):
+                raise ValueError("unknown canonical queue status")
+            if type(row["gh_number"]) is not int or row["gh_number"] <= 0:
+                raise ValueError("queue issue number unavailable")
+            identity = resolve_roadmap_identity(row, repos, origin)
+            if not identity["repo"] or (row["roadmap_global_id"] and not identity["identity_valid"]):
+                raise ValueError("queue repository/issue identity is ambiguous")
+            row["repository"] = identity["repo"]
+            row["held_reasons"] = ["execution-not-authorized"]
+            if row["roadmap_global_id"] is None:
+                row["held_reasons"].append("unregistered-roadmap")
+            row["dispatch"] = False
+        if include_work:
+            by_repo = {r["id"]: r for r in repo_records}
+            def qualify(row, prefix):
+                owner = by_repo.get(row["repo_id"])
+                if (owner is None or not isinstance(row["global_id"], str)
+                        or not re.fullmatch(prefix + CROCKFORD_GLOB_CLASS + "{26}", row["global_id"])):
+                    raise ValueError("work fact repository/GID ownership unavailable")
+                row.update(repository=owner["repository"], repo_global_id=owner["global_id"],
+                           held_reasons=["execution-not-authorized"], dispatch=False)
+            marathons = [dict(r) for r in conn.execute("""
+                SELECT m.*, t.global_id AS tracking_global_id, t.url AS tracking_url,
+                       t.temp_id AS tracking_temp_id
+                FROM marathons m LEFT JOIN issue_refs t ON t.id = m.tracking_ref_id ORDER BY m.id
+            """)]
+            for row in marathons:
+                qualify(row, "mar-")
+                tracking = row["tracking_global_id"]
+                if not isinstance(tracking, str) or not re.fullmatch("ref-" + CROCKFORD_GLOB_CLASS + "{26}", tracking):
+                    row["held_reasons"].append("unresolved-tracking-reference")
+                repo, number = _repo_from_issue_url(row["tracking_url"])
+                row.update(tracking_repository=repo, tracking_number=number)
+                if repo is None:
+                    row["held_reasons"].append("no-native-tracking-reference")
+                if row["status"] not in ("planned", "running", "done", "escalated", "abandoned"):
+                    row["held_reasons"].append("unknown-marathon-status")
+            lifecycle = [dict(r) for r in conn.execute("SELECT * FROM work_events ORDER BY id")]
+            for row in lifecycle:
+                qualify(row, "wev-")
+                row["issue_identity"] = ("%s#%s" % (row["repository"].casefold(), row["gh_number"])
+                                         if type(row["gh_number"]) is int and row["gh_number"] > 0 else None)
+                if row["issue_identity"] is None:
+                    row["held_reasons"].append("no-qualified-issue-reference")
+                try:
+                    row["payload_decoded"] = json.loads(row["payload"]) if row["payload"] is not None else None
+                except (ValueError, TypeError):
+                    row["payload_decoded"] = None
+                    row["held_reasons"].append("invalid-event-payload")
+            with open(rtl_path, "rb") as stream:
+                if stream.read() != rtl_bytes:
+                    raise ValueError("lock resolver code changed during observation")
+            if (head() != initial_head or lock_observation() != initial_lock):
+                raise ValueError("declared-root Git HEAD/driver observation changed during read")
+        if include_work:
+            json.dumps({"rows": rows, "marathons": marathons, "lifecycle": lifecycle})
+        if generation() != initial or stable_file() != before:
+            raise ValueError("canonical queue generation/artifact changed during observation")
+        result.update(status="PASS", read_complete=True, repositories=repo_records, rows=rows,
+                      held_reasons=["execution-not-authorized"])
+        if include_work:
+            result.update(marathons=marathons, lifecycle=lifecycle, driver_lock=initial_lock,
+                          git_head=initial_head)
+    except (OSError, sqlite3.Error, ValueError, TypeError, KeyError, SystemExit, subprocess.SubprocessError) as error:
+        result["held_reasons"] = [str(error)]
+    finally:
+        if conn is not None:
+            conn.close()
+    return result
+
+
+def read_jog_inventory(root, show_all=False):
+    return _read_work_inventory(root, show_all)
+
+
+def cmd_work_inventory(args):
+    result = _read_work_inventory(resolve_root(args.root), True, include_work=True)
+    print(json.dumps(result, indent=2))
+    if not result["read_complete"]:
+        raise SystemExit(2)
+
+
 def cmd_jog_list(args):
     root = resolve_root(args.root)
+    if getattr(args, "inventory_json", False):
+        result = read_jog_inventory(root, args.show_all)
+        print(json.dumps(result, indent=2))
+        if not result["read_complete"]:
+            raise SystemExit(2)
+        return
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4562,29 +4832,7 @@ def cmd_jog_list(args):
                 print("Jog queue is empty (table not initialized).")
             return
 
-        where_clause = "" if args.show_all else "WHERE jq.status IN ('pending', 'running')"
-        has_rm = _table_exists(conn, "roadmap_items")
-        if has_rm:
-            query = """
-                SELECT jq.id, jq.global_id, jq.gh_number, jq.position, jq.status,
-                       jq.attempt_count, jq.lease_pid, jq.failure_reason, jq.created_at, jq.updated_at,
-                       ri.title, ri.doc_path, ri.issue_url
-                FROM jog_queue jq
-                LEFT JOIN roadmap_items ri ON ri.gh_number = jq.gh_number
-                %s
-                ORDER BY CASE WHEN jq.status IN ('running', 'pending') THEN 0 ELSE 1 END, jq.position ASC, jq.id ASC
-            """ % where_clause
-        else:
-            query = """
-                SELECT jq.id, jq.global_id, jq.gh_number, jq.position, jq.status,
-                       jq.attempt_count, jq.lease_pid, jq.failure_reason, jq.created_at, jq.updated_at,
-                       NULL AS title, NULL AS doc_path, NULL AS issue_url
-                FROM jog_queue jq
-                %s
-                ORDER BY CASE WHEN jq.status IN ('running', 'pending') THEN 0 ELSE 1 END, jq.position ASC, jq.id ASC
-            """ % where_clause
-
-        rows = [dict(r) for r in conn.execute(query).fetchall()]
+        rows = _jog_rows(conn, args.show_all)
         if args.as_json:
             print(json.dumps(rows, indent=2))
             return
@@ -5670,6 +5918,8 @@ def cmd_work_reconcile(args):
 
 
 def cmd_check(args):
+    if any(getattr(args, key, None) for key in ('merge_base', 'merge_target', 'expected_head', 'expected_branch', 'merge_delta_parent', 'apply')):
+        return cmd_merge_ledger(args)
     root = resolve_root(args.root)
     paths = artifact_paths(root)
     lock = WriterLock(root)
@@ -5755,25 +6005,14 @@ def cmd_check(args):
                                        FROM op_receipts WHERE op != 'ship-evidence'
                                        ORDER BY id""").fetchall()
             chain_ok = True
-            breaks = 0
-            tolerated_breaks = 0
-            prev_after = None
-            for r in receipts:
-                if prev_after is not None and r["state_digest_before"] != prev_after:
-                    breaks += 1
-                if r["op"] == "merge-rebuild":
-                    scoped = _parse_reanchor_breaks(r["target_gid"])
-                    if scoped == -1:
-                        fail("malformed-reanchor-receipt",
-                             "merge-rebuild receipt carries unparseable target_gid %r — "
-                             "expected 'reanchor:N' or NULL" % r["target_gid"])
-                        chain_ok = False
-                    elif scoped is not None:
-                        tolerated_breaks = scoped
-                    else:
-                        # Legacy merge-rebuild receipt with NULL target_gid tolerates breaks up to this point
-                        tolerated_breaks = breaks
-                prev_after = r["state_digest_after"]
+            digest = business_digest(conn)
+            chain = _receipt_chain_details(receipts, digest)
+            breaks, tolerated_breaks = chain['breaks'], chain['tolerated']
+            for invalid in chain['invalid']:
+                fail("malformed-reanchor-receipt",
+                     "merge-rebuild receipt carries unparseable target_gid %r — "
+                     "expected 'reanchor:N' or NULL" % invalid)
+                chain_ok = False
 
             if breaks > tolerated_breaks:
                 unreanchored = breaks - tolerated_breaks
@@ -5789,8 +6028,7 @@ def cmd_check(args):
                          "`releases check --rebuild` to re-anchor"
                          % (unreanchored, breaks, tolerated_breaks))
                 chain_ok = False
-            digest = business_digest(conn)
-            if receipts and receipts[-1]["state_digest_after"] != digest:
+            if not chain['latest_matches']:
                 fail("receipt-chain",
                      "latest receipt's after-digest != current business-state digest — a "
                      "receipt-less mutation (a direct write that bypassed the CLI) is caught "
@@ -6248,31 +6486,420 @@ def load_dump(conn, tables, skip_schema_migrations=False):
                       row.get("payload"), row["at"]))
 
 
-def _rebuild(root, conn):
-    """`check --rebuild`: dump -> DB, atomic, with a .bak of the displaced DB. MERGE RESOLUTION
-    ONLY (PRD) — crash recovery is the journal protocol, and a live journal is refused here. A
-    merge legitimately forks the receipt chain (both sides branch from one ancestor), so the
-    rebuild appends a merge-rebuild receipt — the one legal fork point in the chain rule."""
+def _receipt_chain_details(receipts, digest):
+    """Existing scoped-fork arithmetic, shared by check and source admission."""
+    breaks, tolerated, invalid, previous = 0, 0, [], None
+    for row in receipts:
+        if previous is not None and row['state_digest_before'] != previous:
+            breaks += 1
+        if row['op'] == 'merge-rebuild':
+            scoped = _parse_reanchor_breaks(row['target_gid'])
+            if scoped == -1:
+                invalid.append(row['target_gid'])
+            elif scoped is None:
+                tolerated = breaks
+            else:
+                tolerated = scoped
+        previous = row['state_digest_after']
+    return {'breaks': breaks, 'tolerated': tolerated, 'invalid': invalid,
+            'latest_matches': not receipts or receipts[-1]['state_digest_after'] == digest}
+
+
+def _merge_source(text):
+    """Admit exact current canonical data; unknown normalization never becomes preservation."""
+    tables = parse_dump(text)
+    validate_merged_dump(text, tables)
+    if not all(tables.get(key) for key in ('schema_migrations', 'settings', 'repos')):
+        raise ValueError('nonempty current canonical source required')
+    generation = dump_generation_from_text(text)
+    gen_rows = [r for r in tables['settings'] if r['key'] == GENERATION_KEY]
+    if (type(generation) is not int or generation <= 0 or len(gen_rows) != 1
+            or gen_rows[0]['value'] != str(generation)):
+        raise ValueError('canonical source generation mismatch')
+    versions = [int(r['version']) for r in tables['schema_migrations']]
+    if versions != registry_versions():
+        raise ValueError('only current identical registry schema supported')
+    memory = sqlite3.connect(':memory:', isolation_level=None)
+    memory.row_factory = sqlite3.Row
+    try:
+        memory.execute('PRAGMA foreign_keys=ON')
+        apply_migrations(memory, stamp_ledger=False)
+        load_dump(memory, tables)
+        if parse_dump(dump_text(memory, generation)) != tables:
+            raise ValueError('canonical source changes under roundtrip; preserve unknown data')
+        if memory.execute('PRAGMA foreign_key_check').fetchall():
+            raise ValueError('canonical source references are invalid')
+        digest = business_digest(memory)
+        records = [r for r in tables.get('op_receipts', []) if r['op'] != 'ship-evidence']
+        chain = _receipt_chain_details(records, digest)
+        if chain['invalid'] or chain['breaks'] > chain['tolerated'] or not chain['latest_matches']:
+            raise ValueError('canonical source receipt chain is invalid')
+    finally:
+        memory.close()
+    return tables, generation, digest
+
+
+def _merge_dump_text(tables, generation):
+    lines = ['-- releases-app canonical logical merge selection', '-- generation: %s' % generation]
+    for table, rows in tables.items():
+        if rows:
+            columns = list(rows[0])
+            if any(list(r) != columns for r in rows):
+                raise ValueError('unsupported mixed columns in ' + table)
+            _emit(lines.append, table, columns, rows)
+    return '\n'.join(lines) + '\n'
+
+
+def select_ledger_merge(base_text, ours_text, target_text, delta_parent="ours"):
+    """Conservative owner row selection; no I/O, rating edits, replay or delivery policy."""
+    from collections import Counter
+    if delta_parent not in ('ours', 'target'):
+        raise ValueError('explicit supported delta parent required')
+    parsed = [_merge_source(t) for t in (base_text, ours_text, target_text)]
+    base, ours, target = [p[0] for p in parsed]
+    if delta_parent == 'target':
+        ours, target = target, ours  # row-selection policy only; physical input/digest order stays original
+    if not (base['schema_migrations'] == ours['schema_migrations'] == target['schema_migrations']):
+        raise ValueError('schema ownership changed; explicit reconciliation required')
+    def row_key(row):
+        return json.dumps(row, sort_keys=True, ensure_ascii=False)
+    merged, changes = {}, []
+    for table in dict.fromkeys([*target, *ours, *base]):
+        b, o, t = [p.get(table, []) for p in (base, ours, target)]
+        if table == 'settings':
+            bm, om, tm = [{r['key']: r for r in rows} for rows in (b, o, t)]
+            if set(bm) != set(om) or set(bm) != set(tm):
+                raise ValueError('settings shape changed')
+            rows = []
+            for key in tm:
+                if key == GENERATION_KEY:
+                    chosen = max((om[key], tm[key]), key=lambda r: (int(r['value']), r.get('updated_at') or ''))
+                elif om[key] == tm[key] or om[key] == bm[key]:
+                    chosen = tm[key]
+                elif tm[key] == bm[key]:
+                    chosen = om[key]
+                else:
+                    raise ValueError('conflicting owner setting: ' + key)
+                rows.append(chosen)
+        elif table == 'roadmap_items':
+            bm, om, tm = [{r['global_id']: r for r in rows} for rows in (b, o, t)]
+            if not set(bm) <= set(om) or not set(bm) <= set(tm):
+                raise ValueError('roadmap deletion requires explicit disposition')
+            selected = dict(tm)
+            for gid, row in om.items():
+                if row == bm.get(gid):
+                    continue
+                if gid in tm and tm[gid] != bm.get(gid) and tm[gid] != row:
+                    raise ValueError('conflicting owner roadmap GID: ' + gid)
+                selected[gid] = row
+                changes.append(gid)
+            rows = [selected[r['global_id']] for r in t] + [r for r in o if r['global_id'] not in tm]
+            natural = set()
+            for row in rows:
+                if row.get('gh_number') is not None:
+                    identity = (row['repo_gid'], row['gh_number'])
+                    if identity in natural:
+                        raise ValueError('duplicate qualified roadmap identity')
+                    natural.add(identity)
+        elif table in ('op_receipts', 'work_events'):
+            if o[:len(b)] != b or t[:len(b)] != b:
+                raise ValueError('historical source is not append-only: ' + table)
+            rows = list(t)
+            existing = Counter(row_key(r) for r in t)
+            seen = Counter(row_key(r) for r in b)
+            for row in o[len(b):]:
+                key = row_key(row); seen[key] += 1
+                if seen[key] > existing[key]:
+                    rows.append(row); existing[key] += 1
+        else:
+            if o != b:
+                raise ValueError('unsupported local table change: ' + table)
+            # This shape retains every old GID/history row; mutable target edits survive.
+            if any(r.get('global_id') for r in b):
+                if not {r['global_id'] for r in b} <= {r['global_id'] for r in t}:
+                    raise ValueError('target deletion requires explicit disposition: ' + table)
+            elif t[:len(b)] != b:
+                raise ValueError('unsupported target row deletion/edit: ' + table)
+            rows = list(t)
+        merged[table] = rows
+    gen = max(p[1] for p in parsed[1:])
+    text = _merge_dump_text(merged, gen)
+    # Combined histories can fork: the existing staged builder owns reanchoring.
+    validate_merged_dump(text, parse_dump(text))
+    memory = sqlite3.connect(':memory:', isolation_level=None); memory.row_factory = sqlite3.Row
+    try:
+        memory.execute('PRAGMA foreign_keys=ON'); apply_migrations(memory, stamp_ledger=False)
+        load_dump(memory, merged)
+        if parse_dump(dump_text(memory, gen)) != merged or memory.execute('PRAGMA foreign_key_check').fetchall():
+            raise ValueError('merged selection does not roundtrip exactly')
+    finally:
+        memory.close()
+    return {'tables': merged, 'text': text, 'generation_floor': gen, 'changed_gids': changes,
+            'source_generations': [p[1] for p in parsed], 'source_digests': [p[2] for p in parsed],
+            'delta_parent': delta_parent}
+
+
+def _merge_git(root, *argv, allow_missing=False):
+    try:
+        return subprocess.check_output(['git', '-C', root, *argv], text=True,
+                                       stderr=subprocess.PIPE, timeout=30).strip()
+    except subprocess.CalledProcessError as error:
+        if allow_missing and error.returncode == 1:
+            return ''
+        raise
+
+
+def _merge_git_inputs(root, args):
+    if (not args.root or not os.path.isdir(os.path.join(root, '.git'))
+            or os.path.islink(os.path.join(root, '.git'))):
+        raise ValueError('explicit independent full clone required')
+    if (_merge_git(root, 'rev-parse', '--is-bare-repository') != 'false'
+            or _merge_git(root, 'rev-parse', '--is-shallow-repository') != 'false'
+            or _merge_git(root, 'rev-parse', '--show-object-format') != 'sha1'):
+        raise ValueError('unsupported Git clone shape')
+    if (_merge_git(root, 'rev-parse', '--show-toplevel') != os.path.realpath(root)
+            or _merge_git(root, 'config', '--get-regexp', r'remote\..*\.(promisor|partialclonefilter)', allow_missing=True)):
+        raise ValueError('independent complete root required')
+    for value in (args.merge_base, args.merge_target, args.expected_head):
+        if not isinstance(value, str) or not re.fullmatch(r'[0-9a-f]{40}', value):
+            raise ValueError('exact supplied Git SHA required')
+        if _merge_git(root, 'rev-parse', '--verify', value + '^{commit}') != value:
+            raise ValueError('supplied commit unavailable')
+    if not args.expected_branch or _merge_git(root, 'branch', '--show-current') != args.expected_branch:
+        raise ValueError('declared branch changed')
+    if _merge_git(root, 'rev-parse', 'HEAD') != args.expected_head:
+        raise ValueError('declared root HEAD changed')
+    if _merge_git(root, 'merge-base', '--all', args.expected_head, args.merge_target) != args.merge_base:
+        raise ValueError('unique declared merge base required')
+    return [_merge_git(root, 'show', ref + ':' + DUMP_NAME) + '\n'
+            for ref in (args.merge_base, args.expected_head, args.merge_target)]
+
+
+def _merge_file_hash(path):
+    if os.path.islink(path) or not os.path.isfile(path):
+        raise ValueError('missing or symlinked canonical merge file')
+    with open(path, 'rb') as stream:
+        return hashlib.sha256(stream.read()).hexdigest()
+
+
+def _sync_directory(path):
+    fd = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def _merge_journal_write(path, record):
+    _atomic_write(path, json.dumps(record, indent=2) + '\n')
+    _sync_directory(os.path.dirname(path))
+
+
+def _recover_ledger_merge(root, conn, journal, journal_path):
+    """Exact new-mode before/after recovery, ahead of legacy generation-only cleanup."""
     paths = artifact_paths(root)
-    _, _, journal_path = lock_paths(root)
-    if os.path.exists(journal_path):
-        refuse("journal-live",
-               "recover the interrupted write with plain `releases check` first; --rebuild is "
-               "for git-merge resolution only, never crash recovery")
-    if not os.path.exists(paths["dump"]):
-        refuse("dump-missing", "nothing to rebuild from")
-    with open(paths["dump"], encoding="utf-8") as fh:
-        dump_content = fh.read()
-    dump_gen = dump_generation_from_text(dump_content)
-    if dump_gen is None:
-        refuse("dump-generation", "%s carries no generation header — not a canonical dump"
-               % DUMP_NAME)
+    if (journal.get('db') != paths['db'] or journal.get('root') != os.path.realpath(root)
+            or _merge_git(root, 'rev-parse', 'HEAD') != journal.get('head')
+            or _merge_git(root, 'branch', '--show-current') != journal.get('branch')):
+        refuse('merge-recovery-identity', 'root/branch/HEAD changed; preserve all evidence')
+    if journal.get('owner_sha256') != _merge_file_hash(os.path.abspath(__file__)):
+        refuse('merge-recovery-runtime', 'canonical owner bytes changed; preserve evidence')
+    declared = argparse.Namespace(root=root, merge_base=journal.get('merge_base'),
+                                  merge_target=journal.get('merge_target'),
+                                  expected_head=journal.get('head'), expected_branch=journal.get('branch'))
+    selected = select_ledger_merge(*_merge_git_inputs(root, declared),
+                                   delta_parent=journal.get('delta_parent', 'ours'))
+    if hashlib.sha256(selected['text'].encode()).hexdigest() != journal.get('selection_sha256'):
+        refuse('merge-recovery-selection', 'declared parent selection changed; preserve evidence')
+    staged = journal.get('staged_db')
+    if (not isinstance(staged, str) or staged != paths['db'] + '.tmp-' + journal.get('txn_id', '')
+            or not re.fullmatch(r'[0-9a-f]{32}', journal.get('txn_id', ''))):
+        refuse('merge-recovery-stage', 'unsupported staged identity; preserve evidence')
+    staged_dump = journal.get('staged_dump')
+    if staged_dump != paths['dump'] + '.tmp-' + journal['txn_id']:
+        refuse('merge-recovery-stage', 'unsupported staged dump identity; preserve evidence')
+    if _sqlite_header_uses_wal(paths['db']) or any(os.path.lexists(paths['db'] + x) for x in ('-wal', '-shm', '-journal')):
+        refuse('merge-recovery-state', 'SQLite ambiguity; preserve evidence')
+    # Inspect every owned stage before changing or deleting any recovery evidence.
+    for stage in (staged, staged_dump):
+        if os.path.lexists(stage) and (os.path.islink(stage) or not os.path.isfile(stage)):
+            refuse('merge-recovery-stage', 'unknown staged file; preserve evidence')
+    if os.path.exists(staged) and (not journal.get('after_sha256') or _merge_file_hash(staged) != journal['after_sha256']):
+        refuse('merge-recovery-stage', 'unknown or changed staged DB; preserve evidence')
+    if os.path.exists(staged_dump) and (not journal.get('after_dump_sha256') or _merge_file_hash(staged_dump) != journal['after_dump_sha256']):
+        refuse('merge-recovery-stage', 'unknown or changed staged dump; preserve evidence')
+    current = _merge_file_hash(paths['db']); gen = get_generation(conn)
+    before = current == journal.get('before_sha256') and gen == journal.get('before_generation')
+    after = current == journal.get('after_sha256') and gen == journal.get('generation')
+    if not before and not after:
+        refuse('merge-recovery-state', 'DB matches neither exact before nor after; preserve evidence')
+    if os.path.lexists(paths['dump']) and (os.path.islink(paths['dump']) or not os.path.isfile(paths['dump'])):
+        refuse('merge-recovery-state', 'unknown dump file; preserve evidence')
+    live_dump_hash = _merge_file_hash(paths['dump'])
+    allowed_dump_hashes = {journal.get('before_dump_sha256')}
+    if after:
+        allowed_dump_hashes.add(journal.get('after_dump_sha256'))
+    if live_dump_hash not in allowed_dump_hashes:
+        refuse('merge-recovery-state', 'owner dump changed; preserve all evidence')
+    if after and not _ledger_selection_applied(conn, selected):
+        refuse('merge-recovery-selection', 'durable data does not match declared selection; preserve evidence')
+    if after and live_dump_hash != journal.get('after_dump_sha256'):
+        canonical_dump = dump_text(conn, gen)
+        if hashlib.sha256(canonical_dump.encode()).hexdigest() != journal.get('after_dump_sha256'):
+            refuse('merge-recovery-state', 'canonical after dump identity changed; preserve evidence')
+        _atomic_write(paths['dump'], canonical_dump); _sync_directory(root)
+    for stage in (staged, staged_dump):
+        if os.path.exists(stage):
+            os.unlink(stage)
+    os.unlink(journal_path); _sync_directory(os.path.dirname(journal_path)); _sync_directory(root)
+    audit_log(root, 'recovered', 'exact ledger merge %s (txn %s)' % ('completed' if after else 'discarded', journal['txn_id']))
+    return ('completed' if after else 'discarded', journal['txn_id'])
 
-    old_digest = business_digest(conn)
-    old_gen = get_generation(conn)
-    new_gen = max(dump_gen, old_gen) + 1
 
-    tmp_db = "%s.rebuild-%s" % (paths["db"], new_txn_id()[:12])
+def _ledger_selection_applied(conn, selected):
+    current = parse_dump(dump_text(conn, get_generation(conn)))
+    desired = selected['tables']
+    if set(current) != set(desired):
+        return False
+    for table in desired:
+        if table == 'settings':
+            if ([r for r in current[table] if r['key'] != GENERATION_KEY]
+                    != [r for r in desired[table] if r['key'] != GENERATION_KEY]):
+                return False
+        elif table == 'op_receipts':
+            rows = current[table]
+            if rows[:-1] != desired[table] or not rows or rows[-1]['op'] != 'merge-rebuild':
+                return False
+            if rows[-1]['state_digest_before'] != selected['source_digests'][1]:
+                return False
+        elif current[table] != desired[table]:
+            return False
+    chain = _receipt_chain_details([r for r in current.get('op_receipts', [])
+                                    if r['op'] != 'ship-evidence'], business_digest(conn))
+    return (get_generation(conn) == selected['generation_floor'] + 1
+            and not chain['invalid'] and chain['breaks'] <= chain['tolerated']
+            and chain['latest_matches'])
+
+
+def cmd_merge_ledger(args):
+    """Supplied immutable local-parent merge; never remote freshness or dispatch approval."""
+    answer = {'schema': 'releases/ledger-merge@1', 'status': 'UNKNOWN', 'complete': False,
+              'changed': False, 'dispatch': False, 'holds': []}
+    conn = None
+    try:
+        if args.rebuild:
+            raise ValueError('merge mode cannot invoke legacy rebuild/recovery')
+        owner_path = os.path.abspath(__file__); owner_sha256 = _merge_file_hash(owner_path)
+        root = resolve_root(args.root); texts = _merge_git_inputs(root, args)
+        selected = select_ledger_merge(*texts, delta_parent=getattr(args, 'merge_delta_parent', None) or 'ours')
+        answer.update(delta_parent=selected['delta_parent'], owner_sha256=owner_sha256, root=root, head=args.expected_head, branch=args.expected_branch,
+                      merge_base=args.merge_base, supplied_target=args.merge_target,
+                      target_freshness='not verified; supplied local commit only',
+                      source_generations=selected['source_generations'],
+                      changed_gids=selected['changed_gids'], generation_floor=selected['generation_floor'],
+                      table_counts={k: len(v) for k, v in selected['tables'].items()},
+                      selection_sha256=hashlib.sha256(selected['text'].encode()).hexdigest())
+        if _merge_git_inputs(root, args) != texts or _merge_file_hash(owner_path) != owner_sha256:
+            raise ValueError('Git inputs/runtime owner changed during preview')
+        if not args.apply:
+            answer.update(status='HELD', complete=True, effects='local Git reads and in-memory validation only')
+        else:
+            if os.environ.get('XYZ_WORK_CONNECTORS') != '0':
+                raise ValueError('local projection apply requires explicit connectors0')
+            paths = artifact_paths(root); _, _, intent = lock_paths(root)
+            with WriterLock(root):
+                def guard():
+                    if _merge_git_inputs(root, args) != texts or _merge_file_hash(owner_path) != owner_sha256:
+                        raise ValueError('root/input/runtime drift; preserve incomplete operation')
+                guard()
+                if os.path.lexists(intent) or _sqlite_header_uses_wal(paths['db']) or any(os.path.lexists(paths['db'] + x) for x in ('-wal', '-shm', '-journal')):
+                    raise ValueError('canonical intent/SQLite ambiguity; use explicit existing recovery')
+                _merge_file_hash(paths['db']); _merge_file_hash(paths['dump'])
+                committed_db = _merge_git(root, 'hash-object', paths['db']) == _merge_git(root, 'rev-parse', args.expected_head + ':' + DB_NAME)
+                conn = connect(paths['db'], readonly=True)
+                if (_table_exists(conn, 'connector_cursors') and conn.execute('SELECT 1 FROM connector_cursors LIMIT 1').fetchone()) or conn.execute('SELECT 1 FROM jog_queue WHERE lease_pid IS NOT NULL LIMIT 1').fetchone():
+                    raise ValueError('device-local cursor/lease state not portable; preserve it')
+                rtl_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'rtl.py')
+                namespace = {'__name__': 'ledger_merge_lock_owner', '__file__': rtl_path}
+                with open(rtl_path, 'rb') as stream:
+                    rtl_bytes = stream.read()
+                exec(compile(rtl_bytes, rtl_path, 'exec'), namespace)
+                if os.path.lexists(namespace['driver_lock_path'](root)[0]):
+                    raise ValueError('local driver ownership present; preserve it')
+                old_gen = get_generation(conn); old_digest = business_digest(conn)
+                integrated = _ledger_selection_applied(conn, selected)
+                if not committed_db and not integrated:
+                    raise ValueError('uncommitted owner DB changes; preserve them')
+                with open(paths['dump'], encoding='utf-8') as stream:
+                    live_dump = stream.read()
+                if live_dump != dump_text(conn, old_gen):
+                    raise ValueError('uncommitted or divergent owner dump; preserve it')
+                if not integrated and parse_dump(dump_text(conn, old_gen)) != parse_dump(texts[1]):
+                    raise ValueError('runtime owner data differs from committed source')
+                if integrated or (selected['tables'] == parse_dump(texts[1]) and old_gen >= selected['generation_floor']):
+                    guard()
+                    answer.update(status='HELD', complete=True, generation=old_gen, effects='no data write; writer lock audit only')
+                else:
+                    before_hash = _merge_file_hash(paths['db']); new_gen = max(old_gen, selected['generation_floor']) + 1
+                    txn = new_txn_id(); staged = paths['db'] + '.tmp-' + txn
+                    record = {'app': APP, 'op': 'merge-rebuild', 'kind': 'ledger-merge@1', 'txn_id': txn,
+                              'session_id': session_id(), 'root': os.path.realpath(root), 'head': args.expected_head,
+                              'branch': args.expected_branch, 'merge_base': args.merge_base, 'merge_target': args.merge_target,
+                              'owner_sha256': owner_sha256, 'selection_sha256': answer['selection_sha256'],
+                              'delta_parent': selected['delta_parent'],
+                              'db': paths['db'], 'before_generation': old_gen,
+                              'generation': new_gen, 'before_sha256': before_hash, 'after_sha256': None,
+                              'before_dump_sha256': _merge_file_hash(paths['dump']), 'after_dump_sha256': None,
+                              'staged_db': staged, 'staged_dump': paths['dump'] + '.tmp-' + txn, 'planned_outputs': [paths['db'], paths['dump']], 'started_at': now_iso()}
+                    _merge_journal_write(intent, record)
+                    _crash('pre-commit')
+                    _build_rebuilt_db(root, selected['text'], new_gen, old_digest, staged, txn)
+                    probe = connect(staged, readonly=True)
+                    try:
+                        if not _ledger_selection_applied(probe, selected):
+                            raise ValueError('staged owner data does not preserve exact selection')
+                        after_dump = dump_text(probe, new_gen)
+                        record['after_dump_sha256'] = hashlib.sha256(after_dump.encode()).hexdigest()
+                    finally:
+                        probe.close()
+                    with open(staged, 'rb') as stream:
+                        os.fsync(stream.fileno())
+                    _sync_directory(root); record['after_sha256'] = _merge_file_hash(staged)
+                    _merge_journal_write(intent, record); guard()
+                    with open(rtl_path, 'rb') as stream:
+                        if stream.read() != rtl_bytes:
+                            raise ValueError('driver lock owner source changed; preserve evidence')
+                    if os.path.lexists(namespace['driver_lock_path'](root)[0]):
+                        raise ValueError('driver ownership changed before publication')
+                    if _merge_file_hash(paths['dump']) != record['before_dump_sha256']:
+                        raise ValueError('owner dump changed before publication; preserve evidence')
+                    if _merge_file_hash(paths['db']) != before_hash:
+                        raise ValueError('owner DB changed before publication; preserve evidence')
+                    conn.close(); conn = None
+                    os.replace(staged, paths['db']); _sync_directory(root); _crash('post-commit')
+                    conn = connect(paths['db'], readonly=True)
+                    if dump_text(conn, new_gen) != after_dump:
+                        raise ValueError('durable DB differs from staged dump; preserve evidence')
+                    _stage_write(paths['dump'], after_dump, record['staged_dump']); _sync_directory(root)
+                    _crash('post-stage'); os.replace(record['staged_dump'], paths['dump'])
+                    _sync_directory(root); _crash('mid-rename'); _crash('post-rename')
+                    guard(); refresh_preview(root)
+                    os.unlink(intent); _sync_directory(os.path.dirname(intent))
+                    answer.update(status='HELD', complete=True, changed=True, generation=new_gen, txn_id=txn,
+                                  effects='local staged DB/dump/journal/lock audit and adopted views; no Git or connector writes')
+    except (ValueError, OSError, KeyError, TypeError, sqlite3.Error, subprocess.SubprocessError, SystemExit) as error:
+        answer['holds'].append(str(error))
+    finally:
+        if conn is not None:
+            conn.close()
+    print(json.dumps(answer, indent=2))
+    if not answer['complete']:
+        raise SystemExit(2)
+
+
+def _build_rebuilt_db(root, dump_content, new_gen, old_digest, tmp_db=None, receipt_txn=None):
+    """Existing canonical staged constructor; publication stays with its caller."""
+    tmp_db = tmp_db or "%s.rebuild-%s" % (artifact_paths(root)["db"], new_txn_id()[:12])
     try:
         tconn = sqlite3.connect(tmp_db, isolation_level=None)
         try:
@@ -6342,7 +6969,7 @@ def _rebuild(root, conn):
             tconn.execute("""INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id,
                              state_digest_before, state_digest_after)
                              VALUES ('merge-rebuild', ?, ?, ?, ?, ?, ?)""",
-                          (reanchor_gid, now_iso(), new_txn_id(), session_id(), old_digest, new_digest))
+                          (reanchor_gid, now_iso(), receipt_txn or new_txn_id(), session_id(), old_digest, new_digest))
         finally:
             tconn.close()
         probe = connect(tmp_db)   # FK pragma + openability of the rebuilt DB, before it goes live
@@ -6353,6 +6980,35 @@ def _rebuild(root, conn):
         except OSError:
             pass
         raise
+
+    return tmp_db
+
+
+def _rebuild(root, conn):
+    """`check --rebuild`: dump -> DB, atomic, with a .bak of the displaced DB. MERGE RESOLUTION
+    ONLY (PRD) — crash recovery is the journal protocol, and a live journal is refused here. A
+    merge legitimately forks the receipt chain (both sides branch from one ancestor), so the
+    rebuild appends a merge-rebuild receipt — the one legal fork point in the chain rule."""
+    paths = artifact_paths(root)
+    _, _, journal_path = lock_paths(root)
+    if os.path.exists(journal_path):
+        refuse("journal-live",
+               "recover the interrupted write with plain `releases check` first; --rebuild is "
+               "for git-merge resolution only, never crash recovery")
+    if not os.path.exists(paths["dump"]):
+        refuse("dump-missing", "nothing to rebuild from")
+    with open(paths["dump"], encoding="utf-8") as fh:
+        dump_content = fh.read()
+    dump_gen = dump_generation_from_text(dump_content)
+    if dump_gen is None:
+        refuse("dump-generation", "%s carries no generation header — not a canonical dump"
+               % DUMP_NAME)
+
+    old_digest = business_digest(conn)
+    old_gen = get_generation(conn)
+    new_gen = max(dump_gen, old_gen) + 1
+
+    tmp_db = _build_rebuilt_db(root, dump_content, new_gen, old_digest)
 
     shutil.copy2(paths["db"], paths["bak"])
     os.replace(tmp_db, paths["db"])
@@ -6391,7 +7047,7 @@ def cmd_dashboard(args):
         
         staleness_banner = ""
         if dump_gen != db_gen:
-            staleness_banner = "<div style='background: red; color: white; padding: 10px; font-weight: bold;'>STALE SYNC: DB generation (%d) != Dump generation (%d)</div>" % (db_gen, dump_gen)
+            staleness_banner = "<div style='background: red; color: white; padding: 10px; font-weight: bold;'>STALE SYNC: DB generation (%d) != Dump generation (%s)</div>" % (db_gen, dump_gen if dump_gen is not None else "unavailable")
             
         # Releases panel
         releases = conn.execute("""
@@ -6418,10 +7074,10 @@ def cmd_dashboard(args):
             
             releases_html += f"""
             <div style='border: 1px solid #ccc; padding: 1rem; min-width: 250px;'>
-                <h3>{r['version'] or ''} {r['codename'] or ''}</h3>
-                <p>Status: {r['status']}{days_str}</p>
+                <h3>{html_escape(str(r['version'] or ''))} {html_escape(str(r['codename'] or ''))}</h3>
+                <p>Status: {html_escape(str(r['status']))}{days_str}</p>
                 <p>Manifest: {open_items} open / {closed_items} closed</p>
-                <p>Exit: {r['exit_criterion'] or 'None'}</p>
+                <p>Exit: {html_escape(str(r['exit_criterion'] or 'None'))}</p>
             </div>
             """
         releases_html += "</div>"
@@ -6439,10 +7095,10 @@ def cmd_dashboard(args):
             
         roadmap_html = "<h2>Roadmap</h2>"
         for section, items in roadmap_by_section.items():
-            roadmap_html += f"<h3>{section}</h3><ul>"
+            roadmap_html += f"<h3>{html_escape(str(section))}</h3><ul>"
             for i in items:
                 gh = f"GH-{i['gh_number']} " if i['gh_number'] else ""
-                roadmap_html += f"<li>{i['status_marker'] or ''} {gh}{i['title']}</li>"
+                roadmap_html += f"<li>{html_escape(str(i['status_marker'] or ''))} {html_escape(gh)}{html_escape(str(i['title']))}</li>"
             roadmap_html += "</ul>"
 
         html = f"""<!DOCTYPE html>
@@ -6635,6 +7291,12 @@ def build_parser():
     sp.add_argument("--rebuild", action="store_true",
                     help="rebuild the DB from the dump (git-merge resolution ONLY)")
 
+    for flag in ('merge-base', 'merge-target', 'expected-head', 'expected-branch'):
+        sp.add_argument('--' + flag, help='explicit opt-in local logical ledger merge input')
+    sp.add_argument('--merge-delta-parent', choices=('ours', 'target'), default=None,
+                    help='explicit incoming delta orientation; default local ours')
+    sp.add_argument('--apply', action='store_true', help='apply the explicit local ledger merge; default is held preview')
+
     sp = sub.add_parser("reconcile", help="fill real URLs into temp refs")
     sp.add_argument("--map", action="append", metavar="TMP-X=URL",
                     help="placeholder -> real issue URL (repeatable)")
@@ -6656,6 +7318,7 @@ def build_parser():
 
     sp_work = sub.add_parser("work", help="GH-549 work-state event stream and its connectors")
     wsub = sp_work.add_subparsers(dest="work_cmd", required=True)
+    wsub.add_parser("inventory", help="read-only declared-root held Marathon/Jog/raw-lifecycle JSON")
     sp_we = wsub.add_parser("emit", help="record one work event (used by merge-cleanup)")
     sp_we.add_argument("--event", required=True, help="domain event name, e.g. pr_merged")
     we_selector = sp_we.add_mutually_exclusive_group(required=True)
@@ -6770,6 +7433,8 @@ def build_parser():
     sp_jl = jsub.add_parser("list", help="list active jog queue items")
     sp_jl.add_argument("--all", dest="show_all", action="store_true", help="include completed/dropped/archived items")
     sp_jl.add_argument("--json", dest="as_json", action="store_true", help="output as JSON array")
+    sp_jl.add_argument("--inventory-json", action="store_true",
+                       help="read-only held ownership snapshot; use --all for terminal/carryover rows")
 
     sp_jb = jsub.add_parser("bump", help="bump an issue to the head of the jog queue (position 1)")
     sp_jb.add_argument("target", help="issue number (e.g. 123 or GH-123)")
@@ -6867,7 +7532,7 @@ def main(argv=None):
         "settings": lambda a: {"set": cmd_settings_set,
                                "list": cmd_settings_list,
                                "get": cmd_settings_get}[a.settings_cmd](a),
-        "work": lambda a: {"emit": cmd_work_emit, "backfill": cmd_work_backfill,
+        "work": lambda a: {"inventory": cmd_work_inventory, "emit": cmd_work_emit, "backfill": cmd_work_backfill,
                            "reconcile": cmd_work_reconcile,
                            "status": cmd_work_status}[a.work_cmd](a),
         "dashboard": cmd_dashboard,

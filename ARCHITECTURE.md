@@ -88,7 +88,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 | [xyz-mod](skills/2-daily/xyz-mod/SKILL.md) | Read-only Claude Code mod: `/xyz-status` prints hosted runs, tick claims and marathon/relay drivers with no model turn. |
 
-### `3-weekly` — Weekly (14)
+### `3-weekly` — Weekly (15)
 
 _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 
@@ -106,6 +106,7 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | [skills-army-hq](skills/3-weekly/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. Canonical here; published to XYZ-skills-army-mini via `push-downstream` (GH-955). |
 | [sop](skills/3-weekly/sop/SKILL.md) | Catch SOP / runbook / lessons-learned docs up to recent events; recon, propose additive diffs, apply only on approval. |
 | [task-sync](skills/3-weekly/task-sync/SKILL.md) | Unified IDE task-list grooming (GH-896): one core + per-IDE adapters (ZCode, Antigravity, native Codex planner) date-stamp titles with last-activity mm-dd, write last-action descriptions, manage pins; dry-run default, doctor, one 15-minute heartbeat, Skills Army HQ-deployable. |
+| [weekly-planner](skills/3-weekly/weekly-planner/SKILL.md) | Dual-horizon weekly sprint planning, PR merge sequencing, provisional decisions register, and held branch accumulation. |
 | [weekly-shipped](skills/3-weekly/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |
 | [whack-a-mole](skills/3-weekly/whack-a-mole/SKILL.md) | Cluster 14 days of recurring bugs by churn and file one approved root-cause umbrella issue. |
 

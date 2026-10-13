@@ -1,0 +1,41 @@
+{
+  "source_sha256": {
+    "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/releases_app.py": "06b02c67ad6fc7f3c649ff13c61a0c9af41ed60a67a1167a87415b7fa81ecaf1",
+    "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/planner_core.py": "6755081ca5ae947e2e19dbf84ba23eeb454ae7afec7793c1c85c4975196433a5"
+  },
+  "controls": [
+    {
+      "control": "caller-manual",
+      "rc": 0
+    },
+    {
+      "control": "commit-loss",
+      "rc": 0
+    },
+    {
+      "control": "clone-loss",
+      "rc": 0
+    },
+    {
+      "control": "ancestry-loss",
+      "rc": 0
+    },
+    {
+      "control": "intent-pair-loss",
+      "rc": 0
+    },
+    {
+      "control": "new-writer-race",
+      "rc": 0
+    },
+    {
+      "control": "adopt-publish",
+      "rc": 0
+    },
+    {
+      "control": "same-date",
+      "rc": 0
+    }
+  ],
+  "effects": "ephemeral fixture Git/DB/capture/intents/audit/localbare publication; injected GH and clone routes; connectors0; no real planning push/dispatch/CI additions"
+}
