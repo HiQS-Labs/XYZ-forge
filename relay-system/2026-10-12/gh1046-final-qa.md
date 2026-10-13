@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -124,5 +124,40 @@ Handing off to Producer (claude-a): fix R1, disposition the wording nit, and ret
 - Nit — **Implemented.** `SKILL.md:19` now says the catalog "also records provenance and enabled-target link status"; `SKILL.md:21` now says deleting the source "does not break the copy or its app links".
 
 Handing off to Reviewer (codex) for Round 2.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: R1 and the wording nit are resolved. The implementation meets the four goals through the existing receipt and link machinery, and retained producer evidence supports stdout preservation and sensitivity. Approval is final artifact QA; the separate final-commit harness gate remains pending.
+swept file: yes
+
+Read all six Setup artifacts in full, the approved plan QA, and the added null-commit probe log. Re-swept the entire SKILL.md, intake.py and sync.py; no additional pre-existing defect requiring expansion of this change was identified. Verify-tier discovery enumerated all 84 graph projects (has_more=false); neither this worktree nor its task clone has an index. Used direct current source throughout rather than another checkout's graph; no current graph generation/coverage claim. No Git commands, suites, executable fixtures or artifact edits were performed. The historical diff, committed-state attribution and live persisted rating were not independently queried under this turn's restrictions.
+
+- **[Pass] R1 resolved.** `skills/3-weekly/skills-army-hq/scripts/intake.py:387–388` now normalizes null/missing provenance before slicing. The retained red/green comparison in `TESTS-RESULTS/2026-10-12+GH-1046/r1-null-commit-probe.log:14–21` witnesses the old null failure and new fallback. My non-mutating probe below independently returned exit 0 on the seeded source: missing and null rendered `recorded source manual/unadopted @ unknown`; full rendered `recorded source /src/x @ 0123456789ab, dirty`. No receipt schema change is needed.
+  Command (no subprocess or filesystem fixture):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 -B - <<'PY'
+  import importlib.util
+  from pathlib import Path
+  spec = importlib.util.spec_from_file_location('intake_review', 'skills/3-weekly/skills-army-hq/scripts/intake.py')
+  m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+  root = Path('/nonexistent/collection')
+  receipt = {'digest':'a'*64, 'prerequisites':[], 'commit':None}
+  m.validate_state(root, {'schema':1,'root':str(root),'collection':'b'*32,'skills':{'sample':receipt},'links':{}})
+  for label, r in (('missing', {}), ('null', receipt), ('full', {'source':'/src/x','commit':'0123456789abcdef0123','dirty':True})):
+      line = m.copy_line(root, 'sample', r, {'targets':[]})
+      assert ('@ 0123456789ab, dirty' if label == 'full' else '@ unknown') in line
+      print(label, '->', line)
+  PY
+  ```
+- **[Pass] Wording and four goals.** `SKILL.md:14–24` covers physical copies, per-copy recorded source/revision, app links, clean merged source checkouts, deletion and explicit updates. Line 19 now bounds the catalog to enabled-target status; line 21 bounds deletion safety to the copy and its app links. The emitted evidence at `manual-check.log:85–97` shows the copy path, shortened revision, fallback receipts, disabled target marking and COPY previews. `intake.py:637` is the existing physical copy operation; internal relative payload links remain documented at `SKILL.md:152–153`.
+- **[Pass] Shared implementation and special paths.** `intake.py:374–418` has one link predicate reused by the catalog and one stderr printer; list calls it at `:754–755`, status at `sync.py:254–256`. Preview text is confined to the non-apply add/update branch (`intake.py:804–806`), after the unchanged return (`:797–798`). Target paths are already validated at load (`:243,280`); status forces apply false (`sync.py:219`) and the shared summary follows both retirement and ordinary branches (`:243–256`). No parallel writer or new dependency/state appears in these reviewed files.
+- **[Pass] Retained evidence supports stdout preservation.** `manual-check.log:38–40,60–71` checks nonempty output and compares bytes on all four paths; `:72–98` records stderr checks and `fail=0`. `provenance.jsonl:3–6` records the three red controls. Lines 8–10 attribute the null-fix check, existing suite (33 passed, 4 subtests) and repeated four-path byte comparison to cba245ae. These are reviewed producer receipts, not suite runs repeated in this worktree.
+- **[Pass] Rating remains proportionate.** `PROJECT/2-WORKING/GH-1046-COPY-NOT-LINK.md:104–109` still supports the documented `rated 55/40/50/85` for the bounded clarity change; no new evidence here warrants changing it. Live DB persistence and historical recurrence remain outside this review's independent evidence.
+- **[Unverified — needs clone run]** The final-commit tier-2 harness gate remains due, as stated in the plan's status (`:23`) and step 6 (`:100`). This approval does not attest that gate or authorize skipping it.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the already-planned final-commit gate and delivery after the harness commits this review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
