@@ -15,7 +15,7 @@ goal: "Align Pages workflow triggers and jobs with the operator's development-on
 
 | What was just completed | What's next |
 |---|---|
-| Four-declaration fix; existing57/0 and manual routing/red controls pass | Independent final QA, normal full push gate and draftPR |
+| Four-declaration fix; existing57/0/manual controls and native final QA Approved round1/3 | Normal full push gate, draftPR and exact-head hosted checks |
 
 Intake base0085ceee5269c9edfa22d77a96e08edf158a8cc5 (development advanced from earlier ecbe7722 preflight; Pages unchanged). Exact-main Pages38326961150 built but deploy was forbidden by github-pages policy permitting onlydevelopment. Operator chose development-only publishing and requested bounded fix/draftPR, not landing or deploy. Currentmain4895148683120b8b6f808d4dcd66267a3754fd2c remains immutable and qualified.
 
