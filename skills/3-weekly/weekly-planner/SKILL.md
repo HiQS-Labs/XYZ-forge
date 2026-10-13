@@ -33,11 +33,12 @@ Orchestrate weekly sprint alignment and daily task execution across team members
    - For reversible business configuration, record an explicit provisional value, owner, and correction path. Add a UI control or re-compute action only when that configuration actually needs one; never turn correctness invariants, safety guardrails, or migrations into blanket settings.
 3. **High-Value Blocker Prioritization:**
    - The top item in an operator's queue is strictly whatever **currently blocks another team member or gates the weekly milestone**.
-4. **Dual Ingestion (PRS/PDDA Native with Fallback):**
-   - **Mode A (Native XYZ):** Ingests PRS 4-axis ratings (`pri/sev/appeal/effort`, `calc` sum, `ovr` overrides) directly from `releases.db` and active docs from `PROJECT/`.
-   - **Mode B (Zero-Dependency Fallback):** Ingests open issues via `gh issue list`, executing a 2–3 pass scratch markdown process in `temp/planner/` to triage and sharpen tasks.
+4. **Canonical Discovery & Dual Ingestion (`issue_intake.py`):**
+   - **Canonical Discovery (Default):** Employs `issue_intake.py` to ingest paginated, deduplicated open and recently updated GitHub issues and PRs without artificial ceilings, preserving carryovers and PR diff metadata.
+   - **Native PRS Cross-Referencing:** When `releases.db` exists, merges PRS 4-axis ratings (`pri/sev/appeal/effort`, `calc` sum, `ovr` overrides) with live GitHub activity.
+   - **Zero-Dependency Fallback:** When offline or unconfigured, falls back cleanly to local scratch triage in `temp/planner/`.
 5. **Shared Core Engine Architecture (Zero Skill Drift):**
-   - The weekly planner owns the primary data models, merge-sequencer, and adversarial checks in `scripts/planner_core.py`.
+   - The weekly planner owns the primary data models, discovery intake, merge-sequencer, and adversarial checks in `scripts/`.
    - The `daily-planner` skill imports and calls these shared routines to calculate its 24-hour pivot, ensuring that the daily and weekly cadence never contradict each other.
 
 ---
@@ -48,7 +49,8 @@ Orchestrate weekly sprint alignment and daily task execution across team members
 skills/3-weekly/weekly-planner/
 ├── SKILL.md                  # This specification and prompt guide
 └── scripts/
-    └── planner_core.py       # Shared engine for intake, sequencing, audit, and daily pivot
+    ├── issue_intake.py       # Canonical issue & PR discovery engine
+    └── planner_core.py       # Shared engine for intake, sequencing, audit, daily pivot, and preparation
 ```
 
 ---
@@ -63,9 +65,10 @@ skills/3-weekly/weekly-planner/
 ### Step 1: Ingest Signals & Team Weekly Plan
 1. Identify the **Team Weekly Plan GitHub Issue** (via `--issue <N>` or search):
    - Ingest team member domain assignments (e.g. Jose -> Data/Pipeline, Matthew -> NexMail/Calendar, Noel -> Orchestration/Gate).
-2. Signal Ingestion:
-   - **If `releases.db` exists:** Query calculated scores via `python3 utils/py/releases_app.py roadmap list --json`.
-   - **If Fallback Mode:** Ingest active GH issues and generate `temp/planner/pass1-intake.md` and `temp/planner/pass2-sharpened.md`.
+2. Signal Ingestion & Canonical Discovery:
+   - **Canonical Issue Discovery (Default):** Runs `issue_intake.discover_weekly` across all open and recently updated GitHub issues and PRs (retaining carryovers and PR diff metadata).
+   - **PRS Roadmap Scores:** If `releases.db` exists, merges calculated 4-axis PRS scores (`pri/sev/appeal/effort`, `calc` sum, `ovr` overrides) with live GitHub issues.
+   - **Fallback Scratch Triage:** If offline or forced via `--fallback`, generates `temp/planner/pass1-intake.md` and `temp/planner/pass2-sharpened.md`.
 3. Reconcile the latest issue/PR state, owner decisions, plan documents, and rollout evidence before labeling work open or done. Record the source and as-of date; distinguish merged, deployed, backfilled, and production-verified states.
 
 ### Step 2: Establish the Topological Merge Sequence
@@ -120,6 +123,15 @@ In environments where subagents cannot be spawned, invoke `/relay-xyz` or `/cons
    - Trace audit claims to the exact source and commit. Identify the observed guardrail or threshold; do not invent constants or treat distinct guardrails as interchangeable.
    - Estimate remaining scoped work against combined team capacity, including review, deployment, and verification. Mark deadlines as targets unless an owner has justified a commitment.
    - After optional additions are resolved, record the exact release SHA and hold acceptance to that revision; a version label or adjacent PR number cannot expand the agreed scope.
+4. **Publishing to GitHub (Optional):**
+   - Automatically create a GitHub issue for the weekly plan:
+     ```bash
+     python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root . --create-issue
+     ```
+   - Or manually publish from the generated markdown:
+     ```bash
+     gh issue create --title "Weekly Plan Outline — $(date -u +%Y-%m-%d)" --body-file temp/planner/WEEKLY-PLAN-$(date -u +%Y-%m-%d).md
+     ```
 
 ---
 
@@ -136,29 +148,40 @@ python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root . --m
 5. Runs the Adversarial Northstars check on the pivoted day plan before presenting to the user.
 6. Emits both `temp/planner/daily-pivot-<date>.json` and `temp/planner/DAILY-PIVOT-<date>.md`.
 
+---
 
-## Opt-in declared work observation
+## Held Branch Accumulation & Jog/Marathon Preparation (GH-1022)
 
-The distinct `/weekly` workflow uses this core's held `weekly-work` read mode:
+When preparing an automated weekly Jog or Marathon queue proposal (batch unattended tasks), use the core's held preparation and declared-work census modes.
 
+### 1. Declared Work Observation (`--mode weekly-work`)
+Reads canonical Marathon/Jog/raw lifecycle facts and explicitly named observer contexts without preparation or dispatch:
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root "$SOURCE_ROOT" --mode weekly-work --authority-file "$AUTHORITIES"
 ```
-
-AUTHORITIES explicitly names sources; no primary/fleet/registry scan is inferred:
-
+AUTHORITIES is an explicit JSON `weekly/authorities@1` object with a nonempty `roots` list:
 ```json
 {"schema":"weekly/authorities@1","roots":[{"id":"repo","root":"/absolute/clone","repository":"OWNER/REPO","contexts":[{"path":"/absolute/coord/run.log.progress.json","coordination_root":"/absolute/coord","product_root":"/logical/product","metadata_roots":["/absolute/metadata"]}]}]}
 ```
 
-Every root requires a unique id, absolute path, qualified repository and explicit
-contexts list (which may be empty). Context metadata must lie within the declared
-physical roots; product ownership preserves the observer's logical path. Complete
-observations remain HELD with dispatch_allowed false. Missing, malformed, foreign,
-conflicting or observed drifting evidence is UNKNOWN/nonzero, with available raw
-sources and known qualified facts retained. A complete read does not prove criterion
-delivery, authentic peer approval, stopped descendants or global absence of work.
-Empty context lists do not prove idle. This mode reads existing canonical owners
-once; it does not prepare, select, write ledger/context/captures, schedule or dispatch.
-Legacy weekly/daily outline modes keep their existing interfaces. See the separate
-[weekly skill](../weekly/SKILL.md) for accumulation and capability limits.
+### 2. Local Branch Accumulation (`--mode weekly-prepare`)
+Prepares held issue observations and explicit local branch accumulation for an auto-* planning proposal:
+```bash
+XYZ_HARNESS="$HARNESS" PYTHONDONTWRITEBYTECODE=1 python3 "$HARNESS/skills/3-weekly/weekly-planner/scripts/planner_core.py" \
+  --repo-root "$SOURCE_ROOT" --gh-repo "$TARGET_REPO" --mode weekly-prepare \
+  --prepare-root "$PREP_ROOT" --planning-date "$PLANNING_DATE" \
+  --target-ref "$TARGET_REF" --since "$SINCE" \
+  --initial-backfill all-open --overlap-hours "$OVERLAP_HOURS"
+```
+
+### 3. Preserved Reconciliation & Rollover (`--mode weekly-reconcile`)
+Preserves a complete stopped predecessor into a distinct new full clone at fresh canonical target:
+```bash
+python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root "$SOURCE_ROOT" --mode weekly-reconcile \
+  --prepare-root "$PREP_ROOT" --planning-date "$PLANNING_DATE" --target-ref "$TARGET_REF" \
+  --since "$SINCE" --initial-backfill all-open --overlap-hours "$OVERLAP_HOURS" \
+  --authority-file "$AUTHORITIES" --predecessor-root "$PRED_ROOT" \
+  --expected-predecessor-head "$PRED_HEAD"
+```
+
+> **Execution Hold & Safety Boundary:** Every accumulation and preparation result remains strictly **HELD** with `dispatch_allowed: false`. Local accounting, checks, and branch accumulation are observations and proposals, not execution authority. Marathon and Jog batch execution requires explicit operator review and separate authorization.

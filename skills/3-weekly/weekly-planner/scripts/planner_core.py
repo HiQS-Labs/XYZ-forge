@@ -533,16 +533,38 @@ def pivot_daily(weekly_plan_file: Path | None, repo_root: Path, gh_repo: str | N
     }
 
 
-def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue: int | None = None, fallback_mode: bool = False) -> dict:
+def resolve_gh_repo(repo_root: Path) -> str | None:
+    """Resolve GitHub owner/repo from git remote or gh CLI."""
+    try:
+        out = run_cmd(["git", "config", "--get", "remote.origin.url"], cwd=repo_root, check=False)
+        if out:
+            m = re.search(r"github\.com[:/]([\w.-]+/[\w.-]+?)(?:\.git)?$", out.strip())
+            if m:
+                return m.group(1)
+    except Exception:
+        pass
+    try:
+        out = run_cmd(["gh", "repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"], cwd=repo_root, check=False)
+        if out and "/" in out.strip():
+            return out.strip()
+    except Exception:
+        pass
+    return None
+
+
+def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue: int | None = None, fallback_mode: bool = False, since: str | None = None) -> dict:
     """
-    Ingest weekly signals:
+    Ingest weekly signals using the canonical issue discovery engine:
     - Mode A (Native XYZ): Query PRS 4-axis scores via releases_app.py roadmap list --json.
-    - Mode B (Fallback): Query open GitHub issues and generate pass1-intake.md and pass2-sharpened.md.
+    - Uses issue_intake.discover_weekly to ingest live, paginated GitHub issues & PRs.
+    - Merges live GitHub issues with PRS roadmap items.
+    - Mode B (Fallback): Full fallback to GitHub discovery when releases.db is unavailable.
     - Ingest team member domain assignments from team_issue or issue assignees.
     """
     temp_dir = ensure_temp_dir(repo_root)
     intake_mode = "fallback_scratch"
     roadmap_items = []
+    discovered_prs = []
     teammates: dict[str, dict] = {
         "Jose": {"domain": "Data/Pipeline", "tasks": []},
         "Matthew": {"domain": "NexMail/Calendar", "tasks": []},
@@ -557,10 +579,65 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
             cmd = ["python3", str(releases_cli), "roadmap", "list", "--json"]
             out = run_cmd(cmd, cwd=repo_root, check=True)
             if out:
-                roadmap_items = json.loads(out)
+                raw_items = json.loads(out)
+                roadmap_items = [
+                    item for item in raw_items
+                    if item.get("section") != "Completed" and item.get("state") != "CLOSED"
+                ]
                 intake_mode = "native_prs"
         except (subprocess.SubprocessError, json.JSONDecodeError, OSError, RuntimeError) as e:
             print(f"[WARN] Native PRS intake failed ({e}); falling back to GitHub issues intake.", file=sys.stderr)
+
+    target_repo = gh_repo or resolve_gh_repo(repo_root)
+    if target_repo:
+        try:
+            intake_module = load_issue_intake()
+            if not since:
+                since = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+            discovery = intake_module.discover_weekly(target_repo, since, repo_root)
+            discovered_issues = discovery.get("issues", [])
+            discovered_prs = discovery.get("prs", [])
+
+            existing_numbers = {
+                item.get("gh_number") or item.get("issue_number") or item.get("number")
+                for item in roadmap_items
+                if (item.get("gh_number") or item.get("issue_number") or item.get("number"))
+            }
+
+            new_gh_items = [
+                {
+                    "gh_number": iss.get("number"),
+                    "title": iss.get("title"),
+                    "labels": iss.get("labels", []),
+                    "assignees": [],
+                    "state": iss.get("state"),
+                    "url": iss.get("url"),
+                    "section": "Active Issues (Weekly Intake)",
+                }
+                for iss in discovered_issues
+                if iss.get("state") == "OPEN" and iss.get("number") not in existing_numbers
+            ]
+
+            if roadmap_items:
+                roadmap_items.extend(new_gh_items)
+                intake_mode = "canonical_intake_prs"
+            else:
+                roadmap_items = [
+                    {
+                        "gh_number": iss.get("number"),
+                        "title": iss.get("title"),
+                        "labels": iss.get("labels", []),
+                        "assignees": [],
+                        "state": iss.get("state"),
+                        "url": iss.get("url"),
+                        "section": "Open Issues (Weekly Intake)",
+                    }
+                    for iss in discovered_issues
+                    if iss.get("state") == "OPEN"
+                ]
+                intake_mode = "canonical_intake_gh"
+        except Exception as e:
+            print(f"[WARN] Canonical issue intake discovery encountered an issue ({e}); proceeding with existing items.", file=sys.stderr)
 
     if not roadmap_items:
         intake_mode = "fallback_scratch"
@@ -570,8 +647,8 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
             "--limit", "100",
             "--json", "number,title,labels,assignees,body,updatedAt"
         ]
-        if gh_repo:
-            cmd.extend(["-R", gh_repo])
+        if target_repo:
+            cmd.extend(["-R", target_repo])
         out = run_cmd(cmd, cwd=repo_root, check=True)
         raw_issues = json.loads(out) if out else []
         roadmap_items = [
@@ -585,25 +662,25 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
             for iss in raw_issues
         ]
 
-        # Generate pass1-intake.md and pass2-sharpened.md in temp/planner/
-        pass1_file = temp_dir / "pass1-intake.md"
-        pass1_lines = ["# Pass 1: Unfiltered Task Intake\n"]
-        for item in roadmap_items:
-            pass1_lines.append(f"- #{item.get('gh_number')} {item.get('title')}")
-        pass1_file.write_text("\n".join(pass1_lines) + "\n", encoding="utf-8")
+    # Generate pass1-intake.md and pass2-sharpened.md in temp/planner/
+    pass1_file = temp_dir / "pass1-intake.md"
+    pass1_lines = ["# Pass 1: Unfiltered Task Intake\n"]
+    for item in roadmap_items:
+        pass1_lines.append(f"- #{item.get('gh_number')} {item.get('title')}")
+    pass1_file.write_text("\n".join(pass1_lines) + "\n", encoding="utf-8")
 
-        pass2_file = temp_dir / "pass2-sharpened.md"
-        pass2_lines = ["# Pass 2: Sharpened & Prioritized Tasks\n"]
-        for item in roadmap_items[:20]:
-            pass2_lines.append(f"- [ ] **GH-{item.get('gh_number')}**: {item.get('title')}")
-        pass2_file.write_text("\n".join(pass2_lines) + "\n", encoding="utf-8")
+    pass2_file = temp_dir / "pass2-sharpened.md"
+    pass2_lines = ["# Pass 2: Sharpened & Prioritized Tasks\n"]
+    for item in roadmap_items[:20]:
+        pass2_lines.append(f"- [ ] **GH-{item.get('gh_number')}**: {item.get('title')}")
+    pass2_file.write_text("\n".join(pass2_lines) + "\n", encoding="utf-8")
 
     # Ingest team weekly issue if provided
     if team_issue:
         try:
             cmd = ["gh", "issue", "view", str(team_issue), "--json", "body,assignees,title"]
-            if gh_repo:
-                cmd.extend(["-R", gh_repo])
+            if target_repo:
+                cmd.extend(["-R", target_repo])
             out = run_cmd(cmd, cwd=repo_root, check=True)
             issue_data = json.loads(out)
             body = issue_data.get("body", "")
@@ -632,6 +709,7 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
         "intake_mode": intake_mode,
         "roadmap_items": roadmap_items,
         "teammate_assignments": teammates,
+        "discovered_prs": discovered_prs,
     }
 
 
@@ -706,8 +784,20 @@ def format_weekly_markdown(date_str: str, plan_data: dict) -> str:
             lines.append("- *No scheduled tasks assigned.*")
         lines.append("")
 
+    tasks = plan_data.get("tasks", [])
+    if tasks:
+        lines.extend([
+            "## 4. Active Issues (Intake Queue)",
+            ""
+        ])
+        for t in tasks[:25]:
+            gh_num = t.get("gh_number") or t.get("number")
+            section = f" [{t.get('section')}]" if t.get("section") else ""
+            lines.append(f"- [ ] **GH-{gh_num}**: {t.get('title')}{section}")
+        lines.append("")
+
     lines.extend([
-        "## 4. Adversarial Northstars Audit",
+        "## 5. Adversarial Northstars Audit",
         ""
     ])
 
@@ -1894,6 +1984,7 @@ def main():
     parser.add_argument("--team-issue", "--issue", dest="team_issue", type=int, help="Team weekly issue number for focus assignments")
     parser.add_argument("--hours", type=int, default=36, help="Lookback interval in hours for daily mode")
     parser.add_argument("--fallback", action="store_true", help="Force scratch markdown fallback intake")
+    parser.add_argument("--create-issue", action="store_true", help="Publish the generated weekly plan outline as a GitHub issue")
 
     parser.add_argument("--since", help="UTC/offset ISO timestamp for held weekly intake")
     parser.add_argument("--intake-file", help="Previous complete weekly-intake JSON; carry every member")
@@ -2004,7 +2095,11 @@ def main():
         return
 
     # Weekly mode
-    intake = ingest_weekly_intake(repo_root, args.gh_repo, team_issue=args.team_issue, fallback_mode=args.fallback)
+    target_repo = args.gh_repo or resolve_gh_repo(repo_root)
+    intake = ingest_weekly_intake(repo_root, target_repo, team_issue=args.team_issue, fallback_mode=args.fallback, since=args.since)
+    if intake.get("discovered_prs"):
+        prs = intake["discovered_prs"]
+        sequence = detect_merge_sequence(prs)
     plan_payload = {
         "prs": prs,
         "roadmap_items": intake.get("roadmap_items", []),
@@ -2027,6 +2122,19 @@ def main():
     out_md = temp_dir / f"WEEKLY-PLAN-{date_str}.md"
     out_md.write_text(format_weekly_markdown(date_str, result), encoding="utf-8")
     print(f"Weekly plan outline generated at:\n  - JSON: {out_json}\n  - Markdown: {out_md}")
+
+    if args.create_issue:
+        title = f"Weekly Plan Outline — {date_str}"
+        cmd = ["gh", "issue", "create", "--title", title, "--body-file", str(out_md)]
+        if target_repo:
+            cmd.extend(["-R", target_repo])
+        print(f"Publishing weekly plan GitHub issue for {target_repo or 'repository'}...")
+        res = subprocess.run(cmd, capture_output=True, text=True, cwd=repo_root)
+        if res.returncode == 0:
+            issue_url = res.stdout.strip()
+            print(f"Weekly plan issue created: {issue_url}")
+        else:
+            print(f"[ERROR] Failed to create issue: {res.stderr.strip()}", file=sys.stderr)
 
 
 if __name__ == "__main__":

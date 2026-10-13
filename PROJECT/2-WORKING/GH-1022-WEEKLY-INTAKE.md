@@ -38,7 +38,7 @@ goal: Implement shared weekly intake, bounded canonical planning and exact appro
 Outcome: complete issue observations shared by weekly and 10days, without importing
 10days' auto-fire policy. Smallest viable staged bet: one harness-owned issue_intake.py,
 thin existing shell adapters, and an explicit read-only weekly-intake preview in the
-existing planner core. The new weekly skill describes the held preparation entry point.
+existing planner core. The unified weekly-planner skill describes both the canonical discovery outline and held preparation entry points.
 This PR delivers shared discovery and held local accumulation; umbrella #1022 remains incomplete. The entire workflow is held
 until branch reconciliation and execution safeguards ship and receive separate review.
 

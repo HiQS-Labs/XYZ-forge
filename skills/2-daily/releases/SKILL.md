@@ -81,7 +81,7 @@ check --merge-base BASE_SHA --merge-target TARGET_SHA --expected-head HEAD_SHA
 parents in a full clone. It does not invoke ordinary check's lock/recovery and does
 not prove fresh remote state. Current identical schema and conservative disjoint
 roadmap changes/append-only histories are supported; unknown or conflicting rows
-hold. See the [weekly contract](../../3-weekly/weekly/SKILL.md#canonical-local-merge-prerequisite)
+hold. See the [weekly-planner contract](../../3-weekly/weekly-planner/SKILL.md#held-branch-accumulation--jogmarathon-preparation-gh-1022)
 for source validity, preservation and exclusions.
 
 Explicit `XYZ_WORK_CONNECTORS=0` and `--apply` opt into local canonical staged
