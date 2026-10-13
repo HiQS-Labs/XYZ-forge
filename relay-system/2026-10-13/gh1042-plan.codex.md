@@ -91,3 +91,11 @@ Commit: none
 - [Informational — evidence limits] Verify-tier inventory returned all 84 projects with no index for this worktree. XYZ-forge coverage reports generation 2026-09-01T15:54:30Z, changed marathon_drive/jog_run metadata, untracked relay_attest and partial marathon.sh line 351; relay_attest graph search returned zero symbols. Current source was read directly, including the flagged shell range. No completeness claim relies on the stale graph. Ratings sums 275/260 are consistent; live issue/duplicate/RELEASES assertions remain producer evidence.
 
 No blocking textual plan finding. This approval covers the implementation plan only; implementation correctness and merge readiness remain pending.
+
+### Attestation · relay-drive — 2026-10-13T15:37:20Z
+task: RELAY-GH1042-PLAN-20261013-3
+reviewer: codex
+status: Approved
+reviewed-head: a048be42cfaf938a95734e3f2301d5033a5ff518
+added-range: 12213+3653
+added-sha256: e98a0739464fa0128d337bd498348fee4f0a01bfe8b22dd9ac795f3cc0941f8e
