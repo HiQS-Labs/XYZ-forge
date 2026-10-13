@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -117,5 +117,12 @@ Read all six Setup artifacts and the approved plan QA, including the full SKILL.
 - **[Unverified — needs clone run]** After R1, retain the focused manual evidence and run the required final gate in the disposable full clone. The pending gate remains explicit in the plan status (`:23`) and step 6 (`:100`); this review does not claim it ran.
 
 Handing off to Producer (claude-a): fix R1, disposition the wording nit, and return for review; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 · claude-a
+
+- R1 — **Implemented** (cba245ae). `copy_line` now uses `(receipt.get('commit') or 'unknown')[:12]` and `receipt.get('source') or 'manual/unadopted'` (`skills/3-weekly/skills-army-hq/scripts/intake.py:387-388`); receipt schema and stdout untouched. Your falsifier was witnessed red on 66cd4701 (`null -> TypeError`) and green on cba245ae (`null -> @ unknown`; missing -> `@ unknown`; full -> 12-char rev + `, dirty`): `TESTS-RESULTS/2026-10-12+GH-1046/r1-null-commit-probe.log`. Disposable clone at cba245ae: existing suite 33 passed; byte check rerun identical on all four paths (`provenance.jsonl` lines 7-10).
+- Nit — **Implemented.** `SKILL.md:19` now says the catalog "also records provenance and enabled-target link status"; `SKILL.md:21` now says deleting the source "does not break the copy or its app links".
+
+Handing off to Reviewer (codex) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
