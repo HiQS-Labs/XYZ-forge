@@ -1,0 +1,252 @@
+{
+  "qualified_main": "4895148683120b8b6f808d4dcd66267a3754fd2c",
+  "tested_candidate": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+  "carrier": "separate evidence-only commit, not qualification target",
+  "files": [
+    {
+      "path": "MAIN-QUALIFICATION.json",
+      "bytes": 1244,
+      "sha256": "35cdfacc92bcf595778fa4bb28415cb22482cbfe9e997bd5ccaf437113e580a9"
+    },
+    {
+      "path": "SUMMARY.md",
+      "bytes": 1823,
+      "sha256": "9e3f3f9c1f7fab7dad0818c8deee502771de2a055e5d954a70da725ed739c8ed"
+    },
+    {
+      "path": "actual-candidate-commit.json",
+      "bytes": 1210,
+      "sha256": "b782bd1401ce4c2fc7e10b6b733f1e272dfb5d6487dff6195342a5d8762fbebe"
+    },
+    {
+      "path": "actual-main-commit.json",
+      "bytes": 2712,
+      "sha256": "a68f7a9618722cc50231843b635d8c4c65543ec40a5c3c758e038600200fe17a"
+    },
+    {
+      "path": "carrier-pr.json",
+      "bytes": 5423,
+      "sha256": "82973622141d7c3ba1b59422f2b3470ed23cba9f5141d5210d1e0e48ea65d2a2"
+    },
+    {
+      "path": "carrier-publish-gate.log",
+      "bytes": 33848,
+      "sha256": "7d5e542433bf9bad256c3c89902a66af3801316ba9642fea8ada66193e3e13e4"
+    },
+    {
+      "path": "current-main-ref.json",
+      "bytes": 336,
+      "sha256": "93a5407d7969c96155059d38942aa96e4675a04d54cf3a0af0240c965bd05f05"
+    },
+    {
+      "path": "finish-main.py",
+      "bytes": 2660,
+      "sha256": "25fb221da74b61c0a1481ca5dc9c98f46c88ae666c208311231fdd1668d09da9"
+    },
+    {
+      "path": "main-boundary.log",
+      "bytes": 1551978,
+      "sha256": "99b3b267eea944e265cb9548498e95092d9c46444492fa29a043997748775438"
+    },
+    {
+      "path": "main-ci-final.json",
+      "bytes": 12801,
+      "sha256": "8726a083f775fc185020a59dbd112d7cdac9decabd9e4fb9844c95545e76e516"
+    },
+    {
+      "path": "main-jobs-final.json",
+      "bytes": 5784,
+      "sha256": "29481fbb9cfe474ce611448c195e27117ce2f4f60998a7aabc073aee8c97c0fc"
+    },
+    {
+      "path": "main-merge-proof.json",
+      "bytes": 392,
+      "sha256": "9d4b7d1a10fa06425c265cf06e2011fd083403d05a50f54f4c6468fa96fb2e0c"
+    },
+    {
+      "path": "pages-diagnosis/DIAGNOSIS.md",
+      "bytes": 3052,
+      "sha256": "da9d080ae0c03a180b440bc822c703ddf5b26a72b9e64dffab205a02ae432fdc"
+    },
+    {
+      "path": "pages-diagnosis/artifacts.json",
+      "bytes": 709,
+      "sha256": "b2a57f26fd4ac668a2236e57af47f3939571251e684e30297f1534d1326e10e8"
+    },
+    {
+      "path": "pages-diagnosis/artifacts.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pages-diagnosis/branch-policies.json",
+      "bytes": 143,
+      "sha256": "807aa2228375bf13d5262c453553dcdfffb07270ec3571d1fe637b27f6d7dce6"
+    },
+    {
+      "path": "pages-diagnosis/branch-policies.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pages-diagnosis/build-annotations.json",
+      "bytes": 423,
+      "sha256": "d49f14cb7ca65d6ae148f0001e450c30845372caacca46c761da9417b69988f9"
+    },
+    {
+      "path": "pages-diagnosis/build-annotations.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pages-diagnosis/deploy-annotations.json",
+      "bytes": 699,
+      "sha256": "f2223ea613dff0ae0d93620cb5b5da00b4e511bb8b7954601520225c66eee397"
+    },
+    {
+      "path": "pages-diagnosis/deploy-annotations.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pages-diagnosis/environment.json",
+      "bytes": 546,
+      "sha256": "2184efb941eebbe20d8aef7ee1dfdba98ab15f497b6ba5ff35601ee4d17e4e16"
+    },
+    {
+      "path": "pages-diagnosis/environment.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pages-diagnosis/evidence-manifest.json",
+      "bytes": 5541,
+      "sha256": "7a66e5504bacd6b794eff8deef4a2446070913b9435fbc5977c20140b52da83d"
+    },
+    {
+      "path": "pages-diagnosis/existing-site-response.html",
+      "bytes": 13129,
+      "sha256": "3935607f63c4973f1081c822ed94ec5268ea1773ce3c7a6f4f188d410be42040"
+    },
+    {
+      "path": "pages-diagnosis/existing-site-response.json",
+      "bytes": 997,
+      "sha256": "b9f233d5c152f5c56d528eee060820a905b0f5a77bb865b09f9f473858602b4f"
+    },
+    {
+      "path": "pages-diagnosis/jobs.json",
+      "bytes": 3085,
+      "sha256": "1da6e58020867ca9a2214e7aa058bb26d1c29f459c2fecd93a25e30416753c29"
+    },
+    {
+      "path": "pages-diagnosis/jobs.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pages-diagnosis/log-1_build.txt",
+      "bytes": 22232,
+      "sha256": "0e13330646a354df85e0e4491d0513f14a84154e9292c08318786f3d55b9211b"
+    },
+    {
+      "path": "pages-diagnosis/log-build__10_Post Run actions_checkout@v7.txt",
+      "bytes": 4152,
+      "sha256": "b55f004e3f730c52467b19114cd80b5374b4e8fac74ac1875e6723c7b3d38304"
+    },
+    {
+      "path": "pages-diagnosis/log-build__11_Complete job.txt",
+      "bytes": 61,
+      "sha256": "9325a4af28c059dd61c29136b48962416d59fa4796817c3b97969975d5027112"
+    },
+    {
+      "path": "pages-diagnosis/log-build__1_Set up job.txt",
+      "bytes": 2428,
+      "sha256": "7475ce3814fb7a299c3980c0a4694f1476b53fa256105db0969fbddf2a11f6db"
+    },
+    {
+      "path": "pages-diagnosis/log-build__2_Run actions_checkout@v7.txt",
+      "bytes": 7299,
+      "sha256": "881dc317344e35de56a5bbee95fe76bd3fdd6ec7c540d22d835f3422c211192a"
+    },
+    {
+      "path": "pages-diagnosis/log-build__3_Run actions_setup-python@v7.txt",
+      "bytes": 618,
+      "sha256": "25d3dae54ad398e3f4114df4189f40bd64e8cf0f95aaab961368c96ced0ed139"
+    },
+    {
+      "path": "pages-diagnosis/log-build__4_Regenerate data-driven pages from the committed ledgers.txt",
+      "bytes": 1175,
+      "sha256": "a5d8e25590fda278075398a090cdfb7d0f30d2a4c39ca6e2ec678d33754ecee1"
+    },
+    {
+      "path": "pages-diagnosis/log-build__5_Run actions_upload-pages-artifact@v5.txt",
+      "bytes": 6470,
+      "sha256": "5e35b79644a3210e2edbb73b4c885116f348ee0a86ccc2be403bb37e757a1d24"
+    },
+    {
+      "path": "pages-diagnosis/log-build__9_Post Run actions_setup-python@v7.txt",
+      "bytes": 50,
+      "sha256": "ebb6aa1f6bcc330e6ad702ffbb72b1c815c7e578c481cdfed7f85c7112f6d327"
+    },
+    {
+      "path": "pages-diagnosis/log-build__system.txt",
+      "bytes": 571,
+      "sha256": "68c60f921ece89beff4d8f2642cc971b3fe5dc330603de0d56386b1f0cedf7d7"
+    },
+    {
+      "path": "pages-diagnosis/pages.json",
+      "bytes": 333,
+      "sha256": "f75dfd21f3ba3ee91ff55c4c7bb4c325f5649afeb3ab1ce443f6f091509833eb"
+    },
+    {
+      "path": "pages-diagnosis/pages.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pages-diagnosis/pages.yml",
+      "bytes": 1557,
+      "sha256": "f33d2e1d8dd9de39fcd830cbb62e16510f5e3c3f20c05315d802f387520054aa"
+    },
+    {
+      "path": "pages-diagnosis/run-logs.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pages-diagnosis/run-logs.zip",
+      "bytes": 13404,
+      "sha256": "d64752fbf7335ad8ea3b52ba110ef4fe642c86b2fc237f22e03c71580fb98958"
+    },
+    {
+      "path": "pages-diagnosis/run.json",
+      "bytes": 12806,
+      "sha256": "998a5c3c27cd6a828482ee25edfa09a1be5af57ad5a9825147d7c237ec4e197d"
+    },
+    {
+      "path": "pages-diagnosis/run.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pages-diagnosis/workflow.json",
+      "bytes": 3209,
+      "sha256": "cfac1ce6a2167761b0da7399d9dea337983f9b71f707eced02e664905c813db4"
+    },
+    {
+      "path": "pages-diagnosis/workflow.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "promotion-merged.json",
+      "bytes": 287,
+      "sha256": "d82f5bda8070717a97a4f3b582a4825cab6e9c8f96327ccc736510fbe5893a5f"
+    },
+    {
+      "path": "review-comment-verification.json",
+      "bytes": 178,
+      "sha256": "40249fe0d189a62f831c89d3f4726a763553377a0c456cf1900b2a101285d247"
+    }
+  ]
+}

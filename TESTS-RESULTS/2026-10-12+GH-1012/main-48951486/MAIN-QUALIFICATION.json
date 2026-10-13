@@ -1,0 +1,31 @@
+{
+  "qualified_main": "4895148683120b8b6f808d4dcd66267a3754fd2c",
+  "tested_candidate": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+  "last_good_main": "a076b1b117a68252dc3d9d1c4901b0c31fcb4db3",
+  "main_parents": [
+    "a076b1b117a68252dc3d9d1c4901b0c31fcb4db3",
+    "af50c205e3f04f3fc6a02ac6c402f2013123b127"
+  ],
+  "main_tree_matches_candidate": true,
+  "run": 38326961087,
+  "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38326961087",
+  "macos_job": 115067757430,
+  "macos_labels": [
+    "macos-latest"
+  ],
+  "macos_conclusion": "success",
+  "full_validator_step": "success",
+  "smoke_conclusion": "success",
+  "boundary_output": [
+    "2026-10-13T01:26:49.1819230Z MACOS-BOUNDARY: green 4895148683120b8b6f808d4dcd66267a3754fd2c"
+  ],
+  "raw_log_bytes": 1551978,
+  "raw_log_sha256": "99b3b267eea944e265cb9548498e95092d9c46444492fa29a043997748775438",
+  "current_main": "4895148683120b8b6f808d4dcd66267a3754fd2c",
+  "current_main_matches": true,
+  "limit": "qualifies this immutable main SHA only; declared live-agent exclusion, no installed/provider pilot proof; canonical issue/plan write remains separately denied",
+  "validator_passed": 409,
+  "validator_total": 409,
+  "validator_failed": 0,
+  "retry_ladder_suites": 0
+}
