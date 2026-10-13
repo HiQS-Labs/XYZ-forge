@@ -9,3 +9,7 @@ Existing gh491, gh505 and gh642 suites passed at `0275a7a0`. Marathon-drive firs
 Plan QA: third round Approved, harness exit0. Earlier two textual approvals were structurally rejected (missing Log; verdict spelling); neither counts. Final independent QA is pending. No new test suites, registry entries or Bash changes.
 
 Legacy limitation: records with no protected completion field remain strict current-head checks. No automatic inference/backfill of old divergent completion; intentional explicit retry re-reviews it.
+
+## Final legacy-force compatibility checkpoint
+
+Source revision `9b392b358189545b0d077ca0cc3b9a51d778e8ba`: 34 expected manual outcomes passed, including explicit --force rebuilding a legacy divergent approval on a fresh token; plain legacy recovery still refuses. Marathon-drive passed again, clone identity unchanged. The prior source's explicit legacy-force halt was recorded as a red compatibility control. New immutable receipts are in `after-legacy-force/`; prior revision evidence above remains retained. Final QA round1 passed for the preceding source; round2 and publication gate are required for this changed source.

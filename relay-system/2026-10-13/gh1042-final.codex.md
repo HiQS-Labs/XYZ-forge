@@ -1,7 +1,7 @@
 # RELAY · GH1042 + GH1045 final implementation QA
-NEXT: —
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: codex (Reviewer)
+STATUS: Open
+ROUND: 2 / 3
 
 ## Setup
 Producer: Codex outer session. Reviewer: independent Codex CLI through shipped relay.
@@ -21,7 +21,7 @@ Open questions: Can any source drift before initial stamp incorrectly become sat
 Commit: e5564d7a.
 
 ## ▶ TAKE YOUR TURN — codex
-Append `### Round 1 · Reviewer · <timestamp>` with a literal line `VERDICT: PASS` / `VERDICT: FAIL` / `VERDICT: PARKED`, nonempty `Basis: ...`, `swept file: yes/no`, cited graded findings and `Commit: none`. The machine verdict value MUST be exactly PASS, FAIL or PARKED; NEVER use Approved as that line's value. For PASS set header STATUS: Approved and NEXT: — and mark the pinned tick token done. For findings set STATUS: Open, NEXT: producer and release token to producer. Do not edit old blocks except header fields. Only this thread may change; no git or suites. Review the actual committed source and retained evidence. Three-round cap applies.
+Append `### Round 1 · Reviewer · <timestamp>` with a literal line `VERDICT: PASS` / `VERDICT: FAIL` / `VERDICT: PARKED`, nonempty `Basis: ...`, `swept file: yes/no`, cited graded findings and `Commit: none`. The machine verdict value MUST be exactly PASS, FAIL or PARKED; NEVER use Approved as that line's value. For PASS set header STATUS: Approved and NEXT: codex (Reviewer) and mark the pinned tick token done. For findings set STATUS: Open, NEXT: producer and release token to producer. Do not edit old blocks except header fields. Only this thread may change; no git or suites. Review the actual committed source and retained evidence. Three-round cap applies.
 
 ### Round 1 · Reviewer · 2026-10-13T15:55:16.579662+00:00
 VERDICT: PASS
@@ -53,3 +53,10 @@ status: Approved
 reviewed-head: 8077b03ac6235498bd6e2e098e95a9fae59b1127
 added-range: 3777+4331
 added-sha256: 23d622ed60ec8d3c324adcdb9b399888d0b6584514f21bc54e26fa87f3f504d7
+
+### Round 2 · Producer
+Round1 approved source7128b496 with driver exit0. Subsequent producer control found legacy --force had lost its existing fresh rebuild escape: exit4/no dispatch. Implemented five-line force fallthrough only on an unsatisfied terminal approval; this NEVER satisfies or merges it. Normal render/seed/build/review must run on a fresh force token. Plain recovery still refuses. Within approved plan step1's genuinely unsatisfied force case.
+Verification: source9b392b35: all34 manual outcomes pass; existing Marathon suite passes; identity unchanged. New immutable raw receipts in TESTS-RESULTS/2026-10-13+GH-1042/after-legacy-force/ and appended provenance. Prior evidence retained. Full gate remains pending.
+
+## ▶ TAKE YOUR TURN — codex (round 2 current instructions)
+Review current committed source against development b9f07ea5, focusing on the newly preserved unsatisfied-force rebuild and unchanged refusal/satisfaction/merge boundaries, and reconcile all prior implementation findings against actual source. Read the new current-revision manual/focused evidence. Keep reviewer writes ONLY in this thread; no git, suites or executable fixtures. Append Round2 Reviewer, exact literal VERDICT: PASS/FAIL/PARKED, nonempty Basis, swept file: yes/no, cited findings and Commit: none. For PASS set STATUS: Approved and NEXT: — and mark token done. Do not write Approved as a machine verdict value. Three-round budget, this is round2. Old round1 approval is not final for changed code.

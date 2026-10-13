@@ -82,3 +82,5 @@ Source at 7128b496 implements the approved plan. Existing post-approve hooks rev
 Plan QA completed with driver exit0 on round3. Round1 and round2 were structurally rejected due to the producer's scaffold/skill-runtime verdict mismatch; retained in the relay, not counted as approvals. Final QA and full route3 publication gate remain pending; this task is not shipped.
 
 Final QA round1 approved source7128b496 with driver exit0. A subsequent producer compatibility check found --force on a legacy divergent approval had lost GH642's rebuild escape (exit4/no dispatch). Restored explicit force fallthrough to fresh-token rebuild, never satisfaction; plain recovery still refuses. This narrow preservation is covered by plan step1 (unsatisfied force allocates a fresh token). Final QA round2 will review the changed source and new control; round1 approval is stale for that source.
+
+At source9b392b35, all34 manual expected outcomes and the existing Marathon suite pass; identity before/after remains unchanged. New receipts in TESTS-RESULTS/2026-10-13+GH-1042/after-legacy-force/.
