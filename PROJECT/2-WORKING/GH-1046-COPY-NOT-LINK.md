@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved by Codex in round 2 (`relay-system/2026-10-12/gh1046-plan-qa.md`, attested at b86dcf60); promoted to 2-WORKING. | Implement steps 1-5, verify per step 6 in a disposable clone, final relay QA, PR. |
+| Steps 1-5 implemented (5b5f7bb); step 6 verified in a disposable clone (`TESTS-RESULTS/2026-10-12+GH-1046/`: suite 33 passed, stdout byte-identical on 4 paths, 3 red controls witnessed). Plan QA: Codex approved r2. | Final Codex relay QA (`relay-system/2026-10-12/gh1046-final-qa.md`), tier-2 gate on the final commit, PR. |
 
 ## Ask
 
