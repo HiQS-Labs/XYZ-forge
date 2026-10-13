@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Steps 1-5 implemented (5b5f7bb); step 6 verified in a disposable clone (`TESTS-RESULTS/2026-10-12+GH-1046/`: suite 33 passed, stdout byte-identical on 4 paths, 3 red controls witnessed). Plan QA: Codex approved r2. | Final Codex relay QA (`relay-system/2026-10-12/gh1046-final-qa.md`), tier-2 gate on the final commit, PR. |
+| Implemented (5b5f7bb, R1 fix cba245ae); verified in a disposable clone (`TESTS-RESULTS/2026-10-12+GH-1046/`). Plan QA: Codex approved r2. Final QA: Codex approved r2 (`relay-system/2026-10-12/gh1046-final-qa.md`, attested at 602be59e). | Tier-2 gate on the final commit, push, ready PR against `development`; merge + reconciliation via merge-cleanup. |
 
 ## Ask
 
