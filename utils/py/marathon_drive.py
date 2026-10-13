@@ -2737,6 +2737,9 @@ relay-file: {rel_relay}
                 sys.exit(4)
             return cand, rec
         candidate, record = bind_candidate(f"phase {args.phase_id} success")
+        # Approval precedes the post-approve hook (GH-273); completion is stamped only later.
+        subprocess.run([tick_bin, "log", "marathon.phase.approved", attested_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
         refresh_remote_tracking_ref()
         if args.post_approve_cmd and not historical:
             log(f"phase approved — running post-approve command: {args.post_approve_cmd}")
@@ -2757,8 +2760,6 @@ relay-file: {rel_relay}
                 escalate("phase-completion-write-failed", 0)
                 sys.exit(4)
         _RESULT["historical_completion"] = historical
-        subprocess.run([tick_bin, "log", "marathon.phase.approved", attested_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
         _RESULT["token"] = attested_task
         _RESULT["reviewed_candidate"] = candidate
         _RESULT["reviewed_head"] = record["reviewed_head"]
