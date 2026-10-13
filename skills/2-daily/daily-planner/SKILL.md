@@ -41,7 +41,8 @@ Before presenting a status change, recheck current sources and the latest explic
 
 ### Step 3: Re-Sequence & Promote Unblocked Work
 
-- Open PRs are re-sorted topologically into the 4 phases (Ready to Land, Blockers to Fix, Needs Rebase, In Review) with CI status check validation (`statusCheckRollup`).
+- Open PRs are re-sorted topologically into the 5 phases (Ready to Land, Ready Pending Undraft, Needs Rebase, In Review, and Held Drafts & Evidence Carriers) with CI status check validation (`statusCheckRollup`).
+- Held drafts and evidence carriers (e.g. test qualification receipts, held spikes) are cleanly isolated in Phase 5 with reason annotations so the daily runner does not mistake them for actionable blockers or merges.
 - Newly unblocked dependent tasks are promoted to the top of today's operator queue.
 - If a task is waiting on a business decision, the **Provisional Decision Protocol** is applied (fallback default + record on canonical tracking issue).
 

@@ -51,6 +51,62 @@ def ensure_temp_dir(repo_root: Path) -> Path:
     return planner_temp
 
 
+def get_release_milestones(repo_root: Path) -> dict:
+    """Fetch release milestones from releases_app.py next if available."""
+    releases_cli = repo_root / "utils" / "py" / "releases_app.py"
+    if not releases_cli.exists():
+        return {}
+    try:
+        out = run_cmd(["python3", str(releases_cli), "next"], cwd=repo_root, check=False)
+        lines = [line.strip() for line in out.splitlines() if line.strip()]
+        next_release = None
+        upcoming = []
+        for line in lines:
+            if line.startswith("NEXT:"):
+                next_release = line[len("NEXT:"):].strip()
+            elif line.startswith("then:"):
+                upcoming.append(line[len("then:"):].strip())
+
+        overdue_note = ""
+        if next_release:
+            match = re.search(r"target=(\d{4}-\d{2}-\d{2})", next_release)
+            if match:
+                target_dt = datetime.strptime(match.group(1), "%Y-%m-%d").date()
+                today = datetime.now(timezone.utc).date()
+                if target_dt < today:
+                    days_overdue = (today - target_dt).days
+                    overdue_note = f" ({days_overdue} days overdue)"
+
+        return {
+            "next_release": next_release,
+            "overdue_note": overdue_note,
+            "upcoming_releases": upcoming,
+            "raw": out,
+        }
+    except Exception as e:
+        print(f"[WARN] Failed to query releases_app.py next: {e}", file=sys.stderr)
+        return {}
+
+
+def get_open_issues(repo_root: Path, gh_repo: str | None = None, limit: int = 500) -> dict[int, dict]:
+    """Fetch all open issues from GitHub with metadata to ground planning in live state."""
+    cmd = [
+        "gh", "issue", "list",
+        "--state", "open",
+        "--limit", str(limit),
+        "--json", "number,title,labels,assignees,body,updatedAt"
+    ]
+    if gh_repo:
+        cmd.extend(["-R", gh_repo])
+    try:
+        out = run_cmd(cmd, cwd=repo_root, check=True)
+        raw_issues = json.loads(out) if out else []
+        return {iss["number"]: iss for iss in raw_issues if "number" in iss}
+    except Exception as e:
+        print(f"[WARN] Failed to fetch live open issues via gh issue list: {e}", file=sys.stderr)
+        return {}
+
+
 def eval_ci_status(pr: dict) -> str:
     """
     Evaluate statusCheckRollup for a PR.
@@ -105,7 +161,7 @@ def get_open_prs(repo_root: Path, gh_repo: str | None = None, limit: int = 300) 
         "gh", "pr", "list",
         "--state", "open",
         "--limit", str(limit),
-        "--json", "number,title,author,headRefName,baseRefName,mergeable,reviewDecision,reviews,updatedAt,statusCheckRollup,files,body"
+        "--json", "number,title,author,headRefName,baseRefName,mergeable,reviewDecision,reviews,updatedAt,statusCheckRollup,files,body,isDraft"
     ]
     if gh_repo:
         cmd.extend(["-R", gh_repo])
@@ -152,24 +208,64 @@ def detect_merge_sequence(prs: list[dict]) -> dict:
         pr_dependencies[num] = deps
 
     phase_ready = []
+    phase_ready_pending_undraft = []
     phase_blocker_fixes = []
     phase_needs_rebase = []
+    phase_held_or_evidence = []
     phase_in_review = []
 
     for pr in prs:
         decision = (pr.get("reviewDecision") or "").upper()
         mergeable = (pr.get("mergeable") or "").upper()
+        is_draft = bool(pr.get("isDraft"))
         ci = eval_ci_status(pr)
+        title = pr.get("title") or ""
+        body = pr.get("body") or ""
+        combined_text = f"{title} {body}".lower()
+
+        # Detect explicit holds or evidence carrier status
+        is_held = False
+        hold_reason = ""
+        is_evidence_carrier = False
+
+        if re.search(r"\bhold\b", title, re.IGNORECASE):
+            is_held = True
+            hold_reason = "Explicit HOLD in title"
+        elif re.search(r"leave (?:this draft )?unmerged|leave unmerged", combined_text):
+            is_held = True
+            is_evidence_carrier = True
+            hold_reason = "Evidence carrier (leave unmerged)"
+        elif re.search(r"not an (?:additional )?authorized merge", combined_text):
+            is_held = True
+            is_evidence_carrier = True
+            hold_reason = "Evidence retention (not an authorized merge)"
+        elif re.search(r"prerequisites? required|live-pilot", combined_text):
+            is_held = True
+            hold_reason = "Prerequisites required"
+        elif re.search(r"review authority limit|fail/escalated", combined_text):
+            is_held = True
+            hold_reason = "Review authority limit / unresolved escalation"
+
+        if re.search(r"qualification receipts?|reconciliation receipts?|evidence carrier", combined_text):
+            is_evidence_carrier = True
+
         pr_with_ci = dict(pr)
         pr_with_ci["ci_status"] = ci
+        pr_with_ci["is_held"] = is_held
+        pr_with_ci["hold_reason"] = hold_reason
+        pr_with_ci["is_evidence_carrier"] = is_evidence_carrier
         pr_with_ci["dependencies"] = sorted(list(pr_dependencies.get(pr.get("number"), set())))
 
-        if decision == "CHANGES_REQUESTED" or ci == "FAILURE":
+        if is_held or is_evidence_carrier:
+            phase_held_or_evidence.append(pr_with_ci)
+        elif decision == "CHANGES_REQUESTED" or ci == "FAILURE":
             phase_blocker_fixes.append(pr_with_ci)
         elif mergeable == "CONFLICTING":
             phase_needs_rebase.append(pr_with_ci)
-        elif decision == "APPROVED" and mergeable == "MERGEABLE" and ci in {"SUCCESS", "NONE"}:
+        elif decision == "APPROVED" and mergeable == "MERGEABLE" and ci in {"SUCCESS", "NONE"} and not is_draft:
             phase_ready.append(pr_with_ci)
+        elif is_draft and mergeable == "MERGEABLE" and ci in {"SUCCESS", "NONE"}:
+            phase_ready_pending_undraft.append(pr_with_ci)
         else:
             phase_in_review.append(pr_with_ci)
 
@@ -209,15 +305,19 @@ def detect_merge_sequence(prs: list[dict]) -> dict:
     return {
         "status_phases": {
             "ready_to_land": sorted_ready,
+            "ready_pending_undraft": phase_ready_pending_undraft,
             "blockers_to_fix": phase_blocker_fixes,
             "needs_rebase": phase_needs_rebase,
+            "evidence_carriers_or_held": phase_held_or_evidence,
             "in_review_or_wip": phase_in_review,
         },
         "topological_merge_sequence": sorted_ready,
         # Backward-compatible aliases at root
         "ready_to_land": sorted_ready,
+        "ready_pending_undraft": phase_ready_pending_undraft,
         "blockers_to_fix": phase_blocker_fixes,
         "needs_rebase": phase_needs_rebase,
+        "evidence_carriers_or_held": phase_held_or_evidence,
         "in_review_or_wip": phase_in_review,
     }
 
@@ -310,6 +410,14 @@ def audit_adversarial(plan: dict, prs: list[dict] | None = None) -> dict:
         pr_num = pr.get("number")
         if pr_num is None:
             continue
+        # Skip evidence carriers, receipts, and doc PRs from implementation duplication flags
+        body = pr.get("body") or ""
+        combined = f"{title} {body}".lower()
+        if pr.get("is_evidence_carrier") or any(k in combined for k in ["leave this draft unmerged", "leave unmerged", "qualification receipts", "evidence carrier"]):
+            continue
+        if title.lower().startswith("docs("):
+            continue
+
         for match in re.finditer(r"(?i)(?:fixes|closes|resolves|gh-|#)(\d+)", title):
             issue_id = match.group(1)
             seen_issues.setdefault(issue_id, []).append(pr_num)
@@ -319,7 +427,7 @@ def audit_adversarial(plan: dict, prs: list[dict] | None = None) -> dict:
         findings.append({
             "severity": "MEDIUM",
             "type": "TASK_DUPLICATION",
-            "message": f"Multiple PRs targeting identical issue/task: {'; '.join(dup_summary)}."
+            "message": f"Multiple implementation PRs targeting identical issue/task: {'; '.join(dup_summary)}."
         })
 
     return {
@@ -498,17 +606,26 @@ def pivot_daily(weekly_plan_file: Path | None, repo_root: Path, gh_repo: str | N
 def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue: int | None = None, fallback_mode: bool = False) -> dict:
     """
     Ingest weekly signals:
+    - Grounding: Validates open issues against live GitHub state (drops closed/retired/foreign issues).
+    - Release Milestone Anchor: Ingests next unshipped release and upcoming milestones from releases_app.py next.
     - Mode A (Native XYZ): Query PRS 4-axis scores via releases_app.py roadmap list --json.
     - Mode B (Fallback): Query open GitHub issues and generate pass1-intake.md and pass2-sharpened.md.
-    - Ingest team member domain assignments from team_issue or issue assignees.
+    - Grounded Assignment: Assigns issues based on explicit GitHub assignees or --team-issue; leaves unassigned tasks in triage queue.
     """
     temp_dir = ensure_temp_dir(repo_root)
     intake_mode = "fallback_scratch"
     roadmap_items = []
+    active_candidates = []
+    deferred_items = []
+    unassigned_items = []
+
+    open_issues = get_open_issues(repo_root, gh_repo)
+    release_milestones = get_release_milestones(repo_root)
+
     teammates: dict[str, dict] = {
+        "Noel": {"domain": "Orchestration/Gate", "tasks": []},
         "Jose": {"domain": "Data/Pipeline", "tasks": []},
         "Matthew": {"domain": "NexMail/Calendar", "tasks": []},
-        "Noel": {"domain": "Orchestration/Gate", "tasks": []},
     }
 
     releases_cli = repo_root / "utils" / "py" / "releases_app.py"
@@ -519,30 +636,73 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
             cmd = ["python3", str(releases_cli), "roadmap", "list", "--json"]
             out = run_cmd(cmd, cwd=repo_root, check=True)
             if out:
-                roadmap_items = json.loads(out)
+                raw_items = json.loads(out)
                 intake_mode = "native_prs"
+                for item in raw_items:
+                    section = (item.get("section") or "").lower()
+                    if section in {"completed", "done", "shipped"}:
+                        continue
+                    status_marker = (item.get("status_marker") or "").strip()
+                    if status_marker in {"✅", "[DONE]", "shipped"}:
+                        continue
+
+                    raw_title = item.get("title") or ""
+                    raw_text = item.get("raw_text") or ""
+                    combined = f"{raw_title} {raw_text}".lower()
+
+                    # Filter out superseded or retired items
+                    if any(t in combined for t in ["superseded", "retired", "do not implement"]):
+                        continue
+                    if "deferred" in combined and "vision" in combined:
+                        continue
+
+                    gh_num_raw = item.get("gh_number")
+                    if not gh_num_raw:
+                        continue
+                    try:
+                        gh_num = int(gh_num_raw)
+                    except ValueError:
+                        continue
+
+                    # Grounding check: Issue must actually be open in GitHub!
+                    if open_issues and gh_num not in open_issues:
+                        continue
+
+                    # Enrich with live assignees and labels from GitHub
+                    if gh_num in open_issues:
+                        live_iss = open_issues[gh_num]
+                        item["live_assignees"] = [a.get("login") for a in live_iss.get("assignees", []) if isinstance(a, dict)]
+                        item["live_labels"] = [lbl.get("name") for lbl in live_iss.get("labels", []) if isinstance(lbl, dict)]
+                        item["updated_at"] = live_iss.get("updatedAt")
+
+                    roadmap_items.append(item)
         except (subprocess.SubprocessError, json.JSONDecodeError, OSError, RuntimeError) as e:
             print(f"[WARN] Native PRS intake failed ({e}); falling back to GitHub issues intake.", file=sys.stderr)
 
     if not roadmap_items:
         intake_mode = "fallback_scratch"
-        cmd = [
-            "gh", "issue", "list",
-            "--state", "open",
-            "--limit", "100",
-            "--json", "number,title,labels,assignees,body,updatedAt"
-        ]
-        if gh_repo:
-            cmd.extend(["-R", gh_repo])
-        out = run_cmd(cmd, cwd=repo_root, check=True)
-        raw_issues = json.loads(out) if out else []
+        raw_issues = list(open_issues.values()) if open_issues else []
+        if not raw_issues:
+            cmd = [
+                "gh", "issue", "list",
+                "--state", "open",
+                "--limit", "100",
+                "--json", "number,title,labels,assignees,body,updatedAt"
+            ]
+            if gh_repo:
+                cmd.extend(["-R", gh_repo])
+            out = run_cmd(cmd, cwd=repo_root, check=True)
+            raw_issues = json.loads(out) if out else []
+
         roadmap_items = [
             {
                 "gh_number": iss.get("number"),
                 "title": iss.get("title"),
                 "labels": [lbl.get("name") for lbl in iss.get("labels", []) if isinstance(lbl, dict)],
                 "assignees": [a.get("login") for a in iss.get("assignees", []) if isinstance(a, dict)],
+                "live_assignees": [a.get("login") for a in iss.get("assignees", []) if isinstance(a, dict)],
                 "section": "Open Issues Intake",
+                "updated_at": iss.get("updatedAt"),
             }
             for iss in raw_issues
         ]
@@ -577,23 +737,41 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
         except (subprocess.SubprocessError, json.JSONDecodeError, OSError, RuntimeError) as e:
             print(f"[WARN] Failed to parse team issue #{team_issue}: {e}", file=sys.stderr)
 
-    # Assign roadmap items to teammates
+    # Ground task assignments in explicit GitHub assignees or explicit issue mapping
+    login_to_member = {
+        "noelsaw1": "Noel",
+        "noel": "Noel",
+        "jose": "Jose",
+        "matthew": "Matthew",
+    }
+
     for item in roadmap_items:
-        title = (item.get("title") or "").lower()
+        title = item.get("title") or ""
+        if title.lower().startswith("deferred:"):
+            deferred_items.append(item)
+            continue
+
         assigned = False
-        for name, data in teammates.items():
-            domain_words = [w.lower() for w in re.split(r"[\s/]+", data["domain"]) if len(w) > 3]
-            if any(dw in title for dw in domain_words):
-                data["tasks"].append(item)
+        live_assignees = item.get("live_assignees") or item.get("assignees") or []
+        for login in live_assignees:
+            member = login_to_member.get(login.lower())
+            if member and member in teammates:
+                teammates[member]["tasks"].append(item)
+                item["assignment_source"] = f"GitHub assignee (@{login})"
                 assigned = True
                 break
-        if not assigned and "Noel" in teammates:
-            teammates["Noel"]["tasks"].append(item)
+
+        if not assigned:
+            unassigned_items.append(item)
+        active_candidates.append(item)
 
     return {
         "intake_mode": intake_mode,
-        "roadmap_items": roadmap_items,
+        "roadmap_items": active_candidates,
+        "deferred_items": deferred_items,
+        "unassigned_items": unassigned_items,
         "teammate_assignments": teammates,
+        "release_milestones": release_milestones,
     }
 
 
@@ -602,23 +780,57 @@ def format_weekly_markdown(date_str: str, plan_data: dict) -> str:
     seq = plan_data.get("merge_sequence", {})
     phases = seq.get("status_phases", {})
     ready = phases.get("ready_to_land", [])
+    ready_undraft = phases.get("ready_pending_undraft", [])
     blockers = phases.get("blockers_to_fix", [])
     rebase = phases.get("needs_rebase", [])
     in_review = phases.get("in_review_or_wip", [])
+    held_or_evidence = phases.get("evidence_carriers_or_held", [])
+
     audit = plan_data.get("adversarial_audit", {})
     teammates = plan_data.get("teammate_assignments", {})
+    unassigned = plan_data.get("unassigned_items", [])
+    deferred = plan_data.get("deferred_items", [])
+    release_info = plan_data.get("release_milestones", {})
     decisions_issue = plan_data.get("decisions_issue", "NONE_SET")
+
+    # Compute 7-day planning window
+    try:
+        start_dt = datetime.strptime(date_str, "%Y-%m-%d")
+        end_dt = start_dt + timedelta(days=6)
+        window_str = f"{start_dt.strftime('%b %d')} – {end_dt.strftime('%b %d, %Y')} (America/Los_Angeles)"
+    except Exception:
+        window_str = date_str
 
     lines = [
         f"# Weekly Plan Outline — {date_str}",
         "",
+        f"- **Planning Window:** {window_str}",
         f"- **Generated:** {plan_data.get('timestamp')}",
         f"- **Intake Mode:** {plan_data.get('intake_mode')}",
         f"- **Provisional Decisions Register:** Issue #{decisions_issue}" if decisions_issue != "NONE_SET" else "- **Provisional Decisions Register:** None configured",
         "",
-        "## 1. Immediate P0 Blockers",
+        "## 0. Release Milestone Context & Active Targets",
         ""
     ]
+
+    next_rel = release_info.get("next_release")
+    overdue_note = release_info.get("overdue_note", "")
+    upcoming = release_info.get("upcoming_releases", [])
+
+    if next_rel:
+        lines.append(f"- **Target Release:** `{next_rel}`{overdue_note}")
+        if upcoming:
+            lines.append("- **Subsequent Milestones:**")
+            for u in upcoming:
+                lines.append(f"  - `{u}`")
+    else:
+        lines.append("- *No release targets detected from releases_app.py next.*")
+
+    lines.extend([
+        "",
+        "## 1. Immediate P0 Blockers",
+        ""
+    ])
 
     if blockers:
         for p in blockers:
@@ -637,21 +849,38 @@ def format_weekly_markdown(date_str: str, plan_data: dict) -> str:
         for p in ready:
             deps_note = f" (depends on PR #{p['dependencies']})" if p.get("dependencies") else ""
             lines.append(f"1. **PR #{p.get('number')}**: {p.get('title')}{deps_note} — `MERGEABLE`, CI: `{p.get('ci_status')}`")
+        lines.append("")
     else:
+        lines.append("### Phase 1: Ready to Land")
         lines.append("- *No PRs currently ready to land.*")
+        lines.append("")
+
+    if ready_undraft:
+        lines.append("### Phase 2: Ready Pending Undraft")
+        for p in ready_undraft:
+            lines.append(f"- **PR #{p.get('number')}**: {p.get('title')} — `DRAFT`, CI: `{p.get('ci_status')}` (ready to undraft upon operator check)")
+        lines.append("")
 
     if rebase:
-        lines.extend(["", "### Phase 3: Needs Rebase"])
+        lines.append("### Phase 3: Needs Rebase")
         for p in rebase:
             lines.append(f"- **PR #{p.get('number')}**: {p.get('title')} — `CONFLICTING` against base")
+        lines.append("")
 
     if in_review:
-        lines.extend(["", "### Phase 4: In Review / WIP"])
+        lines.append("### Phase 4: In Review / WIP")
         for p in in_review:
             lines.append(f"- **PR #{p.get('number')}**: {p.get('title')} — Review: `{p.get('reviewDecision') or 'PENDING'}`, CI: `{p.get('ci_status')}`")
+        lines.append("")
+
+    if held_or_evidence:
+        lines.append("### Phase 5: Held Drafts & Evidence Carriers (Do Not Merge Directly)")
+        for p in held_or_evidence:
+            reason = p.get("hold_reason") or "Held / Evidence retention"
+            lines.append(f"- **PR #{p.get('number')}**: {p.get('title')} — Status: `{reason}`")
+        lines.append("")
 
     lines.extend([
-        "",
         "## 3. Teammate Focus & Action Outlines",
         ""
     ])
@@ -661,11 +890,29 @@ def format_weekly_markdown(date_str: str, plan_data: dict) -> str:
         tasks = data.get("tasks", [])
         lines.append(f"### {member} ({domain})")
         if tasks:
-            for t in tasks[:7]:
+            for t in tasks:
                 gh_num = t.get("gh_number") or t.get("number")
-                lines.append(f"- [ ] **GH-{gh_num}**: {t.get('title')}")
+                src = t.get("assignment_source")
+                src_note = f" *[{src}]*" if src else ""
+                lines.append(f"- [ ] **GH-{gh_num}**: {t.get('title')}{src_note}")
         else:
             lines.append("- *No scheduled tasks assigned.*")
+        lines.append("")
+
+    if unassigned:
+        lines.append("### Unassigned / Triage Queue")
+        for t in unassigned[:10]:
+            gh_num = t.get("gh_number") or t.get("number")
+            lines.append(f"- [ ] **GH-{gh_num}**: {t.get('title')}")
+        if len(unassigned) > 10:
+            lines.append(f"- *... and {len(unassigned) - 10} more unassigned items in roadmap ledger.*")
+        lines.append("")
+
+    if deferred:
+        lines.append("### Deferred / Parked Intake")
+        for t in deferred[:10]:
+            gh_num = t.get("gh_number") or t.get("number")
+            lines.append(f"- [ ] **GH-{gh_num}**: {t.get('title')}")
         lines.append("")
 
     lines.extend([
@@ -831,9 +1078,12 @@ def main():
         "date": date_str,
         "timestamp": now_utc.isoformat(),
         "intake_mode": intake.get("intake_mode"),
+        "release_milestones": intake.get("release_milestones", {}),
         "merge_sequence": sequence,
         "adversarial_audit": audit,
         "teammate_assignments": intake.get("teammate_assignments", {}),
+        "unassigned_items": intake.get("unassigned_items", []),
+        "deferred_items": intake.get("deferred_items", []),
         "decisions_issue": args.decisions_issue or "NONE_SET",
         "tasks": intake.get("roadmap_items", []),
     }

@@ -68,9 +68,9 @@ Scale the lane count to the radius, and say which you ran: a two-file change wit
 | Lane | Question it answers | Owns |
 | --- | --- | --- |
 | **A. Entry & call paths** | How does control reach this code? | Callers and entry points — routes, CLI, cron, hooks, event handlers, tests — plus runtime registration, plugin dispatch, reflection, and anything invoked by name from config |
-| **B. State & data** | What reads and writes the state involved? | Read sites and *write* sites, active readers and writers, schema, migrations, caches, serialized formats, database triggers/views/procedures, and whether there is a single write path. **Step N+1:** verify whether an active reader, background reconciler, or UI consumer exists for any state or status being written. |
-| **C. Contracts & boundaries** | What crosses a line if this changes? | Public APIs, exported symbols with external consumers, events/queues, background worker queues, delayed/asynchronous consumers, config keys, env vars, feature flags, cross-service and cross-repository consumers. **Step N+1:** verify whether arguments passed into engines/solvers act as constraints (restricting) or generators (creating candidates). |
-| **D. Build, failure & operations** | How is this built, how does it fail, who notices? | Build/CI config and package metadata, generated code and its generator, IaC and deploy manifests, error paths, retries, timeouts, operational tripwires, lock budgets, existing tests covering the subject, logs/metrics/traces, and the reverse-sync rollback path. **Step N+1:** simulate what the enclosing caller or lease manager does on the next scheduled retry when an error is raised or claim held. |
+| **B. State & data** | What reads and writes the state involved? | Read sites and *write* sites, active readers and writers, schema, migrations, caches, serialized formats, database triggers/views/procedures, and whether there is a single write path. **Step N+1:** verify whether consumer behavior accepts, selects, and advances the newly written status/value to a terminal or recovery path (a UI badge alone proves neither). |
+| **C. Contracts & boundaries** | What crosses a line if this changes? | Public APIs, exported symbols with external consumers, events/queues, background worker queues, delayed/asynchronous consumers, config keys, env vars, feature flags, cross-service and cross-repository consumers. **Step N+1:** verify whether arguments passed into engines/solvers act as constraints (restricting) or generators (creating candidates); check rollout coexistence and rollback feasibility when persisted contracts change. |
+| **D. Build, failure & operations** | How is this built, how does it fail, who notices? | Build/CI config and package metadata, generated code and its generator, IaC and deploy manifests, error paths, retries, timeouts, operational tripwires, lock budgets, existing tests covering the subject, logs/metrics/traces, and the reverse-sync rollback path. **Step N+1:** trace transparent delegation through wrappers and simulate what the enclosing caller or lease manager does on the next scheduled retry when an error is raised or claim held. |
 
 Budget each lane: **read-only, no edits, roughly 8 minutes, report what you found and what the budget cut off.** The budget is a prompt instruction, not a timeout — which is exactly why the report-what-you-cut rule is the part that has to hold. An empty lane is a finding, not a failure. Give every lane the same honesty instruction: *`file:line` for everything claimed; anything inferred, unverified, or graph-only is listed as an unknown, never smoothed into the findings.*
 
@@ -78,16 +78,32 @@ No sub-agent capability? Run the lanes serially in the main context, same budget
 
 ## Step 3.5 — Step N+1 Downstream Verification (Default vs Deep)
 
-Recon must never stop at the local mutation site. An LLM agent that stops at the edit site will recommend `status = SENDING` without checking if a polling worker exists, recommend `raise` without checking if a distributed lease manager enters an infinite retry loop, or pass items into a solver without checking if the parameter generates entities instead of constraining them.
+Recon must never stop at the local mutation site. An LLM agent that stops at the edit site will recommend `status = SENDING` without checking if a polling worker actually selects and advances it, recommend `raise` without checking if a distributed lease manager enters an infinite retry loop, or pass items into a solver without checking if the parameter generates entities instead of constraining them.
 
-### Default Mode: The Three 1-Hop Invariant Checks (Mandatory on Every Seam)
-Every recon touching state, error paths, or solver inputs must trace **exactly one hop downstream**:
-1. **The Consumer Hop (Lane B):** When a change proposes writing or transitioning state $S$ (e.g. status, flags, cache values), verify that an active reader, background reconciler, or UI consumer exists for $S$. If no consumer exists, flag it in the map as an **Incomplete State Machine** (do not leave state orphaned).
-2. **The Retry Hop (Lane D):** When a change proposes raising an exception or holding a claim on failure, trace the enclosing caller and temporal retry mechanism. Does the next scheduled execution cycle (e.g. Celery beat, cron, lease expiration) recover cleanly, or does it trigger an **infinite stuck retry loop** (e.g. retrying RECOVER on an unresolvable ID)?
-3. **The Parameter Role Check (Lane C):** When proposing to pass state or collections into an existing engine or solver (e.g. `compose_calendar(events=...)`), inspect the callee to verify whether the argument acts as a **constraint** (restricts/filters days) or a **generator** (creates new candidate entities), preventing unintentional entity duplication.
+### Default Mode: Logical Downstream Boundary Invariant Checks (Mandatory on Every Seam)
+Every recon touching state transitions, error paths, or solver inputs must start with one logical downstream boundary, follow transparent delegation (e.g. wrapper functions, forwarding helpers, retry decorators) until the relevant contract is established within the stated budget, and report unresolved evidence as Unknown:
+
+1. **Consumer Behavior & Progress Hop (Lane B):**
+   - When a change proposes writing or transitioning state $S$ (e.g. status codes, flags, cache values), verify **consumer behavior**, not merely existence.
+   - For the exact newly written status or value, trace whether the deployed consumer accepts its schema/value, whether its query/filter/routing actually selects the record, and whether its handler advances it toward a terminal outcome or an actionable, bounded recovery path. (A poller that only queries `QUEUED` does not cover a new `SENDING` state even if the same worker updates other records; a UI badge alone proves neither progress nor recovery).
+   - Identify the progress/recovery owner and terminal/timeout path.
+   - *Exceptions:* Intentional write-only audit logs or terminal archival records are permitted when documented as terminal/audit-only; distinguish "not found in bounded search" from proven absence.
+   - If an unhandled non-terminal state is introduced without an advancing consumer, flag it in the map as an **Incomplete State Machine / Stranded State**.
+
+2. **The Retry & Transparent Delegation Hop (Lane D):**
+   - When a change proposes raising an exception or holding a claim on failure, trace past immediate wrapper helpers and decorators to the enclosing caller and temporal retry mechanism.
+   - Does the next scheduled execution cycle (e.g. Celery beat, cron, lease expiration) recover cleanly, or does it trigger an **infinite stuck retry loop** (e.g. retrying RECOVER on an unresolvable ID)?
+
+3. **The Parameter Role Check (Lane C):**
+   - When proposing to pass state or collections into an existing engine or solver (e.g. `compose_calendar(events=...)`), inspect the callee to verify whether the argument acts as a **constraint** (restricts/filters days) or a **generator** (creates new candidate entities), preventing unintentional entity duplication.
+
+4. **Rollout Coexistence & Rollback Invariant (Lane C / SWE Policy):**
+   - When persisted formats, status values, or external contracts change, check whether old and new readers/writers must coexist during deployment (including delayed/queued consumers).
+   - Trace whether each supported version can read and interpret the other version's writes, and whether rollback remains viable after new-format data has been written.
+   - If compatibility requires ordered deployment, quiescent/offline migration, or a point after which rollback is unavailable, state that condition and the last safe rollback point (referencing the SWE migration/rollback policy) rather than assuming universal coexistence.
 
 ### Deep Mode (`recon --deep`): Exhaustive Multi-Hop Simulation & Dataset Auditing
-Triggered explicitly via `recon --deep`, `/recon --deep`, or when analyzing multi-service architecture:
+Triggered explicitly via `recon --deep`, `/recon --deep`, or when analyzing multi-service architecture (reserved for broader transitive analysis, not for finishing an ordinary check hidden behind one wrapper):
 - **Transitive Call Chains ($N+2, N+3$):** Trace downstream side effects through queues, webhooks, and third-party APIs.
 - **Automated Dataset Parsing:** Programmatically parse non-code datasets (e.g. running scripts to audit every article in a Help JSON/CSV catalog against registered router tables, rather than spot-checking documentation summaries).
 - **Distributed Failure Matrix:** Stress-test behavior under clock skew (DST transitions), worker crashes, network drops, and concurrent lease races.
