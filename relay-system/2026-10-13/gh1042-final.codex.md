@@ -1,6 +1,6 @@
 # RELAY · GH1042 + GH1045 final implementation QA
-NEXT: codex (Reviewer)
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 2 / 3
 
 ## Setup
@@ -60,3 +60,31 @@ Verification: source9b392b35: all34 manual outcomes pass; existing Marathon suit
 
 ## ▶ TAKE YOUR TURN — codex (round 2 current instructions)
 Review current committed source against development b9f07ea5, focusing on the newly preserved unsatisfied-force rebuild and unchanged refusal/satisfaction/merge boundaries, and reconcile all prior implementation findings against actual source. Read the new current-revision manual/focused evidence. Keep reviewer writes ONLY in this thread; no git, suites or executable fixtures. Append Round2 Reviewer, exact literal VERDICT: PASS/FAIL/PARKED, nonempty Basis, swept file: yes/no, cited findings and Commit: none. For PASS set STATUS: Approved and NEXT: — and mark token done. Do not write Approved as a machine verdict value. Three-round budget, this is round2. Old round1 approval is not final for changed code.
+
+### Round 2 · Reviewer · 2026-10-13T16:03:02.752689+00:00
+VERDICT: PASS
+Basis: Ship with conditions: source review approves proceeding to the pending publication gate. Inspected the current supplied source, canonical plan, retained manual runner, after-legacy-force raw logs/results, focused receipts and appended provenance. Independently executed only a read-only JSON consistency/AST probe, not the behavioral fixtures. No git, suites, pytest, provider calls or merge were run. Source identity 9b392b358189545b0d077ca0cc3b9a51d778e8ba is attributed by retained receipts; committed identity and a development-b9f07ea5 diff were not independently queried under the no-git restriction. Graph project pagination was exhausted: this checkout is not indexed; nearest XYZ-forge generation 2026-09-01T15:54:30Z is a different root with changed/not-tracked coverage for the three source paths, so exact local source was used. Review sweep covers the relevant complete functions and their consumer boundaries, not every unrelated function in these large modules.
+swept file: yes
+
+- [Pass] Restored rebuild escape: `utils/py/marathon_drive.py:2874` (`satisfied_lane_terminal`) returns false after refused attestation only for force without an explicit relay task. It does not assign completion state or publish success. The following `resolve_force_relay_task` call at `:2926` preserves the existing spent-token allocation, followed by ordinary render/seed/relay dispatch. Explicit task selection remains authoritative. The retained `after-legacy-force/legacy-force-regression.log` and provenance identify the pre-fix source7128b496 exit4/no dispatch; `legacy-force-rebuild.log` shows fresh MARATHON-P1-TURN-R2, relay dispatch and intended stub exit7 at source9b392b35. This is a rebuild-path observation, not a successful real builder/reviewer run.
+- [Pass] Refusal and satisfaction remain separate. `completed_relay_task` still restricts recorded identities to the base/numeric/force family. `attested_terminal` validates the protected record, optional historical completion and strict candidate check. Plain divergent legacy recovery still exits4 in `legacy-later-refuses.log`. Force fallthrough cannot make a refused record satisfied; a newly dispatched build must obtain a new approval. Existing successful force recovery continues to short-circuit before allocation. No blocking defect found in the bounded source sweep.
+- [Pass] Reconciled prior authority findings against current source: `relay_attest.py:359-408` binds completion to phase/lane/review, validates the completion candidate, and requires ancestry; absent metadata uses strict legacy checking and malformed metadata refuses. `complete_phase_success` retains approval-before-hook ordering, stamps only after final candidate validation, and exits4 on write failure. Historical recovery checks committed recovery-time drift, retains the historical candidate, skips repeated completed side effects and suppresses fresh gate/phase-QA receipts. `jog_run.py:414` and `_merge_reviewed_pr` at `:1430` still require expected candidate equality, strict `candidate_ok` and `--match-head-commit`. Historical satisfaction therefore grants no successor merge authority within the existing committed-candidate contract.
+- [Pass] Current evidence: retained manual-results.json has 34/34 matching expected outcomes, final-focused-results.json attributes both successful commands to 9b392b35, provenance retains earlier source identities, and marathon-drive-final.log ends `marathon-drive: 162 pass, 0 fail`. The before/after clone identity objects match. The stubbed runner and its assertions were inspected but not executed here; no provider or full-gate result is inferred.
+- [Pass] Independently executed probe: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` exited 0. Decisive output: `34/34 retained outcomes match; force dispatch/plain refusal confirmed; identity pair equal; 2 current-source receipts pass; 3 AST parses pass`. Probe body:
+  ```python
+  import ast,json,pathlib
+  p=pathlib.Path('TESTS-RESULTS/2026-10-13+GH-1042/after-legacy-force')
+  r=json.loads((p/'manual-results.json').read_text())
+  assert len(r)==34 and all(x['ok'] and x['rc']==x['expected'] for x in r)
+  d={x['name']:x for x in r}
+  assert d['legacy-force-rebuild']['rc']==7 and d['legacy-force-rebuild']['dispatched']
+  assert d['legacy-later-refuses']['rc']==4 and not d['legacy-later-refuses']['dispatched']
+  assert json.loads((p/'final-identity-before.json').read_text())==json.loads((p/'final-identity-after.json').read_text())
+  f=json.loads((p/'final-focused-results.json').read_text())
+  assert len(f)==2 and all(x['exit_code']==0 and x['sha']=='9b392b358189545b0d077ca0cc3b9a51d778e8ba' for x in f)
+  for name in ('marathon_drive','relay_attest','jog_run'): ast.parse(pathlib.Path('utils/py/'+name+'.py').read_text())
+  print('34/34 retained outcomes match; force dispatch/plain refusal confirmed; identity pair equal; 2 current-source receipts pass; 3 AST parses pass')  [Unverified — no citation]
+  ```
+- [Unverified — needs clone run] Final full publication gate remains pending. This verdict approves the reviewed implementation for that next gate, not publication/merge readiness. Runtime behavior was assessed from retained producer evidence rather than independently rerun during this turn.
+
+Commit: none
