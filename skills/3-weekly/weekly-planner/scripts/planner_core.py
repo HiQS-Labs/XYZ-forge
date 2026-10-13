@@ -51,41 +51,201 @@ def ensure_temp_dir(repo_root: Path) -> Path:
     return planner_temp
 
 
+def compute_prs_score(item: dict) -> tuple[int | None, str]:
+    """
+    Compute composite PRS score (4-400) and human-readable rating badge.
+    Formula:
+    - If rating_ovr is set (4-400), operator override takes precedence.
+    - Else if all 4 axes (pri, sev, appeal, effort) are present (1-100 each), sum them.
+    - Returns (score, formatted_token_string).
+    """
+    ovr = item.get("rating_ovr")
+    if ovr is not None:
+        try:
+            ovr_val = int(ovr)
+            return ovr_val, f"*[PRS: {ovr_val} (ovr)]*"
+        except (ValueError, TypeError):
+            pass
+
+    pri = item.get("rating_pri")
+    sev = item.get("rating_sev")
+    appeal = item.get("rating_appeal")
+    effort = item.get("rating_effort")
+
+    if pri is not None and sev is not None and appeal is not None and effort is not None:
+        try:
+            p, s, a, e = int(pri), int(sev), int(appeal), int(effort)
+            total = p + s + a + e
+            return total, f"*[PRS: {total} ({p}/{s}/{a}/{e})]*"
+        except (ValueError, TypeError):
+            pass
+
+    return None, ""
+
+
 def get_release_milestones(repo_root: Path) -> dict:
-    """Fetch release milestones from releases_app.py next if available."""
+    """
+    Fetch comprehensive release milestones, build burndown, exit criterion,
+    active marathons, and jog queue from releases.db and releases_app.py next.
+    """
     releases_cli = repo_root / "utils" / "py" / "releases_app.py"
-    if not releases_cli.exists():
-        return {}
-    try:
-        out = run_cmd(["python3", str(releases_cli), "next"], cwd=repo_root, check=False)
-        lines = [line.strip() for line in out.splitlines() if line.strip()]
-        next_release = None
-        upcoming = []
-        for line in lines:
-            if line.startswith("NEXT:"):
-                next_release = line[len("NEXT:"):].strip()
-            elif line.startswith("then:"):
-                upcoming.append(line[len("then:"):].strip())
+    releases_db_file = repo_root / "releases.db"
 
-        overdue_note = ""
-        if next_release:
-            match = re.search(r"target=(\d{4}-\d{2}-\d{2})", next_release)
-            if match:
-                target_dt = datetime.strptime(match.group(1), "%Y-%m-%d").date()
-                today = datetime.now(timezone.utc).date()
-                if target_dt < today:
-                    days_overdue = (today - target_dt).days
-                    overdue_note = f" ({days_overdue} days overdue)"
+    next_release = None
+    upcoming = []
+    raw_next = ""
 
-        return {
-            "next_release": next_release,
-            "overdue_note": overdue_note,
-            "upcoming_releases": upcoming,
-            "raw": out,
-        }
-    except Exception as e:
-        print(f"[WARN] Failed to query releases_app.py next: {e}", file=sys.stderr)
-        return {}
+    if releases_cli.exists():
+        try:
+            raw_next = run_cmd(["python3", str(releases_cli), "next"], cwd=repo_root, check=False)
+            lines = [line.strip() for line in raw_next.splitlines() if line.strip()]
+            for line in lines:
+                if line.startswith("NEXT:"):
+                    next_release = line[len("NEXT:"):].strip()
+                elif line.startswith("then:"):
+                    upcoming.append(line[len("then:"):].strip())
+        except Exception as e:
+            print(f"[WARN] Failed to query releases_app.py next: {e}", file=sys.stderr)
+
+    target_release_info = {}
+    manifest_summary = {}
+    active_marathons = []
+    active_jog_queue = []
+
+    if releases_db_file.exists():
+        try:
+            import sqlite3
+            conn = sqlite3.connect(f"file:{releases_db_file}?mode=ro", uri=True)  # SQLITE-GATEWAY-OK: read-only releases.db ledger inspection (GH-1043/GH-777)
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+
+            # 1. Target Release metadata
+            target_ver = None
+            if next_release:
+                m = re.match(r"^(\d+\.\d+\.\d+)", next_release)
+                if m:
+                    target_ver = m.group(1)
+
+            if target_ver:
+                rel_row = cur.execute(
+                    "SELECT id, version, codename, status, target_date, exit_criterion, description, milestone FROM releases WHERE version = ?",
+                    (target_ver,)
+                ).fetchone()
+            else:
+                rel_row = cur.execute(
+                    "SELECT id, version, codename, status, target_date, exit_criterion, description, milestone FROM releases WHERE status != 'shipped' "
+                    "ORDER BY CASE WHEN status = 'active' THEN 0 ELSE 1 END, target_date ASC, id ASC LIMIT 1"
+                ).fetchone()
+
+            if rel_row:
+                target_release_info = dict(rel_row)
+                rel_id = rel_row["id"]
+
+                # 2. Manifest Items (Release Build Items)
+                manifest_rows = cur.execute("""
+                    SELECT m.state, ir.url, ir.temp_id, m.dial_reason
+                    FROM manifest_items m
+                    JOIN issue_refs ir ON m.issue_ref_id = ir.id
+                    WHERE m.release_id = ?
+                """, (rel_id,)).fetchall()
+
+                shipped_issues = []
+                dialed_in_issues = []
+                cut_issues = []
+
+                for m_row in manifest_rows:
+                    state = m_row["state"]
+                    url = m_row["url"] or ""
+                    m_iss = re.search(r"/issues/(\d+)", url)
+                    iss_num = int(m_iss.group(1)) if m_iss else None
+
+                    item_dict = {
+                        "state": state,
+                        "issue_number": iss_num,
+                        "url": url,
+                        "temp_id": m_row["temp_id"],
+                        "dial_reason": m_row["dial_reason"],
+                    }
+                    if state == "shipped":
+                        shipped_issues.append(item_dict)
+                    elif state == "dialed_in":
+                        dialed_in_issues.append(item_dict)
+                    elif state == "cut":
+                        cut_issues.append(item_dict)
+
+                total_active = len(shipped_issues) + len(dialed_in_issues)
+                burndown_pct = round((len(shipped_issues) / total_active) * 100, 1) if total_active > 0 else 0.0
+
+                manifest_summary = {
+                    "total_items": len(manifest_rows),
+                    "shipped_count": len(shipped_issues),
+                    "dialed_in_count": len(dialed_in_issues),
+                    "cut_count": len(cut_issues),
+                    "burndown_pct": burndown_pct,
+                    "shipped_issues": shipped_issues,
+                    "dialed_in_issues": dialed_in_issues,
+                    "dialed_in_numbers": [i["issue_number"] for i in dialed_in_issues if i["issue_number"] is not None],
+                    "cut_issues": cut_issues,
+                }
+
+            # 3. Active Marathons
+            marathon_rows = cur.execute("""
+                SELECT m.id, m.status, ir.url, m.created_at
+                FROM marathons m
+                JOIN issue_refs ir ON m.tracking_ref_id = ir.id
+                WHERE m.status IN ('planned', 'running')
+                ORDER BY m.id ASC
+            """).fetchall()
+            for mr in marathon_rows:
+                active_marathons.append(dict(mr))
+
+            # 4. Active Jog Queue (Serial Build Queue)
+            jog_rows = cur.execute("""
+                SELECT gh_number, position, status, attempt_count
+                FROM jog_queue
+                WHERE status IN ('pending', 'running')
+                ORDER BY position ASC
+                LIMIT 10
+            """).fetchall()
+            for jr in jog_rows:
+                active_jog_queue.append(dict(jr))
+
+            conn.close()
+        except Exception as e:
+            print(f"[WARN] Failed to query releases.db for milestones: {e}", file=sys.stderr)
+
+    overdue_note = ""
+    target_date_str = target_release_info.get("target_date")
+    if not target_date_str and next_release:
+        match = re.search(r"target=(\d{4}-\d{2}-\d{2})", next_release)
+        if match:
+            target_date_str = match.group(1)
+
+    if target_date_str:
+        try:
+            target_dt = datetime.strptime(target_date_str, "%Y-%m-%d").date()
+            today = datetime.now(timezone.utc).date()
+            if target_dt < today:
+                days_overdue = (today - target_dt).days
+                overdue_note = f" ({days_overdue} days overdue)"
+            elif target_dt > today:
+                days_remaining = (target_dt - today).days
+                overdue_note = f" ({days_remaining} days remaining)"
+            else:
+                overdue_note = " (due today)"
+        except Exception:
+            pass
+
+    return {
+        "next_release": next_release,
+        "overdue_note": overdue_note,
+        "upcoming_releases": upcoming,
+        "target_release": target_release_info,
+        "manifest_summary": manifest_summary,
+        "active_marathons": active_marathons,
+        "active_jog_queue": active_jog_queue,
+        "raw": raw_next,
+    }
 
 
 def get_open_issues(repo_root: Path, gh_repo: str | None = None, limit: int = 500) -> dict[int, dict]:
@@ -607,10 +767,15 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
     """
     Ingest weekly signals:
     - Grounding: Validates open issues against live GitHub state (drops closed/retired/foreign issues).
-    - Release Milestone Anchor: Ingests next unshipped release and upcoming milestones from releases_app.py next.
-    - Mode A (Native XYZ): Query PRS 4-axis scores via releases_app.py roadmap list --json.
+    - Release Milestone Anchor: Ingests next unshipped release, exit criterion, manifest build burndown,
+      active marathons, and jog queue from releases.db and releases_app.py next.
+    - Mode A (Native XYZ): Query PRS 4-axis ratings (pri, sev, appeal, effort, ovr, risk) directly from
+      releases.db roadmap_items (or releases_app.py fallback).
     - Mode B (Fallback): Query open GitHub issues and generate pass1-intake.md and pass2-sharpened.md.
-    - Grounded Assignment: Assigns issues based on explicit GitHub assignees or --team-issue; leaves unassigned tasks in triage queue.
+    - Prioritization: Sorts tasks by (is_release_build, prs_score) descending so dialed-in release builds
+      and high-value/cheap tasks advance first.
+    - Grounded Assignment: Assigns issues based on explicit GitHub assignees or --team-issue;
+      leaves unassigned tasks in sorted triage queue.
     """
     temp_dir = ensure_temp_dir(repo_root)
     intake_mode = "fallback_scratch"
@@ -622,6 +787,9 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
     open_issues = get_open_issues(repo_root, gh_repo)
     release_milestones = get_release_milestones(repo_root)
 
+    dialed_in_set = set(release_milestones.get("manifest_summary", {}).get("dialed_in_numbers", []))
+    target_release_ver = release_milestones.get("target_release", {}).get("version")
+
     teammates: dict[str, dict] = {
         "Noel": {"domain": "Orchestration/Gate", "tasks": []},
         "Jose": {"domain": "Data/Pipeline", "tasks": []},
@@ -631,7 +799,85 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
     releases_cli = repo_root / "utils" / "py" / "releases_app.py"
     releases_db = repo_root / "releases.db"
 
-    if not fallback_mode and (releases_db.exists() or releases_cli.exists()):
+    if not fallback_mode and releases_db.exists():
+        try:
+            import sqlite3
+            conn = sqlite3.connect(f"file:{releases_db}?mode=ro", uri=True)  # SQLITE-GATEWAY-OK: read-only releases.db ledger inspection (GH-1043/GH-777)
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            rows = cur.execute("""
+                SELECT gh_number, title, section, position, status_marker,
+                       rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr,
+                       risk, complexity, effort, status_label, raw_text
+                FROM roadmap_items
+                ORDER BY section, position
+            """).fetchall()
+            raw_items = [dict(r) for r in rows]
+            conn.close()
+            intake_mode = "native_prs"
+
+            for item in raw_items:
+                section = (item.get("section") or "").lower()
+                if section in {"completed", "done", "shipped"}:
+                    continue
+                status_marker = (item.get("status_marker") or "").strip()
+                if status_marker in {"✅", "[DONE]", "shipped"}:
+                    continue
+
+                raw_title = item.get("title") or ""
+                raw_text = item.get("raw_text") or ""
+                combined = f"{raw_title} {raw_text}".lower()
+
+                # Filter out superseded or retired items
+                if any(t in combined for t in ["superseded", "retired", "do not implement"]):
+                    continue
+                if "deferred" in combined and "vision" in combined:
+                    continue
+
+                gh_num_raw = item.get("gh_number")
+                if not gh_num_raw:
+                    continue
+                try:
+                    gh_num = int(gh_num_raw)
+                except (ValueError, TypeError):
+                    continue
+
+                # Grounding check: Issue must actually be open in GitHub!
+                if open_issues and gh_num not in open_issues:
+                    continue
+
+                # Enrich with live assignees and labels from GitHub
+                if gh_num in open_issues:
+                    live_iss = open_issues[gh_num]
+                    item["live_assignees"] = [a.get("login") for a in live_iss.get("assignees", []) if isinstance(a, dict)]
+                    item["live_labels"] = [lbl.get("name") for lbl in live_iss.get("labels", []) if isinstance(lbl, dict)]
+                    item["updated_at"] = live_iss.get("updatedAt")
+
+                # PRS score calculation
+                score, prs_badge = compute_prs_score(item)
+                item["prs_score"] = score
+                item["prs_badge"] = prs_badge
+
+                # Risk gate check (risk >= 4 acts as human gate, not summed)
+                risk_val = item.get("risk")
+                if risk_val is not None:
+                    try:
+                        if int(risk_val) >= 4:
+                            item["is_high_risk_gate"] = True
+                            item["risk_gate_badge"] = f"*[GATE: risk {risk_val}]*"
+                    except (ValueError, TypeError):
+                        pass
+
+                # Dialed-in release build association
+                if gh_num in dialed_in_set:
+                    item["is_release_build"] = True
+                    item["release_build_version"] = target_release_ver
+
+                roadmap_items.append(item)
+        except Exception as e:
+            print(f"[WARN] Direct releases.db roadmap intake failed ({e}); falling back to CLI.", file=sys.stderr)
+
+    if not roadmap_items and not fallback_mode and releases_cli.exists():
         try:
             cmd = ["python3", str(releases_cli), "roadmap", "list", "--json"]
             out = run_cmd(cmd, cwd=repo_root, check=True)
@@ -650,7 +896,6 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
                     raw_text = item.get("raw_text") or ""
                     combined = f"{raw_title} {raw_text}".lower()
 
-                    # Filter out superseded or retired items
                     if any(t in combined for t in ["superseded", "retired", "do not implement"]):
                         continue
                     if "deferred" in combined and "vision" in combined:
@@ -664,20 +909,22 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
                     except ValueError:
                         continue
 
-                    # Grounding check: Issue must actually be open in GitHub!
                     if open_issues and gh_num not in open_issues:
                         continue
 
-                    # Enrich with live assignees and labels from GitHub
                     if gh_num in open_issues:
                         live_iss = open_issues[gh_num]
                         item["live_assignees"] = [a.get("login") for a in live_iss.get("assignees", []) if isinstance(a, dict)]
                         item["live_labels"] = [lbl.get("name") for lbl in live_iss.get("labels", []) if isinstance(lbl, dict)]
                         item["updated_at"] = live_iss.get("updatedAt")
 
+                    if gh_num in dialed_in_set:
+                        item["is_release_build"] = True
+                        item["release_build_version"] = target_release_ver
+
                     roadmap_items.append(item)
         except (subprocess.SubprocessError, json.JSONDecodeError, OSError, RuntimeError) as e:
-            print(f"[WARN] Native PRS intake failed ({e}); falling back to GitHub issues intake.", file=sys.stderr)
+            print(f"[WARN] Native CLI intake failed ({e}); falling back to GitHub issues intake.", file=sys.stderr)
 
     if not roadmap_items:
         intake_mode = "fallback_scratch"
@@ -703,6 +950,8 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
                 "live_assignees": [a.get("login") for a in iss.get("assignees", []) if isinstance(a, dict)],
                 "section": "Open Issues Intake",
                 "updated_at": iss.get("updatedAt"),
+                "is_release_build": iss.get("number") in dialed_in_set,
+                "release_build_version": target_release_ver,
             }
             for iss in raw_issues
         ]
@@ -765,6 +1014,28 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
             unassigned_items.append(item)
         active_candidates.append(item)
 
+    def sort_plan_tasks(tasks: list[dict]) -> list[dict]:
+        """
+        Prioritize tasks:
+        1. Dialed-in release build tasks first.
+        2. Highest composite PRS score descending.
+        3. Original ledger position ascending (tie-breaker).
+        """
+        return sorted(
+            tasks,
+            key=lambda x: (
+                1 if x.get("is_release_build") else 0,
+                x.get("prs_score") if x.get("prs_score") is not None else -1,
+                -(x.get("position") or 999),
+            ),
+            reverse=True,
+        )
+
+    for member in teammates:
+        teammates[member]["tasks"] = sort_plan_tasks(teammates[member]["tasks"])
+    unassigned_items = sort_plan_tasks(unassigned_items)
+    active_candidates = sort_plan_tasks(active_candidates)
+
     return {
         "intake_mode": intake_mode,
         "roadmap_items": active_candidates,
@@ -817,14 +1088,47 @@ def format_weekly_markdown(date_str: str, plan_data: dict) -> str:
     overdue_note = release_info.get("overdue_note", "")
     upcoming = release_info.get("upcoming_releases", [])
 
-    if next_rel:
-        lines.append(f"- **Target Release:** `{next_rel}`{overdue_note}")
+    target_rel = release_info.get("target_release", {})
+    manifest = release_info.get("manifest_summary", {})
+    marathons = release_info.get("active_marathons", [])
+    jog_q = release_info.get("active_jog_queue", [])
+
+    if next_rel or target_rel:
+        rel_title = next_rel if next_rel else f"{target_rel.get('version')} {target_rel.get('codename')} ({target_rel.get('status')})"
+        lines.append(f"- **Target Release:** `{rel_title}`{overdue_note}")
+        exit_crit = target_rel.get("exit_criterion")
+        if exit_crit:
+            clean_exit = exit_crit.strip().replace("\n", " ")
+            if len(clean_exit) > 200:
+                clean_exit = clean_exit[:197] + "..."
+            lines.append(f"- **Release Exit Criterion:** {clean_exit}")
+
+        if manifest and manifest.get("total_items", 0) > 0:
+            shipped = manifest.get("shipped_count", 0)
+            dialed = manifest.get("dialed_in_count", 0)
+            pct = manifest.get("burndown_pct", 0.0)
+            lines.append(f"- **Release Build Burndown:** {shipped} shipped, {dialed} dialed-in ({pct}% complete)")
+            dialed_nums = manifest.get("dialed_in_numbers", [])
+            if dialed_nums:
+                dialed_str = ", ".join(f"#{num}" for num in dialed_nums)
+                lines.append(f"- **Dialed-in Build Tasks:** {dialed_str}")
+
         if upcoming:
             lines.append("- **Subsequent Milestones:**")
             for u in upcoming:
                 lines.append(f"  - `{u}`")
+
+        if marathons:
+            lines.append("- **Active Marathons:**")
+            for m in marathons:
+                lines.append(f"  - Marathon #{m.get('id')} (`{m.get('status')}`): {m.get('url')}")
+
+        if jog_q:
+            lines.append("- **Active Jog Build Queue:**")
+            for j in jog_q:
+                lines.append(f"  - Pos {j.get('position')}: GH-{j.get('gh_number')} (status: `{j.get('status')}`)")
     else:
-        lines.append("- *No release targets detected from releases_app.py next.*")
+        lines.append("- *No release targets detected from releases_app.py next or releases.db.*")
 
     lines.extend([
         "",
@@ -880,6 +1184,22 @@ def format_weekly_markdown(date_str: str, plan_data: dict) -> str:
             lines.append(f"- **PR #{p.get('number')}**: {p.get('title')} — Status: `{reason}`")
         lines.append("")
 
+    def format_task_item(t: dict) -> str:
+        gh_num = t.get("gh_number") or t.get("number")
+        title = t.get("title") or ""
+        badges = []
+        if t.get("is_release_build"):
+            ver = t.get("release_build_version")
+            badges.append(f"*[Release Build: {ver}]*" if ver else "*[Release Build]*")
+        if t.get("prs_badge"):
+            badges.append(t["prs_badge"])
+        if t.get("risk_gate_badge"):
+            badges.append(t["risk_gate_badge"])
+        if t.get("assignment_source"):
+            badges.append(f"*[{t['assignment_source']}]*")
+        badge_str = (" " + " ".join(badges)) if badges else ""
+        return f"- [ ] **GH-{gh_num}**: {title}{badge_str}"
+
     lines.extend([
         "## 3. Teammate Focus & Action Outlines",
         ""
@@ -891,10 +1211,7 @@ def format_weekly_markdown(date_str: str, plan_data: dict) -> str:
         lines.append(f"### {member} ({domain})")
         if tasks:
             for t in tasks:
-                gh_num = t.get("gh_number") or t.get("number")
-                src = t.get("assignment_source")
-                src_note = f" *[{src}]*" if src else ""
-                lines.append(f"- [ ] **GH-{gh_num}**: {t.get('title')}{src_note}")
+                lines.append(format_task_item(t))
         else:
             lines.append("- *No scheduled tasks assigned.*")
         lines.append("")
@@ -902,8 +1219,7 @@ def format_weekly_markdown(date_str: str, plan_data: dict) -> str:
     if unassigned:
         lines.append("### Unassigned / Triage Queue")
         for t in unassigned[:10]:
-            gh_num = t.get("gh_number") or t.get("number")
-            lines.append(f"- [ ] **GH-{gh_num}**: {t.get('title')}")
+            lines.append(format_task_item(t))
         if len(unassigned) > 10:
             lines.append(f"- *... and {len(unassigned) - 10} more unassigned items in roadmap ledger.*")
         lines.append("")
@@ -911,8 +1227,7 @@ def format_weekly_markdown(date_str: str, plan_data: dict) -> str:
     if deferred:
         lines.append("### Deferred / Parked Intake")
         for t in deferred[:10]:
-            gh_num = t.get("gh_number") or t.get("number")
-            lines.append(f"- [ ] **GH-{gh_num}**: {t.get('title')}")
+            lines.append(format_task_item(t))
         lines.append("")
 
     lines.extend([

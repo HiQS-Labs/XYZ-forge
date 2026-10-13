@@ -19,8 +19,8 @@ Orchestrate weekly sprint alignment and daily task execution across team members
 
 ## Core Northstars
 
-1. **Release Milestone Anchoring:**
-   - Every weekly plan must anchor itself to the nearest release target (`python3 utils/py/releases_app.py next`), reporting target release version, release window, and days overdue/remaining, ensuring sprint intake explicitly advances active release themes (e.g. 0.6.0 Front-Door, 0.8.0 Sundown).
+1. **Release Milestone & Build Manifest Anchoring:**
+   - Every weekly plan must anchor itself to the active target release (`releases_app.py next` and `releases.db`), reporting target release version, release window, days overdue/remaining, the **release exit criterion**, and the **manifest build burndown** (shipped count, dialed-in count, burndown percentage, and exact dialed-in build issue numbers), along with active marathons and the jog build queue.
 2. **Live Issue Grounding & Grounded Assignments:**
    - Ingested roadmap and backlog tasks MUST be validated against live GitHub open issue state (`gh issue list --state open`). Closed, retired, superseded, or foreign issues must be dropped immediately.
    - Task assignments must be grounded in explicit GitHub assignees or explicit team issue sections—never dump unassigned tasks onto a single operator. Unassigned roadmap items belong in `Unassigned / Triage Queue`, and parked vision items belong in `Deferred / Parked Intake`.
@@ -36,10 +36,14 @@ Orchestrate weekly sprint alignment and daily task execution across team members
    - Capture unresolved business/product decisions as **Deferred Provisional Decision Points** on the canonical tracking issue. Check later comments and linked follow-up decisions before applying an older assumption or exclusion; follow the latest explicit owner decision and show unresolved conflicts.
    - If no decisions tracker exists, the skill requests permission to create a canonical GitHub issue to track and record all decisions.
    - For reversible business configuration, record an explicit provisional value, owner, and correction path. Add a UI control or re-compute action only when that configuration actually needs one; never turn correctness invariants, safety guardrails, or migrations into blanket settings.
-5. **High-Value Blocker Prioritization:**
-   - The top item in an operator's queue is strictly whatever **currently blocks another team member or gates the weekly milestone**.
+5. **High-Value Blocker Prioritization & PRS Ranking:**
+   - The top item in an operator's queue is strictly whatever **currently blocks another team member or gates the active release milestone**.
+   - Tasks are prioritized by `(is_release_build, prs_score)` descending:
+     - **Dialed-in release builds** rank first to advance the active release.
+     - Scored items rank by composite PRS score (`rating_ovr` or sum of `pri/sev/appeal/effort`).
+     - `risk >= 4` acts as an explicit human gate (`*[GATE: risk {risk}]*`), never summed into the score.
 6. **Dual Ingestion (PRS/PDDA Native with Fallback):**
-   - **Mode A (Native XYZ):** Ingests PRS 4-axis ratings (`pri/sev/appeal/effort`, `calc` sum, `ovr` overrides) directly from `releases.db` and active docs from `PROJECT/`.
+   - **Mode A (Native XYZ):** Ingests PRS 4-axis ratings (`pri/sev/appeal/effort`, `calc` sum, `ovr` overrides, `risk` gate) and build manifest items directly from `releases.db` (read-only SQLite) and active docs from `PROJECT/`.
    - **Mode B (Zero-Dependency Fallback):** Ingests open issues via `gh issue list`, executing a 2–3 pass scratch markdown process in `temp/planner/` to triage and sharpen tasks.
 7. **Shared Core Engine Architecture (Zero Skill Drift):**
    - The weekly planner owns the primary data models, merge-sequencer, and adversarial checks in `scripts/planner_core.py`.
@@ -69,12 +73,12 @@ skills/3-weekly/weekly-planner/
 1. Identify the **Team Weekly Plan GitHub Issue** (via `--issue <N>` or search):
    - Ingest team member domain assignments (e.g. Jose -> Data/Pipeline, Matthew -> NexMail/Calendar, Noel -> Orchestration/Gate).
 2. Signal Ingestion & Live Grounding:
-   - **Release Milestones:** Run `python3 utils/py/releases_app.py next` to anchor the weekly plan to the active milestone and calculate days overdue or remaining.
+   - **Release Milestones & Builds:** Query `releases.db` and run `python3 utils/py/releases_app.py next` to anchor the weekly plan to the active milestone, compute days overdue or remaining, extract the release exit criterion, compute the manifest build burndown (`shipped` vs `dialed_in`), and inspect active marathons and the jog queue.
    - **Live Open Issues:** Fetch live open issues via `gh issue list --state open` to ground all candidate tasks. Filter out any closed, retired, or superseded issues.
-   - **If `releases.db` exists:** Query calculated scores via `python3 utils/py/releases_app.py roadmap list --json`.
+   - **If `releases.db` exists:** Query PRS 4-axis ratings and overrides directly from `roadmap_items`. Tag dialed-in release build tasks with `*[Release Build: {version}]*`, format PRS badges `*[PRS: {score} ({p}/{s}/{a}/{e})]*` or `*[PRS: {score} (ovr)]*`, and flag `*[GATE: risk {risk}]*`.
    - **If Fallback Mode:** Ingest active GH issues and generate `temp/planner/pass1-intake.md` and `temp/planner/pass2-sharpened.md`.
 3. Reconcile the latest issue/PR state, owner decisions, plan documents, and rollout evidence before labeling work open or done. Record the source and as-of date; distinguish merged, deployed, backfilled, and production-verified states.
-4. Ground assignments in explicit GitHub assignees or explicit issue sections; route unassigned items to `Unassigned / Triage Queue` and parked items to `Deferred / Parked Intake`.
+4. Ground assignments in explicit GitHub assignees or explicit issue sections; route unassigned items to `Unassigned / Triage Queue` and parked items to `Deferred / Parked Intake`, sorted by release build status and PRS score.
 
 ### Step 2: Establish the Topological Merge Sequence
 Run the shared sequencing engine:
@@ -120,17 +124,11 @@ In environments where subagents cannot be spawned, invoke `/relay-xyz` or `/cons
 1. Generate both machine-readable (`temp/planner/weekly-plan-<date>.json`) and human-readable (`temp/planner/WEEKLY-PLAN-<date>.md`) outlines.
 2. Present the plan with standard sections:
    - **Header:** Planning Window (7-day range and timezone e.g. `Oct 13 – Oct 19, 2026 (America/Los_Angeles)`), Generation Timestamp, Intake Mode, Provisional Decisions Register.
-   - **Section 0: Release Milestone Context & Active Targets:** Nearest release target from `releases_app.py next`, overdue/remaining days, and upcoming milestones.
+   - **Section 0: Release Milestone Context & Active Targets:** Target release from `releases.db` / `releases_app.py next`, overdue/remaining days, release exit criterion, manifest build burndown, dialed-in build tasks, subsequent milestones, active marathons, and jog build queue.
    - **Section 1: Immediate P0 Blockers** at the top.
    - **Section 2: PR Merge Sequence:** Topologically sorted 5 phases (Ready to Land, Ready Pending Undraft, Needs Rebase, In Review, Held Drafts & Evidence Carriers).
-   - **Section 3: Teammate Focus & Action Outlines:** Member tasks with assignment citations, plus `Unassigned / Triage Queue` and `Deferred / Parked Intake`.
+   - **Section 3: Teammate Focus & Action Outlines:** Member tasks with release build tags, PRS badges, risk gates, and assignment citations, plus `Unassigned / Triage Queue` and `Deferred / Parked Intake` sorted by priority.
    - **Section 4: Adversarial Audit Receipt:** Zero contradictions or explicit friction warnings.
-3. Treat engine output as a draft until these checks are applied:
-   - Define acceptance per owner and each applicable tenant or cohort, with dated evidence and explicit, approved exclusions. Do not generalize one owner's pass to everyone.
-   - Stamp counts and denominators with source and as-of time; recheck them before using an old snapshot as a success target.
-   - Trace audit claims to the exact source and commit. Identify the observed guardrail or threshold; do not invent constants or treat distinct guardrails as interchangeable.
-   - Estimate remaining scoped work against combined team capacity, including review, deployment, and verification. Mark deadlines as targets unless an owner has justified a commitment.
-   - After optional additions are resolved, record the exact release SHA and hold acceptance to that revision; a version label or adjacent PR number cannot expand the agreed scope.
 3. Treat engine output as a draft until these checks are applied:
    - Define acceptance per owner and each applicable tenant or cohort, with dated evidence and explicit, approved exclusions. Do not generalize one owner's pass to everyone.
    - Stamp counts and denominators with source and as-of time; recheck them before using an old snapshot as a success target.
