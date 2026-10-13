@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-12 — Muse relay turns no longer stall on an unanswerable approval prompt (GH-521)
+
+Driven Muse relay turns hit the wall cap with `cpu=0.00` and no relay block. The cause was
+`muse exec`'s default `--approval-mode on-request`: run headless, the first tool call that needs
+approval waits forever. `muse-turn.py` now passes `--approval-mode never`. Muse's sandbox stays
+on, and XYZ containment (allowlist, worktree isolation, commit guard) is unchanged.
+
+Verified with Muse Code 1.1.1 and `MUSE_MODEL=muse-wonder-1.0` in a throwaway clone. Unchanged
+shim: killed at 600 s, `timeout-idle-unknown`. With the flag: a valid reviewer block in ~2 min,
+`VERDICT: PASS`, attested Approved by `relay-drive`. No suites added (GH-831). Revert the
+`fix(GH-521)` commit to undo.
+
 ## 2026-10-12 — Sync ownership survives child deletions and manager README updates (GH-1037)
 
 A child that deletes an entire adapted entry keeps that deletion across later publications. The
