@@ -160,4 +160,12 @@ Read all six Setup artifacts in full, the approved plan QA, and the added null-c
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) resumes the already-planned final-commit gate and delivery after the harness commits this review.
 
+
+### Attestation · relay-drive — 2026-10-13T03:58:12Z
+task: RELAY-gh1046-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 602be59e1af50f2345037f4f7bfaeb999b0c723f
+added-range: 15080+4924
+added-sha256: a76ed53611030044d0a2086578e3b9de5e11773f3c15bf18c1ce89e1f57de24b
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
