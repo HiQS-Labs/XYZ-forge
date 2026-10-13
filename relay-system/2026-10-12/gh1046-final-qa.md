@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -75,5 +75,47 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The implementation follows the approved small design and the retained evidence supports its normal paths, but nullable revision metadata accepted by the existing validator now breaks the new summary. Fix that narrow regression before approval.
+swept file: yes
+
+Read all six Setup artifacts and the approved plan QA, including the full SKILL.md, intake.py and sync.py. No additional pre-existing defect requiring expansion of this change was identified. Graph tools are unavailable in this session; findings use direct source. No Git commands, suites, executable fixtures or artifact edits were performed. Only the non-mutating function probe below was run. A base diff and exact committed-state attribution were not independently checked because Git is prohibited this turn.
+
+- **[Should] R1 — Null commit metadata crashes the added human summary (`skills/3-weekly/skills-army-hq/scripts/intake.py:388`).** `validate_state` accepts a receipt with `commit: None` (`:259–264`), but slicing `receipt.get('commit', 'unknown')[:12]` raises TypeError. Both list (`:754–755`) and status (`sync.py:254–256`) call this after writing JSON; their exception handlers then return 2. Normalize missing/null revision to `unknown` before slicing, without tightening the existing receipt schema or changing stdout. The old catalog interpolation (`intake.py:412`) does not slice this value.
+  Observed input: `{'digest': 'a'*64, 'prerequisites': [], 'commit': None}`, in a schema-1 state with a valid 32-character collection id, `skills={'sample': receipt}`, and `links={}`. The direct probe accepted the state and reproduced `TypeError: 'NoneType' object is not subscriptable`.
+  Affected scope: list/status human summaries for otherwise accepted receipts whose optional commit is null; ordinary string commits and missing commits must retain their current formatting.
+  Falsifier: pass the same validated receipt to `copy_line` and expect `@ unknown` with no exception; absent commit must still show `unknown`, and a full string revision must still shorten to twelve characters. Record the narrow manual check; no new suite or schema machinery.
+  Probe command (exit 0; exception deliberately captured, no filesystem fixture or subprocess):
+  ```python
+  # Invoked with python3 -B - <<'PY', after exporting
+  # PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  import importlib.util
+  from pathlib import Path
+  spec = importlib.util.spec_from_file_location('intake_review', 'skills/3-weekly/skills-army-hq/scripts/intake.py')
+  m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+  root = Path.cwd()/'.relay-scratch/tmp/collection'
+  receipt = {'digest':'a'*64, 'prerequisites':[], 'commit':None}
+  state = {'schema':1, 'root':str(root), 'collection':'b'*32, 'skills':{'sample':receipt}, 'links':{}}
+  m.validate_state(root, state)
+  print('validate_state: accepted commit=None')
+  print('missing commit:', m.copy_line(root, 'sample', {}, {'targets':[]}))
+  try:
+      print(m.copy_line(root, 'sample', receipt, {'targets':[]}))
+  except Exception as exc:
+      print(f'commit=None: {type(exc).__name__}: {exc}')
+  ```
+  Decisive output: `validate_state: accepted commit=None`; absent commit rendered `recorded source manual/unadopted @ unknown`; null commit rendered `commit=None: TypeError: 'NoneType' object is not subscriptable`.
+
+- **[Pass] Four goals and helper reuse.** `SKILL.md:14–24` explains physical copies, recorded provenance, disposable clean merged source and explicit updates; `intake.py:637` actually copies payloads. `manual-check.log:85–97` shows copy/source/revision, configured target IDs, disabled links and COPY previews. `intake.py:374–418` shares the link predicate with the catalog and a single `print_copies`; `sync.py:255–256` uses that same printer. The existing unchanged-update return (`intake.py:797–798`) precedes the preview notice (`:804–806`). No duplicate writer or new state/dependency appears in these files.
+- **[Pass] The proposed target-path regression is not established.** `load` already invokes `validate_targets`, which calls `location` for every configured target (`intake.py:243,280`), including disabled ones. A missing ordinary target directory is permitted; a symlinked ancestor is already rejected before the summary. `sync.py:219` makes status read-only even with apply, and `:243–256` prints the same inventory summary after the retirement branch too. No new target-validation policy is requested.
+- **[Pass] Retained normal-path evidence meets the planned verification shape.** `TESTS-RESULTS/2026-10-12+GH-1046/manual-check.log:38–40` size-checks the base output and compares bytes; `:60–71` records zero exits and nonempty identical stdout for all four paths (3167/1104/286/353 bytes). Lines `:72–98` record the expected stderr and `fail=0`. `provenance.jsonl:2–6` records the existing suite green and all three red controls, including JSON indentation sensitivity. These are reviewed producer receipts, not suite runs independently repeated here, and do not cover R1.
+- **[Nit] Bound two explanatory claims.** `SKILL.md:19` says the catalog “shows the same,” although the catalog intentionally excludes disabled targets (`intake.py:409–410`) while the new summary includes them. Say it also records provenance and enabled-target status. `SKILL.md:21` says deleting the source “breaks nothing”; this is accurate for copied payloads/app links, but an explicit canonical path to that checkout makes later sync fail (`sync.py:39–49`). Prefer “does not break the copy or its app links,” keeping the existing update-source and canonical-root guidance.
+- **[Pass] Rating remains proportionate.** The small presentation change and single reported confusion incident still fit `rated 55/40/50/85` and its rationale (`PROJECT/2-WORKING/GH-1046-COPY-NOT-LINK.md:104–109`). Recurrence/history and the live persisted DB value were not independently queried.
+- **[Unverified — needs clone run]** After R1, retain the focused manual evidence and run the required final gate in the disposable full clone. The pending gate remains explicit in the plan status (`:23`) and step 6 (`:100`); this review does not claim it ran.
+
+Handing off to Producer (claude-a): fix R1, disposition the wording nit, and return for review; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
