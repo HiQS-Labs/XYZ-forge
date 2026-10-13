@@ -2880,6 +2880,11 @@ relay-file: {rel_relay}
         # cannot be reopened (GH-274), so the run refuses loudly instead of re-dispatching.
         record = attested_terminal(task, where=f"phase {args.phase_id} startup", completed=True)
         if record is None:
+            if args.force and not args.relay_task:
+                # Preserve GH-642's explicit rebuild escape. This does not accept the old
+                # approval: normal render/seed/build/review runs on a fresh force token.
+                log(f"phase {args.phase_id}: --force cannot reuse this terminal approval — rebuilding with a fresh token")
+                return False
             log(f"phase {args.phase_id}: terminal relay is NOT attested — refusing to treat it as satisfied; "
                 f"its token '{task}' is done and cannot be reopened, so this run halts (see GH-505)")
             escalate("unattested-terminal", 0)

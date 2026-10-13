@@ -88,6 +88,8 @@ if FIXED:
     root,env,brief=fixture('legacy-later')
     mutate(root)
     p=drive(root,env,brief);record('legacy-later-refuses',p,root,4)
+    p=drive(root,env,brief,['--force']);record('legacy-force-rebuild',p,root,7)
+    assert (root/'dispatched').exists()
     for name,value in [('null',None),('wrong-phase',dict(phase='other')),('wrong-lane',dict(lane='other')),('wrong-review',dict(added_sha256='0'*64)),('bad-sha',dict(candidate=''))]:
         root,env,brief=fixture('malformed-'+name)
         p=drive(root,env,brief);record('seed-'+name,p,root,0)
