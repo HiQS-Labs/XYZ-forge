@@ -252,6 +252,8 @@ def main(argv=None):
                       "errors": errors, "warnings": warnings, "drift": drift, "repo": repo,
                       "prerequisites": {n: r.get("prerequisites", []) for n, r in state["skills"].items()}}
             print(json.dumps(result, indent=2))
+            if args.status:
+                shared.print_copies(root, state, config, found)
             if apply and (actions or changes or errors):
                 shared.transact(root, state, config, actions, "sync-partial" if errors else "sync", result)
             return 2 if errors else 0

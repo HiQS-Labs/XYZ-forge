@@ -1,0 +1,37 @@
+﻿2026-10-13T00:23:05.7985457Z Current runner version: '2.337.0'
+2026-10-13T00:23:05.8010728Z ##[group]Runner Image Provisioner
+2026-10-13T00:23:05.8011616Z Hosted Compute Agent
+2026-10-13T00:23:05.8012321Z Version: 20261002.596
+2026-10-13T00:23:05.8013012Z Commit: c3d12f3313a95f25162a1503be624f3b0617f8c0
+2026-10-13T00:23:05.8013837Z Build Date: 2026-10-02T22:28:27Z
+2026-10-13T00:23:05.8014566Z Worker ID: {f0c1a092-ee30-4389-835e-af6fa90c3edc}
+2026-10-13T00:23:05.8015372Z Region: westus
+2026-10-13T00:23:05.8016480Z Cloud: Azure
+2026-10-13T00:23:05.8017153Z ##[endgroup]
+2026-10-13T00:23:05.8018723Z ##[group]Operating System
+2026-10-13T00:23:05.8019499Z Ubuntu
+2026-10-13T00:23:05.8020063Z 24.04.5
+2026-10-13T00:23:05.8020667Z LTS
+2026-10-13T00:23:05.8021297Z ##[endgroup]
+2026-10-13T00:23:05.8021878Z ##[group]Runner Image
+2026-10-13T00:23:05.8022550Z Image: ubuntu-24.04
+2026-10-13T00:23:05.8023124Z Version: 20261004.327.1
+2026-10-13T00:23:05.8024221Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261004.327/images/ubuntu/Ubuntu2404-Readme.md
+2026-10-13T00:23:05.8026340Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261004.327
+2026-10-13T00:23:05.8027464Z ##[endgroup]
+2026-10-13T00:23:05.8028668Z ##[group]GITHUB_TOKEN Permissions
+2026-10-13T00:23:05.8030774Z Contents: read
+2026-10-13T00:23:05.8031441Z Metadata: read
+2026-10-13T00:23:05.8032123Z Pages: write
+2026-10-13T00:23:05.8032754Z ##[endgroup]
+2026-10-13T00:23:05.8034839Z Secret source: Actions
+2026-10-13T00:23:05.8036173Z Cache mode: write
+2026-10-13T00:23:05.8036930Z Prepare workflow directory
+2026-10-13T00:23:05.8377563Z Prepare all required actions
+2026-10-13T00:23:05.8428287Z Getting action download info
+2026-10-13T00:23:06.2302672Z Download action repository 'actions/checkout@v7' (SHA:3d3c42e5aac5ba805825da76410c181273ba90b1)
+2026-10-13T00:23:06.3450054Z Download action repository 'actions/setup-python@v7' (SHA:5fda3b95a4ea91299a34e894583c3862153e4b97)
+2026-10-13T00:23:06.4219076Z Download action repository 'actions/upload-pages-artifact@v5' (SHA:fc324d3547104276b827a68afc52ff2a11cc49c9)
+2026-10-13T00:23:06.7659053Z Getting action download info
+2026-10-13T00:23:06.9000674Z Download action repository 'actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f' (SHA:bbbca2ddaa5d8feaa63e36b76fdaad77386f024f)
+2026-10-13T00:23:07.0109299Z Complete job name: build

@@ -1,0 +1,22 @@
+{
+  "mini": {
+    "seeded": true,
+    "absent_after_first_publication": true,
+    "recreated_after_second_publication": false,
+    "accepted_behavior": true,
+    "child": "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+    "push": false,
+    "origin": "/private/tmp/xyz1012-final-controls-af50c205/mini-child"
+  },
+  "manager": {
+    "head_before": "28752d33c5133286586b19242cf2a05facd11616",
+    "head_after": "43bc5f8cfc7981a341367d4805d9ef57c05190b2",
+    "status": "",
+    "warning": "skills-army-hq: committed skills-army-hq in /private/tmp/xyz1012-final-controls-af50c205/pulse-collection (43bc5f8); git-pulse pushes it on its next run\n",
+    "all_targets_disabled": true,
+    "root_readme_refreshed": true,
+    "accepted_behavior": true,
+    "collection": "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+    "network_publish": false
+  }
+}

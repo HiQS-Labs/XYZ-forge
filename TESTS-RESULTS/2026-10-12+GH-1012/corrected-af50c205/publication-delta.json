@@ -1,0 +1,20 @@
+{
+  "base": "489ba1b45b6924dbb57f70ba1bed98645db54644",
+  "candidate": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+  "parents": [
+    "489ba1b45b6924dbb57f70ba1bed98645db54644"
+  ],
+  "paths": [
+    "M\tLEADERBOARD.md",
+    "D\tPROJECT/1-INBOX/GH-1010-MERGE-HISTORY-RECON.md",
+    "D\tPROJECT/2-WORKING/GH-1037-SYNC-FIXES.md",
+    "M\tPROJECT/2-WORKING/MARATHON-PLAN-2026-10-12.md",
+    "A\tPROJECT/3-COMPLETED/GH-1010-MERGE-HISTORY-RECON.md",
+    "A\tPROJECT/3-COMPLETED/GH-1037-SYNC-FIXES.md",
+    "A\tTESTS-RESULTS/2026-10-12+GH-591/wave-489ba1b45b6924dbb57f70ba1bed98645db54644/provenance.jsonl",
+    "A\tTESTS-RESULTS/2026-10-12+GH-591/wave-489ba1b45b6924dbb57f70ba1bed98645db54644/validation.jsonl",
+    "M\treleases.db",
+    "M\treleases.sql"
+  ],
+  "runtime_gate_blobs_unchanged": true
+}

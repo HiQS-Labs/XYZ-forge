@@ -1,0 +1,1 @@
+{"schema_version": "1.0", "issue": 1030, "pr": 1019, "base_sha": "d09b8f9dedd436be3e5f883f68deff985719fe1b", "merge_sha": "afa2763516ac988ab7d02a424237f9eddd581eed", "raw_log_txt_added_lines": 4859, "note": "Original PR evidence dominates additions; tracked under #1029. This task publishes no new raw logs."}
