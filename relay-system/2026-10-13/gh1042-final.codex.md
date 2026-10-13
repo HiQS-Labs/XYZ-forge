@@ -45,3 +45,11 @@ swept file: yes
 - [Unverified — needs clone run] The final full publication gate remains pending. This PASS approves the reviewed implementation for that next gate; it does not assert publication/merge readiness or a fresh end-to-end provider run. No blocking source finding within the bounded review.
 
 Commit: none
+
+### Attestation · relay-drive — 2026-10-13T15:55:35Z
+task: RELAY-GH1042-FINAL-20261013
+reviewer: codex
+status: Approved
+reviewed-head: 8077b03ac6235498bd6e2e098e95a9fae59b1127
+added-range: 3777+4331
+added-sha256: 23d622ed60ec8d3c324adcdb9b399888d0b6584514f21bc54e26fa87f3f504d7
