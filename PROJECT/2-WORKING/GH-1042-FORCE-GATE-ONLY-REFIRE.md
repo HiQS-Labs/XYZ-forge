@@ -1,6 +1,6 @@
 ---
 title: "GH-1042 + GH-1045: trusted phase completion recovery"
-status: Planning — awaiting independent plan QA
+status: In progress — plan QA approved
 created: 2026-10-13
 updated: 2026-10-13
 owner: Codex
@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Fresh clone, live issue intake, graph/source trace and reproduced recovery defects. | Independent Codex plan QA before production edits. |
+| Fresh clone, live issue intake, graph/source trace and reproduced recovery defects. | Implement approved plan and verify recovery controls. |
 
 ## Scope and per-issue acceptance
 
@@ -67,9 +67,9 @@ Legacy limitation: a phase completed by an older driver, followed already by unr
 
 ## Evidence and QA gates
 
-No new test files or gate machinery. Existing suites: gh491-gate-only-refire, gh505-relay-attest, gh642-force-spent-token, marathon-drive (verify exact existing filename), and Python layer if applicable. Manual replay under TESTS-RESULTS is an evidence artifact, not a registered suite. Controls must include empty/missing attestation, unrelated family, force generation, numeric generation, explicit retry, legacy later drift, tampered review binding, divergent HEAD, red gate and post-approve mutation, historical gate-induced mutation, result identity, and a two-phase shell traversal. Compare disposable clone HEAD/config/origin/local identity before and after suite runs; drift invalidates evidence.
+No new test files or gate machinery. Existing suites: gh491-gate-only-refire, gh505-relay-attest, gh642-consumer-fruit, marathon-drive, and Python layer if applicable. Manual replay under TESTS-RESULTS is an evidence artifact, not a registered suite. Controls must include empty/missing attestation, unrelated family, force generation, numeric generation, explicit retry, legacy later drift, tampered review binding, divergent HEAD, red gate and post-approve mutation, historical gate-induced mutation, result identity, and a two-phase shell traversal. Compare disposable clone HEAD/config/origin/local identity before and after suite runs; drift invalidates evidence.
 
-Plan QA: pending. Final QA: pending. Gate: pending. No claim of merge readiness before all three pass. Reviewer budget is three rounds; no enterprise machinery or speculative approval redesign.
+Plan QA: Approved, third round, relay driver exit0; earlier two scaffold-invalid turns do not qualify. Final QA: pending. Gate: pending. No claim of merge readiness before all three pass. Reviewer budget is three rounds; no enterprise machinery or speculative approval redesign.
 
 ## Ratings and recurrence (2026-10-13)
 

@@ -198,7 +198,7 @@ def _write_terminal_result_inner(code):
                 pass
 
     gate_receipt_path = None
-    if head_sha and _RESULT.get("root"):
+    if head_sha and _RESULT.get("root") and not _RESULT.get("historical_completion"):
         candidate = os.path.join(_RESULT["root"], ".xyz", "receipts", f"{head_sha}.json")
         if os.path.isfile(candidate):
             gate_receipt_path = candidate
@@ -1414,12 +1414,7 @@ def main():
         pre_advance_cmd = f"bash {shlex.quote(os.path.join(root, 'validate.sh'))}"
     _RESULT["gate_cmd"] = pre_advance_cmd
     relay_task = args.relay_task or f"MARATHON-{args.phase_id.upper()}-TURN"
-    # GH-642: --force on a spent default token auto-suffixes a fresh relay-task id (see
-    # resolve_force_relay_task). Resolved HERE — before render, the receipt
-    # (_RESULT["token"]), heartbeat, and seed — so every downstream consumer sees exactly one
-    # token identity. The lane-attempt key stays lane/phase-keyed.
-    relay_task = resolve_force_relay_task(
-        relay_task, tick_bin, force=bool(args.force), explicit=bool(args.relay_task))
+    # Resolve historical satisfaction on this original identity before any force allocation.
     _RESULT["token"] = relay_task
     # GH-207: a marathon lane namespaces its phase paths + attempt state so two lanes sharing a bare
     # phase id (p1) don't collide. Defaults to the phase id when no lane namespace is set.
@@ -2492,7 +2487,7 @@ relay-file: {rel_relay}
         actor = claimer if status == "claimed" else (handoff if status == "open" else "")
         return (status, actor)
 
-    def attested_terminal(task_name=None, candidate=None, where="probe"):
+    def attested_terminal(task_name=None, candidate=None, where="probe", completed=False):
         """GH-505/GH-509: is this lane's relay TERMINAL *and attested by relay-drive* for the
         configured reviewer, with the token read as done and the candidate revision being the
         reviewed revision plus transcript-only commits? Returns the record or None. Every refusal is
@@ -2511,6 +2506,14 @@ relay-file: {rel_relay}
             log(f"{where}: relay is terminal (STATUS: {s}) but NOT attested by relay-drive — {why} — not accepting it (GH-505)")
             return None
         cand = candidate or _cmd_out(["git", "-C", trepo, "rev-parse", "HEAD"])
+        if completed:
+            historical, why = relay_attest.phase_completion_candidate(
+                record, phase=args.phase_id, lane=lane_state_key, head=cand, target_repo=trepo)
+            if why:
+                log(f"{where}: historical completion refused — {why}")
+                return None
+            if historical:
+                cand = historical
         ok, why = relay_attest.candidate_ok(record, cand, trepo)
         if not ok:
             log(f"{where}: attested approval found but candidate {cand[:12] if cand else '?'} is not the reviewed revision — {why} — not accepting it (GH-505)")
@@ -2665,7 +2668,11 @@ relay-file: {rel_relay}
                 f"are on '{head}'. Open the PR by hand: "
                 f"gh pr create --base {base} --head {head}")
 
+    completed_candidate = [None]
+
     def complete_phase_success(success_mode="approved"):
+        historical = success_mode == "already-satisfied" and completed_candidate[0] is not None
+        recovery_head = _cmd_out(["git", "-C", args.target_root or root, "rev-parse", "HEAD"]) if historical else None
         # GH-438 Phase 2: judged BEFORE the repo-level gate. The gate knows nothing about this lane's
         # acceptance — that is exactly why the reported lane passed it while having changed nothing —
         # so a lane that did not do its own job should say so in its own terms, not as a gate failure.
@@ -2696,7 +2703,7 @@ relay-file: {rel_relay}
                 escalate("pre-advance-failed", 0)
                 xyz_marathon_emit("red", f"halted at phase {args.phase_id} — pre-advance gate failed")
             sys.exit(5)
-        if args.requires_test and not requires_test_delta(args.requires_test):
+        if not historical and args.requires_test and not requires_test_delta(args.requires_test):
             log(f"requires-test FAILED — no new/updated test detected at: {args.requires_test}")
             escalate("requires-test-missing", 0)
             xyz_marathon_emit("red", f"halted at phase {args.phase_id} — required test not added/updated: {args.requires_test}")
@@ -2713,7 +2720,16 @@ relay-file: {rel_relay}
         attested_task = completed_relay_task() if success_mode == "already-satisfied" else relay_task
         def bind_candidate(where):
             cand = _cmd_out(["git", "-C", args.target_root or root, "rev-parse", "HEAD"])
-            rec = attested_terminal(attested_task, candidate=cand, where=where)
+            rec = attested_terminal(attested_task, candidate=cand, where=where, completed=historical)
+            if rec is not None and historical:
+                # The gate and transcript processing may not introduce unreviewed source changes.
+                recovery_record = dict(rec, reviewed_head=recovery_head)
+                ok, why = relay_attest.candidate_ok(recovery_record, cand, args.target_root or root)
+                if not ok:
+                    log(f"{where}: recovery changed non-transcript content — {why}")
+                    rec = None
+                else:
+                    cand = completed_candidate[0]
             if rec is None:
                 log(f"phase {args.phase_id}: relay exited 0 but its approval is not attested for candidate {cand[:12] if cand else '?'} — refusing to publish success")
                 escalate("candidate-drifted-from-reviewed-head", 0)
@@ -2721,10 +2737,8 @@ relay-file: {rel_relay}
                 sys.exit(4)
             return cand, rec
         candidate, record = bind_candidate(f"phase {args.phase_id} success")
-        subprocess.run([tick_bin, "log", "marathon.phase.approved", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
         refresh_remote_tracking_ref()
-        if args.post_approve_cmd:
+        if args.post_approve_cmd and not historical:
             log(f"phase approved — running post-approve command: {args.post_approve_cmd}")
             post_approve_exit = run_post_approve_cmd()
             if post_approve_exit != 0:
@@ -2733,6 +2747,19 @@ relay-file: {rel_relay}
                 sys.exit(9)
             # the hook may move HEAD — the receipt names ONE validated candidate, taken after it
             candidate, record = bind_candidate(f"phase {args.phase_id} post-approve")
+        if not historical:
+            try:
+                relay_attest.record_phase_completion(
+                    record, phase=args.phase_id, lane=lane_state_key, candidate=candidate,
+                    target_repo=args.target_root or root)
+            except Exception as exc:
+                log(f"phase {args.phase_id}: could not persist validated completion — {exc}")
+                escalate("phase-completion-write-failed", 0)
+                sys.exit(4)
+        _RESULT["historical_completion"] = historical
+        subprocess.run([tick_bin, "log", "marathon.phase.approved", attested_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
+        _RESULT["token"] = attested_task
         _RESULT["reviewed_candidate"] = candidate
         _RESULT["reviewed_head"] = record["reviewed_head"]
         _RESULT["added_sha256"] = record["added_sha256"]
@@ -2742,7 +2769,7 @@ relay-file: {rel_relay}
         log(success_text)
         xyz_marathon_emit("green", success_text)
         head_sha = candidate
-        if head_sha:
+        if head_sha and not historical:
             try:
                 receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
                 if os.path.isfile(receipt_py):
@@ -2814,7 +2841,7 @@ relay-file: {rel_relay}
         #      the file at all. This is what --retry passes, and a retry must never be satisfied by
         #      the attempt it was invoked to retry.
         #   2. Otherwise accept the recorded name only if it belongs to THIS lane's token family: the
-        #      derived base itself, or one of GH-116's `-<n>` retry derivatives of it. Anything else
+        #      derived base itself, GH-116's `-<n>` retry or GH-642's `-R<n>` force derivatives. Anything else
         #      falls back to the base token — i.e. exactly the pre-GH-385 behavior, which is safe.
         #
         # The rejection is logged rather than silently absorbed: a lane that rebuilds because its
@@ -2824,7 +2851,7 @@ relay-file: {rel_relay}
         recorded = recorded_relay_task()
         if not recorded or recorded == relay_task:
             return relay_task
-        if re.fullmatch(re.escape(relay_task) + r"-\d+", recorded):
+        if re.fullmatch(re.escape(relay_task) + r"-(?:R)?\d+", recorded):
             return recorded
         log(f"relay directive names task '{recorded}', which is not {relay_task} or a retry derivative of it "
             f"— ignoring it and resolving the satisfied check against {relay_task}")
@@ -2850,12 +2877,15 @@ relay-file: {rel_relay}
         # GH-505/GH-509: the word `Approved` is builder-writable; only relay-drive's attestation says
         # a reviewer approved THIS file at a revision this HEAD still honours. Without it, a spent token
         # cannot be reopened (GH-274), so the run refuses loudly instead of re-dispatching.
-        if attested_terminal(task, where=f"phase {args.phase_id} startup") is None:
+        record = attested_terminal(task, where=f"phase {args.phase_id} startup", completed=True)
+        if record is None:
             log(f"phase {args.phase_id}: terminal relay is NOT attested — refusing to treat it as satisfied; "
                 f"its token '{task}' is done and cannot be reopened, so this run halts (see GH-505)")
             escalate("unattested-terminal", 0)
             xyz_marathon_emit("red", f"halted at phase {args.phase_id} — terminal relay without a reviewer attestation")
             sys.exit(4)
+        completion = record.get("phase_completion")
+        completed_candidate[0] = completion["candidate"] if completion else None
         return True
 
     if not args.dry_run and satisfied_lane_terminal():
@@ -2885,6 +2915,11 @@ relay-file: {rel_relay}
                     f"terminal (STATUS: {_s}) and its recorded token '{_recorded}' reads done — re-firing "
                     f"WITHOUT --retry would have re-run only the pre-advance gate and dispatched no "
                     f"builder or reviewer turn (GH-491)")
+
+    # GH-1042: only a lane that actually rebuilds needs GH-642's fresh force token.
+    relay_task = resolve_force_relay_task(
+        relay_task, tick_bin, force=bool(args.force), explicit=bool(args.relay_task))
+    _RESULT["token"] = relay_task
 
     if not args.dry_run:
         try:

@@ -1,3 +1,18 @@
+---
+title: Recon — phase recovery
+status: In progress
+created: 2026-10-13
+updated: 2026-10-13
+owner: Codex
+goal: Trace historical phase recovery and approval boundaries.
+---
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Entry, state and consumer trace confirmed. | Verify implementation against the shared repair plan. |
+
 # Recon Map — phase completion recovery
 Commit: b9f07ea5b8d95bac62a3ed9f886770fee883030f · Mode: graph + exact source · Lanes: parent entry/failure plus independent read-only state/contract trace.
 
