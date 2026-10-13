@@ -1,6 +1,6 @@
 # RELAY · GH1042 + GH1045 repair plan
-NEXT: codex (Reviewer)
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 3 / 3
 
 ## Setup
@@ -75,3 +75,19 @@ Verification: read bin/validate-relay-block: ## Log plus a last `VERDICT: PASS` 
 
 ## ▶ TAKE YOUR TURN — codex (round 3, authoritative current instructions)
 Review the same actual plan and source with prior textual findings as leads. Append a Round 3 Reviewer block. To approve, set header STATUS: Approved and NEXT: —, and write EXACTLY `VERDICT: PASS` plus `Basis: textual only — <actual source checked>` in your new block. Use literal `VERDICT: FAIL` for Changes requested, or `VERDICT: PARKED` for blocked. Do NOT write any subsequent verdict line with value Approved; that spelling fails the machine parser. State swept file: yes/no and cited findings. Include Commit: none. Only edit this relay thread; no git, suites or production edits. Mark token done if Approved. Three-round budget is binding.
+
+### Round 3 · Reviewer · codex
+
+VERDICT: PASS
+Basis: textual only — entire canonical GH1042/GH1045 plan and recon; current relay_attest.py including write/load/candidate_ok; marathon_drive.py force allocation, completion, startup and mid-relay recovery; Jog attestation consumer and complete _merge_reviewed_pr; shell phase traversal; retained baseline JSON/provenance.
+swept file: yes
+Commit: none
+
+- [Pass — plan] Steps 1–2 address distinct defects: force allocation precedes satisfaction (utils/py/marathon_drive.py:1416), and completed_relay_task currently accepts only numeric derivatives (utils/py/marathon_drive.py:2791). Resolve against the original family before allocation, retain explicit retry, and propagate the selected token consistently into result/heartbeat/seed. Shell traversal already limits explicit retry to its target (relay-automation/marathon.sh:608).
+- [Pass — plan] The protected optional completion field extends existing atomic publication and validated approval loading (utils/py/relay_attest.py:197,216), without changing candidate_ok (utils/py/relay_attest.py:301). Plan steps 2–3 require historical candidate validation, ancestry, phase/lane and review binding, plus successful initial obligations before stamping. Missing-field strict fallback, malformed refusal, replacement on fresh approval and inert rollback are proportionate to the stated local trust boundary.
+- [Pass — plan] Step 4 must distinguish a validated completion stamp from an already-satisfied mode label: the mid-relay path can obtain its first approval (utils/py/marathon_drive.py:3401). The plan correctly permits skipping required-test/post-approve only after actual completed history, retains current acceptance/gate checks, rejects recovery-induced source drift and never refreshes the historical stamp. Initial completion must still satisfy the full closure at utils/py/marathon_drive.py:2668.
+- [Pass — plan] Step 5 preserves the distinction between historical reviewed_candidate and observational head_sha. Review implementation of both receipt publication and existing receipt lookup (utils/py/marathon_drive.py:200,2742) against that requirement. Jog loads the approval at utils/py/jog_run.py:414 and its merge function at utils/py/jog_run.py:1430 requires actual PR-head equality, unchanged candidate_ok and SHA-bound merge. Historical phase recovery therefore need not weaken merge eligibility.
+- [Unverified — needs clone run] No runtime probe, suite, fixture or gate was executed. Retained baseline-results.json reports force dispatch exit 7, historical refusal exit 4, force-family dispatch exit 7 and explicit-retry dispatch exit 7; provenance.jsonl attributes these producer observations to b9f07ea5b8d95bac62a3ed9f886770fee883030f. These are not independently repeated measurements. Plan step 6 and its refusal/mutation/two-phase controls, exact-revision gate and final independent implementation QA remain required.
+- [Informational — evidence limits] Verify-tier inventory returned all 84 projects with no index for this worktree. XYZ-forge coverage reports generation 2026-09-01T15:54:30Z, changed marathon_drive/jog_run metadata, untracked relay_attest and partial marathon.sh line 351; relay_attest graph search returned zero symbols. Current source was read directly, including the flagged shell range. No completeness claim relies on the stale graph. Ratings sums 275/260 are consistent; live issue/duplicate/RELEASES assertions remain producer evidence.
+
+No blocking textual plan finding. This approval covers the implementation plan only; implementation correctness and merge readiness remain pending.
