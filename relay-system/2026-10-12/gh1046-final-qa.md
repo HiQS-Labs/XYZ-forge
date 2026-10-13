@@ -52,7 +52,8 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the implementation diff `git diff d86f647b245e866f23245211b8d36e4cc49ecc67..HEAD -- skills/3-weekly/skills-army-hq` (SKILL.md, scripts/intake.py, scripts/sync.py), against the approved plan `PROJECT/2-WORKING/GH-1046-COPY-NOT-LINK.md` (plan QA: `relay-system/2026-10-12/gh1046-plan-qa.md`, approved r2) and the evidence in `TESTS-RESULTS/2026-10-12+GH-1046/` (`manual-check.log`, `provenance.jsonl`). Issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1046
+- Artifact under review: `skills/3-weekly/skills-army-hq/SKILL.md`, `skills/3-weekly/skills-army-hq/scripts/intake.py`, `skills/3-weekly/skills-army-hq/scripts/sync.py`, `PROJECT/2-WORKING/GH-1046-COPY-NOT-LINK.md`, `TESTS-RESULTS/2026-10-12+GH-1046/manual-check.log`, `TESTS-RESULTS/2026-10-12+GH-1046/provenance.jsonl`
+- Diff under review: git diff d86f647b245e866f23245211b8d36e4cc49ecc67..HEAD -- skills/3-weekly/skills-army-hq (the three skill files above), graded against the approved plan (plan QA thread relay-system/2026-10-12/gh1046-plan-qa.md, approved r2) and the evidence files above. Issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1046
 - Operational envelope: local single-operator CLI plus a skill doc; a clarity change. Grade against the issue's Goal 1-4 and the approved plan with commensurate complexity; do not ask for new state, JSON keys, flags, tests or machinery (GH-831: a new test file or validate.sh entry in the diff is itself a finding). Read-only probes only; no validate.sh / test/*.sh / pytest in the relay worktree.
 - Questions:
   1. Is each issue goal met? (1) copy not link, (2) source path + revision per copy, (3) which app roots link, (4) consequences (any clean checkout of the merged revision; deletable after intake; update needs a newer source). Cite SKILL.md lines and the emitted lines in `manual-check.log`.
