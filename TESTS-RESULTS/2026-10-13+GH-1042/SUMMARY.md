@@ -13,3 +13,7 @@ Legacy limitation: records with no protected completion field remain strict curr
 ## Final legacy-force compatibility checkpoint
 
 Source revision `9b392b358189545b0d077ca0cc3b9a51d778e8ba`: 34 expected manual outcomes passed, including explicit --force rebuilding a legacy divergent approval on a fresh token; plain legacy recovery still refuses. Marathon-drive passed again, clone identity unchanged. The prior source's explicit legacy-force halt was recorded as a red compatibility control. New immutable receipts are in `after-legacy-force/`; prior revision evidence above remains retained. Final QA round1 passed for the preceding source; round2 and publication gate are required for this changed source.
+
+## Publication boundary
+
+Final Codex QA round2 Approved, driver exit0, reviewed c98e1201; subsequent relay-only commits retain the same production blobs. Full installed pre-push gate on macOS at `d37140db370feb098476b38c9d9341e4aa75c222` passed409/409, zero reruns, 896.11s including push. Before/after clone identity is identical. Outer raw validation telemetry and push log are retained in publication/. This is local publication evidence, not promotion qualification or a live provider replay.

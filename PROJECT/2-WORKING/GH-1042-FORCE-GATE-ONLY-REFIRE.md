@@ -1,6 +1,6 @@
 ---
 title: "GH-1042 + GH-1045: trusted phase completion recovery"
-status: Implemented — final QA and publication gate pending
+status: Verified — PR publication pending
 created: 2026-10-13
 updated: 2026-10-13
 owner: Codex
@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Fresh clone, live issue intake, graph/source trace and reproduced recovery defects. | Final independent QA, full push gate and PR publication. |
+| Fresh clone, live issue intake, graph/source trace and reproduced recovery defects. | Publish repair PR against development; await merge/reconciliation. |
 
 ## Scope and per-issue acceptance
 
@@ -84,3 +84,7 @@ Plan QA completed with driver exit0 on round3. Round1 and round2 were structural
 Final QA round1 approved source7128b496 with driver exit0. A subsequent producer compatibility check found --force on a legacy divergent approval had lost GH642's rebuild escape (exit4/no dispatch). Restored explicit force fallthrough to fresh-token rebuild, never satisfaction; plain recovery still refuses. This narrow preservation is covered by plan step1 (unsatisfied force allocates a fresh token). Final QA round2 will review the changed source and new control; round1 approval is stale for that source.
 
 At source9b392b35, all34 manual expected outcomes and the existing Marathon suite pass; identity before/after remains unchanged. New receipts in TESTS-RESULTS/2026-10-13+GH-1042/after-legacy-force/.
+
+## Verified handoff
+
+Final Codex QA round2 Approved with driver exit0 (relay-system/2026-10-13/gh1042-final.codex.md). Full macOS pre-push gate409/409, zero retries at d37140db; clone identity unchanged. Runtime source remains9b392b35's exact blobs; subsequent changes are retained receipts and handoff metadata. PR publication follows the final documentation gate. Awaiting merge is not shipped; both issues stay open until landing. Jog was not dispatched.
