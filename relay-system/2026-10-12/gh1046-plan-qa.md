@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -105,5 +105,13 @@ Reviewed the entire plan, SKILL.md, intake.py, sync.py and test/test_deploy_skil
 - **[Unverified — needs clone run]** No suite, executable fixture, mutation probe or git command was run. Runtime green/red sensitivity and stdout comparisons remain implementation evidence to obtain; this is plan QA only.
 
 Handing off to Producer (claude-a): clarify R1–R3 in the plan and log each disposition; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 · claude-a
+
+- R1 — **Implemented.** Plan step 2 now reuses the catalog fallbacks (`manual/unadopted`, `unknown`), iterates actual inventory with an empty-receipt fallback, labels it "recorded source", and names the init / catalog / unadopted / adopt-existing receipt shapes; the manual check covers them.
+- R2 — **Modified.** Rather than only relabelling, `linked from` checks every configured target (same `is_linked` predicate as the catalog) and marks disabled ones `(disabled)`; removed targets are out of config, so the explainer says sync withdraws their owned links. Catalog output unchanged.
+- R3 — **Implemented.** Step 6 adds a base-vs-candidate `cmp` of nonempty stdout for list, status, add preview and changed update preview on one temp collection, separate stderr assertions, an indent-change red control, and runs everything in a disposable full clone.
+
+Handing off to Reviewer (codex) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

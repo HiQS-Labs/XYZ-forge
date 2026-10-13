@@ -60,21 +60,35 @@ for no reader. **Rollback:** revert the single commit (Easy).
    clean checkout of the merged revision, need not stay on `main`, deletable after intake); updates
    are explicit (`intake.py update NAME --source <newer checkout>`, then sync; a deleted recorded
    source needs `--source`). -> expect diff confined to that block.
-2. `intake.py`: add `linked_targets(root, name, config)` (enabled target ids whose entry is a
-   symlink to `root/name`) and `copy_line(root, name, receipt, config)` ->
-   `<name>: copy at <root/name> (from <source> @ <commit12>[, dirty]); linked from: <ids|none>`.
-   `render_catalog()` reuses `linked_targets` (output unchanged).
+2. `intake.py`: add `is_linked(root, name, target)` (the existing catalog predicate: the target's
+   entry is a symlink whose text is `root/name`) and `copy_line(root, name, receipt, config)` ->
+   `<name>: copy at <root/name> (recorded source <source> @ <commit12>[, dirty]); linked from: <ids|none>`.
+   `render_catalog()` reuses `is_linked` (output unchanged). Fallbacks reuse the catalog's
+   conventions: no `source` -> `manual/unadopted`, no `commit` -> `unknown` (plain `init` manager
+   receipt, `catalog`-adopted and unadopted inventory entries; iterate actual inventory with an
+   empty-receipt fallback). `init --adopt-existing` records the local Pulse collection, which the line
+   reports as-is ("recorded source"). "linked from" checks every *configured* target, marking
+   disabled ones `(disabled)` since disabling leaves links until sync withdraws them; targets removed
+   from config are not listed (the explainer says sync withdraws their owned links).
 3. `intake.py list`: after the JSON, print to stderr a one-line explainer plus `copy_line` per
    skill. -> expect stdout JSON unchanged.
 4. `intake.py add|update` preview (not apply): stderr line
    `will COPY <source> @ <commit12> into <root/name>; apps link to that copy, not to the source`.
 5. `sync.py --status`: after the JSON, the same stderr explainer + `copy_line` per skill
    (reusing `shared.copy_line`).
-6. Verify: `bash test/skills-army-hq.sh` (focused; existing pytest parses stdout JSON so it would
-   go red if stdout changed); manual check in a temp collection showing the new lines, recorded under
-   `TESTS-RESULTS/2026-10-12+GH-1046/` with `provenance.jsonl`; red control: temporarily print a
-   line to stdout in `list`/`--status` and watch the existing suite fail, then revert. Final gate per
-   `utils/ci-route.sh` (skills-army-hq subsystem) once on the final commit, in a disposable clone.
+6. Verify (all runs in a disposable full clone, never this task clone):
+   - existing suite `bash test/skills-army-hq.sh` green;
+   - manual byte check: in one temp collection (with an imported skill, a catalog-adopted skill,
+     the init manager receipt, one enabled linked target and one disabled-but-still-linked target),
+     capture stdout of `list`, `sync.py --status`, an `add` preview and a changed `update` preview
+     with the base scripts and with the candidate scripts; `cmp` must report identical, nonempty
+     stdout; assert the new stderr lines separately (fallback text, `(disabled)`, `will COPY`).
+     Recorded under `TESTS-RESULTS/2026-10-12+GH-1046/` with `provenance.jsonl`;
+   - red controls: (a) a stdout print in the `--status` path makes the existing suite fail at
+     `test/test_deploy_skills.py:581/617` (json.loads); (b) a one-space JSON indent change makes the
+     manual `cmp` fail although json.loads would pass; (c) `copy_line` raising makes the existing
+     `list`/`--status` calls (`:171,173,222,315,316`) fail on exit code. Each reverted after.
+   - final gate per `utils/ci-route.sh` (skills-army-hq subsystem) once on the final commit.
 
 ## Rating rationale (2026-10-12)
 
