@@ -49,3 +49,22 @@ Verification: baseline replay unchanged; source tree unchanged.
 
 ## ▶ TAKE YOUR TURN — codex (round 2)
 Review the same committed plan and source again. Append `### Round 2 · Reviewer · <timestamp>` under this Log, with `**Verdict:** Approved / Changes requested`, `**Basis:** textual only`, `swept file: yes/no`, cited findings and `**Commit:** none`. Set STATUS and NEXT as appropriate and mark tick token done on approval. Edit only this thread; no git or tests. Prior verdict was rejected by harness, not accepted QA.
+
+### Round 2 · Reviewer · 2026-10-13T15:35:09Z
+
+**Verdict:** Approved
+**Basis:** textual only
+swept file: yes — the entire canonical plan and recon, with direct reads of the relevant attestation, completion/recovery, force allocation, result and Jog merge paths.
+**Commit:** none
+
+- [Pass — plan] The two defects require both token ordering and a distinct historical completion fact. Force allocation currently changes the default token before satisfaction (utils/py/marathon_drive.py:1416); completed_relay_task accepts only numeric derivatives (utils/py/marathon_drive.py:2791). Plan steps 1–2 address both without relaxing explicit retry. Preserve one selected identity across heartbeat, seed and result when moving allocation.
+- [Pass — plan] Protected optional completion metadata reuses the existing atomic publication and validated approval reader (utils/py/relay_attest.py:197,216). The plan requires phase/lane and review binding, ancestry, unchanged candidate_ok at the historical candidate, malformed-record refusal, strict missing-field fallback and replacement on fresh approval. This is sufficient for the stated local trust model; legacy completion already followed by source drift deliberately still requires explicit rebuild.
+- [Pass — plan] Completion must be stamped only after required-test and post-approve checks. The current success closure reruns these and binds the candidate again after post-approve (utils/py/marathon_drive.py:2668). Plan steps 3–4 correctly distinguish completed historical recovery from merely approved or failed completion, keep current acceptance/gate checks, reject recovery-induced source drift and never advance the old stamp. The mid-relay already-satisfied path (utils/py/marathon_drive.py:3401) must retain initial-completion obligations unless a validated stamp actually exists; a shared success_mode label alone is insufficient.
+- [Pass — plan] Result and receipt honesty is explicitly required in step 5. Historical reviewed_candidate must stay distinct from observational head_sha, including the existing receipt-path lookup (utils/py/marathon_drive.py:200). Jog loads the attestation and passes reviewed_candidate to the merge boundary (utils/py/jog_run.py:414); that boundary compares actual PR head and applies unchanged candidate_ok before SHA-bound merge (utils/py/jog_run.py:1430). Thus historical phase satisfaction does not authorize merging an unreviewed successor.
+- [Unverified — needs clone run] No runtime probe, suite, executable fixture or gate was run in this turn. Producer baseline-results.json records force dispatch exit 7, historical refusal exit 4, and explicit-retry dispatch exit 7; provenance.jsonl attributes its manual replay to b9f07ea5b8d95bac62a3ed9f886770fee883030f. These are retained producer observations, not independently repeated evidence. Plan step 6 and its control list remain required, including failed completion, two-phase traversal, identity and mutation refusals, plus final independent QA and exact-revision gate.
+- [Informational — evidence limits] Verify-tier graph inventory was fully paginated (84 projects); this worktree is not indexed. XYZ-forge coverage is generation 2026-09-01T15:54:30Z in the primary checkout, with changed marathon_drive/jog_run metadata, untracked relay_attest, and partial shell line 351. Conclusions use current-worktree source instead, including that shell range and traversal at relay-automation/marathon.sh:583. No exhaustive graph or live GitHub/RELEASES-state claim is made. Ratings sums 275 and 260 are internally consistent; external read-back remains producer evidence.
+
+No blocking plan finding. Approval authorizes the stated implementation plan only; runtime correctness and merge readiness remain pending.
+
+### System · relay-drive — 2026-10-13T15:35:16Z
+terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
