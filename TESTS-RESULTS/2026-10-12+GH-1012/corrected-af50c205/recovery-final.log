@@ -1,0 +1,32 @@
+[
+  {
+    "mainline": 1,
+    "synthetic_merge": "e73bd0d52742a69d6c64fea5a14cc2dc5d6141da",
+    "parents": [
+      "a076b1b117a68252dc3d9d1c4901b0c31fcb4db3",
+      "af50c205e3f04f3fc6a02ac6c402f2013123b127"
+    ],
+    "expected_tree": "58f39e121cead7a4593a212f7433409f1603b6ce",
+    "result_tree": "58f39e121cead7a4593a212f7433409f1603b6ce",
+    "matches_base": true,
+    "diff_exit": 0,
+    "identity_unchanged": true,
+    "root": "/tmp/xyz1012-final-recovery-af50c205-mainline-1",
+    "intentional_worktree_effect": "uncommitted recovery rehearsal only"
+  },
+  {
+    "mainline": 2,
+    "synthetic_merge": "495b420c9dce1c4878c94c0a741a9327183d211d",
+    "parents": [
+      "a076b1b117a68252dc3d9d1c4901b0c31fcb4db3",
+      "af50c205e3f04f3fc6a02ac6c402f2013123b127"
+    ],
+    "expected_tree": "58f39e121cead7a4593a212f7433409f1603b6ce",
+    "result_tree": "8ebdeea4bf56808da6a4aa2dad8653ed0e942c9f",
+    "matches_base": false,
+    "diff_exit": 1,
+    "identity_unchanged": true,
+    "root": "/tmp/xyz1012-final-recovery-af50c205-mainline-2",
+    "intentional_worktree_effect": "uncommitted recovery rehearsal only"
+  }
+]

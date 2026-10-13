@@ -1,0 +1,18 @@
+[
+  {
+    "case": "unrelated-dirt",
+    "head_unchanged": true,
+    "dirty": " M README.md\n M notes.txt\n M skills-army-hq/README.md\n",
+    "warning": "skills-army-hq: WARN not committed in /private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt: unrelated uncommitted changes: notes.txt \u2014 commit by hand or the hourly pulse stays blocked\n",
+    "foreign_edit_preserved": true,
+    "limit": "Other dirty file bytes preserved."
+  },
+  {
+    "case": "preexisting-readme",
+    "head_unchanged": true,
+    "dirty": "MM README.md\n M skills-army-hq/README.md\n",
+    "warning": "skills-army-hq: WARN not committed in /private/tmp/xyz1012-final-controls-af50c205/preexisting-readme: unrelated uncommitted changes: README.md \u2014 commit by hand or the hourly pulse stays blocked\n",
+    "foreign_edit_preserved": true,
+    "limit": "Existing transaction still refreshes working root README; this check verifies it is not auto-committed and the staged original is preserved."
+  }
+]

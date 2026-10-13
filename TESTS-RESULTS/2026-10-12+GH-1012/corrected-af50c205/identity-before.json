@@ -1,0 +1,57 @@
+{
+  "head": {
+    "rc": 0,
+    "value": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+    "stderr": ""
+  },
+  "origin": {
+    "rc": 0,
+    "value": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "stderr": ""
+  },
+  "bare": {
+    "rc": 0,
+    "value": "false",
+    "stderr": ""
+  },
+  "shallow": {
+    "rc": 0,
+    "value": "false",
+    "stderr": ""
+  },
+  "name": {
+    "rc": 1,
+    "value": "",
+    "stderr": ""
+  },
+  "email": {
+    "rc": 1,
+    "value": "",
+    "stderr": ""
+  },
+  "status": {
+    "rc": 0,
+    "value": "",
+    "stderr": ""
+  },
+  "tracked_status": {
+    "rc": 0,
+    "value": "",
+    "stderr": ""
+  },
+  "common": {
+    "rc": 0,
+    "value": ".git",
+    "stderr": ""
+  },
+  "gitdir": {
+    "rc": 0,
+    "value": "/private/tmp/XYZ-forge-gh1012-corrected-release-2026-10-12-verify/.git",
+    "stderr": ""
+  },
+  "local_config": {
+    "rc": 0,
+    "value": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.fix/XYZ-forge-gh1012-sync-fixes-2026-10-12.remote=origin\nbranch.fix/XYZ-forge-gh1012-sync-fixes-2026-10-12.merge=refs/heads/fix/XYZ-forge-gh1012-sync-fixes-2026-10-12",
+    "stderr": ""
+  }
+}
