@@ -15,7 +15,7 @@ goal: "Align Pages workflow triggers and jobs with the operator's development-on
 
 | What was just completed | What's next |
 |---|---|
-| Four-declaration fix; existing57/0/manual controls and native final QA Approved round1/3 | Normal full push gate, draftPR and exact-head hosted checks |
+| Four-declaration fix, existing57/0/manual controls, native final QA Approved1/3 and full publication gate409/409; draft #1053 created | Exact final carrier-head hosted checks, then operator merge decision |
 
 Intake base0085ceee5269c9edfa22d77a96e08edf158a8cc5 (development advanced from earlier ecbe7722 preflight; Pages unchanged). Exact-main Pages38326961150 built but deploy was forbidden by github-pages policy permitting onlydevelopment. Operator chose development-only publishing and requested bounded fix/draftPR, not landing or deploy. Currentmain4895148683120b8b6f808d4dcd66267a3754fd2c remains immutable and qualified.
 
@@ -46,3 +46,7 @@ Pending; no landing authorized.
 ## Lessons Learned (For Future Agents)
 
 Workflow intent must match environment source-branch policy. A successful artifact build is not proof of deployment; a rejected new artifact does not establish existing-site downtime.
+
+## Draft verification checkpoint
+
+Full normal push gate passed409/409 at baf31e72 after two built-in serial fixture rechecks; earlier sandbox EPERM refusal is retained under TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72. No bypass or testchanges. Draft https://github.com/HiQS-Labs/XYZ-forge/pull/1053 targetsdevelopment. Currentdevelopmentb9f07ea5 differs from intake only by externally landed evidence/relay receipts; Pages executable content unchanged. This proof/status-only carrier does not claim a fresh full run on its later SHA. Final exact-head hosted checks remain pending. No merge/deploy authorized.
