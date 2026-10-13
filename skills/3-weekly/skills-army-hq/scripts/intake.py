@@ -384,8 +384,8 @@ COPY_NOTE = ("Each skill is a physical COPY in the collection; app roots symlink
 def copy_line(root, name, receipt, config):
     """GH-1046: one human line per skill from the existing receipt (stderr; stdout JSON is unchanged)."""
     linked = [t["id"] + ("" if t["enabled"] else " (disabled)") for t in config["targets"] if is_linked(root, name, t)]
-    return (f"{name}: copy at {root / name} (recorded source {receipt.get('source', 'manual/unadopted')} @ "
-            f"{receipt.get('commit', 'unknown')[:12]}{', dirty' if receipt.get('dirty') else ''}); "
+    return (f"{name}: copy at {root / name} (recorded source {receipt.get('source') or 'manual/unadopted'} @ "
+            f"{(receipt.get('commit') or 'unknown')[:12]}{', dirty' if receipt.get('dirty') else ''}); "
             f"linked from: {', '.join(linked) or 'none'}")
 
 

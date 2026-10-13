@@ -16,9 +16,9 @@ description: >-
   (`~/.claude/skills/<name>` → `Deployed Skills/<name>`). Nothing links back to the source.
 - **Provenance is recorded per copy.** `intake.py list` and `sync.py --status` print, on stderr,
   `<name>: copy at <path> (recorded source <source> @ <rev>); linked from: <targets>`;
-  `catalog.md` shows the same.
+  `catalog.md` also records provenance and enabled-target link status.
 - **The source is disposable.** Any clean checkout of the merged revision is a valid source. It
-  need not stay on `main`, and deleting it after intake breaks nothing.
+  need not stay on `main`, and deleting it after intake does not break the copy or its app links.
 - **Updates are explicit.** A copy never follows its source. To refresh one, preview then apply
   `intake.py update NAME --source <newer checkout>`, then run `sync.py`. Pass `--source` if the
   recorded source has since been deleted.
