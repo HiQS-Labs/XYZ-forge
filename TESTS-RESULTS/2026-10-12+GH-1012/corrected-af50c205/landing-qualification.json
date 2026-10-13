@@ -1,0 +1,16 @@
+{
+  "artifact_kind": "pr",
+  "gate": "validate.sh --sequential",
+  "landing_commit": "489ba1b45b6924dbb57f70ba1bed98645db54644",
+  "passed": 409,
+  "pr": 1035,
+  "rc": 0,
+  "result": "pass",
+  "run_url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38313598719",
+  "schema_version": "wave-qualification@1",
+  "telemetry": "TESTS-RESULTS/2026-10-12+GH-591/wave-489ba1b45b6924dbb57f70ba1bed98645db54644/validation.jsonl",
+  "telemetry_sha256": "c41ae3751e74ad0c143099bfaa14328f66b93b0171524729bd841057e6082983",
+  "tested_commit": "489ba1b45b6924dbb57f70ba1bed98645db54644",
+  "timestamp": "2026-10-12T23:12:05.064810+00:00",
+  "total": 409
+}

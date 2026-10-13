@@ -1,0 +1,10 @@
+{
+  "run": 38321150935,
+  "sha": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+  "before": "action_required; no jobs; same repo pull_request1036 created by github-actions[bot]",
+  "action": "existing run per-run approval via POST /approve",
+  "approval_succeeded": true,
+  "new_dispatch_or_rerun": false,
+  "deployment_approval": false,
+  "policy_permission_or_credential_change": false
+}

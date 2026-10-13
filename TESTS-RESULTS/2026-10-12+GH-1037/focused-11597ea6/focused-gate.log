@@ -1,0 +1,188 @@
+validate.sh: tier 2 — subsystem skills-army-hq (GH-35)
+validate.sh: SEQUENTIAL mode — explicit --sequential
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+
+===============================
+Tier 2 — subsystem gate (GH-35): skills-army-hq.sh gh620-skills-army-mini-sync.sh gh589-xyz-mini-sync.sh gh589-consult-no-tick.sh gh589-skill-viewer.sh
+NOT promotion evidence: the qualifying gate is ci-local.sh's sequential full run (GH-509).
+===============================
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.kofJtH/harnesses.db), envelope state captured
+
+===============================
+Running skills-army-hq.sh
+===============================
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- /opt/homebrew/opt/python@3.14/bin/python3.14
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /private/tmp/XYZ-forge-gh1037-sync-fixes-2026-10-12-verify
+configfile: pytest.ini
+plugins: hypothesis-6.167.1, anyio-4.13.0
+collecting ... collected 33 items
+
+test/test_deploy_skills.py::DeploySkillsTest::test_a10_old_discoverable_skill_is_absent PASSED [  3%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a10_retirement_is_explicit_and_recoverable PASSED [  6%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a1_copied_manager_and_no_source_dependency PASSED [  9%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a1_failed_init_preserved_then_retry_after_backup PASSED [ 12%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a1_incomplete_manager_refused PASSED [ 15%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a1_legacy_manager_activation_preserves_collection PASSED [ 18%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a1_readme_copied_updated_and_archived PASSED [ 21%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a2_archive_crc_and_copy_failure_preserve_live_payload PASSED [ 24%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a2_archives_round_trip_and_same_day_collisions PASSED [ 27%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a2_self_update_preserves_runnable_manager PASSED [ 30%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a3_names_malformed_sources_and_symlinks PASSED [ 33%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a3_overlap_alias_and_denied_scan PASSED [ 36%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a3_previews_write_nothing PASSED [ 39%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a4_adopt_and_selected_source_migration PASSED [ 42%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a4_alternative_source_requires_exact_explicit_selection PASSED [ 45%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a4_foreign_real_link_and_lost_ownership_preserved PASSED [ 48%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a4_owned_links_idempotence_removed_disabled_and_dedup PASSED [ 51%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a4_partial_sync_reports_failure_and_keeps_success PASSED [ 54%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_crash_each_publish_boundary_recovers_once 
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_crash_each_publish_boundary_recovers_once PASSED [ 57%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_link_crash_and_corrupt_pending_fail_closed PASSED [ 60%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_missing_payload_corrupt_state_and_history_refuse_prune PASSED [ 63%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_two_missing_payloads_do_not_deadlock_remove PASSED [ 66%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a6_shipped_consult_has_no_recursive_install_artifact PASSED [ 69%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a7_missing_manager_entry_blocks_usability PASSED [ 72%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a7_swe_description_fits_zcode_discovery_limit PASSED [ 75%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_collection_only_skill_is_unrecognized_never_refused PASSED [ 78%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_drifted_deploy_refused_citing_canonical_then_allowed_loudly PASSED [ 81%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_explicit_bad_canonical_is_an_error PASSED [ 84%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_no_canonical_is_a_warning_not_a_pass PASSED [ 87%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_targets_json_canonical_key PASSED [ 90%]
+test/test_deploy_skills.py::DeploySkillsTest::test_pulse_adoption_refuses_unprotected_or_foreign_state PASSED [ 93%]
+test/test_deploy_skills.py::DeploySkillsTest::test_pulse_adoption_two_devices_and_pull_readthrough PASSED [ 96%]
+test/test_deploy_skills.py::DeploySkillsTest::test_pulse_default_root PASSED [100%]
+
+==================== 33 passed, 4 subtests passed in 22.97s ====================
+
+===============================
+Running gh620-skills-army-mini-sync.sh
+===============================
+  PASS: first publication pushes and reads back
+  PASS: literal inclusion-only payload set
+  PASS: manifest names exactly the ten managed payloads
+  PASS: root README matches its canonical package source
+  PASS: revision records exact parent commit
+  PASS: republication is idempotent
+  PASS: default sibling path uses the public repository casing
+  PASS: matching metadata plus unrelated amended file is not an exact retry
+  PASS: exact retained publisher commit retries push
+  PASS: retry refuses a restored previously managed deletion
+  PASS: retry refuses takeover of an unmanifested operator-owned path
+  PASS: default-profile retry may restore an absent seed
+  PASS: retry refuses replacement of an existing child-owned seed
+  PASS: ordinary mismatched root without publisher proof is rejected
+  PASS: generated root missing a required manifest entry is rejected
+  PASS: init preview leaves absent collection untouched
+  PASS: init apply creates copied manager
+  PASS: init excludes repository-only metadata from the installed manager
+  PASS: installed manager is byte-for-byte the canonical package tree
+  PASS: generated repository root remains a valid manager update source
+  PASS: add preview is non-mutating
+  PASS: add apply catalogs fixture
+  PASS: target preview is non-mutating
+  PASS: target apply stays in temporary collection
+  PASS: sync preview is non-mutating
+  PASS: sync apply creates readable fixture link
+  PASS: catalog and link read-through identify fixture
+  PASS: stale destination refuses before writes
+gh620-skills-army-mini-sync: 28 passed, 0 failed
+
+===============================
+Running gh589-xyz-mini-sync.sh
+===============================
+== test: gh589-xyz-mini-sync ==
+  PASS: preview exits 0 and writes nothing
+  PASS: 2. missing manifest source → exit 2, no push
+  PASS: secret in a shipped file → exit 4, nothing written
+  PASS: red control: scan disabled → the same plant passes preview
+  PASS: first publication --push exits 0
+  PASS: remote main == local HEAD
+  PASS: skill set is exactly the eleven expected
+  PASS: 6. viewer names == skills on disk
+  PASS: 5. debug-mantra ships without issues/419 or SOP.md
+  PASS: LICENSE byte-identical
+  PASS: LICENSE-COMMERCIAL.md byte-identical
+  PASS: install.sh keeps its executable bit
+  PASS: agent-chorus standalone pipeline did not ship
+  PASS: 1. second run: exit 0, no new commit, remote unchanged
+  PASS: check: matching detached child → exit 0
+  PASS: check: one changed managed byte → exit 1 naming the path
+  PASS: check: a lost executable bit → exit 1
+  PASS: check + --apply → exit 2, child untouched
+  PASS: check: matching + drifting targets → exit 1, one summary line each
+  PASS: adapted: child bytes kept, forge drift not shipped
+  PASS: adapted: child-added install.sh kept and recorded in MANIFEST.txt
+  PASS: adapted: forge addition under an established entry is not shipped
+  PASS: adapted: entry without an exact ORIGIN row → exit 2 (a Notes mention documents nothing)
+  PASS: adapted: ORIGIN row with the wrong kind → exit 2
+  PASS: stale ORIGIN 'adapted' row for a managed entry → exit 2, mini bytes intact
+  PASS: uncommitted ORIGIN edit + --allow-dirty → exit 2
+  PASS: adapted: a child deletion is recorded, never re-created from forge bytes
+  PASS: adapted: a child re-addition is recorded on the next publication
+  PASS: adapted: dropping the whole entry deletes it, child-only files included
+  PASS: adapted: a re-added entry is seeded fresh from forge bytes
+  PASS: 3. unlisted skill never ships
+  PASS: dropped entry is deleted from mini
+  PASS: seeded TODO.md and unrelated NOTES.local survive
+  PASS: ownership guard: unpublished existing file → exit 2, bytes intact
+  PASS: print-manifest: `all` (deduplicated) lists every profile once
+  PASS: --dest with two targets → exit 2
+  PASS: multi-target: refused first target does not stop the next; worst exit wins
+  PASS: agent-chorus: the 13 payload paths shipped, no legacy TSV
+  PASS: agent-chorus: published child passes --check
+gh589-xyz-mini-sync: 39 passed, 0 failed
+
+===============================
+Running gh589-consult-no-tick.sh
+===============================
+== test: gh589-consult-no-tick ==
+  PASS: publisher built the package
+  PASS: package has no bin/tick, PROJECT/ or releases.db
+  PASS: 4. Python lane: exit 0, two transcripts, degrade warning, no tick
+  PASS: 4. Bash lane (XYZ_PYTHON=0) also runs clean
+  PASS: explicit broken TICK_BIN is fatal
+  PASS: exit-0 empty agy counts as failed (degraded, not a full panel)
+gh589-consult-no-tick: 6 passed, 0 failed
+
+===============================
+Running gh589-skill-viewer.sh
+===============================
+== test: gh589-skill-viewer ==
+  PASS: forge: viewer count 68 == ls count 68 (rc=0)
+  PASS: forge: viewer name set equals the folder set
+  PASS: foreign-repo CWD: viewer resolves its own repo (68)
+  PASS: red: un-anchored viewer copy reports the foreign repo (0) — control goes red
+  PASS: synthetic: three frontmatter styles parse to the expected set
+  PASS: synthetic: trailing count line is '3 skills'
+  PASS: red: missing frontmatter → exit 1, file named
+  PASS: red: empty skills dir → exit 2 (two empty inventories cannot pass)
+gh589-skill-viewer: 8 passed, 0 failed
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Summary
+===============================
+tier 2 run — 5 suite(s). NOT promotion evidence (GH-35/GH-509).
+telemetry: /private/tmp/XYZ-forge-gh1037-sync-fixes-2026-10-12-verify/.tick/telemetry/validate-sequential-1791841351810-38142.jsonl (5 suite events, 406 registered)
+10 slowest suites:
+  name  duration_s  rc
+  gh589-xyz-mini-sync.sh  26.723  0
+  skills-army-hq.sh  23.409  0
+  gh620-skills-army-mini-sync.sh  17.720  0
+  gh589-consult-no-tick.sh  4.784  0
+  gh589-skill-viewer.sh  0.783  0
+re-run ladder: 0 suite(s), 0.000s total
+passed: 6 / 6
+  + skills-army-hq.sh
+  + gh620-skills-army-mini-sync.sh
+  + gh589-xyz-mini-sync.sh
+  + gh589-consult-no-tick.sh
+  + gh589-skill-viewer.sh
+  + clone-identity-invariant

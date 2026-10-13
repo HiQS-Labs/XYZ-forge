@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-10-12 — Muse relay turns no longer stall on an unanswerable approval prompt (GH-521)
+
+Driven Muse relay turns hit the wall cap with `cpu=0.00` and no relay block. The cause was
+`muse exec`'s default `--approval-mode on-request`: run headless, the first tool call that needs
+approval waits forever. `muse-turn.py` now passes `--approval-mode never`. Muse's sandbox stays
+on, and XYZ containment (allowlist, worktree isolation, commit guard) is unchanged.
+
+Verified with Muse Code 1.1.1 and `MUSE_MODEL=muse-wonder-1.0` in a throwaway clone. Unchanged
+shim: killed at 600 s, `timeout-idle-unknown`. With the flag: a valid reviewer block in ~2 min,
+`VERDICT: PASS`, attested Approved by `relay-drive`. No suites added (GH-831). Revert the
+`fix(GH-521)` commit to undo.
+
+## 2026-10-12 — Sync ownership survives child deletions and manager README updates (GH-1037)
+
+A child that deletes an entire adapted entry keeps that deletion across later publications. The
+existing `MANIFEST.txt` now retains adapted-root markers separately from payload paths; upstream
+entry removal/re-addition still controls its ownership lifecycle.
+
+A Skills Army manager update can commit its generated root README with the manager folder only
+when that README was a clean tracked mirror before the transaction and matches the new mirror
+afterward. Unrelated dirt still refuses auto-commit; Git Pulse remains the sole push writer.
+
+The two defects were reproduced in the GH-1012 release review. Verification uses existing suites
+and retained isolated manual controls only; no CI cases or registration are added. Revert the
+GH-1037 implementation commit to undo these localized ownership changes.
+
 ## 2026-10-12 — Preserved held weekly rollover (GH-1022, Phase9)
 
 The existing weekly core can explicitly reconcile an owned or exactly published
@@ -196,6 +222,16 @@ workload-scoped online migrations. Manual physical/absolute-symlink/relative-sym
 eight foreign or unqualified cases stay unverified, and restoring either old behavior makes the
 acceptance check fail. Existing GH-609 and package checks pass 33/33 and 3/3 in a disposable clone
 with intact Git identity. Evidence: `TESTS-RESULTS/2026-10-10+GH-1015/`.
+
+## 2026-10-09 — Per-project cleanup merge-history policy (GH-1010)
+
+Maintainers can opt in with tracked `.merge-cleanup.json` to require merge commits in cleanup;
+explicit squash/rebase and unavailable hosting capability refuse without fallback. Forge opts in.
+Deep audit shares the policy report and distinguishes original commit ancestry from landed content;
+vendoring recommends a choice without copying Forge policy or changing GitHub settings. Historical
+squash provenance and teardown gates remain intact. Existing cleanup suite: 180 tests pass; manual
+policy/vendor/ancestry probes and enforcement-removal red control retained under
+`TESTS-RESULTS/2026-10-09+GH-1010/`.
 
 ## 2026-10-09 — Marathon: bounded observation and repair-to-PR handoff (GH-1006)
 

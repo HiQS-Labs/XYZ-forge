@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /private/tmp/xyz1012-regression-20261012-2008
+configfile: pytest.ini
+plugins: hypothesis-6.167.1, anyio-4.13.0
+collected 20 items
+
+test/flightdeck/test_work_status.py ....................                 [100%]
+
+============================== 20 passed in 1.63s ==============================

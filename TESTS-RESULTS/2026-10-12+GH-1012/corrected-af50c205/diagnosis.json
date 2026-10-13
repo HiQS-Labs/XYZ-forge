@@ -1,0 +1,17 @@
+{
+  "run": 38313598719,
+  "job": 115024864357,
+  "outcome": "SUCCESS",
+  "conclusion": "normal bounded full qualification; no hang established",
+  "runner_group": "GitHub Actions",
+  "qualification_source": "utils/py/wave_reconcile.py:652-658",
+  "output_behavior": "run_bounded captures stdout/stderr; command() prints only after return",
+  "qualification_timeout_seconds": 5400,
+  "workflow_timeout_minutes": 120,
+  "test_receipt_timestamp": "2026-10-12T23:12:05.064810+00:00",
+  "tested_landing": "489ba1b45b6924dbb57f70ba1bed98645db54644",
+  "passed": 409,
+  "total": 409,
+  "published_candidate": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+  "no_cancel_rerun_duplicate_writer": true
+}

@@ -1,0 +1,369 @@
+{
+  "tested_candidate": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+  "mini": {
+    "seeded": true,
+    "absent_after_first_publication": true,
+    "recreated_after_second_publication": false,
+    "accepted_behavior": true,
+    "child": "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+    "push": false,
+    "origin": "/private/tmp/xyz1012-final-controls-af50c205/mini-child"
+  },
+  "manager": {
+    "head_before": "28752d33c5133286586b19242cf2a05facd11616",
+    "head_after": "43bc5f8cfc7981a341367d4805d9ef57c05190b2",
+    "status": "",
+    "warning": "skills-army-hq: committed skills-army-hq in /private/tmp/xyz1012-final-controls-af50c205/pulse-collection (43bc5f8); git-pulse pushes it on its next run\n",
+    "all_targets_disabled": true,
+    "root_readme_refreshed": true,
+    "accepted_behavior": true,
+    "collection": "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+    "network_publish": false
+  },
+  "commands": [
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+        "init",
+        "-q",
+        "-b",
+        "main"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+        "config",
+        "user.name",
+        "Distribution Fixture"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+        "commit",
+        "--allow-empty",
+        "-qm",
+        "fixture seed"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+        "remote",
+        "add",
+        "origin",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/XYZ-forge-gh1012-corrected-evidence-2026-10-12",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/XYZ-forge-gh1012-corrected-evidence-2026-10-12/utils/py/xyz_mini_sync.py",
+        "--dest",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+        "--apply"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "xyz-mini-sync: note: publishing from 'docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: adapted entries seeded from forge bytes \u2014 re-adapt per the child's ORIGIN.md: skills/daily-planner skills/weekly-planner\nxyz-mini-sync: source af50c205e3f0 (docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12) \u2192 /private/tmp/xyz1012-final-controls-af50c205/mini-child\nxyz-mini-sync: plan: copy 40 files, delete 0\nxyz-mini-sync: committed 007a0a0: sync: XYZ-forge@af50c205e3f0 (docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12)\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+        "rm",
+        "-r",
+        "--",
+        "skills/weekly-planner"
+      ],
+      "rc": 0,
+      "stdout": "rm 'skills/weekly-planner/SKILL.md'\nrm 'skills/weekly-planner/scripts/planner_core.py'\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+        "commit",
+        "-qm",
+        "fixture child removes its adapted entry"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/XYZ-forge-gh1012-corrected-evidence-2026-10-12",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/XYZ-forge-gh1012-corrected-evidence-2026-10-12/utils/py/xyz_mini_sync.py",
+        "--dest",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+        "--apply"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "xyz-mini-sync: note: publishing from 'docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: child removed adapted paths (recorded, never re-created from forge bytes): skills/weekly-planner/SKILL.md skills/weekly-planner/scripts/planner_core.py\nxyz-mini-sync: source af50c205e3f0 (docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12) \u2192 /private/tmp/xyz1012-final-controls-af50c205/mini-child\nxyz-mini-sync: plan: copy 36 files, delete 0\nxyz-mini-sync: committed 20d3981: sync: XYZ-forge@af50c205e3f0 (docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12)\n"
+    },
+    {
+      "cwd": "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/XYZ-forge-gh1012-corrected-evidence-2026-10-12",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/XYZ-forge-gh1012-corrected-evidence-2026-10-12/utils/py/xyz_mini_sync.py",
+        "--dest",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+        "--apply"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "xyz-mini-sync: note: publishing from 'docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: source af50c205e3f0 (docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12) \u2192 /private/tmp/xyz1012-final-controls-af50c205/mini-child\nxyz-mini-sync: plan: copy 36 files, delete 0\nxyz-mini-sync: no changes \u2014 no commit created\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--quiet",
+        "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/XYZ-forge-gh1012-corrected-evidence-2026-10-12",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "init",
+        "-q",
+        "-b",
+        "main"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "config",
+        "user.name",
+        "Distribution Fixture"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "commit",
+        "--allow-empty",
+        "-qm",
+        "fixture seed"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "add",
+        "-A"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "commit",
+        "-qm",
+        "fixture pulse payloads"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "--root",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "--apply",
+        "init",
+        "--adopt-existing"
+      ],
+      "rc": 0,
+      "stdout": "{\"operation\": \"adopt-existing\", \"root\": \"/private/tmp/xyz1012-final-controls-af50c205/pulse-collection\", \"skills\": [\"skills-army-hq\"], \"apply\": true}\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "28752d33c5133286586b19242cf2a05facd11616\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/manager-source",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source",
+        "add",
+        "--",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq/README.md"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/manager-source",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source",
+        "commit",
+        "-qm",
+        "fixture README payload update"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "--root",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "--apply",
+        "update",
+        "skills-army-hq",
+        "--source",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"operation\": \"update\",\n  \"apply\": true,\n  \"name\": \"skills-army-hq\",\n  \"source\": \"/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq\",\n  \"before\": \"68621013587b9bd65f933fdbd2762396cb979ef698412ef698810da1f0ef42dc\",\n  \"after\": \"e0d5ca1dbb0fcfc4553b9a17e27b3baac282aef4d4dc49f4b70e3da7efda8058\",\n  \"commit\": \"579d6a7d98db2effd991f246a96064befadfc122\",\n  \"backup\": \"backups/skills-army-hq-2026-10-12.zip\"\n}\n",
+      "stderr": "skills-army-hq: committed skills-army-hq in /private/tmp/xyz1012-final-controls-af50c205/pulse-collection (43bc5f8); git-pulse pushes it on its next run\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "43bc5f8cfc7981a341367d4805d9ef57c05190b2\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "status",
+        "--porcelain=v1"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}
