@@ -2,8 +2,11 @@
 gh_issue: 1046
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1046
 title: "skills-army-hq: state plainly that Deployed Skills holds copies (not links to the source) and show provenance per skill"
-status: Proposed (1-INBOX — not yet active)
+status: In Progress
 created: 2026-10-12
+updated: 2026-10-12
+owner: operator
+goal: "An agent can tell from SKILL.md or one command that Deployed Skills holds copies, where each came from, and which apps link to it."
 doc_type: feedback
 effort: 1
 complexity: 1
@@ -12,6 +15,12 @@ phases: 1
 ---
 
 # GH-1046: Deployed Skills holds copies, not links
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Plan QA approved by Codex in round 2 (`relay-system/2026-10-12/gh1046-plan-qa.md`, attested at b86dcf60); promoted to 2-WORKING. | Implement steps 1-5, verify per step 6 in a disposable clone, final relay QA, PR. |
 
 ## Ask
 
@@ -38,7 +47,7 @@ only the app roots link to them. Make that obvious without filesystem inspection
   into each receipt (`state["skills"][name]`); `render_catalog()` already renders
   `source @ commit` and per-enabled-target `linked`/`not linked` into `catalog.md`.
 - `intake.py list`, the `add`/`update` preview and `sync.py` (`--status`/preview/apply) print JSON on
-  stdout; `test/test_deploy_skills.py` parses that JSON. Human notices (commit result, sync WARN)
+  stdout; `test/test_deploy_skills.py` parses `sync.py --status` JSON (`:581,617,622`) and checks exit codes for `list`/previews. Human notices (commit result, sync WARN)
   already go to stderr. So new human lines go to stderr and the JSON stays byte-identical.
 - `README.md:68` already says the collection is "an actual copy, not a link back to the source
   checkout"; `SKILL.md`, which agents load, only says it implicitly ("Keep actual skill folders",
