@@ -60,7 +60,7 @@ to override); `pdda.sh issue-doc-sync` is the deterministic drift detector when 
 Maintainer-only workflow defaults (branch discipline, express-to-development, fresh-clone-per-task)
 live in `SOP.md` → "Opinionated SOPs" — optional for downstream users, binding for us. That section
 is a standing carve-out from the "do not create new git branches automatically" rail: it
-pre-authorizes one `feat/`/`fix/` branch per fresh task clone, nothing more.
+pre-authorizes one `feat/`/`fix/`/`chore/`/`docs/` branch per fresh task clone, nothing more.
 
 ## Operating principles
 
@@ -104,11 +104,16 @@ you merely ran and can no longer show counts as no claim at all.
 **A check that cannot fail is not a check.** A passing assertion is evidence only once you have seen
 it fail: mutate the thing it guards — break the code, transpose the fix, delete the value — and watch
 it go red. If you cannot make it fail, it is decorative, and it is worse than nothing because it
-reports confidence it never earned. This is the precise way this principle fails while looking
+reports confidence it never earned. Witness the failure on an existing suite or record it as a manual check.
+Never add a suite to do it; see the *No new tests* rail. This is the precise way this principle fails while looking
 satisfied: you *did* verify, and the verification was hollow. Three examples from GH-377/GH-379, all
 of which passed cleanly before they were mutated — an `awk` range that terminated on its own first
 line, `not matches -- "$pat"` where the helper already supplied `--` so the check searched for the
 literal string `--`, and a telemetry `rc` assertion that no *passing* run could ever exercise.
+
+**A flaky suite is fixed in place if it is in a tier, and turned off if it is not.** Tier membership comes from
+`utils/ci-route.sh` (`SUBSYSTEM_TESTS_small`). Turning off means removing it from `validate.sh` `TESTS` and adding it to the
+gh306 `EXEMPT` list, keeping the file (#802 operator decision, comment 5841529958; #853).
 
 **An empty input passes every check.** Before asserting anything about extracted data, assert that
 you extracted some: a failed command substitution yields an empty string, a shell redirect creates
@@ -119,6 +124,8 @@ or guard the extraction with its own assertion, before trusting a verdict comput
 remote bridge needs explicit permission each time — running the tests is not permission, and neither
 is working on the feature that provides it. `SOP.md` §3b has the incident and the teardown rule that
 goes with it.
+
+**Establish blocker necessity before investing in repair.** An in-flight failing test or unexpected error is not automatically an urgent blocker. When an obstacle's necessity or user consequence is unclear, or after two investigation attempts yield no new evidence, run `sanity-check` (`skills/1-hourly/sanity-check/SKILL.md`) to evaluate whether to fix now, simplify, defer via PRS, or dismiss, before sinking hours into tracing the fail path.
 
 ### 7. Record only consequential bets
 
@@ -131,6 +138,19 @@ Most edits are small and reversible. Do not manufacture ceremony for a rename, t
 local change.
 
 ## Repo-specific rails
+
+- **No new tests (GH-831, operator decision 2026-09-25).** This covers three things:
+  - Do not add a new `test/` suite or a new entry in `validate.sh`'s `TESTS` registry.
+  - Do not add new gate machinery: guards, lanes, runners or telemetry stages.
+  - Do not add a test to enforce this rule.
+
+  Verify a change with the existing suite that covers it, or with a manual check recorded under
+  `TESTS-RESULTS/<date>+GH-<n>/` with its `provenance.jsonl`. Edit an existing suite only to keep it truthful
+  when the behaviour it pins changes. A red control (see *Verified beats plausible*) is witnessed on an
+  existing suite or recorded as a manual check. Reviewers treat a new test file as a finding.
+
+  The gate is being cut to Small/Medium/Large tiers under [#831](https://github.com/HiQS-Labs/XYZ-forge/issues/831).
+  #815, #816, #817 and #819 are superseded; do not implement them.
 
 - **This repo's purpose is to keep a long-horizon marathon under load — and that is a work-selection
   filter, not a slogan.** The harness is only proven by work long enough, parallel enough, and
@@ -156,7 +176,8 @@ local change.
   4. **The point is the failures.** A marathon that completes cleanly and teaches nothing is a
      weaker result than one that escalates and names a defect. Report what broke; do not smooth it.
 
-- **The RELEASES DB is two subsystems behind one CLI** (`utils/py/releases_app.py`): the GH-32
+- **The RELEASES DB is two subsystems behind one CLI** (`utils/py/releases_app.py`; it is the
+  Product Release System, [PRS](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)): the GH-32
   release ledger and the roadmap ledger (`roadmap_items`). Since the `ROADMAP_SOURCE=releases`
   flip (GH-169/GH-238/GH-243) and ROADMAP.md retirement (GH-269), the DB is the roadmap's source of truth in THIS repo: park intake
   with `releases roadmap add` (or `hq park`), and read with `releases roadmap list` (or `python3 utils/py/releases_app.py roadmap list`).
@@ -181,6 +202,9 @@ local change.
   restores the old full-core width), auto-sized to the host, and announces a
     sequential fallback with its reason. `bash ci-local.sh` is still the qualifying run that writes
     the evidence record — it stays sequential and does not call `validate.sh`.
+  - **Three tiers qualify a landing (GH-831).** After a merge, the hosted reconcile qualifies each
+    landing with one run chosen by its tier, and promotion always runs the full registry. The tiers,
+    their commands and the suites turned off are in `ROUTER.md` (command rails); those suites stay off.
   - Bypasses are `git push --no-verify` and `XYZ_SKIP_PREPUSH=1`. Both announce themselves. Use them
     deliberately, not reflexively — they skip the local boundary even when hosted CI later runs.
     Draft-review publication (GH-487) is a legitimate bypass use and is NOT merge readiness: an
@@ -388,12 +412,14 @@ local change.
 - **The local macOS run is the gate; hosted ubuntu is advisory (GH-509).** XYZ is a developer toolkit
   for **macOS**; Linux and Windows are on the roadmap and not here yet. So `./validate.sh` (or
   `./ci-local.sh`) on your Mac is the highest-fidelity evidence available — it is the shipping
-  platform with the real toolchain — and it runs a **superset** of the hosted job, including
-  `registry-lock-concurrency.sh`, which CI skips for a contended-Linux flake. The hosted `canary-ubuntu`
+  platform with the real toolchain. Operator-retired suites stay out of both runners;
+  their retained manual files are listed in gh306 EXEMPT (GH-854). The hosted `canary-ubuntu`
   job is `continue-on-error: true`: its red means *portability drift*, not breakage, and must not be
   reported as a broken commit. Two consequences that bite: **never defer a test run to CI** — CI is
   advisory and tests the wrong OS; and **a green local run is self-reported**, so it does not qualify a
-  promotion. Promotion needs a hosted **macOS** run for that exact commit. When a claim really is about
+  promotion. Two hosted **macOS** rules follow (GH-831): a landing on `development` is qualified by the
+  reconcile run its tier selects (the tiers are in `ROUTER.md`), and promotion needs a hosted
+  full-registry run for that exact commit. When a claim really is about
   Linux, the canary is the right instrument and its red is authoritative.
 - **Commit to the QUEUE; re-anchor, don't rabbit-hole (GH-45).** A wave's committed lane list *is* the
   active commitment — after each lane attempt, re-read it before acting further. A driven lane that

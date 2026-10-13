@@ -1,0 +1,17 @@
+== test: preflight-docs ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-preflight-docs.XXXXXX.ia1tpN42b2
+  PASS: exits 0 with no PDDA_LLM_BIN (never blocks)
+  PASS: no-LLM: broken working doc logged as warn
+  PASS: no-LLM: clean working doc logged as clean
+  PASS: no-LLM: ROADMAP-queued inbox capture is targeted + warned
+  PASS: no-LLM: doc left unedited
+  PASS: model-declines: logged as warn
+  PASS: model-declines: doc left unedited
+  PASS: unsafe-edit: rejected and logged as warn
+  PASS: unsafe-edit: summary records the revert
+  PASS: unsafe-edit: doc reverted to original
+  PASS: safe-edit: logged as edit
+  PASS: safe-edit: marked safe
+  PASS: safe-edit: contract fix applied to the doc
+  PASS: all telemetry lines are valid JSON
+  preflight-docs: 14 pass, 0 fail

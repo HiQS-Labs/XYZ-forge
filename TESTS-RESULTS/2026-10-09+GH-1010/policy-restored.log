@@ -1,0 +1,26 @@
+merge-cleanup: ERROR — PR #7: /var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/gh1010-policy-nuv3uyk7/.merge-cleanup.json: preserve_commit_history=true requires --strategy merge; --strategy squash is not permitted
+merge-cleanup: ERROR — PR #7: /var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/gh1010-policy-nuv3uyk7/.merge-cleanup.json: preserve_commit_history=true requires --strategy merge; --strategy rebase is not permitted
+merge-cleanup: ERROR — PR #7: history preservation requires GitHub merge commits, but availability was not confirmed; no fallback or settings change. Check the repository's merge settings.
+merge-cleanup: ERROR — PR #7: history preservation requires GitHub merge commits, but availability was not confirmed; no fallback or settings change. Check the repository's merge settings.
+merge-cleanup: ERROR — PR #7: history preservation requires GitHub merge commits, but availability was not confirmed; no fallback or settings change. Check the repository's merge settings.
+merge-cleanup: ERROR — PR #7: history preservation requires GitHub merge commits, but availability was not confirmed; no fallback or settings change. Check the repository's merge settings.
+merge-cleanup: ERROR — PR #7: history preservation requires GitHub merge commits, but availability was not confirmed; no fallback or settings change. Check the repository's merge settings.
+merge-cleanup: ERROR — Failed to merge PR #7: ruleset refused
+merge-cleanup: ERROR — /var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/gh1010-policy-nuv3uyk7/.merge-cleanup.json: preserve_commit_history=true requires --strategy merge; --strategy squash is not permitted
+merge-cleanup: ERROR — /private/var/folders/dh/ypr5rkgn3b9fzlzlmj69yd_r0000gn/T/gh1010-policy-nuv3uyk7/.merge-cleanup.json: preserve_commit_history must be a JSON boolean
+PASS policy matrix None
+PASS policy matrix {}
+PASS policy matrix {'preserve_commit_history': False}
+PASS policy matrix {'preserve_commit_history': True}
+PASS invalid/unreadable policy refuses
+PASS direct merge writer refuses forbidden methods before GitHub
+PASS unavailable/unknown hosting capability makes no merge call
+merge-cleanup: Merging PR #7 via `gh pr merge 7 --merge --delete-branch`...
+merge-cleanup: ✅ PR #7 is MERGED as aaaaaaaaaa
+PASS opted-in writer emits --merge, verified MERGED
+merge-cleanup: Merging PR #7 via `gh pr merge 7 --merge --delete-branch`...
+PASS GitHub refusal has no fallback
+PASS landing refuses before repair/merge
+PASS shared JSON reporter has no scan/network/mutation
+PASS malformed policy refuses before Phase 0 and teardown
+ALL POLICY PROBES PASSED

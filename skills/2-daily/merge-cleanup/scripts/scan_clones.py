@@ -13,6 +13,7 @@ import sys
 import json
 import subprocess
 import shutil
+import signal
 import tempfile
 import time
 from pathlib import Path
@@ -94,20 +95,55 @@ def run_git(cwd: Path, args: List[str], timeout: Optional[float] = None) -> subp
     ledger caller keeps today's behavior; network call sites pass a finite value (see
     merge_cleanup._net_git). A timeout is reported as a non-zero exit — the same "git said no"
     shape — never as an exception.
+
+    A bounded call runs in its own process group and the WHOLE group is ended on expiry: a push's
+    pre-push hook (and the gate it runs) are git's children, and killing git alone left them
+    running after merge-cleanup had already reported failure (PR #880 review, P1).
     """
+    argv = ["git", "-C", str(cwd)] + args
     try:
-        return subprocess.run(
-            ["git", "-C", str(cwd)] + args,
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=timeout
-        )
-    except subprocess.TimeoutExpired as exc:
-        return subprocess.CompletedProcess(args=args, returncode=124, stdout="",
-                                           stderr=f"timed out after {exc.timeout}s: git {' '.join(args)}")
+        if timeout is None:
+            return subprocess.run(argv, capture_output=True, text=True, check=False)
+        proc = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                                start_new_session=True)
     except OSError as exc:
         return subprocess.CompletedProcess(args=args, returncode=127, stdout="", stderr=f"{exc}")
+    try:
+        out, err = proc.communicate(timeout=timeout)
+        return subprocess.CompletedProcess(args=args, returncode=proc.returncode, stdout=out, stderr=err)
+    except BaseException as exc:
+        # Its own session means a terminal Ctrl-C no longer reaches git, so an interrupt (or any other
+        # escape) must end the group too before it propagates, or a cancelled push still lands.
+        _kill_group(proc.pid)
+        if not isinstance(exc, subprocess.TimeoutExpired):
+            raise
+        try:
+            proc.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
+            pass
+        return subprocess.CompletedProcess(args=args, returncode=124, stdout="",
+                                           stderr=f"timed out after {timeout}s: git {' '.join(args)}")
+
+
+def _kill_group(pgid: int, grace: float = 5.0) -> None:
+    """TERM the group, wait out a grace window, then KILL. Same sequence as utils/py/proc_group.py
+    kill_existing, which this skill does not import: it ships standalone (Deployed Skills), and
+    .xyz/ installs vendored before utils/ was mirrored carry no utils/py/proc_group.py."""
+    try:
+        os.killpg(pgid, signal.SIGTERM)
+    except OSError:
+        return
+    deadline = time.monotonic() + grace
+    while time.monotonic() < deadline:
+        try:
+            os.killpg(pgid, 0)
+        except OSError:
+            return
+        time.sleep(0.1)
+    try:
+        os.killpg(pgid, signal.SIGKILL)
+    except OSError:
+        pass
 
 
 def is_pid_alive(pid: int) -> bool:
@@ -434,7 +470,7 @@ def classify_local_refs(repo_path: Path, integration_branch: str = "development"
     """
     out: Dict[str, Any] = {"ok": False, "failed_query": "", "unlanded": [], "landed": []}
     remote_ref = f"origin/{integration_branch}"
-    fetched = run_git(repo_path, ["fetch", "--quiet", "origin", integration_branch])
+    fetched = run_git(repo_path, ["fetch", "--quiet", "origin", integration_branch], timeout=180)  # GH-852
     if fetched.returncode != 0:
         out["failed_query"] = f"git fetch origin {integration_branch}: {fetched.stderr.strip() or 'failed'}"
         return out
@@ -1128,7 +1164,9 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
     # still open, and the next merge will refuse. Fail closed; never abort it for the operator.
     for marker, label in (
         ("MERGE_HEAD", "merge"),
-        ("REBASE_HEAD", "rebase"),
+        ("rebase-merge", "rebase"),
+        ("rebase-apply", "rebase"),
+        ("sequencer", "sequencer"),
         ("CHERRY_PICK_HEAD", "cherry-pick"),
         ("REVERT_HEAD", "revert"),
         ("BISECT_LOG", "bisect"),
@@ -1152,6 +1190,26 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
                 "the landing merge will refuse while it is open"
             )
             break
+
+    # REBASE_HEAD can outlive a rebase. Inspection stays read-only; only the orchestrator
+    # may remove a valid orphan after every other readiness condition is affirmative.
+    res["stale_rebase_head"] = ""
+    probe = run_git(path, ["rev-parse", "--git-path", "REBASE_HEAD"])
+    if probe.returncode != 0 or not probe.stdout.strip():
+        res["operation_evidence_ok"] = False
+        res["blockers"].append("cannot locate REBASE_HEAD — readiness is unknown")
+    else:
+        marker = Path(probe.stdout.strip())
+        if not marker.is_absolute():
+            marker = path / marker
+        if marker.exists() and not res["operation_in_progress"]:
+            oid = run_git(path, ["rev-parse", "--verify", "REBASE_HEAD^{commit}"])
+            if oid.returncode == 0 and oid.stdout.strip():
+                res["stale_rebase_head"] = oid.stdout.strip()
+                res["blockers"].append("orphaned REBASE_HEAD remains; execute landing can prune it")
+            else:
+                res["operation_evidence_ok"] = False
+                res["blockers"].append("invalid REBASE_HEAD — readiness is unknown")
 
     # Local commits the remote does not have would be silently skipped by a squash-merge landing.
     # A FAILED count is unknown state, not zero.
@@ -1179,13 +1237,14 @@ def inspect_primary_landing(primary_repo: Path, integration_branch: str = "devel
         )
 
     res["evidence_complete"] = bool(ref_evidence and res["can_ff"] and res["operation_evidence_ok"])
-    res["landing_ready"] = bool(
+    res["ready_except_stale_rebase"] = bool(
         res["on_integration_branch"]
         and res["is_clean"]
         and not res["unpushed_on_integration"]
         and not res["operation_in_progress"]
         and res["evidence_complete"]
     )
+    res["landing_ready"] = res["ready_except_stale_rebase"] and not res["stale_rebase_head"]
     return res
 
 
@@ -1256,6 +1315,9 @@ def format_completion_and_followup_summary(checkouts: List[Dict[str, Any]]) -> s
 
 def main():
     import argparse
+    # GH-852: abort a stalled HTTP transfer instead of waiting on a dead socket (see merge_cleanup.main).
+    os.environ.setdefault("GIT_HTTP_LOW_SPEED_LIMIT", "1000")
+    os.environ.setdefault("GIT_HTTP_LOW_SPEED_TIME", "120")
     parser = argparse.ArgumentParser(description="Scan and audit Git worktrees and clones.")
     parser.add_argument("--root", action="append", help="Root directory to scan (defaults to standard repo roots)")
     parser.add_argument("--prefix", default="", help="Filter checkouts by name prefix/substring")

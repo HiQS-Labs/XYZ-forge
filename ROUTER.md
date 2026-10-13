@@ -2,6 +2,8 @@
 
 This file is the first entry point for an AI agent working in this repo: it tells you what to read, what to run, and which files are canonical.
 
+XYZ Forge is three parts: **XYZ Forge**, the harness (this router and `AGENTS.md`); **PDDA**, project-doc governance (`PROJECT/PDDA.md`); and **PRS**, the Product Release System, which is the RELEASES ledger (`RELEASES-DB-FAQS.md`). Definition: [HOW-TO-USE.md → Glossary](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first).
+
 ## Role split
 
 - `ROUTER.md` = startup order and canonical entry points
@@ -69,6 +71,7 @@ bash githooks/install.sh --check # is this clone gated? exit 1 if not
 ./validate.sh --print-mode # which mode would this host pick, and why — runs nothing
 ./validate.sh --sequential # force the sequential run (see the hook’s measured GREEN in Ns line)
 ./validate.sh --tier 2 --subsystem hq   # GH-35: one subsystem's focused suites (pre-push speed, NOT evidence)
+./validate.sh --sequential --subsystem small  # GH-831: the Small list — locally a self-check; hosted, the reconcile's qualifying run for docs/ledger/skill landings
 ./validate.sh --auto       # GH-35: classify the git diff, run the minimal safe tier (fails closed to 3)
 ./validate.sh --throttle   # GH-35: 2 workers under nice — quiet-machine mode (--burst restores full width)
 bash ci-local.sh           # the QUALIFYING run — sequential + writes the gate record (GH-509/GH-536)
@@ -104,11 +107,29 @@ and the reason, so a fallback is never silent.
 
 **GH-35 also added TIERED SELECTION on top, as a separate axis from width.** `utils/ci-route.sh`
 owns one fail-closed subsystem registry (hq, releases, telemetry, ate, swe-diagram, pdda,
-agent-chorus, standup, skills-army-hq); a push the classifier rates `tier=2` runs only those focused
+agent-chorus, standup, skills-army-hq, plus `small`, a gate-only list that claims no paths); a push the classifier rates `tier=2` runs only those focused
 suites at the boundary, `--tier 1` runs the docs gate, and everything else — unknown paths, unclaimed
 test edits, kernel surfaces — runs the full suite. `--auto` classifies a local diff the same way.
 Tiers 1 and 2 are pre-push speed and are labelled NOT promotion evidence; only `ci-local.sh`'s
 sequential full run qualifies (GH-509).
+
+**GH-831 (2026-09-25) made these three tiers for what qualifies a landing.** The push hook is unchanged.
+After a merge, the hosted reconcile (`wave-reconcile.yml`) qualifies each landing with **one** run,
+picked by classifying the landing's changes at the tested commit:
+
+- **Small** — docs, the ledger dumps (`releases.*`, `harnesses.*`) and non-core skill files (tier 1):
+  `validate.sh --sequential --subsystem small`, the PDDA, PRS and canary suites plus the PDDA gate
+  and the Python layer. The receipt records the list it ran.
+- **Medium** — mapped non-core code (tier 2): the full registry at the reconcile, the area's suites at push.
+- **Large** — core harness, unmapped code, gate surfaces (tier 3): the full registry.
+
+Promotion always runs the full registry. Eight skill-text suites are off, recorded in
+`test/gh306-registry-bidirectional.sh`'s EXEMPT list, and no new suites are added (AGENTS.md). The code of
+core skills (`relay`, `relay-xyz`, `relay-automation`, `merge-cleanup`, `express`, `jog`) never routes as
+docs. Skill markdown keeps its existing docs routing, except that `relay-xyz` and `relay-automation` stay
+full-gate surfaces for every file. merge-cleanup's `SKILL.md` and `WORKTREE-SAFETY.md` are full-gate files too:
+they are what `gh436-merge-cleanup` reads, and GH-836 D1 moved that suite from Small to Large.
+Plan: [GH-831](PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md).
 
 `--burst` / `XYZ_VALIDATE_MAX_JOBS` are honoured for tier 2: 2 is the default width, not a pin.
 Run one gate at a time on a host: a concurrent relay turn, second gate or pollers lengthen the run
@@ -195,5 +216,6 @@ no-ops here by design (it would delete `add`-parked rows). Pinned by `test/gh69-
 - If the task is about cross-repo HQ tooling (`utils/hq/` — `hq.sh` single-repo actions, `rollup.sh` the Obsidian daily ROADMAP rollup, `marathon-scan.sh` the cross-repo marathon-preflight aggregator, `hq-lib.sh` the shared repo registry), start in `PROJECT/3-COMPLETED/GH-27-ROADMAP-DASHBOARD.md` and `PROJECT/3-COMPLETED/GH-158-HQ-MARATHON-SCAN.md`. The two rollups are deliberately separate today (`rollup.sh` → Obsidian, generic; `marathon-scan.sh` → hub repo, preflight-aware) and are not yet bridged — tracked in `PROJECT/1-INBOX/GH-192-HQ-MARATHON-OBSIDIAN-ROLLUP.md`.
 - If the task is about a proposed roadmap-steward agent, start here, then read `PROJECT/PDDA.md` and its `Proposed roadmap steward extension` section.
 - If the task is about finding or picking a skill for a job, see `ARCHITECTURE.md` → "Skills Index" for a one-line inventory of every skill in `skills/`.
-- If the task is about **managing skills for the system** — adding a skill to the machine-wide collection, deploying/refreshing/removing it across the configured app targets (`targets.json`, machine-local), or asking what is deployed — the mechanism is the `skills-army-hq` skill (`skills/3-weekly/skills-army-hq/SKILL.md`). `skills/` in this repo is the authoring source; the durable collection lives wherever `XYZ_SKILLS_ROOT` points (machine-local, never committed; falls back to `~/git-pulse-sync/Deployed Skills`), and only `intake.py` / `sync.py` mutate it or the app symlinks. Never hand-copy a skill folder into an app's skills directory.
+- If the task is blocked by a failing test, unexpected error, or disputed requirement, invoke the `sanity-check` skill (`skills/1-hourly/sanity-check/SKILL.md`) to establish whether the obstacle must block the goal before spending hours debugging or repairing it.
+- If the task is about **managing skills for the system** — adding a skill to the machine-wide collection, deploying/refreshing/removing it across the configured app targets (`targets.json`, machine-local), or asking what is deployed — the mechanism is the `skills-army-hq` skill (`skills/3-weekly/skills-army-hq/SKILL.md`). Forge authors its own skills in `skills/`, Skills Army HQ included; XYZ-skills-army-mini and the other standalone repos are published children (`push-downstream`, GH-955). Intake accepts any local folder. The durable collection lives wherever `XYZ_SKILLS_ROOT` points (machine-local, never committed; falls back to `~/git-pulse-sync/Deployed Skills`), and only `intake.py` / `sync.py` mutate it or the app symlinks. Never hand-copy a skill folder into an app's skills directory.
 - Issue-first SOP: any change beyond a 2–3 line fix (and every project plan) opens a GitHub issue *first*, then gets a pointer doc named after the issue at `PROJECT/1-INBOX/GH-<number>-VERY-SHORT-DESC.md` — e.g. `GH-1234-SHOWME-COMMAND.md` — and that capture is parked in the roadmap ledger queue immediately via `releases roadmap add` (format + lifecycle owned by `PROJECT/PDDA.md` → "GitHub issue intake"), following the normal `1-INBOX` → `2-WORKING` flow. Genuinely trivial edits (≤2–3 line fixes, typos, path repoints, doc-only one-liners) are exempt and commit directly.

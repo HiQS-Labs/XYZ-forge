@@ -1,0 +1,25 @@
+# #854 landing QA S1 witness (manual; no new tests). python3 witness.py.txt <merge_cleanup.py>
+# Codex's probe: an in-flight hosted run, then (error | empty listing | completed success).
+import ast, json, sys
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Optional
+p = Path(sys.argv[1]); tree = ast.parse(p.read_text())
+node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'wait_for_hosted_reconcile')
+got = {}
+for second in ('error', 'empty', 'success'):
+    clock = SimpleNamespace(now=0); clock.monotonic = lambda: clock.now
+    def sleep(n): clock.now += n
+    clock.sleep = sleep
+    active = dict(databaseId=42, status='in_progress', conclusion='', headSha='h')
+    complete = dict(active, status='completed', conclusion='success')
+    responses = iter([SimpleNamespace(returncode=0, stdout=json.dumps([active]), stderr=''),
+        SimpleNamespace(returncode=1 if second == 'error' else 0, stdout=json.dumps([complete] if second == 'success' else []), stderr='lookup failed' if second == 'error' else '')])
+    env = dict(Path=Path, Optional=Optional, json=json, time=clock, HOSTED_WAIT_ENV='wait', HOSTED_POLL_ENV='poll', HOSTED_GRACE_ENV='grace',
+        _seconds_from_env=lambda key, default: {'wait': 90, 'poll': 30, 'grace': 0}[key],
+        _gh=lambda *a, **kw: next(responses), log=lambda x: None, log_warn=lambda x: None, log_err=lambda x: None)
+    exec(compile(ast.Module(body=[node], type_ignores=[]), str(p), 'exec'), env)
+    got[second] = env['wait_for_hosted_reconcile']('m', Path('.'), 'development', pr_head='h')
+    print(f"active_then_{second}={got[second]}")
+ok = got == {'error': 'active_timeout', 'empty': 'active_timeout', 'success': 'success'}
+print("RESULT:", "PASS" if ok else "FAIL"); sys.exit(0 if ok else 1)

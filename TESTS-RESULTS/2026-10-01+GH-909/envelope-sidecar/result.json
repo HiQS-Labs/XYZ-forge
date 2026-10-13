@@ -1,0 +1,10 @@
+{
+  "start_utc": "2026-10-01T20:02:17.123546+00:00",
+  "end_utc": "2026-10-01T20:16:38.948794+00:00",
+  "push_rc": 1,
+  "tested_sha": "bdc399f54e3814eada97d437ec5b95b35aed8c59",
+  "identity_intact": true,
+  "width": "pre-push default balanced capped4",
+  "relay_skip": "default policy1",
+  "clone": "/private/tmp/xyz-ci-stabilization-20260930/completion-policy-publish-oct1"
+}

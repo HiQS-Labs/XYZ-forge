@@ -14,7 +14,10 @@ usage: ./validate.sh [--parallel N | --sequential | --print-mode]
                 --throttle | --quiet-cpu          2 workers under nice — quiet-machine mode (GH-35)
                 --burst                           full-core width, cores-2 capped 8 — unattended speed
   tiers (GH-35) --tier 1|2|3                      1 = docs gate · 2 = subsystem suites · 3 = full (default)
-                --subsystem <name>                tier 2 for one subsystem (utils/ci-route.sh subsystems)
+                --subsystem <name>                tier 2 for one subsystem (utils/ci-route.sh subsystems);
+                                                  `--sequential --subsystem small` runs the Small list:
+                                                  locally a self-check; in the hosted reconcile, the
+                                                  run that qualifies a docs/ledger/skill landing (GH-831)
                 --auto [base[.. head]]            classify the git diff, run the minimal safe tier
                 --paths-file <file>               tier 2 from a path list — what pre-push hands over
   environment   XYZ_VALIDATE_THROTTLE=1 · XYZ_VALIDATE_MAX_JOBS=N · XYZ_VALIDATE_PARALLEL=N|0
@@ -133,18 +136,12 @@ TESTS=(
   "gh308-frozen-twin-guard.sh"  # GH-308 (Python-authoritative twins: banner + committed-change guard)
   "gh245-agy-probe-verb-invariant.sh" # GH-245 (agy auth probe verb must agree across utils/py call sites and not be a removed subcommand)
   "gh267-express-skill.sh"     # GH-267 (/express hotfix lane: refusal predicates, born-complete docs, tick telemetry)
-  "gh578-ci-optimize-skill.sh"  # GH-578 (ci-optimize transferable CI/CD audit & optimization skill)
-  "gh778-review-code-skill.sh"    # GH-778 (review-code and review-PR ground-truth code review skill)
-  "gh798-status-skill.sh"         # GH-798 (status skill and review-code DRY / helper audit)
-  "gh779-radar-ci-health.sh"    # GH-779 (radar: trunk CI health, new-guard re-run on open PRs, regressed-after-fixed table)
-  "gh781-wam-radar-seed.sh"    # GH-781 (whack-a-mole seeds candidate clusters from recent radar reports)
+  # GH-831: eight skill-text suites are turned off (files kept in test/); their one record is
+  # the EXEMPT list in test/gh306-registry-bidirectional.sh. Do not re-register them here.
   "gh788-python-path-space.sh"    # GH-788 (stub launcher + quoted interpreter survive a spaced Python path; ratchet)
   "gh777-start-task-prior-art.sh" # GH-777 (start-task: bounded prior-art discovery across repos, PRs, and tools)
   "gh777-inventory-ratchet.sh"  # GH-777 (inventory ratchet: shrink-only script/connect guards)
-  "gh615-start-task-reinforce.sh" # GH-615 (start-task reinforcement: ponytail adjudication rail, test scope, tiered verification, anti-thrashing)
-  "gh616-start-task-commensurate-envelope.sh" # GH-616 (start-task commensurate machinery & review packet envelope)
-  "gh617-relay-xyz-commensurate-review.sh" # GH-617 (relay-xyz commensurate review scope & operational envelope)
-  "gh609-sdlc-agent-gaps.sh"    # GH-609 (autonomous SDLC gaps: recovery, expand-contract migrations, containment)
+  "gh609-sdlc-agent-gaps.sh"    # GH-609 (autonomous SDLC gaps: recovery, workload-scoped online migrations, containment)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "gh478-runaway-guard.sh"      # GH-478 (ATE runaway guard: per-invocation timeout + trap-safe child reaper; sweep cases append with utils/ate-runaway-sweep.sh)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup) + GH-450 (tier-4 post-correction guard, terminal-refusal control)
@@ -219,18 +216,7 @@ TESTS=(
                                  #   test/marathon.sh's GH-205 cases are the non-regression CONTROL,
                                  #   not the pin — they pass with OR without the probe, which is
                                  #   exactly why this file exists.
-  "gh492-idle-kill.sh"           # GH-492 (a blocked turn is killed on an IDLE threshold, not only at the
-                                 #   wall cap) — 16/0, covering both surfaces: agy-turn.py and consult.py.
-                                 #   The NEGATIVE CONTROLS are the point, because a trigger-happy bound is
-                                 #   worse than the hang it replaces — it kills reviewer turns, and a dead
-                                 #   reviewer turn takes a VERDICT with it. (1) a slow-but-progressing turn
-                                 #   must NOT be killed: measured 0.06s idle vs the blocked turn's 4.09s.
-                                 #   (2) consult scoping is pinned BOTH ways — a hung advisor reads 2.99s
-                                 #   idle scoped to its own pid and 0.14s under the shared parent, so the
-                                 #   case cannot pass on a build where scoping does nothing.
-                                 #   Behavioural mutation (not just a missing symbol): dropping worktree
-                                 #   progress from the idle signal makes the control fail, which is exactly
-                                 #   what a trigger-happy bound looks like.
+  # GH-1006 / AGENTS #802/#853: non-Small gh492 timing flake is retained for manual use.
   "gh432-failed-turn-persist.sh" # GH-432 (a failed turn still reaches rtl_enforce: commit + token handoff; both routes) — 12/0 post-fix, control 5/4 pre-fix
   "gh441-gate-env-contract.sh"   # GH-441 P2 (every driver export is classified scrub-or-pass; custom gates get the same clean env) — 13/0; controls: unhelped gate contaminated, orphaned helper fails loud
   "gh218-synthetic-nested-driver-lock.sh" # GH-218 (synthetic suites must not contend for the harness clone's driver lock: static sweep rejects RELAY_DRIVER_LOCKED=0 on/above any relay_drive/marathon_drive invocation in test/synthetic; dynamic repro holds the real lock dir+live pid and runs gh101 green — the live marathon pre-advance incident shape) — 2/0; negative control: detector flags the pre-fix gh101 line 101
@@ -554,7 +540,6 @@ TESTS=(
   "gh620-skills-army-mini-sync.sh" # GH-620 generated child publisher + detached package smoke
   "agent-chorus-bridge.sh"      # GH-384 (cross-device bridge over Cloudflare Tunnel)
   "gh233-agent-chorus-concurrency.sh" # GH-233 (AgentChorus Gen 2 Phase 2: concurrency, mutex, and supersession stress)
-  "gh268-relay-cue-and-target-checks.sh" # GH-268 items 7+8 (handoff cue every turn, reviewer file sweep, target-repo gate)
   "xyz-vendor.sh"
   "gh642-consumer-fruit.sh"      # GH-642 (vendor→info/exclude, claude Opus-budget warn, --force token auto-suffix, worktree deps copy, xyz-init-clone, preflight zero-criteria warn)
   "xyz-sync-check.sh"            # GH-96 (xyz-sync check: tick_version/source_commit drift report)
@@ -585,7 +570,6 @@ TESTS=(
   "gh123-lock-progress-bound.sh" # GH-123 (XYZ_LOCK_WAIT_S bounds one holder, not the queue; progress re-arms)
   "gh14-atomic-append.sh"        # GH-14 (appendEvent publishes via a .tmp name + atomic rename; concurrent readers never see a torn .jsonl)
   "gh23-path-overlap-enforcement.sh" # GH-23 (enforce path overlap rejection on direct tick claim and tick scope under withClaimLock; --force bypass)
-  "gh4-ungated-clone-warning.sh" # GH-4 (validate.sh warns non-fatally when the push gate is not installed; silent when gated)
   "xyz-harness-hooks.sh"
   "preflight-docs.sh"
   "marathon-plan.sh"
@@ -648,7 +632,6 @@ TESTS=(
   "sentinel-overlay.sh"         # GH-281 (Tier-2 overlay: static egress guard + inert-by-default proof)
   "checkjs.sh"
   "acorn-extract.sh"             # GH-169
-  "registry-lock-concurrency.sh"
   "marathon-monitor.sh"          # GH-88 (cross-repo marathon monitor)
   "signal-triage.sh"             # GH-63 (signal triage stage)
   # GH-40 double-blind Reviewer canaries — each verify-fixture.sh drives the real kernel and exits
@@ -681,7 +664,6 @@ TESTS=(
   "gh693-lessons-learned-advisory.sh" # GH-693 (Lessons Learned is a WARN, never a promotion gate: explicit, --pre-merge, catch-up; frontmatter control)
   "gh306-registry-bidirectional.sh" # GH-306 (exists→registered registry half; self-demonstrating — see the suite header)
   "gh298-ate-gen4-ci-smoke.sh"      # GH-298 (ATE Gen 4 CI smoke — fuzz/oracle wiring against the real runner)
-  "gh-gen4-phase1-domain-oracles.sh" # GH-299 Phase 1 (Gen 4 semantic domain oracles: zero-state, containment, idempotence, crash-recovery; +/- controls)
   "gh-gen4-phase2-adaptive-ate.sh"   # GH-299 Phase 2 (Gen 4 constraint-aware pairwise ATE + calibrated $0 Tier-1 triage; independent coverage walk)
   "gh-gen4-phase3-fuzz-engine.sh"    # GH-299 Phase 3 (Gen 4 seeded mutational fuzz engine: replay, novelty-capped corpus, cross-twin parity)
   "gh-gen4-phase4-repro-synth.sh"    # GH-299 Phase 4 (Gen 4 clustered reproducer synthesis: 1 suite per root cause, ddmin, falsification)
@@ -772,7 +754,7 @@ while [ $# -gt 0 ]; do
     --skip)
       # GH-379: the canary hand-rolled its own runner partly to get a skip list. A skip is a real
       # reduction in coverage, so it is spelled out loud rather than buried in a CI for-loop.
-      [ $# -ge 2 ] || _err2 "--skip requires a suite name (e.g. --skip registry-lock-concurrency.sh)"
+      [ $# -ge 2 ] || _err2 "--skip requires a suite name (e.g. --skip acorn-extract.sh)"
       SKIP_SUITES+=("$2")
       shift 2 ;;
     --parallel|--max-parallel)
@@ -937,6 +919,9 @@ if [ -n "$SUBSYSTEM" ]; then
   [ -n "$T2_TESTS" ] || _err2 "subsystem '$SUBSYSTEM' resolved to no suites — refusing a zero-test gate"
   TIER=2
   case "$SUBSYSTEM" in releases|pdda) T2_PYTEST=1 ;; esac
+  # GH-831 D2: small is what the hosted reconcile runs for a docs landing, so it also runs the
+  # PDDA docs gate and the Python layer — the tier-2 qualification rule requires both.
+  if [ "$SUBSYSTEM" = small ]; then T2_PYTEST=1; T2_PDDA=1; fi
   echo "validate.sh: tier 2 — subsystem $SUBSYSTEM (GH-35)"
 fi
 

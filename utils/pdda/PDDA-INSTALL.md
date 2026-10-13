@@ -17,7 +17,21 @@ create the lifecycle tree, synthesize the blank seed files, `chmod`, and run a v
 ```bash
 ./utils/pdda/pdda-install.sh /path/to/target-repo          # observe mode, idempotent
 ./utils/pdda/pdda-install.sh --with-startup-docs --mode light /path/to/target-repo
+./utils/pdda/pdda-install.sh --with-startup-docs --roadmap-source releases --projections off /path/to/vendored-repo
 ```
+
+For a releases-only install, vendor the XYZ harness first so the target has
+`utils/py/releases_app.py` or `.xyz/utils/py/releases_app.py`. The installer checks
+for that CLI before writing anything, initializes `releases.db` and `releases.sql`,
+sets `ROADMAP_SOURCE=releases`, and seeds neither `ROADMAP.md` nor `RELEASES.md`.
+`--projections off` writes the supported `releases settings set projections off`
+setting, which suppresses automatic HTML and Markdown view refresh even if a view
+file exists. `--projections auto` (default) retains the historical file-presence
+adoption rule; `on` retains that rule explicitly. Existing Markdown ledgers need
+a separate migration and are refused by the releases-only installer path.
+
+The `/pdda` skill copy under `.claude/skills/` is optional. A write denial is
+reported and core installation, registry, and verification continue.
 
 The rest of this document is the canonical spec `utils/pdda/pdda-install.sh` implements — read on when you need to
 install by hand, adapt to a non-standard layout, or keep the script honest. Keep the two in lockstep:

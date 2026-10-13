@@ -1,0 +1,45 @@
+{
+ "practice_issue": 873,
+ "checks": [
+  {
+   "check": "first filing",
+   "issue": 873,
+   "result": "created"
+  },
+  {
+   "check": "dedupe on re-run",
+   "same_issue": false,
+   "result": "created",
+   "open_matches": [
+    873
+   ],
+   "delta_comments_added": 0
+  },
+  {
+   "check": "oversized report",
+   "full_chars": 108722,
+   "body_chars": 857,
+   "parts": 2,
+   "table_rows_posted": 411,
+   "table_identical": true
+  },
+  {
+   "check": "per-turn comments",
+   "decision_turn_added": 1,
+   "no_decision_turn_added": 0
+  },
+  {
+   "check": "redaction",
+   "leaks": []
+  },
+  {
+   "check": "labels and close",
+   "labels": [
+    "ci",
+    "stability"
+   ],
+   "radar_used": false,
+   "final_state": "CLOSED"
+  }
+ ]
+}

@@ -1,0 +1,2 @@
+{"label": "qa-head", "sha": "04fd21bf9d785b724d9c90e77169481812f4217d", "case": "r1_head_moved_after_poll", "outcome": "returned", "elapsed_s": 0.13, "result": {"rc": 2, "refresh_reads": ["dddd/CONFLICTING", "cccc/UNKNOWN", "eeee/MERGEABLE"], "landing_clone_heads": ["dddd", "eeee"], "prepared_a_head_other_than_pushed": true}}
+{"label": "qa-head", "sha": "04fd21bf9d785b724d9c90e77169481812f4217d", "case": "r2_active_then_lookup_error", "outcome": "returned", "elapsed_s": 0.13, "result": {"result": "fallback", "local_writer_would_run": true}}

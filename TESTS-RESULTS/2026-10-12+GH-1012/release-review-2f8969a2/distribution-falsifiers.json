@@ -1,0 +1,369 @@
+{
+  "tested_candidate": "2f8969a292e8dd230ab69ab9fe4ddc96a898ab55",
+  "mini": {
+    "seeded": true,
+    "absent_after_first_publication": true,
+    "recreated_after_second_publication": true,
+    "regression_reproduced": true,
+    "child": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+    "push": false,
+    "origin": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child"
+  },
+  "manager": {
+    "head_before": "768caed860c072ca58e6eb2218493d0fb3ac01e4",
+    "head_after": "768caed860c072ca58e6eb2218493d0fb3ac01e4",
+    "status": "M README.md\n M skills-army-hq/README.md",
+    "warning": "skills-army-hq: WARN not committed in /private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection: unrelated uncommitted changes: README.md \u2014 commit by hand or the hourly pulse stays blocked\n",
+    "all_targets_disabled": true,
+    "root_readme_refreshed": true,
+    "regression_reproduced": true,
+    "collection": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+    "network_publish": false
+  },
+  "commands": [
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+        "init",
+        "-q",
+        "-b",
+        "main"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+        "config",
+        "user.name",
+        "Distribution Fixture"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+        "commit",
+        "--allow-empty",
+        "-qm",
+        "fixture seed"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+        "remote",
+        "add",
+        "origin",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/promotion-review-20261012",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/promotion-review-20261012/utils/py/xyz_mini_sync.py",
+        "--dest",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+        "--apply"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "xyz-mini-sync: note: publishing from 'docs/gh1012-release-review-20261012', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: adapted entries seeded from forge bytes \u2014 re-adapt per the child's ORIGIN.md: skills/daily-planner skills/weekly-planner\nxyz-mini-sync: source 2f8969a292e8 (docs/gh1012-release-review-20261012) \u2192 /private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child\nxyz-mini-sync: plan: copy 40 files, delete 0\nxyz-mini-sync: committed 9f10433: sync: XYZ-forge@2f8969a292e8 (docs/gh1012-release-review-20261012)\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+        "rm",
+        "-r",
+        "--",
+        "skills/weekly-planner"
+      ],
+      "rc": 0,
+      "stdout": "rm 'skills/weekly-planner/SKILL.md'\nrm 'skills/weekly-planner/scripts/planner_core.py'\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+        "commit",
+        "-qm",
+        "fixture child removes its adapted entry"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/promotion-review-20261012",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/promotion-review-20261012/utils/py/xyz_mini_sync.py",
+        "--dest",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+        "--apply"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "xyz-mini-sync: note: publishing from 'docs/gh1012-release-review-20261012', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: child removed adapted paths (recorded, never re-created from forge bytes): skills/weekly-planner/SKILL.md skills/weekly-planner/scripts/planner_core.py\nxyz-mini-sync: source 2f8969a292e8 (docs/gh1012-release-review-20261012) \u2192 /private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child\nxyz-mini-sync: plan: copy 36 files, delete 0\nxyz-mini-sync: committed 6449eeb: sync: XYZ-forge@2f8969a292e8 (docs/gh1012-release-review-20261012)\n"
+    },
+    {
+      "cwd": "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/promotion-review-20261012",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/promotion-review-20261012/utils/py/xyz_mini_sync.py",
+        "--dest",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child",
+        "--apply"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "xyz-mini-sync: note: publishing from 'docs/gh1012-release-review-20261012', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: adapted entries seeded from forge bytes \u2014 re-adapt per the child's ORIGIN.md: skills/weekly-planner\nxyz-mini-sync: source 2f8969a292e8 (docs/gh1012-release-review-20261012) \u2192 /private/tmp/xyz1012-distribution-falsifiers-20261012-r2/mini-child\nxyz-mini-sync: plan: copy 38 files, delete 0\nxyz-mini-sync: committed abf1756: sync: XYZ-forge@2f8969a292e8 (docs/gh1012-release-review-20261012)\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--quiet",
+        "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/promotion-review-20261012",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/manager-source"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+        "init",
+        "-q",
+        "-b",
+        "main"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+        "config",
+        "user.name",
+        "Distribution Fixture"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+        "commit",
+        "--allow-empty",
+        "-qm",
+        "fixture seed"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+        "add",
+        "-A"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+        "commit",
+        "-qm",
+        "fixture pulse payloads"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/manager-source/skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "--root",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+        "--apply",
+        "init",
+        "--adopt-existing"
+      ],
+      "rc": 0,
+      "stdout": "{\"operation\": \"adopt-existing\", \"root\": \"/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection\", \"skills\": [\"skills-army-hq\"], \"apply\": true}\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "768caed860c072ca58e6eb2218493d0fb3ac01e4\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/manager-source",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/manager-source",
+        "add",
+        "--",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/manager-source/skills/3-weekly/skills-army-hq/README.md"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/manager-source",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/manager-source",
+        "commit",
+        "-qm",
+        "fixture README payload update"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/manager-source/skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "--root",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+        "--apply",
+        "update",
+        "skills-army-hq",
+        "--source",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/manager-source/skills/3-weekly/skills-army-hq"
+      ],
+      "rc": 0,
+      "stdout": "{\n  \"operation\": \"update\",\n  \"apply\": true,\n  \"name\": \"skills-army-hq\",\n  \"source\": \"/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/manager-source/skills/3-weekly/skills-army-hq\",\n  \"before\": \"0859ffb1c65146227b99c3b38cf932e3082ba6e4999fd92ae53b698a545aeeec\",\n  \"after\": \"56065c0a1ecb18f09edd05a32bab14dd3a7880f1296d799212675d9f2f973e7c\",\n  \"commit\": \"ff62dabedfa25849e51329e5413abad4b796cc8d\",\n  \"backup\": \"backups/skills-army-hq-2026-10-12.zip\"\n}\n",
+      "stderr": "skills-army-hq: WARN not committed in /private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection: unrelated uncommitted changes: README.md \u2014 commit by hand or the hourly pulse stays blocked\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "768caed860c072ca58e6eb2218493d0fb3ac01e4\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+      "argv": [
+        "git",
+        "-C",
+        "/private/tmp/xyz1012-distribution-falsifiers-20261012-r2/pulse-collection",
+        "status",
+        "--porcelain=v1"
+      ],
+      "rc": 0,
+      "stdout": " M README.md\n M skills-army-hq/README.md\n",
+      "stderr": ""
+    }
+  ]
+}

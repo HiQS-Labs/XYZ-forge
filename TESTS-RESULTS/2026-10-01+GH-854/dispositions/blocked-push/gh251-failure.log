@@ -1,0 +1,170 @@
+== test: gh251-validate-pytest-skip ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh251-validate-pytest-skip.XXXXXX.vyVZIj4OLN
+  PASS: validate.sh invokes pytest when pytest is importable
+  FAIL: python:test_python_layer.py was not reported in passed list: validate.sh: classified tier 2 — subsystems: skills-army-hq (GH-35)
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+
+===============================
+Tier 2 — subsystem gate (GH-35): skills-army-hq.sh gh620-skills-army-mini-sync.sh gh589-xyz-mini-sync.sh gh589-consult-no-tick.sh gh589-skill-viewer.sh
+NOT promotion evidence: the qualifying gate is ci-local.sh's sequential full run (GH-509).
+===============================
+
+===============================
+Running tier-2 static syntax checks on changed files
+===============================
+  python3 ast-parse skills/3-weekly/skills-army-hq/scripts/sync.py
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.jm5cZk/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 4-wide — XYZ_VALIDATE_MAX_JOBS=4
+  5 pooled suites + 0 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] gh589-consult-no-tick.sh rc=0
+[parallel] gh589-skill-viewer.sh rc=0
+[parallel] gh589-xyz-mini-sync.sh rc=0
+[parallel] gh620-skills-army-mini-sync.sh rc=0
+[parallel] skills-army-hq.sh rc=1
+
+===============================
+FAILED in parallel (rc=1): skills-army-hq.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_crash_each_publish_boundary_recovers_once 
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_crash_each_publish_boundary_recovers_once PASSED [ 57%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_link_crash_and_corrupt_pending_fail_closed PASSED [ 60%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_missing_payload_corrupt_state_and_history_refuse_prune PASSED [ 63%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_two_missing_payloads_do_not_deadlock_remove PASSED [ 66%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a6_shipped_consult_has_no_recursive_install_artifact PASSED [ 69%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a7_missing_manager_entry_blocks_usability PASSED [ 72%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a7_swe_description_fits_zcode_discovery_limit PASSED [ 75%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_collection_only_skill_is_unrecognized_never_refused PASSED [ 78%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_drifted_deploy_refused_citing_canonical_then_allowed_loudly PASSED [ 81%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_explicit_bad_canonical_is_an_error PASSED [ 84%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_no_canonical_is_a_warning_not_a_pass PASSED [ 87%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_targets_json_canonical_key PASSED [ 90%]
+test/test_deploy_skills.py::DeploySkillsTest::test_pulse_adoption_refuses_unprotected_or_foreign_state PASSED [ 93%]
+test/test_deploy_skills.py::DeploySkillsTest::test_pulse_adoption_two_devices_and_pull_readthrough PASSED [ 96%]
+test/test_deploy_skills.py::DeploySkillsTest::test_pulse_default_root PASSED [100%]
+
+=================================== FAILURES ===================================
+_____ DeploySkillsTest.test_a2_archives_round_trip_and_same_day_collisions _____
+
+self = <test_deploy_skills.DeploySkillsTest testMethod=test_a2_archives_round_trip_and_same_day_collisions>
+
+    def test_a2_archives_round_trip_and_same_day_collisions(self):
+        source = self.source()
+        self.cli("--apply", "add", source)
+        expected = intake.snapshot(self.root / "sample")
+        for version in (2, 3):
+            (source / "run.py").write_text(f"print({version})\n")
+            self.cli("--apply", "update", "sample")
+        archives = sorted((self.root / "backups").glob("sample-*.zip"))
+        self.assertEqual(len(archives), 2)
+        self.assertTrue(any(p.name.endswith("-02.zip") for p in archives))
+>       first = next(p for p in archives if not p.name.endswith("-02.zip"))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       StopIteration
+
+test/test_deploy_skills.py:272: StopIteration
+=========================== short test summary info ============================
+FAILED test/test_deploy_skills.py::DeploySkillsTest::test_a2_archives_round_trip_and_same_day_collisions
+=============== 1 failed, 32 passed, 4 subtests passed in 18.15s ===============
+
+===============================
+Running python3 -m pytest test/test_python_layer.py
+===============================
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- /opt/homebrew/opt/python@3.14/bin/python3.14
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /private/tmp/xyz-ci-stabilization-20260930/gate-dispositions-publish-oct1
+configfile: pytest.ini
+plugins: hypothesis-6.167.1, anyio-4.13.0
+collecting ... collected 21 items
+
+test/test_python_layer.py::test_deploy_skills_behavioral_suite FAILED    [  4%]
+test/test_python_layer.py::test_rtl_module_load PASSED                   [  9%]
+test/test_python_layer.py::test_poll_module_load PASSED                  [ 14%]
+test/test_python_layer.py::test_consult_module_load PASSED               [ 19%]
+test/test_python_layer.py::test_marathon_drive_module_load PASSED        [ 23%]
+test/test_python_layer.py::test_swarm_preflight_module_load PASSED       [ 28%]
+test/test_python_layer.py::test_marathon_plan_module_load PASSED         [ 33%]
+test/test_python_layer.py::test_codex_turn_default_flags_match_bash_default PASSED [ 38%]
+test/test_python_layer.py::test_pi_turn_module_load PASSED               [ 42%]
+test/test_python_layer.py::test_pi_turn_parse_usage_keeps_last_event_gh295 PASSED [ 47%]
+test/test_python_layer.py::test_pi_turn_parse_usage_missing_file_returns_zero PASSED [ 52%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_builder_binary_missing PASSED [ 57%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_pi_builder_binary_missing PASSED [ 61%]
+test/test_python_layer.py::test_swarm_preflight_gh108_bundle_helpers PASSED [ 66%]
+test/test_python_layer.py::test_swarm_preflight_default_root_gh267 PASSED [ 71%]
+test/test_python_layer.py::test_rtl_bridge_honors_containment_ignore_in_python_mode PASSED [ 76%]
+test/test_python_layer.py::test_rtl_run_rtl_returns_code_without_exiting PASSED [ 80%]
+test/test_python_layer.py::test_rtl_run_checked_fails_fast PASSED        [ 85%]
+test/test_python_layer.py::test_poll_relay_field PASSED                  [ 90%]
+test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137 PASSED [ 95%]
+test/test_python_layer.py::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated PASSED [100%]
+
+=================================== FAILURES ===================================
+_____________________ test_deploy_skills_behavioral_suite ______________________
+
+    def test_deploy_skills_behavioral_suite():
+        result = subprocess.run(
+            [sys.executable, "-B", "-m", "unittest", "discover", "-s", "test", "-p", "test_deploy_skills.py"],
+            cwd=REPO_ROOT, text=True, capture_output=True, timeout=180,
+        )
+>       assert result.returncode == 0, result.stdout + result.stderr
+E       AssertionError: ...skills-army-hq: init copy failure
+E         skills-army-hq: Init requires empty folder: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh251-validate-pytest-skip.XXXXXX.vyVZIj4OLN/tmp/gh484-fixture-1bqzo3gp/fresh collection
+E         ....skills-army-hq: ZIP verification failed
+E         skills-army-hq: injected copy failure
+E         .E................./private/tmp/xyz-ci-stabilization-20260930/gate-dispositions-publish-oct1/test/test_deploy_skills.py:582: ResourceWarning: unclosed file <_io.TextIOWrapper name='/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh251-validate-pytest-skip.XXXXXX.vyVZIj4OLN/tmp/gh484-fixture-ny2ywtpq/Documents/Deployed Skills/sample/SKILL.md' mode='a' encoding='UTF-8'>
+E           (self.root / "sample" / "SKILL.md").open("a").write("\nlocal hack\n")
+E         ResourceWarning: Enable tracemalloc to get the object allocation traceback
+E         .......
+E         ======================================================================
+E         ERROR: test_a2_archives_round_trip_and_same_day_collisions (test_deploy_skills.DeploySkillsTest.test_a2_archives_round_trip_and_same_day_collisions)
+E         ----------------------------------------------------------------------
+E         Traceback (most recent call last):
+E           File "/private/tmp/xyz-ci-stabilization-20260930/gate-dispositions-publish-oct1/test/test_deploy_skills.py", line 272, in test_a2_archives_round_trip_and_same_day_collisions
+E             first = next(p for p in archives if not p.name.endswith("-02.zip"))
+E         StopIteration
+E         
+E         ----------------------------------------------------------------------
+E         Ran 33 tests in 18.106s
+E         
+E         FAILED (errors=1)
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/opt/homebrew/opt/python@3.14/bin/python3.14', '-B', '-m', 'unittest', 'discover', '-s', 'test', '-p', 'test_deploy_skills.py'], returncode=1, stdout='', stderr='...skills-army-hq: init copy failure\nskills-army-hq: Init requires empty folder: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh251-validate-pytest-skip.XXXXXX.vyVZIj4OLN/tmp/gh484-fixture-1bqzo3gp/fresh collection\n....skills-army-hq: ZIP verification failed\nskills-army-hq: injected copy failure\n.E................./private/tmp/xyz-ci-stabilization-20260930/gate-dispositions-publish-oct1/test/test_deploy_skills.py:582: ResourceWarning: unclosed file <_io.TextIOWrapper name=\'/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh251-validate-pytest-skip.XXXXXX.vyVZIj4OLN/tmp/gh484-fixture-ny2ywtpq/Documents/Deployed Skills/sample/SKILL.md\' mode=\'a\' encoding=\'UTF-8\'>\n  (self.root / "sample" / "SKILL.md").open("a").write("\\nlocal hack\\n")\nResourceWarning: Enable tracemalloc to get the object allocation traceback\n.......\n======================================================================\nERROR: test_a2_archives_round_trip_and_same_day_collisions (test_deploy_skills.DeploySkillsTest.test_a2_archives_round_trip_and_same_day_collisions)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File "/private/tmp/xyz-ci-stabilization-20260930/gate-dispositions-publish-oct1/test/test_deploy_skills.py", line 272, in test_a2_archives_round_trip_and_same_day_collisions\n    first = next(p for p in archives if not p.name.endswith("-02.zip"))\nStopIteration\n\n----------------------------------------------------------------------\nRan 33 tests in 18.106s\n\nFAILED (errors=1)\n').returncode
+
+test/test_python_layer.py:18: AssertionError
+=========================== short test summary info ============================
+FAILED test/test_python_layer.py::test_deploy_skills_behavioral_suite - Asser...
+======================== 1 failed, 20 passed in 18.53s =========================
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Summary
+===============================
+tier 2 run — 5 suite(s). NOT promotion evidence (GH-35/GH-509).
+telemetry: /private/tmp/xyz-ci-stabilization-20260930/gate-dispositions-publish-oct1/.tick/telemetry/validate-parallel-1790918842975-14779.jsonl (8 suite events, 408 registered)
+10 slowest suites:
+  name  duration_s  rc
+  skills-army-hq.sh  22.122  1
+  gh620-skills-army-mini-sync.sh  17.179  0
+  gh589-xyz-mini-sync.sh  11.535  0
+  gh589-consult-no-tick.sh  7.238  0
+  gh589-skill-viewer.sh  1.457  0
+re-run ladder: 1 suite(s), 18.563s total
+passed: 6 / 8
+  + tier2:static
+  + gh589-consult-no-tick.sh
+  + gh589-skill-viewer.sh
+  + gh589-xyz-mini-sync.sh
+  + gh620-skills-army-mini-sync.sh
+  + clone-identity-invariant
+failed:
+  - skills-army-hq.sh
+  - python:test_python_layer.py

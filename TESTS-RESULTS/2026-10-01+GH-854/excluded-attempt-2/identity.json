@@ -1,0 +1,44 @@
+{
+  "run": 2,
+  "start": "2026-10-01T18:29:56.890026+00:00",
+  "end": "2026-10-01T18:47:00.047321+00:00",
+  "sha": "57bd97af4a0e8d456927e20b49d64b232d95f36d",
+  "clone": "/private/tmp/xyz-ci-stabilization-20260930/qualification-oct1-2-43008",
+  "host": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+  "command": "caffeinate -i bash validate.sh --parallel 4",
+  "rc": 0,
+  "identity_intact": true,
+  "zero_rescues": false,
+  "telemetry_summary": {
+    "v": 1,
+    "ts_ms": 1790880419747,
+    "run": "57bd97af4-45797",
+    "runner": "validate",
+    "event": "run.summary",
+    "passed": 414,
+    "failed": 0,
+    "total": 414,
+    "envelope_rc": "0",
+    "envelope_drift": "none",
+    "suite_events": "414",
+    "run_set": "411",
+    "registered": "411",
+    "suite_events_match": "yes"
+  },
+  "retry_events": 2,
+  "candidate_clean": false,
+  "before": {
+    "head": "57bd97af4a0e8d456927e20b49d64b232d95f36d",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/development:refs/remotes/origin/development\nbranch.development.remote=origin\nbranch.development.merge=refs/heads/development",
+    "refs": "57bd97af4a0e8d456927e20b49d64b232d95f36d refs/heads/development\n57bd97af4a0e8d456927e20b49d64b232d95f36d refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0",
+    "worktrees": "worktree /private/tmp/xyz-ci-stabilization-20260930/qualification-oct1-2-43008\nHEAD 57bd97af4a0e8d456927e20b49d64b232d95f36d\nbranch refs/heads/development"
+  },
+  "after": {
+    "head": "57bd97af4a0e8d456927e20b49d64b232d95f36d",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/development:refs/remotes/origin/development\nbranch.development.remote=origin\nbranch.development.merge=refs/heads/development",
+    "refs": "57bd97af4a0e8d456927e20b49d64b232d95f36d refs/heads/development\n57bd97af4a0e8d456927e20b49d64b232d95f36d refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0",
+    "worktrees": "worktree /private/tmp/xyz-ci-stabilization-20260930/qualification-oct1-2-43008\nHEAD 57bd97af4a0e8d456927e20b49d64b232d95f36d\nbranch refs/heads/development"
+  }
+}

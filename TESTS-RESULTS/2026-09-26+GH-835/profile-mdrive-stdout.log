@@ -1,0 +1,165 @@
+== test: marathon-drive ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-marathon-drive.XXXXXX.0fOnZRIgtg
+  PASS: dry-run exits 0
+  PASS: dry-run emits the rendered relay on stdout
+  PASS: the emitted render is the real relay body, not just a banner
+  PASS: dry-run writes nothing to disk (GH-401)
+  PASS: dry-run makes no staged changes
+  PASS: dry-run makes no commits
+  PASS: relay file has builder TAKE YOUR TURN section
+  PASS: relay file has reviewer TAKE YOUR TURN section
+  PASS: relay file has STATUS: Open
+  PASS: phase brief text baked into relay file
+  PASS: MARATHON-P1-TURN tick task created (event file present)
+  PASS: seeded the leaked open handoff fixture
+  PASS: driver reconciles leaked handoff and re-seeds cleanly
+  PASS: driver avoids the old 'task ... is open' collision
+  PASS: driver re-seeds the token back to the builder handoff (builder claimed it, reviewer completed it)
+  PASS: live claim blocks re-seed instead of being reaped
+  PASS: live-claim refusal is explicit
+  PASS: live claude claim survives the failed re-seed
+  PASS: relay-drive called with --relay-file
+  PASS: relay-drive called with --relay-task
+  PASS: relay-drive called with --round-cap
+  PASS: relay-drive called with --agent-cmd
+  PASS: happy path exits 0 (relay approved + gate passed)
+  PASS: transcript saved under relay-system/<date>/
+  PASS: marathon.phase.approved event emitted
+  PASS: GH-307: gate cannot see XYZ_HARNESS_CONTEXT
+  PASS: GH-307: gate cannot see XYZ_SESSION_ID
+  PASS: GH-307: gate cannot see MARATHON_LANE_NS
+  PASS: GH-307: scrub is narrow — MARATHON_ROOT preserved
+  PASS: GH-307: scrub is narrow — TICK_REPO_ROOT preserved
+  PASS: pre-advance failure exits 5
+  PASS: ESCALATION.md written on gate failure
+  PASS: ESCALATION.md records pre-advance-failed reason
+  PASS: H4: post-approve source commit → exit 4 (approval not bound to the final candidate)
+  PASS: H4: escalation names candidate-drifted-from-reviewed-head
+  PASS: H4: control — the hook really committed source (the SECOND bind is what refused)
+  PASS: H4: the refusal came from the post-approve bind, after the approved event
+  PASS: H4: receipt is not approved and carries no validated candidate
+  PASS: H4: no green completion was emitted
+  PASS: GH-273: XYZ_PYTHON=0 help documents --post-approve-cmd
+  PASS: GH-273: XYZ_PYTHON=0 omitted hook preserves the existing happy path
+  PASS: GH-273: XYZ_PYTHON=0 passing hook runs exactly once after approval
+  PASS: GH-273: XYZ_PYTHON=0 failing hook exits 9
+  PASS: GH-273: XYZ_PYTHON=0 failing hook still runs exactly once after approval
+  PASS: GH-273: XYZ_PYTHON=0 failing hook records post-approve-failed
+  PASS: GH-273: XYZ_PYTHON=0 approval remains logged when closeout fails
+  PASS: GH-273: XYZ_PYTHON=1 help documents --post-approve-cmd
+  PASS: GH-273: XYZ_PYTHON=1 omitted hook preserves the existing happy path
+  PASS: GH-273: XYZ_PYTHON=1 passing hook runs exactly once after approval
+  PASS: GH-273: XYZ_PYTHON=1 failing hook exits 9
+  PASS: GH-273: XYZ_PYTHON=1 failing hook still runs exactly once after approval
+  PASS: GH-273: XYZ_PYTHON=1 failing hook records post-approve-failed
+  PASS: GH-273: XYZ_PYTHON=1 approval remains logged when closeout fails
+  PASS: relay cap escalation exits 4
+  PASS: ESCALATION.md written on relay cap
+  PASS: ESCALATION.md records relay-drive-exit: 4
+  PASS: relay no-progress exits 3
+  PASS: ESCALATION.md written on no-progress
+  PASS: containment violation escalation exits 6 (not 'unexpected')
+  PASS: ESCALATION.md written on containment violation
+  PASS: ESCALATION.md records containment-violation reason
+  PASS: MARATHON_BUILDER/MARATHON_REVIEWER wired (no dispatcher errors in happy path)
+  PASS: --round-cap 9 passed to relay-drive
+  PASS: agent-cmd path with spaces survives relay-drive dispatch
+  PASS: artifact path baked into relay template
+  PASS: tick claim --paths includes relay + artifact
+  PASS: ALLOW_PATHS exported to the turn-taker env
+  PASS: relay-only phase clears inherited ALLOW_PATHS (no extra write surface)
+  PASS: GH-207: plan-a namespaced lane exits with the stubbed relay cap
+  PASS: GH-207: phase render lives under the namespaced lane path for plan-a
+  PASS: GH-207: plan-a attempt state is keyed by the namespaced lane id
+  PASS: GH-207: plan-b namespaced lane also runs independently
+  PASS: GH-207: phase render lives under the namespaced lane path for plan-b
+  PASS: GH-207: plan-b attempt state is separate from plan-a despite the shared bare lane id
+  PASS: GH-207: namespaced runs do not fall back to a bare p1 attempt file
+  PASS: GH-207: first namespaced render fires (unattested stub, exit 4)
+  PASS: GH-207: identical re-render does not HALT on the render (unattested stub, exit 4)
+  PASS: GH-207: identical re-render is explicitly treated as unchanged
+  PASS: GH-207: identical re-render avoids the old nothing-to-commit halt
+  PASS: GH-207: prebuilt gate-green lane reaches satisfied instead of no-progress
+  PASS: GH-207: already-satisfied recovery re-enters relay-drive once for reviewer approval
+  PASS: GH-207: reviewer approval lands in the namespaced relay file
+  PASS: GH-207: satisfied path is explicitly marked lane_already_satisfied
+  PASS: GH-207: red gate stalled lane still exits no-progress
+  PASS: GH-207: red gate does not route a stalled lane into reviewer recovery
+  PASS: GH-207: stalled red-gate lane still records the ordinary no-progress escalation
+  PASS: GH-279: zero-byte declared artifact remains no-progress
+  PASS: GH-279: zero-byte artifact does not route a reviewer recovery
+  PASS: GH-279: unchanged declared artifact remains no-progress
+  PASS: GH-279: unchanged artifact does not route a reviewer recovery
+  PASS: GH-274: relay approves but a flaky gate still escalates (exit 5)
+  PASS: GH-274: RELAY.md already shows STATUS: Approved after the gate-failed escalation
+  PASS: GH-274: tick token is already done after the gate-failed escalation
+  PASS: GH-274: retrying after the gate is fixed exits 0
+  PASS: GH-274: retry explicitly takes the satisfied-lane short-circuit
+  PASS: GH-274: RELAY.md is byte-identical after the retry (not clobbered)
+  PASS: GH-274: RELAY.md never regresses to STATUS: Open on retry
+  PASS: --require-clean passes on a clean workspace
+  PASS: --require-clean fixture uses a linked worktree (.git file)
+  PASS: --require-clean passes inside a linked worktree (no self-trip on the driver lock)
+  PASS: linked worktree run does not report the driver's own lock as dirt
+  PASS: linked worktree + --require-clean still seeds the phase
+  PASS: --require-clean hard-stops (exit 2) on a dirty workspace
+  PASS: dirty + --require-clean does not seed the phase
+  PASS: dirty workspace only WARNS without --require-clean (still runs)
+  PASS: GH-238: missing default gate exits before dispatch
+  PASS: GH-238: missing default gate names the fail-fast condition
+  PASS: GH-238: missing default gate names the override remedy
+  PASS: GH-238: missing default gate never renders turn 1 relay
+  PASS: GH-238: missing default gate never dispatches relay-drive turn 1
+  PASS: GH-238: missing default gate never seeds a tick task
+  PASS: GH-117: missing builder binary exits 2
+  PASS: GH-117: missing builder error names the missing binary
+  PASS: GH-117: missing builder — relay file never rendered
+  PASS: GH-117: missing builder — no tick task created (no spent token)
+  PASS: GH-117: missing reviewer binary exits 2
+  PASS: GH-117: missing reviewer error names the missing binary
+  PASS: GH-117: missing reviewer — relay file never rendered
+  PASS: GH-117: missing reviewer — no tick task created (no spent token)
+  PASS: GH-117: both binaries present — dry-run still exits 0
+  PASS: GH-117: both-present — relay still rendered
+  PASS: GH-171: vendored full chain advances twice and exits on cap, not no-progress
+  PASS: GH-171: final handoff stays in the consumer repo tick log
+  PASS: GH-171: codex claim event lands in the consumer repo .tick
+  PASS: GH-171: reviewer claim event lands in the consumer repo .tick
+  PASS: GH-171: vendored .xyz does not grow a stray .tick event log
+  PASS: vendored seed byte-unchanged after case 17 (GH-171 vendored chain) (containment)
+  PASS: GH-172: vendored XYZ_PYTHON=1 full chain advances twice and exits on cap, not no-progress
+  PASS: GH-172: XYZ_PYTHON=1 final handoff stays in the consumer repo tick log
+  PASS: GH-172: XYZ_PYTHON=1 codex claim event lands in the consumer repo .tick
+  PASS: GH-172: XYZ_PYTHON=1 reviewer claim event lands in the consumer repo .tick
+  PASS: GH-172: vendored XYZ_PYTHON=1 run does not grow a stray .xyz .tick event log
+  PASS: GH-174: agy claim event lands in the consumer repo .tick under XYZ_PYTHON=1
+  PASS: vendored seed byte-unchanged after cases 18/18a (GH-172/GH-174 vendored XYZ_PYTHON=1 chain) (containment)
+  PASS: GH-172: vendored Bash approval path exits 0 after reviewer approval
+  PASS: GH-172: vendored Bash approval path closes the consumer repo token
+  PASS: GH-172: vendored Bash approval path creates the task in the consumer repo .tick
+  PASS: GH-172: vendored Bash approval path claims builder in the consumer repo .tick
+  PASS: GH-172: vendored Bash approval path releases builder to reviewer in the consumer repo .tick
+  PASS: GH-172: vendored Bash approval path claims reviewer in the consumer repo .tick
+  PASS: GH-172: vendored Bash approval path records reviewer done in the consumer repo .tick
+  PASS: GH-172: vendored Bash approval path does not grow a stray .xyz .tick event log
+  PASS: vendored seed byte-unchanged after case 18b (GH-172 vendored Bash approval chain) (containment)
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path exits 0 after reviewer approval
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path closes the consumer repo token
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path creates the task in the consumer repo .tick
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path claims builder in the consumer repo .tick
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path releases builder to reviewer in the consumer repo .tick
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path claims reviewer in the consumer repo .tick
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path records reviewer done in the consumer repo .tick
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path does not grow a stray .xyz .tick event log
+  PASS: vendored seed byte-unchanged after case 18c (GH-172 vendored XYZ_PYTHON=1 approval chain) (containment)
+  PASS: GH-212: default builder (no --builder flag) runs with no claude binary present
+  PASS: GH-212: default builder identity rendered in the relay file is codex
+  PASS: GH-414: --builder pi is accepted by the default (Python) router and completes a phase
+  PASS: GH-414: the pi builder identity is what actually reaches the relay file
+  PASS: GH-414 control: the frozen Bash driver REJECTS --builder pi (divergence is real, not assumed)
+  PASS: GH-414 control: the Bash rejection names the agent set that omits pi
+  PASS: GH-451: missing Pi builder binary exits 2
+  PASS: GH-451: missing Pi builder error names the missing binary
+  PASS: GH-451: missing Pi builder — relay file never rendered
+  PASS: GH-451: missing Pi builder — no tick task created (no spent token)
+  marathon-drive: 162 pass, 0 fail

@@ -1,0 +1,16 @@
+{
+  "tested_commit": "a59c583eb84470c4d6942e43e8c58560eafd4a23",
+  "reconciled_origin": "d7287c69180b262ab9b4d1c64514158e09eff9eb",
+  "post_test_changed_paths": [
+    "LEADERBOARD.md",
+    "PROJECT/2-WORKING/MARATHON-PLAN-2026-10-09.md",
+    "PROJECT/3-COMPLETED/GH-970-CLONE-NAMING.md",
+    "TESTS-RESULTS/2026-10-09+GH-591/wave-a59c583eb84470c4d6942e43e8c58560eafd4a23/provenance.jsonl",
+    "TESTS-RESULTS/2026-10-09+GH-591/wave-a59c583eb84470c4d6942e43e8c58560eafd4a23/validation.jsonl",
+    "releases.db",
+    "releases.sql"
+  ],
+  "runtime_differences": [],
+  "result": "pass",
+  "limitations": "post-test changes are governance/docs/receipts only; full registry tested the last landing snapshot, final governance checked reconciled origin; operator/deployed checks remain pending"
+}

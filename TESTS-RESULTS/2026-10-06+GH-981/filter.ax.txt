@@ -1,0 +1,16 @@
+The following is a diff from the previous accessibility tree for Window: "XYZ Forge · Dashboard preview" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 365, 435-436, 440, 442-460
+~						364 search text field (settable) Filter displayed work, Value: does-not-match, Placeholder: Filter this view…
++							435 text (settable) does-not-match
++							436 button cancel
++						437 text No observations match this filter.
+~						438 text Source mapping updated
+~						439 text Rebalance
++						440 text 28m ago
+~							441 text Select an observation to inspect its context.
++						442 text Snapshot Just observed
++						443 text xyz_work · ok
++						444 text clio · ok
++						445 text git_pulse · ok
++						446 text topology · off
+The focused UI element is 364 search text field (settable) Filter displayed work, Value: does-not-match, Placeholder: Filter this view…

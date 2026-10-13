@@ -1,0 +1,53 @@
+find-harness (GH-70 Phase 2):
+  PASS: skill front door searches the user install root
+  PASS: skill front door does not prescribe the CWD-relative command
+  PASS: harness clone: --check exits 0
+  PASS: harness clone: no concurrency warning
+  PASS: foreign no-.xyz: --check still exits 0 (fail-open)
+  PASS: foreign no-.xyz: emits the concurrency warning
+  PASS: foreign no-.xyz: points at xyz-vendor.sh
+  PASS: foreign no-.xyz: hint omits the bogus vendor subcommand
+  PASS: vendored .xyz: --check exits 0
+  PASS: vendored .xyz: no concurrency warning
+  PASS: vendored .xyz: resolves to the local .xyz
+  PASS: case-collision: --check still exits 0 (fail-open)
+  PASS: case-collision: emits the advisory warning
+  PASS: case-collision: names both colliding paths
+  PASS: case-collision: explains the exit-6 risk + git mv remedy
+  PASS: vendored collision: --check exits 0
+  PASS: vendored collision: emits the case-collision warning
+  PASS: vendored collision: names both colliding paths
+  PASS: vendored collision: stays scoped to caller repo
+  PASS: no-collision: --check exits 0
+  PASS: no-collision: case-collision warning absent
+  PASS: ignorecase=false collision: --check exits 0
+  PASS: ignorecase=false collision: warning absent
+  PASS: copied skill gives an actionable no-candidate failure
+  PASS: similarly named task clone cannot win discovery
+  PASS: wrong-origin XYZ-forge cannot win discovery
+  PASS: no-candidate diagnostic lists /tmp/find-harness.0ZuV42/gh856-home/Documents/GH Repos/XYZ-forge
+  PASS: copied skill searches /tmp/find-harness.0ZuV42/gh856-home/Documents/GH Repos/XYZ-forge
+  PASS: no-candidate diagnostic lists /tmp/find-harness.0ZuV42/gh856-home/Documents/GitHub/XYZ-forge
+  PASS: copied skill searches /tmp/find-harness.0ZuV42/gh856-home/Documents/GitHub/XYZ-forge
+  PASS: no-candidate diagnostic lists /tmp/find-harness.0ZuV42/gh856-home/Documents/GitHub Repos/XYZ-forge
+  PASS: copied skill searches /tmp/find-harness.0ZuV42/gh856-home/Documents/GitHub Repos/XYZ-forge
+  PASS: no-candidate diagnostic lists /tmp/find-harness.0ZuV42/gh856-home/Documents/GitHub-Repos/XYZ-forge
+  PASS: copied skill searches /tmp/find-harness.0ZuV42/gh856-home/Documents/GitHub-Repos/XYZ-forge
+  PASS: no-candidate diagnostic lists /tmp/find-harness.0ZuV42/gh856-home/Documents/Github/XYZ-forge
+  PASS: copied skill searches /tmp/find-harness.0ZuV42/gh856-home/Documents/Github/XYZ-forge
+  PASS: no-candidate diagnostic lists /tmp/find-harness.0ZuV42/gh856-home/XYZ-forge
+  PASS: copied skill searches /tmp/find-harness.0ZuV42/gh856-home/XYZ-forge
+  PASS: no-candidate diagnostic lists /tmp/find-harness.0ZuV42/gh856-home/Developer/XYZ-forge
+  PASS: copied skill searches /tmp/find-harness.0ZuV42/gh856-home/Developer/XYZ-forge
+  PASS: equally qualified clones cause a named refusal
+  PASS: unique development clone wins
+find-harness: HARNESS=/tmp/find-harness.0ZuV42/gh856-home/Documents/GH Repos/XYZ-forge REPO_ROOT=/tmp/find-harness.0ZuV42/gh856-home/Documents/GH Repos/XYZ-forge vendored=0 via=override
+  PASS: --check config hint writes the chosen path
+  PASS: copied skill resolves the saved config
+  PASS: copied skill --env exports usable harness, repo root, and tick
+  PASS: copied skill warns on a non-development branch
+  PASS: invalid config falls through to canonical search
+  PASS: copied skill reports held lock and cached-upstream lag
+  PASS: dead holder is reported as a stale lock
+  PASS: copied skill compares vendored drift with configured live harness
+  find-harness: 50 pass, 0 fail

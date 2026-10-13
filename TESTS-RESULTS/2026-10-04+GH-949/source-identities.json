@@ -1,0 +1,20 @@
+[
+  {
+    "source_sha": "3fbed72f781d1ad060e298b798a44c32edef393d",
+    "files": {
+      "proc_group.py": "c2a2cd8a869cee5cf1a0d7c525315874d7f73dd80c7a5105eb5620d07a32ce91",
+      "domain_oracles.py": "d492acd746925b3e0736d7b20f253febb7ce66b0b86cd0505cbe515f3ce5e26b",
+      "metamorphic_oracle.py": "c4b5e1d58c8dc0b99da9bcca4327d9c0b69c67ecdcfc53f43de362a72e585d2e",
+      "telemetry_schema.py": "fb176d53992bd7c5720deeed4516bd24abd5cb522b8175e486f14b56211cf56e"
+    }
+  },
+  {
+    "source_sha": "0b892acd81c6549eac3a356d73105e185c765624",
+    "files": {
+      "proc_group.py": "e5dbc41b0e48ded0a9a30ce381f141a27be1322963ce8fd5a44a94adb5ef0130",
+      "domain_oracles.py": "b551fd3d414a44eb1bd35e7f81623cd1cae0adcc6dd43f37ad66e019ed352833",
+      "metamorphic_oracle.py": "5f069afdebbe25d964c8c3de965200657198c9a78e6d4b2982427926e0289a32",
+      "telemetry_schema.py": "fb176d53992bd7c5720deeed4516bd24abd5cb522b8175e486f14b56211cf56e"
+    }
+  }
+]

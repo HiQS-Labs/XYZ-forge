@@ -1,0 +1,21 @@
+XYZ-forge	markers:[]	has-commits
+AEGIS-Sleuth-Slackbot	markers:[]	has-commits
+rebalanceOS	markers:[]	has-commits
+Needle-fork	markers:[]	has-commits
+XYZ-skills-army-mini	markers:[.xyz-forge-revision MANIFEST.txt]	has-commits
+XYZ-CLIO	markers:[]	has-commits
+XYZ-layout-engine	markers:[]	has-commits
+HiQS-AI-Resolve-Catalog	markers:[]	has-commits
+XYZ-mini	markers:[.xyz-forge-revision MANIFEST.txt]	has-commits
+Jev-unofficial-toolkit	markers:[]	has-commits
+AgentChorus-Skill	markers:[.xyz-canonical-revision]	has-commits
+XYZ-team-work-skill	markers:[]	empty-repo
+ai-catalog-update	markers:[]	empty-repo
+Model-catalog	markers:[]	has-commits
+MiniCPM-fork	markers:[]	has-commits
+Orca-fork	markers:[]	has-commits
+XYZ-code-intelligence	markers:[]	has-commits
+Orion-fork	markers:[]	has-commits
+firebase-AI-reports	markers:[]	has-commits
+timeline-ui	markers:[]	has-commits
+GitCanary-fork	markers:[]	has-commits

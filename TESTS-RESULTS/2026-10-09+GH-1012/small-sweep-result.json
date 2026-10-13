@@ -1,0 +1,15 @@
+{
+  "started": "2026-10-10T04:23:20.071391+00:00",
+  "finished": "2026-10-10T04:35:31.547073+00:00",
+  "argv": [
+    "bash",
+    "validate.sh",
+    "--sequential",
+    "--subsystem",
+    "small"
+  ],
+  "cwd": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/merge-cleanup-2026-10-09/publication-clone",
+  "source_sha": "47fb72dfcb13af1d0f64ed7d527a8db467171cbb",
+  "rc": 0,
+  "identity_unchanged": true
+}

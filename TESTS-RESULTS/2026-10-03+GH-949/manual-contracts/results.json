@@ -1,0 +1,252 @@
+{
+  "candidate_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+  "completed_utc": "2026-10-03T07:22:27Z",
+  "results": [
+    {
+      "check": "zero budget rejects no-work and preserves prior row",
+      "passed": true,
+      "detail": {
+        "rc": 2,
+        "stderr": "[run_variations] no variations attempted in this invocation\n",
+        "row_bytes_preserved": true,
+        "target_head_unchanged": true,
+        "target_status_unchanged": true
+      }
+    },
+    {
+      "check": "spawn_error full row accepted by checkin and compile_issue dry-run",
+      "passed": true,
+      "detail": {
+        "source": "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/missing-command/rows.jsonl",
+        "schema_rows": 1,
+        "category": "spawn_error",
+        "checkin_rc": 0,
+        "checkin_summary": {
+          "n_records": 1,
+          "engine": "ate_variations",
+          "passed": 0,
+          "failed": 1,
+          "pass_rate_pct": 0.0,
+          "durations": {
+            "min_ms": 0.0,
+            "avg_ms": 0.0,
+            "p50_ms": 0.0,
+            "p95_ms": 0.0,
+            "max_ms": 0.0
+          },
+          "tokens": {
+            "prompt": 0,
+            "completion": 0,
+            "total": 0,
+            "sources": [
+              "unsupported"
+            ]
+          },
+          "statuses": {
+            "fail": 1
+          },
+          "categories": {
+            "spawn_error": 1
+          },
+          "top_causes": [
+            [
+              "[Errno 2] No such file or directory: '/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/missing-command/missing'",
+              1
+            ]
+          ],
+          "tool_modes": {},
+          "drift_detected": false,
+          "suspicious_pass_count": 0,
+          "log_last_modified_seconds_ago": 0.1
+        },
+        "compile_issue_rc": 0,
+        "dry_run_contains_one_record": true,
+        "dry_run_stderr": ""
+      }
+    },
+    {
+      "check": "term full row accepted by checkin and compile_issue dry-run",
+      "passed": true,
+      "detail": {
+        "source": "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/term.jsonl",
+        "schema_rows": 1,
+        "category": "interrupted",
+        "checkin_rc": 0,
+        "checkin_summary": {
+          "n_records": 1,
+          "engine": "ate_variations",
+          "passed": 0,
+          "failed": 1,
+          "pass_rate_pct": 0.0,
+          "durations": {
+            "min_ms": 5500.0,
+            "avg_ms": 5500.0,
+            "p50_ms": 5500.0,
+            "p95_ms": 5500.0,
+            "max_ms": 5500.0
+          },
+          "tokens": {
+            "prompt": 0,
+            "completion": 0,
+            "total": 0,
+            "sources": [
+              "unsupported"
+            ]
+          },
+          "statuses": {
+            "fail": 1
+          },
+          "categories": {
+            "interrupted": 1
+          },
+          "top_causes": [
+            [
+              "interrupted by signal 15",
+              1
+            ]
+          ],
+          "tool_modes": {},
+          "drift_detected": false,
+          "suspicious_pass_count": 0,
+          "log_last_modified_seconds_ago": 0.0
+        },
+        "compile_issue_rc": 0,
+        "dry_run_contains_one_record": true,
+        "dry_run_stderr": ""
+      }
+    },
+    {
+      "check": "int full row accepted by checkin and compile_issue dry-run",
+      "passed": true,
+      "detail": {
+        "source": "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/after/int.jsonl",
+        "schema_rows": 1,
+        "category": "interrupted",
+        "checkin_rc": 0,
+        "checkin_summary": {
+          "n_records": 1,
+          "engine": "ate_variations",
+          "passed": 0,
+          "failed": 1,
+          "pass_rate_pct": 0.0,
+          "durations": {
+            "min_ms": 5500.0,
+            "avg_ms": 5500.0,
+            "p50_ms": 5500.0,
+            "p95_ms": 5500.0,
+            "max_ms": 5500.0
+          },
+          "tokens": {
+            "prompt": 0,
+            "completion": 0,
+            "total": 0,
+            "sources": [
+              "unsupported"
+            ]
+          },
+          "statuses": {
+            "fail": 1
+          },
+          "categories": {
+            "interrupted": 1
+          },
+          "top_causes": [
+            [
+              "interrupted by signal 2",
+              1
+            ]
+          ],
+          "tool_modes": {},
+          "drift_detected": false,
+          "suspicious_pass_count": 0,
+          "log_last_modified_seconds_ago": 0.1
+        },
+        "compile_issue_rc": 0,
+        "dry_run_contains_one_record": true,
+        "dry_run_stderr": ""
+      }
+    },
+    {
+      "check": "concurrent idempotence normal pass and timeout failure are incomplete; no signal handlers installed",
+      "passed": true,
+      "detail": {
+        "normal": {
+          "passed": true,
+          "repetitions": 2,
+          "concurrent": true,
+          "exit_codes": [
+            0,
+            0
+          ],
+          "completed": true,
+          "stdout_hashes": [
+            "2b92ea252be0fbc26f70317cdaa7b6411ea634b50d55338cd8c495e4dbf25d1d",
+            "2b92ea252be0fbc26f70317cdaa7b6411ea634b50d55338cd8c495e4dbf25d1d"
+          ],
+          "divergences": []
+        },
+        "timeout": {
+          "passed": false,
+          "repetitions": 2,
+          "concurrent": true,
+          "exit_codes": [
+            null,
+            null
+          ],
+          "completed": false,
+          "stdout_hashes": [
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          ],
+          "divergences": [
+            "Exit codes: [None, None]",
+            "Stdout hashes: ['e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855']"
+          ]
+        },
+        "signal_handlers_unchanged": true
+      }
+    },
+    {
+      "check": "containment rejects absent host metadata",
+      "passed": true,
+      "detail": {
+        "passed": false,
+        "reasons": [
+          "host Git metadata could not be read"
+        ],
+        "host_errors": [
+          "config_sha256: Command '['git', '-C', '/Users/noelsaw/task-clones/ate-remediation-20261003/manual-contracts/fixtures-20261003T072225Z-87656/does-not-exist-host', 'rev-parse', '--git-common-dir']' returned non-zero exit status 128.",
+          "worktree_config_sha256: Command '['git', '-C', '/Users/noelsaw/task-clones/ate-remediation-20261003/manual-contracts/fixtures-20261003T072225Z-87656/does-not-exist-host', 'rev-parse', '--git-path', 'config.worktree']' returned non-zero exit status 128."
+        ]
+      }
+    },
+    {
+      "check": "containment rejects unreadable/missing host config",
+      "passed": true,
+      "detail": {
+        "passed": false,
+        "reasons": [
+          "host Git metadata could not be read"
+        ],
+        "host_errors": [
+          "config_sha256: [Errno 2] No such file or directory: '/Users/noelsaw/task-clones/ate-remediation-20261003/manual-contracts/fixtures-20261003T072225Z-87656/host-no-config/.git/config'"
+        ]
+      }
+    },
+    {
+      "check": "containment detects linked-worktree HEAD change",
+      "passed": true,
+      "detail": {
+        "head_before": "3c032b2d62fff759afe5a9b7c1f67831772ccd4a",
+        "head_after": "26536d9f99f5384ccce9de159045d9d18395e502",
+        "passed": false,
+        "reasons": [
+          "host head_tip changed",
+          "host branches changed"
+        ],
+        "worktree_config_before": "002d4dc5eb7d829d8df391ecaed3d514b952ee3a934fd04ff80396f6031ce991"
+      }
+    }
+  ],
+  "passed": true
+}

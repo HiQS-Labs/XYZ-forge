@@ -1,0 +1,10 @@
+== test: hq-promote (GH-138) ==
+  PASS: preview (no --create) previews + writes nothing
+  PASS: --create git-mv's the doc from 1-INBOX to 2-WORKING
+  PASS: promoted doc passes pdda frontmatter (title/status/created/updated/owner/goal present)
+  PASS: promoted doc passes pdda status-table (exact header + non-blank cells)
+  PASS: status frontmatter flipped off the 1-INBOX 'Proposed' state
+  PASS: refuses (non-zero) when no PROJECT/1-INBOX/GH-N-*.md exists
+  PASS: refuses to overwrite an existing 2-WORKING doc
+  PASS: marathon glob now matches MARATHON-<date>.md (was MARATHON-PLAN-*.md only)
+== hq-promote: 8 passed, 0 failed ==

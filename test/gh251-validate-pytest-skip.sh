@@ -11,7 +11,11 @@ VAL="$ROOT/validate.sh"
 export TMPDIR="$WORK/tmp"; mkdir -p "$TMPDIR"
 
 PATHS_FILE="$WORK/paths.txt"
-printf 'utils/py/releases_app.py\n' > "$PATHS_FILE"
+# GH-808: the suite only needs --paths-file to classify tier 2 with T2_PYTEST=1 (any
+# *.py path sets it) — naming releases_app.py routed both nested runs at the ~24-suite
+# releases lane and made this suite ~22% of the full gate. skills-army-hq is the
+# smallest measured .py-bearing lane (2 suites).
+printf 'skills/3-weekly/skills-army-hq/scripts/sync.py\n' > "$PATHS_FILE"
 
 # 1. Normal run when pytest is present — runs and passes test_python_layer.py
 if python3 -c "import pytest" >/dev/null 2>&1; then

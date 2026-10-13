@@ -1,0 +1,31 @@
+[
+  {
+    "command": "quick_validate.py skills/1-hourly/sanity-check",
+    "exit_code": 0,
+    "output": "Skill is valid!",
+    "sha256": "d17edce63fec985cfdce37ada305c8bee8b2850278f408965ae113db097add6c"
+  },
+  {
+    "command": "quick_validate.py skills/3-weekly/whack-a-mole",
+    "exit_code": 0,
+    "output": "Skill is valid!",
+    "sha256": "952151210a2477032869e143a061b2c5fa6252f81ef9d0492dc34c09139c6b51"
+  },
+  {
+    "command": "quick_validate.py skills/3-weekly/radar",
+    "exit_code": 1,
+    "output": "Description is too long (1336 characters). Maximum is 1024 characters.",
+    "sha256": "124fc436787946049508d952c1f336d2f06c37360179936fdd2305c6813ffb38"
+  },
+  {
+    "command": "quick_validate.py temp/sanity-red-control",
+    "mutation": "invalid skill name in disposable copy only",
+    "exit_code": 1,
+    "output": "Name 'INVALID NAME' should be hyphen-case (lowercase letters, digits, and hyphens only)"
+  },
+  {
+    "check": "radar description identical to origin/development",
+    "result": true,
+    "limitation": "existing 1336-character description exceeds validator maximum 1024"
+  }
+]

@@ -1,0 +1,5 @@
+# Retained GH-909 experiment receipts
+
+These scripts are captured historical experiment inputs, not reusable runners. Preserve their bytes with the matching committed provenance, source snapshot and recorded output. In particular, `red-handoff/replay.py` used a fresh preserved clone at base `57bd97af4a0e8d456927e20b49d64b232d95f36d` and then-empty scratch barriers. Do not rerun it in a current or reused checkout: a new controlled replay must pin that base, allocate new scratch state, and assert each scheduling replacement matches exactly once. The captured instrumented `red-handoff/writer.sh` is the actual executed input.
+
+In `focused/manual.py`, the three true flags are assertion-gated: the script only constructs them after observing the inode, waiter exclusion and successful crash-release append. Its `records` value deliberately records the earlier A/W/B handoff snapshot, not the later C crash-release operation; C's successful return code is asserted separately. This clarifies the existing measured result without rewriting historical receipts or implying a new run.

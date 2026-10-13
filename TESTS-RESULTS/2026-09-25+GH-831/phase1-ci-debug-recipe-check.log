@@ -1,0 +1,14 @@
+# GH-831 Phase 1 r1 F2 — manual check of the ci-debug clone recipe (no new suite)
+# recipe:
+#   CLONE="/tmp/XYZ-forge-ci-debug-$$-$(date +%s)"
+#   git clone . "$CLONE" && cd "$CLONE" && bash githooks/install.sh \
+#     || { echo "ci-debug: clone setup failed; stopping before any suite runs" >&2; exit 1; }
+## case 1: run from a non-repo directory, so git clone . fails (expect: message, rc 1, no install, cwd unchanged)
+  fatal: repository '.' does not exist
+  ci-debug: clone setup failed; stopping before any suite runs
+  rc=1
+  PASS: stopped with the message
+  PASS: did not continue
+## case 2: the destination is computed once (expect exactly one $(date +%s))
+  date +%s occurrences: 1
+  PASS

@@ -1,0 +1,407 @@
+#!/usr/bin/env python3
+"""GH-851 / GH-852 witnesses (plan steps F1-F5). Manual checks, not a registered suite (AGENTS.md: no new tests).
+
+One script, run unchanged against a base checkout and a head checkout:
+
+    python3 witness.py.txt --checkout <clone> --label base|head --out <dir>
+
+Each case runs in its own process group under a 10 s outer watchdog; a case still running when the
+watchdog fires is recorded as BLOCKED. Every case writes one JSON line to <out>/<label>.jsonl and
+its full stdout/stderr to <out>/<label>-<case>.log.
+"""
+import argparse, contextlib, io, json, os, signal, subprocess, sys, tempfile, time
+from pathlib import Path
+from unittest import mock
+
+WATCHDOG_S = 10
+H, M, P_NEW, P_OLD = "a" * 40, "b" * 40, "c" * 40, "d" * 40
+
+
+def _load(checkout):
+    sys.path.insert(0, str(Path(checkout) / "skills/2-daily/merge-cleanup/scripts"))
+    import merge_cleanup, scan_clones
+    return merge_cleanup, scan_clones
+
+
+def _stub_git(tmp, stall_on):
+    """A `git` first on PATH that sleeps (exec, so a kill reaches it) for one subcommand only."""
+    real = subprocess.run(["which", "git"], capture_output=True, text=True).stdout.strip()
+    d = Path(tmp) / "stubbin"; d.mkdir()
+    (d / "git").write_text(f'#!/bin/bash\nfor a in "$@"; do [ "$a" = "{stall_on}" ] && exec sleep 600; done\nexec "{real}" "$@"\n')
+    (d / "git").chmod(0o755)
+    os.environ["PATH"] = f"{d}:{os.environ['PATH']}"
+
+
+def _repo(tmp, name="primary"):
+    r = Path(tmp) / name
+    subprocess.run(["git", "init", "-q", "-b", "development", str(r)], check=True)
+    subprocess.run(["git", "-C", str(r), "-c", "user.name=w", "-c", "user.email=w@e", "commit", "-q",
+                    "--allow-empty", "-m", "p"], check=True)
+    subprocess.run(["git", "-C", str(r), "remote", "add", "origin", str(Path(tmp) / "nowhere.git")], check=True)
+    return r
+
+
+def _shorten(mc_or_sc):
+    real = mc_or_sc.run_git
+    def wrap(cwd, args, timeout=None, **kw):  # the plan's C2/D2 wrapper: None stays None
+        return real(cwd, args, timeout=None if timeout is None else min(timeout, 2), **kw)
+    return wrap
+
+
+def _verdict(primary):
+    return {"path": str(primary), "integration_branch": "development", "current_branch": "development",
+            "is_clean": True, "dirty_count": 0, "on_integration_branch": True, "unpushed_on_integration": 0,
+            "can_ff": True, "operation_in_progress": "", "evidence_complete": True, "landing_ready": True,
+            "blockers": []}
+
+
+# ---- cases: each returns a dict (the JSON result) ------------------------------------------------
+
+def w1_clone_stall(mc, sc, tmp):
+    """F1: a stalled `clone` in validate_head_in_second_clone, bound shortened through the wrapper."""
+    _stub_git(tmp, "clone")
+    primary = _repo(tmp)
+    with mock.patch.object(mc, "run_git", side_effect=_shorten(mc)):
+        ok, why = mc.validate_head_in_second_clone(primary, primary, H, Path(tmp))
+    return {"returned": [ok, why]}
+
+
+def w2_timeouts(mc, sc, tmp):
+    """F1: the `timeout` each of the six network git sites passes (None = unbounded)."""
+    seen = {}
+    real_mc, real_sc = mc.run_git, sc.run_git
+    def rec(site, real=None):
+        def fn(cwd, args, timeout=None, **kw):
+            if args[0] not in ("clone", "push", "fetch"):  # local queries pass through
+                return (real or real_mc)(cwd, args, timeout=timeout)
+            seen.setdefault(site, []).append([args[0], timeout])
+            return subprocess.CompletedProcess(args, 1, "", "witness stop")
+        return fn
+    primary = _repo(tmp)
+    with mock.patch.object(mc, "run_git", side_effect=rec("merge_cleanup.py:316 clone")):
+        mc.validate_head_in_second_clone(primary, primary, H, Path(tmp))
+    pr = {"number": 7, "headRefOid": H, "headRefName": "feat/x"}
+    with mock.patch.object(mc, "refresh_pr", return_value=dict(pr)), \
+         mock.patch.object(mc, "run_git", side_effect=rec("merge_cleanup.py:343 push")):
+        mc.push_resolved_head(pr, primary, H, primary)
+    def reconcile_git(cwd, args, timeout=None, **kw):
+        if args[:2] == ["rev-parse", "HEAD"]:
+            return subprocess.CompletedProcess(args, 0, M + "\n", "")
+        return rec("merge_cleanup.py:550 fetch")(cwd, args, timeout=timeout)
+    with mock.patch.object(mc, "wait_for_hosted_reconcile", return_value="success"), \
+         mock.patch.object(mc, "run_git", side_effect=reconcile_git):
+        mc.run_post_merge_reconcile(7, primary, "development", dry_run=False)
+    def p5_git(cwd, args, timeout=None, **kw):
+        if args[0] == "status":
+            return subprocess.CompletedProcess(args, 0, "", "")
+        site = {"push": "merge_cleanup.py:601 push", "fetch": "merge_cleanup.py:605 fetch"}.get(args[0], "other " + args[0])
+        seen.setdefault(site, []).append([args[0], timeout])
+        return subprocess.CompletedProcess(args, 0 if args[0] == "push" else 1, "", "witness stop")
+    with mock.patch.object(mc, "run_git", side_effect=p5_git):
+        mc.commit_and_push_phase5_writes(7, primary, "development")
+    with mock.patch.object(sc, "run_git", side_effect=rec("scan_clones.py:437 fetch", real_sc)):
+        sc.classify_local_refs(primary, "development")
+    return {"timeouts": seen}
+
+
+def w2a_scan_fetch_stall(mc, sc, tmp):
+    """F1 / QA D1: a stalled Phase-3 fetch, bound shortened, NO GIT_HTTP_LOW_SPEED_* in the env."""
+    for k in ("GIT_HTTP_LOW_SPEED_LIMIT", "GIT_HTTP_LOW_SPEED_TIME"):
+        os.environ.pop(k, None)
+    _stub_git(tmp, "fetch")
+    primary = _repo(tmp)
+    with mock.patch.object(sc, "run_git", side_effect=_shorten(sc)):
+        out = sc.classify_local_refs(primary, "development")
+    return {"returned": out}
+
+
+def w3_env(mc, sc, tmp):
+    """F1: after main() has set up, the child-git env holds the low-speed abort; an operator value wins."""
+    res = {}
+    for mod, name in ((mc, "merge_cleanup"), (sc, "scan_clones")):
+        for preset in (None, "5"):
+            for k in ("GIT_HTTP_LOW_SPEED_LIMIT", "GIT_HTTP_LOW_SPEED_TIME"):
+                os.environ.pop(k, None)
+            if preset:
+                os.environ["GIT_HTTP_LOW_SPEED_LIMIT"] = preset
+            # an argv argparse rejects: main() returns through SystemExit right after its setup
+            with mock.patch.object(sys, "argv", [name + ".py", "--no-such-flag"]), \
+                 contextlib.redirect_stderr(io.StringIO()):
+                try:
+                    mod.main()
+                except SystemExit:
+                    pass
+            res[f"{name} preset={preset}"] = {k: os.environ.get(k) for k in ("GIT_HTTP_LOW_SPEED_LIMIT", "GIT_HTTP_LOW_SPEED_TIME")}
+    return res
+
+
+def w4_transient(mc, sc, tmp):
+    texts = ["error: RPC failed; curl 28 Operation too slow. Less than 1000 bytes/sec transferred the last 120 seconds",
+             "error: RPC failed; curl 56 Recv failure: Connection reset by peer",
+             "remote: Repository not found.",
+             "fatal: Authentication failed"]
+    return {"transient": {t: mc._transient(t) for t in texts}}
+
+
+def _gh_stub(view, runs=None, merge_rc=1):
+    calls = []
+    def fn(args, cwd, timeout=180):
+        calls.append(list(args[:2]))
+        if args[:2] == ["pr", "merge"]:
+            return subprocess.CompletedProcess(args, merge_rc, "", "gh: killed / network error")
+        if args[:2] == ["pr", "view"]:
+            if view is None:
+                return subprocess.CompletedProcess(args, 1, "", "HTTP 404: Not Found")
+            return subprocess.CompletedProcess(args, 0, json.dumps(view), "")
+        if args[:2] == ["run", "list"]:
+            return subprocess.CompletedProcess(args, 0, json.dumps(runs or []), "")
+        return subprocess.CompletedProcess(args, 1, "", "unexpected " + " ".join(args))
+    return fn, calls
+
+
+MERGED = {"number": 42, "state": "MERGED", "mergeable": "UNKNOWN", "headRefOid": H, "headRefName": "feat/x",
+          "baseRefName": "development", "labels": [], "mergeCommit": {"oid": M}, "url": "u"}
+OPEN = dict(MERGED, state="OPEN", mergeCommit=None)
+
+
+def f2_merge_recovery(mc, sc, tmp):
+    fn, calls = _gh_stub(MERGED)
+    with mock.patch.object(mc, "_gh", side_effect=fn):
+        r = mc.execute_pr_merge(42, Path(tmp), dry_run=False)
+    return {"returned": r, "gh_calls": calls}
+
+
+def f2_control_open(mc, sc, tmp):
+    fn, calls = _gh_stub(OPEN)
+    with mock.patch.object(mc, "_gh", side_effect=fn):
+        r = mc.execute_pr_merge(42, Path(tmp), dry_run=False)
+    return {"returned": r, "gh_calls": calls}
+
+
+def _f3(mc, sc, tmp, view, red_control=False):
+    primary = _repo(tmp)
+    phead = subprocess.run(["git", "-C", str(primary), "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+    runs = [{"databaseId": 99, "status": "in_progress", "conclusion": None, "headSha": H, "event": "pull_request"}]
+    fn, calls = _gh_stub(view, runs)
+    os.environ.update({"MERGE_CLEANUP_HOSTED_WAIT_S": "1", "MERGE_CLEANUP_HOSTED_POLL_S": "1",
+                       "MERGE_CLEANUP_HOSTED_GRACE_S": "1"})
+    reconcile_calls, local_calls, looked_for = [], [], []
+    real_reconcile, real_wait = mc.run_post_merge_reconcile, mc.wait_for_hosted_reconcile
+    def spy_reconcile(*a, **kw):
+        reconcile_calls.append({k: kw.get(k) for k in ("pr_head", "merged_head")})
+        return real_reconcile(*a, **kw)
+    def spy_wait(merged_head, *a, **kw):
+        looked_for.append({"merged_head": merged_head, "pr_head": kw.get("pr_head")})
+        if red_control:  # deliberate mutation: the local writer runs while the run on H is active
+            mc.run_local_wave_reconcile(42, primary)
+        return real_wait(merged_head, *a, **kw)
+    def local(pr_num, repo):
+        local_calls.append(pr_num); return False
+    with mock.patch.object(sys, "argv", ["merge_cleanup.py", "--primary", str(primary), "--reconcile-pr", "42", "--execute"]), \
+         mock.patch.object(mc, "inspect_primary_landing", return_value=_verdict(primary)), \
+         mock.patch.object(mc, "_gh", side_effect=fn), \
+         mock.patch.object(mc, "run_post_merge_reconcile", side_effect=spy_reconcile), \
+         mock.patch.object(mc, "wait_for_hosted_reconcile", side_effect=spy_wait), \
+         mock.patch.object(mc, "run_local_wave_reconcile", side_effect=local), \
+         mock.patch.object(mc, "_sleep", lambda s: None):
+        rc = mc.main()
+    return {"rc": rc, "primary_head": phead, "pr_head_H": H, "merge_M": M, "looked_for": looked_for,
+            "run_post_merge_reconcile_calls": reconcile_calls, "local_writer_calls": len(local_calls)}
+
+
+def f3_lookup(mc, sc, tmp):
+    """F3 + safety witness 3: active run on H, wait exhausted -> active_timeout, never the local writer."""
+    return _f3(mc, sc, tmp, MERGED)
+
+
+def f3_open_refused(mc, sc, tmp):
+    return _f3(mc, sc, tmp, OPEN)
+
+
+def f3_view_error(mc, sc, tmp):
+    return _f3(mc, sc, tmp, None)
+
+
+def f3_red_control(mc, sc, tmp):
+    return _f3(mc, sc, tmp, MERGED, red_control=True)
+
+
+def f4_regate(mc, sc, tmp):
+    """F4: after the B1 push GitHub reads old-head CONFLICTING, then new-head UNKNOWN, then MERGEABLE."""
+    base = {"number": 5, "state": "OPEN", "headRefName": "feat/x", "baseRefName": "development", "labels": [],
+            "mergeCommit": None, "url": "u"}
+    seq = [dict(base, headRefOid=P_OLD, mergeable="CONFLICTING"),   # first read (before B1)
+           dict(base, headRefOid=P_OLD, mergeable="CONFLICTING"),   # straight after the push: stale
+           dict(base, headRefOid=P_NEW, mergeable="UNKNOWN"),
+           dict(base, headRefOid=P_NEW, mergeable="MERGEABLE")]
+    reads = []
+    def refresh(n, repo):
+        i = min(len(reads), len(seq) - 1)
+        reads.append(f"{seq[i]['headRefOid'][:4]}/{seq[i]['mergeable']}")
+        return dict(seq[i])
+    preps = []
+    def prep(info, primary, branch, workdir):
+        preps.append(info["headRefOid"][:4])
+        if len(preps) == 1:
+            return {"clone": Path(tmp), "merge_rc": 1, "error": ""}
+        return {"clone": Path(tmp), "merge_rc": None, "error": "WITNESS: reached the landing clone for the pushed head"}
+    b1 = {"resolved": True, "handoff": False, "reason": "", "commit": P_NEW, "log": [], "conflict_set": []}
+    args = argparse.Namespace(integration_branch="development", resume=False)
+    ar = mc.attempt_record
+    with mock.patch.object(mc, "refresh_pr_with_retry", side_effect=refresh), \
+         mock.patch.object(mc, "origin_url", return_value="https://example.invalid/x.git"), \
+         mock.patch.object(mc, "prepare_landing_clone", side_effect=prep), \
+         mock.patch.object(mc, "resolve_ledger_conflict", return_value=b1), \
+         mock.patch.object(mc, "validate_head_in_second_clone", return_value=(True, "ok")), \
+         mock.patch.object(mc, "push_resolved_head", return_value=(True, f"pushed {P_NEW[:10]}")), \
+         mock.patch.object(ar, "record_path", return_value=Path(tmp) / "rec.json"), \
+         mock.patch.object(ar, "reserve", return_value=(0, "slot reserved")), \
+         mock.patch.object(ar, "finish"), mock.patch.object(ar, "set_conflicts"), \
+         mock.patch.object(mc, "_sleep", lambda s: None):
+        rc = mc.land_prs([{"number": 5}], Path(tmp), args, dry_run=False)
+    return {"rc": rc, "refresh_reads_head": reads, "landing_clone_heads": preps}
+
+
+def r1_head_moved_after_poll(mc, sc, tmp):
+    """Final QA R1: the pushed head arrives UNKNOWN, then the mergeability poll returns ANOTHER head."""
+    base = {"number": 5, "state": "OPEN", "headRefName": "feat/x", "baseRefName": "development", "labels": [],
+            "mergeCommit": None, "url": "u"}
+    other = "e" * 40
+    seq = [dict(base, headRefOid=P_OLD, mergeable="CONFLICTING"),
+           dict(base, headRefOid=P_NEW, mergeable="UNKNOWN"),
+           dict(base, headRefOid=other, mergeable="MERGEABLE")]
+    reads = []
+    def refresh(n, repo):
+        i = min(len(reads), len(seq) - 1)
+        reads.append(f"{seq[i]['headRefOid'][:4]}/{seq[i]['mergeable']}")
+        return dict(seq[i])
+    preps = []
+    def prep(info, primary, branch, workdir):
+        preps.append(info["headRefOid"][:4])
+        if len(preps) == 1:
+            return {"clone": Path(tmp), "merge_rc": 1, "error": ""}
+        return {"clone": Path(tmp), "merge_rc": None, "error": "WITNESS: reached the landing clone"}
+    b1 = {"resolved": True, "handoff": False, "reason": "", "commit": P_NEW, "log": [], "conflict_set": []}
+    args = argparse.Namespace(integration_branch="development", resume=False)
+    ar = mc.attempt_record
+    with mock.patch.object(mc, "refresh_pr_with_retry", side_effect=refresh), \
+         mock.patch.object(mc, "origin_url", return_value="https://example.invalid/x.git"), \
+         mock.patch.object(mc, "prepare_landing_clone", side_effect=prep), \
+         mock.patch.object(mc, "resolve_ledger_conflict", return_value=b1), \
+         mock.patch.object(mc, "validate_head_in_second_clone", return_value=(True, "ok")), \
+         mock.patch.object(mc, "push_resolved_head", return_value=(True, f"pushed {P_NEW[:10]}")), \
+         mock.patch.object(ar, "record_path", return_value=Path(tmp) / "rec.json"), \
+         mock.patch.object(ar, "reserve", return_value=(0, "slot reserved")), \
+         mock.patch.object(ar, "finish"), mock.patch.object(ar, "set_conflicts"), \
+         mock.patch.object(mc, "_sleep", lambda s: None):
+        rc = mc.land_prs([{"number": 5}], Path(tmp), args, dry_run=False)
+    return {"rc": rc, "refresh_reads": reads, "landing_clone_heads": preps,
+            "prepared_a_head_other_than_pushed": other[:4] in preps}
+
+
+def r2_active_then_lookup_error(mc, sc, tmp):
+    """Final QA R2: the run on H is seen in flight, then the next lookup fails."""
+    active = json.dumps([{"databaseId": 99, "status": "in_progress", "conclusion": None, "headSha": H, "event": "pull_request"}])
+    answers = iter([subprocess.CompletedProcess([], 0, active, ""),
+                    subprocess.CompletedProcess([], 1, "", "error: connection reset by peer")])
+    os.environ.update({"MERGE_CLEANUP_HOSTED_WAIT_S": "60", "MERGE_CLEANUP_HOSTED_POLL_S": "0",
+                       "MERGE_CLEANUP_HOSTED_GRACE_S": "0"})
+    with mock.patch.object(mc, "_gh", side_effect=lambda *a, **k: next(answers)), \
+         mock.patch.object(mc.time, "sleep", lambda s: None):
+        result = mc.wait_for_hosted_reconcile(M, Path(tmp), "development", pr_head=H)
+    return {"result": result, "local_writer_would_run": result == "fallback"}
+
+
+def r3_clone_retry_after_stall(mc, sc, tmp):
+    """#820 landing, 2026-09-27: the landing clone stalls past its bound after creating its directory;
+    the GH-623 retry must not then fail on 'destination path already exists'."""
+    real = subprocess.run(["which", "git"], capture_output=True, text=True).stdout.strip()
+    bare = Path(tmp) / "origin.git"
+    subprocess.run(["git", "init", "-q", "--bare", "-b", "development", str(bare)], check=True)
+    seed = _repo(tmp, "seed")
+    subprocess.run(["git", "-C", str(seed), "push", "-q", str(bare), "HEAD:refs/heads/development"], check=True)
+    primary = _repo(tmp)
+    subprocess.run(["git", "-C", str(primary), "remote", "set-url", "origin", str(bare)], check=True)
+    d = Path(tmp) / "stubbin"; d.mkdir(); flag = Path(tmp) / "first-clone-done"
+    (d / "git").write_text(f'''#!/bin/bash
+for a in "$@"; do if [ "$a" = clone ] && [ ! -e "{flag}" ]; then
+  touch "{flag}"; dest="${{@: -1}}"; mkdir -p "$dest/.git"; echo partial > "$dest/.git/HEAD"; exec sleep 600
+fi; done
+exec "{real}" "$@"
+''')
+    (d / "git").chmod(0o755)
+    os.environ["PATH"] = f"{d}:{os.environ['PATH']}"
+    pr = {"number": 820, "headRefOid": H, "headRefName": "feat/x"}
+    with mock.patch.object(mc, "run_git", side_effect=_shorten(mc)), mock.patch.object(mc, "_sleep", lambda s: None):
+        out = mc.prepare_landing_clone(pr, primary, "development", Path(tmp))
+    err = out.get("error") or ""
+    return {"error": err[:200], "clone_retry_failed_on_leftover_dir": "already exists" in err,
+            "clone_succeeded_on_retry": not err.startswith("git clone failed")}
+
+
+def f5_default(mc, sc, tmp):
+    seen = []
+    def spy(name, default):
+        seen.append([name, default]); raise RuntimeError("witness stop")
+    with mock.patch.object(mc, "_seconds_from_env", side_effect=spy):
+        try:
+            mc.wait_for_hosted_reconcile(M, Path(tmp), "development", pr_head=H)
+        except RuntimeError:
+            pass
+    return {"first_seconds_from_env": seen[:1]}
+
+
+CASES = [w1_clone_stall, w2_timeouts, w2a_scan_fetch_stall, w3_env, w4_transient, f2_merge_recovery,
+         f2_control_open, f3_lookup, f3_open_refused, f3_view_error, f3_red_control, f4_regate, f5_default,
+         r1_head_moved_after_poll, r2_active_then_lookup_error, r3_clone_retry_after_stall]
+
+
+def run_one(checkout, case, result_path):
+    mc, sc = _load(checkout)
+    with tempfile.TemporaryDirectory() as tmp:
+        out = globals()[case](mc, sc, tmp)
+    Path(result_path).write_text(json.dumps(out, default=str))
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--checkout", required=True)
+    ap.add_argument("--label", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--one"), ap.add_argument("--result")
+    ap.add_argument("--cases", help="comma-separated subset of case names")
+    a = ap.parse_args()
+    if a.one:
+        return run_one(a.checkout, a.one, a.result)
+    out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
+    sha = subprocess.run(["git", "-C", a.checkout, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
+    with open(out / f"{a.label}.jsonl", "w") as jl:
+        for case in CASES:
+            name = case.__name__
+            if a.cases and name not in a.cases.split(","):
+                continue
+            res_file = out / f".{a.label}-{name}.json"
+            log_file = out / f"{a.label}-{name}.log"
+            t0 = time.time()
+            with open(log_file, "w") as lf:
+                proc = subprocess.Popen([sys.executable, __file__, "--checkout", a.checkout, "--label", a.label,
+                                         "--out", a.out, "--one", name, "--result", str(res_file)],
+                                        stdout=lf, stderr=subprocess.STDOUT, start_new_session=True)
+                try:
+                    proc.wait(timeout=WATCHDOG_S)
+                    outcome = "returned" if proc.returncode == 0 else f"crashed rc={proc.returncode}"
+                except subprocess.TimeoutExpired:
+                    os.killpg(proc.pid, signal.SIGKILL); proc.wait()
+                    outcome = f"BLOCKED at the {WATCHDOG_S}s outer watchdog"
+            result = json.loads(res_file.read_text()) if res_file.exists() else None
+            res_file.unlink(missing_ok=True)
+            if log_file.stat().st_size == 0:
+                log_file.write_text(f"(case {name} printed nothing; outcome: {outcome})\n")
+            line = {"label": a.label, "sha": sha, "case": name, "outcome": outcome,
+                    "elapsed_s": round(time.time() - t0, 2), "result": result}
+            jl.write(json.dumps(line, default=str) + "\n")
+            print(json.dumps(line, default=str)[:400])
+
+
+if __name__ == "__main__":
+    main()

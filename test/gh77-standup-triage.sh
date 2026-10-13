@@ -28,8 +28,8 @@ fail_() { echo "  FAIL: $1" >&2; fail=$((fail+1)); }
 # Deliberately no dynamic evaluation: the helper other suites share needs a security-scan baseline
 # entry per suite, and nothing below needs that indirection.
 is()   { if [ "$2" = "$3" ]; then pass_ "$1"; else fail_ "$1 (got '$2', want '$3')"; fi; }
-has()  { if printf '%s' "$2" | grep -Fq -- "$3"; then pass_ "$1"; else fail_ "$1 (missing '$3')"; fi; }
-hasnt(){ if printf '%s' "$2" | grep -Fq -- "$3"; then fail_ "$1 (found '$3')"; else pass_ "$1"; fi; }
+has()  { if grep -Fq -- "$3" <<<"$2"; then pass_ "$1"; else fail_ "$1 (missing '$3')"; fi; }
+hasnt(){ if grep -Fq -- "$3" <<<"$2"; then fail_ "$1 (found '$3')"; else pass_ "$1"; fi; }
 
 echo "== test: gh77-standup-triage =="
 command -v python3 >/dev/null 2>&1 || { echo "python3 required" >&2; exit 1; }
@@ -417,10 +417,10 @@ has "an adversarial path is single-quoted in the close command" "$adv" "'\$(touc
 # `$(` is a space, which any "not a quote" pattern matches, so the naive check fails a correct string.
 # Ask the real question instead: does a shell-word splitter recover the path as ONE literal token,
 # byte-for-byte? It does exactly when the quoting is sound, and cannot when it is not.
-if python3 -c '
+if grep -q YES <<<"$(python3 -c '
 import shlex, sys
 want = sys.argv[1]
-print("YES" if want in shlex.split(sys.argv[2]) else "NO")' '$(touch /tmp/pwned).txt' "$adv" | grep -q YES; then
+print("YES" if want in shlex.split(sys.argv[2]) else "NO")' '$(touch /tmp/pwned).txt' "$adv")"; then
   pass_ "  the path survives shell word-splitting as one literal token (substitution is inert)"
 else
   fail_ "the adversarial path does not survive as a literal token — it would expand if followed"

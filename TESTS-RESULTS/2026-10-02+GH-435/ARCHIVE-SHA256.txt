@@ -1,0 +1,2 @@
+491ce5b1b7299c3fa6ddbd5ec4ba9480ff375dda53ec52a49a01ec4cf4e116d4  campaign-evidence.tar.gz
+Per-file checksums and symlink targets are in evidence-manifest.json inside the archive (4064 entries).

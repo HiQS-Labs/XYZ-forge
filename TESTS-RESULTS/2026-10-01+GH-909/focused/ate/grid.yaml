@@ -1,0 +1,13 @@
+model: stub
+message: bounded completion contention
+expects_edits: false
+per_variation_timeout_seconds: 50
+command_template:
+  - python3
+  - /private/tmp/xyz-ci-stabilization-20260930/completion-lock-verify-oct1/temp/gh909/ate/probe.py
+  - /private/tmp/xyz-ci-stabilization-20260930/completion-lock-verify-oct1/utils/telemetry/append-xyz-completion.sh
+  - '{writers}'
+  - '{delay}'
+variation_keys: [writers, delay]
+writers: [16, 32, 64]
+delay: [0, 0.01]

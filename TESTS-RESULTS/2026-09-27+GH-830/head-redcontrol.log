@@ -1,0 +1,14 @@
+  PASS: first publication pushes and reads back
+  PASS: literal inclusion-only payload set
+  PASS: manifest names exactly the nine managed payloads
+  PASS: root README matches its canonical package source
+  PASS: revision records exact parent commit
+  PASS: republication is idempotent
+  PASS: default sibling path uses the public repository casing
+  PASS: matching metadata plus unrelated amended file is not an exact retry
+  PASS: exact retained publisher commit retries push
+  PASS: retry refuses a restored previously managed deletion
+  PASS: retry refuses takeover of an unmanifested operator-owned path
+  PASS: default-profile retry may restore an absent seed
+  FAIL: fixture setup failed: git -C /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh620-skills-army.przZd2 clone -q /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh620-skills-army.przZd2/mini.git-missing /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh620-skills-army.przZd2/seed-owner (exit 128): fatal: repository '/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh620-skills-army.przZd2/mini.git-missing' does not exist
+red-control rc=1

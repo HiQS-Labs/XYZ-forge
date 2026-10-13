@@ -1,0 +1,20 @@
+{
+  "resolved": true,
+  "handoff": false,
+  "reason": "resolved through the writer path; merge commit 0852e43cb5",
+  "log": [
+    "classification: keep=theirs generation ours/theirs=(1123, 1125) replay=2 op(s)",
+    "check --rebuild on the kept side: rc=0",
+    "roadmap add GH-791: rc=0 ",
+    "roadmap update GH-791 (section/marker): rc=0 ",
+    "roadmap add GH-793: rc=0 ",
+    "roadmap update GH-793 (section/marker): rc=0 ",
+    "releases-merge-resolve.sh: rc=0",
+    "removed verified rebuild backup: releases.db.bak"
+  ],
+  "commit": "0852e43cb58abdcf0f12cbbb2db1ec63ec8682ed",
+  "conflict_set": [
+    "releases.db",
+    "releases.sql"
+  ]
+}

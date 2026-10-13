@@ -1,0 +1,55 @@
+{
+  "candidate": "2f8969a292e8dd230ab69ab9fe4ddc96a898ab55",
+  "checks": [
+    {
+      "name": "GH1001 mocked target issue identity",
+      "exit": 0,
+      "receipt": "issue-identity.txt"
+    },
+    {
+      "name": "GH1015 retained observer replay",
+      "exit": 0,
+      "receipt": "observer-manual.json"
+    },
+    {
+      "name": "GH976 A C F G retained progress controls",
+      "exit": 0,
+      "receipts": [
+        "relay-progress-A.txt",
+        "relay-progress-C.txt",
+        "relay-progress-F.txt",
+        "relay-progress-G.txt"
+      ],
+      "safety_adaptation": "removed fixture cleanup; owned resolved descendant guard; case/cap definitions unchanged; stub agents only"
+    },
+    {
+      "name": "GH949 eight existing cancellation controls",
+      "exit": 0,
+      "receipt": "cancellation/results.json"
+    },
+    {
+      "name": "existing flightdeck work status cases",
+      "exit": 0,
+      "passed": 20,
+      "receipt": "work-status-pytest.txt"
+    },
+    {
+      "name": "existing work selectors",
+      "exit": 0,
+      "receipt": "work-selectors.txt"
+    },
+    {
+      "name": "existing synthetic board fallback matrix",
+      "exit": 0,
+      "receipt": "board-fallback.txt"
+    },
+    {
+      "name": "frozen twins B..D",
+      "exit": 0,
+      "receipt": "frozen-range.txt"
+    }
+  ],
+  "no_new_ci_tests": true,
+  "no_live_calls": true,
+  "no_cap_override": true
+}

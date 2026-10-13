@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-10T08:20:33.288829+00:00",
+  "primary_head": "48eb283da4b2d2bda8afc37c6cbe34d0c2b5a48c",
+  "live_origin_development": "48eb283da4b2d2bda8afc37c6cbe34d0c2b5a48c",
+  "primary_clean": true,
+  "coordinator_log": "final-resume-cleanup.log",
+  "pr1006": "remains open; Refs-only partial delivery does not authorize automatic continuation"
+}

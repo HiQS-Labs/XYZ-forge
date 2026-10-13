@@ -1,0 +1,13 @@
+== ballast-release (suite) — release 0.7.0 post-launch-hardening goalpost ==
+
+-- the frozen manifest
+  PASS: the frozen manifest here matches releases.db's Manifest-Members field in both directions ( 14 15 4 3)
+  PASS: #14 complete — test/gh14-atomic-append.sh registered, control recorded, issue CLOSED
+  PASS: #15 complete — test/gh528-parallel-contention-retry.sh registered, control recorded, issue CLOSED
+  INFO: #4 explicitly exempt from automatic gating — retained control, no release completion credit
+  PASS: #3 complete — test/gh430-state-dir-tracked-default.sh registered, control recorded, issue CLOSED
+
+manifest: 3 complete, 1 remaining, 0 false completion claim(s)
+
+  ballast-release: 4 passed, 0 failed, 1 informational
+  (suite mode is green while Ballast is in progress — run --release-gate for the goalpost)

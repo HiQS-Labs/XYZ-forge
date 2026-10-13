@@ -1,0 +1,108 @@
+## test/lib/runner-envelope.sh
+--- lines 59-90 ---
+59: runner_envelope_begin() {
+60:   local here="$1" label="$2"
+61:   RUNNER_ENVELOPE_SCRATCH=""
+62:   RUNNER_ENVELOPE_STATE=""
+63:   if [ -z "${XYZ_HARNESS_DB:-}" ]; then
+64:     RUNNER_ENVELOPE_SCRATCH="$(mktemp -d "${TMPDIR:-/tmp}/runner-envelope.XXXXXX")"
+65:     if [ -z "$RUNNER_ENVELOPE_SCRATCH" ] || [ ! -d "$RUNNER_ENVELOPE_SCRATCH" ]; then
+66:       echo "runner-envelope: mktemp -d for harness scratch failed — refusing to run ungated" >&2
+67:       return 1
+68:     fi
+69:     cp "$here/harnesses.db"  "$RUNNER_ENVELOPE_SCRATCH/harnesses.db"  2>/dev/null || true
+70:     cp "$here/harnesses.sql" "$RUNNER_ENVELOPE_SCRATCH/harnesses.sql" 2>/dev/null || true
+71:     export XYZ_HARNESS_DB="$RUNNER_ENVELOPE_SCRATCH/harnesses.db"
+72:   fi
+73:   RUNNER_ENVELOPE_STATE="$(mktemp -d "${TMPDIR:-/tmp}/runner-state.XXXXXX")"
+74:   if [ -z "$RUNNER_ENVELOPE_STATE" ] || [ ! -d "$RUNNER_ENVELOPE_STATE" ]; then
+75:     echo "runner-envelope: mktemp -d for state snapshot failed — refusing to run unbracketed" >&2
+76:     return 1
+77:   fi
+78:   if ! bash "$(_re_lib_dir)/clone-identity.sh" capture "$RUNNER_ENVELOPE_STATE/identity" "$here"; then
+79:     echo "runner-envelope: could not capture clone identity — refusing to run the suite blind (GH-1)" >&2
+80:     return 1
+81:   fi
+82:   _re_tree "$here"      > "$RUNNER_ENVELOPE_STATE/tree"
+83:   _re_worktrees "$here" > "$RUNNER_ENVELOPE_STATE/worktrees"
+84:   _re_locks "$here"     > "$RUNNER_ENVELOPE_STATE/locks"
+85:   echo "runner-envelope: $label — harness registry at scratch ($XYZ_HARNESS_DB), envelope state captured"
+86: }
+87: 
+88: runner_envelope_assert() {
+89:   local here="$1" label="$2" facet drifted=0
+90:   RUNNER_ENVELOPE_DRIFT_FACETS=""
+## validate.sh
+--- lines 1293-1294 ---
+1293:     if $NICE_CMD bash "$VALIDATE_HERE/test/$t" >"$log" 2>&1 </dev/null; then rc=0; else rc=$?; fi
+1294:     printf '%s %s\n' "$rc" "$t" >> "$VALIDATE_RESULTS"
+--- lines 1366-1367 ---
+1366:     if $NICE_CMD bash "$HERE/test/$t" > "$log.serial" 2>&1 </dev/null; then
+1367:       rc_alone=0
+--- lines 1422-1423 ---
+1422:   if $NICE_CMD bash "$HERE/test/$t"; then
+1423:     PASSED+=("$t")
+## ci-local.sh
+--- lines 298-300 ---
+298:     bash "test/$t" 2>&1 | tee -a "$GATE_SUITE_LOG" | tee "$_one"
+299:     _rc="${PIPESTATUS[0]}"
+300:     if [ "$_rc" -eq 0 ]; then
+## test/find-harness.sh
+--- lines 45-72 ---
+45: # --- Case 1: from the harness clone itself → resolves to self, NO concurrency warning, exit 0 ---
+46: out1="$( cd "$REPO" && bash "$FH" --check 2>&1 )"; rc1=$?
+47: ok "harness clone: --check exits 0"                 "[ '$rc1' -eq 0 ]"
+48: ok "harness clone: no concurrency warning"          "! grep -qi concurrency <<<\"\$out1\""
+49: 
+50: # --- Case 2: from a FOREIGN repo with NO .xyz/ → warns + vendor command, still exit 0 (fail-open) ---
+51: FHWORK="$(mktemp -d "${TMPDIR:-/tmp}/find-harness.XXXXXX")"
+52: . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+53: fixture_guard_init "$FHWORK"   # GH-10: pin the sandbox root (FR below is deleted between cases)
+54: FR="$(mktemp -d "$FHWORK/fh-foreign.XXXXXX")"; require_fixture "$FR" "foreign fixture"  # GH-10
+55: git -C "$FR" init -q
+56: out2="$( cd "$FR" && bash "$FH" --check 2>&1 )"; rc2=$?
+57: ok "foreign no-.xyz: --check still exits 0 (fail-open)"  "[ '$rc2' -eq 0 ]"
+58: ok "foreign no-.xyz: emits the concurrency warning"      "grep -qi 'concurrency' <<<\"\$out2\""
+59: # GH-421: the hint must use the REAL contract (target repo is the sole positional). Asserting the
+60: # old 'xyz-vendor.sh vendor' form is what kept the broken hint alive — the test pinned the defect.
+61: ok "foreign no-.xyz: points at xyz-vendor.sh"            "grep -q 'xyz-vendor.sh ' <<<\"\$out2\""
+62: ok "foreign no-.xyz: hint omits the bogus vendor subcommand" "! grep -q 'xyz-vendor.sh vendor' <<<\"\$out2\""
+63: rm -rf "$FR"
+64: 
+65: # --- Case 3: foreign repo WITH a local .xyz/ harness → resolves to it, NO concurrency warning ---
+66: FV="$(mktemp -d "$FHWORK/fh-vendored.XXXXXX")"; require_fixture "$FV" "vendored harness fixture"  # GH-10
+67: git -C "$FV" init -q
+68: seed_vendored_harness "$FV"
+69: out3="$( cd "$FV" && bash "$FH" --check 2>&1 )"; rc3=$?
+70: ok "vendored .xyz: --check exits 0"                 "[ '$rc3' -eq 0 ]"
+71: ok "vendored .xyz: no concurrency warning"          "! grep -qi concurrency <<<\"\$out3\""
+72: ok "vendored .xyz: resolves to the local .xyz"      "grep -q '.xyz' <<<\"\$out3\""
+## test/gh396-find-harness-roots.sh
+--- lines 46-53 ---
+46: env_value() {  # env_value <cwd> <name> [override-path]
+47:   _cwd="$1"; _name="$2"; _ov="${3:-}"
+48:   if [ -n "$_ov" ]; then
+49:     _out="$(cd "$_cwd" && XYZ_HARNESS="$_ov" XYZ_REPO_ROOT= bash "$FH" --env 2>/dev/null || true)"
+50:   else
+51:     _out="$(cd "$_cwd" && env -u XYZ_HARNESS -u XYZ_REPO_ROOT bash "$FH" --env 2>/dev/null || true)"
+52:   fi
+53:   _line="$(grep -E "^export ${_name}=" <<<"$_out" || true)"
+--- lines 223-240 ---
+223: # ── --quiet: exists, silences the announcement, changes nothing else ──────────────────────────
+224: make_vendored_fixture "$WORK/g-quiet" --stub
+225: _rc=0; _q_err="$(cd "$VF_REPO" && env -u XYZ_HARNESS -u XYZ_REPO_ROOT bash "$FH" --quiet --env 2>&1 >/dev/null)" || _rc=$?
+226: if [ "$_rc" -eq 0 ]; then ok "--quiet: accepted (exit 0)"; else bad "--quiet: accepted (exit $_rc: ${_q_err:-<no stderr>})"; fi
+227: _q_lines="$(grep -c '^find-harness:' <<<"${_q_err:-}" || true)"
+228: if [ "${_q_lines:-0}" -eq 0 ]; then ok "--quiet: no find-harness: announcement on stderr"
+229: else bad "--quiet: no find-harness: announcement on stderr (got $_q_lines line(s))"; fi
+230: _loud="$(cd "$VF_REPO" && env -u XYZ_HARNESS -u XYZ_REPO_ROOT bash "$FH" --env 2>/dev/null | sort || true)"
+231: _quiet="$(cd "$VF_REPO" && env -u XYZ_HARNESS -u XYZ_REPO_ROOT bash "$FH" --quiet --env 2>/dev/null | sort || true)"
+232: if [ -n "$_quiet" ] && [ "$_loud" = "$_quiet" ]; then ok "--quiet: exported names and values are identical to the loud form"
+233: else bad "--quiet: exported names and values are identical to the loud form"; fi
+234: remove_vendored_fixture
+235: 
+236: # ── File-symlinked locator test (Finding 2) ────────────────────────────────────────────────────
+237: _link_dir="$WORK/filelink-test"; mkdir -p "$_link_dir"
+238: ln -s "$FH" "$_link_dir/find-harness.sh"
+239: _fl_root="$(bash "$_link_dir/find-harness.sh" --root 2>/dev/null || true)"
+240: _fl_root_p="$(cd -P "$_fl_root" 2>/dev/null && pwd || printf '%s' "$_fl_root")"

@@ -1,0 +1,4 @@
+{"case": "missing-exemption", "rc": 1, "expected_rc": 1, "command": "caffeinate -i bash test/ballast-release.sh", "utc": "2026-10-02T06:53:03.359006+00:00"}
+{"case": "missing-suite", "rc": 1, "expected_rc": 1, "command": "caffeinate -i bash test/ballast-release.sh", "utc": "2026-10-02T06:53:05.194963+00:00"}
+{"case": "missing-control", "rc": 1, "expected_rc": 1, "command": "caffeinate -i bash test/ballast-release.sh", "utc": "2026-10-02T06:53:07.256474+00:00"}
+{"case": "restored", "rc": 0, "expected_rc": 0, "command": "caffeinate -i bash test/ballast-release.sh", "utc": "2026-10-02T06:53:09.094100+00:00"}

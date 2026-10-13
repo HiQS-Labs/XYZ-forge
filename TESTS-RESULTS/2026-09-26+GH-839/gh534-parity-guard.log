@@ -1,0 +1,12 @@
+test_control_call_replaced_by_comment_is_named (__main__.TestParityGuard.test_control_call_replaced_by_comment_is_named) ... ok
+test_control_deleted_row_is_named (__main__.TestParityGuard.test_control_deleted_row_is_named) ... ok
+test_control_documented_option_absent_from_argparse_is_named (__main__.TestParityGuard.test_control_documented_option_absent_from_argparse_is_named) ... ok
+test_control_owner_flip_is_named (__main__.TestParityGuard.test_control_owner_flip_is_named) ... ok
+test_control_renamed_test_is_named (__main__.TestParityGuard.test_control_renamed_test_is_named) ... ok
+test_recon_owner_is_pinned_to_caller (__main__.TestParityGuard.test_recon_owner_is_pinned_to_caller) ... ok
+test_skill_md_matches_code_and_tests (__main__.TestParityGuard.test_skill_md_matches_code_and_tests) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.861s
+
+OK

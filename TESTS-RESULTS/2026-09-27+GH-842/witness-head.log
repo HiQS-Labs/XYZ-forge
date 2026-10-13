@@ -1,0 +1,28 @@
+wave-reconcile: Receipt recovery found 0 pending PR(s) since workflow activation 2026-09-09T19:08:00-07:00
+wave-reconcile: Receipt recovery found 5 pending direct commit(s) since f098ab43debd
+9fd2d88543 PR merge    56978803+noelsaw1@users.nore docs(GH-833): define PRS — the Product Release System, the R
+241bfcce60 bot         41898282+github-actions[bot] chore: reconcile merged development work
+1eef93a368 PR merge    56978803+noelsaw1@users.nore docs(GH-831,GH-836): record the first hosted Small run (15.7
+fe2fa18b55 bot         41898282+github-actions[bot] chore: reconcile merged development work
+12cccb9380 PR merge    56978803+noelsaw1@users.nore fix(GH-836): D1 — gh436-merge-cleanup moves from Small to La
+10033a2cec bot         41898282+github-actions[bot] chore: reconcile merged development work
+8ecaa8af01 PR merge    56978803+noelsaw1@users.nore docs: reviewed merge sequence and remediation plan for GH-79
+6af61c0864 bot         41898282+github-actions[bot] chore: reconcile merged development work
+0cdda91a8f PR merge    56978803+noelsaw1@users.nore feat(test): simplify GH-798 status skill tests and consolida
+19d25f0a23 bot         41898282+github-actions[bot] chore: reconcile merged development work
+85a60f2cf1 QUALIFY     noel@neochro.me              chore: reconcile after PR #806
+ad923412a2 PR merge    56978803+noelsaw1@users.nore fix(GH-807): signal-triage assertions match on captured JSON
+5b1a214af5 bot         41898282+github-actions[bot] chore: reconcile merged development work
+d469343d11 PR merge    56978803+noelsaw1@users.nore fix(GH-813): retry the WAL switch when concurrent first user
+e9fecef150 bot         41898282+github-actions[bot] chore: reconcile merged development work
+07f0c46d90 QUALIFY     noel@neochro.me              chore: reconcile after PR #818
+030ab5ba0b PR merge    56978803+noelsaw1@users.nore feat(skills): standardize clone backup layout & integrity ve
+a8034d74d6 bot         41898282+github-actions[bot] chore: reconcile merged development work
+4909c482fc QUALIFY     noel@neochro.me              chore: reconcile after PR #846
+73fc2e3214 PR merge    56978803+noelsaw1@users.nore docs: record M6 full-suite benchmark and three-device campai
+dcc449fb63 bot         41898282+github-actions[bot] chore: reconcile merged development work
+e53939d68f PR merge    56978803+noelsaw1@users.nore fix(flightdeck): explain unknown progress and source states 
+fcd880d745 bot         41898282+github-actions[bot] chore: reconcile merged development work
+42e85b1cbd QUALIFY     noel@neochro.me              chore: reconcile after PR #820
+41db436717 QUALIFY     noel@neochro.me              docs(parked): #854 window day-0 findings (#760, #715 parked;
+pending: 5

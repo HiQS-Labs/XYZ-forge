@@ -210,3 +210,7 @@ Copied verbatim from issue #544.
 Contract authored by hand from the issue text, not auto-drafted. `orchestrator_only` covers the two
 paths where a wrong edit is expensive: the workflow file (silently re-arms billing) and the hook
 (silently stops gating).
+
+## Merge evidence
+
+- PR #834 merged 2026-09-26 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

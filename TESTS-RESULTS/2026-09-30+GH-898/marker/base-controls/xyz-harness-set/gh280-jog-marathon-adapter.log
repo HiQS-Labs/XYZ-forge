@@ -1,0 +1,25 @@
+== test: gh280-jog-marathon-adapter ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.HU0Jvga6Lt
+  PASS: A1 root preflight exits 0 (candidate ready)
+  PASS: A2 packet still carries run-candidate.json (additive)
+  PASS: A2 packet still carries lane-plan.json (additive)
+  PASS: A2 packet still carries freshness.json (additive)
+  PASS: A2 packet still carries readiness.json (additive)
+  PASS: A2 packet still carries marathon-invocation.txt (additive)
+  PASS: A2 packet still carries packet.md (additive)
+  PASS: A2 packet still carries marathon-invocation.json (additive)
+  PASS: A3 invocation artifact schema is marathon-invocation@1
+  PASS: A4 argv[0] is the absolute executable drive path
+  PASS: A5 env entries carry swarm/session/isolation
+  PASS: A6 packet_path resolves
+  PASS: A7 result_path is beside the packet
+  PASS: A8 identity fields: issue/base_ref/builder/reviewer
+  PASS: A9 phase/lane/gate/artifacts carried
+  PASS: A10 argv embeds --result-file with result_path
+  PASS: A11 argv embeds --phase-brief with packet_path
+  PASS: A12 run-candidate@1 unchanged (compat)
+  PASS: A13 text invocation hint unchanged (compat)
+  PASS: B1 load_marathon_invocation accepts the real artifact
+  PASS: B2 unsupported schema version refused
+  PASS: B3 non-executable argv[0] refused
+  FAIL: C1 approved run exit=8

@@ -59,7 +59,8 @@ This document outlines the standard operating procedure for designing, executing
 ### Step 1: Intake & Working Doc
 1. File the tracking GitHub issue.
 2. Scaffold the active doc in `PROJECT/2-WORKING/GH-<n>-<SLUG>.md`.
-3. Park the ledger row **in the RELEASES DB** (`ROADMAP.md` is retired per GH-269):
+3. Park the ledger row **in the RELEASES DB**, the Product Release System ([PRS](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first))
+   (`ROADMAP.md` is retired per GH-269):
    `python3 utils/py/releases_app.py roadmap add --issue-num N --issue-url U --title T --created YYYY-MM-DD --doc-path P`
    (`hq park` routes there automatically). Note `roadmap sync` is a **legacy-mode-only** verb — in
    this repo it refuses with "releases-mode repo" and is never part of the flow.
@@ -132,7 +133,7 @@ python3 utils/ate/scripts/checkin.py --log "$SCRATCH/error_log.jsonl"
 ```
 Monitor failure clusters, category distributions (`auth_failure`, `config_error`, `env_failure`), and throughput. If a valid defect is identified:
 1. **File a GitHub tracking issue immediately (auto-file — §1; do not wait to be prompted).** Ambiguous findings: offer to file rather than holding them silently.
-2. If straightforward, dispatch to DeepSeek Harness (`dsh` -> OpenRouter -> `deepseek-v4-pro`) in a clean standalone full clone (GH-564) to synthesize a fix and regression test.
+2. If straightforward, dispatch to DeepSeek Harness (`dsh` -> OpenRouter -> `deepseek-v4-pro`) in a clean standalone full clone (GH-564) to synthesize a fix, verified with the existing suite that covers it. Where none does, verify it with a manual check recorded under `TESTS-RESULTS/` with its `provenance.jsonl`. No new test suites (GH-831).
 3. If complex, record findings on the issue for architectural planning.
 
 ### Step 7: Commit Artifact Receipts
@@ -186,6 +187,10 @@ Kill the child by its own PID, or start it with `exec` so the subshell *becomes*
 **verify** with `ps`/`lsof` rather than trusting the kill. A teardown that cannot fail is not a
 teardown — the same rule as `AGENTS.md` §6.
 
+### Never spend hours debugging a red check without establishing its necessity
+
+An in-flight failing test or runner error is not automatically an urgent blocker. When an obstacle's necessity or user consequence is unclear, or after two investigation attempts yield no new evidence, run `sanity-check` (`skills/1-hourly/sanity-check/SKILL.md`) to evaluate whether to fix now, simplify, defer via PRS, or dismiss, before sinking hours into tracing the fail path.
+
 ## 4. Opinionated SOPs (XYZ-maintainer defaults — optional downstream)
 
 > **Who these are for:** These conventions exist to help the **XYZ maintainers** with our own
@@ -194,6 +199,7 @@ teardown — the same rule as `AGENTS.md` §6.
 > maintainers to ignore them, or write a script that strips this section on pull from upstream.
 > Nothing in the codebase enforces them.
 
+- **CI churn recovery.** When CI churn is suspected, follow [`docs/CI-CHURN-RECOVERY-SOP.md`](docs/CI-CHURN-RECOVERY-SOP.md) (#857). It covers the entry gate for declaring an episode, the phased strategy checklist, and the exit gates for closing it. It grants no standing exception to `AGENTS.md`.
 - **The primary clone stays on `development`.** Each device has exactly one
   **operator-designated primary clone** — the long-lived checkout the operator opens by default
   and keeps mapped to GitHub. That clone is always kept on the `development` branch. This rule
@@ -207,18 +213,22 @@ teardown — the same rule as `AGENTS.md` §6.
   `origin/development`:
 
   ```bash
-  git clone git@github.com:HiQS-Labs/XYZ-forge.git ../XYZ-forge-<topic>
-  cd ../XYZ-forge-<topic>
+  # Name = <repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>, a sibling of the primary clone (GH-970)
+  N=XYZ-forge-gh1234-showme-command-2026-10-05
+  git clone git@github.com:HiQS-Labs/XYZ-forge.git ../$N
+  cd ../$N
   bash githooks/install.sh                       # per-clone; the gate does not travel (GH-549)
-  git checkout -b feat/<topic> origin/development   # or fix/<topic>
+  git checkout -b feat/$N origin/development     # or fix/ chore/ docs/
   ```
 
-  Work lands by pushing that task branch and opening a PR into `development`. **This policy is
+  The full naming rule (multi-issue groups, `-gate`/`-verify` helper clones, resume before
+  re-create) lives in `skills/1-hourly/start-task/SKILL.md` step 3. Work lands by pushing that
+  task branch and opening a PR into `development`. **This policy is
   the standing explicit authorization** for that fresh-clone task branch under `AGENTS.md`'s
   "do not create new git branches automatically" rail — the same carve-out shape as the
-  marathon per-lane branch. It authorizes exactly one `feat/`/`fix/` branch per fresh task
-  clone, and it is *not* a licence to commit directly onto `development` (the express path
-  above remains user-request-only).
+  marathon per-lane branch. It authorizes exactly one `feat/`/`fix/`/`chore/`/`docs/` branch per
+  fresh task clone, and it is *not* a licence to commit directly onto `development` (the express
+  path above remains user-request-only).
 
 ### Arc planning — schedule the follow-up lanes, don't discover them
 
@@ -231,7 +241,7 @@ teardown — the same rule as `AGENTS.md` §6.
 1. **Pre-create the budgeted follow-up lanes at plan time.** Before implementation starts,
    open the three issues you already know you will need: a *review-findings* lane (the
    builder/reviewer split guarantees one), a *dogfood-findings* lane (dogfooding exists to
-   manufacture findings), and a *conformance* lane (new contracts always owe fixtures).
+   manufacture findings), and a *conformance* lane (new contracts owe a conformance check against existing suites or a recorded manual check; no new test suites, GH-831).
    Follow-ups then arrive as scheduled phases instead of surprises. Evidence this works:
    the GH-280 plan's follow-up record listed six items before execution began; all six
    landed in that order, with review findings landed on top.

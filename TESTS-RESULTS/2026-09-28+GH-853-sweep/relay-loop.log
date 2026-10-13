@@ -1,0 +1,18 @@
+== test: relay-loop ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-relay-loop.XXXXXX.CTb3OljVDi
+  PASS: default tick: run-runner -> NEXT-POLL: 0, exit 0
+  PASS: default tick: idle (not my turn) -> NEXT-POLL: 300 (adaptive backoff)
+  PASS: default tick: runner dispatched once
+  PASS: sleep-loop: terminal STATUS -> exit 10 (no sleep)
+  PASS: sleep-loop: iterates (runner ran) then stops on flip-to-Approved (exit 10)
+  PASS: background: dispatches detached (returns before runner finishes; pidfile written)
+  PASS: background: a running turn blocks a second dispatch (BG-RUNNING)
+  PASS: background: runner ran exactly once across both ticks (no double-dispatch)
+  PASS: background: stale pidfile cleared on completion; fresh decision proceeds (stop)
+  PASS: background: execution parity with foreground (containment inherited — same runner path)
+  PASS: background: rejects --sleep-loop (mutually exclusive, exit 2)
+  PASS: background: nudge-cross-model dispatches the configured cross-model shim
+  PASS: background: cross-model dispatch reuses the single-turn pidfile lock
+  PASS: background: cross-model shim ran exactly once across both ticks
+  PASS: background: cross-model without a command degrades to the manual nudge
+  relay-loop: 15 pass, 0 fail

@@ -61,29 +61,39 @@ open(os.path.join(wt_b, "seed.txt"), "w").write("seed\n")
 diag_b = TurnDiagnostics(worktree=wt_b, interval=INTERVAL)
 diag_b.start()
 
-deadline = time.monotonic() + 4.0
+# GH-793: the window is measured in SAMPLES as well as seconds. Each sample runs `ps`/`pgrep`
+# (and one `lsof` probe), which slow down under a loaded parallel gate. A fixed 4 s window then
+# held too few samples for a verdict. It still lasts at least 4 s, so a fast host runs as before.
+start = time.monotonic()
+deadline = start + 4.0
+need = IDLE_MIN_SAMPLES + 1
 n = 0
-while time.monotonic() < deadline:
+while (time.monotonic() < deadline
+       or len(diag_a.samples) < need or len(diag_b.samples) < need) and time.monotonic() < start + 30.0:
     n += 1
     # touch a NEW file so _newest_mtime advances
     with open(os.path.join(wt_b, f"progress-{n}.txt"), "w") as f:
         f.write(str(n))
     time.sleep(INTERVAL)
 
+# GH-793: read idle as the window closes. stop() joins each sampler for up to 2 s, and the kill
+# waits too; measured after them, that time counted as "idle" for a turn that was progressing.
+idle_a = diag_a.idle_seconds()
+idle_b = diag_b.idle_seconds()
+gaps_b = [b[0] - a[0] for a, b in zip(diag_b.samples, diag_b.samples[1:])]
 diag_a.stop(); diag_b.stop()
 try:
     proc_a.kill(); proc_a.wait(timeout=5)
 except Exception:
     pass
 
-idle_a = diag_a.idle_seconds()
-idle_b = diag_b.idle_seconds()
 reason_a, _ = diag_a.classify()
 reason_b, _ = diag_b.classify()
 print(f"SAMPLES_A={len(diag_a.samples)}")
 print(f"SAMPLES_B={len(diag_b.samples)}")
 print(f"IDLE_A={idle_a}")
 print(f"IDLE_B={idle_b}")
+print(f"GAP_B={max(gaps_b) if gaps_b else 0.0}")
 print(f"REASON_A={reason_a}")
 print(f"REASON_B={reason_b}")
 print(f"MIN_SAMPLES={IDLE_MIN_SAMPLES}")
@@ -111,9 +121,15 @@ awk -v v="$IDLE_A" 'BEGIN{exit !(v+0 >= 1.0)}' 2>/dev/null \
   && pass "a blocked turn accumulates idle time (idle=${IDLE_A}s) — killable before the wall cap" \
   || fail "a blocked turn reported idle=${IDLE_A} — the idle bound would never fire"
 
-# (3) THE CONTROL — a slow-but-progressing tree must stay near zero idle, so it is NOT killed
-awk -v v="$IDLE_B" 'BEGIN{exit !(v+0 <= 1.0)}' 2>/dev/null \
-  && pass "CONTROL: a slow-but-progressing turn stays un-idle (idle=${IDLE_B}s) — not killed" \
+# (3) THE CONTROL — a slow-but-progressing tree must stay near zero idle, so it is NOT killed.
+# GH-793: "near zero" is what the sampler can resolve. Progress is only seen at a sample, so a
+# progressing turn's idle can reach one sample gap. The bound is 1.0 s or twice the largest gap B
+# actually took, whichever is larger. On a fast host that is still 1.0 s.
+GAP_B="$(get GAP_B)"
+CTRL_MAX="$(awk -v g="$GAP_B" 'BEGIN{m=2*g; if (m < 1.0) m = 1.0; printf "%.3f", m}')"
+# GH-793 review: awk reads "None" as 0, so an unmeasured reading must fail, never prove progress.
+awk -v v="$IDLE_B" -v m="$CTRL_MAX" 'BEGIN{exit !(v ~ /^[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$/ && v+0 <= m+0)}' 2>/dev/null \
+  && pass "CONTROL: a slow-but-progressing turn stays un-idle (idle=${IDLE_B}s <= ${CTRL_MAX}s; largest sample gap ${GAP_B}s) — not killed" \
   || fail "CONTROL FAILED: a progressing turn reported idle=${IDLE_B}s — this bound is trigger-happy and would kill good reviews"
 
 # (4) the two must be SEPARATED, not merely both present. A bound cannot act on a difference it
@@ -165,7 +181,7 @@ grep -q "_idle is not None and _idle >= idle_cap" "$PY_DIR/agy-turn.py" \
 SCOPE_OUT="$WORK/scope.txt"
 PYTHONPATH="$PY_DIR" python3 - "$WORK" > "$SCOPE_OUT" 2>&1 <<'PYEOF'
 import os, sys, time, subprocess
-from turn_diagnostics import TurnDiagnostics
+from turn_diagnostics import TurnDiagnostics, IDLE_MIN_SAMPLES
 
 work = sys.argv[1]
 INTERVAL = 0.2
@@ -183,7 +199,15 @@ scoped = TurnDiagnostics(worktree=out_a, root_pid=proc_a.pid, interval=INTERVAL)
 # deliberately WRONG scoping: the shared parent, which is what the pre-GH-492 class could only do
 unscoped = TurnDiagnostics(worktree=out_a, interval=INTERVAL)
 scoped.start(); unscoped.start()
-time.sleep(3.0)
+# GH-793: at least 3 s AND enough samples for idle_seconds() to answer (capped at 30 s). Under a
+# loaded gate each sample's ps/pgrep can take a second or more, so a bare 3 s held too few.
+t0 = time.monotonic()
+while (time.monotonic() - t0 < 3.0
+       or min(len(scoped.samples), len(unscoped.samples)) < IDLE_MIN_SAMPLES + 1) \
+        and time.monotonic() - t0 < 30.0:
+    time.sleep(INTERVAL)
+scoped_idle, unscoped_idle = scoped.idle_seconds(), unscoped.idle_seconds()
+gaps_u = [b[0] - a[0] for a, b in zip(unscoped.samples, unscoped.samples[1:])]
 scoped.stop(); unscoped.stop()
 
 for p in (proc_a, proc_b):
@@ -192,8 +216,9 @@ for p in (proc_a, proc_b):
     except Exception:
         pass
 
-print(f"SCOPED_IDLE={scoped.idle_seconds()}")
-print(f"UNSCOPED_IDLE={unscoped.idle_seconds()}")
+print(f"SCOPED_IDLE={scoped_idle}")
+print(f"UNSCOPED_IDLE={unscoped_idle}")
+print(f"UNSCOPED_GAP={max(gaps_u) if gaps_u else 0.0}")
 PYEOF
 
 if grep -q "^SCOPED_IDLE=" "$SCOPE_OUT"; then
@@ -202,8 +227,11 @@ if grep -q "^SCOPED_IDLE=" "$SCOPE_OUT"; then
   awk -v v="$S_IDLE" 'BEGIN{exit !(v+0 >= 1.0)}' 2>/dev/null \
     && pass "CONSULT: a hung advisor is seen as idle when scoped to its own pid (idle=${S_IDLE}s)" \
     || fail "CONSULT: a hung advisor reported idle=${S_IDLE}s even when correctly scoped"
-  awk -v v="$U_IDLE" 'BEGIN{exit !(v+0 < 1.0)}' 2>/dev/null \
-    && pass "CONSULT: the SHARED-parent scope masks that same hang (idle=${U_IDLE}s) — which is why root_pid exists" \
+  # GH-793: the busy sibling is only seen at a sample, so "not idle" is resolved to one sample gap.
+  U_GAP="$(grep '^UNSCOPED_GAP=' "$SCOPE_OUT" | cut -d= -f2)"
+  U_MAX="$(awk -v g="$U_GAP" 'BEGIN{m=2*g; if (m < 1.0) m = 1.0; printf "%.3f", m}')"
+  awk -v v="$U_IDLE" -v m="$U_MAX" 'BEGIN{exit !(v ~ /^[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$/ && v+0 < m+0)}' 2>/dev/null \
+    && pass "CONSULT: the SHARED-parent scope masks that same hang (idle=${U_IDLE}s < ${U_MAX}s) — which is why root_pid exists" \
     || fail "CONSULT: the shared-parent scope reported idle=${U_IDLE}s, so this case proves nothing about scoping"
 else
   fail "consult scoping harness did not run: $(cat "$SCOPE_OUT")"

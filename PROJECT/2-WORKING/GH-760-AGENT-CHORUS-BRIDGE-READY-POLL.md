@@ -64,3 +64,7 @@ Run 35767844928 passed bridge start, `GET /` 200, session create, and both joins
 ## Merge evidence
 
 - PR #761 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #880 merged 2026-09-28 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

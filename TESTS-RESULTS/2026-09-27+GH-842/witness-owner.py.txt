@@ -1,0 +1,37 @@
+# GH-842 Codex r1 falsifier (manual; AGENTS.md no new tests): python3 witness-owner.py.txt <path/to/wave_reconcile.py>
+# Scratch repo: an older PR #5 and a NEWER, already-receipted direct commit both close drifted GH-421.
+# PASS = the direct commit stays visible, owns GH-421 and is flagged a catch-up landing; PR #5 is not the owner.
+import importlib.util, os, subprocess, sys, tempfile
+sys.path.insert(0, os.path.dirname(os.path.abspath(sys.argv[1])))
+spec = importlib.util.spec_from_file_location("w", sys.argv[1]); w = importlib.util.module_from_spec(spec); spec.loader.exec_module(w)
+root = tempfile.mkdtemp()
+g = lambda *a: subprocess.run(["git", "-C", root, *a], check=True, capture_output=True, text=True).stdout.strip()
+g("init", "-q", "-b", "development"); g("config", "user.email", "op@example.invalid"); g("config", "user.name", "op")
+g("commit", "-q", "--allow-empty", "-m", "cutover"); cut = g("rev-parse", "HEAD")
+os.makedirs(f"{root}/PROJECT/2-WORKING"); open(f"{root}/PROJECT/2-WORKING/GH-421-x.md", "w").write("x\n")
+g("add", "-A"); g("commit", "-q", "-m", "fix: direct landing\n\nCloses #421"); direct = g("rev-parse", "HEAD")
+if hasattr(w, "DIRECT_COMMIT_CUTOVER"):
+    w.DIRECT_COMMIT_CUTOVER = cut
+pr5 = dict(number=5, title="older", body="Closes #421", state="MERGED", mergedAt="2000-01-01T00:00:00Z",
+           baseRefName="development", mergeCommit={"oid": "a" * 40}, url="", headRefOid=None, commits=[])
+def fake_prs(root_, slug, md):
+    md[("pr", "5")] = pr5
+    return []                                   # PR #5 is receipted: not pending
+w.unreconciled_prs = fake_prs
+w.committed_qualifications = lambda *a: [{"receipt": "stub"}]
+w.qualification_receipt_matches = lambda *a: True   # the direct commit is receipted too
+meta = {}
+found = w.catch_up_prs(root, "test/repo", {"issues": [{"number": 421, "state": "CLOSED"}], "prs": [pr5]}, meta)
+cm = meta.get(("commit", direct))
+print("found PRs:", found)
+print("direct commit visible:", cm is not None, "| catchUp:", bool(cm and cm.get("catchUp")))
+ok = cm is not None and cm.get("catchUp") and found == []
+# Repeat after the closeout finished (doc left 2-WORKING): the receipted commit is metadata only, no landing.
+os.remove(f"{root}/PROJECT/2-WORKING/GH-421-x.md")
+meta2 = {}
+found2 = w.catch_up_prs(root, "test/repo", {"issues": [{"number": 421, "state": "CLOSED"}], "prs": [pr5]}, meta2)
+cm2 = meta2.get(("commit", direct))
+print("repeat: found PRs:", found2, "| catchUp:", bool(cm2 and cm2.get("catchUp")))
+ok = ok and found2 == [] and not (cm2 and cm2.get("catchUp"))
+print("RESULT:", "PASS" if ok else "FAIL")
+sys.exit(0 if ok else 1)

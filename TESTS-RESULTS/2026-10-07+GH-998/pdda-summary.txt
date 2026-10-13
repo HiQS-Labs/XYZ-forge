@@ -1,0 +1,15 @@
+Environment: PDDA_ISSUE_SYNC_SOURCE=cache
+SUMMARY, ERROR and final result lines; unrelated warnings omitted
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+SUMMARY [pdda-check-roadmap] errors=0 warns=0 info=1
+SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=82
+SUMMARY [pdda-check-changelog] errors=0 warns=0 info=0
+SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=397 info=0
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=1
+SUMMARY [pdda-check-governance] errors=0 warns=5 info=0
+SUMMARY [pdda-check-marathon-qa] errors=0 warns=9 info=0
+SUMMARY [pdda-doc-ready] errors=0 warns=0 info=1
+PDDA run complete: no errors, 411 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa

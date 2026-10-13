@@ -1,0 +1,12 @@
+Validating plugin manifest: ~/Documents/GH Repos/XYZ-forge-gh964-mods/skills/2-daily/xyz-mod/mod/.claude-plugin/plugin.json
+
+⚠ Found 1 warning:
+
+  ❯ author: No author information provided. Consider adding author details for plugin attribution
+
+Validating hooks: ~/Documents/GH Repos/XYZ-forge-gh964-mods/skills/2-daily/xyz-mod/mod/hooks/hooks.json
+
+  ❯ ./register.ts hooks: session.start, command.run{command=xyz-status}
+  ❯ ./register.ts calls: $.command.register, $.process.run
+
+✔ Validation passed with warnings

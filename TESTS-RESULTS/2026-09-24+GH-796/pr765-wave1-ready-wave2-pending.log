@@ -1,0 +1,4 @@
+ERROR [pdda-check-marathon-qa] MARATHON-PLAN-probe.md:14 Wave 2 unverified item: 'Wave 2 Proof of Done Test Suite Green' — cannot open PR or complete marathon without verified wave QA — verify-and-check-item
+ERROR [pdda-check-marathon-qa] MARATHON-PLAN-probe.md:15 Wave 2 unverified item: 'Wave 2 Post-Build Codex QA Relay executed (`relay-system/approved.md`)' — cannot open PR or complete marathon without verified wave QA — verify-and-check-item
+ERROR [pdda-check-marathon-qa] MARATHON-PLAN-probe.md:16 Wave 2 unverified item: 'Wave 2 CodeRabbit / Peer Review findings adjudicated' — cannot open PR or complete marathon without verified wave QA — verify-and-check-item
+SUMMARY [pdda-check-marathon-qa] errors=3 warns=0 info=0

@@ -1,0 +1,129 @@
+---
+title: "GH-949 — ATE lifecycle, oracle and environment remediation"
+status: Complete
+created: 2026-10-03
+updated: 2026-10-09
+owner: Codex
+goal: Repair nine campaign findings and GH-912 with existing shared implementations and witnessed before/after controls.
+gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/949
+related: [949, 912, 435, 948]
+effort: 3
+complexity: 3
+risk: 3
+phases: 3
+reversibility: Costly — shared process and gate environment consumers require compatibility verification; revert focused commits on regression.
+---
+
+# GH-949 — ATE remediation plan
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Fable B1 repaired; renewed QA Approved; full macOS gate and hosted smoke green | PR #953 ready; awaiting merge |
+
+## Table of contents
+
+- [Scope and evidence](#scope-and-evidence)
+- [Phase 1 — Plan QA](#phase-1--plan-qa)
+- [Phase 2 — Implement and prove](#phase-2--implement-and-prove)
+- [Phase 3 — Final QA and PR](#phase-3--final-qa-and-pr)
+
+## Scope and evidence
+
+Canonical tracking: https://github.com/HiQS-Labs/XYZ-forge/issues/949; existing related task https://github.com/HiQS-Labs/XYZ-forge/issues/912. Campaign evidence PR948 is a reference, not an implementation dependency: repairs start at current development `3fbed72f781d1ad060e298b798a44c32edef393d`. [Recon map](recon-gh949-ate-remediation.md) traces the callers and mutable state. No overlapping implementation PR was found; PR930 is held canary work and is not changed.
+
+Bet: existing process-group and runner boundaries can carry all fixes without a new engine, gate or dependency. If a control requires another executor or persistent authority, stop and re-review the plan. Debug-mantra is the execution protocol. No schema migration, Bash twin edit, new test suite, registry entry, timeout-success policy expansion, installer behavior change or broad #918 diagnosis. Manual scripts are retained execution artifacts under TESTS-RESULTS, not a new runner or registered gate. This is a bounded repair batch, not a large refactor/new marathon; review, dogfood and conformance are budgeted inside these phases.
+
+| Issue | Requirements | Dependencies | Plan / branch | Acceptance | Ledger rating | State / PR |
+|---|---|---|---|---|---|---|
+| #949 | F1–F9 | shared cleanup before oracle/ATE use | this plan; fix/gh949-ate-remediation | Phase 2 steps 1–6 + final QA/gate | rated90/85/50/55 | PR #953; awaiting merge |
+| #912 | K1 ambient selector leak | existing runner envelope | same plan/branch, separate ledger row | inherited selector red → clean wrapped suites; intentional overrides still win | rated82/80/50/85 | PR #953; awaiting merge |
+
+Ratings dated2026-10-03, read back from RELEASES: #949 priority90/severity85/neutral appeal50/cheapness55; #91282/80/50/85. Unsupervised continuing writes and false containment are high-impact potential consequences, not claimed production loss. #912 caused a documented3373s false-red gate on Oct1; the Oct3 campaign reproduces the same defect, not a second production incident. History windows Sep19–Oct3 versus Sep5–19: #478 documents a Sep3–6 runaway incident in the earlier window, but its generator cause differs; #918 Oct1 pooled oracle failure has unknown attribution and is not counted as the same root cause. Trend is unknown from this bounded sample, not increasing by assertion. No user override exists; appeal stays neutral. Cheapness reflects a focused multi-file repair versus simple envelope correction.
+
+## Phase 1 — Plan QA
+
+- [x] Record exact-source recon, existing consumers and graph limitations.
+- [x] Register and rate #949 and #912 independently; do not admit accepted-start before approved QA.
+- [x] Commit plan and run shipped Codex relay, review-only, with three-round cap; record every disposition. Round 1 protocol refusal preserved; corrected round 2 attested Approved, exit 0. Receipt: `relay-system/2026-10-03/gh949-plan.codex.md`; driver logs under TESTS-RESULTS.
+
+### Phase 1 — QA checklist
+
+- [x] Approved relay status plus successful driver exit, nonempty receipt and grounded findings.
+- [x] Scope covers all ten checklist entries; no new test/gate machinery.
+
+## Phase 2 — Implement and prove
+
+Execute this one ordered list after plan approval. Shared changes are Costly; shield is fresh full verification clone with identity snapshots, tripwire is any changed caller result shape, surviving owned process or unintended Git mutation. Stop on tripwire, preserve evidence, revert only owned changes/commits if necessary. No production data migration or one-way operation.
+
+1. Admit the exact two owned roadmap rows with --accepted-start after issue/row identity read-back. Extend `proc_group.run_bounded` to clean/reap its group on BaseException and re-raise, preserving timeout result and spawn-error propagation. Keep signal handlers out of threaded library calls. At CLI entry boundaries translate SIGTERM into catchable cancellation, restore previous handlers, and guard repeated interruption during bounded cleanup. Move command-mode timeout validation before spawn/publication/ack; keep --kill-pgid timeout-optional. → F1/F7 controls: SIGINT/SIGTERM no surviving same-group child; missing timeout no PID/sentinel; existing timeout/ack/publication codes unchanged; normal successful background policy unchanged.
+2. Reuse run_bounded in domain `_run` and existing metamorphic idempotence repetitions. Preserve ordinary nonzero diagnostic semantics, but mark timed-out/unlaunched observation incomplete and never pass it; reject timeout in zero-state, containment and idempotence, including later repeats. Keep intentional crash-holder SIGKILL separate. → F8: nonempty no-op passes, timed-out same-group late writer fails and cannot mutate after return; sequential/threaded idempotence remains callable and timeout fails; genuine command exit124 distinguishable from witnessed timeout.
+3. Extend existing tree digest to include directory symlink entries without traversing targets. Resolve shared Git config with Git's common-dir/path commands and include worktree config presence/hash; metadata resolution/read errors must not silently compare as an empty success. → F2/F3: no-op passes; file/link add/remove/retarget detected; target contents untouched; standalone config, linked shared config, linked config.worktree and linked HEAD changes detected.
+4. Reject empty grids before control/baseline/reset writes. Track records produced by this invocation and return explicit nonzero no-work when a budget runs out before any attempt. Convert launch exceptions into one structured fail/spawn_error row, then stop nonzero (deliberate fail-fast, no repeated global launch failure); record a cancelled active run as one fail/interrupted row, then exit130/143 with no next attempt. Reuse the existing append/classification path and schema1.0; preserve prior rows and filing exit semantics for normally completed runs. Generate UTC timestamps and run IDs with UTC clocks. → F1/F4/F5/F9: nonempty positive, no-write empty-grid refusal, missing executable one row/nonzero, cancellation prior-row preservation, timezone-invariant epoch; checkin/compile readers accept records.
+5. Guard optional HOME config/search/AGY paths without root-relative fallbacks; preserve XDG and explicit override precedence. Scrub inherited XYZ_HARNESS and XYZ_REPO_ROOT once at `runner_envelope_begin`, shared by both gate runners; keep XYZ_HARNESS_DB and explicit per-case assignments. → F6/K1: valid override works with HOME unset with/without XDG; missing fallback truthfully refuses; baseline ambient-override suite red becomes wrapped green; explicit fixture overrides still resolve correctly.
+6. Record manual red/base and repaired controls with provenance and minimized scripts under TESTS-RESULTS/2026-10-03+GH-949. Run the existing focused suites named in recon once relevant changes stabilize; alter an existing suite only if changed behavior makes its assertion untruthful. No new suite or registry entry, and no re-enabling #918's retired universal check. Update CHANGELOG for this consequential shared-behavior bet. → every F1–F9/K1 has a result and failure-witness reference; no empty extracted evidence.
+
+### Phase 2 — QA checklist
+
+- [x] All ten requirements mapped to observed base/repaired outcomes; expected refusals separated from product failures.
+- [x] Process/fixture cleanup and clone identity before/after verified; no production writes.
+- [x] Focused suite results and manual controls committed with provenance, including failures and dispositions.
+- [x] Runtime scope stays in existing helpers; no new dependencies, schemas, suites or gate stages.
+
+## Phase 3 — Final QA and PR
+
+- [x] Commit resumed implementation/evidence; obtain renewed final Codex relay against full changed files, acceptance matrix and latest ratings (three rounds maximum). Resolve grounded findings, reject speculative scope expansion with written disposition, and obtain Approved on final implementation.
+- [x] Run renewed required full local push gate exactly once on the final approved implementation in a separate disposable full clone; verify clone identity and retain output/provenance. A failed gate remains failed; diagnose required failures rather than bypassing.
+- [x] Fetch/reconcile current development conflicts via supported RELEASES merge resolver if needed; any implementation change after approval gets fresh focused verification/review.
+- [x] Push through the required hook from the disposable verification/push clone, open ready PR to development, verify emitted base/head/scope and hosted checks. Do not merge or prematurely close issues; retain task clone for merge handoff.
+
+### Phase 3 — QA checklist
+
+- [x] Final relay Approved plus successful nonempty receipt; required local and hosted results linked for exact tested SHA.
+- [x] #949/#912 runtime requirements satisfied; ready status follows current PR blocking checks.
+- [x] Plan/ledger say PR ready awaiting merge, not shipped; retained clone and cleanup handoff reported.
+
+Historical evidence: `TESTS-RESULTS/2026-10-03+GH-949/SUMMARY.md` maps original findings to retained controls. The shared runner remains signal-handler-free; handlers now belong to four CLI boundaries (ATE, proc_group and both oracles). Zero-minute admission keeps its initialization contract. Original QA/gates below are earlier checkpoints; current readiness is recorded in the resumed disposition.
+
+Final QA R1 disposition: Implemented. The whole-file sweep exposed a pre-existing first-versus-later rc/stdout blind spot. `984b7f64` compares the first observation against existing metamorphic result fields. Actual-process red/green controls are retained under manual-idempotence; affected existing suites are rerun. This extends the already approved idempotence comparison, not the process architecture or risk scope.
+
+Final Codex relay round2 is attested Approved (exit0); source and focused evidence reviewed at59d666cd. No implementation changes after approval. Full qualifying push-boundary run is next.
+
+PR [#953](https://github.com/HiQS-Labs/XYZ-forge/pull/953) targets development. Full local push gate passed870s at992914e6; immutable receipt under full-gate. Development docs/ledger merged through the canonical resolver without runtime changes. Hosted results are attached to the PR exact head; promotion qualification and merge remain future work. Retain task clone until merge handoff; this doc does not claim shipment.
+
+## Independent Fable QA — 2026-10-03
+
+Operator-requested Claude Code Fable5.1 high review returned FAIL (valid relay exit5), one blocker B1: oracle CLI SIGTERM can orphan its session-isolated command. Full signed review: `relay-system/2026-10-03/gh949-fable-qa.md`; provenance: `TESTS-RESULTS/2026-10-03+GH-949/fable-qa/`. PR953 is draft pending disposition; earlier ready/Approved statements above describe the prior checkpoint. No runtime changes made during this QA turn. S1 (metamorphic linked-worktree config) is non-blocking; base-comparison and full Git-mutation controls remain unverified.
+
+## Resumed disposition — 2026-10-04
+
+B1 Implemented: both oracle `__main__` blocks reuse the existing cancellation
+context and preserve130/143. Original-base comparison now proves outer-cap
+orphaning is introduced by session isolation; direct SIGTERM orphaning predates it.
+All eight repaired direct TERM/INT, outer-cap and TERM-resistant direct controls
+pass with nonempty startup evidence and verified cleanup. Three focused suites
+pass (17/0,8/0,43/0); clone identity and tracked diff stay unchanged. Receipts:
+`TESTS-RESULTS/2026-10-04+GH-949/SUMMARY.md`.
+
+S1 Deferred as the review permits; observation retained in
+`PARKED/2026-10-04-metamorphic-worktree-config.md`. It is not claimed repaired.
+These two CLI-boundary changes are obvious, local and reversible, so no new plan
+design or plan QA is needed beyond approved Phase2 step1 and Fable's concrete fix
+direction. Final independent QA still applies. PR953 remains draft until renewed
+approval and the required gate pass. Development was integrated using the existing
+disjoint-ledger resolver; both issue registrations/ratings survived, with replayed
+row IDs explicitly re-admitted through accepted-start.
+
+Renewed final Codex relay: attested Approved round1 on `157bf05a`; receipt
+`relay-system/2026-10-04/gh949-resumed-final.codex.md` and
+`TESTS-RESULTS/2026-10-04+GH-949/final-qa/provenance.jsonl`.
+Development reconciliation `442ea913` was integrated after approval; it adds only
+upstream docs/receipts. All six reviewed runtime files remain byte-identical.
+Full macOS push gate GREEN in808s on `9e7eaddc` (407 shell suites,21 Python
+tests; identity unchanged; no bypass). Hosted smoke success on that SHA:
+https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37268691818.
+Raw log, clone snapshots and provenance: `TESTS-RESULTS/2026-10-04+GH-949/full-gate/`.
+The final receipt/doc/ledger commit preserves all six reviewed runtime files.
+This is PR push-gate evidence, not promotion evidence. PR953 is ready awaiting
+merge; issues and task clone remain open for merge handoff.

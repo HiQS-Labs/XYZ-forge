@@ -1,0 +1,101 @@
+== test: xyz-vendor ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-xyz-vendor.XXXXXX.Kf07LbTio4
+  PASS: parses: relay-automation/xyz-vendor.sh
+  PASS: parses: relay-automation/xyz-sync.sh
+  PASS: parses: skills/1-hourly/relay-xyz/find-harness.sh
+  PASS: parses: relay-automation/hooks/xyz-vendor-reminder.sh
+  PASS: GH-742: vendor writes a CommonJS package boundary
+  PASS: GH-742: target ESM package.json remains untouched
+  PASS: GH-742: vendored tick runs inside an ESM target
+  PASS: GH-742 control: removing .xyz/package.json reproduces the ESM failure
+  PASS: full mirror matches harness (52 relay-automation + 437 test *.sh, excluding 1 overlay script)
+  PASS: all 13 src/*.js vendored
+  PASS: Tier 1 utils/*.sh vendored (41 *.sh, excluding 2 overlay scripts)
+  PASS: vendored swarm-preflight.sh parses
+  PASS: vendored marathon-plan.sh parses
+  PASS: utils/py/rtl.py vendored in Tier 1
+  PASS: utils/py/marathon_plan.py vendored in Tier 1
+  PASS: Tier 1: xyz-releases-onboard.sh excluded
+  PASS: Tier 1: releases_app.py excluded
+  PASS: Tier 1: releases_cycle.py excluded
+  PASS: Tier 1: releases-merge-resolve.sh excluded
+  PASS: Tier 1: release-lanes.sh excluded
+  PASS: Tier 1: utils/timeline excluded
+  PASS: Tier 1: RELEASES-DB-FAQS.md excluded
+  PASS: Tier 1: stamped tier=1 in VERSION
+  PASS: bin/tick vendored + executable
+  PASS: bin/validate-relay-block vendored + executable
+  PASS: GH-49b: marathon runtime vendored + parses (4 files)
+  PASS: VERSION has all 4 fields (incl. tier)
+  PASS: .xyz/ excluded (GH-642: repo-local exclude)
+  PASS: /.tick/ excluded (GH-440/GH-642)
+  PASS: target .gitignore untouched by vendor (GH-642)
+  PASS: registry has 1 vendored row
+  PASS: GH-226: VENDORS into a repo ignoring '/relay-system' (exit 0, marathon check deferred to runtime)
+  PASS:   and names the rule in the way
+  PASS:   and emitted the advisory warning banner
+  PASS:   and preserved original ignore rule '/relay-system'
+  PASS:   and added .xyz/ to the repo-local exclude (GH-642)
+  PASS:   and added /.tick/ to the repo-local exclude (GH-642)
+  PASS:   and left ignored paths un-negated (never un-ignores for you)
+  PASS:   and successfully materialized .xyz/
+  PASS: GH-226: VENDORS into a repo ignoring 'phases' (exit 0, marathon check deferred to runtime)
+  PASS:   and names the rule in the way
+  PASS:   and emitted the advisory warning banner
+  PASS:   and preserved original ignore rule 'phases'
+  PASS:   and added .xyz/ to the repo-local exclude (GH-642)
+  PASS:   and added /.tick/ to the repo-local exclude (GH-642)
+  PASS:   and left ignored paths un-negated (never un-ignores for you)
+  PASS:   and successfully materialized .xyz/
+  PASS: GH-226: VENDORS into a repo ignoring '/phases/' (exit 0, marathon check deferred to runtime)
+  PASS:   and names the rule in the way
+  PASS:   and emitted the advisory warning banner
+  PASS:   and preserved original ignore rule '/phases/'
+  PASS:   and added .xyz/ to the repo-local exclude (GH-642)
+  PASS:   and added /.tick/ to the repo-local exclude (GH-642)
+  PASS:   and left ignored paths un-negated (never un-ignores for you)
+  PASS:   and successfully materialized .xyz/
+  PASS: GH-644: vendors into a repo whose info/exclude lacks a trailing newline
+  PASS:   and the last rule '*.cact' survived as its own line (no fusion)
+  PASS:   and no '*.cact.xyz/' fused line exists
+  PASS:   and .xyz/ was appended exactly once as its own line
+  PASS: GH-644B: vendors into a repo that already tracks .xyz/
+  PASS:   and did NOT add the blanket .xyz/ rule to the exclude (harness code stays trackable)
+  PASS:   and left .gitignore untouched
+  PASS:   and every runtime subpath is ignored exactly once (idempotent across two runs)
+  PASS:   and /.tick/ at the target root is still ignored exactly once
+  PASS:   and the previously committed .xyz/bin/tick is still tracked
+  PASS:   and a NEW harness file under .xyz/ stages on git add -A
+  PASS:   and no runtime-state sentinel staged
+  PASS: GH-644B: vendors (exit 0) when a tracked-.xyz/ repo already carries a blanket .xyz/ rule
+  PASS:   and left the operator's blanket .xyz/ line in place (never deletes an ignore rule)
+  PASS:   and WARNED that the blanket rule will hide new harness files
+  PASS: GH-644B: WARNS when tracked .xyz/ content intersects the runtime paths (names .xyz/.tick)
+  PASS:   and still wrote the runtime subpath ignores
+  PASS:   control: a non-tracking repo still gets the blanket .xyz/ rule and no subpath rules
+  PASS: GH-314: never writes a negation rule to un-ignore for you
+  PASS:   control: the fixture repo really does ignore relay-system
+  PASS: an unrelated ignore rule does NOT block vendoring
+  PASS: idempotent re-run (1 exclude line, 1 registry row)
+  PASS: --no-register writes no registry
+  PASS: no-.xyz: resolves to the live harness (default path intact)
+  PASS: no-.xyz: no stderr banner
+  PASS: .xyz/ preferred when present
+  PASS: XYZ_HARNESS still wins over a present .xyz/
+  PASS: staleness: current copy is silent
+  PASS: staleness: behind copy still exits 0 (never blocks)
+  PASS: staleness: behind copy warns on stderr
+  PASS: staleness: --env stdout stays pure export lines
+  PASS: xyz-sync list shows the vendored copy
+  PASS: xyz-sync update restamps VERSION to live HEAD
+  PASS: xyz-sync delete dry-runs by default (.xyz survives)
+  PASS: xyz-sync delete --yes removes .xyz/ but keeps the repo
+  PASS: xyz-sync delete --yes drops the registry row
+  PASS: reminder hook lists an existing vendored copy
+  PASS: reminder hook honors XYZ_NO_VENDOR_REMINDER
+  PASS: reminder hook silent when no copy on disk
+  PASS: collision: target src/ untouched
+  PASS: collision: target utils/ untouched
+  PASS: collision: target bin/ untouched
+  PASS: collision: harness landed under .xyz/
+  xyz-vendor: 98 pass, 0 fail

@@ -1,0 +1,21 @@
+== test: gh781-wam-radar-seed ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh781-wam-radar-seed.XXXXXX.DIH1RSVPKV
+== test: gh781-wam-radar-seed ==
+  PASS: whack-a-mole SKILL.md exists
+  PASS: seed subsection
+  PASS: reads dated radar reports
+  PASS: reads the live radar issue
+  PASS: seeds from ranked and carried targets
+  PASS: freshness gate
+  PASS: stale report is said out loud
+  PASS: seeds are hints
+  PASS: two-signal rule still applies
+  PASS: out-of-window members not scored
+  PASS: non-reproducing seed is reported
+  PASS: normal scan still runs
+  PASS: yield line
+  PASS: absence is a stated result
+  PASS: umbrella cites the radar class
+  PASS: seed step sits in §2 before clustering
+  PASS: negative control: a seed step without re-verification fails the pin
+  gh781-wam-radar-seed: 17 pass, 0 fail

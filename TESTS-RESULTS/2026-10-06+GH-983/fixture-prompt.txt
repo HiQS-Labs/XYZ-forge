@@ -1,0 +1,7 @@
+Reconstruction: use the exact skill bytes at source_sha and skill_sha256 in provenance.jsonl. Append JSON of cases.json with expected removed from each object. Prefix and suffix used:
+
+Bounded decision fixture, not an actual workhorse task. No tools, mutations, skill dispatch or external actions. Evaluate the supplied skill as instruction text. For each independent fictional state, decide the next action and whether the requested execution outcome is complete. Return only JSON array objects with id, next_action, complete boolean, unfinished, reason. Do not pretend actions were performed. These states are fictional; respect authorization.
+SKILL:
+<exact SKILL.md bytes>
+STATES:
+<json.dumps of cases without expected>

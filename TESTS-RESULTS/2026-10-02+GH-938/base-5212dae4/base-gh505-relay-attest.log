@@ -1,0 +1,64 @@
+== test: gh505-relay-attest ==
+  workdir: /tmp/tick-gh505-relay-attest.4DaiJP
+== test: gh505-relay-attest ==
+  PASS: A: the stub builder turn really ran through codex-turn
+  PASS: A: builder-written Approved → driver exits 4
+  PASS: A: escalation reason is forged-terminal
+  PASS: A: STATUS restored on disk
+  PASS: A: STATUS restored in HEAD (revert committed)
+  PASS: A: revert commit is the driver's
+  PASS: A: no attestation trailer
+  PASS: A: no record written
+  PASS: A2: failed turn keeps the shim's exit 5 (not 4)
+  PASS: A2: reason still names the forgery
+  PASS: A2: forged STATUS reverted in HEAD on the failure path
+  PASS: A2: no record
+  PASS: A3: failed reviewer turn keeps the shim's exit 5
+  PASS: A3: reason is failed-turn-terminal
+  PASS: A3: the failed turn's Approved reverted in HEAD
+  PASS: A3: no trailer, no record
+  PASS: B: reviewer approval → driver exits 0
+  PASS: B: attestation trailer appended
+  PASS: B: reviewed-head = HEAD before dispatch
+  PASS: B: the isolated worktree was cut at the pinned revision
+  PASS: B: reviewed-head is the parent of the shim's commit
+  PASS: B: record loads for reviewer rev; digest = sha256(exactly the appended bytes)
+new-relay: wrote /tmp/tick-gh505-relay-attest.4DaiJP/agent-a/relay.md (NEXT: Reviewer, reviewer=rev)
+  PASS: B1: reviewer following generated append-above-marker instruction is attested
+  PASS: B1: exactly one trailing marker remains
+  PASS: B1: marker remains the final line
+  PASS: B4: approval still attested (the reviewer read the pinned revision)
+  PASS: B4: reviewed-head is the PRE-dispatch revision, not the peer commit
+  PASS: B4: control — HEAD had already moved when the shim started
+  PASS: B4: worktree cut at the pin even though HEAD moved before the cut
+  PASS: B4: candidate_ok REFUSES the HEAD that carries the peer's source change
+  PASS: B5: harness's uncited-claim downgrade does not read as a body rewrite; approval attested
+  PASS: B5: the downgrade really happened (control)
+  PASS: B5: record still loads after the downgrade
+  PASS: B6: appended citation changes the harness's judgement of an OLD line without reading as a rewrite
+  PASS: B6: control — the old claim stayed un-stamped (the awk saw the new citation)
+  PASS: B7: CRLF relay file attested
+  PASS: B7: record loads on the CRLF file
+  PASS: C: pre-approved file → unattested-terminal (exit 4)
+  PASS: C: no turn dispatched
+  PASS: D1: STATUS-only approval → empty-approval
+  PASS: D3: rewritten body → review-body-rewritten
+  PASS: D3: no record
+  PASS: E2: no --reviewer → warned at startup; the approval is refused as forged (no reviewer can exist)
+  PASS: E2: no record
+  PASS: E3: builder == reviewer → exit 2
+  PASS: S1: RELAY_WORKTREE_ISOLATION=false refused before dispatch
+  PASS: S1: no turn dispatched
+  PASS: K1: the shim closes the token for a terminal reviewer turn; approval attested
+  PASS: K2: bare agent-cmd leaves the token claimed → close-mismatch, not attested
+  PASS: K2: no record
+  PASS: L: fixture approval attested
+  PASS: L: reader refuses wrong reviewer / edited STATUS / edited review text / truncated record
+Traceback (most recent call last):
+  File "<stdin>", line 6, in <module>
+  File "<stdin>", line 4, in <lambda>
+  File "/usr/lib/python3.13/subprocess.py", line 577, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['git', '-C', '/tmp/tick-gh505-relay-attest.4DaiJP/n3', 'commit', '-qm', 'seed']' returned non-zero exit status 128.
+  FAIL: N3: candidate binding wrong for a relay beside source

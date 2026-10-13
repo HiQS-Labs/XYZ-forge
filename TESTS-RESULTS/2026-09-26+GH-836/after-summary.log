@@ -1,0 +1,6 @@
+identity-before 4c5ee0bf0f455b1c7b1e89db878827427bfa9795 porcelain=0
+gh549 wall=147s tail=GH-549 work-state event stream: 125 passed, 0 failed
+gh436 rc=0 wall=239s
+gh436-pytest rc=0 wall=244s
+gh649 rc=0 GH-649 migration checks passed
+identity-after 4c5ee0bf0f455b1c7b1e89db878827427bfa9795 porcelain=0

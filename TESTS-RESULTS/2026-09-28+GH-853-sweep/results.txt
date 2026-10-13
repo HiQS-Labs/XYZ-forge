@@ -1,0 +1,30 @@
+0 1s test/gh139-pipe-grep-guard.sh
+0 2s test/analyze.sh
+0 1s test/auto-sync.sh
+0 1s test/debug-mantra.sh
+0 9s test/deep-research.sh
+0 2s test/find-harness.sh
+0 2s test/gh1-adoption-guard.sh
+0 2s test/gh23-path-overlap-enforcement.sh
+0 2s test/gh284-p4-release-lanes.sh
+0 1s test/gh308-poll-guards.sh
+0 4s test/gh308-turn-shim-parity.sh
+0 21s test/gh32-releases-app.sh
+0 1s test/gh369-find-doc-root-resolution.sh (re-run after restoring the dropped `--`)
+0 2s test/gh376-relay-drive-lock-parity.sh
+0 3s test/gh39-releases-project-sync.sh
+0 -  test/gh460-pipe-buffer-sigpipe.sh (not swept: its 7 sites are the deliberate SIGPIPE red control and its prose; file restored, re-run green)
+0 1s test/gh520-default-reviewer-stub.sh
+0 1s test/gh527-destructive-git-guard.sh
+0 63s test/gh528-parallel-contention-retry.sh
+0 2s test/gh544-parallel-default.sh
+0 11s test/gh57-live-merge-resolve.sh
+0 41s test/gh77-standup-triage.sh
+0 1s test/handoff.sh
+0 1s test/hq-hardening.sh
+0 1s test/hq-promote.sh
+0 2s test/hq.sh
+0 33s test/preflight-docs.sh
+0 2s test/relay-dep-drift.sh
+0 8s test/relay-loop.sh
+0 1s test/tick-foreign-cwd.sh

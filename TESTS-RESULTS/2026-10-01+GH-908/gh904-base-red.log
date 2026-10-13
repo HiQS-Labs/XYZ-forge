@@ -1,0 +1,2 @@
+ERROR [pdda-check-roadmap-coverage] ROADMAP.md ROADMAP.md not found and no releases.db ledger present; cannot verify working-doc coverage
+SUMMARY [pdda-check-roadmap-coverage] errors=1 warns=0 info=0

@@ -1,0 +1,14 @@
+relay-dep-drift (GH-68):
+  PASS: tick drift wrote an event file
+  PASS: event type is dependency.drift
+  PASS: event stamps surface
+  PASS: event stamps prior_sha/current_sha
+  PASS: event stamps numeric diff_lines
+  PASS: no phantom 'post-commit' task in projection
+  PASS: peer (agent-b) sees the unread drift once
+  PASS: second read is empty — watermark advanced
+  PASS: agent-a never sees its own drift
+  PASS: rtl_enforce emitted a drift event for the changed surface
+  PASS: emitted drift names src/project.js
+  PASS: turn still committed (warn-only, non-blocking)
+  relay-dep-drift: 12 pass, 0 fail

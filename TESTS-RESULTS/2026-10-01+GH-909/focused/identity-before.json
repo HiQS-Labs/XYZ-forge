@@ -1,0 +1,5 @@
+{
+  "head": "266a954a8c82aea5a8267e3ed4e66391f14d9f79\n",
+  "origin": "/private/tmp/xyz-ci-stabilization-20260930/completion-lock-fix-oct1\n",
+  "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=/private/tmp/xyz-ci-stabilization-20260930/completion-lock-fix-oct1\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.fix/completion-lock-loss.remote=origin\nbranch.fix/completion-lock-loss.merge=refs/heads/fix/completion-lock-loss\n"
+}

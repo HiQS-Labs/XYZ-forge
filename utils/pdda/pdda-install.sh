@@ -33,6 +33,8 @@ MIGRATE=1
 REGISTER=1
 MODE="observe"
 QUAD="off"
+ROADMAP_SOURCE="legacy"
+PROJECTIONS="auto"
 TARGET=""
 
 # Per-user, per-device install registry — records WHERE each copy was installed and on which source
@@ -63,10 +65,13 @@ Options:
                          blank.md placeholders) and startup-doc scaffolds. Runtime scripts +
                          PROJECT/PDDA.md are always refreshed. Never touches your real PROJECT/** docs.
   --with-startup-docs    Also install the operator read-order scaffold: ROUTER.md (written from
-                         utils/pdda/templates/ROUTER.target.md — the canonical repo's own ROUTER.md is NOT
+                         utils/pdda/templates/ROUTER.target.md in legacy mode or
+                         utils/pdda/templates/ROUTER.releases.target.md in releases mode;
+                         the canonical repo's own ROUTER.md is NOT
                          copied), AGENTS.md, GUIDING-PRINCIPLES.md, and the /pdda re-orient skill.
                          The three docs are create-only: an existing file is kept, not overwritten
-                         (use --force). The /pdda skill is runtime and always refreshed.
+                         (use --force). The optional /pdda skill is refreshed when writable;
+                         a denied skill path warns but does not stop core setup.
                          When ROUTER.md is written, a post-install self-check asserts that every
                          *.sh it names exists in the target; a failure exits non-zero (a PDDA
                          template bug). A ROUTER.md that was kept is never validated.
@@ -78,6 +83,10 @@ Options:
                          override with PDDA_REGISTRY). The registry is machine-local and never committed.
                          Also skips the multi-device git-pulse projection (see below).
   --mode <m>             Initial .pdda-mode: observe (default) | light | full.
+  --roadmap-source <s>   legacy (default) | releases. Releases requires an installed
+                         releases CLI under utils/py/ or .xyz/utils/py/ and creates its DB.
+  --projections <p>      auto (default; adopted by file presence) | on | off.
+                         Requires --roadmap-source releases.
   --quad                 Enable the opt-in Quad Concepts layer (seeds .pdda-quad=on). Off by default;
                          orthogonal to --mode. Requires a "## Quad Concepts" section (1-4 bullets) on
                          plan docs; see PROJECT/PDDA.md. Opt a doc out with quad_exempt: true.
@@ -87,7 +96,9 @@ What gets installed (zero state):
   utils/pdda/{pdda.sh,pdda-lib.sh,pdda-doc-ready.sh,pdda-catchup.sh,pdda-gh-refresh.sh}   (runtime, refreshed)
   PROJECT/PDDA.md                                            (the contract, refreshed)
   PROJECT/{1-INBOX,2-WORKING,3-COMPLETED,4-MISC}/blank.md    (lifecycle buckets)
-  ROADMAP.md CHANGELOG.md RELEASES.md PROJECT/PDDA-ACTIVITY.jsonl .pdda-mode .pdda-quad   (blank seeds, create-only)
+  CHANGELOG.md PROJECT/PDDA-ACTIVITY.jsonl .pdda-mode .pdda-quad   (blank seeds, create-only)
+  ROADMAP.md RELEASES.md                                     (legacy source only)
+  releases.db releases.sql                                   (releases source only)
   .gitignore += PROJECT/PDDA-ACTIVITY.jsonl .pdda-gh-state.tsv  (churning runtime state)
 
 It also records the install in a per-user, machine-local registry (~/.config/pdda/registry.tsv) so
@@ -113,6 +124,8 @@ while [ "$#" -gt 0 ]; do
     --no-migrate) MIGRATE=0; shift ;;
     --no-register) REGISTER=0; shift ;;
     --mode) MODE="${2:-}"; shift 2 ;;
+    --roadmap-source) ROADMAP_SOURCE="${2:-}"; shift 2 ;;
+    --projections) PROJECTIONS="${2:-}"; shift 2 ;;
     --quad) QUAD="on"; shift ;;
     -h|--help) usage; exit 0 ;;
     -*) printf 'install.sh: unknown option %q\n\n' "$1" >&2; usage >&2; exit 2 ;;
@@ -121,6 +134,11 @@ while [ "$#" -gt 0 ]; do
 done
 
 case "$MODE" in observe|light|full) ;; *) printf 'install.sh: --mode must be observe|light|full (got %q)\n' "$MODE" >&2; exit 2 ;; esac
+case "$ROADMAP_SOURCE" in legacy|releases) ;; *) printf 'install.sh: --roadmap-source must be legacy|releases\n' >&2; exit 2 ;; esac
+case "$PROJECTIONS" in auto|on|off) ;; *) printf 'install.sh: --projections must be auto|on|off\n' >&2; exit 2 ;; esac
+if [ "$ROADMAP_SOURCE" = legacy ] && [ "$PROJECTIONS" != auto ]; then
+  printf 'install.sh: --projections requires --roadmap-source releases\n' >&2; exit 2
+fi
 
 if [ -z "$TARGET" ]; then
   printf 'install.sh: missing target repo directory.\n\n' >&2
@@ -134,6 +152,23 @@ if [ ! -d "$TARGET" ]; then
   exit 1
 fi
 TARGET="$(cd "$TARGET" && pwd)"
+
+RELEASES_CLI=""
+if [ "$ROADMAP_SOURCE" = releases ]; then
+  for candidate in "$TARGET/utils/py/releases_app.py" "$TARGET/.xyz/utils/py/releases_app.py"; do
+    if [ -f "$candidate" ]; then RELEASES_CLI="$candidate"; break; fi
+  done
+  if [ -z "$RELEASES_CLI" ]; then
+    printf 'install.sh: releases mode requires the Releases CLI in the target (vendor XYZ first)\n' >&2; exit 1
+  fi
+  if [ -e "$TARGET/ROADMAP.md" ] || [ -e "$TARGET/RELEASES.md" ]; then
+    printf 'install.sh: releases-only install requires a target without ROADMAP.md or RELEASES.md; migrate existing ledgers separately\n' >&2; exit 1
+  fi
+  if [ -f "$TARGET/.pdda-mode" ] && ! grep -Eq '^[[:space:]]*ROADMAP_SOURCE[[:space:]]*=[[:space:]]*releases([[:space:]]*(#.*)?)?$' "$TARGET/.pdda-mode"; then
+    printf 'install.sh: existing .pdda-mode does not select releases; migrate it separately\n' >&2; exit 1
+  fi
+  python3 "$RELEASES_CLI" --help >/dev/null || exit 1
+fi
 
 if [ "$TARGET" = "$SOURCE_DIR" ]; then
   printf 'install.sh: refusing to install into the pdda source repo itself.\n' >&2
@@ -589,14 +624,22 @@ if [ "$WITH_STARTUP_DOCS" -eq 1 ]; then
   #   scaffold   AGENTS.md, GUIDING-PRINCIPLES.md   create-only; the target owns them after install
   #   runtime    .claude/skills/pdda/SKILL.md       PDDA owns it; safe to refresh verbatim
   written_docs="" kept_docs=""
-  seed_from_source "utils/pdda/templates/ROUTER.target.md" "ROUTER.md"
+  if [ "$ROADMAP_SOURCE" = releases ]; then
+    seed_from_source "utils/pdda/templates/ROUTER.releases.target.md" "ROUTER.md"
+  else
+    seed_from_source "utils/pdda/templates/ROUTER.target.md" "ROUTER.md"
+  fi
   if [ "$SEEDED_LAST" -eq 1 ]; then written_docs="$written_docs ROUTER.md"; else kept_docs="$kept_docs ROUTER.md"; fi
   seed_from_source "utils/pdda/templates/AGENTS.target.md" "AGENTS.md"
   if [ "$SEEDED_LAST" -eq 1 ]; then written_docs="$written_docs AGENTS.md"; else kept_docs="$kept_docs AGENTS.md"; fi
   seed_from_source "utils/pdda/templates/GUIDING-PRINCIPLES.target.md" "GUIDING-PRINCIPLES.md"
   if [ "$SEEDED_LAST" -eq 1 ]; then written_docs="$written_docs GUIDING-PRINCIPLES.md"; else kept_docs="$kept_docs GUIDING-PRINCIPLES.md"; fi
-  mkdir -p "$TARGET/.claude/skills/pdda"
-  cp "$SOURCE_DIR/utils/pdda/templates/pdda/SKILL.md" "$TARGET/.claude/skills/pdda/SKILL.md"
+  if mkdir -p "$TARGET/.claude/skills/pdda" 2>/dev/null && \
+     cp "$SOURCE_DIR/utils/pdda/templates/pdda/SKILL.md" "$TARGET/.claude/skills/pdda/SKILL.md" 2>/dev/null; then
+    say "  installed optional .claude/skills/pdda/SKILL.md"
+  else
+    say "  WARNING: optional .claude/skills/pdda/SKILL.md was not installed; continuing core PDDA setup"
+  fi
 
   # GH-23 P2 — post-install self-check. One assertion would have caught the whole GH-23 bug at install
   # time: a startup doc that names a script the repo does not contain. P3 widened it from ROUTER.md to
@@ -627,6 +670,7 @@ say ""
 say "Zero-state seeds:"
 TODAY="$(date +%Y-%m-%d)"
 
+if [ "$ROADMAP_SOURCE" = legacy ]; then
 seed_file "ROADMAP.md" <<ROADMAP
 <!-- PDDA ROADMAP CONTRACT — this file is a POINTER/LEDGER, not a plan body.
      Allowed: queued intake / projects in progress / completed / attempted / deferred + links to PROJECT/** docs.
@@ -668,6 +712,7 @@ seed_file "ROADMAP.md" <<ROADMAP
 
 *Add new work here only when a real \`PROJECT/**\` doc exists to own the execution detail.*
 ROADMAP
+fi
 
 seed_file "CHANGELOG.md" <<CHANGELOG
 # CHANGELOG.md
@@ -686,6 +731,7 @@ why, and the verification. See \`PROJECT/PDDA.md\` for the full contract.
 Verification: \`./utils/pdda/pdda.sh run\`
 CHANGELOG
 
+if [ "$ROADMAP_SOURCE" = legacy ]; then
 seed_file "RELEASES.md" <<'RELEASES'
 # Major Releases
 
@@ -705,15 +751,32 @@ Front-door reviewed:
 Shakedown reviewed:
 License file:
 RELEASES
+fi
 
 # Empty activity log (never copy the source repo's log).
 seed_file "PROJECT/PDDA-ACTIVITY.jsonl" </dev/null
 
 ensure_runtime_ignored
 
-seed_file ".pdda-mode" <<MODE
+if [ "$ROADMAP_SOURCE" = releases ]; then
+  seed_file ".pdda-mode" <<MODE
+$MODE
+ROADMAP_SOURCE=releases
+MODE
+else
+  seed_file ".pdda-mode" <<MODE
 $MODE
 MODE
+fi
+
+if [ "$ROADMAP_SOURCE" = releases ]; then
+  if [ ! -f "$TARGET/releases.db" ]; then
+    python3 "$RELEASES_CLI" --root "$TARGET" init
+  fi
+  if [ "$PROJECTIONS" != auto ]; then
+    python3 "$RELEASES_CLI" --root "$TARGET" settings set projections "$PROJECTIONS"
+  fi
+fi
 
 # Quad Concepts opt-in lever (orthogonal to .pdda-mode). Off unless --quad was passed.
 seed_file ".pdda-quad" <<QUAD
@@ -740,7 +803,11 @@ if ( cd "$TARGET" && PDDA_MODE="$MODE" ./utils/pdda/pdda.sh run ); then
   say ""
   say "PDDA installed. Mode: $MODE ($MODE_BLURB)."
   [ "$QUAD" = "on" ] && say "Quad Concepts: ON — plan docs need a '## Quad Concepts' section (1-4 bullets); opt out with quad_exempt: true."
-  say "Next: read PROJECT/PDDA.md, then start a doc in PROJECT/2-WORKING and point ROADMAP.md at it."
+  if [ "$ROADMAP_SOURCE" = releases ]; then
+    say "Next: read PROJECT/PDDA.md, then use the Releases CLI to park a PROJECT/2-WORKING doc."
+  else
+    say "Next: read PROJECT/PDDA.md, then start a doc in PROJECT/2-WORKING and point ROADMAP.md at it."
+  fi
 else
   VERIFY_RC=$?
   say ""

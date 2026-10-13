@@ -1,0 +1,24 @@
+test_bad_accounts (__main__.ClaudeSubscription.test_bad_accounts) ... ok
+test_effort_and_resolution (__main__.ClaudeSubscription.test_effort_and_resolution) ... ok
+test_legacy_and_invalid_mode (__main__.ClaudeSubscription.test_legacy_and_invalid_mode) ... ok
+test_legacy_subscription_refused (__main__.ClaudeSubscription.test_legacy_subscription_refused) ... ok
+test_missing_binary (__main__.ClaudeSubscription.test_missing_binary) ... ok
+test_overrides_rejected_before_probe (__main__.ClaudeSubscription.test_overrides_rejected_before_probe) ... ok
+test_probe_failures (__main__.ClaudeSubscription.test_probe_failures) ... ok
+test_real_probe_and_consult_dispatch (__main__.ClaudeSubscription.test_real_probe_and_consult_dispatch) ... FAIL
+test_restricted_probe_uses_request_settings (__main__.ClaudeSubscription.test_restricted_probe_uses_request_settings) ... ok
+test_results (__main__.ClaudeSubscription.test_results) ... ok
+test_subscription_account (__main__.ClaudeSubscription.test_subscription_account) ... ok
+test_wall_and_idle_kill_descendants (__main__.ClaudeSubscription.test_wall_and_idle_kill_descendants) ... ok
+
+======================================================================
+FAIL: test_real_probe_and_consult_dispatch (__main__.ClaudeSubscription.test_real_probe_and_consult_dispatch)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 139, in test_real_probe_and_consult_dispatch
+AssertionError: 'idle-unknown' not found in '**PARTIAL — killed at idle threshold [timeout-unclassified], no verdict**\n\n\nconsult: advisor was IDLE for >=1s (no CPU, no transcript growth) and was killed before the 19s wall cap [timeout-unclassified: idle signals were observed, but the one-shot network probe failed [cpu=0.00s/s, samples=3, worktree-progress=no]]. This is an EXTERNAL condition consult detected and contained, not one it prevented.\n'
+
+----------------------------------------------------------------------
+Ran 12 tests in 30.750s
+
+FAILED (failures=1)

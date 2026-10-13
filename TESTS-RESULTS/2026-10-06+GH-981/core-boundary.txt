@@ -1,0 +1,3 @@
+PASS git diff 85556455 HEAD -- src/flightdeck web/flightdeck: empty
+PASS os.waitid unavailable under Darwin Python3.9.6; releases_cycle.py, work_status.py and test_work_status.py unchanged from base.
+Git identity after focused suites: core.bare=false; origin canonical; local user.email unset; HEAD cb537a50; working tree clean.

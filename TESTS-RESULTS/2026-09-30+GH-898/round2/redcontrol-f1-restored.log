@@ -1,0 +1,33 @@
+PASS absent source identical to base: repo-only
+PASS absent source identical to base: repos-only
+PASS pinned first, case-insensitive dedupe, capped, tie-break by name
+PASS order stable across runs
+PASS label on success
+PASS repos_source not in policy dict
+PASS ValueError: top_n 0
+PASS ValueError: top_n string
+PASS ValueError: top_n bool
+PASS ValueError: since_days 0
+PASS ValueError: unknown type
+PASS ValueError: top_n over SQLite int
+PASS ValueError: top_n + pin over SQLite int
+PASS ValueError: non-object
+PASS ValueError: repo + repos_source
+PASS ValueError: env string for repos_source
+PASS config shows resolved list + label only when source set
+PASS membership drift makes restore refuse (policy != saved)
+PASS documented recovery reproduces the saved policy exactly
+PASS different board owner/number still differs
+PASS live DB: pinned first, non-empty, owner/name shaped
+LIVE repos: ['o/pinned', 'Hypercart-Dev-Tools/rebalance-git-pulse', 'HiQS-Labs/XYZ-forge', 'HiQS-Labs/rebalanceOS', 'BinoidCBD/LTVera-Pandas', 'HiQS-Labs/XYZ-CLIO']
+PASS fallback keeps pinned list: missing DB
+PASS fallback warns: missing DB
+PASS fallback label: missing DB
+PASS fallback keeps pinned list: empty file (no github_activity table)
+PASS fallback warns: empty file (no github_activity table)
+PASS fallback label: empty file (no github_activity table)
+PASS fallback keeps pinned list: table present, zero in-window rows
+PASS fallback warns: table present, zero in-window rows
+PASS fallback label: table present, zero in-window rows
+PASS schema-absent vs zero-score warnings differ
+RESULT: ALL PASS

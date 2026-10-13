@@ -40,7 +40,7 @@ It coordinates four specialized disciplines into a cohesive review workflow:
 > 1. **Ingest target & map blast radius (Phase 1 /recon).** Ingest the diff or PR (`review-PR`), map callers, state mutations, contracts, failure paths, and audit adherence to centralized helpers and zero parallel subsystems (DRY).
 > 2. **Meticulously test fixes & features (Phase 2 /debug-mantra).** Test every fix against root cause (falsify symptom patches; mutate guards to watch them fail) and verify feature acceptance criteria with measured ground truth and negative controls.
 > 3. **Autonomous resolution & anti-hesitation (Phase 3 /workhorse + /unstuck).** If pivots or adaptations are needed, classify reversibility (`Easy`/`Costly`/`One-way door`): autonomously adapt and test `Easy` changes without operator round-trips; freeze cogs and execute foundational unblocking moves.
-> 4. **Grade & synthesize verified findings (Phase 4).** Categorize findings (`[Blocker]`, `[Should]`, `[Nit]`, `[Pass]`) with exact `file:line` citations, emit the actionable checklist, and post or report PR verdict.
+> 4. **Grade & synthesize verified findings (Phase 4).** Categorize findings (`[Blocker]`, `[Should]`, `[Nit]`, `[Pass]`) with exact `file:line` citations, emit the actionable checklist, and deliver the verdict twice: post the report to the GitHub PR/issue via `gh` **and** render it on-screen with the verified comment URL. Never one without the other.
 >
 > **Overall Goal:** Every fix and feature verified against live behavior rather than plausible appearance, with reversible issues resolved autonomously and review conclusions grounded in runnable proof.
 
@@ -69,7 +69,7 @@ Phase 3: Autonomous Pivot & Resolution     ──► Classify reversibility: Eas
                  │
                  ▼
 Phase 4: Graded Findings & PR Actionability──► [Blocker] / [Should] / [Nit] / [Pass] with mandatory file:line citations;
-                                               structured report, actionable checklist, and PR verdict / comment
+                                               report posted to the GH PR/issue AND rendered on-screen with the verified comment URL
 ```
 
 ---
@@ -162,7 +162,9 @@ When reviewing a bug fix, apply the four debug mantras rigorously:
 
 1. **Mantra 1 — Reproduce reliably:**
    - Verify there is an automated regression test reproducing the original defect.
-   - If the regression test is missing, write one or require it before approving.
+   - If the regression test is missing, write one or require it before approving, unless the repo
+     forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831). There, require the existing suite that
+     covers it, or a recorded manual repro.
 2. **Mantra 2 — Trace the fail path:**
    - Trace from the crash or incorrect output back to the root cause origin.
    - **The Symptom-Fix Trap:** Actively scrutinize whether the fix merely patches symptoms at the
@@ -179,6 +181,9 @@ When reviewing a bug fix, apply the four debug mantras rigorously:
    - Run the test suite: **Did the test turn RED?**
    - If the test still passes when the fix is broken, the test is decorative and reports confidence
      it never earned. This is a mandatory `[Blocker]`.
+   - In a repo that forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), where no existing suite
+     covers the fix, a manual red control recorded under `TESTS-RESULTS/` satisfies this mantra. It mutates
+     the fix and records the failing result.
 4. **Mantra 4 — Cross-reference breadcrumbs:**
    - Walk recent `CHANGELOG.md` entries and git history. Does this fix repeat a previously failed
      pattern or reopen a settled architectural decision?
@@ -222,7 +227,7 @@ Classify every necessary adaptation or pivot on the repository's shared scale:
 │                 │ - Defensive parameter checks     │ - Implement & test     │
 │                 │ - Fixing a typo or broken regex  │ - Record in ledger     │
 │                 │ - /ponytail least-mechanism diff │ - Drive forward move   │
-│                 │ - Adding missing negative tests  │                        │
+│                 │ - Negative tests, if repo allows │                        │
 ├─────────────────┼──────────────────────────────────┼────────────────────────┤
 │ COSTLY          │ - Re-architecting shared schema  │ PREPARE ROLLBACK & ASK │
 │                 │ - Breaking public API contracts  │ - Formulate 2 options  │
@@ -295,7 +300,9 @@ exact `file:line` or symbol references.
   *Requires resolution before merge/approval.*
 - ⚠️ **`[Should]`**: Architectural gaps, missing test coverage / negative controls, non-optimal complexity,
   missing error logging, unhandled edge cases, **or non-DRY duplicate logic / redundant utility functions.**
-  *Strongly recommended improvements.*
+  *Strongly recommended improvements.* In a repo that forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), a
+  missing-coverage finding asks for an existing suite or a recorded manual check, and a new test file in
+  the diff is itself a `[Should]`.
 - 💡 **`[Nit]`**: Style, documentation, variable naming, minor comment cleanups. *Non-blocking suggestions.*
 - ✅ **`[Pass]`**: Confirmed correct execution paths with firsthand citations, verified test results,
   and passing mutation checks.
@@ -352,15 +359,42 @@ Every `/review-code` report follows this structure:
 - `src/core.py:88` — Thread-safe atomic update verified with concurrent worker test. `[Pass]`
 ```
 
-### 3. PR Actionability (`review-PR`)
+### 3. Verdict Delivery: Post to GitHub AND Render On-Screen (mandatory — both, every run)
 
-When targeting a pull request:
-- **Format:** Ensure the output is formatted as clean GitHub-flavored markdown.
-- **Automated Posting:** Post the review comment to the PR via `gh pr comment <PR#> --body-file <report.md>`
-  or submit formal review via `gh pr review <PR#> --comment / --request-changes / --approve`.
+The review ships twice from the same bytes: once into the chat session, once into the GitHub target.
+Posting is not an alternative to the on-screen report, is not optional, and is not gated on operator
+approval — a review comment is reversible (it can be edited or deleted), so it is pre-authorized
+here. Never pause to ask.
+
+1. **Resolve the target before writing the report.** PR mode (`--pr <PR#>`) posts to that PR.
+   Local-diff mode (`/review-code` without `--pr`): resolve the branch's open PR with
+   `gh pr view --json number,url -q .number`, or use an explicit `--issue <N>` if given. If neither
+   resolves, that is the only sanctioned skip — state `NO GH TARGET — report on-screen only` on
+   screen and stop there. Nothing else may skip the post. In local-diff mode, post to the PR only
+   when the reviewed bytes are its pushed head (`git status --porcelain` empty and `HEAD` equal to
+   `gh pr view --json headRefOid`). Otherwise the comment would describe code the PR does not
+   contain: report on-screen and state `NOT POSTED: local diff differs from the PR head`.
+2. **Write the report to a file first.** Emit the full Phase 4 report as clean GitHub-flavored
+   markdown to `temp/review-<PR#|issue#>-<YYYYMMDD-HHMM>.md` (create `temp/` if missing; never the
+   repo root). If the repo does not already ignore `temp/` (`git check-ignore -q temp/x`), add
+   `temp/` to `.git/info/exclude` first so the report can never be committed. The on-screen report and the posted comment must carry the same content.
+3. **Post it without asking, with `--body-file`** (never `--body` — shell quoting silently mangles
+   multi-line markdown):
+   - PR target: `gh pr comment <PR#> --body-file <report.md>`
+   - Issue target: `gh issue comment <N> --body-file <report.md>`
+   Do not default to `gh pr review --request-changes` / `--approve`: branch protection may reject
+   self-approval and a requested-changes gate blocks the merge; a plain comment always succeeds.
+4. **Verify the post landed.** `gh pr comment` prints the comment URL on success — capture it. If no
+   URL was captured, re-check via `gh pr view <PR#> --json comments` (an issue target:
+   `gh issue view <N> --json comments`) and confirm the report's
+   heading line is present. An uncaptured URL is an unverified post.
+5. **Render on-screen and close the loop.** Print the full report in the chat session, then the
+   verification line `Posted: <comment-url>`. If posting failed, print the full report, the exact
+   `gh` error, and `NOT POSTED: <reason>` — a failed post is reported, never silently skipped.
+
 - **Linked Issue Checklists:** If the PR closes issues (`Fixes #123`), verify that all requirements
   in the linked issue or PDDA tracking document (`PROJECT/1-INBOX/` or `PROJECT/2-WORKING/`) are
-  satisfied and reflected in the checklist.
+  satisfied and reflected in the checklist before posting.
 
 ---
 
@@ -384,3 +418,7 @@ When targeting a pull request:
 8. **Builder/Orchestrator Role Split (GH-221 rail):** Claude is the orchestrator and reviewer.
    Autonomous adaptations are restricted to `Easy` reversible fixes and review assertions; do not
    drive headless full-system marathon builds without authorized builder lanes.
+9. **The verdict ships twice (pre-authorized):** posting the Phase 4 report to the GitHub PR/issue
+   is reversible and pre-authorized — do not pause for operator approval, and do not end a review
+   with the report only on-screen when a GitHub target exists. The one sanctioned skip is
+   `NO GH TARGET`, stated on screen.

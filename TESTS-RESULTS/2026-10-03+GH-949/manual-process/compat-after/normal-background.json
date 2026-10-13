@@ -1,0 +1,25 @@
+{
+  "returncode": 0,
+  "result": {
+    "rc": 0,
+    "stdout": "",
+    "stderr": "",
+    "timed_out": false,
+    "pgid": 38916,
+    "wall_seconds": 0.055266042007133365
+  },
+  "child_live_after": true,
+  "correct_properties": {
+    "successful_result": true,
+    "background_policy_unchanged": true
+  },
+  "independent_cleanup_child_absent": true,
+  "case": "normal-background",
+  "command": [
+    "/opt/homebrew/opt/python@3.14/bin/python3.14",
+    "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-process/compat-after/normal-background.py"
+  ],
+  "source_sha": "76ad7e4e1ec64afe4b63383b3dc4e80cd9549a2d",
+  "started_utc": "2026-10-03T07:21:01.352253+00:00",
+  "finished_utc": "2026-10-03T07:21:01.745272+00:00"
+}

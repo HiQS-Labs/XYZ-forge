@@ -1,0 +1,1 @@
+Review the diff in HEAD for GH-804 (simplifying test/gh798-status-skill.sh and adding capture doc). Does this commit cleanly achieve GH-804 goals, retain all essential installer safety checks and falsification negative controls, and maintain clean gate compliance without regressions or overengineering?

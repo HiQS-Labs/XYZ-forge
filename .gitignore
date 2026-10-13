@@ -15,7 +15,7 @@ relay-system/2026-06-21/shakedown-lib.sh
 # GH-75 / GH-96: XYZ.json is the local newest-first completion log; XYZ.heartbeat.json is the mutable
 # in-flight companion marker. Both are machine-specific and kept out of git to avoid churn.
 XYZ.json
-XYZ.json.lock/
+XYZ.json.lock
 XYZ.heartbeat.json
 # GH-78: hourly doc-preflight telemetry — per-machine, per-run edit/warn logs; gitignored to avoid churn.
 utils/telemetry/preflight-log/

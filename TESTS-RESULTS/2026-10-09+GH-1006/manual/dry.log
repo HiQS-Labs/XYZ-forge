@@ -1,0 +1,5 @@
+marathon: plan: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify/temp/gh1006-manual-verified/dry/MARATHON.yaml — 2 phase(s) in execution order
+marathon: progress observation: interval=600s count=18 window=10800s; stdout/run-log only
+marathon: ── phase 1/2: p1 (reviewer=codex, round-cap=3) ──
+marathon: ── phase 2/2: p2 (reviewer=codex, round-cap=3) ──
+marathon: dry-run complete: 2 phase(s) would run in order

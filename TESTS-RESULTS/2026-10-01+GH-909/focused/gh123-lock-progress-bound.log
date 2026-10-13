@@ -1,0 +1,8 @@
+== test: gh123-lock-progress-bound ==
+  PASS: stuck holder still exits 75 (lock starvation stays loud), after 2s
+  PASS: stuck holder failed promptly (2s), it did not wait out the total cap
+  PASS: lock changing hands was waited out and acquired (rc=0) after 6s
+  PASS: it waited 6s — past the 2s per-holder bound, so re-arm fired rather than a lucky grab
+  PASS: the record actually landed on disk (content, not just exit code)
+  PASS: defaults unchanged — gh358's verbatim bound assertions still hold
+  gh123-lock-progress-bound: 6 pass, 0 fail

@@ -1,0 +1,1 @@
+marathon: --progress-check-count requires a positive integer

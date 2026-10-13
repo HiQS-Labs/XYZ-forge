@@ -1,0 +1,25 @@
+{
+  "source_parent": "21859373320165db97c6843319cf94380ec58897",
+  "skill_sha256": "a6054d9fd3c99ac0caf92adef14d9acfd137637e86734c9664d2404983cb0931",
+  "shared_heading": true,
+  "red_control": "old Codex-only heading fails shared identity assertion",
+  "hook_checks": [
+    {
+      "case": "open",
+      "input": "- [ ] W1 capture service baseline",
+      "exit_code": 0,
+      "output": "{\"decision\": \"block\", \"reason\": \"/workhorse run checklist /Users/noelsaw/marathon-clones/workhorse-codex-continuation-20261006/temp/gate/.workhorse/claude-compat-probe.md still has 1 open item(s):\\n- [ ] W1 capture service baseline\\nContinue with the next open item. To hand back to the operator instead, mark it [!] (with the exact blocker) or [-] (parked, with its pointer).\"}\n",
+      "blocks": true
+    },
+    {
+      "case": "checked",
+      "input": "- [x] W1 capture service baseline",
+      "exit_code": 0,
+      "output": "",
+      "blocks": false
+    }
+  ],
+  "limit": "bounded hook protocol probe, not end-to-end Claude session or semantic evidence enforcement",
+  "stop-hook.sh_preserved": true,
+  "install.sh_preserved": true
+}

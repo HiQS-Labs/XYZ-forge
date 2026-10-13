@@ -1,0 +1,19 @@
+{
+  "before": {
+    "head": "f1560e48adf1de607c4be64742868115604702ca",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.fix/gh788-python-path-space.remote=origin\nbranch.fix/gh788-python-path-space.merge=refs/heads/fix/gh788-python-path-space"
+  },
+  "after": {
+    "head": "f1560e48adf1de607c4be64742868115604702ca",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.fix/gh788-python-path-space.remote=origin\nbranch.fix/gh788-python-path-space.merge=refs/heads/fix/gh788-python-path-space"
+  },
+  "same": true,
+  "push_exit": 0,
+  "interpreter": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/temp/gh796-pr795-gate/.venv/bin/python3"
+}

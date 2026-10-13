@@ -7,7 +7,7 @@ APP="$HERE/../utils/py/releases_app.py"
 
 pass=0; fail=0
 ok(){ if [ "$2" = "0" ]; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
-has(){ printf '%s' "$1" | grep -q "$2"; }
+has(){ grep -q "$2" <<<"$1"; }
 
 echo "== test: gh39-releases-project-sync =="
 command -v python3 >/dev/null 2>&1 || { echo "python3 required" >&2; exit 1; }

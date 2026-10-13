@@ -1,0 +1,110 @@
+== test: gh353-vendored-router-audit ==
+  PASS: clean releases-mode repo reports ok (rc=0)
+  PASS: clean releases-mode repo output contains ok
+  PASS: drifted releases-mode repo reports non-zero exit with --check
+  PASS: drifted releases-mode repo output reports ROUTER DRIFT
+  PASS: mentioning dashboard outside bounded sections fails audit
+  PASS: omitted ROADMAP.md role entry reports drift
+  PASS: obsolete dashboard declaration in Role split reports drift
+  PASS: historical archive dashboard declaration in Role split reports drift
+  PASS: negated generated dashboard declaration in Role split reports drift
+  PASS: not a generated view dashboard declaration in Role split reports drift
+  PASS: generated deployment manifest in Role split reports drift
+  PASS: negated DB source of truth in Role split reports drift
+  PASS: compatibility DB note without source of truth in Role split reports drift
+  PASS: mode token without DB source of truth in Role split reports drift
+  PASS: unrelated frozen subject on same line in Role split reports drift
+  PASS: negated dashboard read in Startup sequence reports drift
+  PASS: historical context dashboard directive in Startup reports drift
+  PASS: purpose-free dashboard directive in Startup reports drift
+  PASS: purpose-free dashboard + unrelated current work in Startup reports drift
+  PASS: not current state dashboard directive in Startup reports drift
+  PASS: multi-clause line with active directive despite frozen text reports drift
+  PASS: historical first clause + active second clause in Startup reports drift
+  PASS: historical first clause + active second clause repaired with --fix (rc=0)
+  PASS: conjunction active directive in Startup reports drift
+  PASS: while-connector active directive in Startup reports drift
+  PASS: colon-form active keywords in Role split reports drift
+  PASS: negated legacy in Role split reports drift
+  PASS: prose active ROADMAP in Role split reports drift
+  PASS: prefixed prose active ROADMAP in Role split reports drift
+  PASS: prefixed prose active ROADMAP repaired with --fix (rc=0)
+  PASS: compound custom entry + active prose in Role split reports drift
+  PASS: compound custom entry fixed and passes audit (rc=0)
+  PASS: compound fix preserved governance clause
+  PASS: compound fix removed stray active clause
+  PASS: asterisk-marker active ROADMAP.md declaration in Role split reports drift
+  PASS: Startup sequence with Open ROADMAP.md reports drift
+  PASS: Startup sequence with Consult ROADMAP.md reports drift
+  PASS: Startup sequence with Use ROADMAP.md for current work reports drift
+  PASS: Startup sequence saying ROADMAP.md is not frozen reports drift
+  PASS: Startup sequence with markdown link to ROADMAP.md reports drift
+  PASS: missing Startup sequence section reports drift
+  PASS: duplicate Role split / Startup sequence sections report drift
+  PASS: valid custom PDDA entry mentioning ROADMAP.md passes releases audit (rc=0)
+  PASS: releases --fix preserved custom PROJECT/PDDA.md entry
+  PASS: releases repo with custom startup step fixed and passes audit (rc=0)
+  PASS: releases --fix preserved custom startup step byte-for-byte with cmp
+  PASS: valid historical read 'Read ROADMAP.md only for historical reference' passes releases audit (rc=0)
+  PASS: releases --fix preserved historical read line
+  PASS: valid negation 'do not use it for current work' passes releases audit (rc=0)
+  PASS: clean repo with ## headings inside code fences passes audit (rc=0)
+  PASS: dup roadmap steps fixed and passes audit (rc=0)
+  PASS: Startup sequence collapsed duplicate directives to 1 canonical step
+  PASS: duplicate sections fixed and passes audit (rc=0)
+  PASS: fixed ROUTER.md has exactly 1 ## Role split
+  PASS: fixed ROUTER.md has exactly 1 ## Startup sequence
+  PASS: prefixed custom sections repo fixed and passes audit (rc=0)
+  PASS: prefixed '## Role split rationale' preserved byte-for-byte with cmp
+  PASS: prefixed '## Startup sequence notes' preserved byte-for-byte with cmp
+  PASS: router_audit.py --fix returns rc=0 on CRLF fixture
+  PASS: after --fix, CRLF repo passes audit with rc=0
+  PASS: custom section bytes match exactly with cmp (CRLF intact)
+  PASS: --fix is byte-level idempotent on second run
+  PASS: releases repo with empty ## Role split fixed and passes audit (rc=0)
+  PASS: releases --fix preserved repeated custom entries
+  PASS: releases --fix preserved mixed LF and CRLF line endings verbatim
+  PASS: commented ROADMAP_SOURCE=releases is recognized as legacy mode (rc=0)
+  PASS: prefix NOT_ROADMAP_SOURCE=releases is recognized as legacy mode (rc=0)
+  PASS: whitespace-padded ROADMAP_SOURCE=releases is recognized as releases mode (rc=0)
+  PASS: unreadable .pdda-mode reports error on --check
+  PASS: clean legacy-mode repo reports ok (rc=0)
+  PASS: clean legacy-mode repo with Markdown link in Startup reports ok (rc=0)
+  PASS: clean legacy-mode repo with 'not frozen' in Startup reports ok (rc=0)
+  PASS: clean legacy-mode repo with unrelated 'OLD-API.md remains legacy' reports ok (rc=0)
+  PASS: legacy --fix preserved unrelated OLD-API.md entry
+  PASS: clean legacy repo with historical frozen mention in CHANGELOG entry reports ok (rc=0)
+  PASS: legacy --fix preserved non-owned CHANGELOG entry
+  PASS: legacy repo with custom startup step fixed and passes audit (rc=0)
+  PASS: legacy --fix preserved custom startup step byte-for-byte with cmp
+  PASS: legacy repo with pointer ledger for deployment policy in Role split reports drift
+  PASS: legacy repo with archived pointer ledger in Role split reports drift
+  PASS: legacy repo with false-frozen ROADMAP.md in Role split reports drift
+  PASS: legacy repo with two contradictory lines in Role split reports drift
+  PASS: legacy repo with not frozen + affirmative legacy in Role split reports drift
+  PASS: legacy repo with asterisk false-frozen role reports drift
+  PASS: legacy repo with not active; obsolete record in Role split reports drift
+  PASS: legacy repo with releases.db token in Role split reports drift
+  PASS: legacy repo with deployment instructions in Startup sequence reports drift
+  PASS: legacy repo with deployment instructions + negated current work in Startup reports drift
+  PASS: legacy repo with false-frozen Startup sequence reports drift
+  PASS: legacy repo with historical reference only in Startup reports drift
+  PASS: legacy repo with Do not read ROADMAP.md reports drift
+  PASS: legacy repo with not frozen + do not read contradiction in Startup reports drift
+  PASS: legacy repo with affirmative legacy clause in Startup reports drift
+  PASS: legacy repo with releases.sql in Startup sequence reports drift
+  PASS: legacy repo missing Role split reports drift
+  PASS: legacy repo missing Startup sequence reports drift
+  PASS: legacy repo with leftover dashboard file but clean router reports ok
+  PASS: drifted legacy repo remediated with --fix (rc=0)
+  PASS: legacy --fix removed ROADMAP-DASHBOARD.md declaration
+  PASS: legacy --fix stripped standalone releases.db line
+  PASS: legacy --fix stripped contradictory frozen line
+  PASS: legacy --fix restored active pointer ledger text
+  PASS: legacy --fix restored active ROADMAP.md read step
+  PASS: missing ROUTER.md reports non-zero exit on --check
+  PASS: missing ROUTER.md output indicates not found
+  PASS: unreadable ROUTER.md reports non-zero exit on --check
+  PASS: unreadable output indicates error
+  PASS: xyz-sync.sh check surfaces ROUTER DRIFT
+gh353: 108 passed, 0 failed

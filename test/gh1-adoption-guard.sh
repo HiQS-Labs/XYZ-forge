@@ -102,7 +102,7 @@ git -C "$W" init -q
 EOF
 ctrl_a="$(derive_offenders "$CTRL_DIR")"
 ok "CONTROL A: an unguarded new suite is DETECTED (not waved through)" \
-   "printf '%s' \"\$ctrl_a\" | grep -q 'ctrl-unguarded.sh'"
+   "grep -q 'ctrl-unguarded.sh' <<<\"\$ctrl_a\""
 
 # Control B — an adopted suite whose guard lines are STRIPPED: must be detected. Uses a real
 # adopted suite so the control proves the derivation reads what it claims to read.
@@ -110,9 +110,9 @@ cp "$HERE/hq-park.sh" "$CTRL_DIR/hq-park.sh"
 sed '/fixture-guard.sh/d; /fixture_guard_init/d; /require_fixture/d' "$CTRL_DIR/hq-park.sh" > "$CTRL_DIR/hq-park.stripped" && mv "$CTRL_DIR/hq-park.stripped" "$CTRL_DIR/hq-park.sh"
 ctrl_b="$(derive_offenders "$CTRL_DIR")"
 ok "CONTROL B: an adopted suite with its guard stripped is DETECTED" \
-   "printf '%s' \"\$ctrl_b\" | grep -q 'hq-park.sh'"
+   "grep -q 'hq-park.sh' <<<\"\$ctrl_b\""
 ok "  and Control A's file is still named alongside it (both sins in one pass)" \
-   "printf '%s' \"\$ctrl_b\" | grep -q 'ctrl-unguarded.sh'"
+   "grep -q 'ctrl-unguarded.sh' <<<\"\$ctrl_b\""
 
 # Control D (review finding 2) — the _setup.sh indirection is VERIFIED, not trusted: with an
 # intact _setup.sh a consumer is adopted; strip the two central lines from the _setup COPY and

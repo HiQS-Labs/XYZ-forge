@@ -26,6 +26,7 @@ import os
 import re
 import subprocess
 import sys
+from datetime import date
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -415,6 +416,64 @@ def ledger_semantic_check(clone: Path, integration_branch: str = "development") 
     return {"ok": True, "changed_both": True, "classification": classify(base, ours, theirs)}
 
 
+def union_changelog(base: str, ours: str, theirs: str) -> str:
+    """Resolve only complete prepended dated blocks; historical bytes are never rewritten."""
+    if not all((base, ours, theirs)) or any(re.search(r"(?m)^(?:<{7}|={7}|>{7}|\|{7})(?: |$)", t)
+                                          for t in (base, ours, theirs)):
+        raise ValueError("empty changelog or conflict markers")
+    first = re.search(r"(?m)^## ", base)
+    if first is None:
+        raise ValueError("base has no section boundary")
+    preamble, history = base[:first.start()], base[first.start():]
+    historical_headings = set(re.findall(r"(?m)^## [^\r\n]+", history))
+    blocks = {}
+    for text in (ours, theirs):
+        if not text.startswith(preamble) or not text.endswith(history):
+            raise ValueError("changelog preamble or existing history changed")
+        additions = text[len(preamble):len(text) - len(history)]
+        # This deliberately narrow resolver does not interpret fenced/HTML Markdown blocks:
+        # a heading inside an example must never become a separately sorted release entry.
+        if "<!--" in additions or re.search(r"(?m)^[ \t]{0,3}(?:`{3,}|~{3,}|<)", additions):
+            raise ValueError("fenced or HTML additions require manual changelog resolution")
+        starts = list(re.finditer(r"(?m)^## ", additions))
+        if additions and (not starts or starts[0].start() != 0):
+            raise ValueError("additions are not complete sections")
+        seen = set()
+        for i, match in enumerate(starts):
+            block = additions[match.start():starts[i + 1].start() if i + 1 < len(starts) else len(additions)]
+            heading, newline, body = block.partition("\n")
+            date_match = re.fullmatch(r"## (\d{4}-\d{2}-\d{2})(?:[ \t]+[^\r\n]+)?", heading)
+            if not date_match or not newline or not body.strip() or not block.endswith("\n"):
+                raise ValueError("malformed or empty dated section")
+            # Calendar validation is cheap and prevents impossible dates sorting as real entries.
+            date.fromisoformat(date_match[1])
+            if heading in seen:
+                raise ValueError("duplicate heading on one side")
+            seen.add(heading)
+            if heading in historical_headings:
+                raise ValueError("addition repeats an existing heading")
+            if heading in blocks and blocks[heading] != block:
+                raise ValueError("different additions share the same heading")
+            blocks[heading] = block
+    if not blocks:
+        raise ValueError("no additive sections extracted")
+    return preamble + "".join(blocks[h] for h in sorted(blocks, reverse=True)) + history
+
+
+def read_changelog_union(clone: Path) -> str:
+    bases = run_git(clone, ["merge-base", "--all", "HEAD", "MERGE_HEAD"])
+    if bases.returncode or len(bases.stdout.split()) != 1:
+        raise ValueError("CHANGELOG requires one merge base")
+    texts = []
+    for ref in (bases.stdout.strip(), "HEAD", "MERGE_HEAD"):
+        # Binary capture preserves CRLF and all historical bytes; strict UTF-8 rejects ambiguity.
+        r = subprocess.run(["git", "show", f"{ref}:CHANGELOG.md"], cwd=clone, capture_output=True)
+        if r.returncode or not r.stdout:
+            raise ValueError(f"cannot read nonempty CHANGELOG at {ref}")
+        texts.append(r.stdout.decode("utf-8"))
+    return union_changelog(*texts)
+
+
 def resolve_ledger_conflict(clone: Path, execute: bool) -> Dict[str, Any]:
     """B1 inside a clone with a conflicted merge in progress.
 
@@ -434,10 +493,18 @@ def resolve_ledger_conflict(clone: Path, execute: bool) -> Dict[str, Any]:
     if excluded:
         res.update(handoff=True, reason=f"conflict in {', '.join(sorted(excluded))} — no resolver for harness telemetry yet")
         return res
-    non_ledger = paths - B1_SET
+    non_ledger = paths - B1_SET - {"CHANGELOG.md"}
     if non_ledger:
         res.update(handoff=True, reason=f"code/doc conflict outside the ledger set: {', '.join(sorted(non_ledger))}")
         return res
+    changelog = None
+    if "CHANGELOG.md" in paths:
+        try:
+            changelog = read_changelog_union(clone)
+        except (ValueError, OSError) as exc:
+            res.update(handoff=True, reason=f"CHANGELOG handoff: {exc}")
+            return res
+        res["log"].append("CHANGELOG: proven prefix-additive sections; existing history preserved")
     sem = ledger_semantic_check(clone)
     if not sem["ok"]:
         res.update(handoff=True, reason=sem["error"])
@@ -454,6 +521,17 @@ def resolve_ledger_conflict(clone: Path, execute: bool) -> Dict[str, Any]:
     if not execute:
         res.update(reason=f"[DRY RUN] B1 would keep the {cls['keep']} side and replay {len(cls['replay'])} roadmap change(s) through the writer, then run the resolver")
         return res
+
+    if changelog is not None:
+        try:
+            (clone / "CHANGELOG.md").write_bytes(changelog.encode("utf-8"))
+        except OSError as exc:
+            res.update(reason=f"cannot write CHANGELOG: {exc}")
+            return res
+        r = run_git(clone, ["add", "--", "CHANGELOG.md"])
+        if r.returncode:
+            res.update(reason=f"cannot stage CHANGELOG: {r.stderr.strip()}")
+            return res
 
     keep_ref = "--ours" if cls["keep"] == "ours" else "--theirs"
     for f in (LEDGER_DUMP, LEDGER_DB):

@@ -1,0 +1,22 @@
+{
+  "base": "1b40d57c36c70eb045341ec95403de93ba056b92",
+  "head": "9c77b309f36bab29d6e486d203b2f7218f86dc86",
+  "before": 410,
+  "after": 408,
+  "removed": [
+    "gh-gen4-phase1-domain-oracles.sh",
+    "registry-lock-concurrency.sh"
+  ],
+  "small_unchanged": true,
+  "preserved_sha256": {
+    "test/registry-lock-concurrency.sh": "1f02f5fda2b0640ab46bcc852db30bcc679c3d7fb32b0f5f5bf02589c5a28e2f",
+    "test/gh-gen4-phase1-domain-oracles.sh": "31415dcd1e79c6852f47c9aea36bfc5f60225e4f490995cbb894f0d000c08e00",
+    "test/xyz-completion.sh": "a4286167714f502acd3f368210adf8b72f9b11299d72e8a52f3aff53654bbf57",
+    "test/relay-self-sufficiency.sh": "d354a89ac5a9a154653fad5240ece289331eb901826b267784122c6617aed5f6",
+    "utils/py/domain_oracles.py": "d492acd746925b3e0736d7b20f253febb7ce66b0b86cd0505cbe515f3ce5e26b",
+    "utils/telemetry/append-xyz-completion.sh": "b637e5b8d14d2a23ed1ed95f3039c63872b36a9b20db16ef5a9927cd09c067d4"
+  },
+  "command": "manual parsed TESTS delta and byte comparison against base",
+  "timestamp": "2026-10-02T05:22:51.342347+00:00",
+  "rc": 0
+}

@@ -1,0 +1,32 @@
+== test: gh376-relay-drive-lock-parity ==
+  workdir: /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh376.OflICG
+  PASS: fixture: the linked worktree's .git is a FILE (the branch that had no case)
+-- A. linked worktree: relay-drive excludes against the marathon-side lock --
+  PASS: THE PIN (python): relay_drive.py refuses — it resolved the git COMMON dir, like marathon-drive
+  PASS: THE PIN (bash): relay-drive.sh refuses — the frozen twin agrees with the Python half
+  PASS: twin parity: both lanes emit a byte-identical REFUSAL (same path, same label, same pid)
+  PASS: neither lane left a worktree-local lock behind at $WT/.relay-driver.lock
+-- B. negative control: pre-fix resolution does NOT exclude --
+  PASS: negative control (python): pre-fix 2-branch logic sails past the held lock — the defect, reproduced
+  PASS: negative control (bash): pre-fix 2-branch logic sails past the held lock
+-- C. control: a normal clone (.git is a directory) is unchanged --
+  PASS: CONTROL (python): a normal clone still excludes at .git/relay-driver.lock
+  PASS: CONTROL (bash): a normal clone still excludes at .git/relay-driver.lock
+-- D. control: a vendored copy with no .git falls back to .relay-driver.lock --
+  PASS: CONTROL (python): vendored copy resolves the hidden lock beside the scripts
+  PASS: CONTROL (bash): vendored copy resolves the hidden lock beside the scripts
+-- E. source guards: the shared resolver is called, not copied --
+  PASS: relay_drive.py imports and calls the shared resolver
+  PASS: relay-drive.sh sources and calls the shared resolver
+  PASS: relay_drive.py contains no git-dir resolution of its own
+  PASS: non-goal held: marathon_drive.py's own lock resolution is untouched
+-- F. the inherited RELAY_DRIVER_LOCKED=1 case (nested driver, by design) --
+  PASS: F (python): RELAY_DRIVER_LOCKED=1 skips acquisition — the nested-driver contract holds
+  PASS: F (bash): RELAY_DRIVER_LOCKED=1 skips acquisition on the frozen twin too
+  PASS: F: clearing the flag flips the SAME invocation back to refusing — sections A-D are honest
+-- syntax check --
+  PASS: syntax OK: relay-drive.sh
+  PASS: syntax OK: gh376-relay-drive-lock-parity.sh
+  PASS: syntax OK: relay_drive.py
+
+gh376-relay-drive-lock-parity: 21 pass, 0 fail

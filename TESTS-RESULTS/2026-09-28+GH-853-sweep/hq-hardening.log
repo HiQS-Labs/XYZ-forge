@@ -1,0 +1,17 @@
+== test: hq-hardening (GH-132) ==
+  PASS: owner slug 'FooOrg/api' resolves to the RIGHT install (orgA)
+  PASS: owner slug 'BarOrg/api' resolves to the RIGHT install (orgB)
+  PASS: bare 'api' collision -> AMBIGUOUS (rc=2), not a silent wrong-repo guess
+  PASS: unknown owner 'WrongOrg/api' -> AMBIGUOUS (rc=2), never guesses
+  PASS: stale XYZ path -> UNRESOLVED (rc=1), no XYZ_PATH emitted
+  PASS: fire at a stale target -> refuses (no GATES PASS)
+  PASS: hq_render_capture escapes a quoted/backslash title into valid YAML
+  PASS: park --create with a quoted --title writes VALID YAML and succeeds
+  PASS: park --create fails hard (rc!=0) when the frontmatter check fails
+  PASS: glob token '*' does NOT resolve via find (rc=1, UNRESOLVED)
+  PASS: control: a literal name still resolves via find (rc=0)
+  PASS: same-repo duplicate registry rows collapse, not ambiguous (rc=0)
+  PASS: same-repo collapse prefers the vendored .xyz install over the legacy one
+  PASS: control: cross-repo basename collision still ambiguous after the same-repo collapse fix
+  PASS: empty Rebalance DB warns while XYZ registry repos remain available
+== hq-hardening: 15 passed, 0 failed ==

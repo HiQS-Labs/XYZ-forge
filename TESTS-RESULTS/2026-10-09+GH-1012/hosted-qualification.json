@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-10T06:48:47.174240+00:00",
+  "run_id": 38028211122,
+  "conclusion": "success",
+  "source_integration_head": "b8802f5c5464278978256712b7454f5bb4b963f9",
+  "receipt_path": "TESTS-RESULTS/2026-10-10+GH-591/wave-3c829e0de674914725603981fb7069c2ff041228/provenance.jsonl",
+  "qualification": {
+    "artifact_kind": "pr",
+    "gate": "validate.sh --sequential",
+    "landing_commit": "3c829e0de674914725603981fb7069c2ff041228",
+    "passed": 410,
+    "pr": 982,
+    "rc": 0,
+    "result": "pass",
+    "run_url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38028211122",
+    "schema_version": "wave-qualification@1",
+    "telemetry": "TESTS-RESULTS/2026-10-10+GH-591/wave-3c829e0de674914725603981fb7069c2ff041228/validation.jsonl",
+    "telemetry_sha256": "c9c5d481368c4bb26fb2ffa2868271409fde379ae3489213f251a54b6d3c554f",
+    "tested_commit": "3c829e0de674914725603981fb7069c2ff041228",
+    "timestamp": "2026-10-10T06:44:12.309444+00:00",
+    "total": 410
+  },
+  "reviewed_runtime_and_policy_trees_unchanged": {
+    "addons/paperclip-dashboard/ATTRIBUTION.md": "100644 blob d71f84627da82f4a8c2c4b3d2fd8311f9b34d2cd\taddons/paperclip-dashboard/ATTRIBUTION.md",
+    "addons/paperclip-dashboard/LICENSE.paperclip": "100644 blob a63594a5150d0ae00c3ddc36b61fa8f708c3ca8c\taddons/paperclip-dashboard/LICENSE.paperclip",
+    "addons/paperclip-dashboard/README.md": "100644 blob 92e27e5ecf8b2c838ce6774daefbeb96b6429eb5\taddons/paperclip-dashboard/README.md",
+    "addons/paperclip-dashboard/app.css": "100644 blob 07f00ffcff136f25762ddd5e70b06b4c5b3567eb\taddons/paperclip-dashboard/app.css",
+    "addons/paperclip-dashboard/app.js": "100644 blob 411fc1a8a2d48009d0afee70061f81e5a2be988d\taddons/paperclip-dashboard/app.js",
+    "addons/paperclip-dashboard/demo.mjs": "100644 blob 43f1b2a27b1d34c31bc8feda3ff03f8cfa0823c4\taddons/paperclip-dashboard/demo.mjs",
+    "addons/paperclip-dashboard/index.html": "100644 blob 027f780a7b7638f3409732b41a90b2d5546932d1\taddons/paperclip-dashboard/index.html",
+    "addons/paperclip-dashboard/preview.py": "100644 blob 84cb821c993dad8197e95eb7ff4016247e5bb53f\taddons/paperclip-dashboard/preview.py",
+    "skills/1-hourly/swe/SKILL.md": "100644 blob cd739d5df78ecd27197e3aa2a2098deeb59b7cb1\tskills/1-hourly/swe/SKILL.md",
+    "test/gh609-sdlc-agent-gaps.sh": "100755 blob 6c1770237fec76f58501ad657ef714a811e7e712\ttest/gh609-sdlc-agent-gaps.sh"
+  },
+  "reuse": "This completed post-merge hosted qualification runs the tier-appropriate full registry in a separate disposable full clone. It covers the integrated batch and is reused as the after-batch regression sweep, rather than repeated locally."
+}

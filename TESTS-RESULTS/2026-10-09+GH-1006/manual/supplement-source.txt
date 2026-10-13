@@ -1,0 +1,37 @@
+from pathlib import Path
+import importlib.util,json,time,io,contextlib,signal,hashlib,subprocess
+from datetime import datetime,timezone,timedelta
+ROOT=Path.cwd();OUT=ROOT/'temp/gh1006-manual-final';source=ROOT/'utils/py/marathon_progress.py'
+spec=importlib.util.spec_from_file_location('mp',source);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+base=next((OUT/'window/relay-system/run-logs').rglob('*.progress.json'));context=json.loads(base.read_text());rows=[]
+def check(name,ok,**detail):rows.append(dict(check=name,passed=bool(ok),**detail));assert ok,(name,detail)
+# Actual observer output under a controlled clock; no historical snapshots are fabricated.
+oldclock=m.time.monotonic;oldparent=m.os.getppid;oldsignals={s:signal.getsignal(s) for s in (signal.SIGINT,signal.SIGTERM)}
+try:
+ for count in (6,18):
+  c={**context,'observation_stop':False,'started_monotonic':0,'interval':600,'count':count}
+  p=OUT/('jump-'+str(count)+'.json');p.write_text(json.dumps(c));m.time.monotonic=lambda:99999;m.os.getppid=lambda:c['owner'];stream=io.StringIO()
+  with contextlib.redirect_stdout(stream):m.observe(p)
+  events=[json.loads(x.split(': ',1)[1]) for x in stream.getvalue().splitlines()];(OUT/('jump-'+str(count)+'.log')).write_text(stream.getvalue())
+  check('actual whole-window suspension N='+str(count),[x['check'] for x in events if x['kind']=='missed-check']==list(range(1,count)) and [x['check'] for x in events if x['kind']=='check']==[count] and events[-1]['kind']=='observation-ended' and len(events)==count+1)
+finally:
+ m.time.monotonic=oldclock;m.os.getppid=oldparent
+ for s,v in oldsignals.items():signal.signal(s,v)
+# Driver heartbeats have whole-second timestamps; same PID/phase/token remain mandatory.
+beat=OUT/'heartbeat-control.json';c={**context,'heartbeat_file':str(beat),'started_utc':datetime.now(timezone.utc).isoformat()};c['phase']={**context['phase'],'driver_pid':12345}
+now=datetime.now(timezone.utc).replace(microsecond=0).isoformat();good=dict(pid=12345,phase_id=c['phase']['id'],relay_task=c['phase']['token_family'],started_utc=now,updated_utc=now)
+beat.write_text(json.dumps(good));check('whole-second current heartbeat accepted only as liveness',m.heartbeat(c)['state']=='liveness only')
+for field,val in [('updated_utc',[]),('started_utc',123),('pid',11111),('phase_id','foreign'),('relay_task','FOREIGN'),('started_utc',(datetime.now(timezone.utc)-timedelta(hours=2)).isoformat()),('updated_utc',(datetime.now(timezone.utc)+timedelta(hours=2)).isoformat())]:
+ beat.write_text(json.dumps({**good,field:val}));check('foreign heartbeat '+field+' unknown',m.heartbeat(c)['state']=='unknown')
+large=OUT/'oversize.json';large.write_bytes(b'x'*(1024*1024+1));check('oversize input bounded and unknown',m.bounded_read(large) is None)
+# Read-only observer changed no coordination state; compare result bindings and unique candidate.
+receipt=OUT/'duplicate-result.json';c={**context,'milestones':[],'last_milestone':None,'verified_phases':0,'returned_success':0};c['phase']={**context['phase'],'result_file':str(receipt),'execution_id':'dup'}
+r=dict(schema='marathon-drive/result@1',execution_id='dup',phase=c['phase']['id'],lane=c['phase']['lane'],token=c['phase']['token_family'],target_repo={'path':c['product_root']},outcome='approved',exit_code=0,gate={'result':'green','exit':0},reviewed_candidate='d'*40,reviewed_head='d'*40,attest_path='driver-bound-record',reason='approved, gate passed',acceptance={'checked':False});receipt.write_text(json.dumps(r));p=OUT/'duplicate-context.json';p.write_text(json.dumps(c))
+for i in range(2):subprocess.run(['python3',str(source),'finish',str(p),'--exit-code','0'],check=True)
+c=json.loads(p.read_text());check('same candidate twice is one product milestone',len(c['milestones'])==1 and c['verified_phases']==2)
+# Observer-only invocation preserved all input bytes; projection writer is not the observer.
+inputs=[base,Path(context['phase']['result_file']),Path(context['phase']['relay_file'])];digest=lambda:{str(p):hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
+before=digest();p=OUT/'read-only-context.json';p.write_text(json.dumps(context));m.observe(p);check('observer leaves context/receipt/relay bytes intact',digest()==before and json.loads(p.read_text())==context)
+(OUT/'supplement-checks.json').write_text(json.dumps(rows,indent=2)+'\n')
+with (OUT/'provenance.jsonl').open('a') as f:f.write(json.dumps({'command':'python3 temp/gh1006-manual/supplement.py','checks':len(rows),'passed':len(rows),'source_sha256':hashlib.sha256(source.read_bytes()).hexdigest(),'recorded_utc':datetime.now(timezone.utc).isoformat()})+'\n')
+print('supplement',len(rows),'passed')

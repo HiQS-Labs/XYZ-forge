@@ -1,0 +1,58 @@
+== test: deep-research ==
+  PASS: missing --query -> usage (exit 2)
+  PASS: bad --search-context-size -> usage (exit 2)
+  PASS: non-numeric --temperature -> usage (exit 2)
+deep-research: ok provider=agy model=gemini latency_ms=281 citations=2
+  PASS: good turn exits 0
+  PASS: provider is agy
+  PASS: model field set
+  PASS: query echoed back
+  PASS: both citations extracted from a CITATIONS section
+  PASS: citation title parsed
+  PASS: raw.config carries searchContextSize through
+deep-research: ok provider=agy model=gemini latency_ms=9 citations=2
+  PASS: noformat turn exits 0
+  PASS: fallback extraction finds bare inline URLs
+deep-research: ok provider=agy model=gemini latency_ms=11 citations=2
+  PASS: agy invoked from a throwaway tmpdir, cleaned up after (side-effect free)
+  PASS: agy invoked with --dangerously-skip-permissions (no interactive hang in print mode)
+  PASS: agy stdin closed (a stdin-reading backend returns; no open-pipe hang)
+  PASS: empty output -> exit 1, no stdout
+  PASS: empty output -> typed error on stderr
+  PASS: non-zero exit -> exit 1, no stdout
+  PASS: non-zero exit -> typed error on stderr
+  PASS: missing binary -> exit 1, no stdout
+  PASS: missing binary -> typed error on stderr
+  PASS: timeout -> exit 1, no stdout
+  PASS: timeout -> typed error on stderr
+  PASS: unknown --provider -> usage (exit 2)
+  PASS: openrouter: missing API key -> exit 1, no stdout
+  PASS: openrouter: missing key -> typed missing_api_key error
+deep-research: ok provider=openrouter model=perplexity/sonar latency_ms=55 citations=2
+  PASS: openrouter: good turn exits 0
+  PASS: openrouter: provider field
+  PASS: openrouter: default model perplexity/sonar
+  PASS: openrouter: annotation citation with title
+  PASS: openrouter: citations[] passthrough merged
+  PASS: openrouter: POSTs to <base>/chat/completions
+  PASS: openrouter: Authorization bearer header
+  PASS: openrouter: request body carries model
+  PASS: openrouter: --search-context-size -> web_search_options
+  PASS: openrouter: --max-tokens -> max_tokens
+deep-research: ok provider=openrouter model=perplexity/sonar-pro latency_ms=50 citations=2
+  PASS: openrouter: DEEP_RESEARCH_OPENROUTER_MODEL overrides model (result + request)
+deep-research: ok provider=openrouter model=perplexity/sonar latency_ms=50 citations=2
+  PASS: openrouter: citations[] passthrough extracted without annotations
+deep-research: ok provider=openrouter model=perplexity/sonar latency_ms=51 citations=2
+  PASS: openrouter: bare-URL scan fallback
+  PASS: openrouter: HTTP 500 -> exit 1, no stdout
+  PASS: openrouter: HTTP 500 -> typed backend_error
+  PASS: openrouter: non-JSON body -> typed backend_error
+  PASS: openrouter: empty content -> typed empty_output
+  PASS: openrouter: timeout -> exit 1, no stdout
+  PASS: openrouter: timeout -> typed timeout error
+
+== test: deep-research-real-agy (GH-124, opt-in) ==
+  SKIPPED: DEEP_RESEARCH_LIVE=1 not set (opt-in real-agy smoke test — set DEEP_RESEARCH_LIVE=1 to run one real, billed agy call)
+  deep-research-real-agy: 0 pass, 0 fail (skipped)
+  deep-research: 45 pass, 0 fail

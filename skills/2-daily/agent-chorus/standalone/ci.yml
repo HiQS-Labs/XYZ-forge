@@ -13,14 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Check recorded canonical revision and byte parity
+      - name: Check recorded XYZ-forge revision and managed byte parity
         shell: bash
         run: |
-          revision="$(sed -n '1p' .xyz-canonical-revision)"
+          revision="$(sed -n 's/^source_sha=//p' .xyz-forge-revision)"
           git clone --filter=blob:none https://github.com/HiQS-Labs/XYZ-forge.git "$RUNNER_TEMP/XYZ-forge"
           git -C "$RUNNER_TEMP/XYZ-forge" fetch --depth=1 origin "$revision"
           git -C "$RUNNER_TEMP/XYZ-forge" checkout --detach "$revision"
-          AGENT2AGENT_STANDALONE_REPO="$GITHUB_WORKSPACE" \
-            bash "$RUNNER_TEMP/XYZ-forge/skills/2-daily/agent-chorus/sync-to-standalone.sh" --check
+          python3 "$RUNNER_TEMP/XYZ-forge/utils/py/xyz_mini_sync.py" \
+            --target agent-chorus --dest "$GITHUB_WORKSPACE" --check
       - name: Run standalone smoke suite
-        run: bash skills/2-daily/agent-chorus/test-standalone.sh
+        working-directory: skills/agent-chorus
+        run: bash ./test-standalone.sh

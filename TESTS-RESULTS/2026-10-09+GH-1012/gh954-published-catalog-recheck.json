@@ -1,0 +1,9 @@
+{
+  "at": "2026-10-10T07:31:08.242491+00:00",
+  "published_catalog_main": "ed1594481aef8417f1da912927b7ac24752c19c0",
+  "unchanged_from_complete_recipe_snapshot": true,
+  "snapshot_record": "gh954-published-recipes.json",
+  "published_recipe_count": 3,
+  "live_provider_called": false,
+  "scope": "Complete recipes array in this one immutable published snapshot; not an exhaustive audit of other catalogs or unpublished data."
+}

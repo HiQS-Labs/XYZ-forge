@@ -292,7 +292,11 @@ else
 
   # See the note in run_tier2_gate: no outer `nice` — it is relative and stacks onto the +10
   # validate.sh already applies to each worker.
-  if "$REPO/validate.sh"; then
+  # GH-836 (D2): skip relay-self-sufficiency.sh's LIVE agent turn by default, as ci-local.sh, ci.yml and
+  # the hosted reconcile already do. It cost 1-2.7 min and an API call on every full-gate push, and a
+  # backend hiccup refused the push. RELAY_SELF_SUFFICIENCY_SKIP=0 opts back in; relay-automation/README.md
+  # names when a recorded live run is owed.
+  if RELAY_SELF_SUFFICIENCY_SKIP="${RELAY_SELF_SUFFICIENCY_SKIP:-1}" "$REPO/validate.sh"; then
     echo "pre-push: full gate GREEN in $((SECONDS - _start))s — pushing."
     exit 0
   else

@@ -1,0 +1,1376 @@
+pre-push: running the full gate before this push reaches the remote (GH-544).
+pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+pre-push:   validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+pre-push:   validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)
+pre-push:     NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.ASliA1/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)
+  395 pooled suites + 16 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] gh732-l3-gate-summary.sh rc=0
+[parallel] projection-idempotent.sh rc=0
+[parallel] concurrent-claim.sh rc=0
+[parallel] chaos-stale-writer.sh rc=0
+[parallel] path-overlap.sh rc=0
+[parallel] scope-change.sh rc=0
+[parallel] tick-foreign-cwd.sh rc=0
+[parallel] chaos-midturn-kill.sh rc=0
+[parallel] gh411-tick-log-foreign-cwd.sh rc=0
+[parallel] chaos-concurrent-pollers.sh rc=0
+[parallel] gh412-transient-claim-exit.sh rc=0
+[parallel] gh554-tick-unknown-flags.sh rc=0
+[parallel] gh415-guard-hook-entrypoints.sh rc=0
+[parallel] handoff.sh rc=0
+[parallel] handoff-exclusive.sh rc=0
+[parallel] circuit-break.sh rc=0
+[parallel] gh414-comment-reference-check.sh rc=0
+[parallel] terminality-seal.sh rc=0
+[parallel] write-ops-log.sh rc=0
+[parallel] poll-relay.sh rc=0
+[parallel] auto-sync.sh rc=0
+[parallel] workstealing-verdict.sh rc=0
+[parallel] analyze.sh rc=0
+[parallel] verdict-edge.sh rc=0
+[parallel] claim-cap.sh rc=0
+[parallel] reap.sh rc=0
+[parallel] gh346-gateway-allowlists.sh rc=0
+[parallel] heartbeat.sh rc=0
+[parallel] take.sh rc=0
+[parallel] cost.sh rc=0
+[parallel] gh391-emit-marathon-yaml.sh rc=0
+[parallel] watchdog-liveness.sh rc=0
+[parallel] gh322-unknown-arg-rejection.sh rc=0
+[parallel] runner-loop.sh rc=0
+[parallel] poll-driver.sh rc=0
+[parallel] watchdog-relay.sh rc=0
+[parallel] gh331-cost-summary.sh rc=0
+[parallel] gh413-launch-artifact-destination-guard.sh rc=0
+[parallel] relay-loop.sh rc=0
+[parallel] relay-target-root.sh rc=0
+[parallel] relay-target-root-paths.sh rc=0
+[parallel] relay-target-root-relayfile.sh rc=0
+[parallel] relay-target-root-newfile.sh rc=0
+[parallel] gh289-target-root-build-turn.sh rc=0
+[parallel] pi-turn.sh rc=0
+[parallel] relay-token-collision.sh rc=0
+[parallel] relay-escalation-not-stall.sh rc=0
+[parallel] relay-turn-trace.sh rc=0
+[parallel] codex-turn.sh rc=0
+[parallel] relay-untracked-file-warn.sh rc=0
+[parallel] gh278-turn-timeout-parity.sh rc=0
+[parallel] gh308-frozen-twin-guard.sh rc=0
+[parallel] gh245-agy-probe-verb-invariant.sh rc=0
+[parallel] relay-review-once.sh rc=0
+[parallel] relay-artifact-file.sh rc=0
+[parallel] relay-xyz-skill-guard.sh rc=0
+[parallel] gh251-validate-pytest-skip.sh rc=0
+[parallel] gh788-python-path-space.sh rc=0
+[parallel] gh777-start-task-prior-art.sh rc=0
+[parallel] aider-turn.sh rc=0
+[parallel] gh777-inventory-ratchet.sh rc=1
+[parallel] gh609-sdlc-agent-gaps.sh rc=0
+[parallel] ate-run-variations.sh rc=0
+[parallel] model-alias.sh rc=0
+[parallel] gh450-model-catalog-pin.sh rc=0
+[parallel] gh460-fuzz-resolver-smoke.sh rc=0
+[parallel] gh346-model-telemetry-honesty.sh rc=0
+[parallel] gh267-express-skill.sh rc=0
+[parallel] gh478-runaway-guard.sh rc=0
+[parallel] agy-turn.sh rc=0
+[parallel] gh346-resolver-fallback.sh rc=0
+[parallel] gh346-telemetry-row-written.sh rc=0
+[parallel] gh346-registry-view-freshness.sh rc=0
+[parallel] gh496-telemetry-isolation.sh rc=0
+[parallel] gh368-same-lane-routing.sh rc=0
+[parallel] gh373-reviewer-validation.sh rc=0
+[parallel] gh346-profile-resolve.sh rc=0
+[parallel] gh518-muse-model-policy.sh rc=0
+[parallel] gh371-interrupt-snapshot.sh rc=0
+[parallel] gh369-group-kill.sh rc=0
+[parallel] gh518-muse-adapter-containment.sh rc=0
+[parallel] gh374-drift-path-filter.sh rc=0
+[parallel] gh370-progress-telemetry.sh rc=0
+[parallel] swe-diagram.sh rc=0
+[parallel] gh648-l8-zero-output-handback.sh rc=0
+[parallel] gh372-escalation-log-tail.sh rc=1
+[parallel] gh698-planner-db-ratings.sh rc=0
+[parallel] gh708-vendored-suite-skips.sh rc=0
+[parallel] gh648-l9-369-regression.sh rc=0
+[parallel] commandcode-turn.sh rc=0
+[parallel] claude-turn.sh rc=0
+[parallel] marathon-yaml.sh rc=0
+[parallel] worktree-isolation.sh rc=0
+[parallel] gh284-runlog-heartbeat.sh rc=0
+[parallel] gh115-round-cap.sh rc=0
+[parallel] gh307-gate-env-scrub.sh rc=0
+[parallel] gh319-gate-path-with-space.sh rc=0
+[parallel] gh320-twin-timeout-parity.sh rc=0
+[parallel] gh610-claude-subscription.sh rc=0
+[parallel] gh308-poll-guards.sh rc=0
+[parallel] shim-worktree.sh rc=0
+[parallel] gh308-swarm-gate-path.sh rc=0
+[parallel] gh343-gate-program-target-root.sh rc=0
+[parallel] gh322-runlog-python-lane.sh rc=0
+[parallel] gh342-sentinel-debug-log-python.sh rc=0
+[parallel] gh308-turn-shim-parity.sh rc=0
+[parallel] gh369-find-doc-root-resolution.sh rc=0
+[parallel] gh400-acceptance-fidelity.sh rc=0
+[parallel] gh557-unknown-blocks-manifest.sh rc=0
+[parallel] gh419-gate-inventory.sh rc=0
+[parallel] gh400-source-url.sh rc=0
+[parallel] gh308-consult-guards.sh rc=0
+[parallel] gh418-issue-state-frozen.sh rc=0
+[parallel] gh422-backfill-source-url.sh rc=0
+[parallel] litmus-release.sh rc=0
+[parallel] gh425-source-url-slug.sh rc=0
+[parallel] gh410-relay-block-driven-path.sh rc=0
+[parallel] gh399-packet-acceptance-continuation.sh rc=0
+[parallel] gh410-containment-advisory.sh rc=0
+[parallel] gh90-allowlist-directory.sh rc=0
+[parallel] gh417-turn-root-symlink-prefix.sh rc=0
+[parallel] gh457-gate-tiers.sh rc=0
+[parallel] gh407-gate-ran-attribution.sh rc=0
+[parallel] gh387-gate-not-first-executor.sh rc=0
+[parallel] gh390-timeout-attribution.sh rc=0
+[parallel] gh492-idle-kill.sh rc=0
+[parallel] gh441-gate-env-contract.sh rc=0
+[parallel] gh218-synthetic-nested-driver-lock.sh rc=0
+[parallel] gh432-failed-turn-persist.sh rc=0
+[parallel] gh448-driver-lock-resolver.sh rc=1
+[parallel] gh390-gate-guard.sh rc=0
+[parallel] gh376-relay-drive-lock-parity.sh rc=0
+[parallel] marathon-drive.sh rc=1
+[parallel] gh397-reviewer-turn-role.sh rc=0
+[parallel] gh401-dry-run-no-mutation.sh rc=0
+[parallel] gh375-agy-auth-preflight.sh rc=0
+[parallel] gh217-gate-env-plan-outside.sh rc=0
+[parallel] gh408-tick-failure-visibility.sh rc=0
+[parallel] gh375-auth-timeout-verdict.sh rc=0
+[parallel] nightwatch-release.sh rc=0
+[parallel] gh379-claude-builder-diagnosis.sh rc=0
+[parallel] gh380-claude-trust.sh rc=0
+[parallel] gh378-gate-requires-green-suite.sh rc=0
+[parallel] gh382-marathon-memory-telemetry.sh rc=0
+[parallel] gh551-resolver-refuses.sh rc=0
+[parallel] meter-release.sh rc=0
+[parallel] gh385-retry-token-satisfied.sh rc=0
+[parallel] ballast-release.sh rc=0
+[parallel] gh386-turn-budget-honesty.sh rc=0
+[parallel] gh491-gate-only-refire.sh rc=0
+[parallel] gh255-remedy-ordering.sh rc=0
+[parallel] gh256-target-root-guard-root.sh rc=0
+[parallel] gh426-worktree-leak.sh rc=0
+[parallel] gh384-crash-recovery.sh rc=0
+[parallel] gh388-run-log-durability.sh rc=0
+[parallel] gh505-relay-attest.sh rc=0
+[parallel] gh409-claim-leak.sh rc=0
+[parallel] gh514-write-set-trackable.sh rc=0
+[parallel] gh467-index-only-lane-blocked.sh rc=0
+[parallel] hq-marathon-live.sh rc=0
+[parallel] debug-mantra.sh rc=0
+[parallel] lane-attempt-cap.sh rc=0
+[parallel] gh438-removal-is-progress.sh rc=0
+[parallel] measure.sh rc=0
+[parallel] driver-lock.sh rc=0
+[parallel] loop-stop.sh rc=0
+[parallel] champion.sh rc=0
+[parallel] oracle-guard.sh rc=0
+[parallel] loop-cost.sh rc=0
+[parallel] heldout-check.sh rc=0
+[parallel] improve-loop.sh rc=0
+[parallel] improve-loop-dogfood.sh rc=0
+[parallel] improve-loop-qa.sh rc=0
+[parallel] gh438-acceptance-recheck.sh rc=0
+[parallel] gh430-state-dir-tracked-default.sh rc=0
+[parallel] gh536-evidence-detail.sh rc=0
+[parallel] gh402-board-sync.sh rc=0
+[parallel] gh405-mock-board-harness.sh rc=0
+[parallel] gh544-parallel-default.sh rc=0
+[parallel] gh646-status-label.sh rc=0
+[parallel] gh379-canary-uses-validate.sh rc=0
+[parallel] gh544-pre-push-gate.sh rc=0
+[parallel] gh35-test-tiers.sh rc=0
+[parallel] gh365-runner-envelope.sh rc=0
+[parallel] gh365-validate-telemetry.sh rc=0
+[parallel] gh402-branch-enforcement.sh rc=0
+[parallel] gh365-driver-lane-registry.sh rc=0
+[parallel] gh365-shellcheck-parallel.sh rc=0
+[parallel] gh1-fixture-guard.sh rc=0
+[parallel] gh1-adoption-guard.sh rc=0
+[parallel] gh314-transcript-writeset.sh rc=0
+[parallel] gh520-default-reviewer-stub.sh rc=0
+[parallel] gh527-destructive-git-guard.sh rc=0
+[parallel] gh50-sandboxed-git-guard.sh rc=0
+[parallel] marathon.sh rc=0
+[parallel] marathon-closeout.sh rc=0
+[parallel] gh484-phase-dir-default.sh rc=0
+[parallel] gh365-pdda-gov-scan.sh rc=0
+[parallel] rtl-orphan-backup.sh rc=0
+[parallel] gh2-orphan-backup-repro.sh rc=0
+[parallel] gh91-relay-scratch.sh rc=0
+[parallel] gh113-headless-scratch.sh rc=0
+[parallel] gh114-headless-tty.sh rc=0
+[parallel] gh124-closeout.sh rc=0
+[parallel] gh129-relay-tick-root.sh rc=0
+[parallel] gh130-agy-auth-whoami.sh rc=0
+[parallel] gh131-marathon-target-root.sh rc=0
+[parallel] gh139-pipe-grep-guard.sh rc=0
+[parallel] synthetic/gh101-consult-programmatic.sh rc=0
+[parallel] synthetic/gh101-relay-programmatic-stress.sh rc=0
+[parallel] synthetic/gh102-telemetry-schema.sh rc=0
+[parallel] synthetic/gh94-containment-invariants.sh rc=0
+[parallel] synthetic/gh94-script-serialization.sh rc=0
+[parallel] synthetic/synthetic-claude-target-root.sh rc=0
+[parallel] synthetic/synthetic-marathon-env-leak.sh rc=0
+[parallel] synthetic/synthetic-marathon-worktree-guard.sh rc=0
+[parallel] synthetic/synthetic-pi-model-unset.sh rc=0
+[parallel] synthetic/synthetic-pi-provider-unsupported.sh rc=0
+[parallel] gh141-synthetic-registry.sh rc=0
+[parallel] gh141-fuzz-inputs.sh rc=0
+[parallel] gh365-tier-fail-closed.sh rc=0
+[parallel] gh142-ate-exit-contract.sh rc=0
+[parallel] gh608-deepseek-effort.sh rc=0
+[parallel] gh648-l7-checkout-aftermath.sh rc=0
+[parallel] gh148-deepseek-turn.sh rc=0
+[parallel] gh648-l5-gh237-repro.sh rc=0
+[parallel] gh648-l6-muse-attribution.sh rc=0
+[parallel] gh648-l3-consult-cap.sh rc=0
+[parallel] gh648-l4-285-revalidate.sh rc=0
+[parallel] gh648-l1-turn-termination.sh rc=0
+[parallel] gh654-offlane-log.sh rc=0
+[parallel] gh660-skill-drift.sh rc=0
+[parallel] gh156-turn-shims-help.sh rc=0
+[parallel] marathon-root-audit.sh rc=0
+[parallel] gh648-l2-token-aftermath.sh rc=0
+[parallel] gh155-phase1-metamorphic-invariants.sh rc=0
+[parallel] gh155-phase4-self-healer.sh rc=0
+[parallel] gh155-phase3-repro-builder.sh rc=0
+[parallel] gh155-phase5-active-explorer.sh rc=0
+[parallel] gh174-harness-registry.sh rc=0
+[parallel] gh168-wave-reconcile-scope.sh rc=0
+[parallel] gh180-repro-timeout-crash.sh rc=0
+[parallel] gh181-repro-adapter-fidelity.sh rc=0
+[parallel] gh183-explorer-env-soundness.sh rc=0
+[parallel] gh184-no-tracked-scratch.sh rc=0
+[parallel] gh182-healer-facade-safety.sh rc=0
+[parallel] gh232-wave-reconcile-multiphase.sh rc=0
+[parallel] gh202-wave-reconcile-issue-state.sh rc=0
+[parallel] gh155-phase2-differential-oracle.sh rc=0
+[parallel] relay-pkg-freshness.sh rc=0
+[parallel] skill-extract.sh rc=0
+[parallel] releases-skill.sh rc=0
+[parallel] deep-research.sh rc=0
+[parallel] gh75-dashboard.sh rc=0
+[parallel] gh103-timeline-exporter.sh rc=0
+[parallel] gh525-unshipped-version-tokens.sh rc=0
+[parallel] gh32-releases-artifacts.sh rc=0
+[parallel] gh549-work-events.sh rc=0
+[parallel] gh54-merged-dump-refusals.sh rc=0
+[parallel] gh360-dump-multiline-values.sh rc=0
+[parallel] gh53-releases-merge-resolve.sh rc=0
+[parallel] gh57-releases-fuzz.sh rc=0
+[parallel] gh57-live-merge-resolve.sh rc=0
+[parallel] gh351-manifest-unship.sh rc=0
+[parallel] gh32-releases-app.sh rc=0
+[parallel] gh360-scoped-receipt-chain-rebuild.sh rc=0
+[parallel] gh69-roadmap-shadow.sh rc=0
+[parallel] gh349-releases-roadmap-vendored.sh rc=0
+[parallel] gh358-wave-reconcile-vendored-paths.sh rc=1
+[parallel] gh429-wave-reconcile-vendored-observe.sh rc=1
+[parallel] consult.sh rc=0
+[parallel] gh32-release-target-advisory.sh rc=0
+[parallel] gh39-releases-project-sync.sh rc=0
+[parallel] path-integrity.sh rc=0
+[parallel] archive-root.sh rc=0
+[parallel] archive-writers.sh rc=0
+[parallel] relay-turn-timeout.sh rc=0
+[parallel] archive-commit.sh rc=0
+[parallel] archive-telemetry.sh rc=0
+[parallel] relay-file-seeding-visibility.sh rc=0
+[parallel] gh304-vendored-relay-path.sh rc=0
+[parallel] relay-dep-drift.sh rc=0
+[parallel] relay-turn-handoff.sh rc=0
+[parallel] new-relay.sh rc=0
+[parallel] gh678-installer-live-links.sh rc=0
+[parallel] gh77-standup-triage.sh rc=0
+[parallel] skills-army-hq.sh rc=0
+[parallel] agent-chorus.sh rc=0
+[parallel] gh233-agent-chorus-concurrency.sh rc=0
+[parallel] gh268-relay-cue-and-target-checks.sh rc=0
+[parallel] agent-chorus-bridge.sh rc=0
+[parallel] gh620-skills-army-mini-sync.sh rc=0
+[parallel] xyz-sync-check.sh rc=0
+[parallel] gh293-vendored-guard-drift.sh rc=0
+[parallel] relay-concurrent-commit.sh rc=0
+[parallel] relay-commit-pathspec.sh rc=0
+[parallel] relay-case-insensitive.sh rc=0
+[parallel] find-harness.sh rc=1
+[parallel] gh642-consumer-fruit.sh rc=0
+[parallel] gh292-worktree-vendored-discovery.sh rc=1
+[parallel] xyz-vendor.sh rc=1
+[parallel] pdda-changelog.sh rc=0
+[parallel] pdda-roadmap-coverage.sh rc=0
+[parallel] gh649-pdda-migration.sh rc=0
+[parallel] pdda-local-checks.sh rc=0
+[parallel] gh784-marathon-qa-gate.sh rc=0
+[parallel] gh460-pipe-buffer-sigpipe.sh rc=0
+[parallel] gh284-p3-release-milestone.sh rc=0
+[parallel] gh284-p4-release-lanes.sh rc=0
+[parallel] pdda-repo-contract.sh rc=0
+[parallel] ci-workflow.sh rc=0
+[parallel] swarm-preflight.sh rc=0
+[parallel] ci-route.sh rc=0
+[parallel] gh509-gate-evidence.sh rc=0
+[parallel] xyz-completion.sh rc=0
+[parallel] gh362-marathon-plan-link-bullets.sh rc=1
+[parallel] gh358-lock-instrumentation.sh rc=0
+[parallel] gh14-atomic-append.sh rc=0
+[parallel] gh23-path-overlap-enforcement.sh rc=0
+[parallel] pdda-install-startup-docs.sh rc=0
+[parallel] gh123-lock-progress-bound.sh rc=0
+[parallel] gh4-ungated-clone-warning.sh rc=0
+[parallel] marathon-plan.sh rc=0
+[parallel] hq.sh rc=0
+[parallel] hq-park.sh rc=0
+[parallel] hq-park-synthesis.sh rc=0
+[parallel] hq-dispatch.sh rc=0
+[parallel] hq-next.sh rc=0
+[parallel] hq-locator.sh rc=1
+[parallel] hq-hardening.sh rc=0
+[parallel] preflight-docs.sh rc=0
+[parallel] hq-promote.sh rc=0
+[parallel] hq-marathon-scan.sh rc=0
+[parallel] xyz-harness-hooks.sh rc=0
+[parallel] hq-rollup.sh rc=0
+[parallel] gh238-hq-releases-mode.sh rc=0
+[parallel] gh567-roadmap-dashboard-retired.sh rc=0
+[parallel] gh257-roadmap-ledger-fixes.sh rc=0
+[parallel] mktemp-trap-guard.sh rc=0
+[parallel] gh703-raw-text-asterisk.sh rc=0
+[parallel] gh568-releases-md-retired.sh rc=0
+[parallel] gh423-roadmap-render.sh rc=0
+[parallel] gh528-parallel-contention-retry.sh rc=0
+[parallel] gh454-reconciler-defects.sh rc=0
+[parallel] gh418-planner-ledger-source.sh rc=0
+[parallel] gh424-roadmap-status-marker.sh rc=0
+[parallel] gh239-hq-status-releases-mode.sh rc=0
+[parallel] gh684-hosted-lane-report.sh rc=0
+[parallel] gh421-auto-wave-reconcile.sh rc=0
+[parallel] gh425-gate-provenance-pr.sh rc=0
+[parallel] gh740-hosted-lane-publish.sh rc=0
+[parallel] gh605-work-state.sh rc=0
+[parallel] gh492-roadmap-state-sweep.sh rc=0
+[parallel] gh605-board-policy.sh rc=0
+[parallel] gh645-merge-cleanup-xyz-tools.sh rc=0
+[parallel] gh674-merge-cleanup-hosted-lookup.sh rc=0
+[parallel] gh491-roadmap-section-validation.sh rc=0
+[parallel] gh681-reviewer-probe-rules.sh rc=0
+[parallel] gh269-roadmap-retired.sh rc=0
+[parallel] gh527-issue-url-repair.sh rc=0
+[parallel] jog-queue.sh rc=0
+[parallel] gh291-contract-goldens.sh rc=0
+[parallel] gh290-ate-variation-grid.sh rc=0
+[parallel] gh205-gate-idempotency.sh rc=0
+[parallel] gh204-sed-portability.sh rc=0
+[parallel] gh153-releases-sidebar-rollup.sh rc=0
+[parallel] gh280-jog-marathon-adapter.sh rc=1
+[parallel] transcript-audit.sh rc=0
+[parallel] sentinel-tier1.sh rc=0
+[parallel] sentinel-network-guard.sh rc=0
+[parallel] gh353-vendored-router-audit.sh rc=0
+[parallel] sentinel-driver-hooks.sh rc=0
+[parallel] checkjs.sh rc=0
+[parallel] acorn-extract.sh rc=0
+[parallel] registry-lock-concurrency.sh rc=0
+[parallel] marathon-monitor.sh rc=0
+[parallel] signal-triage.sh rc=0
+[parallel] fixtures/canary-token-reuse/verify-fixture.sh rc=0
+[parallel] fixtures/canary-peer-orphan/verify-fixture.sh rc=0
+[parallel] fixtures/canary-reviewer-overstep/verify-fixture.sh rc=0
+[parallel] phase3-signoff-guard.sh rc=0
+[parallel] relay-self-sufficiency.sh rc=0
+[parallel] agy-tui-takeover-verdict.sh rc=0
+[parallel] gh105-vendor-releases-addon.sh rc=0
+[parallel] gh107-timeline-json-seam.sh rc=0
+[parallel] gh132-review-xyz-skill.sh rc=0
+[parallel] gh165-governance-canonical-paths-guard.sh rc=0
+[parallel] security-scan.sh rc=0
+[parallel] gh273-marathon-root-audit-python-shape.sh rc=0
+[parallel] sentinel-overlay.sh rc=0
+[parallel] relay-uncited-findings.sh rc=0
+[parallel] wave-reconcile.sh rc=0
+[parallel] gh312-vendor-preserves-state.sh rc=0
+[parallel] gh197-vendor-tier-split.sh rc=0
+[parallel] gh693-lessons-learned-advisory.sh rc=0
+[parallel] gh298-ate-gen4-ci-smoke.sh rc=0
+[parallel] gh306-registry-bidirectional.sh rc=0
+[parallel] gh496-phase2-reconciliation-views.sh rc=0
+[parallel] gh-gen4-phase2-adaptive-ate.sh rc=0
+[parallel] gh-gen4-phase1-domain-oracles.sh rc=1
+[parallel] gh-gen4-phase5-campaign.sh rc=0
+[parallel] gh712-jev-triage.sh rc=0
+[parallel] gh396-find-harness-roots.sh rc=1
+[parallel] gh393-deepseek-readiness.sh rc=0
+[parallel] gh591-prepush-commit-boundary.sh rc=0
+[parallel] gh-gen4-phase4-repro-synth.sh rc=0
+[parallel] gh-gen4-phase3-fuzz-engine.sh rc=0
+[parallel] gh589-skill-viewer.sh rc=0
+[parallel] gh589-consult-no-tick.sh rc=0
+[parallel] gh589-xyz-mini-sync.sh rc=0
+[parallel] gh436-merge-cleanup.sh rc=0
+
+===============================
+FAILED in parallel (rc=1): gh777-inventory-ratchet.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+Testing inventory ratchet on live tree...
+inventory_ratchet: ERROR: NEW SQLite connect site(s) added — count grew from 32 to 33 (GH-777).
+
+===============================
+FAILED in parallel (rc=1): gh372-escalation-log-tail.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+== test: gh372-escalation-log-tail ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh372-escalation-log-tail.XXXXXX.YfSzSbIyOp
+  FAIL: GH-372: missing collapsed log tail — # ESCALATION — Marathon Phase with-log
+
+phase: with-log
+task: MARATHON-WITH-LOG-TURN
+relay-drive-exit: 5
+reason: relay-failed-before-gate
+gate: not-run
+relay-file: phases-with-log/with-log/RELAY.md
+
+turn-log: unavailable (no turn log was created for the failing turn); driver: marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • relay-automation/
+marathon-drive:   • utils/
+marathon-drive: branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)
+marathon-drive: relay file committed: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh372-escalation-log-tail.XXXXXX.YfSzSbIyOp/harness/phases-with-log/with-log/RELAY.md
+marathon-drive: tick token seeded: MARATHON-WITH-LOG-TURN → codex
+marathon-drive: warn: host free swap is critically low (0MB < 1024MB)
+marathon-drive: memory-telemetry: phase with-log-start boundary — compressor=4785MB, swap_free=0MB
+marathon-drive: phase start: running relay-drive --round-cap 1
+relay-drive: GH-370 progress (main tree fallback: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh372-escalation-log-tail.XXXXXX.YfSzSbIyOp/harness) changed-files=3
+marathon-drive: relay escalated: relay-failed-before-gate (gate: not-run)
+marathon-drive: transcript saved: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh372-escalation-log-tail.XXXXXX.YfSzSbIyOp/harness/relay-system/2026-10-01/marathon-with-log-043904.md
+marathon-drive: warn: host free swap is critically low (0MB < 1024MB)
+marathon-drive: memory-telemetry: phase with-log-escalated boundary — compressor=4785MB, swap_free=0MB
+marathon-drive: escalation written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh372-escalation-log-tail.XXXXXX.YfSzSbIyOp/harness/phases-with-log/with-log/ESCALATION.md (reason: relay-failed-before-gate)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: n/a (0 tasks done)
+memory: compressor peak: 4785MB, swap free min: 0MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
+
+===============================
+FAILED in parallel (rc=1): gh448-driver-lock-resolver.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+-- B. negative control: pre-fix 2-branch logic misses the worktree lock --
+  PASS: negative control: old marathon-ls.sh logic guesses '/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.lWK1Ne/wt/.relay-driver.lock' — misses the held lock
+  PASS: negative control: old marathon-live.sh logic (checks .git/… or .xyz/… under $WT) misses the held lock
+  PASS: negative control: old find-harness.sh 2-candidate loop misses the held lock
+-- C. end-to-end: fixed scripts observe LIVE from a linked worktree --
+  PASS: marathon-ls.sh: linked worktree with held common-dir lock -> LIVE
+  PASS: marathon-live.sh: claimed task + linked-worktree common-dir lock -> 🟢 live
+  FAIL: find-harness.sh --check: expected a held-lock warning, got: find-harness: HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge REPO_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge vendored=0 via=override
+relay harness readiness:
+  ok  harness  (/Users/noelsaw/Documents/GH Repos/XYZ-forge)
+  ok  tick CLI  (/Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick)
+  ok  codex CLI (Path A worker)  (/Users/noelsaw/.local/bin/codex)
+  ok  agy CLI   (Path A worker)  (/Users/noelsaw/.local/bin/agy)
+  ok  cmd CLI   (Path A worker, Command Code)  (/Users/noelsaw/.hermes/node/bin/cmd)
+  ok  dsh CLI   (Path A worker, DeepSeek)  (/Users/noelsaw/Documents/GH Repos/deepseek-harness/apps/cli/lib/bin.js)
+  !   concurrency: no local .xyz/ in this repo — relays here use the CENTRALIZED harness and
+      share ONE global driver lock (can't run concurrently with another repo's relay). For
+      per-repo isolation / concurrent relays, vendor this repo:
+        relay-automation/xyz-vendor.sh /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.lWK1Ne/foreign
+  FAIL: find-harness.sh --check: warning did not name /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.lWK1Ne/harness-main/.git/relay-driver.lock: find-harness: HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge REPO_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge vendored=0 via=override
+relay harness readiness:
+  ok  harness  (/Users/noelsaw/Documents/GH Repos/XYZ-forge)
+  ok  tick CLI  (/Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick)
+  ok  codex CLI (Path A worker)  (/Users/noelsaw/.local/bin/codex)
+  ok  agy CLI   (Path A worker)  (/Users/noelsaw/.local/bin/agy)
+  ok  cmd CLI   (Path A worker, Command Code)  (/Users/noelsaw/.hermes/node/bin/cmd)
+  ok  dsh CLI   (Path A worker, DeepSeek)  (/Users/noelsaw/Documents/GH Repos/deepseek-harness/apps/cli/lib/bin.js)
+  !   concurrency: no local .xyz/ in this repo — relays here use the CENTRALIZED harness and
+      share ONE global driver lock (can't run concurrently with another repo's relay). For
+      per-repo isolation / concurrent relays, vendor this repo:
+        relay-automation/xyz-vendor.sh /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.lWK1Ne/foreign
+-- syntax check --
+  PASS: syntax OK: driver-lock-lib.sh
+  PASS: syntax OK: harness-paths.sh
+  PASS: syntax OK: marathon-ls.sh
+  PASS: syntax OK: marathon-live.sh
+  PASS: syntax OK: find-harness.sh
+  PASS: syntax OK: gh448-driver-lock-resolver.sh
+
+gh448-driver-lock-resolver: 16 pass, 2 fail
+
+===============================
+FAILED in parallel (rc=1): marathon-drive.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+  PASS: GH-207: satisfied path is explicitly marked lane_already_satisfied
+  PASS: GH-207: red gate stalled lane still exits no-progress
+  PASS: GH-207: red gate does not route a stalled lane into reviewer recovery
+  PASS: GH-207: stalled red-gate lane still records the ordinary no-progress escalation
+  PASS: GH-279: zero-byte declared artifact remains no-progress
+  PASS: GH-279: zero-byte artifact does not route a reviewer recovery
+  PASS: GH-279: unchanged declared artifact remains no-progress
+  PASS: GH-279: unchanged artifact does not route a reviewer recovery
+  PASS: GH-274: relay approves but a flaky gate still escalates (exit 5)
+  PASS: GH-274: RELAY.md already shows STATUS: Approved after the gate-failed escalation
+  PASS: GH-274: tick token is already done after the gate-failed escalation
+  PASS: GH-274: retrying after the gate is fixed exits 0
+  PASS: GH-274: retry explicitly takes the satisfied-lane short-circuit
+  PASS: GH-274: RELAY.md is byte-identical after the retry (not clobbered)
+  PASS: GH-274: RELAY.md never regresses to STATUS: Open on retry
+  PASS: --require-clean passes on a clean workspace
+  PASS: --require-clean fixture uses a linked worktree (.git file)
+  PASS: --require-clean passes inside a linked worktree (no self-trip on the driver lock)
+  PASS: linked worktree run does not report the driver's own lock as dirt
+  PASS: linked worktree + --require-clean still seeds the phase
+  PASS: --require-clean hard-stops (exit 2) on a dirty workspace
+  PASS: dirty + --require-clean does not seed the phase
+  PASS: dirty workspace only WARNS without --require-clean (still runs)
+  PASS: GH-238: missing default gate exits before dispatch
+  PASS: GH-238: missing default gate names the fail-fast condition
+  PASS: GH-238: missing default gate names the override remedy
+  PASS: GH-238: missing default gate never renders turn 1 relay
+  PASS: GH-238: missing default gate never dispatches relay-drive turn 1
+  PASS: GH-238: missing default gate never seeds a tick task
+  PASS: GH-117: missing builder binary exits 2
+  PASS: GH-117: missing builder error names the missing binary
+  PASS: GH-117: missing builder — relay file never rendered
+  PASS: GH-117: missing builder — no tick task created (no spent token)
+  PASS: GH-117: missing reviewer binary exits 2
+  PASS: GH-117: missing reviewer error names the missing binary
+  PASS: GH-117: missing reviewer — relay file never rendered
+  PASS: GH-117: missing reviewer — no tick task created (no spent token)
+  PASS: GH-117: both binaries present — dry-run still exits 0
+  PASS: GH-117: both-present — relay still rendered
+  FAIL: GH-171: vendored full chain should exit 4 after two advancing turns, got 8
+
+===============================
+FAILED in parallel (rc=1): gh358-wave-reconcile-vendored-paths.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+== test: gh358-wave-reconcile-vendored-paths ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh358-wave-reconcile-vendored-paths.XXXXXX.IuyvZgS3e0
+== test: gh358-wave-reconcile-vendored-paths ==
+-- section 1: the four harness tools resolve under .xyz --
+  FAIL: vendored reconcile exited 6: wave-reconcile: Starting wave reconciliation (dry_run=False, root=/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh358-reconcile.emCzU3/fixture-repo)
+wave-reconcile: Processing PR #4581...
+wave-reconcile:   PR #4581 closes [3581]; references []
+wave-reconcile:   Found active doc: GH-3581-VENDORED.md
+TRANSITION ["doc", "move", "GH-3581-VENDORED.md", "3-COMPLETED", "2026-09-01"]
+wave-reconcile:   Moved -> GH-3581-VENDORED.md (destination: 3-COMPLETED)
+wave-reconcile:   ROADMAP.md entry updated for GH-3581
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile: ERROR — Subprocess 'releases roadmap sync' failed with exit 3:
+refused: rule=not-initialized: no releases.db here; run `releases init` first
+
+
+wave-reconcile: Rolling back all uncommitted mutations...
+  PASS: no 'can't open file' — every harness tool was found
+  FAIL: releases_app did not run from .xyz
+  FAIL: export_timeline did not run from .xyz
+  FAIL: marathon-plan did not run from .xyz
+-- section 2: PDDA is a TARGET-repo tool and must NOT be redirected into .xyz --
+  FAIL: pdda gate did not run from the repo root
+  PASS: harness pdda decoy never ran
+-- section 3: a canonical (non-vendored) checkout still prefers its own tools --
+  PASS: repo-owned tool stays repo-relative (mock seam + canonical checkout preserved)
+
+  gh358: 3 passed, 5 failed
+
+===============================
+FAILED in parallel (rc=1): gh429-wave-reconcile-vendored-observe.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+wave-reconcile:   ROADMAP.md entry updated for GH-4291
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile: ERROR — Subprocess 'releases roadmap sync' failed with exit 3:
+refused: rule=not-initialized: no releases.db here; run `releases init` first
+
+
+wave-reconcile: Rolling back all uncommitted mutations...
+  FAIL: no gate failure message
+  PASS: doc move rolled back
+-- section 3: a closing keyword + the ORIGIN repo's issue URL is a closer --
+  FAIL: exit 6: wave-reconcile: Starting wave reconciliation (dry_run=False, root=/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh429-reconcile.TdSw6Q/repo-url)
+wave-reconcile: Processing PR #5291...
+wave-reconcile:   PR #5291 closes [4291]; references []
+wave-reconcile:   Found active doc: GH-4291-OBSERVE.md
+TRANSITION ["doc", "move", "GH-4291-OBSERVE.md", "3-COMPLETED", "2026-09-03"]
+wave-reconcile:   Moved -> GH-4291-OBSERVE.md (destination: 3-COMPLETED)
+wave-reconcile:   ROADMAP.md entry updated for GH-4291
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile: ERROR — Subprocess 'releases roadmap sync' failed with exit 3:
+refused: rule=not-initialized: no releases.db here; run `releases init` first
+
+
+wave-reconcile: Rolling back all uncommitted mutations...
+  PASS: PR body URL form parsed as closes [4291]
+  FAIL: doc not promoted from URL form
+-- section 3 negative control: a FOREIGN repo's issue URL stays a mention --
+  PASS: foreign URL is not a closer
+  PASS: doc stays active on a foreign URL
+-- unit: slug helper and the extractor --
+  PASS: github_slug_from_origin reads the origin slug
+  PASS: URL form (case-insensitive slug) and #N combine
+  PASS: without a slug the URL form is neither closer nor mention (unchanged contract)
+
+gh429-wave-reconcile-vendored-observe: 8 passed, 7 failed
+
+===============================
+FAILED in parallel (rc=1): find-harness.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+find-harness (GH-70 Phase 2):
+  PASS: skill front door searches the user install root
+  PASS: skill front door does not prescribe the CWD-relative command
+  PASS: harness clone: --check exits 0
+  FAIL: harness clone: no concurrency warning
+  PASS: foreign no-.xyz: --check still exits 0 (fail-open)
+  PASS: foreign no-.xyz: emits the concurrency warning
+  PASS: foreign no-.xyz: points at xyz-vendor.sh
+  PASS: foreign no-.xyz: hint omits the bogus vendor subcommand
+  PASS: vendored .xyz: --check exits 0
+  FAIL: vendored .xyz: no concurrency warning
+  PASS: vendored .xyz: resolves to the local .xyz
+  PASS: case-collision: --check still exits 0 (fail-open)
+  PASS: case-collision: emits the advisory warning
+  PASS: case-collision: names both colliding paths
+  PASS: case-collision: explains the exit-6 risk + git mv remedy
+  PASS: vendored collision: --check exits 0
+  PASS: vendored collision: emits the case-collision warning
+  PASS: vendored collision: names both colliding paths
+  PASS: vendored collision: stays scoped to caller repo
+  PASS: no-collision: --check exits 0
+  PASS: no-collision: case-collision warning absent
+  PASS: ignorecase=false collision: --check exits 0
+  PASS: ignorecase=false collision: warning absent
+  find-harness: 21 pass, 2 fail
+
+===============================
+FAILED in parallel (rc=1): gh292-worktree-vendored-discovery.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+gh292 worktree vendored discovery:
+find-harness: HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge REPO_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge vendored=0 via=override
+  FAIL: main checkout: local vendored harness remains selected (got /Users/noelsaw/Documents/GH Repos/XYZ-forge)
+find-harness: HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge REPO_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge vendored=0 via=override
+  FAIL: linked worktree: selects main checkout's vendored harness (got /Users/noelsaw/Documents/GH Repos/XYZ-forge)
+find-harness: HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge REPO_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge vendored=0 via=override
+  FAIL: linked worktree: selects the vendored tick and its lock root
+  FAIL: linked worktree: does not fall back to the centralized-harness warning
+find-harness: HARNESS=/Users/noelsaw/Documents/GH Repos/XYZ-forge REPO_ROOT=/Users/noelsaw/Documents/GH Repos/XYZ-forge vendored=0 via=override
+  FAIL: unusable vendor: centralized fallback remains available (got /Users/noelsaw/Documents/GH Repos/XYZ-forge)
+  FAIL: unusable vendor: readiness names the main-checkout .xyz path
+  PASS: unusable vendor: readiness warns about centralized fallback
+  gh292 worktree vendored discovery: 1 pass, 6 fail
+
+===============================
+FAILED in parallel (rc=1): xyz-vendor.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+  PASS: GH-226: VENDORS into a repo ignoring 'phases' (exit 0, marathon check deferred to runtime)
+  PASS:   and names the rule in the way
+  PASS:   and emitted the advisory warning banner
+  PASS:   and preserved original ignore rule 'phases'
+  PASS:   and added .xyz/ to the repo-local exclude (GH-642)
+  PASS:   and added /.tick/ to the repo-local exclude (GH-642)
+  PASS:   and left ignored paths un-negated (never un-ignores for you)
+  PASS:   and successfully materialized .xyz/
+  PASS: GH-226: VENDORS into a repo ignoring '/phases/' (exit 0, marathon check deferred to runtime)
+  PASS:   and names the rule in the way
+  PASS:   and emitted the advisory warning banner
+  PASS:   and preserved original ignore rule '/phases/'
+  PASS:   and added .xyz/ to the repo-local exclude (GH-642)
+  PASS:   and added /.tick/ to the repo-local exclude (GH-642)
+  PASS:   and left ignored paths un-negated (never un-ignores for you)
+  PASS:   and successfully materialized .xyz/
+  PASS: GH-644: vendors into a repo whose info/exclude lacks a trailing newline
+  PASS:   and the last rule '*.cact' survived as its own line (no fusion)
+  PASS:   and no '*.cact.xyz/' fused line exists
+  PASS:   and .xyz/ was appended exactly once as its own line
+  PASS: GH-644B: vendors into a repo that already tracks .xyz/
+  PASS:   and did NOT add the blanket .xyz/ rule to the exclude (harness code stays trackable)
+  PASS:   and left .gitignore untouched
+  PASS:   and every runtime subpath is ignored exactly once (idempotent across two runs)
+  PASS:   and /.tick/ at the target root is still ignored exactly once
+  PASS:   and the previously committed .xyz/bin/tick is still tracked
+  PASS:   and a NEW harness file under .xyz/ stages on git add -A
+  PASS:   and no runtime-state sentinel staged
+  PASS: GH-644B: vendors (exit 0) when a tracked-.xyz/ repo already carries a blanket .xyz/ rule
+  PASS:   and left the operator's blanket .xyz/ line in place (never deletes an ignore rule)
+  PASS:   and WARNED that the blanket rule will hide new harness files
+  PASS: GH-644B: WARNS when tracked .xyz/ content intersects the runtime paths (names .xyz/.tick)
+  PASS:   and still wrote the runtime subpath ignores
+  PASS:   control: a non-tracking repo still gets the blanket .xyz/ rule and no subpath rules
+  PASS: GH-314: never writes a negation rule to un-ignore for you
+  PASS:   control: the fixture repo really does ignore relay-system
+  PASS: an unrelated ignore rule does NOT block vendoring
+  PASS: idempotent re-run (1 exclude line, 1 registry row)
+  PASS: --no-register writes no registry
+  FAIL: no-.xyz default resolution changed
+
+===============================
+FAILED in parallel (rc=1): gh362-marathon-plan-link-bullets.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/2-WORKING/GH-402-BOARD-SYNC.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-406-RUSS-EXTERNAL-REVIEW.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-443-MARATHON-RATING-PASS.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-445-TURN-SHIM-HELP-PARITY.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-446-MARATHON-PLAN-WRITE-GUARD.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-452-RELEASE-TAGS.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-doc","file":"","message":"issue #481 has no PROJECT capture doc linked in the ledger","action":"promote to a 2-WORKING capture doc with a preflight contract"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-doc","file":"","message":"issue #482 has no PROJECT capture doc linked in the ledger","action":"promote to a 2-WORKING capture doc with a preflight contract"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/2-WORKING/GH-478-ATE-RUNAWAY-GUARD.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-514-KEEL-SKILL.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-518-MUSE-SPARK-HARNESS-ROUTE.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/2-WORKING/GH-537-FIVE-SKILL.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-522-ISSUE-ADMISSION.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-579-HIQS-CONSUMER.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-506-SKILLS-ARMY-HQ-REPLICATE.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-767-REGENERATE-ARCHITECTURE-DIAGRAMS.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/unrated","file":"PROJECT/1-INBOX/GH-768-RELEASES-APP-AUDIT.md","message":"ledger row has no four-axis rating in releases.db","action":"rate via: releases roadmap rate --issue-num 768 --rated P/S/A/E"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/unrated","file":"PROJECT/1-INBOX/GH-769-MARATHON-DRIVE-AUDIT.md","message":"ledger row has no four-axis rating in releases.db","action":"rate via: releases roadmap rate --issue-num 769 --rated P/S/A/E"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-770-RELEASES-JOG-RESUME-LAND.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-771-JOG-ACCEPTS-REMOVED-GEMINI.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-772-MARATHON-DRIVE-MEMORY-COMPRESSOR.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-774-CI-ROUTE-25-RELEASES.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-775-UMBRELLA-BROKEN-OR-FRAGILE.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/unrated","file":"PROJECT/1-INBOX/GH-789-MERGE-CLEANUP-AUTONOMOUS-PIPELINE.md","message":"ledger row has no four-axis rating in releases.db","action":"rate via: releases roadmap rate --issue-num 789 --rated P/S/A/E"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/1-INBOX/GH-763-RELAY-CLOSE-MISMATCH.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/needs-contract","file":"PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md","message":"rated, but no preflight contract — not marathon-ready","action":"add a ## Swarm Preflight Contract json block"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"info","check":"marathon-plan/dep-not-found","file":"PROJECT/3-COMPLETED/GH-91-RELAY-SCRATCH-DIR.md","message":"lists a dependency on #90, which is not in the ledger","action":"fix the issue number or add a ledger pointer"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"warn","check":"marathon-plan/coupled-lanes","file":"PROJECT/2-WORKING/GH-418-MARATHON-ADOPT-RELEASES-DB.md","message":"same-wave lane shares the `test/baselines/` spine with #425 — write-disjoint but likely a shared contract seam","action":"pin a CONTRACT.md for the test/baselines/ interface and point both lane prompts at it before launching"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"warn","check":"marathon-plan/coupled-lanes","file":"PROJECT/2-WORKING/GH-418-MARATHON-ADOPT-RELEASES-DB.md","message":"same-wave lane shares the `utils/py/` spine with #670 — write-disjoint but likely a shared contract seam","action":"pin a CONTRACT.md for the utils/py/ interface and point both lane prompts at it before launching"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"warn","check":"marathon-plan/coupled-lanes","file":"PROJECT/2-WORKING/GH-418-MARATHON-ADOPT-RELEASES-DB.md","message":"same-wave lane shares the `utils/py/` spine with #491 — write-disjoint but likely a shared contract seam","action":"pin a CONTRACT.md for the utils/py/ interface and point both lane prompts at it before launching"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"warn","check":"marathon-plan/coupled-lanes","file":"PROJECT/2-WORKING/GH-425-GATE-PROVENANCE-CHECK.md","message":"same-wave lane shares the `utils/py/` spine with #670 — write-disjoint but likely a shared contract seam","action":"pin a CONTRACT.md for the utils/py/ interface and point both lane prompts at it before launching"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"warn","check":"marathon-plan/coupled-lanes","file":"PROJECT/2-WORKING/GH-425-GATE-PROVENANCE-CHECK.md","message":"same-wave lane shares the `utils/py/` spine with #491 — write-disjoint but likely a shared contract seam","action":"pin a CONTRACT.md for the utils/py/ interface and point both lane prompts at it before launching"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"warn","check":"marathon-plan/coupled-lanes","file":"PROJECT/2-WORKING/GH-670-CLAUDE-REVIEWER.md","message":"same-wave lane shares the `utils/py/` spine with #491 — write-disjoint but likely a shared contract seam","action":"pin a CONTRACT.md for the utils/py/ interface and point both lane prompts at it before launching"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"warn","check":"marathon-plan/coupled-lanes","file":"PROJECT/2-WORKING/GH-454-RECONCILE-GATE-DEFECTS.md","message":"same-wave lane shares the `utils/py/` spine with #355 — write-disjoint but likely a shared contract seam","action":"pin a CONTRACT.md for the utils/py/ interface and point both lane prompts at it before launching"}
+    {"timestamp":"2026-10-01T04:40:51Z","severity":"warn","check":"marathon-plan/summary","file":"","message":"items=291 active=8 waves=3 drift=true held=56 gh=live","action":"summary"}
+  FAIL: python engine (default): wrong GH key — the title took the whole block
+
+===============================
+FAILED in parallel (rc=1): hq-locator.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+== test: hq-locator (GH-128 find-hq.sh) ==
+  FAIL: harness-cwd: rc=0 out=/Users/noelsaw/Documents/GH Repos/XYZ-forge/utils/hq/hq.sh
+  PASS: cross-repo: symlinked locator resolves REAL harness from a foreign CWD
+  PASS: $XYZ_HARNESS override resolves from any CWD
+  PASS: --root prints the harness root
+  PASS: --env exports HQ_SH/HQ_ROOT (evalable)
+  PASS: resolved hq.sh is executable/runs
+  PASS: unresolvable -> exit 1, no stdout
+  PASS: unknown flag -> exit 2 (usage)
+== hq-locator: 7 passed, 1 failed ==
+
+===============================
+FAILED in parallel (rc=1): gh280-jog-marathon-adapter.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+== test: gh280-jog-marathon-adapter ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.gsPL33IvpS
+  PASS: A1 root preflight exits 0 (candidate ready)
+  PASS: A2 packet still carries run-candidate.json (additive)
+  PASS: A2 packet still carries lane-plan.json (additive)
+  PASS: A2 packet still carries freshness.json (additive)
+  PASS: A2 packet still carries readiness.json (additive)
+  PASS: A2 packet still carries marathon-invocation.txt (additive)
+  PASS: A2 packet still carries packet.md (additive)
+  PASS: A2 packet still carries marathon-invocation.json (additive)
+  PASS: A3 invocation artifact schema is marathon-invocation@1
+  PASS: A4 argv[0] is the absolute executable drive path
+  PASS: A5 env entries carry swarm/session/isolation
+  PASS: A6 packet_path resolves
+  PASS: A7 result_path is beside the packet
+  PASS: A8 identity fields: issue/base_ref/builder/reviewer
+  PASS: A9 phase/lane/gate/artifacts carried
+  PASS: A10 argv embeds --result-file with result_path
+  PASS: A11 argv embeds --phase-brief with packet_path
+  PASS: A12 run-candidate@1 unchanged (compat)
+  PASS: A13 text invocation hint unchanged (compat)
+  PASS: B1 load_marathon_invocation accepts the real artifact
+  PASS: B2 unsupported schema version refused
+  PASS: B3 non-executable argv[0] refused
+  FAIL: C1 approved run exit=8
+
+===============================
+FAILED in parallel (rc=1): gh-gen4-phase1-domain-oracles.sh — re-running it alone to see if that verdict survives
+===============================
+  ... PASSES when run alone. Counting it as passed (sequential is the source of truth).
+  ... This means a shared resource is contended — see the warning at the end of this run.
+
+===============================
+FAILED in parallel (rc=1): gh396-find-harness-roots.sh — re-running it alone to see if that verdict survives
+===============================
+  ... fails alone too. Real failure; last 40 lines of the SERIAL run:
+  PASS: plain .xyz: override still selects the harness it names
+  PASS: plain .xyz (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.xs3AJH/a-plain/.xyz') is True
+  PASS: plain .xyz (python): is_vendored() with override is True
+  PASS: plain .xyz (python): repo_root() with override matches consumer repo
+  PASS: linked worktree, override=main .xyz: auto-discovery resolves TICK_REPO_ROOT to the consumer repo
+  PASS: linked worktree, override=main .xyz: XYZ_HARNESS override agrees with auto-discovery (#395)
+  PASS: linked worktree, override=main .xyz: override still selects the harness it names
+  PASS: linked worktree, override=main .xyz (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.xs3AJH/b-main/.xyz') is True
+  PASS: linked worktree, override=main .xyz (python): is_vendored() with override is True
+  PASS: linked worktree, override=main .xyz (python): repo_root() with override matches consumer repo
+  PASS: symlink inside repo: auto-discovery resolves TICK_REPO_ROOT to the consumer repo
+  PASS: symlink inside repo: XYZ_HARNESS override agrees with auto-discovery (#395)
+  PASS: symlink inside repo: override still selects the harness it names
+  PASS: symlink inside repo (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.xs3AJH/c-inside/.xyz') is True
+  PASS: symlink inside repo (python): is_vendored() with override is True
+  PASS: symlink inside repo (python): repo_root() with override matches consumer repo
+  PASS: symlink outside repo: auto-discovery resolves TICK_REPO_ROOT to the consumer repo
+  PASS: symlink outside repo: XYZ_HARNESS override agrees with auto-discovery (#395)
+  PASS: symlink outside repo: override still selects the harness it names
+  PASS: symlink outside repo (python): is_vendored('/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.xs3AJH/d-outside/.xyz') is True
+  PASS: symlink outside repo (python): is_vendored() with override is True
+  PASS: symlink outside repo (python): repo_root() with override matches consumer repo
+  PASS: symlink outside repo: control — git cannot resolve the link target, so the fallback is load-bearing
+  PASS: precedence step 1: valid XYZ_HARNESS override wins over local .xyz
+  PASS: precedence step 1: invalid override falls through to local .xyz
+  PASS: precedence step 2: local .xyz selected with no override
+  PASS: precedence step 3: delegated to gh292-worktree-vendored-discovery.sh (linked worktree, no override)
+  PASS: precedence step 4: harness clone resolves to itself
+  PASS: precedence step 5: foreign repo falls back to the script's own harness
+  PASS: #394: auto-discovery warns that the vendored copy is behind
+  PASS: #394: the warning still fires when XYZ_HARNESS points at the stale .xyz
+  PASS: #394: the printed remedy is runnable as printed (bash /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.xs3AJH/live-harness/relay-automation/xyz-sync.sh update /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.xs3AJH/f-stale)
+  PASS: --quiet: accepted (exit 0)
+  PASS: --quiet: no find-harness: announcement on stderr
+  PASS: --quiet: exported names and values are identical to the loud form
+  FAIL: file-symlinked locator: resolves root correctly via file symlink (got '/Users/noelsaw/Documents/GH Repos/XYZ-forge', want '/Users/noelsaw/agent-workspaces/xyz-forge-gh898-verify')
+  PASS: harness-paths.sh: xyz_harness_home matches harness directory
+  PASS: harness-paths.sh: xyz_harness_tool resolves tool
+  PASS: harness-paths.sh: xyz_emit_env_exports emits correct format
+  gh396-find-harness-roots: 40 pass, 1 fail
+
+===============================================================================
+WARNING (GH-528): 1 suite(s) failed in parallel and passed alone.
+These are CONTENTION, not product failure: each verdict flipped the moment the
+shared resource was free, so the suite is counted as PASSED and named here.
+The contended resource is almost always THIS CLONE's .git/relay-driver.lock
+(GH-42): it is taken by the real relay-drive.sh BEFORE argument parsing, so a
+suite merely INVOKING a driver contends — add such suites to DRIVER_LOCK_LANE
+in validate.sh so they run in the serialized lane:
+    gh-gen4-phase1-domain-oracles.sh
+Until then --parallel is doing extra serial work and this run took longer than it should.
+===============================================================================
+
+===============================
+Running python3 -m pytest test/test_python_layer.py
+===============================
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- /opt/homebrew/opt/python@3.14/bin/python3.14
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /Users/noelsaw/agent-workspaces/xyz-forge-gh898-verify
+configfile: pytest.ini
+plugins: hypothesis-6.167.1, anyio-4.13.0
+collecting ... collected 21 items
+
+test/test_python_layer.py::test_deploy_skills_behavioral_suite PASSED    [  4%]
+test/test_python_layer.py::test_rtl_module_load PASSED                   [  9%]
+test/test_python_layer.py::test_poll_module_load PASSED                  [ 14%]
+test/test_python_layer.py::test_consult_module_load PASSED               [ 19%]
+test/test_python_layer.py::test_marathon_drive_module_load PASSED        [ 23%]
+test/test_python_layer.py::test_swarm_preflight_module_load PASSED       [ 28%]
+test/test_python_layer.py::test_marathon_plan_module_load PASSED         [ 33%]
+test/test_python_layer.py::test_codex_turn_default_flags_match_bash_default PASSED [ 38%]
+test/test_python_layer.py::test_pi_turn_module_load PASSED               [ 42%]
+test/test_python_layer.py::test_pi_turn_parse_usage_keeps_last_event_gh295 PASSED [ 47%]
+test/test_python_layer.py::test_pi_turn_parse_usage_missing_file_returns_zero PASSED [ 52%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_builder_binary_missing PASSED [ 57%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_pi_builder_binary_missing PASSED [ 61%]
+test/test_python_layer.py::test_swarm_preflight_gh108_bundle_helpers PASSED [ 66%]
+test/test_python_layer.py::test_swarm_preflight_default_root_gh267 PASSED [ 71%]
+test/test_python_layer.py::test_rtl_bridge_honors_containment_ignore_in_python_mode PASSED [ 76%]
+test/test_python_layer.py::test_rtl_run_rtl_returns_code_without_exiting PASSED [ 80%]
+test/test_python_layer.py::test_rtl_run_checked_fails_fast PASSED        [ 85%]
+test/test_python_layer.py::test_poll_relay_field PASSED                  [ 90%]
+test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137 PASSED [ 95%]
+test/test_python_layer.py::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated PASSED [100%]
+
+============================= 21 passed in 18.60s ==============================
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Running gamma-poison fixture staleness probe
+===============================
+
+===============================
+Summary
+===============================
+telemetry: /Users/noelsaw/agent-workspaces/xyz-forge-gh898-verify/.tick/telemetry/validate-parallel-1790828592121-2645.jsonl (427 suite events, 411 registered)
+10 slowest suites:
+  name  duration_s  rc
+  gh436-merge-cleanup.sh  287.268  0
+  gh549-work-events.sh  183.761  0
+  gh362-marathon-plan-link-bullets.sh  141.160  1
+  gh365-tier-fail-closed.sh  109.008  0
+  marathon-root-audit.sh  99.151  0
+  pdda-install-startup-docs.sh  78.243  0
+  marathon-drive.sh  69.387  1
+  gh365-pdda-gov-scan.sh  69.368  0
+  gh528-parallel-contention-retry.sh  67.914  0
+  agy-turn.sh  64.151  0
+re-run ladder: 14 suite(s), 255.129s total
+passed: 401 / 414
+  + gh732-l3-gate-summary.sh
+  + projection-idempotent.sh
+  + concurrent-claim.sh
+  + chaos-stale-writer.sh
+  + path-overlap.sh
+  + scope-change.sh
+  + tick-foreign-cwd.sh
+  + chaos-midturn-kill.sh
+  + gh411-tick-log-foreign-cwd.sh
+  + chaos-concurrent-pollers.sh
+  + gh412-transient-claim-exit.sh
+  + gh554-tick-unknown-flags.sh
+  + gh415-guard-hook-entrypoints.sh
+  + handoff.sh
+  + handoff-exclusive.sh
+  + circuit-break.sh
+  + gh414-comment-reference-check.sh
+  + terminality-seal.sh
+  + write-ops-log.sh
+  + poll-relay.sh
+  + auto-sync.sh
+  + workstealing-verdict.sh
+  + analyze.sh
+  + verdict-edge.sh
+  + claim-cap.sh
+  + reap.sh
+  + gh346-gateway-allowlists.sh
+  + heartbeat.sh
+  + take.sh
+  + cost.sh
+  + gh391-emit-marathon-yaml.sh
+  + watchdog-liveness.sh
+  + gh322-unknown-arg-rejection.sh
+  + runner-loop.sh
+  + poll-driver.sh
+  + watchdog-relay.sh
+  + gh331-cost-summary.sh
+  + gh413-launch-artifact-destination-guard.sh
+  + relay-loop.sh
+  + relay-target-root.sh
+  + relay-target-root-paths.sh
+  + relay-target-root-relayfile.sh
+  + relay-target-root-newfile.sh
+  + gh289-target-root-build-turn.sh
+  + pi-turn.sh
+  + relay-token-collision.sh
+  + relay-escalation-not-stall.sh
+  + relay-turn-trace.sh
+  + codex-turn.sh
+  + relay-untracked-file-warn.sh
+  + gh278-turn-timeout-parity.sh
+  + gh308-frozen-twin-guard.sh
+  + gh245-agy-probe-verb-invariant.sh
+  + relay-review-once.sh
+  + relay-artifact-file.sh
+  + relay-xyz-skill-guard.sh
+  + gh251-validate-pytest-skip.sh
+  + gh788-python-path-space.sh
+  + gh777-start-task-prior-art.sh
+  + aider-turn.sh
+  + gh609-sdlc-agent-gaps.sh
+  + ate-run-variations.sh
+  + model-alias.sh
+  + gh450-model-catalog-pin.sh
+  + gh460-fuzz-resolver-smoke.sh
+  + gh346-model-telemetry-honesty.sh
+  + gh267-express-skill.sh
+  + gh478-runaway-guard.sh
+  + agy-turn.sh
+  + gh346-resolver-fallback.sh
+  + gh346-telemetry-row-written.sh
+  + gh346-registry-view-freshness.sh
+  + gh496-telemetry-isolation.sh
+  + gh368-same-lane-routing.sh
+  + gh373-reviewer-validation.sh
+  + gh346-profile-resolve.sh
+  + gh518-muse-model-policy.sh
+  + gh371-interrupt-snapshot.sh
+  + gh369-group-kill.sh
+  + gh518-muse-adapter-containment.sh
+  + gh374-drift-path-filter.sh
+  + gh370-progress-telemetry.sh
+  + swe-diagram.sh
+  + gh648-l8-zero-output-handback.sh
+  + gh698-planner-db-ratings.sh
+  + gh708-vendored-suite-skips.sh
+  + gh648-l9-369-regression.sh
+  + commandcode-turn.sh
+  + claude-turn.sh
+  + marathon-yaml.sh
+  + worktree-isolation.sh
+  + gh284-runlog-heartbeat.sh
+  + gh115-round-cap.sh
+  + gh307-gate-env-scrub.sh
+  + gh319-gate-path-with-space.sh
+  + gh320-twin-timeout-parity.sh
+  + gh610-claude-subscription.sh
+  + gh308-poll-guards.sh
+  + shim-worktree.sh
+  + gh308-swarm-gate-path.sh
+  + gh343-gate-program-target-root.sh
+  + gh322-runlog-python-lane.sh
+  + gh342-sentinel-debug-log-python.sh
+  + gh308-turn-shim-parity.sh
+  + gh369-find-doc-root-resolution.sh
+  + gh400-acceptance-fidelity.sh
+  + gh557-unknown-blocks-manifest.sh
+  + gh419-gate-inventory.sh
+  + gh400-source-url.sh
+  + gh308-consult-guards.sh
+  + gh418-issue-state-frozen.sh
+  + gh422-backfill-source-url.sh
+  + litmus-release.sh
+  + gh425-source-url-slug.sh
+  + gh410-relay-block-driven-path.sh
+  + gh399-packet-acceptance-continuation.sh
+  + gh410-containment-advisory.sh
+  + gh90-allowlist-directory.sh
+  + gh417-turn-root-symlink-prefix.sh
+  + gh457-gate-tiers.sh
+  + gh407-gate-ran-attribution.sh
+  + gh387-gate-not-first-executor.sh
+  + gh390-timeout-attribution.sh
+  + gh492-idle-kill.sh
+  + gh441-gate-env-contract.sh
+  + gh218-synthetic-nested-driver-lock.sh
+  + gh432-failed-turn-persist.sh
+  + gh390-gate-guard.sh
+  + gh376-relay-drive-lock-parity.sh
+  + gh397-reviewer-turn-role.sh
+  + gh401-dry-run-no-mutation.sh
+  + gh375-agy-auth-preflight.sh
+  + gh217-gate-env-plan-outside.sh
+  + gh408-tick-failure-visibility.sh
+  + gh375-auth-timeout-verdict.sh
+  + nightwatch-release.sh
+  + gh379-claude-builder-diagnosis.sh
+  + gh380-claude-trust.sh
+  + gh378-gate-requires-green-suite.sh
+  + gh382-marathon-memory-telemetry.sh
+  + gh551-resolver-refuses.sh
+  + meter-release.sh
+  + gh385-retry-token-satisfied.sh
+  + ballast-release.sh
+  + gh386-turn-budget-honesty.sh
+  + gh491-gate-only-refire.sh
+  + gh255-remedy-ordering.sh
+  + gh256-target-root-guard-root.sh
+  + gh426-worktree-leak.sh
+  + gh384-crash-recovery.sh
+  + gh388-run-log-durability.sh
+  + gh505-relay-attest.sh
+  + gh409-claim-leak.sh
+  + gh514-write-set-trackable.sh
+  + gh467-index-only-lane-blocked.sh
+  + hq-marathon-live.sh
+  + debug-mantra.sh
+  + lane-attempt-cap.sh
+  + gh438-removal-is-progress.sh
+  + measure.sh
+  + driver-lock.sh
+  + loop-stop.sh
+  + champion.sh
+  + oracle-guard.sh
+  + loop-cost.sh
+  + heldout-check.sh
+  + improve-loop.sh
+  + improve-loop-dogfood.sh
+  + improve-loop-qa.sh
+  + gh438-acceptance-recheck.sh
+  + gh430-state-dir-tracked-default.sh
+  + gh536-evidence-detail.sh
+  + gh402-board-sync.sh
+  + gh405-mock-board-harness.sh
+  + gh544-parallel-default.sh
+  + gh646-status-label.sh
+  + gh379-canary-uses-validate.sh
+  + gh544-pre-push-gate.sh
+  + gh35-test-tiers.sh
+  + gh365-runner-envelope.sh
+  + gh365-validate-telemetry.sh
+  + gh402-branch-enforcement.sh
+  + gh365-driver-lane-registry.sh
+  + gh365-shellcheck-parallel.sh
+  + gh1-fixture-guard.sh
+  + gh1-adoption-guard.sh
+  + gh314-transcript-writeset.sh
+  + gh520-default-reviewer-stub.sh
+  + gh527-destructive-git-guard.sh
+  + gh50-sandboxed-git-guard.sh
+  + marathon.sh
+  + marathon-closeout.sh
+  + gh484-phase-dir-default.sh
+  + gh365-pdda-gov-scan.sh
+  + rtl-orphan-backup.sh
+  + gh2-orphan-backup-repro.sh
+  + gh91-relay-scratch.sh
+  + gh113-headless-scratch.sh
+  + gh114-headless-tty.sh
+  + gh124-closeout.sh
+  + gh129-relay-tick-root.sh
+  + gh130-agy-auth-whoami.sh
+  + gh131-marathon-target-root.sh
+  + gh139-pipe-grep-guard.sh
+  + synthetic/gh101-consult-programmatic.sh
+  + synthetic/gh101-relay-programmatic-stress.sh
+  + synthetic/gh102-telemetry-schema.sh
+  + synthetic/gh94-containment-invariants.sh
+  + synthetic/gh94-script-serialization.sh
+  + synthetic/synthetic-claude-target-root.sh
+  + synthetic/synthetic-marathon-env-leak.sh
+  + synthetic/synthetic-marathon-worktree-guard.sh
+  + synthetic/synthetic-pi-model-unset.sh
+  + synthetic/synthetic-pi-provider-unsupported.sh
+  + gh141-synthetic-registry.sh
+  + gh141-fuzz-inputs.sh
+  + gh365-tier-fail-closed.sh
+  + gh142-ate-exit-contract.sh
+  + gh608-deepseek-effort.sh
+  + gh648-l7-checkout-aftermath.sh
+  + gh148-deepseek-turn.sh
+  + gh648-l5-gh237-repro.sh
+  + gh648-l6-muse-attribution.sh
+  + gh648-l3-consult-cap.sh
+  + gh648-l4-285-revalidate.sh
+  + gh648-l1-turn-termination.sh
+  + gh654-offlane-log.sh
+  + gh660-skill-drift.sh
+  + gh156-turn-shims-help.sh
+  + marathon-root-audit.sh
+  + gh648-l2-token-aftermath.sh
+  + gh155-phase1-metamorphic-invariants.sh
+  + gh155-phase4-self-healer.sh
+  + gh155-phase3-repro-builder.sh
+  + gh155-phase5-active-explorer.sh
+  + gh174-harness-registry.sh
+  + gh168-wave-reconcile-scope.sh
+  + gh180-repro-timeout-crash.sh
+  + gh181-repro-adapter-fidelity.sh
+  + gh183-explorer-env-soundness.sh
+  + gh184-no-tracked-scratch.sh
+  + gh182-healer-facade-safety.sh
+  + gh232-wave-reconcile-multiphase.sh
+  + gh202-wave-reconcile-issue-state.sh
+  + gh155-phase2-differential-oracle.sh
+  + relay-pkg-freshness.sh
+  + skill-extract.sh
+  + releases-skill.sh
+  + deep-research.sh
+  + gh75-dashboard.sh
+  + gh103-timeline-exporter.sh
+  + gh525-unshipped-version-tokens.sh
+  + gh32-releases-artifacts.sh
+  + gh549-work-events.sh
+  + gh54-merged-dump-refusals.sh
+  + gh360-dump-multiline-values.sh
+  + gh53-releases-merge-resolve.sh
+  + gh57-releases-fuzz.sh
+  + gh57-live-merge-resolve.sh
+  + gh351-manifest-unship.sh
+  + gh32-releases-app.sh
+  + gh360-scoped-receipt-chain-rebuild.sh
+  + gh69-roadmap-shadow.sh
+  + gh349-releases-roadmap-vendored.sh
+  + consult.sh
+  + gh32-release-target-advisory.sh
+  + gh39-releases-project-sync.sh
+  + path-integrity.sh
+  + archive-root.sh
+  + archive-writers.sh
+  + relay-turn-timeout.sh
+  + archive-commit.sh
+  + archive-telemetry.sh
+  + relay-file-seeding-visibility.sh
+  + gh304-vendored-relay-path.sh
+  + relay-dep-drift.sh
+  + relay-turn-handoff.sh
+  + new-relay.sh
+  + gh678-installer-live-links.sh
+  + gh77-standup-triage.sh
+  + skills-army-hq.sh
+  + agent-chorus.sh
+  + gh233-agent-chorus-concurrency.sh
+  + gh268-relay-cue-and-target-checks.sh
+  + agent-chorus-bridge.sh
+  + gh620-skills-army-mini-sync.sh
+  + xyz-sync-check.sh
+  + gh293-vendored-guard-drift.sh
+  + relay-concurrent-commit.sh
+  + relay-commit-pathspec.sh
+  + relay-case-insensitive.sh
+  + gh642-consumer-fruit.sh
+  + pdda-changelog.sh
+  + pdda-roadmap-coverage.sh
+  + gh649-pdda-migration.sh
+  + pdda-local-checks.sh
+  + gh784-marathon-qa-gate.sh
+  + gh460-pipe-buffer-sigpipe.sh
+  + gh284-p3-release-milestone.sh
+  + gh284-p4-release-lanes.sh
+  + pdda-repo-contract.sh
+  + ci-workflow.sh
+  + swarm-preflight.sh
+  + ci-route.sh
+  + gh509-gate-evidence.sh
+  + xyz-completion.sh
+  + gh358-lock-instrumentation.sh
+  + gh14-atomic-append.sh
+  + gh23-path-overlap-enforcement.sh
+  + pdda-install-startup-docs.sh
+  + gh123-lock-progress-bound.sh
+  + gh4-ungated-clone-warning.sh
+  + marathon-plan.sh
+  + hq.sh
+  + hq-park.sh
+  + hq-park-synthesis.sh
+  + hq-dispatch.sh
+  + hq-next.sh
+  + hq-hardening.sh
+  + preflight-docs.sh
+  + hq-promote.sh
+  + hq-marathon-scan.sh
+  + xyz-harness-hooks.sh
+  + hq-rollup.sh
+  + gh238-hq-releases-mode.sh
+  + gh567-roadmap-dashboard-retired.sh
+  + gh257-roadmap-ledger-fixes.sh
+  + mktemp-trap-guard.sh
+  + gh703-raw-text-asterisk.sh
+  + gh568-releases-md-retired.sh
+  + gh423-roadmap-render.sh
+  + gh528-parallel-contention-retry.sh
+  + gh454-reconciler-defects.sh
+  + gh418-planner-ledger-source.sh
+  + gh424-roadmap-status-marker.sh
+  + gh239-hq-status-releases-mode.sh
+  + gh684-hosted-lane-report.sh
+  + gh421-auto-wave-reconcile.sh
+  + gh425-gate-provenance-pr.sh
+  + gh740-hosted-lane-publish.sh
+  + gh605-work-state.sh
+  + gh492-roadmap-state-sweep.sh
+  + gh605-board-policy.sh
+  + gh645-merge-cleanup-xyz-tools.sh
+  + gh674-merge-cleanup-hosted-lookup.sh
+  + gh491-roadmap-section-validation.sh
+  + gh681-reviewer-probe-rules.sh
+  + gh269-roadmap-retired.sh
+  + gh527-issue-url-repair.sh
+  + jog-queue.sh
+  + gh291-contract-goldens.sh
+  + gh290-ate-variation-grid.sh
+  + gh205-gate-idempotency.sh
+  + gh204-sed-portability.sh
+  + gh153-releases-sidebar-rollup.sh
+  + transcript-audit.sh
+  + sentinel-tier1.sh
+  + sentinel-network-guard.sh
+  + gh353-vendored-router-audit.sh
+  + sentinel-driver-hooks.sh
+  + checkjs.sh
+  + acorn-extract.sh
+  + registry-lock-concurrency.sh
+  + marathon-monitor.sh
+  + signal-triage.sh
+  + fixtures/canary-token-reuse/verify-fixture.sh
+  + fixtures/canary-peer-orphan/verify-fixture.sh
+  + fixtures/canary-reviewer-overstep/verify-fixture.sh
+  + phase3-signoff-guard.sh
+  + relay-self-sufficiency.sh
+  + agy-tui-takeover-verdict.sh
+  + gh105-vendor-releases-addon.sh
+  + gh107-timeline-json-seam.sh
+  + gh132-review-xyz-skill.sh
+  + gh165-governance-canonical-paths-guard.sh
+  + security-scan.sh
+  + gh273-marathon-root-audit-python-shape.sh
+  + sentinel-overlay.sh
+  + relay-uncited-findings.sh
+  + wave-reconcile.sh
+  + gh312-vendor-preserves-state.sh
+  + gh197-vendor-tier-split.sh
+  + gh693-lessons-learned-advisory.sh
+  + gh298-ate-gen4-ci-smoke.sh
+  + gh306-registry-bidirectional.sh
+  + gh496-phase2-reconciliation-views.sh
+  + gh-gen4-phase2-adaptive-ate.sh
+  + gh-gen4-phase1-domain-oracles.sh
+  + gh-gen4-phase5-campaign.sh
+  + gh712-jev-triage.sh
+  + gh393-deepseek-readiness.sh
+  + gh591-prepush-commit-boundary.sh
+  + gh-gen4-phase4-repro-synth.sh
+  + gh-gen4-phase3-fuzz-engine.sh
+  + gh589-skill-viewer.sh
+  + gh589-consult-no-tick.sh
+  + gh589-xyz-mini-sync.sh
+  + gh436-merge-cleanup.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant
+  + gamma-poison-staleness-probe
+failed:
+  - gh777-inventory-ratchet.sh
+  - gh372-escalation-log-tail.sh
+  - gh448-driver-lock-resolver.sh
+  - marathon-drive.sh
+  - gh358-wave-reconcile-vendored-paths.sh
+  - gh429-wave-reconcile-vendored-observe.sh
+  - find-harness.sh
+  - gh292-worktree-vendored-discovery.sh
+  - xyz-vendor.sh
+  - gh362-marathon-plan-link-bullets.sh
+  - hq-locator.sh
+  - gh280-jog-marathon-adapter.sh
+  - gh396-find-harness-roots.sh
+
+pre-push: full validation RED (exit 1) after 1228s — push REFUSED.
+
+  The failing checks are named in the output above.
+
+  Hosted CI may run after the push, but this local boundary is the earliest full signal and the
+  Ubuntu pull-request lane is advisory. Do not use downstream CI as a reason to ignore this red.
+
+  To push anyway (and you may have a good reason — a WIP branch, a known-red baseline):
+    git push --no-verify
+error: failed to push some refs to 'https://github.com/HiQS-Labs/XYZ-forge.git'

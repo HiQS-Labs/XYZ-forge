@@ -1,0 +1,29 @@
+GH-405 mock_gh_board harness:
+1. management CLI verbs
+  ok  - --reset initializes clean state file
+  ok  - --dump outputs valid JSON state
+  ok  - --seed populates initial items
+2. query resolution
+  ok  - user projectV2 and single-select field options resolved
+  ok  - repository issue node resolved
+3. mutations & duplicate card fidelity
+  ok  - addProjectV2ItemById creates first item (PVTI_mock_item_0001)
+  ok  - repeated addProjectV2ItemById creates distinct duplicate item (PVTI_mock_item_0002 != PVTI_mock_item_0001)
+  ok  - updateProjectV2ItemFieldValue sets field value
+  ok  - deleteProjectV2Item removes item
+4. integration with board_sync.py
+  ok  - board_sync touch 405 --write completes via mock
+  ok  - board_sync check-first reports already In progress (no-op)
+  ok  - a card at the wrong status is a status write, not a no-op (r2 #2 red control)
+5. fault injection and self-heal retry
+  ok  - fault injection triggers self-healing retry without duplicating card
+  ok  - dedupe confirms single item preserved after self-heal retry
+6. organization-owned board
+  ok  - an organization-owned project resolves and accepts the write
+7. GH-549 — insufficient token scope
+  ok  - a missing Projects scope names the exact remediation command (rc=1)
+  ok  - and it is a named refusal, not a traceback
+  ok  - and it states plainly that it will not auth for you
+  ok  - red control: with the fault cleared the same call succeeds (rc=0)
+
+GH-405 mock_gh_board harness: 19 passed, 0 failed

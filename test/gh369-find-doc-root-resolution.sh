@@ -57,7 +57,7 @@ if [ "$rc" -ne 2 ]; then
   fail "case 2: expected rc=2 for a bad \$TENDAYS_ROOT, got rc=$rc"
 elif grep -q -- '--root' <<<"$(printf '%s' "$out")"; then
   fail "case 2: message blames --root, which was never passed: $out"
-elif printf '%s' "$out" | grep -q 'TENDAYS_ROOT' && printf '%s' "$out" | grep -q '/no/such/dir'; then
+elif grep -q 'TENDAYS_ROOT' <<<"$out" && grep -q '/no/such/dir' <<<"$out"; then
   pass "case 2: bad \$TENDAYS_ROOT names its source AND the offending path"
 else
   fail "case 2: message must name \$TENDAYS_ROOT and the path, got: $out"
@@ -66,7 +66,7 @@ fi
 # --- Case 3: a bad --root still names --root, and prints the path ----------------------------
 out="$(run_capped --root /no/such/dir 5)"
 rc=$?
-if [ "$rc" -eq 2 ] && printf '%s' "$out" | grep -q -- '--root' && printf '%s' "$out" | grep -q '/no/such/dir'; then
+if [ "$rc" -eq 2 ] && grep -q -- '--root' <<<"$out" && grep -q '/no/such/dir' <<<"$out"; then
   pass "case 3: bad --root reports --root and the path"
 else
   fail "case 3: expected rc=2 naming --root and the path, got rc=$rc: $out"

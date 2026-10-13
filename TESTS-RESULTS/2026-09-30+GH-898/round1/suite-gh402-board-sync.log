@@ -1,0 +1,50 @@
+GH-402 board_sync Phase 1:
+1. extraction (strong sources)
+  ok  - gh-123.*strong.*pdda_doc
+  ok  - gh-402.*strong.*pdda_doc
+  ok  - gh-124.*strong.*branch
+  ok  - gh-391.*strong.*branch
+  ok  - gh-132.*strong.*branch
+  ok  - gh-133.*strong.*branch
+  ok  - gh-126.*strong.*tick_event
+  ok  - gh-127.*strong.*jog_running
+2. strength classification (S2)
+  ok  - clone dir is weak (presence is not work)
+  ok  - stale 🚧 marker is weak
+3. negatives
+  ok  - non-claim verbs ignored
+  ok  - done markers ignored
+  ok  - non-running jog rows ignored
+  ok  - branch number extraction bounded
+4. empty-input refusal
+  ok  - zero candidates over a populated checkout refuses (rc=1)
+  ok  - surface-less (void) root refuses too (S-2 residual gap closed)
+5. kill-switch
+  ok  - kill-switch no-ops
+6. settings env tier
+  ok  - env tier overrides nested board_sync setting
+  ok  - config output marks token_file reserved (no secret material)
+7. witnessed red (extractor break)
+  ok  - broken extractor drops gh-123 (this suite would be red — the pin holds)
+  ok  - mutation isolated to the pdda extractor (branches still found)
+8. weak-only reconcile refuses to write (S-4)
+  ok  - weak-only candidates log and never write, even with --write
+9. loud errors + state-path override
+  ok  - flag-before-subcommand is a loud usage error
+  ok  - touch with unparseable issue fails (rc=2)
+  ok  - XYZ_BOARD_SYNC_STATE_PATH overrides state path (offline-pinnable)
+10. reconcile on empty
+  ok  - reconcile over an idle clone exits 0 with 'nothing to reconcile'
+11. config coercion
+  ok  - a string repos value from device_config.json is coerced to a list
+12. XYZ_BOARD_SYNC_GH_BIN seam
+  ok  - XYZ_BOARD_SYNC_GH_BIN overrides gh executable and intercepts _gql (rc=1)
+  ok  - touch accepts bare integer argument (402)
+13. GH-549 — no default board identity
+  ok  - an unconfigured board_sync refuses by name (rc=2)
+  ok  - and it made ZERO gh calls before refusing
+  ok  - DEFAULTS carries no project_owner
+  ok  - DEFAULTS carries no project_number
+  ok  - DEFAULTS carries no repos
+
+GH-402 board_sync Phase 1: 34 passed, 0 failed

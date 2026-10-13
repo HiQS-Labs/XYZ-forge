@@ -1,0 +1,17 @@
+# D1 routing probes — base (before the edit, red) — 24d77635 — utils/ci-route.sh sha256 16d2ea180947
+worktree-safety alone [WORKTREE-SAFETY.md]                 rc=0  route=docs tier=1 tier_reason=docs-only 
+merge-cleanup SKILL.md alone [skills/2-daily/merge-cleanup/SKILL.md] rc=0  route=docs tier=1 tier_reason=docs-only 
+worktree-safety + README [WORKTREE-SAFETY.md README.md]    rc=0  route=docs tier=1 tier_reason=docs-only 
+merge-cleanup SKILL.md + README [skills/2-daily/merge-cleanup/SKILL.md README.md] rc=0  route=docs tier=1 tier_reason=docs-only 
+control: README alone [README.md]                          rc=0  route=docs tier=1 tier_reason=docs-only 
+control: another skill's SKILL.md [skills/2-daily/releases/SKILL.md] rc=0  route=docs tier=1 tier_reason=docs-only 
+subsystems small: 73 suites; gh436 present: 1
+
+# D1 routing probes — after (edited router, green) — 24d77635 — utils/ci-route.sh sha256 9881afe850a2
+worktree-safety alone [WORKTREE-SAFETY.md]                 rc=0  route=full tier=3 tier_reason=kernel/gate surface (route=full) 
+merge-cleanup SKILL.md alone [skills/2-daily/merge-cleanup/SKILL.md] rc=0  route=full tier=3 tier_reason=kernel/gate surface (route=full) 
+worktree-safety + README [WORKTREE-SAFETY.md README.md]    rc=0  route=full tier=3 tier_reason=kernel/gate surface (route=full) 
+merge-cleanup SKILL.md + README [skills/2-daily/merge-cleanup/SKILL.md README.md] rc=0  route=full tier=3 tier_reason=kernel/gate surface (route=full) 
+control: README alone [README.md]                          rc=0  route=docs tier=1 tier_reason=docs-only 
+control: another skill's SKILL.md [skills/2-daily/releases/SKILL.md] rc=0  route=docs tier=1 tier_reason=docs-only 
+subsystems small: 72 suites; gh436 present: 0

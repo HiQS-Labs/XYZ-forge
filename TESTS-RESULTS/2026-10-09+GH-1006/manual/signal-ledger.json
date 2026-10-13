@@ -1,0 +1,31 @@
+{
+  "command": "minimal Bash process-substitution TERM probe; controlled 0.05s cancellation write delay",
+  "hypotheses": [
+    "group TERM kills tee; next stdout write SIGPIPE",
+    "phase child status overwrites TERM",
+    "observer shutdown clobbers status"
+  ],
+  "runs": [
+    {
+      "name": "parent-control",
+      "protect_tee": false,
+      "signal_group": false,
+      "exit": 143
+    },
+    {
+      "name": "group-red",
+      "protect_tee": false,
+      "signal_group": true,
+      "exit": -13
+    },
+    {
+      "name": "group-disproof",
+      "protect_tee": true,
+      "signal_group": true,
+      "exit": 143
+    }
+  ],
+  "root_cause": "group TERM terminates run-log reader before cancellation can write",
+  "fix_site": "opt-in run-log reader signal disposition",
+  "why_not_downstream": "catching broken pipes at every writer loses the terminal record and leaves the logger dead"
+}

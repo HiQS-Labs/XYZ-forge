@@ -68,7 +68,7 @@ out="$(run good --query "what is deep research" --search-context-size high --tem
 grep -q '"provider":"agy"' <<<"$(echo "$out")" && pass "provider is agy" || fail "provider field wrong: $out"
 grep -q '"model":"gemini"' <<<"$(echo "$out")" && pass "model field set" || fail "model field wrong: $out"
 grep -q '"query":"what is deep research"' <<<"$(echo "$out")" && pass "query echoed back" || fail "query field wrong: $out"
-echo "$out" | grep -q 'https://example.com/docs' && echo "$out" | grep -q 'https://example.com/blog' \
+grep -q 'https://example.com/docs' <<<"$out" && grep -q 'https://example.com/blog' <<<"$out" \
   && pass "both citations extracted from a CITATIONS section" || fail "citations missing: $out"
 grep -q '"title":"Example Docs"' <<<"$(echo "$out")" && pass "citation title parsed" || fail "citation title missing: $out"
 grep -q '"searchContextSize":"high"' <<<"$(echo "$out")" && pass "raw.config carries searchContextSize through" || fail "raw config missing searchContextSize: $out"
@@ -76,7 +76,7 @@ grep -q '"searchContextSize":"high"' <<<"$(echo "$out")" && pass "raw.config car
 # --- (3) fallback citation extraction: no CITATIONS heading, bare inline URLs ---------------------
 out="$(run noformat --query q)"; rc=$?
 [ "$rc" -eq 0 ] && pass "noformat turn exits 0" || fail "noformat rc=$rc"
-echo "$out" | grep -q 'https://example.com/a' && echo "$out" | grep -q 'https://example.com/b' \
+grep -q 'https://example.com/a' <<<"$out" && grep -q 'https://example.com/b' <<<"$out" \
   && pass "fallback extraction finds bare inline URLs" || fail "fallback citations missing: $out"
 
 # --- (4) side-effect free: agy runs in a throwaway tmpdir, not the caller's CWD, cleaned up after --
@@ -98,7 +98,7 @@ grep -q -- '--dangerously-skip-permissions' "$amarker" 2>/dev/null \
 # --- (4c) agy's stdin is EOF'd, so a backend that reads stdin doesn't block (regression for the
 # execFile-ignores-stdio hang where stdin stayed an open pipe until --print-timeout, 2026-07-04) ----
 out="$(DEEP_RESEARCH_TIMEOUT_MS=8000 run needstdin --query q 2>/dev/null)"; rc=$?
-{ [ "$rc" -eq 0 ] && echo "$out" | grep -q 'example.com/x'; } \
+{ [ "$rc" -eq 0 ] && grep -q 'example.com/x' <<<"$out"; } \
   && pass "agy stdin closed (a stdin-reading backend returns; no open-pipe hang)" \
   || fail "expected exit 0 with output (stdin not EOF'd -> hang), rc=$rc out='$out'"
 
@@ -211,7 +211,7 @@ grep -q '"max_tokens":256' "$WORK/or-req.json" && pass "openrouter: --max-tokens
 or_start good
 out="$(DEEP_RESEARCH_OPENROUTER_MODEL="perplexity/sonar-pro" or_run --query q)"; rc=$?
 or_stop
-{ [ "$rc" -eq 0 ] && echo "$out" | grep -q '"model":"perplexity/sonar-pro"'; } \
+{ [ "$rc" -eq 0 ] && grep -q '"model":"perplexity/sonar-pro"' <<<"$out"; } \
   && grep -q '"model":"perplexity/sonar-pro"' "$WORK/or-req.json" \
   && pass "openrouter: DEEP_RESEARCH_OPENROUTER_MODEL overrides model (result + request)" \
   || fail "model override failed: rc=$rc out='$out' req=$(cat "$WORK/or-req.json" 2>/dev/null)"
@@ -220,14 +220,14 @@ or_stop
 or_start citearray
 out="$(or_run --query q)"; rc=$?
 or_stop
-{ [ "$rc" -eq 0 ] && echo "$out" | grep -q 'https://example.com/c1' && echo "$out" | grep -q 'https://example.com/c2'; } \
+{ [ "$rc" -eq 0 ] && grep -q 'https://example.com/c1' <<<"$out" && grep -q 'https://example.com/c2' <<<"$out"; } \
   && pass "openrouter: citations[] passthrough extracted without annotations" || fail "citearray failed: rc=$rc out='$out'"
 
 # --- (14) bare-URL fallback when neither annotations nor citations[] present -----------------------
 or_start inline
 out="$(or_run --query q)"; rc=$?
 or_stop
-{ [ "$rc" -eq 0 ] && echo "$out" | grep -q 'https://example.com/inline1' && echo "$out" | grep -q 'https://example.com/inline2'; } \
+{ [ "$rc" -eq 0 ] && grep -q 'https://example.com/inline1' <<<"$out" && grep -q 'https://example.com/inline2' <<<"$out"; } \
   && pass "openrouter: bare-URL scan fallback" || fail "inline fallback failed: rc=$rc out='$out'"
 
 # --- (15) fail-closed: non-200 -> exit 1, typed backend_error, no fallback -------------------------

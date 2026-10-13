@@ -1,0 +1,26 @@
+{
+  "version": "codex-cli 0.159.1",
+  "features": [
+    "goals                                    stable             true",
+    "hooks                                    stable             true"
+  ],
+  "exposed_goal_tools": "create_goal/get_goal/update_goal available in current session; creation requires explicit Goal request",
+  "configured_workhorse_hooks": "none installed by this change",
+  "commands": [
+    {
+      "argv": [
+        "codex",
+        "--version"
+      ],
+      "rc": 0
+    },
+    {
+      "argv": [
+        "codex",
+        "features",
+        "list"
+      ],
+      "rc": 0
+    }
+  ]
+}

@@ -117,7 +117,7 @@ run_preflight() {  # run_preflight <logdir> [PDDA_LLM_BIN]
 }
 
 logline() { grep "\"doc\": \"[^\"]*$1\"" "$2/$(date +%Y-%m-%d).jsonl" 2>/dev/null; }
-has() { logline "$1" "$3" | grep -q "\"action\": \"$2\""; }
+has() { grep -q "\"action\": \"$2\"" <<<"$(logline "$1" "$3")"; }
 
 # ── Case 1: no LLM — review+warn only, no edits ──────────────────────────────
 seed_broken

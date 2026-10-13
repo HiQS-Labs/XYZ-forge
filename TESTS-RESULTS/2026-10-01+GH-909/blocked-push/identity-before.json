@@ -1,0 +1,6 @@
+{
+  "head": "1cad5dce410b8a747901d981dda90c4b2d04c2c7",
+  "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.fix/completion-lock-loss.remote=origin\nbranch.fix/completion-lock-loss.merge=refs/heads/fix/completion-lock-loss",
+  "branch": "fix/completion-lock-loss"
+}

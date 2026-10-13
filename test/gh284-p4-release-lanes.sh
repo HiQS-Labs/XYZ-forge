@@ -144,7 +144,7 @@ conn.execute("INSERT INTO releases VALUES ('2.0.0', 'Second', 'draft', 'Second')
 conn.commit()
 PYEOF
 out="$(PATH="$STUB:$PATH" RELEASES_DB="$DB2" bash "$LANES" rollup --trunk "$TRUNK" 2>&1)"; rc=$?
-[ "$rc" -eq 3 ] && printf '%s' "$out" | grep -q 'Quicksilver' && printf '%s' "$out" | grep -q 'Second' \
+[ "$rc" -eq 3 ] && grep -q 'Quicksilver' <<<"$out" && grep -q 'Second' <<<"$out" \
   && pass "two in-progress releases with join keys is an error that names both" \
   || fail "ambiguous auto-resolve should exit 3 naming both (rc=$rc): $out"
 

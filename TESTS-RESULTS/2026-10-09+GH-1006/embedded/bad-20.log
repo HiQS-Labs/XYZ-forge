@@ -1,0 +1,1 @@
+marathon: progress interval must be a positive integer <=86400

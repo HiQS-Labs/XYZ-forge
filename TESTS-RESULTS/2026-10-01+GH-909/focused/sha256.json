@@ -1,0 +1,16 @@
+{
+  "green-records.json": "0fba56712255c994732b2eb27d3fe74c2de6d1189a591b64612cc1a55054a0b0",
+  "manual-result.json": "59d8ecbe5a595dfc422e4a8107975620949dfb1770884ab65dfc6ccb02d20d2d",
+  "manual.py": "2729da9b77173ff7bd43b6a09c48ccdfbc2fe8ccae0613d861dd002017d9739b",
+  "gh358-lock-instrumentation.log": "adb3a2ad00db3f1f73405595494b59c49407f8449709d78a9b5c4cbbd28ef4de",
+  "gh123-lock-progress-bound.log": "f378b246e1395fe93997dcfa78812d217c235bf98d408cc8fa018e31d6adbcbd",
+  "green-writer.sh": "67fb92cbbf2aed06bc96699afd1169af1e288f2e35552cec0f16073e7373e1c0",
+  "provenance.jsonl": "e5831ff9b3dc3b51ab7a0e61dbe74c9e197a139c718317238d9f297409055bc1",
+  "identity-before.json": "ba5840760e4baf045ea52d1e63b05981e20f84b23663249cc3a24737139bae5d",
+  "xyz-completion.log": "6ac0bc03ef157103183961973aa43a68ace7f051420f816aae048da13eda21fa",
+  "identity-after.json": "ba5840760e4baf045ea52d1e63b05981e20f84b23663249cc3a24737139bae5d",
+  "ate/error_log.jsonl": "2e045db9e9b9b7b98f6b0b87a9c4fa6bcb9e083d7c66d273527ae14f94a5da10",
+  "ate/probe.py": "81212b662eece335f811c8ccddbb928684e1d47394cf54a51e0244ebc0ac6e60",
+  "ate/grid.yaml": "417e858def7093990db142adb2b81ff9c514cdd35f99196581acfa55b534b302",
+  "ate/control.json": "572fc7b7efaaf81712f35c10b88e3f288275608bd12edd879a9ce09d6b8b2fb8"
+}

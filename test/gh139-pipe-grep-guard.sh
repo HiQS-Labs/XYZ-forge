@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# #139 — static inventory guard: NO NEW `| grep -q` pipes under test/.
+# #139 — static inventory guard: NO NEW quiet grep pipes under test/.
 #
-# The shape is nondeterministic red under `set -o pipefail`: `grep -q` exits the instant it
+# The shape is nondeterministic red under `set -o pipefail`: quiet grep exits the instant it
 # matches, the producer still writing gets SIGPIPE, and the pipeline reports the producer's 141
 # — a match that SUCCEEDED reads as a failure. GH-460 pinned the mechanism (and fixed its one
 # production site); Wave 1 reintroduced the shape in a fresh suite with full knowledge of the
@@ -29,7 +29,7 @@ fail() { echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); }
 
 [ -f "$BASELINE" ] || { echo "gh139: baseline missing: $BASELINE" >&2; exit 1; }
 
-# Current per-file counts of the pipe-into-grep -q shape (the guard itself excluded — its own
+# Current per-file counts of the pipe-into-quiet-grep shape (the guard itself excluded — its own
 # body contains the shape in prose/patterns). `||` is stripped first: `a || grep -q x` chains a
 # grep WITHOUT a pipe and must not count (the repaired gh284/gh322 lines carry exactly that
 # shape and false-positived the first gate run).
@@ -39,7 +39,9 @@ for f in "$ROOT"/test/*.sh "$ROOT"/test/synthetic/*.sh "$ROOT"/test/fixtures/*/*
   [ -f "$f" ] || continue
   rel="${f#"$ROOT"/}"
   [ "$rel" = "$SELF_REL" ] && continue
-  c="$(sed 's/||//g' "$f" | grep -c "| grep -q")"
+  # Match |grep as well as -q, combined short flags (-Fq/-iq/-qF), and --quiet.
+  # Option tokens cannot cross another pipe; `||` was removed above.
+  c="$(sed 's/||//g' "$f" | grep -Ec '\|[[:space:]]*grep[[:space:]]+(-[^[:space:]|]+[[:space:]]+)*(-[[:alpha:]]*q[[:alpha:]]*|--quiet)')"
   [ "$c" -gt 0 ] && printf '%s %s\n' "$c" "$rel"
 done | sort -k2 >"$CURRENT"
 
@@ -50,11 +52,11 @@ while read -r count path; do
   base="$(awk -v p="$path" '$2 == p {print $1}' "$BASELINE")"
   base="${base:-0}"
   if [ "$count" -gt "$base" ]; then
-    fail "$path grew from $base to $count pipe-into-grep -q site(s) — use capture-then-match: grep -q PAT <<<\"\$(cmd)\""
+    fail "$path grew from $base to $count pipe-into-quiet-grep site(s) — use capture-then-match: grep -q PAT <<<\"\$(cmd)\""
     violations=$((violations+1))
   fi
 done <"$CURRENT"
-[ "$violations" -eq 0 ] && pass "no file exceeded its baseline pipe-into-grep -q inventory"
+[ "$violations" -eq 0 ] && pass "no file exceeded its baseline pipe-into-quiet-grep inventory"
 
 # 2. shrunk counts: report and invite the ratchet forward (never a failure)
 shrunk=0

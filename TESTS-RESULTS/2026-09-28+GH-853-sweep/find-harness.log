@@ -1,0 +1,25 @@
+find-harness (GH-70 Phase 2):
+  PASS: skill front door searches the user install root
+  PASS: skill front door does not prescribe the CWD-relative command
+  PASS: harness clone: --check exits 0
+  PASS: harness clone: no concurrency warning
+  PASS: foreign no-.xyz: --check still exits 0 (fail-open)
+  PASS: foreign no-.xyz: emits the concurrency warning
+  PASS: foreign no-.xyz: points at xyz-vendor.sh
+  PASS: foreign no-.xyz: hint omits the bogus vendor subcommand
+  PASS: vendored .xyz: --check exits 0
+  PASS: vendored .xyz: no concurrency warning
+  PASS: vendored .xyz: resolves to the local .xyz
+  PASS: case-collision: --check still exits 0 (fail-open)
+  PASS: case-collision: emits the advisory warning
+  PASS: case-collision: names both colliding paths
+  PASS: case-collision: explains the exit-6 risk + git mv remedy
+  PASS: vendored collision: --check exits 0
+  PASS: vendored collision: emits the case-collision warning
+  PASS: vendored collision: names both colliding paths
+  PASS: vendored collision: stays scoped to caller repo
+  PASS: no-collision: --check exits 0
+  PASS: no-collision: case-collision warning absent
+  PASS: ignorecase=false collision: --check exits 0
+  PASS: ignorecase=false collision: warning absent
+  find-harness: 23 pass, 0 fail

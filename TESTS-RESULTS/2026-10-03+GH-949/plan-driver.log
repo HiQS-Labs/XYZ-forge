@@ -1,0 +1,6 @@
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to /Users/noelsaw/task-clones/ate-remediation-20261003/task (#129)
+relay-drive: RELAY-GH949-PLAN not found in the resolved tick log
+  TICK_REPO_ROOT: /Users/noelsaw/task-clones/ate-remediation-20261003/task
+  searched:       /Users/noelsaw/task-clones/ate-remediation-20261003/task/.tick/events/
+  hint: if you seeded the token in another shell, export the same env —
+        eval "$(find-harness.sh --env)"

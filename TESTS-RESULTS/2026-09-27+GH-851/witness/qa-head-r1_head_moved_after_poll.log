@@ -1,0 +1,7 @@
+merge-cleanup: ERROR — PR #5: the resolved head still does not merge cleanly — stopping (WITNESS: reached the landing clone)
+merge-cleanup: PR #5: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #5: attempt record /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tmpuheb6o7o/rec.json
+merge-cleanup: PR #5: slot reserved
+merge-cleanup: PR #5: pushed cccccccccc; re-fetching and re-gating the new head
+merge-cleanup: PR #5: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (1/6)
+merge-cleanup: Landing clones kept for inspection under /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/merge-cleanup-rhhtrasu

@@ -1,0 +1,141 @@
+{
+  "label": "base",
+  "source": "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base-source",
+  "rows": [
+    {
+      "module": "domain_oracles.py",
+      "case": "TERM",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base-source/domain_oracles.py",
+        "--mode",
+        "idempotence",
+        "--cmd",
+        "/opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base/domain_oracles-TERM/worker.py",
+        "--cwd",
+        "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base/domain_oracles-TERM",
+        "--repetitions",
+        "2",
+        "--json"
+      ],
+      "started_utc": "2026-10-05T05:05:17.962509+00:00",
+      "returncode": -15,
+      "conventional_rc": 143,
+      "expected_rc": 143,
+      "child": {
+        "pid": 71431,
+        "pgid": 71421
+      },
+      "child_survived": true,
+      "property_pass": false,
+      "stdout": "",
+      "stderr": "",
+      "cleanup_verified": true
+    },
+    {
+      "module": "domain_oracles.py",
+      "case": "cap",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base-source/proc_group.py",
+        "--timeout",
+        "2",
+        "--grace",
+        "1",
+        "--",
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base-source/domain_oracles.py",
+        "--mode",
+        "idempotence",
+        "--cmd",
+        "/opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base/domain_oracles-cap/worker.py",
+        "--cwd",
+        "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base/domain_oracles-cap",
+        "--repetitions",
+        "2",
+        "--json"
+      ],
+      "started_utc": "2026-10-05T05:05:18.185517+00:00",
+      "returncode": 124,
+      "conventional_rc": 124,
+      "expected_rc": 124,
+      "child": {
+        "pid": 71505,
+        "pgid": 71503
+      },
+      "child_survived": false,
+      "property_pass": true,
+      "stdout": "",
+      "stderr": "proc_group: TIMEOUT after 2.0s \u2014 killing process group of pid 71503: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base-source/domain_oracles.py --mode idempotence --cmd /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base/domain_oracles-cap/worker.py --cwd /Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base/domain_oracles-cap --repetitions 2 --json\n",
+      "cleanup_verified": true
+    },
+    {
+      "module": "metamorphic_oracle.py",
+      "case": "TERM",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base-source/metamorphic_oracle.py",
+        "--mode",
+        "idempotence",
+        "--cmd",
+        "/opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base/metamorphic_oracle-TERM/worker.py",
+        "--cwd",
+        "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base/metamorphic_oracle-TERM",
+        "--repetitions",
+        "2",
+        "--json"
+      ],
+      "started_utc": "2026-10-05T05:05:20.457261+00:00",
+      "returncode": -15,
+      "conventional_rc": 143,
+      "expected_rc": 143,
+      "child": {
+        "pid": 71725,
+        "pgid": 71717
+      },
+      "child_survived": true,
+      "property_pass": false,
+      "stdout": "",
+      "stderr": "",
+      "cleanup_verified": true
+    },
+    {
+      "module": "metamorphic_oracle.py",
+      "case": "cap",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base-source/proc_group.py",
+        "--timeout",
+        "2",
+        "--grace",
+        "1",
+        "--",
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base-source/metamorphic_oracle.py",
+        "--mode",
+        "idempotence",
+        "--cmd",
+        "/opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base/metamorphic_oracle-cap/worker.py",
+        "--cwd",
+        "/Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base/metamorphic_oracle-cap",
+        "--repetitions",
+        "2",
+        "--json"
+      ],
+      "started_utc": "2026-10-05T05:05:20.651203+00:00",
+      "returncode": 124,
+      "conventional_rc": 124,
+      "expected_rc": 124,
+      "child": {
+        "pid": 71809,
+        "pgid": 71808
+      },
+      "child_survived": false,
+      "property_pass": true,
+      "stdout": "",
+      "stderr": "proc_group: TIMEOUT after 2.0s \u2014 killing process group of pid 71808: /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base-source/metamorphic_oracle.py --mode idempotence --cmd /opt/homebrew/opt/python@3.14/bin/python3.14 /Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base/metamorphic_oracle-cap/worker.py --cwd /Users/noelsaw/agent-workspaces/xyz-forge-pr953-verify-20261004/temp/pr953-b1/base/metamorphic_oracle-cap --repetitions 2 --json\n",
+      "cleanup_verified": true
+    }
+  ],
+  "all_properties_pass": false
+}

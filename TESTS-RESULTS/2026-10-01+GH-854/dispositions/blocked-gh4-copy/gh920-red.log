@@ -1,0 +1,13 @@
+== test: gh306-registry-bidirectional ==
+  PASS: the TESTS array was extracted from validate.sh (non-empty blob)
+  FAIL: top-level suite(s) on disk but registered nowhere and not exempt (the B3 shape, GH-306):
+        gh4-ungated-clone-warning.sh
+  PASS: this suite itself is registered in TESTS (self-demonstrating — an unregistered guard is the exact failure it exists to catch)
+  PASS: every TESTS entry exists on disk (missing: none)
+  PASS: every exemption names a file that still exists on disk (stale: none)
+  PASS: no exemption is ALSO registered in TESTS (double-listed: none — exempt means not in the gate)
+  PASS: a ghost suite (on disk, unregistered, unexempted) is flagged BY NAME — the #281 B3 shape goes red
+  PASS:   and the registered stub in the same dir is NOT flagged
+  PASS:   and the exempt helper in the same dir is NOT flagged
+  PASS: a fully-registered-or-exempt dir yields an EMPTY drift report (control: the guard is not trigger-happy)
+  gh306-registry-bidirectional: 9 pass, 1 fail

@@ -54,8 +54,8 @@ printf 'PEER-UNCOMMITTED-WORK\n' > "$R/peer.txt"
 printf 'untracked peer work\n'   > "$R/peer-new.txt"
 OUT="$(hook_out "$R" "git reset --hard HEAD")"
 
-ok "dirty tree: guard announces the snapshot" "printf '%s' \"\$OUT\" | grep -q 'snapshot saved'"
-ok "dirty tree: message names the command shape" "printf '%s' \"\$OUT\" | grep -q 'reset --hard'"
+ok "dirty tree: guard announces the snapshot" "grep -q 'snapshot saved' <<<\"\$OUT\""
+ok "dirty tree: message names the command shape" "grep -q 'reset --hard' <<<\"\$OUT\""
 SNAP="$(ls -d "$R"/.tick/orphan-backups/*/ 2>/dev/null | head -1 || true)"
 ok "dirty tree: a snapshot directory was created" "[ -n '$SNAP' ]"
 ok "snapshot holds the pre-destruction content" \
@@ -96,7 +96,7 @@ printf 'dirty\n' > "$C/peer.txt"
 for shape in "git reset --hard HEAD" "git checkout -- peer.txt" "git checkout peer.txt" \
              "git restore peer.txt" "git stash"; do
   OUT="$(hook_out "$C" "$shape")"
-  ok "fires on: $shape" "printf '%s' \"\$OUT\" | grep -q 'snapshot saved'"
+  ok "fires on: $shape" "grep -q 'snapshot saved' <<<\"\$OUT\""
 done
 
 # --- (4b) `git clean` is the INVERSE case, and it needs its own everything --------------------
@@ -110,7 +110,7 @@ printf 'tracked-edit\n' > "$K/peer.txt"          # tracked modification — clea
 printf 'UNTRACKED-WORK\n' > "$K/untracked.txt"   # untracked — clean DOES destroy this
 OUT="$(hook_out "$K" "git clean -fdx")"
 ok "clean: names the untracked set, not the tracked one" \
-   "printf '%s' \"\$OUT\" | grep -q 'untracked file'"
+   "grep -q 'untracked file' <<<\"\$OUT\""
 CSNAP="$(printf '%s' "$OUT" | sed -n 's/.*snapshot saved -> //p')"
 ok "clean: snapshot is OUTSIDE the repo (git clean -x would delete an in-repo one)" \
    "case '$CSNAP' in '$K'*) false ;; /*) true ;; *) false ;; esac"

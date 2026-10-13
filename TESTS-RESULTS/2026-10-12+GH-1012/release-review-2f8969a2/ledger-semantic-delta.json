@@ -1,0 +1,257 @@
+{
+  "schema_migrations": {
+    "base": 9,
+    "candidate": 9,
+    "removed": [],
+    "added_count": 0,
+    "changed_count": 0,
+    "changed": []
+  },
+  "settings": {
+    "base": 3,
+    "candidate": 3,
+    "removed": [],
+    "added_count": 0,
+    "changed_count": 1,
+    "changed": [
+      {
+        "key": [
+          "generation"
+        ],
+        "fields": [
+          "value",
+          "updated_at"
+        ]
+      }
+    ]
+  },
+  "repos": {
+    "base": 1,
+    "candidate": 1,
+    "removed": [],
+    "added_count": 0,
+    "changed_count": 0,
+    "changed": []
+  },
+  "issue_refs": {
+    "base": 96,
+    "candidate": 101,
+    "removed": [],
+    "added_count": 5,
+    "changed_count": 0,
+    "changed": []
+  },
+  "marathons": {
+    "base": 6,
+    "candidate": 6,
+    "removed": [],
+    "added_count": 0,
+    "changed_count": 0,
+    "changed": []
+  },
+  "releases": {
+    "base": 13,
+    "candidate": 13,
+    "removed": [],
+    "added_count": 0,
+    "changed_count": 1,
+    "changed": [
+      {
+        "key": [
+          "rel-01M0GKP4YGTHVTXHVV5WAP08B5"
+        ],
+        "fields": [
+          "status",
+          "shipped_date",
+          "gh_release_url",
+          "updated_at"
+        ]
+      }
+    ]
+  },
+  "manifest_items": {
+    "base": 93,
+    "candidate": 98,
+    "removed": [],
+    "added_count": 5,
+    "changed_count": 0,
+    "changed": []
+  },
+  "manifest_state_events": {
+    "base": 82,
+    "candidate": 87,
+    "removed": [],
+    "added_count": 5,
+    "changed_count": 0,
+    "changed": []
+  },
+  "doc_lines": {
+    "base": 86,
+    "candidate": 86,
+    "removed": [],
+    "added_count": 0,
+    "changed_count": 0,
+    "changed": []
+  },
+  "legacy_lines": {
+    "base": 28,
+    "candidate": 28,
+    "removed": [],
+    "added_count": 0,
+    "changed_count": 0,
+    "changed": []
+  },
+  "grandfather_entries": {
+    "base": 24,
+    "candidate": 24,
+    "removed": [],
+    "added_count": 0,
+    "changed_count": 0,
+    "changed": []
+  },
+  "roadmap_items": {
+    "base": 271,
+    "candidate": 350,
+    "removed": [],
+    "added_count": 79,
+    "changed_count": 6,
+    "changed": [
+      {
+        "key": [
+          "rmi-01M3CW2W2ZZX4GG993EQ7PW39D"
+        ],
+        "fields": [
+          "section",
+          "status_marker",
+          "doc_path",
+          "raw_text",
+          "updated_at",
+          "status_label"
+        ]
+      },
+      {
+        "key": [
+          "rmi-01M2RFN0VYYH0ANWRWGH3C67SB"
+        ],
+        "fields": [
+          "section",
+          "doc_path",
+          "raw_text",
+          "updated_at",
+          "rating_pri",
+          "rating_sev",
+          "rating_appeal",
+          "rating_effort"
+        ]
+      },
+      {
+        "key": [
+          "rmi-01M3A9VTSPC5M10DVZDAGXEQCW"
+        ],
+        "fields": [
+          "section",
+          "status_marker",
+          "doc_path",
+          "raw_text",
+          "updated_at",
+          "rating_pri",
+          "rating_sev",
+          "rating_appeal",
+          "rating_effort"
+        ]
+      },
+      {
+        "key": [
+          "rmi-01M32XWJVQKREQPY7NKGRBDD4M"
+        ],
+        "fields": [
+          "section",
+          "status_marker",
+          "raw_text",
+          "updated_at"
+        ]
+      },
+      {
+        "key": [
+          "rmi-01M24FQRXBZE1PRTQNQT0V0162"
+        ],
+        "fields": [
+          "section",
+          "status_marker",
+          "doc_path",
+          "raw_text",
+          "updated_at"
+        ]
+      },
+      {
+        "key": [
+          "rmi-01M3B4T24D4ZFTHMK6NHJBNXR3"
+        ],
+        "fields": [
+          "section",
+          "status_marker",
+          "doc_path",
+          "raw_text",
+          "updated_at"
+        ]
+      }
+    ]
+  },
+  "jog_queue": {
+    "base": 14,
+    "candidate": 18,
+    "removed": [],
+    "added_count": 4,
+    "changed_count": 4,
+    "changed": [
+      {
+        "key": [
+          "jog-01M15ZWAJYZRX9E4ZM2E2EEMJB"
+        ],
+        "fields": [
+          "position"
+        ]
+      },
+      {
+        "key": [
+          "jog-01M26ZN8YPGWBVSMAQ7BSMTNVB"
+        ],
+        "fields": [
+          "position"
+        ]
+      },
+      {
+        "key": [
+          "jog-01M26ZN96BASE5PR5C5T9Q3PA8"
+        ],
+        "fields": [
+          "position"
+        ]
+      },
+      {
+        "key": [
+          "jog-01M15ZWB962P2PR2XMJPZREAVV"
+        ],
+        "fields": [
+          "position"
+        ]
+      }
+    ]
+  },
+  "op_receipts": {
+    "base": 1353,
+    "candidate": 1781,
+    "removed": [],
+    "added_count": 428,
+    "changed_count": 0,
+    "changed": []
+  },
+  "work_events": {
+    "base": 410,
+    "candidate": 706,
+    "removed": [],
+    "added_count": 296,
+    "changed_count": 0,
+    "changed": []
+  }
+}

@@ -1,0 +1,89 @@
+== test: gh69-roadmap-shadow ==
+  PASS: first sync succeeds (rc=0)
+  PASS:   and captured all four ledger entries
+  PASS:   and ROADMAP.md is byte-identical (shadow never writes the markdown)
+  PASS:   and the planner-invisible section IS mirrored (mirror the file, not the planner)
+  PASS:   and nothing outside ## Ledger leaked in
+  PASS:   and cx/risk/eff parsed as integers
+  PASS:   and legacy HiQS-Suite doc link + issue url landed
+  PASS:   and HiQS-Labs issue url landed (GH-228)
+  PASS:   and HiQS-Labs pull url landed (GH-228)
+  PASS:   and raw_text is the entry verbatim (lossless)
+  PASS:   and check is clean after the sync
+  PASS: no-change sync is a no-op (rc=0)
+  PASS:   and the generation did not move
+  PASS:   and the dump is byte-identical (no churn for clones to conflict over)
+  PASS: dry run names the pending update (rc=0)
+  PASS:   and wrote nothing
+  PASS: edit+removal sync applies both (rc=0)
+  PASS:   and GH-32's GID is stable across the update
+  PASS:   and the removed row is gone
+  FAIL:   and the receipt chain is still intact
+  PASS: check --rebuild accepts a dump carrying roadmap rows (rc=0)
+  PASS:   and every shadow row survived the dump -> DB round-trip, GIDs intact
+  PASS:   and check is clean on the rebuilt DB
+  PASS: duplicate GH number refuses (rc=3)
+  PASS:   and names the rule
+  PASS:   and nothing was written
+-- 7: the rating grammar (GH-108)
+  PASS: a rated entry syncs (rc=0)
+  PASS:   and the four axes land in the rating_ columns, in pri/sev/appeal/effort order
+  PASS:   and no override is implied by its absence
+  PASS:   and calc is DERIVED at read time, never stored (roadmap list shows the sum)
+  PASS:   and calc appears nowhere in the dump (a stored derived value is the drift class this avoids)
+  PASS:   and the word "rated" in the entry's own TITLE is prose, not a second score token
+  PASS: prose naming the two token words around a real score parses the score, not the prose (rc=0)
+  PASS: an override parses and rides alongside the honest axes
+  PASS:   and the override wins over calc for ranking (roadmap list shows calc>ovr)
+  PASS: three numbers refuses with rule=rating-shape
+  PASS: five numbers refuses with rule=rating-shape
+  PASS: a non-numeric axis refuses with rule=rating-shape
+  PASS: an axis over 100 refuses with rule=rating-range
+  PASS: an axis of zero refuses with rule=rating-range
+  PASS: two rated tokens refuses with rule=rating-duplicate
+  PASS: two ovr tokens refuses with rule=ovr-duplicate
+  PASS: a mistyped ovr refuses with rule=ovr-shape
+  PASS: an out-of-scale ovr refuses with rule=ovr-range
+  PASS: an ovr with no rated refuses with rule=ovr-orphan
+  PASS: both vocabularies on one entry refuses with rule=rating-vocabulary-clash
+  PASS:   and not one of those refusals wrote anything
+  PASS: prose "rated 3rd" beside a real score is ONE rating, not a duplicate (rc=0)
+  PASS: unbackticked prose naming ovr does not refuse an entry that carries a real score (rc=0)
+  PASS: a bare truncated `rated 70` still refuses — the presence test was not weakened
+  PASS: a legacy cx/risk/eff entry still syncs (grandfathered, not broken)
+  PASS: converting it to `rated` NULLs the legacy columns in the SAME sync (no row-level coexistence)
+  PASS:   and the next sync is a NO-OP (the mirror agrees with its source; no forever-update loop)
+  PASS: the five rating columns retain their fixed order before status_label
+  PASS:   and survive a dump -> rebuild round trip
+  PASS:   and check is clean afterwards
+  PASS: GH-249: --dry-run reports the parsed rating before any write
+  PASS:   and --dry-run writes nothing
+  PASS:   a rated line handed to `roadmap add` STORES the four axes (GH-169 dropped them silently)
+  PASS:   and leaves ovr NULL when the line carries no override
+  PASS:   an `ovr` override on the intake line is stored too
+  PASS:   NEGATIVE CONTROL: an unrated intake line still stores NULL (the pass above is earned)
+  PASS:   a malformed `rated` token on intake is REFUSED by name, not read as unrated
+  PASS:   intake-stored ratings survive a dump -> rebuild round trip
+  PASS: GH-253: a row parked unrated starts NULL (the state the backfill has to reach)
+  PASS:   --dry-run previews the rewritten line and the parsed scores
+  PASS:   and --dry-run writes nothing
+  PASS:   rating a parked row stores the four axes
+  PASS:   and rewrites raw_text so the ledger line and the columns cannot disagree
+  PASS:   re-rating without --force is REFUSED (re-scoring is deliberate, not a retry)
+  PASS:   NEGATIVE CONTROL: the refused re-rate left the original score intact
+  PASS:   --force replaces the score, and leaves exactly ONE rated token behind (no stacking)
+  PASS:   an --ovr override is stored alongside the honest axes
+  PASS:   a malformed --rated is refused by the SAME parser, by name
+  PASS:   rating a row that was never parked is refused by name
+  PASS:   --gid path: fixture has no gh_number-less row; selector guards below cover the flag
+  PASS:   passing BOTH selectors is refused by name (no ambiguous target)
+  PASS:   passing NEITHER selector is refused by name
+  PASS: repoint --dry-run previews both the path and the rewritten line
+  PASS:   and --dry-run writes nothing
+  PASS:   repoint moves doc_path
+  PASS:   and rewrites the embedded path in raw_text (no half-move)
+  PASS:   NEGATIVE CONTROL: re-pointing at a nonexistent doc is refused by name
+  PASS:   backfilled ratings survive a dump -> rebuild round trip
+  PASS:   and check is clean afterwards
+
+  gh69-roadmap-shadow: 84 pass, 1 fail

@@ -1,0 +1,18 @@
+{
+  "base_sha": "57bd97af4a0e8d456927e20b49d64b232d95f36d",
+  "candidate_sha": "6dca26eefd1f34b5fcb52a477890ae9aeed29ba9",
+  "input": "actual template repeated64x to force pipe backpressure",
+  "input_bytes": 339968,
+  "old_present": {
+    "rc": 141,
+    "stderr": ""
+  },
+  "fixed_present": {
+    "rc": 0,
+    "stderr": ""
+  },
+  "fixed_absent": {
+    "rc": 1,
+    "stderr": ""
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "at_utc": "2026-10-03T07:15:38Z",
+  "verify_base": "3fbed72f781d1ad060e298b798a44c32edef393d",
+  "task_base_before": "863480bf1bb10f54c2b8c0845a64d123bf84d49e",
+  "results": [
+    {
+      "suite": "find-harness.sh",
+      "mode": "clean",
+      "rc": 0,
+      "identity_unchanged": true,
+      "log": "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-environment/discovery/logs/find-harness.sh.clean.json",
+      "tail": [
+        "  PASS: copied skill resolves the saved config",
+        "  PASS: copied skill --env exports usable harness, repo root, and tick",
+        "  PASS: copied skill warns on a non-development branch",
+        "  PASS: invalid config falls through to canonical search",
+        "  PASS: copied skill reports held lock and cached-upstream lag",
+        "  PASS: dead holder is reported as a stale lock",
+        "  PASS: copied skill compares vendored drift with configured live harness",
+        "  find-harness: 50 pass, 0 fail"
+      ]
+    },
+    {
+      "suite": "find-harness.sh",
+      "mode": "inherited",
+      "rc": 1,
+      "identity_unchanged": true,
+      "log": "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-environment/discovery/logs/find-harness.sh.inherited.json",
+      "tail": [
+        "  PASS: copied skill resolves the saved config",
+        "  PASS: copied skill --env exports usable harness, repo root, and tick",
+        "  PASS: copied skill warns on a non-development branch",
+        "  PASS: invalid config falls through to canonical search",
+        "  PASS: copied skill reports held lock and cached-upstream lag",
+        "  PASS: dead holder is reported as a stale lock",
+        "  PASS: copied skill compares vendored drift with configured live harness",
+        "  find-harness: 48 pass, 2 fail"
+      ]
+    },
+    {
+      "suite": "gh396-find-harness-roots.sh",
+      "mode": "clean",
+      "rc": 0,
+      "identity_unchanged": true,
+      "log": "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-environment/discovery/logs/gh396-find-harness-roots.sh.clean.json",
+      "tail": [
+        "  PASS: --quiet: accepted (exit 0)",
+        "  PASS: --quiet: no find-harness: announcement on stderr",
+        "  PASS: --quiet: exported names and values are identical to the loud form",
+        "  PASS: file-symlinked locator: resolves root correctly via file symlink",
+        "  PASS: harness-paths.sh: xyz_harness_home matches harness directory",
+        "  PASS: harness-paths.sh: xyz_harness_tool resolves tool",
+        "  PASS: harness-paths.sh: xyz_emit_env_exports emits correct format",
+        "  gh396-find-harness-roots: 41 pass, 0 fail"
+      ]
+    },
+    {
+      "suite": "gh396-find-harness-roots.sh",
+      "mode": "inherited",
+      "rc": 1,
+      "identity_unchanged": true,
+      "log": "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-environment/discovery/logs/gh396-find-harness-roots.sh.inherited.json",
+      "tail": [
+        "  PASS: #394: the printed remedy is runnable as printed (bash /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.Bjsnqm/live-harness/relay-automation/xyz-sync.sh update /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh396-roots.Bjsnqm/f-stale)",
+        "  PASS: --quiet: accepted (exit 0)",
+        "  PASS: --quiet: no find-harness: announcement on stderr",
+        "  PASS: --quiet: exported names and values are identical to the loud form",
+        "  PASS: harness-paths.sh: xyz_harness_home matches harness directory",
+        "  PASS: harness-paths.sh: xyz_harness_tool resolves tool",
+        "  PASS: harness-paths.sh: xyz_emit_env_exports emits correct format",
+        "  gh396-find-harness-roots: 40 pass, 1 fail"
+      ]
+    }
+  ]
+}

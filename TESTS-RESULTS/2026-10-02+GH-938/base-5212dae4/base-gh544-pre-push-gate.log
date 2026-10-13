@@ -1,0 +1,61 @@
+== test: gh544-pre-push-gate ==
+  PASS: a red gate refuses the push (exit 1)
+  PASS:   and says the push was REFUSED
+  PASS:   and names the escape hatch rather than leaving you stuck
+  PASS:   and does not excuse the red merely because hosted CI exists
+  PASS: a green gate allows the push (exit 0)
+  PASS:   and reports the wall-clock it cost
+  PASS:   and announced the mode before running
+  PASS: a docs-only push is allowed even when validate.sh is red
+  PASS:   and runs the deterministic documentation gate
+  PASS:   and does NOT run validate.sh
+  PASS: a red documentation gate still refuses the docs-only push
+  PASS:   and names the documentation gate failure
+  PASS: a code change remains on the full gate
+  PASS:   and does NOT take the documentation route
+  PASS: an hq push with NO runnable suite falls back to the FULL gate
+  PASS:   and validate.sh was NOT asked for a narrow --paths-file run
+  PASS: an hq push with its suite present runs the tier 2 gate
+  PASS:   and validate.sh received the paths file (the hook's only narrow invocation)
+  PASS:   and the gate really ran
+  PASS: a RED tier 2 gate still refuses the utility push (exit 1)
+  PASS:   and names the tier 2 gate in the refusal
+  PASS: the FIRST push of a new branch with a verifiable base runs the tier 2 gate (GH-487)
+  PASS:   and validate.sh received the paths file (the shared narrow invocation)
+  PASS:   and the narrow gate really ran
+  PASS: a new branch with NO origin/development base evidence falls back to the full gate (GH-487)
+  PASS: a new branch with NO common ancestor to the integration branch fails closed to full (GH-487)
+  PASS: a base equal to the pushed SHA (empty range) fails closed to full (GH-487)
+  PASS: a push by URL has no configured remote name and takes the full gate (GH-487)
+  PASS:   and says WHY instead of leaving the slowness unexplained
+  PASS: a MIXED new-branch + integration-ref push still selects the narrow gate (GH-487)
+  PASS:   and validate.sh received the paths file
+  PASS: an EMPTY stdin still announces the full gate (nothing narrow can run on no input, GH-487)
+  PASS: a BACKWARD-rewritten integration branch fails closed to full (GH-487 round 1)
+  PASS: a STALE-BEHIND integration branch (fetch needed) fails closed to full (GH-487 round 1)
+  PASS: a FAILED ls-remote (partial ref emitted) fails closed to full (GH-487 round 3)
+  PASS:   and names the offline bypass levers (GH-496)
+error: unknown option `push'
+usage: git ls-remote [--branches] [--tags] [--refs] [--upload-pack=<exec>]
+                     [-q | --quiet] [--exit-code] [--get-url] [--sort=<key>]
+                     [--symref] [<repository> [<patterns>...]]
+
+    -q, --[no-]quiet      do not print remote URL
+    --[no-]upload-pack <exec>
+                          path of git-upload-pack on the remote host
+    -t, --[no-]tags       limit to tags
+    -b, --[no-]branches   limit to branches
+    --[no-]refs           do not show peeled tags
+    --[no-]get-url        take url.<base>.insteadOf into account
+    --[no-]sort <key>     field name to sort on
+    --[no-]exit-code      exit with exit code 2 if no matching refs are found
+    --[no-]symref         show underlying ref in addition to the object pointed by it
+    -o, --[no-]server-option <server-specific>
+                          option to transmit
+
+  PASS: a pushurl that disagrees with the fetch url fails closed to full (GH-487 CodeRabbit #2)
+  PASS: a NO-OP integration ref in a mixed push contributes no paths and keeps the narrow gate (GH-487 pin)
+fatal: 'main' is not a commit and a branch 'Q' cannot be created from it
+error: pathspec 'Q' did not match any file(s) known to git
+error: pathspec 'Q' did not match any file(s) known to git
+  FAIL: criss-cross fixture is degenerate: fewer than two best common ancestors

@@ -1,0 +1,270 @@
+merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GH Repos/XYZ-forge
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/Documents/GH Repos/XYZ-forge
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (12 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge` | standalone_clone | `development` | ✅ | 🔥 Active (10 in 10m) | ⚠️ 1 | 0 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+| `XYZ-forge-gh1006-bounded-recovery-2026-10-09` | standalone_clone | `feat/XYZ-forge-gh1006-bounded-recovery-2026-10-09` | ✅ | ⏳ Idle (14 in 60m) | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: 'gh1006-bounded-recovery' |
+| `XYZ-forge-gh1006-bounded-recovery-2026-10-09-gate` | standalone_clone | `feat/XYZ-forge-gh1006-bounded-recovery-2026-10-09` | ✅ | ⏳ Idle (1 in 60m) | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: 'gh1006-bounded-recovery' |
+| `XYZ-forge-gh1006-bounded-recovery-2026-10-09-integration-gate` | standalone_clone | `feat/XYZ-forge-gh1006-bounded-recovery-2026-10-09` | ✅ | ⏳ Idle (29 in 60m) | 0 | 0 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: 'gh1006-bounded-recovery' |
+| `XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify` | standalone_clone | `feat/gh1006-bounded-recovery` | ❌ (6) | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: 'gh1006-bounded-recovery' |
+| `XYZ-forge-gh1007-swe-governance-2026-10-09` | standalone_clone | `feat/gh1007-swe-governance` | ✅ | 💤 Dormant | 0 | 0 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: 'gh1007-swe-governance' |
+| `XYZ-forge-gh1007-swe-governance-2026-10-09-verify` | standalone_clone | `feat/gh1007-swe-governance` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: 'gh1007-swe-governance' |
+| `XYZ-forge-integration-review-20260924` | standalone_clone | `feat/gh796-integration-review` | ❌ (1) | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_DIRTY** | Working tree is dirty (1 modified/untracked files):  M LEADERBOARD.md |
+| `XYZ-forge.wiki` | standalone_clone | `master` | ✅ | 💤 Dormant | 0 | 0 | **PRESERVE_WIKI** | GitHub wiki repository |
+| `xyz-forge-pr954-qa-20261005` | standalone_clone | `feat/gh947-hiqs-recipe-profiles` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/feat/gh947-hiqs-recipe-profiles @ 738fde98d7: not reachable from origin/development; no merged PR has this head |
+| `xyz-forge-pr954-verify-20261005` | standalone_clone | `feat/gh947-hiqs-recipe-profiles` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/feat/gh947-hiqs-recipe-profiles @ 738fde98d7: not reachable from origin/development; no merged PR has this head |
+| `XYZ-forge-gh609` | standalone_clone | `feat/gh609-sdlc-agent-gaps` | ✅ | 💤 Dormant | 0 | ⚠️ 2 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/feat/gh609-sdlc-agent-gaps @ b89abcb01d: not reachable from origin/development; no merged PR has this head; refs/heads/fix/gh615-wrapping-tolerant-review-contract @ 0cb3d2a8e3: not reachable from origin/development; no merged PR has this head |
+
+### 📋 In-Flight Checkouts & Follow-up Guidance
+
+#### `XYZ-forge` (Linked Issue: GH-#982)
+- **Completion Status**: Open task checklists (157 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (agent-b) in `XYZ-forge` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh1006-bounded-recovery-2026-10-09` (Linked Issue: GH-#1006)
+- **Completion Status**: Open task checklists (163 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh1006-bounded-recovery-2026-10-09` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh1006-bounded-recovery-2026-10-09-integration-gate` (Linked Issue: GH-#1006)
+- **Completion Status**: Open task checklists (163 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh1006-bounded-recovery-2026-10-09-integration-gate` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify` (Linked Issue: GH-#1006)
+- **Completion Status**: In-flight uncommitted modifications (6 dirty files); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh1007-swe-governance-2026-10-09-verify` (Linked Issue: GH-#1007)
+- **Completion Status**: Open task checklists (157 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh1007-swe-governance-2026-10-09-verify` to close or finish remaining tasks.
+
+#### `XYZ-forge-integration-review-20260924` (Linked Issue: GH-#796)
+- **Completion Status**: In-flight uncommitted modifications (1 dirty files); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-integration-review-20260924` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh609` (Linked Issue: GH-#609)
+- **Completion Status**: Open task checklists (132 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh609` to close or finish remaining tasks.
+
+merge-cleanup: PR #930: excluded by --exclude; not sequenced this run
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (2 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#954](https://github.com/HiQS-Labs/XYZ-forge/pull/954) | feat: admit exact HiQS recipes through C | `feat/gh947-hiqs-recipe-profiles` | `development` | yes | PASS | CONFLICTING | 49 |
+| 2 | [#1014](https://github.com/HiQS-Labs/XYZ-forge/pull/1014) | Marathon: bounded progress reports and s | `feat/XYZ-forge-gh1006-bounded-recovery-2026-10-09` | `development` | no | PASS | CONFLICTING | 100 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /Users/noelsaw/Documents/GH Repos/XYZ-forge
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Resume mode: attempt records under /Users/noelsaw/Documents/GH Repos/XYZ-forge/.tick/merge-cleanup/HiQS-Labs-XYZ-forge are consulted only after each PR's live refresh; a repaired, now-mergeable PR still lands.
+merge-cleanup: PR #954: SKIPPED (draft)
+merge-cleanup: PR #1014: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #1014: attempt record /Users/noelsaw/Documents/GH Repos/XYZ-forge/.tick/merge-cleanup/HiQS-Labs-XYZ-forge/pr-1014.json
+merge-cleanup: PR #1014: attempt 1/2 reserved (script, rung B1, head f398b11218)
+merge-cleanup:   B1: classification: keep=theirs generation ours/theirs=(1558, 1559) replay=1 op(s)
+merge-cleanup:   B1: check --rebuild on the kept side: rc=0
+merge-cleanup:   B1: roadmap add GH-1006: rc=0 
+merge-cleanup:   B1: roadmap rate GH-1006 80/65/80/45: rc=0 
+merge-cleanup:   B1: roadmap update GH-1006 (section/marker): rc=0 
+merge-cleanup:   B1: releases-merge-resolve.sh: rc=0
+merge-cleanup:   B1: removed verified rebuild backup: releases.db.bak
+merge-cleanup: PR #1014: pushed ba503bb2f0 to feat/XYZ-forge-gh1006-bounded-recovery-2026-10-09; re-fetching and re-gating the new head
+merge-cleanup: PR #1014: GitHub still reports head f398b11218 — waiting 15s for ba503bb2f0 (1/6)
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-F1CCB6 is 52 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-D7D2C4 is 52 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-D248B2 is 52 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-79F036 is 52 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-A993B3 is 52 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-751A4C is 52 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-7AFFE1 is 52 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-AC68FA is 52 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 14 day(s) past its target of 2026-09-26 — the plan has drifted from the calendar
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-396: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-589: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-644: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-690: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-807: In progress -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-886: In progress -> Completed
+merge-cleanup: PR #1014: pre-merge ledger gate green on ba503bb2f0 + origin/development
+merge-cleanup: Merging PR #1014 via `gh pr merge 1014 --squash --delete-branch`...
+merge-cleanup: ✅ PR #1014 is MERGED as 0d85603280
+merge-cleanup: Running post-merge reconciliation for PR #1014 in /Users/noelsaw/Documents/GH Repos/XYZ-forge...
+merge-cleanup: Hosted wave-reconcile run #38033370756 is queued; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #38033370756 is in_progress; waiting
+merge-cleanup: ✅ Hosted wave-reconcile run #38033370756 succeeded for 0d85603280
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ pdda issue-doc-sync clean
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py", line 1426, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py", line 1372, in main
+    rc = land_prs(ordered_prs, primary_repo, args, dry_run)
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py", line 1122, in land_prs
+    if not commit_and_push_phase5_writes(p_num, primary_repo, branch):
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py", line 648, in commit_and_push_phase5_writes
+    pushed = _net_git(repo_path, ["push", "origin", f"HEAD:{integration_branch}"], timeout=PUSH_GATE_TIMEOUT_S)
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py", line 113, in _net_git
+    return run_git(cwd, args, timeout=timeout)
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge/skills/2-daily/merge-cleanup/scripts/scan_clones.py", line 112, in run_git
+    out, err = proc.communicate(timeout=timeout)
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 1221, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/subprocess.py", line 2153, in _communicate
+    ready = selector.select(timeout)
+  File "/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/lib/python3.14/selectors.py", line 398, in select
+    fd_event_list = self._selector.poll(timeout)
+KeyboardInterrupt

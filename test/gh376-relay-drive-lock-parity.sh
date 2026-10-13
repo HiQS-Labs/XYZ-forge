@@ -124,7 +124,7 @@ run_driver() {  # <harness-root> <lane: py|sh> — prints the driver's stderr
       --relay-file "$RELAY" --agent-cmd /bin/true --dry-run 2>&1
   fi
 }
-refused() { printf '%s' "$1" | grep -q 'another driver is active in this repo'; }
+refused() { grep -q 'another driver is active in this repo' <<<"$1"; }
 
 # ═══════════════════════════════════════════════════════════════════════════════════════════════
 # A. THE PIN — from a linked worktree, both twins now see the lock marathon-drive holds

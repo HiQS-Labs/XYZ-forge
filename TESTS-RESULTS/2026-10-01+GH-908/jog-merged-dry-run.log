@@ -1,0 +1,6 @@
+jog: [dry-run] simulating queue execution (root: /Users/noelsaw/agent-workspaces/xyz-forge-pdda-904-907-triage-20261001)
+jog: [dry-run] would process 8 pending item(s) (capped at 4):
+  1. GH-904 (builder=agy, auto_merge=False)
+  2. GH-907 (builder=agy, auto_merge=False)
+  3. GH-906 (builder=agy, auto_merge=False)
+  4. GH-905 (builder=agy, auto_merge=False)

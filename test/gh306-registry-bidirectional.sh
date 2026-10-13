@@ -38,17 +38,31 @@ no(){ echo "  FAIL: $1" >&2; fail=$((fail+1)); }
 echo "== test: gh306-registry-bidirectional =="
 
 # ── the exemption list — short by contract; every entry carries its reason ───────────────────────
-# A suite goes here only when it CANNOT run in the gate, with the reason written down. A suite
+# A suite goes here only when it CANNOT run in the gate, or was turned off by operator decision
+# (GH-831, 2026-09-25: non-core skill-text suites stop gating merges), with the reason written down. A suite
 # that merely lacks a registration is DRIFT, not an exemption — gh280 through #281 is what a
 # silent gap looks like. An exempt name that no longer exists on disk is itself drift (stale
 # exemptions are how this list rots into covering nothing), so the list is pinned in BOTH
 # directions below, like the registry it carves holes into.
 EXEMPT=(
+  "gh492-idle-kill.sh" # GH-1006 / AGENTS #802/#853: observed non-Small parallel timing flake; manual suite retained
+  "gh4-ungated-clone-warning.sh" # GH-920 / GH-853: observed non-Small fixture-copy flake; retained for targeted use
+  "registry-lock-concurrency.sh" # GH-854 / GH-917: operator-deferred installer stress; retained for targeted manual use
+  "gh-gen4-phase1-domain-oracles.sh" # GH-854 / GH-918: operator-deferred shared-root oracle; retained for targeted manual use
+  "gh268-relay-cue-and-target-checks.sh" # GH-853 / AGENTS: observed pipefail false-red outside Small; turned off, file retained
   "_setup.sh"                    # sourced by ~150 suites (shared tick fixture setup) — never executed directly
   "_scratch-repo.sh"             # sourced hardened scratch-repo helper (GH-44) — never executed directly
   "test-agy-standalone-repo.sh"  # legacy manual mock from the initial public release; no assertions, prints git status only
   "test-agy-isolation.sh"        # pre-existing RED at GH-306 filing: stale expectation vs gh308-consult-guards.sh's Python-lane coverage of the same detector; needs its own fix lane, not a silent skip
   "gh460-oracle.sh"              # GH-460 fuzz ORACLE, not a suite: takes one model name as $1 and answers for THAT input (0=contract holds, 8=setup/measure failure, 9=violation). The Gen4 engine calls it once per mutant; running it bare in the gate would resolve the empty string once and assert nothing. Its contract is exercised by gh460-fuzz-resolver-smoke.sh, which IS registered.
+  "gh578-ci-optimize-skill.sh"             # turned off by operator decision (GH-831): ci-optimize skill text, not harness code
+  "gh778-review-code-skill.sh"             # turned off by operator decision (GH-831): review-code skill text, not harness code
+  "gh798-status-skill.sh"                  # turned off by operator decision (GH-831): status skill text, not harness code
+  "gh779-radar-ci-health.sh"               # turned off by operator decision (GH-831): radar skill text, not harness code
+  "gh781-wam-radar-seed.sh"                # turned off by operator decision (GH-831): whack-a-mole skill text, not harness code
+  "gh615-start-task-reinforce.sh"          # turned off by operator decision (GH-831): start-task skill text, not harness code
+  "gh616-start-task-commensurate-envelope.sh" # turned off by operator decision (GH-831): start-task skill text, not harness code
+  "gh617-relay-xyz-commensurate-review.sh" # turned off by operator decision (GH-831): relay-xyz review-brief text, not harness code
 )
 
 # drift_of <test_dir> <tests_blob> — prints one basename per top-level *.sh directly inside

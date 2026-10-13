@@ -1,0 +1,5 @@
+base=41db436717513327626f12da450e907a628ebc85
+0
+2098:                    landing_items.extend(("pr", str(p)) for p in mdata.get("prs", []))
+2114:                landing_items.extend(("pr", str(n)) for n in catch_up_prs(
+2093:        landing_items.extend(("commit", value) for value in (args.commit or []))

@@ -273,3 +273,7 @@ confirmed bugs above needed them to be found.
 `complexity: 3 / risk: 2 / effort: 3` — provisional. Phase 0 alone would rate 1/1/1; the composite
 is carried by Phase 2's six sites and Phase 3's undesigned seam. Re-rate at the ROI checkpoint,
 when Phase 3's scope is actually known.
+
+## Merge evidence
+
+- PR #818 merged 2026-09-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

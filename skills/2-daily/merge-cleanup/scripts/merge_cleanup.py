@@ -86,13 +86,15 @@ RETRY_BACKOFF_S = (2, 4)      # sleeps BETWEEN attempts: 3 calls, 2 sleeps
 MERGEABLE_POLL_ATTEMPTS = 6   # UNKNOWN mergeability right after a landing: poll up to 6 × 15s
 MERGEABLE_POLL_S = 15
 NET_TIMEOUT_S = 180           # bound for network git calls (_gh bounds its own subprocess)
+PUSH_GATE_TIMEOUT_S = 3600    # a push to the integration branch runs the pre-push hook, which can run a gate
 
 # `execute_pr_merge` intentionally keeps its long-standing signature: Phase-A callers replace it
 # with a three-argument stub. Phase 5 records the exceptional PRs here before calling it.
 _WITHHOLD_BRANCH_DELETE: set[int] = set()
 
 TRANSIENT_RE = re.compile(
-    r"could not resolve host|connection refused|connection timed out|timed out|TLS|SSL|rate limit",
+    r"could not resolve host|connection refused|connection timed out|timed out|TLS|SSL|rate limit"
+    r"|operation too slow|connection reset",
     re.I,
 )
 
@@ -145,8 +147,56 @@ def log_err(msg: str):
     print(f"merge-cleanup: ERROR — {msg}", file=sys.stderr)
 
 
-def execute_pr_merge(pr_num: int, repo_path: Path, strategy: str = "squash", dry_run: bool = True) -> bool:
-    """Merges a pull request via gh CLI."""
+def resolve_merge_policy(repo_path: Path, strategy: Optional[str] = None) -> Dict[str, Any]:
+    """Read the maintainer's target-project policy, never the installed harness's policy."""
+    policy_path = repo_path / ".merge-cleanup.json"
+    try:
+        data = json.loads(policy_path.read_text(encoding="utf-8"))
+        source = str(policy_path)
+    except FileNotFoundError as exc:
+        if policy_path.is_symlink() or not repo_path.is_dir():
+            raise ValueError(f"cannot read merge policy {policy_path}: {exc}") from exc
+        data, source = {}, "legacy default (no .merge-cleanup.json)"
+    except (OSError, ValueError) as exc:
+        raise ValueError(f"cannot read merge policy {policy_path}: {exc}") from exc
+    if not isinstance(data, dict) or set(data) - {"preserve_commit_history"}:
+        raise ValueError(f"{policy_path}: expected an object with only preserve_commit_history")
+    preserve = data.get("preserve_commit_history", False)
+    if type(preserve) is not bool:
+        raise ValueError(f"{policy_path}: preserve_commit_history must be a JSON boolean")
+    if strategy not in (None, "merge", "squash", "rebase"):
+        raise ValueError(f"unsupported merge strategy: {strategy!r}")
+    if preserve and strategy not in (None, "merge"):
+        raise ValueError(f"{policy_path}: preserve_commit_history=true requires --strategy merge; "
+                         f"--strategy {strategy} is not permitted")
+    return {"preserve_commit_history": preserve,
+            "strategy": strategy or ("merge" if preserve else "squash"), "source": source}
+
+
+def check_merge_capability(repo_path: Path, policy: Dict[str, Any]) -> None:
+    """An opted-in project must support merge commits; never change hosting settings."""
+    if not policy["preserve_commit_history"]:
+        return
+    result = _gh(["repo", "view", "--json", "mergeCommitAllowed"], repo_path)
+    try:
+        info = json.loads(result.stdout) if result.returncode == 0 else {}
+    except ValueError:
+        info = {}
+    if not isinstance(info, dict) or info.get("mergeCommitAllowed") is not True:
+        raise ValueError("history preservation requires GitHub merge commits, but availability "
+                         "was not confirmed; no fallback or settings change. "
+                         + (result.stderr.strip() or "Check the repository's merge settings."))
+
+
+def execute_pr_merge(pr_num: int, repo_path: Path, strategy: Optional[str] = None, dry_run: bool = True) -> bool:
+    """Merge through the project policy even when called without the CLI orchestrator."""
+    try:
+        policy = resolve_merge_policy(repo_path, strategy)
+        check_merge_capability(repo_path, policy)
+    except ValueError as exc:
+        log_err(f"PR #{pr_num}: {exc}")
+        return False
+    strategy = policy["strategy"]
     delete_branch = pr_num not in _WITHHOLD_BRANCH_DELETE
     _WITHHOLD_BRANCH_DELETE.discard(pr_num)
     delete_text = " --delete-branch" if delete_branch else ""
@@ -160,6 +210,13 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: str = "squash", dry
     log(f"Merging PR #{pr_num} via `gh {' '.join(merge_args)}`...")
     res = _gh(merge_args, repo_path, timeout=600)
     if res.returncode != 0:
+        # GH-852: gh can fail or be killed after GitHub has merged (#810). Only GitHub's own
+        # MERGED + merge commit counts, the same evidence the zero-exit path requires below.
+        info = refresh_pr(pr_num, repo_path)
+        oid = (info.get("mergeCommit") or {}).get("oid")
+        if info.get("state") == "MERGED" and oid:
+            log_warn(f"`gh pr merge` exited {res.returncode} but PR #{pr_num} reads MERGED as {oid[:10]} — continuing")
+            return True
         log_err(f"Failed to merge PR #{pr_num}: {res.stderr.strip()}")
         return False
     # E: a zero exit is not a landing (#510 class). The remote must say MERGED.
@@ -176,7 +233,7 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: str = "squash", dry
 def refresh_pr(pr_num: int, repo_path: Path) -> Dict[str, Any]:
     """Live PR state, re-fetched before every decision (E). Any failure -> {"error": ...}."""
     res = _gh(["pr", "view", str(pr_num), "--json",
-               "number,state,mergeable,headRefOid,headRefName,baseRefName,labels,mergeCommit,url"], repo_path)
+               "number,state,isDraft,mergeable,headRefOid,headRefName,baseRefName,labels,mergeCommit,url"], repo_path)
     if res.returncode != 0:
         return {"error": f"gh pr view #{pr_num} failed: {res.stderr.strip() or 'no diagnostic'}"}
     try:
@@ -286,7 +343,11 @@ def prepare_landing_clone(pr: Dict[str, Any], primary_repo: Path, integration_br
     clone = Path(tempfile.mkdtemp(prefix=f"pr-{pr['number']}-{pr['headRefOid'][:8]}-", dir=str(workdir)))
     clone.rmdir()  # git clone wants to create it
     # GH-623: clone and fetches are network calls — bounded and retried on transient failures.
-    r = _retry_call(lambda: _net_git(workdir, ["clone", "--quiet", url, str(clone)]), f"PR #{pr['number']} clone")
+    def _clone_once():
+        # GH-852: a clone killed at its bound leaves a partial directory; a retry into it can never succeed.
+        shutil.rmtree(clone, ignore_errors=True)
+        return _net_git(workdir, ["clone", "--quiet", url, str(clone)])
+    r = _retry_call(_clone_once, f"PR #{pr['number']} clone")
     if r.returncode != 0:
         return {"clone": None, "merge_rc": None, "error": f"git clone failed: {r.stderr.strip()[:300]}"}
     for k, v in (("user.name", "merge-cleanup"), ("user.email", "merge-cleanup@local")):
@@ -313,7 +374,7 @@ def validate_head_in_second_clone(primary_repo: Path, source_clone: Path, sha: s
     verified before and after (origin URL unchanged, HEAD is the sha we fetched)."""
     url = origin_url(primary_repo)
     second = workdir / f"verify-{sha[:8]}"
-    r = run_git(workdir, ["clone", "--quiet", url or "", str(second)])
+    r = _net_git(workdir, ["clone", "--quiet", url or "", str(second)])
     if r.returncode != 0:
         return False, f"second clone failed: {r.stderr.strip()[:200]}"
     ident_before = origin_url(second)
@@ -333,14 +394,23 @@ def validate_head_in_second_clone(primary_repo: Path, source_clone: Path, sha: s
     return True, "clean in a second clone"
 
 
+DRAFT_REFUSAL = "draft"  # push_resolved_head's reason when the live PR is a draft
+
+
 def push_resolved_head(pr: Dict[str, Any], clone: Path, sha: str, primary_repo: Path) -> Tuple[bool, str]:
     """Push the B1 result to the PR branch only if the remote head is still the SHA we resolved."""
     live = refresh_pr(pr["number"], primary_repo)
     if live.get("error"):
         return False, live["error"]
+    if live.get("state") != "OPEN":
+        return False, "PR is no longer open — not pushing repaired head"
+    if live.get("isDraft"):
+        # A positively observed draft is an expected skip, not a failed landing (GH-789 F2):
+        # the caller names it and moves on; every other refusal here still stops the run.
+        return False, DRAFT_REFUSAL
     if live.get("headRefOid") != pr["headRefOid"]:
         return False, f"remote head moved from {pr['headRefOid'][:10]} to {str(live.get('headRefOid'))[:10]} during resolution — not pushing"
-    r = run_git(clone, ["push", "origin", f"{sha}:refs/heads/{pr['headRefName']}"])
+    r = _net_git(clone, ["push", "origin", f"{sha}:refs/heads/{pr['headRefName']}"])
     if r.returncode != 0:
         return False, f"push refused: {r.stderr.strip()[-400:]}"
     return True, f"pushed {sha[:10]} to {pr['headRefName']}"
@@ -370,10 +440,12 @@ def emit_pr_merged(repo_path, pr, dry_run=False):
 
     Placed here, and only here, for a reason the plan review made explicit: a completed roadmap
     marker does not prove a PR merged, and neither does a generic reconcile. The only honest
-    source for `merged` is a `gh pr merge` that returned 0, which is the caller's `if merged:`.
+    source for `merged` is the caller's `if merged:` — a `gh pr merge` whose PR then reads MERGED
+    with a merge commit, whether gh exited 0 or failed after GitHub had merged (GH-852).
 
-    Deliberately NOT emitted from --reconcile-pr, which never verifies merge state at all; that
-    path is covered by `releases work reconcile`.
+    Deliberately NOT emitted from --reconcile-pr. That mode now verifies the PR is MERGED before
+    reconciling (GH-852), but it did not witness the merge; that path is covered by
+    `releases work reconcile`.
 
     Keyed on the issues the PR closes, not the PR number — the board tracks issues, so emitting
     a PR number would create a card for something that is not on the board. A PR that closes
@@ -428,7 +500,7 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
     window may be tracked by database id until GitHub populates its headSha. Only a matching
     SHA can attest success; unidentified activity only prevents racing the hosted writer.
     """
-    wait_s = _seconds_from_env(HOSTED_WAIT_ENV, 1800)
+    wait_s = _seconds_from_env(HOSTED_WAIT_ENV, 5400)
     poll_s = _seconds_from_env(HOSTED_POLL_ENV, 30)
     grace_s = _seconds_from_env(HOSTED_GRACE_ENV, 60)
     started = time.monotonic()
@@ -439,9 +511,15 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
     ]
     expected_heads = {head for head in (merged_head, pr_head) if head}
     adopted_run_id = None
+    seen_active = None  # GH-852: once a run is seen in flight, losing sight of it is not "no run"
+    seen_ours = None    # the in-flight run was identified by this merge's SHA, not adopted unidentified
 
     while True:
         res = _gh(query, repo_path, timeout=60)
+        if res.returncode != 0 and seen_active is not None:
+            log_err(f"Hosted wave-reconcile run #{seen_active} was in flight and the lookup is now unavailable "
+                    f"({res.stderr.strip() or f'gh exited {res.returncode}'}); refusing to start the local reconciler")
+            return "active_timeout"
         if res.returncode != 0:
             log_warn(
                 "Hosted wave-reconcile lookup unavailable; using local reconciliation: "
@@ -453,6 +531,10 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
             if not isinstance(runs, list):
                 raise ValueError("expected a JSON array")
         except (TypeError, ValueError) as exc:
+            if seen_active is not None:
+                log_err(f"Hosted wave-reconcile run #{seen_active} was in flight and the lookup returned unusable "
+                        f"JSON ({exc}); refusing to start the local reconciler")
+                return "active_timeout"
             log_warn(f"Hosted wave-reconcile lookup returned unusable JSON ({exc}); using local reconciliation")
             return "fallback"
         elapsed = time.monotonic() - started
@@ -475,6 +557,10 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
                     f"waiting up to {grace_left:.0f}s more before assuming there is none")
                 time.sleep(min(poll_s, grace_left) or 0.1)
                 continue
+            if seen_ours is not None:
+                log_err(f"Hosted wave-reconcile run #{seen_ours} was in flight and is no longer listed; "
+                        "refusing to start the local reconciler")
+                return "active_timeout"
             log(f"No hosted wave-reconcile run found for {merged_head[:10]}; using local reconciliation")
             return "fallback"
 
@@ -492,6 +578,9 @@ def wait_for_hosted_reconcile(merged_head: str, repo_path: Path,
             )
             return "fallback"
 
+        seen_active = run_id
+        if str(run.get("headSha") or "") in expected_heads:
+            seen_ours = run_id
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             log_err(
@@ -523,8 +612,12 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
 def run_post_merge_reconcile(pr_num: int, repo_path: Path,
                              integration_branch: str = "development",
                              dry_run: bool = True,
-                             pr_head: Optional[str] = None) -> bool:
-    """Wait for hosted reconciliation (or fall back locally), then run governance checks."""
+                             pr_head: Optional[str] = None,
+                             merged_head: Optional[str] = None) -> bool:
+    """Wait for hosted reconciliation (or fall back locally), then run governance checks.
+
+    `merged_head`, when given, is the PR's merge commit as GitHub reports it (--reconcile-pr);
+    otherwise the primary's HEAD, which the Phase-5 fast-forward has just moved to the merge."""
     if dry_run:
         log(f"[DRY RUN] Would wait for hosted reconciliation or run wave_reconcile.py --pr {pr_num}")
         return True
@@ -538,16 +631,18 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
     # 1. The merge fast-forward immediately before this call pins the workflow lookup to the
     # exact triggering head. Hosted success is authoritative; only an absent/completed-red run
     # selects the local writer. An active timeout stops instead of racing that writer.
-    head = run_git(repo_path, ["rev-parse", "HEAD"])
-    if head.returncode != 0 or not head.stdout.strip():
-        log_err(f"Cannot identify the merged head before reconciliation: {head.stderr.strip()}")
-        return False
+    if not merged_head:
+        head = run_git(repo_path, ["rev-parse", "HEAD"])
+        if head.returncode != 0 or not head.stdout.strip():
+            log_err(f"Cannot identify the merged head before reconciliation: {head.stderr.strip()}")
+            return False
+        merged_head = head.stdout.strip()
     hosted = wait_for_hosted_reconcile(
-        head.stdout.strip(), repo_path, integration_branch, pr_head=pr_head)
+        merged_head, repo_path, integration_branch, pr_head=pr_head)
     if hosted == "active_timeout":
         return False
     if hosted == "success":
-        fetched = run_git(repo_path, ["fetch", "origin", integration_branch])
+        fetched = _net_git(repo_path, ["fetch", "origin", integration_branch])
         if fetched.returncode != 0:
             log_err(f"Hosted reconciliation succeeded but fetch of origin/{integration_branch} failed: {fetched.stderr.strip()}")
             return False
@@ -598,11 +693,11 @@ def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_bran
             log_err(f"PR #{pr_num}: could not commit post-merge writes: {committed.stderr.strip()}")
             return False
 
-    pushed = run_git(repo_path, ["push", "origin", f"HEAD:{integration_branch}"])
+    pushed = _net_git(repo_path, ["push", "origin", f"HEAD:{integration_branch}"], timeout=PUSH_GATE_TIMEOUT_S)
     if pushed.returncode != 0:
         log_err(f"PR #{pr_num}: could not push post-merge writes: {pushed.stderr.strip()}")
         return False
-    fetched = run_git(repo_path, ["fetch", "origin", integration_branch])
+    fetched = _net_git(repo_path, ["fetch", "origin", integration_branch])
     if fetched.returncode != 0:
         log_err(f"PR #{pr_num}: could not verify pushed integration head: {fetched.stderr.strip()}")
         return False
@@ -682,9 +777,17 @@ def teardown_checkout(checkout: Dict[str, Any], dry_run: bool = True) -> bool:
         rem_res = run_git(parent_path, ["worktree", "remove", str(path)])
         if rem_res.returncode != 0:
             log_warn(f"`git worktree remove` failed ({rem_res.stderr.strip()}), retrying with prune...")
+            run_git(parent_path, ["worktree", "prune"])
+            run_git(parent_path, ["worktree", "repair"])
+            rem_res = run_git(parent_path, ["worktree", "remove", str(path)])
+        else:
+            run_git(parent_path, ["worktree", "prune"])
+            run_git(parent_path, ["worktree", "repair"])
 
-        run_git(parent_path, ["worktree", "prune"])
-        run_git(parent_path, ["worktree", "repair"])
+        if path.exists():
+            log_err(f"Failed to remove linked worktree {path}: directory still exists after worktree remove, prune, and repair")
+            return False
+
         log(f"✅ Cleaned linked worktree metadata for {path.name}")
         return True
 
@@ -786,7 +889,7 @@ def _await_mergeable(p_num: int, info: Dict[str, Any], primary_repo: Path) -> Di
     GH-623 defer/stop rules. Still undecided after the last poll is returned as-is: the caller's
     fail-closed stop (a PR whose state is unknown is never merged) is unchanged."""
     polls = 0
-    while (not info.get("error") and info.get("mergeable") not in ("MERGEABLE", "CONFLICTING")
+    while (not info.get("error") and not info.get("isDraft") and info.get("mergeable") not in ("MERGEABLE", "CONFLICTING")
            and polls < MERGEABLE_POLL_ATTEMPTS):
         polls += 1
         log(f"PR #{p_num}: mergeable is {info.get('mergeable')!r} — waiting {MERGEABLE_POLL_S}s for GitHub "
@@ -801,6 +904,12 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
     in a disposable clone against the CURRENT integration head, merged only on green, verified
     MERGED on re-query, then reconciled (gating). The first failure stops everything."""
     branch = args.integration_branch
+    try:
+        policy = resolve_merge_policy(primary_repo, args.strategy)
+        check_merge_capability(primary_repo, policy)
+    except ValueError as exc:
+        log_err(str(exc))
+        return 2
     workdir = Path(tempfile.mkdtemp(prefix="merge-cleanup-"))
     keep_workdir = False
     origin = origin_url(primary_repo) or ""
@@ -814,21 +923,33 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
     # C: runtime map of predecessor outcomes. toposort only ORDERS; a dependent of a parked or
     # handed-off PR must not be attempted at all.
     failed: Dict[int, str] = {}
+    pending = {pr["number"] for pr in ordered_prs}
     try:
         for pr in ordered_prs:
+            # A prior landing can update the tracked policy. Re-read before any repair/retarget.
+            try:
+                policy = resolve_merge_policy(primary_repo, args.strategy)
+                check_merge_capability(primary_repo, policy)
+            except ValueError as exc:
+                log_err(str(exc))
+                return 2
+            strategy = policy["strategy"]
+            log(f"Merge policy: preserve_commit_history={policy['preserve_commit_history']}; "
+                f"strategy={strategy}; source={policy['source']}")
             p_num = pr["number"]
             # C + GH-623: only HARD dependencies (explicit "depends on #N") block a PR on a
             # failed predecessor. Collision edges (`_soft_deps`) decide sequence only — a
             # dependent is attempted anyway and the landing simulation decides; a genuinely
             # conflicting successor hands off on its own merits instead of never being tried.
-            blocked_by = [d for d in pr.get("_hard_deps", []) if d in failed]
+            blocked_by = [d for d in pr.get("_hard_deps", []) if d in failed or d in pending]
+            pending.discard(p_num)
             soft_blocked_by = [d for d in pr.get("_soft_deps", []) if d in failed]
             if soft_blocked_by and not blocked_by:
                 why_soft = ", ".join(f"#{d} ({failed[d]})" for d in soft_blocked_by)
                 log_err(f"PR #{p_num}: soft predecessor(s) {why_soft} did not land — "
                         f"attempting anyway; the landing simulation decides")
             if blocked_by:
-                why = ", ".join(f"#{d} ({failed[d]})" for d in blocked_by)
+                why = ", ".join(f"#{d} ({failed.get(d, 'not yet processed')})" for d in blocked_by)
                 log_err(f"PR #{p_num}: NOT attempted — depends on {why}")
                 failed[p_num] = f"blocked by {', '.join('#%d' % d for d in blocked_by)}"
                 continue
@@ -845,6 +966,10 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     continue
                 log_err(f"PR #{p_num}: {info['error']} — stopping; a PR whose state is unknown is never merged")
                 return 2
+            if info.get("isDraft"):
+                log(f"PR #{p_num}: SKIPPED (draft)")
+                failed[p_num] = "draft"
+                continue
             label = hold_label(info)
             if label:
                 log(f"PR #{p_num}: carries hold label '{label}' — skipped (#444)")
@@ -864,6 +989,10 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     continue
                 log_err(f"PR #{p_num}: {info['error']} — stopping; a PR whose state is unknown is never merged")
                 return 2
+            if info.get("isDraft"):
+                log(f"PR #{p_num}: SKIPPED (draft)")
+                failed[p_num] = "draft"
+                continue
             mergeable = info.get("mergeable")
             if mergeable not in ("MERGEABLE", "CONFLICTING"):
                 log_err(f"PR #{p_num}: mergeable is {mergeable!r} — GitHub has not decided; stopping rather than guessing")
@@ -956,12 +1085,41 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
                     keep_workdir = True
                     return 2
                 ok, why = push_resolved_head(info, clone, b1["commit"], primary_repo)
+                if not ok and why == DRAFT_REFUSAL:
+                    log(f"PR #{p_num}: SKIPPED (draft before repaired-head push; B1 result kept at {clone})")
+                    failed[p_num] = "draft"
+                    keep_workdir = True
+                    continue
                 if not ok:
                     log_err(f"PR #{p_num}: {why}")
                     keep_workdir = True
                     return 2
                 log(f"PR #{p_num}: {why}; re-fetching and re-gating the new head")
-                info = _await_mergeable(p_num, refresh_pr_with_retry(p_num, primary_repo), primary_repo)
+                # GH-851: straight after the push GitHub still reports the old head's CONFLICTING.
+                # Wait (bounded, GH-736's budget) until it reports the pushed head, then re-gate.
+                info = refresh_pr_with_retry(p_num, primary_repo)
+                polls = 0
+                while (not info.get("error") and info.get("headRefOid") != b1["commit"]
+                       and polls < MERGEABLE_POLL_ATTEMPTS):
+                    polls += 1
+                    log(f"PR #{p_num}: GitHub still reports head {str(info.get('headRefOid'))[:10]} — waiting "
+                        f"{MERGEABLE_POLL_S}s for {b1['commit'][:10]} ({polls}/{MERGEABLE_POLL_ATTEMPTS})")
+                    _sleep(MERGEABLE_POLL_S)
+                    info = refresh_pr_with_retry(p_num, primary_repo)
+                if not info.get("error") and info.get("headRefOid") != b1["commit"]:
+                    log_err(f"PR #{p_num}: GitHub still reports head {str(info.get('headRefOid'))[:10]}, "
+                            f"not the pushed {b1['commit'][:10]} — stopping")
+                    return 2
+                info = _await_mergeable(p_num, info, primary_repo)
+                if not info.get("error") and info.get("headRefOid") != b1["commit"]:
+                    log_err(f"PR #{p_num}: head moved to {str(info.get('headRefOid'))[:10]} after the pushed "
+                            f"{b1['commit'][:10]} — stopping")
+                    return 2
+                if info.get("isDraft"):
+                    log(f"PR #{p_num}: SKIPPED (draft after repair)")
+                    failed[p_num] = "draft"
+                    keep_workdir = True
+                    continue
                 if info.get("error") or info.get("mergeable") != "MERGEABLE":
                     log_err(f"PR #{p_num}: after resolution the PR reads {info.get('mergeable') or info.get('error')} — stopping")
                     return 2
@@ -985,8 +1143,19 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             log(f"PR #{p_num}: pre-merge ledger gate green on {info['headRefOid'][:10]} + origin/{branch}")
 
             if dry_run:
-                log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{args.strategy} --delete-branch`")
+                log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy} --delete-branch`")
                 continue
+            live = refresh_pr_with_retry(p_num, primary_repo)
+            if live.get("error"):
+                log_err(f"PR #{p_num}: final eligibility refresh failed — {live['error']}")
+                return 2
+            if live.get("isDraft"):
+                log(f"PR #{p_num}: SKIPPED (draft before merge)")
+                failed[p_num] = "draft"
+                continue
+            if live.get("headRefOid") != info.get("headRefOid"):
+                log_err(f"PR #{p_num}: head changed after validation — not merging")
+                return 2
             _WITHHOLD_BRANCH_DELETE.discard(p_num)
             open_prs = getattr(args, "_open_prs_for_stacks", ordered_prs)
             _protect_stacked_dependents(info, open_prs, primary_repo, branch)
@@ -1020,6 +1189,12 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
         # GH-623: deferrals count as non-landed outcomes too — a deferred PR blocks only its
         # HARD dependents; soft dependents were attempted above. Exit 3 keeps the shape
         # "the queue completed but not everything landed"; 2 remains a hard stop.
+        # Drafts are expected skips, not a failed run. Keep them in the dependency map
+        # through the loop, then report only actual handoffs/deferred/blocked successors.
+        drafts = [n for n, reason in failed.items() if reason == "draft"]
+        if drafts:
+            log("Skipped draft PR(s): " + ", ".join(f"#{n}" for n in drafts))
+        failed = {n: reason for n, reason in failed.items() if reason != "draft"}
         if failed:
             deferred = [n for n, w in failed.items() if w.startswith("deferred:")]
             resumed_parked = [n for n, w in failed.items() if w == "previously parked (resume)"]
@@ -1037,7 +1212,27 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             shutil.rmtree(workdir, ignore_errors=True)
 
 
+def prepare_primary_landing(primary_repo: Path, args) -> Dict[str, Any]:
+    info = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
+    can_prune = (args.execute and not (args.scan_only or args.prs_only or args.teardown_only)
+                 and info.get("ready_except_stale_rebase") and info.get("stale_rebase_head"))
+    if can_prune:
+        oid = info["stale_rebase_head"]
+        result = run_git(primary_repo, ["update-ref", "-d", "REBASE_HEAD", oid])
+        if result.returncode != 0:
+            log_err(f"could not prune orphaned REBASE_HEAD {oid}: {result.stderr.strip()}")
+            return info
+        log_warn(f"pruned orphaned REBASE_HEAD {oid}; rechecking primary readiness")
+        return inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
+    return info
+
+
 def main():
+    # GH-852: every child git (including the pre-push hook's and releases_app's) aborts an HTTP
+    # transfer stalled below 1000 B/s for 120 s instead of waiting on a dead socket after a
+    # wake. An operator's own values win.
+    os.environ.setdefault("GIT_HTTP_LOW_SPEED_LIMIT", "1000")
+    os.environ.setdefault("GIT_HTTP_LOW_SPEED_TIME", "120")
     parser = argparse.ArgumentParser(
         description="/merge-cleanup — Consolidate checkouts, sequence PRs, reconcile docs, and tear down safely."
     )
@@ -1048,7 +1243,8 @@ def main():
     parser.add_argument("--root", action="append", help="Root directory to search for checkouts")
     parser.add_argument("--prefix", default="", help="Filter checkouts by repo name substring")
     parser.add_argument("--exclude", action="append", default=[], help="Pattern, branch, or PR number to exclude from cleanup and PR sequencing")
-    parser.add_argument("--strategy", choices=["squash", "merge", "rebase"], default="squash", help="PR merge strategy")
+    parser.add_argument("--strategy", choices=["squash", "merge", "rebase"], default=None, help="PR merge strategy (default: project policy, otherwise squash)")
+    parser.add_argument("--show-merge-policy", action="store_true", help="Print the effective project merge policy as JSON and exit without scanning or contacting GitHub")
     parser.add_argument("--scan-only", action="store_true", help="Only audit and list checkouts")
     parser.add_argument("--prs-only", action="store_true", help="Only list and sequence open PRs")
     parser.add_argument("--teardown-only", action="store_true", help="Only perform checkout teardown (skip PR merges)")
@@ -1058,6 +1254,8 @@ def main():
     parser.add_argument("--allow-unready-primary", action="store_true", help="Explicitly defer primary-checkout cleanup and proceed even though the primary cannot receive the landing")
     parser.add_argument("--execute", action="store_true", help="Execute mutations (default is safe dry-run)")
     parser.add_argument("--resume", action="store_true", help="Continue a previous run: consult each PR's attempt record and skip one that is already parked (the live refresh stays authoritative — a PR whose repair resolved and now merges cleanly still lands)")
+    parser.add_argument("--backup-first", action="store_true", help="Back up and verify candidate clone folders before tearing them down")
+    parser.add_argument("--backup-root", help="Directory where standardized clone backups are stored (defaults to <top_level_folder>/_backups)")
 
     args = parser.parse_args()
 
@@ -1067,6 +1265,16 @@ def main():
     except (OSError, RuntimeError) as exc:
         log_err(f"cannot resolve the primary path {args.primary!r}: {exc}")
         return 2
+    try:
+        policy = resolve_merge_policy(primary_repo, args.strategy)
+    except ValueError as exc:
+        log_err(str(exc))
+        return 2
+    if args.show_merge_policy:
+        print(json.dumps(policy))
+        return 0
+    log(f"Merge policy: preserve_commit_history={policy['preserve_commit_history']}; "
+        f"strategy={policy['strategy']}; source={policy['source']}")
     search_roots = [Path(r).expanduser().resolve() for r in args.root] if args.root else DEFAULT_SAFE_ROOTS
     dry_run = not args.execute
 
@@ -1079,7 +1287,7 @@ def main():
     # detail discovered at merge time. This must stay above --reconcile-pr: that mode launches
     # governance writers straight into this tree, and used to do so with no verdict computed at
     # all (R1-F2).
-    primary_landing = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
+    primary_landing = prepare_primary_landing(primary_repo, args)
     print("\n" + "=" * 80)
     print("PHASE 0: PRIMARY ON-DISK CHECKOUT")
     print("=" * 80 + "\n")
@@ -1099,9 +1307,20 @@ def main():
     if args.reconcile_pr > 0:
         if _primary_blocks("reconcile"):
             return 2
+        # GH-852: look up the hosted run by this PR's own head and merge commit, not the
+        # primary's HEAD; a PR GitHub does not report as merged has nothing to reconcile.
+        info = refresh_pr_with_retry(args.reconcile_pr, primary_repo)
+        if info.get("error"):
+            log_err(f"PR #{args.reconcile_pr}: cannot read its state — {info['error']}")
+            return 2
+        merge_oid = (info.get("mergeCommit") or {}).get("oid")
+        if info.get("state") != "MERGED" or not merge_oid:
+            log_err(f"PR #{args.reconcile_pr} is {info.get('state')}, not merged — nothing to reconcile")
+            return 2
         return 0 if run_post_merge_reconcile(
             args.reconcile_pr, primary_repo,
             integration_branch=args.integration_branch, dry_run=dry_run,
+            pr_head=info.get("headRefOid"), merged_head=merge_oid,
         ) else 2
 
     # Phase 1..3: Scan & Audit checkouts
@@ -1199,7 +1418,7 @@ def main():
             log_err("Phase 0's verdict is based on cached refs that may no longer match the remote.")
             log_err("Fix the remote access, or pass --allow-unready-primary to proceed on stale evidence.")
             return 2
-        primary_landing = inspect_primary_landing(primary_repo, integration_branch=args.integration_branch)
+        primary_landing = prepare_primary_landing(primary_repo, args)
         print(format_primary_landing(primary_landing) + "\n")
         # R2-2: the branch Phase 0 checked must be the branch these PRs actually land on. A PR
         # based elsewhere would merge into a tree whose readiness was never established.
@@ -1239,15 +1458,41 @@ def main():
     log("Re-inspecting every non-exempt checkout before teardown...")
     fresh = refresh_for_teardown(checkouts, primary_repo, excludes=args.exclude, integration_branch=args.integration_branch)
     removable = [c for c in fresh if c["disposition"] in ("SAFE_REMOVE_WORKTREE", "SAFE_REMOVE_CLONE")]
+    phase6_failures = 0
     if not removable:
         log("No candidate checkouts qualify for safe removal (all are preserved or active).")
     else:
+        if args.backup_first:
+            from backup_clones import build_backup_layout
+            backup_root = Path(args.backup_root).resolve() if args.backup_root else primary_repo.parent / "_backups"
+            log(f"Backing up {len(removable)} candidate checkout(s) to {backup_root} before teardown...")
+            backup_candidates = [Path(c["path"]).resolve() for c in removable]
+            backup_res = build_backup_layout(
+                clones=backup_candidates,
+                backup_root=backup_root,
+                repo_name=primary_repo.name,
+                dry_run=dry_run,
+            )
+            if not dry_run and not backup_res["all_verified"]:
+                unverified_names = [c["clone"] for c in backup_res["clones"] if not c["verified"]]
+                log_err(f"Clone backup verification failed for {len(unverified_names)} checkout(s): {', '.join(unverified_names)}; preserving from teardown.")
+                phase6_failures += 1
+            verified_paths = {c["path"] for c in backup_res["clones"] if c["verified"]}
+            removable = [c for c in removable if str(Path(c["path"]).resolve()) in verified_paths or c["path"] in verified_paths]
+            log(f"Backup complete: {len(removable)} checkout(s) verified safe for teardown. Run dir: {backup_res['run_dir']}")
+
         for c in removable:
-            teardown_checkout(c, dry_run=dry_run)
+            ok = teardown_checkout(c, dry_run=dry_run)
+            if not ok:
+                phase6_failures += 1
 
     # Prune dangling symlinks
     prune_dangling_skill_symlinks(dry_run=dry_run)
     print("\n" + "=" * 80)
+    if phase6_failures > 0 and not dry_run:
+        log_err(f"Phase 6 completed with {phase6_failures} teardown or backup failure(s).")
+        return 2
+
     log("Merge cleanup run complete.")
     return 0
 

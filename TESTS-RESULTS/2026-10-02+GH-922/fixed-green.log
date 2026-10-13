@@ -1,0 +1,12 @@
+PASS mixed inventory skips pinned and default-section project rows before activity validation
+PASS preserves descriptive wording
+PASS missing eligible activity refused
+PASS invalid activity refused
+PASS future activity refused
+PASS stale snapshot refused
+PASS empty inventory refused
+PASS malformed sections refused
+PASS ambiguous membership refused
+PASS stable native readback is idempotent
+PASS CLI missing eligible activity exit 3
+TOTAL 11

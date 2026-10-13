@@ -1,0 +1,18 @@
+updated rmi-01M4FPVQE6GNJ6WBERCAKQDPN1
+
+GH-964: original in-progress admission re-affirmed through qualified writer at current time; no backdated start inferred.
+All replayed row identity, title, section/marker, doc, issue URL, ratings and status_label fields match original intent; regenerated GID/position/timestamps/receipts remain writer-owned.
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 1490 (DB <-> dump)
+OK: receipt chain intact (1677 receipt(s), business-state digest matches, 170 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 51 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 13 day(s) past its target of 2026-09-26 — the plan has drifted from the calendar
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 9 warning(s))

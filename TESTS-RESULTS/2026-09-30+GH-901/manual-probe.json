@@ -1,0 +1,33 @@
+{
+  "passed": 28,
+  "checks": [
+    "nonempty plan renames and pins",
+    "idempotent titles and pins",
+    "full descriptive wording retained",
+    "metadata-only update cannot renew activity",
+    "no-pin flag",
+    "pin-window independent of sweep",
+    "exclude chatgpt/local",
+    "exclude codex/durable",
+    "custom grouping preserved",
+    "heartbeat excluded",
+    "bare date never stacked",
+    "empty inventory refused",
+    "missing actual activity refused",
+    "stale capture refused",
+    "duplicate ID refused",
+    "milliseconds refused",
+    "NaN refused",
+    "boolean refused",
+    "ambiguous grouping refused",
+    "pin-state disagreement refused",
+    "invalid JSON refused",
+    "red control: deleted rename trips nonempty-plan assertion",
+    "mixed preflight --apply",
+    "mixed preflight --set-title",
+    "mixed preflight --group",
+    "mixed preflight --unpin-days",
+    "mixed preflight --hours",
+    "existing core default preserved"
+  ]
+}

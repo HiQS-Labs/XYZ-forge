@@ -1,0 +1,21 @@
+{
+  "check": "stop-hook.sh evidence-pointer gate (GH-983 follow-up, supersedes claude-compatibility.json hook_checks)",
+  "hook_path": "skills/2-daily/workhorse/stop-hook.sh",
+  "hook_sha256": "61be22957013d9d484b9f23f62be84891c5f01cc29813ab990122e6108577876",
+  "method": "temp git repo + .workhorse/<sid>.md per case; hook invoked with {\"session_id\",\"cwd\"} on stdin; blocks = stdout contains decision:block",
+  "all_expected": true,
+  "cases": [
+    {"case": "open",                 "input": "- [ ] W1 capture service baseline — baseline.json exists",                                                 "exit_code": 0, "blocks": true,  "expected": true},
+    {"case": "ticked_no_evidence",   "input": "- [x] W1 capture service baseline — baseline.json exists",                                                 "exit_code": 0, "blocks": true,  "expected": true},
+    {"case": "ticked_with_evidence", "input": "- [x] W1 capture service baseline — baseline.json exists — evidence: TESTS-RESULTS/x/baseline.json",         "exit_code": 0, "blocks": false, "expected": false},
+    {"case": "ticked_evidence_empty","input": "- [x] W1 capture service baseline — evidence:",                                                            "exit_code": 0, "blocks": true,  "expected": true},
+    {"case": "blocked_bang",         "input": "- [!] W1 capture service baseline — needs operator decision on window",                                     "exit_code": 0, "blocks": false, "expected": false},
+    {"case": "deferred_dash",        "input": "- [-] W1 optional polish — user deferred, PARKED/x.md",                                                    "exit_code": 0, "blocks": false, "expected": false},
+    {"case": "mixed_block",          "input": "- [x] W1 done — evidence: abc1234\n- [x] W2 done",                                                          "exit_code": 0, "blocks": true,  "expected": true},
+    {"case": "all_clean",            "input": "- [x] W1 done — evidence: abc1234\n- [-] W2 optional — user deferred\n- [!] W3 — awaiting confirmation",   "exit_code": 0, "blocks": false, "expected": false}
+  ],
+  "block_message_hand_back": "To hand back to the operator instead, mark the item [!] with the exact blocker or decision needed. [-] is only for optional or explicitly user-deferred items, never required scope.",
+  "limit": "bounded hook protocol probe; checks that an evidence pointer is RECORDED, not that it is true; not an end-to-end Claude session",
+  "stop-hook.sh_preserved": false,
+  "install.sh_preserved": true
+}

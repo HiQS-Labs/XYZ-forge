@@ -1,0 +1,61 @@
+== test: codex-turn ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-codex-turn.XXXXXX.fb6UhszrUv
+  PASS: non-Codex actor -> shim defers, no commit
+  PASS: Codex turn (good) exits 0
+  PASS: Codex turn committed (file-scoped)
+  PASS: commit touched the relay file
+  PASS: no push (no origin ref on the commit)
+  PASS: GH-165: no-tick Codex turn still exits 0
+  PASS: GH-165: no-tick Codex turn still commits
+  PASS: GH-165: shim handed the token to the peer after a no-tick Codex turn
+  PASS: GH-165: unowned token -> shim refuses before the turn (exit 5)
+  PASS: GH-165: unowned token -> no commit made
+  PASS: GH-165: unowned token -> claimer still boss
+tick: error: task RELAY-TURN-log is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: CODEX_LOG inside the tree is ignored (turn still succeeds)
+  PASS: transcript log cleaned up (not committed)
+tick: error: task RELAY-TURN-bad is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: off-allowlist edit -> shim fails (exit 6)
+  PASS: off-lane file was reverted/removed
+  PASS: no commit on a violating turn
+tick: error: task RELAY-TURN-bypass is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: Codex commit during turn -> shim fails (exit 6)
+  PASS: sneaked commit reset to BEFORE_HEAD
+  PASS: off-lane committed file removed by reset
+tick: error: task RELAY-TURN-space is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: off-lane path with space -> shim fails (exit 6)
+  PASS: spaced off-lane file reverted (-z parsing)
+  PASS: no commit on spaced-path violation
+tick: error: task RELAY-TURN-ambient is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: pre-existing dirty file -> turn still succeeds
+  PASS: pre-existing ambient WIP left untouched (not reverted)
+  PASS: commit excludes pre-existing ambient WIP
+tick: error: task RELAY-TURN-flags is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: default CODEX_FLAGS '-s workspace-write' reaches codex exec
+  PASS: GH-106: default CODEX_FLAGS includes '-c approval_policy=never' (no headless approval hang)
+  PASS: default RELAY_TURN_TIMEOUT_S is 900s
+tick: error: task RELAY-TURN-flags2 is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: CODEX_FLAGS override is honored
+tick: error: task RELAY-TURN-timeout is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: turn killed at RELAY_TURN_TIMEOUT_S exits 7
+  PASS: timeout fixture can still commit before the shim reports exit 7
+  PASS: timeout fixture still handed the token to the peer before exit 7
+tick: error: task RELAY-TURN-gh36iso is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: GH-36: worktree isolation passes --add-dir <root>/.tick to codex (shared token lock writable)
+tick: error: task RELAY-TURN-gh263noiso is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: GH-263: isolation=0 (default) also passes --add-dir <root>/.tick to codex
+tick: error: task RELAY-TURN-gh296-iso1 is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: GH-296: Python-runtime isolation=1 builds --add-dir off TICK_REPO_ROOT (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-codex-turn.XXXXXX.fb6UhszrUv/agent-a), not XYZ_ROOT
+tick: error: task RELAY-TURN-gh296-iso0 is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: GH-296: Python-runtime isolation=0 builds --add-dir off TICK_REPO_ROOT (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-codex-turn.XXXXXX.fb6UhszrUv/agent-a), not XYZ_ROOT
+tick: error: task RELAY-TURN-rename is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: staged rename (off-lane) enforced, not skipped as pre-existing
+tick: error: task RELAY-TURN-rev is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: reviewer turn: artifact on ALLOW_PATHS dropped -> edit reverted (exit 6)
+  PASS: reviewer's artifact edit reverted to original
+  PASS: no commit on a reviewer-scoping violation
+tick: error: task RELAY-TURN-tickexempt is open (never claimed) — nothing to break; use a fresh --relay-task id
+  PASS: .tick writes exempted when host doesn't gitignore .tick (turn succeeds)
+  PASS: .tick state dir preserved (not rm-rf'd)
+  PASS: turn prompt forbids self-running the full gate (#43-3)
+  codex-turn: 43 pass, 0 fail

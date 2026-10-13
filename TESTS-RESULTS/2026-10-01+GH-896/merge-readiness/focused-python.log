@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gate-900-902
+configfile: pytest.ini
+plugins: hypothesis-6.167.1, anyio-4.13.0
+collected 21 items
+
+test/test_python_layer.py .....................                          [100%]
+
+============================= 21 passed in 21.48s ==============================

@@ -330,7 +330,7 @@ FIXTURE
         self.git('commit', '-m', 'qualification fixture')
         self.sha = self.git('rev-parse', 'HEAD').strip()
         self.meta = dict(META, mergeCommit={'oid': self.sha})
-        self.journal = wave.RollbackJournal()
+        self.journal = wave.RollbackJournal(self.root)  # GH-745: never the real clone's .tick/events
         self.addCleanup(self.journal.cleanup)
 
     def git(self, *args):

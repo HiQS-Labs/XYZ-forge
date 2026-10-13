@@ -174,9 +174,14 @@ if ! valid_json "$X4" || [ "$concurrent_count" != "$M" ] || [ "$distinct" != "$M
   done
 fi
 
-# ── (5) no leftover temp file or lock dir after a write ─────────────────────
+# ── (5) no leftover temp file; retained sidecar is unlocked after a write ─────────────────────
 [ -z "$(find "$WORK" -name '.xyz.*.tmp' 2>/dev/null)" ] && pass "no leftover temp files" || fail "temp file leaked: $(find "$WORK" -name '.xyz.*.tmp')"
-[ ! -e "$X4.lock" ] && pass "lock dir released after concurrent round" || fail "lock dir leaked: $X4.lock"
+python3 - "$X4.lock" <<'PYLOCK'
+import fcntl,sys
+with open(sys.argv[1], 'r+') as f:
+    fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+PYLOCK
+[ "$?" -eq 0 ] && pass "stable sidecar unlocked after concurrent round" || fail "sidecar still locked: $X4.lock"
 
 # ── (6) arg validation ──────────────────────────────────────────────────────
 XYZ_JSON_PATH="$WORK/bad.json" bash "$WRITER" bogus slug green T d >/dev/null 2>&1; rc=$?

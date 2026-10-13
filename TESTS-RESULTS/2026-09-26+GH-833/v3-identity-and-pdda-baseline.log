@@ -1,0 +1,19 @@
+# identity of the V3 clone, checked after the V3 run (not retained before it)
+HEAD=58256426 docs(GH-833): define PRS — the Product Release Sy porcelain=0 core.bare=false local.user.email=<unset> remote=origin	/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh833-prs-docs (fetch)
+
+pdda at af4fef27 rc=0 :: PDDA run complete: no errors, 357 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa
+pdda at cd777ca7 rc=0 :: PDDA run complete: no errors, 359 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa
+
+# warnings at cd777ca7 not present at af4fef27:
+WARN [pdda-check-governance] ROUTER.md:15 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] ROUTER.md:192 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] ROUTER.md:208 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-833-PRS-DEFINITION.md:1 issue #833 state unavailable (gh absent/offline and no cached state) — sync NOT evaluated; run: utils/pdda/pdda.sh gh-refresh
+WARN [pdda-check-issue-doc-sync] releases.db issue #833 state unavailable — roadmap section sync NOT evaluated
+# warnings at af4fef27 gone at cd777ca7:
+WARN [pdda-check-governance] ROUTER.md:13 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] ROUTER.md:190 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] ROUTER.md:206 dead reference 'RELEASES.md' — no file at RELEASES.md
+
+# identity after the PDDA comparison (back at 58256426)
+HEAD=58256426 docs(GH-833): define PRS — the Product Release Sy porcelain=0 core.bare=false local.user.email=<unset> remote=origin	/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh833-prs-docs (fetch)

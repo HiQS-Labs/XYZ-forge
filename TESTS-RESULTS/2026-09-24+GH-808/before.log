@@ -1,0 +1,11 @@
+== test: gh251-validate-pytest-skip ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh251-validate-pytest-skip.XXXXXX.gkbjDHkVqa
+  PASS: validate.sh invokes pytest when pytest is importable
+  PASS: python:test_python_layer.py is reported passed
+  PASS: absent pytest outputs the documented named SKIPPED line
+  PASS: absent pytest is tracked in the SKIPPED summary list
+  PASS: absent pytest does not land in FAILED
+  PASS: missing yaml names the interpreter, repair PATH, and evidence limit
+  gh251-validate-pytest-skip: 6 pass, 0 fail
+bash test/gh251-validate-pytest-skip.sh  603.01s user 204.71s system 76% cpu 17:30.60 total
+exit=0

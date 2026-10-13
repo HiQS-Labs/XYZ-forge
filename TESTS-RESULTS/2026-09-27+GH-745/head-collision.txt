@@ -1,0 +1,3 @@
+files: 2 ['2026-09-27T12-00-00.123Z-35006-862650ef-wave-reconcile-rollback.jsonl', '2026-09-27T12-00-00.123Z-35006-f9d2dfef-wave-reconcile-rollback.jsonl']
+records per file: [1, 1]
+tick claims rc: 0 | {"root":"/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tmpg374g67y","claimed":[]}

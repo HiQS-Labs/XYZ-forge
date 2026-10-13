@@ -1,0 +1,20 @@
+# GH-842 witness (manual; AGENTS.md no new tests). Run from a full clone: python3 witness.py.txt <cutover>
+# Uses the live merged-PR listing (read-only) and real development history.
+import sys, subprocess
+sys.path.insert(0, "utils/py")
+import wave_reconcile as w
+w.DIRECT_COMMIT_CUTOVER = sys.argv[1]
+root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).strip()
+meta = {}
+w.unreconciled_prs(root, "HiQS-Labs/XYZ-forge", meta)
+merged = {m["mergeCommit"]["oid"] for (k, _), m in meta.items() if k == "pr"}
+pending = w.unreconciled_commits(root, meta)
+rows = subprocess.check_output(["git", "log", "--first-parent", "--format=%H %ae %s", f"{sys.argv[1]}..HEAD"],
+                               cwd=root, text=True).splitlines()
+express = w.express_landings(root)
+for r in reversed(rows):
+    sha, author, subj = r.split(" ", 2)
+    why = ("PR merge" if sha in merged else "express" if sha in express
+           else "bot" if author == w.BOT_AUTHOR_EMAIL else "QUALIFY" if sha in pending else "has receipt")
+    print(f"{sha[:10]} {why:11} {author[:28]:28} {subj[:60]}")
+print("pending:", len(pending))

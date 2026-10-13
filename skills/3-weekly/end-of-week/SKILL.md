@@ -29,12 +29,14 @@ completion**. Do not repeat it at every response or tool call.
 > **End of Week — six tasks**
 > 1. Check that reconciliation on origin's primary branch, as configured in GitHub, is clean/green.
 > 2. Run supported reconciliation if needed and verify the result.
-> 3. Compare RebalanceOS HiQS signal, local git activity and origin git activity; diagnose process and script gaps in PDDA, RELEASES SQLite (PRS), and XYZ metadata.
+> 3. Compare RebalanceOS HiQS signal, local git activity and origin git activity; diagnose process and script gaps in PDDA, RELEASES SQLite (the Product Release System, PRS), and XYZ metadata.
 > 4. File an umbrella GitHub issue with the top ten evidenced gaps/changes, their diagnosis, prognosis, recommendations, and potential governance-script updates.
 > 5. Correct verified project metadata through its canonical writers.
 > 6. Update the Project Kanban board from authoritative metadata and verify it by reading it back.
 >
 > **Two goals:** Update Project Kanban; begin governance automation script recalibration.
+
+PRS in task 3 is the Product Release System, the RELEASES ledger ([definition](https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)).
 
 The first completion recital is a **single evidence audit**, not a restart: compare
 all six tasks and both goals against their receipts, finish missing in-scope work,

@@ -1,0 +1,6 @@
+{
+  "head": "011c3f41a225937d0b2eefb3dabe8ec902e6f52b",
+  "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.fix/gh854-gate-dispositions.remote=origin\nbranch.fix/gh854-gate-dispositions.merge=refs/heads/fix/gh854-gate-dispositions",
+  "branch": "fix/gh854-gate-dispositions"
+}

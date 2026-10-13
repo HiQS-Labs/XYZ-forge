@@ -41,6 +41,7 @@ NAV = [
     ("faq.html", "FAQ"),
     ("models-harnesses.html", "Models &amp; Harnesses"),
     ("roadmap.html", "Roadmap"),
+    ("apple-silicon-testing.html", "Apple Silicon Testing"),
     ("issues.html", "Issues"),
     ("other-apps-tools.html", "Other Apps &amp; Tools"),
     ("contact.html", "Contact"),

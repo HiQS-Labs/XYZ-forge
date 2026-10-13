@@ -1,0 +1,10 @@
+#!/bin/bash
+# GH-793 reproduction: run gh492 N times while every core is saturated (simulates the 4-wide gate under load).
+cd "$1"; N="${3:-5}"; OUT="$2"
+C=$(sysctl -n hw.ncpu); pids=()
+for i in $(seq 1 $((C*2))); do ( while :; do :; done ) & pids+=($!); done
+trap 'kill ${pids[@]} 2>/dev/null' EXIT
+for i in $(seq 1 $N); do
+  bash test/gh492-idle-kill.sh > "$OUT-$i.log" 2>&1; rc=$?
+  echo "run $i rc=$rc $(grep -E 'pass, [0-9]+ fail|passed' "$OUT-$i.log" | tail -1) | $(grep -hoE 'CONTROL FAILED[^—]*|got timeout-[a-z-]*' "$OUT-$i.log" | tr '\n' ' ')"
+done

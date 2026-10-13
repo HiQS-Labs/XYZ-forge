@@ -24,10 +24,11 @@ embeds the goal, scope, evidence, constraints, questions, and done condition as 
 
 ## Install
 
-From the repository root, run:
+Run the commands below from the skill folder: `skills/agent-chorus/` in AgentChorus-Skill, or
+`skills/2-daily/agent-chorus/` in XYZ Forge.
 
 ```bash
-bash skills/2-daily/agent-chorus/install.sh
+bash install.sh
 ```
 
 The idempotent installer symlinks this repo-backed skill into the standard skill directories for
@@ -39,7 +40,7 @@ version instead — or to install for one project only — copy the folder and r
 commit:
 
 ```bash
-cp -R skills/2-daily/agent-chorus ~/.claude/skills/agent-chorus        # or <project>/.claude/skills/
+cp -R "$PWD" ~/.claude/skills/agent-chorus        # from the skill folder; or <project>/.claude/skills/
 git rev-parse --short HEAD > ~/.claude/skills/agent-chorus/INSTALLED-FROM.txt
 ```
 
@@ -75,8 +76,8 @@ watch markers stay in the session's `runtime/` directory. Set `AGENT2AGENT_HOME`
 `--store` to select another private external location. Persist one user-level default with:
 
 ```bash
-"$(git rev-parse --show-toplevel)/skills/2-daily/agent-chorus/scripts/agent_chorus.py" configure-store \
-  --path /private/path/to/Agent2Agent-Transcripts
+python3 scripts/agent_chorus.py configure-store \
+  --path /private/path/to/Agent2Agent-Transcripts        # from the skill folder
 ```
 
 Legacy `relay-system/` sessions remain readable and writable in place. To archive them, copy the
@@ -99,27 +100,29 @@ The helper also makes four common long-running-discussion transitions explicit:
 
 ## Verify
 
-Run the skill's dependency-free smoke suite from the repository root:
+Run the skill's dependency-free smoke suite from the skill folder:
 
 ```bash
-bash skills/2-daily/agent-chorus/test-standalone.sh
+bash test-standalone.sh
 ```
 
 ## Publish the standalone distribution
 
-XYZ Forge is canonical. `publish-manifest.tsv` declares every file shipped to the standalone
-repository, including its README, CI workflow, tests, metadata, and licenses. Preview by default,
-then publish only from a clean committed canonical revision:
+XYZ Forge is canonical. The standalone repository (HiQS-Labs/AgentChorus-Skill) is published by the
+forge's one downstream publisher, `utils/py/xyz_mini_sync.py --target agent-chorus` (GH-955; the
+`push-downstream` skill is the operator flow). Its manifest there declares every shipped file:
+README, CI workflow, tests, metadata, and licenses. Run these from the XYZ-forge repository root.
+Preview by default, then publish:
 
 ```bash
-bash skills/2-daily/agent-chorus/sync-to-standalone.sh --preview
-bash skills/2-daily/agent-chorus/sync-to-standalone.sh --apply
-bash skills/2-daily/agent-chorus/sync-to-standalone.sh --check
+python3 utils/py/xyz_mini_sync.py --target agent-chorus           # preview
+python3 utils/py/xyz_mini_sync.py --target agent-chorus --push    # commit + push + read back
+python3 utils/py/xyz_mini_sync.py --target agent-chorus --check   # read-only parity (the child CI runs this)
 ```
 
-Set `AGENT2AGENT_STANDALONE_REPO` to select another checkout. The publisher refuses undeclared
-tracked destination files, preserves declared executable modes, verifies byte parity, and records
-the exact XYZ commit in `.xyz-canonical-revision`. Standalone changes never sync back automatically.
+Set `AGENT2AGENT_STANDALONE_REPO` to select another checkout. The publisher copies executable bits from
+the source, verifies the push, records the exact XYZ commit in `.xyz-forge-revision`, and never
+overwrites a child file it did not publish. Standalone changes never sync back automatically.
 
 ## License
 

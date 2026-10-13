@@ -1,0 +1,3 @@
+ERROR [pdda-check-marathon-qa] MARATHON-PLAN-probe.md:11 Wave 1 checked but transcript 'relay-system/approved.md))' does not exist on disk — commit-missing-relay-transcript
+ERROR [pdda-check-marathon-qa] MARATHON-PLAN-probe.md:15 Wave 2 checked but transcript 'relay-system/approved.md))' does not exist on disk — commit-missing-relay-transcript
+SUMMARY [pdda-check-marathon-qa] errors=2 warns=0 info=0

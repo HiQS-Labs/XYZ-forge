@@ -4,8 +4,9 @@ An operator's guide to running XYZ day to day, organized by time horizon. Adapte
 operating-rhythm writeup in [#259](https://github.com/HiQS-Labs/XYZ-forge/issues/259); that issue's
 comment thread also tracks the skills roadmap that mechanizes these rituals.
 
-One framing point before the rituals: the two core systems own different truths. The **releases DB
-is the commitment ledger** — what's promised, to which release, with what evidence. The **marathon
+One framing point before the rituals: the two core systems own different truths. The **releases DB**,
+the Product Release System ([PRS](#glossary--the-five-terms-youll-hit-first)), **is the commitment ledger** — what's promised, to which
+release, with what evidence. The **marathon
 system is the execution engine** — sequencing, concurrency lanes, readiness. The leverage is in
 never duplicating either's state by hand, and letting each oracle catch the other's rot.
 
@@ -64,7 +65,7 @@ never duplicating either's state by hand, and letting each oracle catch the othe
   across sessions, it's either a core fix or a skill — file it. The oracles detecting their own
   blind spots is the system working as designed; leaving the finding undispositioned is not.
 
-## Glossary — the four terms you'll hit first
+## Glossary — the five terms you'll hit first
 
 (For how the operating modes — Consult, Relay, Swarm, Marathon — relate to each other, see the
 execution-modes table in [README.md](README.md).)
@@ -78,6 +79,13 @@ execution-modes table in [README.md](README.md).)
   an explicit per-call API opt-in (`CLAUDE_MAX_BUDGET` defaults to $0.50 and `CLAUDE_MAX_TURNS` to 12).
 - **agy** — the Antigravity CLI (Google), one of the agents XYZ coordinates alongside Claude Code
   and Codex.
+- **PRS** — the **Product Release System**: the RELEASES ledger, `releases.db` with its git-mergeable dump
+  `releases.sql`, written only through `utils/py/releases_app.py`. It holds the roadmap rows and their
+  `rated pri/sev/appeal/effort` ranking, the release manifests and the ship evidence. PRS names the system;
+  the files, tables, CLI verbs and `RELEASES-*` docs keep their names. It is the third part of the
+  XYZ Forge / PDDA / PRS trinity: **XYZ Forge**, the harness — tick, relay and marathon automation, and the
+  gate ([ROUTER.md](ROUTER.md), [AGENTS.md](AGENTS.md)); **PDDA**, project-doc governance
+  ([PROJECT/PDDA.md](PROJECT/PDDA.md)); and **PRS** ([RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md)).
 
 ## FAQ
 

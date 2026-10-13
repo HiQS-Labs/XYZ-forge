@@ -75,7 +75,7 @@ def view(st, pr):
     git(st["probe"], "fetch", "-q", "origin")
     head = git(st["probe"], "rev-parse", "origin/" + pr["headRefName"]).stdout.strip() if pr["state"] == "OPEN" else pr.get("headRefOid")
     d = {"number": pr["number"], "state": pr["state"], "headRefName": pr["headRefName"], "baseRefName": st["base"],
-         "labels": [{"name": l} for l in pr.get("labels", [])], "headRefOid": head or pr.get("headRefOid"),
+         "isDraft": pr.get("isDraft", False), "labels": [{"name": l} for l in pr.get("labels", [])], "headRefOid": head or pr.get("headRefOid"),
          "mergeCommit": ({"oid": pr["mergeCommit"]} if pr.get("mergeCommit") else None),
          "url": f"https://example.invalid/pr/{pr['number']}", "title": f"PR {pr['number']}", "body": pr.get("body", ""),
          "files": pr.get("files", []), "createdAt": f"2026-09-01T0{pr['number'] % 10}:00:00Z", "statusCheckRollup": []}
@@ -520,9 +520,14 @@ class TestPhase5EndToEnd(LedgerFixture):
         self.pruner.assert_not_called()
 
     def test_reconcile_pr_failure_propagates(self):
-        with mock.patch.object(merge_cleanup, "run_post_merge_reconcile", return_value=False):
+        # --reconcile-pr refuses an unmerged PR (GH-852); PR 7 is merged, so rc 2 is the reconcile's.
+        self.st["prs"]["7"] = {"number": 7, "state": "MERGED", "headRefName": "feat/seven", "labels": [],
+                               "headRefOid": "a" * 40, "mergeCommit": "b" * 40}
+        self.save()
+        with mock.patch.object(merge_cleanup, "run_post_merge_reconcile", return_value=False) as reconcile:
             rc = self.run_main(extra=["--reconcile-pr", "7"])
         self.assertEqual(rc, 2)
+        reconcile.assert_called_once()
 
     def test_conflicting_pr_is_never_gh_merged_on_handoff(self):
         """Same gh_number parked on both sides: textual conflict, semantic conflict → handoff (rc 3)."""

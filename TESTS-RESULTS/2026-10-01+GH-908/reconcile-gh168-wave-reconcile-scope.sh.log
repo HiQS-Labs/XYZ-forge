@@ -1,0 +1,11 @@
+== test: gh168-wave-reconcile-scope ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh168-wave-reconcile-scope.XXXXXX.XeZai8iPzz
+== test: gh168-wave-reconcile-scope ==
+  PASS: unrelated pre-existing planner drift does not roll back reconciliation
+  PASS: warning block names the unrelated held item
+  PASS: successful reconcile keeps the PR-specific doc promotion
+  PASS: promotion writer moves one ROADMAP entry to Completed
+  PASS: PR-owned planner drift remains fatal (witnessed red control)
+  PASS: PR-owned drift rolls back both doc and ROADMAP mutations
+  PASS: second reconcile is a byte-for-byte no-op with one ledger entry
+  gh168-wave-reconcile-scope: 7 pass, 0 fail

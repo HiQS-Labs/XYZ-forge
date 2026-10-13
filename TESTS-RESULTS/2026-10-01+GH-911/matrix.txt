@@ -1,0 +1,15 @@
+red: mutant (predicate off) fails block assertion PASS
+green: real hook blocks on open item             PASS
+stop_hook_active=true still blocks               PASS
+allow: closed/parked/blocked only → silent exit 0 PASS
+allow: no checklist file → silent exit 0       PASS
+allow: other session id → silent exit 0        PASS
+allow: garbage stdin → silent exit 0           PASS
+allow: wrongly typed session_id → silent exit 0 PASS
+allow: path-traversal session_id → silent exit 0 PASS
+allow: empty stdin → silent exit 0             PASS
+non-git cwd → CLAUDE_PROJECT_DIR fallback blocks PASS
+resolve: project-scope path runs hook            PASS
+resolve: user-scope symlink runs hook            PASS
+resolve: neither path → silent exit 0          PASS
+allow: python3 missing → silent exit 0         PASS

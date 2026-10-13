@@ -28,9 +28,15 @@ echo "== test: gh123-lock-progress-bound =="
 
 # ── A. Stuck holder: the bound must still fire, and fire as starvation (75) ──────────────────────
 X_A="$WORK/a.json"; LOCK_A="$X_A.lock"
-mkdir -p "$LOCK_A"
-sleep 30 & stuck_pid=$!                      # a live holder that never lets go
-printf '%s\n' "$stuck_pid" > "$LOCK_A/pid"
+python3 - "$LOCK_A" "$WORK/a.ready" <<'PYHOLD' &
+import fcntl,sys,time,pathlib
+with open(sys.argv[1], 'a+') as f:
+    fcntl.flock(f, fcntl.LOCK_EX)
+    pathlib.Path(sys.argv[2]).touch()
+    time.sleep(30)
+PYHOLD
+stuck_pid=$!
+for _ in $(seq 1 100); do [ -e "$WORK/a.ready" ] && break; sleep .05; done
 
 start=$(date +%s)
 XYZ_JSON_PATH="$X_A" XYZ_LOCK_WAIT_S=2 bash "$WRITER" relay gh123-stuck green "T" "d" >/dev/null 2>&1
@@ -49,19 +55,24 @@ kill "$stuck_pid" 2>/dev/null || true; wait "$stuck_pid" 2>/dev/null || true
 # Six handovers at ~1s each = ~6s of waiting under a 2s per-holder bound. The old single deadline
 # expires at 2s and exits 75; the fixed bound re-arms on every handover and acquires the lock.
 X_B="$WORK/b.json"; LOCK_B="$X_B.lock"
-mkdir -p "$LOCK_B"
-handover_done="$WORK/handover.done"
-(
-  for _ in 1 2 3 4 5 6; do
-    sleep 5 & h=$!                            # a distinct, live pid each round
-    printf '%s\n' "$h" > "$LOCK_B/pid" 2>/dev/null || true
-    sleep 1
-    kill "$h" 2>/dev/null || true; wait "$h" 2>/dev/null || true
-  done
-  rm -rf "$LOCK_B" 2>/dev/null || true         # queue drained — lock is free
-  : > "$handover_done"
-) &
+# Children inherit the locked descriptor: ownership tokens move without an
+# unlocked gap that would let the writer acquire before progress is exercised.
+python3 - "$LOCK_B" "$WORK/b.ready" <<'PYMOVE' &
+import fcntl,os,sys,time,pathlib,uuid
+with open(sys.argv[1], 'a+') as f:
+    fcntl.flock(f, fcntl.LOCK_EX)
+    for n in range(6):
+        pid = os.fork()
+        if pid == 0:
+            os.pwrite(f.fileno(), uuid.uuid4().hex.encode(), 0)
+            os.ftruncate(f.fileno(), 32)
+            if n == 0: pathlib.Path(sys.argv[2]).touch()
+            time.sleep(1)
+            os._exit(0)
+        os.waitpid(pid, 0)
+PYMOVE
 handover_pid=$!
+for _ in $(seq 1 100); do [ -e "$WORK/b.ready" ] && break; sleep .05; done
 
 start=$(date +%s)
 XYZ_JSON_PATH="$X_B" XYZ_LOCK_WAIT_S=2 bash "$WRITER" relay gh123-progress green "T" "d" >/dev/null 2>&1

@@ -589,6 +589,40 @@ def main():
         except Exception:
             return ""
 
+    # GH-976: receipt-only commits are not convergence. A relay turn commits its own transcript in the
+    # same repo get_head_commit() samples (relay-turn-lib.sh commits `relay(<task>): <agent> turn`),
+    # so HEAD moves on a handoff that repaired nothing and the GH-115 extension was granted round
+    # after round up to the hard ceiling (user-sage-backend#75: cap 10 on transcript commits alone).
+    # Progress on the HEAD arm now means at least one changed path outside the receipt paths.
+    RECEIPT_DIRS = ("relay-system/", "marathon-system/", ".tick/", ".relay-scratch/", "TESTS-RESULTS/")
+
+    def commits_touch_non_receipt(before, after):
+        if not before or not after or before == after:
+            return False
+        repo = target_repo()
+        try:
+            # -z: literal NUL-terminated pathnames — without it git quotes unusual names
+            # ("relay-system/r\303\251ceipt.md") and the leading quote defeats every prefix.
+            out = subprocess.check_output(["git", "-C", repo, "diff", "--name-only", "-z", f"{before}..{after}"],
+                                          stderr=subprocess.DEVNULL).decode("utf-8", "surrogateescape")
+        except Exception:
+            return False   # unverifiable evidence earns no extension; the resolved-items arm still applies
+        # Exact-file exclusion only when the transcript resolves INSIDE this repo. realpath on both
+        # operands: on macOS /tmp and /var are aliases of /private/..., and abspath alone makes the
+        # same file look external. commonpath is component-aware ("..thread.md" is not "..").
+        relay_rel = ""
+        try:
+            repo_real = os.path.realpath(repo)
+            relay_real = os.path.realpath(relay_file)
+            if os.path.commonpath([repo_real, relay_real]) == repo_real:
+                relay_rel = os.path.relpath(relay_real, repo_real)
+        except ValueError:
+            relay_rel = ""
+        for path in out.split("\0"):
+            if path and not path.startswith(RECEIPT_DIRS) and not (relay_rel and path == relay_rel):
+                return True
+        return False
+
     def count_resolved_items():
         try:
             with open(relay_file, 'r') as f:
@@ -1094,7 +1128,7 @@ def main():
         resolved_after = count_resolved_items()
         
         made_progress = False
-        if head_after and head_before and head_after != head_before:
+        if commits_touch_non_receipt(head_before, head_after):   # GH-976: not a receipt-only move
             made_progress = True
         elif resolved_after > resolved_before:
             made_progress = True

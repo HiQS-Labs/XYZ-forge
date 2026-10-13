@@ -21,6 +21,7 @@
       <a href="faq.html">FAQ</a>
       <a href="models-harnesses.html">Models &amp; Harnesses</a>
       <a href="roadmap.html">Roadmap</a>
+      <a href="apple-silicon-testing.html">Apple Silicon Testing</a>
       <a href="issues.html">Issues</a>
       <a href="other-apps-tools.html">Other Apps &amp; Tools</a>
       <a href="contact.html">Contact</a>
@@ -106,7 +107,7 @@
       overengineering", "the cogs are moving but the goal isn't", "get back to the plan".<br>
       <strong>Source:</strong> <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/unstuck/SKILL.md"><code>skills/unstuck/SKILL.md</code></a></p>
     </div>
-    <p>It also <strong>fires on its own</strong>. The agent must self-invoke on any of four tripwires,
+    <p>It also <strong>fires on its own</strong>. The agent must self-invoke on any of five tripwires,
     without waiting for the operator:</p>
     <ul>
       <li>Two consecutive turns to the operator with no observable milestone change.</li>
@@ -115,6 +116,8 @@
       <li>Passive narration: "Waiting for the run to finish…", "Should I continue?", "Let me know how
       to proceed" on an in-flight task.</li>
       <li>False completion: about to say "Done" while a core deliverable was bypassed or unattempted.</li>
+      <li>Reviewed-plan re-litigation: about to reopen a settled decision in a reviewed plan without new
+      contradictory evidence or a changed user requirement.</li>
     </ul>
     <p>The governing question is <em>what is the smallest action that changes the original goal's
     observable state?</em></p>
@@ -290,8 +293,10 @@ python3 skills/merge-cleanup/scripts/merge_cleanup.py --primary "$PRIMARY" --pre
       </table>
     </div>
     <p>To install any of these for Claude Code, Codex, or agy on your machine, see
-    <a href="https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/skills-army-hq/SKILL.md"><code>skills-army-hq</code></a>,
-    which manages a durable local skill collection and the per-app symlinks.</p>
+    <a href="https://github.com/HiQS-Labs/XYZ-skills-army-mini/blob/main/SKILL.md"><code>skills-army-hq</code></a>,
+    which manages a durable local skill collection and the per-app symlinks. Its source lives in
+    XYZ Forge; <a href="https://github.com/HiQS-Labs/XYZ-skills-army-mini">XYZ-skills-army-mini</a> is
+    a published standalone copy.</p>
   </div>
 </main>
 

@@ -1,0 +1,12 @@
+ERROR [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:70 Wave 1 missing mandatory Proof of Done test suite checklist item — add-proof-of-done-check
+ERROR [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:70 Wave 1 missing mandatory Post-Build Codex QA Relay checklist item — add-codex-qa-relay-check
+ERROR [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:70 Wave 1 missing mandatory CodeRabbit / Peer Review adjudication checklist item — add-peer-review-check
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:70 Wave 1 item pending verification: 'Every lane runs in an isolated task clone branched from `development`.' — pending-wave-qa
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:72 Wave 1 item pending verification: 'Wave 1 merges and passes full gate before Wave 2 commences.' — pending-wave-qa
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:73 Wave 1 item pending verification: 'All inventory ratchets ratchet downward permanently.' — pending-wave-qa
+ERROR [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:71 Wave 2 missing mandatory Proof of Done test suite checklist item — add-proof-of-done-check
+ERROR [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:71 Wave 2 missing mandatory Post-Build Codex QA Relay checklist item — add-codex-qa-relay-check
+ERROR [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:71 Wave 2 missing mandatory CodeRabbit / Peer Review adjudication checklist item — add-peer-review-check
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:71 Wave 2 item pending verification: 'Central registries (`validate.sh`, `releases.db`) are modified only by Lane 3 in Wave 2.' — pending-wave-qa
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 missing '## Acceptance & Quality Checklist' section — add-marathon-checklist
+SUMMARY [pdda-check-marathon-qa] errors=6 warns=5 info=0

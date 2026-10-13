@@ -1,0 +1,142 @@
+{
+  "source_sha": "b42ad688d598748c371b93fdb36606a57046c2b1",
+  "skill_sha256": "5b05f30a8e0c509540f8f6dff9c53660abc815291ceab3bc0e5a0a7fec50faef",
+  "hook_sha256": "4fbfb305ffed9eba8d91848fb12ff9a8c490bfca9e4a08e2e53c040190668de1",
+  "base_sha": "3c9bfa8ca452bfddd8ec19d4ac243e02372531bb",
+  "python_ast_equal_except_reason": true,
+  "bash_syntax": true,
+  "python_compile": true,
+  "cases": [
+    {
+      "case": "open",
+      "input": {
+        "session_id": "gh985-manual",
+        "cwd": "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate"
+      },
+      "queue": "- [ ] W1 required execution\n",
+      "expected_block": true,
+      "exit_code": 0,
+      "stdout": "{\"decision\": \"block\", \"reason\": \"/workhorse run checklist /Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate/.workhorse/gh985-manual.md still has 1 open item(s):\\n- [ ] W1 required execution\\nContinue the next authorized feasible required item. Mark [x] only with acceptance evidence and audit the requested outcome before completion. For a concrete external blocker record [!] and finish independent authorized work first. Stop only for verified completion, explicit user pause/cancellation, or a concrete external blocker after independent authorized work is finished. [-] is for genuinely optional or explicitly user-deferred work only and does not reduce required scope.\"}\n",
+      "stderr": ""
+    },
+    {
+      "case": "checked",
+      "input": {
+        "session_id": "gh985-manual",
+        "cwd": "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate"
+      },
+      "queue": "- [x] W1 evidence receipt\n",
+      "expected_block": false,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "case": "blocked-plus-independent",
+      "input": {
+        "session_id": "gh985-manual",
+        "cwd": "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate"
+      },
+      "queue": "- [!] W1 external credentials unavailable\n- [ ] W2 independent authorized report\n",
+      "expected_block": true,
+      "exit_code": 0,
+      "stdout": "{\"decision\": \"block\", \"reason\": \"/workhorse run checklist /Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate/.workhorse/gh985-manual.md still has 1 open item(s):\\n- [ ] W2 independent authorized report\\nContinue the next authorized feasible required item. Mark [x] only with acceptance evidence and audit the requested outcome before completion. For a concrete external blocker record [!] and finish independent authorized work first. Stop only for verified completion, explicit user pause/cancellation, or a concrete external blocker after independent authorized work is finished. [-] is for genuinely optional or explicitly user-deferred work only and does not reduce required scope.\"}\n",
+      "stderr": ""
+    },
+    {
+      "case": "optional-plus-required",
+      "input": {
+        "session_id": "gh985-manual",
+        "cwd": "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate"
+      },
+      "queue": "- [-] W1 optional polish\n- [ ] W2 required execution\n",
+      "expected_block": true,
+      "exit_code": 0,
+      "stdout": "{\"decision\": \"block\", \"reason\": \"/workhorse run checklist /Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate/.workhorse/gh985-manual.md still has 1 open item(s):\\n- [ ] W2 required execution\\nContinue the next authorized feasible required item. Mark [x] only with acceptance evidence and audit the requested outcome before completion. For a concrete external blocker record [!] and finish independent authorized work first. Stop only for verified completion, explicit user pause/cancellation, or a concrete external blocker after independent authorized work is finished. [-] is for genuinely optional or explicitly user-deferred work only and does not reduce required scope.\"}\n",
+      "stderr": ""
+    },
+    {
+      "case": "hook-continuation",
+      "input": {
+        "session_id": "gh985-manual",
+        "cwd": "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate",
+        "stop_hook_active": true
+      },
+      "queue": "- [ ] W1 required execution\n",
+      "expected_block": true,
+      "exit_code": 0,
+      "stdout": "{\"decision\": \"block\", \"reason\": \"/workhorse run checklist /Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate/.workhorse/gh985-manual.md still has 1 open item(s):\\n- [ ] W1 required execution\\nContinue the next authorized feasible required item. Mark [x] only with acceptance evidence and audit the requested outcome before completion. For a concrete external blocker record [!] and finish independent authorized work first. Stop only for verified completion, explicit user pause/cancellation, or a concrete external blocker after independent authorized work is finished. [-] is for genuinely optional or explicitly user-deferred work only and does not reduce required scope.\"}\n",
+      "stderr": ""
+    },
+    {
+      "case": "all-blocked",
+      "input": {
+        "session_id": "gh985-manual",
+        "cwd": "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate"
+      },
+      "queue": "- [!] W1 real external blocker\n",
+      "expected_block": false,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "case": "no-checklist",
+      "input": {
+        "session_id": "gh985-manual",
+        "cwd": "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate"
+      },
+      "queue": null,
+      "expected_block": false,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "case": "bad-json",
+      "input": "{",
+      "queue": "- [ ] W1 required execution\n",
+      "expected_block": false,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "case": "bad-session-id",
+      "input": {
+        "session_id": "../gh985-manual",
+        "cwd": "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate"
+      },
+      "queue": "- [ ] W1 required execution\n",
+      "expected_block": false,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "case": "other-session",
+      "input": {
+        "session_id": "different-session",
+        "cwd": "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate"
+      },
+      "queue": "- [ ] W1 required execution\n",
+      "expected_block": false,
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "red_control": {
+    "exit_code": 0,
+    "stdout": "{\"decision\": \"block\", \"reason\": \"/workhorse run checklist /Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate/.workhorse/gh985-manual.md still has 1 open item(s):\\n- [ ] W1 required execution\\nContinue with the next open item. To hand back to the operator instead, mark it [!] (with the exact blocker) or [-] (parked, with its pointer).\"}\n",
+    "stderr": "",
+    "wording_assertion_exit": 1,
+    "assertion": "required guidance absent: optional"
+  },
+  "green_after_red": {
+    "exit_code": 0,
+    "stdout": "{\"decision\": \"block\", \"reason\": \"/workhorse run checklist /Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006/temp/gate/.workhorse/gh985-manual.md still has 1 open item(s):\\n- [ ] W1 required execution\\nContinue the next authorized feasible required item. Mark [x] only with acceptance evidence and audit the requested outcome before completion. For a concrete external blocker record [!] and finish independent authorized work first. Stop only for verified completion, explicit user pause/cancellation, or a concrete external blocker after independent authorized work is finished. [-] is for genuinely optional or explicitly user-deferred work only and does not reduce required scope.\"}\n",
+    "stderr": ""
+  },
+  "limits": "Bounded protocol/message checks; no live Claude multi-turn guarantee, semantic outcome enforcement or API-error continuation."
+}

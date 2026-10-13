@@ -1,0 +1,3 @@
+files: 1 ['2026-09-27T12-00-00.123Z-wave-reconcile-rollback.jsonl']
+records per file: [2]
+tick claims rc: 3 | tick claims: events-unreadable: Unexpected non-whitespace character after JSON at position 159 (line 2 column 1)

@@ -1,0 +1,19 @@
+{
+  "sha": "266a954a8c82aea5a8267e3ed4e66391f14d9f79",
+  "writer_rcs": [
+    0,
+    0,
+    0
+  ],
+  "records": [
+    "W",
+    "B",
+    "A"
+  ],
+  "successor_inode_preserved": true,
+  "waiter_blocked_during_successor": true,
+  "crash_release": true,
+  "legacy_refusal_rc": 1,
+  "fixture": "/private/tmp/xyz-ci-stabilization-20260930/completion-lock-verify-oct1/temp/gh909/handoff-4_7f8qei",
+  "instrumentation": "scheduling barriers only"
+}

@@ -1,0 +1,2 @@
+GOT: rc=4 reason=cap-progressing-extended extensions=2 extension_records=2 stub_turns=4
+EXPECT: rc=4 reason=cap-progressing-extended extensions>=1 extension_records>=1 stub_turns=4

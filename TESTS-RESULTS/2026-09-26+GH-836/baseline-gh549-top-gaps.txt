@@ -1,0 +1,17 @@
+# gh549 baseline, bash -x (PS4='+ ${LINENO}: ') stamped per line; trace span 346s, 1659 lines
+# gap = time until the next traced line, attributed to the line that started it (script line number)
+  124.8s  line  1068  python3 <tmp>/app_race/releases_app.py --root <tmp>/fx_backfill_race work backfill
+   68.8s  line  1127  rr python3 <tmp>/utils/py/releases_app.py --root <tmp>/fx_interleave work backfill
+   38.0s  line  1178  rr python3 <tmp>/utils/py/releases_app.py --root <tmp>/fx_rr_noexc work backfill
+   10.8s  line  1023  python3 <tmp>/app_noidem/releases_app.py --root <tmp>/fx_backfill_idem work backfill
+   10.3s  line  1038  python3 <tmp>/utils/py/releases_app.py --root <tmp>/fx_backfill_conc work backfill
+   10.0s  line   982  appd work backfill
+   10.0s  line   977  python3 <tmp>/app_nodry/releases_app.py --root <tmp>/fx_backfill_red work backfill --dry-run
+    9.4s  line  1310  appk work backfill
+    5.1s  line   400  python3 <tmp>/dispatch_probe.py <tmp>/ledgerC/releases.db /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//gh549-work-e
+    3.0s  line  1141  rr python3 <tmp>/utils/py/releases_app.py --root <tmp>/fx_interleave work backfill
+    3.0s  line  1002  python3 <tmp>/app_map/releases_app.py --root <tmp>/fx_backfill_map work backfill
+    2.9s  line  1159  rr python3 <tmp>/app_nosrc/releases_app.py --root <tmp>/fx_rr_nosrc work backfill
+    2.8s  line  1008  tail -1
+    2.8s  line  1352  appp work backfill
+    2.7s  line  1132  rr python3 <tmp>/utils/py/releases_app.py --root <tmp>/fx_interleave work backfill

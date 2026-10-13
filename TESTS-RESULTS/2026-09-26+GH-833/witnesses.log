@@ -1,0 +1,40 @@
+## green: V1 and V1b on the tree at 9aecad1b
+ok   HOW-TO-USE.md:8
+ok   ROUTER.md:5
+ok   AGENTS.md:174
+ok   PROJECT/PDDA.md:948
+ok   SOP.md:62
+ok   ARCHITECTURE.md:406
+ok   RELEASES-DB-FAQS.md:5
+ok   README.md:145
+ok   skills/2-daily/releases/SKILL.md:8
+ok   skills/1-hourly/start-task/SKILL.md:241
+ok   skills/2-daily/merge-cleanup/SKILL.md:8
+ok   skills/2-daily/start-marathon/SKILL.md:239
+ok   skills/3-weekly/10days/SKILL.md:6
+ok   skills/3-weekly/end-of-week/SKILL.md:32
+V1: 14/14 pass
+rc=0
+V1b: pass
+rc=0
+
+## red control: remove ROUTER's trinity line (V1)
+FAIL ROUTER.md:120: bare PRS before its definition
+V1: 13/14 pass
+rc=1 (want 1)
+
+## red control: delete the glossary entry (V1b)
+FAIL HOW-TO-USE.md: 0 `- **PRS**` glossary entries, want 1
+rc=1 (want 1)
+
+## red control: break ROUTER's glossary anchor (V1b)
+FAIL ROUTER.md: the spelled-out paragraph links neither the glossary (#glossary--the-five-terms-youll-hit-first) nor RELEASES-DB-FAQS.md
+rc=1 (want 1)
+
+## red control: restate the entry in RELEASES-DB-FAQS.md (V1b)
+FAIL RELEASES-DB-FAQS.md: restates the definition (a `- **PRS**` entry outside the glossary)
+rc=1 (want 1)
+
+## red control: break one skill URL anchor (V1b)
+FAIL skills/3-weekly/10days/SKILL.md: no absolute pointer https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first
+rc=1 (want 1)

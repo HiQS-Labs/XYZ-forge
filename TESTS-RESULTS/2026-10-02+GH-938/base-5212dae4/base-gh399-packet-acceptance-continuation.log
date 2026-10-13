@@ -1,0 +1,18 @@
+== test: gh399-packet-acceptance-continuation ==
+  workdir: /tmp/gh399-continuation.gQFr05
+  PASS: C1 the clause naming the defect survives into the packet
+  PASS: C1b the second criterion's continuation survives too
+  PASS: C2 the packet contains the source acceptance block byte-for-byte
+  PASS: C3 checkboxes outside ## Acceptance are excluded
+  PASS: C3b the packet states which scope it inlined from
+  PASS: C3c a doc without ## Acceptance keeps its checklist, continuations included
+  PASS: C3d the packet says the fallback scope was used
+  FAIL: C4 no relay file produced (marathon-drive rc=1):     raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['git', '-C', '/tmp/gh399-continuation.gQFr05/wrapped', 'commit', '-q', '-m', 'marathon: render phase gh399 relay (gh399-test)']' returned non-zero exit status 128.
+  PASS: C5 the cap keeps the first 25 criteria
+  PASS: C5b the cap is applied at 25
+  PASS: C5c the truncation is reported in the packet, not silent
+  PASS: C6 the lossless check gates the readiness verdict
+  PASS: C6b the verifier distinguishes a lossless copy from a lossy one
+  gh399-packet-acceptance-continuation: 12 pass, 1 fail

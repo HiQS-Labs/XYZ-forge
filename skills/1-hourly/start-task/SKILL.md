@@ -52,8 +52,12 @@ Then begin work.
    (`ROUTER.md` where present), `AGENTS.md`, `SOP.md`, guiding principles, active
    roadmap, and relevant project docs. Resolve issue numbers against the actual
    remote; use full repo/issue URLs across repos. Inspect existing issues, PRs,
-   plans, and active work before creating anything (`python3 utils/py/prior_art_recon.py --query <seam>` where available).
+   plans, and active work before creating anything (`python3 utils/py/prior_art_recon.py --query <seam>` where available;
+   add `--repo OWNER/NAME` per sibling repo). It also reports recently merged PRs and matching issues in any state.
    Reuse an existing issue and its canonical plan; never create duplicate intake for an already tracked ask.
+   If it lists an `existing_fix_candidates` entry (a merged PR or an issue closed as completed) that may
+   already solve the ask, stop and confirm with the user before planning: the fix may only need verifying,
+   deploying or reopening. Where the scan reports a GitHub error, run the same searches by hand.
    Follow the target repo's branch and governance contracts. Missing PDDA or
    RELEASES infrastructure is not permission to install it or invent a substitute.
    Record which local equivalent applies or that the repo has none.
@@ -76,10 +80,35 @@ Then begin work.
    a prerequisite just to keep going. Continue other unblocked requested groups.
 
 3. **Provision isolated work and register intake before implementation.** Create
-   a clearly named fresh **full clone from the canonical remote**, verify origin
-   and base SHA, and create the task branch under repo policy. In XYZ Forge this
-   is one `feat/` or `fix/` branch off `origin/development`, with the per-clone git
-   hooks installed and checked. Preserve the primary checkout and other sessions.
+   a fresh **full clone from the canonical remote**, verify origin and base SHA,
+   and create the task branch under repo policy. In XYZ Forge the branch is cut
+   off `origin/development`, with the per-clone git hooks installed and checked.
+   Preserve the primary checkout and other sessions.
+   **Clone and branch names are a formula, not a choice (GH-970).** Resolve the
+   tracking issue first, so the number is known before anything is named:
+   - Folder: `<repo-name>-gh<issue>-<very-short-desc>-<yyyy-mm-dd>`, e.g.
+     `XYZ-forge-gh789-merge-cleanup-repairs-2026-10-05`. `<repo-name>` is the
+     GitHub repo name with its exact case. `<very-short-desc>` is the issue's
+     capture-doc slug lowercased (`GH-1234-SHOWME-COMMAND.md` → `showme-command`);
+     where the repo has no capture doc, pick 2–4 lowercase kebab words once and
+     record them in the task plan. The date is the machine's local date on the day
+     the clone is first provisioned, and it never changes on resume.
+   - A task exempt from tracked intake (no issue) uses no `gh<issue>` segment:
+     `<repo-name>-<very-short-desc>-<yyyy-mm-dd>`.
+   - Location: the same top-level folder as the parent repo, i.e. a sibling of
+     the primary clone (`$(dirname <primary>)/<folder>`). Never `/tmp`, a
+     scratchpad, another workspace root, or a linked worktree.
+   - Branch: the same string with a type prefix, `<type>/<folder>`, where
+     `<type>` is `feat`, `fix`, `chore` or `docs`.
+   - A multi-issue group uses its primary (lowest) issue number. A disposable
+     gate or verification clone for the task is `<folder>-gate` / `<folder>-verify`,
+     in the same location.
+   - Before creating anything, list `<repo-name>-gh<issue>-*` siblings, ignoring
+     `-gate`/`-verify` helpers (never resume implementation in a helper). Exactly
+     one task clone → this is a resume (below). Two or more task clones, or only
+     helpers → inspect each (branch, remote branch, PR, HEAD), reconcile, and ask
+     the operator if it stays ambiguous; never pick one arbitrarily. Never create a
+     numbered or renamed duplicate.
    **Resume Reconciliation Protocol:** An explicit resume must locate and verify the
    existing task clone, branch, remote branch, remote PR status (`gh pr list --head <branch>`),
    and live HEAD commit rather than duplicating clones, creating redundant branches, or
@@ -101,7 +130,7 @@ Then begin work.
    trace the relevant entry point through callers/callees to state writes and
    visible outputs; inspect tests, configuration knobs, and likely affected
    consumers. Run `python3 utils/py/prior_art_recon.py --query <seam>` (where available) to inspect
-   open PRs across repos, `releases.db` roadmap, and existing utilities (`lib/*`,
+   open and recently merged PRs, issues, the `releases.db` roadmap, and existing utilities (`lib/*`,
    `utils/py/*`) before authoring new utilities. Import existing helpers rather
    than reinventing them. Prefer the repo's graph tools where available, falling back
    when coverage is insufficient. Trace enough to size the change; name untraced paths
@@ -127,7 +156,10 @@ Then begin work.
    non-goals, dependencies, risks/rollback, bounded test scope (with explicit
    test non-scope: no speculative test frameworks, synthetic runners, or fuzzers
    outside stated acceptance criteria; test footprint must scale to implementation
-   size), and one ordered implementation list with verification inline. Name the
+   size; and where the repo forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*,
+   GH-831), no new suites or registry entries, with verification through existing
+   suites or manual checks recorded under `TESTS-RESULTS/`), and one ordered
+   implementation list with verification inline. Name the
    existing subsystem and canonical writer being extended. Keep changes surgical
    and DRY: reuse and extend the existing system, without similar subsystems,
    duplicate modules, parallel write paths, speculative abstractions, or unrelated
@@ -135,8 +167,14 @@ Then begin work.
    design cannot carry a requirement, show the traced constraint and propose the
    smallest change to it; do not quietly build a second system. Acceptance checks
    must detect the actual failure, reject empty input where relevant, and specify
-   a red control for new/changed gates. Scale the detail to the task and obey
+   a red control for new/changed gates. Where the repo forbids new tests
+   (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), witness it on an existing suite or record it as a manual check. Scale the detail to the task and obey
    repo-specific arc planning when applicable.
+   - **The Preflight Bet Check (Solution-Fit):** Before committing to build, force the distinction between the requested feature and the underlying problem (invoke [`sanity-check`](../sanity-check/SKILL.md) — or `sanity-check` if installed flat — if the problem's necessity or priority is unproven):
+     - *Outcome sought:* the specific user or system outcome, not merely the requested implementation.
+     - *Smallest viable bet:* what will be built and explicitly what will NOT be built (non-goals).
+     - *Alternatives rejected:* at least one simpler or existing alternative considered and why it was insufficient.
+     - *Rollback / containment:* how the change can be cleanly reverted or contained if the assumption fails.
 
 6. **QA the plan before implementation.** For every non-simple change, load
    `relay-xyz` and use its locator, prerequisite checks, thread protocol and
@@ -183,9 +221,18 @@ Then begin work.
    Apply tiered verification discipline: during iterative implementation and
    relay review loops, run ONLY the focused target test suite (`bash test/<target-test>.sh`
    or `./validate.sh --auto`). Do NOT re-run full qualifying test gates between
-   review rounds when tweaking text or minor points. Run the full qualifying gate
-   (`ci-local.sh` or full `./validate.sh`) EXACTLY ONCE on the final approved
-   commit. In XYZ Forge, mutation-heavy suites run in a **separate disposable full clone**,
+   review rounds when tweaking text or minor points. Select the final gate from
+   the actual changed paths against the integration base, using the repo's existing
+   classifier and push-hook route. In XYZ Forge, when `utils/ci-route.sh` routes the
+   changed paths as docs (most `*.md`/`*.txt`, including most skill instructions), use
+   the deterministic documentation gate (`utils/pdda/pdda.sh run`), not `ci-local.sh` or
+   the full `validate.sh` suite. The classifier decides, not the file extension: some
+   Markdown is a full-gate surface (for example `WORKTREE-SAFETY.md` and
+   `skills/*/merge-cleanup/SKILL.md`) and follows the full route.
+   Include both sides of renames and deletions; a changed script, test, DB, or other
+   non-doc path must follow its classified tier rather than being called docs-only.
+   Run the full qualifying gate (`ci-local.sh` or full `./validate.sh`) EXACTLY ONCE on the final approved commit only when the route requires it.
+   In XYZ Forge, mutation-heavy suites run in a **separate disposable full clone**,
    never a valued task clone or linked worktree. Verify its repository identity
    before and after the run; drift invalidates its evidence. Retain required
    provenance with the PR. Failed/skipped checks remain failed/skipped; fix within
@@ -198,7 +245,8 @@ Then begin work.
    speculative layers of complexity. Ask whether each issue is satisfied, its
    persisted rating matches its latest evidence and user overrides, actual codepaths
    match the plan, a duplicate subsystem or writer slipped in, and checks
-   substantiate the claims. A textual review does not replace deterministic tests.
+   substantiate the claims. In a repo that forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831),
+   a new test file or registry entry in the diff is a finding. A textual review does not replace deterministic tests.
    Keep author and reviewer roles separate, adjudicate each finding against stated
    requirements (rejecting speculative scope creep with `/ponytail`), apply
    surgical fixes and rerun affected focused checks and review within the bounded
@@ -232,7 +280,8 @@ Then begin work.
 
 ## Task rating policy
 
-Rate **every task**, using the existing XYZ RELEASES vocabulary and writer. The
+Rate **every task**, using the existing XYZ RELEASES vocabulary and writer (the RELEASES ledger is the
+Product Release System, PRS; [definition](https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)). The
 canonical schema is four integer axes, **1–100**: `pri/sev/appeal/effort`, stored as
 `rated N/N/N/N`. It is not a three-level scale. "Impact" describes the consequences
 and reach used to assess severity and priority; do not invent an impact column or

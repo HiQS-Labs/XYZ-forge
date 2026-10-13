@@ -56,10 +56,15 @@ if [ -z "$workdir" ]; then
   fail "starvation control did not expose its temporary work directory"
   wait "$test_pid" 2>/dev/null || true
 else
-  sleep 20 &
+  python3 - "$workdir/x4.json.lock" "$WORK/holder.ready" <<'PYHOLD' &
+import fcntl,sys,time,pathlib
+with open(sys.argv[1], 'a+') as f:
+    fcntl.flock(f, fcntl.LOCK_EX)
+    pathlib.Path(sys.argv[2]).touch()
+    time.sleep(20)
+PYHOLD
   holder_pid=$!
-  mkdir "$workdir/x4.json.lock"
-  printf '%s\n' "$holder_pid" > "$workdir/x4.json.lock/pid"
+  for _ in $(seq 1 100); do [ -e "$WORK/holder.ready" ] && break; sleep .05; done
   wait "$test_pid"; starve_rc=$?
   kill "$holder_pid" 2>/dev/null || true
   wait "$holder_pid" 2>/dev/null || true

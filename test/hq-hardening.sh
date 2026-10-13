@@ -37,17 +37,17 @@ r1(){ env HQ_XYZ_REGISTRY="$REG1" HQ_REBALANCE_DB="$G1/none.db" HQ_PDDA_REGISTRY
         HQ_SEARCH_ROOTS="$G1/empty" bash "$HQ" resolve "$1"; }
 
 OUT="$(r1 'FooOrg/api')"; rc=$?
-{ [ "$rc" = 0 ] && printf '%s\n' "$OUT" | grep -q "REPO_PATH=$G1/orgA/api"; } \
+{ [ "$rc" = 0 ] && grep -q "REPO_PATH=$G1/orgA/api" <<<"$OUT"; } \
   && pass "owner slug 'FooOrg/api' resolves to the RIGHT install (orgA)" \
   || fail "FooOrg/api rc=$rc -> $(printf '%s\n' "$OUT" | grep REPO_PATH)"
 
 OUT="$(r1 'BarOrg/api')"; rc=$?
-{ [ "$rc" = 0 ] && printf '%s\n' "$OUT" | grep -q "REPO_PATH=$G1/orgB/api"; } \
+{ [ "$rc" = 0 ] && grep -q "REPO_PATH=$G1/orgB/api" <<<"$OUT"; } \
   && pass "owner slug 'BarOrg/api' resolves to the RIGHT install (orgB)" \
   || fail "BarOrg/api rc=$rc -> $(printf '%s\n' "$OUT" | grep REPO_PATH)"
 
 OUT="$(r1 'api')"; rc=$?
-{ [ "$rc" = 2 ] && printf '%s\n' "$OUT" | grep -q 'RESOLVED_VIA=ambiguous'; } \
+{ [ "$rc" = 2 ] && grep -q 'RESOLVED_VIA=ambiguous' <<<"$OUT"; } \
   && pass "bare 'api' collision -> AMBIGUOUS (rc=2), not a silent wrong-repo guess" \
   || fail "bare api rc=$rc -> $OUT"
 
@@ -66,12 +66,12 @@ e2(){ env HQ_XYZ_REGISTRY="$REG2" HQ_REBALANCE_DB="$G2/none.db" HQ_PDDA_REGISTRY
         HQ_SEARCH_ROOTS="$G2/empty" bash "$HQ" "$@"; }
 
 OUT="$(e2 resolve deleted-app)"; rc=$?
-{ [ "$rc" = 1 ] && ! printf '%s\n' "$OUT" | grep -q '^XYZ_PATH='; } \
+{ [ "$rc" = 1 ] && ! grep -q '^XYZ_PATH=' <<<"$OUT"; } \
   && pass "stale XYZ path -> UNRESOLVED (rc=1), no XYZ_PATH emitted" \
   || fail "stale resolve rc=$rc -> $(printf '%s\n' "$OUT" | grep -E 'XYZ_PATH|REPO_PATH')"
 
 OUT="$(e2 fire --gh-issue 9 --risk 2 deleted-app 2>&1)"; rc=$?
-{ [ "$rc" != 0 ] && ! printf '%s\n' "$OUT" | grep -q 'GATES PASS'; } \
+{ [ "$rc" != 0 ] && ! grep -q 'GATES PASS' <<<"$OUT"; } \
   && pass "fire at a stale target -> refuses (no GATES PASS)" \
   || fail "fire stale rc=$rc -> $OUT"
 
@@ -85,11 +85,11 @@ valid_dq(){ # $1 = a `title: "..."` line -> 0 if no UNescaped interior quote rem
   case "$clean" in *\"*) return 1;; *) return 0;; esac
 }
 # shellcheck source=/dev/null
-( . "$LIB"
+grep -q '___DQ_OK___' <<<"$( . "$LIB"
   OUT="$(hq_render_capture 5 'http://x/issues/5' 'bad "q" and a \back' 2026-07-04 feedback proj repo body)"
   TLINE="$(printf '%s\n' "$OUT" | grep -m1 '^title:')"
   valid_dq "$TLINE" && echo "___DQ_OK___" || echo "___DQ_BAD___ $TLINE"
-) | grep -q '___DQ_OK___' \
+)" \
   && pass "hq_render_capture escapes a quoted/backslash title into valid YAML" \
   || fail "render_capture produced invalid YAML title"
 
@@ -133,7 +133,7 @@ DOC="$(ls "$TGT"/PROJECT/1-INBOX/GH-77-*.md 2>/dev/null | head -1)"
 rm -f "$TGT"/PROJECT/1-INBOX/GH-77-*.md
 T3='x'
 OUT="$(PDDA_STUB_FORCE_FAIL=1 p3 2>&1)"; rc=$?
-{ [ "$rc" != 0 ] && printf '%s\n' "$OUT" | grep -q 'not PDDA-valid'; } \
+{ [ "$rc" != 0 ] && grep -q 'not PDDA-valid' <<<"$OUT"; } \
   && pass "park --create fails hard (rc!=0) when the frontmatter check fails" \
   || fail "park fail-hard rc=$rc -> $OUT"
 
@@ -145,12 +145,12 @@ e4(){ env HQ_XYZ_REGISTRY="$G4/none.tsv" HQ_REBALANCE_DB="$G4/none.db" HQ_PDDA_R
         HQ_SEARCH_ROOTS="$G4/repos" bash "$HQ" resolve "$1"; }
 
 OUT="$(e4 '*')"; rc=$?
-{ [ "$rc" = 1 ] && ! printf '%s\n' "$OUT" | grep -q "REPO_PATH=$G4/repos/only-app"; } \
+{ [ "$rc" = 1 ] && ! grep -q "REPO_PATH=$G4/repos/only-app" <<<"$OUT"; } \
   && pass "glob token '*' does NOT resolve via find (rc=1, UNRESOLVED)" \
   || fail "glob resolve rc=$rc -> $(printf '%s\n' "$OUT" | grep REPO_PATH)"
 
 OUT="$(e4 'only-app')"; rc=$?
-{ [ "$rc" = 0 ] && printf '%s\n' "$OUT" | grep -q "REPO_PATH=$G4/repos/only-app"; } \
+{ [ "$rc" = 0 ] && grep -q "REPO_PATH=$G4/repos/only-app" <<<"$OUT"; } \
   && pass "control: a literal name still resolves via find (rc=0)" \
   || fail "literal resolve rc=$rc -> $(printf '%s\n' "$OUT" | grep REPO_PATH)"
 
@@ -168,19 +168,19 @@ r5(){ env HQ_XYZ_REGISTRY="$REG5" HQ_REBALANCE_DB="$G5/none.db" HQ_PDDA_REGISTRY
         HQ_SEARCH_ROOTS="$G5/empty" bash "$HQ" resolve "$1"; }
 
 OUT="$(r5 'dup-app')"; rc=$?
-{ [ "$rc" = 0 ] && ! printf '%s\n' "$OUT" | grep -q 'RESOLVED_VIA=ambiguous' \
-    && printf '%s\n' "$OUT" | grep -q "REPO_PATH=$G5/dup-app"; } \
+{ [ "$rc" = 0 ] && ! grep -q 'RESOLVED_VIA=ambiguous' <<<"$OUT" \
+    && grep -q "REPO_PATH=$G5/dup-app" <<<"$OUT"; } \
   && pass "same-repo duplicate registry rows collapse, not ambiguous (rc=0)" \
   || fail "dup-app rc=$rc -> $(printf '%s\n' "$OUT" | grep -E 'RESOLVED_VIA|REPO_PATH')"
 
-{ [ "$rc" = 0 ] && printf '%s\n' "$OUT" | grep -q "XYZ_INSTALL=$G5/dup-app/.xyz\$"; } \
+{ [ "$rc" = 0 ] && grep -q "XYZ_INSTALL=$G5/dup-app/.xyz\$" <<<"$OUT"; } \
   && pass "same-repo collapse prefers the vendored .xyz install over the legacy one" \
   || fail "dup-app XYZ_INSTALL -> $(printf '%s\n' "$OUT" | grep XYZ_INSTALL)"
 
 # Control: two DIFFERENT repos sharing a basename must still be ambiguous (the collapse must not
 # weaken Blocker 1's cross-repo disambiguation — re-asserted here alongside its own fixture).
 OUT="$(r1 'api')"; rc=$?
-{ [ "$rc" = 2 ] && printf '%s\n' "$OUT" | grep -q 'RESOLVED_VIA=ambiguous'; } \
+{ [ "$rc" = 2 ] && grep -q 'RESOLVED_VIA=ambiguous' <<<"$OUT"; } \
   && pass "control: cross-repo basename collision still ambiguous after the same-repo collapse fix" \
   || fail "control cross-repo rc=$rc -> $OUT"
 

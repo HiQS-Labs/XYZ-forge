@@ -114,3 +114,7 @@ before lane C means every run re-reads every row. Neither is fatal, both are rew
 ## Merge evidence
 
 - PR #751 merged 2026-09-22 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1014 merged 2026-10-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

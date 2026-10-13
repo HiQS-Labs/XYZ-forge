@@ -60,3 +60,7 @@ The reader-recovery half was rejected on review (unsafe while writes are non-ato
 
 - eslint/prettier adoption (separate change), repairing corrupt files, fsync/durability work.
 - reader-side corrupt-file recovery (→ #14: atomic write in `appendEvent`, quarantine layered on top only after that).
+
+## Merge evidence
+
+- commit d5f75866731e landed 2026-09-30 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -537,6 +537,12 @@ REQUIRED_CAPABILITIES = {
     # not demand can be deleted from SKILL.md with the parity test still green.
     "soft-edge-nonblocking": "script", "network-retry-defer": "script",
     "resume-skips-parked": "script",
+    # GH-944: the batch-issue rows are REQUIRED for the same reason, and two pre-existing
+    # same-class gaps (both tests already run in this suite via gh534_phase_b_tests.py's
+    # TestPhase5EndToEnd) close in the same edit.
+    "batch-issue-threshold": "caller", "batch-issue-resume-append": "caller",
+    "batch-regression-sweep": "caller", "post-deploy-carryover-dual-sink": "caller",
+    "mergeable-unknown-poll": "script", "exclude-drops-pr": "script",
 }
 AST_CALLS = {  # (module source, enclosing function, callee that must be invoked — a comment is not a call)
     "D": (SC_SRC, "inspect_checkout", "inspect_tick_claims"),
@@ -559,8 +565,12 @@ def _calls_in(src: str, func: str):
     return None
 
 
-def parity_failures(skill_text: str, cli_help: str, sources=None, run_tests: bool = False):
-    """Every way SKILL.md can drift from the code, named. Empty list = parity."""
+def parity_failures(skill_text: str, cli_help: str, sources=None):
+    """Every way SKILL.md can drift from the code, named. Empty list = parity.
+
+    A named test must EXIST here; it RUNS in this same suite invocation, because
+    test/gh436-merge-cleanup.py collects this module with `import *` (no __all__). Re-running
+    each named test inside the guard executed them twice per gate run (GH-836: 49 s of 292 s)."""
     import re
     sources = sources or {k: v[0].read_text() for k, v in AST_CALLS.items()}
     fails = []
@@ -584,10 +594,6 @@ def parity_failures(skill_text: str, cli_help: str, sources=None, run_tests: boo
             klass = globals().get(cls)
             if klass is None or not callable(getattr(klass, meth, None)):
                 fails.append(f"test missing: {cap} names {test}")
-            elif run_tests:
-                r = unittest.TextTestRunner(stream=open(os.devnull, "w")).run(klass(meth))
-                if not r.wasSuccessful():
-                    fails.append(f"test failing: {cap} → {test}")
     opts = re.search(r"CLI options this document describes[^\n]*?:\s*(.*)", m.group(0))
     for opt in re.findall(r"`(--[a-z-]+)`", opts.group(1) if opts else ""):
         if opt not in cli_help:
@@ -739,9 +745,14 @@ class TestGh623Resilience(LedgerFixture):
         with mock.patch.object(scan_clones.subprocess, "run") as m:
             scan_clones.run_git(self.primary, ["status"])
         self.assertIsNone(m.call_args.kwargs.get("timeout"))
-        with mock.patch.object(scan_clones.subprocess, "run") as m2:
+        # A bounded call runs in its own process group so expiry can end git's children too
+        # (PR #880 review, P1).
+        with mock.patch.object(scan_clones.subprocess, "Popen") as m2:
+            m2.return_value.communicate.return_value = ("", "")
+            m2.return_value.returncode = 0
             scan_clones.run_git(self.primary, ["status"], timeout=5)
-        self.assertEqual(m2.call_args.kwargs.get("timeout"), 5)
+        self.assertTrue(m2.call_args.kwargs.get("start_new_session"))
+        self.assertEqual(m2.return_value.communicate.call_args.kwargs.get("timeout"), 5)
 
     def test_hung_landing_clone_times_out_and_defers(self):
         """RED on current code: run_git has no timeout, so the hung clone propagates as an
@@ -925,7 +936,7 @@ class TestParityGuard(unittest.TestCase):
         cls.help = subprocess.run([sys.executable, str(MC_SRC), "--help"], capture_output=True, text=True).stdout
 
     def test_skill_md_matches_code_and_tests(self):
-        self.assertEqual(parity_failures(self.skill, self.help, run_tests=True), [])
+        self.assertEqual(parity_failures(self.skill, self.help), [])
 
     def test_recon_owner_is_pinned_to_caller(self):
         self.assertEqual(REQUIRED_CAPABILITIES["code-conflict-recon"], "caller")

@@ -184,10 +184,14 @@ class RollbackJournal:
                 now = datetime.now(timezone.utc)
                 ts = now.isoformat(timespec="milliseconds").replace("+00:00", "Z")
                 filename_ts = ts.replace(":", "-")
+                # GH-745: tick parses each event file as ONE record. A timestamp-only
+                # name plus append mode put two rollbacks in one file and made the whole
+                # log unreadable. One record per file: a unique name, created exclusively.
                 evt = os.path.join(
-                    events_dir, f"{filename_ts}-wave-reconcile-rollback.jsonl"
+                    events_dir,
+                    f"{filename_ts}-{os.getpid()}-{os.urandom(4).hex()}-wave-reconcile-rollback.jsonl",
                 )
-                with open(evt, "a", encoding="utf-8") as fh:
+                with open(evt, "x", encoding="utf-8") as fh:
                     fh.write(json.dumps({
                         "schema_version": "0.2.0",
                         "ts": ts,
@@ -456,10 +460,30 @@ def landing_label(meta):
 
 QUALIFICATION_SCHEMA = "wave-qualification@1"
 QUALIFICATION_PATH = r"TESTS-RESULTS/[0-9]{4}-[0-9]{2}-[0-9]{2}\+GH-591/wave-[0-9a-f]{40}/validation\.jsonl"
+QUALIFICATION_GATE = "validate.sh --sequential"
+# GH-831 D5: a landing whose changes classify tier 1 (docs, ledger, non-core skill files) qualifies
+# through the Small run. Its receipt records the list it ran, replayed against the tested commit.
+SMALL_GATE = "validate.sh --sequential --subsystem small"
+SMALL_NON_SUITE = ("tier2:pdda", "python:test_python_layer.py")
 
 
-def qualification_summary(raw, tested_sha):
-    """Require the existing runner's complete, unquarantined sequential evidence."""
+def small_suites_at(repo_root, commit):
+    """The SUBSYSTEM_TESTS_small line of utils/ci-route.sh at <commit>, never at HEAD."""
+    shown = subprocess.run(["git", "show", f"{commit}:utils/ci-route.sh"], cwd=repo_root,
+                           capture_output=True, text=True, check=False)
+    found = (re.findall(r'^SUBSYSTEM_TESTS_small="([^"]*)"$', shown.stdout, re.M)
+             if shown.returncode == 0 else [])
+    if len(found) != 1 or not found[0].split():
+        raise ValueError(f"no single Small list in utils/ci-route.sh at {commit}")
+    return found[0].split()
+
+
+def qualification_summary(raw, tested_sha, expected=None):
+    """Require the existing runner's complete, unquarantined sequential evidence.
+
+    expected=None is the full registry (tier 3). A list is the Small run (GH-831 D5): tier 2, its
+    shell suites exactly that list, plus the PDDA gate, the Python layer and the identity check.
+    """
     rows = [json.loads(line) for line in raw.splitlines() if line.strip()]
     if not rows or any(not isinstance(row, dict) for row in rows):
         raise ValueError("missing or malformed validation telemetry")
@@ -470,12 +494,26 @@ def qualification_summary(raw, tested_sha):
     start, summary = starts[0], summaries[0]
     registered = start.get("registered")
     if (start.get("commit") != tested_sha or start.get("mode") != "sequential"
-            or start.get("tier") != 3 or type(registered) is not int or registered <= 0
+            or start.get("tier") != (3 if expected is None else 2)
+            or type(registered) is not int or registered <= 0
             or not start.get("run") or any(row.get("run") != start["run"]
                 or row.get("runner") != "validate" for row in rows)):
         raise ValueError("validation run identity, mode or registry does not match")
     suites = [row for row in rows if row.get("event") == "suite"]
     sequential = [row for row in suites if row.get("lane") == "sequential"]
+    if expected is not None:
+        names = [row.get("name") for row in sequential]
+        extra = {row.get("name") for row in suites if row.get("lane") == "non-suite"}
+        identity = [row for row in rows if row.get("event") == "stage" and row.get("name") == "envelope-assert"]
+        if (len(set(expected)) != len(expected) or len(set(names)) != len(names)
+                or sorted(names) != sorted(expected) or not set(SMALL_NON_SUITE) <= extra
+                or any(type(row.get("rc")) is not int or row["rc"] != 0 for row in suites + identity)
+                or len(identity) != 1 or summary.get("failed") != 0
+                or summary.get("total") != len(expected) + 3 or summary.get("passed") != summary["total"]
+                or summary.get("envelope_rc") != "0" or summary.get("suite_events_match") != "yes"
+                or str(summary.get("run_set")) != str(len(expected))):
+            raise ValueError("Small-run telemetry is failed, incomplete or not the expected list")
+        return summary
     if (len(sequential) != registered or len({row.get("name") for row in sequential}) != registered
             or any(type(row.get("rc")) is not int or row["rc"] != 0 for row in suites)
             or summary.get("failed") != 0 or summary.get("total") != registered + 3
@@ -498,7 +536,7 @@ def qualification_receipt_matches(repo_root, entry, meta):
             or not isinstance(landing, str) or not re.fullmatch(r"[0-9a-f]{40}", landing)
             or entry.get("landing_commit") != landing
             or entry.get("result") != "pass" or type(entry.get("rc")) is not int or entry["rc"] != 0
-            or entry.get("gate") != "validate.sh --sequential"
+            or entry.get("gate") not in (QUALIFICATION_GATE, SMALL_GATE)
             or entry.get("artifact_kind") != meta.get("artifactKind", "pr")):
         return False
     if meta.get("artifactKind") != "commit" and (
@@ -516,7 +554,14 @@ def qualification_receipt_matches(repo_root, entry, meta):
         raw = path.read_bytes()
         if hashlib.sha256(raw).hexdigest() != entry.get("telemetry_sha256"):
             return False
-        qualification_summary(raw, tested)
+        expected = None
+        if entry["gate"] == SMALL_GATE:
+            # Durable replay: the recorded list must be the Small list AT THE TESTED COMMIT, so a
+            # later change to SUBSYSTEM_TESTS_small never invalidates, or validates, an old receipt.
+            expected = entry.get("suites")
+            if entry.get("tier") != 2 or expected != small_suites_at(repo_root, tested):
+                return False
+        qualification_summary(raw, tested, expected)
         for older, newer in ((landing, tested), (tested, "HEAD")):
             if subprocess.run(["git", "merge-base", "--is-ancestor", older, newer],
                               cwd=repo_root, capture_output=True, check=False).returncode:
@@ -545,8 +590,36 @@ def committed_qualifications(repo_root):
     return found
 
 
+def select_qualification_gate(clone, metas, env):
+    """GH-831 D5: classify the pending landings' union diff at the tested commit.
+
+    Tier 1 runs the Small list; anything else, or any doubt, runs the full registry.
+    Returns (gate, expected Small list or None, reason).
+    """
+    paths = []
+    try:
+        for meta in metas:
+            landing = meta["mergeCommit"]["oid"]
+            diff = subprocess.run(["git", "diff", "--no-renames", "--name-only", f"{landing}^", landing],
+                                  cwd=clone, env=env, capture_output=True, text=True, check=False, timeout=120)
+            if diff.returncode:
+                return QUALIFICATION_GATE, None, f"no diff for {landing_label(meta)}"
+            paths += diff.stdout.splitlines()
+        routed = subprocess.run(["bash", "utils/ci-route.sh", "push"], cwd=clone, env=env,
+                                input="".join(p + "\n" for p in paths), capture_output=True,
+                                text=True, check=False, timeout=120)
+        tier = re.findall(r"^tier=(\S*)$", routed.stdout, re.M)
+        if routed.returncode or len(tier) != 1:
+            return QUALIFICATION_GATE, None, "the classifier could not run"
+        if tier[0] != "1":
+            return QUALIFICATION_GATE, None, f"tier {tier[0]}"
+        return SMALL_GATE, small_suites_at(clone, "HEAD"), "tier 1"
+    except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError) as exc:
+        return QUALIFICATION_GATE, None, f"classification failed: {exc}"
+
+
 def qualify_landings(repo_root, metas, journal):
-    """Produce retained provenance in the existing closeout transaction, after a real full gate."""
+    """Produce retained provenance in the existing closeout transaction, after a real gate run."""
     from gate_env import gate_env
     from proc_group import run_bounded
 
@@ -564,7 +637,6 @@ def qualify_landings(repo_root, metas, journal):
                 or subprocess.run(["git", "merge-base", "--is-ancestor", landing, tested],
                                   cwd=repo_root, capture_output=True, check=False).returncode):
             die(f"Qualification refuses {landing_label(meta)}: merge not in the tested development snapshot", code=6)
-    log(f"Qualifying {len(pending)} landing(s) in integrated snapshot {tested} with the full sequential suite")
     with tempfile.TemporaryDirectory(prefix="wave-qualification-") as temporary:
         scratch = Path(temporary).resolve()
         clone = scratch / "repo"
@@ -597,7 +669,10 @@ def qualify_landings(repo_root, metas, journal):
             before_config = command(["git", "config", "--local", "--list"], True).stdout
             command(["python3", "-c", "import pytest"])
             command(["npm", "ci"])
-            validation = command(["bash", "validate.sh", "--sequential"])
+            gate, expected, reason = select_qualification_gate(clone, pending, env)
+            log(f"Qualifying {len(pending)} landing(s) in integrated snapshot {tested} with "
+                f"`{gate}` ({reason})")
+            validation = command(["bash", *gate.split()])
             if (command(["git", "rev-parse", "HEAD"], True).stdout.strip() != tested
                     or command(["git", "status", "--porcelain"], True).stdout.strip()
                     or command(["git", "config", "--local", "--list"], True).stdout != before_config):
@@ -608,11 +683,11 @@ def qualify_landings(repo_root, metas, journal):
             if len(files) != 1:
                 die("Qualification requires exactly one retained validation run", code=6)
             raw = files[0].read_bytes()
-            summary = qualification_summary(raw, tested)
+            summary = qualification_summary(raw, tested, expected)
             if summary['run'] != f"{tested[:9]}-{validation.pgid}":
                 die("Qualification telemetry does not identify the launched validation process", code=6)
         except (subprocess.SubprocessError, OSError, ValueError) as exc:
-            die(f"Full-suite qualification failed; no receipt produced: {exc}", code=6)
+            die(f"Qualification failed; no receipt produced: {exc}", code=6)
     if subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip() != tested:
         die("Publishing HEAD changed during qualification; rerun from fresh development", code=6)
     check_porcelain_cleanliness(repo_root)
@@ -629,10 +704,12 @@ def qualify_landings(repo_root, metas, journal):
     for meta in pending:
         entry = dict(schema_version=QUALIFICATION_SCHEMA, artifact_kind=meta.get("artifactKind", "pr"),
                      tested_commit=tested, landing_commit=meta["mergeCommit"]["oid"], result="pass", rc=0,
-                     gate="validate.sh --sequential", timestamp=now.isoformat(),
+                     gate=gate, timestamp=now.isoformat(),
                      telemetry=str(telemetry_path.relative_to(repo_root)),
                      telemetry_sha256=hashlib.sha256(raw).hexdigest(), passed=summary["passed"],
                      total=summary["total"])
+        if expected is not None:
+            entry.update(tier=2, suites=expected)
         if meta.get("artifactKind") != "commit":
             entry["pr"] = meta["number"]
         if os.environ.get("GITHUB_ACTIONS") == "true":
@@ -640,7 +717,7 @@ def qualify_landings(repo_root, metas, journal):
                                 f"{os.environ.get('GITHUB_RUN_ID', '')}")
         entries.append(json.dumps(entry, sort_keys=True))
     receipt_path.write_text("\n".join(entries) + "\n", encoding="utf-8")
-    log(f"Full-suite qualification passed; retained {receipt_path.relative_to(repo_root)}")
+    log(f"Qualification passed (`{gate}`); retained {receipt_path.relative_to(repo_root)}")
 
 
 def check_provenance_receipts(repo_root, pr_meta):
@@ -1249,6 +1326,77 @@ def unreconciled_prs(repo_root, repo_slug, metadata):
     return pending
 
 
+# GH-842: direct pushes to development after this commit are hosted-qualified by catch-up. Forward
+# only (#854: "a direct push then gets a qualifying hosted run"); the pre-cutover backlog is not
+# replayed. Bot commits and express landings (already gated by `--commit --gate`) are excluded.
+DIRECT_COMMIT_CUTOVER = "41db436717513327626f12da450e907a628ebc85"
+BOT_AUTHOR_EMAIL = "41898282+github-actions[bot]@users.noreply.github.com"
+EXPRESS_RECEIPT = r"TESTS-RESULTS/[0-9]{4}-[0-9]{2}-[0-9]{2}\+GH-[0-9]+-express/provenance\.jsonl"
+
+
+def express_landings(repo_root):
+    """Commits with a committed, passing express receipt (utils/py/express.py write_receipt)."""
+    found = set()
+    paths = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", "HEAD", "--", "TESTS-RESULTS/"],
+                                    cwd=repo_root, text=True).splitlines()
+    for path in paths:
+        if not re.fullmatch(EXPRESS_RECEIPT, path):
+            continue
+        raw = subprocess.check_output(["git", "show", f"HEAD:{path}"], cwd=repo_root, text=True)
+        for line in raw.splitlines():
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            if (isinstance(entry, dict) and entry.get("case") == "express-landing" and entry.get("rc") == 0
+                    and isinstance(entry.get("commit"), str)):
+                found.add(entry["commit"])
+    return found
+
+
+def owner_rank(meta):
+    """Newest closer owns an issue's lifecycle. One ordering for discovery and lifecycle writes (GH-842);
+    on a same-second tie a PR outranks a direct commit, then the higher PR number or commit SHA wins."""
+    commit = meta.get("artifactKind") == "commit"
+    return (meta.get("mergedAt") or "", not commit, 0 if commit else int(meta["number"]), meta.get("sha") or "")
+
+
+def unreconciled_commits(repo_root, metadata):
+    """GH-842: first-parent direct commits since the cutover with no PR, bot or express landing.
+
+    PR landings are the merge commits unreconciled_prs already recorded in `metadata`. Every eligible
+    commit is kept in `metadata` as ("commit", sha) so the newest-owner rule sees receipted ones too;
+    only those flagged `catchUp` (unqualified here, or owning drift in catch_up_prs) become landings.
+    """
+    merged_shas = {(meta.get("mergeCommit") or {}).get("oid") for (kind, _), meta in metadata.items() if kind == "pr"}
+    if subprocess.run(["git", "cat-file", "-e", f"{DIRECT_COMMIT_CUTOVER}^{{commit}}"],
+                      cwd=repo_root, capture_output=True, check=False).returncode:
+        log("Direct-commit recovery inactive: cutover not in this history")
+        return []
+    listed = subprocess.run(["git", "log", "--first-parent", "--format=%H %ae",
+                             f"{DIRECT_COMMIT_CUTOVER}..HEAD"],
+                            cwd=repo_root, capture_output=True, text=True, check=False)
+    if listed.returncode:
+        die(f"Direct-commit recovery failed: {listed.stderr}", code=6)
+    express = express_landings(repo_root)
+    previous = committed_qualifications(repo_root)
+    pending = []
+    for line in reversed(listed.stdout.splitlines()):
+        sha, _, author = line.partition(" ")
+        if sha in merged_shas or sha in express or author == BOT_AUTHOR_EMAIL:
+            continue
+        meta = fetch_commit_metadata(repo_root, sha)
+        # Same clock as a PR's merged_at (UTC "Z"), so owner ranks compare across both kinds.
+        meta["mergedAt"] = datetime.fromisoformat(meta["mergedAt"]).astimezone(timezone.utc).strftime(
+            "%Y-%m-%dT%H:%M:%SZ")
+        metadata[("commit", sha)] = meta
+        if not any(qualification_receipt_matches(repo_root, entry, meta) for entry in previous):
+            meta["catchUp"] = True
+            pending.append(sha)
+    log(f"Receipt recovery found {len(pending)} pending direct commit(s) since {DIRECT_COMMIT_CUTOVER[:12]}")
+    return pending
+
+
 def catch_up_prs(repo_root, repo_slug, offline_manifest=None, qualification_metadata=None):
     """Derive drift from committed state; no PR watermark or auxiliary ledger.
 
@@ -1270,6 +1418,8 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None, qualification_meta
             if match:
                 issues.add(int(match[1]))
     found = set(unreconciled_prs(repo_root, repo_slug, qualification_metadata)) if qualification_metadata is not None else set()
+    if qualification_metadata is not None:
+        unreconciled_commits(repo_root, qualification_metadata)
     for issue in sorted(issues):
         if fetch_issue_state(repo_root, issue, offline_manifest) != "CLOSED":
             continue
@@ -1296,12 +1446,19 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None, qualification_meta
         matches = [pr for pr in candidates if pr.get("state", "").upper() == "MERGED"
                    and pr.get("baseRefName") == "development"
                    and issue in extract_linked_issues(pr, repo_slug)[0]]
+        # GH-842: a post-cutover direct commit that closes the issue competes for ownership too.
+        matches += [meta for (kind, _), meta in (qualification_metadata or {}).items()
+                    if kind == "commit" and issue in extract_linked_issues(meta, repo_slug)[0]]
         if not matches:
             log(f"WARNING — Closed GH-{issue} has reconciliation drift but no attributable merged development PR; "
                 "leaving this legacy row unchanged and continuing (GH-584; non-PR closure tracked by GH-492)")
             continue
-        # The most recent closing PR owns the current lifecycle transition.
-        found.add(str(max(matches, key=lambda pr: (pr.get("mergedAt") or "", pr["number"]))["number"]))
+        # The most recent closer owns the current lifecycle transition.
+        owner = max(matches, key=owner_rank)
+        if owner.get("artifactKind") == "commit":
+            owner["catchUp"] = True
+        else:
+            found.add(str(owner["number"]))
     if qualification_metadata is not None:
         return sorted(found, key=lambda n: (qualification_metadata.get(("pr", n), {}).get("mergedAt") or "", int(n)))
     return sorted(found, key=int)
@@ -1650,12 +1807,21 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
     plan_fp = compute_marathon_planner_fingerprint(repo_root)
 
     if not dry_run:
+        # Read through the reconciler's existing read-only ledger path. Older
+        # adopters without this optional setting keep view adoption by presence.
+        try:
+            projection_rows = ledger_rows(
+                repo_root, "SELECT value FROM settings WHERE key = ?", ("projections",)
+            )
+        except ReconcileError:
+            projection_rows = []
+        views_enabled = not projection_rows or projection_rows[0]["value"] != "off"
         # GH-474: RELEASES-PREVIEW.html is an ADOPTED view — opt-in by presence.
-        if os.path.exists(os.path.join(repo_root, "RELEASES-PREVIEW.html")):
+        if views_enabled and os.path.exists(os.path.join(repo_root, "RELEASES-PREVIEW.html")):
             steps.append(("export_timeline.py --preview", timeline_cmd))
         else:
             log("  (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)")
-        if os.path.exists(os.path.join(repo_root, "LEADERBOARD.md")):
+        if views_enabled and os.path.exists(os.path.join(repo_root, "LEADERBOARD.md")):
             if os.path.exists(harness_tool(repo_root, "utils/leaderboard.sh")):
                 steps.append(("leaderboard.sh", lb_cmd))
             else:
@@ -2040,6 +2206,8 @@ def main():
             if args.catch_up:
                 landing_items.extend(("pr", str(n)) for n in catch_up_prs(
                     repo_root, repo_slug, offline_manifest, qualification_metadata=metadata if args.qualify else None))
+                # GH-842: catch-up records pending direct commits in `metadata` alongside the PRs.
+                landing_items.extend(key for key, meta in metadata.items() if key[0] == "commit" and meta.get("catchUp"))
             landing_items = list(dict.fromkeys((kind, str(value)) for kind, value in landing_items))
             if args.qualify and landing_items:
                 for kind, value in landing_items:
@@ -2073,7 +2241,7 @@ def main():
                 for key, meta in metadata.items():
                     if meta.get('state') != 'MERGED' or meta.get('baseRefName') != 'development':
                         continue
-                    rank = (meta.get('mergedAt') or '', str(meta['number']))
+                    rank = owner_rank(meta)
                     for issue in extract_linked_issues(meta, repo_slug)[0]:
                         if issue not in issue_owners or rank > issue_owners[issue][0]:
                             issue_owners[issue] = (rank, key)

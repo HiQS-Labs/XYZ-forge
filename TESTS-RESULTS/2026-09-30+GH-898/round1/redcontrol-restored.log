@@ -1,0 +1,11 @@
+PASS fallback keeps pinned list: missing DB
+PASS fallback warns: missing DB
+PASS fallback label: missing DB
+PASS fallback keeps pinned list: empty file (no github_activity table)
+PASS fallback warns: empty file (no github_activity table)
+PASS fallback label: empty file (no github_activity table)
+PASS fallback keeps pinned list: table present, zero in-window rows
+PASS fallback warns: table present, zero in-window rows
+PASS fallback label: table present, zero in-window rows
+PASS schema-absent vs zero-score warnings differ
+RESULT: ALL PASS

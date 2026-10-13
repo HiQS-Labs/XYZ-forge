@@ -57,7 +57,7 @@ hqp(){ env HQ_XYZ_REGISTRY="$TMP/none.tsv" HQ_REBALANCE_DB="$TMP/none.db" \
 
 # ---- 1. preview writes nothing ----
 OUT="$(hqp promote --gh-issue 42 myproj 2>&1)"; rc=$?
-{ [ "$rc" = 0 ] && printf '%s' "$OUT" | grep -q PREVIEW \
+{ [ "$rc" = 0 ] && grep -q PREVIEW <<<"$OUT" \
     && [ -f "$REPO/PROJECT/1-INBOX/GH-42-SAMPLE-THING.md" ] \
     && [ ! -e "$REPO/PROJECT/2-WORKING/GH-42-SAMPLE-THING.md" ]; } \
   && pass "preview (no --create) previews + writes nothing" \
@@ -91,7 +91,7 @@ grep -q '^status: Promoted from 1-INBOX' "$MOVED" \
 
 # ---- 4. re-promoting when no matching 1-INBOX doc remains -> refuse (non-zero) ----
 OUT="$(hqp promote --create --gh-issue 42 myproj 2>&1)"; rc=$?
-{ [ "$rc" != 0 ] && printf '%s' "$OUT" | grep -qi 'nothing to promote'; } \
+{ [ "$rc" != 0 ] && grep -qi 'nothing to promote' <<<"$OUT"; } \
   && pass "refuses (non-zero) when no PROJECT/1-INBOX/GH-N-*.md exists" \
   || fail "expected refusal, got rc=$rc"
 
@@ -105,7 +105,7 @@ created: 2026-07-05
 # dup
 EOF
 OUT="$(hqp promote --create --gh-issue 42 myproj 2>&1)"; rc=$?
-{ [ "$rc" != 0 ] && printf '%s' "$OUT" | grep -qi 'already exists'; } \
+{ [ "$rc" != 0 ] && grep -qi 'already exists' <<<"$OUT"; } \
   && pass "refuses to overwrite an existing 2-WORKING doc" \
   || fail "expected overwrite refusal, got rc=$rc"
 

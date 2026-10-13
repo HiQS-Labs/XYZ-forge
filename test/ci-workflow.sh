@@ -408,14 +408,8 @@ if [ -f "$CI_LOCAL" ]; then
     pass "ci-local.sh no longer re-derives the registry at all (GH-379 follow-up landed)"
   fi
 
-  # (2) The skip lists must now DIFFER, and this assertion was inverted on 2026-08-12 (GH-509).
-  #
-  # It previously required the two files to skip the SAME tests. Under the macOS reframe that pinned
-  # the wrong invariant: `registry-lock-concurrency.sh` is skipped in CI for a contended-Linux-runner
-  # flake, and the workflow's own comment says it "passes locally". Requiring local to skip it too
-  # discarded real signal about the platform we ship to, in order to imitate one we do not.
-  #
-  # Local must run MORE than hosted ubuntu, not the same.
+  # (2) Both runners avoid repeating the npm suite. Operator-retired registry concurrency
+  # is no longer a local/Ubuntu distinction (GH-854/GH-917); gh306 owns exemptions.
   # GH-379: the workflow now expresses its skips as validate.sh's `--skip <name>` rather than a
   # quoted array member, so match either idiom. What matters is that BOTH still skip it — the
   # intent (it already ran in the npm step; duplicate work, not lost coverage) is unchanged.
@@ -424,12 +418,6 @@ if [ -f "$CI_LOCAL" ]; then
     pass "both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)"
   else
     fail "acorn-extract.sh skip drift — it is duplicate work in both files and should be skipped in both"
-  fi
-
-  if grep -qF '"registry-lock-concurrency.sh"' "$CI_LOCAL"; then
-    fail "GH-509: ci-local.sh skips registry-lock-concurrency.sh — that suite PASSES on macOS and is skipped in CI only for a contended-Linux flake; local must not imitate a platform we do not ship to"
-  else
-    pass "ci-local.sh runs registry-lock-concurrency.sh (skipped in CI for a Linux-only flake)"
   fi
 
   # (3) The honesty notice, also inverted. The old caveat warned that a green local run is not a green

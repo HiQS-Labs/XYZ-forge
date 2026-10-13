@@ -1,0 +1,38 @@
+== test: gh372-escalation-log-tail ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh372-escalation-log-tail.XXXXXX.tRG3TVFsO9
+  FAIL: GH-372: missing collapsed log tail — # ESCALATION — Marathon Phase with-log
+
+phase: with-log
+task: MARATHON-WITH-LOG-TURN
+relay-drive-exit: 5
+reason: relay-failed-before-gate
+gate: not-run
+relay-file: phases-with-log/with-log/RELAY.md
+
+turn-log: unavailable (no turn log was created for the failing turn); driver: marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • relay-automation/
+marathon-drive:   • utils/
+marathon-drive: branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)
+marathon-drive: relay file committed: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh372-escalation-log-tail.XXXXXX.tRG3TVFsO9/harness/phases-with-log/with-log/RELAY.md
+marathon-drive: tick token seeded: MARATHON-WITH-LOG-TURN → codex
+marathon-drive: warn: host free swap is critically low (0MB < 1024MB)
+marathon-drive: memory-telemetry: phase with-log-start boundary — compressor=7365MB, swap_free=0MB
+marathon-drive: phase start: running relay-drive --round-cap 1
+relay-drive: GH-370 progress (main tree fallback: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh372-escalation-log-tail.XXXXXX.tRG3TVFsO9/harness) changed-files=3
+marathon-drive: relay escalated: relay-failed-before-gate (gate: not-run)
+marathon-drive: transcript saved: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh372-escalation-log-tail.XXXXXX.tRG3TVFsO9/harness/relay-system/2026-10-01/marathon-with-log-192734.md
+marathon-drive: warn: host free swap is critically low (0MB < 1024MB)
+marathon-drive: memory-telemetry: phase with-log-escalated boundary — compressor=7363MB, swap_free=0MB
+marathon-drive: escalation written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh372-escalation-log-tail.XXXXXX.tRG3TVFsO9/harness/phases-with-log/with-log/ESCALATION.md (reason: relay-failed-before-gate)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: n/a (0 tasks done)
+memory: compressor peak: 7365MB, swap free min: 0MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
+retained fixture: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh372-escalation-log-tail.XXXXXX.tRG3TVFsO9

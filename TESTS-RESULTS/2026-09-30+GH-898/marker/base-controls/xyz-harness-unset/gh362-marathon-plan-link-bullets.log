@@ -1,0 +1,12 @@
+== test: gh362-marathon-plan-link-bullets ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh362-marathon-plan-link-bullets.XXXXXX.dAG3okPwwQ
+  PASS: python engine (default): ledger of link bullets parsed (no exit 3)
+  PASS: python engine (default): no 'no ledger items parsed' complaint
+  PASS: python engine (default): the row is keyed to 777 from the link label, not to 888 from prose
+  PASS: python engine (default): '- [ ]' / '- [x]' task-list items are still not ledger entries
+  PASS: bash/node engine: ledger of link bullets parsed (no exit 3)
+  PASS: bash/node engine: no 'no ledger items parsed' complaint
+  PASS: bash/node engine: the row is keyed to 777 from the link label, not to 888 from prose
+  PASS: bash/node engine: '- [ ]' / '- [x]' task-list items are still not ledger entries
+  PASS: bold bullets still parse — the fix widened the grammar, it did not swap it
+  gh362-marathon-plan-link-bullets: 9 pass, 0 fail

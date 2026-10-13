@@ -1,0 +1,11 @@
+#!/bin/bash
+# GH-745 witness: run the three RollbackJournal suites from the clone root and count rollback events
+# that land in the REAL clone's .tick/events (the clone must have that directory, as any tick-using clone does).
+cd "$1"; mkdir -p .tick/events
+before=$(ls .tick/events | grep -c wave-reconcile-rollback)
+for s in gh424-roadmap-status-marker gh425-gate-provenance-pr gh421-auto-wave-reconcile; do
+  bash test/$s.sh > "$2/$3-$s.log" 2>&1; echo "$s rc=$? $(tail -1 "$2/$3-$s.log" | cut -c1-80)"
+done
+after=$(ls .tick/events | grep -c wave-reconcile-rollback)
+echo "rollback events written into the real clone: $((after-before))"
+ls .tick/events | grep wave-reconcile-rollback | head -5

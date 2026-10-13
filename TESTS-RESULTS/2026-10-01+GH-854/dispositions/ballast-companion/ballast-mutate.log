@@ -1,0 +1,20 @@
+== ballast-release --mutate-evidence ==
+-- baseline: the unmutated fixture
+  PASS: unmutated fixture: #999 complete, 0 false claims — the control is discriminating, not always-red
+-- mutation 1: unregister the gate (remove it from TESTS but leave the file)
+  PASS: an unregistered gate on a CLOSED issue is DETECTED as a false completion claim
+-- mutation 2: delete the recorded control
+  PASS: a deleted recorded control on a CLOSED issue is DETECTED as a false completion claim
+-- mutation 3: forge a passing stranger-run record — Half B must not read it
+  PASS: a forged stranger-run PASS record has NO EFFECT — Half B still reports NOT COVERED with no clone to execute against
+-- mutation 4: ledger declares a member this file does not measure (direction 2)
+  PASS: a ledger declaring an unmeasured #999 is DETECTED (direction 2 works)
+-- mutation 5: this file measures a member the ledger drops (direction 1)
+  PASS: a ledger missing #3 is DETECTED (direction 1 works)
+-- mutation 6: missing releases.db must not silently pass
+  PASS: missing releases.db is DETECTED (fail-closed)
+-- restore: the unmutated fixture and ledger must be green again in this same run
+  PASS: restoring the inputs restores the verdict — the detector is not simply always-red
+
+  ballast-release --mutate-evidence: 8 passed, 0 failed
+  negative control OBSERVED (gate unregistration, control deletion, forged stranger-run record; ledger both directions)

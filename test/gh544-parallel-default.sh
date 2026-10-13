@@ -37,7 +37,7 @@ echo "== test: gh544-parallel-default =="
 # --- (1) argument contract ------------------------------------------------------------------------
 out="$(bash "$V" --parallel 2>&1)"; rc=$?
 ok "--parallel with no value is a usage error (exit 2)" "[ $rc -eq 2 ]"
-ok "  and says what it wanted" "printf '%s' \"\$out\" | grep -q 'integer >= 1'"
+ok "  and says what it wanted" "grep -q 'integer >= 1' <<<\"\$out\""
 
 rc=0; out="$(bash "$V" --parallel 0 2>&1)" || rc=$?
 ok "--parallel 0 is refused (exit 2)" "[ $rc -eq 2 ]"
@@ -48,7 +48,7 @@ ok "--parallel with a non-integer is refused (exit 2)" "[ $rc -eq 2 ]"
 rc=0; out="$(bash "$V" --bogus 2>&1)" || rc=$?
 ok "an unknown flag is refused (exit 2)" "[ $rc -eq 2 ]"
 ok "  usage names ALL THREE forms" \
-   "printf '%s' \"\$out\" | grep -q -- '--parallel N | --sequential | --print-mode'"
+   "grep -q -- '--parallel N | --sequential | --print-mode' <<<\"\$out\""
 
 rc=0; out="$(bash "$V" --sequential extra 2>&1)" || rc=$?
 ok "--sequential takes no argument (exit 2)" "[ $rc -eq 2 ]"
@@ -56,56 +56,56 @@ ok "--sequential takes no argument (exit 2)" "[ $rc -eq 2 ]"
 rc=0; out="$(XYZ_VALIDATE_PARALLEL=abc bash "$V" --print-mode 2>&1)" || rc=$?
 ok "a malformed XYZ_VALIDATE_PARALLEL is refused, not silently ignored" "[ $rc -eq 2 ]"
 ok "  and names the variable so the operator can find it" \
-   "printf '%s' \"\$out\" | grep -q 'XYZ_VALIDATE_PARALLEL'"
+   "grep -q 'XYZ_VALIDATE_PARALLEL' <<<\"\$out\""
 
 # --- (2) --print-mode itself runs nothing ---------------------------------------------------------
 # If this regresses, every probe below silently becomes a full gate run.
 out="$(bash "$V" --print-mode 2>&1)"
 ok "--print-mode exits 0" "[ $? -eq 0 ]"
 ok "--print-mode runs NO suite (no '== test:' banner in its output)" \
-   "! printf '%s' \"\$out\" | grep -q '== test:'"
+   "! grep -q '== test:' <<<\"\$out\""
 ok "--print-mode prints no per-suite result lines" \
-   "! printf '%s' \"\$out\" | grep -qE '^(PASS|FAIL):'"
+   "! grep -qE '^(PASS|FAIL):' <<<\"\$out\""
 
 # --- (3) THE DECISION IS ANNOUNCED — the whole point of the flip ----------------------------------
 out="$(XYZ_VALIDATE_PARALLEL=0 bash "$V" --print-mode 2>&1)"
-ok "XYZ_VALIDATE_PARALLEL=0 selects sequential" "printf '%s' \"\$out\" | grep -q 'SEQUENTIAL mode'"
+ok "XYZ_VALIDATE_PARALLEL=0 selects sequential" "grep -q 'SEQUENTIAL mode' <<<\"\$out\""
 ok "  and names the env var as the reason (never a silent downgrade)" \
-   "printf '%s' \"\$out\" | grep -q 'XYZ_VALIDATE_PARALLEL=0'"
+   "grep -q 'XYZ_VALIDATE_PARALLEL=0' <<<\"\$out\""
 
 out="$(bash "$V" --print-mode --sequential 2>&1)"
-ok "--sequential selects sequential" "printf '%s' \"\$out\" | grep -q 'SEQUENTIAL mode'"
-ok "  and names the flag as the reason" "printf '%s' \"\$out\" | grep -q 'explicit --sequential'"
+ok "--sequential selects sequential" "grep -q 'SEQUENTIAL mode' <<<\"\$out\""
+ok "  and names the flag as the reason" "grep -q 'explicit --sequential' <<<\"\$out\""
 
 out="$(XYZ_VALIDATE_PARALLEL=3 bash "$V" --print-mode 2>&1)"
-ok "XYZ_VALIDATE_PARALLEL=N pins the width" "printf '%s' \"\$out\" | grep -q 'PARALLEL mode 3-wide'"
-ok "  and names the env var as the reason" "printf '%s' \"\$out\" | grep -q 'XYZ_VALIDATE_PARALLEL=3'"
+ok "XYZ_VALIDATE_PARALLEL=N pins the width" "grep -q 'PARALLEL mode 3-wide' <<<\"\$out\""
+ok "  and names the env var as the reason" "grep -q 'XYZ_VALIDATE_PARALLEL=3' <<<\"\$out\""
 
 out="$(bash "$V" --print-mode --parallel 2 2>&1)"
-ok "--parallel N pins the width" "printf '%s' \"\$out\" | grep -q 'PARALLEL mode 2-wide'"
-ok "  and names the flag as the reason" "printf '%s' \"\$out\" | grep -q 'explicit --parallel 2'"
+ok "--parallel N pins the width" "grep -q 'PARALLEL mode 2-wide' <<<\"\$out\""
+ok "  and names the flag as the reason" "grep -q 'explicit --parallel 2' <<<\"\$out\""
 
 # A flag must beat the environment, or a stale export silently overrides an explicit request.
 out="$(XYZ_VALIDATE_PARALLEL=0 bash "$V" --print-mode --parallel 2 2>&1)"
 ok "an explicit flag OVERRIDES XYZ_VALIDATE_PARALLEL" \
-   "printf '%s' \"\$out\" | grep -q 'PARALLEL mode 2-wide'"
+   "grep -q 'PARALLEL mode 2-wide' <<<\"\$out\""
 
 # --- (4) the no-args default announces a mode AND a reason -----------------------------------------
 # Deliberately not asserting WHICH mode: that is host-dependent, and a suite that demanded parallel
 # would fail on exactly the low-core host the fallback exists to serve. What must always hold is that
 # a mode was chosen and a reason was given.
 out="$(bash "$V" --print-mode 2>&1)"
-ok "no-args run announces a mode" "printf '%s' \"\$out\" | grep -qE '(PARALLEL|SEQUENTIAL) mode'"
+ok "no-args run announces a mode" "grep -qE '(PARALLEL|SEQUENTIAL) mode' <<<\"\$out\""
 ok "no-args run states a REASON for whichever mode it picked" \
-   "printf '%s' \"\$out\" | grep -qE 'auto-detected [0-9]+ cores|core\(s\) detected|xargs does not support|could not detect a core count'"
+   "grep -qE 'auto-detected [0-9]+ cores|core\(s\) detected|xargs does not support|could not detect a core count' <<<\"\$out\""
 
 # --- (5) a parallel run must not be mistakable for promotion evidence ------------------------------
 out="$(bash "$V" --print-mode --parallel 2 2>&1)"
 ok "a parallel run disclaims promotion evidence in its own header" \
-   "printf '%s' \"\$out\" | grep -q 'NOT promotion evidence'"
+   "grep -q 'NOT promotion evidence' <<<\"\$out\""
 out="$(bash "$V" --print-mode --sequential 2>&1)"
 ok "the sequential header does NOT carry that disclaimer (it is the qualifying form)" \
-   "! printf '%s' \"\$out\" | grep -q 'NOT promotion evidence'"
+   "! grep -q 'NOT promotion evidence' <<<\"\$out\""
 
 # --- (6) THE TWO INVARIANTS NOTHING ELSE PINS ------------------------------------------------------
 ok "ci-local.sh does NOT invoke validate.sh (it runs TESTS itself, sequentially)" \

@@ -1,0 +1,15 @@
+  PASS: ps TIME parser handles mm:ss, hh:mm:ss, dd-hh:mm:ss, and junk
+  PASS: a failing probe does not escape as an unhandled crash path
+  PASS: no samples -> timeout-unclassified (never guesses)
+  PASS: a spinning child classifies as timeout-cpu-bound (runaway shape)
+  PASS: a runaway that exited before the last sample still reads cpu-bound
+  PASS: flat trace scores 0.0; classify is honest per cached network state (unclassified / in-flight / idle-unknown)
+  FAIL: idle: BAD timeout-unclassified :: idle signals were observed, but the one-shot network probe failed [cpu=0.00s/s, samples=6]
+  PASS: idle CPU + fresh worktree writes -> timeout-slow-but-progressing
+  PASS: a seen auth dialog outranks CPU evidence and says budget will not help
+  PASS: dialog probe list excludes general-purpose interpreters (osascript regression)
+  PASS: one isolated positive does not confirm a dialog (needs consecutive samples)
+  PASS: a dialog present across consecutive samples is confirmed
+  PASS: all three turn shims start, stop, and classify diagnostics
+  PASS: attribution did not change the exit code — callers still see 7
+gh390-timeout-attribution: 13 pass, 1 fail

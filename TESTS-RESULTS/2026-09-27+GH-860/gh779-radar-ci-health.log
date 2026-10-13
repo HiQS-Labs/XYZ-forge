@@ -1,0 +1,24 @@
+== test: gh779-radar-ci-health ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh779-radar-ci-health.XXXXXX.73xkNRGzbF
+== test: gh779-radar-ci-health ==
+  PASS: radar SKILL.md exists
+  PASS: signal 9 heading
+  PASS: reads trunk workflow runs
+  PASS: reads failing logs
+  PASS: reports consecutive red days
+  PASS: reports first red commit
+  PASS: 2-day red trunk is a regression target
+  PASS: unavailable CI is never green
+  PASS: recital counts 9 signals
+  PASS: new-guard subsection
+  PASS: runs guards added in window
+  PASS: merges PR head with trunk
+  PASS: predating PR is a collision
+  PASS: unrunnable guard is not a pass
+  PASS: report bullet
+  PASS: table header
+  PASS: prose-only is a finding
+  PASS: carried into Sink A
+  PASS: new-guard re-run sits inside Step 2b
+  PASS: negative control: a radar without signal 9 fails the pin
+  gh779-radar-ci-health: 20 pass, 0 fail

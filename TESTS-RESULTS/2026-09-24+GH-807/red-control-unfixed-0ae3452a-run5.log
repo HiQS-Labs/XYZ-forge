@@ -1,0 +1,48 @@
+== test: signal-triage ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//signal-triage-test.zI995y
+  PASS: dup-signal-001: category=noise
+  PASS: dup-signal-001: evidence starts with rule-1-noise
+  PASS: info-signal-001: category=noise
+  PASS: info-signal-001: evidence starts with rule-1-noise
+  PASS: validate-fail-001: category=bug
+  PASS: validate-fail-001: evidence starts with rule-2-bug
+  PASS: validate-fail: test name embedded in evidence
+  PASS: sec-scan-001: category=bug
+  PASS: sec-scan-001: evidence starts with rule-2-bug
+  PASS: security-scan: source field preserved as security-scan (stays queryable per GP #7)
+  PASS: relay-exit6-001: category=bug
+  PASS: relay-exit6-001: evidence starts with rule-2-bug
+  PASS: canary-001: category=bug
+  PASS: canary-001: evidence starts with rule-2-bug
+  PASS: watchdog-001: category=drift
+  PASS: watchdog-001: evidence starts with rule-3-drift
+  PASS: pdda-001: category=drift
+  PASS: pdda-001: evidence starts with rule-3-drift
+  PASS: dep-drift-001: category=drift
+  PASS: dep-drift-001: evidence starts with rule-3-drift
+  PASS: manual-001: category=enhancement
+  PASS: manual-001: evidence starts with rule-4-enhancement
+  PASS: dedupe-first: --dedupe-of on validate-fail source fires rule-1/noise (not rule-2/bug)
+  PASS: dedupe-first: dedupe_of field present in JSON
+  PASS: JSON validity: output starts with '{' and ends with '}'
+  PASS: JSON schema: field 'signal_id' present
+  PASS: JSON schema: field 'source' present
+  PASS: JSON schema: field 'category' present
+  PASS: JSON schema: field 'severity' present
+  PASS: JSON schema: field 'evidence' present
+  PASS: JSON schema: field 'classified_at' present
+  PASS: JSON schema: evidence field carries matched-rule id (starts with rule-*)
+  PASS: canonical note written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//signal-triage-test.zI995y/triage-out/json-valid-001.json exists
+  PASS: canonical note contents match stdout
+  PASS: no .tick/ write: .tick/ not created under output dir
+  PASS: no .tick/ write: repo has no .tick/ dir (correct)
+  PASS: no GH-* capture side effect: no PROJECT/1-INBOX file created by triage
+  PASS: sev-bug-001: severity=high
+  PASS: sev-drift-001: severity=medium
+  PASS: sev-enhancement-001: severity=low
+  PASS: sev-noise-001: severity=drop
+  PASS: missing --source -> exit 2
+  PASS: missing --id -> exit 2
+  PASS: unknown --source value -> exit 2
+
+  signal-triage: 44 pass, 0 fail

@@ -945,7 +945,7 @@ onto the rails deliberately.
 
 ## Roadmap ledger contract (ROADMAP.md / releases.db)
 
-The roadmap ledger (stored as `ROADMAP.md` in legacy repos or in `releases.db` in releases-mode repos) is a pointer file/ledger, not a plan body.
+The roadmap ledger (stored as `ROADMAP.md` in legacy repos or in `releases.db` in releases-mode repos) is a pointer file/ledger, not a plan body. In releases-mode repos it is part of the RELEASES ledger, which XYZ Forge calls the Product Release System (PRS; [definition](https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)).
 
 It should contain:
 

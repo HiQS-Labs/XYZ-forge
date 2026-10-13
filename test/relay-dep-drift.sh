@@ -50,7 +50,7 @@ ok "event stamps prior_sha/current_sha" "grep -q '\"prior_sha\":\"aaa\"' '$ev' &
 ok "event stamps numeric diff_lines" "grep -q '\"diff_lines\":12' '$ev'"
 # Projection must NOT show a phantom 'post-commit' task from the drift event.
 proj="$("$T" project 2>/dev/null || true)"
-ok "no phantom 'post-commit' task in projection" "! printf '%s' \"\$proj\" | grep -q 'post-commit'"
+ok "no phantom 'post-commit' task in projection" "! grep -q 'post-commit' <<<\"\$proj\""
 
 # --- 3: rtl_drift_brief watermark + own-event filter ------------------------------------------------
 # shellcheck disable=SC1090

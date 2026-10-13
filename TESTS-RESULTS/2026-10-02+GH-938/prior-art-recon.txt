@@ -1,0 +1,9 @@
+## Prior-Art Reconnaissance Summary
+- **Query**: `relay-xyz install.sh Skills Army managed`
+- **Status**: `PASS`
+- **Open PRs Found**: 3
+  - #935: docs(triangulate): repeat visible mantra each active turn (`feat/triangulate-turn-mantra`)
+  - #932: feat(skills): cross-link sanity-check across skills, index, and governance (GH-931) (`feat/sanity-check-cross-links`)
+  - #929: feat(skills): sanity-check blocker value and diagnostic routing (`feat/sanity-check-skill`)
+- **Active/Matching Roadmap Items**: 0
+- **Existing Matching Helpers**: 0

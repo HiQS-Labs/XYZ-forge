@@ -1,0 +1,24 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: <scratch>/gh836-after
+configfile: pytest.ini
+collected 180 items
+
+test/gh436-merge-cleanup.py ............................................ [ 24%]
+........................................................................ [ 64%]
+................................................................         [100%]
+
+============================= slowest 12 durations =============================
+8.43s call     test/gh436-merge-cleanup.py::TestCScript::test_dependent_of_a_handed_off_pr_is_not_attempted_and_an_independent_pr_proceeds
+8.24s call     test/gh436-merge-cleanup.py::TestGh623Resilience::test_soft_edge_predecessor_does_not_block_a_collision_dependent
+7.76s call     test/gh436-merge-cleanup.py::TestCScript::test_view_deletion_on_the_pr_side_is_preserved_through_b1
+7.63s call     test/gh436-merge-cleanup.py::TestCScript::test_two_ledger_prs_emit_only_after_fast_forward_and_finish_durable
+7.54s call     test/gh436-merge-cleanup.py::TestA5FreshInspection::test_fault_injection_at_teardown_time_blocks_removal
+7.17s call     test/gh436-merge-cleanup.py::TestGh623Resilience::test_pr_list_discovery_is_bounded_in_time
+7.12s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_two_prs_second_conflicts_after_first_lands_and_b1_resolves_it
+5.54s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_remote_head_moved_during_resolution_is_not_pushed
+4.83s call     test/gh436-merge-cleanup.py::TestPhase5EndToEnd::test_second_clone_validation_failure_is_not_pushed
+4.75s call     test/gh436-merge-cleanup.py::TestGh623Resilience::test_resume_lands_a_pr_whose_last_repair_resolved
+4.49s call     test/gh436-merge-cleanup.py::TestE6Gate::test_gate_runs_against_the_current_integration_head
+4.47s call     test/gh436-merge-cleanup.py::TestCScript::test_genuinely_invalid_final_head_fails_second_clone_validation_and_is_not_pushed
+======================= 180 passed in 243.64s (0:04:03) ========================

@@ -24,6 +24,7 @@ Contract:
 import argparse
 import os
 import re
+import shlex
 import sys
 import tempfile
 
@@ -796,7 +797,8 @@ def main(argv=None):
             print(f"ROUTER DRIFT in {audit['router_path']} (mode: {mode_str}):")
             for r in audit["reasons"]:
                 print(f"  • {r}")
-            print(f"Remediation available: run `python3 utils/py/router_audit.py --fix {root}`")
+            print("Remediation available: run `python3 %s --fix %s`" %
+                  (shlex.quote(os.path.abspath(__file__)), shlex.quote(root)))
         else:
             mode_str = "releases" if audit["releases_mode"] else "legacy"
             print(f"ok    {audit['router_path']} (in sync with {mode_str} mode)")

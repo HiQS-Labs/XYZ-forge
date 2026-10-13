@@ -1,0 +1,144 @@
+PDDA run starting — mode: full (on rails; errors block with a non-zero exit)
+
+== pdda-check-frontmatter ==
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+
+== pdda-check-status-table ==
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+
+== pdda-check-hardcoded-paths ==
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+
+== pdda-check-roadmap ==
+INFO [pdda-check-roadmap] ROADMAP.md ROADMAP.md not found; nothing to check
+SUMMARY [pdda-check-roadmap] errors=0 warns=0 info=1
+
+== pdda-check-roadmap-coverage ==
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/README.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p1-routing-validation.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p2-turn-supervision.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p3-incident-records.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p4-drift-filter.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS/recon-deploy-skills.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L1-oracle.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L2-token-aftermath.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L3-consult-cap.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L4-285-revalidate.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L5-gh237-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L6-muse-attribution.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L7-checkout-aftermath.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L8-zero-output-handback.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L9-369-regression.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L1-review-once-heading.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L2-measure-c1-d2.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L3-timing-claims-and-summary.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L4-named-environment-faults.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh168-wave-reconcile-scope.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh2-orphan-backup-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh50-sandboxed-git-guard.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-29.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-02.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-03.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-04.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-06.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-07.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-10.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-11.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-12.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-13.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-14.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-15.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-17.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-18.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-19.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-21.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-22.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-agy-model-probe.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-closeout-evidence.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-end-of-week.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-install-sh-link-steal.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-346-PHASE-3-SPEC.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-406-RADAR-CROSSWALK.md:1 roadmap coverage check skipped because roadmap_exempt=true
+SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=70
+
+== pdda-check-changelog ==
+SUMMARY [pdda-check-changelog] errors=0 warns=0 info=0
+
+== pdda-stale-working-docs ==
+SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+
+== pdda-check-issue-doc-sync ==
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 issue #648 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md PROJECT/3-COMPLETED/CAPTURE.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 issue #494 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-consumer.md PROJECT/3-COMPLETED/recon-flightdeck-consumer.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 issue #494 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md PROJECT/3-COMPLETED/recon-flightdeck-issue-visibility.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 issue #494 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-session-context.md PROJECT/3-COMPLETED/recon-flightdeck-session-context.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 issue #496 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md PROJECT/3-COMPLETED/recon-gh496-merge-churn-and-telemetry.md
+WARN [pdda-check-issue-doc-sync] releases.db issue #589 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #644 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #690 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=8 info=0
+
+== pdda-check-releases ==
+INFO [pdda-check-releases] RELEASES.md RELEASES.md not found — nothing to check
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=1
+
+== pdda-check-governance ==
+WARN [pdda-check-governance] ROUTER.md:13 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] ROUTER.md:172 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] ROUTER.md:188 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:45 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:435 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:505 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:596 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:602 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:605 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:660 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:806 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:808 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:169 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] CLAUDE.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+SUMMARY [pdda-check-governance] errors=0 warns=15 info=0
+
+== pdda-check-marathon-qa ==
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:78 Wave 1 item pending verification: 'Wave 1 Proof of Done Test Suite Green (record runnable command and passing output)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:79 Wave 1 Post-Build Codex QA Relay item has no receipt citation
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:79 Wave 1 item pending verification: 'Wave 1 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:80 Wave 1 item pending verification: 'Wave 1 CodeRabbit / Peer Review findings adjudicated'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:83 Wave 2 item pending verification: 'Wave 2 Proof of Done Test Suite Green (record runnable command and passing output)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:84 Wave 2 Post-Build Codex QA Relay item has no receipt citation
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:84 Wave 2 item pending verification: 'Wave 2 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:85 Wave 2 item pending verification: 'Wave 2 CodeRabbit / Peer Review findings adjudicated'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 missing '## Acceptance & Quality Checklist' section
+SUMMARY [pdda-check-marathon-qa] errors=0 warns=9 info=0
+
+== pdda-doc-ready ==
+INFO [pdda-doc-ready] . LLM readiness review skipped (set PDDA_LLM_BIN to a model CLI such as agy/codex/claude to enable)
+SUMMARY [pdda-doc-ready] errors=0 warns=0 info=1
+
+PDDA run complete: no errors, 32 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa

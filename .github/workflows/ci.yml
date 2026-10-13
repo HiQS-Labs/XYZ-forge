@@ -154,7 +154,8 @@ jobs:
     # A bound, not an estimate: an unbounded hang is the expensive failure mode, so cap it rather than
     # discover the cost afterwards. The cap tracks MEASURED hosted runtime, not the August "~13-15 min
     # locally" (GH-823): wave-reconcile.yml runs this same `validate.sh --sequential` on this same runner
-    # in 60-92 min per job (2026-09-21..25), so the old 45-min cap would fail every promotion. Keep it >=
+    # in 60-92 min per job (2026-09-21..25) for every non-docs landing (GH-831: docs, ledger and skill
+    # landings run the Small list there instead), so the old 45-min cap would fail every promotion. Keep it >=
     # that workflow's cap; test/ci-workflow.sh fails if it drops below.
     timeout-minutes: 120
     steps:
@@ -196,7 +197,9 @@ jobs:
         # point of it is that its green means something the local run's cannot. Promotion evidence
         # stays sequential (GH-528 Phase 2 has not been met), so the flag is explicit rather than
         # inherited: a future change to validate.sh's default must not be able to silently change what
-        # this job attests. test/ci-workflow.sh asserts the flag is present.
+        # this job attests. test/ci-workflow.sh asserts the flag is present. It runs the FULL registry
+        # whatever the classifier would say about the promotion range: the three-tier routing (GH-831)
+        # stops at the hosted reconcile, and this is the last full check before a release (O8).
         run: ./validate.sh --sequential
 
       - name: Promotion evidence
@@ -392,6 +395,12 @@ jobs:
           git config --global user.email "ci@runner.invalid"
           git config --global user.name "CI Runner"
 
+      # Same install as the promotion-boundary job: without pytest, wave_reconcile's qualification
+      # refuses by design (#750), so gh425 went red here and the python lane was skipped (#886).
+      - name: Install Python dependencies for the full suite
+        if: steps.route.outputs.docs_only != 'true'
+        run: python3 -m pip install --quiet --break-system-packages pytest requests PyYAML
+
       - name: Run Fast Gate tests (Pull Request)
         # Whole-job budget target: < 3 minutes for a code-only fast PR.
         if: github.event_name == 'pull_request' && steps.route.outputs.route == 'fast'
@@ -440,12 +449,12 @@ jobs:
       # binary happened to be on the developer's own PATH, masking the gap; ubuntu CI has no such
       # binary. path-integrity.sh/archive-writers.sh/relay-file-seeding-visibility.sh/xyz-vendor.sh/
       # hq.sh/relay-pkg-freshness.sh all passed cleanly once re-tested for real — no ubuntu-specific
-      # bug in any of them. Only registry-lock-concurrency.sh (GH-72, a documented 16-concurrent-writer
-      # lock-contention flake under CI load, unrelated to this issue) stays skipped.
+      # bug in any of them. Registry concurrency is now unregistered by operator disposition
+      # (GH-854/GH-917); its retained manual suite must not appear in --skip.
       # GH-379: this step CALLS validate.sh. It must never go back to iterating suites itself.
       #
       # It used to scrape the TESTS array out of validate.sh with sed/grep and run a serial
-      # for-loop, in order to carry the three skips below. That cost three things at once:
+      # for-loop, in order to carry the then-current skips. That cost three things at once:
       #   * PARALLELISM — GH-528 measured 946.0s -> 184.3s at --parallel 8 with byte-identical
       #     pass/fail sets. The serial loop threw all of it away; the step measured 13m 14s, 88%
       #     of this job's wall and 100% of the repo's sampled runner-minute bill.
@@ -474,7 +483,7 @@ jobs:
       # No tier or path selector may be added here: the three non-shell lanes are tier-3 lanes, so
       # narrowing the run set would silently retract this issue's headline coverage claim.
       # test/gh379-canary-uses-validate.sh asserts all of this, selector by selector.
-      - name: Run validate.sh suite (minus a documented flaky test)
+      - name: Run validate.sh suite (with documented skips)
         if: steps.route.outputs.route == 'full'
         env:
           RELAY_SELF_SUFFICIENCY_SKIP: "1"
@@ -482,7 +491,6 @@ jobs:
           set -euo pipefail
           ./validate.sh --parallel 6 \
             --skip acorn-extract.sh \
-            --skip registry-lock-concurrency.sh \
             --skip pdda-repo-contract.sh
 
       # GH-509 Phase 2 — the canary's verdict, written where a human and a script can both find it.

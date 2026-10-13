@@ -1,0 +1,36 @@
+== test: gh527-destructive-git-guard ==
+  PASS: guard script exists and is executable
+  PASS: dirty tree: guard announces the snapshot
+  PASS: dirty tree: message names the command shape
+  PASS: dirty tree: a snapshot directory was created
+  PASS: snapshot holds the pre-destruction content
+  PASS: snapshot does NOT include untracked files (they survive the command)
+  PASS: the destructive command really did destroy the tracked edit
+  PASS: untracked file survived the command (matches the issue's fixture)
+  PASS: RECOVERY: content restored from the snapshot end-to-end
+  PASS: CONTROL: clean tree — guard stays silent
+  PASS: CONTROL: clean tree — no snapshot directory created
+  PASS: fires on: git reset --hard HEAD
+  PASS: fires on: git checkout -- peer.txt
+  PASS: fires on: git checkout peer.txt
+  PASS: fires on: git restore peer.txt
+  PASS: fires on: git stash
+  PASS: clean: names the untracked set, not the tracked one
+  PASS: clean: snapshot is OUTSIDE the repo (git clean -x would delete an in-repo one)
+  PASS: clean: snapshot holds the untracked file
+  PASS: clean: snapshot does NOT hold the tracked modification (clean would not touch it)
+  PASS: clean really destroyed the untracked file
+  PASS: clean: the snapshot SURVIVED the command that deleted everything else
+  PASS: clean: RECOVERY restores the untracked file end-to-end
+  PASS: silent on read-only: git status
+  PASS: silent on read-only: git stash list
+  PASS: silent on read-only: git log --oneline
+  PASS: silent on read-only: git diff
+  PASS: ignores non-Bash tool calls
+  PASS: XYZ_NO_GIT_SNAPSHOT=1 disables the guard
+  PASS: AGENTS.md rail names reset --hard
+  PASS: AGENTS.md rail names checkout -- <path>
+  PASS: AGENTS.md rail names stash
+  PASS: AGENTS.md rail points at the guard
+  PASS: hook registered in .claude/settings.json
+  gh527-destructive-git-guard: 34 pass, 0 fail

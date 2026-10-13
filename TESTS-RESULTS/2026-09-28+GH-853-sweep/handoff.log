@@ -1,0 +1,6 @@
+== test: handoff ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-handoff.XXXXXX.RF01tygXKo
+  pre-handoff, bob's next: TASK-099 (priority: 100)
+  post-handoff, bob's next: TASK-007 (priority: 1) [handoff]
+  PASS: bob's next returns TASK-007 with handoff marker, despite TASK-099 having higher priority
+  handoff: 1 pass, 0 fail

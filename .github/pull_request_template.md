@@ -6,7 +6,7 @@
 - [ ] **Grounded Recon**: Verified no overlapping PR, existing helper, or conflicting roadmap item.
 
 ## Proof of Done
-- [ ] **Mechanical Verification Command**: `bash test/<test-name>.sh` (or `./validate.sh`, AST check, ratchet delta)
+- [ ] **Mechanical Verification Command**: `bash test/<existing-suite>.sh` (or `./validate.sh`, AST check, ratchet delta, or a manual check recorded under `TESTS-RESULTS/` — no new suites, GH-831)
 - [ ] **Test Output**: (Paste the exact passing test output / collected count)
 
 ## Governance & PDDA

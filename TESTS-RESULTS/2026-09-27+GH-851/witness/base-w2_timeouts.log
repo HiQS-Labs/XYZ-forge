@@ -1,0 +1,3 @@
+merge-cleanup: ERROR — Hosted reconciliation succeeded but fetch of origin/development failed: witness stop
+merge-cleanup: ERROR — PR #7: could not verify pushed integration head: witness stop
+merge-cleanup: Running post-merge reconciliation for PR #7 in /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tmpuniemvok/primary...

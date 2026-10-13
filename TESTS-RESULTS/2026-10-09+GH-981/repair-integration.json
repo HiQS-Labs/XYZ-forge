@@ -1,0 +1,39 @@
+{
+  "source_sha": "bd6300c73bff93c3116aa1eea75b14843914f54a",
+  "development_baseline": "8037a18a56ce7def44e3b1a16cc5bf7404fe2495",
+  "reviewed_code_unchanged": true,
+  "code_sha256": {
+    "addons/paperclip-dashboard/preview.py": "d5489137abf306f9dffc4cd7e0df37efa03d3c42f2d674ae02d24abba2837deb",
+    "addons/paperclip-dashboard/index.html": "67f75c81deab4a1a76f28b259f69adbdf5f12b6f0906cec8edb527beee9d7ba2",
+    "addons/paperclip-dashboard/ATTRIBUTION.md": "4ea9ea230ed9d54651f0b1e5967ded2af2fe810b2c5a26cbaae36b7a4fc2ff4c",
+    "addons/paperclip-dashboard/app.css": "85f46a6322093051d7c278054e69225321e82340a31176947a628adb5891d5d8",
+    "addons/paperclip-dashboard/README.md": "8cdcf49db40c18ee65b41d4bb5421d2dfb158089064d7f1f4b1cc5b3c4c4bb38",
+    "addons/paperclip-dashboard/LICENSE.paperclip": "7f8a27f0979bded50e240caa8c8c29f3088ddf87032cb83e5a9732bff91d18b4",
+    "addons/paperclip-dashboard/app.js": "f53b153d8b990d3ddae05d98ba7fc986c827adb66133089a4e9ae70139921000",
+    "addons/paperclip-dashboard/demo.mjs": "8bbc2b1305bf9ed428e55a6bfc5817494b6239bb849aa18fd16be086905b4738",
+    "test/gh609-sdlc-agent-gaps.sh": "6d2a8fc2dd19848b27b33590a9b2afa9ea077128127f46ba58a94523d26aefcf",
+    "skills/1-hourly/swe/SKILL.md": "b8a507482cd0def67078df57b1477af014f63f78e8993e8061f73c6fae60fe2b"
+  },
+  "result": {
+    "resolved": true,
+    "handoff": false,
+    "reason": "resolved through the writer path; merge commit bd6300c73b",
+    "log": [
+      "classification: keep=theirs generation ours/theirs=(1551, 1551) replay=1 op(s)",
+      "check --rebuild on the kept side: rc=0",
+      "roadmap add GH-981: rc=0 ",
+      "roadmap rate GH-981 55/20/50/65: rc=0 ",
+      "roadmap update GH-981 (section/marker): rc=0 ",
+      "releases-merge-resolve.sh: rc=0",
+      "removed verified rebuild backup: releases.db.bak"
+    ],
+    "commit": "bd6300c73bff93c3116aa1eea75b14843914f54a",
+    "conflict_set": [
+      "LEADERBOARD.md",
+      "releases.db",
+      "releases.sql"
+    ]
+  },
+  "repair_slot": 2,
+  "qualification": "pending"
+}

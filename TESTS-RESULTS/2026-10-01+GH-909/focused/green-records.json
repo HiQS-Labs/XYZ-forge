@@ -1,0 +1,34 @@
+[
+	{
+		"harness": "relay",
+		"sessionId": "C",
+		"health": "green",
+		"title": "C",
+		"description": "C",
+		"updatedAt": "2026-10-01T19:14:55Z"
+	},
+	{
+		"harness": "relay",
+		"sessionId": "W",
+		"health": "green",
+		"title": "W",
+		"description": "W",
+		"updatedAt": "2026-10-01T19:14:54Z"
+	},
+	{
+		"harness": "relay",
+		"sessionId": "B",
+		"health": "green",
+		"title": "B",
+		"description": "B",
+		"updatedAt": "2026-10-01T19:14:54Z"
+	},
+	{
+		"harness": "relay",
+		"sessionId": "A",
+		"health": "green",
+		"title": "A",
+		"description": "A",
+		"updatedAt": "2026-10-01T19:14:54Z"
+	}
+]

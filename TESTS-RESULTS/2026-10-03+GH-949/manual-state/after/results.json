@@ -1,0 +1,856 @@
+[
+  {
+    "case": "noop",
+    "passed": true,
+    "observed": {
+      "oracle": "zero-state",
+      "passed": true,
+      "reasons": [],
+      "digest_before": "c2a841f9110a8900ef3443b55a1886bd153bf905c4aadc5b4c9cc57a62a9224c",
+      "digest_after": "c2a841f9110a8900ef3443b55a1886bd153bf905c4aadc5b4c9cc57a62a9224c",
+      "files": 1,
+      "lsof": {
+        "ok": true,
+        "holders": [],
+        "targets_checked": 1
+      },
+      "git_status_clean": null,
+      "run": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "completed": true,
+        "duration_ms": 22.678209003061056
+      }
+    }
+  },
+  {
+    "case": "file",
+    "passed": true,
+    "observed": {
+      "oracle": "zero-state",
+      "passed": false,
+      "reasons": [
+        "tree digest changed (1 -> 1 files)"
+      ],
+      "digest_before": "c2a841f9110a8900ef3443b55a1886bd153bf905c4aadc5b4c9cc57a62a9224c",
+      "digest_after": "4f43f7b9fb0735015b02632ba884d42b67e397f4463c867630fad55a8da608a6",
+      "files": 1,
+      "lsof": {
+        "ok": true,
+        "holders": [],
+        "targets_checked": 1
+      },
+      "git_status_clean": null,
+      "run": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "completed": true,
+        "duration_ms": 25.688915979117155
+      }
+    }
+  },
+  {
+    "case": "link-add",
+    "passed": true,
+    "observed": {
+      "oracle": "zero-state",
+      "passed": false,
+      "reasons": [
+        "tree digest changed (1 -> 2 files)"
+      ],
+      "digest_before": "c2a841f9110a8900ef3443b55a1886bd153bf905c4aadc5b4c9cc57a62a9224c",
+      "digest_after": "1b757530c4ae7fdf1928c5bf44651b99dec0f1dcba2ee4fa414f9650cfa1cb40",
+      "files": 2,
+      "lsof": {
+        "ok": true,
+        "holders": [],
+        "targets_checked": 1
+      },
+      "git_status_clean": null,
+      "run": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "completed": true,
+        "duration_ms": 28.088250022847205
+      }
+    }
+  },
+  {
+    "case": "link-remove",
+    "passed": true,
+    "observed": {
+      "oracle": "zero-state",
+      "passed": false,
+      "reasons": [
+        "tree digest changed (2 -> 1 files)"
+      ],
+      "digest_before": "1b757530c4ae7fdf1928c5bf44651b99dec0f1dcba2ee4fa414f9650cfa1cb40",
+      "digest_after": "c2a841f9110a8900ef3443b55a1886bd153bf905c4aadc5b4c9cc57a62a9224c",
+      "files": 1,
+      "lsof": {
+        "ok": true,
+        "holders": [],
+        "targets_checked": 1
+      },
+      "git_status_clean": null,
+      "run": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "completed": true,
+        "duration_ms": 30.496165971271694
+      }
+    }
+  },
+  {
+    "case": "link-retarget",
+    "passed": true,
+    "observed": {
+      "oracle": "zero-state",
+      "passed": false,
+      "reasons": [
+        "tree digest changed (2 -> 2 files)"
+      ],
+      "digest_before": "1b757530c4ae7fdf1928c5bf44651b99dec0f1dcba2ee4fa414f9650cfa1cb40",
+      "digest_after": "846cf5e6301b46d0cde089edb0d314e7d74b7c43402952c124329818ba38bd71",
+      "files": 2,
+      "lsof": {
+        "ok": true,
+        "holders": [],
+        "targets_checked": 1
+      },
+      "git_status_clean": null,
+      "run": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "completed": true,
+        "duration_ms": 29.43562500877306
+      }
+    }
+  },
+  {
+    "case": "standalone-config",
+    "passed": true,
+    "observed": {
+      "oracle": "containment",
+      "passed": false,
+      "reasons": [
+        "host config_sha256 changed",
+        "host tree digest changed \u2014 written during run: .git/config"
+      ],
+      "host_before": {
+        "config_sha256": "cae33efdb02cf774435c1ff9cb16bcc1014606908530c6e1dc727615fe3e8cda",
+        "worktree_config_sha256": null,
+        "errors": [],
+        "core_bare": "false",
+        "remotes": "",
+        "head_ref": "refs/heads/main",
+        "head_tip": "758e1bb7da04ef40d3cfd2c69d7d6c670a4fd359",
+        "branches": "refs/heads/main 758e1bb7da04ef40d3cfd2c69d7d6c670a4fd359"
+      },
+      "host_after": {
+        "config_sha256": "d3c02bbe7458f5dcfec1925410c9bc20686dabbe18090e9c3751970c9908cdf2",
+        "worktree_config_sha256": null,
+        "errors": [],
+        "core_bare": "false",
+        "remotes": "",
+        "head_ref": "refs/heads/main",
+        "head_tip": "758e1bb7da04ef40d3cfd2c69d7d6c670a4fd359",
+        "branches": "refs/heads/main 758e1bb7da04ef40d3cfd2c69d7d6c670a4fd359"
+      },
+      "host_touched": [
+        ".git/config"
+      ],
+      "run": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "completed": true,
+        "duration_ms": 15.617624972946942
+      }
+    }
+  },
+  {
+    "case": "linked-config",
+    "passed": true,
+    "observed": {
+      "oracle": "containment",
+      "passed": false,
+      "reasons": [
+        "host config_sha256 changed"
+      ],
+      "host_before": {
+        "config_sha256": "cae33efdb02cf774435c1ff9cb16bcc1014606908530c6e1dc727615fe3e8cda",
+        "worktree_config_sha256": null,
+        "errors": [],
+        "core_bare": "false",
+        "remotes": "",
+        "head_ref": "",
+        "head_tip": "758e1bb7da04ef40d3cfd2c69d7d6c670a4fd359",
+        "branches": "refs/heads/main 758e1bb7da04ef40d3cfd2c69d7d6c670a4fd359"
+      },
+      "host_after": {
+        "config_sha256": "d3c02bbe7458f5dcfec1925410c9bc20686dabbe18090e9c3751970c9908cdf2",
+        "worktree_config_sha256": null,
+        "errors": [],
+        "core_bare": "false",
+        "remotes": "",
+        "head_ref": "",
+        "head_tip": "758e1bb7da04ef40d3cfd2c69d7d6c670a4fd359",
+        "branches": "refs/heads/main 758e1bb7da04ef40d3cfd2c69d7d6c670a4fd359"
+      },
+      "host_touched": [],
+      "run": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "completed": true,
+        "duration_ms": 16.960583976469934
+      }
+    }
+  },
+  {
+    "case": "linked-worktree-config",
+    "passed": true,
+    "observed": {
+      "oracle": "containment",
+      "passed": false,
+      "reasons": [
+        "host worktree_config_sha256 changed"
+      ],
+      "host_before": {
+        "config_sha256": "95a1f7d19be439847af9384dfe1a1f7678aa0902b1601b24c56cc60d783388b1",
+        "worktree_config_sha256": null,
+        "errors": [],
+        "core_bare": "false",
+        "remotes": "",
+        "head_ref": "",
+        "head_tip": "43fd7509c9ecbbda8b68ab7818c30f8b434b3aee",
+        "branches": "refs/heads/main 43fd7509c9ecbbda8b68ab7818c30f8b434b3aee"
+      },
+      "host_after": {
+        "config_sha256": "95a1f7d19be439847af9384dfe1a1f7678aa0902b1601b24c56cc60d783388b1",
+        "worktree_config_sha256": "bd3643e1406037825ca8fa6e6074d568817075eb413e041d1a955311edc649bf",
+        "errors": [],
+        "core_bare": "false",
+        "remotes": "",
+        "head_ref": "",
+        "head_tip": "43fd7509c9ecbbda8b68ab7818c30f8b434b3aee",
+        "branches": "refs/heads/main 43fd7509c9ecbbda8b68ab7818c30f8b434b3aee"
+      },
+      "host_touched": [],
+      "run": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "completed": true,
+        "duration_ms": 16.62116701481864
+      }
+    }
+  },
+  {
+    "case": "linked-noop",
+    "passed": true,
+    "observed": {
+      "oracle": "containment",
+      "passed": true,
+      "reasons": [],
+      "host_before": {
+        "config_sha256": "cae33efdb02cf774435c1ff9cb16bcc1014606908530c6e1dc727615fe3e8cda",
+        "worktree_config_sha256": null,
+        "errors": [],
+        "core_bare": "false",
+        "remotes": "",
+        "head_ref": "",
+        "head_tip": "43fd7509c9ecbbda8b68ab7818c30f8b434b3aee",
+        "branches": "refs/heads/main 43fd7509c9ecbbda8b68ab7818c30f8b434b3aee"
+      },
+      "host_after": {
+        "config_sha256": "cae33efdb02cf774435c1ff9cb16bcc1014606908530c6e1dc727615fe3e8cda",
+        "worktree_config_sha256": null,
+        "errors": [],
+        "core_bare": "false",
+        "remotes": "",
+        "head_ref": "",
+        "head_tip": "43fd7509c9ecbbda8b68ab7818c30f8b434b3aee",
+        "branches": "refs/heads/main 43fd7509c9ecbbda8b68ab7818c30f8b434b3aee"
+      },
+      "host_touched": [],
+      "run": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "",
+        "timed_out": false,
+        "completed": true,
+        "duration_ms": 34.05445901444182
+      }
+    }
+  },
+  {
+    "case": "home-unset-xdg-False",
+    "passed": true,
+    "observed": {
+      "rc": 0,
+      "stdout": "export HARNESS=/Users/noelsaw/task-clones/ate-remediation-20261003/verify\nexport TICK_REPO_ROOT=/Users/noelsaw/task-clones/ate-remediation-20261003/verify\nexport TICK=/Users/noelsaw/task-clones/ate-remediation-20261003/verify/bin/tick\nexport CODEX_BIN=/Users/noelsaw/.local/bin/codex\nexport AGY_BIN=/Users/noelsaw/.local/bin/agy\nexport COMMANDCODE_BIN=/Users/noelsaw/.hermes/node/bin/cmd\nexport DEEPSEEK_BIN=/Users/noelsaw/Documents/GH\\ Repos/deepseek-harness/apps/cli/lib/bin.js\nexport RELAY_HAS_TICK=1\nexport RELAY_HAS_CODEX=1\nexport RELAY_HAS_AGY=1\nexport RELAY_HAS_COMMANDCODE=1\nexport RELAY_HAS_DEEPSEEK=1\nexport XYZ_VENDORED=0\n",
+      "stderr": "find-harness: HARNESS=/Users/noelsaw/task-clones/ate-remediation-20261003/verify REPO_ROOT=/Users/noelsaw/task-clones/ate-remediation-20261003/verify vendored=0 via=override\n"
+    }
+  },
+  {
+    "case": "home-unset-xdg-True",
+    "passed": true,
+    "observed": {
+      "rc": 0,
+      "stdout": "export HARNESS=/Users/noelsaw/task-clones/ate-remediation-20261003/verify\nexport TICK_REPO_ROOT=/Users/noelsaw/task-clones/ate-remediation-20261003/verify\nexport TICK=/Users/noelsaw/task-clones/ate-remediation-20261003/verify/bin/tick\nexport CODEX_BIN=/Users/noelsaw/.local/bin/codex\nexport AGY_BIN=/Users/noelsaw/.local/bin/agy\nexport COMMANDCODE_BIN=/Users/noelsaw/.hermes/node/bin/cmd\nexport DEEPSEEK_BIN=/Users/noelsaw/Documents/GH\\ Repos/deepseek-harness/apps/cli/lib/bin.js\nexport RELAY_HAS_TICK=1\nexport RELAY_HAS_CODEX=1\nexport RELAY_HAS_AGY=1\nexport RELAY_HAS_COMMANDCODE=1\nexport RELAY_HAS_DEEPSEEK=1\nexport XYZ_VENDORED=0\n",
+      "stderr": "find-harness: HARNESS=/Users/noelsaw/task-clones/ate-remediation-20261003/verify REPO_ROOT=/Users/noelsaw/task-clones/ate-remediation-20261003/verify vendored=0 via=override\n"
+    }
+  },
+  {
+    "case": "empty-grid",
+    "passed": true,
+    "observed": {
+      "rc": 2,
+      "rows": 0,
+      "records": [],
+      "stderr": "[run_variations] empty variation grid; refusing to mutate the target\n",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/verify/utils/ate/scripts/run_variations.py",
+        "--repo",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/empty-grid/scratch",
+        "--variations",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/empty-grid/grid.json",
+        "--log",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/empty-grid/rows.jsonl",
+        "--control",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/empty-grid/control.json",
+        "--mock-classifier",
+        "--minutes",
+        "0.02"
+      ],
+      "utc_start": 1791011912.9649699,
+      "utc_end": 1791011913.384232
+    }
+  },
+  {
+    "case": "missing-command",
+    "passed": true,
+    "observed": {
+      "rc": 127,
+      "rows": 1,
+      "records": [
+        {
+          "schema_version": "1.0",
+          "run_id": "run-20261003071833-64891",
+          "iteration": 0,
+          "engine": "ate_variations",
+          "timestamp": "2026-10-03T07:18:33Z",
+          "variation": {
+            "x": "a"
+          },
+          "status": "fail",
+          "duration_ms": 0,
+          "turn_count": 1,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "tokens_source": "unsupported",
+          "tool_count": null,
+          "tool_schema_bytes": null,
+          "tool_mode": null,
+          "command": "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/missing-command/missing",
+          "cmd": [
+            "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/missing-command/missing"
+          ],
+          "exit_code": null,
+          "stdout": "",
+          "stderr": "[Errno 2] No such file or directory: '/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/missing-command/missing'",
+          "wall_seconds": 0.0,
+          "timed_out": false,
+          "edited": false,
+          "classification": {
+            "status": "fail",
+            "severity": "high",
+            "category": "spawn_error",
+            "likely_cause": "[Errno 2] No such file or directory: '/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/missing-command/missing'"
+          }
+        }
+      ],
+      "stderr": "[run_variations] spawn_error; record preserved in /Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/missing-command/rows.jsonl\n",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/verify/utils/ate/scripts/run_variations.py",
+        "--repo",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/missing-command/scratch",
+        "--variations",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/missing-command/grid.json",
+        "--log",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/missing-command/rows.jsonl",
+        "--control",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/missing-command/control.json",
+        "--mock-classifier",
+        "--minutes",
+        "0.02"
+      ],
+      "utc_start": 1791011913.405385,
+      "utc_end": 1791011913.861241
+    }
+  },
+  {
+    "case": "utc-timestamp",
+    "passed": true,
+    "observed": {
+      "rc": 0,
+      "rows": 11,
+      "records": [
+        {
+          "schema_version": "1.0",
+          "run_id": "run-20261003071834-64934",
+          "iteration": 0,
+          "engine": "ate_variations",
+          "timestamp": "2026-10-03T07:18:34Z",
+          "variation": {
+            "x": "a"
+          },
+          "status": "pass",
+          "duration_ms": 0,
+          "turn_count": 1,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "tokens_source": "unsupported",
+          "tool_count": null,
+          "tool_schema_bytes": null,
+          "tool_mode": null,
+          "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 -c pass",
+          "cmd": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "-c",
+            "pass"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "wall_seconds": 0.0,
+          "timed_out": false,
+          "edited": false,
+          "classification": {
+            "status": "pass",
+            "severity": "none",
+            "category": "ok",
+            "likely_cause": "clean execution"
+          }
+        },
+        {
+          "schema_version": "1.0",
+          "run_id": "run-20261003071834-64934",
+          "iteration": 1,
+          "engine": "ate_variations",
+          "timestamp": "2026-10-03T07:18:34Z",
+          "variation": {
+            "x": "a"
+          },
+          "status": "pass",
+          "duration_ms": 0,
+          "turn_count": 1,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "tokens_source": "unsupported",
+          "tool_count": null,
+          "tool_schema_bytes": null,
+          "tool_mode": null,
+          "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 -c pass",
+          "cmd": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "-c",
+            "pass"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "wall_seconds": 0.0,
+          "timed_out": false,
+          "edited": false,
+          "classification": {
+            "status": "pass",
+            "severity": "none",
+            "category": "ok",
+            "likely_cause": "clean execution"
+          }
+        },
+        {
+          "schema_version": "1.0",
+          "run_id": "run-20261003071834-64934",
+          "iteration": 2,
+          "engine": "ate_variations",
+          "timestamp": "2026-10-03T07:18:34Z",
+          "variation": {
+            "x": "a"
+          },
+          "status": "pass",
+          "duration_ms": 0,
+          "turn_count": 1,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "tokens_source": "unsupported",
+          "tool_count": null,
+          "tool_schema_bytes": null,
+          "tool_mode": null,
+          "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 -c pass",
+          "cmd": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "-c",
+            "pass"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "wall_seconds": 0.0,
+          "timed_out": false,
+          "edited": false,
+          "classification": {
+            "status": "pass",
+            "severity": "none",
+            "category": "ok",
+            "likely_cause": "clean execution"
+          }
+        },
+        {
+          "schema_version": "1.0",
+          "run_id": "run-20261003071834-64934",
+          "iteration": 3,
+          "engine": "ate_variations",
+          "timestamp": "2026-10-03T07:18:34Z",
+          "variation": {
+            "x": "a"
+          },
+          "status": "pass",
+          "duration_ms": 0,
+          "turn_count": 1,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "tokens_source": "unsupported",
+          "tool_count": null,
+          "tool_schema_bytes": null,
+          "tool_mode": null,
+          "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 -c pass",
+          "cmd": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "-c",
+            "pass"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "wall_seconds": 0.0,
+          "timed_out": false,
+          "edited": false,
+          "classification": {
+            "status": "pass",
+            "severity": "none",
+            "category": "ok",
+            "likely_cause": "clean execution"
+          }
+        },
+        {
+          "schema_version": "1.0",
+          "run_id": "run-20261003071834-64934",
+          "iteration": 4,
+          "engine": "ate_variations",
+          "timestamp": "2026-10-03T07:18:34Z",
+          "variation": {
+            "x": "a"
+          },
+          "status": "pass",
+          "duration_ms": 0,
+          "turn_count": 1,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "tokens_source": "unsupported",
+          "tool_count": null,
+          "tool_schema_bytes": null,
+          "tool_mode": null,
+          "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 -c pass",
+          "cmd": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "-c",
+            "pass"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "wall_seconds": 0.0,
+          "timed_out": false,
+          "edited": false,
+          "classification": {
+            "status": "pass",
+            "severity": "none",
+            "category": "ok",
+            "likely_cause": "clean execution"
+          }
+        },
+        {
+          "schema_version": "1.0",
+          "run_id": "run-20261003071834-64934",
+          "iteration": 5,
+          "engine": "ate_variations",
+          "timestamp": "2026-10-03T07:18:34Z",
+          "variation": {
+            "x": "a"
+          },
+          "status": "pass",
+          "duration_ms": 0,
+          "turn_count": 1,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "tokens_source": "unsupported",
+          "tool_count": null,
+          "tool_schema_bytes": null,
+          "tool_mode": null,
+          "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 -c pass",
+          "cmd": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "-c",
+            "pass"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "wall_seconds": 0.0,
+          "timed_out": false,
+          "edited": false,
+          "classification": {
+            "status": "pass",
+            "severity": "none",
+            "category": "ok",
+            "likely_cause": "clean execution"
+          }
+        },
+        {
+          "schema_version": "1.0",
+          "run_id": "run-20261003071834-64934",
+          "iteration": 6,
+          "engine": "ate_variations",
+          "timestamp": "2026-10-03T07:18:34Z",
+          "variation": {
+            "x": "a"
+          },
+          "status": "pass",
+          "duration_ms": 0,
+          "turn_count": 1,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "tokens_source": "unsupported",
+          "tool_count": null,
+          "tool_schema_bytes": null,
+          "tool_mode": null,
+          "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 -c pass",
+          "cmd": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "-c",
+            "pass"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "wall_seconds": 0.0,
+          "timed_out": false,
+          "edited": false,
+          "classification": {
+            "status": "pass",
+            "severity": "none",
+            "category": "ok",
+            "likely_cause": "clean execution"
+          }
+        },
+        {
+          "schema_version": "1.0",
+          "run_id": "run-20261003071834-64934",
+          "iteration": 7,
+          "engine": "ate_variations",
+          "timestamp": "2026-10-03T07:18:35Z",
+          "variation": {
+            "x": "a"
+          },
+          "status": "pass",
+          "duration_ms": 0,
+          "turn_count": 1,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "tokens_source": "unsupported",
+          "tool_count": null,
+          "tool_schema_bytes": null,
+          "tool_mode": null,
+          "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 -c pass",
+          "cmd": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "-c",
+            "pass"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "wall_seconds": 0.0,
+          "timed_out": false,
+          "edited": false,
+          "classification": {
+            "status": "pass",
+            "severity": "none",
+            "category": "ok",
+            "likely_cause": "clean execution"
+          }
+        },
+        {
+          "schema_version": "1.0",
+          "run_id": "run-20261003071834-64934",
+          "iteration": 8,
+          "engine": "ate_variations",
+          "timestamp": "2026-10-03T07:18:35Z",
+          "variation": {
+            "x": "a"
+          },
+          "status": "pass",
+          "duration_ms": 0,
+          "turn_count": 1,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "tokens_source": "unsupported",
+          "tool_count": null,
+          "tool_schema_bytes": null,
+          "tool_mode": null,
+          "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 -c pass",
+          "cmd": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "-c",
+            "pass"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "wall_seconds": 0.0,
+          "timed_out": false,
+          "edited": false,
+          "classification": {
+            "status": "pass",
+            "severity": "none",
+            "category": "ok",
+            "likely_cause": "clean execution"
+          }
+        },
+        {
+          "schema_version": "1.0",
+          "run_id": "run-20261003071834-64934",
+          "iteration": 9,
+          "engine": "ate_variations",
+          "timestamp": "2026-10-03T07:18:35Z",
+          "variation": {
+            "x": "a"
+          },
+          "status": "pass",
+          "duration_ms": 0,
+          "turn_count": 1,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "tokens_source": "unsupported",
+          "tool_count": null,
+          "tool_schema_bytes": null,
+          "tool_mode": null,
+          "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 -c pass",
+          "cmd": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "-c",
+            "pass"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "wall_seconds": 0.0,
+          "timed_out": false,
+          "edited": false,
+          "classification": {
+            "status": "pass",
+            "severity": "none",
+            "category": "ok",
+            "likely_cause": "clean execution"
+          }
+        },
+        {
+          "schema_version": "1.0",
+          "run_id": "run-20261003071834-64934",
+          "iteration": 10,
+          "engine": "ate_variations",
+          "timestamp": "2026-10-03T07:18:35Z",
+          "variation": {
+            "x": "a"
+          },
+          "status": "pass",
+          "duration_ms": 0,
+          "turn_count": 1,
+          "prompt_tokens": null,
+          "completion_tokens": null,
+          "total_tokens": null,
+          "tokens_source": "unsupported",
+          "tool_count": null,
+          "tool_schema_bytes": null,
+          "tool_mode": null,
+          "command": "/opt/homebrew/opt/python@3.14/bin/python3.14 -c pass",
+          "cmd": [
+            "/opt/homebrew/opt/python@3.14/bin/python3.14",
+            "-c",
+            "pass"
+          ],
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "",
+          "wall_seconds": 0.0,
+          "timed_out": false,
+          "edited": false,
+          "classification": {
+            "status": "pass",
+            "severity": "none",
+            "category": "ok",
+            "likely_cause": "clean execution"
+          }
+        }
+      ],
+      "stderr": "",
+      "command": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/verify/utils/ate/scripts/run_variations.py",
+        "--repo",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/utc-timestamp/scratch",
+        "--variations",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/utc-timestamp/grid.json",
+        "--log",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/utc-timestamp/rows.jsonl",
+        "--control",
+        "/Users/noelsaw/task-clones/ate-remediation-20261003/manual-state/after/utc-timestamp/control.json",
+        "--mock-classifier",
+        "--minutes",
+        "0.02"
+      ],
+      "utc_start": 1791011913.882442,
+      "utc_end": 1791011915.395139
+    }
+  }
+]

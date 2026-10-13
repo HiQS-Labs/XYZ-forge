@@ -1,0 +1,6 @@
+{
+  "['rev-parse', 'HEAD']": "9a923f3cc131f432f2682e7a11f57d03597fb5df",
+  "['remote', 'get-url', 'origin']": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1015-observer-path-2026-10-10",
+  "['config', '--get', 'core.bare']": "false",
+  "['config', '--local', '--get', 'user.email']": ""
+}

@@ -1,0 +1,71 @@
+{
+  "pr": 971,
+  "earlier_parent": "c42aa067b4be7a2d7f222e43fa34fdb029c82124",
+  "integration_parent": "643aa0d0510c0ce0f52d649f749e6a88d3eb09d6",
+  "merge_base": "1e83bfb9d792d9c2dd4650d2956d9ac182566c12",
+  "classification": {
+    "disjoint": true,
+    "reasons": [],
+    "ours": {
+      "roadmap_items": {
+        "rmi-01M4FZARRMYSN7JPT66HMC545P": "added"
+      }
+    },
+    "theirs": {
+      "roadmap_items": {
+        "rmi-01M4FZ6SFJ0AQ4C9RKBMZMQH7S": "added",
+        "rmi-01M4FZ6SX3PXE3M755HFX2T691": "added"
+      }
+    },
+    "keep": "theirs",
+    "replay": [
+      {
+        "op": "add",
+        "row": {
+          "global_id": "rmi-01M4FZARRMYSN7JPT66HMC545P",
+          "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+          "gh_number": "970",
+          "title": "Deterministic task-clone folder and branch names",
+          "section": "Queue / parked intake",
+          "position": "123",
+          "status_marker": "\ud83c\udd95",
+          "complexity": null,
+          "risk": null,
+          "effort": null,
+          "doc_path": "PROJECT/1-INBOX/GH-970-CLONE-NAMING.md",
+          "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/970",
+          "raw_text": "- **GH-970 \u00b7 Deterministic task-clone folder and branch names** \ud83c\udd95 **captured 2026-10-05 via HQ** \u2014 [GH-970-CLONE-NAMING.md](PROJECT/1-INBOX/GH-970-CLONE-NAMING.md) \u00b7 [#970](https://github.com/HiQS-Labs/XYZ-forge/issues/970) (rated 55/40/50/85)",
+          "first_seen": "2026-10-09T09:18:57Z",
+          "updated_at": "2026-10-09T09:18:58Z",
+          "rating_pri": "55",
+          "rating_sev": "40",
+          "rating_appeal": "50",
+          "rating_effort": "85",
+          "rating_ovr": null,
+          "status_label": null
+        }
+      }
+    ],
+    "gen": [
+      1507,
+      1515
+    ]
+  },
+  "manual_terminal_replay": false,
+  "manual_basis": null,
+  "material_roadmap_differences": {},
+  "qualified_issue_row_count": 338,
+  "candidate_roadmap_row_count": 340,
+  "integration_roadmap_row_count": 339,
+  "unqualified_business_rows_preserved": 2,
+  "runtime_paths_equal_to_integration": [
+    "test/lib/runner-envelope.sh",
+    "utils/ate/scripts/run_variations.py",
+    "utils/py/domain_oracles.py",
+    "utils/py/metamorphic_oracle.py",
+    "utils/py/proc_group.py"
+  ],
+  "tested_own_candidate": "9ce8e5b28ac4ba150548c97db8ab9c093f879f4c",
+  "limitations": "final independent QA, exact-head second-clone release check and hosted smoke remain pending",
+  "row_count_scope": "Producer readback selected qualified issue rows; independent final peer review compared the complete expected table, including unqualified rows."
+}

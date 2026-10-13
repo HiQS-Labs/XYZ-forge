@@ -1,0 +1,19 @@
+{
+  "added_len": 11640,
+  "added_sha256": "c0ddd16587c999b74bbdce969febcf4593125214a1ee6978ad7b3f478be86688",
+  "added_start": 33985,
+  "artifact_sha256": null,
+  "attested_at": "2026-10-09T16:49:43Z",
+  "driver_pid": 29647,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09/relay-system/2026-10-09/gh1006-final-qa.md",
+  "relay_file_rel": "relay-system/2026-10-09/gh1006-final-qa.md",
+  "reviewed_head": "c0abced3ae47fc9e0e4345f55eb7fc8cdf049e6d",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09",
+  "task": "RELAY-GH1006-FINAL-QA-GATE-CORRECTION",
+  "trailer_sha256": "06f6bf8d8e5d2c9a6c22b152260fef9dbf59c955b172f9a5c57bf61802bf48a4",
+  "transcript_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09"
+}

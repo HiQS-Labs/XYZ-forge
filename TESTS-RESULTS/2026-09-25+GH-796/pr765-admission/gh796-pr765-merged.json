@@ -1,0 +1,45 @@
+{
+  "baseRefName": "development",
+  "body": "This adds the `start-marathon` preparation workflow while retaining explicit authorization for firing work and the legacy `marathon-triage` alias. It also adds root `PARKED/` intake, narrows standup parsing to structured records, and introduces the mechanical per-wave QA check from #784.\n\nCloses #762.\nCloses #784.\n\n## Integration remediation\n\nThe GH-796 review found six integration problems. This revision resolves them in the existing checker, skill and controls:\n\n- `--pre-pr --wave N` admits a completed wave while future waves remain pending; final closeout still requires all waves.\n- The #777 plan has the required proof/reviewer structure and current skill paths, with unfinished work unchecked.\n- The production inventory admits exactly the reviewed checker addition and retains the earlier GitHub connector repair.\n- Checker and dispatcher use the consumer root for receipts and activity logs.\n- Markdown and backtick receipt links work; missing, empty, unreadable and nonterminal receipts fail.\n- Current ledger history and completed #764 state are preserved through the existing writer, with only distinct #762/#763 intake replayed.\n\nThe receipt check does not establish independent authorship or exact-SHA review. **#777 remains open**; this change does not complete its remaining adoption and final acceptance work.\n\n## Verification\n\nFinal candidate `aa59ea0350842b2e08692bfce2f1f58b3842944a` passed the full combined local macOS gate **422/422** in 1081 seconds, including the Python layer **21/21**. The installed pre-push gate ran in a separate disposable full clone; the normal push succeeded and pre/post HEAD, origin, bare state, config and cleanliness matched. Retained full gate logs and provenance are committed with GH-796 integration evidence in PR #799. Hosted CI is [run 36113131036](https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36113131036) passed its smoke job for this exact head. Hosted macOS promotion was skipped and is not claimed.\n\nAgy approved all seven bounded final-integration questions through the shipped relay driver (exit 0, one turn), reviewing source at `902aa29d`; the committed attestation is in `relay-system/2026-09-25/gh796-pr765-final-integration-qa.md`. Later candidate changes contain the review report and documentation/evidence only.\n\nEarlier focused verification at `0e9c4b88` passed GH-784, hook routing, the installer matrix, standup (153/153), the inventory ratchet and PDDA (0 errors), including retained negative controls. Source, integration-writer and review evidence/provenance are committed under `TESTS-RESULTS/2026-09-24+GH-796-PR765/` and `TESTS-RESULTS/2026-09-25+GH-796-PR765/`.\n\nHistorical draft publication used `--no-verify` and had baseline/toolchain failures plus an unattested closeout mismatch. Those records remain in the committed transcripts; they are not the final qualification. #763 tracks the closeout issue; #764 is already closed and its completed state is preserved.\n\n## Scope and rollback\n\nThis changes preparation/routing, governance and its checker, with no marathon executor rewrite or automatic dispatch. The code and skill changes are reversible through a normal revert; live skill deployment uses the normal Skills Army process. Unrelated PRs remain outside this merge batch.\n",
+  "closingIssuesReferences": [
+    {
+      "id": "I_kwDOT5mrCM8AAAABSzX1Yw",
+      "number": 762,
+      "repository": {
+        "id": "R_kgDOT5mrCA",
+        "name": "XYZ-forge",
+        "owner": {
+          "id": "O_kgDOEjwOzw",
+          "login": "HiQS-Labs"
+        }
+      },
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/762"
+    },
+    {
+      "id": "I_kwDOT5mrCM8AAAABTAoLYA",
+      "number": 784,
+      "repository": {
+        "id": "R_kgDOT5mrCA",
+        "name": "XYZ-forge",
+        "owner": {
+          "id": "O_kgDOEjwOzw",
+          "login": "HiQS-Labs"
+        }
+      },
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/784"
+    }
+  ],
+  "headRefName": "feat/gh762-start-marathon",
+  "headRefOid": "aa59ea0350842b2e08692bfce2f1f58b3842944a",
+  "isDraft": false,
+  "labels": [],
+  "mergeCommit": {
+    "oid": "6f956294ff05b66eaf0c79ea886a6ce5c64724c3"
+  },
+  "mergeable": "UNKNOWN",
+  "mergedAt": "2026-09-25T08:30:55Z",
+  "number": 765,
+  "state": "MERGED",
+  "title": "Start marathon: reviewed preparation routing and dry-run workflow",
+  "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/765"
+}

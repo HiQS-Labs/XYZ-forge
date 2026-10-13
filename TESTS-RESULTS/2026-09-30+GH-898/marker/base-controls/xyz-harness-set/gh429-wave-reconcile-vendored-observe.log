@@ -1,0 +1,85 @@
+== test: gh429-wave-reconcile-vendored-observe ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh429-wave-reconcile-vendored-observe.XXXXXX.fHPoCUus5S
+== test: gh429-wave-reconcile-vendored-observe ==
+-- section 1+2: observe-mode pdda (findings, exit 0) no longer kills a live run; dashboard gets the repo root --
+  FAIL: live reconcile exited 6: wave-reconcile: Starting wave reconciliation (dry_run=False, root=/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh429-reconcile.UAuBEz/repo-observe)
+wave-reconcile: Processing PR #5291...
+wave-reconcile:   PR #5291 closes [4291]; references []
+wave-reconcile:   Found active doc: GH-4291-OBSERVE.md
+TRANSITION ["doc", "move", "GH-4291-OBSERVE.md", "3-COMPLETED", "2026-09-03"]
+wave-reconcile:   Moved -> GH-4291-OBSERVE.md (destination: 3-COMPLETED)
+wave-reconcile:   ROADMAP.md entry updated for GH-4291
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile: ERROR — Subprocess 'releases roadmap sync' failed with exit 3:
+refused: rule=not-initialized: no releases.db here; run `releases init` first
+
+
+wave-reconcile: Rolling back all uncommitted mutations...
+  FAIL: no warning with the count: wave-reconcile: Starting wave reconciliation (dry_run=False, root=/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh429-reconcile.UAuBEz/repo-observe)
+wave-reconcile: Processing PR #5291...
+wave-reconcile:   PR #5291 closes [4291]; references []
+wave-reconcile:   Found active doc: GH-4291-OBSERVE.md
+TRANSITION ["doc", "move", "GH-4291-OBSERVE.md", "3-COMPLETED", "2026-09-03"]
+wave-reconcile:   Moved -> GH-4291-OBSERVE.md (destination: 3-COMPLETED)
+wave-reconcile:   ROADMAP.md entry updated for GH-4291
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile: ERROR — Subprocess 'releases roadmap sync' failed with exit 3:
+refused: rule=not-initialized: no releases.db here; run `releases init` first
+
+
+wave-reconcile: Rolling back all uncommitted mutations...
+  PASS: gate did not die on stdout
+  FAIL: doc not promoted
+-- section 2 negative control: a FULL-mode pdda (exit 1) still blocks and rolls back --
+  FAIL: expected exit 7, got 6: wave-reconcile: Starting wave reconciliation (dry_run=False, root=/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh429-reconcile.UAuBEz/repo-full)
+wave-reconcile: Processing PR #5291...
+wave-reconcile:   PR #5291 closes [4291]; references []
+wave-reconcile:   Found active doc: GH-4291-OBSERVE.md
+TRANSITION ["doc", "move", "GH-4291-OBSERVE.md", "3-COMPLETED", "2026-09-03"]
+wave-reconcile:   Moved -> GH-4291-OBSERVE.md (destination: 3-COMPLETED)
+wave-reconcile:   ROADMAP.md entry updated for GH-4291
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile: ERROR — Subprocess 'releases roadmap sync' failed with exit 3:
+refused: rule=not-initialized: no releases.db here; run `releases init` first
+
+
+wave-reconcile: Rolling back all uncommitted mutations...
+  FAIL: no gate failure message
+  PASS: doc move rolled back
+-- section 3: a closing keyword + the ORIGIN repo's issue URL is a closer --
+  FAIL: exit 6: wave-reconcile: Starting wave reconciliation (dry_run=False, root=/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh429-reconcile.UAuBEz/repo-url)
+wave-reconcile: Processing PR #5291...
+wave-reconcile:   PR #5291 closes [4291]; references []
+wave-reconcile:   Found active doc: GH-4291-OBSERVE.md
+TRANSITION ["doc", "move", "GH-4291-OBSERVE.md", "3-COMPLETED", "2026-09-03"]
+wave-reconcile:   Moved -> GH-4291-OBSERVE.md (destination: 3-COMPLETED)
+wave-reconcile:   ROADMAP.md entry updated for GH-4291
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile: ERROR — Subprocess 'releases roadmap sync' failed with exit 3:
+refused: rule=not-initialized: no releases.db here; run `releases init` first
+
+
+wave-reconcile: Rolling back all uncommitted mutations...
+  PASS: PR body URL form parsed as closes [4291]
+  FAIL: doc not promoted from URL form
+-- section 3 negative control: a FOREIGN repo's issue URL stays a mention --
+  PASS: foreign URL is not a closer
+  PASS: doc stays active on a foreign URL
+-- unit: slug helper and the extractor --
+  PASS: github_slug_from_origin reads the origin slug
+  PASS: URL form (case-insensitive slug) and #N combine
+  PASS: without a slug the URL form is neither closer nor mention (unchanged contract)
+
+gh429-wave-reconcile-vendored-observe: 8 passed, 7 failed

@@ -1,0 +1,77 @@
+{
+  "before": {
+    "head": "9c77b309f36bab29d6e486d203b2f7218f86dc86",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.fix/gh854-gate-dispositions.remote=origin\nbranch.fix/gh854-gate-dispositions.merge=refs/heads/fix/gh854-gate-dispositions",
+    "refs": "9c77b309f36bab29d6e486d203b2f7218f86dc86 refs/heads/fix/gh854-gate-dispositions\n1b88bee900c5b24c03b061dabae7e92cfb0fd5f5 refs/remotes/origin/HEAD\n1b40d57c36c70eb045341ec95403de93ba056b92 refs/remotes/origin/development\n1b88bee900c5b24c03b061dabae7e92cfb0fd5f5 refs/remotes/origin/fix/gh854-gate-dispositions\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0"
+  },
+  "after": {
+    "head": "9c77b309f36bab29d6e486d203b2f7218f86dc86",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.fix/gh854-gate-dispositions.remote=origin\nbranch.fix/gh854-gate-dispositions.merge=refs/heads/fix/gh854-gate-dispositions",
+    "refs": "9c77b309f36bab29d6e486d203b2f7218f86dc86 refs/heads/fix/gh854-gate-dispositions\n1b88bee900c5b24c03b061dabae7e92cfb0fd5f5 refs/remotes/origin/HEAD\n1b40d57c36c70eb045341ec95403de93ba056b92 refs/remotes/origin/development\n1b88bee900c5b24c03b061dabae7e92cfb0fd5f5 refs/remotes/origin/fix/gh854-gate-dispositions\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0"
+  },
+  "identity_intact": true,
+  "records": [
+    {
+      "name": "gh306-red-missing-exemptions",
+      "command": [
+        "bash",
+        "test/gh306-registry-bidirectional.sh"
+      ],
+      "start": "2026-10-02T05:22:37.713111+00:00",
+      "end": "2026-10-02T05:22:39.873948+00:00",
+      "rc": 1,
+      "expected_rc": 1,
+      "tested_sha": "9c77b309f36bab29d6e486d203b2f7218f86dc86"
+    },
+    {
+      "name": "gh306-registry-bidirectional.sh",
+      "command": [
+        "bash",
+        "test/gh306-registry-bidirectional.sh"
+      ],
+      "start": "2026-10-02T05:22:39.874420+00:00",
+      "end": "2026-10-02T05:22:42.050746+00:00",
+      "rc": 0,
+      "expected_rc": 0,
+      "tested_sha": "9c77b309f36bab29d6e486d203b2f7218f86dc86"
+    },
+    {
+      "name": "gh35-test-tiers.sh",
+      "command": [
+        "bash",
+        "test/gh35-test-tiers.sh"
+      ],
+      "start": "2026-10-02T05:22:42.050947+00:00",
+      "end": "2026-10-02T05:22:56.314740+00:00",
+      "rc": 0,
+      "expected_rc": 0,
+      "tested_sha": "9c77b309f36bab29d6e486d203b2f7218f86dc86"
+    },
+    {
+      "name": "gh379-canary-uses-validate.sh",
+      "command": [
+        "bash",
+        "test/gh379-canary-uses-validate.sh"
+      ],
+      "start": "2026-10-02T05:22:56.314955+00:00",
+      "end": "2026-10-02T05:22:59.080582+00:00",
+      "rc": 0,
+      "expected_rc": 0,
+      "tested_sha": "9c77b309f36bab29d6e486d203b2f7218f86dc86"
+    },
+    {
+      "name": "ci-workflow.sh",
+      "command": [
+        "bash",
+        "test/ci-workflow.sh"
+      ],
+      "start": "2026-10-02T05:22:59.080825+00:00",
+      "end": "2026-10-02T05:22:59.327548+00:00",
+      "rc": 0,
+      "expected_rc": 0,
+      "tested_sha": "9c77b309f36bab29d6e486d203b2f7218f86dc86"
+    }
+  ]
+}

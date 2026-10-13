@@ -1,0 +1,27 @@
+# GH-842 Codex r2 falsifier (manual): python3 witness-tie.py.txt <path/to/wave_reconcile.py>
+# Evaluates the catch-up owner key and main()'s lifecycle rank from the given source, in its own module
+# namespace, for a PR and a direct commit merged at a distinct time and at the same second. PASS = they agree.
+import ast, importlib.util, os, sys
+src = sys.argv[1]
+sys.path.insert(0, os.path.dirname(os.path.abspath(src)))
+spec = importlib.util.spec_from_file_location("w", src); w = importlib.util.module_from_spec(spec); spec.loader.exec_module(w)
+tree = ast.parse(open(src).read())
+fn = lambda name: next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == name)
+owner = next(n for n in ast.walk(fn("catch_up_prs")) if isinstance(n, ast.Assign)
+             and any(isinstance(t, ast.Name) and t.id == "owner" for t in n.targets))
+key = next(k.value for k in owner.value.keywords if k.arg == "key")
+rank = next(n.value for n in ast.walk(fn("main")) if isinstance(n, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == "rank" for t in n.targets))
+ns = vars(w)
+discovery = eval(compile(ast.Expression(key), "<key>", "eval"), ns)
+lifecycle = lambda meta: eval(compile(ast.Expression(rank), "<rank>", "eval"), dict(ns, meta=meta))
+pr = dict(number=5, mergedAt="2026-09-27T12:00:00Z")
+commit = dict(number="bbbbbbbbbbbb", sha="b" * 40, artifactKind="commit", mergedAt=pr["mergedAt"])
+ok = True
+for label, stamp in [("distinct-time", "2026-09-27T12:00:01Z"), ("same-second", pr["mergedAt"])]:
+    commit["mergedAt"] = stamp
+    a, b = max([pr, commit], key=discovery), max([pr, commit], key=lifecycle)
+    print(f"{label}: discovery={a['number']} lifecycle={b['number']} agree={a is b}")
+    ok &= a is b
+print("discovery:", ast.unparse(key)); print("lifecycle:", ast.unparse(rank))
+print("RESULT:", "PASS" if ok else "FAIL"); sys.exit(0 if ok else 1)

@@ -1,0 +1,2 @@
+{"name": "exported-width", "override": true, "rc": 1, "expected": 1, "tested_sha": "c3072782a2c274bb0c3378162d90be8051b7a86a", "command": ["caffeinate", "-i", "bash", "test/gh544-parallel-default.sh"], "timestamp": "2026-10-02T05:41:11.933718+00:00"}
+{"name": "normal-environment", "override": false, "rc": 0, "expected": 0, "tested_sha": "c3072782a2c274bb0c3378162d90be8051b7a86a", "command": ["caffeinate", "-i", "bash", "test/gh544-parallel-default.sh"], "timestamp": "2026-10-02T05:41:14.637538+00:00"}

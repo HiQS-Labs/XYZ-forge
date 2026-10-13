@@ -1,0 +1,1 @@
+{"start": "2026-10-02T05:30:02.136432+00:00", "end": "2026-10-02T05:31:10.788072+00:00", "command": ["caffeinate", "-i", "bash", "test/gh251-validate-pytest-skip.sh"], "rc": 0, "tested_sha": "c3072782a2c274bb0c3378162d90be8051b7a86a", "identity_intact": true}

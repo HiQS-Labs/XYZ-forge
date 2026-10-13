@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+"""GH-833 V1b: one canonical PRS definition, and the canonical docs' spelled-out forms link to it.
+
+Usage: prs-definition-check.py <tree root>   Exit 0 = pass; 1 = any failure.
+
+1. HOW-TO-USE.md's glossary section (from its `## Glossary` heading to the next `## ` heading) holds exactly one
+   `- **PRS**` entry that spells out "Product Release System"; no other part of HOW-TO-USE.md, and no other
+   checked file, has one. (v2, GH-844: v1 searched the whole file, so an entry outside the glossary passed.)
+2. In each linked doc, the paragraph holding "Product Release System" links either the glossary heading
+   (anchor = GitHub's slug of the real heading) or RELEASES-DB-FAQS.md, and the link's file exists.
+3. PROJECT/PDDA.md and the six skills are read outside this checkout (PDDA.md is adopted by other repos;
+   skills are deployed), so a relative link would break. Each must instead carry the absolute URL of the
+   glossary heading on development, with the anchor checked against the real heading.
+"""
+import re
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+fails = []
+ENTRY = re.compile(r"^- \*\*PRS\*\*", re.M)
+ALL = ["HOW-TO-USE.md", "ROUTER.md", "AGENTS.md", "PROJECT/PDDA.md", "SOP.md", "ARCHITECTURE.md",
+       "RELEASES-DB-FAQS.md", "README.md", "skills/2-daily/releases/SKILL.md", "skills/1-hourly/start-task/SKILL.md",
+       "skills/2-daily/merge-cleanup/SKILL.md", "skills/2-daily/start-marathon/SKILL.md",
+       "skills/3-weekly/10days/SKILL.md", "skills/3-weekly/end-of-week/SKILL.md"]
+PORTABLE = ["PROJECT/PDDA.md"] + ALL[8:]
+URL = "https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#"
+LINKED = ["HOW-TO-USE.md", "ROUTER.md", "AGENTS.md", "SOP.md", "ARCHITECTURE.md", "RELEASES-DB-FAQS.md", "README.md"]
+
+
+def slug(heading):  # GitHub's anchor rule: lowercase, drop punctuation, spaces to hyphens
+    return re.sub(r"[^\w\- ]", "", heading.strip().lower()).replace(" ", "-")
+
+
+howto = (root / "HOW-TO-USE.md").read_text(encoding="utf-8")
+gm = re.search(r"^## (Glossary[^\n]*)$", howto, re.M)
+glossary = gm.group(1) if gm else None
+if gm is None:
+    fails.append("HOW-TO-USE.md: no Glossary heading")
+    section, outside = "", howto
+else:
+    nxt = re.search(r"^## ", howto[gm.end():], re.M)
+    end = gm.end() + nxt.start() if nxt else len(howto)
+    section, outside = howto[gm.end():end], howto[:gm.end()] + howto[end:]
+entries = [m.start() for m in ENTRY.finditer(section)]
+if ENTRY.search(outside):
+    fails.append("HOW-TO-USE.md: a `- **PRS**` entry sits outside the glossary section")
+if len(entries) != 1:
+    fails.append(f"HOW-TO-USE.md: {len(entries)} `- **PRS**` entries in the glossary section, want 1")
+else:
+    nl = section.find("\n", entries[0])
+    line = section[entries[0]:nl if nl != -1 else len(section)]
+    if "Product Release System" not in line:
+        fails.append("HOW-TO-USE.md: the PRS entry does not spell out Product Release System")
+    stop = section.find("\n- **", entries[0] + 1)
+    body = section[entries[0]:stop if stop != -1 else len(section)]
+    for part in ("XYZ Forge", "PDDA"):
+        if part not in body:
+            fails.append(f"HOW-TO-USE.md: the PRS entry does not name the trinity part {part}")
+for f in ALL[1:]:
+    if ENTRY.search((root / f).read_text(encoding="utf-8")):
+        fails.append(f"{f}: restates the definition (a `- **PRS**` entry outside the glossary)")
+
+anchor = slug(glossary) if glossary else None
+for f in LINKED:
+    text = (root / f).read_text(encoding="utf-8")
+    paras = [p for p in re.split(r"\n\s*\n", text) if "Product Release System" in p]
+    if not paras:
+        fails.append(f"{f}: no paragraph spells out Product Release System")
+        continue
+    ok = False
+    for target, frag in re.findall(r"\]\(([^)#\s]*)(?:#([^)\s]*))?\)", paras[0]):
+        path = (root / f).parent / target if target else root / f
+        if not path.resolve().is_file():
+            continue
+        if path.name == "HOW-TO-USE.md" and frag == anchor:
+            ok = True
+        elif path.name == "RELEASES-DB-FAQS.md" and not frag and f != "RELEASES-DB-FAQS.md":
+            ok = True
+    if not ok:
+        fails.append(f"{f}: the spelled-out paragraph links neither the glossary (#{anchor}) nor RELEASES-DB-FAQS.md")
+
+for f in PORTABLE:
+    text = (root / f).read_text(encoding="utf-8")
+    if anchor is None or URL + anchor not in text:
+        fails.append(f"{f}: no absolute pointer {URL}{anchor}")
+
+for x in fails:
+    print("FAIL", x)
+print(f"V1b: {'pass' if not fails else str(len(fails)) + ' failure(s)'}")
+sys.exit(1 if fails else 0)

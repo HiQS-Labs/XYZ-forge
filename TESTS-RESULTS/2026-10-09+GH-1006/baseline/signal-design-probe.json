@@ -1,0 +1,14 @@
+[
+  {
+    "case": "foreground",
+    "cancelled_line": "cancelled",
+    "exit": 143,
+    "latency_seconds": 0.954
+  },
+  {
+    "case": "interruptible-wait",
+    "cancelled_line": "cancelled",
+    "exit": 143,
+    "latency_seconds": 0.001
+  }
+]

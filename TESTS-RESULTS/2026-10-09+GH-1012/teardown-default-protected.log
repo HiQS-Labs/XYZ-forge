@@ -1,0 +1,80 @@
+merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GH Repos/XYZ-forge
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/Documents/GH Repos/XYZ-forge
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (12 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge` | standalone_clone | `development` | ✅ | 🔥 Active (23 in 10m) | ⚠️ 1 | 0 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+| `XYZ-forge-gh1006-bounded-recovery-2026-10-09` | standalone_clone | `feat/XYZ-forge-gh1006-bounded-recovery-2026-10-09` | ✅ | ⏳ Idle (30 in 60m) | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/feat/XYZ-forge-gh1006-bounded-recovery-2026-10-09 @ f398b11218: not reachable from origin/development; no merged PR has this head |
+| `XYZ-forge-gh1006-bounded-recovery-2026-10-09-gate` | standalone_clone | `feat/XYZ-forge-gh1006-bounded-recovery-2026-10-09` | ✅ | ⏳ Idle (14 in 60m) | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/feat/XYZ-forge-gh1006-bounded-recovery-2026-10-09 @ 6ef9fbf2c7: not reachable from origin/development; merged-PR lookup unavailable (gh answered for hiqs-labs/xyz-forge, origin is /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1006-bounded-recovery-2026-10-09) |
+| `XYZ-forge-gh1006-bounded-recovery-2026-10-09-integration-gate` | standalone_clone | `feat/XYZ-forge-gh1006-bounded-recovery-2026-10-09` | ✅ | ⏳ Idle (59 in 60m) | 0 | 0 | **PRESERVE_UNVERIFIED_QUERY** | Safety query failed: git merge-base --is-ancestor f398b11218 origin/development: fatal: Not a valid object name origin/development |
+| `XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify` | standalone_clone | `feat/gh1006-bounded-recovery` | ❌ (6) | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_DIRTY** | Working tree is dirty (6 modified/untracked files): M  relay-automation/README.md, MM relay-automation/marathon.sh, M  skills/1-hourly/relay-automation/relay-pkg.tar.gz,  M test/gh306-registry-bidirectional.sh, AD utils/py/marathon_progress.py,  M validate.sh |
+| `XYZ-forge-gh1007-swe-governance-2026-10-09` | standalone_clone | `feat/gh1007-swe-governance` | ✅ | 💤 Dormant | 0 | 0 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: 'gh1007-swe-governance' |
+| `XYZ-forge-gh1007-swe-governance-2026-10-09-verify` | standalone_clone | `feat/gh1007-swe-governance` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVED_USER_EXCLUDE** | Matches user exclusion pattern: 'gh1007-swe-governance' |
+| `XYZ-forge-integration-review-20260924` | standalone_clone | `feat/gh796-integration-review` | ❌ (1) | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_DIRTY** | Working tree is dirty (1 modified/untracked files):  M LEADERBOARD.md |
+| `XYZ-forge.wiki` | standalone_clone | `master` | ✅ | 💤 Dormant | 0 | 0 | **PRESERVE_WIKI** | GitHub wiki repository |
+| `xyz-forge-pr954-qa-20261005` | standalone_clone | `feat/gh947-hiqs-recipe-profiles` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/feat/gh947-hiqs-recipe-profiles @ 738fde98d7: not reachable from origin/development; no merged PR has this head |
+| `xyz-forge-pr954-verify-20261005` | standalone_clone | `feat/gh947-hiqs-recipe-profiles` | ✅ | 💤 Dormant | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/feat/gh947-hiqs-recipe-profiles @ 738fde98d7: not reachable from origin/development; no merged PR has this head |
+| `XYZ-forge-gh609` | standalone_clone | `feat/gh609-sdlc-agent-gaps` | ✅ | 💤 Dormant | 0 | ⚠️ 2 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/feat/gh609-sdlc-agent-gaps @ b89abcb01d: not reachable from origin/development; no merged PR has this head; refs/heads/fix/gh615-wrapping-tolerant-review-contract @ 0cb3d2a8e3: not reachable from origin/development; no merged PR has this head |
+
+### 📋 In-Flight Checkouts & Follow-up Guidance
+
+#### `XYZ-forge` (Linked Issue: GH-#982)
+- **Completion Status**: Open task checklists (157 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (agent-b) in `XYZ-forge` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh1006-bounded-recovery-2026-10-09` (Linked Issue: GH-#1006)
+- **Completion Status**: Open task checklists (163 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh1006-bounded-recovery-2026-10-09` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh1006-bounded-recovery-2026-10-09-integration-gate` (Linked Issue: GH-#1006)
+- **Completion Status**: Open task checklists (163 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh1006-bounded-recovery-2026-10-09-integration-gate` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify` (Linked Issue: GH-#1006)
+- **Completion Status**: In-flight uncommitted modifications (6 dirty files); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh1006-bounded-recovery-2026-10-09-verify` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh1007-swe-governance-2026-10-09-verify` (Linked Issue: GH-#1007)
+- **Completion Status**: Open task checklists (157 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh1007-swe-governance-2026-10-09-verify` to close or finish remaining tasks.
+
+#### `XYZ-forge-integration-review-20260924` (Linked Issue: GH-#796)
+- **Completion Status**: In-flight uncommitted modifications (1 dirty files); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-integration-review-20260924` to close or finish remaining tasks.
+
+#### `XYZ-forge-gh609` (Linked Issue: GH-#609)
+- **Completion Status**: Open task checklists (132 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (Noel Saw) in `XYZ-forge-gh609` to close or finish remaining tasks.
+
+merge-cleanup: PR #930: excluded by --exclude; not sequenced this run
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (2 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#954](https://github.com/HiQS-Labs/XYZ-forge/pull/954) | feat: admit exact HiQS recipes through C | `feat/gh947-hiqs-recipe-profiles` | `development` | yes | PASS | UNKNOWN | 49 |
+| 2 | [#1014](https://github.com/HiQS-Labs/XYZ-forge/pull/1014) | Marathon: bounded progress reports and s | `feat/XYZ-forge-gh1006-bounded-recovery-2026-10-09` | `development` | no | PASS | UNKNOWN | 100 |
+
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.

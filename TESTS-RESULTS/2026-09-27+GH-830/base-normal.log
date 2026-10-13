@@ -1,0 +1,29 @@
+  PASS: first publication pushes and reads back
+  PASS: literal inclusion-only payload set
+  PASS: manifest names exactly the nine managed payloads
+  PASS: root README matches its canonical package source
+  PASS: revision records exact parent commit
+  PASS: republication is idempotent
+  PASS: default sibling path uses the public repository casing
+  PASS: matching metadata plus unrelated amended file is not an exact retry
+  PASS: exact retained publisher commit retries push
+  PASS: retry refuses a restored previously managed deletion
+  PASS: retry refuses takeover of an unmanifested operator-owned path
+  PASS: default-profile retry may restore an absent seed
+  PASS: retry refuses replacement of an existing child-owned seed
+  PASS: ordinary mismatched root without publisher proof is rejected
+  PASS: generated root missing a required manifest entry is rejected
+  PASS: init preview leaves absent collection untouched
+  PASS: init apply creates copied manager
+  PASS: init excludes repository-only metadata from the installed manager
+  PASS: installed manager is byte-for-byte the canonical package tree
+  PASS: generated repository root remains a valid manager update source
+  PASS: add preview is non-mutating
+  PASS: add apply catalogs fixture
+  PASS: target preview is non-mutating
+  PASS: target apply stays in temporary collection
+  PASS: sync preview is non-mutating
+  PASS: sync apply creates readable fixture link
+  PASS: catalog and link read-through identify fixture
+  PASS: stale destination refuses before writes
+gh620-skills-army-mini-sync: 28 passed, 0 failed

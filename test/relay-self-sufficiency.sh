@@ -3,11 +3,15 @@ set -u
 #
 # relay-self-sufficiency.sh — verify that the ▶ TAKE YOUR TURN block in a minimal relay
 # file template is sufficient for a context-free headless agent to complete a turn correctly.
+# The template is the fixed fixture test/fixtures/minimal-relay.md, NOT the one relay-automation/new-relay.sh
+# generates: this checks the fixture, turn prompt, shim, agent and tick together, not the live scaffold.
 #
 # This test uses a REAL headless agent (agy or codex). It is skipped automatically when no
 # live agent is found on PATH, or when RELAY_SELF_SUFFICIENCY_SKIP=1 is set.
 #
-# CI gate: set RELAY_SELF_SUFFICIENCY_SKIP=1 in keyless environments (no API key / network).
+# Skipped by default in four wrappers (GH-836): ci-local.sh, ci.yml, the hosted reconcile and the pre-push hook
+# set RELAY_SELF_SUFFICIENCY_SKIP=1. A direct ./validate.sh still runs it (the default below is 0).
+# relay-automation/README.md says when a recorded live run is owed.
 # Cost: one real API call per run (~10-60s turn depending on agent speed).
 #
 # FAIL criteria (checked by assertions below):
@@ -27,7 +31,7 @@ echo "== test: relay-self-sufficiency =="
 
 # --- Skip: CI gate or explicit opt-out ---
 if [ "${RELAY_SELF_SUFFICIENCY_SKIP:-0}" = "1" ]; then
-  echo "  SKIPPED: RELAY_SELF_SUFFICIENCY_SKIP=1 (CI gate — no live agent in this environment)"
+  echo "  SKIPPED: RELAY_SELF_SUFFICIENCY_SKIP=1 (the default in CI, the reconcile and the pre-push hook; =0 runs the live turn)"
   echo "  relay-self-sufficiency: 0 pass, 0 fail (skipped)"
   exit 0
 fi

@@ -75,7 +75,7 @@ utils/pdda/pdda.sh help        # list every command
 - If the task is about document quality, active-doc lifecycle, roadmap sprawl, or automation policy, start in `PROJECT/PDDA.md`.
 - If the task is about repo-local maintenance state, start in `ROADMAP.md`.
 - If the task is about the changelog, provenance, or end-of-iteration logging, the governance is in `PROJECT/PDDA.md` (the "CHANGELOG.md — end-of-iteration record" contract).
-- To re-run this startup sequence mid-session (task switch, resume, post-compact, context drift), invoke the `/pdda` skill (`.claude/skills/pdda/SKILL.md`) instead of re-reading by hand.
+- To re-run this startup sequence mid-session, invoke the optional `/pdda` skill (`.claude/skills/pdda/SKILL.md`) if installed; otherwise read this sequence again.
 
 <!-- Written by PDDA's installer from the target-router template in the canonical PDDA repo. This is a
      scaffold: your repo owns it now, and the installer will not overwrite it again without --force.

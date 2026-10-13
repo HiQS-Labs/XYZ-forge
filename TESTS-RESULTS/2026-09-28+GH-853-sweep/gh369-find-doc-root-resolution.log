@@ -1,0 +1,17 @@
+== GH-369: find-doc.sh root resolution and argument parsing ==
+  ok   case 1: `--root` with no value exits 2 with a specific message, does not spin
+  ok   case 2: bad $TENDAYS_ROOT names its source AND the offending path
+  ok   case 3: bad --root reports --root and the path
+  ok   case 4: from alpha's cwd, resolves alpha's own doc (3-COMPLETED)
+  ok   case 5: same issue number from beta's cwd resolves BETA's doc — not alpha's, not the harness's
+  ok   case 6: GH-254 exists in the harness, yet a non-repo cwd returns a clean miss
+  ok   case 7a: --root overrides cwd
+  ok   case 7b: $TENDAYS_ROOT overrides cwd
+  ok   case 7c: --root beats $TENDAYS_ROOT (documented precedence)
+  ok   case 8a: no args exits 2
+  ok   case 8b: unknown flag exits 2
+  ok   case 8c: non-numeric exits 2
+  ok   case 8d: --help exits 0
+  ok   case 9: a miss is exit 0 with well-formed JSON nulls
+
+gh369-find-doc-root-resolution: 14 pass / 0 fail

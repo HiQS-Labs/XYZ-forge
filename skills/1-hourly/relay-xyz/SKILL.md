@@ -6,11 +6,11 @@ description: >-
   poll.sh) rather than improvising the handoff by hand. Use when the operator
   wants to "run an automated relay", "have Codex or agy review this
   end-to-end", "drive a relay to completion headless", "run the relay harness",
-  or set up the all-Claude hands-free poll loop — and the working tree is a
-  clone of the xyz-3-agents-swarm repo (it ships relay-automation/). /relay
+  or set up the all-Claude hands-free poll loop. The skill can start from a
+  foreign repo because its locator selects a separate XYZ-forge harness. /relay
   scaffolds the thread and owns the turn protocol; relay-xyz is the repo-specific
   layer that runs the real scripts. NOT for scaffolding a thread from scratch
-  (that is /relay), NOT for repos without relay-automation/.
+  (that is /relay).
 ---
 
 # relay-xyz — automated relays on the shipped harness
@@ -26,6 +26,8 @@ for candidate in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/1-hourly/relay-xyz/find-har
                  "$HOME/.gemini/config/skills/relay-xyz/find-harness.sh" \
                  "$HOME/.gemini/antigravity/skills/relay-xyz/find-harness.sh" \
                  "$HOME/.gemini/antigravity-cli/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.agents/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.zcode/skills/relay-xyz/find-harness.sh" \
                  "$(git rev-parse --show-toplevel 2>/dev/null)/.claude/skills/relay-xyz/find-harness.sh" \
                  "$(git rev-parse --show-toplevel 2>/dev/null)/skills/1-hourly/relay-xyz/find-harness.sh"; do
   [ -n "$candidate" ] && [ -f "$candidate" ] && { L="$candidate"; break; }
@@ -56,23 +58,98 @@ Use `/relay` to *create* the thread (or reuse one under `relay-system/<date>/`),
 - Running automated relays in **two different repos at the same time on one machine** — see
   [Concurrent relays across repos](#concurrent-relays-across-repos-same-machine) (each repo needs its own
   vendored `.xyz/`).
-- You have a relay thread (or are about to scaffold one with `/relay`) **and** the working tree is a
-  clone of this repo.
+- You have a relay thread (or are about to scaffold one with `/relay`); the current working tree may
+  be a foreign repo if the locator can reach a canonical XYZ-forge harness.
 
-**Not** for: scaffolding a brand-new thread from scratch (that's `/relay`), repos that don't ship
-`relay-automation/`, or work that needs a human checkpoint between every turn (use plain `/relay`
+**Not** for: scaffolding a brand-new thread from scratch (that's `/relay`), or work that needs a human checkpoint between every turn (use plain `/relay`
 manual mode).
+
+## Bounded marathon repair to PR
+
+This procedure is performed by an **active supervising caller**, not by the progress observer or
+a durable background skill. Before launch, obtain explicit machinery-repair authorization and an
+absolute UTC recovery deadline. The allowance is **one repair episode and at most one continuation
+dispatch**, shared across diagnosis, consult, implementation, plan/final QA, gates and publication.
+Do not pause or extend the deadline during repair, nest recovery, raise caps, use `--force`, or
+reset attempts by choosing a new token. Without that authorization, report the halt and park.
+
+1. Preserve the original halt, result receipt, relay/escalation and run-log pointers; record the
+   exact plan, product/coordination/harness roots, revision, failure attempts and remaining deadline.
+   Distinguish liveness from product progress (a newly accepted revision with gate and independent
+   review) and preparation progress (a reviewed repair PR or actionable reproduced blocker).
+2. Reproduce and trace a local machinery defect using debug-mantra. Name its failing input, narrow
+   write allowlist and falsifier; inspect current issues/PRs before creating duplicate work. A small
+   diff is insufficient. Exclude lock/ownership, containment, gate/review semantics, schemas,
+   auth/network bridges, dependency expansion, deletion, product-scope changes and unknown causes.
+3. Run `$consult` with three distinct seats reading the same retained evidence. Require three
+   affirmative recommendations for this unattended repair; dissent, abstention, missing output or
+   timeout parks. Record disagreements and your disposition. A successful consult command is not
+   quorum, and advice never overrides the exclusions, deterministic checks or independent QA.
+4. Use `$start-task` in a fresh full clone for the eligible fix: grounded plan and independent Codex
+   plan QA, implementation, existing covering verification in a disposable full clone, final
+   independent Codex QA and required exact-revision gate. No new suites/gates/controllers. Stop at
+   the original deadline or any exhausted cap and retain unfinished work with its next action.
+5. Publish the verified repair PR against `development`; inspect its actual base, head SHA, diff
+   and review/gate receipts. Default to **publish and park**. Report original failure, repair SHA,
+   evidence and one specific next action. Do not merge, hot-patch an installed harness, or rewrite
+   the original failure as a successful run.
+6. **Held capability:** this delivery does not automatically continue from an unmerged repair PR.
+   A future continuation must prove exclusive ownership and stopped descendants, exact PR revision
+   and independent QA/gate evidence, #752-safe re-entry and #1004 adoption, preserved original
+   authorization/plan/state roots/attempts/deadline, and normal preflight/dry-run. It needs explicit
+   authorization for the unmerged dependency and an immutable per-run harness checkout. Unknown
+   predicates mean park; neither publication nor the consult vote authorizes a bypass or a merge.
+
+An idle gap can be correct. Promise a bounded attempt and durable, attributable evidence; never
+promise an accepted product change merely because several unattended hours were authorized.
 
 ## First-time setup on a new clone or machine (make the skill discoverable)
 
-This repo keeps its skills in top-level `skills/`, which Claude Code does **not** scan. A session
-finds `relay-xyz` only if it's symlinked into `~/.claude/skills/`. A fresh clone or second machine has
-no such symlink, so the skill is invisible in **every** session there — the "other VS Code sessions
-can't find the relay-xyz files" failure. Fix it **once per clone** (idempotent, self-locating, no
-hardcoded path):
+First check whether Skills Army HQ already manages this skill on the machine:
 
 ```bash
-bash skills/1-hourly/relay-xyz/install.sh   # symlinks this clone's skills/1-hourly/relay-xyz into ~/.claude/skills/
+readlink ~/.claude/skills/relay-xyz   # or the relay-xyz entry in your app's skills root
+```
+
+Compare the printed target with your Skills Army collection root: `$XYZ_SKILLS_ROOT` when it is set,
+otherwise `~/git-pulse-sync/Deployed Skills`. Three outcomes:
+
+**Managed by Skills Army HQ: skip `install.sh`.** The link points into the collection root
+(`<collection root>/relay-xyz`). This counts even when the link is dangling, for example after the
+collection moved or mid-sync. Skills Army HQ owns the link, and its rule is not to run copied `install.sh`
+files. Running it there exits 1 on a live link (GH-678 keeps it). On a dangling one it replaces the link
+with this clone and adds links in app roots the collection does not target. Repair or refresh links with
+Skills Army HQ (`sync.py`), then go straight to the locator below.
+
+To check the harness, run `--check` from the installed path and from **outside any repo**:
+
+```bash
+cd "$HOME" && bash "$HOME/.claude/skills/relay-xyz/find-harness.sh" --check   # or your app root's relay-xyz
+```
+
+Inside a task clone, `--check` resolves that clone and would offer to save it. When it resolves your
+canonical clone, run the one-line `save this harness on this Mac` command it prints. When it finds no
+harness at all, it exits 1 without a save command. Write the per-Mac config yourself:
+
+```bash
+mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/xyz" && printf '%s\n' /path/to/XYZ-forge > "${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness"
+```
+
+The alternative is to prefix a single command with `XYZ_HARNESS=/path/to/XYZ-forge`. Do not export it from
+shell startup files.
+
+**A live link to somewhere else** (another XYZ-forge clone, or a vendored `.xyz/` copy). Another installer
+owns it, and `install.sh` refuses it with exit 1 (GH-678). If that target is the copy you want, keep it and
+go to the locator. To switch, remove the link yourself, then follow the next case.
+
+**Not managed (no link, or a dangling link outside the collection root).** This repo keeps its skills in top-level `skills/`, which
+Claude Code does **not** scan. A session finds `relay-xyz` only if it's symlinked into `~/.claude/skills/`.
+A fresh clone or second machine without Skills Army HQ has no such symlink, so the skill is invisible in
+**every** session there — the "other VS Code sessions can't find the relay-xyz files" failure. Fix it
+**once per maintained clone** (idempotent, self-locating, no hardcoded path):
+
+```bash
+bash skills/1-hourly/relay-xyz/install.sh   # symlinks this clone's skills/1-hourly/relay-xyz into the Claude Code, Codex, and Gemini/Antigravity skills roots
 ```
 
 It also replaces a stale/dangling symlink and verifies `find-harness.sh` resolves the harness. The
@@ -82,12 +159,11 @@ load the skill at all* — a layer the locator can't reach, since it runs only a
 ## Preconditions — locate the harness (bundled locator, never hardcode a path)
 
 `relay-xyz` ships its own device-agnostic locator, [`find-harness.sh`](find-harness.sh), beside this
-skill. It resolves the harness repo (the clone that ships `relay-automation/`) **relative to its own
-installed location**, following symlinks — so it works from *any* working directory, including a clone
-that has only `relay-system/` thread storage (from `/relay`) but **not** the harness scripts. `$HOME`
-and the skill's own symlink are the only anchors; **no machine path is ever hardcoded.** That's what
-keeps relay-xyz from "complaining the harness isn't in this repo" when you launch it from a clone
-without `relay-automation/` + `bin/tick`.
+skill. It checks an explicit override, a caller's vendored harness, the current repo, its own
+installed location, a per-Mac config at `${XDG_CONFIG_HOME:-$HOME/.config}/xyz/harness`, and bounded
+canonical XYZ-forge clone locations. A copied Skills Army deployment therefore works from a foreign
+repo. `--check` shows a command to save the chosen canonical harness in that config and warns when
+its cached upstream is ahead. It never fetches while checking.
 
 Run this first. It finds the locator, exports the harness env, `cd`s into the clone that ships the
 harness, and prints a one-glance readiness line:
@@ -101,11 +177,13 @@ for L in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/1-hourly/relay-xyz/find-harness.sh}
          "$HOME/.gemini/config/skills/relay-xyz/find-harness.sh" \
          "$HOME/.gemini/antigravity/skills/relay-xyz/find-harness.sh" \
          "$HOME/.gemini/antigravity-cli/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.agents/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.zcode/skills/relay-xyz/find-harness.sh" \
          "./.claude/skills/relay-xyz/find-harness.sh" \
          "$(git rev-parse --show-toplevel 2>/dev/null)/skills/1-hourly/relay-xyz/find-harness.sh"; do
   [ -n "$L" ] && [ -x "$L" ] && break
 done
-[ -x "$L" ] || { echo "relay-xyz: locator not found — set XYZ_HARNESS to your xyz-3-agents-swarm clone"; exit 1; }
+[ -x "$L" ] || { echo "relay-xyz: locator not found — set XYZ_HARNESS to your XYZ-forge clone"; exit 1; }
 
 eval "$("$L" --env)"   # exports HARNESS, TICK, TICK_REPO_ROOT, RELAY_HAS_{TICK,CODEX,AGY,COMMANDCODE,DEEPSEEK}
 cd "$HARNESS"
@@ -185,7 +263,7 @@ is unrecoverable, with no reflog or stash behind it. A new runtime artifact unde
 to the preserve list in `xyz-vendor.sh`'s `materialize_vendor()`, or the next update will delete it.
 
 So: **`xyz-vendor.sh` (not `install.sh`) is the path to concurrent per-repo relays.** Once a repo has
-`.xyz/`, `find-harness.sh` prefers it automatically (env → `.xyz/` → current repo → script-relative), and
+`.xyz/`, `find-harness.sh` prefers it automatically (env → `.xyz/` → current repo → script-relative → config → search), and
 `find-harness.sh --check` **warns** when you're in a foreign repo with no `.xyz/` (using the shared
 harness) and points you at the vendor command. Two vendored repos each run `relay-drive.sh` from their
 own `.xyz/relay-automation/`, holding independent locks — no contention. (Editing the central harness
@@ -207,8 +285,9 @@ Either breadcrumb must be a **portable pointer** — the skill name or the `find
 bare file isn't auto-loaded (a skimming agent skips it exactly like it skips this doc's own body), it's
 machine-specific (breaks on the next clone or device), a stale cached path is *worse* than no path at
 all, and cleaning one up later has cross-repo blast radius. **relay-xyz never auto-installs any file
-into a target repo** — only `install.sh` writes anything, and it writes only into `~/.claude/skills/`
-on the machine running it, never into the target repo itself.
+into a target repo**. Only `install.sh` writes anything, and it writes only skill symlinks into the
+machine's app skills roots (`~/.claude/skills/`, `~/.codex/skills/`, and the Gemini/Antigravity roots),
+never into the target repo itself.
 
 ## The two automated paths
 
@@ -325,7 +404,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/codex-turn.sh \
-  --reviewer   "$CODEX_AGENT" \
+  --reviewer   codex \
   --round-cap  4
 ```
 
@@ -347,7 +426,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/agy-turn.sh \
-  --reviewer   "$AGY_AGENT" \
+  --reviewer   agy \
   --round-cap  4
 ```
 
@@ -369,7 +448,7 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/commandcode-turn.sh \
-  --reviewer   "$COMMANDCODE_AGENT" \
+  --reviewer   commandcode \
   --round-cap  4
 ```
 
@@ -421,7 +500,7 @@ the same repo/worktree state (observed: a stray `git worktree` plus a `tick` tok
   scaffolder only writes a thread; you still drive it with `relay-drive.sh` per the paths above.
 
 - **Drive a full relay/build that lands in a DIFFERENT repo (`--target-root`):** the *normal* case —
-  the harness lives in `xyz-3-agents-swarm`, the code you want built or reviewed-and-committed lives in
+  the harness lives in `XYZ-forge`, the code you want built or reviewed-and-committed lives in
   your own repo. Pass `--target-root <repo>` to `relay-drive.sh` (or `marathon-drive.sh`): the relay
   thread + `tick` token stay in the harness clone, while the worktree base, `ALLOW_PATHS` resolution,
   and the file-scoped commit all route to `<repo>` (the harness clone is never touched). `find-harness.sh`
@@ -562,14 +641,28 @@ runs a bare executable path directly, so an **absolute path with spaces** (a clo
 
 ## Verify the harness is green before a real run
 
-These are anchored on `$HARNESS` (set by Preconditions) so they resolve whatever your CWD is — don't
-drop the `$HARNESS/` prefix or they'll 404 from a foreign session:
+Run mutation-heavy suites only in a **separate disposable full clone**, never in the maintained
+`$HARNESS` or a linked worktree. Commit the inputs first: cloning does not copy uncommitted edits.
+For a vendored install without its own Git checkout, select the maintained XYZ-forge full clone
+containing that harness revision as `VERIFY_SOURCE`.
 
 ```bash
-bash "$HARNESS/validate.sh"            # the tick/automation suite
-bash "$HARNESS/test/codex-turn.sh"     # before a Codex run
-bash "$HARNESS/test/agy-turn.sh"       # before an agy run
+VERIFY_SOURCE="$HARNESS"   # must be a full XYZ-forge clone with committed test inputs
+[ -d "$VERIFY_SOURCE/.git" ] || { echo "select a full harness clone as VERIFY_SOURCE"; exit 1; }
+VERIFY_CLONE="$(mktemp -d "${TMPDIR:-/tmp}/xyz-verify.XXXXXX")" || exit 1
+[ -n "$VERIFY_CLONE" ] && [ -d "$VERIFY_CLONE" ] || exit 1
+git clone --no-local "$VERIFY_SOURCE" "$VERIFY_CLONE" || exit 1
+cd "$VERIFY_CLONE" || exit 1
+unset XYZ_HARNESS TICK_REPO_ROOT  # test fixtures must not inherit the maintained clone
+# Bracket identity as described in WORKTREE-SAFETY.md (HEAD, origin, bare flag, local identity).
+bash ./validate.sh             # when the task's classified gate requires it
+bash ./test/codex-turn.sh      # focused check before a Codex run
+bash ./test/agy-turn.sh        # focused check before an agy run
+# Compare the identity bracket before trusting results; drift invalidates them.
 ```
+
+See [WORKTREE-SAFETY.md](https://github.com/HiQS-Labs/XYZ-forge/blob/development/WORKTREE-SAFETY.md)
+for the existing identity and recovery procedure. Run only the checks applicable to the task.
 
 **If your turn's `--artifact`/`ALLOW_PATHS` includes anything under `relay-automation/`, re-run
 `bash "$HARNESS/skills/1-hourly/relay-automation/make-pkg.sh"` after the turn lands, before trusting a green
@@ -609,6 +702,10 @@ Reviewers (Codex, agy, Claude, etc.) and authors must adhere to a strict standar
 4. **Challenge Unwarranted Complexity:** Reviewers should actively challenge speculative abstractions, parallel subsystems, and overbuilding, acting as a filter *against* bloat rather than an engine of scope creep.
 5. **Measure, read-only (GH-681):** a headless Reviewer MAY run narrow, non-mutating probes and queries against the seeded artifact to measure a claim — output and temp files under `.relay-scratch/` or `$TMPDIR` only, with `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"` first, and the command, exit status and decisive output quoted in the finding (scratch is discarded after the turn). It may NOT run `validate.sh`, `test/*.sh`, pytest, or executable fixtures in the relay worktree — those belong in a disposable full clone (`AGENTS.md`); a claim only measurable that way is graded `[Unverified — needs clone run]`. Containment is unchanged. The canonical wording is the reviewer note in `relay-automation/relay-turn-lib.sh` (`rtl_turn_prompt`); the marathon reviewer brief (`utils/py/marathon_drive.py`, step 4b) already allows `$TMPDIR` probes.
 6. **Generalizations carry a falsifier (GH-681):** a finding that asks for a behaviour change is a generalization unless the Reviewer can paste the concrete input — a row, a value, a `file:line` — that fails under the current code. Every `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`, `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Producer may disposition a request lacking these as `Declined — unproven generalization`. Protocol rule, not a mechanical check; canonical wording in `relay-automation/new-relay.sh` (Reviewer bullet), mirrored in `skills/1-hourly/relay/SKILL.md` and the marathon brief (step 4c). Origin: the gh673 final QA relay, where a Round-1 `[Blocker]` generalized one late-error observation into a rule that blanks every issue on real data, and the same seat `[Pass]`ed it next round.
+7. **No new tests where the repo forbids them (XYZ-forge, GH-831):** there, a new `test/` suite, a new
+   `validate.sh` TESTS entry or new gate machinery in the diff is itself a finding, and a reviewer does not
+   ask for one. Verification uses the existing suite that covers the change, or a manual check recorded
+   under `TESTS-RESULTS/` with its `provenance.jsonl`. Other repos keep their own test policy.
 
 ## QA / Consult Template Formatting
 

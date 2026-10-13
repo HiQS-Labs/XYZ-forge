@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-10T07:19:36.615488+00:00",
+  "pr": 1014,
+  "published_head": "ba503bb2f093644e52433be371fdf0c4ab1e0914",
+  "merge_commit": "0d85603280a92b14f981e8e1efea06f01c9ff6e9",
+  "head_and_squash_whole_trees_identical": true,
+  "reviewed_and_full_gated_owned_sources_plus_archive_unchanged_after_B1": true,
+  "conflicts": [
+    "releases.db",
+    "releases.sql"
+  ],
+  "B1": "keep incoming generation1559 over1558; replay owned GH1006 through add/rate/section-marker writer only",
+  "repair_count": 1,
+  "hosted_run": 38033370756,
+  "hosted_qualification": "in_progress",
+  "source_manifest": "1014-source-readback.json"
+}

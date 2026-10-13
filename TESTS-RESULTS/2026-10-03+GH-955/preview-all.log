@@ -1,0 +1,14 @@
+xyz-mini-sync: note: publishing from 'feat/gh-955-central-publisher', not development — the branch is recorded in the child's .xyz-forge-revision
+xyz-mini-sync: source 4bd2bae88713 (feat/gh-955-central-publisher) → /Users/noelsaw/Documents/GH Repos/XYZ-mini
+xyz-mini-sync: plan: copy 36 files, delete 0
+xyz-mini-sync: preview only — pass --apply to write, --push to publish
+skills-army-mini-sync: note: publishing from 'feat/gh-955-central-publisher', not development — the branch is recorded in the child's .xyz-forge-revision
+skills-army-mini-sync: source 4bd2bae88713 (feat/gh-955-central-publisher) → /Users/noelsaw/Documents/GH Repos/XYZ-skills-army-mini
+skills-army-mini-sync: plan: copy 9 files, delete 0
+skills-army-mini-sync: preview only — pass --apply to write, --push to publish
+agent-chorus-sync: note: publishing from 'feat/gh-955-central-publisher', not development — the branch is recorded in the child's .xyz-forge-revision
+agent-chorus-sync: refused: LICENSE exists in the destination but was not published by this tool — refusing to overwrite
+downstream: xyz-mini: exit 0
+downstream: skills-army-mini: exit 0
+downstream: agent-chorus: exit 2
+preview rc=2

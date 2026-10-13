@@ -1,0 +1,5 @@
+identity-before 9c5d294e82a621c57440ee20ffe1e41a0b52d3da porcelain=0
+gh549 rc= wall=346s tail=GH-549 work-state event stream: 124 passed, 0 failed
+gh436 rc=0 wall=292s tail=merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (6/6)
+gh436-pytest rc=0 wall=292s
+identity-after 9c5d294e82a621c57440ee20ffe1e41a0b52d3da porcelain=0

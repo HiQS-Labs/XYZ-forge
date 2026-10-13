@@ -1,0 +1,406 @@
+validate.sh: tier 2 — subsystem small (GH-35)
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+
+===============================
+Tier 2 — subsystem gate (GH-35): gh308-frozen-twin-guard.sh gh777-inventory-ratchet.sh gh400-acceptance-fidelity.sh gh400-source-url.sh litmus-release.sh gh422-backfill-source-url.sh gh425-source-url-slug.sh gh448-driver-lock-resolver.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh549-work-events.sh gh646-status-label.sh gh1-fixture-guard.sh gh1-adoption-guard.sh gh139-pipe-grep-guard.sh gh168-wave-reconcile-scope.sh gh184-no-tracked-scratch.sh gh202-wave-reconcile-issue-state.sh gh232-wave-reconcile-multiphase.sh releases-skill.sh gh103-timeline-exporter.sh gh75-dashboard.sh gh32-releases-app.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-releases-fuzz.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh351-manifest-unship.sh gh360-scoped-receipt-chain-rebuild.sh gh349-releases-roadmap-vendored.sh gh429-wave-reconcile-vendored-observe.sh gh358-wave-reconcile-vendored-paths.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh relay-target-root.sh relay-target-root-paths.sh relay-target-root-relayfile.sh relay-target-root-newfile.sh gh649-pdda-migration.sh pdda-changelog.sh pdda-install-startup-docs.sh pdda-roadmap-coverage.sh pdda-repo-contract.sh pdda-local-checks.sh gh784-marathon-qa-gate.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh mktemp-trap-guard.sh gh567-roadmap-dashboard-retired.sh gh257-roadmap-ledger-fixes.sh gh269-roadmap-retired.sh gh568-releases-md-retired.sh gh454-reconciler-defects.sh gh424-roadmap-status-marker.sh gh421-auto-wave-reconcile.sh gh491-roadmap-section-validation.sh gh492-roadmap-state-sweep.sh gh605-work-state.sh gh605-board-policy.sh gh645-merge-cleanup-xyz-tools.sh gh674-merge-cleanup-hosted-lookup.sh gh527-issue-url-repair.sh gh153-releases-sidebar-rollup.sh security-scan.sh sentinel-network-guard.sh gh107-timeline-json-seam.sh wave-reconcile.sh gh496-phase2-reconciliation-views.sh gh306-registry-bidirectional.sh
+NOT promotion evidence: the qualifying gate is ci-local.sh's sequential full run (GH-509).
+===============================
+
+===============================
+Running tier-2 docs gate (docs paths in the change set)
+===============================
+PDDA run starting — mode: full (on rails; errors block with a non-zero exit)
+
+== pdda-check-frontmatter ==
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+
+== pdda-check-status-table ==
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+
+== pdda-check-hardcoded-paths ==
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+
+== pdda-check-roadmap ==
+INFO [pdda-check-roadmap] ROADMAP.md ROADMAP.md not found; nothing to check
+SUMMARY [pdda-check-roadmap] errors=0 warns=0 info=1
+
+== pdda-check-roadmap-coverage ==
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/README.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p1-routing-validation.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p2-turn-supervision.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p3-incident-records.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p4-drift-filter.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS/recon-deploy-skills.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L1-oracle.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L2-token-aftermath.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L3-consult-cap.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L4-285-revalidate.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L5-gh237-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L6-muse-attribution.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L7-checkout-aftermath.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L8-zero-output-handback.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L9-369-regression.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L1-review-once-heading.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L2-measure-c1-d2.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L3-timing-claims-and-summary.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L4-named-environment-faults.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh168-wave-reconcile-scope.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh2-orphan-backup-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh50-sandboxed-git-guard.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-29.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-02.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-03.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-04.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-06.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-07.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-10.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-11.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-12.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-13.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-14.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-15.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-17.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-18.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-19.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-21.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-22.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-30.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-agy-model-probe.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-closeout-evidence.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-end-of-week.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh796-integration.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-install-sh-link-steal.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-346-PHASE-3-SPEC.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-406-RADAR-CROSSWALK.md:1 roadmap coverage check skipped because roadmap_exempt=true
+SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=74
+
+== pdda-check-changelog ==
+SUMMARY [pdda-check-changelog] errors=0 warns=0 info=0
+
+== pdda-stale-working-docs ==
+SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+
+== pdda-check-issue-doc-sync ==
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-396-HARNESS-ROOT-RESOLVER.md:1 issue #396 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-396-HARNESS-ROOT-RESOLVER.md PROJECT/3-COMPLETED/GH-396-HARNESS-ROOT-RESOLVER.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 issue #648 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md PROJECT/3-COMPLETED/CAPTURE.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md:1 issue #807 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md PROJECT/3-COMPLETED/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-886-LINUX-PORTABILITY-CANARY.md:1 issue #886 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/GH-886-LINUX-PORTABILITY-CANARY.md PROJECT/3-COMPLETED/GH-886-LINUX-PORTABILITY-CANARY.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 issue #494 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-consumer.md PROJECT/3-COMPLETED/recon-flightdeck-consumer.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 issue #494 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md PROJECT/3-COMPLETED/recon-flightdeck-issue-visibility.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 issue #494 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-session-context.md PROJECT/3-COMPLETED/recon-flightdeck-session-context.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 issue #496 is CLOSED but the doc is still in 2-WORKING — recommend: git mv PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md PROJECT/3-COMPLETED/recon-gh496-merge-churn-and-telemetry.md
+WARN [pdda-check-issue-doc-sync] releases.db issue #396 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #589 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #644 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #690 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #807 is CLOSED but roadmap section is 'In progress' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #886 is CLOSED but roadmap section is 'In progress' — review: releases roadmap reconcile-state --dry-run
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=14 info=0
+
+== pdda-check-releases ==
+INFO [pdda-check-releases] RELEASES.md RELEASES.md not found — nothing to check
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=1
+
+== pdda-check-governance ==
+WARN [pdda-check-governance] ROUTER.md:15 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] ROUTER.md:193 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] ROUTER.md:209 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] GUIDING-PRINCIPLES.md:54 dead reference 'STATE.md' — no file at STATE.md
+WARN [pdda-check-governance] GUIDING-PRINCIPLES.md:63 dead reference '.tick/STATE.md' — no file at .tick/STATE.md
+WARN [pdda-check-governance] README.md:90 dead reference '.tick/STATE.md' — no file at .tick/STATE.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:45 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:435 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:505 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:596 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:602 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:605 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:660 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:806 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:808 dead reference 'RELEASES.md' — no file at RELEASES.md
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:169 dead reference 'RELEASES.md' — no file at RELEASES.md
+INFO [pdda-check-governance] src/project.js:335 comment reference '.tick/STATE.md' in source tree cites generated/ignored state — exempt from existence check
+WARN [pdda-check-governance] CLAUDE.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+SUMMARY [pdda-check-governance] errors=0 warns=18 info=1
+
+== pdda-check-marathon-qa ==
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:78 Wave 1 item pending verification: 'Wave 1 Proof of Done Test Suite Green (record runnable command and passing output)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:79 Wave 1 Post-Build Codex QA Relay item has no receipt citation
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:79 Wave 1 item pending verification: 'Wave 1 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:80 Wave 1 item pending verification: 'Wave 1 CodeRabbit / Peer Review findings adjudicated'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:83 Wave 2 item pending verification: 'Wave 2 Proof of Done Test Suite Green (record runnable command and passing output)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:84 Wave 2 Post-Build Codex QA Relay item has no receipt citation
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:84 Wave 2 item pending verification: 'Wave 2 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:85 Wave 2 item pending verification: 'Wave 2 CodeRabbit / Peer Review findings adjudicated'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 missing '## Acceptance & Quality Checklist' section
+SUMMARY [pdda-check-marathon-qa] errors=0 warns=9 info=0
+
+== pdda-doc-ready ==
+INFO [pdda-doc-ready] . LLM readiness review skipped (set PDDA_LLM_BIN to a model CLI such as agy/codex/claude to enable)
+SUMMARY [pdda-doc-ready] errors=0 warns=0 info=1
+
+PDDA run complete: no errors, 41 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//runner-envelope.RNPRxr/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 2-wide — tier 2 default — 2 workers under nice (GH-35)
+  68 pooled suites + 4 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] gh777-inventory-ratchet.sh rc=0
+[parallel] gh400-acceptance-fidelity.sh rc=0
+[parallel] gh400-source-url.sh rc=0
+[parallel] gh308-frozen-twin-guard.sh rc=0
+[parallel] litmus-release.sh rc=0
+[parallel] gh422-backfill-source-url.sh rc=0
+[parallel] gh448-driver-lock-resolver.sh rc=0
+[parallel] gh425-source-url-slug.sh rc=0
+[parallel] meter-release.sh rc=0
+[parallel] nightwatch-release.sh rc=0
+[parallel] relay-target-root.sh rc=0
+[parallel] ballast-release.sh rc=0
+[parallel] relay-target-root-paths.sh rc=0
+[parallel] relay-target-root-relayfile.sh rc=0
+[parallel] relay-target-root-newfile.sh rc=0
+[parallel] gh646-status-label.sh rc=0
+[parallel] gh1-fixture-guard.sh rc=0
+[parallel] gh1-adoption-guard.sh rc=0
+[parallel] gh139-pipe-grep-guard.sh rc=0
+[parallel] gh168-wave-reconcile-scope.sh rc=0
+[parallel] gh184-no-tracked-scratch.sh rc=0
+[parallel] gh202-wave-reconcile-issue-state.sh rc=0
+[parallel] gh232-wave-reconcile-multiphase.sh rc=0
+[parallel] releases-skill.sh rc=0
+[parallel] gh103-timeline-exporter.sh rc=0
+[parallel] gh75-dashboard.sh rc=1
+[parallel] gh32-releases-app.sh rc=0
+[parallel] gh32-releases-artifacts.sh rc=0
+[parallel] gh53-releases-merge-resolve.sh rc=0
+[parallel] gh54-merged-dump-refusals.sh rc=0
+[parallel] gh57-releases-fuzz.sh rc=0
+[parallel] gh57-live-merge-resolve.sh rc=1
+[parallel] gh69-roadmap-shadow.sh rc=0
+[parallel] gh351-manifest-unship.sh rc=0
+[parallel] gh360-scoped-receipt-chain-rebuild.sh rc=0
+[parallel] gh349-releases-roadmap-vendored.sh rc=0
+[parallel] gh429-wave-reconcile-vendored-observe.sh rc=0
+[parallel] gh358-wave-reconcile-vendored-paths.sh rc=0
+[parallel] gh32-release-target-advisory.sh rc=0
+[parallel] gh39-releases-project-sync.sh rc=0
+[parallel] gh649-pdda-migration.sh rc=0
+[parallel] pdda-changelog.sh rc=0
+[parallel] gh549-work-events.sh rc=0
+[parallel] pdda-roadmap-coverage.sh rc=0
+[parallel] pdda-repo-contract.sh rc=0
+[parallel] pdda-local-checks.sh rc=0
+[parallel] pdda-install-startup-docs.sh rc=0
+[parallel] gh784-marathon-qa-gate.sh rc=0
+[parallel] gh284-p3-release-milestone.sh rc=0
+[parallel] gh284-p4-release-lanes.sh rc=0
+[parallel] gh567-roadmap-dashboard-retired.sh rc=0
+[parallel] gh257-roadmap-ledger-fixes.sh rc=0
+[parallel] mktemp-trap-guard.sh rc=0
+[parallel] gh568-releases-md-retired.sh rc=0
+[parallel] gh454-reconciler-defects.sh rc=0
+[parallel] gh424-roadmap-status-marker.sh rc=0
+[parallel] gh269-roadmap-retired.sh rc=0
+[parallel] gh421-auto-wave-reconcile.sh rc=0
+[parallel] gh492-roadmap-state-sweep.sh rc=0
+[parallel] gh491-roadmap-section-validation.sh rc=0
+[parallel] gh605-work-state.sh rc=0
+[parallel] gh645-merge-cleanup-xyz-tools.sh rc=0
+[parallel] gh674-merge-cleanup-hosted-lookup.sh rc=0
+[parallel] gh605-board-policy.sh rc=0
+[parallel] gh153-releases-sidebar-rollup.sh rc=0
+[parallel] gh527-issue-url-repair.sh rc=0
+[parallel] sentinel-network-guard.sh rc=0
+[parallel] gh107-timeline-json-seam.sh rc=0
+[parallel] wave-reconcile.sh rc=0
+[parallel] gh496-phase2-reconciliation-views.sh rc=0
+[parallel] security-scan.sh rc=0
+[parallel] gh306-registry-bidirectional.sh rc=0
+
+===============================
+FAILED in parallel (rc=1): gh75-dashboard.sh — re-running it alone to see if that verdict survives
+===============================
+  ... PASSES when run alone. Counting it as passed (sequential is the source of truth).
+  ... This means a shared resource is contended — see the warning at the end of this run.
+
+===============================
+FAILED in parallel (rc=1): gh57-live-merge-resolve.sh — re-running it alone to see if that verdict survives
+===============================
+  ... PASSES when run alone. Counting it as passed (sequential is the source of truth).
+  ... This means a shared resource is contended — see the warning at the end of this run.
+
+===============================================================================
+WARNING (GH-528): 2 suite(s) failed in parallel and passed alone.
+These are CONTENTION, not product failure: each verdict flipped the moment the
+shared resource was free, so the suite is counted as PASSED and named here.
+The contended resource is almost always THIS CLONE's .git/relay-driver.lock
+(GH-42): it is taken by the real relay-drive.sh BEFORE argument parsing, so a
+suite merely INVOKING a driver contends — add such suites to DRIVER_LOCK_LANE
+in validate.sh so they run in the serialized lane:
+    gh75-dashboard.sh
+    gh57-live-merge-resolve.sh
+Until then --parallel is doing extra serial work and this run took longer than it should.
+===============================================================================
+
+===============================
+Running python3 -m pytest test/test_python_layer.py
+===============================
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- /opt/homebrew/opt/python@3.14/bin/python3.14
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /private/tmp/XYZ-forge-pr902-gate
+configfile: pytest.ini
+plugins: hypothesis-6.167.1, anyio-4.13.0
+collecting ... collected 21 items
+
+test/test_python_layer.py::test_deploy_skills_behavioral_suite PASSED    [  4%]
+test/test_python_layer.py::test_rtl_module_load PASSED                   [  9%]
+test/test_python_layer.py::test_poll_module_load PASSED                  [ 14%]
+test/test_python_layer.py::test_consult_module_load PASSED               [ 19%]
+test/test_python_layer.py::test_marathon_drive_module_load PASSED        [ 23%]
+test/test_python_layer.py::test_swarm_preflight_module_load PASSED       [ 28%]
+test/test_python_layer.py::test_marathon_plan_module_load PASSED         [ 33%]
+test/test_python_layer.py::test_codex_turn_default_flags_match_bash_default PASSED [ 38%]
+test/test_python_layer.py::test_pi_turn_module_load PASSED               [ 42%]
+test/test_python_layer.py::test_pi_turn_parse_usage_keeps_last_event_gh295 PASSED [ 47%]
+test/test_python_layer.py::test_pi_turn_parse_usage_missing_file_returns_zero PASSED [ 52%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_builder_binary_missing PASSED [ 57%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_pi_builder_binary_missing PASSED [ 61%]
+test/test_python_layer.py::test_swarm_preflight_gh108_bundle_helpers PASSED [ 66%]
+test/test_python_layer.py::test_swarm_preflight_default_root_gh267 PASSED [ 71%]
+test/test_python_layer.py::test_rtl_bridge_honors_containment_ignore_in_python_mode PASSED [ 76%]
+test/test_python_layer.py::test_rtl_run_rtl_returns_code_without_exiting PASSED [ 80%]
+test/test_python_layer.py::test_rtl_run_checked_fails_fast PASSED        [ 85%]
+test/test_python_layer.py::test_poll_relay_field PASSED                  [ 90%]
+test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137 PASSED [ 95%]
+test/test_python_layer.py::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated PASSED [100%]
+
+============================= 21 passed in 26.50s ==============================
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Summary
+===============================
+tier 2 run — 72 suite(s). NOT promotion evidence (GH-35/GH-509).
+telemetry: /private/tmp/XYZ-forge-pr902-gate/.tick/telemetry/validate-parallel-1790829138632-11279.jsonl (76 suite events, 411 registered)
+10 slowest suites:
+  name  duration_s  rc
+  gh549-work-events.sh  211.843  0
+  pdda-install-startup-docs.sh  86.091  0
+  pdda-repo-contract.sh  59.365  0
+  gh649-pdda-migration.sh  38.641  0
+  gh32-releases-app.sh  33.403  0
+  gh269-roadmap-retired.sh  19.295  0
+  mktemp-trap-guard.sh  19.225  0
+  gh57-live-merge-resolve.sh  18.943  1
+  security-scan.sh  18.131  0
+  gh57-releases-fuzz.sh  16.800  0
+re-run ladder: 2 suite(s), 13.996s total
+passed: 75 / 75
+  + tier2:pdda
+  + gh777-inventory-ratchet.sh
+  + gh400-acceptance-fidelity.sh
+  + gh400-source-url.sh
+  + gh308-frozen-twin-guard.sh
+  + litmus-release.sh
+  + gh422-backfill-source-url.sh
+  + gh448-driver-lock-resolver.sh
+  + gh425-source-url-slug.sh
+  + meter-release.sh
+  + nightwatch-release.sh
+  + relay-target-root.sh
+  + ballast-release.sh
+  + relay-target-root-paths.sh
+  + relay-target-root-relayfile.sh
+  + relay-target-root-newfile.sh
+  + gh646-status-label.sh
+  + gh1-fixture-guard.sh
+  + gh1-adoption-guard.sh
+  + gh139-pipe-grep-guard.sh
+  + gh168-wave-reconcile-scope.sh
+  + gh184-no-tracked-scratch.sh
+  + gh202-wave-reconcile-issue-state.sh
+  + gh232-wave-reconcile-multiphase.sh
+  + releases-skill.sh
+  + gh103-timeline-exporter.sh
+  + gh75-dashboard.sh
+  + gh32-releases-app.sh
+  + gh32-releases-artifacts.sh
+  + gh53-releases-merge-resolve.sh
+  + gh54-merged-dump-refusals.sh
+  + gh57-releases-fuzz.sh
+  + gh57-live-merge-resolve.sh
+  + gh69-roadmap-shadow.sh
+  + gh351-manifest-unship.sh
+  + gh360-scoped-receipt-chain-rebuild.sh
+  + gh349-releases-roadmap-vendored.sh
+  + gh429-wave-reconcile-vendored-observe.sh
+  + gh358-wave-reconcile-vendored-paths.sh
+  + gh32-release-target-advisory.sh
+  + gh39-releases-project-sync.sh
+  + gh649-pdda-migration.sh
+  + pdda-changelog.sh
+  + gh549-work-events.sh
+  + pdda-roadmap-coverage.sh
+  + pdda-repo-contract.sh
+  + pdda-local-checks.sh
+  + pdda-install-startup-docs.sh
+  + gh784-marathon-qa-gate.sh
+  + gh284-p3-release-milestone.sh
+  + gh284-p4-release-lanes.sh
+  + gh567-roadmap-dashboard-retired.sh
+  + gh257-roadmap-ledger-fixes.sh
+  + mktemp-trap-guard.sh
+  + gh568-releases-md-retired.sh
+  + gh454-reconciler-defects.sh
+  + gh424-roadmap-status-marker.sh
+  + gh269-roadmap-retired.sh
+  + gh421-auto-wave-reconcile.sh
+  + gh492-roadmap-state-sweep.sh
+  + gh491-roadmap-section-validation.sh
+  + gh605-work-state.sh
+  + gh645-merge-cleanup-xyz-tools.sh
+  + gh674-merge-cleanup-hosted-lookup.sh
+  + gh605-board-policy.sh
+  + gh153-releases-sidebar-rollup.sh
+  + gh527-issue-url-repair.sh
+  + sentinel-network-guard.sh
+  + gh107-timeline-json-seam.sh
+  + wave-reconcile.sh
+  + gh496-phase2-reconciliation-views.sh
+  + security-scan.sh
+  + gh306-registry-bidirectional.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant

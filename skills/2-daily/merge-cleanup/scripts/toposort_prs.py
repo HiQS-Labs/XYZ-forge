@@ -32,7 +32,7 @@ def fetch_open_prs(repo_path: Optional[str] = None) -> List[Dict[str, Any]]:
     cmd = [
         os.environ.get("MERGE_CLEANUP_GH_BIN") or "gh", "pr", "list",
         "--state", "open",
-        "--json", "number,title,headRefName,baseRefName,labels,mergeable,statusCheckRollup,body,files,createdAt,url"
+        "--json", "number,title,headRefName,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url"
     ]
     cwd = repo_path or "."
     try:
@@ -129,18 +129,24 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
                 if num2 not in dep_graph[num1] and num1 not in dep_graph[num2]:
                     created1 = pr1.get("createdAt", "")
                     created2 = pr2.get("createdAt", "")
-                    if created1 <= created2:
-                        dep_graph[num2].add(num1)
-                        soft_edges[num2].add(num1)
-                        warnings.append(
-                            f"File collision on {len(overlap)} file(s) between PR #{num1} and PR #{num2} — ordering #{num1} before #{num2}"
-                        )
-                    else:
-                        dep_graph[num1].add(num2)
-                        soft_edges[num1].add(num2)
-                        warnings.append(
-                            f"File collision on {len(overlap)} file(s) between PR #{num2} and PR #{num1} — ordering #{num2} before #{num1}"
-                        )
+                    before, after = (num1, num2) if created1 <= created2 else (num2, num1)
+                    # A collision is only a preference. Do not let it create a cycle that
+                    # forces Kahn's fallback to discard an otherwise valid hard ordering.
+                    todo, seen = [before], set()
+                    while todo:
+                        node = todo.pop()
+                        if node in seen:
+                            continue
+                        seen.add(node)
+                        todo.extend(dep_graph[node] - seen)
+                    if after in seen:
+                        warnings.append(f"File collision #{before} before #{after} ignored: would create a dependency cycle")
+                        continue
+                    dep_graph[after].add(before)
+                    soft_edges[after].add(before)
+                    warnings.append(
+                        f"File collision on {len(overlap)} file(s) between PR #{before} and PR #{after} — ordering #{before} before #{after}"
+                    )
 
     # GH-534 C: Kahn's loop below consumes dep_graph. Phase 5 keeps a runtime map of predecessor
     # outcomes, but only HARD edges make a PR "NOT attempted" (GH-623). The three lists are
@@ -189,8 +195,8 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
 def format_pr_table(ordered_prs: List[Dict[str, Any]]) -> str:
     """Formats the ordered PR table in markdown."""
     lines = [
-        "| Seq | PR # | Title | Branch | Base | Checks | Mergeable | Files |",
-        "|:---:|:---:|---|---|---|:---:|:---:|:---:|",
+        "| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |",
+        "|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|",
     ]
     for idx, pr in enumerate(ordered_prs, 1):
         checks = "PASS"
@@ -208,7 +214,7 @@ def format_pr_table(ordered_prs: List[Dict[str, Any]]) -> str:
         file_count = len(pr.get("files") or [])
 
         lines.append(
-            f"| {idx} | [#{pr['number']}]({pr.get('url', '')}) | {pr.get('title', '')[:40]} | `{pr.get('headRefName', '')}` | `{pr.get('baseRefName', '')}` | {checks} | {mergeable} | {file_count} |"
+            f"| {idx} | [#{pr['number']}]({pr.get('url', '')}) | {pr.get('title', '')[:40]} | `{pr.get('headRefName', '')}` | `{pr.get('baseRefName', '')}` | {'yes' if pr.get('isDraft') else 'no'} | {checks} | {mergeable} | {file_count} |"
         )
     return "\n".join(lines)
 

@@ -1,0 +1,21 @@
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to /Users/noelsaw/Documents/GH Repos/XYZ-forge-integration-review-20260924 (#129)
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/GH Repos/XYZ-forge-integration-review-20260924) changed-files=0
+relay-turn: ⚠️  NOTICE: tracking ref origin/development is 4 commits ahead. Consider rebasing between phases.
+agy-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.1FBrKR)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.1FBrKR) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.1FBrKR) changed-files=0
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/GH Repos/XYZ-forge-integration-review-20260924/relay-system/2026-09-24/gh796-landing-qa.md
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: relay STATUS=Approved → closed token (tick done RELAY-gh796-landing-qa)
+relay-drive: attested Approved by agy — reviewed 23943dfb1cf6, 1626 bytes of review text, record /Users/noelsaw/Documents/GH Repos/XYZ-forge-integration-review-20260924/.git/relay-attest/RELAY-gh796-landing-qa.json
+relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/2 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 1h 33m
+per done-task: ≥0 tokens, 46m 56s wall-clock
+  turn peak RSS: agy: 163MB peak RSS
+

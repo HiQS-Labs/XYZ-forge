@@ -1,0 +1,82 @@
+{
+  "at": "2026-10-10T07:02:32.417221+00:00",
+  "head": "f398b11218708b88b3b2892d9c434c7308eba7d8",
+  "package_sha256": "0e586f53fed0ef325f599f2215f73f5aa8dcae6c89eb302d30bdcf64ce2031db",
+  "member_count": 18,
+  "members": [
+    {
+      "path": "relay-automation/poll.sh",
+      "sha256": "3beeba0345403720f1d60e1179ae873f592de7f61a7ac96fe58cf8e8c22cd903"
+    },
+    {
+      "path": "relay-automation/relay-loop.sh",
+      "sha256": "90052e8f2d28bc174a3a54e408dac9b19bf72deaf761afff996496ee07737c40"
+    },
+    {
+      "path": "relay-automation/runner.sh",
+      "sha256": "7ef3f5089803766067313a62b247cf86a3383ea2ece6836d22633f3943ff20e6"
+    },
+    {
+      "path": "relay-automation/watchdog.sh",
+      "sha256": "17c15966551e3f0cd47c5bb1bca1ff3349ee50e38876cb655b88d51061308a1d"
+    },
+    {
+      "path": "relay-automation/relay-drive.sh",
+      "sha256": "e000c5ab7ffbcf2a5a065f3fb5ebd5095d90e356ed48d8846b100aa6f3f98669"
+    },
+    {
+      "path": "relay-automation/relay-turn-lib.sh",
+      "sha256": "dda81d62e4555169112c3e45992e6be5ce850a4753672ce709b02225417eb663"
+    },
+    {
+      "path": "relay-automation/durable-log-lib.sh",
+      "sha256": "f370b784ea765c102306a10d453b86c2c77aa9f351ae696bb60047d6f30c31c8"
+    },
+    {
+      "path": "relay-automation/non-durable-log-roots.conf",
+      "sha256": "11ebd677fdc286cea97e09e8ef478bbe707ffd4faf9092baaa4763a14ce253fc"
+    },
+    {
+      "path": "relay-automation/new-relay.sh",
+      "sha256": "adeafdc3ee3bb38b3bccbee11d141cbce7e8fdc73dda4cd2695594711e6882aa"
+    },
+    {
+      "path": "relay-automation/codex-turn.sh",
+      "sha256": "ba6d351e23816dd50b662961a5fdde0189774dbfa0aa49bf18ac2845abeed412"
+    },
+    {
+      "path": "relay-automation/agy-turn.sh",
+      "sha256": "eeff46819c6334b4e8d22ec979f1c2e658c28d2cf170afcc508bfbae79c78cfe"
+    },
+    {
+      "path": "relay-automation/README.md",
+      "sha256": "960927d6903da319a5b9bf6e0435423a76fe7a1b197a59be5969bceb23cddd47"
+    },
+    {
+      "path": "test/poll-driver.sh",
+      "sha256": "06c5a8581ee1b672226d99d356053b0d1b6688dc5ab28d328c521e532b907dd5"
+    },
+    {
+      "path": "test/relay-loop.sh",
+      "sha256": "39edbcc5498aa3266311540dc25a0a26af5fe685e505460ac92872bd91f64a94"
+    },
+    {
+      "path": "test/poll-relay.sh",
+      "sha256": "90c3193cca86f5ccfab6db8d543d9eb810815cf7a57fead6399258909d766b6e"
+    },
+    {
+      "path": "test/watchdog-relay.sh",
+      "sha256": "e345cbfcaf58130799688add0c4732634e4b08580a610bc860146ca6173107ea"
+    },
+    {
+      "path": "test/codex-turn.sh",
+      "sha256": "3737b09550d12e1ad1cc79398045915ffe3391d05971c67cb671023237b69e08"
+    },
+    {
+      "path": "test/agy-turn.sh",
+      "sha256": "43157f88cbb83b41fbd109c219ec417632828758730e43dfb7926d53b51c4ecd"
+    }
+  ],
+  "read_only": true,
+  "extracted_to_disk": false
+}

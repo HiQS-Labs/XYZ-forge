@@ -10,8 +10,11 @@ description: >-
 # Skills Army HQ
 
 Keep actual skill folders in the user's `~/git-pulse-sync/Deployed Skills` (GH-536:
-the collection lives inside the live Git Pulse Sync checkout — the hourly pulse writer
-stages it, and machine-local state is excluded by the collection's own `.gitignore`). Apps discover
+the collection lives inside the live Git Pulse Sync checkout, and machine-local state is excluded by
+the collection's own `.gitignore`). The hourly pulse stages only its own files and refuses to sync
+while anything else is uncommitted, so `intake.py --apply add|update|remove` commits just that skill's
+folder itself (GH-993; never pushes — the pulse pushes it), refuses over unrelated changes, and
+`sync.py --status` warns when the collection repo is dirty, detached or behind. Apps discover
 directory symlinks to these stable copies, not disposable task clones. **The collection is a
 projection, not a source:** every skill's canonical source is the repository it was vendored
 from — XYZ-forge `skills/<tier>/<name>/` for forge-owned skills, another repo for the rest — and the
@@ -159,12 +162,22 @@ reported as `unrecognized` and never fail.
   is a `WARN drift check skipped`, never a silent pass.
 - Preview / `--status`: every drifted forge-owned skill is a `WARN DRIFTED <name>` line on
   stderr citing the vendored and canonical paths and the re-vendor command; the JSON result
-  carries `warnings` and a `drift` block (`ok`, `drifted`, `unrecognized`, `origin`).
+  carries `warnings` and a `drift` block (`ok`, `drifted`, `unrecognized`, `origin`). Note that
+  the checker compares file bytes with the **local working tree** of the selected canonical
+  checkout (with CRLF normalization); an `ok` result denotes parity with that local folder, not
+  proven upstream freshness or release status. Verify the checkout's active branch and clean
+  state before re-vendoring so local WIP does not inadvertently clobber deployed skills.
 - `--apply` with an enabled target and any drifted forge-owned skill is **REFUSED** (exit 2)
-  naming the skills and the canonical `skills/` path. Remedy is always the same:
+  naming the skills and the canonical `skills/` path. When the canonical checkout is verified as the
+  intended release source, the remedy is:
   `intake.py --apply update <name> --source <forge>/skills/<tier>/<name>`, then sync again.
   `--allow-drift` deploys anyway, loudly, and records the drift in the result — a
   disclosed exception for a WIP branch, never a way to silence the checker.
+- **Immediate symlink read-through boundary:** Because configured app roots hold direct directory
+  symlinks to `Deployed Skills/<name>`, running `intake.py --apply update` modifies the target payload
+  in place, making new bytes immediately readable to active agents and IDEs before `sync.py` runs.
+  `sync.py`'s drift refusal governs symlink reconciliation across targets, not intake rollback. Always
+  inspect the source repository and branch before applying an update to an already-symlinked collection.
 
 ## Runtime dependencies are separate
 

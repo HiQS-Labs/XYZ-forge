@@ -1,0 +1,1 @@
+merge-cleanup: PR #820 clone: transient network failure (timed out after 2s: git clone --quiet /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tmpx_nkdnds/origin.git /var/folde) — retry 2/3 in 2s

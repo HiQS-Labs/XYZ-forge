@@ -1,0 +1,2 @@
+rc=124 grandchild_alive_after_timeout=False
+PASS

@@ -28,7 +28,7 @@ RESOLVER="$ROOT_DIR/utils/releases-merge-resolve.sh"
 
 pass=0; fail=0
 ok()   { if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1" >&2; fail=$((fail+1)); fi }
-has()  { printf '%s' "$1" | grep -Fq -- "$2"; }
+has()  { grep -Fq -- "$2" <<<"$1"; }
 
 echo "== test: gh57-live-merge-resolve =="
 command -v python3 >/dev/null 2>&1 || { echo "python3 required" >&2; exit 1; }
@@ -158,7 +158,7 @@ git -C "$R3" commit -q --no-edit >/dev/null 2>&1
 ok "  and \`git commit\` closes the merge" \
    "[ -z \"\$(git -C '$R3' rev-parse --verify -q MERGE_HEAD 2>/dev/null)\" ]"
 ok "  and the committed tree carries both artifacts" \
-   "git -C '$R3' show --stat HEAD | grep -q releases.sql && git -C '$R3' show --stat HEAD | grep -q releases.db"
+   "grep -q releases.sql <<<\"\$(git -C '$R3' show --stat HEAD)\" && grep -q releases.db <<<\"\$(git -C '$R3' show --stat HEAD)\""
 
 # ── 4. EDGE CASE: a failed resolver must leave the merge genuinely open ─────────────────────────
 # Found broken 2026-08-19: the resolver staged releases.db BEFORE attempting the rebuild, so a
@@ -182,7 +182,7 @@ git -C "$R4" add releases.sql
 out="$(resolver "$R4")"; rc=$?
 ok "resolver fails on an unsettleable content conflict (rc=$rc)" "[ $rc -ne 0 ]"
 ok "  and releases.db is STILL unmerged — the merge is open, as the message claims" \
-   "git -C '$R4' diff --name-only --diff-filter=U | grep -qx releases.db"
+   "grep -qx releases.db <<<\"\$(git -C '$R4' diff --name-only --diff-filter=U)\""
 
 # ── 5. EDGE CASE: keeping the LOWER generation header must be refused ───────────────────────────
 # Found broken 2026-08-19: this returned rc=0 and then `check: clean`, with the ledger's generation

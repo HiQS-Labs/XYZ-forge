@@ -1,0 +1,26 @@
+== test: gh448-driver-lock-resolver ==
+  workdir: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.IAPjsp
+  PASS: fixture: linked worktree's .git is a FILE (not a dir)
+-- A. resolver parity (bash vs python) --
+  PASS: parity (dir): bash and python agree (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.IAPjsp/dir-repo/.git/relay-driver.lock)
+  PASS: parity (absent): bash and python agree (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.IAPjsp/absent-repo/.relay-driver.lock)
+  PASS: parity (worktree): bash and python agree (/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.IAPjsp/main-repo/.git/relay-driver.lock)
+  PASS: worktree case resolves to the git COMMON dir, not <worktree>/.git/…
+-- B. negative control: pre-fix 2-branch logic misses the worktree lock --
+  PASS: negative control: old marathon-ls.sh logic guesses '/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh448-driver-lock.IAPjsp/wt/.relay-driver.lock' — misses the held lock
+  PASS: negative control: old marathon-live.sh logic (checks .git/… or .xyz/… under $WT) misses the held lock
+  PASS: negative control: old find-harness.sh 2-candidate loop misses the held lock
+-- C. end-to-end: fixed scripts observe LIVE from a linked worktree --
+  PASS: marathon-ls.sh: linked worktree with held common-dir lock -> LIVE
+  PASS: marathon-live.sh: claimed task + linked-worktree common-dir lock -> 🟢 live
+  PASS: find-harness.sh --check: linked-worktree harness + held common-dir lock -> warns
+  PASS: find-harness.sh --check: warning names the REAL (common-dir) lock path
+-- syntax check --
+  PASS: syntax OK: driver-lock-lib.sh
+  PASS: syntax OK: harness-paths.sh
+  PASS: syntax OK: marathon-ls.sh
+  PASS: syntax OK: marathon-live.sh
+  PASS: syntax OK: find-harness.sh
+  PASS: syntax OK: gh448-driver-lock-resolver.sh
+
+gh448-driver-lock-resolver: 18 pass, 0 fail

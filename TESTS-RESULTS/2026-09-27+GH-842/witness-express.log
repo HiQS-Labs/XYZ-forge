@@ -1,0 +1,55 @@
+wave-reconcile: Receipt recovery found 0 pending PR(s) since workflow activation 2026-09-09T19:08:00-07:00
+wave-reconcile: Receipt recovery found 10 pending direct commit(s) since 137076593882
+1370765938 express     agent-b@t                    fix(GH-801): fix: GH-798 skill tests violate pipe-to-grep ra
+99ad7ea1b1 QUALIFY     agent-b@t                    chore(releases): express ship GH-801 (commit 137076593882)
+c84dc61888 QUALIFY     agent-b@t                    chore(pdda): express reconcile GH-801 (commit 137076593882)
+0ae3452a57 PR merge    56978803+noelsaw1@users.nore fix: repair four regressions from merge batch #791 (#794)
+b56220df84 QUALIFY     agent-b@t                    chore: reconcile PR 794 through verified local fallback
+41c07aa4b6 PR merge    56978803+noelsaw1@users.nore fix(gate): suites survive a Python path with a space — quote
+7331e4af89 bot         41898282+github-actions[bot] chore: retain qualification receipts for 0ae3452a5774c6e72b6
+5ac6650d50 bot         41898282+github-actions[bot] chore: reconcile merged development work
+3bf0f53367 bot         41898282+github-actions[bot] chore: reconcile merged development work
+6936702661 QUALIFY     agent-b@t                    chore(GH-796): persist witnessed PR 795 merge event
+6f956294ff PR merge    56978803+noelsaw1@users.nore Start marathon: reviewed preparation routing and dry-run wor
+9ab269c81a bot         41898282+github-actions[bot] chore: reconcile merged development work
+61f09827ed PR merge    56978803+noelsaw1@users.nore fix(ci): promotion boundary cap fits the suite — 45 → 120 mi
+a2de235995 bot         41898282+github-actions[bot] chore: reconcile merged development work
+31a4286752 PR merge    56978803+noelsaw1@users.nore chore(release): GH-784 promotion QA receipt and 0.9.0 Cargo 
+a076b1b117 bot         41898282+github-actions[bot] chore: reconcile merged development work
+61fd2d89c3 PR merge    56978803+noelsaw1@users.nore chore(release): 0.9.0 "Cargo" shipped — record the GitHub Re
+73935deca2 bot         41898282+github-actions[bot] chore: reconcile merged development work
+a0345e9c3d PR merge    56978803+noelsaw1@users.nore fix(GH-808): scope gh251's nested gate runs to the cheapest 
+37038841e7 bot         41898282+github-actions[bot] chore: reconcile merged development work
+f832ef5aca PR merge    56978803+noelsaw1@users.nore feat(GH-831): no new tests — the rule in AGENTS, principle 1
+9bfb3f49ba bot         41898282+github-actions[bot] chore: reconcile merged development work
+b2c307b4e6 PR merge    56978803+noelsaw1@users.nore feat(GH-831): three tiers — the hosted reconcile qualifies e
+058ae2766b bot         41898282+github-actions[bot] chore: reconcile merged development work
+4bd8851ac8 QUALIFY     agent-b@users.noreply.github chore(GH-835): full-gate re-measure 414/414 in 1040s (Mac St
+af4fef273f PR merge    56978803+noelsaw1@users.nore fix(GH-836): trim the measured gate hotspots — gh549 346→147
+f098ab43de bot         41898282+github-actions[bot] chore: reconcile merged development work
+9fd2d88543 PR merge    56978803+noelsaw1@users.nore docs(GH-833): define PRS — the Product Release System, the R
+241bfcce60 bot         41898282+github-actions[bot] chore: reconcile merged development work
+1eef93a368 PR merge    56978803+noelsaw1@users.nore docs(GH-831,GH-836): record the first hosted Small run (15.7
+fe2fa18b55 bot         41898282+github-actions[bot] chore: reconcile merged development work
+12cccb9380 PR merge    56978803+noelsaw1@users.nore fix(GH-836): D1 — gh436-merge-cleanup moves from Small to La
+10033a2cec bot         41898282+github-actions[bot] chore: reconcile merged development work
+8ecaa8af01 PR merge    56978803+noelsaw1@users.nore docs: reviewed merge sequence and remediation plan for GH-79
+6af61c0864 bot         41898282+github-actions[bot] chore: reconcile merged development work
+0cdda91a8f PR merge    56978803+noelsaw1@users.nore feat(test): simplify GH-798 status skill tests and consolida
+19d25f0a23 bot         41898282+github-actions[bot] chore: reconcile merged development work
+85a60f2cf1 QUALIFY     noel@neochro.me              chore: reconcile after PR #806
+ad923412a2 PR merge    56978803+noelsaw1@users.nore fix(GH-807): signal-triage assertions match on captured JSON
+5b1a214af5 bot         41898282+github-actions[bot] chore: reconcile merged development work
+d469343d11 PR merge    56978803+noelsaw1@users.nore fix(GH-813): retry the WAL switch when concurrent first user
+e9fecef150 bot         41898282+github-actions[bot] chore: reconcile merged development work
+07f0c46d90 QUALIFY     noel@neochro.me              chore: reconcile after PR #818
+030ab5ba0b PR merge    56978803+noelsaw1@users.nore feat(skills): standardize clone backup layout & integrity ve
+a8034d74d6 bot         41898282+github-actions[bot] chore: reconcile merged development work
+4909c482fc QUALIFY     noel@neochro.me              chore: reconcile after PR #846
+73fc2e3214 PR merge    56978803+noelsaw1@users.nore docs: record M6 full-suite benchmark and three-device campai
+dcc449fb63 bot         41898282+github-actions[bot] chore: reconcile merged development work
+e53939d68f PR merge    56978803+noelsaw1@users.nore fix(flightdeck): explain unknown progress and source states 
+fcd880d745 bot         41898282+github-actions[bot] chore: reconcile merged development work
+42e85b1cbd QUALIFY     noel@neochro.me              chore: reconcile after PR #820
+41db436717 QUALIFY     noel@neochro.me              docs(parked): #854 window day-0 findings (#760, #715 parked;
+pending: 10

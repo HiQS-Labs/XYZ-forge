@@ -1,0 +1,2 @@
+{"label": "qa-fix", "sha": "fab979c4585f6bc16bac47e80de468f127279ec1", "case": "r1_head_moved_after_poll", "outcome": "returned", "elapsed_s": 0.13, "result": {"rc": 2, "refresh_reads": ["dddd/CONFLICTING", "cccc/UNKNOWN", "eeee/MERGEABLE"], "landing_clone_heads": ["dddd"], "prepared_a_head_other_than_pushed": false}}
+{"label": "qa-fix", "sha": "fab979c4585f6bc16bac47e80de468f127279ec1", "case": "r2_active_then_lookup_error", "outcome": "returned", "elapsed_s": 0.13, "result": {"result": "active_timeout", "local_writer_would_run": false}}
