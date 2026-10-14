@@ -1,6 +1,6 @@
 # RELAY · neutral skipped-review disclosure
-NEXT: codex (Reviewer)
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 2 / 3
 
 ## Setup
@@ -64,3 +64,54 @@ Verification: the two source additions remain identical; original instructions r
 
 ## ▶ TAKE YOUR TURN — codex, Round2 CURRENT INSTRUCTIONS
 Read the actual two skill paragraphs again and verify the original four checks. Append your entire new Round2 Reviewer block AT THE ABSOLUTE END OF THIS FILE, after ALL existing text. Do NOT insert before any TAKE YOUR TURN heading, marker, or existing paragraph. Earlier content must be unchanged except header NEXT/STATUS/ROUND. Use literal VERDICT: PASS/FAIL/PARKED and Basis. PASS sets STATUS Approved, NEXT —, token done. Only edit this thread; no git, tests or artifact edits. This is round2/3.
+
+### Round 2 · Reviewer (codex)
+VERDICT: PASS
+Basis: Ship the two scoped disclosure additions. Direct rereading confirms all four requested checks; no actionable finding in these paragraphs. This approves the instruction text only, with publication gates still pending.
+
+- Neutral disclosure: `skills/1-hourly/start-task/SKILL.md:36–40` and `skills/1-hourly/relay-xyz/SKILL.md:691–695` state that independent review did not run, prohibit assigning defect severity or operator/setup fault from its absence, and prohibit creating/escalating a blocking issue or downstream upgrade into a defect.
+- Necessary explanation: `start-task/SKILL.md:37` and `relay-xyz/SKILL.md:692` permit one brief factual reason when the next action or platform requires it.
+- Actual findings and explicit gates: `start-task/SKILL.md:40–41` and `relay-xyz/SKILL.md:695–696` expressly keep those separate. The surrounding `start-task/SKILL.md:243–268` retains applicable deterministic checks, final independent QA, Approved plus passing gates for the final revision, and failed-review treatment for nonzero driver exits or missing verdicts. The relay skill's exit-status table at lines 484–489 still distinguishes approval, non-approval, stalls and close mismatches.
+- Truthful approval: both paragraphs expressly say “Keep approval status truthful”; the neutral note grants no approval or gate exemption. Both sections are identical, with six nonempty body lines.
+
+Evidence method: Verify-tier, bounded to these Markdown additions and the surrounding review requirements. The graph project `XYZ-forge` is rooted outside this worktree; coverage generation `2026-09-01T15:54:30Z` reports both skill paths as `not_tracked` and this relay as `missing`. Direct local source is the evidence; no graph content was used to establish the text.
+
+Read-only probe command (exit 0):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+from pathlib import Path
+paths = ['skills/1-hourly/start-task/SKILL.md', 'skills/1-hourly/relay-xyz/SKILL.md']
+sections = []
+for path in paths:
+    text = Path(path).read_text()
+    assert text.count('## Skipped independent review\n') == 1
+    section = text.split('## Skipped independent review\n', 1)[1].split('\n## ', 1)[0].strip()
+    assert section
+    sections.append(section)
+    print(f'{path}: nonempty section, {len(section.splitlines())} body lines')
+assert sections[0] == sections[1]
+print('PASS: both disclosure sections identical')
+mutated = sections[1].replace('Keep approval status truthful;', 'Assume approval;')
+assert mutated != sections[1]
+try:
+    assert sections[0] == mutated
+except AssertionError:
+    print('RED CONTROL: in-memory false-approval alteration rejected')
+else:
+    raise AssertionError('equality check failed to detect alteration')
+PYPROBE
+```
+Decisive output:
+```text
+skills/1-hourly/start-task/SKILL.md: nonempty section, 6 body lines
+skills/1-hourly/relay-xyz/SKILL.md: nonempty section, 6 body lines
+PASS: both disclosure sections identical
+RED CONTROL: in-memory false-approval alteration rejected
+```
+The red control establishes equality-check sensitivity; the four policy judgments come from source reading.
+
+Limits: The base-removal comparison is producer-reported in `TESTS-RESULTS/2026-10-14+GH-1055/provenance.jsonl`, which I read; I did not independently repeat it because git is prohibited this turn. No suites, executable fixtures, artifact edits, or git commands ran. Harness acceptance and publication verification remain outside this textual verdict.
+
+Round 2 disposition: STATUS Approved; NEXT —; mark the token done. This entire Round 2 Reviewer block is appended after all pre-existing text; only the header NEXT/STATUS values change above it.
