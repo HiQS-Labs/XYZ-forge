@@ -1,5 +1,5 @@
 # RELAY · PR1044 expanded landing review
-NEXT: codex
+NEXT: codex-producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -77,3 +77,69 @@ Both Round1 findings are repaired at28c014b6. Canonical deferred sections / paus
 Verification: reran26 prior manual outcomes; actual355-row canonical CLI fallback equals DB for79 active candidates,62 scored, risk/build flags and GH-418 score321. Both GH-920/GH-974 remain parked in both modes. Removing producer metadata / canonical deferral guards reproduced failures. Existing GH646 suite42/42 and GH777 ratchet passed in the separate full verify clone. Exact inputs/outputs/provenance under TESTS-RESULTS/2026-10-14+GH-1043/manual/round2. Full publication gate remains running on the preceding head and will be rerun for the production follow-up.
 
 Review the follow-up and confirm previous repairs remain intact. APPEND at absolute EOF with exact heading `### Round 2 · Reviewer (codex)`, VERDICT: PASS or FAIL and nonempty Basis. On PASS set STATUS: Approved, NEXT: —, and mark RELAY-GH1044-LANDING-20261014 done. Do not rewrite any previous body block.
+
+
+### Round 2 · Reviewer (codex)
+VERDICT: FAIL
+
+Basis: Both Round1 findings are repaired, and prior bounded planner checks still pass. One required selected-repository contract remains broken on the degraded native CLI path. Reviewed expanded source against locally recorded origin/development `3473ba8cbde89c5b671529c0b006364b543fb2ed` by read-only object decoding, without Git commands. Seeded HEAD is `2b76b11add161c92748fe76a7cc740b2f2d5cd7b`, containing production follow-up `28c014b6`. Graph project `XYZ-forge`, generation `2026-09-01T15:54:30Z`, is stale/not tracking planner paths; exact source reads supplied the evidence.
+
+1. **[Blocker — high confidence] Native CLI fallback still mixes repositories.** `skills/3-weekly/weekly-planner/scripts/planner_core.py:830` invokes the unscoped JSON reader. Unlike the direct reader's `WHERE repo_id = ?` at `:822`, `utils/py/releases_app.py:4438` selects every roadmap row and exports no repository identity. URL checks at `planner_core.py:864`–`:869` apply only when a URL exists, but the canonical schema permits null `issue_url` and issue numbers are unique per repository (`releases_app.py:634`–`:651`). On a shared ledger with an imported URL-less foreign row whose issue number overlaps a selected-repository open issue, direct-reader failure schedules foreign work as selected-repository work. The producer's `repo_scoped_roadmap` manual check covers only the direct reader. Preserve selected-repository identity through the canonical JSON seam (or provide a supported scoped reader), and apply it before assignment. Check existing consumers before changing the default scope of all JSON reads.
+
+   Probe below copies the seeded read-only ledger into memory and adds one foreign row **in memory only**. It invokes the actual canonical reader, holds live input constant at the committed 242-issue snapshot, and compares direct vs degraded CLI intake. No foreign row in production is claimed. Command `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 .relay-scratch/repo_scope_probe.py` exited **0**. Decisive output:
+
+   ```text
+   DB GH418 titles: ['Marathon planner still reads the frozen ROADMAP.md']
+   CLI GH418 titles: ['Marathon planner still reads the frozen ROADMAP.md', 'Foreign repository work']
+   CLI repo identity keys: []
+   ```
+
+#### Exact nonmutating scope probe
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY_SCOPE'
+from pathlib import Path
+from types import ModuleType,SimpleNamespace
+from unittest.mock import patch
+from contextlib import redirect_stdout
+from io import StringIO
+import sqlite3,json
+root=Path.cwd()
+def load(p):
+ m=ModuleType(p.stem);m.__file__=str(p);exec(compile(p.read_text(),str(p),"exec"),m.__dict__);return m
+m=load(root/"skills/3-weekly/weekly-planner/scripts/planner_core.py");r=load(root/"utils/py/releases_app.py");realconnect=sqlite3.connect
+def memory():
+ src=realconnect(f"file:{root/'releases.db'}?mode=ro",uri=True);dst=realconnect(":memory:");src.backup(dst);src.close();dst.row_factory=sqlite3.Row
+ dst.execute("PRAGMA foreign_keys=ON")
+ dst.execute("INSERT INTO repos (global_id,slug) VALUES ('repo-01ARZ3NDEKTSV4RRFFQ69G5FAV','Other/Project')")
+ other=dst.execute("SELECT id FROM repos WHERE slug='Other/Project'").fetchone()[0]
+ row=dict(dst.execute("SELECT * FROM roadmap_items WHERE gh_number=418").fetchone());row.pop("id")
+ row.update(repo_id=other,global_id="rmi-01ARZ3NDEKTSV4RRFFQ69G5FAV",title="Foreign repository work",issue_url=None,raw_text="")
+ keys=list(row);dst.execute("INSERT INTO roadmap_items ("+",".join(keys)+") VALUES ("+",".join("?" for _ in keys)+")",list(row.values()))
+ return dst
+buf=StringIO()
+with patch.object(r,"resolve_root",return_value=root),patch.object(r,"artifact_paths",return_value={"db":root/"releases.db"}),patch.object(r,"connect",side_effect=lambda p:memory()),redirect_stdout(buf):
+ r.cmd_roadmap_list(SimpleNamespace(root=str(root),as_json=True))
+live={i["number"]:i for i in json.loads(Path("TESTS-RESULTS/2026-10-14+GH-1043/manual/open-issues-snapshot.json").read_text())}
+with patch.object(m,"ensure_temp_dir",return_value=root/".relay-scratch/tmp"),patch.object(m,"get_open_issues",return_value=live),patch.object(m,"get_release_milestones",return_value={}):
+ with patch.object(sqlite3,"connect",side_effect=lambda *a,**k:memory()):
+  db=m.ingest_weekly_intake(root,"HiQS-Labs/XYZ-forge")
+ with patch.object(sqlite3,"connect",side_effect=sqlite3.OperationalError("controlled direct-reader failure")),patch.object(m,"run_cmd",return_value=buf.getvalue()):
+  cli=m.ingest_weekly_intake(root,"HiQS-Labs/XYZ-forge")
+print("DB GH418 titles:",[i["title"] for i in db["roadmap_items"] if i["gh_number"]==418])
+print("CLI GH418 titles:",[i["title"] for i in cli["roadmap_items"] if i["gh_number"]==418])
+print("CLI repo identity keys:",sorted(set(json.loads(buf.getvalue())[-1]) & {"repo_id","repo_slug"}))
+PY_SCOPE
+```
+
+#### Confirmed repairs and limits
+
+- Read-only command `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 .relay-scratch/round2_probe.py` exited **0**. Actual JSON reader: **355 rows**, all five rating keys plus risk. Real-ledger DB/CLI parity: **79 active / 62 scored**, GH-418 **321**, GH-920/GH-974 parked in both. In-memory metadata removal produced **0 scored**; in-memory canonical section/pause guard removal returned **[920, 974]** to active work. These independently confirm committed round2 producer-contract evidence.
+- Same probe: held-chain ready **[]**, cyclic ready **[3]**, prerequisite order **[1, 2]**, ordinary validation-receipt ready **[1]**, no held-chain daily `P0 ACTION: Land PR`, native empty **['native_prs', 0]**, unavailable/invalid/truncated live issue input rejected. Target release **0.6.0**, manifest **12 shipped / 8 dialed-in**.
+- Ledger hashes unchanged: `releases.db` `13beb45f7e1bca3bc4dd85ee775fd63397351ee358b4d39ceda2aceda9f0043d`; `releases.sql` `853d7a6cf3d9208a5892ff240f971790418726e4babf5ec1ae005fb2e375d8c6`.
+- Source confirms exact consumer advancement, transparent delegation, retry/parameter roles, and conditional rollout/rollback in N+1 instructions. The unapproved `test/test_planner_core.py` remains absent. JSON additions are additive; `utils/py/site_build.py:98` checks required-key inclusion and `utils/hq/rollup.sh:56` reads named fields, so those inspected consumers tolerate extra keys.
+- `gh pr view 1044 --repo HiQS-Labs/XYZ-forge --json number,baseRefName,headRefOid,state` exited **0**: PR **OPEN**, base **development**, remote head **b706ac89f1695a314a14c4aaba70bc0bc83d5874**. Local repairs are not yet attested as the remote PR head.
+- **[Unverified — needs clone run]** Final publication gate remains outstanding for the repaired candidate. GH646/GH777 passes are producer receipts, not reviewer reruns. No validate/test/pytest/executable fixture ran here. IDE discovery/deployment and current live issue refresh are unverified; probes use the committed snapshot. No merge or deployment approval is given.
+
+Handoff: repair selected-repository filtering through the actual CLI fallback, record a bounded shared-ledger comparison using existing/manual verification, then return for independent review. Only this relay file changed outside permitted scratch and pinned tick state.
