@@ -19,7 +19,7 @@ risk: 3
 
 | What was just completed | What's next |
 |---|---|
-| Existing cleanup180 tests, three start-task suites and39 manual cases passed; receipts retained | Final independent QA, classified gate, ready PR and targeted retirement |
+| Final QA round2 Approved; existing cleanup180 tests, three start-task suites and41 manual cases retained | Fresh classified gate, ready PR and targeted retirement |
 
 ## Requirements and bet
 
@@ -74,10 +74,12 @@ Plan QA attested Approved at `04b787c2`, reviewed head `3bb6231f`. Qualified sch
 
 ## Verification and ownership
 
-This workflow owns only the sibling task clone slug `XYZ-forge-gh1059-published-clone-retirement-2026-10-14` and its `-gate` helper, on branch `fix/XYZ-forge-gh1059-published-clone-retirement-2026-10-14`. The operator-designated primary and all other folders remain outside retirement scope.
+This workflow owns only the sibling task clone slug `XYZ-forge-gh1059-published-clone-retirement-2026-10-14` and its `-gate` and `-verify` helpers, on branch `fix/XYZ-forge-gh1059-published-clone-retirement-2026-10-14`. The operator-designated primary and all other folders remain outside retirement scope.
 
 Existing cleanup suite:180/180 at c391afec. Three existing start-task suites and39 manual cases passed at60c1ad18. The manual API/URL surface is a fixture, not live GitHub proof; Git fetch/ancestry, Trash moves and linked-worktree removal are real isolated operations. Final publication will supply the live same-origin PR evidence. Red controls: removing admission breaks successful open-PR classification; removing draft validation admits draft refs; a zero-PR routing witness reached the broad path at c391 and is rejected after60c. Fresh inspection catches changed PR metadata and preserves. Initial probe authoring errors (empty fixture commit, nonempty fixture Trash) were corrected before the retained completed run; neither was a product failure. No new test file/suite/registry/gate was added.
 
 ### Post-approval input correction
 
 Final round1 approved at8eb6f70c (reviewed e86e1371). Before publication, a nonmutating sentinel probe observed that `--primary ""` resolved to the caller's current directory and entered targeted retirement instead of rejecting missing explicit identity. No removal occurred. The published-mode argument check now requires an absolute primary path; ordinary modes are unchanged. The in-flight first full gate at8eb was intentionally interrupted and is not passing evidence. This concrete scope correction receives cumulative final review round2/3 and a fresh final gate; no speculative re-review or cap reset.
+
+Final round2 attested Approved at26574f1c, reviewed e013552e. The remaining edits update only this progress/ownership record; runtime and policy match that reviewed head. Both task-owned helper suffixes are explicit scope: the interrupted `-gate` and fresh `-verify`. Required evidence is committed before their closeout.
