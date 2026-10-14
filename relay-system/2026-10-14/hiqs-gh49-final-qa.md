@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -97,5 +97,27 @@ Cite file:line for every finding. Set STATUS: Approved if it passes.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+Ship.
+
+VERDICT: PASS
+
+Basis: The seeded diff implements the approved documentation/rename plan. The network guidance preserves diagnostic uncertainty, and the recorded fresh-agent probe is supported by its raw transcript. No required correction found; this approval covers the reviewed artifact, not deployment or an unrun runtime gate.
+
+swept file: yes
+
+Read the entire `.relay-artifacts/gh49-final.diff`, all six resulting changed files (including the complete skill files and CHANGELOG), approved plan-QA record, relevant `consumer/chain.ts:220–325`, and raw probe transcript/final message. No additional pre-existing defect found in the affected files. Source paths below are relative to task clone `/Users/noelsaw/Documents/GH Repos/hiqs-ai-resolve-gh49-hiqs-skill-rename-2026-10-14` (`R`). Raw probe directory (`P`) is `/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-hiqs-ai-resolve/e1cc774f-3230-482b-8148-e7d7414b4fa4/scratchpad/durability-probe`.
+
+- **[Pass] Rename and scope match the plan.** `skills/hiqs-research/SKILL.md:2`, `:6`, `:16` and `skills/hiqs-image/SKILL.md:2`, `:6`, `:41` update names, titles and canonical paths while retaining former names. Runtime description/link are updated at `skills/hiqs-chain/SKILL.md:3`, `:18`; `CHANGELOG.md:5` records the change. The artifact has exactly six diff sections: CHANGELOG, the plan, probe record and three skill files; no runtime, bundle or manifest section. A read-only Python scan of all skill Markdown returned exactly `hiqs-image/SKILL.md:41` and `hiqs-research/SKILL.md:16` for old names. Both frontmatter names equal their folder names, and both old folders are absent. This meets `docs/issue-49/plan.md:35–40` without rewriting historical evidence.
+
+- **[Pass] Canonical network guidance and links are correct.** `skills/hiqs-chain/SKILL.md:24–28` contains one Network requirement section after the JSON/reporting paragraph; the wrapper pointers at `skills/hiqs-research/SKILL.md:12` and `skills/hiqs-image/SKILL.md:33` resolve to its heading. All five local Markdown links in the three skill files resolve. The wording “Diagnostic clue, not proof” matches `consumer/chain.ts:306–318` (dispatch precedes fetch; non-timeout transport errors map to `contract_rejected`) and `:243`, `:314`, `:321–323` (response-shape rejection can omit HTTP status too). No runtime classifier fix is implied. In-memory red control, command `python3 -c 'from pathlib import Path; import sys; s=Path(sys.argv[1]).read_text(); print(s.count("../resolve-image/SKILL.md"), s.replace("../hiqs-image/SKILL.md","../resolve-image/SKILL.md").count("../resolve-image/SKILL.md"))' "$R/skills/hiqs-chain/SKILL.md"`; the equivalent expression in the combined read-only probe exited **0**, decisive output `STALE-LINK CONTROL: 0 -> 1`. No artifact was mutated.
+
+- **[Pass] Durability record supports its bounded claim.** `docs/issue-49/durability-probe.md:5`, `:9`, `:13–30` records a sandboxed agent that reports failure and recommends network-enabled execution rather than asserting a contract bug. Raw `P/transcript.log:8` records `sandbox: workspace-write`; `:87` records runtime exit 4; `:96–97` record two `ENOTFOUND` results; `:106`, `:115` preserve diagnostic uncertainty and subsequent contract investigation. The final message is verbatim and both copied skill documents equal the reviewed files. Probe command: `python3 -c 'from pathlib import Path; import sys; r,p=map(Path,sys.argv[1:]); d=(r/"docs/issue-49/durability-probe.md").read_text(); q="\n".join(x[2:] for x in d.splitlines() if x.startswith("> ")); assert q and q==(p/"last-message.md").read_text().rstrip("\n"); assert all((r/"skills"/n/"SKILL.md").read_bytes()==(p/"skills"/n/"SKILL.md").read_bytes() for n in ("hiqs-research","hiqs-chain")); print("PASS: verbatim final message; both probe skills equal reviewed files")' "$R" "$P"`. Exit **0**; decisive output `PASS: verbatim final message; both probe skills equal reviewed files`. This is one successful diagnostic-guidance probe, not proof of universal agent behavior or successful provider execution.
+
+Limitations: Graph Verify lookup found only the other checkout's `hiqs-ai-resolve` generation `2026-09-12T03:16:16Z`; chain lookup returned zero, and coverage reported untracked/missing/excluded paths. Direct source reads supplied review evidence. Intake previews are producer-reported, not independently rerun. No Git command, test suite, executable fixture, new agent run, paid request or deployment was performed. Runtime remeasurement is **[Unverified — needs clone run]**; the harness gate remains separate. Only this relay file was edited.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) receives the completed review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
