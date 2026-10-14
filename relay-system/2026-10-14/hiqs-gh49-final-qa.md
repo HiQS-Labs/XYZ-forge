@@ -120,4 +120,12 @@ Limitations: Graph Verify lookup found only the other checkout's `hiqs-ai-resolv
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) receives the completed review.
 
+
+### Attestation · relay-drive — 2026-10-14T23:21:02Z
+task: RELAY-hiqs-gh49-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 9785789c3abcb9b70b1c3300bb6ebf239b5ff9bb
+added-range: 7849+4776
+added-sha256: 1b7d2aa0e44ce1221f6024c17ef0ee9b64c6e76e58d0bce18e437e864d493b62
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
