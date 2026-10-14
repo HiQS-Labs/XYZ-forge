@@ -1294,7 +1294,7 @@ def main():
     parser.add_argument("--scan-only", action="store_true", help="Only audit and list checkouts")
     parser.add_argument("--prs-only", action="store_true", help="Only list and sequence open PRs")
     parser.add_argument("--teardown-only", action="store_true", help="Only perform checkout teardown (skip PR merges)")
-    parser.add_argument("--retire-published-pr", type=int, default=0, help="Retire only explicit checkouts recoverable from this fully published PR; never merge")
+    parser.add_argument("--retire-published-pr", type=int, default=None, help="Retire only explicit checkouts recoverable from this fully published PR; never merge")
     parser.add_argument("--checkout", action="append", default=[], help="Exact absolute task-owned checkout path for --retire-published-pr (repeatable)")
     parser.add_argument("--reconcile-pr", type=int, default=0, help="Run post-merge reconcile on a specific PR number")
     parser.add_argument("--integration-branch", default="development", help="Branch PRs land on and the primary must be able to fast-forward (default: development)")
@@ -1313,8 +1313,8 @@ def main():
     except (OSError, RuntimeError) as exc:
         log_err(f"cannot resolve the primary path {args.primary!r}: {exc}")
         return 2
-    if args.retire_published_pr or args.checkout:
-        if (args.retire_published_pr <= 0 or not args.checkout
+    if args.retire_published_pr is not None or args.checkout:
+        if (not args.retire_published_pr or args.retire_published_pr <= 0 or not args.checkout
                 or args.root or args.prefix or args.exclude or args.strategy or args.show_merge_policy
                 or args.scan_only or args.prs_only or args.teardown_only or args.reconcile_pr
                 or args.marker or args.allow_unready_primary or args.resume or args.backup_first or args.backup_root):
