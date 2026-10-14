@@ -19,7 +19,7 @@ risk: 3
 
 | What was just completed | What's next |
 |---|---|
-| Operator confirmed retirement after branch and PR publication; intake and rating registered | Independent plan QA, then bounded implementation |
+| Independent plan QA Approved; implemented opt-in publication proof and targeted reuse of safety/removal paths | Disposable-clone verification and final QA |
 
 ## Requirements and bet
 
@@ -67,3 +67,7 @@ Unknowns: current old-clone inventories and individual ownership have not been a
 - [ ] Only explicitly supplied task-owned paths retire; no primary writes, broad merges or new remover.
 - [ ] Start-task automatically invokes published closeout; local-only/active/unknown state is preserved.
 - [ ] Existing/manual verification, red controls, plan/final QA and appropriate final gate have retained receipts.
+
+## Implementation notes
+
+Plan QA attested Approved at `04b787c2`, reviewed head `3bb6231f`. Qualified schema009 accepted-start was recorded for owned row `rmi-01M4YBF6YKJ8MJP63B15FB6PZS` before implementation. The publication validator fetches the exact named origin head, not a cached tracking ref; failure preserves even a merged PR whose head branch is no longer fetchable (normal post-merge cleanup remains available). Native linked-worktree removal updates parent Git metadata, as clarified by plan QA; no primary landing/working-tree/governance writer runs. Existing merged-only invocation paths omit the new optional argument.
