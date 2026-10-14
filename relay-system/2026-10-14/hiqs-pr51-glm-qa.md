@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -95,5 +95,23 @@ Cite file:line for every finding. Set STATUS: Approved if it passes.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — Round 1 (commandcode)
+
+All probes run read-only against the task clone at PR head `ae7a29e` (clean tree, `git status` empty). Scratch under `$TMPDIR` per envelope; no validate/test/pytest/fixture runs.
+
+- **[Pass] Artifact fidelity.** `git diff origin/main...HEAD` at `ae7a29e` is byte-identical to `.relay-artifacts/pr51.diff` (`diff -u` exit 0). Changed set = 6 files, +103/−8, exactly the plan's scope.
+- **[Pass] Q1 — rename complete and consistent.** `git grep -n -E 'resolve-research|resolve-image' -- 'skills/*.md'` returns only the two "formerly" notes (`skills/hiqs-image/SKILL.md:41`, `skills/hiqs-research/SKILL.md:16`). Frontmatter `name:` equals folder name for all 12 skills (probed every `skills/*/SKILL.md`). Old names outside `skills/` are all historical or evidence: `CHANGELOG.md:6-7` (prior entries, declared exclusion), `docs/issue-41/**`, `docs/catalog-ops/ledger.md:624` (historical ledger of Oct 7–8 work — not in the plan's enumerated exclusion list but unambiguously historical, correctly left), `scripts/build-image-manifest.ts:19` (BY string reproducing signed evidence). No hits in `consumer/ src/ packages/ tests/` — matches plan.md:22's claim.
+- **[Pass] Q2 — Network section accurate against `consumer/chain.ts`.** `dispatched = true` at `consumer/chain.ts:306` precedes `io.fetch` at `:307`; the catch at `:318` maps non-`ProviderFailure` errors (transport, e.g. DNS `ENOTFOUND`) to `contract_rejected` with `dispatched` recorded; an HTTP-200 shape rejection throws `ProviderFailure("contract_rejected")` from `content()` (invoked at `:314`; `content()` at `:231` throws `contract_rejected` with no `httpStatus` on shape mismatch, and `boundedJSON` at `:217` likewise on overflow/parse) — identical signature (`dispatched: true`, no `httpStatus`, empty text/URLs), exactly as `skills/hiqs-chain/SKILL.md:28` states. Nothing overstated: hedged as "can indicate"/"Diagnostic clue, not proof", and timeout stays distinct (`reason: "timeout"` via the same catch), which the doc does not conflate. The Codex sandbox wording ("a sandbox mode or approval that permits network", `SKILL.md:26`) is appropriately generic rather than pinning flags that drift.
+- **[Pass] Q3 — pointers findable, no weakened admission checks.** Heading `## Network requirement` at `skills/hiqs-chain/SKILL.md:24` → GitHub anchor `#network-requirement` matches both wrapper links (`skills/hiqs-research/SKILL.md:12`, `skills/hiqs-image/SKILL.md:33`). `hiqs-research`'s pointer adds the blocked-run trigger ("before running it inside an agent sandbox or diagnosing an all-`contract_rejected` result"); both wrappers retain the admission guard ("Do not substitute direct tools or pretend an unavailable/refused recipe was admitted", `hiqs-research/SKILL.md:10`) — nothing points an agent toward weakening admission.
+- **[Pass] Q4 — exclusions correct.** `git diff --quiet origin/main -- skills/hiqs-chain/assets/image-manifest.json` and `... -- scripts/build-image-manifest.ts` both exit 0 (unchanged); their old-name text lives inside digested/signed evidence, correctly preserved.
+- **[Pass] Q5 — CHANGELOG + durability probe.** `CHANGELOG.md:5` is one accurate line naming GH-49, the #48 mitigation and the #50 pointer. Probe record (`docs/issue-49/durability-probe.md`): cited commit `b34c36c` is the rename commit and an ancestor of HEAD (`git merge-base --is-ancestor` exit 0); the recorded exit-4/`contract_rejected`/no-`httpStatus` control matches the code path verified above; the verbatim final message shows the agent reached the right diagnosis without hints. Timestamps (2026-10-14 23:17 UTC) consistent with the relay date.
+- **[Nit] Ephemeral evidence link.** `docs/issue-49/durability-probe.md:48` links the "full JSON result" to `/private/tmp/hiqs-node22-research-result.json` — an ephemeral path outside the repo a future reader cannot open, while the sentence claims it "preserves timestamps, attempts, and exact... digests". The plan only required a transcript excerpt (recorded verbatim), so no change is required for #49; optional follow-up would copy the JSON under `docs/issue-49/` or drop the link. Doc-only, non-blocking.
+- **Pre-existing sweep (GH-268):** swept file: yes — read all four touched Markdown files in full plus `consumer/chain.ts:185-330`. No pre-existing defects found in them beyond the nit above; the quirky `unknownOutcome` overload at `chain.ts:318` (the `dispatched` boolean passed as `unknownOutcome`) is precisely the #48/#50 misclassification the doc accurately describes, not a new finding.
+
+**VERDICT: PASS**
+Basis: every plan check reproduced against the clone at `ae7a29e` — rename complete with only the two sanctioned "formerly" notes, Network section technically accurate against the runtime source line-for-line, anchors resolve, exclusions verified unchanged, CHANGELOG and probe record honest and internally consistent. One non-blocking Nit. This independently corroborates the prior Codex PASS (hiqs-gh49-final-qa) without repeating its findings.
+
+swept file: yes
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
