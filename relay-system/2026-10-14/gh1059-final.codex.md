@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -110,3 +110,21 @@ Original final review approved e86e1371 (attestation8eb6f70c). A subsequent sent
 Fresh full verify clone at6a71397b:41 manual cases pass, including empty/relative primary rejection and all earlier39 cases/red controls. Evidence is under manual/primary-scope with committed provenance. The initial8eb full gate was stopped, not passed, when this concrete gap was observed; only own gate processes were stopped, and clone identity stayed intact. A fresh full gate follows this corrected approval.
 
 This is cumulative final round2/3, not a cap reset. Current token: RELAY-GH1059-FINAL-R2-20261014; prior token is terminal, do not touch it. Read prior full approval and the small e86e1371-to-current delta in merge_cleanup.py argument dispatch, two policy clarifications and current41-case input/output; grade explicit-primary identity, unchanged defaults and retained verification. No new machinery/test request. APPEND at absolute EOF with `### Reviewer (codex) · Round 2`, VERDICT: PASS/FAIL, nonempty Basis and swept file yes/no. On PASS set STATUS: Approved, NEXT: — and done current R2 token. Read-only, thread only; no git/tests/fixtures, permitted nonmutating scratch probes only.
+
+### Reviewer (codex) · Round 2
+
+Ship the corrected implementation through the fresh final publication gate.
+
+VERDICT: PASS
+Basis: The explicit-primary correction rejects the observed empty-input failure before targeted retirement, preserves ordinary-mode routing and agrees with both updated policy consumers. Current source and retained manual evidence support this bounded approval. No material defect or outstanding Blocker/Should was found.
+swept file: yes
+
+- [Pass] Explicit primary identity is enforced before targeted dispatch: `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1316` selects the scoped mode; `:1318` checks the expanded input's absolute form before dispatch at `:1323`. Reviewer command: `PYTHONDONTWRITEBYTECODE=1 python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "" --retire-published-pr 1059 --checkout /nonexistent-candidate`. Command exit: **2**. Decisive output: “published retirement requires a positive PR, absolute --primary and --checkout path(s), without other workflow modes/overrides”. Output was captured only in `.relay-scratch/tmp/empty-primary.out`. No retirement was attempted.
+- [Pass] The correction stays within targeted routing. Ordinary modes continue from `merge_cleanup.py:1325`; the publication/ref/fresh-inspection/removal chain remains `:1265` → `:1267` → `:1271`, and ordinary teardown omits `published_pr` at `:1516`. Both Python owners and both changed skill files were swept in full, including pre-existing code; SOP section4 and WORKTREE-SAFETY section7 were cross-checked. No additional material pre-existing defect was found in this bounded sweep.
+- [Pass] Policy names the same input and preservation contract: `skills/1-hourly/start-task/SKILL.md:294` requires a separately resolved absolute primary; `skills/2-daily/merge-cleanup/SKILL.md:455` explicitly rejects empty/relative values. Current-driver, outside-target execution and preserve-on-unknown requirements remain at start-task `:298` and `:300`, and merge-cleanup `:465`.
+- [Pass] Retained evidence includes the failing input and corrected cases. `TESTS-RESULTS/2026-10-14+GH-1059/manual/primary-scope/empty-primary-red-input.md:10` uses a stopping retirement sentinel; `empty-primary-red.log:1` records “RED: empty primary inferred from CWD”. Corrected input at `executed-probe.md:83` requires exit2 for empty/dot primary values; `gh1059-manual-results.json:168` and `:173` record PASS; `gh1059-manual-output.log:258` reports “Manual cases: 41”. `TESTS-RESULTS/2026-10-14+GH-1059/provenance.jsonl:6` attributes that fresh full-clone manual run to 6a71397b. These are producer receipts, not reviewer fixture reruns.
+- [Unverified — needs clone run] The initial full gate was interrupted, not passed (`TESTS-RESULTS/2026-10-14+GH-1059/provenance.jsonl:5`). The fresh classified final gate, exact live GitHub publication/hosted checks and actual task retirement remain producer obligations under `PROJECT/2-WORKING/GH-1059-PUBLISHED-CLONE-RETIREMENT.md:61`. Approval does not attest those later actions.
+
+Evidence limits: Verify-tier graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-10-13T06:40:42Z`, describes the maintained primary rather than this seeded revision. The bounded Function search returned four owners with no further page; coverage reported no recorded gaps for the six named source/policy paths, changed start-task metadata and an excluded cache subtree. Graph tracing required unavailable approval; current source supplied the relevant call chain. No independently established Git revision diff is claimed because Git commands were prohibited. Narrow reviewer sentinels additionally observed empty/dot/relative rejection, absolute-primary targeted dispatch and ordinary relative-primary policy routing without invoking Git or cleanup; these are routing observations only. No suite, executable fixture, pytest, gate or Git command ran here.
+
+Relay closed (Approved), no further reviewer turn needed. Handing completion to codex-producer for the fresh final gate, publication and narrowly scoped retirement or exact preservation report.
