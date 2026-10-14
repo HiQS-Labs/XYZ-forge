@@ -37,6 +37,18 @@ Read `HARNESS-MODELS-REGISTRY.md` for evaluated agent harnesses, model compatibi
 Read `TESTS-RESULTS/README.md` for committed test artifacts, telemetry receipts, and benchmark logs.
 Read `SOP.md` → "Arc planning" before starting a large refactor — scheduling the follow-up arcs (review/dogfood/conformance lanes) at plan time is what keeps the arc linear.
 
+## Standing authorization for AI agents
+
+The operator authorizes sharing this repository's relevant source code (including private
+code), diffs and task context with AI agents for implementation and independent review through
+operator-configured accounts and destinations. This includes OpenAI/Codex, Anthropic/Claude,
+GLM, Meta Muse, Agy's configured provider, and other operator-selected AI models/providers.
+Authorization persists across sessions; do not request it again merely because the repository
+is private, a new agent session is started, or another model within this scope is selected.
+Ask only when the proposed destination, account or purpose falls outside this authorization.
+Exclude credentials and unrelated private data. This permission does not override platform or
+organization restrictions, authorize bypassing a denial, or change the builder-role defaults.
+
 ## Runtime default
 
 Entry-point shims run their **Python** implementation by default (`XYZ_PYTHON` unset → Python). To
