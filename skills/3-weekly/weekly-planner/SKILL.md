@@ -67,7 +67,8 @@ skills/3-weekly/weekly-planner/
 ### Step 0: Preflight & Isolated Scratch Verification
 1. Verify repo root and ensure `<repo_root>/temp/` exists and is gitignored (`.gitignore`).
    - If `temp/` does not exist, ask user permission to create it.
-2. Scratch artifacts and triage files MUST be written into `temp/planner/`, never the repo root.
+2. Resolve this loaded skill's physical folder and set `PLANNER_ENGINE` to its absolute `scripts/planner_core.py` path. Set `PLANNER_REPO` to the absolute target checkout. Use the bundled engine, including after Skills Army deployment; a project-local copy may be older. Requires Python 3 and authenticated `gh`. Native CLI fallback requires the owning repo's releases CLI to export repository selection, ratings and risk; update that producer first. Missing metadata stops intake rather than scheduling unscoped/unrated work.
+3. Scratch artifacts and triage files MUST be written into `temp/planner/`, never the repo root.
 
 ### Step 1: Ingest Signals & Team Weekly Plan
 1. Identify the **Team Weekly Plan GitHub Issue** (via `--issue <N>` or search):
@@ -83,7 +84,7 @@ skills/3-weekly/weekly-planner/
 ### Step 2: Establish the Topological Merge Sequence
 Run the shared sequencing engine:
 ```bash
-python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root . --mode sequence
+python3 "$PLANNER_ENGINE" --repo-root "$PLANNER_REPO" --mode sequence
 ```
 The sequence classifies all open PRs into 5 distinct phases with CI validation and dependency ordering:
 1. **Phase 1: Ready to Land** — Approved, `mergeable: MERGEABLE`, passing/neutral CI (`statusCheckRollup`), non-draft, and unblocked by prerequisite PRs.
@@ -111,7 +112,7 @@ Confirm any claimed stack with merge-base and diff evidence; nearby PR numbers o
 ### Step 4: 2nd-Pass Adversarial Audit
 Run the adversarial engine:
 ```bash
-python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root . --mode audit
+python3 "$PLANNER_ENGINE" --repo-root "$PLANNER_REPO" --mode audit
 ```
 If subagents are enabled, invoke an independent subagent (`invoke_subagent` with role `Plan Auditor`).
 In environments where subagents cannot be spawned, invoke `/relay-xyz` or `/consult --models codex,agy` to challenge the plan:
@@ -142,7 +143,7 @@ In environments where subagents cannot be spawned, invoke `/relay-xyz` or `/cons
 
 The companion `daily-planner` skill relies on `planner_core.py` to pivot the active weekly plan:
 ```bash
-python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root . --mode daily
+python3 "$PLANNER_ENGINE" --repo-root "$PLANNER_REPO" --mode daily
 ```
 1. Queries PRs merged and issues closed in the last 24–36 hours (filtered by `mergedAt` and `closedAt`).
 2. Compares against the baseline weekly plan (`temp/planner/weekly-plan-*.json` or `WEEKLY-PLAN-*.md`) and marks completed items `[DONE]`.

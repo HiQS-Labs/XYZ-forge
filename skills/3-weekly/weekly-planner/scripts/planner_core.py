@@ -832,6 +832,12 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
         raw_items = json.loads(out)
         if not isinstance(raw_items, list):
             raise ValueError("Native roadmap CLI must return a list")
+        required = {"is_selected_repo", "rating_pri", "rating_sev", "rating_appeal",
+                    "rating_effort", "rating_ovr", "risk"}
+        if any(not isinstance(row, dict) or not required.issubset(row)
+               or not isinstance(row["is_selected_repo"], bool) for row in raw_items):
+            raise ValueError("Native roadmap CLI lacks repository/rating metadata; update the owning repo's releases CLI first")
+        raw_items = [row for row in raw_items if row["is_selected_repo"]]
     elif raw_items is None and not fallback_mode and releases_db.exists():
         raise RuntimeError("Native roadmap is unavailable; repair its source or explicitly select --fallback")
 
