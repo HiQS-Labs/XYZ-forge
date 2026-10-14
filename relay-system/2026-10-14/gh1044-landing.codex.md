@@ -1,6 +1,6 @@
 # RELAY · PR1044 expanded landing review
-NEXT: codex
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 3 / 3
 
 ## Setup
@@ -148,3 +148,63 @@ Handoff: repair selected-repository filtering through the actual CLI fallback, r
 Round2 selected-repository seam repaired at acb82a49. Canonical JSON keeps its existing all-repository default but additively exports repo_slug and boolean is_selected_repo derived from canonical settings.repo_slug. Planner fallback requires identity/rating/risk fields then filters selected rows before common assignment. Old producers fail with explicit update instruction, preserving authoritative empty lists. No schema/default scope change. Actual shared-ledger probe with URL-less overlapping foreign GH418 now agrees with direct reader; removing the filter returns foreign work (witnessed red control). Actual CLI parity and all26 prior outcomes rerun in separate full verify clone. Committed evidence in manual/round3. Weekly/daily instructions also resolve the installed shared engine rather than an assumed stale project/IDE path and state producer-first compatibility.
 
 Final review: verify the complete expanded repair plus this narrow follow-up, including additive JSON consumers and old-producer rejection. No new tests/gates. Full final publication gate is running in a separate full clone; it is an independent merge prerequisite, not something to self-attest here. APPEND at absolute EOF with parser-supported exact heading `### Reviewer (codex) · Round 3` followed by VERDICT: PASS/FAIL and nonempty Basis. Do not use `### Round 3 · Reviewer (codex)` (the harness does not recognize that form). On PASS set STATUS: Approved, NEXT: — and mark task done.
+
+
+### Reviewer (codex) · Round 3
+VERDICT: PASS
+
+Basis: No remaining blocking defect found in the expanded seeded artifact. Independently verified the Round2 repository-scope repair through the actual canonical JSON producer and planner consumer, including a failing in-memory negative control. Reviewed the complete planner source and the N+1, weekly/daily instruction and capture changes against locally recorded development baseline `3473ba8cbde89c5b671529c0b006364b543fb2ed`, using read-only loose/packed object decoding without Git commands. Seeded HEAD is `2cef261b8c46fb1db37052b723a9e0b0bb2d7937`; object ancestry confirms original peer `b706ac89` and repairs `80338e0d`, `28c014b6`, `acb82a49` remain ancestors. Graph Verify lookup/coverage confirmed project `XYZ-forge`, generation `2026-09-01T15:54:30Z`, stale/untracked planner paths and changed releases source; exact source reads supplied the material evidence.
+
+#### Verified producer/consumer repair
+
+- `utils/py/releases_app.py:4438`–`:4452` preserves the all-repository JSON default and additively exports `repo_slug`, boolean `is_selected_repo`, the five rating fields and risk. `skills/3-weekly/weekly-planner/scripts/planner_core.py:835`–`:840` rejects missing/malformed metadata and filters selected rows before the common eligibility, scoring and assignment path. This fixes the origin of the lost repository identity; URL heuristics no longer carry the scope contract.
+- The independent probe used the previous review's exact `PY_SCOPE` reader/intake setup, copied the ledger read-only into memory, and inserted one URL-less foreign GH418 row only in memory. The actual producer returned **356 rows: 355 selected, 1 foreign**. DB and degraded CLI both returned only `Marathon planner still reads the frozen ROADMAP.md` for GH418. Removing only the selection filter in the in-memory module scheduled `Foreign repository work`; the same no-foreign-work assertion then failed. No production foreign row is claimed.
+- Missing selection metadata, missing ratings and nonboolean selection each raised `ValueError: Native roadmap CLI lacks repository/rating metadata; update the owning repo's releases CLI first`. Both `[]` and a foreign-only JSON list remained **native_prs / 0 tasks**, without general-backlog fallback.
+
+Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 .relay-scratch/round3_scope_probe.py` — **exit 0**. Decisive output:
+
+```text
+rows/selected/foreign: 356 355 1
+native empty native_prs 0
+foreign only native_prs 0
+RED: same no-foreign-work assertion fails with filter removed
+```
+
+#### Earlier repairs and downstream behavior remain intact
+
+Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 .relay-scratch/round3_contract_probe.py` — **exit 0**. This probe called the actual JSON reader with read-only connections, pinned GitHub input to the committed **242-issue snapshot**, compared DB/CLI task signatures (issue, title, score, risk gate, release-build flag and assignment), and exercised pure classification/rendering functions. Decisive output:
+
+```text
+snapshot issues / JSON rows: 242 355
+DB/CLI active/scored: 79 62
+GH418 score: 321
+ deferred GH920/GH974: parked in both
+ target / shipped / dialed: 0.6.0 12 8
+zero open native: native_prs 0
+invalid live input rejected
+truncated live input rejected
+unavailable live input propagated
+held chain ready: []
+daily held-chain landing instruction: absent
+cycle ready: [3]
+prerequisite order ready: [1, 2]
+ordinary receipt ready: [1]
+PASS bounded contract probes
+```
+
+- Common intake retains canonical deferred section/pause semantics and ratings/risk/build flags (`planner_core.py:883`–`:940`). Sequencing admits only prerequisites already in the landing order (`:448`–`:469`); the daily P0 consumer (`:1223`–`:1226`) emits no landing action for the held chain. Ordinary validation receipts remain actionable implementation work.
+- Inspected additive JSON consumers remain compatible: `utils/py/site_build.py:98` checks required-key inclusion; `utils/hq/rollup.sh:56` reads named fields. Neither inspected consumer rejects extra fields. Weekly instructions (`skills/3-weekly/weekly-planner/SKILL.md:70`) state producer-first CLI compatibility; daily instructions (`skills/2-daily/daily-planner/SKILL.md:14`) resolve the installed shared engine and require weekly alongside it. No schema/default-scope change or new suite/gate is introduced; `test/test_planner_core.py` is absent.
+- N+1 policy establishes exact consumer acceptance/selection/advancement, transparent-delegation tracing, retry and parameter roles, and conditional coexistence/rollback (`recon/SKILL.md:84`–`:103`; `review-code/SKILL.md:150`–`:166`). The baseline diff removes no skipped/neutral independent-review note. Blocker/assignment prose identifies the manual calibration step instead of claiming the engine infers teammate blockers.
+- Ledger hashes remained unchanged during both probes: `releases.db` `13beb45f7e1bca3bc4dd85ee775fd63397351ee358b4d39ceda2aceda9f0043d`; `releases.sql` `853d7a6cf3d9208a5892ff240f971790418726e4babf5ec1ae005fb2e375d8c6`. Committed round3 manual receipts and provenance were inspected; clone-suite passes remain producer evidence, not reviewer reruns.
+
+#### Nonblocking documentation nit
+
+**[Nit — high confidence]** `PROJECT/1-INBOX/GH-1043-RECON-STEP-N-PLUS-1.md:48` still checks “Added test/test_planner_core.py,” although that unapproved suite was removed. Update the acceptance wording to the committed manual checks/negative controls. The landing-repair section already describes the actual verification method; this stale checklist wording does not invalidate the measured repairs.
+
+#### Limits and handoff
+
+`gh pr view 1044 --repo HiQS-Labs/XYZ-forge --json number,baseRefName,headRefOid,state` — **exit 0**: PR **OPEN**, base **development**, remote head `0200a96279c5fd2c8d6279324fb75b9c1fd4d494`. The reviewed local repairs are not yet the remote PR head.
+
+**[Unverified — needs clone run]** Final publication gate for the final committed candidate remains an independent merge prerequisite. No validate/test/pytest/executable fixture ran in this reviewer worktree. Current live issue refresh, hosted checks for the eventual pushed head, and IDE discovery/deployment are unverified. This is seeded-artifact QA approval; it does not attest merge readiness, deployment or cleanup. Probe inputs used read-only files/in-memory mutations and permitted scratch only.
+
+Handoff: **Approved**; complete the relay token with `done` as required for PASS. The producer/orchestrator must still inspect the final publication gate and final remote head before landing/deployment. Only this relay file changed outside permitted scratch and pinned tick state.
