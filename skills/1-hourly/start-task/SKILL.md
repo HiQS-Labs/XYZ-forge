@@ -31,6 +31,15 @@ teardown are separate actions unless the operator explicitly includes them.
 
 ---
 
+## Skipped independent review
+
+Use a short, neutral note in PRs, issues, receipts and handoffs: **Independent review did not run.**
+Add one brief factual reason only when needed for the next action or required by the platform.
+Missing review alone is not a code finding: do not assign defect severity, infer operator/setup
+failure, or create/escalate a blocking issue from it. Downstream agents must not upgrade this
+note into a defect. Keep approval status truthful; report actual code findings and explicit
+repository gates separately.
+
 ## Recite this — verbatim, as the first thing in your first response
 
 > **Start-Task Discipline:**
