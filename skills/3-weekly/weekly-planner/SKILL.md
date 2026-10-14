@@ -22,8 +22,8 @@ Orchestrate weekly sprint alignment and daily task execution across team members
 1. **Release Milestone & Build Manifest Anchoring:**
    - Every weekly plan must anchor itself to the active target release (`releases_app.py next` and `releases.db`), reporting target release version, release window, days overdue/remaining, the **release exit criterion**, and the **manifest build burndown** (shipped count, dialed-in count, burndown percentage, and exact dialed-in build issue numbers), along with active marathons and the jog build queue.
 2. **Live Issue Grounding & Grounded Assignments:**
-   - Ingested roadmap and backlog tasks MUST be validated against live GitHub open issue state (`gh issue list --state open`). Closed, retired, superseded, or foreign issues must be dropped immediately.
-   - Task assignments must be grounded in explicit GitHub assignees or explicit team issue sections—never dump unassigned tasks onto a single operator. Unassigned roadmap items belong in `Unassigned / Triage Queue`, and parked vision items belong in `Deferred / Parked Intake`.
+   - Ingested roadmap and backlog tasks MUST be validated against live GitHub open issue state (`gh issue list --state open`). Closed, retired, superseded, or foreign issues must be dropped immediately. A failed or truncated live lookup stops intake; a successful empty native result stays empty and does not reopen the general backlog.
+   - Task assignments must be grounded in explicit GitHub assignees mapped to known teammates; the team issue supplies domain descriptions—never dump unassigned tasks onto a single operator. Unassigned roadmap items belong in `Unassigned / Triage Queue`, and parked vision items belong in `Deferred / Parked Intake`.
 3. **Adversarial Audit on Both Horizons (Weekly & Daily):**
    - Every weekly plan and every daily pivot must undergo a 2nd-pass adversarial review (spawned subagent, or `/relay-xyz` / `/consult` fallback in environments without subagents).
    - Catches:
@@ -37,7 +37,7 @@ Orchestrate weekly sprint alignment and daily task execution across team members
    - If no decisions tracker exists, the skill requests permission to create a canonical GitHub issue to track and record all decisions.
    - For reversible business configuration, record an explicit provisional value, owner, and correction path. Add a UI control or re-compute action only when that configuration actually needs one; never turn correctness invariants, safety guardrails, or migrations into blanket settings.
 5. **High-Value Blocker Prioritization & PRS Ranking:**
-   - The top item in an operator's queue is strictly whatever **currently blocks another team member or gates the active release milestone**.
+   - Before publishing, the operator/adversarial pass identifies any task that **currently blocks another team member or gates the active release milestone** and promotes it explicitly; the engine does not infer teammate blockers.
    - Tasks are prioritized by `(is_release_build, prs_score)` descending:
      - **Dialed-in release builds** rank first to advance the active release.
      - Scored items rank by composite PRS score (`rating_ovr` or sum of `pri/sev/appeal/effort`).
@@ -78,7 +78,7 @@ skills/3-weekly/weekly-planner/
    - **If `releases.db` exists:** Query PRS 4-axis ratings and overrides directly from `roadmap_items`. Tag dialed-in release build tasks with `*[Release Build: {version}]*`, format PRS badges `*[PRS: {score} ({p}/{s}/{a}/{e})]*` or `*[PRS: {score} (ovr)]*`, and flag `*[GATE: risk {risk}]*`.
    - **If Fallback Mode:** Ingest active GH issues and generate `temp/planner/pass1-intake.md` and `temp/planner/pass2-sharpened.md`.
 3. Reconcile the latest issue/PR state, owner decisions, plan documents, and rollout evidence before labeling work open or done. Record the source and as-of date; distinguish merged, deployed, backfilled, and production-verified states.
-4. Ground assignments in explicit GitHub assignees or explicit issue sections; route unassigned items to `Unassigned / Triage Queue` and parked items to `Deferred / Parked Intake`, sorted by release build status and PRS score.
+4. Ground assignments in explicit GitHub assignees mapped to known teammates (the team issue supplies domain descriptions); route unassigned items to `Unassigned / Triage Queue` and parked items to `Deferred / Parked Intake`, sorted by release build status and PRS score.
 
 ### Step 2: Establish the Topological Merge Sequence
 Run the shared sequencing engine:

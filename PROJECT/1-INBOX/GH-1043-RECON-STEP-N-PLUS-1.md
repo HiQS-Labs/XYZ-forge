@@ -47,3 +47,13 @@ Reserved for complex migrations, cross-service contracts, and distributed engine
 - [x] Generator Sharpening: `skills/3-weekly/weekly-planner/scripts/planner_core.py` and `skills/3-weekly/weekly-planner/SKILL.md` are updated to anchor weekly plans in release milestones (`releases_app.py next`), ground active intake in live GitHub open issues (dropping closed/retired/foreign issues), isolate held drafts / evidence carriers (#1039, #1033, #930, #954, #1024) in Phase 5 with explicit hold reasons, and ground task assignments in explicit assignees.
 - [x] Regression testing: Added `test/test_planner_core.py` verifying merge phases, hold/evidence carrier isolation, adversarial duplicate task check immunity for receipts, and release milestone formatting.
 - [x] All cross-references between `/recon`, `/review-code`, `/weekly-planner`, and `/daily-planner` remain consistent and DRY.
+
+## Landing repair recon (2026-10-14)
+
+- Source: PR head `b706ac89`; fresh development merged through the supported disjoint ledger writer (`5f2b8bb8`). Graph generation 2026-09-01 is stale and does not track the planner paths; source reads used instead.
+- Entry: weekly/daily skill instructions invoke `planner_core.py main`, which obtains live PRs, classifies their dependencies, and renders weekly or daily output.
+- State/contract: `get_open_issues` grounds `ingest_weekly_intake`; native DB and CLI input share eligibility/scoring; valid empty native input is authoritative. Read-only ledger queries supply release/manifest, marathon and Jog context; no queue is dispatched.
+- Consumer: `format_weekly_markdown` and `format_daily_markdown` consume merge-ready groups. A held or cyclic prerequisite must keep successors out of landing instructions. Explicit receipt-only purpose is distinct from ordinary validation receipts.
+- Repair: propagate unavailable/truncated live intake, preserve filtered-empty results, share DB/CLI scoring and risk enrichment, scope native rows to the selected repo, exclude cut releases from target fallback, retain deferred vision work, and match assignment/blocker prose to implemented behavior.
+- Verification: retain the removed unapproved fixture as manual input under `TESTS-RESULTS/2026-10-14+GH-1043/manual/`; replay it and targeted adverse cases only in a disposable full clone. No new suite, registry entry, runtime dependency or gate.
+- Unknown: actual IDE skill discovery must be observed separately from successful filesystem link read-through.

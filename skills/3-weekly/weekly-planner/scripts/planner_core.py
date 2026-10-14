@@ -63,7 +63,8 @@ def compute_prs_score(item: dict) -> tuple[int | None, str]:
     if ovr is not None:
         try:
             ovr_val = int(ovr)
-            return ovr_val, f"*[PRS: {ovr_val} (ovr)]*"
+            if 4 <= ovr_val <= 400:
+                return ovr_val, f"*[PRS: {ovr_val} (ovr)]*"
         except (ValueError, TypeError):
             pass
 
@@ -75,15 +76,26 @@ def compute_prs_score(item: dict) -> tuple[int | None, str]:
     if pri is not None and sev is not None and appeal is not None and effort is not None:
         try:
             p, s, a, e = int(pri), int(sev), int(appeal), int(effort)
-            total = p + s + a + e
-            return total, f"*[PRS: {total} ({p}/{s}/{a}/{e})]*"
+            if all(1 <= axis <= 100 for axis in (p, s, a, e)):
+                total = p + s + a + e
+                return total, f"*[PRS: {total} ({p}/{s}/{a}/{e})]*"
         except (ValueError, TypeError):
             pass
 
     return None, ""
 
 
-def get_release_milestones(repo_root: Path) -> dict:
+def ledger_repo_id(conn, repo_root: Path, gh_repo: str | None = None) -> int:
+    """Select the requested repository rather than mixing rows in a shared ledger."""
+    repo = gh_repo or run_cmd(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], cwd=repo_root)
+    slug = repo.rsplit("/", 1)[-1]
+    row = conn.execute("SELECT id FROM repos WHERE slug = ?", (slug,)).fetchone()
+    if row is None:
+        raise ValueError(f"No native ledger repository matches {repo}")
+    return row[0]
+
+
+def get_release_milestones(repo_root: Path, gh_repo: str | None = None) -> dict:
     """
     Fetch comprehensive release milestones, build burndown, exit criterion,
     active marathons, and jog queue from releases.db and releases_app.py next.
@@ -118,24 +130,19 @@ def get_release_milestones(repo_root: Path) -> dict:
             conn = sqlite3.connect(f"file:{releases_db_file}?mode=ro", uri=True)  # SQLITE-GATEWAY-OK: read-only releases.db ledger inspection (GH-1043/GH-777)
             conn.row_factory = sqlite3.Row
             cur = conn.cursor()
+            repo_id = ledger_repo_id(conn, repo_root, gh_repo)
 
-            # 1. Target Release metadata
-            target_ver = None
-            if next_release:
-                m = re.match(r"^(\d+\.\d+\.\d+)", next_release)
-                if m:
-                    target_ver = m.group(1)
-
-            if target_ver:
-                rel_row = cur.execute(
-                    "SELECT id, version, codename, status, target_date, exit_criterion, description, milestone FROM releases WHERE version = ?",
-                    (target_ver,)
-                ).fetchone()
-            else:
-                rel_row = cur.execute(
-                    "SELECT id, version, codename, status, target_date, exit_criterion, description, milestone FROM releases WHERE status != 'shipped' "
-                    "ORDER BY CASE WHEN status = 'active' THEN 0 ELSE 1 END, target_date ASC, id ASC LIMIT 1"
-                ).fetchone()
+            # Use the canonical draft/active, dated-first order for this repository.
+            releases = cur.execute(
+                "SELECT id, version, codename, status, target_date, exit_criterion, description, milestone "
+                "FROM releases WHERE repo_id = ? AND status IN ('draft', 'active') "
+                "ORDER BY target_date IS NULL, target_date ASC, version ASC",
+                (repo_id,),
+            ).fetchall()
+            rel_row = releases[0] if releases else None
+            labels = [f"{r['version']} {r['codename']} ({r['status']}; target={r['target_date'] or 'undated'})" for r in releases]
+            next_release = labels[0] if labels else None
+            upcoming = labels[1:]
 
             if rel_row:
                 target_release_info = dict(rel_row)
@@ -193,9 +200,9 @@ def get_release_milestones(repo_root: Path) -> dict:
                 SELECT m.id, m.status, ir.url, m.created_at
                 FROM marathons m
                 JOIN issue_refs ir ON m.tracking_ref_id = ir.id
-                WHERE m.status IN ('planned', 'running')
+                WHERE m.repo_id = ? AND m.status IN ('planned', 'running')
                 ORDER BY m.id ASC
-            """).fetchall()
+            """, (repo_id,)).fetchall()
             for mr in marathon_rows:
                 active_marathons.append(dict(mr))
 
@@ -203,10 +210,10 @@ def get_release_milestones(repo_root: Path) -> dict:
             jog_rows = cur.execute("""
                 SELECT gh_number, position, status, attempt_count
                 FROM jog_queue
-                WHERE status IN ('pending', 'running')
+                WHERE repo_id = ? AND status IN ('pending', 'running')
                 ORDER BY position ASC
                 LIMIT 10
-            """).fetchall()
+            """, (repo_id,)).fetchall()
             for jr in jog_rows:
                 active_jog_queue.append(dict(jr))
 
@@ -254,17 +261,17 @@ def get_open_issues(repo_root: Path, gh_repo: str | None = None, limit: int = 50
         "gh", "issue", "list",
         "--state", "open",
         "--limit", str(limit),
-        "--json", "number,title,labels,assignees,body,updatedAt"
+        "--json", "number,title,url,labels,assignees,body,updatedAt"
     ]
     if gh_repo:
         cmd.extend(["-R", gh_repo])
-    try:
-        out = run_cmd(cmd, cwd=repo_root, check=True)
-        raw_issues = json.loads(out) if out else []
-        return {iss["number"]: iss for iss in raw_issues if "number" in iss}
-    except Exception as e:
-        print(f"[WARN] Failed to fetch live open issues via gh issue list: {e}", file=sys.stderr)
-        return {}
+    out = run_cmd(cmd, cwd=repo_root, check=True)
+    raw_issues = json.loads(out)
+    if not isinstance(raw_issues, list):
+        raise ValueError("GitHub open-issue intake must return a list")
+    if len(raw_issues) >= limit:
+        raise RuntimeError(f"Open-issue intake reached limit={limit}; completeness is unknown")
+    return {iss["number"]: iss for iss in raw_issues}
 
 
 def eval_ci_status(pr: dict) -> str:
@@ -335,7 +342,7 @@ def get_open_prs(repo_root: Path, gh_repo: str | None = None, limit: int = 300) 
 
 def detect_merge_sequence(prs: list[dict]) -> dict:
     """
-    Classify PRs into 4 status groups and compute a topological merge sequence:
+    Classify PRs by readiness, explicit holds, and prerequisites.
     1. Phase 1: ready_to_land — Approved, MERGEABLE, passing or neutral CI, and unblocked.
     2. Phase 2: blockers_to_fix — CHANGES_REQUESTED or broken CI (must be fixed to unblock downstream).
     3. Phase 3: needs_rebase — CONFLICTING state (requires rebase against base branch).
@@ -388,7 +395,7 @@ def detect_merge_sequence(prs: list[dict]) -> dict:
         hold_reason = ""
         is_evidence_carrier = False
 
-        if re.search(r"\bhold\b", title, re.IGNORECASE):
+        if re.search(r"(?:^\s*HOLD\b|\[HOLD\])", title, re.IGNORECASE):
             is_held = True
             hold_reason = "Explicit HOLD in title"
         elif re.search(r"leave (?:this draft )?unmerged|leave unmerged", combined_text):
@@ -406,8 +413,17 @@ def detect_merge_sequence(prs: list[dict]) -> dict:
             is_held = True
             hold_reason = "Review authority limit / unresolved escalation"
 
-        if re.search(r"qualification receipts?|reconciliation receipts?|evidence carrier", combined_text):
+        # Classify explicit evidence-only purpose, not an implementation's validation note.
+        evidence_purpose = re.search(
+            r"(?im)^\s*(?:this (?:pr|draft) is an? )?evidence carrier(?: for| only|[.:])",
+            body,
+        ) or re.search(
+            r"(?i)^(?:docs(?:\([^)]*\))?:\s*)?(?:retain|preserve|record)\b.*"
+            r"(?:qualification|reconciliation) receipts?", title,
+        )
+        if evidence_purpose:
             is_evidence_carrier = True
+            hold_reason = hold_reason or "Explicit evidence-only purpose"
 
         pr_with_ci = dict(pr)
         pr_with_ci["ci_status"] = ci
@@ -424,43 +440,30 @@ def detect_merge_sequence(prs: list[dict]) -> dict:
             phase_needs_rebase.append(pr_with_ci)
         elif decision == "APPROVED" and mergeable == "MERGEABLE" and ci in {"SUCCESS", "NONE"} and not is_draft:
             phase_ready.append(pr_with_ci)
-        elif is_draft and mergeable == "MERGEABLE" and ci in {"SUCCESS", "NONE"}:
+        elif is_draft and decision == "APPROVED" and mergeable == "MERGEABLE" and ci in {"SUCCESS", "NONE"}:
             phase_ready_pending_undraft.append(pr_with_ci)
         else:
             phase_in_review.append(pr_with_ci)
 
-    # Topologically sort phase_ready:
-    # A PR in ready_to_land should only land after any prerequisite PRs it depends on.
-    ready_numbers = {p["number"] for p in phase_ready}
+    # Admit only PRs whose open prerequisites are already in the landing sequence.
+    # A held, conflicting or cyclic prerequisite must never become a "Land" action.
+    pending = {p["number"]: p for p in phase_ready}
     sorted_ready = []
-    visited: set[int] = set()
-    visiting: set[int] = set()
-
-    def visit(num: int):
-        if num in visiting:
-            # Cycle detected, break cycle
-            return
-        if num in visited:
-            return
-        visiting.add(num)
-        for dep in pr_dependencies.get(num, set()):
-            if dep in ready_numbers:
-                visit(dep)
-        visiting.remove(num)
-        visited.add(num)
-        p = pr_by_number.get(num)
-        if p and p["number"] in ready_numbers:
-            pr_data = next((x for x in phase_ready if x["number"] == num), p)
-            sorted_ready.append(pr_data)
-
-    for p in phase_ready:
-        if p["number"] not in visited:
-            visit(p["number"])
-
-    # Any ready PR whose dependencies are not ready is marked as blocked
-    for p in sorted_ready:
-        unmet_deps = [d for d in pr_dependencies.get(p["number"], set()) if d not in ready_numbers]
-        p["blocked_by_unmerged"] = unmet_deps
+    ready_numbers = set()
+    while pending:
+        newly_ready = [n for n in pending if pr_dependencies[n] <= ready_numbers]
+        if not newly_ready:
+            break
+        for num in newly_ready:
+            sorted_ready.append(pending.pop(num))
+            ready_numbers.add(num)
+    for p in list(pending.values()) + list(phase_ready_pending_undraft):
+        unmet = sorted(pr_dependencies[p["number"]] - ready_numbers)
+        if unmet:
+            p["blocked_by_unmerged"] = unmet
+            phase_in_review.append(p)
+            if p in phase_ready_pending_undraft:
+                phase_ready_pending_undraft.remove(p)
 
     return {
         "status_phases": {
@@ -563,7 +566,11 @@ def audit_adversarial(plan: dict, prs: list[dict] | None = None) -> dict:
             "message": f"Concurrent backfill ({len(backfill_items)} item(s)) and reconciler ({len(reconciler_items)} item(s)) operations detected. Backfill operations must enforce isolated window keys (--window-key) or run in separate execution windows."
         })
 
-    # 4. Duplicate task check
+    # 4. Duplicate task check: use the same disposition as merge sequencing.
+    evidence_numbers = {
+        p["number"] for p in detect_merge_sequence(open_prs)["evidence_carriers_or_held"]
+        if p.get("is_evidence_carrier")
+    }
     seen_issues: dict[str, list[int]] = {}
     for pr in open_prs:
         title = pr.get("title", "")
@@ -573,7 +580,7 @@ def audit_adversarial(plan: dict, prs: list[dict] | None = None) -> dict:
         # Skip evidence carriers, receipts, and doc PRs from implementation duplication flags
         body = pr.get("body") or ""
         combined = f"{title} {body}".lower()
-        if pr.get("is_evidence_carrier") or any(k in combined for k in ["leave this draft unmerged", "leave unmerged", "qualification receipts", "evidence carrier"]):
+        if pr.get("is_evidence_carrier") or pr_num in evidence_numbers:
             continue
         if title.lower().startswith("docs("):
             continue
@@ -774,8 +781,8 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
     - Mode B (Fallback): Query open GitHub issues and generate pass1-intake.md and pass2-sharpened.md.
     - Prioritization: Sorts tasks by (is_release_build, prs_score) descending so dialed-in release builds
       and high-value/cheap tasks advance first.
-    - Grounded Assignment: Assigns issues based on explicit GitHub assignees or --team-issue;
-      leaves unassigned tasks in sorted triage queue.
+    - Grounded Assignment: Maps explicit GitHub assignees to known teammates; --team-issue
+      supplies domain descriptions. Unmapped tasks remain in sorted triage queue.
     """
     temp_dir = ensure_temp_dir(repo_root)
     intake_mode = "fallback_scratch"
@@ -785,7 +792,7 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
     unassigned_items = []
 
     open_issues = get_open_issues(repo_root, gh_repo)
-    release_milestones = get_release_milestones(repo_root)
+    release_milestones = get_release_milestones(repo_root, gh_repo)
 
     dialed_in_set = set(release_milestones.get("manifest_summary", {}).get("dialed_in_numbers", []))
     target_release_ver = release_milestones.get("target_release", {}).get("version")
@@ -799,163 +806,83 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
     releases_cli = repo_root / "utils" / "py" / "releases_app.py"
     releases_db = repo_root / "releases.db"
 
+    raw_items = None
     if not fallback_mode and releases_db.exists():
         try:
             import sqlite3
             conn = sqlite3.connect(f"file:{releases_db}?mode=ro", uri=True)  # SQLITE-GATEWAY-OK: read-only releases.db ledger inspection (GH-1043/GH-777)
-            conn.row_factory = sqlite3.Row
-            cur = conn.cursor()
-            rows = cur.execute("""
-                SELECT gh_number, title, section, position, status_marker,
-                       rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr,
-                       risk, complexity, effort, status_label, raw_text
-                FROM roadmap_items
-                ORDER BY section, position
-            """).fetchall()
-            raw_items = [dict(r) for r in rows]
-            conn.close()
-            intake_mode = "native_prs"
-
-            for item in raw_items:
-                section = (item.get("section") or "").lower()
-                if section in {"completed", "done", "shipped"}:
-                    continue
-                status_marker = (item.get("status_marker") or "").strip()
-                if status_marker in {"✅", "[DONE]", "shipped"}:
-                    continue
-
-                raw_title = item.get("title") or ""
-                raw_text = item.get("raw_text") or ""
-                combined = f"{raw_title} {raw_text}".lower()
-
-                # Filter out superseded or retired items
-                if any(t in combined for t in ["superseded", "retired", "do not implement"]):
-                    continue
-                if "deferred" in combined and "vision" in combined:
-                    continue
-
-                gh_num_raw = item.get("gh_number")
-                if not gh_num_raw:
-                    continue
-                try:
-                    gh_num = int(gh_num_raw)
-                except (ValueError, TypeError):
-                    continue
-
-                # Grounding check: Issue must actually be open in GitHub!
-                if open_issues and gh_num not in open_issues:
-                    continue
-
-                # Enrich with live assignees and labels from GitHub
-                if gh_num in open_issues:
-                    live_iss = open_issues[gh_num]
-                    item["live_assignees"] = [a.get("login") for a in live_iss.get("assignees", []) if isinstance(a, dict)]
-                    item["live_labels"] = [lbl.get("name") for lbl in live_iss.get("labels", []) if isinstance(lbl, dict)]
-                    item["updated_at"] = live_iss.get("updatedAt")
-
-                # PRS score calculation
-                score, prs_badge = compute_prs_score(item)
-                item["prs_score"] = score
-                item["prs_badge"] = prs_badge
-
-                # Risk gate check (risk >= 4 acts as human gate, not summed)
-                risk_val = item.get("risk")
-                if risk_val is not None:
-                    try:
-                        if int(risk_val) >= 4:
-                            item["is_high_risk_gate"] = True
-                            item["risk_gate_badge"] = f"*[GATE: risk {risk_val}]*"
-                    except (ValueError, TypeError):
-                        pass
-
-                # Dialed-in release build association
-                if gh_num in dialed_in_set:
-                    item["is_release_build"] = True
-                    item["release_build_version"] = target_release_ver
-
-                roadmap_items.append(item)
+            try:
+                conn.row_factory = sqlite3.Row
+                repo_id = ledger_repo_id(conn, repo_root, gh_repo)
+                rows = conn.execute("""
+                    SELECT gh_number, title, section, position, status_marker, issue_url,
+                           rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr,
+                           risk, complexity, effort, status_label, raw_text
+                    FROM roadmap_items WHERE repo_id = ? ORDER BY section, position
+                """, (repo_id,)).fetchall()
+                raw_items = [dict(r) for r in rows]
+            finally:
+                conn.close()
         except Exception as e:
             print(f"[WARN] Direct releases.db roadmap intake failed ({e}); falling back to CLI.", file=sys.stderr)
 
-    if not roadmap_items and not fallback_mode and releases_cli.exists():
-        try:
-            cmd = ["python3", str(releases_cli), "roadmap", "list", "--json"]
-            out = run_cmd(cmd, cwd=repo_root, check=True)
-            if out:
-                raw_items = json.loads(out)
-                intake_mode = "native_prs"
-                for item in raw_items:
-                    section = (item.get("section") or "").lower()
-                    if section in {"completed", "done", "shipped"}:
-                        continue
-                    status_marker = (item.get("status_marker") or "").strip()
-                    if status_marker in {"✅", "[DONE]", "shipped"}:
-                        continue
+    if raw_items is None and not fallback_mode and releases_cli.exists():
+        out = run_cmd(["python3", str(releases_cli), "roadmap", "list", "--json"], cwd=repo_root)
+        raw_items = json.loads(out)
+        if not isinstance(raw_items, list):
+            raise ValueError("Native roadmap CLI must return a list")
+    elif raw_items is None and not fallback_mode and releases_db.exists():
+        raise RuntimeError("Native roadmap is unavailable; repair its source or explicitly select --fallback")
 
-                    raw_title = item.get("title") or ""
-                    raw_text = item.get("raw_text") or ""
-                    combined = f"{raw_title} {raw_text}".lower()
-
-                    if any(t in combined for t in ["superseded", "retired", "do not implement"]):
-                        continue
-                    if "deferred" in combined and "vision" in combined:
-                        continue
-
-                    gh_num_raw = item.get("gh_number")
-                    if not gh_num_raw:
-                        continue
-                    try:
-                        gh_num = int(gh_num_raw)
-                    except ValueError:
-                        continue
-
-                    if open_issues and gh_num not in open_issues:
-                        continue
-
-                    if gh_num in open_issues:
-                        live_iss = open_issues[gh_num]
-                        item["live_assignees"] = [a.get("login") for a in live_iss.get("assignees", []) if isinstance(a, dict)]
-                        item["live_labels"] = [lbl.get("name") for lbl in live_iss.get("labels", []) if isinstance(lbl, dict)]
-                        item["updated_at"] = live_iss.get("updatedAt")
-
-                    if gh_num in dialed_in_set:
-                        item["is_release_build"] = True
-                        item["release_build_version"] = target_release_ver
-
-                    roadmap_items.append(item)
-        except (subprocess.SubprocessError, json.JSONDecodeError, OSError, RuntimeError) as e:
-            print(f"[WARN] Native CLI intake failed ({e}); falling back to GitHub issues intake.", file=sys.stderr)
-
-    if not roadmap_items:
-        intake_mode = "fallback_scratch"
-        raw_issues = list(open_issues.values()) if open_issues else []
-        if not raw_issues:
-            cmd = [
-                "gh", "issue", "list",
-                "--state", "open",
-                "--limit", "100",
-                "--json", "number,title,labels,assignees,body,updatedAt"
-            ]
-            if gh_repo:
-                cmd.extend(["-R", gh_repo])
-            out = run_cmd(cmd, cwd=repo_root, check=True)
-            raw_issues = json.loads(out) if out else []
-
-        roadmap_items = [
-            {
-                "gh_number": iss.get("number"),
-                "title": iss.get("title"),
-                "labels": [lbl.get("name") for lbl in iss.get("labels", []) if isinstance(lbl, dict)],
-                "assignees": [a.get("login") for a in iss.get("assignees", []) if isinstance(a, dict)],
-                "live_assignees": [a.get("login") for a in iss.get("assignees", []) if isinstance(a, dict)],
-                "section": "Open Issues Intake",
-                "updated_at": iss.get("updatedAt"),
-                "is_release_build": iss.get("number") in dialed_in_set,
-                "release_build_version": target_release_ver,
-            }
-            for iss in raw_issues
+    native_loaded = raw_items is not None
+    if native_loaded:
+        intake_mode = "native_prs"
+    else:
+        raw_items = [
+            {"gh_number": iss["number"], "title": iss.get("title"),
+             "section": "Open Issues Intake", "raw_text": ""}
+            for iss in open_issues.values()
         ]
 
+    # Apply the same eligibility, live grounding, ratings and risk rules to every source.
+    for source_item in raw_items:
+        item = dict(source_item)
+        section = (item.get("section") or "").lower()
+        marker = (item.get("status_marker") or "").strip()
+        if section in {"completed", "done", "shipped"} or marker in {"✅", "[DONE]", "shipped"}:
+            continue
+        combined = f"{item.get('title') or ''} {item.get('raw_text') or ''}".lower()
+        if any(word in combined for word in ("superseded", "retired", "do not implement")):
+            continue
+        try:
+            gh_num = int(item.get("gh_number"))
+        except (ValueError, TypeError):
+            continue
+        if gh_num not in open_issues:
+            continue
+        issue_url = item.get("issue_url") or ""
+        if gh_repo and issue_url and not issue_url.lower().startswith(f"https://github.com/{gh_repo}/issues/".lower()):
+            continue
+        item["gh_number"] = gh_num
+        live = open_issues[gh_num]
+        if issue_url and live.get("url") and issue_url.rstrip("/").lower() != live["url"].rstrip("/").lower():
+            continue
+        item["live_assignees"] = [a["login"] for a in live.get("assignees", []) if isinstance(a, dict) and a.get("login")]
+        item["live_labels"] = [a["name"] for a in live.get("labels", []) if isinstance(a, dict) and a.get("name")]
+        item["updated_at"] = live.get("updatedAt")
+        item["prs_score"], item["prs_badge"] = compute_prs_score(item)
+        try:
+            item["is_high_risk_gate"] = int(item.get("risk") or 0) >= 4
+        except (ValueError, TypeError):
+            item["is_high_risk_gate"] = False
+        if item["is_high_risk_gate"]:
+            item["risk_gate_badge"] = f"*[GATE: risk {item['risk']}]*"
+        item["is_release_build"] = gh_num in dialed_in_set
+        item["release_build_version"] = target_release_ver
+        item["is_deferred"] = (item.get("title") or "").lower().startswith("deferred:") or ("deferred" in combined and "vision" in combined)
+        roadmap_items.append(item)
+
+    if not native_loaded:
         # Generate pass1-intake.md and pass2-sharpened.md in temp/planner/
         pass1_file = temp_dir / "pass1-intake.md"
         pass1_lines = ["# Pass 1: Unfiltered Task Intake\n"]
@@ -996,7 +923,7 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
 
     for item in roadmap_items:
         title = item.get("title") or ""
-        if title.lower().startswith("deferred:"):
+        if item.get("is_deferred"):
             deferred_items.append(item)
             continue
 
@@ -1026,7 +953,7 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
             key=lambda x: (
                 1 if x.get("is_release_build") else 0,
                 x.get("prs_score") if x.get("prs_score") is not None else -1,
-                -(x.get("position") or 999),
+                -(x["position"] if x.get("position") is not None else 999),
             ),
             reverse=True,
         )
@@ -1174,7 +1101,8 @@ def format_weekly_markdown(date_str: str, plan_data: dict) -> str:
     if in_review:
         lines.append("### Phase 4: In Review / WIP")
         for p in in_review:
-            lines.append(f"- **PR #{p.get('number')}**: {p.get('title')} — Review: `{p.get('reviewDecision') or 'PENDING'}`, CI: `{p.get('ci_status')}`")
+            deps = f"; waiting on prerequisite PRs {p['blocked_by_unmerged']}" if p.get("blocked_by_unmerged") else ""
+            lines.append(f"- **PR #{p.get('number')}**: {p.get('title')} — Review: `{p.get('reviewDecision') or 'PENDING'}`, CI: `{p.get('ci_status')}`{deps}")
         lines.append("")
 
     if held_or_evidence:

@@ -1,3 +1,9 @@
+# Original PR fixture input
+
+Source: PR 1044 head b706ac89f1695a314a14c4aaba70bc0bc83d5874.
+Retained for one-off manual verification; not registered as a suite.
+
+```python
 import sys
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -268,3 +274,5 @@ if __name__ == "__main__":
     print("PASS: all test_planner_core checks passed successfully.")
 
 
+
+```

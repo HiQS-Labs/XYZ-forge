@@ -140,9 +140,10 @@ Commit: <sha> · Mode: <graph+read | grep-only> · Lanes: <which ran>
 <name — consumer — breaking-if — where it is declared>
 ## Build, failure and rollback today
 ## Step N+1 Downstream Checks
-- Consumer hop: <active reader/poller verified at file:line, or "none (incomplete state machine)">
+- Consumer hop: <exact value accepted, selected and advanced by consumer at file:line; progress/recovery owner and terminal/timeout path; documented terminal/audit-only exception or Unknown>
 - Retry hop: <recovery behavior on next scheduled run verified at file:line, or "infinite loop risk">
 - Parameter role: <callee treats argument as constraint | generator | n/a>
+- Rollout/rollback: <supported reader/writer versions and last safe rollback point when contracts change; n/a or Unknown>
 ## Unknowns
 | Unknown | Why it matters | What would settle it |
 ## Current-state radius, one line
