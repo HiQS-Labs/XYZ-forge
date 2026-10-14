@@ -2,7 +2,7 @@
 title: Relay Architecture — headless Claude, Codex, and agy turns over a tick token
 status: Reference
 created: 2026-06-22
-updated: 2026-09-13
+updated: 2026-10-14
 owner: noelsaw
 doc_type: architecture
 summary: Verified map of how `relay-drive.sh`, per-agent turn shims, `relay-turn-lib.sh`, the `RELAY-TURN` tick task, and the relay thread file coordinate one-turn-at-a-time multi-agent work, plus the roadmap query pipeline and the adoption gate for derived views.
@@ -418,7 +418,9 @@ In this repo's releases mode, the RELEASES DB is authoritative and that legacy s
 `releases.db` is the source of truth for this repo's roadmap and release ledger. Three human-readable
 views are *derived* from it (`LEADERBOARD.md`, `RELEASES-PREVIEW.html`, `LEADERBOARD.html`), and every one of them is **adopted by presence**: a generator refreshes
 a view only if that file already exists at the repo root. A repo that never baked one — a fixture, a
-fresh clone, a vendored `.xyz/` install — is a silent no-op, not an error.
+fresh clone, a vendored `.xyz/` install — is a silent no-op, not an error. The ledger's `projections`
+setting sits in front of that check: `off` disables every view refresh regardless of presence, while
+the default `auto` leaves the decision to presence (set via `pdda-install.sh --projections`).
 
 That single rule is what makes a view addable and removable without editing a single consumer.
 
@@ -442,29 +444,35 @@ flowchart TD
         G4["export_timeline.py --leaderboard"]
     end
 
-    subgraph views["Derived views at the repo root"]
-        V2["LEADERBOARD.md<br/>adopted"]
-        V3["RELEASES-PREVIEW.html<br/>adopted"]
-        V4["LEADERBOARD.html<br/>adopted"]
+    subgraph views["Derived views at the repo root — all opt-in"]
+        V2["LEADERBOARD.md<br/>adopted in this repo"]
+        V3["RELEASES-PREVIEW.html<br/>not adopted here"]
+        V4["LEADERBOARD.html<br/>not adopted here"]
     end
 
     subgraph consumers["Every write path that refreshes a view"]
         C1["releases_app.py<br/>refresh_preview() — after a DB write"]
         C2["releases-merge-resolve.sh<br/>— after a ledger merge"]
+        C2a["merge-cleanup ledger_merge.py<br/>— during a landing batch"]
         C3["wave_reconcile.py<br/>— after a merged PR"]
         C4["express.py / jog_run.py<br/>— stage into a lane commit"]
     end
 
+    SWITCH{{"projections setting<br/>is off?"}}
     GATE{{"does the file already<br/>exist at the repo root?"}}
 
     DB --> gens
-    consumers --> GATE
-    GATE -- "no: NOT adopted" --> SKIP["skip — silent no-op"]
+    C2a --> C2
+    consumers --> SWITCH
+    SWITCH -- "yes: views disabled" --> SKIP["skip — silent no-op"]
+    SWITCH -- "no: auto / on" --> GATE
+    GATE -- "no: NOT adopted" --> SKIP
     GATE -- "yes: adopted" --> gens
     G2 --> V2
     G3 --> V3
     G4 --> V4
 
+    style SWITCH fill:#fff3cd,stroke:#997404
     style GATE fill:#fff3cd,stroke:#997404
 ```
 
