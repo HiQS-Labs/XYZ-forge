@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -96,5 +96,37 @@ Cite file:line for every finding. Set STATUS: Approved if the plan is ready.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+Ship with conditions.
+
+VERDICT: FAIL
+
+Basis: The surgical rename and canonical network paragraph fit the task. Fix S1's contradictory acceptance check and S2's overconfident diagnostic instruction before implementation. Both are small plan edits; no runtime changes or new tests requested.
+
+swept file: yes
+
+Read all of `.relay-artifacts/plan.md`, all three affected skill Markdown files and CHANGELOG, plus the relevant dispatch, evidence-sealing and deployment source. No additional pre-existing defect found in those skill files beyond the missing network guidance already addressed by this task. Paths below are relative to `/Users/noelsaw/Documents/GH Repos/hiqs-ai-resolve-gh49-hiqs-skill-rename-2026-10-14` unless qualified. Graph lookup used Verify scope, but the available `hiqs-ai-resolve` graph is for another checkout, generation `2026-09-12T03:16:16Z`; chain lookup returned zero and coverage was untracked/excluded or changed, so conclusions use direct source reads and literal searches instead.
+
+- **[Should] S1 — Make the rename check compatible with preserved evidence.** `.relay-artifacts/plan.md:36` requires the skills-wide old-name grep to return only two formerly notes, while `:22` expressly preserves `skills/hiqs-chain/assets/image-manifest.json:1`. That manifest contains five old-name occurrences, including two `recordedBy` values and three evidence URLs. Cheapest fix: scope the live-name assertion to skill Markdown, then separately assert the historical manifest remains unchanged; do not rewrite evidence to satisfy the grep.
+  Observed input: The preserved manifest. Probe, with `task_repo='/Users/noelsaw/Documents/GH Repos/hiqs-ai-resolve-gh49-hiqs-skill-rename-2026-10-14'`: `python3 -c 'from pathlib import Path; import re,sys; s=Path(sys.argv[1]).read_text(); print("preserved manifest old-name matches:",len(re.findall("resolve-research|resolve-image",s)))' "$task_repo/skills/hiqs-chain/assets/image-manifest.json"`. Exit **0**; decisive output: `preserved manifest old-name matches: 5`.
+  Affected scope: The skills-wide rename acceptance check at plan lines 36/42, not historical provenance.
+  Falsifier: After the proposed rename, a Markdown-only search must show exactly the intended formerly notes; restoring one live old-name link must fail that check, while retaining the unchanged manifest must pass.
+
+- **[Should] S2 — Treat the signature as a clue, not proof of blocked egress.** `.relay-artifacts/plan.md:37` says to rerun with network and “do not report it as a recipe/contract defect.” Source supports the reported transport-failure mapping (`consumer/chain.ts:306`, `:318`), but successful HTTP responses rejected by `boundedJSON`/`content` also become `contract_rejected` without `httpStatus` (`:224`, `:229`, `:243`, `:321`). Cheapest fix: include `dispatched: true`, say the pattern *can indicate* blocked network, establish whether network was denied, and preserve contract investigation if it recurs with network available. No classifier change belongs here.
+  Observed input: Existing `tests/acceptance/chain-caller.test.ts:118` supplies HTTP-200 JSON with `status: "completed"` and an empty `google_search_result.result`; `consumer/chain.ts:243` rejects that actual response contract. The source trace reaches the same failed/empty-output/no-httpStatus signature without blocked egress. **[Unverified — needs clone run]** for runtime measurement; the existing suite was read, not executed.
+  Affected scope: The new canonical diagnostic paragraph and wrapper pointers, specifically interpretation of dispatched `contract_rejected` attempts without HTTP status.
+  Falsifier: In a disposable clone, compare a fetch rejection with that existing HTTP-200 ungrounded-response case. The documentation must allow a network diagnosis for the former and a response-contract diagnosis for the latter, rather than prohibiting the latter report.
+
+- **[Pass] Recon and evidence preservation otherwise fit.** Literal search covered 20 matching files; the live skill references are accounted for by plan lines 16–19. `docs/catalog-ops/ledger.md:624` is an additional historical mention and can remain unchanged. No old-name hits were found across the inspected consumer/src/packages/tests files (7/100/11/25 files respectively). Keeping the manifest and builder identity is correct: `scripts/build-image-manifest.ts:39`, `:43`, `:51`, `:64` seal provenance; `packages/core/src/recipes.ts:35` hashes claim content and `packages/core/src/client.ts:145` hashes the snapshot. These strings are provenance rather than executable folder references.
+
+- **[Pass] Deployment sequence and probe purpose are reasonable.** The deployed `/Users/noelsaw/git-pulse-sync/Deployed Skills/skills-army-hq/SKILL.md:66` requires publishing from merged source; `:88` explicitly prescribes remove then sync for withdrawal. Its `scripts/intake.py:816` says `run sync apply to withdraw owned links`; remove alone removes the payload/receipt and can leave temporarily dangling links. Plan `:49` includes the necessary sync. The probe at plan `:44` has an observable outcome and a durable transcript destination; actual agent behavior remains **[Unverified — needs clone run]**.
+
+- **[Nit] Pin the runtime refresh source explicitly.** At plan `:49`, spell out `update hiqs-chain --source <merged main>/skills/hiqs-chain` and preview/apply sync. The SOP `:22` documents explicit refresh, and `scripts/intake.py:788` otherwise reuses the recorded source; selecting the same merged checkout as the new wrappers avoids stale-source ambiguity.
+
+Limitations: `gh issue view 49 --repo NeochromeTeam/hiqs-ai-resolve --json title,body,comments` exited **1**, `error connecting to api.github.com`; review used the relay-authorized local requirements/context fallback. No tests, executable fixtures, paid calls, deployment operations or agent durability run were performed. Artifact/source files were not edited.
+
+Handing off to Producer (claude-a) — address S1/S2, disposition the remaining observations, then return for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
