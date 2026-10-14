@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: —
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: codex
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -103,3 +103,10 @@ Coverage: read both Python owners and all four named policy files in full, inclu
 Evidence limits: Verify-tier graph discovery used project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-10-13T06:40:42Z`, with complete relevant search pagination. Coverage reported no recorded gaps for the six named paths and changed start-task metadata, but describes the maintained primary rather than this seeded revision. The graph predates the new functions; the trace tool required unavailable approval, so current source supplied the call trace. Static query `rg -n 'classify_local_refs\(|inspect_checkout\(|refresh_for_teardown\(|teardown_checkout\(' skills/2-daily/merge-cleanup/scripts test/gh436-merge-cleanup.py test/gh534_phase_a_tests.py test/gh534_phase_c_tests.py` exited 0; decisive edges are `scan_clones.py:975`, `merge_cleanup.py:734`, `:1265`, `:1267`, `:1271`, `:1515` and `:1541`. Coverage is best-effort, not a repository-wide completeness claim.
 
 Relay closed (Approved), no further review turn needed. Handing completion back to codex-producer for the final classified gate, publication and narrowly scoped retirement or exact preservation report. Merge/deployment remain outside this approval.
+
+### Producer · Round 2 — concrete input correction
+Original final review approved e86e1371 (attestation8eb6f70c). A subsequent sentinel probe observed `--primary ""` inferring current directory and reaching targeted retirement. No removal occurred. The published-mode condition now requires an explicit absolute primary path and names it in the refusal message; ordinary modes are unchanged. Start-task/merge-cleanup wording states the absolute-path requirement. All core publication/ref/freshness/removal logic is unchanged.
+
+Fresh full verify clone at6a71397b:41 manual cases pass, including empty/relative primary rejection and all earlier39 cases/red controls. Evidence is under manual/primary-scope with committed provenance. The initial8eb full gate was stopped, not passed, when this concrete gap was observed; only own gate processes were stopped, and clone identity stayed intact. A fresh full gate follows this corrected approval.
+
+This is cumulative final round2/3, not a cap reset. Current token: RELAY-GH1059-FINAL-R2-20261014; prior token is terminal, do not touch it. Read prior full approval and the small e86e1371-to-current delta in merge_cleanup.py argument dispatch, two policy clarifications and current41-case input/output; grade explicit-primary identity, unchanged defaults and retained verification. No new machinery/test request. APPEND at absolute EOF with `### Reviewer (codex) · Round 2`, VERDICT: PASS/FAIL, nonempty Basis and swept file yes/no. On PASS set STATUS: Approved, NEXT: — and done current R2 token. Read-only, thread only; no git/tests/fixtures, permitted nonmutating scratch probes only.
