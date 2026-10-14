@@ -1315,6 +1315,7 @@ def main():
         return 2
     if args.retire_published_pr is not None or args.checkout:
         if (not args.retire_published_pr or args.retire_published_pr <= 0 or not args.checkout
+                or not Path(args.primary).expanduser().is_absolute()
                 or args.root or args.prefix or args.exclude or args.strategy or args.show_merge_policy
                 or args.scan_only or args.prs_only or args.teardown_only or args.reconcile_pr
                 or args.marker or args.allow_unready_primary or args.resume or args.backup_first or args.backup_root):

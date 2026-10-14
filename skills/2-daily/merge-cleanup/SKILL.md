@@ -452,7 +452,9 @@ python3 /path/to/merge-cleanup/scripts/merge_cleanup.py --primary "$PRIMARY_REPO
 ```
 
 Repeat `--checkout` only for explicit paths created by this workflow. Do not infer
-the primary from the task clone or combine this mode with scans, merge/reconcile,
+the primary from the task clone: `--primary` must be an explicit absolute path;
+empty/relative values refuse instead of inferring the current directory. Do not
+combine this mode with scans, merge/reconcile,
 override or backup flags. The driver requires matching canonical origins, a live
 non-draft OPEN/MERGED same-repository PR targeting the integration branch, exact
 fetched origin branch/head equality, and remote recovery proof for every local ref

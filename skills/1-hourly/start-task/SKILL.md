@@ -291,7 +291,7 @@ Then begin work.
      push every intended local checkpoint and verify the exact live PR/branch head.
      A published draft, failed/skipped required gate, or unfinished review is not PR-ready.
    - Identify only the task checkout and gate/verify helpers created by this workflow.
-     Resolve the protected primary separately; never infer it from a disposable clone.
+     Resolve the protected primary separately as an absolute path; never infer it from a disposable clone.
      Preserve remaining local-only evidence, stashes, unrelated refs, peer claims/processes,
      dependent worktrees and unknown safety state. Do not sweep other task folders.
    - Release only this workflow's completed claims and stop its own finished processes.
