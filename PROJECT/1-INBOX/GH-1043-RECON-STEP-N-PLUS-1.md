@@ -45,7 +45,7 @@ Reserved for complex migrations, cross-service contracts, and distributed engine
 - [x] `skills/1-hourly/recon/SKILL.md` is updated to define the mandatory logical downstream boundary checks in Default mode (verifying consumer advancement, tracing past transparent delegation, checking rollout coexistence) and specify `--deep` mode capabilities.
 - [x] `skills/2-daily/review-code/SKILL.md` is updated to integrate Step N+1 checks into Phase 1 (/recon audit) and Phase 4 grading (`[Blocker]` for unadvancing stranded states, stuck retry loops, and parameter generator inversions) while remaining lean and DRY by invoking `recon`'s policy.
 - [x] Generator Sharpening: `skills/3-weekly/weekly-planner/scripts/planner_core.py` and `skills/3-weekly/weekly-planner/SKILL.md` are updated to anchor weekly plans in release milestones (`releases_app.py next`), ground active intake in live GitHub open issues (dropping closed/retired/foreign issues), isolate held drafts / evidence carriers (#1039, #1033, #930, #954, #1024) in Phase 5 with explicit hold reasons, and ground task assignments in explicit assignees.
-- [x] Regression testing: Added `test/test_planner_core.py` verifying merge phases, hold/evidence carrier isolation, adversarial duplicate task check immunity for receipts, and release milestone formatting.
+- [x] Regression verification: removed the unapproved new `test/test_planner_core.py` suite; retained and replayed its fixtures as manual evidence, plus original-failure witnesses, negative controls, actual CLI/DB parity and existing suites under `TESTS-RESULTS/2026-10-14+GH-1043/`.
 - [x] All cross-references between `/recon`, `/review-code`, `/weekly-planner`, and `/daily-planner` remain consistent and DRY.
 
 ## Landing repair recon (2026-10-14)
@@ -61,3 +61,9 @@ Reserved for complex migrations, cross-service contracts, and distributed engine
 ### Independent review follow-up
 
 Round1 independently reproduced canonical deferred rows entering active work and the actual `roadmap list --json` producer omitting rating/risk fields. The additive JSON export in `utils/py/releases_app.py` now supplies all five rating fields and risk using the existing schema-tolerant column reader; site-build and HQ rollup consumers accept extra keys. Planner deferral now respects canonical sections and explicit pause markers, and DB repository identity follows the ledger setting. Actual producer/consumer probes verified parity (79 active,62 scored; GH-418321) and parked GH-920/GH-974, with negative controls and unchanged ledger hashes. Existing status-label suite42/42 passed.
+
+### Final review and publication
+
+Round3 independently approved the selected-repository fallback repair at reviewed head `2cef261b8c46fb1db37052b723a9e0b0bb2d7937`; relay-drive attestation is committed in `relay-system/2026-10-14/gh1044-landing.codex.md`. Actual shared-ledger probes prove foreign URL-less overlapping issue numbers are excluded; removing the filter reproduces contamination. Older CLI producers without selection/rating metadata stop with an update instruction. Weekly/daily instructions resolve the installed bundle and state producer-first compatibility.
+
+Publication evidence: broad revision0200a962 passed409/409 full gate in1027s (one suite retry); final production revision2cef261b passed28/28 tier2 releases/docs checks in366s (no retry), selected by the normal push hook. Both ran in separate full clones; logs and telemetry are retained under `publication/`. These are development landing checks, not release-promotion evidence. GitHub smoke run38635391443 passed on2cef261b. No deployed-payload mutation has occurred before merge.
