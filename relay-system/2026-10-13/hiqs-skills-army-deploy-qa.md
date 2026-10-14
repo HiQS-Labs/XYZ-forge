@@ -143,4 +143,12 @@ Basis: The round-1 prerequisite finding is discharged. Read the entire re-seeded
 
 Relay closed (Approved), no further turn needed. Token completed for Producer (claude-a); harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-10-14T05:10:51Z
+task: RELAY-hiqs-skills-army-deploy-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0d8fc4a4065309c48473bc083697ca0b089da229
+added-range: 13935+3862
+added-sha256: 22cd9e63b4654fa63fc3c887fde2b2313a631764f54b520646300c298ac0a3b1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
