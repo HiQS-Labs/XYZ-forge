@@ -166,3 +166,11 @@ swept file: yes
 - [Unverified — needs clone run] The updated-head normal publication gate and hosted exact-head qualification remain pending. Original gate409/409 at d37140db is historical evidence only. The GitHub connector still reports published head730e707, not the supplied refreshed corrections; no fresh publication or live mergeability is claimed. This PASS permits the next authorized qualification step, not merge/promotion or a fourth review round. No blocking finding within the bounded final review.
 
 Commit: none
+
+### Attestation · relay-drive — 2026-10-14T23:45:05Z
+task: RELAY-GH1042-FINAL-20261013-R3
+reviewer: codex
+status: Approved
+reviewed-head: 6edaeacded5e0aaa8a0f5d1f7edbab99e355ab87
+added-range: 18537+10410
+added-sha256: 34c943ea039c497a17798d11bd096989de2f4e670f1e687d8131e680327052b5
