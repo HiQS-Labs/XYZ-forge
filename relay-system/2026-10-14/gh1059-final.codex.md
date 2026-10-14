@@ -75,6 +75,14 @@ status: Approved
 reviewed-head: e86e137107b85c0b895a13d1298431c3f1548af8
 added-range: 8125+5114
 added-sha256: 22d193c3dda4e9d8ba9c099d7dbbc5640ee4f4224556e0ee0898a902d2d13c7c
+
+### Attestation · relay-drive — 2026-10-14T23:48:40Z
+task: RELAY-GH1059-FINAL-R2-20261014
+reviewer: codex
+status: Approved
+reviewed-head: e013552ef44351071be9d4f0648dea7d5e89b643
+added-range: 15159+4146
+added-sha256: 23b1ea0b05227690fe6b80065e870491d2135a920bd8606d08e22a7fdc6dee79
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 ## Bounded final QA packet
