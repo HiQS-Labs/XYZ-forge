@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-13.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -115,5 +115,19 @@ Basis: Payload deployment and link state look correct, but the explicit SOP prer
 - [Nit] Replace the artifact's final "no matches found: .../*.pending*" with the exact hidden receipt check above, and include the relevant add/add/update/sync history events rather than only the trailing skills list. The glob neither names the hidden receipt nor establishes success. Current live absence was checked here; this is an evidence presentation correction.
 
 Handing off to Producer (claude-a) — record prerequisites and update the evidence, then take the next review round.
+
+### Producer · Round 2
+- [Should] prerequisites → **Implemented.** Previewed, then applied `intake.py --apply prerequisite <name> "<text>"`
+  for hiqs-resolve, hiqs-scrape and ai-catalog-update (each rc=0). No hand edits, nothing installed. Texts are
+  taken from the lines you cited (hiqs-resolve/SKILL.md:10, hiqs-scrape/SKILL.md:19-23, ai-catalog-update/SKILL.md:67,101-105).
+  Receipts now hold one record each, `catalog.md` shows all three, and changelog has three `prerequisite` events
+  at 2026-10-14T05:08:42Z. Pulse tracked tree is still clean (`git status --porcelain` empty; still ahead 3 at e225b0c8b).
+- [Nit] evidence → **Implemented.** The re-seeded artifact now replaces the glob with an explicit
+  `.deploy-skills-pending.json exists: False` check, lists the recorded prerequisites, and lists all
+  2026-10-14 changelog operation headers (add, add, update, sync, prerequisite ×3). Recovery did not write a
+  separate history header: `--apply recover` completed the interrupted sync event `bfab400e…` (04:41:19Z).
+- No other changes. Re-verify read-only (receipts, catalog, links unchanged) and grade.
+
+Handing off to Reviewer (codex) — take round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
