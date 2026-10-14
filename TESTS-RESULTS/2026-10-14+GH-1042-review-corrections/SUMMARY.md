@@ -1,0 +1,7 @@
+# PR1054 review corrections — current-base evidence
+
+Source519e9014, refreshed onto development7bc727cb. Existing34 manual outcomes passed in a separate full clone. The two-phase retry intentionally exits7 and dispatches the failing p2 stub; its result is now null rather than the earlier approved p1 object. Original pre-correction receipts are retained under the older date and are superseded only for that result association. No production recovery code was changed by the review corrections, no new CI tests/cases were added and no live provider/run was activated.
+
+Ledger conflicts were proven disjoint and replayed by the installed ledger resolver. The CLI does not expose a positional-update verb; the retained position-repair receipt records a one-time two-GID change through the existing releases_app.perform_write transaction owner. Only positions changed, to127/128; ratings and all other row fields were checked unchanged. GH1045 raw text was corrected through roadmap update. Releases check passed with0 failures and9 historical warnings.
+
+Before/after clone HEAD, origin, bare flag and local config digest match. Absolute disposable-clone paths in published logs are normalized; original local raw output remains in the gate clone. Existing final QA was2/3 and the updated head uses its remaining third review; the cap is unchanged. The normal updated-head publication gate is still required.

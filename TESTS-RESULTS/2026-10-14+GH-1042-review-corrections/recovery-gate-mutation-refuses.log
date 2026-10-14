@@ -1,0 +1,11 @@
+marathon-drive: phase p1 already reached a terminal relay (STATUS: Approved, token done) — skipping render/reseed, re-running only the pre-advance gate
+marathon-drive: relay approved — running pre-advance gate: printf unreviewed > src.txt; git add src.txt; git commit -qm post-mutation
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 2MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: <disposable-clone>/temp/recovery-manual/recovery-gate-mutation-83p_6dy0/relay-system/recovery-gate-mutation-83p_6dy0/2026-10-14/marathon-p1-233708.md
+marathon-drive: phase p1 success: recovery changed non-transcript content — candidate 8e9752e6ca16 changes non-transcript content after reviewed head b990e4b063d0
+marathon-drive: phase p1: relay exited 0 but its approval is not attested for candidate 8e9752e6ca16 — refusing to publish success
+marathon-drive: transcript unchanged: <disposable-clone>/temp/recovery-manual/recovery-gate-mutation-83p_6dy0/relay-system/recovery-gate-mutation-83p_6dy0/2026-10-14/marathon-p1-233708.md
+marathon-drive: warn: host free swap is critically low (453MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7235MB, swap_free=453MB
+marathon-drive: escalation written: <disposable-clone>/temp/recovery-manual/recovery-gate-mutation-83p_6dy0/phases/p1/ESCALATION.md (reason: candidate-drifted-from-reviewed-head)
+marathon-drive: result receipt written: <disposable-clone>/temp/recovery-manual/recovery-gate-mutation-83p_6dy0/result.json (outcome: escalated, exit 4)

@@ -1,7 +1,7 @@
 # RELAY · GH1042 + GH1045 final implementation QA
-NEXT: —
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: codex
+STATUS: Open
+ROUND: 3 / 3
 
 ## Setup
 Producer: Codex outer session. Reviewer: independent Codex CLI through shipped relay.
@@ -99,3 +99,13 @@ added-sha256: 6d0b5287bdc959761411cc6ad14355d75604c02273163e476b3cc3509620582d
 
 ### Publication handoff · Producer
 PR #1054: https://github.com/HiQS-Labs/XYZ-forge/pull/1054 (development, non-draft, MERGEABLE). Full pre-push409/409 atd37140db, no retries, clone identity unchanged. Gate receipts committed in7be78ea0; its metadata-only documentation gate passed67s. Production blobs unchanged from reviewed source9b392b35. This handoff adds only publication facts, not a new reviewer verdict. Await merge/reconciliation; no Jog dispatched.
+
+### Round 3 · Producer · 2026-10-14
+Did: refreshed the existing PR1054 branch onto development7bc727cb using the installed disjoint-only ledger resolver; corrected stale plan acceptance/pending states; added the missing durable bet record and append-only changelog correction; corrected GH1045 raw-text title; repaired positions of only GH1042/GH1045 through the existing releases_app.perform_write owner, preserving every other row field. The CLI has no positional-update verb; no CLI/runtime subsystem was added. Production recovery/attestation code is unchanged by review corrections.
+
+Repro: the retained old two-phase row has rc7 but result.exit_code0/outcome approved from the earlier p1 seed. Existing manual-replay now unlinks the seed result before shell traversal. Fresh existing34-outcome replay passed; the failed p2 retry has result null and dispatched=true. Clone identity/config remained identical. Retained new evidence: TESTS-RESULTS/2026-10-14+GH-1042-review-corrections/. No new CI tests/cases, no cap reset, no live provider/Marathon/Jog activation. Updated-head normal publication gate remains pending.
+
+Review scope: review these corrections and the current-base integration, adjudicate the original five CodeRabbit findings against actual source/evidence, verify the ledger write uses the existing transaction owner and changes only intended metadata, and check that earlier historical receipts/approvals are not rewritten. Original final QA round1/round2 and attestations remain intact. This is the remaining third round of the existing three-round budget.
+
+## ▶ TAKE YOUR TURN — codex (round 3 current instructions)
+Read current committed changes and retained evidence. Edit ONLY this existing relay file. Do not run git, suites, pytest, executable fixtures, provider calls or writes outside this relay. Narrow nonmutating JSON/source probes are permitted under .relay-scratch or TMPDIR. Append `### Round 3 · Reviewer · <timestamp>` with literal `VERDICT: PASS`, `VERDICT: FAIL` or `VERDICT: PARKED`, nonempty Basis, `swept file: yes/no`, graded cited findings and `Commit: none`. For PASS set STATUS: Approved/NEXT: — and mark the pinned token done. For findings set STATUS: Open/NEXT: producer and release to producer. Do not edit old log blocks or call a passing gate an independent review. Cap3/3; no further round is authorized. Distinguish inspected producer evidence from any independently executed probes and from the still-pending publication gate.
