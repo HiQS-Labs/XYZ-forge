@@ -2,7 +2,7 @@
 gh_issue: 1043
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1043
 title: "feat(recon, review-code): Step N+1 bounded downstream verification in default and exhaustive simulation in deep mode"
-status: "Proposed (1-INBOX — active)"
+status: Complete
 created: 2026-10-12
 doc_type: feature
 effort: 2
