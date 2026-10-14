@@ -208,3 +208,11 @@ PASS bounded contract probes
 **[Unverified — needs clone run]** Final publication gate for the final committed candidate remains an independent merge prerequisite. No validate/test/pytest/executable fixture ran in this reviewer worktree. Current live issue refresh, hosted checks for the eventual pushed head, and IDE discovery/deployment are unverified. This is seeded-artifact QA approval; it does not attest merge readiness, deployment or cleanup. Probe inputs used read-only files/in-memory mutations and permitted scratch only.
 
 Handoff: **Approved**; complete the relay token with `done` as required for PASS. The producer/orchestrator must still inspect the final publication gate and final remote head before landing/deployment. Only this relay file changed outside permitted scratch and pinned tick state.
+
+### Attestation · relay-drive — 2026-10-14T20:50:30Z
+task: RELAY-GH1044-LANDING-20261014
+reviewer: codex
+status: Approved
+reviewed-head: 2cef261b8c46fb1db37052b723a9e0b0bb2d7937
+added-range: 20507+6796
+added-sha256: 61b46dab5be4b92227a242fcc295966f96df48dc3da96a63df0f8b69a11e0a5a
