@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-14T23:54:52.908976+00:00",
+  "base": "69666c474c4b27ddacd7c865d32ebee7713d1541",
+  "resolved_commit": "c396bd76a6a75339aeb92a03f63a1d3244a4e45e",
+  "original_reviewed_head": "6edaeacded5e0aaa8a0f5d1f7edbab99e355ab87",
+  "scope": "reconciliation-only docs/ledger refresh; GH1043 incoming metadata replay only",
+  "reviewed_issue_rows_unchanged": true,
+  "runtime_blobs_unchanged": {
+    "utils/py/marathon_drive.py": "3e26b03a43215e31fa9c5a732d9d8d4ec72a1b0e8001783ca453d1736dd72498",
+    "utils/py/relay_attest.py": "aa5d2224482812c2619828d20d3afa0eaae5e2913301c4624657e05cbd0820b3",
+    "utils/py/jog_run.py": "ee02a62ba6a02283e1ea1159f03fa415ceba64a2f89763af86349b8c23564b93"
+  },
+  "leaderboard_policy": "retain hosted incoming view byte-for-byte; no task-owned routine view delta",
+  "final_QA_budget": "3/3 remains exhausted; no new turn or cap reset; fresh exact-head automated reviews/checks required"
+}
