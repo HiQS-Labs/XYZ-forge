@@ -4,7 +4,7 @@ status: Active (2-WORKING)
 created: 2026-10-14
 updated: 2026-10-14
 owner: noel
-branch: docs/XYZ-forge-gh1057-ai-review-authorization-2026-10-14
+branch: development
 doc_type: project
 source: releases.db (roadmap_items) (open ledger entries)
 generated_by: utils/marathon-plan.sh
@@ -103,7 +103,9 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #907 GH-907 · router_audit.py remediation hint prints bare utils/py path in vendored .xyz/ installs — `already-landed`
 - #906 GH-906 · pdda-install.sh aborts mid-install when .claude/skills is unwritable, skipping buckets, seeds, mode file and registry — `already-landed`
 - #905 GH-905 · PDDA/RELEASES: no supported releases-DB-only install path; MD ledger seeds and projections can only be stopped ad hoc — `already-landed`
-- #1055 GH-1055 · Neutral skipped-review disclosure — `already-closed`
+
+### 🔧 Reconcile — undocumented partial completion
+- #14 GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files — `partial`
 
 ### ⚠️ Not yet sequenceable — rate / add doc / add contract
 - #201 GH-201 · Gen 3.5 follow-ups — remaining ATE hardening arc (tasks 3–8b of #174) — `needs-contract`
