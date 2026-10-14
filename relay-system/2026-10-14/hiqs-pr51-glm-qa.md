@@ -114,4 +114,12 @@ Basis: every plan check reproduced against the clone at `ae7a29e` — rename com
 
 swept file: yes
 
+
+### Attestation · relay-drive — 2026-10-14T23:31:12Z
+task: RELAY-hiqs-pr51-glm-qa
+reviewer: commandcode
+status: Approved
+reviewed-head: 7f8f661a8bdc077faaaa886eab39446ba6d048ad
+added-range: 7673+5073
+added-sha256: 0ec1f4bf0304f05c5d60f2f5f0b0a1c2354efa25d50ad3973138ed332dc951e3
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
