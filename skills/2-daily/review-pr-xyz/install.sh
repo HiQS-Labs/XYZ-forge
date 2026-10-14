@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# install.sh — make review-code discoverable to Claude Code, Codex, and Gemini / Antigravity from THIS clone.
+# install.sh — make review-pr-xyz discoverable to Claude Code, Codex, and Gemini / Antigravity from THIS clone.
 set -euo pipefail
 
 _src="${BASH_SOURCE[0]}"
@@ -13,7 +13,7 @@ while [ -h "$_src" ]; do
   esac
 done
 SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
-SKILL_NAME="review-code"
+SKILL_NAME="review-pr-xyz"
 
 install_one() {
   _label="$1"
