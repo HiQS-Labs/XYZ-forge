@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -133,8 +133,27 @@ Handing off to Producer (claude-a) — address S1/S2, disposition the remaining 
 - S1 → **Implemented** (plan d05af87, step 1 check): old-name assertion scoped to `skills/*.md`; separate `git diff --quiet origin/main -- skills/hiqs-chain/assets/image-manifest.json` asserts the preserved evidence is unchanged.
 - S2 → **Implemented** (step 2): the diagnostic now reads as a clue (`dispatched: true`, no `httpStatus`, `contract_rejected` *can indicate* blocked egress), first establish whether network was denied and rerun with network, and keep contract investigation if it recurs with network available.
 - Nit → **Implemented** (post-merge): `update hiqs-chain --source <merged main>/skills/hiqs-chain`, then preview/apply sync.
-- Recon/manifest/deployment [Pass] items: no change. The artifact path above now resolves to plan r2 (re-seeded).
+- Recon/manifest/deployment [Unverified — no citation] items: no change. The artifact path above now resolves to plan r2 (re-seeded).
 
 Handing off to Reviewer (codex) — round 2.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+
+Basis: S1, S2 and the deployment-source nit are addressed. The full plan is ready to implement within the documentation/rename envelope; approval does not attest implementation or deployment.
+
+swept file: yes
+
+Read the entire revised `.relay-artifacts/plan.md`, all three affected skill Markdown files and CHANGELOG, plus the dispatch/response failure path, manifest builder and deployment SOP/source. No additional pre-existing defect found in those affected files beyond the missing network guidance already covered by this task. Source citations below are relative to `/Users/noelsaw/Documents/GH Repos/hiqs-ai-resolve-gh49-hiqs-skill-rename-2026-10-14` unless qualified.
+
+- **[Pass] S1 closed — live-name checks and preserved evidence no longer conflict.** `.relay-artifacts/plan.md:36` scopes the old-name search to skill Markdown and separately checks the unchanged manifest. The five preserved old-name occurrences in `skills/hiqs-chain/assets/image-manifest.json:1` therefore do not invalidate the rename check. The plan retains the actual live references at `skills/resolve-research/SKILL.md:2`, `:14`, `skills/resolve-image/SKILL.md:2`, `:39`, and `skills/hiqs-chain/SKILL.md:3`, `:18` in its rename scope (`plan.md:16–19`, `:35–39`).
+- **[Pass] S2 closed — diagnostic uncertainty is explicit.** `.relay-artifacts/plan.md:37` includes `dispatched: true`, says “can indicate”, asks to establish network denial, and retains investigation of HTTP-200 shape rejection with network available. This matches the distinct paths in `consumer/chain.ts:243`, `:306–318`, `:321–323`; the signature alone is not presented as proof of blocked egress. Canonical guidance plus wrapper pointers remain DRY (`plan.md:37`, `:39`).
+- **[Pass] Evidence identity stays outside the folder rename.** `.relay-artifacts/plan.md:22` preserves both the manifest and builder identity. `scripts/build-image-manifest.ts:19`, `:39`, `:43`, `:51–56`, `:64` use the old string as provenance while sealing evidence/snapshot data, not as a folder lookup. Narrow read-only probe (exit **0**): `python3 -c 'from pathlib import Path; import re; r=Path("/Users/noelsaw/Documents/GH Repos/hiqs-ai-resolve-gh49-hiqs-skill-rename-2026-10-14"); print({s:(len(fs:=list((r/s).rglob("*.ts")))+len(js:=list((r/s).rglob("*.tsx"))),sum(bool(re.search("resolve-research|resolve-image|research-chain",p.read_text())) for p in fs+js)) for s in ("consumer","src","packages","tests")}); print("manifest old-name matches:",len(re.findall("resolve-research|resolve-image",(r/"skills/hiqs-chain/assets/image-manifest.json").read_text())))'`. Decisive output: `{'consumer': (6, 0), 'src': (98, 0), 'packages': (11, 0), 'tests': (24, 0)}` and `manifest old-name matches: 5`. The additional historical mention at `docs/catalog-ops/ledger.md:624` remains a valid deliberate exclusion, as recorded in round 1.
+- **[Pass] Deployment-source nit closed; bounded verification remains appropriate.** `.relay-artifacts/plan.md:49` now pins `update hiqs-chain --source <merged main>/skills/hiqs-chain` and previews/applies sync after both removals and additions. This follows `/Users/noelsaw/git-pulse-sync/Deployed Skills/skills-army-hq/SKILL.md:22–24`, `:66–68`, `:88–89`; its `scripts/intake.py:816` explicitly requires sync to withdraw owned links. Intake previews and the fresh-agent durability probe have observable outcomes and a transcript destination (`plan.md:43–44`).
+
+Limitations: Graph Verify lookup again found the other checkout's generation `2026-09-12T03:16:16Z`; `consumer/chain.ts` search returned zero, and checked paths were untracked/excluded. Coverage pagination was completed; direct reads and literal scans supplied the evidence. No Git command, test suite, executable fixture, deployment, paid call or fresh-agent probe was run. Runtime/durability outcomes remain **[Unverified — needs clone run]**. Only this relay file was edited.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with implementation and its planned verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
