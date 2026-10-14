@@ -1,6 +1,6 @@
 ---
 title: "GH-1057: docs: record standing authorization for configured AI reviewers"
-status: Active
+status: Complete
 created: 2026-10-14
 updated: 2026-10-14
 owner: operator (via /express)
