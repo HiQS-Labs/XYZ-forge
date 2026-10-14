@@ -115,3 +115,11 @@ The red control establishes equality-check sensitivity; the four policy judgment
 Limits: The base-removal comparison is producer-reported in `TESTS-RESULTS/2026-10-14+GH-1055/provenance.jsonl`, which I read; I did not independently repeat it because git is prohibited this turn. No suites, executable fixtures, artifact edits, or git commands ran. Harness acceptance and publication verification remain outside this textual verdict.
 
 Round 2 disposition: STATUS Approved; NEXT —; mark the token done. This entire Round 2 Reviewer block is appended after all pre-existing text; only the header NEXT/STATUS values change above it.
+
+### Attestation · relay-drive — 2026-10-14T17:37:41Z
+task: RELAY-GH1055-NOTE-20261014-2
+reviewer: codex
+status: Approved
+reviewed-head: d21644c33ee506e85191162efdabe9c2dbd06ad2
+added-range: 5799+3779
+added-sha256: f26f4eb2c2098d2509dd246fd5aee201c4901ba3afce5d5ed7c27b3e9aeaf952
