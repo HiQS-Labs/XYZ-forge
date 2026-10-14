@@ -156,4 +156,12 @@ Limitations: Graph Verify lookup again found the other checkout's generation `20
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with implementation and its planned verification.
 
+
+### Attestation · relay-drive — 2026-10-14T23:15:31Z
+task: RELAY-hiqs-gh49-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 9bbf883802932b48d74df49bcd64862dcd8e8df3
+added-range: 14436+4100
+added-sha256: e7944295bf0e2b8628dea2a11011d8fa700641ce47a2b63bf002b986918cbea8
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
