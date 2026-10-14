@@ -67,6 +67,14 @@ ROUND: 1 / 3
 
 ## Log
 
+
+### Attestation · relay-drive — 2026-10-14T23:39:22Z
+task: RELAY-GH1059-FINAL-20261014
+reviewer: codex
+status: Approved
+reviewed-head: e86e137107b85c0b895a13d1298431c3f1548af8
+added-range: 8125+5114
+added-sha256: 22d193c3dda4e9d8ba9c099d7dbbc5640ee4f4224556e0ee0898a902d2d13c7c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 ## Bounded final QA packet
