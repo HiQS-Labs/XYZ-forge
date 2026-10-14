@@ -2,7 +2,7 @@
 title: "GH-1042 + GH-1045: trusted phase completion recovery"
 status: PR ready — awaiting merge
 created: 2026-10-13
-updated: 2026-10-13
+updated: 2026-10-14
 owner: Codex
 goal: Restore gate-only and cross-phase recovery without approving unreviewed branch changes.
 gh_issue: 1042
@@ -27,11 +27,11 @@ One repair PR, based on development b9f07ea5b8d95bac62a3ed9f886770fee883030f, co
 
 | Issue | Requirement | Acceptance | State |
 |---|---|---|---|
-| [#1042](https://github.com/HiQS-Labs/XYZ-forge/issues/1042) | `--force` on an attested terminal lane reruns the gate, with no fresh token/turn. | Base, numeric and force-token completions select their recorded same-family token; no dispatch; explicit retry still rebuilds. | Planning |
-| [#1045](https://github.com/HiQS-Labs/XYZ-forge/issues/1045) | Later legitimate phase/operator commits must not make a completed phase unsatisfiable. | Complete phase p1, commit p2 changing shared source, replay p1 and reach p2 retry; retain historical reviewed candidate. | Planning |
-| Shared safety | Terminal words, unrelated tokens, missing/corrupt evidence and unreviewed edits before completion cannot satisfy a phase. | Refusal controls, strict legacy/current-candidate checks and unchanged merge eligibility. | Planning |
+| [#1042](https://github.com/HiQS-Labs/XYZ-forge/issues/1042) | `--force` on an attested terminal lane reruns the gate, with no fresh token/turn. | Base, numeric and force-token completions select their recorded same-family token; no dispatch; explicit retry still rebuilds. | Verified — PR #1054 |
+| [#1045](https://github.com/HiQS-Labs/XYZ-forge/issues/1045) | Later legitimate phase/operator commits must not make a completed phase unsatisfiable. | Complete phase p1, commit p2 changing shared source, replay p1 and reach p2 retry; retain historical reviewed candidate. | Verified — PR #1054 |
+| Shared safety | Terminal words, unrelated tokens, missing/corrupt evidence and unreviewed edits before completion cannot satisfy a phase. | Refusal controls, strict legacy/current-candidate checks and unchanged merge eligibility. | Verified — PR #1054 |
 
-Canonical plan is this file; GH1045 capture points here. Branch is `fix/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13`; clone naming follows the lowest issue's capture slug. PR pending.
+Canonical plan is this file; GH1045 capture points here. Branch is `fix/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13`; clone naming follows the lowest issue's capture slug. PR: #1054.
 
 ## Measured ground truth and root cause
 
@@ -69,7 +69,7 @@ Legacy limitation: a phase completed by an older driver, followed already by unr
 
 No new test files or gate machinery. Existing suites: gh491-gate-only-refire, gh505-relay-attest, gh642-consumer-fruit, marathon-drive, and Python layer if applicable. Manual replay under TESTS-RESULTS is an evidence artifact, not a registered suite. Controls must include empty/missing attestation, unrelated family, force generation, numeric generation, explicit retry, legacy later drift, tampered review binding, divergent HEAD, red gate and post-approve mutation, historical gate-induced mutation, result identity, and a two-phase shell traversal. Compare disposable clone HEAD/config/origin/local identity before and after suite runs; drift invalidates evidence.
 
-Plan QA: Approved, third round, relay driver exit0; earlier two scaffold-invalid turns do not qualify. Final QA: pending. Gate: pending. No claim of merge readiness before all three pass. Reviewer budget is three rounds; no enterprise machinery or speculative approval redesign.
+Plan QA: Approved, third round, relay driver exit0; earlier two scaffold-invalid turns do not qualify. Final QA: round2 Approved. Original full publication gate: 409/409 at d37140db. The current base refresh and evidence corrections require remaining final QA round3 and a fresh publication gate. Reviewer budget is three rounds; no enterprise machinery or speculative approval redesign.
 
 ## Ratings and recurrence (2026-10-13)
 
@@ -79,7 +79,7 @@ Read-back RELEASES scores: GH1042 80/80/50/65 (sum275), GH1045 85/85/50/40 (sum2
 
 Source at 7128b496 implements the approved plan. Existing post-approve hooks revealed an event-timing regression at 0275a7a0; corrected by preserving the approval event before the hook while stamping completion only after final validation. Existing marathon-drive suite then passed. Manual recovery/refusal controls and two-phase shell traversal all passed, with exact raw records and provenance under TESTS-RESULTS/2026-10-13+GH-1042/.
 
-Plan QA completed with driver exit0 on round3. Round1 and round2 were structurally rejected due to the producer's scaffold/skill-runtime verdict mismatch; retained in the relay, not counted as approvals. Final QA and full route3 publication gate remain pending; this task is not shipped.
+Plan QA completed with driver exit0 on round3. Round1 and round2 were structurally rejected due to the producer's scaffold/skill-runtime verdict mismatch; retained in the relay, not counted as approvals. Historical checkpoint: final QA and the full route3 publication gate were pending then. The verified handoff below records their later results; this task is not shipped.
 
 Final QA round1 approved source7128b496 with driver exit0. A subsequent producer compatibility check found --force on a legacy divergent approval had lost GH642's rebuild escape (exit4/no dispatch). Restored explicit force fallthrough to fresh-token rebuild, never satisfaction; plain recovery still refuses. This narrow preservation is covered by plan step1 (unsatisfied force allocates a fresh token). Final QA round2 will review the changed source and new control; round1 approval is stale for that source.
 
@@ -89,4 +89,10 @@ At source9b392b35, all34 manual expected outcomes and the existing Marathon suit
 
 Final Codex QA round2 Approved with driver exit0 (relay-system/2026-10-13/gh1042-final.codex.md). Full macOS pre-push gate409/409, zero retries at d37140db; clone identity unchanged. Runtime source remains9b392b35's exact blobs; subsequent changes are retained receipts and handoff metadata. PR publication follows the final documentation gate. Awaiting merge is not shipped; both issues stay open until landing. Jog was not dispatched.
 
-PR: [https://github.com/HiQS-Labs/XYZ-forge/pull/1054](https://github.com/HiQS-Labs/XYZ-forge/pull/1054). Base development; GitHub MERGEABLE; issues remain open pending landing.
+PR: [https://github.com/HiQS-Labs/XYZ-forge/pull/1054](https://github.com/HiQS-Labs/XYZ-forge/pull/1054). Base development; live mergeability and exact-head gates must be rechecked after the current review corrections; issues remain open pending landing.
+
+## Review corrections and base refresh — 2026-10-14
+
+The ledger conflict against development7bc727cb is mechanically disjoint. The installed classifier kept generation1628 and replayed GH1042/GH1045 through the existing writer, preserving ratings and issue/document identity. Current review corrections leave production recovery/attestation code unchanged. Acceptance remains verified by the original retained replay; corrected two-phase evidence now removes the seed result before the shell traversal, so a failed p2 retry cannot carry an earlier p1 approval object. Earlier raw receipts remain immutable and are explicitly superseded for that result association.
+
+The durable bet is recorded in [the recovery decision](../../decisions/2026-10-14-gh1042-historical-completion.md). Final QA round3 and the fresh normal publication gate remain required for the updated head. The three-round review cap is unchanged. No live Marathon/Jog was activated.

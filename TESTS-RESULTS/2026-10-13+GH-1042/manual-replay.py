@@ -140,6 +140,7 @@ if FIXED:
     plan=root/'PROJECT/2-WORKING/recovery/MARATHON.yaml';plan.parent.mkdir(parents=True)
     plan.write_text('phases:\n  - id: p1\n    reviewer: agy\n    brief: brief.md\n  - id: p2\n    reviewer: agy\n    depends_on: p1\n    brief: brief.md\n')
     env.update(MARATHON_HOME=str(H))
+    (root/'result.json').unlink(missing_ok=True)
     p=run(['bash',H/'relay-automation/marathon.sh','--plan',plan,'--phases-dir',root/'phases','--retry','p2','--builder','claude','--pre-advance-cmd','true'],root,env,False)
     record('two-phase-later-retry',p,root,7)
     assert 'phase p1 complete' in p.stdout and 'MARATHON-P2-TURN-2' in p.stdout

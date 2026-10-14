@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-14 — PR1054 review evidence and base refresh (GH-1042, GH-1045)
+
+Correct the two-phase manual replay association by clearing its earlier seed result before shell traversal. Prior raw evidence is retained unchanged; the corrected replay must report a null result for the intentional failed p2 dispatch, rather than an earlier p1 approval. Refresh onto development7bc727cb through the existing ledger writer; preserve ratings, issue identity and original PR history. Update the verified plan state and add [the previously missing durable bet record](decisions/2026-10-14-gh1042-historical-completion.md).
+
+The original Costly bet now has an explicit expected signal by2026-10-28 and an iterate recommendation: use the next independently authorized multi-phase run to confirm historical recovery and strict current-head merge refusal, or retain an unverified operational claim if no run occurs. No live run is activated. The production recovery/attestation behavior is unchanged by these corrections. Updated-head independent final QA and normal publication qualification remain required.
+
 ## 2026-10-13 — Completed Marathon phases retain their reviewed recovery revision (GH-1042, GH-1045)
 
 Force recovery resolves a completed lane before allocating another token. Completed phases accept their base, numeric retry or force generation, and retain a validated completion revision in the existing protected approval record. Later phase/operator commits no longer invalidate that recorded historical completion. Current-head merge eligibility remains strict; recovery does not approve successor code or repeat completed post-approve effects.
