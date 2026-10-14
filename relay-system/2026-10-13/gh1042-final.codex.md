@@ -1,6 +1,6 @@
 # RELAY · GH1042 + GH1045 final implementation QA
-NEXT: codex
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 3 / 3
 
 ## Setup
@@ -109,3 +109,60 @@ Review scope: review these corrections and the current-base integration, adjudic
 
 ## ▶ TAKE YOUR TURN — codex (round 3 current instructions)
 Read current committed changes and retained evidence. Edit ONLY this existing relay file. Do not run git, suites, pytest, executable fixtures, provider calls or writes outside this relay. Narrow nonmutating JSON/source probes are permitted under .relay-scratch or TMPDIR. Append `### Round 3 · Reviewer · <timestamp>` with literal `VERDICT: PASS`, `VERDICT: FAIL` or `VERDICT: PARKED`, nonempty Basis, `swept file: yes/no`, graded cited findings and `Commit: none`. For PASS set STATUS: Approved/NEXT: — and mark the pinned token done. For findings set STATUS: Open/NEXT: producer and release to producer. Do not edit old log blocks or call a passing gate an independent review. Cap3/3; no further round is authorized. Distinguish inspected producer evidence from any independently executed probes and from the still-pending publication gate.
+
+### Round 3 · Reviewer · 2026-10-14 23:44:32 UTC
+VERDICT: PASS
+Basis: Ship with conditions: approve the supplied corrections for the pending updated-head publication gate. Reviewed the complete relevant completion/attestation functions, force startup path, Jog merge consumer, existing ledger transaction owner, plan/decision/changelog corrections and retained producer evidence. Independently executed only read-only source/JSON/immutable-SQLite consistency probes; no behavioral fixture, suite, pytest, provider call, git command, commit, push or merge. Producer replay is attributed by committed provenance to source519e901419e6e8607eafbbc29fbbd5dcd1ceee7c. GitHub connector reads supplied the original five review comments and historical source/base blobs; local byte hashes independently establish the comparisons below. No current local commit identity is asserted. Graph project pagination exhausted; this checkout has no project. Nearest XYZ-forge generation2026-09-01T15:54:30Z is a different root, with metadata_changed/not_tracked coverage for all four evidence paths. Exact local source supplied the Verify-tier fallback. Scope is the relevant functions and corrections, not every unrelated function in these modules.
+swept file: yes
+
+- [Pass] CodeRabbit minor finding4261368769, durable bet: `CHANGELOG.md:3` appends a dated correction linking `decisions/2026-10-14-gh1042-historical-completion.md:1`. The decision supplies the expected recovery/strict-merge signal, concrete2026-10-28 review date, iterate recommendation, revisit conditions and rollback. It explicitly retains an unverified operational claim if no independently authorized run occurs. The original consequential changelog entry is unchanged, rather than retrospectively rewritten. This satisfies `PROJECT/PDDA.md:1025`. No live run is authorized by this approval.
+- [Pass] CodeRabbit minor finding4261368837, stale plan: `PROJECT/2-WORKING/GH-1042-FORCE-GATE-ONLY-REFIRE.md:30` marks the three acceptance rows Verified and names PR1054. Its evidence section at `:72` distinguishes round2/old409-of409 qualification from still-required round3/current publication qualification. The checkpoint and handoff preserve their dated source identities. Historical verification is established by retained evidence; these labels confer no updated-head merge readiness.
+- [Pass] CodeRabbit minor findings4261368852/4261368866, positions and title: `TESTS-RESULTS/2026-10-14+GH-1042-review-corrections/pr1054-position-repair.json` has exactly two before/after rows, changing only position to127/128. Independently queried immutable `releases.db` shows both positions unique in In progress and the same GH1045 heading in title/raw_text. Current row comparison preserves every other field apart from the separately recorded GH1045 raw_text/updated_at correction. Existing `utils/py/releases_app.py:1657` owns lock, intent journal, BEGIN IMMEDIATE, generation, receipt, durable dump and connector dispatch; its local blob `fa25aee8e4c5a37a13cb748e8ebe3726f95eeac3` matches development7bc727cb. Actual op_receipts contains `roadmap-position-repair` immediately followed by `roadmap-update`, with matching after/before digests. The retained receipt and existing-owner source support the one-time operation; I did not execute that write or inspect an independently retained mutation script. No new CLI/runtime writer was introduced.
+- [Pass] CodeRabbit minor finding4261368880, stale two-phase result: `TESTS-RESULTS/2026-10-13+GH-1042/manual-replay.py:143` now unlinks the seed result before shell traversal. Read-only comparison to PR head730e707 finds exactly that inserted executable line, after normalizing the scratch copy's trailing LF. Exit0 decisive output: `Manual replay correction is exactly one inserted seed-result unlink (trailing scratch LF normalized)`. The new `results.json` row is rc7/dispatched=true/result=null; `two-phase-later-retry.log` shows completed p1 recovery, MARATHON-P2-TURN-2 dispatch and p2 halt. This is stubbed dispatch evidence, not a successful p2/provider run. The older `after-legacy-force/manual-results.json` blob remains `1f3a1dca036b4db652c99013eb745cc782453a3e`, matching head730e707; its stale approved p1 object is preserved and explicitly superseded for that association.
+- [Pass] Current-base integration and historical preservation: nonempty GitHub-fetched development7bc727cb dump contained3372 INSERT rows. Independent exact-line comparison retains every row except the replaced generation setting; unrelated business/provenance rows are intact. The original relay through the publication handoff is an exact prefix after normalizing only its first three mutable headers; round1/round2 reviews and attestations are unchanged. Original provenance blob `1db4c1b463ff3ce2048551aa0292e1654b63e269` matches head730e707. Current correction provenance's40 artifact hashes all match. No old approval or result was rewritten to make the new replay appear successful.
+- [Pass] Reconciled production authority: local blobs of `marathon_drive.py` (`180b0f9d1e0edf682102b5bb7b47487243b67d59`), `relay_attest.py` (`3e6185bf93e7c8f628cb836aae45e1537a861b11`) and `jog_run.py` (`c3fd8a03370f33f238e15a6c40a2d63fa362694a`) match reviewed source9b392b35 via GitHub blob identity and locally computed SHA1 over the Git blob byte format, without invoking git. `marathon_drive.py:2874` refuses unsatisfied terminal approval unless force without explicit task falls through to fresh rebuild, and satisfaction precedes allocation at `:2926`. `relay_attest.py:359` uses the existing atomic writer; `:375` checks phase/lane/review binding, strict completion candidate and ancestry. Missing legacy metadata stays strict, malformed completion refuses. `marathon_drive.py:2673` preserves approval-before-hook timing, validates after the hook, fails completion-write errors, retains historical candidate and checks committed recovery-time drift. Historical recovery skips completed hooks/test-delta obligations and suppresses fresh review/gate receipts. `jog_run.py:414` still forwards the historical expected candidate; `:1454` requires live PR head equality, strict candidate_ok and match-head-commit. No successor merge authority is granted within the existing GH505 committed-candidate boundary. Four independently parsed ASTs passed; this is syntax evidence only.
+- [Pass] Independently executed consistency probe below: exit0; decisive output: `34/34 outcomes; wrong-rc red control rejected; failed p2 result null; identity equal; 40 hashes match; two positions unique; metadata preserved; 3372 base rows retained except generation; old changelog/relay history unchanged`. The remote-review/base-comparison scratch inputs contain the nonempty connector-fetched historical relay/changelog and development7bc727cb INSERT rows. Command:
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PY'
+  import copy,hashlib,json,pathlib,re,sqlite3
+  p=pathlib.Path('TESTS-RESULTS/2026-10-14+GH-1042-review-corrections')
+  rows=json.loads((p/'results.json').read_text())
+  def valid(r): return len(r)==34 and all(x['ok'] and x['rc']==x['expected'] for x in r)
+  assert valid(rows)
+  bad=copy.deepcopy(rows);bad[0]['rc']+=1;assert not valid(bad)
+  d={x['name']:x for x in rows};t=d['two-phase-later-retry']
+  assert t['rc']==7 and t['dispatched'] and t['result'] is None
+  assert json.loads((p/'pr1054-gate-identity-before.json').read_text())==json.loads((p/'pr1054-gate-identity-after-manual.json').read_text())
+  v=[json.loads(x) for x in (p/'provenance.jsonl').read_text().splitlines()]
+  assert len(v)==1 and all(hashlib.sha256((p/n).read_bytes()).hexdigest()==h for n,h in v[0]['artifacts'].items())
+  q=json.loads((p/'pr1054-position-repair.json').read_text())
+  assert len(q['before'])==len(q['after'])==2
+  for a,b in zip(q['before'],q['after']):
+   assert {k:v for k,v in a.items() if k!='position'}=={k:v for k,v in b.items() if k!='position'}
+  assert [x['position'] for x in q['after']]==[127,128]
+  c=sqlite3.connect('file:'+str(pathlib.Path('releases.db').resolve())+'?mode=ro&immutable=1',uri=True);c.row_factory=sqlite3.Row
+  for a in q['after']:
+   b=dict(c.execute('select * from roadmap_items where global_id=?',(a['global_id'],)).fetchone())
+   omit={'raw_text','updated_at'} if a['gh_number']==1045 else set()
+   assert {k:v for k,v in a.items() if k not in omit}=={k:v for k,v in b.items() if k not in omit}
+   assert c.execute('select count(*) from roadmap_items where section=? and position=?',(b['section'],b['position'])).fetchone()[0]==1
+   if a['gh_number']==1045: assert '**'+b['title']+'**' in b['raw_text']
+  base=json.loads(pathlib.Path('.relay-scratch/tmp/base-comparison.json').read_text())
+  assert base['baseRows'] and base['oldEntry']
+  local=set(pathlib.Path('releases.sql').read_text().splitlines())
+  missing=[x for x in base['baseRows'] if x not in local]
+  assert len(missing)==1 and missing[0].startswith('INSERT INTO settings(') and "'generation'" in missing[0]
+  assert base['oldEntry'] in pathlib.Path('CHANGELOG.md').read_text()
+  old=json.loads(pathlib.Path('.relay-scratch/tmp/remote-review.json').read_text())['relay']['content']
+  def normal(s):
+   for k in ('NEXT','STATUS','ROUND'): s=re.sub(r'^'+k+r':.*$',k+':',s,count=1,flags=re.M)
+   return s
+  assert old and normal(pathlib.Path('relay-system/2026-10-13/gh1042-final.codex.md').read_text()).startswith(normal(old))
+  print('34/34 outcomes; wrong-rc red control rejected; failed p2 result null; identity equal; 40 hashes match; two positions unique; metadata preserved; 3372 base rows retained except generation; old changelog/relay history unchanged')
+    PY
+  ```
+  The in-memory wrong-rc control tests this consistency assertion's sensitivity; it is not a runtime mutation or new suite. The producer's34 expected behavioral outcomes were inspected, not rerun here.
+- [Unverified — needs clone run] The updated-head normal publication gate and hosted exact-head qualification remain pending. Original gate409/409 at d37140db is historical evidence only. The GitHub connector still reports published head730e707, not the supplied refreshed corrections; no fresh publication or live mergeability is claimed. This PASS permits the next authorized qualification step, not merge/promotion or a fourth review round. No blocking finding within the bounded final review.
+
+Commit: none
