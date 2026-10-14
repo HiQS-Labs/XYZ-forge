@@ -4443,6 +4443,8 @@ def cmd_roadmap_list(args):
                                  "raw_text": _col(r, "raw_text")})
                     rows[-1]["status_label_supported"] = _has_column(conn, "roadmap_items", "status_label")
                     rows[-1]["status_label"] = _col(r, "status_label")
+                    for key in (*RATING_COLUMNS, "risk"):
+                        rows[-1][key] = _col(r, key)
             print(json.dumps(rows, ensure_ascii=False))
             return
         if not _table_exists(conn, "roadmap_items"):

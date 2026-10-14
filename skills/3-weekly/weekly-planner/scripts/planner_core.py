@@ -85,13 +85,14 @@ def compute_prs_score(item: dict) -> tuple[int | None, str]:
     return None, ""
 
 
-def ledger_repo_id(conn, repo_root: Path, gh_repo: str | None = None) -> int:
+def ledger_repo_id(conn) -> int:
     """Select the requested repository rather than mixing rows in a shared ledger."""
-    repo = gh_repo or run_cmd(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], cwd=repo_root)
-    slug = repo.rsplit("/", 1)[-1]
-    row = conn.execute("SELECT id FROM repos WHERE slug = ?", (slug,)).fetchone()
+    selected = conn.execute("SELECT value FROM settings WHERE key = 'repo_slug'").fetchone()
+    if selected is None:
+        raise ValueError("Native ledger has no selected repository")
+    row = conn.execute("SELECT id FROM repos WHERE slug = ?", (selected[0],)).fetchone()
     if row is None:
-        raise ValueError(f"No native ledger repository matches {repo}")
+        raise ValueError(f"No native ledger repository matches {selected[0]}")
     return row[0]
 
 
@@ -130,7 +131,7 @@ def get_release_milestones(repo_root: Path, gh_repo: str | None = None) -> dict:
             conn = sqlite3.connect(f"file:{releases_db_file}?mode=ro", uri=True)  # SQLITE-GATEWAY-OK: read-only releases.db ledger inspection (GH-1043/GH-777)
             conn.row_factory = sqlite3.Row
             cur = conn.cursor()
-            repo_id = ledger_repo_id(conn, repo_root, gh_repo)
+            repo_id = ledger_repo_id(conn)
 
             # Use the canonical draft/active, dated-first order for this repository.
             releases = cur.execute(
@@ -813,7 +814,7 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
             conn = sqlite3.connect(f"file:{releases_db}?mode=ro", uri=True)  # SQLITE-GATEWAY-OK: read-only releases.db ledger inspection (GH-1043/GH-777)
             try:
                 conn.row_factory = sqlite3.Row
-                repo_id = ledger_repo_id(conn, repo_root, gh_repo)
+                repo_id = ledger_repo_id(conn)
                 rows = conn.execute("""
                     SELECT gh_number, title, section, position, status_marker, issue_url,
                            rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr,
@@ -879,7 +880,11 @@ def ingest_weekly_intake(repo_root: Path, gh_repo: str | None = None, team_issue
             item["risk_gate_badge"] = f"*[GATE: risk {item['risk']}]*"
         item["is_release_build"] = gh_num in dialed_in_set
         item["release_build_version"] = target_release_ver
-        item["is_deferred"] = (item.get("title") or "").lower().startswith("deferred:") or ("deferred" in combined and "vision" in combined)
+        item["is_deferred"] = (
+            section.startswith("deferred") or marker.startswith("⏸")
+            or (item.get("title") or "").lower().startswith("deferred:")
+            or ("deferred" in combined and "vision" in combined)
+        )
         roadmap_items.append(item)
 
     if not native_loaded:
