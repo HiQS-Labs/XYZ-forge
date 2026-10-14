@@ -57,3 +57,7 @@ Reserved for complex migrations, cross-service contracts, and distributed engine
 - Repair: propagate unavailable/truncated live intake, preserve filtered-empty results, share DB/CLI scoring and risk enrichment, scope native rows to the selected repo, exclude cut releases from target fallback, retain deferred vision work, and match assignment/blocker prose to implemented behavior.
 - Verification: retain the removed unapproved fixture as manual input under `TESTS-RESULTS/2026-10-14+GH-1043/manual/`; replay it and targeted adverse cases only in a disposable full clone. No new suite, registry entry, runtime dependency or gate.
 - Unknown: actual IDE skill discovery must be observed separately from successful filesystem link read-through.
+
+### Independent review follow-up
+
+Round1 independently reproduced canonical deferred rows entering active work and the actual `roadmap list --json` producer omitting rating/risk fields. The additive JSON export in `utils/py/releases_app.py` now supplies all five rating fields and risk using the existing schema-tolerant column reader; site-build and HQ rollup consumers accept extra keys. Planner deferral now respects canonical sections and explicit pause markers, and DB repository identity follows the ledger setting. Actual producer/consumer probes verified parity (79 active,62 scored; GH-418321) and parked GH-920/GH-974, with negative controls and unchanged ledger hashes. Existing status-label suite42/42 passed.

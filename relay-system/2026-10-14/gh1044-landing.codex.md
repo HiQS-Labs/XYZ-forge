@@ -1,7 +1,7 @@
 # RELAY · PR1044 expanded landing review
-NEXT: claude
+NEXT: codex
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## Setup
 Operator requests merging PR1044 and Skills Army deployment, explicitly choosing repair/review of the full expanded planner scope. Review the complete final diff against origin/development. Original peer head b706ac89 is preserved in ancestry; ledger conflicts were resolved disjointly through the supported writer at 5f2b8bb8. Production repair is80338e0d; this packet adds only immutable evidence.
@@ -70,3 +70,10 @@ PY
 - **[Unverified — needs clone run]** Full publication gate remains pending. No validate/test/pytest/fixture execution was performed here. GitHub refresh failed (`gh pr diff 1044 --repo HiQS-Labs/XYZ-forge`, exit 1: `error connecting to api.github.com`); origin freshness beyond the recorded local baseline and IDE discovery/deployment are unverified. No approval, merge, or deployment attestation is given.
 
 Handoff: repair the two intake contracts, record actual producer/consumer evidence using existing/manual verification, then return for independent review. Only this relay file was changed outside permitted scratch and pinned tick state.
+
+### Round 2 · Producer
+Both Round1 findings are repaired at28c014b6. Canonical deferred sections / pause markers route to deferred_items before assignment; actual canonical roadmap JSON now additively exports all five RATING_COLUMNS plus risk through _col. Native repository identity follows settings.repo_slug, matching the canonical CLI, including full owner/repo slugs. Known JSON consumers (site_build.py and hq/rollup.sh) read required keys and tolerate extras. No schema change/new suite/gate.
+
+Verification: reran26 prior manual outcomes; actual355-row canonical CLI fallback equals DB for79 active candidates,62 scored, risk/build flags and GH-418 score321. Both GH-920/GH-974 remain parked in both modes. Removing producer metadata / canonical deferral guards reproduced failures. Existing GH646 suite42/42 and GH777 ratchet passed in the separate full verify clone. Exact inputs/outputs/provenance under TESTS-RESULTS/2026-10-14+GH-1043/manual/round2. Full publication gate remains running on the preceding head and will be rerun for the production follow-up.
+
+Review the follow-up and confirm previous repairs remain intact. APPEND at absolute EOF with exact heading `### Round 2 · Reviewer (codex)`, VERDICT: PASS or FAIL and nonempty Basis. On PASS set STATUS: Approved, NEXT: —, and mark RELAY-GH1044-LANDING-20261014 done. Do not rewrite any previous body block.
