@@ -1319,7 +1319,7 @@ def main():
                 or args.root or args.prefix or args.exclude or args.strategy or args.show_merge_policy
                 or args.scan_only or args.prs_only or args.teardown_only or args.reconcile_pr
                 or args.marker or args.allow_unready_primary or args.resume or args.backup_first or args.backup_root):
-            parser.error("published retirement requires a positive PR and --checkout path(s), without other workflow modes/overrides")
+            parser.error("published retirement requires a positive PR, absolute --primary and --checkout path(s), without other workflow modes/overrides")
         return retire_published_checkouts(primary_repo, args.checkout, args.retire_published_pr,
                                          args.integration_branch, args.execute)
     try:
