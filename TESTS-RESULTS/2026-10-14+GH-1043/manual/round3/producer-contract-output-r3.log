@@ -1,0 +1,25 @@
+[WARN] Direct releases.db roadmap intake failed (controlled direct-reader failure); falling back to CLI.
+{
+  "verdict": "PASS",
+  "actual_cli_rows": 355,
+  "exported_metadata_keys": [
+    "rating_appeal",
+    "rating_effort",
+    "rating_ovr",
+    "rating_pri",
+    "rating_sev",
+    "risk"
+  ],
+  "db_and_cli_active_count": 79,
+  "db_and_cli_scored_count": 62,
+  "GH418_score": 321,
+  "canonical_deferred_920_974": "parked in both readers",
+  "red_controls": [
+    "producer field removal removes scores",
+    "canonical-state guard removal returns deferred issues to active work"
+  ],
+  "unchanged_ledger_hashes": {
+    "releases.db": "13beb45f7e1bca3bc4dd85ee775fd63397351ee358b4d39ceda2aceda9f0043d",
+    "releases.sql": "853d7a6cf3d9208a5892ff240f971790418726e4babf5ec1ae005fb2e375d8c6"
+  }
+}

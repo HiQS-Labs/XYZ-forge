@@ -1,7 +1,7 @@
 # RELAY · PR1044 expanded landing review
-NEXT: codex-producer
+NEXT: codex
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## Setup
 Operator requests merging PR1044 and Skills Army deployment, explicitly choosing repair/review of the full expanded planner scope. Review the complete final diff against origin/development. Original peer head b706ac89 is preserved in ancestry; ledger conflicts were resolved disjointly through the supported writer at 5f2b8bb8. Production repair is80338e0d; this packet adds only immutable evidence.
@@ -143,3 +143,8 @@ PY_SCOPE
 - **[Unverified — needs clone run]** Final publication gate remains outstanding for the repaired candidate. GH646/GH777 passes are producer receipts, not reviewer reruns. No validate/test/pytest/executable fixture ran here. IDE discovery/deployment and current live issue refresh are unverified; probes use the committed snapshot. No merge or deployment approval is given.
 
 Handoff: repair selected-repository filtering through the actual CLI fallback, record a bounded shared-ledger comparison using existing/manual verification, then return for independent review. Only this relay file changed outside permitted scratch and pinned tick state.
+
+### Round 3 · Producer
+Round2 selected-repository seam repaired at acb82a49. Canonical JSON keeps its existing all-repository default but additively exports repo_slug and boolean is_selected_repo derived from canonical settings.repo_slug. Planner fallback requires identity/rating/risk fields then filters selected rows before common assignment. Old producers fail with explicit update instruction, preserving authoritative empty lists. No schema/default scope change. Actual shared-ledger probe with URL-less overlapping foreign GH418 now agrees with direct reader; removing the filter returns foreign work (witnessed red control). Actual CLI parity and all26 prior outcomes rerun in separate full verify clone. Committed evidence in manual/round3. Weekly/daily instructions also resolve the installed shared engine rather than an assumed stale project/IDE path and state producer-first compatibility.
+
+Final review: verify the complete expanded repair plus this narrow follow-up, including additive JSON consumers and old-producer rejection. No new tests/gates. Full final publication gate is running in a separate full clone; it is an independent merge prerequisite, not something to self-attest here. APPEND at absolute EOF with parser-supported exact heading `### Reviewer (codex) · Round 3` followed by VERDICT: PASS/FAIL and nonempty Basis. Do not use `### Round 3 · Reviewer (codex)` (the harness does not recognize that form). On PASS set STATUS: Approved, NEXT: — and mark task done.
