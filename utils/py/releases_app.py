@@ -4435,14 +4435,21 @@ def cmd_roadmap_list(args):
             # a display, not an API — its column offsets shift whenever a field widens.
             rows = []
             if _table_exists(conn, "roadmap_items"):
-                for r in conn.execute("SELECT * FROM roadmap_items ORDER BY section, position"):
+                selected_slug = get_setting(conn, "repo_slug")
+                for r in conn.execute("""SELECT roadmap_items.*, repos.slug AS repo_slug
+                                         FROM roadmap_items LEFT JOIN repos ON repos.id = roadmap_items.repo_id
+                                         ORDER BY section, position"""):
                     rows.append({"global_id": r["global_id"], "gh_number": r["gh_number"],
+                                 "repo_slug": r["repo_slug"],
+                                 "is_selected_repo": r["repo_slug"] is not None and r["repo_slug"] == selected_slug,
                                  "title": r["title"], "section": r["section"],
                                  "position": r["position"], "status_marker": r["status_marker"],
                                  "doc_path": _col(r, "doc_path"), "issue_url": _col(r, "issue_url"),
                                  "raw_text": _col(r, "raw_text")})
                     rows[-1]["status_label_supported"] = _has_column(conn, "roadmap_items", "status_label")
                     rows[-1]["status_label"] = _col(r, "status_label")
+                    for key in (*RATING_COLUMNS, "risk"):
+                        rows[-1][key] = _col(r, key)
             print(json.dumps(rows, ensure_ascii=False))
             return
         if not _table_exists(conn, "roadmap_items"):

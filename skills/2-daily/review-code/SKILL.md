@@ -123,9 +123,9 @@ Run the five recon lanes across the touched symbols:
 | Lane | Focus | Review Inquiry & Verification |
 |---|---|---|
 | **Lane A. Entry & Call Paths** | Callers & Dispatch | Trace callers of all modified functions. Did call signatures, parameter defaults, or return types change? Are callers in other modules updated? Check CLI shims, hook registries, plugin dispatch, and event handlers. |
-| **Lane B. State & Data Flow** | Readers & Writers | What state is mutated? Verify the single-writer invariant. Are SQLite locks, file descriptors, transactions, or cache layers handled? Does this introduce competing write paths or dirty reads? |
-| **Lane C. Contracts & Boundaries** | APIs & Protocols | Do changes alter public APIs, CLI flags, JSON schemas, environment variables, or error codes? Check consumers across sibling modules or external repositories. |
-| **Lane D. Build, Failure & Tests** | Errors & Coverage | How does this code fail? Trace timeouts, process exits, broken pipes, signal handling (`SIGINT`/`SIGTERM`), and missing input files. What existing test suites cover this seam? |
+| **Lane B. State & Data Flow** | Readers & Writers | What state is mutated? Verify the single-writer invariant. Are SQLite locks, file descriptors, transactions, or cache layers handled? Does this introduce competing write paths or dirty reads? **Step N+1:** verify whether an active reader, background reconciler, or UI consumer exists for any state or status being written. |
+| **Lane C. Contracts & Boundaries** | APIs & Protocols | Do changes alter public APIs, CLI flags, JSON schemas, environment variables, or error codes? Check consumers across sibling modules or external repositories. **Step N+1:** verify whether arguments passed into engines/solvers act as constraints or generators to prevent entity duplication. |
+| **Lane D. Build, Failure & Tests** | Errors & Coverage | How does this code fail? Trace timeouts, process exits, broken pipes, signal handling (`SIGINT`/`SIGTERM`), and missing input files. What existing test suites cover this seam? **Step N+1:** simulate temporal retry and lease recovery on failure to prevent infinite stuck retry loops. |
 | **Lane E. Centralized Helpers & DRY** | Helpers & Anti-Reinvention | Does this change reinvent functionality that already exists in centralized helpers (e.g. `utils/py/`, canonical CLI shims, standard libraries)? Does it construct a parallel subsystem instead of extending existing modules (violating `GUIDING-PRINCIPLES.md` North Star)? Check for copy-pasted blocks or duplicate helper definitions across the diff. |
 
 ### Lane E: Centralized Helpers & Anti-Redundancy (DRY) Audit
@@ -144,10 +144,25 @@ Reviewers must audit three anti-redundancy checks:
    - Are there duplicated helper functions or copy-pasted logic across multiple files in the PR?
    - Code duplication that can be extracted cleanly into an existing shared utility is a `[Should]`.
 
-**Graph & Source Lookup:**
-- Prefer MCP graph tools (`search_graph`, `trace_path`, `get_code_snippet`) when available to locate callers and dependencies in one call.
-- Fall back to targeted ripgrep / file inspection when MCP tools are unavailable.
-- **The One Rule:** Every caller cited in the review must exist at `file:line`. Anything unread or unverified is recorded under **Unknowns**, never assumed safe.
+### Step N+1 Downstream Verification
+
+Code review must never stop at the local mutation site. Reviewing only lines changed inside the diff is the primary source of plausible-sounding approval on broken architecture: approving `status = SENDING` without checking whether a background polling worker actually selects and advances it, approving an unhandled `raise` without checking whether a distributed lease manager enters an infinite recovery retry loop, or approving passing arguments into a solver without checking whether the callee treats them as constraints or generators.
+
+Reviewers must enforce the Step N+1 verification invariants defined in [`recon`](../../1-hourly/recon/SKILL.md#step-35--step-n1-downstream-verification-default-vs-deep):
+
+#### 1. Invariant Review Classification (Mandatory on Every Seam)
+Reviewers must trace past transparent delegation (forwarding helpers, retry decorators) to the first logical downstream boundary:
+- **Consumer Behavior & Progress (Lane B):** Verify at `file:line` that deployed consumers not only exist, but actually select the newly written state/value and advance it toward a terminal state or bounded timeout/recovery path (a UI badge or display-only reader alone does not prove progress). Introducing a stranded or unadvancing non-terminal state without a progress owner is a `[Blocker]`. Justified terminal/audit-only writes must be noted as such.
+- **The Retry Hop (Lane D):** Verify at `file:line` how the enclosing caller and temporal retry mechanism behave when an exception is raised or claim held. Introducing an infinite stuck retry loop (e.g. continuous unresolvable retries without backoff/dead-letter) is a `[Blocker]`.
+- **Parameter Role Contract (Lane C):** Verify at `file:line` whether arguments passed into existing engines/solvers act as constraints (filtering) or generators (creating candidates). Passing entities under the assumption of constraint when the callee acts as a generator creates duplicate entities and is a `[Blocker]`.
+- **Rollout Coexistence & Rollback (Lane C):** When persisted formats, status values, or external contracts change, verify backward/forward coexistence across versions and rollback feasibility per SWE migration policy. Introducing breaking schema/state without a stated coexistence or rollback boundary is a `[Blocker]`.
+
+#### 2. Deep Mode Review (`/review-code --deep`)
+When review is invoked with `--deep` or for complex cross-service architectural changes, expand review to transitive call chains ($N+2, N+3$), programmatic dataset validation (e.g. running verification scripts over JSON/CSV catalogs), and distributed failure matrices (worker crash / clock skew). Reserve deep mode for broader transitive analysis, not for finishing an ordinary check hidden behind one wrapper.
+
+**Evidence Standard:**
+- Every consumer, caller, and callee cited in the review must exist at `file:line`.
+- Anything unread, unverified, or cut off by budget is recorded under **Unknowns**, never assumed safe.
 
 ---
 
@@ -296,7 +311,9 @@ exact `file:line` or symbol references.
 - 🛑 **`[Blocker]`**: Correctness defects, regressions, security/credential leaks, data loss hazards,
   untested error states, symptom patches hiding root causes, tests that pass on broken code,
   **reinventing a parallel subsystem when an established canonical mechanism exists (North Star violation),
-  or bypassing established centralized helpers in favor of ad-hoc implementations.**
+  bypassing established centralized helpers in favor of ad-hoc implementations, or Step N+1 downstream defects
+  (orphaned state machines without active readers/pollers, infinite stuck retry loops on failure, or parameter
+  generator/constraint inversions producing duplicate entities).**
   *Requires resolution before merge/approval.*
 - ⚠️ **`[Should]`**: Architectural gaps, missing test coverage / negative controls, non-optimal complexity,
   missing error logging, unhandled edge cases, **or non-DRY duplicate logic / redundant utility functions.**
@@ -332,6 +349,10 @@ Every `/review-code` report follows this structure:
 - **State & Data Invariants:** Single-writer verified; SQLite lock budget respected.
 - **Contracts & Boundaries:** Public API backward-compatible; no breaking schema drift.
 - **Centralized Helpers & DRY:** Canonical helpers used; zero parallel subsystems or reinvention detected.
+- **Step N+1 Downstream Verification:**
+  - Consumer Hop: Active reader/poller verified at `src/worker.py:110` (no orphaned state).
+  - Retry Hop: Next-cycle recovery verified at `src/scheduler.py:75` (no infinite stuck retry loop).
+  - Parameter Role: Verified argument acts as constraint (no entity duplication).
 
 ---
 
