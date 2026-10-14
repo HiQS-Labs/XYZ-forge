@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-13.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 2
 
@@ -97,5 +97,23 @@ Cite file:line or quoted command output for every `[Pass]`. Set STATUS: Approved
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+swept file: yes
+VERDICT: FAIL
+Basis: Payload deployment and link state look correct, but the explicit SOP prerequisite-recording step is incomplete. Reviewed the whole seeded evidence file, including its pre-existing reporting defects; no other deployment defect observed. Historical preview execution and absence of manual operations are supported by the producer's narrative, not independently reconstructible from final state. No Git commands, apply operations, suites, or executable fixtures were run.
+
+- [Pass] Live payload parity and target coverage. Read-only Python probe (exit 0) compared recursive relative-path maps of file bytes and symlink text between the owning repo's skills and the collection; decisive output: "hiqs-resolve files 6 parity True", "hiqs-scrape files 2 parity True", "ai-catalog-update files 9 parity True". The same probe iterated enabled entries in `targets.json`, checking `p.is_symlink() and p.resolve()==collection/name`; each of "zcode", "codex", "antigravity", "claude", "codex-compat", "grok-bot" returned all three names. There are six targets: "codex" is the ~/.agents/skills root, not a seventh target. No fix needed.
+- [Pass] Provenance and catalog are current. Command: `python3 -c 'import json; from pathlib import Path; r=Path("/Users/noelsaw/git-pulse-sync/Deployed Skills"); d=json.loads((r/".deploy-skills.json").read_text()); print({n:d["skills"][n] for n in ("hiqs-resolve","hiqs-scrape","ai-catalog-update")})'` (equivalent receipt read executed in the combined Python probe, exit 0). All three records quote commit "3afdd0c0190b2c5abd1ab7bdd75dae023ef30e97", "dirty": false and sources under the owning repo; ai-catalog-update no longer records /private/tmp/hiqs-main. Live catalog rows carry the same revision and six "linked" statuses. This establishes recorded revision and current checkout parity, not an independent Git-object comparison. No fix needed.
+- [Pass] Recovery end-state is sound. Command: `python3 -c 'from pathlib import Path; print((Path("/Users/noelsaw/git-pulse-sync/Deployed Skills")/".deploy-skills-pending.json").exists())'` (same expression in combined probe, exit 0): "pending exists False". Live changelog operation `bfab400eb7da4b96a71d2ad8d69ed5cb` records the 12 new links, "apply": true, "errors": [], "warnings": [], and repo "dirty": [], "ahead": 3, "behind": 0. Artifact Commands 7–8 report preview recover → apply recover → no-op sync. Retained .staging entries exist; recovery.md explicitly says staged old versions are retained with no automatic deletion policy, so their mere presence is not a failed recovery. No cleanup requested.
+- [Pass] Recorded vendor commit scope meets GH-993: artifact sections `git show --stat 73e432087`, `0320259c4`, and `e225b0c8b` list respectively only six hiqs-resolve files, two hiqs-scrape files and ai-catalog-update/SKILL.md. The live audit's add/add/update events at 04:41:06–07 match the source revision and payload digests. The recorded clean/ahead-three state supports no pulse blocker at deployment time and no deployment push; current Git state was not independently queried because this turn prohibits Git. No fix needed.
+- [Should] Record runtime prerequisites through the manager before claiming strict SOP completion.
+  Observed input: live `.deploy-skills.json` contains `"prerequisites": []` for all three skills (receipt probe above, exit 0). The loaded SOP's "Runtime dependencies are separate" says: "Record requirements locally using intake.py --apply prerequisite SKILL TEXT". hiqs-resolve/SKILL.md:10 says "needs curl only"; ai-catalog-update/SKILL.md:67 requires agy on PATH and signed in, and :101–105 use owning-repo docs/schemas and Bun scripts; hiqs-scrape/SKILL.md:19–23 describes curl and credentialed fallback providers.
+  Affected scope: local prerequisite metadata for these three deployed skills, plus the evidence bundle's completion claim; no source code change or dependency installation.
+  Falsifier: nonempty manager-produced prerequisite records accurately describing required runtime/repo context and optional credentialed capabilities, with matching catalog/list output, would discharge this finding. App runtime readiness must remain explicitly untested.
+  Concrete fix: Producer should inspect the three skills, preview then apply the existing `intake.py prerequisite` operation for each, and refresh the evidence with the resulting records. Do not hand-edit metadata or install tools.
+- [Nit] Replace the artifact's final "no matches found: .../*.pending*" with the exact hidden receipt check above, and include the relevant add/add/update/sync history events rather than only the trailing skills list. The glob neither names the hidden receipt nor establishes success. Current live absence was checked here; this is an evidence presentation correction.
+
+Handing off to Producer (claude-a) — record prerequisites and update the evidence, then take the next review round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
