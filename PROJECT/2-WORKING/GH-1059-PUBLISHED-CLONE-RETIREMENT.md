@@ -19,7 +19,7 @@ risk: 3
 
 | What was just completed | What's next |
 |---|---|
-| Independent plan QA Approved; implemented opt-in publication proof and targeted reuse of safety/removal paths | Disposable-clone verification and final QA |
+| Existing cleanup180 tests, three start-task suites and39 manual cases passed; receipts retained | Final independent QA, classified gate, ready PR and targeted retirement |
 
 ## Requirements and bet
 
@@ -71,3 +71,9 @@ Unknowns: current old-clone inventories and individual ownership have not been a
 ## Implementation notes
 
 Plan QA attested Approved at `04b787c2`, reviewed head `3bb6231f`. Qualified schema009 accepted-start was recorded for owned row `rmi-01M4YBF6YKJ8MJP63B15FB6PZS` before implementation. The publication validator fetches the exact named origin head, not a cached tracking ref; failure preserves even a merged PR whose head branch is no longer fetchable (normal post-merge cleanup remains available). Native linked-worktree removal updates parent Git metadata, as clarified by plan QA; no primary landing/working-tree/governance writer runs. Existing merged-only invocation paths omit the new optional argument.
+
+## Verification and ownership
+
+This workflow owns only the sibling task clone slug `XYZ-forge-gh1059-published-clone-retirement-2026-10-14` and its `-gate` helper, on branch `fix/XYZ-forge-gh1059-published-clone-retirement-2026-10-14`. The operator-designated primary and all other folders remain outside retirement scope.
+
+Existing cleanup suite:180/180 at c391afec. Three existing start-task suites and39 manual cases passed at60c1ad18. The manual API/URL surface is a fixture, not live GitHub proof; Git fetch/ancestry, Trash moves and linked-worktree removal are real isolated operations. Final publication will supply the live same-origin PR evidence. Red controls: removing admission breaks successful open-PR classification; removing draft validation admits draft refs; a zero-PR routing witness reached the broad path at c391 and is rejected after60c. Fresh inspection catches changed PR metadata and preserves. Initial probe authoring errors (empty fixture commit, nonempty fixture Trash) were corrected before the retained completed run; neither was a product failure. No new test file/suite/registry/gate was added.

@@ -1,0 +1,14 @@
+[
+  {
+    "command": "bash test/gh615-start-task-reinforce.sh",
+    "exit_code": 0
+  },
+  {
+    "command": "bash test/gh616-start-task-commensurate-envelope.sh",
+    "exit_code": 0
+  },
+  {
+    "command": "bash test/gh777-start-task-prior-art.sh",
+    "exit_code": 0
+  }
+]

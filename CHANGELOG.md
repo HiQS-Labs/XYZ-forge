@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-14 — Retire fully published task checkouts before merge (GH-1059)
+
+Start-task now invokes targeted checkout retirement after verified ready-PR publication.
+Merge-cleanup's opt-in published-PR mode verifies live canonical PR/head/ref recovery,
+then reuses existing local-state/session/dependency checks, fresh inspection and removal.
+Full clones go to Trash; linked worktrees use native Git removal. The primary working
+tree and unrelated checkouts are excluded; normal merged-only cleanup is unchanged.
+
+This changes cleanup eligibility, so unknown or local-only state preserves the checkout.
+Rollback by reverting GH-1059 or omitting the new mode; recover full clones from Trash.
+Existing cleanup180 tests, three focused start-task suites and39 isolated manual cases
+passed, with negative controls and committed provenance under `TESTS-RESULTS/2026-10-14+GH-1059/`.
+Final publication gate and independent final QA remain required before the ready PR.
+
 ## 2026-10-12 — Muse relay turns no longer stall on an unanswerable approval prompt (GH-521)
 
 Driven Muse relay turns hit the wall cap with `cpu=0.00` and no relay block. The cause was
