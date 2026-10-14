@@ -2,7 +2,7 @@
 gh_issue: 1055
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1055
 title: Neutral disclosure for skipped independent review
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-10-14
 doc_type: feedback
 ---
