@@ -3,10 +3,10 @@
 ## 2026-10-15 — Preserve ignored content during published worktree closeout (GH-1059)
 
 A clean Git status and a fully published PR do not preserve ignored worktree files.
-Ordinary native worktree removal deletes those files. The new published-closeout mode
-now enumerates ignored files through the existing inspection owner and preserves linked
+Ordinary native worktree removal deletes those files. Both native cleanup paths now
+enumerate ignored files through the existing inspection owner and preserve linked
 worktrees when any remain, or when enumeration fails. Whole-clone Trash relocation and
-ordinary merged-only behavior are unchanged. This extends no test registry or CI case.
+the ordinary merged-only history requirement are unchanged. This extends no test registry or CI case.
 
 Easy to reverse by reverting the scoped guard; preserving an uncertain worktree has no
 data-loss effect. A backed-up synthetic native-Git fixture demonstrated the deletion;

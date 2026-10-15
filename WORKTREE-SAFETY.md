@@ -305,10 +305,10 @@ All local-state, session, dependency, protected-path and fresh-inspection checks
 still apply. Preserve local-only evidence and anything unknown; never delete the
 protected primary or broaden this into a clone sweep. Run from outside the retiring
 checkout. Full clones move only to Trash; linked worktrees use native Git removal
-and retain their parent repository. In this published-closeout mode, preserve a linked
+and retain their parent repository. In either cleanup mode, preserve a linked
 worktree with any ignored files or a failed ignored-file enumeration: native removal
-deletes ignored content, and published Git refs do not prove its recovery. Ordinary
-merged-only cleanup is unchanged.
+deletes ignored content, and Git refs do not prove its recovery. Ordinary cleanup
+still requires the existing merged-only history proof.
 
 ---
 

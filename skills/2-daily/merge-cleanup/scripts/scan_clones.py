@@ -964,8 +964,8 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
         res["query_failures"].append(f"git status: {st_res.stderr.strip() or 'failed'}")
 
     # Native worktree removal deletes ignored files, unlike whole-clone Trash relocation.
-    # Published refs cannot establish recovery for those files in the new closeout mode.
-    if published_pr and res["checkout_type"] == "linked_worktree":
+    # Neither landed nor published refs establish recovery for those files.
+    if res["checkout_type"] == "linked_worktree":
         ignored = run_git(path, ["ls-files", "--others", "--ignored", "--exclude-standard", "-z"])
         if ignored.returncode:
             res["query_failures"].append(f"ignored worktree files: {ignored.stderr.strip() or 'enumeration failed'}")

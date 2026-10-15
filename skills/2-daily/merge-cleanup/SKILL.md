@@ -469,7 +469,8 @@ the current workflow's completed activity; never stop peers or fabricate a safe
 disposition. Report actual retirement or the exact preservation reason. Full clones
 move to Trash; linked worktrees use native Git removal. Older drivers must be
 updated or the checkout preserved, never replaced with a manual remover. Normal
-merged-only cleanup and its repair/landing policy are unchanged.
+merged-only history admission and its repair/landing policy are unchanged. Both native
+worktree paths preserve ignored files, whose content is not proved recoverable by Git refs.
 
 Run scripts directly from the skill directory or via python:
 

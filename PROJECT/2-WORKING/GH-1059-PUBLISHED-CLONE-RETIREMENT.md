@@ -87,3 +87,16 @@ Final round2 attested Approved at26574f1c, reviewed e013552e. The remaining edit
 Development reconciliation69666c47 landed while the final gate ran on669d136f. Supported disjoint ledger replay committed dbe1e3bc: keep this branch's higher-generation ledger and replay GH1043's completed doc/section/marker/text via writer verbs. No reviewed runtime/policy byte changed; the refreshed ledger checks clean (nine existing warnings). The subsequent publication push rechecks these governance-only changes.
 
 Final publication gate at669d136f:409/409 pass in1574s, separate full clone identity intact; ordinary push published the branch. Retained log, telemetry and provenance are under publication/. This is parallel publication evidence, not main promotion qualification. Runtime/policy still match final QA e013552e; remaining ready-PR/own-clone closeout is performed against live GitHub state. Routine LEADERBOARD output from the ledger refresh is omitted from the task branch; hosted reconciliation owns views.
+
+
+## Merge review correction — 2026-10-15 UTC
+
+A clean synthetic linked worktree with ignored operator notes is admitted by the prior
+ordinary inspection and its native Git remover deletes the notes. The first scoped guard
+passed existing cleanup180 and manual45, but a further retained input demonstrated that
+the same known loss remains in ordinary native cleanup. Complete the guard in the existing
+shared linked-worktree inspection owner: preserve ignored files and failed enumeration
+for both flows. Keep ordinary merged-only history admission and whole-clone Trash.
+No CI test/case is added. Original final QA remains2/3; use only the remaining third round
+after the integration refresh and fresh verification. No publication or merge is claimed
+for this correction until its normal gate and exact-head checks complete.
