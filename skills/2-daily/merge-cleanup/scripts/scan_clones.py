@@ -963,6 +963,15 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
         res["dirty_count"] = -1
         res["query_failures"].append(f"git status: {st_res.stderr.strip() or 'failed'}")
 
+    # Native worktree removal deletes ignored files, unlike whole-clone Trash relocation.
+    # Published refs cannot establish recovery for those files in the new closeout mode.
+    if published_pr and res["checkout_type"] == "linked_worktree":
+        ignored = run_git(path, ["ls-files", "--others", "--ignored", "--exclude-standard", "-z"])
+        if ignored.returncode:
+            res["query_failures"].append(f"ignored worktree files: {ignored.stderr.strip() or 'enumeration failed'}")
+        else:
+            res["ignored_files"] = [name for name in ignored.stdout.split("\0") if name]
+
     # Stash check — a failed enumeration is NOT zero stashes.
     stash_res = run_git(path, ["stash", "list"])
     if stash_res.returncode == 0:
@@ -1070,6 +1079,12 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
     if res["query_failures"]:
         res["disposition"] = "PRESERVE_UNVERIFIED_QUERY"
         res["disposition_reason"] = "Safety query failed: " + "; ".join(res["query_failures"])
+        return res
+
+    if res.get("ignored_files"):
+        res["disposition"] = "PRESERVE_IGNORED"
+        res["disposition_reason"] = (f"Linked worktree has {len(res['ignored_files'])} ignored file(s) "
+                                     "not proven recoverable from published Git history")
         return res
 
     if res["stash_count"] > 0:
