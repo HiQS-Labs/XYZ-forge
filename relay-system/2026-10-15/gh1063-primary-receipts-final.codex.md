@@ -67,6 +67,14 @@ ROUND: 1 / 3
 
 ## Log
 
+
+### Attestation · relay-drive — 2026-10-15T00:44:09Z
+task: RELAY-GH1063-PRIMARY-RECEIPTS-FINAL-20261015
+reviewer: codex
+status: Approved
+reviewed-head: d8a91f18055accb46a058d85f94cf01cd23d6c77
+added-range: 7691+5817
+added-sha256: 721fab264b39554da99999321df707e4760ff2eaeacf13769caaa9fdc082f57b
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 
