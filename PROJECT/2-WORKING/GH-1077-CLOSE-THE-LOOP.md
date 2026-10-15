@@ -16,7 +16,7 @@ doc_type: feature
 
 | What was just completed | What's next |
 |---|---|
-| Prior art checked; single-file skill drafted and indexed. | Validate, independent QA and publish through the documentation route. |
+| Single-file skill and index validated; clarified scenario reviewed and attested Approved. | Publish through the documentation gate; merge/deploy stay separate. |
 
 ## Scope and fit
 
@@ -63,3 +63,9 @@ Round1's independent reviewer applied the initial example and returned PASS, but
 rejected close-mismatch (token released rather than done); it is not an attested approval.
 Clarified skill and spike-to-plan example receive cumulative round2/3. No harness repair or new
 review machinery is in scope.
+
+Final QA: cumulative round2 approved with attestation ff46063, reviewed2f4e293. The applied example
+caught the implicit spike-to-plan pointer gap as well as explicit follow-ups and respected all
+exclusions. Round1 was not attested. Format validation passes; codex prerequisite43/0 ran in the
+independent full helper with unchanged identity. Documentation gate remains the publication boundary;
+no new suite, installer or full runtime run is needed.
