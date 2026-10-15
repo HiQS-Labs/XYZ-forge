@@ -1,16 +1,16 @@
-......
+.........
 ----------------------------------------------------------------------
-Ran 6 tests in 33.640s
+Ran 9 tests in 64.391s
 
 OK
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
-merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.nb_zha6z/primary
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.nlpnjmkq/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.nb_zha6z/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.nlpnjmkq/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -33,7 +33,7 @@ PHASE 4: TOPOLOGICAL PR SEQUENCE (2 open PRs)
 | 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | no | PASS | MERGEABLE | 0 |
 
 merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.nb_zha6z/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.nlpnjmkq/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -47,17 +47,17 @@ merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; sou
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-200 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 200 --issue-url <url>`)
-merge-cleanup: PR #1: pre-merge ledger gate green on bddb551a19 + origin/development
+merge-cleanup: PR #1: pre-merge ledger gate green on 25f2f67fb3 + origin/development
 merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
-merge-cleanup: ✅ PR #1 is MERGED as a4421490e8
+merge-cleanup: ✅ PR #1 is MERGED as b3f303deff
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
-merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b._w_fsvdu/primary
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.g031nwyw/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b._w_fsvdu/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.g031nwyw/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -80,7 +80,7 @@ PHASE 4: TOPOLOGICAL PR SEQUENCE (2 open PRs)
 | 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | no | PASS | MERGEABLE | 0 |
 
 merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b._w_fsvdu/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.g031nwyw/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -91,15 +91,15 @@ PHASE 5: EXECUTING PR MERGES & RECONCILIATION
 ================================================================================
 
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
-merge-cleanup: Landing clones kept for inspection under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/merge-cleanup-bihah6a4
+merge-cleanup: Landing clones kept for inspection under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/merge-cleanup-djzaw6a_
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
-merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.1fhlas4y/primary
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h7mndawh/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.1fhlas4y/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h7mndawh/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -122,7 +122,7 @@ PHASE 4: TOPOLOGICAL PR SEQUENCE (2 open PRs)
 | 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | no | PASS | MERGEABLE | 0 |
 
 merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.1fhlas4y/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h7mndawh/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -136,31 +136,31 @@ merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; sou
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-200 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 200 --issue-url <url>`)
-merge-cleanup: PR #1: pre-merge ledger gate green on 8f5b4f126d + origin/development
+merge-cleanup: PR #1: pre-merge ledger gate green on 796d527be7 + origin/development
 merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
-merge-cleanup: ✅ PR #1 is MERGED as b7795c0de6
-merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.1fhlas4y/primary...
+merge-cleanup: ✅ PR #1 is MERGED as 28399e1639
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h7mndawh/primary...
 merge-cleanup: ✅ RELEASES DB check passed
 merge-cleanup: ✅ PR #1 post-merge writes committed; primary is clean at origin/development
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
 merge-cleanup: PR #2: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
-merge-cleanup: PR #2: attempt record /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.1fhlas4y/primary/.tick/merge-cleanup/gh534b.1fhlas4y-origin/pr-2.json
-merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head a882992a0d)
+merge-cleanup: PR #2: attempt record /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h7mndawh/primary/.tick/merge-cleanup/gh534b.h7mndawh-origin/pr-2.json
+merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head 40629d8239)
 merge-cleanup:   B1: classification: keep=theirs generation ours/theirs=(4, 4) replay=1 op(s)
 merge-cleanup:   B1: check --rebuild on the kept side: rc=0
 merge-cleanup:   B1: roadmap add GH-201: rc=0 releases: work connectors skipped (ModuleNotFoundError("No module named 'work_connectors'"))
 merge-cleanup:   B1: roadmap update GH-201 (section/marker): rc=0 releases: work connectors skipped (ModuleNotFoundError("No module named 'work_connectors'"))
 merge-cleanup:   B1: releases-merge-resolve.sh: rc=0
 merge-cleanup:   B1: removed verified rebuild backup: releases.db.bak
-merge-cleanup: PR #2: pushed 2b5a817e69 to feat/b; re-fetching and re-gating the new head
+merge-cleanup: PR #2: pushed a40b4741fe to feat/b; re-fetching and re-gating the new head
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-200 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 200 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-201 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 201 --issue-url <url>`)
-merge-cleanup: PR #2: pre-merge ledger gate green on 2b5a817e69 + origin/development
+merge-cleanup: PR #2: pre-merge ledger gate green on a40b4741fe + origin/development
 merge-cleanup: Merging PR #2 via `gh pr merge 2 --squash --delete-branch`...
-merge-cleanup: ✅ PR #2 is MERGED as 05f12a0884
-merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.1fhlas4y/primary...
+merge-cleanup: ✅ PR #2 is MERGED as c9bb4c9d6f
+merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h7mndawh/primary...
 merge-cleanup: ✅ RELEASES DB check passed
 merge-cleanup: ✅ PR #2 post-merge writes committed; primary is clean at origin/development
 ================================================================================
@@ -172,16 +172,16 @@ merge-cleanup: No candidate checkouts qualify for safe removal (all are preserve
 
 ================================================================================
 merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://example.invalid/issues/900)
-merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.1fhlas4y/primary <tmp> && cd <tmp> && bash validate.sh --sequential
+merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h7mndawh/primary <tmp> && cd <tmp> && bash validate.sh --sequential
 merge-cleanup: verdict findings recorded for #1, #2 (https://example.invalid/issues/900)
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
-merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -204,7 +204,7 @@ PHASE 4: TOPOLOGICAL PR SEQUENCE (2 open PRs)
 | 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | no | PASS | MERGEABLE | 1 |
 
 merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -217,27 +217,27 @@ PHASE 5: EXECUTING PR MERGES & RECONCILIATION
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
-merge-cleanup: PR #1: pre-merge ledger gate green on 24e2291cdf + origin/development
+merge-cleanup: PR #1: pre-merge ledger gate green on 6fa847decb + origin/development
 merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
-merge-cleanup: ✅ PR #1 is MERGED as a317cfae9c
-merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary...
+merge-cleanup: ✅ PR #1 is MERGED as 9be909cd0e
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary...
 merge-cleanup: ✅ RELEASES DB check passed
 merge-cleanup: ✅ PR #1 post-merge writes committed; primary is clean at origin/development
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
 merge-cleanup: PR #2: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
-merge-cleanup: PR #2: attempt record /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary/.tick/merge-cleanup/gh534b.h93lsfwg-origin/pr-2.json
-merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head ef19caad30)
-merge-cleanup: Landing clones kept for inspection under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/merge-cleanup-9zkrav8e
+merge-cleanup: PR #2: attempt record /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary/.tick/merge-cleanup/gh534b.lf7pdbc2-origin/pr-2.json
+merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head 21be614177)
+merge-cleanup: Landing clones kept for inspection under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/merge-cleanup-vmw4g877
 merge-cleanup: verdict clean recorded for #1 (https://example.invalid/issues/900)
 merge-cleanup: Planned PRs remain: continue with --resume --execute.
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
-merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -259,7 +259,7 @@ PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
 | 1 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | no | PASS | MERGEABLE | 1 |
 
 merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -269,14 +269,14 @@ merge-cleanup: Resuming merge batch https://example.invalid/issues/900
 PHASE 5: EXECUTING PR MERGES & RECONCILIATION
 ================================================================================
 
-merge-cleanup: Resume mode: attempt records under /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary/.tick/merge-cleanup/gh534b.h93lsfwg-origin are consulted only after each PR's live refresh; a repaired, now-mergeable PR still lands.
+merge-cleanup: Resume mode: attempt records under /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary/.tick/merge-cleanup/gh534b.lf7pdbc2-origin are consulted only after each PR's live refresh; a repaired, now-mergeable PR still lands.
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
-merge-cleanup: PR #2: pre-merge ledger gate green on 39db88d6e2 + origin/development
+merge-cleanup: PR #2: pre-merge ledger gate green on e340e5dd07 + origin/development
 merge-cleanup: Merging PR #2 via `gh pr merge 2 --squash --delete-branch`...
-merge-cleanup: ✅ PR #2 is MERGED as 65de41bb05
-merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary...
+merge-cleanup: ✅ PR #2 is MERGED as d18f0720b4
+merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary...
 merge-cleanup: ✅ RELEASES DB check passed
 merge-cleanup: ✅ PR #2 post-merge writes committed; primary is clean at origin/development
 ================================================================================
@@ -288,15 +288,15 @@ merge-cleanup: No candidate checkouts qualify for safe removal (all are preserve
 
 ================================================================================
 merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://example.invalid/issues/900)
-merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary <tmp> && cd <tmp> && bash validate.sh --sequential
+merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary <tmp> && cd <tmp> && bash validate.sh --sequential
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
-merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -320,16 +320,16 @@ merge-cleanup: No candidate checkouts qualify for safe removal (all are preserve
 
 ================================================================================
 merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://example.invalid/issues/900)
-merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary <tmp> && cd <tmp> && bash validate.sh --sequential
+merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary <tmp> && cd <tmp> && bash validate.sh --sequential
 merge-cleanup: verdict clean recorded for #1, #2 (https://example.invalid/issues/900)
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
-merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.h93lsfwg/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.lf7pdbc2/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -353,13 +353,13 @@ merge-cleanup: No candidate checkouts qualify for safe removal (all are preserve
 ================================================================================
 merge-cleanup: Merge cleanup run complete.
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
-merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.azs7h8qn/primary
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.spcfmun_/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.azs7h8qn/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.spcfmun_/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -385,7 +385,7 @@ Ordering Notes:
   - File collision on 1 file(s) between PR #1 and PR #2 — ordering #1 before #2
 
 merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.azs7h8qn/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.spcfmun_/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -399,31 +399,31 @@ merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; sou
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-200 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 200 --issue-url <url>`)
-merge-cleanup: PR #1: pre-merge ledger gate green on 2491ae1df9 + origin/development
+merge-cleanup: PR #1: pre-merge ledger gate green on 7946da7836 + origin/development
 merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
-merge-cleanup: ✅ PR #1 is MERGED as a7026a157d
-merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.azs7h8qn/primary...
+merge-cleanup: ✅ PR #1 is MERGED as 37cb9ee971
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.spcfmun_/primary...
 merge-cleanup: ✅ RELEASES DB check passed
 merge-cleanup: ✅ PR #1 post-merge writes committed; primary is clean at origin/development
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
 merge-cleanup: PR #2: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
-merge-cleanup: PR #2: attempt record /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.azs7h8qn/primary/.tick/merge-cleanup/gh534b.azs7h8qn-origin/pr-2.json
-merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head e0d9988ee1)
+merge-cleanup: PR #2: attempt record /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.spcfmun_/primary/.tick/merge-cleanup/gh534b.spcfmun_-origin/pr-2.json
+merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head 4f7a806250)
 merge-cleanup:   B1: classification: keep=theirs generation ours/theirs=(4, 4) replay=1 op(s)
 merge-cleanup:   B1: check --rebuild on the kept side: rc=0
 merge-cleanup:   B1: roadmap add GH-201: rc=0 releases: work connectors skipped (ModuleNotFoundError("No module named 'work_connectors'"))
 merge-cleanup:   B1: roadmap update GH-201 (section/marker): rc=0 releases: work connectors skipped (ModuleNotFoundError("No module named 'work_connectors'"))
 merge-cleanup:   B1: releases-merge-resolve.sh: rc=0
 merge-cleanup:   B1: removed verified rebuild backup: releases.db.bak
-merge-cleanup: PR #2: pushed d940d8e9e8 to feat/b; re-fetching and re-gating the new head
+merge-cleanup: PR #2: pushed 11cee340ea to feat/b; re-fetching and re-gating the new head
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-200 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 200 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-201 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 201 --issue-url <url>`)
-merge-cleanup: PR #2: pre-merge ledger gate green on d940d8e9e8 + origin/development
+merge-cleanup: PR #2: pre-merge ledger gate green on 11cee340ea + origin/development
 merge-cleanup: Merging PR #2 via `gh pr merge 2 --squash --delete-branch`...
-merge-cleanup: ✅ PR #2 is MERGED as e5db0934b0
-merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.azs7h8qn/primary...
+merge-cleanup: ✅ PR #2 is MERGED as 86c0059e71
+merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.spcfmun_/primary...
 merge-cleanup: ✅ RELEASES DB check passed
 merge-cleanup: ✅ PR #2 post-merge writes committed; primary is clean at origin/development
 ================================================================================
@@ -435,15 +435,15 @@ merge-cleanup: No candidate checkouts qualify for safe removal (all are preserve
 
 ================================================================================
 merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://example.invalid/issues/900)
-merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.azs7h8qn/primary <tmp> && cd <tmp> && bash validate.sh --sequential
+merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.spcfmun_/primary <tmp> && cd <tmp> && bash validate.sh --sequential
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
-merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.azs7h8qn/primary
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.spcfmun_/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.azs7h8qn/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.spcfmun_/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -466,13 +466,394 @@ merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
 
 ================================================================================
 merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
-merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.69e7odun/primary
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary
 
 ================================================================================
 PHASE 0: PRIMARY ON-DISK CHECKOUT
 ================================================================================
 
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.69e7odun/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (2 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/a` | `development` | no | PASS | MERGEABLE | 0 |
+| 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | no | PASS | MERGEABLE | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Merge batch issue: https://example.invalid/issues/900
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-200 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 200 --issue-url <url>`)
+merge-cleanup: PR #1: pre-merge ledger gate green on 04b8aea310 + origin/development
+merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
+merge-cleanup: ✅ PR #1 is MERGED as c283e53dda
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #1 post-merge writes committed; primary is clean at origin/development
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #2: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #2: attempt record /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary/.tick/merge-cleanup/gh534b.64d7m9bv-origin/pr-2.json
+merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head e9b391c34e)
+merge-cleanup:   B1: classification: keep=theirs generation ours/theirs=(4, 4) replay=1 op(s)
+merge-cleanup:   B1: check --rebuild on the kept side: rc=0
+merge-cleanup:   B1: roadmap add GH-201: rc=0 releases: work connectors skipped (ModuleNotFoundError("No module named 'work_connectors'"))
+merge-cleanup:   B1: roadmap update GH-201 (section/marker): rc=0 releases: work connectors skipped (ModuleNotFoundError("No module named 'work_connectors'"))
+merge-cleanup:   B1: releases-merge-resolve.sh: rc=0
+merge-cleanup:   B1: removed verified rebuild backup: releases.db.bak
+merge-cleanup: PR #2: pushed 501f72dd18 to feat/b; re-fetching and re-gating the new head
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-200 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 200 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-201 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 201 --issue-url <url>`)
+merge-cleanup: PR #2: pre-merge ledger gate green on 501f72dd18 + origin/development
+merge-cleanup: Merging PR #2 via `gh pr merge 2 --squash --delete-branch`...
+merge-cleanup: ✅ PR #2 is MERGED as ea47c902b0
+merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #2 post-merge writes committed; primary is clean at origin/development
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://example.invalid/issues/900)
+merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary <tmp> && cd <tmp> && bash validate.sh --sequential
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#3](https://example.invalid/pr/3) | PR 3 | `feat/c` | `development` | no | PASS | MERGEABLE | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Resuming merge batch https://example.invalid/issues/900
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Resume mode: attempt records under /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary/.tick/merge-cleanup/gh534b.64d7m9bv-origin are consulted only after each PR's live refresh; a repaired, now-mergeable PR still lands.
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-200 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 200 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-201 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 201 --issue-url <url>`)
+merge-cleanup: PR #3: pre-merge ledger gate green on 1e9cda3299 + origin/development
+merge-cleanup: Merging PR #3 via `gh pr merge 3 --squash --delete-branch`...
+merge-cleanup: ✅ PR #3 is MERGED as edfe129b34
+merge-cleanup: Running post-merge reconciliation for PR #3 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #3 post-merge writes committed; primary is clean at origin/development
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://example.invalid/issues/900)
+merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.64d7m9bv/primary <tmp> && cd <tmp> && bash validate.sh --sequential
+S1 rc 4 batch landed [1, 2, 3]
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.rno60hhl/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.rno60hhl/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (2 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/a` | `development` | no | PASS | MERGEABLE | 0 |
+| 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | no | PASS | MERGEABLE | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.rno60hhl/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Merge batch issue: https://example.invalid/issues/900
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-200 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 200 --issue-url <url>`)
+merge-cleanup: PR #1: pre-merge ledger gate green on cafcca51fe + origin/development
+merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
+merge-cleanup: ✅ PR #1 is MERGED as 750efa4359
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.rno60hhl/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #1 post-merge writes committed; primary is clean at origin/development
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #2: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #2: attempt record /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.rno60hhl/primary/.tick/merge-cleanup/gh534b.rno60hhl-origin/pr-2.json
+merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head 43954f0ca9)
+merge-cleanup:   B1: classification: keep=theirs generation ours/theirs=(4, 4) replay=1 op(s)
+merge-cleanup:   B1: check --rebuild on the kept side: rc=0
+merge-cleanup:   B1: roadmap add GH-201: rc=0 releases: work connectors skipped (ModuleNotFoundError("No module named 'work_connectors'"))
+merge-cleanup:   B1: roadmap update GH-201 (section/marker): rc=0 releases: work connectors skipped (ModuleNotFoundError("No module named 'work_connectors'"))
+merge-cleanup:   B1: releases-merge-resolve.sh: rc=0
+merge-cleanup:   B1: removed verified rebuild backup: releases.db.bak
+merge-cleanup: PR #2: pushed 1704ef8844 to feat/b; re-fetching and re-gating the new head
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-200 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 200 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-201 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 201 --issue-url <url>`)
+merge-cleanup: PR #2: pre-merge ledger gate green on 1704ef8844 + origin/development
+merge-cleanup: Merging PR #2 via `gh pr merge 2 --squash --delete-branch`...
+merge-cleanup: ✅ PR #2 is MERGED as 26919415a1
+merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.rno60hhl/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #2 post-merge writes committed; primary is clean at origin/development
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://example.invalid/issues/900)
+merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.rno60hhl/primary <tmp> && cd <tmp> && bash validate.sh --sequential
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.rno60hhl/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.rno60hhl/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+merge-cleanup: No open PRs found for this repository.
+merge-cleanup: Resuming merge batch https://example.invalid/issues/900
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://example.invalid/issues/900)
+merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.rno60hhl/primary <tmp> && cd <tmp> && bash validate.sh --sequential
+S2 rc 4
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ojq5775b/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ojq5775b/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (2 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/a` | `development` | no | PASS | MERGEABLE | 0 |
+| 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | no | PASS | MERGEABLE | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ojq5775b/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Merge batch issue: https://example.invalid/issues/900
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-200 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 200 --issue-url <url>`)
+merge-cleanup: PR #1: pre-merge ledger gate green on 77c176aee8 + origin/development
+merge-cleanup: Merging PR #1 via `gh pr merge 1 --squash --delete-branch`...
+merge-cleanup: ✅ PR #1 is MERGED as 5ae8650ff1
+merge-cleanup: Running post-merge reconciliation for PR #1 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ojq5775b/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #1 post-merge writes committed; primary is clean at origin/development
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: PR #2: landing merge conflicts (GitHub said CONFLICTING) — routing to B1
+merge-cleanup: PR #2: attempt record /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ojq5775b/primary/.tick/merge-cleanup/gh534b.ojq5775b-origin/pr-2.json
+merge-cleanup: PR #2: attempt 1/2 reserved (script, rung B1, head a95966cf50)
+merge-cleanup:   B1: classification: keep=theirs generation ours/theirs=(4, 4) replay=1 op(s)
+merge-cleanup:   B1: check --rebuild on the kept side: rc=0
+merge-cleanup:   B1: roadmap add GH-201: rc=0 releases: work connectors skipped (ModuleNotFoundError("No module named 'work_connectors'"))
+merge-cleanup:   B1: roadmap update GH-201 (section/marker): rc=0 releases: work connectors skipped (ModuleNotFoundError("No module named 'work_connectors'"))
+merge-cleanup:   B1: releases-merge-resolve.sh: rc=0
+merge-cleanup:   B1: removed verified rebuild backup: releases.db.bak
+merge-cleanup: PR #2: pushed 1e24e5a48c to feat/b; re-fetching and re-gating the new head
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-200 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 200 --issue-url <url>`)
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-201 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 201 --issue-url <url>`)
+merge-cleanup: PR #2: pre-merge ledger gate green on 1e24e5a48c + origin/development
+merge-cleanup: Merging PR #2 via `gh pr merge 2 --squash --delete-branch`...
+merge-cleanup: ✅ PR #2 is MERGED as 64f202c140
+merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ojq5775b/primary...
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ PR #2 post-merge writes committed; primary is clean at origin/development
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://example.invalid/issues/900)
+merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ojq5775b/primary <tmp> && cd <tmp> && bash validate.sh --sequential
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ojq5775b/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ojq5775b/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (0 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/a` | `development` | no | PASS | CONFLICTING | 0 |
+
+merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ojq5775b/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Resuming merge batch https://example.invalid/issues/900
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Resume mode: attempt records under /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.ojq5775b/primary/.tick/merge-cleanup/gh534b.ojq5775b-origin are consulted only after each PR's live refresh; a repaired, now-mergeable PR still lands.
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Landing clones kept for inspection under /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/merge-cleanup-16ufowcb
+S3 rc 2 {'merge_oid': '5ae8650ff11da8b98ff8cd6fd46af9688286d86d', 'reconcile': 'ok', 'status': 'merged'}
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.vddymu3h/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.vddymu3h/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -495,7 +876,7 @@ PHASE 4: TOPOLOGICAL PR SEQUENCE (2 open PRs)
 | 2 | [#2](https://example.invalid/pr/2) | PR 2 | `feat/b` | `development` | no | PASS | MERGEABLE | 0 |
 
 merge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...
-Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.69e7odun/primary
+Primary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.vddymu3h/primary
   branch: development  (integration: development)
   clean: yes
   landing: READY
@@ -511,10 +892,10 @@ merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; sou
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-100 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 100 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-101 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 101 --issue-url <url>`)
 merge-cleanup:   gate: roadmap reconcile-state --dry-run: warn: rule=roadmap-issue-identity: GH-201 has no matching owned issue URL; skipped (fix with `releases roadmap update --issue-num 201 --issue-url <url>`)
-merge-cleanup: PR #2: pre-merge ledger gate green on 105f525535 + origin/development
+merge-cleanup: PR #2: pre-merge ledger gate green on caed4ba31c + origin/development
 merge-cleanup: Merging PR #2 via `gh pr merge 2 --squash --delete-branch`...
-merge-cleanup: ✅ PR #2 is MERGED as fe91b0db0e
-merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.69e7odun/primary...
+merge-cleanup: ✅ PR #2 is MERGED as 968e88cc8e
+merge-cleanup: Running post-merge reconciliation for PR #2 in /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.vddymu3h/primary...
 merge-cleanup: ✅ RELEASES DB check passed
 merge-cleanup: ✅ PR #2 post-merge writes committed; primary is clean at origin/development
 ================================================================================
@@ -526,4 +907,4 @@ merge-cleanup: No candidate checkouts qualify for safe removal (all are preserve
 
 ================================================================================
 merge-cleanup: STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: https://example.invalid/issues/900)
-merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.69e7odun/primary <tmp> && cd <tmp> && bash validate.sh --sequential
+merge-cleanup:   sweep: git clone --no-local /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.vddymu3h/primary <tmp> && cd <tmp> && bash validate.sh --sequential

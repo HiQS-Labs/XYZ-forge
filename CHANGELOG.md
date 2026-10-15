@@ -27,6 +27,9 @@ the agent's own reading. The script now owns the record for queues of **two or m
   new **exit 4 — landed, QA pending** until `--record-sweep <file>` stores a clean, findings or
   deferred verdict.
 - `--resume` continues the batch even when nothing is left to land.
+- Resume never loses a recorded merge or skips pending QA (#1074): the landed set also counts any
+  outcome with a merge, a merged status is never downgraded, and a queue of only new PRs joins the
+  batch whose QA is still pending.
 
 Per the operator's scoping under GH-831, the script runs no test suite; the agent still runs the
 sweep. Verified on the existing `gh436` suite (180 tests, with updated 2-PR expectations and a

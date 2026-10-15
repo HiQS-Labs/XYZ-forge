@@ -284,8 +284,10 @@ All paths are under `skills/2-daily/merge-cleanup/scripts/` unless given as repo
   rows now name `TestGh623Resilience.test_resume_lands_a_pr_whose_last_repair_resolved`.
   `batch-sweep-record` points at the manual evidence and is no longer in `REQUIRED_CAPABILITIES`.
   The five scenarios now run as a manual check (`manual-batch-checks.py.md`, kept out of the repo's suites).
+- **Review follow-ups (2026-10-14):** [#1074](https://github.com/HiQS-Labs/XYZ-forge/issues/1074) is fixed here. `landed()` also counts outcomes that record a merge, `set_outcome()` never downgrades `merged`, and `select_batch()` on `--resume` falls back to the newest QA-pending batch. [#1075](https://github.com/HiQS-Labs/XYZ-forge/issues/1075) (stale file lists on resume) is filed and parked, deferred by the operator.
 - **Verification:**
   - `bash test/gh436-merge-cleanup.sh`: 180 tests OK (185 before the amendment).
+  - GH-1074: 3 manual scenarios red on the unfixed code, green after (`red-gh1074-unfixed.log`; 9 manual checks OK).
   - Manual batch-record checks: 6 tests OK (`TESTS-RESULTS/2026-10-14+GH-1064/manual-batch-checks.log`).
   - Red controls (each mutation restored byte for byte), re-witnessed after the amendment:
     threshold on the gh436 resume test, the two body/verdict controls on the manual checks.

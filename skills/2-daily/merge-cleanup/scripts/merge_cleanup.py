@@ -1581,7 +1581,9 @@ def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) ->
     origin = origin_url(primary_repo) or ""
     if args.resume:
         batch = batch_record.find_unfinished(primary_repo, origin, args.integration_branch,
-                                             [pr["number"] for pr in ordered_prs])
+                                             [pr["number"] for pr in ordered_prs]) \
+            or batch_record.find_unfinished(primary_repo, origin, args.integration_branch, [], need_qa=True)
+        # GH-1074: a queue of only new PRs must not orphan a batch whose QA is still pending.
         if batch is not None:
             batch_record.extend(batch, ordered_prs)
             log(f"Resuming merge batch {batch.get('issue_url') or batch['path']}")

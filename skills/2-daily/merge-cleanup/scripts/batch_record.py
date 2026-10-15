@@ -91,7 +91,13 @@ def save(rec: Dict[str, Any]) -> None:
 
 
 def landed(rec: Dict[str, Any]) -> List[int]:
-    return list(rec.get("landed_order") or [])
+    """Landing order, plus any outcome that records a merge but is missing from it (GH-1074: a record
+    saved without `landed_order` must never read as "nothing landed" and skip QA)."""
+    order = list(rec.get("landed_order") or [])
+    for n, o in (rec.get("outcomes") or {}).items():
+        if (o.get("status") == "merged" or o.get("merge_oid")) and int(n) not in order:
+            order.append(int(n))
+    return order
 
 
 def qa_pending(rec: Dict[str, Any]) -> bool:
@@ -133,13 +139,13 @@ def find_unfinished(primary: Path, origin: str, integration: str, prs: List[int]
 def set_outcome(rec: Dict[str, Any], pr: int, status: Optional[str] = None,
                 merge_oid: Optional[str] = None, reconcile: Optional[str] = None) -> None:
     o = rec["outcomes"].setdefault(str(pr), {"status": "unattempted"})
-    if status is not None:
+    if status is not None and o.get("status") != "merged":  # GH-1074: a merge is never downgraded
         o["status"] = status
     if merge_oid is not None:
         o["merge_oid"] = merge_oid
     if reconcile is not None:
         o["reconcile"] = reconcile
-    if status == "merged" and pr not in rec["landed_order"]:
+    if status == "merged" and pr not in rec.setdefault("landed_order", []):
         rec["landed_order"].append(pr)
     save(rec)
 

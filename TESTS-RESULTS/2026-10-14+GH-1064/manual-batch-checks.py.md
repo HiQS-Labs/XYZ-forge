@@ -1,6 +1,6 @@
 # manual_batch_checks.py (GH-1064 manual check; GH-831 keeps it out of the suites)
 
-Run: `python3 manual_batch_checks.py <repo> [-k name]`, unsandboxed (GH-177).
+Run: `python3 manual_batch_checks.py <repo> [TestClass[.method]]`, unsandboxed (GH-177).
 
 ```python
 #!/usr/bin/env python3
@@ -176,6 +176,38 @@ class TestBatchIssue(_Fixture):
         self.assertIn("**findings** covering #1, #2", after)
         self.assertNotIn("QA pending", after)
 
+
+
+class TestGh1074ResumeKeepsHistory(_Fixture):
+    """GH-1074: resume never loses merge history or reports QA complete."""
+    def two_landed(self):
+        self.branch("feat/a", 1, lambda r: park(r, 200, "x"))
+        self.branch("feat/b", 2, lambda r: park(r, 201, "y"))
+        self.assertEqual(self.run_main(), 4, self.err)
+
+    def test_s1_resume_with_unrelated_new_pr_still_reports_qa_pending(self):
+        self.two_landed()
+        self.st = self.load()
+        self.branch("feat/c", 3, lambda r: (r / "C.md").write_text("c\n"))
+        rc = self.run_main(extra=["--resume"])
+        print("S1 rc", rc, "batch landed", batch_of(self.primary)["landed_order"])
+        self.assertEqual(rc, 4, "QA for #1,#2 silently dropped")
+
+    def test_s2_record_missing_landed_order(self):
+        self.two_landed()
+        p = sorted(Path(self.primary).glob(".tick/merge-cleanup/*/batch-*.json"))[-1]
+        rec = json.loads(p.read_text()); rec.pop("landed_order"); p.write_text(json.dumps(rec))
+        rc = self.run_main(extra=["--resume"])
+        print("S2 rc", rc)
+        self.assertEqual(rc, 4)
+
+    def test_s3_merged_pr_requeued_keeps_merged_status(self):
+        self.two_landed()
+        st = self.load(); st["prs"]["1"]["state"] = "OPEN"; self.st = st; self.save()  # stale OPEN listing
+        rc = self.run_main(extra=["--resume"])
+        out = batch_of(self.primary)["outcomes"]["1"]
+        print("S3 rc", rc, out)
+        self.assertEqual(out["status"], "merged")
 
 
 if __name__ == "__main__":
