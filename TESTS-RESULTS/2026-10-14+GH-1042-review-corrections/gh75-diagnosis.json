@@ -1,0 +1,13 @@
+{
+  "at": "2026-10-14T23:59:42.556033+00:00",
+  "source_revision": "2fe59019bc331f290ea8b6cfb04c481291e9ed23",
+  "failure": "registered gh75-dashboard helper printf | grep -Fq under set -o pipefail reports printf Broken pipe and rc1 when grep exits on a match",
+  "observation": "parallel failure shows7 PASS,1 FAIL at displays release status; isolated existing suite then8 PASS/rc0",
+  "attribution": "test assertion pipe termination, not a demonstrated dashboard data/output defect; not dismissed as harmless flake",
+  "disposition": "let existing validator perform its built-in drained-pool sequential retry; no bypass, test edits, new cases or cap reset",
+  "full_gate_final": "pending",
+  "artifacts": {
+    "gh75-parallel-failure.log": "30901d0d7fe5abc33ca4ea39c8e0261a471e168a55885d56e35a7dbcbe437aba",
+    "gh75-isolated-serial.log": "94e0b8885342326c25aa2b397d864f4a1df0d6bbea3b327fdcb0b1f572c701ff"
+  }
+}

@@ -1,0 +1,7 @@
+marathon-drive: phase p1 startup: attested approval found but candidate 9b681054bad4 is not the reviewed revision — candidate 9b681054bad4 changes non-transcript content after reviewed head c0e968f9eac6 — not accepting it (GH-505)
+marathon-drive: phase p1: terminal relay is NOT attested — refusing to treat it as satisfied; its token 'MARATHON-P1-TURN' is done and cannot be reopened, so this run halts (see GH-505)
+marathon-drive: transcript saved: <disposable-clone>/temp/recovery-manual/drift-tnmgoomg/relay-system/drift-tnmgoomg/2026-10-14/marathon-p1-233628.md
+marathon-drive: warn: host free swap is critically low (453MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7262MB, swap_free=453MB
+marathon-drive: escalation written: <disposable-clone>/temp/recovery-manual/drift-tnmgoomg/phases/p1/ESCALATION.md (reason: unattested-terminal)
+marathon-drive: result receipt written: <disposable-clone>/temp/recovery-manual/drift-tnmgoomg/result.json (outcome: escalated, exit 4)

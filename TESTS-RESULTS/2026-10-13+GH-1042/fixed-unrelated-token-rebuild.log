@@ -1,0 +1,28 @@
+marathon-drive: relay directive names task 'OTHER-PHASE-TURN', which is not MARATHON-P1-TURN or a retry derivative of it — ignoring it and resolving the satisfied check against MARATHON-P1-TURN
+marathon-drive: phase p1: relay is terminal (STATUS: Approved) but token 'MARATHON-P1-TURN' reads 'unknown', not done — rebuilding; if this phase really did complete, its record is on a token this run cannot see (see GH-385)
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • brief.md
+marathon-drive:   • stub
+marathon-drive: relay file committed: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/unrelated-1depo3bb/phases/p1/RELAY.md
+marathon-drive: tick token seeded: MARATHON-P1-TURN → claude
+marathon-drive: warn: host free swap is critically low (990MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-start boundary — compressor=7227MB, swap_free=990MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay timed out (exit 7) before any declared artifact landed — treating it as a real hang
+marathon-drive: relay escalated: timeout / hang (relay-drive exit 7)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/unrelated-1depo3bb/relay-system/unrelated-1depo3bb/2026-10-13/marathon-p1-154739.md
+marathon-drive: warn: host free swap is critically low (990MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7227MB, swap_free=990MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/unrelated-1depo3bb/phases/p1/ESCALATION.md (reason: timeout-no-artifact)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/unrelated-1depo3bb/result.json (outcome: escalated, exit 7)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: ≥0 tokens, 0s wall-clock
+memory: compressor peak: 7227MB, swap free min: 990MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
