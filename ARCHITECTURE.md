@@ -424,7 +424,10 @@ their automatic refreshes, while the default `auto` leaves the decision to prese
 `pdda-install.sh --projections`). The merge resolver explicitly rebuilds adopted views after a
 ledger merge; it checks presence and deletions independently of this setting.
 
-That single rule is what makes a view addable and removable without editing a single consumer.
+Ordinary ledger writes automatically refresh adopted HTML views; hosted reconciliation refreshes
+the adopted preview and Markdown leaderboard. Explicit generators remain available to create a
+view for adoption. Presence and deletion handling make views addable and removable without
+changing consumers.
 
 > For the whole of it on one canvas — truth, generators, the adoption gate, all three views, and every
 > write path together — open the generated pan-and-zoom map at
@@ -452,7 +455,7 @@ flowchart TD
         V4["LEADERBOARD.html<br/>not adopted here"]
     end
 
-    subgraph consumers["Every write path that refreshes a view"]
+    subgraph consumers["Automatic refresh and view staging paths"]
         C1["releases_app.py<br/>refresh_preview() — after a DB write"]
         C2["releases-merge-resolve.sh<br/>— after a ledger merge"]
         C2a["merge-cleanup ledger_merge.py<br/>— during a landing batch"]
@@ -465,8 +468,8 @@ flowchart TD
 
     DB --> gens
     C2a --> C2
-    C1 --> SWITCH
-    C3 --> SWITCH
+    C1 -- "HTML refresh" --> SWITCH
+    C3 -- "preview + Markdown" --> SWITCH
     C4 -- "via ledger writes" --> SWITCH
     C2 -- "explicit merge rebuild" --> GATE
     SWITCH -- "yes: views disabled" --> SKIP["skip — silent no-op"]
