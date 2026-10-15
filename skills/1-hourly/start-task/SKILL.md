@@ -49,7 +49,7 @@ repository gates separately.
 > 1. **Resolve intake & isolate in a fresh clone (Steps 1–3).** Verify the canonical remote/issue, provision a fresh full clone with a task branch off `origin/development`, register the PDDA capture doc in `1-INBOX`, and record 4-axis RELEASES task ratings.
 > 2. **Ground in recon & draft a surgical plan (Steps 4–5).** Trace live entry points, state writes, and blast radius before proposing changes; design the leanest DRY plan that extends existing subsystems with falsifiable acceptance checks.
 > 3. **Pre-implementation plan QA (Step 6).** Run a Codex relay review on the plan, adjudicate findings against ground-truth evidence, and iterate until approved before writing production code.
-> 4. **Execute & deterministically verify (Step 7).** Build the reviewed scope, commit structured checkpoints, and execute all required test suites and repo gates in safe isolation.
+> 4. **Execute & deterministically verify (Step 7).** Build the reviewed scope, commit structured checkpoints, and execute all required test suites and repo gates in safe isolation, then smoke-run the change on its main path and one adjacent path.
 > 5. **Final relay QA, ready PR & retire published checkouts (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, push through the pre-push gate, open the PR against `development`, and retire safe, fully published task checkouts through merge-cleanup without waiting for merge.
 >
 > **Overall Goal:** Issue implemented to spec, validated through double-relay QA (plan + final), and submitted as a verified, conflict-free PR ready for merge.
@@ -249,9 +249,23 @@ Then begin work.
    before and after the run; drift invalidates its evidence. Retain required
    provenance with the PR. Failed/skipped checks remain failed/skipped; fix within
    scope or mark the group blocked. Do not pass dependents on a failing prerequisite.
+   **Smoke the change before final QA (GH-1088).** Suites prove nothing regressed;
+   they rarely drive the new behaviour the way an operator will. Run the changed
+   entry point once on its **main path** and once on **one adjacent real-world path**:
+   the nearest variation an operator will actually hit (a resume, a rerun, a second
+   invocation, empty or already-done input). Record the commands, observed output and
+   verdict as a manual check under `TESTS-RESULTS/<date>+GH-<n>/` with provenance; this
+   adds no suite or test (GH-831). Mutating runs use a disposable full clone, as above.
+   For documentation-only work, read the changed instruction once from its consumer's
+   entry point, or skip with a one-line reason. A smoke failure is a defect to fix (or
+   a blocker to record) before final QA. The receipt is evidence for the reviewer; it
+   never replaces or counts as the independent review (step 6). GH-1064's resume and
+   rerun defects (#1074, #1084) passed suites and an approved review; one run past the
+   happy path would have shown them.
 
 8. **Run final Codex relay QA and resolve findings.** Use `relay-xyz` on the
-   committed implementation, plan, per-issue acceptance map, and test evidence.
+   committed implementation, plan, per-issue acceptance map, and test evidence,
+   including the step 7 smoke receipt.
    Frame the final review packet with the same commensurate operational envelope
    so verification checks actual acceptance criteria rather than demanding
    speculative layers of complexity. Ask whether each issue is satisfied, its
