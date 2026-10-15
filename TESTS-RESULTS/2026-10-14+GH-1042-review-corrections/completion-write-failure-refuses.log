@@ -1,0 +1,10 @@
+marathon-drive: phase p1 already reached a terminal relay (STATUS: Approved, token done) — skipping render/reseed, re-running only the pre-advance gate
+marathon-drive: relay approved — running pre-advance gate: true
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 0MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: <disposable-clone>/temp/recovery-manual/write-failure-phqkruij/relay-system/write-failure-phqkruij/2026-10-14/marathon-p1-233714.md
+marathon-drive: phase p1: could not persist validated completion — manual completion write failure
+marathon-drive: transcript saved: <disposable-clone>/temp/recovery-manual/write-failure-phqkruij/relay-system/write-failure-phqkruij/2026-10-14/marathon-p1-233715.md
+marathon-drive: warn: host free swap is critically low (453MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7207MB, swap_free=453MB
+marathon-drive: escalation written: <disposable-clone>/temp/recovery-manual/write-failure-phqkruij/phases/p1/ESCALATION.md (reason: phase-completion-write-failed)
+marathon-drive: result receipt written: <disposable-clone>/temp/recovery-manual/write-failure-phqkruij/result.json (outcome: escalated, exit 4)
