@@ -221,6 +221,49 @@ Parking preserves work for later review; it never qualifies it for integration o
 - Analyzes touched file sets to detect unannotated file collisions and orders shared-file PRs chronologically as **soft** edges: they decide sequence only, never eligibility (GH-623).
 - Builds a Directed Acyclic Graph (DAG) and computes topological merge order.
 
+### CI-heavy repositories: plan merge groups before qualification (GH-1066)
+
+Prefer a few coherent landing groups over repeatedly repairing, pushing and fully testing
+one PR at a time. This is caller-owned planning, not a new driver mode or a gate bypass.
+Use the existing batch issue for qualifying queues; smaller queues use the run summary.
+
+1. **Map the cost and constraints.** Read the repo's required checks, push hooks, hosted
+   triggers and reconciliation policy. Identify which pushes actually start broad CI and
+   which existing path supports batching (merge queue, staging or aggregate landing PR).
+   Record the chosen path and intended full-run checkpoints before the first mutation.
+2. **Group by dependency and interaction.** Keep hard dependencies in order; group related
+   changes sharing runtime/contracts or repeated conflict sites. Shared ledger/CHANGELOG
+   files alone do not prove semantic coupling. Separate unrelated work and risky migrations,
+   security or containment changes that need independent rollback and qualification.
+3. **Prepare before expensive runs.** Resolve the group's known conflicts and combined
+   interactions in a disposable full clone, complete independent review, and run the existing
+   focused checks as repairs are made. Publish complete reviewed checkpoints rather than
+   each mechanical repair. Required per-PR checks still run on their actual final heads.
+4. **Freeze the candidate.** Record member PRs and head SHAs, current integration base,
+   combined candidate SHA, review receipts and rollback boundary. New members, code repairs
+   or base changes invalidate affected evidence; refresh review/checks before landing.
+5. **Qualify the complete group.** Where policy permits, reserve the first full gate for
+   this frozen combined candidate, after preparation is complete. Keep the existing tier
+   classification; grouping docs does not require a full gate. Run the repository's
+   qualifying command on its required platform; a parallel publication run is not sequential
+   promotion evidence. A failed required check stops landing; diagnose before retrying.
+6. **Land through the supported path.** Preserve merge-history policy and PR/issue provenance.
+   Never retarget PRs, create a staging branch, alter branch protection/workflows, cancel
+   required runs or use a push bypass merely to meet a CI budget. Those changes require
+   their own authorization. Historical time-boxed exceptions are not standing permission.
+7. **Verify the landed result.** Reserve a second full run for the actual landed integration
+   result when policy requires it or candidate evidence no longer qualifies that result.
+   Reuse an existing qualifying hosted run only when its SHA/content scope covers the group;
+   do not launch a duplicate final sweep. Complete required reconciliation and fresh teardown
+   checks, and record actual run SHAs, results and any remaining verification.
+
+**Fallback:** if no supported batch path exists, keep ordinary sequential merges and every
+required per-merge reconciliation/check. The current Forge driver reconciles after each merge;
+this guidance does not defer that sequence or add a batching flag. Group preparation can reduce
+repair/push churn, but cannot promise one or two total CI runs under an unchanged per-PR policy.
+Record that limit; use Forge's `docs/CI-CHURN-RECOVERY-SOP.md` for a separately authorized
+recovery window when warranted. Never skip qualification or claim unmeasured savings.
+
 ### Phase 5: Safe Execution & Post-Merge Reconciliation
 - **Refuses every executing cleanup when Phase 0 says the primary is not landing-ready**, unless the operator explicitly passes `--allow-unready-primary` to defer that cleanup. This gate applies before any Phase 5 or Phase 6 mutation, including zero-PR and `--teardown-only` runs; the skill never silently chooses to leave the primary dirty or otherwise unready.
 - Carries existing authorization forward. Ask only for a missing scope decision, ambiguous resolution, or an action requiring additional permission under repo policy, after completing safe preparation; do not ask the operator to reselect already authorized work.
