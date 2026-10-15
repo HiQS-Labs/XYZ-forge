@@ -251,4 +251,12 @@ Scope: Re-read the entire six implementation files listed in Setup, the approved
 
 Relay closed (Approved), no further review turn needed. Handing the completed token to the harness with `done`; Producer (claude-a) proceeds with the scheduled disposable-clone full gate. The harness owns the relay-file commit; this reviewer ran no git command.
 
+
+### Attestation · relay-drive — 2026-10-15T02:06:25Z
+task: RELAY-gh1064-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 9a64c66db6ac28451dd64174be030602e18fe4b3
+added-range: 21393+10189
+added-sha256: 3c0592b34bb266009fae828b97a97897a7ecd1309c439b73194c4146ca6f27d8
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
