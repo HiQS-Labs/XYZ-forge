@@ -1,21 +1,27 @@
 ---
-name: review-code
+name: review-code-xyz
 description: >-
-  Meticulous code and pull request review ladder using /recon and /debug-mantra to test out each
-  fix and feature against live ground truth. Supports PR targets under review-PR / --pr <PR#>.
-  Loops through /workhorse and /unstuck ladders to autonomously resolve reversible adaptations and
-  pivots without stopping for operator permission, driving verified forward movement.
+  Meticulous local code review ladder (uncommitted changes, a branch, or files) using /recon and
+  /debug-mantra to test each fix and feature against live ground truth, then /workhorse and
+  /unstuck to resolve reversible issues without stopping for operator permission. Reviewing a
+  GitHub PR? Use review-pr-xyz (validates the PR's claims first, report-only). Multi-model panel
+  review? Use review-xyz.
 metadata:
-  argument-hint: "[diff, branch, file, or --pr <PR#>]"
+  argument-hint: "[diff, branch, or file]"
 ---
 
-# /review-code (and /review-pr) — Meticulous Ground-Truth Code & PR Review Ladder
+# /review-code-xyz — Meticulous Ground-Truth Local Code Review Ladder
 
-`/review-code` is an empirical code and pull request review discipline that treats every proposed
-change as a claim requiring firsthand verification. Rather than passively reading a diff and commenting
-on style or plausible appearance, `/review-code` actively maps the system's blast radius, tests
+`/review-code-xyz` is an empirical code review discipline that treats every proposed change as a
+claim requiring firsthand verification. Rather than passively reading a diff and commenting
+on style or plausible appearance, `/review-code-xyz` actively maps the system's blast radius, tests
 fixes and features against live execution, and uses autonomous problem-resolution ladders to drive
 forward movement.
+
+**Which review skill:** local diff or branch → this skill. A GitHub PR →
+[`review-pr-xyz`](../review-pr-xyz/SKILL.md), which validates the PR's claims first, reuses this
+skill's Phase 1, 2 and 4 definitions, and only reports (it never pushes fixes). A multi-model
+reviewer panel → [`review-xyz`](../review-xyz/SKILL.md).
 
 It coordinates four specialized disciplines into a cohesive review workflow:
 1. **[`/recon`](../../1-hourly/recon/SKILL.md)**: Seam and blast-radius mapping across callers, data
@@ -37,14 +43,14 @@ It coordinates four specialized disciplines into a cohesive review workflow:
 ## Recite this — verbatim, as the first thing in your first response
 
 > **Review-Code Discipline:**
-> 1. **Ingest target & map blast radius (Phase 1 /recon).** Ingest the diff or PR (`review-PR`), map callers, state mutations, contracts, failure paths, and audit adherence to centralized helpers and zero parallel subsystems (DRY).
+> 1. **Ingest target & map blast radius (Phase 1 /recon).** Ingest the local diff or branch, map callers, state mutations, contracts, failure paths, and audit adherence to centralized helpers and zero parallel subsystems (DRY).
 > 2. **Meticulously test fixes & features (Phase 2 /debug-mantra).** Test every fix against root cause (falsify symptom patches; mutate guards to watch them fail) and verify feature acceptance criteria with measured ground truth and negative controls.
 > 3. **Autonomous resolution & anti-hesitation (Phase 3 /workhorse + /unstuck).** If pivots or adaptations are needed, classify reversibility (`Easy`/`Costly`/`One-way door`): autonomously adapt and test `Easy` changes without operator round-trips; freeze cogs and execute foundational unblocking moves.
 > 4. **Grade & synthesize verified findings (Phase 4).** Categorize findings (`[Blocker]`, `[Should]`, `[Nit]`, `[Pass]`) with exact `file:line` citations, emit the actionable checklist, and deliver the verdict twice: post the report to the GitHub PR/issue via `gh` **and** render it on-screen with the verified comment URL. Never one without the other.
 >
 > **Overall Goal:** Every fix and feature verified against live behavior rather than plausible appearance, with reversible issues resolved autonomously and review conclusions grounded in runnable proof.
 
-Then begin work. When `/review-code` (or `/review-pr`) is the active orchestrating skill, this recital
+Then begin work. When `/review-code-xyz` is the active orchestrating skill, this recital
 precedes subordinate skill invocations; subordinate skills ([`/recon`](../../1-hourly/recon/SKILL.md),
 [`/debug-mantra`](../../1-hourly/debug-mantra/SKILL.md), etc.) are then loaded for their mechanics
 without conflicting recitals.
@@ -54,7 +60,7 @@ without conflicting recitals.
 ## The 5-Phase Review Ladder
 
 ```text
-Phase 0: Target Intake & Scope Resolution  ──► Local diff/branch vs GitHub PR (`review-PR`); isolate refs & context
+Phase 0: Target Intake & Scope Resolution  ──► Local diff, branch or files; isolate refs & context (PRs → review-pr-xyz)
                  │
                  ▼
 Phase 1: Seam & Blast Radius Recon (/recon)──► Map callers (Lane A), state (Lane B), contracts (Lane C), tests (Lane D), DRY (Lane E)
@@ -76,10 +82,8 @@ Phase 4: Graded Findings & PR Actionability──► [Blocker] / [Should] / [Nit
 
 ## Phase 0: Target Intake & Scope Resolution
 
-Resolve the exact target under review. Two primary entry modes are supported:
-
-### Mode A: Local Code Review (`/review-code`)
-Used for uncommitted working tree changes, staged diffs, branch diffs against upstream, or targeted files:
+Resolve the exact target under review: uncommitted working tree changes, staged diffs, branch diffs
+against upstream, or targeted files.
 ```bash
 # Review uncommitted changes against HEAD
 git diff HEAD
@@ -91,24 +95,12 @@ git diff origin/development...HEAD
 git diff --stat origin/development...HEAD
 ```
 
-### Mode B: GitHub Pull Request Review (`review-PR` / `/review-code --pr <PR#>`)
-Triggered via `review-PR`, `/review-pr <PR#>`, or `/review-code --pr <PR#>`:
-```bash
-# Inspect PR metadata, base branch, head branch, author, and description
-gh pr view <PR#> --json number,title,body,baseRefName,headRefName,headRefOid,author,state
-
-# Fetch the raw unified diff for the PR
-gh pr diff <PR#>
-
-# Inspect linked issues (Fixes #..., Closes #..., GH-...) and project documentation
-grep -E "(Fixes|Closes|Resolves) #[0-9]+" <<< "$(gh pr view <PR#> --json body -q .body)"
-
-# Check hosted CI check run statuses
-gh pr checks <PR#>
-```
+**Asked to review a GitHub PR?** Stop and hand off to [`review-pr-xyz`](../review-pr-xyz/SKILL.md).
+PR review lives there because it adds a claim-validation phase this ladder does not run, and it is
+report-only.
 
 **Scope Invariant:**
-- Identify the target branch: ensure the PR targets the active WIP branch (`development`), not `main` (per orchestrator rails).
+- Identify the base: the branch should target the active WIP branch (`development`), not `main` (per orchestrator rails).
 - Size the diff: a targeted bug fix should typically be focused (< 500 lines); large architectural diffs require all 5 recon lanes.
 
 ---
@@ -157,7 +149,7 @@ Reviewers must trace past transparent delegation (forwarding helpers, retry deco
 - **Parameter Role Contract (Lane C):** Verify at `file:line` whether arguments passed into existing engines/solvers act as constraints (filtering) or generators (creating candidates). Passing entities under the assumption of constraint when the callee acts as a generator creates duplicate entities and is a `[Blocker]`.
 - **Rollout Coexistence & Rollback (Lane C):** When persisted formats, status values, or external contracts change, verify backward/forward coexistence across versions and rollback feasibility per SWE migration policy. Introducing breaking schema/state without a stated coexistence or rollback boundary is a `[Blocker]`.
 
-#### 2. Deep Mode Review (`/review-code --deep`)
+#### 2. Deep Mode Review (`/review-code-xyz --deep`)
 When review is invoked with `--deep` or for complex cross-service architectural changes, expand review to transitive call chains ($N+2, N+3$), programmatic dataset validation (e.g. running verification scripts over JSON/CSV catalogs), and distributed failure matrices (worker crash / clock skew). Reserve deep mode for broader transitive analysis, not for finishing an ordinary check hidden behind one wrapper.
 
 **Evidence Standard:**
@@ -326,7 +318,7 @@ exact `file:line` or symbol references.
 
 ### 2. Structured Review Report Schema
 
-Every `/review-code` report follows this structure:
+Every `/review-code-xyz` report follows this structure:
 
 ```markdown
 ## 🛡️ Code Review Report: <Target / PR Title>
@@ -387,11 +379,10 @@ Posting is not an alternative to the on-screen report, is not optional, and is n
 approval — a review comment is reversible (it can be edited or deleted), so it is pre-authorized
 here. Never pause to ask.
 
-1. **Resolve the target before writing the report.** PR mode (`--pr <PR#>`) posts to that PR.
-   Local-diff mode (`/review-code` without `--pr`): resolve the branch's open PR with
+1. **Resolve the target before writing the report.** Resolve the branch's open PR with
    `gh pr view --json number,url -q .number`, or use an explicit `--issue <N>` if given. If neither
    resolves, that is the only sanctioned skip — state `NO GH TARGET — report on-screen only` on
-   screen and stop there. Nothing else may skip the post. In local-diff mode, post to the PR only
+   screen and stop there. Nothing else may skip the post. Post to the PR only
    when the reviewed bytes are its pushed head (`git status --porcelain` empty and `HEAD` equal to
    `gh pr view --json headRefOid`). Otherwise the comment would describe code the PR does not
    contain: report on-screen and state `NOT POSTED: local diff differs from the PR head`.

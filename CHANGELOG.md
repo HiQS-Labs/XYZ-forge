@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-14 — PR review checks the PR's claims first: review-pr-xyz; review-code is now review-code-xyz (GH-1060)
+
+New `review-pr-xyz` owns GitHub PR review. Before reading the code it lists what the PR and its
+linked issue claim and checks each one: the bug reproduces on the base branch, the issue asks for
+this, the change has not already landed, and claimed test runs actually pass. If the core claim
+fails, the review stops early with `Changes Requested`. Otherwise it runs the recon and
+debug-mantra phases and posts graded findings. It only reports: it never pushes, approves or merges.
+
+`review-code` is renamed `review-code-xyz` to match `relay-xyz`, and its `--pr` mode moves to the
+new skill. It now reviews local diffs and branches only, and keeps its reversible-fix loop. Clean
+rename with no alias. XYZ-mini picks up both skills and drops `review-code` on the next
+`/push-downstream`, and deployed copies need a Skills Army HQ refresh. No new suites (GH-831);
+existing suites were repointed. Revert the GH-1060 commit to undo.
+
 ## 2026-10-12 — Muse relay turns no longer stall on an unanswerable approval prompt (GH-521)
 
 Driven Muse relay turns hit the wall cap with `cpu=0.00` and no relay block. The cause was
