@@ -55,7 +55,7 @@ ROUND: 1 / 3
 
 Read the complete seeded packet and follow its exact source/evidence scope and operational envelope. No suites or mutations in the linked review worktree. Review all relevant changes versus9061df4b; no new tests/cases permitted.
 - Artifact under review: **.relay-artifacts/gh1076-final-review-packet.md** — the read-only path that
-  `relay-drive.sh --artifact-file .workhorse/gh1076-final-review-packet.md` seeds into the isolated worktree (read it there; do NOT edit it).
+  `relay-drive.sh --artifact-file relay-system/2026-10-15/gh1076-final-review-packet.md` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: codex   ·   Producer: codex-producer
 - Started: 2026-10-15
 - Definition of Done: Complete seeded packet and scoped source/evidence review satisfy its six acceptance points for a draft PR, subject to pending normal final full push gate; no unsupported umbrella completion.
