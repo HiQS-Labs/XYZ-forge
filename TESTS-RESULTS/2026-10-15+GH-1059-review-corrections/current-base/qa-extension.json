@@ -1,0 +1,12 @@
+{
+  "originalReview": "relay-system/2026-10-14/gh1059-final.codex.md",
+  "originalStatus": "Escalated",
+  "originalRoundsUsed": 3,
+  "originalRoundCap": 3,
+  "extensionAuthorizedRounds": 2,
+  "extensionRoundsStarted": 0,
+  "extensionRoundsRemaining": 2,
+  "authorization": "I authorize you and the agent to do more 2 rounds of QA per PR than base/default. Please get as many PRs merged tonight as possible. And then do the full clone folder clean up.",
+  "authorizationEvidence": "Noel main conversation 2026-10-14 19:55 PDT, Sentinel_4231123aedc48191a8cec54c1d6544e0; parent delegation received 2026-10-15 UTC",
+  "limits": "No cap resets or duplicated restart allowances; PR1062 excluded; no new CI case approved; exact-head normal gates still required."
+}
