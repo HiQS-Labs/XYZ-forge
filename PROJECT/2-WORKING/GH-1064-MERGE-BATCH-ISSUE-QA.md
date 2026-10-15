@@ -17,7 +17,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Plan revised for plan-QA round 2 (R2–R4 follow-ups + R7, all implemented). | Codex plan QA round 3 (final). |
+| Implemented per the approved plan; gh436 green (185); 3 red controls recorded. | Full gate in a disposable clone, then final Codex QA and PR. |
 
 ## Operator decisions (2026-10-14)
 
@@ -265,3 +265,15 @@ All paths are under `skills/2-daily/merge-cleanup/scripts/` unless given as repo
   A caller that treats non-zero as failure sees exit 4 as "not done", which is the intent.
 - **Issue churn:** one `gh issue edit` per PR in the batch. Batches are small, so this is negligible.
 - **Pinned doc phrases:** handled by adding text only. The suite will catch any slip.
+
+## Implementation notes (2026-10-14)
+
+- **Hard stops (R4):** instead of editing all 22 in-loop `return 2` sites, `land_prs` is a thin
+  wrapper around the unchanged loop (now `_land_prs_loop`). `log_err` feeds the current PR's error
+  lines to the wrapper, and the wrapper's `finally` records `stopped: <errors>` for the PR in hand,
+  which covers every site, including :935 (before `p_num`). The parity guard's AST pins move to
+  `_land_prs_loop`.
+- **Landing order:** kept as `landed_order` in the record (append on merge), not derived from keys.
+- **Verification:**
+  - `bash test/gh436-merge-cleanup.sh`: 185 tests OK.
+  - Red controls (each mutation restored byte for byte): `TESTS-RESULTS/2026-10-14+GH-1064/provenance.jsonl`.
