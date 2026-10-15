@@ -16,7 +16,7 @@ doc_type: feature
 
 | What was just completed | What's next |
 |---|---|
-| Added caller-owned group planning and explicit gate boundaries. | Documentation gate and PR publication. |
+| Strategy, plan/final QA and full publication gate complete; PR #1068 opened for final receipts. | Verify final remote checks, mark ready and retire owned safe checkouts; merge/deploy remain separate. |
 
 ## Scope and decision
 
@@ -96,11 +96,13 @@ The strategy cannot force one/two full runs while a repo independently mandates 
 
 - [x] Plan relay approved.
 - [x] Revised skill and retained manual scenarios satisfy the requirements.
-- [ ] Final relay approved and classified gate passes at the final revision.
-- [ ] Ready PR published; owned safe checkouts retired or preservation reason reported.
+- [x] Final relay approved and classified gate passes at the final revision.
+- [x] Reviewed PR published: #1068. Ready transition and owned checkout retirement follow final live checks.
 
 Plan QA approved in round1: attestation c6fa142, reviewed315fa63. The reviewer clarified that batch strategy review does not replace required per-PR QA; implemented explicitly. Owned helper: `$(dirname "$PRIMARY_REPO")/XYZ-forge-gh1066-merge-cleanup-ci-groups-2026-10-14-verify`. Seven manual scenarios, two manual red variants and existing codex-turn43/0 retained with limitations. Final QA and final classified gate remain pending.
 
 Final QA approved in round1 at b21dcac (reviewed ee3e803); production skill SHA2568533cb63558432f7e925399ef9334c4c5142333bba64e8569d5e0b5525a5010d. No blocking findings. Invocation nit disposition: future relays must pass artifact-file to seed the advertised alias; the reviewer read and hashed the canonical committed skill, so current approval is valid. No source change required. Final gate uses the owned separate full verify clone; prototype gate remains interrupted/non-passing.
 
 Qualification found a hardcoded local path in this plan (pdda-check-hardcoded-paths); replaced with a portable primary-sibling reference. Skill bytes still match final QA; metadata correction receives the focused portability check before a fresh final gate. The preceding gate is interrupted/non-passing evidence.
+
+Publication: https://github.com/HiQS-Labs/XYZ-forge/pull/1068 (development). Full gate at759b34e passed409/409 in989s with unchanged verify-clone identity; retained qualified-publication.log and validation.jsonl prove publication, not main promotion. This final receipt-only commit uses the normal documentation push gate. Required scope is fulfilled; merge/deploy need separate authorization.
