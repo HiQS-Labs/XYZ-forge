@@ -1,0 +1,129 @@
+
+COMMAND ['bash', 'test/gh425-gate-provenance-pr.sh']
+test_batch_qualifies_once_and_retains_each_landing (__main__.Qualification.test_batch_qualifies_once_and_retains_each_landing) ... wave-reconcile: Qualifying 2 landing(s) in integrated snapshot 4240fbb52486ed0e895c6910cc98367cab1f10b7 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-4240fbb52486ed0e895c6910cc98367cab1f10b7/provenance.jsonl
+ok
+test_bounded_runner_timeout_refuses_receipts (__main__.Qualification.test_bounded_runner_timeout_refuses_receipts) ... wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['git', 'clone', '--no-local', '--quiet', '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh591-qualification-i0mj331s/source', '/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wave-qualification-x1t868xo/repo']' returned non-zero exit status 124.
+ok
+test_committed_proof_makes_replay_idempotent (__main__.Qualification.test_committed_proof_makes_replay_idempotent) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot e7d01dde3959e80bc9ab19907a99b62c08252191 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-e7d01dde3959e80bc9ab19907a99b62c08252191/provenance.jsonl
+ok
+test_full_gate_produces_attributable_retained_proof (__main__.Qualification.test_full_gate_produces_attributable_retained_proof) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 1b4eebda47020e825d1fbdf8841dcf6930192c49 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-1b4eebda47020e825d1fbdf8841dcf6930192c49/provenance.jsonl
+wave-reconcile:   Full-suite integration receipt matched for PR #425: TESTS-RESULTS/2026-10-15+GH-591/wave-1b4eebda47020e825d1fbdf8841dcf6930192c49/provenance.jsonl:1
+ok
+test_incomplete_or_quarantined_telemetry_is_rejected (__main__.Qualification.test_incomplete_or_quarantined_telemetry_is_rejected) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 084b58fa31a2e7c8923d3f7e6eb635d49661ba35 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-084b58fa31a2e7c8923d3f7e6eb635d49661ba35/provenance.jsonl
+ok
+test_new_schema_cannot_fall_through_to_legacy_pr_match (__main__.Qualification.test_new_schema_cannot_fall_through_to_legacy_pr_match) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 6032b6432331380aad09a7bee96f22e7a08b7359 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-6032b6432331380aad09a7bee96f22e7a08b7359/provenance.jsonl
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+ok
+test_receipts_participate_in_rollback (__main__.Qualification.test_receipts_participate_in_rollback) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 6032b6432331380aad09a7bee96f22e7a08b7359 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-6032b6432331380aad09a7bee96f22e7a08b7359/provenance.jsonl
+wave-reconcile: Rolling back all uncommitted mutations...
+ok
+test_red_partial_and_identity_drift_produce_no_receipt (__main__.Qualification.test_red_partial_and_identity_drift_produce_no_receipt) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot c8c90afc6c4557a717f03fe9e02f03989af2361c with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['bash', 'validate.sh', '--sequential']' returned non-zero exit status 42.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot c8c90afc6c4557a717f03fe9e02f03989af2361c with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: ERROR — Qualification failed; no receipt produced: validation telemetry has no unique completed run
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot c8c90afc6c4557a717f03fe9e02f03989af2361c with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['git', 'status', '--porcelain']' returned non-zero exit status 128.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot c8c90afc6c4557a717f03fe9e02f03989af2361c with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: ERROR — Qualification failed; no receipt produced: missing or malformed validation telemetry
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot c8c90afc6c4557a717f03fe9e02f03989af2361c with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: ERROR — Qualification failed; no receipt produced: missing or malformed validation telemetry
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot c8c90afc6c4557a717f03fe9e02f03989af2361c with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: ERROR — Qualification telemetry does not identify the launched validation process
+ok
+test_wrong_landing_fails_before_qualification (__main__.Qualification.test_wrong_landing_fails_before_qualification) ... wave-reconcile: ERROR — Qualification refuses PR #425: merge not in the tested development snapshot
+ok
+test_cli_commit_landing_gate_express_receipt (__main__.Receipts.test_cli_commit_landing_gate_express_receipt)
+GH-592 red control: --commit <sha> --gate on a direct (express) landing. ... ok
+test_cli_gate_and_ungated_path (__main__.Receipts.test_cli_gate_and_ungated_path) ... ok
+test_empty_or_malformed_receipts_fail (__main__.Receipts.test_empty_or_malformed_receipts_fail) ... ok
+test_later_record_and_error_log (__main__.Receipts.test_later_record_and_error_log) ... ok
+test_matching_pr_names_receipt_and_field (__main__.Receipts.test_matching_pr_names_receipt_and_field) ... ok
+test_merge_commit_matches_exactly (__main__.Receipts.test_merge_commit_matches_exactly) ... ok
+test_metadata_requests_merge_commit (__main__.Receipts.test_metadata_requests_merge_commit) ... ok
+test_missing_directory_fails (__main__.Receipts.test_missing_directory_fails) ... ok
+test_missing_identity_cannot_match_null (__main__.Receipts.test_missing_identity_cannot_match_null) ... ok
+test_names_and_symlinks_are_not_evidence (__main__.Receipts.test_names_and_symlinks_are_not_evidence) ... ok
+test_short_sha_matches_candidate_prefix (__main__.Receipts.test_short_sha_matches_candidate_prefix) ... ok
+test_squashed_branch_commit_lineage_matches (__main__.Receipts.test_squashed_branch_commit_lineage_matches) ... ok
+test_unattributable_receipts_fail (__main__.Receipts.test_unattributable_receipts_fail) ... ok
+test_wrong_pr_is_rejected (__main__.Receipts.test_wrong_pr_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 7.829s
+
+OK
+
+COMMAND ['bash', 'test/gh421-auto-wave-reconcile.sh']
+test_catch_up_applies_missed_event (__main__.ReconcileTests.test_catch_up_applies_missed_event) ... ok
+test_catch_up_finds_roadmap_only_drift (__main__.ReconcileTests.test_catch_up_finds_roadmap_only_drift) ... ok
+test_catch_up_promotes_a_lessons_less_backlog_doc_with_a_warning (__main__.ReconcileTests.test_catch_up_promotes_a_lessons_less_backlog_doc_with_a_warning) ... ok
+test_corrupt_ledger_fails_closed (__main__.ReconcileTests.test_corrupt_ledger_fails_closed) ... ok
+test_declined_marker_uses_existing_enum (__main__.ReconcileTests.test_declined_marker_uses_existing_enum) ... ok
+test_direct_commit_with_catch_up (__main__.ReconcileTests.test_direct_commit_with_catch_up) ... ok
+test_doc_write_failure_and_legacy (__main__.ReconcileTests.test_doc_write_failure_and_legacy) ... ok
+test_dry_run_transitions (__main__.ReconcileTests.test_dry_run_transitions) ... ok
+test_explicit_landing_with_a_lessons_less_doc_warns_and_lands (__main__.ReconcileTests.test_explicit_landing_with_a_lessons_less_doc_warns_and_lands) ... ok
+test_legacy_row_does_not_block_attributable_pr (__main__.ReconcileTests.test_legacy_row_does_not_block_attributable_pr) ... ok
+test_lifecycle_and_second_apply (__main__.ReconcileTests.test_lifecycle_and_second_apply) ... ok
+test_live_catch_up_pagination_and_foreign_reference (__main__.ReconcileTests.test_live_catch_up_pagination_and_foreign_reference) ... ok
+test_missing_merge_sha_rolls_back (__main__.ReconcileTests.test_missing_merge_sha_rolls_back) ... ok
+test_no_manifest_and_missing_evidence (__main__.ReconcileTests.test_no_manifest_and_missing_evidence) ... ok
+test_only_receipted_defers_the_unreceipted_older_closer_and_keeps_newest_owner (__main__.ReconcileTests.test_only_receipted_defers_the_unreceipted_older_closer_and_keeps_newest_owner) ... ok
+test_only_receipted_explicit_target_keeps_open_issue_merge_evidence (__main__.ReconcileTests.test_only_receipted_explicit_target_keeps_open_issue_merge_evidence) ... ok
+test_only_receipted_refuses_an_explicit_unreceipted_target (__main__.ReconcileTests.test_only_receipted_refuses_an_explicit_unreceipted_target) ... ok
+test_only_receipted_requires_catch_up_and_qualify (__main__.ReconcileTests.test_only_receipted_requires_catch_up_and_qualify) ... ok
+test_only_receipted_with_both_receipted_still_lets_the_newest_closer_own (__main__.ReconcileTests.test_only_receipted_with_both_receipted_still_lets_the_newest_closer_own) ... ok
+test_open_issue_and_empty_closers (__main__.ReconcileTests.test_open_issue_and_empty_closers) ... ok
+test_planner_drift_for_a_lessons_less_issue_is_owned (__main__.ReconcileTests.test_planner_drift_for_a_lessons_less_issue_is_owned) ... ok
+test_planner_drift_for_a_reconciled_issue_stays_fatal (__main__.ReconcileTests.test_planner_drift_for_a_reconciled_issue_stays_fatal) ... ok
+test_pre_merge_ignores_supporting_notes_in_active_and_completed_dirs (__main__.ReconcileTests.test_pre_merge_ignores_supporting_notes_in_active_and_completed_dirs) ... ok
+test_qualified_empty_sweep_writes_nothing (__main__.ReconcileTests.test_qualified_empty_sweep_writes_nothing) ... ok
+test_recovered_closers_have_one_newest_lifecycle_owner (__main__.ReconcileTests.test_recovered_closers_have_one_newest_lifecycle_owner) ... ok
+test_recovery_covers_no_issue_and_open_reference_prs (__main__.ReconcileTests.test_recovery_covers_no_issue_and_open_reference_prs) ... wave-reconcile: Receipt recovery found 3 pending PR(s) since workflow activation 2026-09-10T00:00:00+00:00
+ok
+test_recovery_fails_closed_on_missing_history_or_api_error (__main__.ReconcileTests.test_recovery_fails_closed_on_missing_history_or_api_error) ... wave-reconcile: ERROR — Merged-PR recovery requires a full, non-shallow clone
+wave-reconcile: ERROR — Merged-PR recovery failed: API unavailable
+ok
+test_recovery_rejects_shallow_and_malformed_metadata (__main__.ReconcileTests.test_recovery_rejects_shallow_and_malformed_metadata) ... wave-reconcile: ERROR — Merged-PR recovery requires a full, non-shallow clone
+wave-reconcile: ERROR — Malformed merged-PR recovery response: pull request lacks merged_at or base.ref
+wave-reconcile: ERROR — Malformed merged-PR recovery response: pull request lacks merged_at or base.ref
+wave-reconcile: ERROR — Malformed merged-PR recovery response: invalid merged_at timestamp
+ok
+test_roadmap_catch_up_preserves_repository_identity (__main__.ReconcileTests.test_roadmap_catch_up_preserves_repository_identity) ... ok
+test_rollback_each_boundary (__main__.ReconcileTests.test_rollback_each_boundary) ... ok
+test_supporting_note_cannot_steal_canonical_closeout (__main__.ReconcileTests.test_supporting_note_cannot_steal_canonical_closeout) ... ok
+test_three_close_events_and_catch_up (__main__.ReconcileTests.test_three_close_events_and_catch_up) ... ok
+test_publish_allowlist_and_plan_lands (__main__.WorkflowTests.test_publish_allowlist_and_plan_lands) ... ok
+test_publish_recovers_from_a_raced_push_with_receipts_first_and_one_recompute (__main__.WorkflowTests.test_publish_recovers_from_a_raced_push_with_receipts_first_and_one_recompute) ... ok
+test_report_step_and_permissions (__main__.WorkflowTests.test_report_step_and_permissions) ... ok
+test_trigger_permissions_and_queue (__main__.WorkflowTests.test_trigger_permissions_and_queue) ... ok
+
+----------------------------------------------------------------------
+Ran 36 tests in 4.374s
+
+OK
+
+COMMAND ['bash', 'test/gh740-hosted-lane-publish.sh']
+test_no_race_is_one_commit_one_push (__main__.PublishTests.test_no_race_is_one_commit_one_push) ... ok
+test_race_publishes_receipts_first_then_recomputes_once (__main__.PublishTests.test_race_publishes_receipts_first_then_recomputes_once) ... ok
+test_race_without_receipts_exits_without_retry (__main__.PublishTests.test_race_without_receipts_exits_without_retry) ... ok
+test_retry_argv_coalesces_targets_for_the_production_parser (__main__.PublishTests.test_retry_argv_coalesces_targets_for_the_production_parser) ... ok
+test_second_race_exits_loudly_with_receipts_kept_and_one_recompute (__main__.PublishTests.test_second_race_exits_loudly_with_receipts_kept_and_one_recompute) ... ok
+test_undeclared_artifact_is_refused_before_any_push (__main__.PublishTests.test_undeclared_artifact_is_refused_before_any_push) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 6.242s
+
+OK

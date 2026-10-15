@@ -1,0 +1,41 @@
+{
+  "before": {
+    "head": "a7d25aede6a03578d19e969f2944fcaa88bdbade",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.remote=origin\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.merge=refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+    "refs": "390bce7f8fe7bd936fe1c1d5bae2d417072fb400 refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\n390bce7f8fe7bd936fe1c1d5bae2d417072fb400 refs/remotes/origin/HEAD\n390bce7f8fe7bd936fe1c1d5bae2d417072fb400 refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\nf974fcee15647aae6551fcc81b129f5a6127120b refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0"
+  },
+  "commands": [
+    {
+      "command": [
+        "bash",
+        "test/gh425-gate-provenance-pr.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 7.953
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh421-auto-wave-reconcile.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 4.57
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh740-hosted-lane-publish.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 6.34
+    }
+  ],
+  "after": {
+    "head": "a7d25aede6a03578d19e969f2944fcaa88bdbade",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.remote=origin\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.merge=refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+    "refs": "390bce7f8fe7bd936fe1c1d5bae2d417072fb400 refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\n390bce7f8fe7bd936fe1c1d5bae2d417072fb400 refs/remotes/origin/HEAD\n390bce7f8fe7bd936fe1c1d5bae2d417072fb400 refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\nf974fcee15647aae6551fcc81b129f5a6127120b refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0"
+  },
+  "identity_unchanged": true
+}
