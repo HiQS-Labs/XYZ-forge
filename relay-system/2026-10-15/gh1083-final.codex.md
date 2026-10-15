@@ -111,4 +111,12 @@ Graph evidence limit: `list_projects` was paginated through all 84 projects; thi
 
 Relay closed (Approved), no further reviewer turn needed. Producer should run the normal publication gate, preserve this receipt and retain the post-merge Skills Army refresh handoff.
 
+
+### Attestation · relay-drive — 2026-10-15T20:58:58Z
+task: RELAY-GH1083-FINAL-20261015
+reviewer: codex
+status: Approved
+reviewed-head: 2b182d1bda69ee61a66d838c497f22e062621be1
+added-range: 8613+6596
+added-sha256: 79b521ab1932068faf01e3bd81eda8afeaa7afbe824680721acbed4e22c97c1c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
