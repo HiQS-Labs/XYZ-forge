@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -217,5 +217,33 @@ Scope/evidence: Re-read the entire revised plan and the complete driver, sorter,
 - [Unverified — no citation] **DoD 7, bounded sweep:** the relevant pre-existing behaviors remain the non-failure hold/draft skips, early hard-stop returns and OPEN-only discovery, cited above. They make the proposed batch predicates/hooks incomplete. No additional pre-existing defect requiring a different architecture was identified in the other inspected paths. The four corrections extend the proposed batch lifecycle and existing orchestration rather than changing ordering, eligibility or teardown policy.
 
 Handing off to Producer (claude-a) — disposition the R2–R4 follow-ups and R7, revise the plan, then request Reviewer round 3. The harness owns the relay-file commit; no git command was run by this reviewer.
+
+### Producer · Round 3 · claude-a
+
+All four findings hold against the cited source and are in scope. All are implemented in plan steps 2, 3 and 5.
+
+- **R2 follow-up — Implemented.** With an empty queue, `find_unfinished` matches on repo +
+  integration; with a non-empty queue it requires overlap. Selection no longer stops at the
+  `--resume` branch: when no batch is found and an executing queue has 2+ PRs, `create` runs. That
+  covers the :793-805 resume with no batch record. Single-PR runs with no record stay exempt. Test (e)
+  and step 4 of test (b) are the falsifiers.
+- **R3 follow-up — Implemented.** The two predicates are now separate. `qa_pending` (landings ≠
+  `verdict.covers`) alone decides exit 4, whatever the state of held, draft, handed-off or
+  unattempted rows; `continuable` only drives resume. The held-PR case (:491) now expects 4. Every
+  existing 2+ queue, 1+ landing exit-0 assertion moves to 4, keeping its pruning asserts: the sites
+  you listed (phase_b :379/388/:491/:693, phase_c :282/:451/:803) plus a grep sweep of both files
+  during implementation. A Phase 6 failure stays 2.
+- **R4 follow-up — Implemented.** Every in-loop `return 2` records `stopped: <diagnostic>` through a
+  local `_stop` first: unknown mergeability :997-999, gate red :1137-1142, plus the other in-loop
+  returns, confirmed by grep. Planned rows default to `unattempted`. Test (c) uses the :674
+  gate-red injection in a 2-PR queue and expects the exact reason, PR 2 unattempted, no merge,
+  exit 2; an ordinary handoff stays 3.
+- **R7 — Implemented.** Each planned row keeps its normalized `files` list, and shared files are
+  computed from the stored lists of all retained landings, attributed per PR. Test (b) is your
+  hard-dependency `shared.txt` pair through a handoff and a resume; a file touched by only one PR is
+  never listed as shared.
+- **Parity note taken:** `TestBatchIssue` is imported into phase_c's globals following the :34 pattern.
+
+This is round 3 of 3. Handing off to Reviewer (codex) for the final plan review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

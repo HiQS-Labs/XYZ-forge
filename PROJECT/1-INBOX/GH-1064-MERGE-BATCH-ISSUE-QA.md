@@ -17,7 +17,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Plan revised for Codex plan-QA round 1 (R1–R6 + nit, all implemented). | Codex plan QA round 2. |
+| Plan revised for plan-QA round 2 (R2–R4 follow-ups + R7, all implemented). | Codex plan QA round 3 (final). |
 
 ## Operator decisions (2026-10-14)
 
@@ -115,13 +115,22 @@ All paths are under `skills/2-daily/merge-cleanup/scripts/` unless given as repo
    GitHub calls take an injected `gh` callable (the driver passes `merge_cleanup._gh`), so there is no
    import of the CLI driver and no second gh wrapper (R1).
    - **Record:** `.tick/merge-cleanup/<slug>/batch-<utc>.json` holding `{schema:1, integration,
-     issue, issue_error, planned:[{pos, pr, title, hard:[..], soft:{pr:[files]}}],
+     issue, issue_error, planned:[{pos, pr, title, files:[paths], hard:[..], soft:{pr:[files]}}],
      outcomes:{pr:{status, merge_oid, reconcile}}, sweep_inputs, verdict:{value, covers:[prs], body}}`.
-   - **Unfinished batch (R2):** a record is unfinished when any planned PR has no terminal status
-     (merged-and-reconciled, closed), **or** its set of landed PRs differs from `verdict.covers`.
-     A recorded partial verdict therefore does not end the batch: new landings make QA pending again.
-   - `find_unfinished(primary, slug, integration, prs)` returns the newest unfinished record whose
-     planned PRs overlap `prs`.
+     Every planned row starts with status `unattempted`. Each row keeps its normalized file list
+     (R7), so a later process can compute cross-PR overlap even for hard-dependency pairs, which
+     have no soft reason (`toposort_prs.py`:126-129).
+   - **Two separate predicates (R2/R3):**
+     - `qa_pending(rec)`: the record has at least one landing, and its set of landed PRs differs from
+       `verdict.covers`. It is independent of held, draft, handed-off or unattempted rows, so a landed
+       subset still needs QA, and a new landing invalidates an earlier verdict.
+     - `continuable(rec)`: some planned PR is not terminal (merged-and-reconciled, or closed). This
+       is used only to decide whether a resume continues the batch.
+     A record is *unfinished* when either predicate holds.
+   - `find_unfinished(primary, slug, integration, prs)` returns the newest unfinished record for this
+     repo and integration branch. When `prs` is non-empty it must overlap the record's planned PRs.
+     When `prs` is empty (OPEN-only discovery after everything landed), it matches on
+     repo + integration alone.
    - `create(primary, slug, integration, ordered, gh)`: `gh label create merge-batch --force`, then
      `gh issue create --label merge-batch --body-file`. Any gh failure sets `issue_error`, saves
      locally, and never raises.
@@ -139,10 +148,13 @@ All paths are under `skills/2-daily/merge-cleanup/scripts/` unless given as repo
      `record_verdict(rec, path)`.
 3. **Hook into `merge_cleanup.py`:**
    - **Batch selection, before the first merge (R2).** In `main`, after Phase 4:
-     - with `--resume`, `batch = find_unfinished(...)` over the planned PRs, regardless of the current
-       queue size (it may be 1 or 0);
-     - otherwise, when executing and `len(ordered_prs) >= 2`, `batch = create(...)`;
-     - otherwise no batch (fresh single-PR runs are unchanged).
+     - with `--resume`: `batch = find_unfinished(...)`, regardless of the current queue size (it may
+       be 1 or 0); a found batch keeps its original issue;
+     - then, if there is still no batch, the run is executing, and `len(ordered_prs) >= 2`:
+       `batch = create(...)`. This covers fresh runs **and** `--resume` runs that have per-PR attempt
+       records but no batch record (`gh534_phase_c_tests.py`:793-805);
+     - otherwise there is no batch: single-PR runs without a matching record, fresh or resumed, are
+       unchanged.
      `batch` is passed into `land_prs`; the issue exists before the loop (:928), so before any `gh pr merge`.
    - **Outcomes at the real branches (R4), all inside `land_prs`:**
      - **Remote merge:** immediately after `execute_pr_merge` returns true, read
@@ -152,24 +164,31 @@ All paths are under `skills/2-daily/merge-cleanup/scripts/` unless given as repo
        (:1171/:1181 and their neighbours).
      - `skipped: hold-label`, `skipped: not open` (:973-979), `skipped: draft`, and every `failed[N]`
        reason (`blocked by`, `deferred`, `parked`, `handoff`).
+     - **Pre-merge hard stops (R4):** every `return 2` inside the loop body records
+       `stopped: <diagnostic>` for the PR being processed first, through a small local `_stop(N, msg)`
+       that also prints the existing error. Known sites: unknown mergeability (:997-999), gate red
+       (:1137-1142), and the other in-loop returns at :968/:1011/:1163/:1171/:1181. Implementation
+       greps every in-loop `return 2` to confirm none is missed. Later PRs keep `unattempted`.
+       Repair policy and exit codes are unchanged.
      - A `try/finally` around the loop runs `finalize_sweep_inputs` and `update` on any return,
        including exit 2 after a landing.
    - **Sweep inputs (R6),** computed over **all** landings retained in the record, including earlier
      resumed runs:
      - `range = <first landing>^1..<last landing>`, in landing order; there is no range when nothing landed;
-     - files touched by 2+ landed PRs (from the planned PRs' file lists);
+     - files touched by 2+ landed PRs, from the **stored** per-PR `files` lists (R7), each attributed to its PRs;
      - repaired conflict sites from each landed PR's `pr-N.json` `conflict_files`;
      - the gate from `select_qualification_gate(primary, metas, env)`, using its `(gate, expected,
        reason)` contract. The module is imported through the reconcile step's harness-tool
        resolution; on import failure the gate is full (`validate.sh --sequential`) with the reason recorded.
      Then print the exact command: `git clone --no-local <primary> <tmp> && cd <tmp> && bash <gate>`.
    - **Exit (R3):** `land_prs` returns its rc unchanged (0/2/3). `main` keeps the existing early return
-     for 2 and 3, so Phase 6 still runs after a successful landing. After Phase 6, if the batch is
-     unfinished only because a verdict is missing, `main` prints
-     `STATUS: landed, QA pending — record a verdict with --record-sweep <file>` and returns 4.
+     for 2 and 3, so Phase 6 still runs after a successful landing. After Phase 6, if
+     `qa_pending(batch)`, `main` prints
+     `STATUS: landed, QA pending — record a verdict with --record-sweep <file>` and returns 4. This
+     holds whether or not other planned PRs are still held, draft or handed off.
      Precedence: 2 (including any Phase 6 failure) > 3 > 4 > 0.
-     **QA-only continuation:** a `--resume` run whose queue is empty but which has an unfinished
-     batch with landings not covered by a verdict also ends with exit 4, after Phase 6.
+     **QA-only continuation:** a `--resume` run whose queue is empty matches the batch by
+     repo + integration (above), runs Phase 6, and returns 4 while `qa_pending`, or 0 once covered.
    - **New flag `--record-sweep PATH`.** It is dispatched right after primary-path resolution, before
      Phase 0, and runs no discovery, merge or teardown.
      - It loads the newest unfinished batch for the primary's repo.
@@ -193,26 +212,43 @@ All paths are under `skills/2-daily/merge-cleanup/scripts/` unless given as repo
 5. **Keep the existing suite truthful** (`gh534_phase_b_tests.py`, `gh534_phase_c_tests.py`; no new file
    or registry entry). The parity guard requires a real method for each `script` row (GH-831's
    "keep an existing suite truthful" case).
-   - **Existing expectations (R3):** the 2-PR success cases at `phase_b`:379/388 and `phase_c`:282 now
-     expect exit **4**. Their landing, durability and pruning assertions are kept, which proves
-     Phase 6 still ran.
+   - **Existing expectations (R3):** every existing gh534 assertion whose queue has 2+ PRs and at
+     least 1 landing moves from exit 0 to exit **4**, keeping its landing, durability and pruning
+     assertions (which prove Phase 6 ran). Known sites: `phase_b`:379/388, :491-498 (held PR 1,
+     PR 2 lands), :693; `phase_c`:282, :451, :803. Implementation greps both files for every
+     `rc == 0` / exit-0 assertion and checks each against this rule.
    - **Extend `GH_STUB`:** `label create`; `issue create` (records the body and prints a URL);
-     `issue view --json body`; `issue edit` (records the body); and a call log so ordering can be asserted.
-   - **Add `TestBatchIssue`**, reusing existing fixtures:
-     - **(a) Creation and exit 4.** A 2-PR queue creates the issue before the first `pr merge`, with
-       the planned order and soft-edge files. A clean run records `reconcile=ok` for both, the range
-       includes both landings, and the run reaches Phase 6 and exits 4. A 1-PR fresh run creates no issue.
-     - **(b) Resume and partial verdict (R2/R6).** Extend the existing handoff scenario (:543), where
-       PR 1 has merged and PR 2 is open. Record a partial verdict, then repair PR 2 and run `--resume`.
-       Expect the same issue (no second create), both oids, `<PR1 oid>^1..<PR2 oid>` as the range,
-       and QA pending again (exit 4).
-     - **(c) Hard stops and skips (R4).** Reuse the failed-reconcile scenario (:510): PR 1 is recorded
-       as merged with a reconcile failure, PR 2 as unattempted, exit 2. The hold-label scenario (:491)
-       records `skipped: hold-label`.
-     - **(d) Body ownership and the verdict flag (R5).** Before an update, put the line
-       `- [ ] #1: operator verification` in Post-deployment carry-overs, plus text in Findings. After
-       the update, both are byte-identical and the script block has changed. `--record-sweep` stores a
-       valid verdict and exits 0. Empty or malformed input exits 2 and stores nothing.
+     `issue view --json body`; `issue edit` (records the body); and a call log so ordering can be
+     asserted. **Parity import:** `TestBatchIssue` lives in `phase_b` and is imported into
+     `phase_c`'s globals following the existing pattern at :34, so the guard can resolve it.
+   - **Add `TestBatchIssue`** (five methods, reusing existing fixtures):
+     - **(a) Creation, skips and exit 4.** A 2-PR queue creates the issue before the first
+       `pr merge`, with the planned order, file lists and soft-edge files. A clean run records
+       `reconcile=ok` for both and exits 4 after Phase 6. The held-PR case (:491) records
+       `skipped: hold-label` for PR 1, PR 2 merged, exit 4. A fresh 1-PR run creates no issue.
+     - **(b) Resume continuity, R7 and verdict coverage.** A hard-dependency pair: PR 1 and PR 2
+       both touch `shared.txt`, and PR 2 says `Depends on #1`.
+       1. Run 1: PR 1 lands, PR 2 hands off (the :543 shape), exit 3.
+       2. Record a partial verdict.
+       3. Repair PR 2 and run `--resume`: same issue (no second create), both oids, range
+          `<PR1>^1..<PR2>`, `shared.txt` attributed to both, and exit 4 (the new landing
+          invalidated the earlier verdict).
+       4. Empty-queue `--resume`: same issue, exit 4.
+       5. Record a verdict, then another empty-queue `--resume`: exit 0. A file touched by only one PR
+          is never listed as shared.
+     - **(c) Stops.** In a 2-PR queue:
+       - gate red on PR 1 (the :674 injection): `stopped: releases check: FAIL: rule=synthetic`,
+         PR 2 `unattempted`, no merge, exit 2;
+       - failed reconcile (:510): PR 1 merged with the reconcile failure recorded, PR 2 unattempted,
+         exit 2;
+       - an ordinary handoff still exits 3.
+     - **(d) Body ownership and the verdict flag (R5).** Before an update, put
+       `- [ ] #1: operator verification` in Post-deployment carry-overs and text in Findings. After
+       the update both are byte-identical and the script block has changed. `--record-sweep` stores a
+       valid verdict and exits 0; empty or malformed input exits 2 and stores nothing.
+     - **(e) Resume with no batch record.** The :793-shaped run (2 open PRs, an existing per-PR
+       record, `--resume`, no batch record) creates exactly one issue before either merge and exits 4.
+       A 1-PR resume with no record creates none.
    - Update `REQUIRED_CAPABILITIES` for the new owners and the new row.
    - **Red controls,** witnessed on this suite and recorded with commands, outcomes and
      `provenance.jsonl` under `TESTS-RESULTS/2026-10-14+GH-1064/`:
