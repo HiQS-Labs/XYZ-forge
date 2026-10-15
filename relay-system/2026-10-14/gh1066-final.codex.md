@@ -101,4 +101,12 @@ Basis: The reviewed prose implements the approved caller-only scope, preserves m
 
 Relay closed (Approved), no further reviewer turn needed. Handing off to codex-producer for the final gate and authorized publication workflow; the harness owns the relay commit.
 
+
+### Attestation · relay-drive — 2026-10-15T04:02:38Z
+task: RELAY-GH1066-FINAL-20261014
+reviewer: codex
+status: Approved
+reviewed-head: ee3e80349ab027037b7084292d56ec3ea83b7c10
+added-range: 7910+4590
+added-sha256: 842d3d34095f011e306fbd95dccbcb92a5ddc5e87331fd60deeba3c9e27fa19e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
