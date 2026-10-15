@@ -1,3 +1,9 @@
+Current correction: the shared native inspection now preserves ignored content in both
+ordinary and published cleanup. `all-native/` records the additional ordinary admission
+RED, shared-guard manual47 + existing cleanup180 pass, and final manual48 covering real
+Git exit0/incomplete enumeration. The initial scoped evidence below remains historical
+at1fb2d9f4; it does not claim current ordinary-mode preservation was already present there.
+
 # PR1061 published-worktree preservation correction
 
 A clean Git status and a fully published HEAD do not preserve ignored worktree files.
