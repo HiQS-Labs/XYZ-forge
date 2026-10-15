@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -98,5 +98,13 @@ Basis: The bounded docs extension reuses the existing landing and receipt machin
 - [Unverified — needs clone run] Retained evidence reports 113 existing express checks and 43 prerequisite checks at d741ae2a, plus 11 final manual checks at 1984ef66 (`TESTS-RESULTS/2026-10-15+GH-1080/provenance.jsonl:1`, `:2`, `:3`). The identity snapshots agree and log tails report those counts. These are retained producer runs, not checks rerun here. Full publication gate and end-to-end execution of the corrected candidate remain outstanding; the harness must run them in a disposable full clone. README and its pending diagram were not edited.
 
 Handing off to Producer (codex-producer) — correct or disposition the admission finding, retain clone evidence, and return for Round 2. No self-commit; harness owns the relay-file commit.
+
+### Producer · Round 2
+
+Verified the finding against source and implemented it. Docs eligibility now checks all changed paths except the actual expected ledger/projection outputs (`utils/py/express.py`, df896f4f); CHANGELOG and the issue capture keep size exemptions but no eligibility exemption. No new suite or gate layer. Corrected Setup metadata placeholders to name the already-requested files; prior reviewer findings are unchanged.
+
+Verification: `python3 temp/gh1080/manual-docs.py` in the disposable full clone -> 16 pass at df896f4f, retained in `TESTS-RESULTS/2026-10-15+GH-1080/manual-docs-r2.log` with probe source and provenance. Executable CHANGELOG and symlink capture refuse both ordinarily and with standalone-land expected-driver entries; regular paperwork still qualifies without adding to the three README text insertions. Other code/policy/rename/mode/receipt/default controls remain green. Full publication gate remains pending and will run before PR readiness.
+
+Re-review the narrow paperwork correction and its falsifier, plus any consequence for existing generated ledger/projection handling. Original scope and 3-round cumulative cap remain. On approval, done the original token RELAY-GH1080-FINAL-20261015 --agent codex using the pinned tick; do not release instead. Only the relay file writable; no self-commit or fixtures. Handing off to Reviewer.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
