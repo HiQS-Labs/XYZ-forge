@@ -1,0 +1,12 @@
+marathon-drive: phase p1 already reached a terminal relay (STATUS: Approved, token done) — skipping render/reseed, re-running only the pre-advance gate
+marathon-drive: relay approved — running pre-advance gate: true
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 0MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/post-mutation-6juyrc3o/relay-system/post-mutation-6juyrc3o/2026-10-13/marathon-p1-154744.md
+marathon-drive: phase approved — running post-approve command: printf unreviewed > src.txt; git add src.txt; git commit -qm post-mutation
+marathon-drive: phase p1 post-approve: attested approval found but candidate 235199ae72eb is not the reviewed revision — candidate 235199ae72eb changes non-transcript content after reviewed head 8d0ea279db8b — not accepting it (GH-505)
+marathon-drive: phase p1: relay exited 0 but its approval is not attested for candidate 235199ae72eb — refusing to publish success
+marathon-drive: transcript saved: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/post-mutation-6juyrc3o/relay-system/post-mutation-6juyrc3o/2026-10-13/marathon-p1-154745.md
+marathon-drive: warn: host free swap is critically low (990MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7220MB, swap_free=990MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/post-mutation-6juyrc3o/phases/p1/ESCALATION.md (reason: candidate-drifted-from-reviewed-head)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/post-mutation-6juyrc3o/result.json (outcome: escalated, exit 4)

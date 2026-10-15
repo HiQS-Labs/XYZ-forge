@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-15 — Preserve unpublished historical HiQS review receipts
+
+Recover three approved historical review records from the operator’s primary checkout
+through eleven source-traced cherry-picks. Preserve their exact bytes, earlier findings,
+rounds and evidence limits; record file hashes and source identities. The original checkout
+and a verified bundle retain its source history. Do not carry older staged development
+reversions into this documentation PR.
+
+These records document prior HiQS artifact reviews and confer no fresh Forge approval or
+current runtime/deployment qualification. Easy to reverse by reverting the documentation
+addition; no source work is discarded and no runtime, installation or activation occurs.
+
 ## 2026-10-15 — Preserve ignored content during published worktree closeout (GH-1059)
 
 A clean Git status and a fully published PR do not preserve ignored worktree files.
@@ -26,6 +38,20 @@ Rollback by reverting GH-1059 or omitting the new mode; recover full clones from
 Existing cleanup180 tests, three focused start-task suites and41 isolated manual cases
 passed, with negative controls and committed provenance under `TESTS-RESULTS/2026-10-14+GH-1059/`.
 Independent plan/final QA approved; the full publication gate passed409/409 in a separate full clone.
+
+## 2026-10-14 — PR1054 review evidence and base refresh (GH-1042, GH-1045)
+
+Correct the two-phase manual replay association by clearing its earlier seed result before shell traversal. Prior raw evidence is retained unchanged; the corrected replay must report a null result for the intentional failed p2 dispatch, rather than an earlier p1 approval. Refresh onto development7bc727cb through the existing ledger writer; preserve ratings, issue identity and original PR history. Update the verified plan state and add [the previously missing durable bet record](decisions/2026-10-14-gh1042-historical-completion.md).
+
+The original Costly bet now has an explicit expected signal by2026-10-28 and an iterate recommendation: use the next independently authorized multi-phase run to confirm historical recovery and strict current-head merge refusal, or retain an unverified operational claim if no run occurs. No live run is activated. The production recovery/attestation behavior is unchanged by these corrections. Updated-head independent final QA and normal publication qualification remain required.
+
+## 2026-10-13 — Completed Marathon phases retain their reviewed recovery revision (GH-1042, GH-1045)
+
+Force recovery resolves a completed lane before allocating another token. Completed phases accept their base, numeric retry or force generation, and retain a validated completion revision in the existing protected approval record. Later phase/operator commits no longer invalidate that recorded historical completion. Current-head merge eligibility remains strict; recovery does not approve successor code or repeat completed post-approve effects.
+
+The bet is that historical completion and current merge approval need separate candidate checks, within the existing attestation owner. Missing legacy metadata retains strict checks; no automatic backfill. Revert the Python repair to roll back; the optional metadata is inert to old readers. Revisit on any false historical satisfaction or receipt that names current unreviewed HEAD as reviewed.
+
+Existing focused suites and retained manual refusal/recovery controls verified the source; Marathon's post-approve suite caught an event-order regression, fixed without changing its expectations. Final independent review and publication gate are recorded in the GH-1042 relay/evidence. No new suites or gate machinery.
 
 ## 2026-10-12 — Muse relay turns no longer stall on an unanswerable approval prompt (GH-521)
 

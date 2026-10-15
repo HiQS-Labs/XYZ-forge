@@ -1,0 +1,44 @@
+{
+  "sourceTip": "14b56455cd9153b5b8926d15693a10cd414397bb",
+  "sourceCommits": [
+    "7e073c1b6be0bf5297796f3bc22d17fcca047eb1",
+    "2805d680a820fe14cacd7b5a02c163a648791a85",
+    "9bbf883802932b48d74df49bcd64862dcd8e8df3",
+    "662a60150d0178f63e78529fec6bf64cfca6df7f",
+    "7916d25e452964a16935d5510182ae26b54205b7",
+    "9785789c3abcb9b70b1c3300bb6ebf239b5ff9bb",
+    "4be1d4f5eede915c42318eccf220398447bd3317",
+    "8fe00947420e7d6825d11632a6dac1304988b907",
+    "7f8f661a8bdc077faaaa886eab39446ba6d048ad",
+    "c73dd07b548453c61d2164a73848f54480a9559a",
+    "14b56455cd9153b5b8926d15693a10cd414397bb"
+  ],
+  "sourceFileEquality": true,
+  "paths": [
+    "relay-system/2026-10-14/hiqs-gh49-final-qa.md",
+    "relay-system/2026-10-14/hiqs-gh49-plan-qa.md",
+    "relay-system/2026-10-14/hiqs-pr51-glm-qa.md"
+  ],
+  "destinationHead": "1b1b5127634e1ecfce12a325dc6155dc58457bd5",
+  "stagedReversionsCopied": false,
+  "checkedAt": "2026-10-15T00:40:16.747885+00:00",
+  "files": [
+    {
+      "path": "relay-system/2026-10-14/hiqs-gh49-final-qa.md",
+      "sha256": "49311a8ee6dac496f2c1a1a64f794b2738caababc5e18e64403e5d4a02d4870a",
+      "bytes": 13027
+    },
+    {
+      "path": "relay-system/2026-10-14/hiqs-gh49-plan-qa.md",
+      "sha256": "c65aee1314c9d049534478bd721ebf43126c546ad6e24a4f0c60e8a6b2f6bdaa",
+      "bytes": 18938
+    },
+    {
+      "path": "relay-system/2026-10-14/hiqs-pr51-glm-qa.md",
+      "sha256": "3222e5e5d97ac10fea711780060e794ec79b784e10ed5a7ed617f0dd59975a68",
+      "bytes": 13152
+    }
+  ],
+  "sourceCheckout": "protected operator primary",
+  "originalSourceRetained": "verified local Git bundle and untouched primary checkout; original commit identities were not discarded"
+}

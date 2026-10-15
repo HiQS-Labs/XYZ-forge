@@ -1,0 +1,341 @@
+[
+  {
+    "name": "force-gate-only",
+    "rc": 7,
+    "expected": 7,
+    "ok": true,
+    "dispatched": true,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-13T15:27:47Z",
+      "outcome": "escalated",
+      "reason": "timeout-no-artifact",
+      "exit_code": 7,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN-R2",
+      "attempt": {
+        "count": 1,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/force-w18w5cig",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "3757fc81cca5527d27b2443ae5ea9c95dd0bb67f",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Open",
+      "timestamps": {
+        "started_at": "2026-10-13T15:27:46Z",
+        "finished_at": "2026-10-13T15:27:47Z"
+      }
+    }
+  },
+  {
+    "name": "initial-completion",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-13T15:27:49Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/history-4zdubj_n",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "308e09fe42365eb619cae32c9615a19c980ec488",
+      "reviewed_candidate": "308e09fe42365eb619cae32c9615a19c980ec488",
+      "reviewed_head": "9f43b4e7ca2e2e334939d11331a5a7c13ac7fe06",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/history-4zdubj_n/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/history-4zdubj_n/.xyz/receipts/308e09fe42365eb619cae32c9615a19c980ec488.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-13T15:27:48Z",
+        "finished_at": "2026-10-13T15:27:49Z"
+      }
+    }
+  },
+  {
+    "name": "historical-recovery",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-13T15:27:50Z",
+      "outcome": "escalated",
+      "reason": "unattested-terminal",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/history-4zdubj_n",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "23e15b553af33a875b12a40efb0764354a06408f",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-13T15:27:49Z",
+        "finished_at": "2026-10-13T15:27:50Z"
+      }
+    }
+  },
+  {
+    "name": "force-token-family",
+    "rc": 7,
+    "expected": 7,
+    "ok": true,
+    "dispatched": true,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-13T15:27:52Z",
+      "outcome": "escalated",
+      "reason": "timeout-no-artifact",
+      "exit_code": 7,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": 1,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/force-family-_1599aip",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "e021312d00f6d00159813e2be88d13854f78b918",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Open",
+      "timestamps": {
+        "started_at": "2026-10-13T15:27:51Z",
+        "finished_at": "2026-10-13T15:27:52Z"
+      }
+    }
+  },
+  {
+    "name": "unreviewed-refusal",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-13T15:27:53Z",
+      "outcome": "escalated",
+      "reason": "unattested-terminal",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/drift-vyr8dqd1",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "8882f671fb7da2cb214802fc3577ab620184d863",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-13T15:27:52Z",
+        "finished_at": "2026-10-13T15:27:53Z"
+      }
+    }
+  },
+  {
+    "name": "explicit-rebuild",
+    "rc": 7,
+    "expected": 7,
+    "ok": true,
+    "dispatched": true,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-13T15:27:55Z",
+      "outcome": "escalated",
+      "reason": "timeout-no-artifact",
+      "exit_code": 7,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN-2",
+      "attempt": {
+        "count": 1,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/explicit-_ads3cre",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "b0ca3c750cb08ff4caaa5b83af97ed4b82c78f52",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Open",
+      "timestamps": {
+        "started_at": "2026-10-13T15:27:53Z",
+        "finished_at": "2026-10-13T15:27:55Z"
+      }
+    }
+  }
+]

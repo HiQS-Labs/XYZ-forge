@@ -1,0 +1,26 @@
+[
+  {
+    "suite": "gh491-gate-only-refire",
+    "exit_code": 0,
+    "duration_s": 8.75,
+    "sha": "0275a7a0ad98a11539fdf34c39ecf0e6f6601c4c"
+  },
+  {
+    "suite": "gh505-relay-attest",
+    "exit_code": 0,
+    "duration_s": 42.92,
+    "sha": "0275a7a0ad98a11539fdf34c39ecf0e6f6601c4c"
+  },
+  {
+    "suite": "gh642-consumer-fruit",
+    "exit_code": 0,
+    "duration_s": 13.72,
+    "sha": "0275a7a0ad98a11539fdf34c39ecf0e6f6601c4c"
+  },
+  {
+    "suite": "marathon-drive",
+    "exit_code": 1,
+    "duration_s": 28.41,
+    "sha": "0275a7a0ad98a11539fdf34c39ecf0e6f6601c4c"
+  }
+]

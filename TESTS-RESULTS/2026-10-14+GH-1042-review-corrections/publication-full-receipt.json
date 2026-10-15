@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-15T00:10:32.125575+00:00",
+  "tested_and_published_commit": "2fe59019bc331f290ea8b6cfb04c481291e9ed23",
+  "gate": "normal installed pre-push / validate.sh parallel width4 tier3",
+  "exit_code": 0,
+  "elapsed_seconds": 1402,
+  "native_retry_suites": [
+    "gh75-dashboard.sh",
+    "jog-queue.sh"
+  ],
+  "identity_unchanged": true,
+  "promotion_qualification": false,
+  "summary_events": [
+    {
+      "v": 1,
+      "ts_ms": 1792022945047,
+      "run": "2fe59019b-88863",
+      "runner": "validate",
+      "event": "run.summary",
+      "passed": 409,
+      "failed": 0,
+      "total": 409,
+      "envelope_rc": "0",
+      "envelope_drift": "none",
+      "suite_events": "410",
+      "run_set": "406",
+      "registered": "406",
+      "suite_events_match": "yes"
+    }
+  ]
+}
