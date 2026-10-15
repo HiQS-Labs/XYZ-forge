@@ -202,3 +202,12 @@ current freeze/ordered member/base/candidate/landed identity and receipt-invalid
 be proven together before expansion. Current policy records serial writer, receipts-first bounded
 recovery, per-PR normal gates, suffix rollback and the expired exception; no batch dispatcher or fold
 authority was added. The safe completed policy work does not certify the unresolved batch runtime.
+
+Integration refreshed before final QA: development9061df4b adds merged PR1078's Markdown skill,
+architecture pointer and intake/evidence. No runtime/test/workflow/registry changes relative to f974.
+Task merge retains both GH1076/GH1077 ledger rows and operation/event histories, keeps the higher
+generation header/settings, then rebuilds/verifies via the existing releases-merge-resolve writer.
+Routine LEADERBOARD regeneration was restored to its committed bytes, per task-branch policy.
+The matched after snapshot will include these unrelated documentation additions and the task's
+review/evidence; source differences and their measurement limits will be disclosed.
+PR1069 refreshed at4691b4a3 (OPEN), GH1072/GH1073 remain OPEN; no owner handoff or readiness inferred.

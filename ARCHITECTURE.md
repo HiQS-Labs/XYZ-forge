@@ -69,7 +69,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [triangulate](skills/1-hourly/triangulate/SKILL.md) | Reconcile three independent probes into an evidence-ranked verdict. |
 | [unstuck](skills/1-hourly/unstuck/SKILL.md) | Interrupt a stalled AI session and restore movement toward the original outcome. |
 
-### `2-daily` — A few times a day (17)
+### `2-daily` — A few times a day (19)
 
 _landing, queueing and driving work; multi-session and multi-repo coordination._
 
@@ -77,6 +77,8 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 |---|---|
 | [agent-chorus](skills/2-daily/agent-chorus/SKILL.md) | Start/join a local multi-agent discussion thread over a six-digit ID (AgentChorus, formerly Agent2Agent). |
 | [ci-debug](skills/2-daily/ci-debug/SKILL.md) | Debug failing CI pipelines and pre-push gates in safe full-clone isolation via debug-mantra, recon, and ponytail. |
+| [close-the-loop](skills/2-daily/close-the-loop/SKILL.md) | Report possible forgotten follow-ups from the current conversation, with evidence and next actions. |
+| [daily-planner](skills/2-daily/daily-planner/SKILL.md) | Adapt the weekly plan to daily outcomes using the shared planning engine. |
 | [express](skills/2-daily/express/SKILL.md) | Hotfix fast lane — one motion: fix + its existing covering suite, ledger writes, born-complete docs, gateless development landing, reconcile. |
 | [file-xyz-bug](skills/2-daily/file-xyz-bug/SKILL.md) | File a bug against the xyz harness from any repo/session. |
 | [hq](skills/2-daily/hq/SKILL.md) | Multi-repo command center — resolve a project name and act across repos. |
