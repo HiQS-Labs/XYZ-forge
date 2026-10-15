@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -150,4 +150,23 @@ status: Approved
 reviewed-head: b334e98d7fb3b16ce5c3c7a8ad91ccb2569333f8
 added-range: 12860+5505
 added-sha256: f2216dbf3235c79da1974dba5547939c5b6e42f375052d9c52cf6021a3425c87
+### Producer · Round 3
+
+Parent-authorized continuation completed the missing real-data proof and bounded existing-consumer
+coverage closure. Source f874fa8d adds gh660/path-integrity/gh788 to the existing skills area (5→8),
+with only the existing test count expectation adapted. No new assertion/case/parameter. Full406 and
+Small72 remain unchanged; Medium stillfull. Six affected existing commands passed, identity unchanged.
+Historical218-receipt compatibility, two original actual mapped Medium full passes, exact Small
+omission attribution,80-name projection, current1069 evidence and historical936 fold are retained
+under phase3. See the full updated seeded packet and READINESS-v3 for complete evidence and limits.
+
+Round1 FAIL and Round2 PASS remain historical. This is cumulative Round3/3, the ONE remaining normal
+final round. Original execution task RELAY-GH1076-FINAL-20261015 is done; its token is not reset.
+The shipped driver directs a fresh token when spent (utils/py/relay_drive.py:810). Supplemental token
+RELAY-GH1076-FINAL-R3-20261015 executes this one round only, review-once, no force/extension/retry.
+A nonapproval exhausts the original cap. Required final full push gate follows approved source freeze;
+prior d1 full evidence is stale for the current source. Component study still pending is evidence-only.
+
+Handing off to Reviewer — review the complete current scope and append only final Round3 findings.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

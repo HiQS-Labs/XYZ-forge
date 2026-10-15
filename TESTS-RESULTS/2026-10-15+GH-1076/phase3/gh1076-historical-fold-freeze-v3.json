@@ -1,0 +1,82 @@
+{
+  "schema": "gh1076-historical-freeze@1",
+  "mode": "read-only historical reconstruction",
+  "source_pr": 936,
+  "source_url": "https://github.com/HiQS-Labs/XYZ-forge/pull/936",
+  "ordered_members": [
+    {
+      "pr": 890,
+      "head": "d9b4811ccc9511931b0a94775e499932e1511e8f"
+    },
+    {
+      "pr": 924,
+      "head": "1f9007cb1203fd088df31c58cfb024fe2c1cc6a2"
+    },
+    {
+      "pr": 919,
+      "head": "6c6946b3c7f31fe05698ca95ef8f467ee4e52763"
+    },
+    {
+      "pr": 827,
+      "head": "b725c234613669dc40cfcc95b9d73865d59456d5"
+    },
+    {
+      "pr": 913,
+      "head": "f6e5b877b4c9155f6dd6cbba2eec9ce69a61d97d"
+    },
+    {
+      "pr": 891,
+      "head": "3a3f6aab5505e8f373d3a4ad7f42dd34ea45b053"
+    },
+    {
+      "pr": 915,
+      "head": "698cb14342286473b774679cd24dc91a12059249"
+    }
+  ],
+  "base": "75b75181299d605b5458dbf4fd367680a05cbb53",
+  "local_tested": "4ec641ba933479881a7a62e2d84b6f2b7bdddce0",
+  "published_candidate": "1dc5c8fe24d94f9aed4609ed89e368e760f2447c",
+  "landing": "ae30510af564356dd155e309ea99ad81c24472d5",
+  "candidate_landing_tree": "6f3dc9661b3ea612700c1dc40c41c69a31e27e1c",
+  "candidate_delta_from_local_tested": "one evidence-only commit, five TESTS-RESULTS files",
+  "reviews": {
+    "initial_combined": "FAIL preserved",
+    "ledger_reviewed_head": "77ec0d5e6c95d2be4f93c475d4b898091bc95fe0",
+    "planner_reviewed_head": "8b5e42fdf8cc0f404712b7fa1bb5fb81894cb578",
+    "scope_limit": "delta reviews do not equal whole final source audit"
+  },
+  "hosted": {
+    "run": 37069893468,
+    "status": "completed",
+    "conclusion": "success",
+    "event_head": "1dc5c8fe24d94f9aed4609ed89e368e760f2447c",
+    "tested_commit": "ae30510af564356dd155e309ea99ad81c24472d5",
+    "gate": "validate.sh --sequential",
+    "passed": 413,
+    "total": 413,
+    "registered": 410,
+    "tier": 3,
+    "width": 1,
+    "telemetry_sha256": "674a511927fb1259992509234029d2dfe7ec5c7135bd6bf8dc871866c5024973",
+    "historical_other_receipted_prs": [
+      900,
+      902
+    ]
+  },
+  "local_log_digest": {
+    "decompressed": "cb42ea03eca16ce9a72af37ca9325221a0dc5be0260c5e2373508dde7fec8ce3",
+    "gzip_bytes": "e0710005a177a2bafc36da2e30fafa91d9bd8505b525ab32bfb4e8ad0f892dca"
+  },
+  "missing_freeze_fields": [
+    "immutable unified freeze ID and source/retrieval provenance",
+    "per-member reviewed/head/base identities and candidate transformation/review mapping",
+    "runtime environment/toolchain/dependency compatibility fingerprint",
+    "explicit rollback baseline/target/owner decision",
+    "all phase-specific result links and digest encoding semantics"
+  ],
+  "current_group_ready": false,
+  "pr1069_required_for_manual_freeze": false,
+  "gh1072_1073_blocks_readonly_shadow_or_unrelated_manual_freeze": false,
+  "tests_or_workflows_run": false,
+  "remote_writes": false
+}
