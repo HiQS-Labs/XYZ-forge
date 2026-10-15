@@ -255,9 +255,10 @@ Use the existing batch issue for qualifying queues; smaller queues use the run s
    or operator authority. Use at most three cumulative review rounds per batch, including
    resumes; do not repeat this strategy review per PR or replace required per-PR QA.
    Material changes to membership, dependency/order, integration content or risk reopen the
-   affected plan review; editorial record updates do not. Record unavailable review or unknown
-   model identity neutrally ("Independent review did not run."); hold the affected unreviewed
-   batch without assigning defect severity or opening a blocking issue. Do not claim cross-model
+   affected plan review; editorial record updates do not. Record unavailable review neutrally
+   ("Independent review did not run.") or an unknown identity as "Reviewer model identity
+   unverified." Hold the affected batch without assigning defect severity or opening a
+   blocking issue. Do not claim cross-model
    approval without evidence. Ordinary one/two-PR queues need no extra strategy relay unless
    risk or repository policy calls for one.
 6. **Qualify the complete group.** Where policy permits, reserve the first full gate for

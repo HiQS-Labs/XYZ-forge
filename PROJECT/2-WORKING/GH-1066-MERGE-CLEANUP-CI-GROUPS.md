@@ -94,7 +94,9 @@ The strategy cannot force one/two full runs while a repo independently mandates 
 
 ## Progress
 
-- [ ] Plan relay approved.
-- [ ] Revised skill and retained manual scenarios satisfy the requirements.
+- [x] Plan relay approved.
+- [x] Revised skill and retained manual scenarios satisfy the requirements.
 - [ ] Final relay approved and classified gate passes at the final revision.
 - [ ] Ready PR published; owned safe checkouts retired or preservation reason reported.
+
+Plan QA approved in round1: attestation c6fa142, reviewed315fa63. The reviewer clarified that batch strategy review does not replace required per-PR QA; implemented explicitly. Owned helper: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1066-merge-cleanup-ci-groups-2026-10-14-verify. Seven manual scenarios, two manual red variants and existing codex-turn43/0 retained with limitations. Final QA and final classified gate remain pending.
