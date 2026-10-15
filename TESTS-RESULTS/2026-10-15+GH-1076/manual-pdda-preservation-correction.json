@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-10-15T07:36:31.429181+00:00",
+  "kind": "manual coverage-preservation correction",
+  "observed_prior_source": "6784bddae5a2925a97c436764fd20585da1521b2",
+  "prior_evidence": "manual-policy-observations.json",
+  "prior_pdda_needed": false,
+  "consumer": "validate.sh apply_classification -> T2_PDDA -> existing tier2:pdda stage",
+  "root_cause": "Publisher text precedence changed docs classification, which was also the producer of existing PDDA-needed metadata.",
+  "fix_site": "Existing classification loop retains pdda_needed=true for machine-consumed .md/.txt while using its area suites.",
+  "command": [
+    "bash",
+    "utils/ci-route.sh",
+    "push"
+  ],
+  "paths": [
+    "skills/3-weekly/skills-army-hq/BOT-DAILY-HEALTH-CHECK.md"
+  ],
+  "rc": 0,
+  "stdout": "docs_only=false\npdda_needed=true\nfull_required=false\nchanged_tests=\nroute=fast\ntier=2\npolicy_version=ci-route@1\nhosted_gate=full\ntier2_subsystems=skills-army-hq\ntier2_tests=skills-army-hq.sh,gh620-skills-army-mini-sync.sh,gh589-xyz-mini-sync.sh,gh589-consult-no-tick.sh,gh589-skill-viewer.sh\ntier_reason=subsystems: skills-army-hq\n",
+  "stderr": "",
+  "new_CI_cases": 0
+}

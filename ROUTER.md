@@ -142,7 +142,8 @@ runner, guard stage or receipt format. Main's explicit full command is unchanged
 Machine-consumed text must follow its consumers, not its suffix. GH988/GH989 added/renamed a
 skills-army package Markdown payload; the existing gh620 publisher pin failed in hosted run37723297290
 ([issue995](https://github.com/HiQS-Labs/XYZ-forge/issues/995)). The router now retains the existing
-skills-army area for its text inputs before generic docs precedence. No suite is added. Existing
+skills-army area for its text inputs before generic docs precedence, retaining the existing PDDA
+documentation gate alongside area coverage. No suite is added. Existing
 safety text/full rules remain. This is one verified consumer edge, not a claim that every published
 text input or transitive consumer is mapped. Changes to publisher manifests and new consumers must
 be audited before any narrower route is accepted; unknown/shared/global/safety scope keeps full.

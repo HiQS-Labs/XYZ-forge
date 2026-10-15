@@ -326,6 +326,8 @@ while IFS= read -r path || [[ -n "$path" ]]; do
     pdda_needed=true
   else
     docs_only=false
+    # A machine-consumed text input still needs its existing documentation gate.
+    case "$path" in *.md|*.txt) pdda_needed=true ;; esac
   fi
 
   # These surfaces own the coordination kernel, containment boundary, frozen twins,

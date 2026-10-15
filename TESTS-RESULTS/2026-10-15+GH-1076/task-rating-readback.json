@@ -1,0 +1,21 @@
+{
+  "global_id": "rmi-01M4Z662VRV2WWRB7E26PEM3XA",
+  "gh_number": 1076,
+  "repo_slug": "XYZ-forge",
+  "is_selected_repo": true,
+  "title": "GH-1076 \u00b7 Canonical selective-CI and batch-qualification policy",
+  "section": "In progress",
+  "position": 125,
+  "status_marker": "\ud83d\udea7",
+  "doc_path": "PROJECT/2-WORKING/GH-1076-CI-POLICY.md",
+  "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1076",
+  "raw_text": "- **GH-1076 \u00b7 Canonical selective-CI and batch-qualification policy** \u2014 approved coverage-preserving implementation, consumer evidence and matched benchmarks; full umbrella readiness remains evidence-gated. rated 75/45/50/40 \u2192 [GH-1076-CI-POLICY.md](PROJECT/2-WORKING/GH-1076-CI-POLICY.md) \u00b7 [#1076](https://github.com/HiQS-Labs/XYZ-forge/issues/1076)",
+  "status_label_supported": true,
+  "status_label": "in-progress",
+  "rating_pri": 75,
+  "rating_sev": 45,
+  "rating_appeal": 50,
+  "rating_effort": 40,
+  "rating_ovr": null,
+  "risk": null
+}

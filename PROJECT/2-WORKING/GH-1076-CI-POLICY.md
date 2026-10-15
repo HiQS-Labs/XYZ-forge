@@ -174,3 +174,9 @@ coverage evidence and independent review. These constraints are not waived by th
 Reduced-Medium rollout and broader automated batch authority remain **not implemented/not ready**
 for the specific evidence/ownership reasons above. The safe policy and consumer enforcement continue
 through normal verification and draft publication; GH1076 is not closed by that PR.
+
+Coverage correction before final QA: source tracing found the publisher-text precedence change also
+removed existing `pdda_needed` metadata. The same classification loop now retains it for machine-
+consumed text, so area coverage is additive to existing doc hygiene. Initial manual observations are
+retained; the correction record names the prior false metadata and downstream T2_PDDA consumer.
+No existing CI assertion was changed or new case added.
