@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -77,5 +77,67 @@ First use the new skill to answer the fictional conversation example. Give its n
 Then assess the resulting behavior and skill instructions: are candidate actions grounded, cancellations/deferrals and mere brainstorming respected, partial context and unverified status honest, and doc/issue/PR targets correctly scoped? Is the single-file payload sufficient and lean? Does the report preserve useful next actions without becoming a general backlog scan or execution pipeline? Is index registration accurate and rating65/20/50/85 modest? Cite concrete contradictions if any; no speculative new machinery.
 
 This is ordinary reversible prose creation. One independent final QA is requested, not a runtime audit or full test campaign. Format validation passed; documentation route is selected by the existing classifier. Only this relay thread writable. Do not run git, validate.sh, test/*.sh, pytest or fixtures. No external mutation. Append one reviewer block with the applied example report, graded findings, swept file: yes/no, literal VERDICT: PASS|FAIL|PARKED and Basis. Approve with STATUS: Approved and NEXT: — when supported. The harness records the one scoped commit. Round1/3.
+
+### Reviewer · Round 1
+
+Ship within this bounded prose-review scope.
+
+swept file: yes
+
+#### Applied example report
+
+Scope: only the fictional conversation and supplied observations in `TESTS-RESULTS/2026-10-15+GH-1077/session-example.md`; earlier turns were compacted away. No live status checks or task execution performed.
+
+1. **Add the rollback result to ExampleOrg/Widget#44** — Request: “After the parser fix lands, update ExampleOrg/Widget#44 with the rollback result.” Supplied observations say PR47 merged and issue44 still has no rollback result. Target: https://github.com/ExampleOrg/Widget/issues/44. Status: confirmed pending in the supplied snapshot. Next: recover the actual rollback result from the parser work evidence, then prepare the requested issue update; the result itself is not supplied here.  [Unverified — no citation]
+2. **Revisit the investigation of ExampleOrg/Widget#71 after the parser work** — Request: “Please investigate ExampleOrg/Widget#71, but finish the parser fix first”; assistant promised to return. PR47 is merged, but no issue71 observation or investigation outcome is available. Target: https://github.com/ExampleOrg/Widget/issues/71. Status: unverified. Next: confirm the parser wrap-up is complete and inspect #71/current investigation evidence before resuming or duplicating work.
+
+#### Graded findings
+
+- [Pass] Grounded candidates and honest uncertainty: `.relay-artifacts/SKILL.md:22-37` requires tracing requests to their latest outcome, distinguishes observation from inference and rejects open status alone as an orphan. The example preserves #44's missing update without inventing its rollback result, and #71 without claiming its investigation never happened.
+- [Pass] Exclusions work on the supplied inputs: `.relay-artifacts/SKILL.md:25-27` says “Respect later corrections, cancellations, superseding decisions and deliberate deferrals” and “An intentional handoff is not forgotten work.” The example's next release has not occurred, caching was merely brainstorming, #60 was cancelled, and PR52 awaits named owner Pat; none belongs in the candidate list. No additional or pre-existing defects found in the complete 57-line artifact.
+- [Pass] Reporting stays bounded and useful: `.relay-artifacts/SKILL.md:18-20,29-32,41-57` discloses missing history, limits checks to named artifacts, binds issue numbers to repositories, requires evidence/status/next steps, and stops without default writes. The explicit-action exception at lines 55-57 preserves actual user authorization without turning this report-only invocation into an execution pipeline.
+- [Pass] Single-file payload and registration: `.relay-artifacts/SKILL.md:1-9` supplies identifying frontmatter and triggers; `ARCHITECTURE.md:72-96` declares 19 daily skills and describes close-the-loop as reporting possible forgotten conversation follow-ups. The read-only probe below found seed/source equality, only `SKILL.md` in the payload, 19 disk skills and 19 index rows with no set differences. No installer, script, dependency or new suite is needed for the stated reporting behavior.
+- [Pass] Scope/rating are proportionate: `PROJECT/2-WORKING/GH-1077-CLOSE-THE-LOOP.md`, “Scope and fit” explicitly rejects express because this is a new workflow rather than a critical hotfix with an existing covering suite. Its “Ratings:65/20/50/85” explanation ties the score to explicit demand, bounded risk, neutral appeal and a small prose change; no override or unsupported incident claim appears.
+
+#### Probe receipt and limits
+
+Read-only command (with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`; scratch directory created beforehand):
+
+```sh
+python3 - <<'PY'
+from pathlib import Path
+seed=Path(".relay-artifacts/SKILL.md")
+source=Path("skills/2-daily/close-the-loop/SKILL.md")
+print("seed_matches_source:",seed.read_bytes()==source.read_bytes())
+payload=sorted(str(p.relative_to(source.parent)) for p in source.parent.rglob("*") if p.is_file())
+print("payload_files:",payload)
+dirs=sorted(p.name for p in Path("skills/2-daily").iterdir() if p.is_dir() and (p/"SKILL.md").is_file())
+arch=Path("ARCHITECTURE.md").read_text().split("### `2-daily`",1)[1].split("### `3-weekly`",1)[0]
+rows=[line.split("](",1)[1].split("/SKILL.md)",1)[0].rsplit("/",1)[-1] for line in arch.splitlines() if line.startswith("| [")]
+print("daily_skill_count:",len(dirs))
+print("index_row_count:",len(rows))
+print("missing_from_index:",sorted(set(dirs)-set(rows)))
+print("index_missing_on_disk:",sorted(set(rows)-set(dirs)))
+PY
+```
+
+Exit status: 0. Decisive output:
+
+```text
+seed_matches_source: True
+payload_files: ['SKILL.md']
+daily_skill_count: 19
+index_row_count: 19
+missing_from_index: []
+index_missing_on_disk: []
+```
+
+This is a manual application and static prose review, not proof of future model compliance. No tests, executable fixtures, workflows, live GitHub queries or git commands ran. The existing harness gate remains outside this review turn; no gate result is asserted here.
+
+VERDICT: PASS
+
+Basis: The whole artifact satisfies the report-only Definition of Done and produces grounded, correctly scoped follow-ups from the supplied example while respecting exclusions and missing context. No required fixes found.
+
+Done — relay closed (Approved), no further review turn needed. Handing the token to codex-producer for harness closeout.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
