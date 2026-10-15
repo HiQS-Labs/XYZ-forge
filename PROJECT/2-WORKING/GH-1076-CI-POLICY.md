@@ -149,3 +149,28 @@ intake and committed evidence. No new framework, installations, live Marathon/Jo
 protected-branch settings, test retirement, cleanup or unrelated runtime refactor. Dependencies:
 GH1064/PR1069 active owner, GH1072/1073 unresolved; per-new-case approval; sufficient historical
 coverage evidence and independent review. These constraints are not waived by the deadline.
+
+## Execution findings and remaining boundaries
+
+- Codex plan QA Approved round2/3; first PARKED seed-delivery failure preserved. Admitted exact owned
+  row via native accepted-start after approval, then promoted through RELEASES verbs. No override.
+- Actual Claude Code completed conditional advisory; Agy returned partial source analysis at300s
+  cap. No cross-model consensus claimed. Consultation synthesis: GH1076 comment6186698655.
+- Canonical prose is now the existing ROUTER section (smaller consult disposition); runtime changes
+  extend existing router and wave selector only. GH1064-owned merge-cleanup files remain untouched.
+- Direct manual observations at6784bdda: historical package add/rename now tier2/full; ordinary docs
+  Small, mapped code/full and safety/full. Missing/unknown/duplicate/malformed/inconsistent decisions
+  return full. Removing the in-memory version comparison wrongly admits Small: witnessed red control.
+  No CI case/assertion/parameter row, registry, workflow or receipt schema was changed.
+- Historical study:20failed-run metadata/six original logs, zero newly validated mapped-Medium
+  regression/change pairs;14unknown logs remain. No catch-rate or reduction readiness claim.
+- Batch dependency refreshed: PR1069 stilld2e7369a, open; GH1072/1073 open. Its other owner's gate
+  finished, not a handoff of implementation ownership. No duplicate batch writer or unsafe authority.
+- Baseline first measurement inherited an exported maximum-worker setting that overrides nested
+  mode-probe expectations. Source trace and direct print-mode differential confirm this configuration
+  effect; retain the run/failures, then use the normal command with balanced width4 verified from
+  telemetry for the matched pair. No test is patched to accommodate the measurement wrapper.
+
+Reduced-Medium rollout and broader automated batch authority remain **not implemented/not ready**
+for the specific evidence/ownership reasons above. The safe policy and consumer enforcement continue
+through normal verification and draft publication; GH1076 is not closed by that PR.

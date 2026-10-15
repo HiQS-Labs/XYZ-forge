@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-15 — One existing CI qualification policy owner (GH-1076)
+
+The router now emits a versioned hosted Small/full decision, consumed by the existing wave
+selector with full fallback for missing, malformed, inconsistent or unsupported metadata.
+Canonical explanation lives in ROUTER; AGENTS, SOP and CI recovery guidance point there.
+Known skills-army package text retains its existing publication-consumer area, covering the
+historical GH995 payload-pin miss without adding CI cases. Registries, hosted Medium/full,
+exact-main full promotion, fixed commands and historical qualification receipts are unchanged.
+
+Easy to reverse by reverting this scoped decision/pointer change; no receipt-schema migration
+or cached cross-candidate evidence is introduced. Existing checks, recorded manual refusal/red
+controls, independent review and matched local full-suite measurements qualify this phase.
+The broader umbrella remains open: the historical sample does not establish reduced-Medium
+coverage, and unmerged GH1064/PR1069 with GH1072/GH1073 cannot authorize batch evidence reuse.
+No test retirement, new assertions, workflow/protection change, merge or activation is included.
+
 ## 2026-10-15 — Preserve unpublished historical HiQS review receipts
 
 Recover three approved historical review records from the operator’s primary checkout
