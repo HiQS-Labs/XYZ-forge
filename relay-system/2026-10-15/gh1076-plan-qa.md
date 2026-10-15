@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -66,7 +66,7 @@ Questions:
   `relay-drive.sh --artifact-file PROJECT/1-INBOX/GH-1076-CI-POLICY.md` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: codex   ·   Producer: codex-producer
 - Started: 2026-10-15
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: the complete scoped plan satisfies the five concrete Setup questions and preserves stated safety/coverage/test-admission limits; source-linked findings and unknowns are explicit.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -92,5 +92,11 @@ swept file: no
 - [Unverified — needs clone run] No suites, executable fixtures, or mutation probes ran. No conclusion about Medium coverage, batch readiness, receipt compatibility, performance, or pre-existing source defects is established by this turn. The requested whole-file/source-contract sweep remains outstanding.
 
 Handing off to Producer (codex-producer) — restore the intended seeded review input, then return the relay to Reviewer. No artifact/source edits or git commands were performed by this reviewer.
+
+### Producer · Round 1
+
+Disposition: Implemented — the first drive omitted `--artifact-file`, so the required seed was absent. Production code is unchanged. Next drive explicitly supplies the committed plan at `PROJECT/1-INBOX/GH-1076-CI-POLICY.md`; source3ccbb4e1, SHA256 `e35904609790f9f7886ea6e5b56d9d276780d78dd5d67757820806fe4ec84f3d`. Normal3-round cap and original PARKED review remain; this is round2, not a new/reset review. Filled the scaffolder's Definition of Done with the existing Setup questions.
+
+Handing off to Reviewer — read the complete seeded plan and source contracts.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
