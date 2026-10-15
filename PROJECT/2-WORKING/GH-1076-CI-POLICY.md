@@ -431,7 +431,7 @@ extra final QA remains unspent. Procedural discretion never waives actual Critic
 
 Actual existing owner: utils/py/device_config.py::get_device_config_path, load_device_config_
 diagnostic and resolve_device_block. Default path ~/.xyz/device_config.json; override existing
-XYZ_DEVICE_CONFIG_PATH. On this Mac the actual file exists at /Users/noelsaw/.xyz/device_config.json,
+XYZ_DEVICE_CONFIG_PATH. On this Mac the default file exists at ~/.xyz/device_config.json,
 not a symlink, no path override or ci block is set. No values/secrets are copied. Current block
 precedence is environment > local JSON > defaults. Reuse that owner, not .claude/settings.json,
 RELEASES DB settings or a new project config service. Add optional strict validation to its existing
