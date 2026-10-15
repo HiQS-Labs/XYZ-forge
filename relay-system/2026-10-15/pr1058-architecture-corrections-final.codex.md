@@ -178,4 +178,12 @@ Scope/limits: Read the whole current ARCHITECTURE.md, ledger JSON, complete cano
 
 Relay closed (Approved), no further review turn needed. Handing completion to Producer (codex-producer) for normal publication and final qualification; harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-10-15T02:15:12Z
+task: RELAY-PR1058-ARCH-FINAL-R3-20261015
+reviewer: codex
+status: Approved
+reviewed-head: 636f49938ddf3e556bf1be5ce772fdccc17ede93
+added-range: 27012+6919
+added-sha256: 213c812f89bcb5a83e70ecb4e6e0c2dcca7de8534ea22bd36d445404e949bab7
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
