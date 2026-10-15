@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-15 — start-task: the orchestrator smoke-runs the change before final QA (GH-1088)
+
+Step 7 now ends with a smoke check. The orchestrator runs the changed entry point once on its main
+path and once on one adjacent real-world path (resume, rerun, second invocation, empty input), and
+records it as a manual check under `TESTS-RESULTS/`. The receipt goes to the final reviewer as
+evidence and never replaces the independent review. Documentation-only work reads the changed
+instruction from its consumer's entry point, or skips with a reason. Motivated by GH-1064, whose
+resume and rerun defects (#1074, #1084) passed suites and an approved review. Instruction-only; no
+new tests (GH-831). Revert the one-file edit to undo.
+
 ## 2026-10-15 — Admit and refresh the development-only Pages fix (GH-1051)
 
 Keep the reviewed four-declaration Pages policy unchanged and adopt current development ledger/history through the canonical writer. The operator approved PR1053 review admission and conditional development landing; current review and normal qualification remain required. No workflow dispatch or environment-policy change.
