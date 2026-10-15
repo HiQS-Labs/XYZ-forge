@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -184,5 +184,71 @@ Both findings hold and are fixed in `d35db0c8`; the evidence is in `8b3b36dc`.
 - The full disposable-clone gate still runs once, on the commit this review approves.
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: Ship through the already-planned disposable-clone gate. F1/F2 are corrected at their writer/consumer and command-formatting boundaries; no further required correction was identified. Approval covers source review and the retained focused evidence, not a full-gate result.
+swept file: yes
+
+Scope: Re-read the entire six implementation files listed in Setup, the approved plan and round-3 precision notes, this complete relay, and the persistence/tool-resolution/classifier seams. Verify-tier graph lookup found no matching symbols; all 84 projects were enumerated, none for this worktree. The nearest XYZ-forge index is generation 2026-09-01T15:54:30Z in another checkout; coverage reports the six paths missing/not_tracked, so exact seeded source supplies the evidence. No git command, suite, pytest, executable fixture, or artifact edit ran. `scripts/` below means `skills/2-daily/merge-cleanup/scripts/`.
+
+- [Pass] **F1 / DoD 1,5 — Closed is terminal.** The live non-OPEN branch writes `closed` for CLOSED and `closed: merged outside this run` for MERGED (scripts/merge_cleanup.py:1034-1039); the predicate accepts those terminal statuses (scripts/batch_record.py:102-109). Holds/drafts/handoffs remain non-terminal. The pure probe below measures the original falsifier and its negative controls; the old `skipped: state CLOSED` representation still demonstrates the original failure. The producer's retained result is TESTS-RESULTS/2026-10-14+GH-1064/provenance.jsonl:4. No merge-eligibility policy change is needed.
+
+- [Pass] **F2 / DoD 1 — The primary is one shell operand.** scripts/batch_record.py:304 now uses `shlex.quote(str(primary))`. The probe evaluates that exact source expression and checks the documented spaced path, a plain path and a metacharacter path without running any shell command from the generated text. Removing quoting reproduces the split source operand. Retained producer checks are provenance.jsonl:5-7 in the same evidence directory.
+
+  Narrow probe command (exit **0**; only imports/pure calls, source parsing and in-memory assertions):
+  ~~~sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 -B - <<'PROBE'
+  import ast, copy, shlex, sys
+  from pathlib import Path
+  sys.path.insert(0, 'skills/2-daily/merge-cleanup/scripts')
+  import batch_record as b
+  r={'planned':[{'pr':1},{'pr':2}], 'outcomes':{'1':{'status':'merged','reconcile':'ok'},'2':{}},'landed_order':[1],'verdict':{'covers':[1]}}
+  for status in ('closed', 'closed: merged outside this run', "skipped: hold-label 'hold'", 'skipped: draft', 'handoff', 'skipped: state CLOSED'):
+      r['outcomes']['2']['status']=status
+      got=(b.qa_pending(r), b.continuable(r))
+      print(status, got)
+      assert got == (False, status not in ('closed','closed: merged outside this run'))
+  t=ast.parse(Path('skills/2-daily/merge-cleanup/scripts/batch_record.py').read_text())
+  d=next(n for n in ast.walk(t) if isinstance(n,ast.Dict) and any(isinstance(k,ast.Constant) and k.value=='command' for k in n.keys))
+  e=next(v for k,v in zip(d.keys,d.values) if isinstance(k,ast.Constant) and k.value=='command')
+  for p in ('/Users/noelsaw/Documents/GH Repos/XYZ-forge', '/tmp/plain', "/tmp/a'$(printf injected);"):
+      c=eval(compile(ast.Expression(e),'<source command>','eval'),{'primary':Path(p),'gate':b.FULL_GATE,'shlex':shlex}).replace('<tmp>','/private/tmp/sweep')
+      tokens=shlex.split(c.split(' && ')[0])
+      print('clone tokens:', tokens)
+      assert tokens == ['git','clone','--no-local',p,'/private/tmp/sweep']
+      if 'GH Repos' in p:
+          unquoted=shlex.split(f'git clone --no-local {p} /private/tmp/sweep')
+          print('unquoted red control:', unquoted)
+          assert unquoted != tokens
+  s=ast.parse(Path('skills/2-daily/merge-cleanup/scripts/merge_cleanup.py').read_text())
+  f=next(n for n in s.body if isinstance(n,ast.FunctionDef) and n.name=='_land_prs_loop')
+  loop=next(n for n in ast.walk(f) if isinstance(n,ast.For) and isinstance(n.target,ast.Name) and n.target.id=='pr')
+  sites=sorted(n.lineno for n in ast.walk(loop) if isinstance(n,ast.Return) and (isinstance(n.value,ast.Constant) and n.value.value==2 or isinstance(n.value,ast.IfExp) and isinstance(n.value.body,ast.Constant) and n.value.body.value==2))
+  print('hard returns:', sites, 'count:',len(sites))
+  assert len(sites)==22
+  print('PASS: pure predicates, command tokenization and hard-return enumeration; no git/test/fixture executed')
+  PROBE
+  ~~~
+  Decisive output: `closed (False, False)`; `closed: merged outside this run (False, False)`; hold/draft/handoff each `(False, True)`; old `skipped: state CLOSED (False, True)`. Quoted clone tokens include one source `/Users/noelsaw/Documents/GH Repos/XYZ-forge`; the unquoted control splits it into `/Users/noelsaw/Documents/GH` and `Repos/XYZ-forge`. All three path assertions passed. The hard-return enumeration reports `[990, 1023, 1042, 1051, 1059, 1071, 1113, 1139, 1146, 1156, 1172, 1177, 1185, 1190, 1202, 1211, 1218, 1223, 1235, 1240, 1245, 1252]`, count **22**. Enumeration is source evidence, not execution of those branches.
+
+- [Pass] **DoD 1,2 — Approved hooks and precision notes remain satisfied.** `_soft_reasons` retains filenames (scripts/toposort_prs.py:148,160); planned rows store normalized files and dependency reasons (scripts/batch_record.py:49-62). The wrapper installs a fresh tracker and clears `_ERR_SINK` before finalization (scripts/merge_cleanup.py:917-925); the loop resets current/errors before policy validation (:981-990), covering the former :935 attribution nit. All enumerated hard-return paths stay under that wrapper. Later unvisited rows retain `unattempted` (scripts/batch_record.py:70). Remote merge status/OID is saved before fetch (:1224-1235), and a post-merge stop adds the reconcile failure without replacing it (:935-937). Actual landing order is append-only (scripts/batch_record.py:142-143) and supplies the inclusive range (:279-282). No stale current/errors or sink leak was identified in these serial CLI call paths.
+
+- [Pass] **DoD 3 — Exit precedence and isolated recording.** Phase-5 exits 2/3 return before teardown (scripts/merge_cleanup.py:1517-1520); a Phase-6 failure returns 2 before the QA predicate (:1562-1571), preserving 2 > 3 > 4 > 0. Executing empty-queue resumes select the retained batch (:1512,1576-1588). `--record-sweep` dispatches before Phase 0 (:1335-1336) into the standalone load/validate/update path (:1601-1623). The existing suite now pins Phase-6 failure over pending QA (test/gh534_phase_b_tests.py:768-772), and every verdict helper call forbids Phase 0/discovery (:738-744). Source ordering also excludes merge/teardown from standalone recording.
+
+- [Pass] **DoD 4 — Issue ownership and gh failure handling.** Create/read/edit failures preserve local state and return normally (scripts/batch_record.py:213-219,229-240,249-250); successful update retains the prefix and suffix outside the markers (:241). All calls use injected driver `_gh`, whose launch/timeout failures become return codes (scripts/merge_cleanup.py:71-75,947,1592,1617). The retained whole-body overwrite control goes red on lost caller text (TESTS-RESULTS/2026-10-14+GH-1064/red-update-overwrites-whole-body.log:91); the existing ownership check asserts caller text survives (test/gh534_phase_b_tests.py:831-850). These do not claim protection against simultaneous human edits between GitHub read and write.
+
+- [Pass] **DoD 5,6 — Resume identity, QA coverage and existing owners.** `find_unfinished` filters exact repo/integration and non-empty queue overlap (scripts/batch_record.py:123-128); `qa_pending` independently compares landed coverage (:97-99). New landings invalidate a partial verdict; single-PR/no-record and non-executing runs remain exempt (scripts/merge_cleanup.py:1579-1592). The resumed hard-pair/empty-queue scenarios are pinned at test/gh534_phase_b_tests.py:774-804 and the no-batch resume at test/gh534_phase_c_tests.py:796-814. Persistence reuses `attempt_record.RecordLock/save` (scripts/batch_record.py:87-90), gh remains injected (:11-12), and gate selection reuses the resolver/classifier with full fallback (:255-271). No duplicate gh wrapper, lock implementation, persistence owner or suite runner was identified. Changes to verification remain in the two existing Phase B/C modules and capability-owner pins (test/gh534_phase_c_tests.py:34,543-553).
+
+- [Pass] **DoD 7 — Focused green evidence is now retained; controls are non-vacuous.** The retained `gh436-green.log:3901-3903` reports `Ran 185 tests in 340.134s` and `OK`; provenance.jsonl:8 records exit 0 with the explicit caveat that the corrections were uncommitted atop `cfedc42b` when run. The three prior mutation receipts/logs remain (provenance.jsonl:1-3), showing threshold `0 != 4`, empty-clean acceptance `0 != 2`, and lost caller text. These substantiate the focused checks and their three mutations; they are not independent exact-final-commit/full-gate attestation.
+
+- [Pass] **DoD 8 — Whole-file sweep conclusion.** No additional pre-existing defect requiring correction within this change was identified after re-reading all six files. F1 resolves the incompatible old skip writer/new terminal consumer (scripts/merge_cleanup.py:1034-1039; scripts/batch_record.py:102-109). Existing landing/durability and teardown boundaries remain explicit (:1231-1254,1517-1520,1528-1564 in merge_cleanup.py); the batch layer records around them.
+
+- [Unverified — needs clone run] The full `route=full`, tier-3 gate against the final committed implementation remains outstanding, exactly as Setup schedules it after approval. This reviewer did not run prohibited gates or fixtures, and approval is not permission to skip that gate or treat the earlier dirty-tree focused receipt as exact-final-commit evidence.
+
+Relay closed (Approved), no further review turn needed. Handing the completed token to the harness with `done`; Producer (claude-a) proceeds with the scheduled disposable-clone full gate. The harness owns the relay-file commit; this reviewer ran no git command.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
