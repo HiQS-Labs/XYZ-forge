@@ -1,0 +1,58 @@
+{
+  "tested_head": "baf31e728ef28bec8d6e9260245e8b17521e2c38",
+  "workflow_sha256": "19596de4c9c8291857038f488dec79f3588ccb9d5e6e3e85ad844eec8370a6c5",
+  "artifacts": {
+    "SUMMARY.md": {
+      "bytes": 1901,
+      "sha256": "7d2f1bae3d8541dd6de6685904320e6a2781ffd99cb7ba902265495fdae678b6"
+    },
+    "agent-chorus-bridge-attempt2-pooled.log": {
+      "bytes": 12907,
+      "sha256": "9ebe6f2914a2a5fc2e0465187d2194c19eb76e2872da666e501f6c2f9b81237d"
+    },
+    "attempt1-telemetry.jsonl": {
+      "bytes": 130682,
+      "sha256": "af9bb86ae4fc1316fd885030f4da574dc6341966a74dd83160075705fa7306ed"
+    },
+    "attempt2-telemetry.jsonl": {
+      "bytes": 131306,
+      "sha256": "a7ba725a5994f17d7610c3c1489195c7a3825da7fcb6d26b36699d661e98c93c"
+    },
+    "base-change-review.json": {
+      "bytes": 9808,
+      "sha256": "0b52b79e177b213c0935c0cee07b7e1ea62fb9dbf9175b86b6ba636e2a004a96"
+    },
+    "diagnostic-ledger.json": {
+      "bytes": 990,
+      "sha256": "f6f329cd70d2c6776ee50838da72602c91260b4fe4300290c9f0c4d1bf73e3c7"
+    },
+    "full-attempt2-after-publication.json": {
+      "bytes": 971,
+      "sha256": "e3c38dc8caa3092dcfff87754ce5fd265e7ceae525039a3ed2f110bbbf00ccbf"
+    },
+    "full-attempt2-before.json": {
+      "bytes": 1077,
+      "sha256": "0a072c6093d3b8f812c8172e66684e1c5fdbf27d8e00105cc7069c8116da0e7f"
+    },
+    "full-publish-gate-attempt1.log": {
+      "bytes": 34822,
+      "sha256": "d4892596d5a60ec408e35ac4c91682606cd0953e589601b36197bb1fa15c4768"
+    },
+    "full-publish-gate-attempt2.log": {
+      "bytes": 35773,
+      "sha256": "adae2cd035812ffa8bce313c5bfbfb53bf5656324f2cb5d38ebf3cc7d630c5aa"
+    },
+    "gh251-attempt2-pooled.log": {
+      "bytes": 1236,
+      "sha256": "b21fa0cee685cd9d59143ff963dfc633be06da60f6bf44fc663789ee7abb7204"
+    },
+    "gh648-focused-unsandboxed.log": {
+      "bytes": 1627,
+      "sha256": "347a01160041445f4494580c68be827d4e51ceac610afc7263809a3525d6ea54"
+    },
+    "gh648-pooled-sandbox-failure.log": {
+      "bytes": 412,
+      "sha256": "a7fbdd50b991a8bc6d75d69630f5df351097507d9c00532b7a130cea42a2a037"
+    }
+  }
+}

@@ -1,28 +1,27 @@
 # Changelog
 
-## 2026-10-15 — One existing CI qualification policy owner (GH-1076)
+## 2026-10-15 — Configurable bounded CI qualification (GH-1076)
 
-- GH-1076 / PR1079: add strict `ci.optimized` resolution through existing device settings and a
-  bounded Small-plus-area qualification profile with separate lossless phase receipts. Invalid or
-  unproved scope retains full; exact-main full is unchanged. Hosted opt-in is an explicit wave env
-  contract, independent of the Mac file. Historical QA failures/receipts remain retained.
+Route machine-consumed skills-army package text through its existing area plus PDDA, expanding
+selection from five to eight already registered consumer suites. The existing router owns its
+versioned hosted decision; ROUTER owns the canonical explanation.
 
-The router now emits a versioned hosted Small/full decision, consumed by the existing wave
-selector with full fallback for missing, malformed, inconsistent or unsupported metadata.
-Canonical explanation lives in ROUTER; AGENTS, SOP and CI recovery guidance point there.
-Known skills-army package text retains its existing publication-consumer area, covering the
-historical GH995 payload-pin miss without adding CI cases. A bounded reverse-consumer audit adds
-three already registered suites (canonical drift, skill links, interpreter patterns) to that same
-local area, five to eight; its existing count expectation is updated without adding an assertion.
-Full/Small registries, hosted Medium/full, exact-main full promotion, fixed commands and historical
-qualification receipts are unchanged.
+Reuse device_config ci.optimized (local defaultfalse) for the one bounded Medium content profile.
+One exact eligible landing gets fixed Small and area commands, separate original streams and
+strict typed@2 provenance through the existing two-file publisher layout. Unknown scope or
+incomplete proof retains full; detected identity drift stops. Historical@1 semantics and exact-main
+macOS/full remain. Hosted wave declares its own environment setting, independent of the Mac file.
 
-Easy to reverse by reverting this scoped decision/pointer change; no receipt-schema migration
-or cached cross-candidate evidence is introduced. Verification uses existing checks, recorded manual refusal/red
-controls, independent review and matched local full-suite measurements; retain their actual outcomes.
-The broader umbrella remains open: the historical sample does not establish reduced-Medium
-coverage, and unmerged GH1064/PR1069 with GH1072/GH1073 cannot authorize batch evidence reuse.
-No test retirement, new assertions, workflow/protection change, merge or activation is included.
+No new CI cases, test retirement, branch-protection change or automated batch authority. Original
+review/gate failures remain retained; this implementation does not claim live activation.
+
+## 2026-10-15 — Admit and refresh the development-only Pages fix (GH-1051)
+
+Keep the reviewed four-declaration Pages policy unchanged and adopt current development ledger/history through the canonical writer. The operator approved PR1053 review admission and conditional development landing; current review and normal qualification remain required. No workflow dispatch or environment-policy change.
+
+## 2026-10-12 — Pages publishing follows development-only policy (GH-1051)
+
+The Pages workflow admits development pushes and manual development runs. Nondevelopment job guards and per-ref concurrency prevent main/tag dispatches from attempting publication or cancelling development publication. Existing environment protections, action versions and build steps are unchanged. Draft PR only; no merge or deployment authorized.
 
 ## 2026-10-15 — Preserve unpublished historical HiQS review receipts
 

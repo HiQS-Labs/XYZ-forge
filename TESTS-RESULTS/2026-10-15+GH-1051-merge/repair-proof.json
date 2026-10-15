@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-10-15T21:41:46.690564+00:00",
+  "incoming": "14081d61d3c42e662479a53637c9399eb772e8e2",
+  "previous_local_candidate": "95ebe8a1ab4015bc8085804167024c8c8525627f",
+  "head": "a5a22ae74ea154f67d98706e823de0e01a1fa823",
+  "automatic_B1": {
+    "resolved": false,
+    "handoff": false,
+    "reason": "[DRY RUN] B1 would keep the theirs side and replay 1 roadmap change(s) through the writer, then run the resolver",
+    "log": [
+      "classification: keep=theirs generation ours/theirs=(1666, 1666) replay=1 op(s)"
+    ],
+    "commit": null,
+    "conflict_set": [
+      "LEADERBOARD.md",
+      "releases.db",
+      "releases.sql"
+    ]
+  },
+  "caller_disposition": "Preserve authoritative incoming ledger exactly, replay only1051 through canonical writer; noB1override/SQLunion",
+  "all_existing_incoming_non_generation_rows_preserved": true,
+  "incoming_changelog_bytes_preserved": true,
+  "workflow_unchanged_from_PR_head": true,
+  "canonical_replay_log": [
+    "roadmap add GH-1051: rc=0 ",
+    "roadmap rate GH-1051 70/45/50/95: rc=0 ",
+    "roadmap update GH-1051 (section/marker): rc=0 "
+  ],
+  "status": "",
+  "limits": "Current-source independent QA and normal publication not yet run; earlier95candidate retained; repair2/2 active."
+}
