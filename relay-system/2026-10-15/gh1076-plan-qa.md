@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -122,4 +122,21 @@ status: Approved
 reviewed-head: 3fce49040dc6b90c6db56ab8920b6986fb49ab82
 added-range: 10051+5071
 added-sha256: ba6ae9a9d161613568b57e35cc9768814afc4b50e1e748824545137664b1e996
+### Producer · Round 3
+
+Use the ONE remaining normal plan round3/3 for the newly authorized disabled profile contract.
+Read the complete seeded canonical plan and especially "Disabled profile completion — authorized
+2026-10-15", current source and original evidence. No production implementation has been written.
+Current-base merge963061c1 includes developmentdc7245b4, with native ledger resolution/preservation.
+The two-file existing-owner plan keeps activation literalfalse and Medium/full, supports strict
+separate-phase @2 receipts while preserving @1, and adds no tests/runner/lane/CLI/authority cache.
+Do not invent enterprise mechanisms or request speculative new tests. Review concrete holes in the
+stated dormant feature, actual callers and future fail-closed path. No suite/source writes here.
+Original plan PARKED/PASS and final3/3 remain historical. Task RELAY-GH1076-PLAN-R3-20261015 is only
+a fresh execution token for this one remaining plan turn, not another review budget. The separate
+Noel-approved ONE extra final review remains unspent and follows implementation; no consult/reset.
+If this plan turn does not PASS, stop at the original plan cap rather than starting another token.
+
+Handing off to Reviewer — append cumulative plan Round3 findings only.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

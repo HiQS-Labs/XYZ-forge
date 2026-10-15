@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-10-15T21:03:24.161118+00:00",
+  "base": "4aceedbfea70ed6a0d1c254866ae906ea499dc63",
+  "ours": "46c1317cd19bf972e0797d08d8f907617bb269d3",
+  "incoming": "dc7245b4d34e49b9adfba25cf5efbae08bf99c0e",
+  "ours_changed_rows": 10,
+  "incoming_changed_rows": 27,
+  "missing_ours_changed_rows": [],
+  "missing_incoming_changed_rows": [],
+  "generation_floor": 1664,
+  "native_resolver_rc": 0
+}
