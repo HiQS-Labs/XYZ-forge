@@ -437,9 +437,9 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | teardown-fresh-inspection | 6 | script | TestA5FreshInspection.test_teardown_refuses_a_stale_scan_record |
 | mergeable-unknown-poll | 5 | script | TestPhase5EndToEnd.test_unknown_mergeable_settles_and_the_pr_lands |
 | exclude-drops-pr | 4 | script | TestPhase5EndToEnd.test_exclude_pr_number_drops_it_from_the_queue |
-| batch-issue-threshold | 5 | script | TestBatchIssue.test_two_pr_queue_opens_the_issue_before_the_first_merge_and_exits_4 |
-| batch-issue-resume-append | 5 | script | TestBatchIssue.test_resume_continues_the_batch_and_a_new_landing_reopens_qa |
-| batch-sweep-record | 5 | script | TestBatchIssue.test_record_sweep_keeps_caller_sections_and_refuses_bad_input |
+| batch-issue-threshold | 5 | script | TestGh623Resilience.test_resume_lands_a_pr_whose_last_repair_resolved |
+| batch-issue-resume-append | 5 | script | TestGh623Resilience.test_resume_lands_a_pr_whose_last_repair_resolved |
+| batch-sweep-record | 5 | script | manual check, `TESTS-RESULTS/2026-10-14+GH-1064/` |
 | batch-regression-sweep | 5 | caller | — |
 | post-deploy-carryover-dual-sink | 5 | caller | — |
 

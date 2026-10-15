@@ -31,7 +31,7 @@ import scan_clones  # noqa: E402
 import unittest.mock as mock
 from attempt_record import RECORD_ENV, RecordError, RecordLock, reserve  # noqa: E402
 from gh534_phase_a_tests import TestA2Provenance, TestA4OpenHandles, TestA4TickClaims, TestA5FailClosed, TestA5FreshInspection  # noqa: E402,F401
-from gh534_phase_b_tests import LedgerFixture, TestBatchIssue, TestE6Gate, TestPhase5EndToEnd, _app, _git, commit_all, park  # noqa: E402,F401
+from gh534_phase_b_tests import LedgerFixture, TestE6Gate, TestPhase5EndToEnd, _app, _git, commit_all, park  # noqa: E402,F401
 
 CLI = REPO / "skills" / "2-daily" / "merge-cleanup" / "scripts" / "attempt_record.py"
 
@@ -542,8 +542,8 @@ REQUIRED_CAPABILITIES = {
     # TestPhase5EndToEnd) close in the same edit.
     "batch-issue-threshold": "script", "batch-issue-resume-append": "script",
     "batch-regression-sweep": "caller", "post-deploy-carryover-dual-sink": "caller",
-    # GH-1064: the script now owns the batch issue and the sweep record; the analysis stays caller's.
-    "batch-sweep-record": "script",
+    # GH-1064: the script now owns the batch issue; the sweep record is script-owned too but has no
+    # existing suite test (GH-831), so its SKILL.md row points at the manual checks instead.
     "mergeable-unknown-poll": "script", "exclude-drops-pr": "script",
 }
 AST_CALLS = {  # (module source, enclosing function, callee that must be invoked — a comment is not a call)
