@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -143,7 +143,6 @@ Scope/limits: Swept the entire current ARCHITECTURE.md, the complete ledger spec
 
 Handing off to Producer (codex-producer) — correct S1a/S1b in documentation only, then return Round 3 to Reviewer. Harness owns the file-scoped commit.
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 
 ### Producer · Round 3
@@ -155,3 +154,28 @@ S1b Implemented — replaced universal result bullets with source-specific outco
 Completed prior preservation landing1065 hosted macOS small qualification75/75 at e09556a5 is committed in development ab7c4123. This branch adopted ab7c4123 in a clean normal history-preserving merge (no further ledger conflict), and its existing releases check passed. This is the remaining final third architecture review, no cap reset; original foreign HiQS historical QA remains untouched. Normal final publication/exact-head hosted review/checks still follow.
 
 Only this thread writable; no git/test/validate/fixtures/network. Whole relevant current owners and bounded artifacts, source-grounded material findings. Append at EOF `### Reviewer (codex) · Round 3`, VERDICT/Basis/swept file. On PASS Approved/NEXT — and tick done RELAY-PR1058-ARCH-FINAL-R3-20261015; if substantive failure, Escalated3/3 and no additional cycle. Handing off to Reviewer.
+
+### Reviewer (codex) · Round 3
+
+VERDICT: PASS
+Basis: S1a and S1b are discharged by the executing Python source. S2, projection ownership, diagram fidelity, parked intake and historical-evidence limits remain sound within this review's scope. No remaining material documentation defect was observed, including pre-existing content in the swept architecture document. This approves the architecture correction; final publication and qualification remain Producer/harness obligations.
+swept file: no
+
+Scope/limits: Read the whole current ARCHITECTURE.md, ledger JSON, complete canonical HTML template and renderer, builder substitution rules, GH1052 inbox doc, historical HiQS export, current CHANGELOG correction and all six correction-evidence files. Compared the entire generated HTML against an in-memory canonical reconstruction. Unrelated archival CHANGELOG history (1,061,410 bytes in the whole file) was not requalified, hence the conservative aggregate sweep declaration. Verify-tier graph discovery used XYZ-forge in a different checkout, generation 2026-09-01T15:54:30Z; complete project-list pagination found no current-worktree project. Coverage reported changed/missing/excluded evidence paths; material conclusions use seeded source fallback. Python probes used PYTHONDONTWRITEBYTECODE=1 and TMPDIR="$PWD/.relay-scratch/tmp". No Git, suite, executable fixture, network, runtime operation or artifact/source edit was performed.
+
+- [Pass] S1a — Both descriptions now identify Codex/Claude subprocess.run(..., timeout=turn_timeout) and distinguish agy's process-group/idle loop (ARCHITECTURE.md:229–231, :285–288). Executing calls are at utils/py/codex-turn.py:110 and utils/py/claude-turn.py:223; agy creates a separate session and polls wall/idle limits at utils/py/agy-turn.py:487–528. The separate shared helper is at utils/py/rtl.py:304–346. Source-only command "nl -ba utils/py/agy-turn.py | sed -n '400,420p;450,532p'", exit 0, includes "start_new_session=True", "elapsed >= turn_timeout" and "_idle >= idle_cap". No CLI was launched; no further fix.
+- [Pass] S1b — Result bullets describe actual branch ordering (ARCHITECTURE.md:290–295): ordinary Python CLI failure maps to 5, bounded timeout to 7, Claude containment 6 takes precedence, and Codex/agy return bounded results before the enforcement result. Source: utils/py/codex-turn.py:162–170, utils/py/agy-turn.py:671–676, utils/py/claude-turn.py:270–281; earlier Codex/agy off-lane exits are at :120–124 and :553–557 respectively. These are inspected source branches, not executed timeout/containment scenarios. No runtime change requested.
+- [Pass] S2 and default routing remain accurate: ARCHITECTURE.md:178–182, :198–203 and :411–413 match relay-automation/relay-drive.sh:9–18 and utils/py/relay_drive.py:693–788. The driver requires a successful reviewer-role turn, unchanged canonical prefix, nonempty added review bytes, done token and this driver's attestation; pre-existing unattested terminal text escalates. Command "nl -ba utils/py/relay_drive.py | sed -n '680,800p'", exit 0, decisive spans: 'if role != "reviewer" or not shim_ok', 'if not added.strip()', 'if tstat != "done"' and 'if not attested: ... exit_unattested(...)'. No further fix.
+- [Pass] Projections distinguish automatic switch-before-presence from explicit merge rebuild (ARCHITECTURE.md:444–455, :497–504; ARCHITECTURE/ledger-diagram.json:30–42, :65–70). Source: utils/py/releases_app.py:1344–1388, utils/py/wave_reconcile.py:1810–1830, utils/releases-merge-resolve.sh:161–223. Ordinary writer refreshes adopted HTML; hosted reconciliation refreshes adopted preview/Markdown; resolver independently honours merge-parent deletion and rebuilds adopted views. No further fix.
+- [Pass] Full generated HTML fidelity measured, with a red control. Command:
+  python3 -c 'import json,re,html;from pathlib import Path;s=json.loads(Path("ARCHITECTURE/ledger-diagram.json").read_text());h=Path("ARCHITECTURE/ledger-diagram.html").read_text();e=json.JSONDecoder().raw_decode(h[re.search(r"var spec =\s*",h).end():])[0];a=Path("utils/swe-diagram/assets");b=a.joinpath("template.html").read_text().replace("__TITLE__",html.escape(s.get("title","System Diagram"))).replace("__RENDERER_JS__",a.joinpath("renderer.js").read_text()).replace("__DIAGRAM_JSON__",json.dumps(s,indent=2).replace("<","\\u003c"));print("nodes",len(s["nodes"]),"edges",len(s["edges"]),"embedded_equal",s==e,"canonical_bytes_equal",b.encode()==Path("ARCHITECTURE/ledger-diagram.html").read_bytes());s["nodes"][0]["label"]="RED CONTROL";print("mutated_equal",s==e)'
+  Exit 0: "nodes 27 edges 33 embedded_equal True canonical_bytes_equal True"; "mutated_equal False". The preceding combined read-only probe also asserted nonempty graph sets, unique node/group IDs, declared node groups and valid edge endpoints. Reconstruction follows utils/swe-diagram/assets/build-diagram.sh:12–23; no output artifact was generated.
+- [Pass] GH1052 stays inbox/parked intake: PROJECT/1-INBOX/GH-1052-RECON-VENDOR-CONTRACTS.md:3, :35–36, :56–67 retain Proposed/not active and nine unchecked items. Command:
+  python3 -c 'import sqlite3;c=sqlite3.connect("file:releases.db?mode=ro&immutable=1",uri=True);r=c.execute("select gh_number,section,status_marker,doc_path from roadmap_items where gh_number=1052").fetchall();assert len(r)==1;print(r);c.close()'
+  Exit 0: "[(1052, 'Queue / parked intake', '🆕', 'PROJECT/1-INBOX/GH-1052-RECON-VENDOR-CONTRACTS.md')]". This establishes local intake state; live GitHub OPEN state was not queried.
+- [Pass] Historical export boundaries remain explicit (relay-system/2026-10-13/hiqs-skills-army-deploy-qa.md:3–7, :164–177): retained digest/range authenticates the unmodified original, not this redaction or current deployment; catalog preview/apply completion remains unverified. CHANGELOG.md:22–26 and correction SUMMARY.md:7 agree. No historical reapproval, catalog operation or deployment requested.
+- [Unverified — needs clone run] Retained evidence reports 56/56 on aae709a23442a296821d5da0a4edcb7644375dd4 (TESTS-RESULTS/2026-10-15+PR-1058-review-corrections/provenance.jsonl:1, existing-swe-diagram.log:47–58), with unchanged clone identity in existing-suite-identity.json. Newer AST receipt is expressly source-only (provenance.jsonl:2, timeout-owner-source-observation.json). This turn ran no suite and does not independently qualify final candidate, Producer's reported PR1065 hosted result/base adoption, preserved incoming LEADERBOARD bytes, original remote blob, live issue state or absence of runtime diffs. SUMMARY.md:9 leaves normal publication, exact-head hosted checks/reviews and post-merge qualification pending.
+
+Relay closed (Approved), no further review turn needed. Handing completion to Producer (codex-producer) for normal publication and final qualification; harness owns the file-scoped commit.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
