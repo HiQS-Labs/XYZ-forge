@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-15T20:51:43.713544+00:00", "commit": "3765101e890d24b6bb05a177a56636554a13ab52", "case": "codex-prerequisite", "command": "bash test/codex-turn.sh", "rc": 0, "result": "pass", "summary": "43 pass, 0 fail; separate full clone, identity unchanged"}
