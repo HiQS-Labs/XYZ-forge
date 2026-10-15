@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -79,5 +79,24 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Approve the plan for the bounded instruction-only change. Its requirements match the live issue and its placement preserves independent review. This approves implementation, not unexecuted gate results.
+swept file: yes
+
+- [Pass] **DoD 1 — current behavior.** Read the entire plan (lines 1–113) and entire start-task skill (lines 1–395), including pre-existing instructions. No additional in-scope pre-existing defect found. `skills/1-hourly/start-task/SKILL.md:212–214` prohibits substituting self-review; `:216–251` contains implementation and verification without an orchestrator smoke step; `:253–272` covers independent final QA; `:274–283` covers diff inspection and emitted-PR checks. The plan's current-state account at `PROJECT/1-INBOX/GH-1088-START-TASK-SMOKE-CHECK.md:19–27` is accurate.
+- [Pass] **DoD 2 — placement and roles.** Plan `:54–58` places the paragraph at the end of step 7, evidence in step 8, and visibility in recitation item 4 (`skills/1-hourly/start-task/SKILL.md:52`). Plan `:46–47,63` explicitly says the receipt never substitutes for review. This complements the independent-review boundary at skill `:262–269`; no role conflict.
+- [Pass] **DoD 3 — complete and proportionate.** Plan `:40–50` covers main path, one adjacent operator path, commands/output/verdict with provenance, reviewer handoff, docs-only read/justified skip, and fixing or recording a blocker before QA. Source query `gh issue view 1088 --repo HiQS-Labs/XYZ-forge --json body,title,url` exited 0; its Ask explicitly requires “main path” and “one adjacent real-world path”, and permits documentation smoke-reading or a reasoned skip. The plan adds no unnecessary machinery. Its mutation-heavy isolation provision (`:85–86`) reuses skill `:247–250`.
+- [Pass] **DoD 4 — GH-831 and gh609 preservation.** Plan `:62–64,82–86` excludes new tests, runners, gates and unrelated skills, consistent with `AGENTS.md:154–162`. `test/gh609-sdlc-agent-gaps.sh:94–106` pins resume/remote-PR/live-HEAD and transport reconciliation strings, located at skill `:124–128,228–229,277–279`; none is a planned edit. The existing suite also has a remote-PR mutation at `:304–310`. This is source inspection, not a claim the suite ran.
+- [Pass] **DoD 5 — verification design.** Plan `:90–95` uses the existing docs gate, existing gh609 suite and a self-applied consumer read, sufficient for this instruction-only scope. Narrow classifier probe: `printf '%s\n' skills/1-hourly/start-task/SKILL.md PROJECT/1-INBOX/GH-1088-START-TASK-SMOKE-CHECK.md relay-system/2026-10-15/gh1088-plan-qa.md TESTS-RESULTS/2026-10-15+GH-1088/provenance.jsonl | bash utils/ci-route.sh pull_request` exited 0, output `docs_only=true`, `pdda_needed=true`, `full_required=false`, `route=docs`, `tier=1`. This agrees with `utils/ci-route.sh:63–70,459–477`.
+  Manual baseline red control for the proposed evidence check: `python3 -` read the skill with `Path.read_text()`, extracted between `'8. **Run final Codex relay QA'` and `'9. **Open or update'`, asserted a nonempty extraction, printed whether `'smoke' in packet.lower()`, and exited `0 if present else 1`. Exit 1; decisive output: `Step 8 nonempty; smoke receipt in final-review packet: False`. Thus the current artifact fails the proposed smoke-evidence criterion; the implementation receipt must show the changed consumer path satisfies the full requirements, not just keyword presence. Commit its `provenance.jsonl` with the PR (`AGENTS.md:112–119`).
+- [Pass] **DoD 6 — rating.** Plan `:99–107` explains 55/45/50/85, labels one episode rather than asserting a trend, and uses neutral appeal and high cheapness consistently with skill `:330–344`. Read-only issue queries for #1074 and #1084 both exited 0 and describe lost merge history/false QA completion and the non-resume rerun bypass, supporting the stated medium process consequence. Exact scores remain a reasoned assessment, not a measured probability.
+- [Unverified — needs clone run] Planned gh609 and documentation gates have not run in this reviewer turn; no implementation exists yet. Execute and retain their results against the final revision in the authorized later verification phase. No executable fixtures, tests, git commands, source edits or artifact edits were performed here.
+
+Evidence scope: Verify-tier direct source review. `list_projects` returned no index for this temporary checkout. The nearest XYZ-forge index is generation `2026-09-01T15:54:30Z`; coverage for the five evidence paths reported missing/not-tracked/metadata-changed freshness. Used current local source throughout; no graph completeness claim.
+
+relay closed (Approved), no further turn needed. Producer may proceed with the approved plan; implementation still requires final QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
