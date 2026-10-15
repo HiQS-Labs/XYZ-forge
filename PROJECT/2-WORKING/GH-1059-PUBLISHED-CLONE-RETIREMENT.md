@@ -4,7 +4,7 @@ gh_issue: 1059
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1059
 status: "In progress (2-WORKING — planning)"
 created: 2026-10-14
-updated: 2026-10-14
+updated: 2026-10-15
 owner: Codex
 goal: "Automatically retire fully published task checkouts without losing active or local-only work"
 doc_type: feature
@@ -25,7 +25,7 @@ risk: 3
 
 The operator explicitly requests: after the branch and PR are fully pushed to origin, delete the worktree or full clone; modify the policy. Full clones go to recoverable Trash; linked worktrees use native Git removal. This does not authorize merging this repair PR or sweeping unrelated existing clones.
 
-Smallest bet: add a targeted published-PR retirement mode to the existing merge-cleanup driver and reuse its inspection/removal paths. Default post-merge cleanup is unchanged. No daemon, scheduler, separate deletion utility, new test suite or new CI gate. The earlier GH-690/PR692 fix was a reminder-only policy and explicitly excluded automatic retirement, so this is the operator-authorized next behavior rather than a duplicate fix. #722 (inventory roots) and #748 (temporary landing clones) are separate scopes.
+Smallest bet: add a targeted published-PR retirement mode to the existing merge-cleanup driver and reuse its inspection/removal paths. Default post-merge history admission is unchanged; the merge-review correction also preserves ignored content at the shared native-removal boundary. No daemon, scheduler, separate deletion utility, new test suite or new CI gate. The earlier GH-690/PR692 fix was a reminder-only policy and explicitly excluded automatic retirement, so this is the operator-authorized next behavior rather than a duplicate fix. #722 (inventory roots) and #748 (temporary landing clones) are separate scopes.
 
 Reversibility: **Costly** because eligibility for shared cleanup changes. Containment is an explicit PR number plus exact task-owned checkout paths; no remote merges, primary writes, branch deletion or broad scan. Rollback: omit the new mode (existing landed-only behavior), revert this commit, and restore accidentally retired full clones from Trash. No schema or persisted-format migration. Linked worktrees are removable only when their content/refs are recoverable from the canonical remote.
 
@@ -100,3 +100,8 @@ for both flows. Keep ordinary merged-only history admission and whole-clone Tras
 No CI test/case is added. Original final QA remains2/3; use only the remaining third round
 after the integration refresh and fresh verification. No publication or merge is claimed
 for this correction until its normal gate and exact-head checks complete.
+
+A further own permission fixture returned exit0 and no files while Git warned that an
+ignored directory was unreadable. The shared guard treats stderr from this normally silent
+enumeration as incomplete evidence and preserves it through the same query-failure path.
+The fixture permissions were restored; no existing checkout or permission was changed.

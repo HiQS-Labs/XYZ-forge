@@ -967,7 +967,8 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
     # Neither landed nor published refs establish recovery for those files.
     if res["checkout_type"] == "linked_worktree":
         ignored = run_git(path, ["ls-files", "--others", "--ignored", "--exclude-standard", "-z"])
-        if ignored.returncode:
+        # Git can warn about an unreadable directory yet exit 0 with an empty list.
+        if ignored.returncode or ignored.stderr.strip():
             res["query_failures"].append(f"ignored worktree files: {ignored.stderr.strip() or 'enumeration failed'}")
         else:
             res["ignored_files"] = [name for name in ignored.stdout.split("\0") if name]
