@@ -1,0 +1,6 @@
+marathon-drive: phase p1 startup: attested approval found but candidate 9716d0df67b6 is not the reviewed revision — candidate 9716d0df67b6 changes non-transcript content after reviewed head 0221fb0761ce — not accepting it (GH-505)
+marathon-drive: phase p1: terminal relay is NOT attested — refusing to treat it as satisfied; its token 'MARATHON-P1-TURN' is done and cannot be reopened, so this run halts (see GH-505)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/legacy-later-5__cl_03/relay-system/legacy-later-5__cl_03/2026-10-15/marathon-p1-034407.md
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7718MB, swap_free=1643MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/legacy-later-5__cl_03/phases/p1/ESCALATION.md (reason: unattested-terminal)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/legacy-later-5__cl_03/result.json (outcome: escalated, exit 4)

@@ -1,0 +1,6 @@
+marathon-drive: phase p1 startup: relay is terminal (STATUS: Approved) but NOT attested by relay-drive — attestation record unreadable/malformed: Expecting value: line 1 column 1 (char 0) — not accepting it (GH-505)
+marathon-drive: phase p1: terminal relay is NOT attested — refusing to treat it as satisfied; its token 'MARATHON-P1-TURN' is done and cannot be reopened, so this run halts (see GH-505)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/empty-attest-kadg5th4/relay-system/empty-attest-kadg5th4/2026-10-15/marathon-p1-034425.md
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7704MB, swap_free=1651MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/empty-attest-kadg5th4/phases/p1/ESCALATION.md (reason: unattested-terminal)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/empty-attest-kadg5th4/result.json (outcome: escalated, exit 4)

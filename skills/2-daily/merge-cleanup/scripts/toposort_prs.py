@@ -88,6 +88,7 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
     dep_graph: Dict[int, Set[int]] = {pr["number"]: set() for pr in prs}
     hard_edges: Dict[int, Set[int]] = {pr["number"]: set() for pr in prs}
     soft_edges: Dict[int, Set[int]] = {pr["number"]: set() for pr in prs}
+    soft_reasons: Dict[int, Dict[int, List[str]]] = {pr["number"]: {} for pr in prs}  # GH-1064
     warnings: List[str] = []
 
     # 1. Explicit dependencies are HARD (GH-623): a declared "depends on #N" is a semantic
@@ -144,6 +145,7 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
                         continue
                     dep_graph[after].add(before)
                     soft_edges[after].add(before)
+                    soft_reasons[after][before] = sorted(overlap)
                     warnings.append(
                         f"File collision on {len(overlap)} file(s) between PR #{before} and PR #{after} — ordering #{before} before #{after}"
                     )
@@ -155,6 +157,7 @@ def toposort_prs(prs: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[
     for pr in prs:
         pr["_hard_deps"] = sorted(hard_edges[pr["number"]])
         pr["_soft_deps"] = sorted(soft_edges[pr["number"]])
+        pr["_soft_reasons"] = soft_reasons[pr["number"]]  # GH-1064: overlap files per soft edge
         pr["_deps"] = sorted(dep_graph[pr["number"]])
 
     # 3. Topological sort with cycle detection (Kahn's algorithm)

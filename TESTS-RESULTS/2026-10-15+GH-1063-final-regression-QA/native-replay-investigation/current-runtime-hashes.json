@@ -1,0 +1,13 @@
+{
+  "commit": "5c46c49b6580711300fc141c6896c1946028e4ab",
+  "currentMatchesPriorSixRuntimePolicyHashes": true,
+  "sha256": {
+    "skills/2-daily/merge-cleanup/scripts/scan_clones.py": "d7b8acd4bb2ebcc75f2654e2d4185294fee36a94d53b979c993b923d924a79b9",
+    "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py": "bc748d402fe607bbf56ad5d029fff155ced8386c2036dea107fd27f67b66c11d",
+    "skills/2-daily/merge-cleanup/SKILL.md": "e871e5be2120830bb88e1f7ff6a83b8f0b5b4349431a05732970133ebef58b6f",
+    "skills/1-hourly/start-task/SKILL.md": "5323f505d3292123bb301df68fd6a859263f490ef789ae5fade6144d8752875c",
+    "WORKTREE-SAFETY.md": "7cf481485af80977fe043c6734ee9e56437e8703b282550efc6662333e323651",
+    "SOP.md": "b1798feb2f648a6d58c96e1b10139ab002262da637cd0e7d272a207b7c6fcdd1"
+  },
+  "scope": "post-followup current source comparison; no full before/after config attestation"
+}
