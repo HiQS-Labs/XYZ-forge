@@ -9,3 +9,7 @@ Before/after clone HEAD, origin, bare flag and local config digest match. Absolu
 ## Completed hosted reconciliation refresh
 
 Hosted Wave38649763226 succeeded on2026-10-14 and advanced development to69666c47. Repair2/2 used the existing disjoint-only resolver: keep our higher generation1638, replay only GH1043 repoint/section/marker/raw-text metadata, rebuild and check. The reviewed GH1042/GH1045 rows are exact matches before/after, and all three reviewed recovery/attestation/Jog runtime blobs are byte-identical. Adopted LEADERBOARD.md is retained byte-for-byte from hosted development; this task introduces no routine view delta. Original final QA3/3 remains intact, not reset. This administrative refresh requires fresh normal exact-head publication checks and automated review; it does not claim a new independent core review or promotion qualification.
+
+## Required gate assertion failure
+
+The normal full gate reported gh75-dashboard rc1: its existing has helper uses printf piped to grep-Fq under pipefail, and the release-status check printed a printf Broken pipe. The unchanged existing suite passed8/8 in a separate full diagnostic clone. This establishes an assertion termination problem; it is not dismissed as an unimportant flake or waived gate. The existing validator performs its drained-pool sequential retry; the final gate result is recorded separately. No test/helper/case was changed, and no review/repair cap was reset.
