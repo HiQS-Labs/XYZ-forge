@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-15 — Express documentation admission checkpoint (GH-1080)
+
+Complete the Costly bet recorded in the original bounded documentation-lane entry; that entry and its evidence remain unchanged. By 2026-10-22, review any independently authorized documentation-mode landings for preserved bounds, exact PDDA receipts and recorded content/link/rendering checks. If none occurs, operational evidence remains unverified; do not launch work to manufacture it.
+
+Revisit on an admitted runtime/governance payload, qualified-byte drift, or a receipt/resume mismatch. Recommendation: iterate until authorized use supplies the signal; graduate the operational claim only with that evidence, and abandon the documentation lane if it cannot remain bounded. Roll back the driver, canonical skill and SOP together to restore the prior hotfix-only rule. This checkpoint schedules no automation or live run.
+
 ## 2026-10-15 — Bounded express documentation lane (GH-1080)
 
 Explicit documentation express requests now accept ordinary text and image updates without a critical-hotfix rationale or runtime coverage suite. `--docs-only` reuses the registered PDDA repository documentation gate; its exact command remains in existing commit-bound receipts and resume. Image assets count toward file limits, not binary newlines. Code/configuration, executable policy, symlinks and executable files remain outside documentation admission.

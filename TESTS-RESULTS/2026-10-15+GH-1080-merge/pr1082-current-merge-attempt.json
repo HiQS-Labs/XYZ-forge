@@ -1,0 +1,7 @@
+{
+  "rc": 1,
+  "stdout": "Auto-merging CHANGELOG.md\nCONFLICT (content): Merge conflict in CHANGELOG.md\nwarning: Cannot merge binary files: releases.db (HEAD vs. origin/development)\nAuto-merging releases.db\nCONFLICT (content): Merge conflict in releases.db\nAuto-merging releases.sql\nCONFLICT (content): Merge conflict in releases.sql\nAutomatic merge failed; fix conflicts and then commit the result.\n",
+  "stderr": "",
+  "head": "906b8fcfdf29703e017eb3d640c8abb753c0af6e",
+  "integration": "ded6208053d5a714fb6aac8a98744a6237d4dd95"
+}
