@@ -1,0 +1,12 @@
+{
+  "observedAt": "2026-10-15T04:06:31.961395+00:00",
+  "sourceCommit": "5c46c49b6580711300fc141c6896c1946028e4ab",
+  "originalLog": "initial-pooled-failure.log",
+  "retryLog": "sequential-retry.log",
+  "frameworkResult": "pass",
+  "limits": "Existing validator built-in retry, no additional case/run or test edit",
+  "originalCaptureAliases": {
+    "initial": "post-final-gh648-initial-failure.log",
+    "retry": "post-final-gh648-serial-retry.log"
+  }
+}

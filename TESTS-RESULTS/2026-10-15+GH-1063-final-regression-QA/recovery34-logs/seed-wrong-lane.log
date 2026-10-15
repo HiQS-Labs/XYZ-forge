@@ -1,0 +1,7 @@
+marathon-drive: phase p1 already reached a terminal relay (STATUS: Approved, token done) — skipping render/reseed, re-running only the pre-advance gate
+marathon-drive: relay approved — running pre-advance gate: true
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 0MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/malformed-wrong-lane-ja2vie1a/relay-system/malformed-wrong-lane-ja2vie1a/2026-10-15/marathon-p1-034416.md
+marathon-drive: memory-telemetry: phase p1-complete boundary — compressor=7698MB, swap_free=1643MB
+marathon-drive: phase p1 complete — lane_already_satisfied, reviewer approved, gate passed
+marathon-drive: result receipt written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/malformed-wrong-lane-ja2vie1a/result.json (outcome: approved, exit 0)
