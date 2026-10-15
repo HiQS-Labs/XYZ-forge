@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -72,11 +72,32 @@ ROUND: 1 / 3
 Read the canonical plan named above, all of skills/3-weekly/radar/SKILL.md and TESTS-RESULTS/2026-10-15+GH-1083/issue-source.json. No production skill edits have occurred. Review plan vs the actual issue, not just the author's summary. Scope: one skill Markdown payload, no runtime or new tests/runners/state stores. Routine governance/evidence accompanies it. Apply commensurate complexity and the ponytail lens; no enterprise machinery or speculative gates. Repo no-new-tests applies.
 
 Questions:
-1. Does the plan cover GitHub authority for work facts and live checking of doc hints across lenses, release membership, historical closure and shipped claims? Do the bounded read/manual checks distinguish a confirmed relationship from a link merely existing, unavailable from genuinely empty, and merged from open PRs?
+1. Does the plan cover GitHub authority for work facts and live checking of doc hints across lenses, release membership, historical closure and shipped claims? Do the bounded read/manual checks distinguish a confirmed relationship from a link merely existing, unavailable from genuinely empty, and merged from open PRs?  [Unverified — no citation]
 2. Does moving explicit rgt declarations to governing GitHub issues/PRs preserve Transform-never-inferred and honest adoption measurement, including missing PROJECT or unavailable/partial GitHub?
 3. Is the narrow landed/adopted CI SOP threshold exception justified and restricted to operational policy, with GitHub still owning adoption/status/version and supersession? Name any contradiction or missing acceptance check that would restore broad doc-wins authority.
 4. Are ratings 70/45/50/85 (neutral appeal, unknown recurrence trend), scope, rollback, manual red controls and post-merge Skills Army pointer supported? The normal docs route must not run a full runtime suite.
 
 Only this relay file writable. Do not edit the plan or skill. No git mutations, validate.sh, test/*.sh, pytest, fixtures or external writes. Use exact source reads; graph may be unavailable/stale in an isolated checkout. Append one reviewer block with graded, concrete findings, file:line evidence, swept file: yes/no, VERDICT: PASS|FAIL|PARKED and Basis. Behavior requests need Observed input / Affected scope / Falsifier. On approval set STATUS: Approved and NEXT: — and **done RELAY-GH1083-PLAN-20261015 --agent codex** with the env-pinned absolute tick; never merely release on approval. Otherwise release to codex-producer and set NEXT: Producer. No self-commit: the harness owns the scoped commit. Cumulative cap 3 rounds. Plan QA only; final dry run/verification is not yet performed.
+
+### Reviewer · Round 1
+
+Ship the plan to implementation.
+
+swept file: yes
+
+Read the entire 66-line plan, entire 680-line radar skill, and retained issue-source.json. Verify-tier review used exact local source: graph project enumeration found no index for this worktree; nearest `XYZ-forge` generation `2026-09-01T15:54:30Z` belongs to another checkout, and coverage returned missing/not-tracked for these paths. No graph completeness claim is relied on.
+
+- [Pass] The plan addresses the actual ask, including the less obvious downstream authority surfaces. `PROJECT/2-WORKING/GH-1083-RADAR-GITHUB-FIRST.md:25,30,46` explicitly covers state, kinship, recurrence, closure/reopens, milestone membership, historical reports, retirement and shipped claims, and rejects semantic kinship based on a reference alone. These are necessary replacements for `skills/3-weekly/radar/SKILL.md:147-179,395-399,497-499,562-564`. No additional plan-level defect found in the full-file sweep; the pre-existing precedence conflicts are already in the planned scope.
+- [Pass] Explicit GitHub `rgt:` declarations plus labelled unavailable-GitHub fallback are a minimal way to preserve declared Transform (`plan:47,57`) while removing PROJECT as a prerequisite (`plan:58`). Implementation must retain the existing never-infer and adoption caveats (`radar/SKILL.md:52-54,110-114`), updating their source/count wording consistently; partial reads cannot establish zero adoption (`plan:46-48`).
+- [Pass] The narrow SOP exception is justified by the issue's express allowance for stated exceptions (issue-source.json, Wanted 3: “Either move them to GitHub-first, or keep each as a stated, justified exception.”). `plan:40` reserves adoption/status/version and supersession to GitHub, so it does not preserve the current blanket doc-wins rule (`radar/SKILL.md:347`).
+- [Pass] Verification is appropriately bounded: nonempty dated inputs, live observations, conflict/fallback scenarios, textual red controls and a retained evidence destination (`plan:48,53-58`); final independent QA and actual docs-route classification remain required (`plan:49`). No new tests, runners or runtime mechanism; Easy rollback and merged-source Skills Army refresh are explicit (`plan:38,42,62`). The qualitative `70/45/50/85` rationale in `plan:34` supports neutral appeal and unknown recurrence; this review does not independently attest ledger persistence or the historical search counts.
+- [Nit] Strengthen the existing SOP acceptance row (`plan:57`) with the reverse conflict: live GitHub identifies a newer adopted policy while the landed doc still has older thresholds → newer adopted policy governs and the doc is drift. The current draft-versus-adopted case tests only one direction. Also record adoption as unknown on partial GitHub reads, rather than a measured zero. These clarify checks for behavior already required by `plan:40,46`; no new machinery is needed.
+
+Read-only live probe: `gh issue view 1083 --repo HiQS-Labs/XYZ-forge --json number,state,title,body,updatedAt` → exit 0; decisive output: `number: 1083`, `state: OPEN`, `updatedAt: 2026-10-15T18:58:41Z`, and the four Wanted requirements plus scope match the retained JSON. No executable fixtures or test gates run. Dry-run behavior and final gate results remain unverified until implementation; this is plan approval only.
+
+VERDICT: PASS
+Basis: The plan is implementable, minimal and aligned with all four issue requirements. Its stated exception cannot override work facts or adopted-policy supersession. No Blocker or Should finding remains; the optional acceptance clarification above can be incorporated during implementation.
+
+Relay closed (Approved), no further review turn needed. Producer proceeds with implementation and the planned final QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
