@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -77,5 +77,20 @@ Questions:
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PARKED
+Basis: Required seeded review input is absent. This is an input-delivery finding, not a rejection or approval of the implementation plan.
+swept file: no
+
+- [Blocker] Setup names `.relay-artifacts/GH-1076-CI-POLICY.md` and explicitly directs the reviewer to read the seeded artifact there. That file does not exist in this review worktree. The complete canonical `PROJECT/1-INBOX/GH-1076-CI-POLICY.md` was readable, but its presence does not establish that it is the intended immutable seed at plan source `3ccbb4e1`. Concrete fix: have the Producer/harness seed the named artifact from the intended plan revision, then return for whole-file review; do not substitute an unverified artifact identity.
+  Observed input: `.relay-artifacts/GH-1076-CI-POLICY.md` is absent; `.relay-artifacts/` contains only `gh182-claim-guards.md`.
+  Affected scope: this relay's required plan input and the resulting approval, not router/selector behavior.
+  Falsifier: the named seeded file exists, is nonempty, and is attributable to the intended plan revision; expected result is a readable complete plan suitable for the requested source-contract review.
+  Probe: `python3 -B -c 'from pathlib import Path; p=Path(".relay-artifacts/GH-1076-CI-POLICY.md"); print("seeded_artifact_exists=" + str(p.is_file())); q=Path("PROJECT/1-INBOX/GH-1076-CI-POLICY.md"); print("canonical_plan_exists=" + str(q.is_file())); raise SystemExit(0 if p.is_file() else 2)'` → exit **2**, decisive output: `seeded_artifact_exists=False`, `canonical_plan_exists=True`. Initial `cat .relay-artifacts/GH-1076-CI-POLICY.md` also returned `No such file or directory`.
+- [Unverified — needs clone run] No suites, executable fixtures, or mutation probes ran. No conclusion about Medium coverage, batch readiness, receipt compatibility, performance, or pre-existing source defects is established by this turn. The requested whole-file/source-contract sweep remains outstanding.
+
+Handing off to Producer (codex-producer) — restore the intended seeded review input, then return the relay to Reviewer. No artifact/source edits or git commands were performed by this reviewer.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
