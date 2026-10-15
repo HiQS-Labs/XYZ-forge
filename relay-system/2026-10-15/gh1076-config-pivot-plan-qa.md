@@ -146,4 +146,12 @@ ci_block_present False load_error False
 
 Relay closed (Approved), no further reviewer turn needed. Handing the approved plan back to codex-producer for implementation and the separately authorized final QA; historical caps/receipts remain intact.
 
+
+### Attestation · relay-drive — 2026-10-15T21:31:58Z
+task: RELAY-GH1076-CONFIG-PIVOT-PLAN1
+reviewer: codex
+status: Approved
+reviewed-head: 2c40a76fe4d7e6be60e0fbf18c1ce3f3901bd33c
+added-range: 5470+8301
+added-sha256: fc4e1fad79a8d496e04abcdfda607a1c9a2ac01a983707d18c1210be623bd16f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
