@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -81,3 +81,32 @@ Current-base integration: canonical B1 initially handed off CHANGELOG because in
 Read the relevant artifacts in full, verify missing-JSONL falsifier and evidence attribution/limits, current-base preservation and original-history integrity. No new runtime review is necessary solely for this metadata correction; report any concrete in-scope defect if seen. Do not call earlier full gate a current-head gate: new normal publication after this integration, exact-head hosted checks/reviews, premerge receipts and destination macOS qualification remain Producer obligations. No actual cleanup occurred.
 
 Read-only peer: only this new relay file writable, no Git command, network, test/validate/pytest or executable fixture. Narrow file/JSON/hash probes with bytecode disabled allowed. Append at absolute EOF exact heading `### Reviewer (codex) · Round 1`, `VERDICT: PASS` or FAIL, nonempty Basis and `swept file: yes` or no. On PASS header Approved/NEXT —, tick done RELAY-PR1061-EXTENSION-20261015. On FAIL leave truthful findings and hand off; only one extension round remains. Never edit original relay or counters. Handing off to Reviewer.
+
+### Reviewer (codex) · Round 1
+
+VERDICT: PASS
+Basis: The original Round3 receipt-format finding is closed. The evidence-only correction meets the relevant canonical GH1059 acceptance while retaining original history and verification limits. No outstanding Blocker/Should or additional material pre-existing defect was found in this bounded evidence sweep. Current-head publication, hosted checks and destination qualification remain Producer obligations.
+swept file: yes
+
+Evidence paths below are relative to `TESTS-RESULTS/2026-10-15+GH-1059-review-corrections/` unless fully qualified.
+
+- [Pass] The exact missing-JSONL falsifier is satisfied. `provenance.jsonl:1` retains source1fb2d9f4; `:2` and `:3` attribute manual47/cleanup180 to fb6b7f28; `:4` attributes manual48 to359f7766 and expressly excludes full180/publication qualification at that source. `all-native/shared-guard-results.json` retains matching before/after identity and rc0 for both earlier checks. `all-native/shared-guard-cleanup180.log:1921` reports “Ran 180 tests in 286.110s”, followed by “OK” at1923; `all-native/final-manual48.log:293` reports “Manual cases: 48”. Recorded inputs retain ordinary/published guard-removal red controls and the exit0 warning case; `all-native/git-warning-proof.json` retains the concrete warning. These are producer executions, not reviewer reruns. No new suite/case, runtime change or rerun is requested.
+  Reviewer receipt probe, with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`:
+  ```sh
+  python3 -c 'import json; from pathlib import Path; p=Path("TESTS-RESULTS/2026-10-15+GH-1059-review-corrections/provenance.jsonl"); r=[json.loads(s) for s in p.read_text().splitlines() if s.strip()]; want={("fb6b7f28",47),("fb6b7f28",180),("359f7766",48)}; have=lambda rows:{(x.get("source","")[:8],x.get("passed")) for x in rows if x.get("rc")==0}; assert r and want<=have(r) and not want<=have(r[:1]); print("records:",len(r),"; newer receipts: 3/3; historical-only control: fails")'
+  ```
+  Exit **0**; output: `records: 4 ; newer receipts: 3/3; historical-only control: fails`. The in-memory historical-only control fails the receipt predicate without altering an artifact.
+- [Pass] Earlier full publication is accurately bounded. `publication/provenance.jsonl:1` attributes409/409 to e4a8af1e as local macOS parallel publication, explicitly not hosted landing/main promotion; `:2` adds commit/PR/result identity for the same run. `publication/attribution-correction.md:3` retains the earlier reader refusal and `:5` explains the alias without a rerun. The raw log records both initial failures and passing sequential retries (`publication/normal-full-publication.log:419`,425,431),409/409 at505 and1223s at915. `publication/result.json` retains identical before/after identity. The existing reader receipt at `publication/provenance.jsonl:3` belongs to1c4bc868. None is a current integrated-head full-gate result.
+- [Pass] Integration history is explicit. `current-base/pr1061-second-current-base-resolution.json` retains the CHANGELOG refusal; `pr1061-second-changelog-preservation.json` records byte-identical common sections and retention of both sides' additions. `pr1061-second-ledger-resolution.json` records higher-generation ours plus writer replay of GH1052. `current-base/preservation.json:5` records incoming business-content preservation, with only GH1052 identity/timestamps reminted and issue1059 added; `:75` records incoming view preservation. `current-base/ledger-check.log` ends “check: clean (0 failures, 9 warning(s))”. These are retained producer comparisons/checks, not independently rerun Git merge-base or ledger-writer results.
+- [Pass] Current runtime/policy and original relay bytes match all seven retained digests (`current-base/preservation.json:66`,74). The original `relay-system/2026-10-14/gh1059-final.codex.md:7` retains Producer/Escalated3/3 and the failed review. `current-base/qa-extension.json:4` preserves that budget and identifies cumulative round4 within two authorized extension rounds. No original counter or earlier turn was edited.
+  Reviewer hash probe under the same environment:
+  ```sh
+  python3 -c 'import hashlib,json; from pathlib import Path; p=json.loads(Path("TESTS-RESULTS/2026-10-15+GH-1059-review-corrections/current-base/preservation.json").read_text()); checks=dict(p["runtimePolicySha256UnchangedFromPrior"]); checks["relay-system/2026-10-14/gh1059-final.codex.md"]=p["originalEscalated3of3FileSha256"]; assert len(checks)==7 and all(hashlib.sha256(Path(f).read_bytes()).hexdigest()==h for f,h in checks.items()); print("retained SHA256 matches: 7/7")'
+  ```
+  Exit **0**; output: `retained SHA256 matches: 7/7`. This checks seeded bytes against retained digests, not an independently fetched prior revision.
+- [Unverified — needs clone run] Normal publication after current integration, exact-head hosted checks/reviews, premerge receipts and destination macOS qualification remain Producer obligations. Earlier runs attest their named revisions. No actual cleanup is established here.
+
+Coverage and limits: reviewed the original relay, canonical acceptance, correction summary, receipt/identity/result metadata, recorded native manual inputs/results, raw-log summaries and current-base records; parsed retained manual output and full publication telemetry. No additional material defect was found in these evidence files. No new runtime sweep was required for this metadata-only extension; the original Round3 owns the prior full runtime/policy sweep. Verify-tier graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation2026-10-13T06:40:42Z, describes the maintained primary rather than this worktree. Coverage has missing metadata for the new plan/relay and no indexed correction scope; direct seeded files supplied authority. No Git command, network request, suite, pytest, executable fixture, repository import or gate ran. An initial file-only parser exited1 because it assumed unittest's OK was the last line; OK is at1923 before buffered stdout, and the corrected parser exited0. This was a reviewer parser assumption, not a product failure.
+
+Relay closed (Approved), no further review turn needed. Handing completion to Producer (codex-producer) for current-head gates, hosted/premerge evidence and destination qualification before authorized merge or cleanup.
+
