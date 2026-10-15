@@ -16,7 +16,7 @@ doc_type: feature
 
 | What was just completed | What's next |
 |---|---|
-| Single-file skill and index validated; clarified scenario reviewed and attested Approved. | Publish through the documentation gate; merge/deploy stay separate. |
+| Skill, clarified example, independent QA and documentation gate complete; PR #1078 opened for final receipts. | Verify final remote head/checks, mark ready and retire owned safe clones; merge/deploy stay separate. |
 
 ## Scope and fit
 
@@ -69,3 +69,8 @@ caught the implicit spike-to-plan pointer gap as well as explicit follow-ups and
 exclusions. Round1 was not attested. Format validation passes; codex prerequisite43/0 ran in the
 independent full helper with unchanged identity. Documentation gate remains the publication boundary;
 no new suite, installer or full runtime run is needed.
+
+Publication: https://github.com/HiQS-Labs/XYZ-forge/pull/1078 into development. Normal documentation
+gate passed73s at a89280c in the independent full helper, with before/after identity unchanged.
+This final metadata/evidence commit uses the same normal documentation route. No full runtime
+suite was invoked and no direct express landing or Skills Army deployment occurred.
