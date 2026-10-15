@@ -337,7 +337,8 @@ any test suite (GH-831): the caller still runs the sweep and writes the verdict.
 - **Every outcome, at the branch where it happens.**
   - The remote merge is recorded with its merge commit as soon as `gh pr merge` is verified, and the
     reconcile result separately.
-  - Hold-label, closed and draft skips get named statuses, as do blocked, deferred, parked and
+  - Hold-label and draft skips get named statuses (a PR seen closed is recorded `closed`, which is
+    terminal), as do blocked, deferred, parked and
     handed-off PRs.
   - Any hard stop is recorded against the PR in hand, with its error lines. PRs never reached stay
     `unattempted`.

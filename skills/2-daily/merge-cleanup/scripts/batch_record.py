@@ -15,6 +15,7 @@ this module has no wrapper of its own and never imports the driver.
 import importlib.util
 import json
 import os
+import shlex
 import sys
 import tempfile
 import time
@@ -101,7 +102,8 @@ def qa_pending(rec: Dict[str, Any]) -> bool:
 def continuable(rec: Dict[str, Any]) -> bool:
     for row in rec["planned"]:
         o = rec["outcomes"].get(str(row["pr"]), {})
-        if o.get("status") == "closed" or (o.get("status") == "merged" and o.get("reconcile") == "ok"):
+        status = o.get("status") or ""
+        if status == "closed" or status.startswith("closed:") or (status == "merged" and o.get("reconcile") == "ok"):
             continue
         return True
     return False
@@ -299,7 +301,7 @@ def finalize_sweep_inputs(rec: Dict[str, Any], primary: Path, origin: str) -> No
         "range": rng,
         "shared_files": {f: sorted(prs) for f, prs in sorted(owners.items()) if len(prs) > 1},
         "conflict_sites": conflicts, "gate": gate, "gate_reason": reason,
-        "command": f"git clone --no-local {primary} <tmp> && cd <tmp> && bash {gate}",
+        "command": f"git clone --no-local {shlex.quote(str(primary))} <tmp> && cd <tmp> && bash {gate}",
     }
     save(rec)
 

@@ -1033,8 +1033,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 continue
             if info.get("state") != "OPEN":
                 log(f"PR #{p_num}: state is {info.get('state')} — skipped")
-                if track is not None:
-                    track["skips"][p_num] = f"skipped: state {info.get('state')}"
+                if track is not None:  # GH-1064: positively observed closed/merged is terminal
+                    track["skips"][p_num] = ("closed" if info.get("state") == "CLOSED"
+                                             else f"closed: {str(info.get('state')).lower()} outside this run")
                 continue
             if (info.get("baseRefName") or "") != branch:
                 log_err(f"PR #{p_num} targets '{info.get('baseRefName')}', not '{branch}' — stopping")

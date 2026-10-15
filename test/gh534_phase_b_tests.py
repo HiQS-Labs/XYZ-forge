@@ -23,6 +23,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "skills" / "2-daily" / "merge-cleanup" / "scripts"))
 
+import batch_record  # noqa: E402
 import ledger_merge  # noqa: E402
 import merge_cleanup  # noqa: E402
 import scan_clones  # noqa: E402
@@ -228,14 +229,14 @@ class LedgerFixture(unittest.TestCase):
         self.save()
         return head
 
-    def run_main(self, execute=True, extra=()):
+    def run_main(self, execute=True, extra=(), teardown_ok=True):
         argv = ["merge_cleanup.py", "--primary", str(self.primary), "--root", str(self.tmp / "no-roots")] + list(extra)
         if execute:
             argv.append("--execute")
         err = io.StringIO()
         with mock.patch.object(sys, "argv", argv), \
              mock.patch.object(merge_cleanup, "prune_dangling_skill_symlinks") as pruner, \
-             mock.patch.object(merge_cleanup, "teardown_checkout") as teardown, \
+             mock.patch.object(merge_cleanup, "teardown_checkout", return_value=teardown_ok) as teardown, \
              mock.patch.object(merge_cleanup, "scan_directories", return_value=[]), \
              contextlib.redirect_stderr(err):
             rc = merge_cleanup.main()
@@ -737,7 +738,10 @@ class TestBatchIssue(LedgerFixture):
     def verdict(self, text):
         f = self.tmp / f"verdict-{len(os.listdir(self.tmp))}.md"
         f.write_text(text)
-        return self.run_main(execute=False, extra=["--record-sweep", str(f)])
+        never = AssertionError("--record-sweep reached Phase 0 / discovery")  # it must do neither
+        with mock.patch.object(merge_cleanup, "prepare_primary_landing", side_effect=never), \
+             mock.patch.object(merge_cleanup, "fetch_open_prs_with_retry", side_effect=never):
+            return self.run_main(execute=False, extra=["--record-sweep", str(f)])
 
     def oid(self, n):
         return self.load()["prs"][str(n)]["mergeCommit"]
@@ -761,6 +765,11 @@ class TestBatchIssue(LedgerFixture):
         self.assertEqual(rec["sweep_inputs"]["shared_files"], {"releases.sql": [1, 2]}, "a single-PR file was listed as shared")
         self.assertIn("QA pending", body)
         self.pruner.assert_called_once()  # Phase 6 ran before exit 4
+        # A Phase 6 failure outranks QA pending: the QA-only resume tears down a failing checkout → 2.
+        doomed = [{"disposition": "SAFE_REMOVE_CLONE", "path": str(self.tmp / "doomed")}]
+        with mock.patch.object(merge_cleanup, "refresh_for_teardown", return_value=doomed):
+            self.assertEqual(self.run_main(extra=["--resume"], teardown_ok=False), 2, self.err)
+        self.assertTrue(batch_record.qa_pending(batch_of(self.primary)), "QA is still pending under the 2")
 
     def test_resume_continues_the_batch_and_a_new_landing_reopens_qa(self):
         """R2/R6/R7: one landed + one handed off, a partial verdict, a repaired resume, then QA-only resumes."""
