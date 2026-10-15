@@ -1,0 +1,17 @@
+{
+  "observed": "2026-10-15T23:20:28.783826+00:00",
+  "symptom": "Unified exec transport disconnected; executor key changed during recovery",
+  "primitive_observations": [
+    "Exact task closeout worker absent from process table",
+    "No process holds own monitor log",
+    "GitHub run state read through unchanged existing access",
+    "Prior scheduled-catchup receipt existed since 21:40 UTC in coordinator; own historical artifact, not a new writer"
+  ],
+  "root_cause_scope": "Local exec transport/session recovery lost the worker processes. Underlying executor key change cause is outside repository evidence; no repository/CI failure inferred.",
+  "safe_recovery": "Keep existing hosted run; resume monitoring only for remainder of original 90-minute window. Preserve/copy known own catch-up receipt and exclude its exact filename locally so closeout guard sees source cleanliness; no files deleted. Restart closeout only after process absence proof.",
+  "run": 38815406932,
+  "repair_or_qa_budget_change": false,
+  "original_deadline": "2026-10-15T23:41:41+00:00",
+  "recovered_start": "2026-10-15T23:21:15.127029+00:00",
+  "remaining_seconds": 1225.872971
+}

@@ -1,0 +1,5 @@
+{
+  "pr": 1068,
+  "head": "34ebdd83b3fe5cdcfe3fc540d20c410d88f286f0",
+  "error": "No committed passing test receipt at HEAD matches PR #1068 in TESTS-RESULTS/ (AGENTS.md: uncommitted provenance is not proof)."
+}

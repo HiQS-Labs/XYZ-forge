@@ -19,3 +19,7 @@ the batch was created. The sweep's `shared_files` can then miss overlaps between
 
 Smallest fix: in `extend()`, refresh `files` and `soft` for already-planned PRs from the current queue.
 Keep order and outcomes unchanged. Verify with a manual check (GH-831).
+
+## Merge evidence
+
+- PR #1069 merged 2026-10-15 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

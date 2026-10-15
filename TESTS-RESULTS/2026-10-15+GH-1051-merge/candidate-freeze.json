@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-10-15T21:45:29.106358+00:00",
+  "pr": 1053,
+  "remote_member_head": "99464f9c823d900d4028875d7b249ce44de7dde1",
+  "integration_base": "14081d61d3c42e662479a53637c9399eb772e8e2",
+  "reviewed_candidate": "b74588d1587d9e379cbe9ecc0169901a7fc73efe",
+  "candidate_tree": "0d247f303278cc30eb8517eb871af369fea848e8",
+  "final_review_round": "2/3",
+  "mechanism": "native internal Codex peer /root/gh1051_final_r2, same mechanism as original1/3; not Forge relay attestation",
+  "review_receipt": "TESTS-RESULTS/2026-10-15+GH-1051-merge/final-review-r2.md",
+  "policy_sha256": {
+    ".github/workflows/pages.yml": "19596de4c9c8291857038f488dec79f3588ccb9d5e6e3e85ad844eec8370a6c5",
+    "utils/ci-route.sh": "9d2cc686a6ae9ac3e071e73a8a60b2096c40f0b52ed3c17c43ea09c83b946565",
+    "githooks/pre-push": "29edf96df79282e39f497d89f222c30ad27e71eea35ecf88dfe5baee4d474268",
+    "validate.sh": "b2cb6d1ef04b48f6a6f29e486c92476054fe29c296b21a08ff6ce190a6108dae",
+    "ci-local.sh": "d386f3d0dd0304b26d32a3333d90a246ce07511fa947ac8ad1232cb0b5328672",
+    "utils/py/wave_reconcile.py": "a5bcd0d369b651191b5d8b06ec85e5f8821faa25ed2c69343286d8f8decbd3ee"
+  },
+  "rollback": "Scoped normal PR revert; no environment policy change",
+  "publication_gate": "normal installed pre-push; full current publication remains pending",
+  "later_carriers": "TESTS-RESULTS-only descendants may carry receipts; verify source continuity and actual published head before merge",
+  "invalidates": "New source/ledger/base or policy/environment changes require affected evidence refresh; no cap reset",
+  "batch": "https://github.com/HiQS-Labs/XYZ-forge/issues/1086"
+}

@@ -1,0 +1,12 @@
+== test: gh251-validate-pytest-skip ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh251-validate-pytest-skip.XXXXXX.Jt4dCEfShB
+  PASS: validate.sh invokes pytest when pytest is importable
+  PASS: python:test_python_layer.py is reported passed
+  PASS: absent pytest outputs the documented named SKIPPED line
+  PASS: absent pytest is tracked in the SKIPPED summary list
+  PASS: absent pytest does not land in FAILED
+/private/tmp/XYZ-forge-gh1051-pages-development-2026-10-12-verify/test/gh251-validate-pytest-skip.sh: line 98: printf: write error: Broken pipe
+  FAIL: missing yaml diagnostic regressed (exit 0): validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+ENVIRONMENT FAULT: python3 (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh251-validate-pytest-skip.XXXXXX.Jt4dCEfShB/no-yaml/python3) cannot import yaml — put ~/.cache/xyz-forge-test-venv/bin first on PATH (gate-toolchain); NOT promotion evidence (GH-732)
+validate.sh: PARALLEL mode 4-wide — auto-detected 10 cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
