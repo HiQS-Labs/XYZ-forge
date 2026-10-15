@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""express.py — /express hotfix fast lane driver (GH-267).
+"""express.py — /express hotfix and documentation fast lane driver (GH-267/GH-1080).
 
 One motion, per the design on #267 (v2): fix -> releases DB -> PDDA docs ->
 land on development -> reconcile. This driver is the mechanized form of SOP.md
 §4's express-to-development carve-out: the ONLY sanctioned agent path to a
 direct development landing without a human review loop, because the express
-qualification checks and the fix's registered regression suite are asserted up
-front. It does NOT run the full pre-push gate (validate.sh) — that bypass is the
+qualification checks and an existing registered verifier are asserted up front.
+Code hotfixes require behavior coverage; --docs-only selects the existing PDDA
+docs suite for ordinary documentation text and images. It does NOT run the full pre-push gate (validate.sh) — that bypass is the
 lane's design (GH-267/GH-516) — and every landing leaves a TESTS-RESULTS receipt
 saying exactly that (`gate: express-suite`, GH-592).
 
@@ -81,6 +82,27 @@ RELEASES_PROJECTIONS = (
 DRIVER_GENERATED = RELEASES_PROJECTIONS
 DEFAULT_MAX_FILES = 4
 DEFAULT_MAX_INSERTIONS = 150
+DOCS_SUITE = "test/pdda-repo-contract.sh"
+DOCS_IMAGES = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")
+
+
+def is_documentation_update(root, path):
+    """Ordinary prose/assets, not executable policy or text-shaped runtime inputs."""
+    p = Path(path)
+    ordinary = (path in ("README.md", "CHANGELOG.md")
+                or path.startswith(("docs/", "PROJECT/1-INBOX/", "PROJECT/2-WORKING/",
+                                    "PROJECT/3-COMPLETED/", "PROJECT/4-MISC/"))
+                or (path.startswith("assets/") and p.suffix.lower() in DOCS_IMAGES))
+    if not ordinary or p.suffix.lower() not in (".md", ".txt", ".rst") + DOCS_IMAGES:
+        return False
+    if p.name in ("AGENTS.md", "CLAUDE.md", "SKILL.md") or p.name.endswith(".generated.md"):
+        return False
+    full = Path(root, path)
+    # Check the old mode too: deleting/renaming an executable is still a code change.
+    old_mode = git(root, "ls-tree", "origin/development", "--", path).stdout.split(" ", 1)[0]
+    if old_mode in ("100755", "120000", "160000"):
+        return False
+    return not full.is_symlink() and (not full.exists() or (full.is_file() and not full.stat().st_mode & 0o111))
 
 
 def now_iso():
@@ -337,12 +359,12 @@ def change_paths(root):
     paths = set()
     dev_rev = git(root, "rev-parse", "origin/development", check=False)
     if dev_rev.returncode == 0:
-        d = git(root, "diff", "--name-only", "origin/development..HEAD", check=False).stdout
+        d = git(root, "diff", "--no-renames", "--name-only", "origin/development..HEAD", check=False).stdout
         for line in d.splitlines():
             line = line.strip().strip('"')
             if line:
                 paths.add(line)
-    porcelain = git(root, "status", "--porcelain=v1", "-uall", check=False).stdout
+    porcelain = git(root, "status", "--no-renames", "--porcelain=v1", "-uall", check=False).stdout
     for line in porcelain.splitlines():
         if not line.strip():
             continue
@@ -402,7 +424,7 @@ def is_doc_path(root, issue, p):
     return p == "CHANGELOG.md" or p == capture_doc_path(root, issue)
 
 
-def insertions(root, issue, paths, expect_driver=frozenset()):
+def insertions(root, issue, paths, expect_driver=frozenset(), docs_only=False):
     total = 0
     numstat = git(root, "diff", "origin/development", "--numstat", check=False).stdout
     tracked = {}
@@ -413,6 +435,8 @@ def insertions(root, issue, paths, expect_driver=frozenset()):
     for p in paths:
         if is_doc_path(root, issue, p) or p in expect_driver:
             continue
+        if docs_only and Path(p).suffix.lower() in DOCS_IMAGES:
+            continue  # image assets count as files, not arbitrary binary newline counts
         if p in tracked:
             total += tracked[p]
         elif os.path.isfile(os.path.join(root, p)):  # untracked new file
@@ -477,6 +501,12 @@ def cmd_check(args, expect_driver=frozenset()):
                    "projection refresh may carry it" % p, issue=args.issue)
 
     core = [p for p in paths if not is_doc_path(root, args.issue, p) and p not in expect_driver]
+    docs_only = getattr(args, "docs_only", False)
+    if docs_only:
+        for p in core:
+            if not is_documentation_update(root, p):
+                refuse(root, "docs-only", "%s is not an ordinary documentation text/image update; "
+                       "use the normal PR or code hotfix lane" % p, issue=args.issue)
 
     # Step 2 — hard refusals. Frozen twins, kernel surfaces, containment.
     for p in core:
@@ -505,7 +535,7 @@ def cmd_check(args, expect_driver=frozenset()):
         refuse(root, "too-many-files",
                "%d core files > bound %d — route to the normal PR lane" % (len(core), args.max_files),
                issue=args.issue)
-    ins = insertions(root, args.issue, paths, expect_driver)
+    ins = insertions(root, args.issue, paths, expect_driver, docs_only=docs_only)
     if ins > args.max_insertions:
         refuse(root, "too-large",
                "%d insertions > bound %d — route to the normal PR lane" % (ins, args.max_insertions),
@@ -514,7 +544,7 @@ def cmd_check(args, expect_driver=frozenset()):
     # subsystem for the independent single-subsystem rule.
     non_test = [p for p in core if not p.startswith(("test/", "PROJECT/"))]
     tops = {p.split("/")[0] for p in non_test}
-    if len(tops) > 1:
+    if len(tops) > 1 and not docs_only:
         allow_multi = getattr(args, "allow_multi_subsystem", False)
         micro_diff = (len(core) <= 2 and ins <= 30)
         if not allow_multi and not micro_diff:
@@ -549,7 +579,7 @@ def cmd_check(args, expect_driver=frozenset()):
     print("express-check%s: PASS" % (" [dry-run]" if getattr(args, "dry_run", False) else ""))
     print("  issue   : #%s %s" % (args.issue, meta.get("title", "")))
     print("  files   : %d core, %d insertions (bounds %d/%d)" % (len(core), ins, args.max_files, args.max_insertions))
-    print("  suite   : %s (registered)" % suite)
+    print("  suite   : %s (%s)" % (suite, "registered docs gate; no runtime coverage claim" if docs_only else "registered"))
     print("  changes : %s" % ", ".join(paths))
     return dict(issue=args.issue, title=meta.get("title", ""), paths=paths, suite=suite,
                 insertions=ins, branch=branch)
@@ -569,6 +599,11 @@ def cmd_docs(args):
     if not (args.suite or "").strip():
         die("express-docs: --suite is required (the existing registered suite that covers the fix, e.g. "
             "test/<existing-suite>.sh) — nothing was written")
+    docs_only = getattr(args, "docs_only", False)
+    qualification = ("Documentation update qualified for /express; docs gate {suite}; no runtime coverage claim"
+                     if docs_only else "Fix qualified for /express; existing suite {suite} covers it")
+    acceptance = ("Documentation gate {suite} verifies doc hygiene, not runtime behavior; manual content/link/rendering evidence belongs in the operator summary"
+                  if docs_only else "Existing suite {suite} covers the fix and is its landing gate; no new suite (GH-831)")
     iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state,title,url"])
     meta = json.loads(iv.stdout)
 
@@ -590,13 +625,13 @@ updated: {d}
 owner: operator (via /express)
 gh_issue: {n}
 source: {src}
-doc_type: bugfix
+doc_type: {doc_type}
 complexity: 2
 risk: 2
 effort: 2
 ratings_provisional: true
 goal: >
-  Express hotfix (GH-267 lane): {t}
+  Express {kind} (GH-267 lane): {t}
 ---
 
 # GH-{n} — {t}
@@ -605,12 +640,12 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Fix qualified for /express; existing suite {suite} covers it (green asserted at landing, Step 7; receipt in TESTS-RESULTS/) | Reconcile promotes this doc when issue #{n} closes |
+| {qualification} (green asserted at landing, Step 7; receipt in TESTS-RESULTS/) | Reconcile promotes this doc when issue #{n} closes |
 
 ## Acceptance Criteria
 
-- [x] Existing suite {suite} covers the fix and is its landing gate; no new suite (GH-831). (Step 7 refuses to land unless it is green; the TESTS-RESULTS receipt records the run — express-suite, not the full pre-push gate).
-- [x] Single-subsystem, risk-bounded diff (express qualification passed).
+- [x] {acceptance}. (Step 7 refuses to land unless it is green; the TESTS-RESULTS receipt records the run — express-suite, not the full pre-push gate).
+- [x] Bounded diff (express qualification passed).
 
 ## Merge evidence
 
@@ -621,14 +656,17 @@ goal: >
 - Landed via the /express fast lane (GH-267): the fix, its suite, this doc, and the
   CHANGELOG entry moved as one motion; consult the .tick express-fired event for the
   run's receipts. Operator-supplied summary: {sm}
-""".format(n=args.issue, t=meta["title"], d=today, src=meta["url"], suite=args.suite, sm=args.summary or "(none)")
+""".format(n=args.issue, t=meta["title"], d=today, src=meta["url"], suite=args.suite, sm=args.summary or "(none)",
+           kind="documentation update" if docs_only else "hotfix", doc_type="documentation" if docs_only else "bugfix",
+           qualification=qualification.format(suite=args.suite), acceptance=acceptance.format(suite=args.suite))
     with open(doc, "w", encoding="utf-8") as f:
         f.write(body)
 
     # CHANGELOG — newest-first under a fresh dated Unreleased section.
     cl = os.path.join(root, "CHANGELOG.md")
-    bullet = ("- **GH-%d: %s.** (express hotfix, GH-267 lane; "
-              "existing suite %s as the landing gate.)\n" % (args.issue, meta["title"], normalize_suite(args.suite)))
+    bullet = ("- **GH-%d: %s.** (express %s, GH-267 lane; "
+              "existing suite %s as the landing gate.)\n" % (args.issue, meta["title"],
+              "documentation update" if docs_only else "hotfix", normalize_suite(args.suite)))
     entry = "## [Unreleased] - %s\n\n### Fixed\n%s\n" % (today, bullet)
     with open(cl, encoding="utf-8", errors="replace") as f:
         cbody = f.read()
@@ -728,7 +766,7 @@ def cmd_ledger(args):
             refuse(root, "no-active-release", "`releases next` names no release gid: %s" % nxt.strip(), issue=args.issue)
         rel = m.group(1)
     run_releases(root, "manifest", "dial-in", meta["url"], "--gid", rel,
-                 "--reason", "express hotfix %s (GH-267 lane)" % datetime.date.today().isoformat())
+                 "--reason", "express %s (GH-267 lane)" % datetime.date.today().isoformat())
     print("express-ledger: dialed into %s" % rel)
     return dict(release=rel)
 
@@ -801,8 +839,9 @@ def cmd_land(args):
 
     # Step 8 — commit the one-motion change set (explicit pathspecs, never -A).
     git(root, "add", "--", *sorted(after))
-    msg = ("fix(GH-%d): %s [express]\n\nExpress lane (GH-267): fix + suite + born-complete doc + "
-           "CHANGELOG in one motion.\n\nCloses #%d\n" % (args.issue, state["title"], args.issue))
+    msg = ("%s(GH-%d): %s [express]\n\nExpress lane (GH-267): update + suite + born-complete doc + "
+           "CHANGELOG in one motion.\n\nCloses #%d\n" %
+           ("docs" if getattr(args, "docs_only", False) else "fix", args.issue, state["title"], args.issue))
     git(root, "commit", "-m", msg)
     sha = git(root, "rev-parse", "HEAD").stdout.strip()
     # Step 7 ran the registered suite; the FULL pre-push gate is bypassed by lane design
@@ -866,7 +905,7 @@ def closeout(root, args, sha, suite, state):
     iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state"], check=False)
     if iv.returncode == 0 and json.loads(iv.stdout)["state"] != "CLOSED":
         gh(["issue", "close", str(args.issue), "-R", args.repo,
-            "--comment", "Express hotfix landed directly on development: %s (suite %s green)" % (sha, suite)])
+            "--comment", "Express update landed directly on development: %s (suite %s green)" % (sha, suite)])
 
     # wave_reconcile refuses a dirty tree. Persist the ship transaction first,
     # then reconcile from the clean committed development state.
@@ -1154,7 +1193,7 @@ def cmd_resume(args):
     iv = gh(["issue", "view", str(issue), "-R", args.repo, "--json", "state"], check=False)
     if iv.returncode == 0 and json.loads(iv.stdout).get("state") != "CLOSED":
         gh(["issue", "close", str(issue), "-R", args.repo,
-            "--comment", "Express hotfix landed directly on development: %s (resumed closeout)" % sha])
+            "--comment", "Express update landed directly on development: %s (resumed closeout)" % sha])
         print("express-resume: closed issue #%d" % issue)
 
     # 5. Ship manifest item if still dialed_in
@@ -1209,6 +1248,8 @@ def main():
         p.add_argument("--repo", default=args_repo())
         p.add_argument("--issue", type=int, required=issue_required)
         p.add_argument("--suite")
+        p.add_argument("--docs-only", action="store_true",
+                       help="ordinary documentation text/images; use the existing PDDA docs suite, not runtime coverage")
         p.add_argument("--max-files", type=int, default=DEFAULT_MAX_FILES)
         p.add_argument("--max-insertions", type=int, default=DEFAULT_MAX_INSERTIONS)
         p.add_argument("--allow-multi-subsystem", action="store_true", default=False,
@@ -1240,7 +1281,8 @@ def main():
     p = sub.add_parser("resume", help="recover/resume an interrupted express landing and complete reconciliation")
     p.add_argument("--issue", type=int, required=True, help="GH issue number")
     p.add_argument("--sha", help="commit SHA landed on development (resolved from git log if omitted)")
-    p.add_argument("--suite", required=True,
+    p.add_argument("--docs-only", action="store_true", help="resume the documentation lane with its fixed docs suite")
+    p.add_argument("--suite",
                    help="the existing registered suite the landing ran (GH-592: resume validates the "
                         "committed receipt against it; it never runs a suite or writes evidence)")
     p.add_argument("--repo", default=args_repo())
@@ -1257,7 +1299,11 @@ def main():
     p.set_defaults(fn=cmd_run)
 
     args = ap.parse_args()
-    if getattr(args, "suite", None) is None and args.cmd in ("check", "land", "run"):
+    if getattr(args, "docs_only", False):
+        if args.suite and normalize_suite(args.suite) != DOCS_SUITE:
+            ap.error("--docs-only uses %s; do not substitute a runtime suite" % DOCS_SUITE)
+        args.suite = DOCS_SUITE
+    if getattr(args, "suite", None) is None and args.cmd in ("check", "land", "run", "resume"):
         ap.error("--suite is required for %s (a hotfix without its regression suite is a claim, not a fix)" % args.cmd)
     args.fn(args)
 

@@ -1,9 +1,9 @@
 ---
 name: express
 description: >-
-  Hotfix fast lane (GH-267/GH-516) for an explicit /express, "express this hotfix",
-  or "express GH-N" request. Carries a critical, risk-bounded fix, registered
-  existing covering suite, releases-ledger updates, born-complete PDDA doc, CHANGELOG,
+  Fast lane for explicit /express requests: critical, risk-bounded code hotfixes
+  with an existing covering suite, or small documentation text/image updates with
+  --docs-only and the existing PDDA docs suite. Carries releases-ledger updates, born-complete PDDA doc, CHANGELOG,
   landing, and reconciliation in one operator-authorized motion. Requires a task
   clone branched from origin/development (carrying <= 2 local commits) with the
   canonical pre-push gate installed, authenticated gh, and the root releases ledger.
@@ -16,9 +16,9 @@ description: >-
   issues. Do not use for Costly or one-way-door changes.
 ---
 
-# /express — hotfix fast lane through the whole paper trail
+# /express — bounded hotfix and documentation fast lane
 
-One verb, one motion: the fix, the existing suite that covers it, the ledger writes, the
+One motion: the update, its existing verifier, the ledger writes, the
 born-complete capture doc, the CHANGELOG entry, the landing, and the
 reconciliation — all before the operator's coffee cools. The guardrails are the
 skill; the speed is a side effect.
@@ -29,12 +29,12 @@ skill; the speed is a side effect.
 
 > **Express Discipline:**
 > 1. **Verify clone & pre-flight bounds (Phases 0–2).** Require a task clone off `origin/development` ($\le 2$ local commits, canonical pre-push gate installed via `githooks/install.sh --check`); enforce strict subsystem bounds ($\le 4$ files / $\le 150$ insertions) and hard refusals on kernel, coordination, or shared Bash surfaces.
-> 2. **Validate issue & existing covering suite (Phases 3–4).** Confirm the tracking issue is OPEN; name the existing suite that covers the fix and verify it is registered in `validate.sh TESTS`. Do not add a new suite (GH-831: no new tests). A hotfix with no covering registered suite is refused; take it through `/start-task`.
+> 2. **Validate issue & verification lane (Phases 3–4).** Confirm the tracking issue is OPEN. Code hotfixes require an existing registered covering suite. Ordinary documentation text/images use `--docs-only`, which selects the existing registered PDDA docs suite; no critical-hotfix rationale or runtime behavior suite is required. Do not add a suite (GH-831).
 > 3. **Generate born-complete docs & append changelog (Phase 5).** Scaffold capture doc in `PROJECT/2-WORKING/` with Status, Acceptance, Merge evidence, and Lessons Learned present from birth; append the entry to `CHANGELOG.md` in the same motion.
-> 4. **Execute qualified gate & dial-in releases ledger (Phases 6–7).** Register roadmap issue in `releases.db` and dial into active release (`releases next`); execute regression suite green, prove tree identity, and re-snapshot tree to prevent drift.
+> 4. **Execute qualified gate & dial-in releases ledger (Phases 6–7).** Register roadmap issue in `releases.db` and dial into active release (`releases next`); execute the selected existing suite green, prove tree identity, and re-snapshot tree to prevent drift.
 > 5. **Direct fast-forward landing & 3-push reconciliation (Phases 8–11).** Commit qualified paths (`Closes #N`), direct push fast-forward to `origin/development` (`XYZ_SKIP_PREPUSH=1`), verify remote issue closure, ship release evidence, and execute clean-tree `wave_reconcile --commit`.
 >
-> **Overall Goal:** Critical, risk-bounded hotfix implemented, tested, ledger-tracked, landed directly to development, and reconciled with a complete paper trail in one single, unpaused motion with zero bypassed safety invariants.
+> **Overall Goal:** Bounded hotfix or documentation update verified, ledger-tracked, landed directly to development, and reconciled with a complete paper trail in one single, unpaused motion with zero bypassed safety invariants.
 
 Then begin work.
 
@@ -49,6 +49,34 @@ landing boundary by default (orchestrator outer review), express inlines those
 same predicates — base branch, diff size, gate receipts — as pre-flight
 refusals, because a pause would defeat the reason /express exists. That is the
 foundational difference, and it is the only one.
+
+## Documentation text and images (GH-1080)
+
+Small, reversible documentation edits may use express when the operator explicitly requests it;
+they need not be critical hotfixes. Add `--docs-only` to each step (including `resume`), or use:
+
+```bash
+python3 utils/py/express.py run --issue <N> --docs-only --summary "Content/link/rendering checks and outcome"
+python3 utils/py/express.py resume --issue <N> --docs-only --sha <landing-sha>
+```
+
+The driver selects **`test/pdda-repo-contract.sh`**, the existing registered suite that runs the
+actual deterministic PDDA docs gate. Its receipt records that exact command; it does not claim
+runtime coverage. The full runtime suite is not required merely because text or an image changed.
+Before running, check content accuracy, relative links and image rendering as applicable, and put
+the concrete results in `--summary`. Do not claim a render or visual check that did not run.
+
+Eligible payloads are `README.md`, `CHANGELOG.md`, ordinary `.md`/`.txt`/`.rst` documentation under
+`docs/` or the four PROJECT lifecycle folders, and PNG/JPEG/GIF/WebP/SVG assets under those folders
+or `assets/`. A README plus a diagram is one documentation change across folders. The existing
+4-file/150-text-insertion defaults still apply; images count as files, not binary newlines.
+
+This mode does not admit runtime/configuration changes, executable or symlinked files, skill
+instructions, or shared governance such as AGENTS/SOP/PDDA policy. Inspect what the text actually
+controls; an allowed extension is not permission to change safety, review or landing behavior.
+Generated artifacts still require their canonical generator/verbs. Consequential policy changes
+and mixed code/docs changes use the normal PR lane (or the unchanged code-hotfix lane when eligible).
+All existing clone, identity, issue, bounds, provenance, fast-forward and reconciliation rules remain.
 
 ## Procedure
 
@@ -109,7 +137,7 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
    proves the canonical pre-push stub (`gate-unwired`; hooks do not travel, GH-549).
    Express never commits over peer work (GH-527). Hand-edits to ledger files or
    generated views are refused; only the driver's verbs may write them.
-1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem (unless
+1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem for code hotfixes (unless
    `--allow-multi-subsystem` is passed, or micro-diff tolerance applies: $\le 30$
    insertions across $\le 2$ files auto-passes, GH-516). Only the lane's OWN
    paperwork (`CHANGELOG.md` and the current issue's capture doc resolved by
@@ -123,9 +151,9 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
    coordination-kernel and containment surfaces (AGENTS: at least Costly).
 3. **Issue first** — the tracking issue exists and is OPEN. Closed => the work
    may already be landed; run the preflight probes instead of re-doing it.
-4. **Suite** — an existing suite that covers the fix is named, and it is registered in
-   `validate.sh` TESTS. A hotfix without a covering suite is a claim, not a fix. Do not
-   add a new suite to get one (GH-831: no new tests); an uncovered fix goes through `/start-task`.
+4. **Suite** — code hotfixes name an existing covering suite registered in
+   `validate.sh` TESTS; `--docs-only` selects the existing PDDA docs suite above. Do not
+   add a new suite to get one (GH-831: no new tests); an uncovered code fix goes through `/start-task`.
 5. **Docs born complete** — capture doc scaffolded in `2-WORKING` with Status,
    Acceptance, Merge evidence, and `## Lessons Learned (For Future Agents)`
    present from birth (highly recommended — since GH-693 the reconciler warns
