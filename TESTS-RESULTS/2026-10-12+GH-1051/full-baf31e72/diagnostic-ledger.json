@@ -1,0 +1,19 @@
+{
+  "goal": "GH-1051 development-only Pages draft",
+  "observations": [
+    {
+      "run": "normal full pre-push pooled lane",
+      "head": "baf31e728ef28bec8d6e9260245e8b17521e2c38",
+      "suite": "gh648-l4-285-revalidate.sh",
+      "result": "rc1; PermissionError EPERM at process-group signal in descendant fixture and cleanup",
+      "artifact": "gh648-pooled-sandbox-failure.log"
+    },
+    {
+      "run": "unchanged existing focused suite with require_escalated in same disposable clone",
+      "result": "exit0, six existing cases including resistant descendants and no-kill negative control",
+      "artifact": "gh648-focused-unsandboxed.log"
+    }
+  ],
+  "disposition": "Required gate still pending. No production defect attributed or repair proposed; different execution permissions are a discriminating observation, not a waiver. Await normal gate final result before deciding whether full rerun with approved execution envelope is needed.",
+  "timestamp": 1791871865.710277
+}

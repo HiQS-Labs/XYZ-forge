@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-15 — Admit and refresh the development-only Pages fix (GH-1051)
+
+Keep the reviewed four-declaration Pages policy unchanged and adopt current development ledger/history through the canonical writer. The operator approved PR1053 review admission and conditional development landing; current review and normal qualification remain required. No workflow dispatch or environment-policy change.
+
+## 2026-10-12 — Pages publishing follows development-only policy (GH-1051)
+
+The Pages workflow admits development pushes and manual development runs. Nondevelopment job guards and per-ref concurrency prevent main/tag dispatches from attempting publication or cancelling development publication. Existing environment protections, action versions and build steps are unchanged. Draft PR only; no merge or deployment authorized.
+
 ## 2026-10-15 — Preserve unpublished historical HiQS review receipts
 
 Recover three approved historical review records from the operator’s primary checkout

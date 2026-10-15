@@ -1,0 +1,131 @@
+{
+  "source_commit": "55d470116b7dad2369cb6970a1d56e3d4d89abac",
+  "workflow_sha256": "19596de4c9c8291857038f488dec79f3588ccb9d5e6e3e85ad844eec8370a6c5",
+  "only_four_declared_changes": true,
+  "rows": [
+    {
+      "event": "push",
+      "ref": "refs/heads/development",
+      "original": {
+        "triggered": true,
+        "jobs": {
+          "build": true,
+          "deploy": true
+        },
+        "concurrency": "pages"
+      },
+      "fixed": {
+        "triggered": true,
+        "jobs": {
+          "build": true,
+          "deploy": true
+        },
+        "concurrency": "pages-refs/heads/development"
+      }
+    },
+    {
+      "event": "workflow_dispatch",
+      "ref": "refs/heads/development",
+      "original": {
+        "triggered": true,
+        "jobs": {
+          "build": true,
+          "deploy": true
+        },
+        "concurrency": "pages"
+      },
+      "fixed": {
+        "triggered": true,
+        "jobs": {
+          "build": true,
+          "deploy": true
+        },
+        "concurrency": "pages-refs/heads/development"
+      }
+    },
+    {
+      "event": "push",
+      "ref": "refs/heads/main",
+      "original": {
+        "triggered": true,
+        "jobs": {
+          "build": true,
+          "deploy": true
+        },
+        "concurrency": "pages"
+      },
+      "fixed": {
+        "triggered": false,
+        "jobs": {
+          "build": false,
+          "deploy": false
+        },
+        "concurrency": "pages-refs/heads/main"
+      }
+    },
+    {
+      "event": "workflow_dispatch",
+      "ref": "refs/heads/main",
+      "original": {
+        "triggered": true,
+        "jobs": {
+          "build": true,
+          "deploy": true
+        },
+        "concurrency": "pages"
+      },
+      "fixed": {
+        "triggered": true,
+        "jobs": {
+          "build": false,
+          "deploy": false
+        },
+        "concurrency": "pages-refs/heads/main"
+      }
+    },
+    {
+      "event": "workflow_dispatch",
+      "ref": "refs/tags/v1",
+      "original": {
+        "triggered": true,
+        "jobs": {
+          "build": true,
+          "deploy": true
+        },
+        "concurrency": "pages"
+      },
+      "fixed": {
+        "triggered": true,
+        "jobs": {
+          "build": false,
+          "deploy": false
+        },
+        "concurrency": "pages-refs/tags/v1"
+      }
+    },
+    {
+      "event": "workflow_dispatch",
+      "ref": "refs/heads/other",
+      "original": {
+        "triggered": true,
+        "jobs": {
+          "build": true,
+          "deploy": true
+        },
+        "concurrency": "pages"
+      },
+      "fixed": {
+        "triggered": true,
+        "jobs": {
+          "build": false,
+          "deploy": false
+        },
+        "concurrency": "pages-refs/heads/other"
+      }
+    }
+  ],
+  "original_main_dispatch_red": true,
+  "original_shared_concurrency_red": true,
+  "fixed_controls_pass": true,
+  "limit": "one-off manual static contract check of the exact literal ref expressions and declared workflow fields; no hosted dispatch/deployment, CI case, test registration or runner machinery"
+}

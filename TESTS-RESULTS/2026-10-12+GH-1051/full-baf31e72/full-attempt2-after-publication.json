@@ -1,0 +1,18 @@
+{
+  "head": {
+    "rc": 0,
+    "value": "baf31e728ef28bec8d6e9260245e8b17521e2c38"
+  },
+  "status": {
+    "rc": 0,
+    "value": ""
+  },
+  "worktrees": {
+    "rc": 0,
+    "value": "worktree /private/tmp/XYZ-forge-gh1051-pages-development-2026-10-12-verify\nHEAD baf31e728ef28bec8d6e9260245e8b17521e2c38\nbranch refs/heads/fix/XYZ-forge-gh1051-pages-development-2026-10-12"
+  },
+  "config": {
+    "rc": 0,
+    "value": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.development.remote=origin\nbranch.development.merge=refs/heads/development\nbranch.fix/XYZ-forge-gh1051-pages-development-2026-10-12.remote=origin\nbranch.fix/XYZ-forge-gh1051-pages-development-2026-10-12.merge=refs/heads/fix/XYZ-forge-gh1051-pages-development-2026-10-12"
+  }
+}
