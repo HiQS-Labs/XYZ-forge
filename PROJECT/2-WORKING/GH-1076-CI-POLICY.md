@@ -217,3 +217,15 @@ identical before/after (focused-verification.json/.log). This covers routing/who
 workflow/envelope, receipt/premerge, auto-reconcile, publication recovery and skills-army publisher.
 No individual CI case added or altered. Subsequent integration changes are documentation/ledger.
 Final independent review and required exact-source full push gate remain pending.
+
+Final Codex relay Approved round2/3 atb334e98d; round1 Should/FAIL preserved and corrected by
+counting malformed duplicate tier values instead of silently discarding them. Manual before/after
+and independent reviewer red control show malformed duplicate now full; ordinary Small unchanged.
+Normal cap not reset. Ten-suite evidence predates this one-line correction; affected receipt and
+reconciliation rerun and required normal full push gate remain pending after the serial baseline.
+
+Final source freeze/handoff: subsequent measured gate receipts and remote/PR/hosted outcomes will be
+committed under TESTS-RESULTS/2026-10-15+GH-1076/SUMMARY.md. Read that outcome with this plan rather
+than treating a pending gate here as completed. Verification evidence commits do not alter source;
+any later non-evidence source change invalidates the attributed final full run. The umbrella stays
+In progress while reduced-Medium/batch prerequisites remain unmet; no early lifecycle completion.
