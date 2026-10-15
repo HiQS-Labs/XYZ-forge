@@ -52,10 +52,10 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: _<fill in the repo-relative path(s) the turn reviews>_
+- Artifact under review: **utils/py/express.py**, its canonical express skill and SOP/ARCHITECTURE changes; read committed source directly.
 - Reviewer: codex   ·   Producer: codex-producer
 - Started: 2026-10-15
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: bounded explicit docs admission with the real existing PDDA gate, accurate receipts/recovery, practical exclusions and unchanged hotfix requirements.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.

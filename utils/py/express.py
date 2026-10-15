@@ -503,7 +503,11 @@ def cmd_check(args, expect_driver=frozenset()):
     core = [p for p in paths if not is_doc_path(root, args.issue, p) and p not in expect_driver]
     docs_only = getattr(args, "docs_only", False)
     if docs_only:
-        for p in core:
+        # Paperwork is exempt from size bounds, not from docs eligibility.
+        generated = set(expect_driver) & driver_projection_paths(root)
+        for p in paths:
+            if p in generated:
+                continue
             if not is_documentation_update(root, p):
                 refuse(root, "docs-only", "%s is not an ordinary documentation text/image update; "
                        "use the normal PR or code hotfix lane" % p, issue=args.issue)
