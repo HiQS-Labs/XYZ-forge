@@ -117,8 +117,8 @@ rewrite or **silently truncate** `git` output — a `tail` view of a piped tally
 contradicting the `head` view of the same pipeline, and on another machine-repo the RTK proxy
 capped `git log` at exactly **50 lines for both windows of a 548-commit repo**, which would have
 bucketed 50 commits and reported a confidently wrong distribution with no visible symptom. A
-partial read is indistinguishable from a real distribution; the sum check is the only thing that
-tells them apart. Cross-check the total against `git rev-list --no-merges --count` as well when the
+partial read can still have internally consistent buckets: the sum check proves accounting, not
+source completeness. Cross-check the total against `git rev-list --no-merges --count` when the
 numbers matter.
 An unproven tally is exactly the reads-as-authoritative-while-wrong failure this tool exists to
 catch; do not let the radar commit it.
