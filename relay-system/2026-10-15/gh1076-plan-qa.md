@@ -114,4 +114,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Producer (codex-producer) may proceed with the approved plan subject to its named prerequisites; approval grants no merge/protection/deployment authority. Only this relay file was edited.
 
+
+### Attestation · relay-drive — 2026-10-15T07:17:31Z
+task: RELAY-GH1076-PLAN-20261015
+reviewer: codex
+status: Approved
+reviewed-head: 3fce49040dc6b90c6db56ab8920b6986fb49ab82
+added-range: 10051+5071
+added-sha256: ba6ae9a9d161613568b57e35cc9768814afc4b50e1e748824545137664b1e996
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
