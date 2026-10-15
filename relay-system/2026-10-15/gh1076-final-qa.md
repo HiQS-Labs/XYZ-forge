@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -168,5 +168,27 @@ A nonapproval exhausts the original cap. Required final full push gate follows a
 prior d1 full evidence is stale for the current source. Component study still pending is evidence-only.
 
 Handing off to Reviewer — review the complete current scope and append only final Round3 findings.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+VERDICT: PASS
+
+Basis: The current coverage-preserving implementation and retained continuation evidence satisfy the six acceptance points for draft PR1079, subject to a fresh normal final full push gate. Reviewed the entire seeded packet, complete router, changed existing test, selector/historical receipt/execution contexts, changed policy text, canonical plan and CHANGELOG, caller/workflow/publisher contexts and continuation evidence. No additional pre-existing defect was identified in the inspected scope. This is the final cumulative round3/3; prior findings, verdicts and attestation remain historical, with no cap reset.
+
+- [Pass] The additional consumer coverage uses the existing owner. utils/ci-route.sh:35 contains the five prior suites plus gh660, path-integrity and gh788; test/ci-route.sh:235–238 changes only the existing count5→8 and label. The concrete source edges are sync.py's canonical checker invocation (skills/3-weekly/skills-army-hq/scripts/sync.py:30–62), test/path-integrity.sh:165–198 scanning all skill Markdown, and test/gh788-python-path-space.sh:89–105 scanning skills content without suffix restriction. validate.sh's full registry and literal Small list are unchanged. Direct read-only probe command: `PYTHONDONTWRITEBYTECODE=1 python3 "$TMPDIR/review_probe.py"`, exit0; actual router listing returned `LISTS 0 0 72 8 80`. Package input `skills/3-weekly/skills-army-hq/BOT-DAILY-HEALTH-CHECK.md` returned rc0, tier2, pdda_needed=true, hosted_gate=full and all eight names. README remained Small; empty, unmapped and src/project.js remained full. No suite ran.
+
+- [Pass] Selection remains fail-full, historical receipt semantics unchanged. utils/py/wave_reconcile.py:612–624 validates unique supported metadata and exact tier1 for Small; :470–590 retains tested-commit historical list/receipt handling; :681 executes fixed commands. The same probe extracted the actual selector AST and intercepted external reads (README diff, stubbed historical list), without running Git. Exact malformed duplicate `tier=1\ntier=2 trailing\npolicy_version=ci-route@1\nhosted_gate=small\n` selected full; missing, unsupported-version and inconsistent Small metadata also selected full; ordinary supported tier1 selected Small. In-memory removal of only the version comparison produced the red control `RED_VERSION_REMOVED ('validate.sh --sequential --subsystem small', ['existing-small-suite'], 'tier 1')` for unsupported ci-route@2. Production source was untouched. phase3/historical-receipt-compatibility.json retains218 actual records with218 old accepts,218 current accepts and zero differences; this turn inspected that record, not an independent live replay of all218.
+
+- [Pass] Scope matches the bounded implementation. Command `PYTHONDONTWRITEBYTECODE=1 python3 "$TMPDIR/object_review.py"`, exit0, independently decoded and SHA1-checked loose/packed objects against integration base9061df4b and current source f874fa8d. Decisive output: `ADDED CODE []`; changed code/test files are exactly utils/ci-route.sh, utils/py/wave_reconcile.py and test/ci-route.sh. The latter only changes its existing count/label; wave changes only its selector. `WORKTREE_MATCH_f874` was True for those three and validate.sh. No new suite, assertion, case, parameter, workflow, runner or receipt schema is introduced. Policy consolidation in ROUTER and AGENTS/SOP/churn pointers preserves Medium/full and exact-main/full; .github/workflows/ci.yml:152–203 and wave-reconcile.yml retain their existing qualification boundaries.
+
+- [Pass] Historical evidence supports the bounded correction without manufacturing reduced qualification. phase3/expected-selection-replay-v3.json explicitly says “Read-only projection of original rows, not reduced execution”; READINESS-v3 says the profile is “remaining implementation.” Independent read-only Python JSON/gzip/SHA256 inspection, exit0, matched all five referenced telemetry digests and all four decompressed outer-log digests. Decisive outputs: both single_medium_1047 and single_medium_1035 `digest True found 80 bad [] summary 409`; payload_small_988_989 `digest True found 72 bad [] summary 75`; mixed_recovery_995 summary410. Original log lines461/422/407/439 match pending counts1/1/6/7 and supplied member counts. The known payload failure is explicitly a source-equivalence inference, not a backdated run. All29 phase3 provenance artifact hashes match their files (Python hashlib check, exit0: `phase3 provenance 29 mismatches []`).
+
+- [Unverified — no citation] Current evidence and authority remain bounded. phase3/gh1076-consumer-focused.json records six rc0 existing commands at f874fa8d, before==after identity; no reviewer suite execution. READINESS-v3 separates historical PR936 manual-fold proof from mutable PR1069 authority and states “No current fold is selected or declared ready.” frozen-pilot-proposal-v3.json says “proposed, inactive” and candidate=null. These are remaining decisions/implementation, not shipped capabilities or umbrella completion. Read-only immutable SQLite SELECT, exit0, returned row rmi-01M4Z662VRV2WWRB7E26PEM3XA, ratings75/45/50/40, null override, and accepted_start=true event wev-01M4Z6X7K22Q2QV1HYQD4DX3BM. Consult limits and original failures remain retained.
+
+- [Unverified — needs clone run] Fresh exact-source full push verification and normal exact-head hosted feedback remain owed after this approval/source freeze. The earlier d1 full does not qualify f874. Pending component study results cannot replace that gate or become a composite Medium receipt. No validate/test/pytest/executable fixture ran here; no savings, current platform qualification, reduced-Medium activation, batch authority, merge permission or umbrella closure is inferred. Graph inventory was fully paginated with no current worktree project; nearest XYZ-forge coverage generation2026-09-01 is stale/metadata-changed, so current source/object reads supplied evidence.
+
+Relay closed (Approved), no further review turn needed. Handing completion to codex-producer — retain this final receipt, run the fresh required full gate in the disposable full clone and report actual exact-head hosted outcomes within the existing task authority.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
