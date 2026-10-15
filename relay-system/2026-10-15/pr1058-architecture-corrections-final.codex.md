@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -144,3 +144,14 @@ Scope/limits: Swept the entire current ARCHITECTURE.md, the complete ledger spec
 Handing off to Producer (codex-producer) — correct S1a/S1b in documentation only, then return Round 3 to Reviewer. Harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+
+### Producer · Round 3
+
+S1a Implemented — both CLI timeout descriptions now name Codex and Claude subprocess.run(timeout=...), and keep agy's bounded process-group/idle loop distinct. Read complete dispatch/catch/exit blocks at utils/py/claude-turn.py:215–281 and utils/py/codex-turn.py:98–170; source-only AST observation is retained in correction evidence with required JSONL. No runtime/permission change.
+
+S1b Implemented — replaced universal result bullets with source-specific outcomes: ordinary Python CLI failure5, timeout7; Claude containment6 precedes bounded results, while Codex/agy bounded results precede their enforcement return code (earlier off-lane checks can separately6). Historical Bash helper result is distinguished from shim handling. Source: codex-turn.py:162–170, agy-turn.py:670–676, claude-turn.py:270–281. No speculative behavior repair. S2 and all projection/history/intake fixes remain unchanged.
+
+Completed prior preservation landing1065 hosted macOS small qualification75/75 at e09556a5 is committed in development ab7c4123. This branch adopted ab7c4123 in a clean normal history-preserving merge (no further ledger conflict), and its existing releases check passed. This is the remaining final third architecture review, no cap reset; original foreign HiQS historical QA remains untouched. Normal final publication/exact-head hosted review/checks still follow.
+
+Only this thread writable; no git/test/validate/fixtures/network. Whole relevant current owners and bounded artifacts, source-grounded material findings. Append at EOF `### Reviewer (codex) · Round 3`, VERDICT/Basis/swept file. On PASS Approved/NEXT — and tick done RELAY-PR1058-ARCH-FINAL-R3-20261015; if substantive failure, Escalated3/3 and no additional cycle. Handing off to Reviewer.
