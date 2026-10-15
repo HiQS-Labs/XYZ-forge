@@ -1,4 +1,53 @@
-# GH1076 verification and handoff
+# GH1076 continuation verification and handoff
+
+Continuation safe coverage correction is independently Approved at cumulative final3/3, original
+round1FAIL and round2PASS retained. Exact reviewed headc6e50bf3; attestation-containing full-tested
+sourcedebbfe4e8c22d68dad5c069fa71976d92f584323. Later task commits change TESTS-RESULTS only.
+The existing skills area adds three existing consumers (five→eight); only the old count condition
+changes5→8. Full406 and Small72 remain unchanged. No new CI assertion/case/parameter was added.
+
+Six affected existing commands passed atf874 with unchanged clone identity. Serial component study
+atf874 passed Small75/75 (746.681s runner;746.980s outer) and area9/9 (84.558s runner;84.853s outer),
+zero retries/skip_lines and identical clone head/status/config/refs. These preserve two actual run
+IDs/envelopes, not one composite Medium receipt or active qualifying profile. See phase3/component-study.
+
+Fresh normal full push passed409/409 atdebbfe4e, no retries or envelope drift:923.532s runner,
+926.922s outer including hook/push.21 Python-layer tests passed. Source/config/origin/status remained
+stable; the expected task tracking ref changedc6e50bf3→debbfe4e, and origin/HEAD remained on development.
+The one-off wrapper and actual push both exited0. Raw metadata/log/outer telemetry/digest/comparison
+are in continuation/. The typed full receipt in rootprovenance remains bound to exactdebbfe4e.
+This is local parallel self-check evidence, not hosted development/main qualification.
+
+Pinned clean baselinef974 full1090.831s versus continuation923.532s is descriptive only. Tools match;
+start load104.49/151.91/193.76 versus45.51/63.62/46.23 and caches are uncontrolled. No causal speedup,
+CI runner-minute saving or catch-rate claim. The olderd1after911.376s and failed calibration remain
+historical and do not qualify new source. Current full counted3skip lines (ci-workflow1,marathon-plan2),
+plus the known live relay probe omission via RELAY_SELF_SUFFICIENCY_SKIP=1 despite its counter0.
+Operator-retired suites remain outside full. These omissions are not additional passing coverage.
+
+phase3 now retains direct/reverse coverage over406 source bodies;80-name actual-row projection;
+two genuine single-member mapped Medium full409/409 snapshots with complete pending ranges/original
+logs; exact six-member Small omission and byte-equivalent known later gh620failure inputs (bounded
+inference, not a backdated run);218 actual @1 receipts with identical baseline/current acceptance;
+current1069 and GH1072/1073/1075 evidence plus actual existing180-test gh436PASS but missing current
+typed premerge receipt; effective protection/rules readback; actual approved historical936fold with
+retained failed combined review and actual-landed hosted413/413; inactive candidate contract/readiness.
+No currently ready approved coupled group exists. Human frozen folds do not depend on1069 mutable
+bookkeeping. Automatic mutable authority needs exclusive ownership, scoped state repairs, current
+normal review/receipt and the three retained assertion admission/removal. Selective qualification
+needs a separately approved named profile/real candidate, then existing-owner phase/profile
+implementation and valid normal review budget. It is not claimed shipped or generically data-blocked.
+No new runner, lane, receipt schema, activation, merge, workflow trigger, deployment or cleanup.
+GH1076 stays open; draft1079 carries the completed safe source/evidence. Clones are retained.
+
+Natural exactdebbfe4e CI run38711780015 passed: blocking vendored smoke plus reconciliation wiring,
+frozen-twin and vendor steps succeeded. macOS promotion and advisory Ubuntu jobs were SKIPPED for
+this PR event. continuation/hosted-source.json retains actual API/job/step state; its provenance
+line is PR feedback only, not full platform qualification. Final evidence-only tip feedback is
+rechecked live from GitHub and kept with the session handoff, without claiming skipped platform passes.
+
+# Initial publication — historical snapshot8bf95a1e
+
 
 Safe policy/consumer work is independently reviewed (plan2/3, final2/3). Original PARKED/FAIL
 results and corrective manual controls are retained. Ten existing focused suites passed; after the

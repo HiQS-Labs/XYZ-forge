@@ -1,0 +1,48 @@
+{
+  "before_sha": "f974fcee15647aae6551fcc81b129f5a6127120b",
+  "after_sha": "debbfe4e8c22d68dad5c069fa71976d92f584323",
+  "before_runner_seconds": 1090.831,
+  "after_runner_seconds": 923.532,
+  "difference_seconds": -167.299,
+  "outer_after_push_seconds": 926.922,
+  "normal_workers": 4,
+  "registered_shell_suites": 406,
+  "reported_outcomes": 409,
+  "retries_before": [],
+  "retries_after": [],
+  "tool_versions_identical": true,
+  "load_before": [
+    {
+      "command": [
+        "uptime"
+      ],
+      "rc": 0,
+      "stdout": " 0:45  up 6 days, 15:28, 1 user, load averages: 104.49 151.91 193.76\n",
+      "stderr": ""
+    }
+  ],
+  "load_after": [
+    {
+      "command": [
+        "uptime"
+      ],
+      "rc": 0,
+      "stdout": " 2:01  up 6 days, 16:44, 1 user, load averages: 45.51 63.62 46.23\n",
+      "stderr": ""
+    }
+  ],
+  "counted_skip_output": [
+    {
+      "name": "ci-workflow.sh",
+      "lane": "pool",
+      "skip_lines": 1
+    },
+    {
+      "name": "marathon-plan.sh",
+      "lane": "pool",
+      "skip_lines": 2
+    }
+  ],
+  "additional_known_omission": "Live relay-self-sufficiency probe skipped via RELAY_SELF_SUFFICIENCY_SKIP=1 despite skip_lines0; retired suites remain outside registry.",
+  "claim": "Descriptive measurements only; ambient load/caches uncontrolled. Existing normal balanced4 full before vs actual normal full push after; not hosted/main qualification or causal savings. Prior calibration and d1 after remain historical."
+}
