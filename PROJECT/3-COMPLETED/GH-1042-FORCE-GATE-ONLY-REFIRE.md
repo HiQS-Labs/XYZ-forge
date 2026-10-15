@@ -1,6 +1,6 @@
 ---
 title: "GH-1042 + GH-1045: trusted phase completion recovery"
-status: PR ready — awaiting merge
+status: Complete
 created: 2026-10-13
 updated: 2026-10-15
 owner: Codex

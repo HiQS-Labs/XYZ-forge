@@ -2,9 +2,9 @@
 gh_issue: 1045
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1045
 title: "GH-1045: historical phase recovery"
-status: PR ready — awaiting merge
+status: Complete
 created: 2026-10-13
-updated: 2026-10-13
+updated: 2026-10-15
 owner: Codex
 goal: Preserve historical phase satisfaction without weakening merge approval.
 doc_type: bugfix
