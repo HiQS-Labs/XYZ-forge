@@ -7,6 +7,7 @@ created: 2026-10-14
 updated: 2026-10-14
 owner: operator
 doc_type: feature
+goal: "Every 2+ PR landing leaves one consistent issue with the planned order and outcomes, and missing post-merge QA shows up as exit 4."
 related:
   - https://github.com/HiQS-Labs/XYZ-forge/issues/944
 ---
