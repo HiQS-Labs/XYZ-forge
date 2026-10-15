@@ -142,4 +142,12 @@ Basis: The Round 1 Should is resolved. The completed policy/consumer scope is su
 
 Relay closed (Approved), no further review turn needed. Handing completion to codex-producer for the pending disposable-clone final gate, retained evidence and draft publication under the existing plan; approval does not waive any pending gate.
 
+
+### Attestation · relay-drive — 2026-10-15T07:52:30Z
+task: RELAY-GH1076-FINAL-20261015
+reviewer: codex
+status: Approved
+reviewed-head: b334e98d7fb3b16ce5c3c7a8ad91ccb2569333f8
+added-range: 12860+5505
+added-sha256: f2216dbf3235c79da1974dba5547939c5b6e42f375052d9c52cf6021a3425c87
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
