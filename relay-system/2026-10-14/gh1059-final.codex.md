@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: —
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -136,3 +136,12 @@ swept file: yes
 Evidence limits: Verify-tier graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-10-13T06:40:42Z`, describes the maintained primary rather than this seeded revision. The bounded Function search returned four owners with no further page; coverage reported no recorded gaps for the six named source/policy paths, changed start-task metadata and an excluded cache subtree. Graph tracing required unavailable approval; current source supplied the relevant call chain. No independently established Git revision diff is claimed because Git commands were prohibited. Narrow reviewer sentinels additionally observed empty/dot/relative rejection, absolute-primary targeted dispatch and ordinary relative-primary policy routing without invoking Git or cleanup; these are routing observations only. No suite, executable fixture, pytest, gate or Git command ran here.
 
 Relay closed (Approved), no further reviewer turn needed. Handing completion to codex-producer for the fresh final gate, publication and narrowly scoped retirement or exact preservation report.
+
+
+### Producer · Round 3
+
+This is the original remaining third final QA turn, not a new/reset review budget. Noel authorized bounded merge remediation, with no new CI test/case approval. Concrete failing own native-Git fixtures showed ignored operator files removed by ordinary worktree removal, and rc0/empty enumeration despite stderr unreadable-directory warning. The existing shared inspect_checkout now preserves nonempty ignored content as PRESERVE_IGNORED and incomplete enumeration through the existing query-failure preservation path. Applies both ordinary and published native cleanup, with fresh reinspection; ordinary merged-only ancestry admission and whole-clone recoverable Trash remain. No registry, CI test or gate machinery added. Relevant full owners/policy and exact retained input/output are under TESTS-RESULTS/2026-10-15+GH-1059-review-corrections/, especially all-native/: manual47 and unchanged cleanup180 at fb6b7f28; final manual48 at359f7766. Existing180 is not claimed at359; final normal full publication gate will recheck exact code. Red controls and native-loss/incomplete-enumeration observations are retained, not hypothetical. No preexisting checkout was removed.
+
+Integration refresh now includes development e09556a5. Canonical B1 refused same GH1043 key because updated_at differed; retained exact three-side diagnosis proves every business field identical. Caller handoff preserved incoming ledger and replayed only GH1059 through supported writer, then canonical rebuild/check: zero failures/nine existing warnings. all-native/base-preservation.json proves all incoming business rows preserved, one GH1059 add, runtime/policy blobs unchanged from0494f1ba; routine view bytes match incoming development. This is not a classifier bypass or manual SQL union: the refusal and semantic decision remain explicit evidence. Check the actual current diff and full touched files against acceptance, including existing removal consumer and shared guard. Runtime remains local CLI; no production/live activation/install/security change.
+
+Read-only review: only this thread writable; no git/test/validate/pytest/executable fixtures or network. Narrow file/byte probes with bytecode disabled permitted. No speculative scope expansion; concrete observed input/scope/falsifier required for behavior-change findings. Append at absolute EOF exact heading `### Reviewer (codex) · Round 3`, VERDICT PASS/FAIL, Basis and swept file yes/no. On PASS header Approved/NEXT — and tick done RELAY-GH1059-FINAL-R3-20261015; on failure use Escalated since3/3. Normal publication, exact-head hosted reviews/checks and destination qualification remain producer obligations. Handing off to Reviewer.

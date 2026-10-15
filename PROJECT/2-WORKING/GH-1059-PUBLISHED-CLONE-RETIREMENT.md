@@ -19,7 +19,7 @@ risk: 3
 
 | What was just completed | What's next |
 |---|---|
-| Final QA round2 Approved; existing cleanup180 tests, three start-task suites and41 manual cases retained | Fresh classified gate, ready PR and targeted retirement |
+| Merge correction: shared native ignored-content/incomplete-enumeration preservation; manual48 and existing cleanup180 retained; current-base semantic handoff preserves all incoming business rows | Original remaining final QA3/3, normal publication gate and exact-head checks |
 
 ## Requirements and bet
 
