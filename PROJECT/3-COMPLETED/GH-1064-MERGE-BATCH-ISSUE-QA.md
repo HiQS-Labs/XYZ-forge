@@ -2,9 +2,9 @@
 gh_issue: 1064
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1064
 title: "merge-cleanup: script-owned batch issue (planned sequence) and enforced post-merge QA for batches of 2+ PRs"
-status: In Progress
+status: Complete
 created: 2026-10-14
-updated: 2026-10-14
+updated: 2026-10-15
 owner: operator
 doc_type: feature
 goal: "Every 2+ PR landing leaves one consistent issue with the planned order and outcomes, and missing post-merge QA shows up as exit 4."
