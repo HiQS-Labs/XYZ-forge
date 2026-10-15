@@ -116,4 +116,12 @@ PY
 
 Relay closed (Approved), no further plan-review turn needed. Producer (codex-producer) may implement this approved disabled plan, then use the separately authorized one supplemental final QA and required checks. This grants no activation, merge, deployment or access bypass. Only this relay file was edited; the harness owns its commit.
 
+
+### Attestation · relay-drive — 2026-10-15T21:19:04Z
+task: RELAY-GH1076-DISABLED-PLAN-EXT1
+reviewer: codex
+status: Approved
+reviewed-head: 073b8aa53fc3791b37950e802d03e8aac14ef263
+added-range: 6411+6579
+added-sha256: dc1e43dbc9dceb4975685d89b749ee3ec1562a589992147cc1f6e9e9724d09ab
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
