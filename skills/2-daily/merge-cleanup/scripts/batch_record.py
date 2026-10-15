@@ -30,6 +30,8 @@ END = "<!-- merge-batch:script:end -->"
 VERDICTS = ("clean", "findings", "deferred")
 FULL_GATE = "validate.sh --sequential"
 CALLER_SECTIONS = (
+    "## Strategy and sequence review\n<!-- groups/order, PR/head/base/candidate SHAs, CI checkpoints, rollback; "
+    "for 3+ PRs: author/reviewer model identities, relay receipt and finding dispositions (GH-1066) -->\n\n",
     "## Problems\n\n",
     "## Ad-hoc fixes & pivots\n\n",
     "## Findings\n\n",
