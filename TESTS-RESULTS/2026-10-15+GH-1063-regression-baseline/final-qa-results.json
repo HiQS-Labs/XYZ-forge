@@ -1,0 +1,56 @@
+{
+  "before": {
+    "head": "0215c276713c0609800e7037411e6db9502187ca",
+    "tree": "7c89e5af6aa7359ac06050e221bbf5bd6e939987",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "config": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+  },
+  "after": {
+    "head": "0215c276713c0609800e7037411e6db9502187ca",
+    "tree": "7c89e5af6aa7359ac06050e221bbf5bd6e939987",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "config": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+  },
+  "identityUnchanged": true,
+  "results": [
+    {
+      "label": "existing-recovery-manual34",
+      "command": [
+        "python3",
+        "TESTS-RESULTS/2026-10-13+GH-1042/manual-replay.py",
+        "--expect-fixed"
+      ],
+      "at": "2026-10-15T02:51:03.799347+00:00",
+      "rc": 0,
+      "durationSeconds": 63.66,
+      "identity": {
+        "head": "0215c276713c0609800e7037411e6db9502187ca",
+        "tree": "7c89e5af6aa7359ac06050e221bbf5bd6e939987",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "bare": "false",
+        "config": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+      }
+    },
+    {
+      "label": "existing-full-validator",
+      "command": [
+        "bash",
+        "validate.sh"
+      ],
+      "at": "2026-10-15T02:52:07.873718+00:00",
+      "rc": 0,
+      "durationSeconds": 1146.77,
+      "identity": {
+        "head": "0215c276713c0609800e7037411e6db9502187ca",
+        "tree": "7c89e5af6aa7359ac06050e221bbf5bd6e939987",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "bare": "false",
+        "config": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+      }
+    }
+  ],
+  "kind": "post-queue local macOS regression QA; not main promotion",
+  "at": "2026-10-15T03:11:14.884137+00:00"
+}

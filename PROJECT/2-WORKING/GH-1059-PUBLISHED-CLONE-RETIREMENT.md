@@ -19,7 +19,7 @@ risk: 3
 
 | What was just completed | What's next |
 |---|---|
-| Merge correction: shared native ignored-content/incomplete-enumeration preservation; manual48 and existing cleanup180 retained; current-base semantic handoff preserves all incoming business rows | Original final QA3/3 FAIL retained; Noel-authorized extension1/2 PASS (cumulative4), current-base0215 preserved; normal current-head publication/exact-head checks and destination qualification next |
+| Merge correction: shared native ignored-content/incomplete-enumeration preservation; manual48 and existing cleanup180 retained; current-base semantic handoff preserves all incoming business rows | Original final QA3/3 FAIL retained; Noel-authorized extension2/2 PASS (cumulative5), current-base0215 preserved; normal current-head publication/exact-head checks and destination qualification next |
 
 ## Requirements and bet
 
@@ -112,3 +112,6 @@ The fixture permissions were restored; no existing checkout or permission was ch
 Noel authorized two additional QA rounds per PR for tonight’s merge batch, preserving original counters. Original final3/3 Escalated is byte-identical; the separate extension thread `relay-system/2026-10-15/pr1061-authorized-extension.codex.md` consumed extension1/2 (cumulative4), reviewedb55594b7 and attested46973638 Approved. It verifies the exact newer JSONL falsifier, retained full409/409 ate4 with two built-in retries, receipt-reader attribution correction, current-base preservation and unchanged runtime/policy hashes. No new runtime sweep or suite was claimed by this evidence review. One extension round remains; no restarted allowance.
 
 Current integration0215 was resolved through the canonical disjoint writer after explicit exact-section changelog handoff. Incoming business content is preserved; GH1052 remains parked with only canonical gid/timestamps reminted, and only1059 is added. Original full gates attest their named revisions; the next normal publication gate qualifies the integrated head, followed by exact-head hosted checks/reviews and normal merge gates. The batch authorization permits merge after those gates, not their bypass. No existing checkout was removed.
+
+
+The Producer caught a changelog preservation error before publication: a section-heading dictionary collapsed duplicate historical headings. Reconstructed the complete incoming0215 byte string plus exactly the two GH1059 sections; the prior claim is explicitly superseded. Final extension2/2 (cumulative5) independently PASSED at1b4b4627, attested841c2e1a, with whole-byte and heading-collapse/truncation red controls. Runtime/policy and originalQA hashes remain unchanged. Zero extension rounds remain. All normal publication/exact-head/destination gates still apply.

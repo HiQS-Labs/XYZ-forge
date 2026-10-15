@@ -14,5 +14,8 @@
   "extensionRound1Verdict": "PASS",
   "extensionRound1ReviewedHead": "b55594b7a1570c454dd37f59c1a1e889bd0bd8e7",
   "extensionRound1Attestation": "469736386ef43ff1164995d6386d7d35fb0968ea",
-  "extensionRound2Reason": "Correct producer changelog preservation bug that collapsed duplicate historical headings; no runtime edit"
+  "extensionRound2Reason": "Correct producer changelog preservation bug that collapsed duplicate historical headings; no runtime edit",
+  "extensionRound2Verdict": "PASS",
+  "extensionRound2ReviewedHead": "1b4b46273a66e75a3d6418a1a8ba70ffb5d3c62c",
+  "extensionRound2Attestation": "841c2e1a218be2ef14b522da1f6577c4db03bf12"
 }
