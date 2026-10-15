@@ -242,16 +242,34 @@ Use the existing batch issue for qualifying queues; smaller queues use the run s
 4. **Freeze the candidate.** Record member PRs and head SHAs, current integration base,
    combined candidate SHA, review receipts and rollback boundary. New members, code repairs
    or base changes invalidate affected evidence; refresh review/checks before landing.
-5. **Qualify the complete group.** Where policy permits, reserve the first full gate for
+5. **Adversarial sequence review for three or more PRs.** When the authorized batch
+   contains three or more PRs, use one bounded [`relay-xyz`](../../1-hourly/relay-xyz/SKILL.md)
+   review of the whole grouping, merge strategy and sequence before the first merge, even
+   when the batch is divided into smaller groups. Choose an independent reviewer using a
+   different actual model family from the plan author; a different CLI alone is not proof.
+   Record both model identities, the frozen PR/head/base/candidate SHAs, proposed groups/order,
+   required CI checkpoints and rollback boundaries in the existing batch record and relay.
+   Ask the reviewer to challenge missing dependencies, semantic interactions, conflict sites,
+   unsupported gate deferral, duplicate broad runs and recovery after a partial landing.
+   Disposition supported findings before proceeding; advice cannot waive deterministic gates
+   or operator authority. Use at most three cumulative review rounds per batch, including
+   resumes; do not repeat this strategy review per PR or replace required per-PR QA.
+   Material changes to membership, dependency/order, integration content or risk reopen the
+   affected plan review; editorial record updates do not. Record unavailable review or unknown
+   model identity neutrally ("Independent review did not run."); hold the affected unreviewed
+   batch without assigning defect severity or opening a blocking issue. Do not claim cross-model
+   approval without evidence. Ordinary one/two-PR queues need no extra strategy relay unless
+   risk or repository policy calls for one.
+6. **Qualify the complete group.** Where policy permits, reserve the first full gate for
    this frozen combined candidate, after preparation is complete. Keep the existing tier
    classification; grouping docs does not require a full gate. Run the repository's
    qualifying command on its required platform; a parallel publication run is not sequential
    promotion evidence. A failed required check stops landing; diagnose before retrying.
-6. **Land through the supported path.** Preserve merge-history policy and PR/issue provenance.
+7. **Land through the supported path.** Preserve merge-history policy and PR/issue provenance.
    Never retarget PRs, create a staging branch, alter branch protection/workflows, cancel
    required runs or use a push bypass merely to meet a CI budget. Those changes require
    their own authorization. Historical time-boxed exceptions are not standing permission.
-7. **Verify the landed result.** Reserve a second full run for the actual landed integration
+8. **Verify the landed result.** Reserve a second full run for the actual landed integration
    result when policy requires it or candidate evidence no longer qualifies that result.
    Reuse an existing qualifying hosted run only when its SHA/content scope covers the group;
    do not launch a duplicate final sweep. Complete required reconciliation and fresh teardown
@@ -415,6 +433,9 @@ script option governs it, and nothing in the landing sequence waits on GitHub is
 Title: Merge batch <YYYY-MM-DD> — <owner/repo> — <PR list>
 Labels: merge-batch
 Integration branch: <development>
+
+## Strategy and sequence review
+<!-- groups/order, PR/head/base/candidate SHAs, CI checkpoints, rollback; for3+PRs: author/reviewer model identities, relay receipt and finding dispositions -->
 
 ## Merge sequence
 | # | PR | outcome | reconcile |
