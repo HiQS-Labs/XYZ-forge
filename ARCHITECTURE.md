@@ -226,10 +226,9 @@ Each headless turn follows the same pipeline:
    [agy-turn.sh:97](relay-automation/agy-turn.sh#L97),
    [codex-turn.sh:62](relay-automation/codex-turn.sh#L62),
    [claude-turn.sh:122](relay-automation/claude-turn.sh#L122).)
-5. The executing Python shim runs the model CLI under its timeout handling: Codex uses
-   `subprocess.run(..., timeout=turn_timeout)`, agy uses its bounded process-group/idle loop, and
-   Claude uses the shared Python `rtl_run_bounded`. The historical Bash shims use the
-   sleep/kill watchdog in `relay-turn-lib.sh`.
+5. The executing Python Codex and Claude shims run the model CLI with
+   `subprocess.run(..., timeout=turn_timeout)`; agy uses its bounded process-group/idle loop.
+   The historical Bash shims use the sleep/kill watchdog in `relay-turn-lib.sh`.
 6. The shim calls `rtl_enforce`, which:
    - resets the repo if the agent committed during its turn
    - reverts off-allowlist tracked changes
@@ -283,14 +282,17 @@ No shim pushes.
 
 ### 4. Timeout watchdog
 
-Timeout ownership follows the executing lane: Python Codex uses `subprocess.run` with a timeout,
-Python agy uses process-group wall/idle bounds, and Python Claude uses the shared
-`utils/py/rtl.py::rtl_run_bounded`. Only the historical Bash fallback routes every shim through
-`relay-turn-lib.sh::rtl_run_bounded <seconds> <cmd...>`, its sleep/kill watchdog.
+Timeout ownership follows the executing lane: Python Codex and Claude use `subprocess.run` with
+a timeout; Python agy uses process-group wall/idle bounds. The shared Python
+`utils/py/rtl.py::rtl_run_bounded` exists, but these three CLI dispatchers do not call it.
+The historical Bash fallback uses `relay-turn-lib.sh::rtl_run_bounded`, its sleep/kill watchdog.
 
-- normal CLI failure -> returns the CLI's exit code
-- watchdog kill -> returns `7`
-- containment violation -> still wins; the turn exits `6`
+- default Python shims map ordinary CLI failures to `5` and timeout results to `7`
+- Python Claude prioritizes containment result `6` over a failed or timed-out CLI
+- Python Codex and agy return bounded timeout/failure results before the enforcement return code;
+  their earlier off-lane worktree checks can separately exit `6`
+- the historical Bash helper itself returns the command status, or `7` after its watchdog kill;
+  individual shim failure handling remains in each dispatcher
 
 ### 5. Worktree isolation
 
