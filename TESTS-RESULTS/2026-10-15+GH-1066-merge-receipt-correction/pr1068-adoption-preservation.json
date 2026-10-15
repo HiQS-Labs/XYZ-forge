@@ -1,0 +1,40 @@
+{
+  "incoming": "d71c57e7acbae77b71db0a28e3aee5f0dd4c9387",
+  "sourceBefore": "34ebdd83b3fe5cdcfe3fc540d20c410d88f286f0",
+  "adoptedHead": "ee8ea69e77c9644d464e147e3de52f301f8e9556",
+  "resolver": {
+    "resolved": true,
+    "handoff": false,
+    "reason": "resolved through the writer path; merge commit ee8ea69e77",
+    "log": [
+      "classification: keep=theirs generation ours/theirs=(1657, 1657) replay=1 op(s)",
+      "check --rebuild on the kept side: rc=0",
+      "roadmap add GH-1066: rc=0 ",
+      "roadmap rate GH-1066 65/25/50/85: rc=0 ",
+      "roadmap update GH-1066 (section/marker): rc=0 ",
+      "releases-merge-resolve.sh: rc=0",
+      "removed verified rebuild backup: releases.db.bak"
+    ],
+    "commit": "ee8ea69e77c9644d464e147e3de52f301f8e9556",
+    "conflict_set": [
+      "releases.db",
+      "releases.sql"
+    ]
+  },
+  "allIncomingNonGenerationSQLInsertsPreservedExactly": true,
+  "onlyExtraRoadmapIssue": 1066,
+  "extraSQLRows": [
+    "INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M4YYQRRBK86V1P0PDX8MJZ97', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1066', 'merge-cleanup: CI-heavy landing groups', 'In progress', '125', '\ud83d\udea7', NULL, NULL, NULL, 'PROJECT/2-WORKING/GH-1066-MERGE-CLEANUP-CI-GROUPS.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1066', '- **GH-1066 \u00b7 merge-cleanup: CI-heavy landing groups** \u2014 \u2014 [plan](PROJECT/2-WORKING/GH-1066-MERGE-CLEANUP-CI-GROUPS.md) (rated 65/25/50/85)', '2026-10-15T04:57:11Z', '2026-10-15T04:57:12Z', '65', '25', '50', '85', NULL, NULL);",
+    "INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', 'reanchor:185', '2026-10-15T04:57:11Z', '15318a56f9cf4417beb434f38a218039', 'default', 'c20e3ba268502e12cd7447e5ee2ea37045a05eb54f2111f82377999987d88386', 'c20e3ba268502e12cd7447e5ee2ea37045a05eb54f2111f82377999987d88386');",
+    "INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-add', 'rmi-01M4YYQRRBK86V1P0PDX8MJZ97', '2026-10-15T04:57:11Z', 'db33f1eca45741a193406af5b520afe6', 'default', 'c20e3ba268502e12cd7447e5ee2ea37045a05eb54f2111f82377999987d88386', '31cb5657db871fcdffd4c86e23194d1d6ad38ef719dbc2bf9e274de923fccb76');",
+    "INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-rate', 'rmi-01M4YYQRRBK86V1P0PDX8MJZ97', '2026-10-15T04:57:11Z', 'ae4c58a7e23a4a4ba6d96d750694dc4b', 'default', '31cb5657db871fcdffd4c86e23194d1d6ad38ef719dbc2bf9e274de923fccb76', 'ea35a4c6d870f59ad8e3bc3d9aa9fa18595188d84b5c497f832bfe9b93a03e12');",
+    "INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M4YYQRRBK86V1P0PDX8MJZ97', '2026-10-15T04:57:12Z', '154a2bb25457496a9a87b4bf5d540195', 'default', 'ea35a4c6d870f59ad8e3bc3d9aa9fa18595188d84b5c497f832bfe9b93a03e12', 'bf61c1ec34f0f4868a17c6b0b4188520d4098c04a5a6581991d592f001a184be');",
+    "INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('merge-rebuild', 'reanchor:186', '2026-10-15T04:57:13Z', '207713e717cc4e7aa285d3c076e7da48', 'default', 'ccea6996637e6b0b1e8c8cc22c4b800ed9dbbd7008f657246e5e84f8812ea7af', 'bf61c1ec34f0f4868a17c6b0b4188520d4098c04a5a6581991d592f001a184be');",
+    "INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M4YYQRS39J7CQ1W91EHTVAR1', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1066', 'db33f1eca45741a193406af5b520afe6', 'parked', '{\"section\": \"Queue / parked intake\"}', '2026-10-15T04:57:11Z');",
+    "INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M4YYQS1E4RVMGAPDGKZDDENC', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1066', 'ae4c58a7e23a4a4ba6d96d750694dc4b', 'rated', '{\"rated\": \"65/25/50/85\"}', '2026-10-15T04:57:11Z');",
+    "INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M4YYQS625A87NGYRGPDVKDEK', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1066', '154a2bb25457496a9a87b4bf5d540195', 'in_flight', '{\"marker\": \"\\ud83d\\udea7\", \"section\": \"In progress\", \"source\": \"roadmap-update\", \"transition\": true}', '2026-10-15T04:57:12Z');"
+  ],
+  "reviewedSkillBlobUnchanged": true,
+  "incomingChangelogBytesUnchanged": true,
+  "limits": "Canonical replay remints GH1066 gid/timestamps. No manual SQL union or classifier change; source policy not deployed."
+}

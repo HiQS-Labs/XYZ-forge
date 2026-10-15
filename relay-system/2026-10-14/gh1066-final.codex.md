@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: —
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: codex
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -110,3 +110,12 @@ reviewed-head: ee3e80349ab027037b7084292d56ec3ea83b7c10
 added-range: 7910+4590
 added-sha256: 842d3d34095f011e306fbd95dccbcb92a5ddc5e87331fd60deeba3c9e27fa19e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+
+### Producer · Round 2
+
+Continuation of the SAME final QA thread, cumulative2/3; original round1 and attestation preserved. Author published ready PR1068 then source/gate copies were externally retired. Caller owns this isolated clone and reserved canonical repair1/2 before any change. Current reviewed artifact is canonical skills/2-daily/merge-cleanup/SKILL.md, GH1066 plan and TESTS-RESULTS/2026-10-15+GH-1066-merge-receipt-correction/. The old external .relay-artifacts path was not present in round1; use canonical actual source and whole-file reads here. Source skill is unchanged byte-for-byte from original reviewedee3e8034, SHA2568533cb63558432f7e925399ef9334c4c5142333bba64e8569d5e0b5525a5010d.
+
+Only integration/packaging corrections: existing receipt reader failed34ebdd83 due to narrative result/exit_code and later non-TESTS plan edits; typed historical alias accurately binds actual full409/409 at759b34e0 in989s, with rawtelemetry. This alias does not certify later metadata. A fresh normal classified publication gate will run AFTER this review; do not demand/run it in the relay or claim it passed now. Qualified destinationd71c57e7 adopted via canonicalB1 disjoint resolver, onlyGH1066 replayed; exact preservation proof retained. All incoming non-generation SQL rows preserved exactly, onlyGH1066 extra roadmap, whole incoming changelog unchanged. No policy/runtime/test/CI edit. No retroactive strategy-review/savings/installation claim. Current source guidance remains only a PR.
+
+Review the whole current skill and plan, original finalQA, original full publication rawtelemetry/identity proof, and correction README/JSON/provenance/preservation proof. Verify truthful binding and limits; identify concrete integration loss or unsupported claim, not speculative machinery/test additions. Existing fullproof is historical and fresh normal publication/exacthead/hosted gates remain caller obligations. Only this thread writable. No Git commands, tests/validate/pytest, fixtures, network or repository imports; narrow file/hash/JSON read comparisons allowed, bytecode disabled. Append at absolute EOF exact ### Reviewer (codex) · Round 2, file:line citations, swept file yes/no, VERDICT PASS|FAIL|PARKED and Basis. PASS headerApproved/NEXT —, tick done RELAY-GH1066-FINAL-R2-20261015; no selfcommit. Harness owns attestation. Handing off to Reviewer.
