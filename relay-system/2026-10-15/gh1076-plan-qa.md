@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -98,5 +98,20 @@ Handing off to Producer (codex-producer) — restore the intended seeded review 
 Disposition: Implemented — the first drive omitted `--artifact-file`, so the required seed was absent. Production code is unchanged. Next drive explicitly supplies the committed plan at `PROJECT/1-INBOX/GH-1076-CI-POLICY.md`; source3ccbb4e1, SHA256 `e35904609790f9f7886ea6e5b56d9d276780d78dd5d67757820806fe4ec84f3d`. Normal3-round cap and original PARKED review remain; this is round2, not a new/reset review. Filled the scaffolder's Definition of Done with the existing Setup questions.
 
 Handing off to Reviewer — read the complete seeded plan and source contracts.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: The complete seeded plan meets the five Setup questions as a coverage-preserving implementation plan with explicit readiness prerequisites. Approval does not attest implementation, live dependency state, Medium coverage, batch readiness or performance results.
+swept file: yes
+
+- [Pass] Required seed restored: the complete 152-line artifact is nonempty (10,918 bytes), and its SHA256 matches the Producer's recorded `e35904609790f9f7886ea6e5b56d9d276780d78dd5d67757820806fe4ec84f3d`. Read the whole artifact, including existing scope, phase gates and rollback; no additional pre-existing plan defect found. Probe: `python3 -B -c 'from pathlib import Path; import hashlib; p=Path(".relay-artifacts/GH-1076-CI-POLICY.md"); b=p.read_bytes(); print("bytes=",len(b)); print("sha256="+hashlib.sha256(b).hexdigest())'` → exit **0**, decisive output: `bytes= 10918`, matching digest above.
+- [Pass] Scope and ownership are honest: artifact lines 100–118 require an assessment of batch identities/dependencies/rollback and Medium evidence, preserve per-PR gates and bounded recovery, name GH1064/PR1069 and GH1072/GH1073, and explicitly prohibit calling unsupported umbrella capabilities complete. Lines 66–76 require registration/rating readback, prior-art/writer checks and independent review before code; lines 149–152 retain new-case approval and evidence dependencies. Live PR/owner state must be refreshed during execution; this turn does not certify it.
+- [Pass] Smallest consolidation fits the actual contracts. Artifact lines 80–88 extend the existing router and wave consumer, retain fixed dispatch and fail full on absent/unknown/duplicate/malformed decisions. Current `utils/py/wave_reconcile.py:593–619` owns the duplicated tier-to-gate translation; `:461–477` defines the two fixed gates and historical Small lookup, and `:531–571` checks schema, hash, tested-commit list and ancestry. Preserving @1 replay avoids an unnecessary receipt migration. Artifact lines 94–96 preserve registries and main/full; `.github/workflows/ci.yml:151–203` pins exact-main push and full sequential promotion. `validate.sh:922–924` enables PDDA/Python for Small; these stages remain required.
+- [Pass] Package widening is grounded in current input, without implying representative Medium catch-rate evidence. Probe commands: `printf '%s\n' skills/3-weekly/skills-army-hq/BOT-DAILY-HEALTH-CHECK.md | bash utils/ci-route.sh push` and `printf '%s\n' skills/3-weekly/skills-army-hq/scripts/sync.py | bash utils/ci-route.sh push` → both exit **0**. Decisive output: markdown `route=docs`, `tier=1`, empty `tier2_subsystems`; script `route=fast`, `tier=2`, `tier2_subsystems=skills-army-hq`, with `gh620-skills-army-mini-sync.sh` in `tier2_tests`. The literal Small registry omits that suite (`utils/ci-route.sh:38`); the existing publication area includes it (`:33`), the publisher projects the package (`utils/py/xyz_mini_sync.py:98–100`), and the existing payload pin checks its literal file set (`test/gh620-skills-army-mini-sync.sh:63–75`). Artifact lines 89–96 address that precedence miss and retain hosted Medium/full. No extra framework or CI case is needed to specify the fix.
+- [Pass] Verification and measurement criteria are proportionate: artifact lines 68–71 and 122–138 require matched width4 full runs in disposable full clones, host serialization, identity brackets, retained first failures/skips/retries, final review, typed attribution, normal push gates and exact-head hosted outcomes. They label one pair descriptive and restrict hosted comparison to naturally occurring equivalent jobs. Existing receipt checks include red/partial/drift/empty/wrong-run refusal (`test/gh425-gate-provenance-pr.sh:360–367`) and malformed telemetry rejection (`:395–406`); planned manual red controls complement existing checks without new assertions. Execution must commit provenance/raw evidence under the repository's existing TESTS-RESULTS contract, preserving the tested implementation SHA separately from subsequent evidence commits.
+- [Unverified — needs clone run] No suite, pytest, executable fixture, mutation, git command or external-state query ran. Classification above is a narrow read-only observation, not verification of the proposed implementation. Graph discovery was attempted against the available XYZ-forge project, but its generation was 2026-09-01 and its root was another checkout; exact-path coverage reported changed/untracked/missing metadata. Current local source was read directly for the material router/selector/receipt/workflow/runner/publication and existing-check contracts. No exhaustive source-defect or live-state claim is made. Implementation signoff still requires the plan's clone runs and recorded red controls.
+
+Relay closed (Approved), no further review turn needed. Producer (codex-producer) may proceed with the approved plan subject to its named prerequisites; approval grants no merge/protection/deployment authority. Only this relay file was edited.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
