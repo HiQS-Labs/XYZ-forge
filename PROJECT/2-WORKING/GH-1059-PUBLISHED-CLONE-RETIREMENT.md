@@ -62,11 +62,11 @@ Unknowns: current old-clone inventories and individual ownership have not been a
 
 ## Acceptance
 
-- [ ] Publication before merge is sufficient only through live canonical PR/head/ref proof.
-- [ ] Existing safety checks and normal merged-only behavior remain intact.
-- [ ] Only explicitly supplied task-owned paths retire; no primary writes, broad merges or new remover.
-- [ ] Start-task automatically invokes published closeout; local-only/active/unknown state is preserved.
-- [ ] Existing/manual verification, red controls, plan/final QA and appropriate final gate have retained receipts.
+- [x] Publication before merge is sufficient only through live canonical PR/head/ref proof.
+- [x] Existing safety checks and normal merged-only behavior remain intact.
+- [x] Only explicitly supplied task-owned paths retire; no primary writes, broad merges or new remover.
+- [x] Start-task automatically invokes published closeout; local-only/active/unknown state is preserved.
+- [x] Existing/manual verification, red controls, plan/final QA and appropriate final gate have retained receipts.
 
 ## Implementation notes
 
@@ -85,3 +85,5 @@ Final round1 approved at8eb6f70c (reviewed e86e1371). Before publication, a nonm
 Final round2 attested Approved at26574f1c, reviewed e013552e. The remaining edits update only this progress/ownership record; runtime and policy match that reviewed head. Both task-owned helper suffixes are explicit scope: the interrupted `-gate` and fresh `-verify`. Required evidence is committed before their closeout.
 
 Development reconciliation69666c47 landed while the final gate ran on669d136f. Supported disjoint ledger replay committed dbe1e3bc: keep this branch's higher-generation ledger and replay GH1043's completed doc/section/marker/text via writer verbs. No reviewed runtime/policy byte changed; the refreshed ledger checks clean (nine existing warnings). The subsequent publication push rechecks these governance-only changes.
+
+Final publication gate at669d136f:409/409 pass in1574s, separate full clone identity intact; ordinary push published the branch. Retained log, telemetry and provenance are under publication/. This is parallel publication evidence, not main promotion qualification. Runtime/policy still match final QA e013552e; remaining ready-PR/own-clone closeout is performed against live GitHub state. Routine LEADERBOARD output from the ledger refresh is omitted from the task branch; hosted reconciliation owns views.

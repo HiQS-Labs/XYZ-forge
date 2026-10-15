@@ -10,9 +10,9 @@ tree and unrelated checkouts are excluded; normal merged-only cleanup is unchang
 
 This changes cleanup eligibility, so unknown or local-only state preserves the checkout.
 Rollback by reverting GH-1059 or omitting the new mode; recover full clones from Trash.
-Existing cleanup180 tests, three focused start-task suites and39 isolated manual cases
+Existing cleanup180 tests, three focused start-task suites and41 isolated manual cases
 passed, with negative controls and committed provenance under `TESTS-RESULTS/2026-10-14+GH-1059/`.
-Final publication gate and independent final QA remain required before the ready PR.
+Independent plan/final QA approved; the full publication gate passed409/409 in a separate full clone.
 
 ## 2026-10-12 — Muse relay turns no longer stall on an unanswerable approval prompt (GH-521)
 
