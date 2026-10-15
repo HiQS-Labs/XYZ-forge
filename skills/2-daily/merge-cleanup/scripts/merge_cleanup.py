@@ -43,6 +43,7 @@ from toposort_prs import (
 )
 from scan_clones import GH_BIN_ENV
 import attempt_record
+import batch_record
 import ledger_merge
 from ledger_merge import (
     LEDGER_DUMP,
@@ -143,8 +144,15 @@ def log_warn(msg: str):
     print(f"merge-cleanup: WARNING — {msg}", file=sys.stderr)
 
 
+# GH-1064: while a batch is landing, the errors logged for the PR in hand are kept so a hard stop
+# can be recorded against that PR with its own diagnostic, whichever of the loop's returns fired.
+_ERR_SINK: Optional[Dict[str, Any]] = None
+
+
 def log_err(msg: str):
     print(f"merge-cleanup: ERROR — {msg}", file=sys.stderr)
+    if _ERR_SINK is not None:
+        _ERR_SINK["errs"].append(msg.strip())
 
 
 def resolve_merge_policy(repo_path: Path, strategy: Optional[str] = None) -> Dict[str, Any]:
@@ -899,7 +907,50 @@ def _await_mergeable(p_num: int, info: Dict[str, Any], primary_repo: Path) -> Di
     return info
 
 
-def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_run: bool) -> int:
+def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_run: bool,
+             batch: Optional[Dict[str, Any]] = None) -> int:
+    """Phase 5. With a batch record (GH-1064), every PR's outcome is written to it and to the
+    batch issue on any return, including each hard stop, which is attributed to the PR in hand."""
+    if batch is None:
+        return _land_prs_loop(ordered_prs, primary_repo, args, dry_run)
+    global _ERR_SINK
+    track: Dict[str, Any] = {"current": None, "errs": [], "failed": {}, "skips": {}, "reconciled": set()}
+    _ERR_SINK = track
+    rc = 2
+    try:
+        rc = _land_prs_loop(ordered_prs, primary_repo, args, dry_run, track, batch)
+        return rc
+    finally:
+        _ERR_SINK = None
+        _record_batch_outcomes(batch, ordered_prs, track, rc, primary_repo)
+
+
+def _record_batch_outcomes(batch, ordered_prs, track, rc, primary_repo) -> None:
+    stopped = "; ".join(track["errs"]) or "stopped"
+    for pr in ordered_prs:
+        n = pr["number"]
+        o = batch["outcomes"].get(str(n), {})
+        if n in track["reconciled"]:
+            batch_record.set_outcome(batch, n, reconcile="ok")
+        elif o.get("status") == "merged" and o.get("reconcile") != "ok":
+            if n == track["current"] and rc == 2:  # merged remotely, then a post-merge step stopped
+                batch_record.set_outcome(batch, n, reconcile=f"failed: {stopped}")
+        elif n in track["failed"]:
+            reason = track["failed"][n]
+            batch_record.set_outcome(batch, n, status="skipped: draft" if reason == "draft" else reason)
+        elif n in track["skips"]:
+            batch_record.set_outcome(batch, n, status=track["skips"][n])
+        elif n == track["current"] and rc == 2:
+            batch_record.set_outcome(batch, n, status=f"stopped: {stopped}")
+    origin = origin_url(primary_repo) or ""
+    batch_record.finalize_sweep_inputs(batch, primary_repo, origin)
+    batch_record.update(batch, _gh, primary_repo)
+    if batch.get("issue_error"):
+        log_warn(f"merge-batch issue: {batch['issue_error']} (the landing itself is unaffected)")
+
+
+def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_run: bool,
+                   track: Optional[Dict[str, Any]] = None, batch: Optional[Dict[str, Any]] = None) -> int:
     """E + E.6 + B1: the Phase 5 feedback loop. Every PR is re-fetched before any decision, gated
     in a disposable clone against the CURRENT integration head, merged only on green, verified
     MERGED on re-query, then reconciled (gating). The first failure stops everything."""
@@ -923,9 +974,13 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
     # C: runtime map of predecessor outcomes. toposort only ORDERS; a dependent of a parked or
     # handed-off PR must not be attempted at all.
     failed: Dict[int, str] = {}
+    if track is not None:
+        track["failed"] = failed
     pending = {pr["number"] for pr in ordered_prs}
     try:
         for pr in ordered_prs:
+            if track is not None:  # GH-1064: a stop from here on is this PR's, with these errors
+                track["current"], track["errs"] = pr["number"], []
             # A prior landing can update the tracked policy. Re-read before any repair/retarget.
             try:
                 policy = resolve_merge_policy(primary_repo, args.strategy)
@@ -973,9 +1028,13 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             label = hold_label(info)
             if label:
                 log(f"PR #{p_num}: carries hold label '{label}' — skipped (#444)")
+                if track is not None:
+                    track["skips"][p_num] = f"skipped: hold-label '{label}'"
                 continue
             if info.get("state") != "OPEN":
                 log(f"PR #{p_num}: state is {info.get('state')} — skipped")
+                if track is not None:
+                    track["skips"][p_num] = f"skipped: state {info.get('state')}"
                 continue
             if (info.get("baseRefName") or "") != branch:
                 log_err(f"PR #{p_num} targets '{info.get('baseRefName')}', not '{branch}' — stopping")
@@ -1161,6 +1220,10 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             _protect_stacked_dependents(info, open_prs, primary_repo, branch)
             if not execute_pr_merge(p_num, primary_repo, strategy=args.strategy, dry_run=False):
                 return 2
+            if batch is not None:  # GH-1064: record the remote merge before anything else can stop
+                merged = refresh_pr_with_retry(p_num, primary_repo)
+                batch_record.set_outcome(batch, p_num, status="merged",
+                                         merge_oid=(merged.get("mergeCommit") or {}).get("oid") or "")
             # Land it locally before anything writes into the primary. In particular, emitting
             # pr_merged before this fast-forward dirties releases.sql and can block the landing
             # (GH-624). GH-623: the fetch is bounded and retried on transient network failures.
@@ -1186,6 +1249,8 @@ def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_ru
             if not commit_and_push_phase5_writes(p_num, primary_repo, branch):
                 log_err(f"PR #{p_num}: post-merge writes were not made durable — stopping before the next PR")
                 return 2
+            if track is not None:
+                track["reconciled"].add(p_num)
         # GH-623: deferrals count as non-landed outcomes too — a deferred PR blocks only its
         # HARD dependents; soft dependents were attempted above. Exit 3 keeps the shape
         # "the queue completed but not everything landed"; 2 remains a hard stop.
@@ -1256,6 +1321,7 @@ def main():
     parser.add_argument("--resume", action="store_true", help="Continue a previous run: consult each PR's attempt record and skip one that is already parked (the live refresh stays authoritative — a PR whose repair resolved and now merges cleanly still lands)")
     parser.add_argument("--backup-first", action="store_true", help="Back up and verify candidate clone folders before tearing them down")
     parser.add_argument("--backup-root", help="Directory where standardized clone backups are stored (defaults to <top_level_folder>/_backups)")
+    parser.add_argument("--record-sweep", metavar="FILE", help="Record the post-merge regression-sweep verdict for the newest batch with QA pending (first line `verdict: clean|findings|deferred`), update its issue, and exit; nothing is scanned, merged or torn down (GH-1064)")
 
     args = parser.parse_args()
 
@@ -1265,6 +1331,8 @@ def main():
     except (OSError, RuntimeError) as exc:
         log_err(f"cannot resolve the primary path {args.primary!r}: {exc}")
         return 2
+    if args.record_sweep:
+        return record_sweep(primary_repo, args.integration_branch, Path(args.record_sweep))
     try:
         policy = resolve_merge_policy(primary_repo, args.strategy)
     except ValueError as exc:
@@ -1440,11 +1508,12 @@ def main():
     if _primary_blocks("execute cleanup"):
         return 2
 
+    batch = select_batch(primary_repo, args, ordered_prs)
     if not args.teardown_only and ordered_prs:
         print("=" * 80)
         print("PHASE 5: EXECUTING PR MERGES & RECONCILIATION")
         print("=" * 80 + "\n")
-        rc = land_prs(ordered_prs, primary_repo, args, dry_run)
+        rc = land_prs(ordered_prs, primary_repo, args, dry_run, batch=batch)
         if rc != 0:
             log_err("Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.")
             return rc
@@ -1493,7 +1562,63 @@ def main():
         log_err(f"Phase 6 completed with {phase6_failures} teardown or backup failure(s).")
         return 2
 
+    if batch is not None and batch_record.qa_pending(batch):
+        # GH-1064: landed, but no recorded sweep verdict covers these landings yet.
+        where = batch.get("issue_url") or batch["path"]
+        log(f"STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: {where})")
+        log(f"  sweep: {(batch.get('sweep_inputs') or {}).get('command', 'see the batch record')}")
+        return 4
     log("Merge cleanup run complete.")
+    return 0
+
+
+def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """GH-1064: continue the unfinished batch on --resume (whatever the queue size, even 0), else
+    open a new one when an executing queue holds 2+ PRs. Runs before the first merge."""
+    if not args.execute or args.teardown_only:
+        return None
+    origin = origin_url(primary_repo) or ""
+    if args.resume:
+        batch = batch_record.find_unfinished(primary_repo, origin, args.integration_branch,
+                                             [pr["number"] for pr in ordered_prs])
+        if batch is not None:
+            batch_record.extend(batch, ordered_prs)
+            log(f"Resuming merge batch {batch.get('issue_url') or batch['path']}")
+            return batch
+    if len(ordered_prs) < 2:
+        return None
+    batch = batch_record.new(primary_repo, origin, args.integration_branch, ordered_prs)
+    batch_record.create(batch, _gh, primary_repo, attempt_record.repo_slug(origin))
+    if batch.get("issue_error"):
+        log_warn(f"merge-batch issue not created: {batch['issue_error']} — landing continues; "
+                 f"the record is at {batch['path']}")
+    else:
+        log(f"Merge batch issue: {batch['issue_url']}")
+    return batch
+
+
+def record_sweep(primary_repo: Path, integration: str, verdict_file: Path) -> int:
+    """GH-1064 --record-sweep: store the caller's sweep verdict on the newest QA-pending batch."""
+    origin = origin_url(primary_repo) or ""
+    batch = batch_record.find_unfinished(primary_repo, origin, integration, [], need_qa=True)
+    if batch is None:
+        log_err(f"no merge batch with QA pending for {primary_repo} on '{integration}'")
+        return 2
+    try:
+        text = verdict_file.read_text()
+    except OSError as exc:
+        log_err(f"cannot read {verdict_file}: {exc}")
+        return 2
+    ok, msg = batch_record.record_verdict(batch, text)
+    if not ok:
+        log_err(f"verdict not recorded: {msg}")
+        return 2
+    batch_record.update(batch, _gh, primary_repo)
+    log(msg + (f" ({batch['issue_url']})" if batch.get("issue_url") else ""))
+    if batch.get("issue_error"):
+        log_warn(f"merge-batch issue: {batch['issue_error']}")
+    if batch_record.continuable(batch):
+        log("Planned PRs remain: continue with --resume --execute.")
     return 0
 
 
