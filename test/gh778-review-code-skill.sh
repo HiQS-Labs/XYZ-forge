@@ -7,8 +7,6 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 SKILL_DIR="$REPO/skills/2-daily/review-code-xyz"
 SKILL_FILE="$SKILL_DIR/SKILL.md"
 INSTALLER="$SKILL_DIR/install.sh"
-PR_DIR="$REPO/skills/2-daily/review-pr-xyz"
-PR_FILE="$PR_DIR/SKILL.md"
 ARCH_FILE="$REPO/ARCHITECTURE.md"
 
 echo "== test: gh778-review-code-skill =="
@@ -18,11 +16,9 @@ echo "== test: gh778-review-code-skill =="
 [ -f "$INSTALLER" ] && pass "skills/2-daily/review-code-xyz/install.sh exists" || fail "missing install.sh"
 [ -x "$INSTALLER" ] && pass "install.sh is executable" || fail "install.sh is not executable"
 [ ! -e "$REPO/skills/2-daily/review-code" ] && pass "old review-code folder is gone (GH-1060)" || fail "old review-code folder still present"
-[ -f "$PR_FILE" ] && [ -x "$PR_DIR/install.sh" ] && pass "review-pr-xyz SKILL.md + executable install.sh exist" || fail "review-pr-xyz incomplete"
 
 # --- 2. YAML frontmatter validation ---
 grep -q "^name: review-code-xyz$" "$SKILL_FILE" && pass "frontmatter has name: review-code-xyz" || fail "missing name in frontmatter"
-grep -q "^name: review-pr-xyz$" "$PR_FILE" && pass "frontmatter has name: review-pr-xyz" || fail "missing review-pr-xyz name"
 grep -q "description:" "$SKILL_FILE" && pass "frontmatter has description" || fail "missing description in frontmatter"
 
 # --- 3. Recital and Core Discipline Presence ---
@@ -32,14 +28,6 @@ grep -q "/debug-mantra" "$SKILL_FILE" && pass "/debug-mantra integrated" || fail
 grep -q "/workhorse" "$SKILL_FILE" && pass "/workhorse integrated" || fail "missing /workhorse reference"
 grep -q "/unstuck" "$SKILL_FILE" && pass "/unstuck integrated" || fail "missing /unstuck reference"
 grep -q "hand off to \[\`review-pr-xyz\`\]" "$SKILL_FILE" && pass "PR targets hand off to review-pr-xyz" || fail "missing review-pr-xyz handoff"
-grep -q -- "--pr <PR#>" "$SKILL_FILE" && fail "review-code-xyz still advertises --pr mode" || pass "review-code-xyz has no --pr mode"
-
-# --- 3b. review-pr-xyz: claims before code, report-only ---
-grep -q "Review-PR Discipline:" "$PR_FILE" && pass "review-pr-xyz recital present" || fail "missing review-pr-xyz recital"
-grep -q "## Phase 1: Claim Validation" "$PR_FILE" && pass "claim validation phase present" || fail "missing claim validation phase"
-grep -q "Early exit:" "$PR_FILE" && pass "invalid core claim exits early" || fail "missing early exit"
-grep -q "Never commit to, push to" "$PR_FILE" && pass "report-only rail present" || fail "missing report-only rail"
-grep -q "/workhorse\|/unstuck" "$PR_FILE" && fail "review-pr-xyz pulls in the fix loop" || pass "review-pr-xyz has no workhorse/unstuck fix loop"
 
 # --- 4. Quality gates & anti-patterns ---
 grep -q "A check that cannot fail is not a check" "$SKILL_FILE" && pass "mutation check rule present" || fail "missing mutation check rule"
@@ -54,7 +42,6 @@ done
 
 # --- 6. ARCHITECTURE.md registration ---
 grep -q "\[review-code-xyz\](skills/2-daily/review-code-xyz/SKILL.md)" "$ARCH_FILE" && pass "ARCHITECTURE.md has review-code-xyz link" || fail "missing ARCHITECTURE.md link"
-grep -q "\[review-pr-xyz\](skills/2-daily/review-pr-xyz/SKILL.md)" "$ARCH_FILE" && pass "ARCHITECTURE.md has review-pr-xyz link" || fail "missing review-pr-xyz ARCHITECTURE.md link"
 n_daily="$(find "$REPO/skills/2-daily" -mindepth 2 -maxdepth 2 -name SKILL.md | wc -l | tr -d ' ')"
 grep -q "### \`2-daily\` — A few times a day ($n_daily)" "$ARCH_FILE" && pass "ARCHITECTURE.md 2-daily count matches disk ($n_daily)" || fail "2-daily count does not match disk ($n_daily)"
 

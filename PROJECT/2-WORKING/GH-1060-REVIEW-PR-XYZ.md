@@ -54,3 +54,7 @@ issue asks for something else, or the change already landed.
 - [x] `ls -d skills/*/review-code` is empty; both new skills have valid frontmatter.
 - [x] No live reference to `skills/*/review-code/` or `name: review-code` remains (historical docs untouched).
 - [x] `test/gh778-review-code-skill.sh`, `test/gh798-status-skill.sh`, `test/gh306-registry-bidirectional.sh`, `test/gh589-xyz-mini-sync.sh` pass.
+
+## Operator-authorized assertion trim
+
+Removed nine newly added prose/packaging assertions from gh778; retained rename and handoff repairs, obsolete-folder absence and existing checks. gh589 publication-output assertion and gh798 maintenance are unchanged. gh778 now25pass0fail; recreating the obsolete folder produces a witnessed failure. New skill packaging, routing, claim-first and report-only instructions were reviewed manually, with limitations recorded under TESTS-RESULTS/2026-10-14+GH-1060/assertion-trim/. No skill/runtime behavior changed.
