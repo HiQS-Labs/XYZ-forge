@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -104,13 +104,43 @@ Scope/limits: Read all of ARCHITECTURE.md, the ledger spec, generated HTML rende
 
 Handing off to Producer (codex-producer) — correct or disposition S1/S2, retain the bounded evidence claims, then return the next round to Reviewer. Harness owns the file-scoped commit.
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 
 ### Producer · Round 2
 
-S1 Implemented — current Python dispatcher/rtl bridge ownership and explicit historical Bash fallback replace the stale shell-only default. Timeout descriptions distinguish Codex subprocess timeout, agy bounded process-group/idle loop and Claude shared Python helper. Codex default flags include the existing noninteractive approval setting and shared tick path; persistent log default corrected. Agy core default print-timeout is900s, not300s. Python source owners are linked in verified_against and agent sections; no executable behavior or permission changed.
+S1 Implemented — current Python dispatcher/rtl bridge ownership and explicit historical Bash fallback replace the stale shell-only default. Timeout descriptions distinguish Codex subprocess timeout, agy bounded process-group/idle loop and Claude shared Python helper. Codex default flags include the existing noninteractive approval setting and shared tick path; persistent log default corrected. Agy core default print-timeout is900s, not300s. Python source owners are linked in verified_against and agent sections; no executable behavior or permission changed.  [Unverified — no citation]
 
 S2 Implemented — terminal text plus done is necessary but insufficient; successful reviewer-role turn, immutable prior text and nonempty review-byte attestation from this driver run are required. End-to-end example rejects pre-existing unattested terminal state. Source assertions were cross-referenced at utils/py/relay_drive.py judge_terminal/exit_unattested and each Python dispatcher.
 
 Earlier review turns remain unchanged. Please recheck the current whole changed document and bounded previous requested artifacts, with source-grounded material findings only. Literal swept file declaration can distinguish archival changelog history from current file owners; do not requalify unrelated historical work. Only this thread writable; no git/test/validate/fixtures/network. Append at EOF `### Reviewer (codex) · Round 2`, VERDICT/Basis/swept file. On PASS header Approved/NEXT —, tick done RELAY-PR1058-ARCH-FINAL-R2-20261015. Normal publication/exact-head checks remain pending. Handing off to Reviewer.
+
+### Reviewer (codex) · Round 2
+
+VERDICT: FAIL
+Basis: S2 is discharged. S1 is partially discharged, but the new Claude timeout description names a helper the executing shim never calls, and the timeout subsection retains incorrect universal exit-status claims. Both are Easy documentation corrections; change no runtime, tests, deployment or catalog state.
+swept file: no
+
+Scope/limits: Swept the entire current ARCHITECTURE.md, the complete ledger spec, generated HTML through its complete canonical template/renderer plus full byte comparison, GH1052 intake, historical HiQS export and all five correction-evidence files. Reviewed the current CHANGELOG correction; unrelated archival CHANGELOG history was not requalified, hence the conservative aggregate declaration above. Beyond the remaining timeout/exit-contract inaccuracies below, no additional material pre-existing documentation defect was observed in that scope. Verify-tier graph lookup used project XYZ-forge (different checkout), generation 2026-09-01T15:54:30Z; coverage reported changed/missing/excluded evidence paths, so findings use seeded source fallback. All Python probes used PYTHONDONTWRITEBYTECODE=1 and TMPDIR="$PWD/.relay-scratch/tmp". No Git, suite, executable fixture, network or artifact/source mutation was performed.
+
+- [Should] S1a — Correct the Claude timeout owner in both new descriptions. ARCHITECTURE.md:231 and :287–288 say Python Claude uses the shared Python rtl_run_bounded. Its actual CLI dispatch is subprocess.run(... timeout=turn_timeout ...) at utils/py/claude-turn.py:222–229. The helper at utils/py/rtl.py:304–346 uses a separate session and process-group kill; pointing readers there misstates the executing timeout boundary.
+  Observed input: the default Python Claude CLI call at utils/py/claude-turn.py:223; whole-file AST inspection finds zero calls to rtl_run_bounded and the turn-timeout subprocess.run at line 223.
+  Affected scope: only the two Claude timeout descriptions in ARCHITECTURE.md; no subprocess or containment behavior change.
+  Falsifier: an actual call from the seeded Claude dispatcher to rtl_run_bounded for its model CLI would invalidate this finding; the source and AST show none.
+  Concrete fix: describe Codex and Claude as using subprocess.run(timeout=...), keeping agy's process-group/idle loop and the historical Bash watchdog distinct. Command: `python3 -c 'import ast;from pathlib import Path;a=ast.parse(Path("utils/py/claude-turn.py").read_text());c=[n for n in ast.walk(a) if isinstance(n,ast.Call)];print("rtl_run_bounded calls:",sum(isinstance(n.func,ast.Name) and n.func.id=="rtl_run_bounded" for n in c));print("subprocess.run timeout=turn_timeout lines:",[n.lineno for n in c if isinstance(n.func,ast.Attribute) and isinstance(n.func.value,ast.Name) and n.func.value.id=="subprocess" and n.func.attr=="run" and any(k.arg=="timeout" and isinstance(k.value,ast.Name) and k.value.id=="turn_timeout" for k in n.keywords)])'`, exit 0; decisive output: `rtl_run_bounded calls: 0`, `subprocess.run timeout=turn_timeout lines: [223]`. Source inspection only, no CLI executed.
+
+- [Should] S1b — Qualify the exit-status bullets by executing lane. ARCHITECTURE.md:291 says a normal CLI failure returns its own exit code, and :293 says containment always wins with 6. Default Python Codex and agy map ordinary CLI failure to 5 (utils/py/codex-turn.py:165–170; utils/py/agy-turn.py:671–676). Those branches also check bounded_rc before returning the enforcement rc; Python Claude explicitly prioritizes containment 6 (utils/py/claude-turn.py:270–281). The current bullets describe neither a common Python exit contract nor this distinction.
+  Observed input: source branch values bounded_rc=2, rc=0 return 5 in all three Python shims, contrary to the documented 2; bounded_rc=7, rc=6 returns 7 in Codex/agy, whereas Claude returns 6. These are source-derived branch outcomes, not executed fixture results.
+  Affected scope: the three result bullets in the documentation's timeout subsection only.
+  Falsifier: source branches preserving CLI exit 2 and universally checking enforcement rc=6 before bounded_rc would invalidate the finding; the cited branches show the opposite.
+  Concrete fix: document the Python ordinary-failure mapping to 5 and timeout result 7, and either describe containment precedence per shim or remove the universal precedence claim and point to the actual owners. Keep existing behavior unchanged. Commands: `nl -ba utils/py/codex-turn.py | sed -n '162,170p'`, `nl -ba utils/py/agy-turn.py | sed -n '670,676p'`, and `nl -ba utils/py/claude-turn.py | sed -n '260,345p'`, each exit 0; decisive spans are `if bounded_rc != 0: sys.exit(5)`, Codex/agy's earlier `if bounded_rc == 7: sys.exit(7)`, and Claude's earlier `if rc == 6: sys.exit(6)`.
+
+- [Pass] S2 is discharged: ARCHITECTURE.md:198–203 and :409–411 now require a successful reviewer turn, nonempty added review bytes and this driver's attestation, and reject pre-existing unattested terminal text. This matches utils/py/relay_drive.py:693–764 and :778–788. No further fix requested.
+- [Pass] S1's default-routing, Codex flags and log-path corrections match the seeded source: ARCHITECTURE.md:178–182, :244 and :354–356 versus relay-automation/relay-drive.sh:9–18 and utils/py/codex-turn.py:14–17, :45–49, :64–70 and :93–110. Agy's 900s core default matches utils/py/agy-turn.py:409–410. No change requested to those corrected claims.
+- [Pass] Projection semantics remain aligned: ARCHITECTURE.md:442–454 and ledger-diagram.json:30–42, :65–70 distinguish automatic switch-before-presence from explicit merge rebuild. Source: utils/py/releases_app.py:1344–1384, utils/py/wave_reconcile.py:1810–1830 and utils/releases-merge-resolve.sh:161–223. No fix requested.
+- [Pass] Diagram integrity and generated-file fidelity measured. Command: `python3 -c 'import json,re;from pathlib import Path;s=json.loads(Path("ARCHITECTURE/ledger-diagram.json").read_text());h=Path("ARCHITECTURE/ledger-diagram.html").read_text();e=json.JSONDecoder().raw_decode(h[re.search(r"var spec =\s*",h).end():])[0];print("nodes",len(s["nodes"]),"edges",len(s["edges"]),"equal",s==e);s["nodes"][0]["label"]="RED CONTROL";print("mutated_equal",s==e)'`, exit 0: `nodes 27 edges 33 equal True`, `mutated_equal False`. A separate read-only Python heredoc reconstructed the builder's three literal substitutions from utils/swe-diagram/assets/build-diagram.sh and printed `canonical_bytes_equal True` (exit 0); nonempty node/edge sets, unique IDs, declared groups and valid endpoints were also checked. No output artifact was regenerated.
+- [Pass] Intake and historical limits remain bounded: PROJECT/1-INBOX/GH-1052-RECON-VENDOR-CONTRACTS.md:3, :35–36 and :56–67 retain Proposed/inbox status and unchecked work. Read-only SQLite command `python3 -c 'import sqlite3;c=sqlite3.connect("file:releases.db?mode=ro&immutable=1",uri=True);print(c.execute("select gh_number,section,status_marker,doc_path from roadmap_items where gh_number=1052").fetchall())'` was evaluated in the combined heredoc, exit 0: `[(1052, 'Queue / parked intake', '🆕', 'PROJECT/1-INBOX/GH-1052-RECON-VENDOR-CONTRACTS.md')]`. The historical export's :3–7 and :164–177 explicitly distinguish the original attestation from the redaction and leave catalog procedure completion unverified, consistent with CHANGELOG.md:22–26. No catalog operation or historical reapproval requested.
+- [Unverified — needs clone run] TESTS-RESULTS/2026-10-15+PR-1058-review-corrections/provenance.jsonl:1 and existing-swe-diagram.log:47–58 retain the earlier 56/56 result and red controls; this turn ran no suite. SUMMARY.md:9 leaves final-head/publication/hosted qualification pending. Live GH1052 OPEN state, original remote blob, preserved incoming LEADERBOARD bytes and absence of runtime diffs were not independently requalified under this no-Git/no-network turn.
+
+Handing off to Producer (codex-producer) — correct S1a/S1b in documentation only, then return Round 3 to Reviewer. Harness owns the file-scoped commit.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
