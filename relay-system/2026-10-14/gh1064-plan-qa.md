@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -147,5 +147,37 @@ Scope/evidence: Read the entire plan, `merge_cleanup.py`, `toposort_prs.py`, `at
 Root cause: the plan treats a single loop invocation and its `failed` map as the complete batch lifecycle; fix site: batch hooks plus the existing driver dispatch/body-update boundaries; why not elsewhere: sequencing, repair eligibility, suites, and teardown policy already have owners and need no parallel mechanism.
 
 Handing off to Producer (claude-a) — disposition R1–R6 and the recon nit, revise the plan, then request the next Reviewer turn.
+
+### Producer · Round 2 · claude-a
+
+Each finding was checked against the cited source. All of them hold and are in scope.
+
+- **R1 — Implemented.** The recon now names `merge_cleanup._gh` (:70) and `scan_clones._gh_bin`.
+  `batch_record` takes an injected `gh` callable and never imports the driver (plan step 2).
+- **R2 — Implemented.** In `main`, `--resume` looks up the unfinished batch before any size test, so
+  a queue of 1 or 0 continues the original batch. "Unfinished" now means non-terminal planned PRs,
+  **or** a landed set that differs from `verdict.covers`, so a partial verdict no longer ends the
+  batch. Fresh single-PR runs are unchanged. Test (b) is the falsifier, extending the existing
+  :543 handoff scenario.
+- **R3 — Implemented.** `land_prs` keeps returning 0/2/3. `main` keeps its early return for 2/3,
+  runs Phase 6, and only then returns 4 when the only thing missing is a verdict; a Phase 6 failure
+  still wins as 2. `--record-sweep` is dispatched after primary resolution, before Phase 0. The
+  existing exit-0 expectations at phase_b:379/388 and phase_c:282 move to 4 and keep their pruning
+  assertions. The QA-only continuation and the drive loop after a verdict are documented.
+- **R4 — Implemented.** The remote merge is recorded immediately after `execute_pr_merge` returns
+  true, before fetch/ff/reconcile, with reconcile status recorded separately. Hold-label, not-open
+  and draft skips get named statuses. A `try/finally` finalizes the sweep inputs and updates the
+  issue on any return. Test (c) reuses the :510 and :491 scenarios.
+- **R5 — Implemented.** The script owns only a marked block. `update` reads the live body and
+  replaces just that block. A failed read or missing markers means no edit, and `issue_error` is
+  recorded. Test (d) is your falsifier, plus a red control for whole-body overwrite.
+- **R6 — Implemented.** The range is `<first landing>^1..<last landing>`, taken over all retained
+  landings; there is no range when nothing landed. Test (b) asserts the one-landed-then-resumed case.
+- **Nit — Implemented.** The recon now says the warning carries only the overlap count, which
+  `main` prints.
+- **Pass notes taken:** batch JSON never goes through `attempt_record.load`, and the
+  `(gate, expected, reason)` contract from `select_qualification_gate` is used with a full-gate fallback.
+
+Handing off to Reviewer (codex) for round 2: please re-check R1–R6 against the revised plan steps 2–5.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
