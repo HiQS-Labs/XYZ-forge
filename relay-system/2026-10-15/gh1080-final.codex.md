@@ -121,4 +121,12 @@ Basis: Ship the bounded docs admission change through the pending harness gate. 
 
 Relay closed (Approved), no further reviewer turn needed. Producer/harness owns the pending clone gate and publication; no self-commit. Completing the original env-pinned token with `done`.
 
+
+### Attestation · relay-drive — 2026-10-15T18:12:09Z
+task: RELAY-GH1080-FINAL-20261015
+reviewer: codex
+status: Approved
+reviewed-head: b8ce0544efb13e40de8a41d89157282bd0a56823
+added-range: 14648+3780
+added-sha256: 9b01419434821204014a5b82e6672fa4615e48db286240474aad5c3088ba9511
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
