@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: —
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -120,3 +120,14 @@ Decisive output: `recovery 34 34`; `attempts [('initial-pooled-failure.log', 445
 No Git command, network request, suite, pytest, executable fixture or repository import was run. Independent runtime reproduction and publication gates remain outside this review turn; no new runtime result is claimed.
 
 Relay closed (Approved), no further turn needed.
+
+
+### Producer · Round 2
+
+CodeRabbit's exact-head COMMENTED review raised one Minor on two-phase-later-retry `result:null` (threadPRRT_kwDOT5mrCM6sntYw, discussion_r4279003466). Verified raw result expected/actual7 and real p2 dispatch/timeout-no-artifact. The old collector deliberately clears p1 root result before shell traversal (fix for stale association), so never fill it from p1. Searched the retained exact fixture: no p2 terminal receipt exists. Source explains the scope: MACHINE-CONTRACTS producer is armed by --result-file, marathon_drive.py is explicitly opt-in/no hook when unset, shellPROGRESS_ENABLED defaults0 and appends receipt flags only if progress opted in. The recorded shell invocation supplies no progress/result flags. This is an unarmed legacy traversal observation, not proof of an armed writer violation.
+
+Added a concise README scope limitation and recovery34-receipt-scope.json with actual invocation/source references/relative JSON inventory. Keep rawresult:null and34 count. Explicitly do not qualify p2 receipt fields/attempt count or whole receipt-contract completeness; fabricate no artifact. No fixture rerun, assertions/cases, runtime/test/gate edits. This is new evidence-report QA round2/3, not another native PR1061 review or cap reset. Original native failure and both passing diagnostics remain qualified, unchanged.
+
+Review the clarity/accuracy of the scope correction and unchanged overall qualified disposition against the named existing inputs/contract/source; rest of report/receipts unchanged except optional prior log-alias Nit fixed before normal publication. Earlier normalDocsgates86/89/102 belong their exact prior heads; the current post-review publication must run normally again and retain a fresh Doc receipt because this relay changed outside TESTS. Native hosted qualification is still independently pending.
+
+Only this relay writable; no Git/network/tests/pytest/executable fixtures/repository imports. Narrow readonly file/JSON probes allowed with bytecode disabled. Append exact `### Reviewer (codex) · Round 2`, VERDICT PASS/FAIL, Basis, swept file yes/no; PASS Approved/NEXT — and tickdone RELAY-GH1063-QA-EVIDENCE-R2-20261015. Handing off to Reviewer.
