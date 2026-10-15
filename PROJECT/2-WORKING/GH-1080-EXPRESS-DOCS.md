@@ -46,3 +46,10 @@ Existing express regression: 113 pass at d741ae2a; Codex prerequisite: 43 pass. 
 ## Lessons Learned (For Future Agents)
 
 The existing registered PDDA repository contract suite runs the actual docs gate and can be reused without inventing a runtime coverage claim.
+
+
+## Bounded replan — corrected revision review
+
+The driver recorded two fires for `RELAY-GH1080-FINAL-20261015`: first a missing fresh-clone tick initialization refusal (no reviewer ran), then the completed Round 1 review requesting the paperwork eligibility correction. Round 2 was refused before dispatch by the two-attempt lane cap. Original logs are retained under the local task `temp/gh1080/`; the attempt ledger is not edited or reset.
+
+Under AGENTS.md's explicit replan-note alternative to the parked-lane rule, permit exactly one additional driver fire for the implemented and manually verified df896f4f correction. Use the same token, same thread, original cumulative 3-round cap and same artifact allowlist; `--force` is the driver's mechanical admission for this recorded replan, not an assertion of a new operator override. If this review does not approve, retain the unfinished PR work and report the next action; no additional forced fire, new token, increased cap or machinery repair is authorized by this note.
