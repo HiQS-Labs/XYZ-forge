@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-15 — Preserve unpublished historical HiQS review receipts
+
+Recover three approved historical review records from the operator’s primary checkout
+through eleven source-traced cherry-picks. Preserve their exact bytes, earlier findings,
+rounds and evidence limits; record file hashes and source identities. The original checkout
+and a verified bundle retain its source history. Do not carry older staged development
+reversions into this documentation PR.
+
+These records document prior HiQS artifact reviews and confer no fresh Forge approval or
+current runtime/deployment qualification. Easy to reverse by reverting the documentation
+addition; no source work is discarded and no runtime, installation or activation occurs.
+
 ## 2026-10-14 — merge-cleanup keeps the batch record itself and holds Done until QA is recorded (GH-1064)
 
 The `merge-batch` issue protocol (GH-944) was caller-owned prose for queues of three or more PRs.
