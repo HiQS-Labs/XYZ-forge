@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -79,5 +79,41 @@ do not demand deployment or a live @2 qualification while activation is prohibit
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Ship the corrected plan for the bounded disabled implementation. The exact two-file layout resolves the original publication gap without expanding the publisher, runner or authority surface. This approves a plan, not implemented @2 qualification or activation. Original plan3/3 FAIL and final3/3 history remain intact; the separately authorized supplemental final QA is unspent.
+swept file: yes
+
+- [Pass] Exact writer/reader contract is adequate. Artifact .relay-artifacts/GH-1076-CI-POLICY.md:374–388 specifies two ordered phase rows in existing validation.jsonl, lossless UTF-8 payloads, container and original-stream digests, original run IDs/commands/lists/counts, independent strict validation, historical @1 raw-stream semantics and unknown-schema refusal. This explicitly supersedes earlier separate-file wording (:413–414). Each run remains independently attributable; no combined run or synthetic passing total is proposed. Implement the stated strict contract in the existing wave owner, including malformed rows/types/duplicates/order/hash/identity refusal; do not pass the container itself to qualification_summary.
+- [Pass] Existing publication/recovery can carry this layout unchanged. utils/py/hosted_lane_publish.py:56,80–90 admits/retains both exact physical filenames; :119–136 reads targets from provenance only; :208–232 restores all retained receipt files before one recompute with --only-receipted --skip-pull. The recompute consumer is the same committed receipt matcher (utils/py/wave_reconcile.py:2223–2238), so implementation must extend committed enumeration and that matcher together as required by artifact :332–351,379–388. Disabled/incompatible @2 must remain unusable there. No publisher widening is needed. This is source inspection plus packaging observation, not an executed publication race.
+- [Pass] Independent narrow probe reproduced the retained packaging claim. Exact command below exited **0**, with decisive output **ordered_rows=2; both_original_byte_streams_and_hashes_match=True** and **publisher_regex_matches=[True, True]**. Inputs were a nonempty two-row container and both retained actual component streams. A separate AST-only invocation of existing publisher pure functions returned both paths from declared_paths/receipt_paths, receipt_targets([validation_path]) == ([], []), and retry argv ['--catch-up', '--qualify', '--pr', '1079', '--only-receipted', '--skip-pull']; no git/publisher main/fixture ran. Original streams identify distinct runs f874fa8d4-47453 (75/75) and f874fa8d4-81198 (9/9), both at true tested f874fa8d4d69e2db4f56a8863e6de9b61275842c. These are phase-shape observations, not new qualifying receipts.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 -B - <<'PY'
+import ast, hashlib, json, re
+from pathlib import Path
+b = Path("TESTS-RESULTS/2026-10-15+GH-1076")
+t = ast.parse(Path("utils/py/hosted_lane_publish.py").read_text())
+pattern = next(ast.literal_eval(n.value) for n in t.body if isinstance(n, ast.Assign) and any(isinstance(x, ast.Name) and x.id == "RECEIPT" for x in n.targets))
+rows = [json.loads(x) for x in (b/"disabled-profile/proposed-validation-bundle.jsonl").read_bytes().splitlines()]
+assert [x["phase"] for x in rows] == ["small", "skills-army-hq"]
+for x in rows:
+    raw = x["telemetry_utf8"].encode("utf-8")
+    assert raw == (b/("phase3/component-study/"+x["phase"]+"-validation.jsonl")).read_bytes()
+    assert hashlib.sha256(raw).hexdigest() == x["telemetry_sha256"]
+print("ordered_rows=2; both_original_byte_streams_and_hashes_match=True")
+prefix = "TESTS-RESULTS/2026-10-15+GH-591/wave-f874fa8d4d69e2db4f56a8863e6de9b61275842c/"
+print("publisher_regex_matches=" + repr([bool(re.fullmatch(pattern, prefix+n+".jsonl")) for n in ("validation", "provenance")]))
+PY
+```
+
+- [Pass] Generic fallthrough/coexistence are explicit implementation obligations, not assumed current behavior. Current check_provenance_receipts already reserves qualification namespaces (utils/py/wave_reconcile.py:787–792), whereas validate_pre_merge_receipts directly checks PR/result fields (:866–914). Artifact :385–388 specifically requires the latter to reject @2/unsupported qualification namespaces and requires deployed-consumer/coexistence review before future emission. Current @1 enumeration/matching and historical Small-list replay (:470–478,531–590) must retain their semantics. This addresses the concrete consumer difference without requiring deployment while disabled.
+- [Pass] Whole 414-line artifact swept, including historical work, measurements, ownership constraints and superseding continuation. No additional pre-existing plan defect found. Artifact :285–305,313–343 retains two existing owners, fixed existing commands, source-controlled literal false with no override, full fallback, one exact merged development landing, policy/environment identity, no-transfer and no disabled @2 emission/suppression. Runner phase shapes correspond to validate.sh:916–924,1119–1127,1464–1468,1499–1504; the area's eight-suite list is utils/ci-route.sh:35. Artifact :344–364,404–414 retains clone-only checks, no new CI cases, one supplemental final QA, source freeze, ordinary access/403 stop and separate future activation approval. Costly shared-contract risk and pre-activation revert boundary are stated at :300–305. Older status/history is read with its dated continuation, not as refreshed remote state.
+- [Unverified — needs clone run] No validate.sh, test/*.sh, pytest, executable fixtures, git commands, source writes, live qualification, publication race or external-state query ran. New writer/reader strictness, current @1 replay equality and red controls require retained disposable-clone evidence and final QA. Graph Verify discovery was attempted: no project exists for this worktree; available foreign-root XYZ-forge generation is 2026-09-01T15:54:30Z, relevant search returned zero, and exact-path coverage reports changed metadata/untracked publisher. Material contracts were read directly from current local source. No exhaustive code-defect, current-development freshness or performance qualification is claimed.
+
+Relay closed (Approved), no further plan-review turn needed. Producer (codex-producer) may implement this approved disabled plan, then use the separately authorized one supplemental final QA and required checks. This grants no activation, merge, deployment or access bypass. Only this relay file was edited; the harness owns its commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
