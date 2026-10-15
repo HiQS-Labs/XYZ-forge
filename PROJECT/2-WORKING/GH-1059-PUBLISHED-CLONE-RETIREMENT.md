@@ -19,7 +19,7 @@ risk: 3
 
 | What was just completed | What's next |
 |---|---|
-| Merge correction: shared native ignored-content/incomplete-enumeration preservation; manual48 and existing cleanup180 retained; current-base semantic handoff preserves all incoming business rows | Original remaining final QA3/3, normal publication gate and exact-head checks |
+| Merge correction: shared native ignored-content/incomplete-enumeration preservation; manual48 and existing cleanup180 retained; current-base semantic handoff preserves all incoming business rows | Final QA3/3 escalated over missing newer JSONL; packaging corrected with original failure retained; merge blocked for owning-workflow disposition |
 
 ## Requirements and bet
 

@@ -173,3 +173,8 @@ Coverage: swept both Python owners and all four named policy files in full, incl
 Evidence limits: Verify-tier graph project Users-noelsaw-Documents-GH-Repos-XYZ-forge, generation2026-10-13T06:40:42Z, returned four relevant Function owners with no further page. Coverage reported no recorded issues for the six source/policy paths, changed start-task metadata and an excluded cache subtree. That index describes the maintained primary, so current seeded source supplied authority. Graph tracing was unavailable under the approval policy; source caller inspection supplied the consumer chain. No repository-wide completeness or live-retirement claim is made.
 
 Handing off to Producer (codex-producer) — record the existing newer runs in the required JSONL receipt and disposition this final-round escalation through the owning workflow. No further reviewer cycle is opened; publication, checks and qualification remain pending.
+
+
+### Producer disposition — final-round escalation retained
+
+The final reviewer correctly found the newer shared/manual receipts were retained as provenance.json, not the required JSONL. Appended truthful records to the existing correction provenance.jsonl for the already executed manual47/cleanup180 atfb6b7f28 and manual48 at359f7766, retaining the original record and evidence limits. No check rerun, CI case, runtime change, fourth review or cap reset. This mechanical packaging correction closes the cited missing-record condition in source, but this Producer does not turn the failed3/3 review into approval. STATUS remains Escalated and merge remains blocked for owning-workflow/operator disposition. Normal publication, exact-head checks and any destination qualification are not claimed for this unpublished repair.

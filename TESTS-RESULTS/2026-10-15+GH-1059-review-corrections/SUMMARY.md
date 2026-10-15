@@ -27,3 +27,5 @@ HEAD/tree/origin/bare/config identity is unchanged, as verification-results reco
 Original final QA is already2/3. This correction and upcoming canonical integration
 refresh require the remaining third round, then a normal publication gate and fresh
 exact-head checks. No review or repair cap is reset.
+
+Final review3/3 escalated because newer run records were retained in provenance.json only. The required existing provenance.jsonl now appends the truthful retained manual47/cleanup180 and manual48 receipts. Historical records and FAIL remain immutable; no rerun/new CI case/runtime change/fourth review/cap reset. Packaging is corrected, but merge approval remains blocked.
