@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-15 — GitHub-first radar work evidence (GH-1083)
+
+Radar now verifies doc-derived work facts against live GitHub issues/PRs, reports stale-doc drift, and uses docs as discovery hints or labelled degraded fallback. Explicit GitHub RGT declarations replace doc-only authority. The narrow adopted-SOP policy exception cannot override adoption/status/supersession evidence. Missing or partial GitHub access lowers report confidence; missing PROJECT removes hints only.
+
+Instruction-only, Easy to reverse by reverting the skill change. No new tests, runtime code or data schema. Skills Army deployment follows merge and remains a tracked handoff.
+
 ## 2026-10-15 — Preserve unpublished historical HiQS review receipts
 
 Recover three approved historical review records from the operator’s primary checkout
