@@ -109,6 +109,14 @@ status: Approved
 reviewed-head: ee3e80349ab027037b7084292d56ec3ea83b7c10
 added-range: 7910+4590
 added-sha256: 842d3d34095f011e306fbd95dccbcb92a5ddc5e87331fd60deeba3c9e27fa19e
+
+### Attestation · relay-drive — 2026-10-15T05:01:57Z
+task: RELAY-GH1066-FINAL-R2-20261015
+reviewer: codex
+status: Approved
+reviewed-head: c8ff62340af45193e1343506a51e0458f9cfddbb
+added-range: 15159+5291
+added-sha256: ee6a9c2932fcd1b36cf050ee86ed7f6131301d404126ccd30a78748ee8c49fc5
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 
