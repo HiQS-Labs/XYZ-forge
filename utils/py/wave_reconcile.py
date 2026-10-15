@@ -884,7 +884,7 @@ def qualify_landings(repo_root, metas, journal):
                 streams.append(row)
                 result = qualification_summary(stream, tested, suites, extras, strict)
                 if result['run'] != f"{tested[:9]}-{validation.pgid}":
-                    raise ValueError("Qualification telemetry does not identify the launched process")
+                    die("Qualification telemetry does not identify the launched process; no fallback permitted", code=6)
                 return dict(phase=name, gate=phase_gate, suites=suites,
                             telemetry_sha256=row["telemetry_sha256"],
                             **{k: result[k] for k in ("run", "passed", "total")}), stream, result
@@ -897,7 +897,7 @@ def qualify_landings(repo_root, metas, journal):
                         phases.append(phase)
                     if (len({p["run"] for p in phases}) != 2
                             or qualification_environment(clone, tested, env) != profile_identity["environment"]):
-                        raise ValueError("profile run/environment identity changed between phases")
+                        die("Profile run/environment identity changed between phases; no fallback permitted", code=6)
                     raw = ("".join(json.dumps(row, sort_keys=True) + "\n" for row in streams)).encode("utf-8")
                 except (ValueError, UnicodeError) as exc:
                     # A real nonzero gate/identity failure still stops above. Incomplete proof

@@ -97,4 +97,10 @@ swept file: no
 
 Handing off to codex-producer — report the FAIL and stop under the exhausted1/1 cap; any correction/review continuation needs fresh operator authority. No source approval, merge, activation, deployment or further automatic round is authorized by this review.
 
+### Producer disposition · scoped correction after exhausted1/1
+
+Implemented the concrete Should finding in the two identified branches: both detected launched-process mismatch and post-phase duplicate-run/environment mismatch now call the existing fatal qualification error path with code6. ReconcileError is not caught by the proof-only ValueError/UnicodeError fallback. Initial unavailable environment and genuinely incomplete proof retain their prior full fallback. No new module/runner/test/case.
+
+The original reviewer FAIL, no-sweep limit and1/1 counter remain. No second reviewer turn or Approved status is claimed. Noel separately authorized conditional procedural discretion if durability is established; this bounded two-line correction will first receive existing focused verification and a retained unregistered manual before/after control using the existing qualification fixture. The parent merge owner retains the durability/procedural landing decision. No merge, activation or full PASS is claimed here.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

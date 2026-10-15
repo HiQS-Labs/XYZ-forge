@@ -17,7 +17,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Configurable optimization pivot implemented; existing-owner ci.optimized and strict two-phase evidence verified in isolation. Original failed/approved review history retained. | Supplemental final QA, then frozen-source full pre-push gate and GH1076/PR1079 evidence publication. Primary activation and landing stay with the merge owner. |
+| Configuration pivot implemented;13 existing focused suites pass. Supplemental final1/1 FAIL found drift wrongly entering proof fallback; two fatal-stop corrections applied. | Verify bounded correction and retain original FAIL/counter; parent judges conditional procedural exception, with fresh full evidence and GH1076/PR1079 publication still required. |
 
 ## Table of contents
 
