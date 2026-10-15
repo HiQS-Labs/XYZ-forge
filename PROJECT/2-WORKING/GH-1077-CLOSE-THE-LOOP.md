@@ -49,3 +49,17 @@ all prior tasks and the operator's primary checkout.
 Ratings:65/20/50/85 — explicitly requested workflow, bounded reporting risk, neutral appeal, small
 prose change. No numeric override or incident growth claim. Context visibility can be partial; the
 skill must disclose that limit rather than promise complete recall.
+
+## Clarified handoff-gap requirement
+
+The operator clarified that the sweep must find missing documentation and execution propagation,
+not only unkept explicit promises. Example: a technical spike for tomorrow is captured in the
+main issue but tomorrow's execution planning doc lacks even a pointer. Trace finding/decision
+→ existing source record → next execution consumer; propose a minimal pointer and execution
+implication, labeled inferred/possible until checked. Bounded task/date lookup is allowed when
+the downstream plan is not already linked. No blanket doc synchronization or automatic writing.
+
+Round1's independent reviewer applied the initial example and returned PASS, but relay-drive
+rejected close-mismatch (token released rather than done); it is not an attested approval.
+Clarified skill and spike-to-plan example receive cumulative round2/3. No harness repair or new
+review machinery is in scope.

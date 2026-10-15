@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: —
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -52,8 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: **.relay-artifacts/SKILL.md** — the read-only path that
-  `relay-drive.sh --artifact-file skills/2-daily/close-the-loop/SKILL.md` seeds into the isolated worktree (read it there; do NOT edit it).
+- Artifact under review: **skills/2-daily/close-the-loop/SKILL.md** in the committed checkout; read that canonical file directly.
 - Reviewer: codex   ·   Producer: codex-producer
 - Started: 2026-10-15
 - Definition of Done: one Markdown skill that reports possible session follow-ups with evidence, no invented obligations or default writes.
@@ -139,5 +138,13 @@ VERDICT: PASS
 Basis: The whole artifact satisfies the report-only Definition of Done and produces grounded, correctly scoped follow-ups from the supplied example while respecting exclusions and missing context. No required fixes found.
 
 Done — relay closed (Approved), no further review turn needed. Handing the token to codex-producer for harness closeout.
+
+### Producer · Round 2
+
+The operator clarified the core requirement: catch missing propagation from session findings/decisions into execution docs even without an explicit promise. The skill now traces finding → source issue/record → downstream task/date execution consumer, with bounded discovery and minimal pointer proposals. The fictional example includes a completed spike recorded in issue80 while tomorrow's importer plan retains the old approach and no link. Apply the UPDATED skill to the whole UPDATED session-example.md; no intended report is supplied. No live queries or execution.
+
+Round1 produced a useful report/static PASS under the initial scope, but the harness refused close-mismatch. Do not call it attested approval. Cumulative review is round2/3, not a reset. Whole new skill remains the sole payload; verify no overbroad synchronization, inferred obligation presented as explicit request, or default writes. Prior Setup's seed alias is superseded: read the committed canonical skill directly; do not create/change .relay-artifacts files. Only this thread writable.
+
+Append your applied report and graded verdict with file:line evidence, swept file: yes/no, VERDICT and Basis. On approval, set STATUS: Approved and NEXT: —, then use the env-pinned absolute tick to **done RELAY-GH1077-FINAL-R2-20261015 --agent codex**. Do not merely release the token on approval; that caused the prior close-mismatch. No git commands/self-commit. No tests or real external actions.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
