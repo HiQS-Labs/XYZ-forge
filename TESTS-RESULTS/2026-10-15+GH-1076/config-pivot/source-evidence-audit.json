@@ -1,0 +1,90 @@
+{
+  "source_base": "14081d61",
+  "source_head": "a6d1676dbff5331a29434a1c0dcd58288758fe3c",
+  "production_files": [
+    {
+      "path": ".github/workflows/wave-reconcile.yml",
+      "added": "2",
+      "removed": "0"
+    },
+    {
+      "path": "utils/ci-route.sh",
+      "added": "43",
+      "removed": "1"
+    },
+    {
+      "path": "utils/py/device_config.py",
+      "added": "19",
+      "removed": "2"
+    },
+    {
+      "path": "utils/py/wave_reconcile.py",
+      "added": "266",
+      "removed": "34"
+    }
+  ],
+  "production_added": 330,
+  "production_removed": 37,
+  "existing_test_adaptations": [
+    {
+      "path": "test/ci-route.sh",
+      "added": "2",
+      "removed": "2"
+    }
+  ],
+  "evidence_file_count_before_compaction": 142,
+  "evidence_bytes_before_compaction": 4131322,
+  "exact_duplicate_groups": [
+    {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "paths": [
+        "TESTS-RESULTS/2026-10-15+GH-1076/phase3/development-effective-rules.json",
+        "TESTS-RESULTS/2026-10-15+GH-1076/phase3/repository-rulesets.json"
+      ]
+    }
+  ],
+  "embedded_telemetry_duplicates": [
+    {
+      "container": "TESTS-RESULTS/2026-10-15+GH-1076/disabled-profile/proposed-validation-bundle.jsonl",
+      "phase": "small",
+      "sha256": "bfee71ff5b9121a91e6575a157c9952714ea44521d8479010bc04e2aa6a16f95",
+      "matching_files": [
+        "TESTS-RESULTS/2026-10-15+GH-1076/phase3/component-study/small-validation.jsonl"
+      ]
+    },
+    {
+      "container": "TESTS-RESULTS/2026-10-15+GH-1076/disabled-profile/proposed-validation-bundle.jsonl",
+      "phase": "skills-army-hq",
+      "sha256": "11955e7669aa6798ff34f6a65d23b2688249b829ac4c1e7565c2ed1127efa04f",
+      "matching_files": [
+        "TESTS-RESULTS/2026-10-15+GH-1076/phase3/component-study/skills-army-hq-validation.jsonl"
+      ]
+    }
+  ],
+  "known_sensitive_pattern_matches": 0,
+  "compressed_streams_inspected": [
+    {
+      "path": "TESTS-RESULTS/2026-10-15+GH-1076/phase3/gh1076-v3-run-38346799359.log.gz",
+      "uncompressed_bytes": 1849676,
+      "sha256": "91ef1ff6cf1812924a0f8eb2892d780ffdffdcc56b3ee09852eeece78a9250c7"
+    },
+    {
+      "path": "TESTS-RESULTS/2026-10-15+GH-1076/phase3/gh1076-v3-run-38313598719.log.gz",
+      "uncompressed_bytes": 2153959,
+      "sha256": "c7ee18a7e71b203cda057eb12f7ca3ce78181f63246b275b059054799fa6c2b4"
+    },
+    {
+      "path": "TESTS-RESULTS/2026-10-15+GH-1076/phase3/gh1076-v3-run-37700855208.log.gz",
+      "uncompressed_bytes": 405093,
+      "sha256": "5a28bb2e6fdcb6db24099c8a9d30bda438cd9c2d6e613222634b44468a32a1ec"
+    },
+    {
+      "path": "TESTS-RESULTS/2026-10-15+GH-1076/phase3/gh1076-v3-run-37729005966.log.gz",
+      "uncompressed_bytes": 1816267,
+      "sha256": "618fc788e17ce2ca4ecc377cb284e50cd6334883da491de1d6d819061ae28748"
+    }
+  ],
+  "limits": "Read-only known credential/private-key/URL-userinfo patterns including decompressed retained gz and authored docs/source. No secret match values printed; this is not a proof against every arbitrary secret format.",
+  "metadata_note": "Evidence contains workstation paths, process IDs and tool/package versions; full new environment/diagnostic dumps are retained locally rather than added to the proposed PR. No arbitrary-format secret-free guarantee.",
+  "compaction": "220-record report reduced5208->59lines, full original preserved locally and in prior Git objects; byte-exact reconstruction verified; no history rewrite or unique deletion."
+}

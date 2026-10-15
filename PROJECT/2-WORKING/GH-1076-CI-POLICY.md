@@ -567,3 +567,25 @@ Only isolated override-file optimization was exercised. Fresh shared default-fil
 optimizedfalse/errornull; no primary setting write. Hosted declaration remains unmerged/inactive
 through this PR. No live@2 writer/publication-race proof, exact-main qualification or stable-main
 claim. All eight owned task/evidence clones remain preserved with their ignored telemetry.
+
+## Continued diagnosis and controlled acceptance evidence
+
+The existing timeout suite now has matched passing observations on both baseline/current. Native
+Codex child tracing at nice10 preserves budget1: slow1.003/1.006s timeout; fast0.394/0.287s return.
+No changed module was loaded in that child path. A separate high-load comparison changed the
+failing assertion to Agy whole-shim elapsed while Codex fast passed. No deadline or test changed.
+This supports a conditioned exclusive-host recheck, not a retrospective explanation or waiver
+of either full failure. No speculative source fix, review round or approval claim is added.
+
+The production@2 writer/reader and actual local Git publication-race recovery were exercised in
+a retained controlled fixture: push rejection, receipts-first, one only-receipted recompute, no
+suite rerun, equal original hashes, preserved racer, discarded stale transition, disabled and
+generic-premerge rejection. Validation results/PR metadata/transitions are simulated; no real
+registered-suite qualification or live hosted activation is claimed. Live observation remains
+outstanding. Details, limits and compressed raw proof are under config-pivot/CONTINUATION.md.
+
+Source-only is four production files +330/-37, plus the prior existing count adaptation +2/-2.
+Known sensitive-pattern scans including decompressed retained logs found no match; local paths
+and tool inventories remain metadata. The duplicate220-record report became a59-line lossless
+delta over the old218 records, with original bytes backed up and exact reconstruction verified.
+No unique artifact was deleted or history rewritten. Raw new diagnostics remain local.

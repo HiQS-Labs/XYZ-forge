@@ -1,0 +1,149 @@
+{
+  "comparisons": {
+    ".": {
+      "method": "Existing suite unchanged; existing soft-fail observes all original assertions. Node preload records timing only for fixture Tick processes; one-second cap unchanged. Reverse baseline/current order from the previous comparison. No new CI case.",
+      "records": [
+        {
+          "label": "baseline",
+          "head": "f974fcee15647aae6551fcc81b129f5a6127120b",
+          "load_before": "16:00  up 7 days,  6:43, 1 user, load averages: 27.36 36.38 32.70",
+          "rc": 0,
+          "wall_seconds": 14.88,
+          "load_after": "16:00  up 7 days,  6:44, 1 user, load averages: 27.37 35.95 32.61",
+          "status_after": ""
+        },
+        {
+          "label": "current",
+          "head": "10325ce107ba45d21910e5a05a5d03486bd4ea65",
+          "load_before": "16:00  up 7 days,  6:44, 1 user, load averages: 27.37 35.95 32.61",
+          "rc": 0,
+          "wall_seconds": 15.039,
+          "load_after": "16:01  up 7 days,  6:44, 1 user, load averages: 26.15 35.27 32.43",
+          "status_after": ""
+        }
+      ],
+      "executables": {
+        "bash": "/bin/bash",
+        "node": "/Users/noelsaw/.local/bin/node",
+        "python3": "/opt/homebrew/bin/python3",
+        "git": "/usr/bin/git"
+      },
+      "controls_sha256": "f0cba9cdbc08a1440ce5cd6e312fc72ad4cde0831e5830ee9344d10235461315"
+    },
+    "nice-matched": {
+      "method": "Existing suite unchanged; existing soft-fail observes all original assertions. Node preload records timing only for fixture Tick processes; one-second cap unchanged. Baseline/current observed serially at gate priority nice10; only the original shim output redirection is changed to retain diagnostics. No new CI case.",
+      "records": [
+        {
+          "label": "baseline",
+          "head": "f974fcee15647aae6551fcc81b129f5a6127120b",
+          "load_before": "16:02  up 7 days,  6:45, 1 user, load averages: 38.20 35.04 32.53",
+          "rc": 0,
+          "wall_seconds": 20.711,
+          "load_after": "16:03  up 7 days,  6:46, 1 user, load averages: 78.75 44.24 35.88",
+          "status_after": ""
+        },
+        {
+          "label": "current",
+          "head": "10325ce107ba45d21910e5a05a5d03486bd4ea65",
+          "load_before": "16:03  up 7 days,  6:46, 1 user, load averages: 78.75 44.24 35.88",
+          "rc": 1,
+          "wall_seconds": 16.421,
+          "load_after": "16:03  up 7 days,  6:46, 1 user, load averages: 110.62 52.93 39.12",
+          "status_after": ""
+        }
+      ],
+      "executables": {
+        "bash": "/bin/bash",
+        "node": "/Users/noelsaw/.local/bin/node",
+        "python3": "/opt/homebrew/bin/python3",
+        "git": "/usr/bin/git"
+      },
+      "controls_sha256": "f0cba9cdbc08a1440ce5cd6e312fc72ad4cde0831e5830ee9344d10235461315"
+    },
+    "child-trace": {
+      "method": "Existing suite unchanged; existing soft-fail observes all original assertions. Node preload records timing only for fixture Tick processes; one-second cap unchanged. Baseline/current observed serially at gate priority nice10; only the original shim output redirection is changed to retain diagnostics. Original Codex slow/fast cases only, with native subprocess.run observer; timeout passed through unchanged. No new CI case.",
+      "records": [
+        {
+          "label": "baseline",
+          "head": "f974fcee15647aae6551fcc81b129f5a6127120b",
+          "load_before": "16:13  up 7 days,  6:56, 1 user, load averages: 11.20 36.30 42.88",
+          "rc": 0,
+          "wall_seconds": 3.867,
+          "load_after": "16:13  up 7 days,  6:56, 1 user, load averages: 11.20 36.30 42.88",
+          "status_after": ""
+        },
+        {
+          "label": "current",
+          "head": "10325ce107ba45d21910e5a05a5d03486bd4ea65",
+          "load_before": "16:13  up 7 days,  6:56, 1 user, load averages: 11.20 36.30 42.88",
+          "rc": 0,
+          "wall_seconds": 3.685,
+          "load_after": "16:13  up 7 days,  6:56, 1 user, load averages: 11.19 35.88 42.70",
+          "status_after": ""
+        }
+      ],
+      "executables": {
+        "bash": "/bin/bash",
+        "node": "/Users/noelsaw/.local/bin/node",
+        "python3": "/opt/homebrew/bin/python3",
+        "git": "/usr/bin/git"
+      },
+      "controls_sha256": "6b868a175bd04d3334bd9e96f4b7e2622288eafa2c1d66ccb31d516b7897cf12"
+    }
+  },
+  "native_child_observations": {
+    "baseline": [
+      {
+        "program": "slow-cli",
+        "nice": 10,
+        "budget": 1,
+        "elapsed": 1.0025800000876188,
+        "outcome": "TimeoutExpired",
+        "modules": {
+          "rtl": "rtl.py",
+          "device_config": null,
+          "wave_reconcile": null
+        }
+      },
+      {
+        "program": "fast-cli",
+        "nice": 10,
+        "budget": 1,
+        "elapsed": 0.3937515419675037,
+        "outcome": "return",
+        "modules": {
+          "rtl": "rtl.py",
+          "device_config": null,
+          "wave_reconcile": null
+        }
+      }
+    ],
+    "current": [
+      {
+        "program": "slow-cli",
+        "nice": 10,
+        "budget": 1,
+        "elapsed": 1.0055765000870451,
+        "outcome": "TimeoutExpired",
+        "modules": {
+          "rtl": "rtl.py",
+          "device_config": null,
+          "wave_reconcile": null
+        }
+      },
+      {
+        "program": "fast-cli",
+        "nice": 10,
+        "budget": 1,
+        "elapsed": 0.28683804196771234,
+        "outcome": "return",
+        "modules": {
+          "rtl": "rtl.py",
+          "device_config": null,
+          "wave_reconcile": null
+        }
+      }
+    ]
+  },
+  "interpretation": "Not a deterministic source regression: identical timeout/relay files and matched passing observations. Original fast timeout lacks a retained internal timing trace; exact original scheduling cause unresolved. Observed high-load/competing-gate snapshot does not retroactively prove the original cause. No deadline weakened, test edited, or full result upgraded."
+}
