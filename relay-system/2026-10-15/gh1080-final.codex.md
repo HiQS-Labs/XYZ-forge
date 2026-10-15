@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -106,5 +106,19 @@ Verified the finding against source and implemented it. Docs eligibility now che
 Verification: `python3 temp/gh1080/manual-docs.py` in the disposable full clone -> 16 pass at df896f4f, retained in `TESTS-RESULTS/2026-10-15+GH-1080/manual-docs-r2.log` with probe source and provenance. Executable CHANGELOG and symlink capture refuse both ordinarily and with standalone-land expected-driver entries; regular paperwork still qualifies without adding to the three README text insertions. Other code/policy/rename/mode/receipt/default controls remain green. Full publication gate remains pending and will run before PR readiness.
 
 Re-review the narrow paperwork correction and its falsifier, plus any consequence for existing generated ledger/projection handling. Original scope and 3-round cumulative cap remain. On approval, done the original token RELAY-GH1080-FINAL-20261015 --agent codex using the pinned tick; do not release instead. Only the relay file writable; no self-commit or fixtures. Handing off to Reviewer.
+
+### Reviewer · Round 2
+
+swept file: yes
+VERDICT: PASS
+Basis: Ship the bounded docs admission change through the pending harness gate. Round 1's paperwork eligibility finding is resolved without broadening generated-output exemptions. Re-read the full express driver and canonical skill, task/recon documents, relevant SOP/ARCHITECTURE changes, and retained Round 2 evidence. No blocking pre-existing defect identified in this bounded sweep; one optional stale-doc nit is below. This approves the source review, not an unrun publication gate or an end-to-end landing.
+
+- [Pass] Paperwork correction: `utils/py/express.py:507` intersects expected outputs with `driver_projection_paths`, then `:508-513` checks every remaining changed path. CHANGELOG and the capture document therefore reach the same old/current-mode eligibility predicate (`:89-105`), even when standalone land includes them in `expect_driver_paths` (`:1015-1018`). Their size exemptions remain at `:422-424` and `:436`. The producer's retained falsifier evidence explicitly shows executable CHANGELOG and symlink capture refusals with and without expected-driver entries, then regular-paperwork acceptance with 2 core files / 3 insertions (`TESTS-RESULTS/2026-10-15+GH-1080/manual-docs-r2.log:9-13`). No further correction requested.
+- [Pass] Generated ledger/projection handling stays narrow: `utils/py/express.py:412-415` enumerates the ledger pair and adopted projections; `:494-501` refuses unsolicited edits, and `:507` uses that existing enumeration rather than the broader paperwork allowlist. Ordinary docs still use the fixed registered verifier (`:1306-1309`, `validate.sh:557`, `test/pdda-repo-contract.sh:11`); hotfix commands still require a named suite (`express.py:1310-1311`). README/image file bounds, image insertion handling and permission-sensitive identity remain at `:538-545`, `:438-439`, and `:394`.
+- [Pass] Receipt/recovery consumer remains coherent: the real suite status flows from `utils/py/express.py:813-817` to the receipt at `:897`; exact suite command/success matching remains at `:232-242`, receipt persistence precedes gated reconciliation at `:916-923`, and resume requires that committed receipt at `:1191-1193`. Docs scaffold language explicitly says "no runtime coverage claim" and "not runtime behavior" (`:607-610`). Canonical skill `:59-74` keeps semantic content/link/rendering checks an agent obligation.
+- [Nit] Optional pre-existing prose cleanup: `skills/2-daily/express/SKILL.md:160` still names retired `ROADMAP-DASHBOARD.md` among refreshed outputs. Remove that filename at the next routine text cleanup; the actual output list is `utils/py/express.py:73-81`, and `ROUTER.md`'s RELEASES DB section records the dashboard retirement. This does not affect admission or block approval.
+- [Unverified — needs clone run] Retained provenance reports 16 manual controls at df896f4f (`TESTS-RESULTS/2026-10-15+GH-1080/provenance.jsonl:4`; decisive log summary at `manual-docs-r2.log:18`), alongside earlier 113/43 regression/prerequisite results. These are inspected producer receipts, not independently rerun checks. No suite, fixture, pytest or git command ran here. Full final-candidate publication gate remains for the harness in a disposable full clone. An origin/development diff comparison was not independently performed under the no-git constraint. Graph project inventory was fully paginated (84 projects); neither this worktree nor the pinned task clone is indexed, so no matching generation/coverage evidence was available and exact seeded source was read instead.
+
+Relay closed (Approved), no further reviewer turn needed. Producer/harness owns the pending clone gate and publication; no self-commit. Completing the original env-pinned token with `done`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
