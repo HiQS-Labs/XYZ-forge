@@ -161,7 +161,7 @@ local change.
   when the behaviour it pins changes. A red control (see *Verified beats plausible*) is witnessed on an
   existing suite or recorded as a manual check. Reviewers treat a new test file as a finding.
 
-  The gate is being cut to Small/Medium/Large tiers under [#831](https://github.com/HiQS-Labs/XYZ-forge/issues/831).
+  Selection and qualification follow [ROUTER policy](ROUTER.md#ci-qualification-policy); #831 records the tiering decision.
   #815, #816, #817 and #819 are superseded; do not implement them.
 
 - **This repo's purpose is to keep a long-horizon marathon under load — and that is a work-selection
