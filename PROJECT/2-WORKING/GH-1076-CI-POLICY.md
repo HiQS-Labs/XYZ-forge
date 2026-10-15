@@ -211,3 +211,9 @@ Routine LEADERBOARD regeneration was restored to its committed bytes, per task-b
 The matched after snapshot will include these unrelated documentation additions and the task's
 review/evidence; source differences and their measurement limits will be disclosed.
 PR1069 refreshed at4691b4a3 (OPEN), GH1072/GH1073 remain OPEN; no owner handoff or readiness inferred.
+
+Focused verification69567090:10/10 existing suites returned0, repository HEAD/config/refs/status
+identical before/after (focused-verification.json/.log). This covers routing/whole-tree drift,
+workflow/envelope, receipt/premerge, auto-reconcile, publication recovery and skills-army publisher.
+No individual CI case added or altered. Subsequent integration changes are documentation/ledger.
+Final independent review and required exact-source full push gate remain pending.
