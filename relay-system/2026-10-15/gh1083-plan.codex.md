@@ -100,4 +100,12 @@ Basis: The plan is implementable, minimal and aligned with all four issue requir
 
 Relay closed (Approved), no further review turn needed. Producer proceeds with implementation and the planned final QA.
 
+
+### Attestation · relay-drive — 2026-10-15T20:53:08Z
+task: RELAY-GH1083-PLAN-20261015
+reviewer: codex
+status: Approved
+reviewed-head: 35b5d75cd622f26e5690ebdb164245cdad1d436f
+added-range: 7677+3790
+added-sha256: 17cca498017744e55bdae6f76cd809be3caa3f4b07926f97a38616986eff890a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
