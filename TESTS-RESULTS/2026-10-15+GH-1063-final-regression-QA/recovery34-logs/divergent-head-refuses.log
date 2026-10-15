@@ -1,0 +1,6 @@
+marathon-drive: phase p1 startup: historical completion refused — phase completion is not an ancestor of current HEAD or ancestry check failed
+marathon-drive: phase p1: terminal relay is NOT attested — refusing to treat it as satisfied; its token 'MARATHON-P1-TURN' is done and cannot be reopened, so this run halts (see GH-505)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/divergent-v6t9eu36/relay-system/divergent-v6t9eu36/2026-10-15/marathon-p1-034431.md
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7710MB, swap_free=1651MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/divergent-v6t9eu36/phases/p1/ESCALATION.md (reason: unattested-terminal)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/divergent-v6t9eu36/result.json (outcome: escalated, exit 4)

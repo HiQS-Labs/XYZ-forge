@@ -1,0 +1,6 @@
+marathon-drive: phase p1 startup: relay is terminal (STATUS: Approved) but NOT attested by relay-drive — no attestation record for MARATHON-P1-TURN at /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/missing-attest-ilqvcyne/.git/relay-attest/MARATHON-P1-TURN.json — not accepting it (GH-505)
+marathon-drive: phase p1: terminal relay is NOT attested — refusing to treat it as satisfied; its token 'MARATHON-P1-TURN' is done and cannot be reopened, so this run halts (see GH-505)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/missing-attest-ilqvcyne/relay-system/missing-attest-ilqvcyne/2026-10-15/marathon-p1-034424.md
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7692MB, swap_free=1651MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/missing-attest-ilqvcyne/phases/p1/ESCALATION.md (reason: unattested-terminal)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/missing-attest-ilqvcyne/result.json (outcome: escalated, exit 4)
