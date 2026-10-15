@@ -67,7 +67,7 @@ unknown, not fabricated from issue count. Four-axis DB readback is authoritative
    implementation. Run prior-art recon and confirm no GH1076 writer. → one owned issue row/plan.
 2. Retain f974 baseline in a disposable full clone. Check for active host gates; GH1064 ci-local was
    active at initial inventory, so do not overlap it. When free, capture before identity, runtime/tool
-   versions, load, command and full telemetry; run existing full `validate.sh` with explicit width4.
+   versions, load, command and full telemetry; run existing full `validate.sh` with normal balanced width4 verified, without exporting worker overrides.
    → preserve rc/counts/skips/first failures/retries/wall time and after identity before comparison.
 3. Consult actual Agy and Claude Code CLI on this plan/spike, then Codex relay plan QA with normal
    3-round cap. → preserve raw opinions/dispositions; no substituted identity or claimed quorum.
@@ -121,7 +121,7 @@ silently. No merge/protection/deployment permission is inferred from end-to-end 
 9. Commit coherent implementation, focused existing checks and recorded manual controls in separate
    disposable full clones with before/after identity. Run independent Codex final relay QA under the
    normal3-round cap; resolve bounded findings without scope inflation. Preserve raw failed results.
-10. On the final approved implementation SHA run one required full gate at the same explicit width4
+10. On the final approved implementation SHA run one required full gate at the same normal balanced width4
     as baseline, serial per host. Reuse that run as the after benchmark and normal push verification
     where the installed hook supports the existing receipt path; otherwise follow the normal hook
     without bypass and report any additional run honestly. Retain command, versions, counts, skips,
@@ -162,8 +162,10 @@ coverage evidence and independent review. These constraints are not waived by th
   Small, mapped code/full and safety/full. Missing/unknown/duplicate/malformed/inconsistent decisions
   return full. Removing the in-memory version comparison wrongly admits Small: witnessed red control.
   No CI case/assertion/parameter row, registry, workflow or receipt schema was changed.
-- Historical study:20failed-run metadata/six original logs, zero newly validated mapped-Medium
-  regression/change pairs;14unknown logs remain. No catch-rate or reduction readiness claim.
+- Historical study v2: all20original failed logs (30,300,983 bytes),16 qualification attempts
+  across13distinct tested snapshots; zero newly validated mapped-Medium regression/change pairs.
+  Pending-union and causal attribution remain explicit unknowns. Version1 is preserved, including
+  the narrower failure list corrected by v2. No catch-rate or reduction readiness claim.
 - Batch dependency refreshed: PR1069 stilld2e7369a, open; GH1072/1073 open. Its other owner's gate
   finished, not a handoff of implementation ownership. No duplicate batch writer or unsafe authority.
 - Baseline first measurement inherited an exported maximum-worker setting that overrides nested
@@ -180,3 +182,23 @@ removed existing `pdda_needed` metadata. The same classification loop now retain
 consumed text, so area coverage is additive to existing doc hygiene. Initial manual observations are
 retained; the correction record names the prior false metadata and downstream T2_PDDA consumer.
 No existing CI assertion was changed or new case added.
+
+Parent adjudication accepted existing ROUTER as the canonical prose location; deterministic routing
+retains its current script owner. Actual Agy timeout remains partial, not approval; no cap reset.
+
+The discarded calibration completed rc1,408/409 at pinned f974 in1,455.57s. Its exported
+XYZ_VALIDATE_MAX_JOBS=4 contaminated nested mode probes; gh544 remained failed on sequential retry.
+Other first failures/retries remain in raw telemetry. Repository identity stayed unchanged. This run
+is retained as failed calibration, not the matched before measurement or qualifying evidence.
+
+Medium pilot unmet criteria: no eligible mapped-only changed-range/full-failure pair established;
+complete pending unions and introduced-by-change causality are not proven by trigger diffs; direct
+and downstream consumers, all non-shell stages, expected-list replay, historical receipt behavior
+and current workflow/protection compatibility require reviewed evidence before reduced selection.
+Current implementation retains full for Medium/unknown/global/safety and does not introduce savings.
+
+Batch authority unmet criteria: GH1072/GH1073 fixes and PR1069 ownership/handoff are unresolved;
+current freeze/ordered member/base/candidate/landed identity and receipt-invalidation semantics must
+be proven together before expansion. Current policy records serial writer, receipts-first bounded
+recovery, per-PR normal gates, suffix rollback and the expired exception; no batch dispatcher or fold
+authority was added. The safe completed policy work does not certify the unresolved batch runtime.

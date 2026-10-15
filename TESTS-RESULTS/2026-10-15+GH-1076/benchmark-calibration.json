@@ -1,0 +1,163 @@
+{
+  "queued_at": "2026-10-15T07:14:39.262861+00:00",
+  "started_at": "2026-10-15T07:16:10.479287+00:00",
+  "source": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-benchmark-gate",
+  "command": [
+    "./validate.sh"
+  ],
+  "controls": {
+    "XYZ_VALIDATE_MAX_JOBS": "4",
+    "RELAY_SELF_SUFFICIENCY_SKIP": "1"
+  },
+  "before": {
+    "head": "f974fcee15647aae6551fcc81b129f5a6127120b",
+    "status": "",
+    "refs_sha256": "0da001301cd36838878b92a4ee0f42c5280341a3f4b2fc997319396e947abf93",
+    "config_sha256": "41273824883f9cc3dc8a4be95eeb2e3191898cb3d8f7056655bb8499b92e4a44",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "full_clone": true
+  },
+  "environment": [
+    {
+      "command": [
+        "sw_vers"
+      ],
+      "rc": 0,
+      "stdout": "ProductName:\t\tmacOS\nProductVersion:\t\t15.6.1\nBuildVersion:\t\t24G90\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "uname",
+        "-m"
+      ],
+      "rc": 0,
+      "stdout": "arm64\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "sysctl",
+        "-n",
+        "hw.logicalcpu"
+      ],
+      "rc": 0,
+      "stdout": "10\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "Python 3.14.7\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "-c",
+        "import sys,requests,yaml,pytest; print(sys.executable); print('requests',requests.__version__,'yaml',yaml.__version__,'pytest',pytest.__version__)"
+      ],
+      "rc": 0,
+      "stdout": "/opt/homebrew/opt/python@3.14/bin/python3.14\nrequests 2.33.1 yaml 6.0.3 pytest 9.1.1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "git version 2.50.1 (Apple Git-155)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "GNU bash, version 3.2.57(1)-release (arm64-apple-darwin24)\nCopyright (C) 2007 Free Software Foundation, Inc.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "v22.22.3\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "npm",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "10.9.8\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "shellcheck",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "ShellCheck - shell script analysis tool\nversion: 0.11.0\nlicense: GNU General Public License, version 3\nwebsite: https://www.shellcheck.net\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "uptime"
+      ],
+      "rc": 0,
+      "stdout": " 0:16  up 6 days, 14:59, 1 user, load averages: 35.53 47.53 52.17\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "pmset",
+        "-g",
+        "therm"
+      ],
+      "rc": 0,
+      "stdout": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n",
+      "stderr": ""
+    }
+  ],
+  "claim": "Local full self-check benchmark, not hosted qualification or stable-main evidence.",
+  "finished_at": "2026-10-15T07:40:26.667903+00:00",
+  "wall_seconds": 1455.57,
+  "rc": 1,
+  "after": {
+    "head": "f974fcee15647aae6551fcc81b129f5a6127120b",
+    "status": "",
+    "refs_sha256": "0da001301cd36838878b92a4ee0f42c5280341a3f4b2fc997319396e947abf93",
+    "config_sha256": "41273824883f9cc3dc8a4be95eeb2e3191898cb3d8f7056655bb8499b92e4a44",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "full_clone": true
+  },
+  "end_load": {
+    "command": [
+      "uptime"
+    ],
+    "rc": 0,
+    "stdout": " 0:40  up 6 days, 15:23, 1 user, load averages: 73.59 216.79 228.29\n",
+    "stderr": ""
+  },
+  "identity_unchanged": true,
+  "telemetry_files": [
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-benchmark-gate/.tick/telemetry/validate-parallel-1792049541054-32660.jsonl",
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-benchmark-gate/.tick/telemetry/validate-sequential-1792049015266-90275.jsonl",
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-benchmark-gate/.tick/telemetry/validate-parallel-1792049507098-88979.jsonl",
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-benchmark-gate/.tick/telemetry/validate-parallel-1792048723385-28821.jsonl",
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-benchmark-gate/.tick/telemetry/validate-parallel-1792048571504-553.jsonl",
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-benchmark-gate/.tick/telemetry/validate-parallel-1792048575342-3634.jsonl",
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-benchmark-gate/.tick/telemetry/validate-parallel-1792049577880-77909.jsonl"
+  ]
+}
