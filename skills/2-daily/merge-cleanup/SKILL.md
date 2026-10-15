@@ -1,6 +1,6 @@
 ---
 name: merge-cleanup
-description: Consolidate multiple Git worktrees and clones of a repository into a single clean checkout, safely merge associated PRs in topological dependency order, document landing batches of three or more PRs as a GitHub issue (merge sequence, problems, ad-hoc fixes, regression sweep, post-deployment carry-overs — also echoed in chat), reconcile post-merge governance state (PDDA and RELEASES DB), and safely remove leftover worktrees/clones without data loss or interrupting active sessions. Strictly complies with WORKTREE-SAFETY.md.
+description: Consolidate multiple Git worktrees and clones of a repository into a single clean checkout, safely merge associated PRs in topological dependency order, document landing batches of two or more PRs as a script-maintained GitHub issue (merge sequence, problems, ad-hoc fixes, regression sweep, post-deployment carry-overs — also echoed in chat), reconcile post-merge governance state (PDDA and RELEASES DB), and safely remove leftover worktrees/clones without data loss or interrupting active sessions. Strictly complies with WORKTREE-SAFETY.md.
 ---
 
 # /merge-cleanup — Worktree Consolidation, PR Sequencing, and Safe Teardown
@@ -19,7 +19,7 @@ Strictly adheres to [`WORKTREE-SAFETY.md`](https://github.com/HiQS-Labs/XYZ-forg
 > 3. **Sequence PRs & pre-gate conflicts (Phases 4–5).** Fetch open PRs into a topological DAG to prevent file collisions; pre-simulate landings and resolve disjoint ledger/doc conflicts.
 > 4. **Merge & reconcile governance (Phase 5).** Merge using the project policy in dependency order, fast-forward primary checkout (`git merge --ff-only`), and execute post-merge reconciliation (`wave_reconcile`, `releases_app check`, `pdda.sh`).
 > 5. **Safe teardown & status confirmation (Phase 6).** Deregister worktrees via canonical git protocol, move clean disposable clones to Trash, prune dangling skill symlinks, and confirm all PRs are landed.
-> 6. **Document qualifying batches (GH-944).** When the sequenced queue holds **three or more PRs**, open a `merge-batch` GitHub issue **before the first merge** and keep it current as the run progresses — merge sequence, problems, ad-hoc fixes/pivots, findings. After the batch, run the `/debug-mantra` regression sweep (findings become issue checklist items) and transcribe each merged PR/issue's **post-deployment carry-over items** into the issue **and** the end-of-run chat summary, verbatim and unchecked.
+> 6. **Document and sweep qualifying batches (GH-944, GH-1064).** When the sequenced queue holds **two or more PRs**, the script opens the `merge-batch` GitHub issue **before the first merge** with the planned order, keeps its outcomes and sweep inputs current, and exits **4** (landed, QA pending) until a sweep verdict is recorded. You fill the caller sections (problems, ad-hoc fixes/pivots, findings), run the `/debug-mantra` regression sweep with the printed suite command in a throwaway clone, record the verdict with `--record-sweep <file>`, and transcribe each merged PR/issue's **post-deployment carry-over items** into the issue **and** the end-of-run chat summary, verbatim and unchecked.
 >
 > **Overall Goal:** All ready-to-merge PRs processed, qualifying batches documented and swept for regressions, and local disk clones and git worktree folders safely torn down when appropriate.
 
@@ -221,6 +221,68 @@ Parking preserves work for later review; it never qualifies it for integration o
 - Analyzes touched file sets to detect unannotated file collisions and orders shared-file PRs chronologically as **soft** edges: they decide sequence only, never eligibility (GH-623).
 - Builds a Directed Acyclic Graph (DAG) and computes topological merge order.
 
+### CI-heavy repositories: plan merge groups before qualification (GH-1066)
+
+Prefer a few coherent landing groups over repeatedly repairing, pushing and fully testing
+one PR at a time. This is caller-owned planning, not a new driver mode or a gate bypass.
+Use the existing batch issue for qualifying queues; smaller queues use the run summary.
+
+1. **Map the cost and constraints.** Read the repo's required checks, push hooks, hosted
+   triggers and reconciliation policy. Identify which pushes actually start broad CI and
+   which existing path supports batching (merge queue, staging or aggregate landing PR).
+   Record the chosen path and intended full-run checkpoints before the first mutation.
+2. **Group by dependency and interaction.** Keep hard dependencies in order; group related
+   changes sharing runtime/contracts or repeated conflict sites. Shared ledger/CHANGELOG
+   files alone do not prove semantic coupling. Separate unrelated work and risky migrations,
+   security or containment changes that need independent rollback and qualification.
+3. **Prepare before expensive runs.** Resolve the group's known conflicts and combined
+   interactions in a disposable full clone, complete independent review, and run the existing
+   focused checks as repairs are made. Publish complete reviewed checkpoints rather than
+   each mechanical repair. Required per-PR checks still run on their actual final heads.
+4. **Freeze the candidate.** Record member PRs and head SHAs, current integration base,
+   combined candidate SHA, review receipts and rollback boundary. New members, code repairs
+   or base changes invalidate affected evidence; refresh review/checks before landing.
+5. **Adversarial sequence review for three or more PRs.** When the authorized batch
+   contains three or more PRs, use one bounded [`relay-xyz`](../../1-hourly/relay-xyz/SKILL.md)
+   review of the whole grouping, merge strategy and sequence before the first merge, even
+   when the batch is divided into smaller groups. Choose an independent reviewer using a
+   different actual model family from the plan author; a different CLI alone is not proof.
+   Record both model identities, the frozen PR/head/base/candidate SHAs, proposed groups/order,
+   required CI checkpoints and rollback boundaries in the existing batch record and relay.
+   Ask the reviewer to challenge missing dependencies, semantic interactions, conflict sites,
+   unsupported gate deferral, duplicate broad runs and recovery after a partial landing.
+   Disposition supported findings before proceeding; advice cannot waive deterministic gates
+   or operator authority. Use at most three cumulative review rounds per batch, including
+   resumes; do not repeat this strategy review per PR or replace required per-PR QA.
+   Material changes to membership, dependency/order, integration content or risk reopen the
+   affected plan review; editorial record updates do not. Record unavailable review neutrally
+   ("Independent review did not run.") or an unknown identity as "Reviewer model identity
+   unverified." Hold the affected batch without assigning defect severity or opening a
+   blocking issue. Do not claim cross-model
+   approval without evidence. Ordinary one/two-PR queues need no extra strategy relay unless
+   risk or repository policy calls for one.
+6. **Qualify the complete group.** Where policy permits, reserve the first full gate for
+   this frozen combined candidate, after preparation is complete. Keep the existing tier
+   classification; grouping docs does not require a full gate. Run the repository's
+   qualifying command on its required platform; a parallel publication run is not sequential
+   promotion evidence. A failed required check stops landing; diagnose before retrying.
+7. **Land through the supported path.** Preserve merge-history policy and PR/issue provenance.
+   Never retarget PRs, create a staging branch, alter branch protection/workflows, cancel
+   required runs or use a push bypass merely to meet a CI budget. Those changes require
+   their own authorization. Historical time-boxed exceptions are not standing permission.
+8. **Verify the landed result.** Reserve a second full run for the actual landed integration
+   result when policy requires it or candidate evidence no longer qualifies that result.
+   Reuse an existing qualifying hosted run only when its SHA/content scope covers the group;
+   do not launch a duplicate final sweep. Complete required reconciliation and fresh teardown
+   checks, and record actual run SHAs, results and any remaining verification.
+
+**Fallback:** if no supported batch path exists, keep ordinary sequential merges and every
+required per-merge reconciliation/check. The current Forge driver reconciles after each merge;
+this guidance does not defer that sequence or add a batching flag. Group preparation can reduce
+repair/push churn, but cannot promise one or two total CI runs under an unchanged per-PR policy.
+Record that limit; use Forge's `docs/CI-CHURN-RECOVERY-SOP.md` for a separately authorized
+recovery window when warranted. Never skip qualification or claim unmeasured savings.
+
 ### Phase 5: Safe Execution & Post-Merge Reconciliation
 - **Refuses every executing cleanup when Phase 0 says the primary is not landing-ready**, unless the operator explicitly passes `--allow-unready-primary` to defer that cleanup. This gate applies before any Phase 5 or Phase 6 mutation, including zero-PR and `--teardown-only` runs; the skill never silently chooses to leave the primary dirty or otherwise unready.
 - Carries existing authorization forward. Ask only for a missing scope decision, ambiguous resolution, or an action requiring additional permission under repo policy, after completing safe preparation; do not ask the operator to reselect already authorized work.
@@ -231,7 +293,7 @@ Parking preserves work for later review; it never qualifies it for integration o
 - **Drafts (GH-789):** live `isDraft` is checked before repair, after polling/repair refreshes, before a repaired-head push and immediately before merge. Drafts are skipped; hard dependents wait, independent PRs continue. Soft collision preferences cannot create dependency cycles; unresolved hard prerequisites block even under numerical fallback.
 - **Orphan rebase marker (GH-789):** inspection stays read-only. Execute landing/reconcile may compare-and-delete a valid stale REBASE_HEAD only when all other readiness checks pass and no active rebase/sequencer/other operation exists, then re-inspects. Dry-run, scan-only, prs-only and teardown-only never prune.
 - **One durable attempt record per PR, at the pinned coordinator (C):** before B1 runs, the script reserves a repair slot in `<primary>/.tick/merge-cleanup/<owner>-<repo>/pr-<N>.json` — `<primary>` is the explicit `--primary` path the run started with, never a disposable clone's CWD. Every writer (this script, and each caller repair rung via `attempt_record.py`) holds `fcntl.flock` on `<record>.lock` for the whole read → reserve → write; that lock is independent of the driver's mkdir lock, so a worker under a running driver still reserves. A lock timeout **stops** the attempt (never "skipped"). Only repairs count (`B1`, `ponytail`, `start-task`); `debug-mantra`/`recon` are notes. **Two repairs per PR, whatever the head**: at the ceiling the PR is **parked** with the record path, and B1 does not run. Any handoff or park prints `export MERGE_CLEANUP_RECORD=<record>` for the caller ladder below.
-- **Only HARD dependencies block on a failed predecessor (C + GH-623):** Phase 4 orders; Phase 5 keeps a runtime map of predecessor outcomes and skips a PR whose declared dependency (`depends on #N`) was handed off, parked or deferred, naming it. File-collision edges are SOFT: a collision-adjacent PR is attempted anyway and its own landing simulation decides — a genuinely conflicting successor hands off on its own merits instead of never being tried (the incident's S3 cascade: one handoff removed most of the queue). Independent PRs still land. A run with any non-landed outcome (handoff / park / defer) exits 3 after the sequence; a stop (unknown state, gate red, merge/reconcile failure, unreadable record) exits 2 immediately.
+- **Only HARD dependencies block on a failed predecessor (C + GH-623):** Phase 4 orders; Phase 5 keeps a runtime map of predecessor outcomes and skips a PR whose declared dependency (`depends on #N`) was handed off, parked or deferred, naming it. File-collision edges are SOFT: a collision-adjacent PR is attempted anyway and its own landing simulation decides — a genuinely conflicting successor hands off on its own merits instead of never being tried (the incident's S3 cascade: one handoff removed most of the queue). Independent PRs still land. A run with any non-landed outcome (handoff / park / defer) exits 3 after the sequence; a stop (unknown state, gate red, merge/reconcile failure, unreadable record) exits 2 immediately. A batch run that landed PRs no recorded sweep verdict covers exits 4 after Phase 6 (GH-1064); 2 and 3 take precedence.
 - **`--resume` continues a previous run (GH-623):** the live refresh stays first and authoritative. Only when a PR's landing actually conflicts — a repair would be needed — does the attempt record decide: at the ceiling with `--resume`, the PR is skipped as `previously parked` without re-running the B1 machinery (and without consuming a slot). A PR whose last recorded repair finished `resolved` and whose head now merges cleanly LANDS — a resume run completes a successful repair's work, never strands it. Without `--resume`, `reserve()` is the under-lock authority and the behavior is unchanged. Resume mode announces itself (`Resume mode: ...`) and the end-of-run summary breaks out parked-on-resume counts.
 - Executes remote merges in topological sequence through `execute_pr_merge`, using the method selected by the project policy resolver (never a hardcoded direct `gh pr merge --squash`) — and a zero exit is not a landing: the PR is re-queried until it reads `MERGED` with a merge commit (#510 class), else the run fails. A non-zero or killed `gh pr merge` is re-queried once too, and a PR that reads `MERGED` with a merge commit continues to the post-merge sequence (GH-852). After a B1 push, the re-gate first waits (up to 6 × 15s) until GitHub reports the pushed head, because the old head's `CONFLICTING` is still showing (GH-851). `--reconcile-pr` refuses (exit 2) unless the PR reads `MERGED`, and looks up the hosted run by that PR's head and merge commit (GH-852).
 - After each verified remote merge, performs one ordered durability sequence before looking at the next PR: **fast-forward primary → reconcile → emit `pr_merged` → commit all resulting primary-side ledger/governance writes → push `origin/<integration-branch>` → assert the primary is clean and `HEAD == origin/<integration-branch>`**. The emitter therefore runs only after both the landing fast-forward and any fast-forward performed by reconciliation; a failure at any step stops the run.
@@ -264,15 +326,20 @@ never attempted:
    `--teardown-only` and still report completion (the incident's S1 false-Done). If a blocker
    cannot be resolved autonomously, finish every independent step first, then report the blockers
    and stop — address them or report them; never silently truncate the task.
-3. **Execute:** add `--execute`. If the sequenced queue holds **≥3 PRs**, open the batch issue first
-   — see [Batch issue protocol (GH-944)](#batch-issue-protocol-gh-944--caller-owned-for-queues-of-three-or-more) —
-   and keep it current through the run.
+3. **Execute:** add `--execute`. If the sequenced queue holds **≥2 PRs**, the script opens the batch
+   issue before the first merge — see [Batch issue protocol](#batch-issue-protocol-gh-944-gh-1064--script-owned-record-for-queues-of-two-or-more) —
+   and you keep its caller sections current through the run.
 4. **On exit 3** (handoff / park / defer): read the printed `export MERGE_CLEANUP_RECORD=...`
    paths, work the caller ladder below for handoffs, then **re-run with `--resume --execute`** to
    continue the queue. Repeat until exit 0 or a stop. Deferred PRs (network) are named in the
    summary; they are not PR failures — re-run once the network is healthy.
 5. **On exit 2**: diagnose before anything else; the diagnostic names the gate. A re-run is only
    valid once the cause is fixed.
+6. **On exit 4** (landed, QA pending — GH-1064): run the printed sweep command in a throwaway clone
+   and the `/debug-mantra` cross-PR review over the recorded inputs, write the verdict file, and
+   record it with `merge_cleanup.py --primary "$PRIMARY" --record-sweep <file>`. If it reports that
+   planned PRs remain, continue with `--resume --execute`; a `--resume` run with nothing left to land
+   still reports 4 until a verdict covers every landing.
 
 ### Continuation contract — do not hand back reversible steps (GH-985 pattern)
 
@@ -308,84 +375,96 @@ skipping one. The same contract as `/workhorse` applies, specialised here:
 **Done rule:** do not report Done unless Phase 5 ran to completion (exit 0; or exit 3 whose
 handoffs and deferrals were worked and re-driven to exit 0), **or** the operator explicitly asked
 for `--teardown-only` / `--scan-only` / `--prs-only`. For a qualifying batch, Done additionally
-requires the regression sweep to have run and been recorded in the batch issue — or its deferral
-to be recorded explicitly there and in the run summary; a silently skipped sweep is not Done. When
-the batch issue could not be created or updated (see *Non-blocking*), record the sweep (or its
-deferral) in the run summary instead and name the issue failure there; that satisfies this rule.
+requires the regression sweep to have run and its verdict (or an explicit `deferred` verdict with
+its reason) to be recorded with `--record-sweep`, which writes it to the batch record and issue;
+exit 4 is the script saying that has not happened, so exit 4 is never Done. When the batch issue
+could not be created or updated (see *Non-blocking*), the verdict still lands in the local batch
+record; name the issue failure in the run summary.
 
 **Permission-classifier blocks:** if a harness permission layer blocks the `--execute` launch,
 retry the identical command once before escalating to the operator — a block that succeeds on a
 verbatim retry was non-deterministic, and surrendering the run to it is how an operator ends up
 hand-driving the loop four times (the incident's S2).
 
-## Batch issue protocol (GH-944) — caller-owned, for queues of three or more
+## Batch issue protocol (GH-944, GH-1064) — script-owned record, for queues of two or more
 
-This protocol is caller-owned: the driving agent executes it around the script's Phase 5; no
-script option governs it, and nothing in the landing sequence waits on GitHub issue state.
+GH-1064 moved the record from caller prose into the script. The script owns the batch record, the
+issue's marked block, the outcomes, the sweep **inputs** and the verdict **record**. It does not run
+any test suite (GH-831): the caller still runs the sweep and writes the verdict.
 
-- **Trigger & threshold.** Fires when the Phase 4 sequence for this run contains **three or more
-  PRs**, counted after `--exclude` drops and the hold labels visible at sequencing time. A hold
-  label added or removed later surfaces at the Phase 5 live refresh: record that PR's outcome in
-  the issue rather than re-counting, and never close or skip the issue because the landed count
-  fell below three. Deferred, parked, and handed-off PRs are Phase 5 outcomes: *named* in the issue,
-  never counted toward the threshold, and a `--resume` continuation inherits the original batch's
-  issue rather than re-counting the shrunken queue. Queues below three behave exactly as before —
-  no issue.
-- **Created before the first merge, kept current.** The issue is opened after sequencing and
-  before the first `gh pr merge` of the batch, so problems and pivots are appended as they happen
-  and the record survives a mid-batch stop (exit 2/3 included).
-- **Idempotent on `--resume`.** On a `--resume` run only, search the repo's open issues labelled
-  `merge-batch` for this integration branch whose PR list overlaps the run's queue; that
-  continuation — including one on a later calendar day — appends to that issue, never mints a
-  duplicate. A fresh (non-`--resume`) run always opens its own issue, even when a PR it queues
-  also appears in an older, still-open batch issue; link the older issue from the new one. The date in the title is a human label, never the match key. One issue per batch run,
-  not per PR.
-- **Label bootstrap.** Run `gh label create merge-batch --force` before the first create, so the
-  protocol works in repos that have never used the label (it is idempotent where the label exists).
-- **Non-blocking.** Issue creation or update failures (network, permissions) are disclosed in the
-  run summary and the governed landing proceeds — the issue is a record, not a gate.
-- **Named data sources — mine, do not freelance.** The merge sequence and per-PR outcomes come
-  from the end-of-run summary; ad-hoc fixes and pivots from the attempt records
-  (`<primary>/.tick/merge-cleanup/<owner>-<repo>/pr-<N>.json`) and B1 ledger-resolution lines;
-  findings from the reconciliation gates (`wave-reconcile`, `releases_app check`,
-  `pdda.sh issue-doc-sync`) and teardown verdicts.
-- **Regression sweep (after the batch).** Apply `/debug-mantra` over the merged range (first
-  through last merge commit of the batch on the integration branch): cross-reference the merged
-  diffs for cross-PR interactions (shared files and semantic overlap — the Phase 4 soft-edge
-  lens), mine the attempt records for repaired conflict sites (a repaired conflict is a
-  regression suspect), and run the tier-appropriate suite **in a disposable full clone** — never
-  the primary (GH-564). Every regression or bug found becomes a `- [ ]` checklist item in the
-  issue with its evidence. A clean sweep is recorded as such, naming what ran: a sweep that
-  cannot name its evidence has not run.
+- **Trigger & threshold.** An executing run whose Phase 4 sequence holds **two or more PRs**, after
+  `--exclude` drops, gets a batch. Single-PR runs are unchanged: no issue, no exit 4.
+- **`--resume` continues the batch, whatever the queue size.** A resume first looks for an
+  unfinished batch (planned PRs not yet landed-and-reconciled, or landings no verdict covers) for
+  this repo and integration branch. A non-empty queue must overlap its planned PRs; an empty queue
+  (everything already landed) matches on repo and branch alone. A found batch keeps its issue. With
+  no match, a 2+ queue opens a new batch, even on `--resume`.
+- **Created before the first merge.** The record lives at
+  `<primary>/.tick/merge-cleanup/<owner>-<repo>/batch-<utc>-<pr>.json`. The issue is opened
+  (`gh label create merge-batch --force`, then `gh issue create`) after sequencing and before the
+  loop. Its marked block holds the planned order, with each PR's hard dependencies and soft-edge
+  overlap files.
+- **Every outcome, at the branch where it happens.**
+  - The remote merge is recorded with its merge commit as soon as `gh pr merge` is verified, and the
+    reconcile result separately.
+  - Hold-label and draft skips get named statuses (a PR seen closed is recorded `closed`, which is
+    terminal), as do blocked, deferred, parked and
+    handed-off PRs.
+  - Any hard stop is recorded against the PR in hand, with its error lines. PRs never reached stay
+    `unattempted`.
+  - The issue's marked block is rewritten on every return.
+- **Sweep inputs (after the loop, over every landing in the batch, including earlier resumed runs):**
+  - the merged range `<first landing>^1..<last landing>`;
+  - files touched by two or more landed PRs (from the stored per-PR file lists);
+  - repaired conflict sites from the attempt records;
+  - the gate from `wave_reconcile.select_qualification_gate`, or the full gate when it cannot classify;
+  - the exact `git clone --no-local … && bash <gate>` command to run.
+- **Exit 4 = landed, QA pending.** After a normal Phase 6, a batch with landings that no recorded
+  verdict covers ends with exit 4. Held or handed-off PRs elsewhere in the batch do not change
+  that, and a new landing makes an earlier verdict partial again. Exit 2 and 3 take precedence.
+- **Recording the verdict.** `merge_cleanup.py --primary <path> --record-sweep <file>` runs no scan,
+  merge or teardown. The file's first line is `verdict: clean|findings|deferred`:
+  - `clean` must name what ran;
+  - `findings` needs at least one `- [ ]` item with its evidence;
+  - `deferred` needs a reason.
+  It covers the batch's current landings. Malformed or empty input exits 2 and stores nothing.
+- **Issue ownership.** The script only ever replaces the text between
+  `<!-- merge-batch:script:start -->` and `<!-- merge-batch:script:end -->`. If the body cannot be
+  read, or the markers are gone, it does not edit and records why. Everything outside the markers is
+  the caller's.
+- **Caller-owned:** Strategy and sequence review (GH-1066), Problems, Ad-hoc fixes & pivots, Findings, the `/debug-mantra` sweep analysis
+  (cross-PR interactions, repaired conflict sites as regression suspects, the suite run in a
+  disposable full clone, never the primary, GH-564), and the carry-overs below.
+- **Non-blocking.** Issue create, read or edit failures are recorded in the batch record and
+  printed as warnings; the landing proceeds. The record is the source of truth either way.
 - **Post-deployment carry-overs (dual sink).** Scan each merged PR body and its closing-linked
   originating issue for post-deployment/verification checklist items; transcribe them
-  **verbatim, attributed (`#PR` / `#issue`), unchecked** into the issue's checklist — **and echo
-  them at the end of the run's chat summary**, after the merge sequence, so the operator sees
-  them in-band rather than only on GitHub. Transcribe only: merge-cleanup never executes
-  production verification.
+  **verbatim, attributed (`#PR` / `#issue`), unchecked** into the issue's carry-overs section, outside
+  the markers, **and echo them at the end of the run's chat summary**, after the merge sequence, so
+  the operator sees them in-band rather than only on GitHub. Transcribe only: merge-cleanup never
+  executes production verification.
 - **Lifecycle.** The issue stays open; the operator works the checklists. merge-cleanup never
   auto-closes it.
 
-**Issue template:**
+**Issue layout (created by the script):**
 
 ```markdown
-Title: Merge batch <YYYY-MM-DD> — <owner/repo> — <PR list>
+Title: Merge batch <YYYY-MM-DD> — <owner-repo> — <PR list>
 Labels: merge-batch
-Integration branch: <development>
+Integration branch: `<development>`
 
-## Merge sequence
-| # | PR | outcome | reconcile |
-|---|----|---------|-----------|
-
+<!-- merge-batch:script:start -->
+## Merge sequence      (planned order · depends on · file overlap · status · merge commit · reconcile)
+## Sweep inputs        (range · shared files · repaired conflicts · gate · command)
+## Sweep verdict       (QA pending | clean/findings/deferred covering #…)
+<!-- merge-batch:script:end -->
+## Strategy and sequence review
+<!-- groups/order, PR/head/base/candidate SHAs, CI checkpoints, rollback; for 3+ PRs: author/reviewer model identities, relay receipt and finding dispositions (GH-1066) -->
 ## Problems
-
 ## Ad-hoc fixes & pivots
-
 ## Findings
-
 ## Regression sweep (debug-mantra)
-- [ ] <!-- findings with evidence; a clean sweep records what ran instead -->
-
+- [ ] <!-- analysis with evidence -->
 ## Post-deployment carry-overs
 - [ ] <!-- verbatim items, attributed to #PR / #issue -->
 ```
@@ -430,12 +509,13 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | teardown-fresh-inspection | 6 | script | TestA5FreshInspection.test_teardown_refuses_a_stale_scan_record |
 | mergeable-unknown-poll | 5 | script | TestPhase5EndToEnd.test_unknown_mergeable_settles_and_the_pr_lands |
 | exclude-drops-pr | 4 | script | TestPhase5EndToEnd.test_exclude_pr_number_drops_it_from_the_queue |
-| batch-issue-threshold | 5 | caller | — |
-| batch-issue-resume-append | 5 | caller | — |
+| batch-issue-threshold | 5 | script | TestGh623Resilience.test_resume_lands_a_pr_whose_last_repair_resolved |
+| batch-issue-resume-append | 5 | script | TestGh623Resilience.test_resume_lands_a_pr_whose_last_repair_resolved |
+| batch-sweep-record | 5 | script | manual check, `TESTS-RESULTS/2026-10-14+GH-1064/` |
 | batch-regression-sweep | 5 | caller | — |
 | post-deploy-carryover-dual-sink | 5 | caller | — |
 
-CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`.
+CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`, `--record-sweep`.
 
 ## CLI Usage
 

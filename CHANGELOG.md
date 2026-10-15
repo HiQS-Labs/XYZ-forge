@@ -74,6 +74,31 @@ Existing cleanup180 tests, three focused start-task suites and41 isolated manual
 passed, with negative controls and committed provenance under `TESTS-RESULTS/2026-10-14+GH-1059/`.
 Independent plan/final QA approved; the full publication gate passed409/409 in a separate full clone.
 
+## 2026-10-14 — merge-cleanup keeps the batch record itself and holds Done until QA is recorded (GH-1064)
+
+The `merge-batch` issue protocol (GH-944) was caller-owned prose for queues of three or more PRs.
+In three weeks it produced six batch issues in six different formats, and its Done rule rested on
+the agent's own reading. The script now owns the record for queues of **two or more**:
+
+- It opens the issue before the first merge, with the planned order and each PR's dependency
+  reasons, and records every outcome where it happens: the remote merge and its commit, the
+  reconcile result, skips, and hard stops against the PR in hand.
+- It only ever edits a marked block of the issue, so the agent's sections survive.
+- After the loop it records the sweep inputs (the inclusive merged range, files shared across
+  landed PRs, repaired conflict sites, the classified gate and the exact command), and ends with a
+  new **exit 4 — landed, QA pending** until `--record-sweep <file>` stores a clean, findings or
+  deferred verdict.
+- `--resume` continues the batch even when nothing is left to land.
+- Resume never loses a recorded merge or skips pending QA (#1074): the landed set also counts any
+  outcome with a merge, a merged status is never downgraded, and a queue of only new PRs joins the
+  batch whose QA is still pending.
+
+Per the operator's scoping under GH-831, the script runs no test suite; the agent still runs the
+sweep. Verified on the existing `gh436` suite (180 tests, with updated 2-PR expectations and a
+repointed parity guard; no new tests) plus recorded manual checks and three red controls under
+`TESTS-RESULTS/2026-10-14+GH-1064/`. Revert the GH-1064 commits to undo; batch records live in the
+gitignored `.tick/`.
+
 ## 2026-10-14 — PR1054 review evidence and base refresh (GH-1042, GH-1045)
 
 Correct the two-phase manual replay association by clearing its earlier seed result before shell traversal. Prior raw evidence is retained unchanged; the corrected replay must report a null result for the intentional failed p2 dispatch, rather than an earlier p1 approval. Refresh onto development7bc727cb through the existing ledger writer; preserve ratings, issue identity and original PR history. Update the verified plan state and add [the previously missing durable bet record](decisions/2026-10-14-gh1042-historical-completion.md).

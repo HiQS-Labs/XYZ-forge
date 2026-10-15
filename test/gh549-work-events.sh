@@ -623,7 +623,7 @@ python3 - "$MC" <<'PYORDER'
 import ast, sys
 src = open(sys.argv[1], encoding="utf-8").read()
 tree = ast.parse(src)
-fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "land_prs")
+fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "_land_prs_loop")  # GH-1064: land_prs is now a recording wrapper
 post = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "run_post_merge_reconcile")
 wait = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "wait_for_hosted_reconcile")
 lines = {}
