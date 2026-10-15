@@ -52,8 +52,8 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the **committed implementation** on this branch versus `origin/development`
-  (`git diff origin/development...HEAD`). Code files:
+- Artifact under review: `skills/2-daily/merge-cleanup/scripts/batch_record.py` and the rest of the
+  committed implementation on this branch (the diff against origin/development). Code files:
   - `skills/2-daily/merge-cleanup/scripts/batch_record.py` (new)
   - `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` (`land_prs` wrapper, `_record_batch_outcomes`, `_land_prs_loop` hooks, `select_batch`, `record_sweep`, exit 4)
   - `skills/2-daily/merge-cleanup/scripts/toposort_prs.py` (`_soft_reasons`)
