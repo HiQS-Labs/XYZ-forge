@@ -5,13 +5,13 @@ description: >-
   with an existing covering suite, or small documentation text/image updates with
   --docs-only and the existing PDDA docs suite. Carries releases-ledger updates, born-complete PDDA doc, CHANGELOG,
   landing, and reconciliation in one operator-authorized motion. Requires a task
-  clone branched from origin/development (carrying <= 2 local commits) with the
+  clone branched from origin/development (carrying at most 2 local commits) with the
   canonical pre-push gate installed, authenticated gh, and the root releases ledger.
   The driver commits and fast-forward pushes directly to development, verifies the
   commit and issue closure, then reconciles with wave_reconcile --commit. Supports
-  --dry-run, subsystem tolerance (--allow-multi-subsystem or <= 30 insertions across
-  <= 2 files), resume, and telemetry mirroring. Refuses shared/stale clones,
-  diverged branches, > 2 commits, unsafe Git/Bash/kernel surfaces, oversized diffs,
+  --dry-run, subsystem tolerance (--allow-multi-subsystem or at most 30 insertions across
+  at most 2 files), resume, and telemetry mirroring. Refuses shared/stale clones,
+  diverged branches, more than 2 commits, unsafe Git/Bash/kernel surfaces, oversized diffs,
   generated-artifact hand edits, missing/red suites, and closed or unresolved
   issues. Do not use for Costly or one-way-door changes.
 ---

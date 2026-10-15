@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-15 — Bounded express documentation lane (GH-1080)
+
+Explicit documentation express requests now accept ordinary text and image updates without a critical-hotfix rationale or runtime coverage suite. `--docs-only` reuses the registered PDDA repository documentation gate; its exact command remains in existing commit-bound receipts and resume. Image assets count toward file limits, not binary newlines. Code/configuration, executable policy, symlinks and executable files remain outside documentation admission.
+
+The bet is that structural docs checks plus recorded agent content/link/rendering checks suit these small updates. Direct-landing admission is Costly: revert the driver, skill and SOP changes together to restore the old rule; existing receipts remain readable. No new suites, gate runners or receipt schema.
+
 ## 2026-10-15 — Preserve unpublished historical HiQS review receipts
 
 Recover three approved historical review records from the operator’s primary checkout
