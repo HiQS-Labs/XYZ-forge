@@ -95,4 +95,12 @@ Evidence scope: Verify-tier direct source review of the current checkout. The ne
 
 relay closed (Approved), no further turn needed. Producer may proceed to the required final gate and publication steps.
 
+
+### Attestation · relay-drive — 2026-10-15T22:48:13Z
+task: RELAY-gh1088-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: e844c747370fa359923ed7ce13d5e1bce00fa299
+added-range: 6876+5652
+added-sha256: 3c383e951cd1cf943a83bbce6f9fc1ba5fd18c7da1f81cfd8b02418a82f77858
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
