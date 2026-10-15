@@ -101,4 +101,12 @@ Basis: The bounded plan reuses existing caller/relay/batch records, preserves ma
 
 Relay closed (Approved), no further turn needed. Producer may proceed with the approved scope and must obtain final implementation QA and applicable gate evidence before publication.
 
+
+### Attestation · relay-drive — 2026-10-15T03:58:30Z
+task: RELAY-GH1066-PLAN-20261014
+reviewer: codex
+status: Approved
+reviewed-head: 315fa63b56afc0d7442e84d38b8dfb39cb6947f6
+added-range: 7539+3937
+added-sha256: 4b6c58e5b0e26d3340b6a8d8c2e384481e9780816c3607df699f4e770173b97f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
