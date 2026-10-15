@@ -1,0 +1,7 @@
+{
+  "['git', 'rev-parse', 'HEAD']": "e62da9ba8ac7c870709cb9925de67e75dcad2002\n",
+  "['git', 'remote', '-v']": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)\ntask\t/Users/noelsaw/marathon-clones/merge-cleanup-ci-groups (fetch)\ntask\t/Users/noelsaw/marathon-clones/merge-cleanup-ci-groups (push)\n",
+  "['git', 'config', '--get', 'core.bare']": "false\n",
+  "['git', 'config', '--local', '--get', 'user.email']": "",
+  "['git', 'status', '--porcelain']": ""
+}

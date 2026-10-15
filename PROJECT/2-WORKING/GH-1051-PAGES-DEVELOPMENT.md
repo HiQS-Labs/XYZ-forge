@@ -2,7 +2,7 @@
 title: "GH-1051: development-only Pages publishing"
 status: Working
 created: 2026-10-12
-updated: 2026-10-12
+updated: 2026-10-15
 owner: Codex
 gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1051
 branch: fix/XYZ-forge-gh1051-pages-development-2026-10-12
@@ -15,7 +15,7 @@ goal: "Align Pages workflow triggers and jobs with the operator's development-on
 
 | What was just completed | What's next |
 |---|---|
-| Four-declaration fix, existing57/0/manual controls, native final QA Approved1/3 and full publication gate409/409; draft #1053 created | Exact final carrier-head hosted checks, then operator merge decision |
+| Operator admitted PR1053 for review and conditional development landing; current-base caller reconciliation preserves the reviewed workflow and all authoritative incoming ledger/history. Original final QA1/3 and earlier full evidence remain historical. | Independent current-base final round2/3, existing focused checks and normal publication/premerge/hosted landing qualification; source-bound results will be retained in the continuation evidence folder. |
 
 Intake base0085ceee5269c9edfa22d77a96e08edf158a8cc5 (development advanced from earlier ecbe7722 preflight; Pages unchanged). Exact-main Pages38326961150 built but deploy was forbidden by github-pages policy permitting onlydevelopment. Operator chose development-only publishing and requested bounded fix/draftPR, not landing or deploy. Currentmain4895148683120b8b6f808d4dcd66267a3754fd2c remains immutable and qualified.
 
@@ -50,3 +50,9 @@ Workflow intent must match environment source-branch policy. A successful artifa
 ## Draft verification checkpoint
 
 Full normal push gate passed409/409 at baf31e72 after two built-in serial fixture rechecks; earlier sandbox EPERM refusal is retained under TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72. No bypass or testchanges. Draft https://github.com/HiQS-Labs/XYZ-forge/pull/1053 targetsdevelopment. Currentdevelopmentb9f07ea5 differs from intake only by externally landed evidence/relay receipts; Pages executable content unchanged. This proof/status-only carrier does not claim a fresh full run on its later SHA. Final exact-head hosted checks remain pending. No merge/deploy authorized.
+
+## Authorized merge continuation — 2026-10-15
+
+The operator explicitly approved taking PR1053 out of draft, finishing its review/checks and merging into development if they pass. Ready status was verified. This supersedes the historical draft-only authorization above; it does not authorize main promotion, workflow dispatch or environment changes. Original native final round1/3 and raw failures remain; the next independent review is cumulative2/3. The earlier local preparation at95ebe8a1 is retained as repair1/2; this current-base caller episode is repair2/2, never reset.
+
+Adopt the qualified1068 reconciliation14081d61, preserve its authoritative Completed states and all existing business rows, and replay only GH1051 through the canonical roadmap writer. Automatic B1 refusal is retained; no SQL union or gate override. Candidate proof, focused checks, final review and normal publication receipts are recorded under `TESTS-RESULTS/2026-10-15+GH-1051-merge/`. The batch plan and actual outcomes are tracked in GitHub issue1086. A passing local publication run is not exact-main promotion qualification.

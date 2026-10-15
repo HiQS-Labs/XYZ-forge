@@ -1,0 +1,39 @@
+{
+  "pr": 1068,
+  "head": "34ebdd83b3fe5cdcfe3fc540d20c410d88f286f0",
+  "fullTestCommit": "759b34e0603626c81690af08bafa6edd38554c12",
+  "summary": {
+    "v": 1,
+    "ts_ms": 1792038882480,
+    "run": "759b34e06-90490",
+    "runner": "validate",
+    "event": "run.summary",
+    "passed": 409,
+    "failed": 0,
+    "total": 409,
+    "envelope_rc": "0",
+    "envelope_drift": "none",
+    "suite_events": "408",
+    "run_set": "406",
+    "registered": "406",
+    "suite_events_match": "yes"
+  },
+  "before": {
+    "['git', 'rev-parse', 'HEAD']": "759b34e0603626c81690af08bafa6edd38554c12\n",
+    "['git', 'remote', '-v']": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)\ntask\t/Users/noelsaw/marathon-clones/merge-cleanup-ci-groups (fetch)\ntask\t/Users/noelsaw/marathon-clones/merge-cleanup-ci-groups (push)\n",
+    "['git', 'config', '--get', 'core.bare']": "false\n",
+    "['git', 'config', '--local', '--get', 'user.email']": "",
+    "['git', 'status', '--porcelain']": ""
+  },
+  "after": {
+    "['git', 'rev-parse', 'HEAD']": "759b34e0603626c81690af08bafa6edd38554c12\n",
+    "['git', 'remote', '-v']": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)\ntask\t/Users/noelsaw/marathon-clones/merge-cleanup-ci-groups (fetch)\ntask\t/Users/noelsaw/marathon-clones/merge-cleanup-ci-groups (push)\n",
+    "['git', 'config', '--get', 'core.bare']": "false\n",
+    "['git', 'config', '--local', '--get', 'user.email']": "",
+    "['git', 'status', '--porcelain']": ""
+  },
+  "reviewedSkillBlobMatches": true,
+  "receiptReaderFailure": "No committed passing test receipt at HEAD matches PR #1068 in TESTS-RESULTS/ (AGENTS.md: uncommitted provenance is not proof).",
+  "postFullChangesIncludePlanMetadata": true,
+  "requiredRemediation": "Preserve historical full proof, add typed attribution and fresh normal documentation receipt at corrected/current base before merge"
+}

@@ -221,6 +221,68 @@ Parking preserves work for later review; it never qualifies it for integration o
 - Analyzes touched file sets to detect unannotated file collisions and orders shared-file PRs chronologically as **soft** edges: they decide sequence only, never eligibility (GH-623).
 - Builds a Directed Acyclic Graph (DAG) and computes topological merge order.
 
+### CI-heavy repositories: plan merge groups before qualification (GH-1066)
+
+Prefer a few coherent landing groups over repeatedly repairing, pushing and fully testing
+one PR at a time. This is caller-owned planning, not a new driver mode or a gate bypass.
+Use the existing batch issue for qualifying queues; smaller queues use the run summary.
+
+1. **Map the cost and constraints.** Read the repo's required checks, push hooks, hosted
+   triggers and reconciliation policy. Identify which pushes actually start broad CI and
+   which existing path supports batching (merge queue, staging or aggregate landing PR).
+   Record the chosen path and intended full-run checkpoints before the first mutation.
+2. **Group by dependency and interaction.** Keep hard dependencies in order; group related
+   changes sharing runtime/contracts or repeated conflict sites. Shared ledger/CHANGELOG
+   files alone do not prove semantic coupling. Separate unrelated work and risky migrations,
+   security or containment changes that need independent rollback and qualification.
+3. **Prepare before expensive runs.** Resolve the group's known conflicts and combined
+   interactions in a disposable full clone, complete independent review, and run the existing
+   focused checks as repairs are made. Publish complete reviewed checkpoints rather than
+   each mechanical repair. Required per-PR checks still run on their actual final heads.
+4. **Freeze the candidate.** Record member PRs and head SHAs, current integration base,
+   combined candidate SHA, review receipts and rollback boundary. New members, code repairs
+   or base changes invalidate affected evidence; refresh review/checks before landing.
+5. **Adversarial sequence review for three or more PRs.** When the authorized batch
+   contains three or more PRs, use one bounded [`relay-xyz`](../../1-hourly/relay-xyz/SKILL.md)
+   review of the whole grouping, merge strategy and sequence before the first merge, even
+   when the batch is divided into smaller groups. Choose an independent reviewer using a
+   different actual model family from the plan author; a different CLI alone is not proof.
+   Record both model identities, the frozen PR/head/base/candidate SHAs, proposed groups/order,
+   required CI checkpoints and rollback boundaries in the existing batch record and relay.
+   Ask the reviewer to challenge missing dependencies, semantic interactions, conflict sites,
+   unsupported gate deferral, duplicate broad runs and recovery after a partial landing.
+   Disposition supported findings before proceeding; advice cannot waive deterministic gates
+   or operator authority. Use at most three cumulative review rounds per batch, including
+   resumes; do not repeat this strategy review per PR or replace required per-PR QA.
+   Material changes to membership, dependency/order, integration content or risk reopen the
+   affected plan review; editorial record updates do not. Record unavailable review neutrally
+   ("Independent review did not run.") or an unknown identity as "Reviewer model identity
+   unverified." Hold the affected batch without assigning defect severity or opening a
+   blocking issue. Do not claim cross-model
+   approval without evidence. Ordinary one/two-PR queues need no extra strategy relay unless
+   risk or repository policy calls for one.
+6. **Qualify the complete group.** Where policy permits, reserve the first full gate for
+   this frozen combined candidate, after preparation is complete. Keep the existing tier
+   classification; grouping docs does not require a full gate. Run the repository's
+   qualifying command on its required platform; a parallel publication run is not sequential
+   promotion evidence. A failed required check stops landing; diagnose before retrying.
+7. **Land through the supported path.** Preserve merge-history policy and PR/issue provenance.
+   Never retarget PRs, create a staging branch, alter branch protection/workflows, cancel
+   required runs or use a push bypass merely to meet a CI budget. Those changes require
+   their own authorization. Historical time-boxed exceptions are not standing permission.
+8. **Verify the landed result.** Reserve a second full run for the actual landed integration
+   result when policy requires it or candidate evidence no longer qualifies that result.
+   Reuse an existing qualifying hosted run only when its SHA/content scope covers the group;
+   do not launch a duplicate final sweep. Complete required reconciliation and fresh teardown
+   checks, and record actual run SHAs, results and any remaining verification.
+
+**Fallback:** if no supported batch path exists, keep ordinary sequential merges and every
+required per-merge reconciliation/check. The current Forge driver reconciles after each merge;
+this guidance does not defer that sequence or add a batching flag. Group preparation can reduce
+repair/push churn, but cannot promise one or two total CI runs under an unchanged per-PR policy.
+Record that limit; use Forge's `docs/CI-CHURN-RECOVERY-SOP.md` for a separately authorized
+recovery window when warranted. Never skip qualification or claim unmeasured savings.
+
 ### Phase 5: Safe Execution & Post-Merge Reconciliation
 - **Refuses every executing cleanup when Phase 0 says the primary is not landing-ready**, unless the operator explicitly passes `--allow-unready-primary` to defer that cleanup. This gate applies before any Phase 5 or Phase 6 mutation, including zero-PR and `--teardown-only` runs; the skill never silently chooses to leave the primary dirty or otherwise unready.
 - Carries existing authorization forward. Ask only for a missing scope decision, ambiguous resolution, or an action requiring additional permission under repo policy, after completing safe preparation; do not ask the operator to reselect already authorized work.
@@ -370,7 +432,7 @@ any test suite (GH-831): the caller still runs the sweep and writes the verdict.
   `<!-- merge-batch:script:start -->` and `<!-- merge-batch:script:end -->`. If the body cannot be
   read, or the markers are gone, it does not edit and records why. Everything outside the markers is
   the caller's.
-- **Caller-owned:** Problems, Ad-hoc fixes & pivots, Findings, the `/debug-mantra` sweep analysis
+- **Caller-owned:** Strategy and sequence review (GH-1066), Problems, Ad-hoc fixes & pivots, Findings, the `/debug-mantra` sweep analysis
   (cross-PR interactions, repaired conflict sites as regression suspects, the suite run in a
   disposable full clone, never the primary, GH-564), and the carry-overs below.
 - **Non-blocking.** Issue create, read or edit failures are recorded in the batch record and
@@ -396,6 +458,8 @@ Integration branch: `<development>`
 ## Sweep inputs        (range · shared files · repaired conflicts · gate · command)
 ## Sweep verdict       (QA pending | clean/findings/deferred covering #…)
 <!-- merge-batch:script:end -->
+## Strategy and sequence review
+<!-- groups/order, PR/head/base/candidate SHAs, CI checkpoints, rollback; for 3+ PRs: author/reviewer model identities, relay receipt and finding dispositions (GH-1066) -->
 ## Problems
 ## Ad-hoc fixes & pivots
 ## Findings
