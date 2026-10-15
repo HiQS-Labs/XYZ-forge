@@ -2,7 +2,7 @@
 title: "GH-1042 + GH-1045: trusted phase completion recovery"
 status: PR ready — awaiting merge
 created: 2026-10-13
-updated: 2026-10-14
+updated: 2026-10-15
 owner: Codex
 goal: Restore gate-only and cross-phase recovery without approving unreviewed branch changes.
 gh_issue: 1042
@@ -96,3 +96,9 @@ PR: [https://github.com/HiQS-Labs/XYZ-forge/pull/1054](https://github.com/HiQS-L
 The ledger conflict against development7bc727cb is mechanically disjoint. The installed classifier kept generation1628 and replayed GH1042/GH1045 through the existing writer, preserving ratings and issue/document identity. Current review corrections leave production recovery/attestation code unchanged. Acceptance remains verified by the original retained replay; corrected two-phase evidence now removes the seed result before the shell traversal, so a failed p2 retry cannot carry an earlier p1 approval object. Earlier raw receipts remain immutable and are explicitly superseded for that result association.
 
 The durable bet is recorded in [the recovery decision](../../decisions/2026-10-14-gh1042-historical-completion.md). Final QA round3 and the fresh normal publication gate remain required for the updated head. The three-round review cap is unchanged. No live Marathon/Jog was activated.
+
+## Updated verified handoff — 2026-10-15
+
+All five original CodeRabbit findings were adjudicated by independent final Codex QA round3/3, Approved, attested review6edaeacd. The corrected existing34-outcome replay passed, and the normal installed full macOS push gate passed409/409 at2fe59019 in1402seconds, with two built-in sequential retries and unchanged clone identity. That exact branch head was published.
+
+Completed hosted reconciliation qualified the preceding GH1044 landing with409/409 at7bc727cb and advanced development69666c47. Repair2/2 preserved every reviewed GH1042/GH1045 row and all three core runtime blobs while replaying only incoming GH1043 metadata. Hosted LEADERBOARD.md is retained byte-for-byte; no task-owned routine view delta. Review3/3 and repair2/2 are not reset. The administrative follow-up uses the normal documentation gate and fresh exact-head remote checks/reviews before any landing. This is still awaiting merge, not shipped or main-qualified.

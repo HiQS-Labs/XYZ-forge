@@ -13,3 +13,7 @@ Hosted Wave38649763226 succeeded on2026-10-14 and advanced development to69666c4
 ## Required gate assertion failure
 
 The normal full gate reported gh75-dashboard rc1: its existing has helper uses printf piped to grep-Fq under pipefail, and the release-status check printed a printf Broken pipe. The unchanged existing suite passed8/8 in a separate full diagnostic clone. This establishes an assertion termination problem; it is not dismissed as an unimportant flake or waived gate. The existing validator performs its drained-pool sequential retry; the final gate result is recorded separately. No test/helper/case was changed, and no review/repair cap was reset.
+
+## Normal full publication result
+
+The installed pre-push hook passed409/409,0 failures, on macOS at2fe59019bc331f290ea8b6cfb04c481291e9ed23 in1402seconds and published that exact ref. Clone HEAD, origin, bare flag and local-config digest stayed identical. Two suites required the validator's built-in drained-pool sequential retry: gh75-dashboard and jog-queue; both passed in that retry. The runner labels these contention generically; the dashboard's retained raw evidence specifically shows early-exiting quiet-grep/SIGPIPE, the class already tracked by openGH853. Jog's first-pass refusal delta remains unexplained beyond its isolated/native-retry passes; it is not called harmless or waived. No test/helper/case was edited. This is full local publication evidence, not main promotion qualification. The later reconciliation-only docs/ledger update still goes through its own normal push gate.
