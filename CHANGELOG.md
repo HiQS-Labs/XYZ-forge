@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-15 — PR1058 architecture and historical-evidence corrections
+
+Document the existing projections boundary accurately: ordinary ledger writes and hosted
+reconciliation honour `projections: off`, while the merge resolver explicitly rebuilds
+adopted views and honours deletions independently of that setting. Regenerate the ledger
+diagram from its corrected spec; no resolver or other runtime behaviour changes.
+
+Separate the GH-1052 intake headings from their content. Export the historical HiQS deployment
+review with generic path placeholders and an explicit link/blob identity for the unmodified
+attested original. Qualify its historical PASS: retained catalog rows and add/update/sync/
+prerequisite history do not establish a separate catalog preview/apply operation. That
+procedure remains unverified; this correction performs no catalog apply or installation.
+
+Easy to reverse: revert these documentation changes. Existing diagram validation, normal
+publication checks and independent review qualify the correction; no new CI test or case.
+
 ## 2026-10-12 — Muse relay turns no longer stall on an unanswerable approval prompt (GH-521)
 
 Driven Muse relay turns hit the wall cap with `cpu=0.00` and no relay block. The cause was

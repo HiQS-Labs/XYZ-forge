@@ -419,8 +419,10 @@ In this repo's releases mode, the RELEASES DB is authoritative and that legacy s
 views are *derived* from it (`LEADERBOARD.md`, `RELEASES-PREVIEW.html`, `LEADERBOARD.html`), and every one of them is **adopted by presence**: a generator refreshes
 a view only if that file already exists at the repo root. A repo that never baked one — a fixture, a
 fresh clone, a vendored `.xyz/` install — is a silent no-op, not an error. The ledger's `projections`
-setting sits in front of that check: `off` disables every view refresh regardless of presence, while
-the default `auto` leaves the decision to presence (set via `pdda-install.sh --projections`).
+setting precedes that check for ordinary ledger writes and hosted reconciliation: `off` disables
+their automatic refreshes, while the default `auto` leaves the decision to presence (set via
+`pdda-install.sh --projections`). The merge resolver explicitly rebuilds adopted views after a
+ledger merge; it checks presence and deletions independently of this setting.
 
 That single rule is what makes a view addable and removable without editing a single consumer.
 
@@ -463,7 +465,10 @@ flowchart TD
 
     DB --> gens
     C2a --> C2
-    consumers --> SWITCH
+    C1 --> SWITCH
+    C3 --> SWITCH
+    C4 -- "via ledger writes" --> SWITCH
+    C2 -- "explicit merge rebuild" --> GATE
     SWITCH -- "yes: views disabled" --> SKIP["skip — silent no-op"]
     SWITCH -- "no: auto / on" --> GATE
     GATE -- "no: NOT adopted" --> SKIP

@@ -1085,7 +1085,7 @@
       "type": "job",
       "group": "writers",
       "tech": "utils/releases-merge-resolve.sh",
-      "description": "Validates the resolved dump and generation, rebuilds releases.db with backup, checks it, regenerates only adopted views and stages the result."
+      "description": "Validates the resolved dump and generation, rebuilds releases.db with backup, checks it, and explicitly regenerates adopted views independently of the projections setting; honours view deletions and stages the result."
     },
     {
       "id": "roadmap-query",
@@ -1133,7 +1133,7 @@
       "type": "service",
       "group": "projections",
       "tech": "settings.projections \u00b7 auto|on|off",
-      "description": "Ledger setting checked before presence. off disables every root-view refresh; auto (default) defers to file presence. Set by pdda-install.sh --projections."
+      "description": "Checked before presence by ordinary ledger writes and hosted reconciliation. off disables their automatic refreshes; auto (default) defers to presence. The merge resolver performs an explicit presence-gated rebuild independently of this setting."
     },
     {
       "id": "adoption-gate",
@@ -1332,7 +1332,7 @@
     {
       "source": "merge-resolve",
       "target": "adoption-gate",
-      "label": "after rebuild",
+      "label": "explicit presence-gated merge rebuild",
       "kind": "sync"
     },
     {
@@ -1456,7 +1456,7 @@
       "kind": "data"
     }
   ],
-  "legend_note": "ROADMAP-DASHBOARD.md, utils/roadmap-dashboard.sh and dashboard-staleness-guard.sh are deliberately absent: GH-567 retired them. Direct roadmap queries and deploy-time Pages generation replaced that committed artifact. Root release/leaderboard views remain optional by presence, behind the projections switch (off disables all refreshes)."
+  "legend_note": "ROADMAP-DASHBOARD.md, utils/roadmap-dashboard.sh and dashboard-staleness-guard.sh are deliberately absent: GH-567 retired them. Direct roadmap queries and deploy-time Pages generation replaced that artifact. Root views remain optional by presence. Ordinary writes and hosted reconciliation additionally honour projections off; the merge resolver explicitly rebuilds adopted views independently of the setting."
 };
 
   // Font stacks: no @font-face, no network fetch — "Indie Flower" resolves

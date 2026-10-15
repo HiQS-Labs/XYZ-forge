@@ -36,19 +36,23 @@ goal: >
 > table and per-phase QA gates (`PROJECT/PDDA.md`).
 
 ## Key concepts
+
 - Distribution is a contract chain: canonical source and owner -> generated, copied, or vendored artifact -> downstream runtime.
 - Apply the extra trace only when a change touches that chain; reuse existing parity, drift, and runtime checks.
 - Keep this distinct from GH-1043's immediate runtime consumer, retry, and solver-parameter checks.
 
 ## Idea
+
 Assess whether recon and review-code should conditionally trace producer, artifact, and downstream-runtime contracts for generated, copied, or vendored changes, and recommend the smallest practical guidance.
 
 ## Why
+
 Recent work includes a central downstream publisher (#955/#956), adapted downstream ownership (#950/#951), publisher parity gaps (#963), an interrupted live re-vendor (#1011), and a local absolute path leaking into downstream artifacts (#1013). The current N+1 proposal (#1043/#1044) sharpens runtime tracing, but these distribution failures cross from Forge source into a separate artifact and its host runtime. Existing safeguards already cover parts of this: `xyz_mini_sync.py` models managed/seed/adapted files and provides `--check`; Skills Army sync uses `skill_drift_check.py`; and `test/xyz-vendor.sh` exercises the materialized runtime in an ESM host. The spike should determine whether a small conditional recon prompt composes these checks or merely repeats existing coverage.
 
 ## Phase 0 - Explore and scope
 
 ### Checklist
+
 - [ ] Trace `relay-automation/xyz-vendor.sh` through target `.xyz/` to a real runtime entry point, including its existing verification.
 - [ ] Trace one standalone or deployed-skill path through its source/ownership rules, published artifact, and downstream consumer.
 - [ ] Review relevant recent issue and PR evidence; separate distinct incidents from recurring boundary failures.
@@ -56,6 +60,7 @@ Recent work includes a central downstream publisher (#955/#956), adapted downstr
 - [ ] Reuse existing verification. Keep local-only changes out of scope; no implementation, new suite, or global gate in this spike.
 
 ### QA checklist - Phase 0
+
 - [ ] Findings cite actual code and existing checks for both runtime vendoring and skill distribution.
 - [ ] Proposed guidance verifies artifact ownership/portability and real downstream use without duplicating GH-1043.
 - [ ] Rollout/rollback compatibility is conditional on relevant persisted or external contract changes.

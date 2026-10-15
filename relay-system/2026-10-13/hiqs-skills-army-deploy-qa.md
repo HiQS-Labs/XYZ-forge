@@ -1,4 +1,11 @@
 # RELAY · QA: HiQS skills deployment via skills-army-hq SOP
+
+> Historical review export. Machine-specific paths were replaced with named placeholders on
+> 2026-10-15 UTC. The original attestation digest and byte range describe the unmodified
+> [published original](https://github.com/HiQS-Labs/XYZ-forge/blob/e1cbb0e9dceca1fc674d881e05cbb7388bccca19/relay-system/2026-10-13/hiqs-skills-army-deploy-qa.md),
+> Git blob `efab749321c750fc73394c6f67cf7a2d6575455b`; they do not authenticate this redacted export or certify current deployment.
+> See the preservation note at the end for the catalog-evidence limit.
+
 <!--
   Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
   Scaffolded by relay-automation/new-relay.sh on 2026-10-13.
@@ -53,7 +60,7 @@ ROUND: 2 / 2
 
 ## Setup
 - Artifact under review: **.relay-artifacts/hiqs-skills-deploy-evidence.md** — the read-only path that
-  `relay-drive.sh --artifact-file /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-hiqs-ai-resolve/e1cc774f-3230-482b-8148-e7d7414b4fa4/scratchpad/hiqs-skills-deploy-evidence.md` seeds into the isolated worktree (read it there; do NOT edit it).
+  `relay-drive.sh --artifact-file <EVIDENCE_PATH>` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-13
 - Definition of Done: the HiQS skills (`hiqs-resolve`, `hiqs-scrape` added; `ai-catalog-update` re-sourced)
@@ -68,16 +75,16 @@ Single-operator local macOS skill deployment. READ-ONLY QA: do not run `intake.p
 
 ### Read
 - The artifact above (evidence bundle with commands run, commits, parity, links, status, changelog).
-- SOP: `/Users/noelsaw/git-pulse-sync/Deployed Skills/skills-army-hq/SKILL.md` and
-  `/Users/noelsaw/git-pulse-sync/Deployed Skills/skills-army-hq/references/recovery.md`.
-- Live state (read-only): `/Users/noelsaw/git-pulse-sync` (commits 73e432087, 0320259c4, e225b0c8b),
-  owning repo `/Users/noelsaw/Documents/GH Repos/hiqs-ai-resolve/skills/{hiqs-resolve,hiqs-scrape,ai-catalog-update}`.
+- SOP: `<SKILLS_ROOT>/skills-army-hq/SKILL.md` and
+  `<SKILLS_ROOT>/skills-army-hq/references/recovery.md`.
+- Live state (read-only): `<PULSE_ROOT>` (commits 73e432087, 0320259c4, e225b0c8b),
+  owning repo `<HIQS_REPO>/skills/{hiqs-resolve,hiqs-scrape,ai-catalog-update}`.
 
 ### Questions
 1. Was every mutation performed by `intake.py`/`sync.py` (preview → apply), with no hand edits or manual
    copies/symlinks? Cite the changelog/commit evidence.
 2. Is each deployed copy byte-identical to its owning repo source at the recorded commit 3afdd0c, and is
-   `ai-catalog-update`'s recorded source now the owning repo instead of the stale `/private/tmp/hiqs-main`?
+   `ai-catalog-update`'s recorded source now the owning repo instead of the stale `<OLD_SKILL_SOURCE>`?
 3. Do all 3 skills resolve through a symlink into `Deployed Skills/<name>` in all 6 enabled targets
    (agents, claude, codex, codex-compat, antigravity, grok-bot, zcode — check `targets.json`)?
 4. Was the interrupted sync (sandbox EPERM) recovered per `recovery.md` (preview `recover`, then
@@ -104,8 +111,8 @@ VERDICT: FAIL
 Basis: Payload deployment and link state look correct, but the explicit SOP prerequisite-recording step is incomplete. Reviewed the whole seeded evidence file, including its pre-existing reporting defects; no other deployment defect observed. Historical preview execution and absence of manual operations are supported by the producer's narrative, not independently reconstructible from final state. No Git commands, apply operations, suites, or executable fixtures were run.
 
 - [Pass] Live payload parity and target coverage. Read-only Python probe (exit 0) compared recursive relative-path maps of file bytes and symlink text between the owning repo's skills and the collection; decisive output: "hiqs-resolve files 6 parity True", "hiqs-scrape files 2 parity True", "ai-catalog-update files 9 parity True". The same probe iterated enabled entries in `targets.json`, checking `p.is_symlink() and p.resolve()==collection/name`; each of "zcode", "codex", "antigravity", "claude", "codex-compat", "grok-bot" returned all three names. There are six targets: "codex" is the ~/.agents/skills root, not a seventh target. No fix needed.
-- [Pass] Provenance and catalog are current. Command: `python3 -c 'import json; from pathlib import Path; r=Path("/Users/noelsaw/git-pulse-sync/Deployed Skills"); d=json.loads((r/".deploy-skills.json").read_text()); print({n:d["skills"][n] for n in ("hiqs-resolve","hiqs-scrape","ai-catalog-update")})'` (equivalent receipt read executed in the combined Python probe, exit 0). All three records quote commit "3afdd0c0190b2c5abd1ab7bdd75dae023ef30e97", "dirty": false and sources under the owning repo; ai-catalog-update no longer records /private/tmp/hiqs-main. Live catalog rows carry the same revision and six "linked" statuses. This establishes recorded revision and current checkout parity, not an independent Git-object comparison. No fix needed.
-- [Pass] Recovery end-state is sound. Command: `python3 -c 'from pathlib import Path; print((Path("/Users/noelsaw/git-pulse-sync/Deployed Skills")/".deploy-skills-pending.json").exists())'` (same expression in combined probe, exit 0): "pending exists False". Live changelog operation `bfab400eb7da4b96a71d2ad8d69ed5cb` records the 12 new links, "apply": true, "errors": [], "warnings": [], and repo "dirty": [], "ahead": 3, "behind": 0. Artifact Commands 7–8 report preview recover → apply recover → no-op sync. Retained .staging entries exist; recovery.md explicitly says staged old versions are retained with no automatic deletion policy, so their mere presence is not a failed recovery. No cleanup requested.
+- [Pass] Provenance and catalog are current. Command: `python3 -c 'import json; from pathlib import Path; r=Path("<SKILLS_ROOT>"); d=json.loads((r/".deploy-skills.json").read_text()); print({n:d["skills"][n] for n in ("hiqs-resolve","hiqs-scrape","ai-catalog-update")})'` (equivalent receipt read executed in the combined Python probe, exit 0). All three records quote commit "3afdd0c0190b2c5abd1ab7bdd75dae023ef30e97", "dirty": false and sources under the owning repo; ai-catalog-update no longer records <OLD_SKILL_SOURCE>. Live catalog rows carry the same revision and six "linked" statuses. This establishes recorded revision and current checkout parity, not an independent Git-object comparison. No fix needed.
+- [Pass] Recovery end-state is sound. Command: `python3 -c 'from pathlib import Path; print((Path("<SKILLS_ROOT>")/".deploy-skills-pending.json").exists())'` (same expression in combined probe, exit 0): "pending exists False". Live changelog operation `bfab400eb7da4b96a71d2ad8d69ed5cb` records the 12 new links, "apply": true, "errors": [], "warnings": [], and repo "dirty": [], "ahead": 3, "behind": 0. Artifact Commands 7–8 report preview recover → apply recover → no-op sync. Retained .staging entries exist; recovery.md explicitly says staged old versions are retained with no automatic deletion policy, so their mere presence is not a failed recovery. No cleanup requested.
 - [Pass] Recorded vendor commit scope meets GH-993: artifact sections `git show --stat 73e432087`, `0320259c4`, and `e225b0c8b` list respectively only six hiqs-resolve files, two hiqs-scrape files and ai-catalog-update/SKILL.md. The live audit's add/add/update events at 04:41:06–07 match the source revision and payload digests. The recorded clean/ahead-three state supports no pulse blocker at deployment time and no deployment push; current Git state was not independently queried because this turn prohibits Git. No fix needed.
 - [Should] Record runtime prerequisites through the manager before claiming strict SOP completion.
   Observed input: live `.deploy-skills.json` contains `"prerequisites": []` for all three skills (receipt probe above, exit 0). The loaded SOP's "Runtime dependencies are separate" says: "Record requirements locally using intake.py --apply prerequisite SKILL TEXT". hiqs-resolve/SKILL.md:10 says "needs curl only"; ai-catalog-update/SKILL.md:67 requires agy on PATH and signed in, and :101–105 use owning-repo docs/schemas and Bun scripts; hiqs-scrape/SKILL.md:19–23 describes curl and credentialed fallback providers.
@@ -135,8 +142,8 @@ swept file: yes
 VERDICT: PASS
 Basis: The round-1 prerequisite finding is discharged. Read the entire re-seeded evidence bundle and deployment/recovery SOP; no remaining deployment defect observed, including in pre-existing evidence. Approval is for filesystem deployment. App discovery and runtime readiness remain untested. Historical preview execution, absence of manual mutations, Git-object parity at the recorded revision, and clean/unpushed Git state rely on the producer's recorded evidence; this turn ran no Git commands, deployment scripts, suites, or fixtures.
 
-- [Pass] Prerequisite fix is present in receipts, catalog and manager history. Read-only `python3 - <<'PY'` probe loaded `json.loads((r/".deploy-skills.json").read_text())`, printed each `d["skills"][n]`, and numbered matching catalog/history lines (exit 0). All three now have one nonempty prerequisite record. `/Users/noelsaw/git-pulse-sync/Deployed Skills/catalog.md:51`, `:54`, `:55` state respectively the owning-checkout/Bun/agy context, curl plus optional signed-in credentials, and curl plus optional fallback providers. `changelog.md:8161`, `:8172`, `:8183` record the corresponding prerequisite events at `2026-10-14T05:08:42+00:00`. These match the artifact's “Recorded prerequisites” section and Producer Round 2's preview/apply account. No further fix needed.
-- [Pass] Fresh payload and link checks pass. Command was a read-only `python3 - <<'PY'` probe with `r=Path("/Users/noelsaw/git-pulse-sync/Deployed Skills")`, `s=Path("/Users/noelsaw/Documents/GH Repos/hiqs-ai-resolve/skills")`, recursively mapping each relative file path to bytes (symlinks to `os.readlink` text), asserting nonempty equal maps; then iterating enabled `targets.json` entries and asserting `p.is_symlink() and p.resolve()==r/n` for all three names (exit 0). Decisive output: "hiqs-resolve files 6 parity True", "hiqs-scrape files 2 parity True", "ai-catalog-update files 9 parity True"; zcode, codex, antigravity, claude, codex-compat and grok-bot each printed "all three linked True". Six enabled targets, 18 links. Receipts retain commit `3afdd0c0190b2c5abd1ab7bdd75dae023ef30e97` and owning-repo source paths for all three. No fix needed.
+- [Pass] Prerequisite fix is present in receipts, catalog and manager history. Read-only `python3 - <<'PY'` probe loaded `json.loads((r/".deploy-skills.json").read_text())`, printed each `d["skills"][n]`, and numbered matching catalog/history lines (exit 0). All three now have one nonempty prerequisite record. `<SKILLS_ROOT>/catalog.md:51`, `:54`, `:55` state respectively the owning-checkout/Bun/agy context, curl plus optional signed-in credentials, and curl plus optional fallback providers. `changelog.md:8161`, `:8172`, `:8183` record the corresponding prerequisite events at `2026-10-14T05:08:42+00:00`. These match the artifact's “Recorded prerequisites” section and Producer Round 2's preview/apply account. No further fix needed.
+- [Pass] Fresh payload and link checks pass. Command was a read-only `python3 - <<'PY'` probe with `r=Path("<SKILLS_ROOT>")`, `s=Path("<HIQS_REPO>/skills")`, recursively mapping each relative file path to bytes (symlinks to `os.readlink` text), asserting nonempty equal maps; then iterating enabled `targets.json` entries and asserting `p.is_symlink() and p.resolve()==r/n` for all three names (exit 0). Decisive output: "hiqs-resolve files 6 parity True", "hiqs-scrape files 2 parity True", "ai-catalog-update files 9 parity True"; zcode, codex, antigravity, claude, codex-compat and grok-bot each printed "all three linked True". Six enabled targets, 18 links. Receipts retain commit `3afdd0c0190b2c5abd1ab7bdd75dae023ef30e97` and owning-repo source paths for all three. No fix needed.
 - [Pass] Recovery and evidence correction are complete within the recorded scope. The receipt probe's `print("pending exists",(r/".deploy-skills-pending.json").exists())` returned "pending exists False" (exit 0). The artifact now names that hidden receipt explicitly and lists add/add/update/sync/prerequisite ×3 history headers; live history at `changelog.md:7864`, `:7878`, `:7892`, `:7907` corroborates the deployment events. Artifact Commands 7–8 record preview recover → apply recover → no-op sync; recovery.md explicitly permits retained `.staging/<operation>/old`. No cleanup needed.
 - [Pass] Recorded commit scope and Pulse handoff still satisfy the deployment contract: artifact “git show --stat” sections list only hiqs-resolve's six files, hiqs-scrape's two files, and ai-catalog-update/SKILL.md for `73e432087`, `0320259c4`, `e225b0c8b`; its status summary quotes `dirty: []`, `ahead: 3`, `behind: 0`, and Producer Round 2 reports the same clean/ahead-three state after prerequisites. This supports script-owned scoped commits and leaving push to Pulse; it is recorded evidence, not an independently queried current Git state. No fix needed.
 - [Nit] Nonblocking evidence formatting: the artifact has an extra standalone triple-backtick immediately after `<!-- end -->` before “Interrupted marker check”, which mispairs later Markdown fences. Remove that extra fence when next refreshing the bundle. Raw evidence remains readable and this does not affect deployment approval.
@@ -152,3 +159,19 @@ reviewed-head: 0d8fc4a4065309c48473bc083697ca0b089da229
 added-range: 13935+3862
 added-sha256: 22cd9e63b4654fa63fc3c887fde2b2313a631764f54b520646300c298ac0a3b1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+
+### Preservation note — 2026-10-15 UTC
+
+The earlier PASS is a historical filesystem/parity review, with its original rounds and
+attestation retained. The retained operation list shows add, add, update, sync and three
+prerequisite writes. No separate catalog preview/apply receipt was found in the named
+retained evidence locations or manager history inspected for this correction. Existing
+catalog rows do not prove that operation ran. Strict completion of that catalog procedure
+therefore remains **unverified**; the historical PASS must not be read as proof of it.
+
+This documentation correction performs no catalog apply, installation, deployment,
+recovery or runtime activation. A future operator-authorized catalog operation or a
+retained original preview/apply receipt is needed before claiming that procedure complete.
+The historical approval budget and source bytes remain available at the original Git blob;
+no historical review round was restarted or rewritten as fresh approval.
