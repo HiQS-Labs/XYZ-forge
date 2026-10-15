@@ -1,0 +1,2 @@
+pre-push: docs-only update — running the documentation gate, not validate.sh.
+pre-push: documentation gate GREEN in 107s — pushing.
