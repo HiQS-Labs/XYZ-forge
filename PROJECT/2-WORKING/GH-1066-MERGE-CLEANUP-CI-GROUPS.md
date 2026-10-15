@@ -99,6 +99,8 @@ The strategy cannot force one/two full runs while a repo independently mandates 
 - [ ] Final relay approved and classified gate passes at the final revision.
 - [ ] Ready PR published; owned safe checkouts retired or preservation reason reported.
 
-Plan QA approved in round1: attestation c6fa142, reviewed315fa63. The reviewer clarified that batch strategy review does not replace required per-PR QA; implemented explicitly. Owned helper: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1066-merge-cleanup-ci-groups-2026-10-14-verify. Seven manual scenarios, two manual red variants and existing codex-turn43/0 retained with limitations. Final QA and final classified gate remain pending.
+Plan QA approved in round1: attestation c6fa142, reviewed315fa63. The reviewer clarified that batch strategy review does not replace required per-PR QA; implemented explicitly. Owned helper: `$(dirname "$PRIMARY_REPO")/XYZ-forge-gh1066-merge-cleanup-ci-groups-2026-10-14-verify`. Seven manual scenarios, two manual red variants and existing codex-turn43/0 retained with limitations. Final QA and final classified gate remain pending.
 
 Final QA approved in round1 at b21dcac (reviewed ee3e803); production skill SHA2568533cb63558432f7e925399ef9334c4c5142333bba64e8569d5e0b5525a5010d. No blocking findings. Invocation nit disposition: future relays must pass artifact-file to seed the advertised alias; the reviewer read and hashed the canonical committed skill, so current approval is valid. No source change required. Final gate uses the owned separate full verify clone; prototype gate remains interrupted/non-passing.
+
+Qualification found a hardcoded local path in this plan (pdda-check-hardcoded-paths); replaced with a portable primary-sibling reference. Skill bytes still match final QA; metadata correction receives the focused portability check before a fresh final gate. The preceding gate is interrupted/non-passing evidence.
