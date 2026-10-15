@@ -20,7 +20,7 @@ goal: Make GitHub authoritative for radar work facts while retaining documentati
 
 | What was just completed | What's next |
 |---|---|
-| Issue, source and prior-art inspection complete; task rated and registered | Skill edits and bounded manual dry run; final Codex QA next |
+| Issue, source and prior-art inspection complete; task rated and registered | Final independent QA, then normal documentation-gated PR publication |
 
 Update only `skills/3-weekly/radar/SKILL.md` as the product payload. GitHub issues/PRs own live state, kinship, recurrence, closure/reopens, milestone membership and merged/shipped evidence. PDDA docs seed discovery and provide explicit degraded fallback. Revisit Transform and CI churn SOP precedence; distinguish losing GitHub from losing doc hints. No new tests or runtime code. Refresh through Skills Army after merge, not from an unmerged task clone.
 
@@ -59,7 +59,7 @@ Reversibility: Easy. Revert the skill edit; no data/schema/runtime migration. Sc
 
 ## Verification and handoff
 
-Plan QA Approved with mechanical attestation at reviewed head 35b5d75cd622f26e5690ebdb164245cdad1d436f. Incorporated the optional reverse-SOP-conflict and unknown-adoption checks as tests of existing requirements. Admission recorded on owned row rmi-01M50N8DK8P3KW3CZ89N0YZGJV before skill edits. Required model-review inputs and final evidence will be committed in this PR. Post-merge action: use Skills Army HQ scripts to intake/update radar from merged development and sync this device's configured IDE targets; do not hand-copy the deployed skill. Keep this pointer in the PR and issue handoff until performed.
+Plan QA Approved with mechanical attestation at reviewed head 35b5d75cd622f26e5690ebdb164245cdad1d436f. Incorporated the optional reverse-SOP-conflict and unknown-adoption checks as tests of existing requirements. Admission recorded on owned row rmi-01M50N8DK8P3KW3CZ89N0YZGJV before skill edits. Skill edit is committed at 033b83a2. Bounded manual dry-run evidence covers eight cases, with nonempty timestamped GitHub observations, controlled conflict/fallback inputs and textual baseline red controls. Format validation passed. Changed paths classify docs / tier 1 / full_required=false. Final independent QA and normal docs publication gate remain pending. Required receipts are retained under TESTS-RESULTS/2026-10-15+GH-1083/. Post-merge action: use Skills Army HQ scripts to intake/update radar from merged development and sync this device's configured IDE targets; do not hand-copy the deployed skill. Keep this pointer in the PR and issue handoff until performed.
 
 ## Lessons Learned (For Future Agents)
 
