@@ -1,0 +1,12 @@
+{
+  "resolved": false,
+  "handoff": true,
+  "reason": "CHANGELOG handoff: changelog preamble or existing history changed",
+  "log": [],
+  "commit": null,
+  "conflict_set": [
+    "CHANGELOG.md",
+    "releases.db",
+    "releases.sql"
+  ]
+}

@@ -1,0 +1,10 @@
+== test: gh615-start-task-reinforce ==
+  PASS: size non-empty guard (30169 bytes)
+  PASS: positive in-tree control
+  PASS: unmodified fixture control
+  PASS: mut1 (test non-scope): properly rejected
+  PASS: mut2 (ponytail rail): properly rejected
+  PASS: mut3 (tiered verification): properly rejected
+  PASS: mut4 (anti-thrashing): properly rejected
+  PASS: mut5 (empty fixture): properly rejected
+  gh615-start-task-reinforce: 8 pass, 0 fail

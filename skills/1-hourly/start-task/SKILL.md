@@ -26,8 +26,11 @@ issue creation, task branches, commits, pushes, Codex QA, and opening PRs. Prese
 explicit limits such as "plan only", "hold after QA", or a different reviewer.
 Discovering this skill during discussion does not authorize external writes.
 Ask only for missing scope, a consequential unresolved decision, or a real blocker;
-do not repeat permission questions already answered. Merge, deployment, and clone
-teardown are separate actions unless the operator explicitly includes them.
+do not repeat permission questions already answered. Merge and deployment remain
+separate actions unless the operator includes them. Successful PR-ready publication
+authorizes automatic retirement of this workflow's task checkout and disposable helpers
+through merge-cleanup's published-PR mode (Step 9), without waiting for merge. Preserve
+anything local-only, active, depended on, or unverifiable; this is not a broad clone sweep.
 
 ---
 
@@ -47,7 +50,7 @@ repository gates separately.
 > 2. **Ground in recon & draft a surgical plan (Steps 4–5).** Trace live entry points, state writes, and blast radius before proposing changes; design the leanest DRY plan that extends existing subsystems with falsifiable acceptance checks.
 > 3. **Pre-implementation plan QA (Step 6).** Run a Codex relay review on the plan, adjudicate findings against ground-truth evidence, and iterate until approved before writing production code.
 > 4. **Execute & deterministically verify (Step 7).** Build the reviewed scope, commit structured checkpoints, and execute all required test suites and repo gates in safe isolation.
-> 5. **Final relay QA & open ready PR (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, push through the pre-push gate, open the PR against `development`, and retain the task clone for merge handoff.
+> 5. **Final relay QA, ready PR & retire published checkouts (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, push through the pre-push gate, open the PR against `development`, and retire safe, fully published task checkouts through merge-cleanup without waiting for merge.
 >
 > **Overall Goal:** Issue implemented to spec, validated through double-relay QA (plan + final), and submitted as a verified, conflict-free PR ready for merge.
 
@@ -281,11 +284,39 @@ Then begin work.
    authorized, but cannot be reported ready. Keep issue/doc/ledger state truthful:
    "PR ready; awaiting merge" is not "shipped" or "completed" when governance
    requires landing first. Do not close issues or run post-merge reconciliation
-   prematurely. Report each issue/group's PR or blocker, QA/gate result, and retained
-   clone path. Hand off merging, reconciliation and safe teardown to `merge-cleanup`
-   when requested; preserve the clone and its evidence until then. At PR-ready time,
-   surface the retirement pointer: the retained clone can be retired via
-   `/merge-cleanup` once its landings are verified (GH-690).
+   prematurely. Report each issue/group's PR or blocker and QA/gate result. Then
+   complete automatic published-checkout retirement (GH-1059), rather than ending
+   with a reminder (GH-690):
+   - Retain required plans, code, review receipts and verification evidence in the PR;
+     push every intended local checkpoint and verify the exact live PR/branch head.
+     A published draft, failed/skipped required gate, or unfinished review is not PR-ready.
+   - Identify only the task checkout and gate/verify helpers created by this workflow.
+     Resolve the protected primary separately as an absolute path; never infer it from a disposable clone.
+     Preserve remaining local-only evidence, stashes, unrelated refs, peer claims/processes,
+     dependent worktrees and unknown safety state. Do not sweep other task folders.
+   - Release only this workflow's completed claims and stop its own finished processes.
+     Leave peer sessions untouched. Change the execution directory to the maintained
+     primary or another directory outside every retiring checkout.
+   - Resolve a verified merge-cleanup driver supporting `--retire-published-pr` (the
+     current reviewed task revision or an updated installed/maintained copy). Preview
+     the command below, repeating `--checkout` for exact task-owned helper paths, then
+     add `--execute` for candidates the fresh inspection can retire. The mode proves
+     live canonical origin/PR/head publication and reuses existing safety/removal paths;
+     it neither merges PRs nor writes the primary working tree or governance.
+
+     ```bash
+     python3 "$CLEANUP_DRIVER" --primary "$PRIMARY_REPO" \
+       --retire-published-pr "$PR_NUMBER" --checkout "$TASK_CHECKOUT"
+     # Apply the same exact scope with --execute; the driver re-inspects before removal.
+     ```
+
+   - Full clones go to recoverable Trash; linked worktrees use native Git removal
+     (which updates the parent's worktree metadata). Report the actual retired paths
+     or the exact preservation reason and next action. An older driver, failed query,
+     live session or local-only evidence means preserve; never fall back to a manual
+     recursive remover, force flag or a fabricated safe disposition. Retrying later
+     must repeat live publication and safety checks. Merge/reconciliation remain a
+     separate handoff when requested; a missing local clone does not mean shipped.
 
 ## Task rating policy
 

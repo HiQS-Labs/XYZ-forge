@@ -230,6 +230,13 @@ An in-flight failing test or runner error is not automatically an urgent blocker
   fresh task clone, and it is *not* a licence to commit directly onto `development` (the express
   path above remains user-request-only).
 
+- **Retire fully published task checkouts at PR-ready closeout (GH-1059).** Follow
+  start-task Step 9 and merge-cleanup's targeted `--retire-published-pr` mode without
+  waiting for merge or another permission question. Only this workflow's explicit
+  task/helper paths are in scope. The primary working tree, unrelated work, live
+  sessions and local-only evidence stay protected under `WORKTREE-SAFETY.md` section7.
+  Full clones go to recoverable Trash; linked worktrees use native Git removal.
+
 ### Arc planning — schedule the follow-up lanes, don't discover them
 
 > Lesson from the GH-280/#291 stretch (2026-08-29): six PRs in ~48h, each small and safe,

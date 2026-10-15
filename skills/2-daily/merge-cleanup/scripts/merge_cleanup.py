@@ -33,7 +33,8 @@ from scan_clones import (
     format_completion_and_followup_summary,
     format_issue_marker_body,
     resolve_canonical_issue,
-    run_git
+    run_git,
+    _normalize_remote,
 )
 from toposort_prs import (
     fetch_open_prs,
@@ -723,7 +724,7 @@ TEARDOWN_EXEMPT = ("PRIMARY_CHECKOUT", "PRESERVED_USER_EXCLUDE", "PRESERVE_WIKI"
 
 def refresh_for_teardown(checkouts: List[Dict[str, Any]], primary_repo: Path,
                          excludes: Optional[List[str]] = None,
-                         integration_branch: str = "development") -> List[Dict[str, Any]]:
+                         integration_branch: str = "development", published_pr: int = 0) -> List[Dict[str, Any]]:
     """Re-run inspect_checkout on EVERY non-exempt checkout; the fresh verdict is the only one
     teardown may act on. The scan-time disposition is kept under `scan_disposition` for display."""
     fresh: List[Dict[str, Any]] = []
@@ -731,7 +732,8 @@ def refresh_for_teardown(checkouts: List[Dict[str, Any]], primary_repo: Path,
         if c["disposition"] in TEARDOWN_EXEMPT:
             continue
         info = inspect_checkout(Path(c["path"]), primary_repo_path=primary_repo, exclude_patterns=excludes,
-                                integration_branch=integration_branch)
+                                integration_branch=integration_branch,
+                                **({"published_pr": published_pr} if published_pr else {}))
         info["scan_disposition"] = c["disposition"]
         if info["disposition"] != c["disposition"]:
             log(f"{info['name']}: {c['disposition']} at scan time -> {info['disposition']} now ({info['disposition_reason']})")
@@ -1227,6 +1229,50 @@ def prepare_primary_landing(primary_repo: Path, args) -> Dict[str, Any]:
     return info
 
 
+def retire_published_checkouts(primary: Path, paths: List[str], number: int,
+                              integration_branch: str, execute: bool) -> int:
+    """Targeted PR-ready closeout; no scan, landing, primary tree write or reconciliation."""
+    primary_origin = run_git(primary, ["remote", "get-url", "origin"])
+    if primary_origin.returncode or not primary_origin.stdout.strip():
+        log_err("Cannot verify the protected primary's origin; preserving all checkouts")
+        return 2
+    candidates = []
+    try:
+        for raw in paths:
+            supplied = Path(raw).expanduser()
+            if not supplied.is_absolute() or supplied.is_symlink():
+                raise ValueError(f"checkout must be an absolute, non-symlink path: {raw}")
+            path = supplied.resolve(strict=True)
+            if (path == primary or path in primary.parents or primary in path.parents
+                    or path == Path.cwd().resolve() or path in Path.cwd().resolve().parents):
+                raise ValueError(f"protected primary/ancestor or executing directory: {path}")
+            if not (path / ".git").exists():
+                raise ValueError(f"not a Git checkout: {path}")
+            safe, why = is_safe_deletable_path(path)
+            if not safe:
+                raise ValueError(why)
+            if any(path == other or path in other.parents or other in path.parents for other in candidates):
+                raise ValueError("checkout paths must be distinct and non-overlapping")
+            origin = run_git(path, ["remote", "get-url", "origin"])
+            if origin.returncode or _normalize_remote(origin.stdout) != _normalize_remote(primary_origin.stdout):
+                raise ValueError(f"checkout origin differs from the protected primary: {path}")
+            candidates.append(path)
+    except (OSError, RuntimeError, ValueError) as exc:
+        log_err(f"Published retirement refused: {exc}")
+        return 2
+    failed = False
+    for path in candidates:
+        scanned = inspect_checkout(path, primary_repo_path=primary,
+                                   integration_branch=integration_branch, published_pr=number)
+        fresh = refresh_for_teardown([scanned], primary, integration_branch=integration_branch,
+                                     published_pr=number)
+        info = fresh[0] if fresh else scanned
+        print(format_scan_table([info]))
+        if not fresh or not teardown_checkout(info, dry_run=not execute):
+            failed = True
+    return 1 if failed else 0
+
+
 def main():
     # GH-852: every child git (including the pre-push hook's and releases_app's) aborts an HTTP
     # transfer stalled below 1000 B/s for 120 s instead of waiting on a dead socket after a
@@ -1248,6 +1294,8 @@ def main():
     parser.add_argument("--scan-only", action="store_true", help="Only audit and list checkouts")
     parser.add_argument("--prs-only", action="store_true", help="Only list and sequence open PRs")
     parser.add_argument("--teardown-only", action="store_true", help="Only perform checkout teardown (skip PR merges)")
+    parser.add_argument("--retire-published-pr", type=int, default=None, help="Retire only explicit checkouts recoverable from this fully published PR; never merge")
+    parser.add_argument("--checkout", action="append", default=[], help="Exact absolute task-owned checkout path for --retire-published-pr (repeatable)")
     parser.add_argument("--reconcile-pr", type=int, default=0, help="Run post-merge reconcile on a specific PR number")
     parser.add_argument("--integration-branch", default="development", help="Branch PRs land on and the primary must be able to fast-forward (default: development)")
     parser.add_argument("--marker", action="store_true", help="Post status marker comments to linked canonical GitHub issues for active/incomplete checkouts")
@@ -1265,6 +1313,15 @@ def main():
     except (OSError, RuntimeError) as exc:
         log_err(f"cannot resolve the primary path {args.primary!r}: {exc}")
         return 2
+    if args.retire_published_pr is not None or args.checkout:
+        if (not args.retire_published_pr or args.retire_published_pr <= 0 or not args.checkout
+                or not Path(args.primary).expanduser().is_absolute()
+                or args.root or args.prefix or args.exclude or args.strategy or args.show_merge_policy
+                or args.scan_only or args.prs_only or args.teardown_only or args.reconcile_pr
+                or args.marker or args.allow_unready_primary or args.resume or args.backup_first or args.backup_root):
+            parser.error("published retirement requires a positive PR, absolute --primary and --checkout path(s), without other workflow modes/overrides")
+        return retire_published_checkouts(primary_repo, args.checkout, args.retire_published_pr,
+                                         args.integration_branch, args.execute)
     try:
         policy = resolve_merge_policy(primary_repo, args.strategy)
     except ValueError as exc:
