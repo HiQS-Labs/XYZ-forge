@@ -1,0 +1,1 @@
+{"schema": "manual-qualification@1", "at": "2026-10-15T01:56:30.025741+00:00", "tested_commit": "aae709a23442a296821d5da0a4edcb7644375dd4", "command": "bash test/swe-diagram.sh", "passed": 56, "total": 56, "rc": 0, "identityUnchanged": true, "kind": "existing-local-focused-suite", "log": "existing-swe-diagram.log"}
