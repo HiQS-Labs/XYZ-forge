@@ -17,7 +17,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Configuration pivot implemented;13 existing focused suites pass. Supplemental final1/1 FAIL found drift wrongly entering proof fallback; two fatal-stop corrections applied. | Verify bounded correction and retain original FAIL/counter; parent judges conditional procedural exception, with fresh full evidence and GH1076/PR1079 publication still required. |
+| Configuration pivot implemented;13 existing focused suites pass. Supplemental final1/1 FAIL found drift wrongly entering proof fallback; two fatal-stop corrections verified by existing23-case suite and before/after manual control. | Retain original FAIL/counter; collect normal full-gate evidence for parent’s conditional procedural decision and publish GH1076/PR1079. No merge or activation. |
 
 ## Table of contents
 
@@ -525,3 +525,24 @@ and the subsequent frozen-source normal full pre-push gate are retained in the e
 No old full result qualifies this new implementation. No new CI cases/suites, installs, deployment,
 main qualification, merge or teardown is performed. Configuration default/scope/disable procedure
 is the normative ROUTER section; future live hosted optimization needs the reviewed PR to land.
+
+## Supplemental final finding and verified bounded correction
+
+The ONE extra final QA at85d376fb returned FAIL1/1: explicit environment/process drift raised
+ValueError inside proof fallback, allowing retry on the same clone. Its incomplete whole-file
+sweep declaration is also retained. Commit9e3e220c changes only the two identified raise statements
+to the existing fatal qualification error path(code6). No new review, reset or Approved verdict.
+
+The existing gh425 receipt suite passed all23 cases after correction. An unregistered manual
+observation reuses its disposable fixture, adapting only temporary telemetry mkdir for repeated
+commands. The original environment drift launched3 fixture validations and wrote@1; corrected drift
+launches2 then exits6/no receipt. Process mismatch drops2 attempts to1 and exits6/no receipt. Stable
+incomplete proof still launches one profile attempt plus one full fallback and can write the
+fixture@1. These are fault-control observations, never real PR qualification. The initial fixture
+limitation/FileExistsError observation remains preserved. No CI case/suite was added or edited.
+
+Noel's conditional procedural discretion allows completion of a concrete verified handoff rather
+than stopping solely on the administrative count. We retain the finalFAIL and parent-owned final
+durability/landing decision; run the mandatory normal full pre-push gate on frozen corrected source
+for that decision. This does not waive real findings, required checks or access denial, and is not
+an Approved review claim. No second final reviewer turn, merge, primary activation or deployment.

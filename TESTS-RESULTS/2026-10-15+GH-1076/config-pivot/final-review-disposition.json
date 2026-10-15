@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-10-15T21:57:02.913157+00:00",
+  "reviewed_head": "85d376fb979febb4f842c7472b461ddeb7f730d2",
+  "review_commit": "3a12a9f2",
+  "status": "Escalated",
+  "verdict": "FAIL",
+  "round": "1/1",
+  "swept_file": false,
+  "finding": "Detected environment/process identity drift incorrectly entered proof-only full fallback",
+  "correction_commit": "9e3e220c",
+  "correction": "Two ValueError raises replaced by existing fatal die(code6). No new review or reset.",
+  "verification": "Existing23-case receipt suite rc0; bounded existing-fixture before/after observations reproduced original unsafe fallback and showed both corrected fatal stops, with stable incomplete-proof fallback retained.",
+  "procedural_disposition": "OriginalFAIL remains; no Approved claim. Noel conditional procedural discretion permits completing concrete verification; parent owns acceptance/landing decision. No automatic further review, merge or activation."
+}

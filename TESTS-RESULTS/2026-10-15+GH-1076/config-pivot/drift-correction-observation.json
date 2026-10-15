@@ -1,0 +1,111 @@
+{
+  "timestamp": "2026-10-15T21:56:26.179032+00:00",
+  "kind": "Unregistered bounded fault observation, using existing gh425 disposable fixture and fixture telemetry only. NOT real suite execution, PR proof, an @2 qualification or CI test/case. No registration/source-test edits/installations/network.",
+  "method": "Existing fixture setup/runner reused; only temporary telemetry mkdir uses exist_ok=True so the single-run fixture can run twice. Original first observation hit that fixture limitation and is retained separately. No repository test edits. Selection/identity metadata are controlled to enter profile branch; only environment, launched-run ID or proof availability differ. Temporary generated fixture provenance is discarded, never committed.",
+  "observations": [
+    {
+      "observation": "before-environment-drift",
+      "exit_code": 0,
+      "fixture_validation_commands": [
+        [
+          "bash",
+          "validate.sh",
+          "--sequential"
+        ],
+        [
+          "bash",
+          "validate.sh",
+          "--sequential"
+        ],
+        [
+          "bash",
+          "validate.sh",
+          "--sequential"
+        ]
+      ],
+      "passing_fixture_receipt_written": true,
+      "fixture_schemas": [
+        "wave-qualification@1"
+      ],
+      "log": "wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 8425db0fe4d3e254513fd384fc92b0f46aacc93f with `validate.sh --sequential --subsystem small && ./validate.sh --sequential --subsystem skills-army-hq` (controlled existing fixture observation)\nwave-reconcile: Profile proof refused (profile run/environment identity changed between phases); running the full gate\nwave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-8425db0fe4d3e254513fd384fc92b0f46aacc93f/provenance.jsonl\n",
+      "source": "3a12a9f2"
+    },
+    {
+      "observation": "after-environment-drift",
+      "exit_code": 6,
+      "fixture_validation_commands": [
+        [
+          "bash",
+          "validate.sh",
+          "--sequential"
+        ],
+        [
+          "bash",
+          "validate.sh",
+          "--sequential"
+        ]
+      ],
+      "passing_fixture_receipt_written": false,
+      "fixture_schemas": [],
+      "log": "wave-reconcile: Qualifying 1 landing(s) in integrated snapshot f0e88eb5dd076d5bac1494dd51c2df6094413585 with `validate.sh --sequential --subsystem small && ./validate.sh --sequential --subsystem skills-army-hq` (controlled existing fixture observation)\nwave-reconcile: ERROR \u2014 Profile run/environment identity changed between phases; no fallback permitted\n",
+      "source": "9e3e220c11c444fd257f4eedeffcb7262279516b"
+    },
+    {
+      "observation": "before-process-drift",
+      "exit_code": 6,
+      "fixture_validation_commands": [
+        [
+          "bash",
+          "validate.sh",
+          "--sequential"
+        ],
+        [
+          "bash",
+          "validate.sh",
+          "--sequential"
+        ]
+      ],
+      "passing_fixture_receipt_written": false,
+      "fixture_schemas": [],
+      "log": "wave-reconcile: Qualifying 1 landing(s) in integrated snapshot f914001aca5c448ff795f25465bb28a3df87c611 with `validate.sh --sequential --subsystem small && ./validate.sh --sequential --subsystem skills-army-hq` (controlled existing fixture observation)\nwave-reconcile: Profile proof refused (Qualification telemetry does not identify the launched process); running the full gate\nwave-reconcile: ERROR \u2014 Qualification failed; no receipt produced: Qualification telemetry does not identify the launched process\n",
+      "source": "3a12a9f2"
+    },
+    {
+      "observation": "after-process-drift",
+      "exit_code": 6,
+      "fixture_validation_commands": [
+        [
+          "bash",
+          "validate.sh",
+          "--sequential"
+        ]
+      ],
+      "passing_fixture_receipt_written": false,
+      "fixture_schemas": [],
+      "log": "wave-reconcile: Qualifying 1 landing(s) in integrated snapshot e88ca74a52c5420fa47c5684010b3bc8d46ec587 with `validate.sh --sequential --subsystem small && ./validate.sh --sequential --subsystem skills-army-hq` (controlled existing fixture observation)\nwave-reconcile: ERROR \u2014 Qualification telemetry does not identify the launched process; no fallback permitted\n",
+      "source": "9e3e220c11c444fd257f4eedeffcb7262279516b"
+    },
+    {
+      "observation": "after-stable-incomplete-proof",
+      "exit_code": 0,
+      "fixture_validation_commands": [
+        [
+          "bash",
+          "validate.sh",
+          "--sequential"
+        ],
+        [
+          "bash",
+          "validate.sh",
+          "--sequential"
+        ]
+      ],
+      "passing_fixture_receipt_written": true,
+      "fixture_schemas": [
+        "wave-qualification@1"
+      ],
+      "log": "wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 4a4abe80c7f71f169f8192b1114b2d330b3f973b with `validate.sh --sequential --subsystem small && ./validate.sh --sequential --subsystem skills-army-hq` (controlled existing fixture observation)\nwave-reconcile: Profile proof refused (manual identity-stable incomplete-proof observation); running the full gate\nwave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-4a4abe80c7f71f169f8192b1114b2d330b3f973b/provenance.jsonl\n",
+      "source": "9e3e220c11c444fd257f4eedeffcb7262279516b"
+    }
+  ]
+}
