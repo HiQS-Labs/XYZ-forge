@@ -284,4 +284,12 @@ Root cause: batch history and QA coverage were caller-owned prose around an invo
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed to implementation and disposable-clone verification. The harness owns the relay-file commit; this reviewer ran no git command.
 
+
+### Attestation · relay-drive — 2026-10-15T01:22:36Z
+task: RELAY-gh1064-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 6294d80974383fcdd4d3b106cd6bc26f9ff94e17
+added-range: 36150+7604
+added-sha256: 582799435804969acd34df431b9d6b652b0de8aa28c1de46bc45a9295009959f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
