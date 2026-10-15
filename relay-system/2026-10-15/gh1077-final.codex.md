@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -146,5 +146,69 @@ The operator clarified the core requirement: catch missing propagation from sess
 Round1 produced a useful report/static PASS under the initial scope, but the harness refused close-mismatch. Do not call it attested approval. Cumulative review is round2/3, not a reset. Whole new skill remains the sole payload; verify no overbroad synchronization, inferred obligation presented as explicit request, or default writes. Prior Setup's seed alias is superseded: read the committed canonical skill directly; do not create/change .relay-artifacts files. Only this thread writable.
 
 Append your applied report and graded verdict with file:line evidence, swept file: yes/no, VERDICT and Basis. On approval, set STATUS: Approved and NEXT: —, then use the env-pinned absolute tick to **done RELAY-GH1077-FINAL-R2-20261015 --agent codex**. Do not merely release the token on approval; that caused the prior close-mismatch. No git commands/self-commit. No tests or real external actions.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+#### Applied example report
+
+Scope: only the whole updated fictional conversation and supplied observations in `TESTS-RESULTS/2026-10-15+GH-1077/session-example.md:1-27`. Earlier turns are unavailable; no live checks or task execution performed. Status refers to the supplied snapshot. All shortened `session-example.md` citations below refer to that path.
+
+1. **Update ExampleOrg/Widget#44 with the rollback result** — Explicit request: “After the parser fix lands, update ExampleOrg/Widget#44 with the rollback result.” PR47 merged, but issue44 has no rollback result (`session-example.md:7-8,20-21`). Source: merged parser PR47; downstream target: https://github.com/ExampleOrg/Widget/issues/44. Status: confirmed pending in the supplied observations. Next: recover the actual rollback result from the parser evidence and propose the requested issue update; the result itself is unavailable here.
+2. **Check the deferred investigation of ExampleOrg/Widget#71** — Explicit request: “Please investigate ExampleOrg/Widget#71, but finish the parser fix first”; the assistant promised to return (`session-example.md:11-12`). PR47 merged, but no observation of issue71 is available (`session-example.md:20-22`). Target: https://github.com/ExampleOrg/Widget/issues/71; no investigation record is supplied. Status: unverified. Next: confirm parser wrap-up is complete and inspect #71/current investigation evidence before resuming or duplicating work.
+3. **Carry the streaming-spike decision into tomorrow's importer plan** — Inferred handoff gap, not an explicit promise: the completed spike's decision and limitations are recorded in ExampleOrg/Widget#80, while tomorrow's plan retains the pre-spike approach and lacks a link (`session-example.md:9-10,24-27`). Source already updated: https://github.com/ExampleOrg/Widget/issues/80. Downstream target: `PROJECT/2-WORKING/IMPORTER-EXECUTION.md`. Status: confirmed pending in the supplied observations. Next: read the recorded conclusion and propose a short canonical issue pointer plus its execution implication, including relevant limitations. The actual decision is not supplied, so no replacement approach can be specified yet.
+
+#### Graded findings
+
+- [Pass] Clarified propagation requirement: `skills/2-daily/close-the-loop/SKILL.md:13-15,23-32,48-53` traces findings into concrete execution consumers without requiring a promise and distinguishes inferred gaps from explicit requests. Item 3 preserves both the missing pointer and stale approach observed at `TESTS-RESULTS/2026-10-15+GH-1077/session-example.md:24-26`, without inventing the spike conclusion. No behavior fix needed.
+- [Pass] Bounded discovery and minimal propagation: `skills/2-daily/close-the-loop/SKILL.md:19-32` restricts checks to available conversation, directly relevant links and bounded task/date lookups with a concrete consumer role. “Do not demand updates to every document for every task” (lines 26-27) and the canonical-pointer preference (lines 29-32) prevent blanket synchronization and duplicated findings. No expansion needed.
+- [Pass] Exclusions and uncertainty: `skills/2-daily/close-the-loop/SKILL.md:34-43,60-61` respects cancellations, superseding decisions, deliberate deferrals and unaccepted ideas, and separates unavailable status from absence. `TESTS-RESULTS/2026-10-15+GH-1077/session-example.md:13-17,20-22` supplies an untriggered release deferral, caching brainstorm, cancelled rewrite and Pat's ordinary review handoff; none yields a candidate. Issue71 remains unverified. No obligation is inferred from missing earlier turns.
+- [Pass] Useful report without default execution: `skills/2-daily/close-the-loop/SKILL.md:47-53` requires numbered, deduplicated, evidenced candidates and smallest next steps; lines 15,39-43,63-66 prohibit execution for the sweep while honoring separately authorized selected actions after a current-state recheck. The example correctly scopes the Widget issues and supplied importer plan. No doc, issue or PR action was executed.
+- [Pass] Lean payload and accurate registration: `skills/2-daily/close-the-loop/SKILL.md:1-8` identifies the skill and triggers; `ARCHITECTURE.md:72-96` registers it among 19 daily entries. The read-only probe below found only SKILL.md in its payload and equal disk/index sets. No script, installer, dependency or new suite is needed for this prose behavior.
+- [Pass] Proportionate scope and rating: `PROJECT/2-WORKING/GH-1077-CLOSE-THE-LOOP.md:23-32,49-60` keeps the workflow reversible, explicitly rejects express eligibility, explains ratings 65/20/50/85, and records bounded downstream propagation. These are editorial estimates, not measured outcomes; the supplied scope supports their modest rationale.
+
+I read the entire canonical 66-line skill, the entire updated example and task doc, and the daily index. No additional or pre-existing defects found within this bounded scope. Round 1's close-mismatch is not treated as attested approval.
+
+#### Probe receipt and limits
+
+Read-only command:
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+from pathlib import Path
+source=Path("skills/2-daily/close-the-loop/SKILL.md")
+print("skill_lines:",len(source.read_text().splitlines()))
+print("payload_files:",sorted(str(p.relative_to(source.parent)) for p in source.parent.rglob("*") if p.is_file()))
+dirs=sorted(p.name for p in Path("skills/2-daily").iterdir() if p.is_dir() and (p/"SKILL.md").is_file())
+arch=Path("ARCHITECTURE.md").read_text().split("### `2-daily`",1)[1].split("### `3-weekly`",1)[0]
+rows=[line.split("](",1)[1].split("/SKILL.md)",1)[0].rsplit("/",1)[-1] for line in arch.splitlines() if line.startswith("| [")]
+print("daily_skill_count:",len(dirs))
+print("index_row_count:",len(rows))
+print("missing_from_index:",sorted(set(dirs)-set(rows)))
+print("index_missing_on_disk:",sorted(set(rows)-set(dirs)))
+PY
+```
+
+Exit status: 0. Decisive output:
+
+```text
+skill_lines: 66
+payload_files: ['SKILL.md']
+daily_skill_count: 19
+index_row_count: 19
+missing_from_index: []
+index_missing_on_disk: []
+```
+
+This is static prose review and manual application, not proof of future model compliance or runtime/gate attestation. No git commands, tests, executable fixtures, live GitHub queries or external mutations ran. The harness gate remains outside this turn.
+
+VERDICT: PASS
+
+Basis: The whole updated skill satisfies the clarified Definition of Done: it catches the concrete spike-to-plan gap alongside explicit follow-ups, labels inference honestly, respects exclusions and missing context, and proposes bounded next steps without default execution. No required fixes found.
+
+Done — relay closed (Approved), no further review turn needed. Handing off to codex-producer for harness closeout with the token marked done.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
