@@ -2,7 +2,7 @@
 title: Relay Architecture — headless Claude, Codex, and agy turns over a tick token
 status: Reference
 created: 2026-06-22
-updated: 2026-10-14
+updated: 2026-10-15
 owner: noelsaw
 doc_type: architecture
 summary: Verified map of how `relay-drive.sh`, per-agent turn shims, `relay-turn-lib.sh`, the `RELAY-TURN` tick task, and the relay thread file coordinate one-turn-at-a-time multi-agent work, plus the roadmap query pipeline and the adoption gate for derived views.

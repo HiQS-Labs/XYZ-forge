@@ -1,0 +1,29 @@
+{
+  "reviewedHead": "636f49938ddf3e556bf1be5ce772fdccc17ede93",
+  "qaAttestationCommit": "610efacf7",
+  "allIncomingBusinessRowsPreserved": true,
+  "onlyAddedRoadmapIssue": 1052,
+  "intakeSection": "Queue / parked intake",
+  "incomingViewExact": true,
+  "runtimeChanges": false,
+  "historicalOriginalBlobVerified": "efab749321c750fc73394c6f67cf7a2d6575455b",
+  "historicalExportMachinePathMatches": 0,
+  "currentArchitectureOnlyPostReviewChange": "updated date metadata from October14 to15 UTC; semantic bytes equal reviewed doc",
+  "changedPaths": [
+    "ARCHITECTURE.md",
+    "ARCHITECTURE/ledger-diagram.html",
+    "ARCHITECTURE/ledger-diagram.json",
+    "CHANGELOG.md",
+    "PROJECT/1-INBOX/GH-1052-RECON-VENDOR-CONTRACTS.md",
+    "TESTS-RESULTS/2026-10-15+PR-1058-review-corrections/SUMMARY.md",
+    "TESTS-RESULTS/2026-10-15+PR-1058-review-corrections/base-resolution.json",
+    "TESTS-RESULTS/2026-10-15+PR-1058-review-corrections/existing-suite-identity.json",
+    "TESTS-RESULTS/2026-10-15+PR-1058-review-corrections/existing-swe-diagram.log",
+    "TESTS-RESULTS/2026-10-15+PR-1058-review-corrections/provenance.jsonl",
+    "TESTS-RESULTS/2026-10-15+PR-1058-review-corrections/timeout-owner-source-observation.json",
+    "relay-system/2026-10-13/hiqs-skills-army-deploy-qa.md",
+    "relay-system/2026-10-15/pr1058-architecture-corrections-final.codex.md",
+    "releases.db",
+    "releases.sql"
+  ]
+}
