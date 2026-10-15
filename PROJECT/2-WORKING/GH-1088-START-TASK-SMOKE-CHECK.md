@@ -2,7 +2,7 @@
 gh_issue: 1088
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1088
 title: "start-task: orchestrator smoke check (main path + one adjacent path) before final relay QA"
-status: In progress (2-WORKING — plan QA Approved r1)
+status: In progress (2-WORKING — PR ready; awaiting merge)
 created: 2026-10-15
 updated: 2026-10-15
 owner: operator
@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (round 1); step 7/8 edit made; gh609 green. | Docs gate, self-applied smoke receipt, final Codex QA, then PR. |
+| Plan QA and final QA Approved (round 1 each); edit, gh609 (33/0), PDDA and smoke receipt recorded. | PR ready; awaiting merge. Then refresh the deployed Skills Army copy. |
 
 ## Problem (observed)
 
@@ -118,4 +118,4 @@ Rating: pri 55 / sev 45 / appeal 50 / effort 85.
 
 | Issue | Clone / branch | State | PR |
 |---|---|---|---|
-| [#1088](https://github.com/HiQS-Labs/XYZ-forge/issues/1088) | `XYZ-forge-gh1088-start-task-smoke-check-2026-10-15` / `docs/XYZ-forge-gh1088-start-task-smoke-check-2026-10-15` | plan drafted | — |
+| [#1088](https://github.com/HiQS-Labs/XYZ-forge/issues/1088) | `XYZ-forge-gh1088-start-task-smoke-check-2026-10-15` / `docs/XYZ-forge-gh1088-start-task-smoke-check-2026-10-15` | PR ready; awaiting merge | (opened next) |
