@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -129,3 +129,65 @@ Corrected CHANGELOG is built from the COMPLETE incoming0215 bytes, inserting onl
 Review the actual entire CHANGELOG and exact byte equation against retained input, not a map keyed by heading. Recheck the required JSONL receipt correction, unchanged six runtime/policy+originalQA hashes, and current-base ledger content proof. Acceptance is the explicit canonical GH1059/evidence contract in this packet; the scaffold's unfilled Setup placeholder does not introduce new requirements. Current-head normal publication, exact-head hosted checks and destination qualification remain pending and Producer-owned. No tests or CI cases added.
 
 Read-only, only this thread writable, no Git/network/test/pytest/executable fixture. File/JSON/hash probes with bytecode disabled allowed. Append `### Reviewer (codex) · Round 2`, VERDICT PASS/FAIL, Basis and swept file yes/no. PASS header Approved/NEXT —, tick done RELAY-PR1061-EXTENSION-R2-20261015. FAIL Escalated2/2 and hand off; no further round remains. Handing off to Reviewer.
+
+### Reviewer (codex) · Round 2
+
+VERDICT: PASS
+Basis: The corrected CHANGELOG satisfies the exact whole-file preservation equation against the retained incoming input; the heading-collapse failure is detected by an independent in-memory red control. The required newer JSONL receipts and seven retained runtime/policy/original-QA digests still match. No outstanding Blocker/Should or additional material pre-existing defect was found in this bounded evidence review. This approves the evidence correction; current-head publication, hosted checks and destination qualification remain pending.
+swept file: yes
+
+Paths below are relative to `TESTS-RESULTS/2026-10-15+GH-1059-review-corrections/` unless fully qualified.
+
+- [Pass] Whole-file CHANGELOG preservation replaces the invalid heading-map proof. `current-base/changelog-duplicate-heading-correction.json:3` explicitly supersedes the earlier claim and names the broken revision at `:4`; hashes at `:7`–`:9` match all three seeded files. Removing the single exact `current-base/changelog-own-additions.md:1` addition from the actual entire `CHANGELOG.md` returns every retained incoming byte: **1,063,253 − 1,843 = 1,061,410 bytes**. Both own sections are present at `CHANGELOG.md:31` and `:44`, directly before the common PR1054 section at `:58`. All 196 incoming headings plus two additions survive, including both occurrences of each repeated heading (2026-06-28, 07-03, 07-04, 09-06, 09-11, 09-14). This is a full-byte comparison, not a dictionary keyed by heading or a diff-only inspection. The new in-memory heading-key collapse and a one-byte truncation both fail the preservation predicate. The exact historical broken blob was not supplied; its recorded negative result at correction JSON `:11` remains Producer evidence, distinct from these reviewer controls.
+- [Pass] The original receipt-format falsifier remains satisfied. `provenance.jsonl:1` retains the historical record; `:2` and `:3` attribute manual47/cleanup180 to fb6b7f28 and `:4` attributes manual48 to359f7766 with explicit limits. The historical-only in-memory control fails the required newer-receipt predicate. Retained `all-native/shared-guard-results.json` has equal before/after identity and rc0 for both checks; `all-native/shared-guard-cleanup180.log:1921` reports “Ran 180 tests in 286.110s” and `:1923` says “OK”. `all-native/final-manual48.log:293` reports “Manual cases: 48”; all 48 retained result rows are PASS. These are inspected Producer runs, not reviewer reruns; cleanup180 is not attributed to359f7766.
+- [Pass] The six runtime/policy files and original Escalated3/3 review match all seven digests in `current-base/preservation.json:66` and `:74`. Original `relay-system/2026-10-14/gh1059-final.codex.md:7` retains Producer/Escalated3/3 and its failed review. `current-base/qa-extension.json:6`–`:8` records two authorized extension rounds started, zero remaining, and `:13` records cumulative round5. Earlier extension1 PASS and its superseded CHANGELOG finding history remain in this thread. This checks seeded bytes against retained digests, not an independently fetched prior revision.
+- [Pass] The retained ledger evidence remains distinct from the withdrawn CHANGELOG comparison: `current-base/pr1061-second-ledger-resolution.json` records higher-generation ours plus canonical writer replay of GH1052; `current-base/preservation.json:5` records incoming business-content preservation, `:6` limits reminting to GH1052 global_id/first_seen/updated_at, `:11` identifies only added issue1059, and `:12` records 13 nonempty table comparisons. `current-base/post-review-ledger-check.log` ends “check: clean (0 failures, 9 warning(s))”; `current-base/provenance.jsonl:1` attributes that check to46973638 and expressly excludes full publication/hosted qualification. Incoming ledger bytes were not supplied for an independent row-by-row comparison; this is reviewed Producer comparison/check evidence, not a rerun of Git integration or the ledger writer.
+- [Unverified — needs clone run] The current corrected head still needs normal publication, exact-head hosted checks/reviews, premerge receipts and destination macOS qualification. Earlier full409/409 belongs to e4a8af1e (`publication/provenance.jsonl:1`–`:2`); its log retains the built-in sequential retries and reports the full gate GREEN in1223s at `publication/normal-full-publication.log:915`. The alias records the same run, not a rerun or current-head gate. No live retirement, merge or cleanup is established by this review.
+
+Reviewer file-only probe (no repository import or executable fixture):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+from pathlib import Path
+from collections import Counter
+import hashlib,json,re
+r=Path("TESTS-RESULTS/2026-10-15+GH-1059-review-corrections")
+b=r/"current-base"
+i=(b/"changelog-incoming.md").read_bytes()
+a=(b/"changelog-own-additions.md").read_bytes()
+c=Path("CHANGELOG.md").read_bytes()
+m=json.loads((b/"changelog-duplicate-heading-correction.json").read_text())
+assert i and a and c and c.count(a)==1 and c.replace(a,b"",1)==i
+for k,v in (("incomingSha256",i),("ownAdditionSha256",a),("correctedSha256",c)):
+    assert hashlib.sha256(v).hexdigest()==m[k]
+heads=lambda v: re.findall(rb"^## .*$",v,re.M)
+assert (len(heads(i)),len(heads(a)),len(heads(c)))==(196,2,198)
+assert Counter(heads(c))==Counter(heads(i))+Counter(heads(a))
+parts=re.split(rb"(?=^## )",i,flags=re.M)
+collapsed=parts[0]+b"".join({p.splitlines()[0]:p for p in parts[1:]}.values())
+assert collapsed!=i and c[:-1].replace(a,b"",1)!=i
+p=json.loads((b/"preservation.json").read_text())
+h=dict(p["runtimePolicySha256UnchangedFromPrior"])
+h["relay-system/2026-10-14/gh1059-final.codex.md"]=p["originalEscalated3of3FileSha256"]
+assert len(h)==7 and all(hashlib.sha256(Path(f).read_bytes()).hexdigest()==v for f,v in h.items())
+rows=[json.loads(s) for s in (r/"provenance.jsonl").read_text().splitlines() if s.strip()]
+want={("fb6b7f28",47),("fb6b7f28",180),("359f7766",48)}
+have=lambda rs:{(x.get("source","")[:8],x.get("passed")) for x in rs if x.get("rc")==0}
+assert len(rows)==4 and want<=have(rows) and not want<=have(rows[:1])
+print("whole-byte preservation: PASS; incoming/own/current bytes: 1061410/1843/1063253")
+print("hashes: changelog 3/3, runtime-policy-original-QA 7/7; headings: 196+2=198")
+print("red controls: heading-key collapse FAILS; one-byte loss FAILS; historical-only receipts FAIL")
+print("JSONL: 4 records, newer receipt attributions 3/3")
+PY
+```
+Exit **0**; decisive output:
+```text
+whole-byte preservation: PASS; incoming/own/current bytes: 1061410/1843/1063253
+hashes: changelog 3/3, runtime-policy-original-QA 7/7; headings: 196+2=198
+red controls: heading-key collapse FAILS; one-byte loss FAILS; historical-only receipts FAIL
+JSONL: 4 records, newer receipt attributions 3/3
+```
+
+Coverage and limits: swept the correction metadata/receipt evidence and the entire CHANGELOG byte string against its entire retained incoming input, including repeated historical sections; read the added sections, original final review and canonical acceptance. This preservation review does not revalidate every unrelated archived narrative claim. No new runtime sweep was needed for this evidence-only correction; the original Round3 records the earlier full runtime/policy sweep. No additional material pre-existing defect was found in the bounded evidence scope. Verify-tier graph project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation2026-10-13T06:40:42Z, describes the maintained primary rather than this worktree; coverage reports changed/missing metadata for CHANGELOG/new evidence/relay and zero indexed correction-scope entries. Direct seeded bytes supply authority. No Git command, network request, suite, pytest, executable fixture or gate ran. Only this relay file was edited; no source or evidence artifact was created or changed.
+
+Relay closed (Approved), no further review turn needed. Handing completion to Producer (codex-producer) for current-head publication, hosted/premerge checks and destination qualification before authorized merge or cleanup.
