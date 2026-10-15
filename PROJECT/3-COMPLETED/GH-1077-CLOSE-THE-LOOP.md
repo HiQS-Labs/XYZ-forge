@@ -2,7 +2,7 @@
 gh_issue: 1077
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1077
 title: "close-the-loop: conversation follow-up sweep"
-status: In Progress
+status: Complete
 created: 2026-10-15
 updated: 2026-10-15
 owner: Codex
