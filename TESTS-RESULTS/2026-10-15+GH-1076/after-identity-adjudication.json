@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-10-15T08:21:03.050020+00:00",
+  "wrapper_exit": 97,
+  "push_exit": 0,
+  "original_wrapper_flags_preserved": {
+    "identity_unchanged": false,
+    "identity_unchanged_except_expected_push_tracking": false
+  },
+  "symbolic_ref": {
+    "alias": "refs/remotes/origin/HEAD",
+    "target": "refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+    "current_raw": "ref: refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\n"
+  },
+  "tracking_reflog": "d1ca36b5bac1a3f208f6392908c4496f5fd77ab2 update by push\n",
+  "stable_source_identity": {
+    "head": true,
+    "status": true,
+    "config_sha256": true,
+    "origin": true,
+    "bare": true,
+    "full_clone": true
+  },
+  "exact_allowed_ref_map_matches": true,
+  "decision": "Expected normal-push tracking-ref change plus its symbolic alias resolution; no source/config/origin/worktree identity drift. Wrapper did not account for symbolic aliases; original exit97 retained. Actual normal full gate/push rc0, runner envelope drift none. No gate rerun or bypass.",
+  "manual_only": true
+}

@@ -1,0 +1,43 @@
+{
+  "before": "f974fcee15647aae6551fcc81b129f5a6127120b",
+  "after": "d1ca36b5bac1a3f208f6392908c4496f5fd77ab2",
+  "controls": [
+    {
+      "path": "validate.sh",
+      "before_sha256": "b2cb6d1ef04b48f6a6f29e486c92476054fe29c296b21a08ff6ce190a6108dae",
+      "after_sha256": "b2cb6d1ef04b48f6a6f29e486c92476054fe29c296b21a08ff6ce190a6108dae",
+      "identical": true
+    },
+    {
+      "path": "githooks/pre-push",
+      "before_sha256": "29edf96df79282e39f497d89f222c30ad27e71eea35ecf88dfe5baee4d474268",
+      "after_sha256": "29edf96df79282e39f497d89f222c30ad27e71eea35ecf88dfe5baee4d474268",
+      "identical": true
+    },
+    {
+      "path": "utils/pdda/pdda.sh",
+      "before_sha256": "4b8172e321f465a8c0dfd219d3c01f25539bde88afd36ffc5e51d8a0a2279bb5",
+      "after_sha256": "4b8172e321f465a8c0dfd219d3c01f25539bde88afd36ffc5e51d8a0a2279bb5",
+      "identical": true
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "before_sha256": "044309dc115584ff66a57667f022917dd9e5b5c534c0e082a7dccd68ac96f735",
+      "after_sha256": "044309dc115584ff66a57667f022917dd9e5b5c534c0e082a7dccd68ac96f735",
+      "identical": true
+    },
+    {
+      "path": ".github/workflows/wave-reconcile.yml",
+      "before_sha256": "639011b87fb7210e88e364bbbc36b337a308e7faffaedc1fc06eb72d2ca9c3a7",
+      "after_sha256": "639011b87fb7210e88e364bbbc36b337a308e7faffaedc1fc06eb72d2ca9c3a7",
+      "identical": true
+    },
+    {
+      "path": "utils/py/hosted_lane_publish.py",
+      "before_sha256": "8c0db215c071f30a5d0ac7fae35461ad8f5ca647cd2c77d803b9550b585efb19",
+      "after_sha256": "8c0db215c071f30a5d0ac7fae35461ad8f5ca647cd2c77d803b9550b585efb19",
+      "identical": true
+    }
+  ],
+  "note": "Read-only source identity comparison. Full runner, push hook, docs dispatcher and hosted workflows/publication unchanged; intended ci-route and wave selector changes are separately reviewed. This does not prove equal ambient load/cache or hosted qualification."
+}

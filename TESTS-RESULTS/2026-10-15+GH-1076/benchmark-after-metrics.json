@@ -1,0 +1,56 @@
+{
+  "metadata": "gh1076-benchmark-after.json",
+  "tested_sha": "d1ca36b5bac1a3f208f6392908c4496f5fd77ab2",
+  "run": "d1ca36b5b-72734",
+  "full_suite_wall_seconds": 911.376,
+  "outer_command_wall_seconds": 916.015,
+  "outer_rc": 0,
+  "start": {
+    "v": 1,
+    "ts_ms": 1792051495786,
+    "run": "d1ca36b5b-72734",
+    "runner": "validate",
+    "event": "run.start",
+    "commit": "d1ca36b5bac1a3f208f6392908c4496f5fd77ab2",
+    "host": "noels-Mac-Studio",
+    "mode": "parallel",
+    "width": 4,
+    "tier": 3,
+    "registered": 406
+  },
+  "summary": {
+    "v": 1,
+    "ts_ms": 1792052407162,
+    "run": "d1ca36b5b-72734",
+    "runner": "validate",
+    "event": "run.summary",
+    "passed": 409,
+    "failed": 0,
+    "total": 409,
+    "envelope_rc": "0",
+    "envelope_drift": "none",
+    "suite_events": "408",
+    "run_set": "406",
+    "registered": "406",
+    "suite_events_match": "yes"
+  },
+  "first_failure_events": [],
+  "retries": [],
+  "skipped_output": [
+    {
+      "name": "ci-workflow.sh",
+      "lane": "pool",
+      "skip_lines": 1
+    },
+    {
+      "name": "marathon-plan.sh",
+      "lane": "pool",
+      "skip_lines": 2
+    }
+  ],
+  "telemetry_sha256": "0749b830c5bd64b31ad0ba0bea463a70720a2df33704a9f8897106b7097d32b6",
+  "telemetry_source": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-final-gate/.tick/telemetry/validate-parallel-1792051495786-72734.jsonl",
+  "identity_unchanged": false,
+  "identity_unchanged_except_expected_push_tracking": false,
+  "coverage_note": "406 registered shell suites plus3 non-shell/envelope outcomes=409 reported total. Count is not individual assertions; skip_lines marks output omissions, not waived coverage."
+}
