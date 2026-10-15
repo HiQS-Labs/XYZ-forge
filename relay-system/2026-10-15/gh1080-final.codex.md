@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -81,5 +81,22 @@ Operational envelope: local developer CLI, explicitly operator-authorized direct
 Evidence: existing express suite 113 pass at d741ae2a (before a one-line mode-fingerprint refinement); Codex prerequisite 43 pass, clone identity unchanged; final candidate manual controls 11 pass at 1984ef66, probe source retained in manual-docs.log. Normal full gate is still pending and will run against the reviewed final candidate before publication; don't claim it already passed.
 
 Only this relay file is writable. No git commands, validate.sh, test/*.sh, pytest, fixture execution or external mutations. Read-only narrow source probes are allowed under the normal reviewer scratch rules. Append one graded reviewer block with swept file: yes/no, VERDICT: PASS|FAIL|PARKED and Basis; cite concrete file:line evidence. If Approved set STATUS: Approved and NEXT: —, then use the env-pinned absolute tick to done RELAY-GH1080-FINAL-20261015 --agent codex. Do not merely release on approval. Otherwise set NEXT: Producer and release to codex-producer. The harness commits the scoped relay result; never self-commit. Cumulative cap: 3 rounds.
+
+### Reviewer · Round 1
+
+swept file: yes
+VERDICT: FAIL
+Basis: The bounded docs extension reuses the existing landing and receipt machinery coherently, but docs eligibility skips the lane's exempt paperwork. Correct that narrow admission gap before approval. Read the entire 1,312-line express driver and canonical express skill, task/recon documents, relevant SOP/ARCHITECTURE text and retained evidence; no unrelated pre-existing defect identified in this bounded sweep. Graph tools were unavailable. No git command was executed, so an independent origin/development diff comparison remains unverified; source review covers the seeded current files.
+
+- [Should] Apply docs-only eligibility to CHANGELOG and the issue capture document too, preserving their existing file/insertion exemptions. `utils/py/express.py:503` removes `is_doc_path` entries before `:506` validates eligibility; `:422` exempts CHANGELOG and the resolved capture doc. Thus the new executable/symlink checks never inspect these payloads, contrary to `skills/2-daily/express/SKILL.md:70`. This is an existing paperwork exemption interacting incorrectly with the new docs admission, not a request to redesign hotfix bounds.
+  Observed input: Narrow in-memory source probe: `cmd_check` with `--docs-only`, changed paths `['CHANGELOG.md']`, and intercepted baseline `ls-tree` mode `100755`; ordinary branch/open-issue/wired-gate responses supplied without executing git, gh, a suite or fixtures. The checker admitted it although its own `is_documentation_update` rejected that identical input. Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY' > .relay-scratch/admission-probe.log` (import seeded express.py; intercept git/gh/gate_check/change_paths using unittest.mock; invoke cmd_check and then the direct classifier). Probe exit: **0**. Decisive output: `express-check [dry-run]: PASS`, `files : 0 core, 0 insertions`, `documentation classifier calls: 0`, `direct classifier result: False`, `admitted paths: ['CHANGELOG.md']`. Initial attempt against the linked-worktree root correctly refused `not a git repo: .`; the successful probe used the pinned full-clone root for the directory check, with all command calls intercepted. No mode or source file was changed.
+  Affected scope: Docs-only changes to CHANGELOG or the current issue capture path, including pre-existing executable/symlink modes or new executable/symlink shapes; actual driver ledger/projection outputs retain their existing handling. Inspect eligibility independently of size-exemption membership.
+  Falsifier: In a disposable full clone, an ordinary text edit to non-executable regular CHANGELOG/capture files must still qualify with unchanged size exemptions, while executable/symlink variants must refuse `docs-only` before any docs write or landing. The exact executable CHANGELOG input above returning a refusal would falsify this finding. Use existing/manual verification, no new suite.
+
+- [Pass] Suite selection and wording: `utils/py/express.py:1302` fixes docs mode to `test/pdda-repo-contract.sh` and refuses substitution; `:1306` retains the suite requirement for hotfix check/land/run/resume. `test/pdda-repo-contract.sh:11` executes the actual PDDA dispatcher; `validate.sh:557` registers it. `express.py:603` and `:605` distinguish doc hygiene from runtime coverage. New and tracked image paths share the insertion exemption at `:438`, while core file bounds remain at `:534`; source/destination rename enumeration uses `--no-renames` at `:364` and `:370`, and fingerprints include permissions at `:395`.
+- [Pass] Consumer trace: landing uses the selected suite and real return code (`utils/py/express.py:801`, `:809`, `:813`); closeout writes its commit-bound receipt (`:893`), persists that specific receipt (`:912`), then invokes gated reconciliation (`:919`, `:940`). Exact command/success matching is in `:233`; resume requires committed evidence at `:1187`, and docs-mode default resolution applies to resume too (`:1284`, `:1302`). `wave_reconcile.py:723` consumes commit attribution. No receipt schema or parallel runner was added in this path.
+- [Unverified — needs clone run] Retained evidence reports 113 existing express checks and 43 prerequisite checks at d741ae2a, plus 11 final manual checks at 1984ef66 (`TESTS-RESULTS/2026-10-15+GH-1080/provenance.jsonl:1`, `:2`, `:3`). The identity snapshots agree and log tails report those counts. These are retained producer runs, not checks rerun here. Full publication gate and end-to-end execution of the corrected candidate remain outstanding; the harness must run them in a disposable full clone. README and its pending diagram were not edited.
+
+Handing off to Producer (codex-producer) — correct or disposition the admission finding, retain clone evidence, and return for Round 2. No self-commit; harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
