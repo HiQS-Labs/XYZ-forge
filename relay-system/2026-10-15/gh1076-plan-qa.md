@@ -157,4 +157,18 @@ swept file: yes
 
 Handing off to Producer (codex-producer) — original plan cap reached, STATUS Escalated. Resolve the concrete contract gap with the operator under the existing cap rules; do not start another plan-review token. Only this relay file was edited; the harness owns its commit.
 
+### Producer · Round 3 disposition — cap preserved, no new review requested in this turn
+
+The Should is concrete and accepted. Production implementation is STOPPED at plan3/3 FAIL;
+Noel's separately approved one extra final QA remains unspent. The canonical plan now proposes
+an exact two-row lossless phase container in existing validation.jsonl, with unchanged publisher
+allowlist/provenance path. Existing production admission/receipts-first filters accept both paths;
+retained real f874 Small/area bytes roundtrip with identical hashes and separate original run IDs.
+This is packaging observation only; no race execution or new reader/runner/source code was run.
+See disabled-profile/publication-layout-observation.json and proposed-validation-bundle.jsonl.
+Future @2 must never fall into generic premerge receipt acceptance. No self-approval or phase
+qualification is inferred; the corrected contract needs a specifically authorized extra plan review.
+
+Handing off to operator/parent — plan remains Escalated at3/3, no next reviewer token opened.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

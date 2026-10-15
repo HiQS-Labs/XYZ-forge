@@ -362,3 +362,40 @@ one execution; a generic candidate cache/approval controller would expand author
 No new CI assertion/case/parameter/suite is proposed. Existing tests that pin a changed contract may
 only be mechanically adapted if necessary; no case/method/row is added. Activation, batch-state fixes,
 1053/1082, remote development writes, deployment and cleanup remain outside this continuation.
+
+
+### Plan round3 disposition and corrected exact publication layout
+
+Normal plan QA round3/3 returned FAIL on one concrete Should: the existing publisher admits only
+wave-<tested>/validation.jsonl and provenance.jsonl. Separately named phase files would be rejected
+by declared_paths and omitted/refused during receipts-first recovery. Original FAIL is retained;
+STATUS Escalated, round3/3. No router/wave production implementation or extra final QA has run.
+
+Disposition: Proposed correction, NOT independently approved. Keep the existing two physical files
+and unchanged publisher allowlist. For schema wave-qualification@2 only, validation.jsonl is exactly
+two JSONL container rows, ordered small then skills-army-hq. Each row has phase, telemetry_utf8 (the
+complete original UTF-8 runner JSONL as a JSON string), and telemetry_sha256. This is lossless storage
+of two original byte streams, not concatenated run telemetry, a merged run ID or a synthetic count.
+@2 provenance binds the single container path/digest and each phase's key/original stream digest,
+launched run ID, fixed command, actual exact historical list and actual separate passed/total.
+New reader must require exactly the two expected keys/order, decode each UTF-8 string, hash it,
+then pass each ORIGINAL byte stream independently to the strict phase validator. All source,
+environment, policy, base, source-head, landing=tested, inactive-refusal and no-transfer requirements
+above remain. @1 keeps its raw single-run validation.jsonl semantics; unknown schemas failclosed.
+The generic premerge receipt reader must reject @2/unsupported qualification namespaces rather
+than letting their PR numbers/result fields fall through as ordinary PR receipts. Older readers
+are not assumed safe for future @2 premerge fallback; no @2 receipt is emitted while inactive, and
+future activation requires deployed-consumer/coexistence review before emitting any such record.
+
+Exact read-only observation publication-layout-observation.json uses the two retained real f874
+component streams. Existing production publisher declared_paths and receipt_paths admit/retain
+both logical filenames; receipt_targets ignores the validation container as provenance. JSON
+encode/decode roundtrips preserve both original hashes and distinct run IDs at the same true tested
+commit. No publication race or new strict reader was executed; this demonstrates the proposed
+storage boundary, not feature completion or qualification. proposed-validation-bundle.jsonl retains
+the concrete example OUTSIDE any wave receipt directory and is not a passing provenance record.
+
+Next decision is limited: authorize ONE additional plan review of this exact corrected layout and
+its existing publication/recovery/generic-receipt consumers, preserving original plan3/3 FAIL.
+The already authorized ONE extra final QA remains UN SPENT and reserved for completed disabled
+implementation. No new assertions, activation, publisher allowlist widening or other scope is sought.

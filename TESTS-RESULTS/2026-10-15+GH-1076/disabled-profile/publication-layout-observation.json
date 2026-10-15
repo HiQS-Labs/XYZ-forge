@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-10-15T21:10:50.399195+00:00",
+  "kind": "Unregistered read-only packaging observation using two retained original real runs; not a qualification receipt or an executed publication race",
+  "source": "f874fa8d4d69e2db4f56a8863e6de9b61275842c",
+  "logical_future_layout": [
+    "TESTS-RESULTS/2026-10-15+GH-591/wave-f874fa8d4d69e2db4f56a8863e6de9b61275842c/validation.jsonl",
+    "TESTS-RESULTS/2026-10-15+GH-591/wave-f874fa8d4d69e2db4f56a8863e6de9b61275842c/provenance.jsonl"
+  ],
+  "publisher_declared_paths": [
+    "TESTS-RESULTS/2026-10-15+GH-591/wave-f874fa8d4d69e2db4f56a8863e6de9b61275842c/validation.jsonl",
+    "TESTS-RESULTS/2026-10-15+GH-591/wave-f874fa8d4d69e2db4f56a8863e6de9b61275842c/provenance.jsonl"
+  ],
+  "publisher_receipts_first_paths": [
+    "TESTS-RESULTS/2026-10-15+GH-591/wave-f874fa8d4d69e2db4f56a8863e6de9b61275842c/validation.jsonl",
+    "TESTS-RESULTS/2026-10-15+GH-591/wave-f874fa8d4d69e2db4f56a8863e6de9b61275842c/provenance.jsonl"
+  ],
+  "validation_is_not_parsed_as_provenance": true,
+  "bundle_sha256": "17ff369073bba7bb935cd2fab6cd4b630ac63d5f8f158dd56c12bd7d17f0b471",
+  "original_phase_facts": [
+    {
+      "phase": "small",
+      "true_tested": "f874fa8d4d69e2db4f56a8863e6de9b61275842c",
+      "original_run": "f874fa8d4-47453",
+      "original_sha256": "bfee71ff5b9121a91e6575a157c9952714ea44521d8479010bc04e2aa6a16f95",
+      "original_summary": {
+        "v": 1,
+        "ts_ms": 1792054789501,
+        "run": "f874fa8d4-47453",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 75,
+        "failed": 0,
+        "total": 75,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "74",
+        "run_set": "72",
+        "registered": "406",
+        "suite_events_match": "yes"
+      }
+    },
+    {
+      "phase": "skills-army-hq",
+      "true_tested": "f874fa8d4d69e2db4f56a8863e6de9b61275842c",
+      "original_run": "f874fa8d4-81198",
+      "original_sha256": "11955e7669aa6798ff34f6a65d23b2688249b829ac4c1e7565c2ed1127efa04f",
+      "original_summary": {
+        "v": 1,
+        "ts_ms": 1792054874478,
+        "run": "f874fa8d4-81198",
+        "runner": "validate",
+        "event": "run.summary",
+        "passed": 9,
+        "failed": 0,
+        "total": 9,
+        "envelope_rc": "0",
+        "envelope_drift": "none",
+        "suite_events": "8",
+        "run_set": "8",
+        "registered": "406",
+        "suite_events_match": "yes"
+      }
+    }
+  ],
+  "byte_roundtrip": [
+    {
+      "phase": "small",
+      "sha256": "bfee71ff5b9121a91e6575a157c9952714ea44521d8479010bc04e2aa6a16f95",
+      "bytes_equal": true
+    },
+    {
+      "phase": "skills-army-hq",
+      "sha256": "11955e7669aa6798ff34f6a65d23b2688249b829ac4c1e7565c2ed1127efa04f",
+      "bytes_equal": true
+    }
+  ],
+  "same_true_tested_identity": true,
+  "distinct_original_run_ids": true,
+  "no_summed_synthetic_run": true,
+  "publication_race_executed": false,
+  "remaining_implementation": "@2 writer/reader must encode/decode this exact two-row container and independently validate each original stream; not implemented while plan cap is exhausted."
+}
