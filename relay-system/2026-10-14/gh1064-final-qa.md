@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -91,5 +91,70 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The implementation substantially follows the approved plan, but two concrete acceptance gaps need small corrections: a positively observed closed PR never becomes terminal in the batch, and the printed sweep command splits the documented primary path at its space. No new subsystem, suite or gate is requested. These are Easy, local corrections; preserve existing landing policy.
+swept file: yes
+
+Scope: Read the complete six implementation files named in Setup, the plan and its earlier QA, the retained red-control receipts, and the relevant persistence/tool-resolution/classifier boundaries. Verify-tier graph discovery returned no matching symbols; all 84 projects were enumerated and none indexes this worktree. The nearest XYZ-forge generation is 2026-09-01T15:54:30Z in another checkout; coverage reports the scripts/tests not_tracked or missing and the selector metadata_changed. Exact seeded source therefore supplies the evidence below. No git command, test suite, pytest, executable fixture, or artifact edit was run. `scripts/` below means `skills/2-daily/merge-cleanup/scripts/`.
+
+- [Should] **F1 / DoD 1,5,8 — Record a positively observed CLOSED skip as terminal.** The loop writes `skipped: state CLOSED` (scripts/merge_cleanup.py:1034-1037, persisted at :941-942), but `continuable` accepts only `closed` or merged-and-reconciled (scripts/batch_record.py:101-107). After QA covers the landed subset, `find_unfinished` still selects this completed record (:126), and `record_sweep` tells the caller to continue (:1620-1621). OPEN-only discovery cannot revisit that closed PR. Use one consistent terminal representation for this observed state; keep holds/drafts/handoffs non-terminal. Verify in the existing suite or a retained manual clone check.
+  Observed input: live refresh `{state: "CLOSED"}` for planned PR 2 after PR 1 landed; the exact skip branch plus `_record_batch_outcomes` produced `{'status': 'skipped: state CLOSED'}` in a non-mutating AST extraction probe. With `verdict.covers=[1]`, the predicate probe below reports QA covered but continuation required.
+  Affected scope: planned PRs positively observed CLOSED during the landing loop; this does not ask to infer closure from an absent PR or change merge eligibility.
+  Falsifier: a batch with PR 1 merged/reconciled and covered, and PR 2 positively CLOSED must have `qa_pending=False`, `continuable=False`, and no unfinished match. Replacing CLOSED with a hold/draft/handoff must retain `continuable=True`.
+  Command (exit 0; source branch additionally traced at scripts/merge_cleanup.py:1034-1037):
+  ~~~sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 -B - <<'PROBE'
+  import copy, sys
+  sys.path.insert(0, 'skills/2-daily/merge-cleanup/scripts')
+  import batch_record as b
+  r={'planned':[{'pr':1},{'pr':2}], 'outcomes':{'1':{'status':'merged','reconcile':'ok'},'2':{'status':'skipped: state CLOSED'}},'landed_order':[1],'verdict':{'covers':[1]}}
+  print('CLOSED:', b.qa_pending(r), b.continuable(r))
+  c=copy.deepcopy(r); c['outcomes']['2']['status']='closed'
+  print('terminal control:', b.qa_pending(c), b.continuable(c))
+  PROBE
+  ~~~
+  Decisive output: `CLOSED: False True`; `terminal control: False False`.
+
+- [Should] **F2 / DoD 1 — Quote the primary in the printed sweep command.** scripts/batch_record.py:302 interpolates an unquoted path into a shell command, while SKILL.md:453,462 explicitly documents primaries under `Documents/GH Repos`. Even after the caller replaces `<tmp>`, this produces three positional operands for clone. Apply shell quoting to the primary (standard-library `shlex.quote` suffices); do not introduce a runner. Keep the placeholder convention or make its replacement instructions explicit.
+  Observed input: `primary=/Users/noelsaw/Documents/GH Repos/XYZ-forge`, the path documented by this skill, with `<tmp>` replaced by `/private/tmp/gh1064-sweep`. The actual command expression parses into separate `/Users/noelsaw/Documents/GH` and `Repos/XYZ-forge` operands.
+  Affected scope: printed sweep commands for primary paths containing shell whitespace/metacharacters; no merge, classification or teardown behavior changes.
+  Falsifier: parse the generated clone command after placeholder substitution and expect one source operand exactly equal to that primary and one destination operand; a no-space primary must remain equivalent. No actual clone is needed to prove tokenization.
+  Command (exit 0):
+  ~~~sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 -B - <<'PROBE'
+  import ast, shlex
+  from pathlib import Path
+  s=Path('skills/2-daily/merge-cleanup/scripts/batch_record.py').read_text()
+  t=ast.parse(s)
+  d=next(n for n in ast.walk(t) if isinstance(n,ast.Dict) and any(isinstance(k,ast.Constant) and k.value=='command' for k in n.keys))
+  e=next(v for k,v in zip(d.keys,d.values) if isinstance(k,ast.Constant) and k.value=='command')
+  c=eval(compile(ast.Expression(e),'<source command>','eval'),{'primary':Path('/Users/noelsaw/Documents/GH Repos/XYZ-forge'),'gate':'validate.sh --sequential'}).replace('<tmp>','/private/tmp/gh1064-sweep')
+  print(shlex.split(c.split(' && ')[0]))
+  PROBE
+  ~~~
+  Decisive output: `['git', 'clone', '--no-local', '/Users/noelsaw/Documents/GH', 'Repos/XYZ-forge', '/private/tmp/gh1064-sweep']`. This measures shell tokenization; no git command ran.
+
+- [Pass] **DoD 1,2 — Stop attribution and landing-order nits.** The wrapper installs a fresh track and clears `_ERR_SINK` before finalization (scripts/merge_cleanup.py:917-925); each PR resets `current`/`errs` before policy validation (:981-990), including the former :935 site. The loop has exactly 22 hard-return sites at current lines 990,1023,1041,1050,1058,1070,1112,1138,1145,1155,1171,1176,1184,1189,1201,1210,1217,1222,1234,1239,1244,1251. Each reaches the wrapper with the current PR; diagnostics come through `log_err` (:152-155), including the merge helper's failure (:228,237). Later rows retain their initialized `unattempted` status (scripts/batch_record.py:69; scripts/merge_cleanup.py:930-944). The remote merge is saved before fetch/reconcile (:1223-1234); post-merge stops retain that status/OID and add the failure (:935-937). Actual landing order is append-only (scripts/batch_record.py:140-141) and supplies the inclusive range (:277-280). These are source/AST conclusions, not execution of all 22 paths.
+
+- [Pass] **DoD 1,3 — Dispatch and precedence.** `--record-sweep` dispatches immediately after primary resolution, before Phase 0 (scripts/merge_cleanup.py:1328-1335); it reads/stores a verdict and updates the issue without discovery/merge/teardown (:1600-1622). Phase-5 exits 2/3 return before Phase 6 (:1516-1519); normal Phase 6 failures return 2 before the QA predicate (:1561-1570), giving 2 > 3 > 4 > 0. Empty-queue executing resumes still select a batch (:1511,1578-1587). qa_pending compares landed PRs with verdict coverage independently of other statuses (scripts/batch_record.py:96-98), so later landings reopen QA. Input rejection precedes mutation (:307-323).
+
+- [Pass] **DoD 4 — Marked-block ownership and non-blocking gh failures.** Create failures become `issue_error` (scripts/batch_record.py:211-217); read failures/missing markers return without an edit (:227-238); successful replacement preserves the prefix/suffix outside markers (:239), and edit errors are recorded (:247-248). The injected callable is the driver's bounded `_gh` (scripts/merge_cleanup.py:71-75,947,1591,1616). Narrow in-memory callable probes also observed create/read/edit errors returning normally, missing-marker updates doing no edit, and byte-identical outside text on replacement. Source citations establish the branches; full landing behavior under those errors remains for a clone run.
+
+- [Pass] **DoD 1,5,6 — Resume, metadata and reuse, except F1.** `find_unfinished` filters repo/integration and requires overlap only for non-empty queues (scripts/batch_record.py:121-126). Selection precedes the first merge and creates for a 2+ resume without a prior record (scripts/merge_cleanup.py:1511-1516,1581-1591); no-record single-PR and non-executing runs stay exempt (:1578-1589). Stored file lists (:59) and soft reasons (scripts/toposort_prs.py:148,160) feed cross-PR overlap over retained landings (scripts/batch_record.py:281-300), including hard pairs. Persistence reuses `attempt_record.RecordLock/save` (:86-89; scripts/attempt_record.py:61-89,117-122); classification uses the existing tool resolver/selector (scripts/batch_record.py:253-269; scripts/ledger_merge.py:263-273; utils/py/wave_reconcile.py:593-618), with full-gate fallback. No second gh wrapper, lock implementation or runner is introduced in the reviewed files.
+
+- [Pass] **DoD 6,7 — Existing-suite footprint and meaningful red controls.** The added behavior stays in the existing Phase B/C modules: issue-call ordering and outcomes (test/gh534_phase_b_tests.py:745-763), hard-pair resume/coverage (:765-795), pre/post-merge stops (:797-820), caller-text preservation and malformed verdicts (:822-841), and no-batch resume (test/gh534_phase_c_tests.py:796-814). Phase C imports `TestBatchIssue` (:34) and requires the new ownership rows (:543-546); AST pins target the real loop (:551-553). The three retained provenance entries (TESTS-RESULTS/2026-10-14+GH-1064/provenance.jsonl:1,2,3) record nonzero controls with decisive failures `0 != 4`, `0 != 2 : accepted 'verdict: clean\\n'`, and missing caller text. They demonstrate sensitivity to their three mutations; they do not cover F1/F2 or prove all error paths. No new test file/registry entry is requested.
+
+- [Unverified — needs clone run] **DoD 7 — Final runtime attestation.** The Setup's 185-test result is producer-reported; this evidence directory retains the three red logs, not the complete positive run. I did not run prohibited gates/fixtures here. After corrections, retain focused green evidence and the already-planned full disposable-clone gate against the final implementation. Specifically exercise Phase-6 failure over QA pending and standalone recording without discovery/teardown; source ordering alone is not a runtime pass.
+
+- [Pass] **DoD 8 — Whole-file sweep conclusion.** F1 is the pre-existing generic non-OPEN skip representation becoming incompatible with the new terminal predicate (scripts/merge_cleanup.py:1034-1037; scripts/batch_record.py:104). No additional pre-existing defect made worse by this change was identified in the complete six-file sweep. Existing merge/durability and teardown boundaries remain at scripts/merge_cleanup.py:1230-1253,1516-1519,1528-1563; the new code records outcomes around them.
+
+Root cause: the new consumer's terminal vocabulary differs from the existing skip writer, and the new display command omits shell argument quoting. Fix those boundaries directly; neither finding calls for merge-policy changes or extra machinery.
+
+Handing off to Producer (claude-a) — disposition F1/F2, make the small corrections, retain existing-suite/manual evidence, and request Reviewer round 2. The harness owns the one-file commit; this reviewer ran no git command.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
