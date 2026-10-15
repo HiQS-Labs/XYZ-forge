@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -85,5 +85,67 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The basic ownership split is sound, but the plan needs corrections for resume, Phase 6, outcome persistence, and caller-written issue content before implementation. These are bounded CLI/record changes, not grounds for new runners or coordination machinery.
+swept file: yes
+
+Scope/evidence: Read the entire plan, `merge_cleanup.py`, `toposort_prs.py`, `attempt_record.py`, SKILL.md, and both gh534 test files; inspected the cited scanner, tool-resolution, qualification, routing, and orchestration-test paths. Verify-tier graph discovery found no matching symbols; coverage generation `2026-09-01T15:54:30Z` belongs to another checkout and reports these script paths `not_tracked`, so the findings below use this worktree's source. No git commands, suites, executable fixtures, or artifact edits were run. Source/AST observations are evidence about the plan, not implementation test results. In citations below, `scripts/` means `skills/2-daily/merge-cleanup/scripts/`, and `plan` means `PROJECT/1-INBOX/GH-1064-MERGE-BATCH-ISSUE-QA.md`.
+
+- [Should] **R1 — Correct the helper owner and avoid a circular import (DoD 1/3).** `plan:62` and `plan:103` specify `scan_clones._gh`, which does not exist. `_gh` and `post_issue_marker` are in `scripts/merge_cleanup.py:70` and `:315`; the scanner has only `_gh_bin` (`scripts/scan_clones.py:373`). Fix the recon and reuse the real `_gh` through an injected callable (or keep orchestration of gh calls in its existing owner); do not have `batch_record` import the CLI driver that imports it.
+  Observed input: the proposed attribute `scan_clones._gh` at `plan:103`. Narrow probe (exit 0; decisive output `scan_clones []` and `merge_cleanup [('_gh', 70), ('post_issue_marker', 315)]`):
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 -B - <<'PY'
+  import ast
+  from pathlib import Path
+  base = Path("skills/2-daily/merge-cleanup/scripts")
+  for module in ("scan_clones", "merge_cleanup"):
+      tree = ast.parse((base / (module + ".py")).read_text())
+      print(module, [(n.name,n.lineno) for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in ("_gh","post_issue_marker")])
+  PY
+  ```
+  Affected scope: the new module's GitHub calls, including label bootstrap and issue create/edit.
+  Falsifier: the same symbol probe finding an actual scanner `_gh` definition would remove the ownership objection; an import-only check in the gate clone must load the final CLI/module without circular-import errors.
+
+- [Should] **R2 — Resume the original batch before applying the new-batch threshold (DoD 2/6).** `plan:119` calls `open_or_resume` only for queues of at least two. Discovery returns only OPEN PRs (`scripts/toposort_prs.py:34`), so an original two-PR batch with one landed and one handed off resumes as one PR and bypasses the batch entirely. An empty queue also bypasses `land_prs` (`scripts/merge_cleanup.py:1443`). Separate lookup/continuation from fresh-batch creation, retain earlier outcomes and sweep inputs, and make an outstanding batch's QA status visible even after discovery shrinks to zero. Also do not use `verdict is unset` as the sole definition of an unfinished merge batch: a sweep recorded for the landed subset must not force a new issue when its remaining PR resumes; new landings need a fresh verdict.
+  Observed input: the existing two-PR handoff scenario at `test/gh534_phase_b_tests.py:543` leaves PR 1 MERGED and PR 2 OPEN (`:552-553`); the proposed `len(ordered_prs) >= 2` predicate rejects its next queue `[2]`. `plan:107-108` also excludes any earlier batch whose partial sweep has been recorded.
+  Affected scope: `--resume` of an originally qualifying batch, including a one-PR remainder and QA-only continuation; fresh one-PR runs remain unchanged.
+  Falsifier: continue that existing scenario after repairing PR 2; expect the same issue, both landing OIDs retained, no second create, and QA pending for the final combined batch. A fresh one-PR run must still create no issue. Record a partial sweep before continuation as the countercase to verdict-based batch identity.
+
+- [Should] **R3 — Carry exit 4 through `main` without skipping normal cleanup (DoD 4/5).** Returning 4 from `land_prs` as written reaches `main`'s existing `if rc != 0: return rc` (`scripts/merge_cleanup.py:1448`), so a successful batch skips all Phase 6 work. This contradicts `plan:94` (no teardown change) and cannot honor 2 > 4 if Phase 6 would fail. Let the driver retain the pending-QA result, run ordinary Phase 6 after successful landings, then return 4 unless a harder result occurred. Dispatch standalone `--record-sweep` after primary-path resolution and before Phase 0/discovery, and document how the drive loop reaches actual cleanup completion after recording the verdict.
+  Observed input: proposed Phase-5 `rc=4` (`plan:131-133`) entering the exact nonzero dispatch at `scripts/merge_cleanup.py:1448-1450`. Existing two-PR coverage explicitly expects both exit 0 and pruning (`test/gh534_phase_b_tests.py:379`, `:388`), and `test/gh534_phase_c_tests.py:282` also pins exit 0 for two successful landings. The plan only adds new methods and misses these existing contract updates.
+  Affected scope: successful qualifying executions, their normal teardown, final exit precedence, and existing two-PR assertions.
+  Falsifier: in the disposable clone, a successful two-PR run must still reach Phase 6 but finish 4; a Phase-6 failure must finish 2. Update affected existing expectations while retaining their landing/durability/pruning assertions. Standalone recording must invoke no discovery, merge, or teardown.
+
+- [Should] **R4 — Record remote landing and every terminal/skip outcome at the actual branches (DoD 1/2/7).** The proposed hooks (`plan:121-123`) do not specify hard-stop persistence, and `failed` is not a complete outcome map. A remote merge can succeed and then return 2 during fetch, fast-forward, reconciliation, or durability (`scripts/merge_cleanup.py:1162-1188`), before an after-loop hook. Hold-label and non-OPEN skips never enter `failed` (`:973-979`), while drafts are removed from it (`:1197`). Specify immediate remote-merge recording before reconciliation, distinct reconcile/durability status, named skipped/stopped outcomes, and sweep-input finalization on early exit after a landing. Keep exit 2/3 and existing merge eligibility unchanged.
+  Observed input: `test/gh534_phase_b_tests.py:510-518` deliberately makes reconciliation fail after PR 1 is MERGED, leaving PR 2 OPEN; `:491-498` supplies a `do-not-merge` PR whose skip never enters `failed`. These are existing path shapes the new record must represent.
+  Affected scope: batch reporting across current early returns and skips, not a redesign of repair or merge policy.
+  Falsifier: reuse the failed-reconcile case and expect PR 1 recorded as remotely merged with reconcile failure, PR 2 unattempted, and exit 2. The held-PR case must name the hold skip. A clean run must retain its successful reconciliation status.
+
+- [Should] **R5 — Preserve the caller-owned sections when updating the issue (DoD 3/6).** `plan:104-116` stores script data and renders the other sections as placeholders, then replaces the entire body with `gh issue edit --body-file`. On resume or verdict recording this can replace the agent's findings, pivots, and carry-overs with placeholders. Bound updates to a marked script-owned block, or explicitly read/preserve the caller sections; a body renderer must not silently own both writers' data.
+  Observed input: `plan:115` expressly leaves sections "as placeholders for the agent", while the shipped contract requires verbatim attributed unchecked carry-overs in the issue (`skills/2-daily/merge-cleanup/SKILL.md:352-355`). Those caller-written bytes have no field in the proposed record (`plan:104-106`) from which full-body rendering could restore them.
+  Affected scope: updates to an existing batch issue after the agent has filled any caller-owned section.
+  Falsifier: place `- [ ] #PR: operator verification` in Post-deployment carry-overs before a resume/verdict update; expect that exact line and the existing Findings/Problems text to survive while the script's outcome/verdict changes. Initial creation may still render placeholders.
+
+- [Should] **R6 — Make the sweep range include the first landing (DoD 6).** `plan:124` says `first..last merge oid`; as a Git range this omits the first commit, and a qualifying queue with one landing produces an empty range. Record the first landing's first parent through the last landing (`first^..last`), or an equivalent explicit pre-batch base, and derive the range from all retained batch landings on resume. The qualification helper already uses each landing's parent (`utils/py/wave_reconcile.py:603`), so keep that inclusive interpretation consistent.
+  Observed input: the one-landed/one-handed-off scenario at `test/gh534_phase_b_tests.py:552-553` gives `first == last`, making the proposed range `M..M` empty despite a real landing.
+  Affected scope: the printed/stored merged-range input for the agent's regression review.
+  Falsifier: for that scenario, the recorded range must include PR 1's diff; for two distinct landings it must include both. A zero-landed run should report no sweep range, not fabricate one.
+
+- [Nit] **Recon wording:** `plan:55-56` says overlap filenames survive in warnings and `main` discards warnings. The warning contains only the overlap **count** (`scripts/toposort_prs.py:147-148`) and `main` prints it (`scripts/merge_cleanup.py:1388-1391`). Fix those two claims; adding `_soft_reasons` remains justified because actual filenames currently require recomputing the intersection.
+
+- [Pass] **DoD 1/2, bounded positive:** the cited `main`, `land_prs`, sorting and merge-call line numbers are accurate (`scripts/merge_cleanup.py:1230`, `:902`, `:1378`, `:1162`); `execute_pr_merge` returns bool (`:191`, `:225-227`). Creating a fresh qualifying issue before the `land_prs` loop (`:928`) precedes every merge even when the first PR defers/skips. Resume qualification is the R2 exception.
+- [Pass] **DoD 3:** a small `batch_record.py` has a distinct responsibility worth separating from the per-PR repair budget. `attempt_record.load` deliberately requires `pr` and `attempts` (`scripts/attempt_record.py:112`), so do not feed batch JSON into that loader. Reusing its `RecordLock` and schema-neutral atomic `save` (`:61`, `:117-122`) avoids a second persistence mechanism; correct the GitHub helper wiring per R1. `select_qualification_gate` returns `(gate, expected, reason)`, not an integer tier (`utils/py/wave_reconcile.py:596-597`, `:614-618`); use that existing return contract with full fallback.
+- [Pass] **DoD 4/5, design only:** 2 > 3 > 4 > 0 is reasonable once R3 covers the whole driver. Adding text preserves the existing Drive-loop phrase checks (`test/gh534_phase_c_tests.py:897-905`). GH-831 forbids new suites/registry/gate machinery and permits keeping an existing suite truthful (`AGENTS.md:154-162`); the existing parity guard requires callable methods for script-owned rows (`test/gh534_phase_c_tests.py:592-596`). Limited additions to these same files are consistent with that contract, but update existing expectations too. The threshold and empty-body red controls are falsifiable (`plan:160-161`); retain their commands, outcomes and committed `provenance.jsonl` with the stated evidence destination. The full route is supported by `utils/ci-route.sh:333-337`.
+- [Unverified — needs clone run] No suite or red control was executed here, as required by this review envelope. Final evidence must come from the disposable full clone, including the changed two-PR expectations and R2–R6 countercases; reuse existing methods or retained manual checks rather than adding suites or gates.
+- [Unverified — source unavailable] **DoD 6:** the three operator decisions and non-goals are explicit (`plan:24-30`, `:89-95`), and the findings above cover their gaps against the shipped GH-944 contract. Live issue-body comparison was unavailable: `gh issue view 1064 --repo HiQS-Labs/XYZ-forge --json body,title` exited 1 with `error connecting to api.github.com`; opening `https://github.com/HiQS-Labs/XYZ-forge/issues/1064` also returned `Failed to fetch ... Cache miss`. Do not treat this as confirmation of the unseen live body.
+- [Pass] **DoD 7:** the sweep found the pre-existing incomplete outcome bookkeeping relevant to this plan (R4) and the nonzero Phase-5 dispatch that makes a direct exit-4 insertion wrong (R3), both with exact source citations above. No additional pre-existing defect was identified in the other inspected paths that changes this plan's design.
+
+Root cause: the plan treats a single loop invocation and its `failed` map as the complete batch lifecycle; fix site: batch hooks plus the existing driver dispatch/body-update boundaries; why not elsewhere: sequencing, repair eligibility, suites, and teardown policy already have owners and need no parallel mechanism.
+
+Handing off to Producer (claude-a) — disposition R1–R6 and the recon nit, revise the plan, then request the next Reviewer turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
