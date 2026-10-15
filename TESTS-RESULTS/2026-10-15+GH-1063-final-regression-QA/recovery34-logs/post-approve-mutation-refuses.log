@@ -1,0 +1,11 @@
+marathon-drive: phase p1 already reached a terminal relay (STATUS: Approved, token done) — skipping render/reseed, re-running only the pre-advance gate
+marathon-drive: relay approved — running pre-advance gate: true
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 0MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/post-mutation-ivze5cw4/relay-system/post-mutation-ivze5cw4/2026-10-15/marathon-p1-034433.md
+marathon-drive: phase approved — running post-approve command: printf unreviewed > src.txt; git add src.txt; git commit -qm post-mutation
+marathon-drive: phase p1 post-approve: attested approval found but candidate a36fa846a31f is not the reviewed revision — candidate a36fa846a31f changes non-transcript content after reviewed head 63753adfb10e — not accepting it (GH-505)
+marathon-drive: phase p1: relay exited 0 but its approval is not attested for candidate a36fa846a31f — refusing to publish success
+marathon-drive: transcript unchanged: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/post-mutation-ivze5cw4/relay-system/post-mutation-ivze5cw4/2026-10-15/marathon-p1-034433.md
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7707MB, swap_free=1651MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/post-mutation-ivze5cw4/phases/p1/ESCALATION.md (reason: candidate-drifted-from-reviewed-head)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/post-mutation-ivze5cw4/result.json (outcome: escalated, exit 4)

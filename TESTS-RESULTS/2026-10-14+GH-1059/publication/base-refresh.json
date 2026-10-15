@@ -1,0 +1,18 @@
+{
+  "resolved": true,
+  "handoff": false,
+  "reason": "resolved through the writer path; merge commit dbe1e3bc34",
+  "log": [
+    "classification: keep=ours generation ours/theirs=(1633, 1630) replay=1 op(s)",
+    "check --rebuild on the kept side: rc=0",
+    "roadmap repoint GH-1043: rc=0 ",
+    "roadmap update GH-1043 (section, status_marker, raw_text): rc=0 ",
+    "releases-merge-resolve.sh: rc=0",
+    "removed verified rebuild backup: releases.db.bak"
+  ],
+  "commit": "dbe1e3bc3498bfb2b1b0e3370edfa9d6a2a3bd44",
+  "conflict_set": [
+    "releases.db",
+    "releases.sql"
+  ]
+}

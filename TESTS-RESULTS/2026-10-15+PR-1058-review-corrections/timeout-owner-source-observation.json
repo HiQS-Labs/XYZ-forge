@@ -1,0 +1,21 @@
+[
+  {
+    "owner": "utils/py/codex-turn.py",
+    "sharedBoundedCalls": 0,
+    "turnTimeoutRunLines": [
+      110
+    ]
+  },
+  {
+    "owner": "utils/py/claude-turn.py",
+    "sharedBoundedCalls": 0,
+    "turnTimeoutRunLines": [
+      223
+    ]
+  },
+  {
+    "owner": "utils/py/agy-turn.py",
+    "sharedBoundedCalls": 0,
+    "turnTimeoutRunLines": []
+  }
+]

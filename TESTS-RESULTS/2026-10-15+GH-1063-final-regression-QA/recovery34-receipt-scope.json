@@ -1,0 +1,42 @@
+{
+  "recorded_at": "2026-10-15T04:32:59.637648+00:00",
+  "testedCommit": "5c46c49b6580711300fc141c6896c1946028e4ab",
+  "case": "two-phase-later-retry",
+  "actualExit": 7,
+  "expectedExit": 7,
+  "collectorResult": null,
+  "shellInvocation": [
+    "bash",
+    "relay-automation/marathon.sh",
+    "--plan",
+    "fixture/PROJECT/2-WORKING/recovery/MARATHON.yaml",
+    "--phases-dir",
+    "fixture/phases",
+    "--retry",
+    "p2",
+    "--builder",
+    "claude",
+    "--pre-advance-cmd",
+    "true"
+  ],
+  "progressFlagsSupplied": false,
+  "resultFileFlagSupplied": false,
+  "p2TerminalReceiptRetained": false,
+  "fixtureRelativeJsonFiles": [
+    {
+      "path": ".git/relay-attest/MARATHON-P1-TURN.json",
+      "schema": "relay-drive/attest@1"
+    },
+    {
+      "path": ".xyz/receipts/01b2fa67b2204568efd2a6a87ceacbe66af83e25.json",
+      "schema": null
+    }
+  ],
+  "sourceReferences": [
+    "TESTS-RESULTS/2026-10-13+GH-1042/manual-replay.py:143-145",
+    "MACHINE-CONTRACTS.md:62-64",
+    "utils/py/marathon_drive.py:71-73,149-153,1137-1138",
+    "relay-automation/marathon.sh:393,405-406,624-631"
+  ],
+  "limits": "Read existing fixture/source only, no new execution or case. Contract writer is opt-in; no receipt/attempt-count qualification for p2. Raw result:null remains unchanged."
+}

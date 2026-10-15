@@ -1,0 +1,9 @@
+== test: gh616-start-task-commensurate-envelope ==
+  PASS: size non-empty guard (30169 bytes)
+  PASS: positive in-tree control
+  PASS: unmodified fixture control
+  PASS: mut1 (no commensurate mantra): properly rejected
+  PASS: mut2 (no step 6 review envelope): properly rejected
+  PASS: mut3 (no step 8 review envelope): properly rejected
+  PASS: mut4 (empty fixture): properly rejected
+  gh616-start-task-commensurate-envelope: 7 pass, 0 fail

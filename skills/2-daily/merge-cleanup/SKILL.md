@@ -94,6 +94,14 @@ change future behavior, review and commit the project setting; never rewrite old
 
 ### Phase 0: Primary On-Disk Checkout — always first, never by discovery
 
+**Targeted PR-ready retirement exception (GH-1059).** `--retire-published-pr N`
+with explicit `--checkout /absolute/task/path` arguments is a separate closeout
+mode, not a merge run. It does not scan other checkouts, merge PRs, fast-forward
+the primary, write governance or prune skill links. Primary landing readiness is
+therefore not required in this mode; its identity/origin and path protection are.
+Native linked-worktree removal updates its parent's Git worktree metadata. All
+ordinary modes retain Phase 0 unchanged. See the scoped contract below.
+
 **Report the operator's own checkout before anything remote is fetched.** It is the tree every
 PR lands in, the tree `git merge --ff-only` runs in, and the tree `wave_reconcile.py`,
 `releases_app.py` and `pdda.sh` write to. A run that opens with a PR table has told the operator
@@ -446,6 +454,39 @@ Each row names who does the work; `script` rows name the test that pins them, an
 CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`, `--record-sweep`.
 
 ## CLI Usage
+
+### Automatic retirement after ready PR publication
+
+Start-task's successful closeout authorizes retirement of its own task checkout and
+disposable helpers before merge. Retain required code, plans and evidence in the PR
+and resolve a current driver first; run from outside all retiring paths:
+
+```bash
+python3 /path/to/merge-cleanup/scripts/merge_cleanup.py --primary "$PRIMARY_REPO" \
+  --retire-published-pr "$PR_NUMBER" --checkout "$TASK_CHECKOUT"
+# Inspect the preview, then repeat this exact scope with --execute.
+```
+
+Repeat `--checkout` only for explicit paths created by this workflow. Do not infer
+the primary from the task clone: `--primary` must be an explicit absolute path;
+empty/relative values refuse instead of inferring the current directory. Do not
+combine this mode with scans, merge/reconcile,
+override or backup flags. The driver requires matching canonical origins, a live
+non-draft OPEN/MERGED same-repository PR targeting the integration branch, exact
+fetched origin branch/head equality, and remote recovery proof for every local ref
+and detached HEAD. Missing/deleted remote branches, stale heads, forks, failed API
+or Git queries and malformed metadata preserve the checkout. Publication is not a
+claim of merge, release promotion or issue completion.
+
+Existing local-state/session/dependency checks run again immediately before the
+existing teardown function. Preserve dirty/local-only evidence, stashes, unrelated
+unpublished refs, active locks/claims/handles and dependent worktrees. Release only
+the current workflow's completed activity; never stop peers or fabricate a safe
+disposition. Report actual retirement or the exact preservation reason. Full clones
+move to Trash; linked worktrees use native Git removal. Older drivers must be
+updated or the checkout preserved, never replaced with a manual remover. Normal
+merged-only history admission and its repair/landing policy are unchanged. Both native
+worktree paths preserve ignored files, whose content is not proved recoverable by Git refs.
 
 Run scripts directly from the skill directory or via python:
 

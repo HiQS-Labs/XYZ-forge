@@ -999,13 +999,15 @@
 (function () {
   var spec = {
   "title": "XYZ Forge \u2014 Releases, Roadmap, Work Events, and Derived Projections",
-  "generated": "2026-09-23",
+  "generated": "2026-10-14",
   "sources": [
     "ROUTER.md \u2014 RELEASES DB and roadmap_items are the releases-mode source of truth",
     "RELEASES-DB-FAQS.md \u2014 runtime DB / generation-stamped SQL merge contract",
     "utils/py/releases_app.py \u2014 perform_write, roadmap list/render, work_events, adopted-view refresh",
     "utils/py/work_connectors/ + board_sync.py \u2014 bounded post-commit connector projection",
     "utils/releases-merge-resolve.sh + utils/py/wave_reconcile.py + .github/workflows/wave-reconcile.yml",
+    "skills/2-daily/merge-cleanup/scripts/ledger_merge.py \u2014 landing-batch ledger merges through the resolver",
+    "utils/py/releases_app.py projections_enabled() + utils/pdda/pdda-install.sh --projections \u2014 the auto|on|off switch",
     "utils/timeline/export_timeline.py + utils/leaderboard.sh + utils/py/site_build.py",
     "githooks/pre-push + utils/ci-route.sh + .github/workflows/ci.yml"
   ],
@@ -1070,12 +1072,20 @@
       "description": "Git merge surface and rebuild input. Ordinary writes refresh it atomically from the committed DB transaction; merge conflicts are resolved here."
     },
     {
+      "id": "ledger-merge",
+      "label": "merge-cleanup ledger merge",
+      "type": "job",
+      "group": "writers",
+      "tech": "skills/2-daily/merge-cleanup/scripts/ledger_merge.py",
+      "description": "During a landing batch, classifies ledger and view conflicts and hands the resolved merge to releases-merge-resolve.sh."
+    },
+    {
       "id": "merge-resolve",
       "label": "Ledger merge resolver",
       "type": "job",
       "group": "writers",
       "tech": "utils/releases-merge-resolve.sh",
-      "description": "Validates the resolved dump and generation, rebuilds releases.db with backup, checks it, regenerates only adopted views and stages the result."
+      "description": "Validates the resolved dump and generation, rebuilds releases.db with backup, checks it, and explicitly regenerates adopted views independently of the projections setting; honours view deletions and stages the result."
     },
     {
       "id": "roadmap-query",
@@ -1118,6 +1128,14 @@
       "description": "First shipped external work-state connector. It projects events to configured board fields without becoming authoritative for lifecycle state."
     },
     {
+      "id": "projections-switch",
+      "label": "projections setting off?",
+      "type": "service",
+      "group": "projections",
+      "tech": "settings.projections \u00b7 auto|on|off",
+      "description": "Checked before presence by ordinary ledger writes and hosted reconciliation. off disables their automatic refreshes; auto (default) defers to presence. The merge resolver performs an explicit presence-gated rebuild independently of this setting."
+    },
+    {
       "id": "adoption-gate",
       "label": "Root view adopted by presence?",
       "type": "service",
@@ -1146,7 +1164,7 @@
       "label": "RELEASES-PREVIEW.html",
       "type": "storage",
       "group": "projections",
-      "tech": "optional root view",
+      "tech": "optional root view \u00b7 not adopted here",
       "description": "Presence-gated HTML release timeline; absent is a valid unadopted state."
     },
     {
@@ -1154,7 +1172,7 @@
       "label": "LEADERBOARD.html",
       "type": "storage",
       "group": "projections",
-      "tech": "optional root view",
+      "tech": "optional root view \u00b7 not adopted here",
       "description": "Presence-gated HTML ranking view; absent is a valid unadopted state."
     },
     {
@@ -1307,14 +1325,26 @@
     },
     {
       "source": "write-protocol",
-      "target": "adoption-gate",
+      "target": "projections-switch",
       "label": "post-commit refresh",
       "kind": "sync"
     },
     {
       "source": "merge-resolve",
       "target": "adoption-gate",
-      "label": "after rebuild",
+      "label": "explicit presence-gated merge rebuild",
+      "kind": "sync"
+    },
+    {
+      "source": "ledger-merge",
+      "target": "merge-resolve",
+      "label": "landing-batch merge",
+      "kind": "sync"
+    },
+    {
+      "source": "projections-switch",
+      "target": "adoption-gate",
+      "label": "auto / on",
       "kind": "sync"
     },
     {
@@ -1385,7 +1415,7 @@
     },
     {
       "source": "wave-reconcile",
-      "target": "adoption-gate",
+      "target": "projections-switch",
       "label": "refresh existing views",
       "kind": "sync"
     },
@@ -1426,7 +1456,7 @@
       "kind": "data"
     }
   ],
-  "legend_note": "ROADMAP-DASHBOARD.md, utils/roadmap-dashboard.sh and dashboard-staleness-guard.sh are deliberately absent: GH-567 retired them. Direct roadmap queries and deploy-time Pages generation replaced that committed artifact. Root release/leaderboard views remain optional by presence."
+  "legend_note": "ROADMAP-DASHBOARD.md, utils/roadmap-dashboard.sh and dashboard-staleness-guard.sh are deliberately absent: GH-567 retired them. Direct roadmap queries and deploy-time Pages generation replaced that artifact. Root views remain optional by presence. Ordinary writes and hosted reconciliation additionally honour projections off; the merge resolver explicitly rebuilds adopted views independently of the setting."
 };
 
   // Font stacks: no @font-face, no network fetch — "Indie Flower" resolves
