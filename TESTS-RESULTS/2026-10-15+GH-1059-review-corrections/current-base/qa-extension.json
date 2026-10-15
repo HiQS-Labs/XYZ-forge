@@ -4,14 +4,15 @@
   "originalRoundsUsed": 3,
   "originalRoundCap": 3,
   "extensionAuthorizedRounds": 2,
-  "extensionRoundsStarted": 1,
-  "extensionRoundsRemaining": 1,
+  "extensionRoundsStarted": 2,
+  "extensionRoundsRemaining": 0,
   "authorization": "I authorize you and the agent to do more 2 rounds of QA per PR than base/default. Please get as many PRs merged tonight as possible. And then do the full clone folder clean up.",
   "authorizationEvidence": "Noel main conversation 2026-10-14 19:55 PDT, Sentinel_4231123aedc48191a8cec54c1d6544e0; parent delegation received 2026-10-15 UTC",
   "limits": "No cap resets or duplicated restart allowances; PR1062 excluded; no new CI case approved; exact-head normal gates still required.",
   "extensionThread": "relay-system/2026-10-15/pr1061-authorized-extension.codex.md",
-  "cumulativeRound": 4,
+  "cumulativeRound": 5,
   "extensionRound1Verdict": "PASS",
   "extensionRound1ReviewedHead": "b55594b7a1570c454dd37f59c1a1e889bd0bd8e7",
-  "extensionRound1Attestation": "469736386ef43ff1164995d6386d7d35fb0968ea"
+  "extensionRound1Attestation": "469736386ef43ff1164995d6386d7d35fb0968ea",
+  "extensionRound2Reason": "Correct producer changelog preservation bug that collapsed duplicate historical headings; no runtime edit"
 }
