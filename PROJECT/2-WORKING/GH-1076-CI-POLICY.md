@@ -399,3 +399,16 @@ Next decision is limited: authorize ONE additional plan review of this exact cor
 its existing publication/recovery/generic-receipt consumers, preserving original plan3/3 FAIL.
 The already authorized ONE extra final QA remains UN SPENT and reserved for completed disabled
 implementation. No new assertions, activation, publisher allowlist widening or other scope is sought.
+
+
+### Operator-approved procedural extension — 2026-10-15T21:15Z
+
+Noel approved the specific additional plan review: "Yes run it. And then if you think it’s good
+enough to be durable, override the protocol." Parent authorized one independent corrected-layout
+plan review, followed by the already approved one extra final QA and existing checks. Original
+plan3/3 FAIL and final3/3 Approved remain untouched; supplemental reviews are each1/1. No new tests,
+activation, merge, deployment, mandatory-check/access bypass or unresolved Critical/High waiver.
+Conditional procedural discretion is not a claimed approval; report concrete durability findings
+and bounded recommendations if anything remains rather than silently resetting a budget.
+Current development remainsdc7245b4; publication/recovery correction above supersedes the earlier
+separate physical phase-file wording. Only the container and provenance physical files are written.
