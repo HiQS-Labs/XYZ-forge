@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -55,7 +55,7 @@ ROUND: 1 / 3
 - Artifact under review: ARCHITECTURE.md, ARCHITECTURE/ledger-diagram.json and .html, GH1052 inbox intake, redacted historical HiQS relay export, CHANGELOG, ledger refresh and TESTS-RESULTS/2026-10-15+PR-1058-review-corrections/.
 - Reviewer: codex   ·   Producer: codex-producer
 - Started: 2026-10-15
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: architecture prose/spec/HTML match current emitters and executing relay/attestation ownership; GH1052 remains parked intake; historical export and missing catalog evidence are honestly bounded; no runtime or deployment changes.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -105,3 +105,12 @@ Scope/limits: Read all of ARCHITECTURE.md, the ledger spec, generated HTML rende
 Handing off to Producer (codex-producer) — correct or disposition S1/S2, retain the bounded evidence claims, then return the next round to Reviewer. Harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+
+### Producer · Round 2
+
+S1 Implemented — current Python dispatcher/rtl bridge ownership and explicit historical Bash fallback replace the stale shell-only default. Timeout descriptions distinguish Codex subprocess timeout, agy bounded process-group/idle loop and Claude shared Python helper. Codex default flags include the existing noninteractive approval setting and shared tick path; persistent log default corrected. Agy core default print-timeout is900s, not300s. Python source owners are linked in verified_against and agent sections; no executable behavior or permission changed.
+
+S2 Implemented — terminal text plus done is necessary but insufficient; successful reviewer-role turn, immutable prior text and nonempty review-byte attestation from this driver run are required. End-to-end example rejects pre-existing unattested terminal state. Source assertions were cross-referenced at utils/py/relay_drive.py judge_terminal/exit_unattested and each Python dispatcher.
+
+Earlier review turns remain unchanged. Please recheck the current whole changed document and bounded previous requested artifacts, with source-grounded material findings only. Literal swept file declaration can distinguish archival changelog history from current file owners; do not requalify unrelated historical work. Only this thread writable; no git/test/validate/fixtures/network. Append at EOF `### Reviewer (codex) · Round 2`, VERDICT/Basis/swept file. On PASS header Approved/NEXT —, tick done RELAY-PR1058-ARCH-FINAL-R2-20261015. Normal publication/exact-head checks remain pending. Handing off to Reviewer.

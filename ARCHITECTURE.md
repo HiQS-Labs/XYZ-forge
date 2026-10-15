@@ -13,6 +13,11 @@ verified_against:
   - relay-automation/codex-turn.sh
   - relay-automation/agy-turn.sh
   - relay-automation/poll.sh
+  - utils/py/relay_drive.py
+  - utils/py/codex-turn.py
+  - utils/py/agy-turn.py
+  - utils/py/claude-turn.py
+  - utils/py/rtl.py
   - bin/tick
   - utils/py/wave_reconcile.py
   - utils/releases-merge-resolve.sh
@@ -154,14 +159,14 @@ Where a behavior is only described in comments or operator notes, this doc says 
 There are five load-bearing layers:
 
 ```text
-relay-drive.sh
+relay-drive.sh -> utils/py/relay_drive.py (default)
   supervisor loop; reads tick + thread status, picks the active actor, invokes one shim
 
-codex-turn.sh / agy-turn.sh / claude-turn.sh
+codex-turn.sh / agy-turn.sh / claude-turn.sh -> matching utils/py/*-turn.py (default)
   per-agent dispatch shims; "is it my turn?", build prompt, run CLI, enforce containment
 
-relay-turn-lib.sh
-  shared safety core; allowlist, worktree isolation, timeout watchdog, scoped commit
+utils/py/rtl.py -> relay-turn-lib.sh
+  shared containment bridge/core; allowlist, worktree isolation, scoped commit
 
 RELAY-TURN (tick task)
   the turn pointer; claim / ping / release --to / done
@@ -170,8 +175,11 @@ relay-system/<date>/<slug>.md
   the thread file; STATUS and review blocks, but not the source of turn ownership
 ```
 
-Nobody imports anybody. The architecture is shell processes spawning shell processes, with `tick`
-projection and a Markdown thread file as the only shared state.
+The shell entry points default to their Python implementations when `XYZ_PYTHON` is unset or `1`
+and Python3.8+ is available. `XYZ_PYTHON=0` selects the historical inline Bash fallback; a missing
+or too-old Python interpreter also falls back with a warning. Python dispatchers import the shared
+`rtl` bridge and launch each agent CLI as a subprocess. The bridge still delegates containment to
+`relay-turn-lib.sh`; `tick` projection and a Markdown thread remain the shared coordination state.
 
 ## What Decides Turn Order
 
@@ -183,13 +191,17 @@ The driver reads `tick info <task>` and derives the current actor like this:
 - `status: open` with `handoff-to` -> current actor is `handoff-to`
 - anything else -> no live actor
 
-That logic lives in [relay-automation/relay-drive.sh](relay-automation/relay-drive.sh) and matches
+The default logic lives in [utils/py/relay_drive.py](utils/py/relay_drive.py), reached through
+[relay-automation/relay-drive.sh](relay-automation/relay-drive.sh), and matches
 the fields printed by [bin/tick](bin/tick).
 
-The thread file's `STATUS:` header is only the terminal signal:
+The thread file's `STATUS:` header signals terminal intent, not proof of approval:
 
-- `Approved` or `Closed` means "the relay should stop"
-- it does not decide whose turn is next
+- `Approved` or `Closed` plus a done token is necessary but insufficient for successful termination
+- the driver must observe a successful reviewer-role turn, preserve the prior review text, and
+  attest the nonempty added review bytes against the reviewed revision/artifact
+- pre-existing terminal text without an attestation from the current driver run is rejected
+- the header does not decide whose turn is next
 
 `relay-drive.sh` enforces agreement between the two:
 
@@ -214,7 +226,10 @@ Each headless turn follows the same pipeline:
    [agy-turn.sh:97](relay-automation/agy-turn.sh#L97),
    [codex-turn.sh:62](relay-automation/codex-turn.sh#L62),
    [claude-turn.sh:122](relay-automation/claude-turn.sh#L122).)
-5. The shim runs the model CLI under `rtl_run_bounded`, a sleep-then-`kill -9` watchdog.
+5. The executing Python shim runs the model CLI under its timeout handling: Codex uses
+   `subprocess.run(..., timeout=turn_timeout)`, agy uses its bounded process-group/idle loop, and
+   Claude uses the shared Python `rtl_run_bounded`. The historical Bash shims use the
+   sleep/kill watchdog in `relay-turn-lib.sh`.
 6. The shim calls `rtl_enforce`, which:
    - resets the repo if the agent committed during its turn
    - reverts off-allowlist tracked changes
@@ -226,12 +241,13 @@ Each headless turn follows the same pipeline:
 
 | Agent | Invocation built by the shim |
 |---|---|
-| Codex | `env -u OPENAI_API_KEY codex exec -s workspace-write "<prompt>"` by default |
-| agy | `agy --dangerously-skip-permissions --print-timeout 300s [--model ...] -p "<prompt>"` |
+| Codex | `env -u OPENAI_API_KEY codex exec -s workspace-write -c approval_policy=never --add-dir "<TICK_REPO_ROOT>/.tick" "<prompt>"` by default |
+| agy | `agy --dangerously-skip-permissions --print-timeout 900s [--model ...] -p "<prompt>"` by default |
 | Claude | `claude -p "<prompt>" --model claude-sonnet-4-6 --allowedTools "Bash,Read,Edit,Write" --permission-mode acceptEdits --output-format json --max-turns 12 --max-budget-usd 0.50` |
 
-Those defaults are configurable via environment variables in each shim, but the shape above is what
-the current code assembles.
+These core defaults come from the executing Python dispatchers; environment variables select
+models, flags and the wall-clock cap. Codex strips the API key from its subprocess environment
+unless explicitly allowed. The command text documents existing behavior; it changes no permissions.
 
 ## Containment Model
 
@@ -267,7 +283,10 @@ No shim pushes.
 
 ### 4. Timeout watchdog
 
-`rtl_run_bounded <seconds> <cmd...>` is the wall-clock guard used by every shim.
+Timeout ownership follows the executing lane: Python Codex uses `subprocess.run` with a timeout,
+Python agy uses process-group wall/idle bounds, and Python Claude uses the shared
+`utils/py/rtl.py::rtl_run_bounded`. Only the historical Bash fallback routes every shim through
+`relay-turn-lib.sh::rtl_run_bounded <seconds> <cmd...>`, its sleep/kill watchdog.
 
 - normal CLI failure -> returns the CLI's exit code
 - watchdog kill -> returns `7`
@@ -329,11 +348,12 @@ the trusted path. Verified against [bin/tick](bin/tick); detail in
 
 ### Codex shim
 
-Verified behavior from [relay-automation/codex-turn.sh](relay-automation/codex-turn.sh):
+Verified default behavior from [utils/py/codex-turn.py](utils/py/codex-turn.py), reached through
+[relay-automation/codex-turn.sh](relay-automation/codex-turn.sh):
 
 - strips `OPENAI_API_KEY` unless `CODEX_ALLOW_API_KEY=1`
-- defaults to `codex exec -s workspace-write`
-- logs to a temp file
+- defaults to `codex exec -s workspace-write -c approval_policy=never`, adding the shared `.tick` path
+- defaults to a persistent transcript under `relay-system/logs/<date>/` unless `CODEX_LOG` is set
 - does not capture token stats yet
 
 Operational note from code comments, not runtime enforcement:
@@ -342,7 +362,8 @@ Operational note from code comments, not runtime enforcement:
 
 ### agy shim
 
-Verified behavior from [relay-automation/agy-turn.sh](relay-automation/agy-turn.sh):
+Verified default behavior from [utils/py/agy-turn.py](utils/py/agy-turn.py), reached through
+[relay-automation/agy-turn.sh](relay-automation/agy-turn.sh):
 
 - runs `agy -p` headlessly with `--dangerously-skip-permissions`
 - pins `--print-timeout` to the same wall-clock limit used by the watchdog
@@ -356,7 +377,8 @@ Operational consequence:
 
 ### Claude shim
 
-Verified behavior from [relay-automation/claude-turn.sh](relay-automation/claude-turn.sh):
+Verified default behavior from [utils/py/claude-turn.py](utils/py/claude-turn.py), reached through
+[relay-automation/claude-turn.sh](relay-automation/claude-turn.sh):
 
 - pins the model, default `claude-sonnet-4-6`
 - sets `--allowedTools "Bash,Read,Edit,Write"`
@@ -377,14 +399,16 @@ relay-drive.sh reads tick info RELAY-TURN
 codex-turn.sh
   -> confirms RELAY_AGENT matches CODEX_AGENT
   -> builds the shared prompt
-  -> runs codex exec under rtl_run_bounded
+  -> default Python dispatcher runs codex exec under subprocess.run(timeout=...)
   -> codex edits the relay file and uses ./bin/tick to ping/release or done
   -> rtl_enforce reverts off-lane changes, stages only the allowlist, commits, no push
 
 relay-drive.sh
   -> re-reads RELAY-TURN
   -> if actor moved, continue
-  -> if token is done and file STATUS is terminal, stop
+  -> terminal STATUS + done requires this driver's successful reviewer-turn attestation
+  -> attest nonempty appended review bytes against reviewed revision/artifact, then stop
+  -> pre-existing terminal text or unattested approval escalates
 ```
 
 The key invariant is simple: the model writes the review state and moves the token; the harness owns
