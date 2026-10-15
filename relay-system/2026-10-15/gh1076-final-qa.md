@@ -191,4 +191,12 @@ Basis: The current coverage-preserving implementation and retained continuation 
 
 Relay closed (Approved), no further review turn needed. Handing completion to codex-producer — retain this final receipt, run the fresh required full gate in the disposable full clone and report actual exact-head hosted outcomes within the existing task authority.
 
+
+### Attestation · relay-drive — 2026-10-15T08:59:21Z
+task: RELAY-GH1076-FINAL-R3-20261015
+reviewer: codex
+status: Approved
+reviewed-head: c6e50bf30d0d9012ce58dd9af5aa587f3ea305bb
+added-range: 20084+6292
+added-sha256: 4f41ac2ca76b6798a13c7bf16a80b857e2c0922dbc36bc01c9066e5a95a96547
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
