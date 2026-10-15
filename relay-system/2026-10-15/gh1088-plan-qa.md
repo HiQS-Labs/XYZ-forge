@@ -99,4 +99,12 @@ Evidence scope: Verify-tier direct source review. `list_projects` returned no in
 
 relay closed (Approved), no further turn needed. Producer may proceed with the approved plan; implementation still requires final QA.
 
+
+### Attestation · relay-drive — 2026-10-15T22:37:49Z
+task: RELAY-gh1088-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: f9363cf289a45d5d26d3608805c755817ccf3095
+added-range: 7030+4856
+added-sha256: 8529a42142ef3b8f5370eb6ef0f56c15da98d8c2db2e720c475a1fa988a78bd7
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
