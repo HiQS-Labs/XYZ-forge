@@ -685,6 +685,7 @@ def content_receipt_matches(repo_root, entry, meta):
                 or type(verdict.get("rc")) is not int or verdict["rc"] != 0
                 or any(key in entry for key in ("result", "status", "rc"))
                 or entry.get("pr") != meta.get("number") or type(entry.get("pr")) is not int
+                or ("pr_number" in entry and entry["pr_number"] != entry.get("pr"))
                 or entry.get("landing_commit") != tested or entry.get("gate") != CONTENT_GATE):
             return False
         base, source = content_source_identity(repo_root, meta, tested)

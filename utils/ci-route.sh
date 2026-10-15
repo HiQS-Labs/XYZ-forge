@@ -519,7 +519,7 @@ else
 fi
 
 # GH-1076: hosted selection belongs to this policy, separate from local tier/width.
-# Medium deliberately remains full. Consumers dispatch only their fixed commands.
+# Medium is full unless the configured content candidate also passes the wave scope/proof checks.
 hosted_gate=full
 profile_enabled=false
 if _ci_enabled="$(PYTHONPATH="$ROOT/utils/py${PYTHONPATH:+:$PYTHONPATH}" python3 -c \

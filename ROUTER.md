@@ -131,13 +131,14 @@ are in gh306. No test retirement or new suite/case is authorized here.
 
 ### Router decision and consumer compatibility
 
-The existing push/PR and deliberate-full key/value outputs add `policy_version=ci-route@1` and
-`hosted_gate=small|full`. The version identifies this decision contract; the tested commit identifies
-its exact policy content. Local readers keep consuming the existing route/tier/area fields.
-The wave consumer recognizes a unique supported version/gate, checks Small is consistent with tier1,
-and dispatches only the existing fixed Small/full commands. Missing, unknown, duplicate or malformed
-metadata selects **full**, including a new consumer paired with an older router. This is not a new
-runner, guard stage or receipt format. Main's explicit full command is unchanged.
+The push/PR key/value output identifies `policy_version=ci-route@1` and the supported
+`hosted_gate=small|full|skills-army-content@1` decision. The profile is a path candidate only;
+its resolved setting and complete raw Git scope must also pass the wave consumer. The version
+identifies the contract; the tested commit identifies its exact content. Local readers continue
+using their existing route/tier fields. Unsupported/missing/duplicate/malformed metadata selects
+full, including a new consumer paired with an older router. Commands are fixed arrays; classifier
+text is never evaluated as shell. Main's explicit full command is unchanged. The bounded profile's
+configuration and versioned two-phase receipt contract are specified below.
 
 Machine-consumed text must follow its consumers, not its suffix. GH988/GH989 added/renamed a
 skills-army package Markdown payload; the existing gh620 publisher pin failed in hosted run37723297290
@@ -147,8 +148,8 @@ documentation gate alongside area coverage. No suite is added. Existing
 safety text/full rules remain. The bounded reverse audit additionally follows package sync into the canonical drift checker and
 scans all registered suite sources for package-wide consumers. The existing area now includes the
 already registered gh660 drift, path-integrity Markdown-link and gh788 interpreter-pattern suites;
-its eight existing shell suites add coverage locally. Small, the full registry and hosted Medium/full
-are unchanged. This is a bounded consumer closure, not a claim that arbitrary shared-publisher,
+its eight existing shell suites add coverage locally. Small and the full registry are unchanged;
+Medium remains full unless the bounded configured qualification below is proved. This is a bounded consumer closure, not a claim that arbitrary shared-publisher,
 all-device sync or probabilistic app behavior is fully mapped. Changes to publisher manifests and new consumers must
 be audited before any narrower route is accepted; unknown/shared/global/safety scope keeps full.
 
@@ -199,7 +200,8 @@ base's wave receipts. Until resolved and independently verified, that proposed b
 be evidence authority. Its active owner must not be duplicated. A single-landing selection study can
 proceed without depending on that unsafe state; broader automated batching cannot be called ready.
 
-Medium stays full. A reduced pilot requires an audited non-core scope, deduplicated existing
+Medium defaults to full. Noel approved the bounded configurable profile below; any further
+coverage reduction requires an audited non-core scope, deduplicated existing
 Small+area+known-consumer coverage plus mandatory non-shell stages, reconstructible expected selection
 at tested policy, retained attributed historical full failures, receipt-version coexistence and
 separately reviewed policy/workflow/protection compatibility. A relevant missed failure, unknown
