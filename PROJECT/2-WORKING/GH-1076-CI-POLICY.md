@@ -17,7 +17,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA Approved round2/3; first PARKED seed-delivery review retained. Claude advisory complete, Agy partial at300s cap. Baseline started at f974fcee after GH1064 gate finished. | Implement the approved coverage-preserving scope; retain full while batch/Medium evidence remains insufficient. |
+| Configurable optimization pivot plan Approved; original plan3/3 FAIL and corrected-layout supplemental PASS retained. | Implement and verify existing-owner ci.optimized; keep primary activation coordinated and use the approved extra final QA. |
 
 ## Table of contents
 
@@ -429,7 +429,7 @@ extra final QA remains unspent. Procedural discretion never waives actual Critic
 
 ### Configuration recon and precise effect
 
-Actual existing owner: utils/py/device_config.py::get_device_config_path, load_local_device_config_
+Actual existing owner: utils/py/device_config.py::get_device_config_path, load_device_config_
 diagnostic and resolve_device_block. Default path ~/.xyz/device_config.json; override existing
 XYZ_DEVICE_CONFIG_PATH. On this Mac the actual file exists at /Users/noelsaw/.xyz/device_config.json,
 not a symlink, no path override or ci block is set. No values/secrets are copied. Current block
@@ -498,3 +498,10 @@ locally. Primary-wide enablement is a parent-coordinated action, not inferred fr
    full pre-push gate once at exact source in the disposable helper, push ONLY1079 through ordinary
    access and verify actual natural exact-head hosted outcomes. No force/bypass/new identities on
    access denial. Publish outcomes/settings scope/disable procedure to1076/1079; no merge or cleanup.
+
+
+Implementation detail: @2 uses nested qualification.result/rc, never root result/status/rc, so even
+older generic PR receipt readers cannot treat it as an ordinary passing PR receipt. The new reader
+also reserves unsupported qualification namespaces. Agent instruction manifests (SKILL/AGENTS/CLAUDE)
+and requirements text are conservatively excluded from the content profile because their metadata
+can affect operational permissions/dependencies. Existing area suites and Small/full lists are unchanged.

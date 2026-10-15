@@ -2,6 +2,11 @@
 
 ## 2026-10-15 — One existing CI qualification policy owner (GH-1076)
 
+- GH-1076 / PR1079: add strict `ci.optimized` resolution through existing device settings and a
+  bounded Small-plus-area qualification profile with separate lossless phase receipts. Invalid or
+  unproved scope retains full; exact-main full is unchanged. Hosted opt-in is an explicit wave env
+  contract, independent of the Mac file. Historical QA failures/receipts remain retained.
+
 The router now emits a versioned hosted Small/full decision, consumed by the existing wave
 selector with full fallback for missing, malformed, inconsistent or unsupported metadata.
 Canonical explanation lives in ROUTER; AGENTS, SOP and CI recovery guidance point there.

@@ -33,6 +33,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       PYTHONDONTWRITEBYTECODE: '1'
+      # Native environment tier of device_config ci.optimized; set the repo variable to 0 to disable.
+      XYZ_CI_OPTIMIZED: ${{ vars.XYZ_CI_OPTIMIZED || '1' }}
     steps:
       - uses: actions/checkout@v7
         with:

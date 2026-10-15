@@ -117,7 +117,7 @@ validation and publication stay in their existing consumers; no second policy ma
 | Boundary | Selection and evidence |
 |---|---|
 | Local push / `validate.sh --auto` | Router tier1 uses the docs gate; tier2 uses its registered areas; unknown/empty/unverifiable ranges, unclaimed test edits, kernel/gate/containment/safety inputs use full. Local runs are self-checks. |
-| Hosted development landing | Router `hosted_gate=small` uses the existing sequential Small list plus PDDA, Python and identity stages. Medium and Large use the full registry sequentially. |
+| Hosted development landing | Router `hosted_gate=small` uses the existing sequential Small list plus PDDA, Python and identity stages. Medium defaults to full; the configured, strictly proved skills-army-content@1 profile uses existing Small then area commands. Large remains full. |
 | Main promotion | Full sequential hosted macOS for the **actual exact main commit**, regardless of range classification. A local PASS, ancestor receipt or equal tree does not qualify main. |
 | PR feedback | Existing vendored-smoke, reconciliation-wiring, frozen-twin and vendored checks remain required by repository policy. A workflow declaration is not an actual run. |
 | Ubuntu canary | Advisory portability signal on development push/manual dispatch; its job conclusion and skipped steps must be disclosed. Its inner PR Fast Gate predicate is unreachable under the current enclosing job predicate; do not count it as active PR selective coverage. |
@@ -293,3 +293,36 @@ no-ops here by design (it would delete `add`-parked rows). Pinned by `test/gh69-
 - If the task is blocked by a failing test, unexpected error, or disputed requirement, invoke the `sanity-check` skill (`skills/1-hourly/sanity-check/SKILL.md`) to establish whether the obstacle must block the goal before spending hours debugging or repairing it.
 - If the task is about **managing skills for the system** — adding a skill to the machine-wide collection, deploying/refreshing/removing it across the configured app targets (`targets.json`, machine-local), or asking what is deployed — the mechanism is the `skills-army-hq` skill (`skills/3-weekly/skills-army-hq/SKILL.md`). Forge authors its own skills in `skills/`, Skills Army HQ included; XYZ-skills-army-mini and the other standalone repos are published children (`push-downstream`, GH-955). Intake accepts any local folder. The durable collection lives wherever `XYZ_SKILLS_ROOT` points (machine-local, never committed; falls back to `~/git-pulse-sync/Deployed Skills`), and only `intake.py` / `sync.py` mutate it or the app symlinks. Never hand-copy a skill folder into an app's skills directory.
 - Issue-first SOP: any change beyond a 2–3 line fix (and every project plan) opens a GitHub issue *first*, then gets a pointer doc named after the issue at `PROJECT/1-INBOX/GH-<number>-VERY-SHORT-DESC.md` — e.g. `GH-1234-SHOWME-COMMAND.md` — and that capture is parked in the roadmap ledger queue immediately via `releases roadmap add` (format + lifecycle owned by `PROJECT/PDDA.md` → "GitHub issue intake"), following the normal `1-INBOX` → `2-WORKING` flow. Genuinely trivial edits (≤2–3 line fixes, typos, path repoints, doc-only one-liners) are exempt and commit directly.
+
+
+### Configurable bounded Medium qualification (GH1076)
+
+The existing device configuration owner reads `ci.optimized` from `~/.xyz/device_config.json`, or
+the existing `XYZ_DEVICE_CONFIG_PATH` override. `XYZ_CI_OPTIMIZED=0|1|false|true` has precedence over
+the file; the library default is false. Invalid JSON/block/key/type/override fails to full, even if
+another tier would mask the error. Inspect with `python3 utils/py/device_config.py --ci`.
+
+The switch controls wave qualification, including local `wave_reconcile --qualify`; explicit full
+commands, `ci-local.sh`, existing local pre-push tiers and exact-main macOS/full are unchanged.
+The only optimized Medium profile is `skills-army-content@1`: exactly one merged development PR
+whose actual tested snapshot is its landing, with verified source/base and only modified regular
+tracked top-level package `.md`/`.txt` data. Agent manifests, requirements, adds/deletes/renames, mode
+changes, symlinks, shared/code/mixed/unknown/high-risk inputs retain full. Name-only classification
+is only a candidate; the wave verifies the complete raw Git diff.
+
+Two fixed existing sequential commands run separately: Small (including PDDA/Python/envelope), then
+skills-army area (including its own envelope). Their original streams, IDs, hashes, lists and counts
+remain separate in a two-row container at the existing `validation.jsonl` path. Typed @2 provenance
+uses a nested outcome; no synthetic combined run or count is created. Strict validation rejects
+failed stages, omissions, retries, extra stages, wrong identities or policy/environment mismatch.
+Incomplete proof after otherwise successful commands gets one full fallback on the unchanged clone;
+a real test failure or clone drift stops qualification. The original rejected proof is retained.
+Historical @1 semantics remain. Off/error/incompatible @2 cannot suppress required full qualification.
+
+Hosted runners do not read the Mac file. The wave workflow explicitly maps repository variable
+`XYZ_CI_OPTIMIZED` into the existing environment tier, defaulting to `1` when unset. Set that variable
+to `0` to restore Medium full for future hosted jobs; removing it returns the workflow's explicit
+on default. Local off is `ci.optimized: false` (or environment `XYZ_CI_OPTIMIZED=0`). Changing the Mac
+file alone cannot switch hosted jobs. This workflow contract becomes live only after this PR lands;
+a PR smoke pass is not an actual optimized qualification. Primary-checkout activation is coordinated
+with the merge owner; isolated verification must not alter the shared Mac file.

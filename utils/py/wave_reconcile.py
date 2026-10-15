@@ -13,6 +13,7 @@ import hashlib
 import json
 import time
 import os
+import platform
 import re
 import shutil
 import sqlite3
@@ -465,6 +466,92 @@ QUALIFICATION_GATE = "validate.sh --sequential"
 # through the Small run. Its receipt records the list it ran, replayed against the tested commit.
 SMALL_GATE = "validate.sh --sequential --subsystem small"
 SMALL_NON_SUITE = ("tier2:pdda", "python:test_python_layer.py")
+CONTENT_PROFILE = "skills-army-content@1"
+CONTENT_SCHEMA = "wave-qualification@2"
+CONTENT_AREA_GATE = "validate.sh --sequential --subsystem skills-army-hq"
+CONTENT_GATE = SMALL_GATE + " && ./" + CONTENT_AREA_GATE
+
+
+def ci_optimization_enabled():
+    try:
+        from device_config import resolve_ci_optimization
+        cfg, error = resolve_ci_optimization()
+        return not error and cfg.get("optimized") is True
+    except (ImportError, OSError, ValueError, TypeError):
+        return False  # Partial/older installations cannot opt into reduced qualification.
+
+
+def content_profile_phases(repo_root, commit):
+    """Read both existing registries at the true tested revision; never copy their suite map."""
+    source = subprocess.check_output(["git", "show", f"{commit}:utils/ci-route.sh"],
+                                     cwd=repo_root, text=True)
+    area = re.findall(r'^SUBSYSTEM_TESTS_skills_army_hq="([^"]*)"$', source, re.M)
+    small = small_suites_at(repo_root, commit)
+    if (len(area) != 1 or not area[0].split() or len(set(area[0].split())) != len(area[0].split())
+            or set(small) & set(area[0].split())):
+        raise ValueError("missing, duplicate or overlapping profile registry")
+    return [("small", SMALL_GATE, small, SMALL_NON_SUITE),
+            ("skills-army-hq", CONTENT_AREA_GATE, area[0].split(), ())]
+
+
+def content_landing_base(repo_root, tested):
+    """Only modified regular top-level package text; no new payload/mode/rename contract."""
+    base = subprocess.check_output(["git", "rev-parse", f"{tested}^1"], cwd=repo_root, text=True).strip()
+    raw = subprocess.check_output(["git", "diff", "--raw", "--no-renames", "--abbrev=40", "-z",
+                                   base, tested], cwd=repo_root).decode("utf-8").split("\0")
+    if raw[-1] != "" or len(raw) < 3 or len(raw) % 2 != 1:
+        raise ValueError("missing or malformed complete profile diff")
+    for header, path in zip(raw[:-1:2], raw[1:-1:2]):
+        parts = header.split()
+        if (len(parts) != 5 or parts[0] not in (":100644", ":100755")
+                or parts[0][1:] != parts[1] or parts[4] != "M"
+                or Path(path).name in ("SKILL.md", "AGENTS.md", "CLAUDE.md")
+                or (Path(path).name.startswith("requirements") and path.endswith(".txt"))
+                or not re.fullmatch(r"skills/3-weekly/skills-army-hq/[^/\n]+\.(?:md|txt)", path)):
+            raise ValueError("profile scope includes unknown, mixed, added or high-risk files")
+    return base
+
+
+def content_source_identity(repo_root, meta, tested):
+    source = meta.get("headRefOid")
+    if (meta.get("state") != "MERGED" or meta.get("baseRefName") != "development"
+            or meta.get("artifactKind", "pr") != "pr" or type(meta.get("number")) is not int or meta["number"] <= 0
+            or (meta.get("mergeCommit") or {}).get("oid") != tested
+            or not isinstance(source, str) or not re.fullmatch(r"[0-9a-f]{40}", source)
+            or subprocess.run(["git", "merge-base", "--is-ancestor", source, tested],
+                              cwd=repo_root, capture_output=True).returncode):
+        raise ValueError("profile requires one exact merged PR/source/landing snapshot")
+    return content_landing_base(repo_root, tested), source
+
+
+def content_policy_revision(repo_root, commit):
+    source = subprocess.check_output(["git", "show", f"{commit}:utils/ci-route.sh"],
+                                     cwd=repo_root, text=True)
+    if re.findall(r'^CONTENT_PROFILE="([^"]*)"$', source, re.M) != [CONTENT_PROFILE]:
+        raise ValueError("unsupported historical content profile")
+    return subprocess.check_output(["git", "rev-parse", f"{commit}:utils/ci-route.sh"],
+                                   cwd=repo_root, text=True).strip()
+
+
+def qualification_environment(repo_root, commit, env=None):
+    """Receipt identity only, not a new runner/stage or a cross-environment verdict cache."""
+    tools = {}
+    for tool in ("git", "bash", "node", "npm", "shellcheck"):
+        tools[tool] = subprocess.check_output([tool, "--version"], cwd=repo_root, env=env,
+                                             text=True, timeout=30).strip()
+    python = subprocess.check_output(["python3", "-c",
+        "import sys,json,importlib.metadata as m;print(json.dumps([sys.version,sys.executable,"
+        "sorted((d.metadata['Name'],d.version) for d in m.distributions())]))"],
+        cwd=repo_root, env=env, text=True, timeout=30)
+    names = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", commit],
+                                    cwd=repo_root, text=True).splitlines()
+    dependencies = {name: subprocess.check_output(["git", "rev-parse", f"{commit}:{name}"],
+                    cwd=repo_root, text=True).strip() for name in names
+                    if Path(name).name in ("package-lock.json", "requirements.txt", "requirements-dev.txt",
+                                           "pyproject.toml", "pytest.ini")}
+    return dict(system=platform.system(), release=platform.release(), version=platform.version(),
+                macos=platform.mac_ver()[0], machine=platform.machine(),
+                python=json.loads(python), tools=tools, dependencies=dependencies)
 
 
 def small_suites_at(repo_root, commit):
@@ -478,7 +565,7 @@ def small_suites_at(repo_root, commit):
     return found[0].split()
 
 
-def qualification_summary(raw, tested_sha, expected=None):
+def qualification_summary(raw, tested_sha, expected=None, non_suite=SMALL_NON_SUITE, strict=False):
     """Require the existing runner's complete, unquarantined sequential evidence.
 
     expected=None is the full registry (tier 3). A list is the Small run (GH-831 D5): tier 2, its
@@ -506,13 +593,25 @@ def qualification_summary(raw, tested_sha, expected=None):
         extra = {row.get("name") for row in suites if row.get("lane") == "non-suite"}
         identity = [row for row in rows if row.get("event") == "stage" and row.get("name") == "envelope-assert"]
         if (len(set(expected)) != len(expected) or len(set(names)) != len(names)
-                or sorted(names) != sorted(expected) or not set(SMALL_NON_SUITE) <= extra
+                or sorted(names) != sorted(expected) or not set(non_suite) <= extra
                 or any(type(row.get("rc")) is not int or row["rc"] != 0 for row in suites + identity)
                 or len(identity) != 1 or summary.get("failed") != 0
-                or summary.get("total") != len(expected) + 3 or summary.get("passed") != summary["total"]
+                or summary.get("total") != len(expected) + len(non_suite) + 1 or summary.get("passed") != summary["total"]
                 or summary.get("envelope_rc") != "0" or summary.get("suite_events_match") != "yes"
                 or str(summary.get("run_set")) != str(len(expected))):
             raise ValueError("Small-run telemetry is failed, incomplete or not the expected list")
+        if strict:
+            extras = [row.get("name") for row in suites if row.get("lane") == "non-suite"]
+            if (type(start.get("width")) is not int or start["width"] != 1
+                    or sorted(extras) != sorted(non_suite) or len(suites) != len(expected) + len(non_suite)
+                    or summary.get("envelope_drift") != "none"
+                    or str(summary.get("registered")) != str(registered)
+                    or str(summary.get("suite_events")) != str(len(suites))
+                    or any(type(row.get("skip_lines", 0)) is not int or row.get("skip_lines", 0) != 0
+                           for row in suites)
+                    or any(row.get("event") == "retry" for row in rows)
+                    or any("rc" in row and (type(row["rc"]) is not int or row["rc"] != 0) for row in rows)):
+                raise ValueError("profile phase contains extra stages, retries, omissions or drift")
         return summary
     if (len(sequential) != registered or len({row.get("name") for row in sequential}) != registered
             or any(type(row.get("rc")) is not int or row["rc"] != 0 for row in suites)
@@ -530,6 +629,8 @@ def qualification_summary(raw, tested_sha, expected=None):
 
 def qualification_receipt_matches(repo_root, entry, meta):
     """An integrated snapshot passed; never claim the historical merge tree ran."""
+    if entry.get("schema_version") == CONTENT_SCHEMA:
+        return content_receipt_matches(repo_root, entry, meta)
     tested, landing = entry.get("tested_commit"), (meta.get("mergeCommit") or {}).get("oid")
     if (entry.get("schema_version") != QUALIFICATION_SCHEMA
             or not isinstance(tested, str) or not re.fullmatch(r"[0-9a-f]{40}", tested)
@@ -571,6 +672,64 @@ def qualification_receipt_matches(repo_root, entry, meta):
     return True
 
 
+def content_receipt_matches(repo_root, entry, meta):
+    """No generic PASS transfer: one true landing, two original runs and matching policy/runtime."""
+    try:
+        tested = entry.get("tested_commit")
+        verdict = entry.get("qualification")
+        if (entry.get("schema_version") != CONTENT_SCHEMA or not ci_optimization_enabled()
+                or entry.get("artifact_kind") != "pr" or entry.get("configuration") != {"optimized": True}
+                or entry.get("profile") != CONTENT_PROFILE
+                or not isinstance(tested, str) or not re.fullmatch(r"[0-9a-f]{40}", tested)
+                or not isinstance(verdict, dict) or verdict.get("result") != "pass"
+                or type(verdict.get("rc")) is not int or verdict["rc"] != 0
+                or any(key in entry for key in ("result", "status", "rc"))
+                or entry.get("pr") != meta.get("number") or type(entry.get("pr")) is not int
+                or entry.get("landing_commit") != tested or entry.get("gate") != CONTENT_GATE):
+            return False
+        base, source = content_source_identity(repo_root, meta, tested)
+        revision = content_policy_revision(repo_root, tested)
+        if (entry.get("base_commit") != base or entry.get("source_head") != source
+                or entry.get("policy_revision") != revision
+                or content_policy_revision(repo_root, "HEAD") != revision
+                or entry.get("environment") != qualification_environment(repo_root, "HEAD")
+                or subprocess.run(["git", "merge-base", "--is-ancestor", tested, "HEAD"],
+                                  cwd=repo_root, capture_output=True).returncode):
+            return False
+        telemetry = entry.get("telemetry", "")
+        if not isinstance(telemetry, str) or not re.fullmatch(QUALIFICATION_PATH, telemetry):
+            return False
+        path = Path(repo_root).resolve() / telemetry
+        if path.resolve() != path or f"wave-{tested}/validation.jsonl" not in telemetry:
+            return False
+        raw = path.read_bytes()
+        if hashlib.sha256(raw).hexdigest() != entry.get("telemetry_sha256"):
+            return False
+        bundle = [json.loads(line) for line in raw.splitlines() if line.strip()]
+        phases = entry.get("phases")
+        specs = content_profile_phases(repo_root, tested)
+        if not isinstance(phases, list) or len(phases) != 2 or len(bundle) != 2:
+            return False
+        runs = []
+        for row, phase, (name, gate, suites, extra) in zip(bundle, phases, specs):
+            if (not isinstance(row, dict) or set(row) != {"phase", "telemetry_utf8", "telemetry_sha256"}
+                    or not isinstance(phase, dict) or row["phase"] != name or phase.get("phase") != name
+                    or not isinstance(row["telemetry_utf8"], str) or phase.get("gate") != gate
+                    or phase.get("suites") != suites):
+                return False
+            stream = row["telemetry_utf8"].encode("utf-8")
+            digest = hashlib.sha256(stream).hexdigest()
+            summary = qualification_summary(stream, tested, suites, extra, strict=True)
+            if (digest != row["telemetry_sha256"] or digest != phase.get("telemetry_sha256")
+                    or any(phase.get(k) != summary[k] for k in ("run", "passed", "total"))
+                    or not re.fullmatch(re.escape(tested[:9]) + r"-\d+", summary["run"])):
+                return False
+            runs.append(summary["run"])
+        return len(set(runs)) == 2
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError, subprocess.SubprocessError):
+        return False
+
+
 def committed_qualifications(repo_root):
     """Only bot-committed completion receipts can suppress a replay or recover a lost event."""
     paths = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", "HEAD", "--",
@@ -585,7 +744,7 @@ def committed_qualifications(repo_root):
                 entry = json.loads(line)
             except ValueError:
                 continue
-            if isinstance(entry, dict) and entry.get("schema_version") == QUALIFICATION_SCHEMA:
+            if isinstance(entry, dict) and entry.get("schema_version") in (QUALIFICATION_SCHEMA, CONTENT_SCHEMA):
                 found.append(entry)
     return found
 
@@ -613,14 +772,25 @@ def select_qualification_gate(clone, metas, env):
         version = re.findall(r"^policy_version=(.*)$", routed.stdout, re.M)
         hosted = re.findall(r"^hosted_gate=(.*)$", routed.stdout, re.M)
         if (routed.returncode or version != ["ci-route@1"] or len(tier) != 1
-                or len(hosted) != 1 or hosted[0] not in ("small", "full")):
+                or len(hosted) != 1 or hosted[0] not in ("small", "full", CONTENT_PROFILE)):
             return QUALIFICATION_GATE, None, "unsupported or malformed classifier decision"
+        if hosted == [CONTENT_PROFILE]:
+            fields = {key: re.findall(r"^" + key + r"=(.*)$", routed.stdout, re.M)
+                      for key in ("profile", "profile_enabled", "profile_candidate")}
+            if (tier != ["2"] or fields != {"profile": [CONTENT_PROFILE], "profile_enabled": ["true"],
+                    "profile_candidate": ["true"]} or len(metas) != 1):
+                return QUALIFICATION_GATE, None, "incomplete profile policy or multiple landings"
+            tested = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=clone, text=True).strip()
+            content_source_identity(clone, metas[0], tested)
+            content_policy_revision(clone, tested)
+            content_profile_phases(clone, tested)
+            return CONTENT_GATE, None, CONTENT_PROFILE
         if hosted[0] != "small":
             return QUALIFICATION_GATE, None, f"policy {version[0]}: tier {tier[0]}"
         if tier != ["1"]:
             return QUALIFICATION_GATE, None, "inconsistent Small classifier decision"
         return SMALL_GATE, small_suites_at(clone, "HEAD"), "tier 1"
-    except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError) as exc:
+    except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError, UnicodeError) as exc:
         return QUALIFICATION_GATE, None, f"classification failed: {exc}"
 
 
@@ -650,7 +820,8 @@ def qualify_landings(repo_root, metas, journal):
         # Reuse the harness environment contract, then isolate Git and runner controls.
         env = {k: v for k, v in gate_env().items()
                if not k.startswith(("GIT_", "RT_", "XYZ_VALIDATE_", "PYTEST_"))
-               and k not in ("XYZ_HARNESS_DB", "PYTHONPATH", "PYTHONHOME")}
+               and k not in ("XYZ_HARNESS_DB", "PYTHONPATH", "PYTHONHOME",
+                              "XYZ_CI_OPTIMIZED", "XYZ_DEVICE_CONFIG_PATH")}
         config = scratch / "gitconfig"
         config.write_text('[user]\nname = Qualification Fixture\nemail = qualification@example.invalid\n'
                           '[init]\ndefaultBranch = main\n')
@@ -675,23 +846,66 @@ def qualify_landings(repo_root, metas, journal):
             before_config = command(["git", "config", "--local", "--list"], True).stdout
             command(["python3", "-c", "import pytest"])
             command(["npm", "ci"])
-            gate, expected, reason = select_qualification_gate(clone, pending, env)
+            routing_env = dict(env)
+            for key in ("XYZ_CI_OPTIMIZED", "XYZ_DEVICE_CONFIG_PATH"):
+                if key in os.environ:
+                    routing_env[key] = os.environ[key]
+            gate, expected, reason = select_qualification_gate(clone, pending, routing_env)
+            rejected_profile = None
+            streams = []
+            profile_identity = None
+            if gate == CONTENT_GATE:
+                try:
+                    base, source_head = content_source_identity(clone, pending[0], tested)
+                    policy_revision = content_policy_revision(clone, tested)
+                    environment = qualification_environment(clone, tested, env)
+                    profile_identity = dict(base_commit=base, source_head=source_head,
+                                            policy_revision=policy_revision, environment=environment)
+                except (OSError, ValueError, subprocess.SubprocessError) as exc:
+                    rejected_profile = dict(reason=str(exc), streams=[])
+                    gate, expected = QUALIFICATION_GATE, None
+                    reason = "profile identity/environment unavailable; full fallback"
             log(f"Qualifying {len(pending)} landing(s) in integrated snapshot {tested} with "
                 f"`{gate}` ({reason})")
-            validation = command(["bash", *gate.split()])
-            if (command(["git", "rev-parse", "HEAD"], True).stdout.strip() != tested
-                    or command(["git", "status", "--porcelain"], True).stdout.strip()
-                    or command(["git", "config", "--local", "--list"], True).stdout != before_config):
-                die("Qualification clone identity/content changed under the suite", code=6)
-            # Suites may launch nested validator probes. Bind proof to the exact
-            # process we launched, not another passing run in the telemetry directory.
-            files = list(telemetry.glob(f"validate-sequential-*-{validation.pgid}.jsonl"))
-            if len(files) != 1:
-                die("Qualification requires exactly one retained validation run", code=6)
-            raw = files[0].read_bytes()
-            summary = qualification_summary(raw, tested, expected)
-            if summary['run'] != f"{tested[:9]}-{validation.pgid}":
-                die("Qualification telemetry does not identify the launched validation process", code=6)
+
+            def run_phase(name, phase_gate, suites, extras, strict=False):
+                validation = command(["bash", *phase_gate.split()])
+                if (command(["git", "rev-parse", "HEAD"], True).stdout.strip() != tested
+                        or command(["git", "status", "--porcelain"], True).stdout.strip()
+                        or command(["git", "config", "--local", "--list"], True).stdout != before_config):
+                    die("Qualification clone identity/content changed under the suite", code=6)
+                files = list(telemetry.glob(f"validate-sequential-*-{validation.pgid}.jsonl"))
+                if len(files) != 1:
+                    raise ValueError("Qualification requires exactly one retained validation run")
+                stream = files[0].read_bytes()
+                row = dict(phase=name, telemetry_utf8=stream.decode("utf-8"),
+                           telemetry_sha256=hashlib.sha256(stream).hexdigest())
+                streams.append(row)
+                result = qualification_summary(stream, tested, suites, extras, strict)
+                if result['run'] != f"{tested[:9]}-{validation.pgid}":
+                    raise ValueError("Qualification telemetry does not identify the launched process")
+                return dict(phase=name, gate=phase_gate, suites=suites,
+                            telemetry_sha256=row["telemetry_sha256"],
+                            **{k: result[k] for k in ("run", "passed", "total")}), stream, result
+
+            if gate == CONTENT_GATE:
+                try:
+                    phases = []
+                    for spec in content_profile_phases(clone, tested):
+                        phase, _, _ = run_phase(*spec, strict=True)
+                        phases.append(phase)
+                    if (len({p["run"] for p in phases}) != 2
+                            or qualification_environment(clone, tested, env) != profile_identity["environment"]):
+                        raise ValueError("profile run/environment identity changed between phases")
+                    raw = ("".join(json.dumps(row, sort_keys=True) + "\n" for row in streams)).encode("utf-8")
+                except (ValueError, UnicodeError) as exc:
+                    # A real nonzero gate/identity failure still stops above. Incomplete proof
+                    # after successful commands instead gets ONE full fallback on the clean clone.
+                    rejected_profile = dict(reason=str(exc), streams=list(streams))
+                    log(f"Profile proof refused ({exc}); running the full gate")
+                    gate, expected = QUALIFICATION_GATE, None
+            if gate != CONTENT_GATE:
+                _, raw, summary = run_phase("validation", gate, expected, SMALL_NON_SUITE)
         except (subprocess.SubprocessError, OSError, ValueError) as exc:
             die(f"Qualification failed; no receipt produced: {exc}", code=6)
     if subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip() != tested:
@@ -708,14 +922,22 @@ def qualify_landings(repo_root, metas, journal):
     telemetry_path.write_bytes(raw)
     entries = []
     for meta in pending:
-        entry = dict(schema_version=QUALIFICATION_SCHEMA, artifact_kind=meta.get("artifactKind", "pr"),
-                     tested_commit=tested, landing_commit=meta["mergeCommit"]["oid"], result="pass", rc=0,
-                     gate=gate, timestamp=now.isoformat(),
+        entry = dict(artifact_kind=meta.get("artifactKind", "pr"), tested_commit=tested,
+                     landing_commit=meta["mergeCommit"]["oid"], gate=gate, timestamp=now.isoformat(),
                      telemetry=str(telemetry_path.relative_to(repo_root)),
-                     telemetry_sha256=hashlib.sha256(raw).hexdigest(), passed=summary["passed"],
-                     total=summary["total"])
-        if expected is not None:
-            entry.update(tier=2, suites=expected)
+                     telemetry_sha256=hashlib.sha256(raw).hexdigest())
+        if gate == CONTENT_GATE:
+            # Nested outcome deliberately cannot pass even an older generic PR receipt reader.
+            entry.update(schema_version=CONTENT_SCHEMA, profile=CONTENT_PROFILE,
+                         qualification=dict(result="pass", rc=0), configuration=dict(optimized=True),
+                         phases=phases, **profile_identity)
+        else:
+            entry.update(schema_version=QUALIFICATION_SCHEMA, result="pass", rc=0,
+                         passed=summary["passed"], total=summary["total"])
+            if expected is not None:
+                entry.update(tier=2, suites=expected)
+            if rejected_profile is not None:
+                entry["rejected_profile"] = rejected_profile
         if meta.get("artifactKind") != "commit":
             entry["pr"] = meta["number"]
         if os.environ.get("GITHUB_ACTIONS") == "true":
@@ -867,6 +1089,9 @@ def validate_pre_merge_receipts(repo_root, head_sha, pr_num=None):
                     continue
                 if not isinstance(entry, dict):
                     continue
+                schema = str(entry.get("schema_version", ""))
+                if schema.startswith("wave-qualification@") and schema != QUALIFICATION_SCHEMA:
+                    continue  # Post-merge profile proof must never become a generic PR PASS.
                 c_val = str(entry.get("commit") or "").lower()
                 c_len = len(c_val)
                 matched_sha = None

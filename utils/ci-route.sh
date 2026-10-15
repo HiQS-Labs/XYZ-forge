@@ -15,6 +15,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Executable decisions live here; explanation/authority: ROUTER.md#ci-qualification-policy.
 POLICY_VERSION="ci-route@1"
+CONTENT_PROFILE="skills-army-content@1"
 
 # ── GH-35 Tier-2 subsystem registry ──────────────────────────────────────────────────────────────
 # The ONE mapping from changed paths to the focused suites that cover them, consumed by
@@ -80,6 +81,7 @@ is_docs_surface() {
 }
 
 event_name="${1:-}"
+profile_candidate=true
 
 case "$event_name" in
   # Registry listing — the drift guard and `validate.sh --subsystem` read this instead of
@@ -316,6 +318,12 @@ add_tier2_test() {  # <suite> — only suites that exist; a subsystem with none 
 while IFS= read -r path || [[ -n "$path" ]]; do
   [[ -n "$path" ]] || continue
   path_count=$((path_count + 1))
+  case "$path" in
+    skills/3-weekly/skills-army-hq/*.md|skills/3-weekly/skills-army-hq/*.txt)
+      case "${path#skills/3-weekly/skills-army-hq/}" in */*|SKILL.md|AGENTS.md|CLAUDE.md|requirements*.txt) profile_candidate=false ;; esac
+      ;;
+    *) profile_candidate=false ;;
+  esac
 
   # Docs surfaces (GH-35 Phase 1 widened the GH-509 list): evidence, transcripts, notes, and
   # governance levers (*.txt anywhere, decisions/, .pdda-* levers, .xyz-launch-artifact).
@@ -464,6 +472,7 @@ done
 
 # An empty or unreadable PR diff is not proof that the change is documentation-only.
 if [[ "$path_count" -eq 0 ]]; then
+  profile_candidate=false
   docs_only=false
   pdda_needed=true
   full_required=true
@@ -512,8 +521,16 @@ fi
 # GH-1076: hosted selection belongs to this policy, separate from local tier/width.
 # Medium deliberately remains full. Consumers dispatch only their fixed commands.
 hosted_gate=full
+profile_enabled=false
+if _ci_enabled="$(PYTHONPATH="$ROOT/utils/py${PYTHONPATH:+:$PYTHONPATH}" python3 -c \
+  'from device_config import resolve_ci_optimization; c,e=resolve_ci_optimization(); print("true" if not e and c["optimized"] else "false")' 2>/dev/null)"; then
+  [ "$_ci_enabled" != true ] || profile_enabled=true
+fi
 if [[ "$tier" == 1 ]]; then
   hosted_gate=small
+elif [[ "$tier" == 2 && "$profile_candidate" == true && "$profile_enabled" == true ]]; then
+  # Path candidate only. The wave consumer must also prove the complete raw Git scope/identity.
+  hosted_gate="$CONTENT_PROFILE"
 fi
 
 printf '%s\n' \
@@ -525,6 +542,9 @@ printf '%s\n' \
   "tier=$tier" \
   "policy_version=$POLICY_VERSION" \
   "hosted_gate=$hosted_gate" \
+  "profile=$CONTENT_PROFILE" \
+  "profile_enabled=$profile_enabled" \
+  "profile_candidate=$profile_candidate" \
   "tier2_subsystems=$tier2_subsystems" \
   "tier2_tests=$tier2_tests" \
   "tier_reason=$tier_reason"
