@@ -391,7 +391,7 @@ def path_fingerprint(path):
         with open(path, "rb") as f:
             for chunk in iter(lambda: f.read(1024 * 1024), b""):
                 digest.update(chunk)
-        return "file:" + digest.hexdigest()
+        return "file:%o:%s" % (os.stat(path).st_mode, digest.hexdigest())
     if os.path.isdir(path):
         digest = hashlib.sha256()
         for name in sorted(os.listdir(path)):
