@@ -21,6 +21,10 @@ related:
 
 # Standard Operating Procedure (SOP): CI Churn Recovery
 
+Current selection, qualification and batch authority live in [ROUTER's CI qualification policy](../ROUTER.md#ci-qualification-policy).
+This recovery playbook does not redefine those rules or revive expired exceptions.
+
+
 > **Scope & relationship to other docs**
 > - **`AGENTS.md`** owns the rails this SOP works inside: *No new tests*, the bypass rule (GH-487),
 >   the branch rules, the GH-784 QA receipt, and never deferring a test run to CI. This SOP grants

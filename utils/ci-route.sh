@@ -13,6 +13,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# Executable decisions live here; explanation/authority: ROUTER.md#ci-qualification-policy.
+POLICY_VERSION="ci-route@1"
 
 # ── GH-35 Tier-2 subsystem registry ──────────────────────────────────────────────────────────────
 # The ONE mapping from changed paths to the focused suites that cover them, consumed by
@@ -61,6 +63,13 @@ subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
 #      catches every relay-xyz and relay-automation file;
 #   4. any other skills/** path is docs unless subsystem_of() claims it for an area.
 is_docs_surface() {
+  # GH-1076/GH-995: package text is publisher input, not just prose. Reuse the
+  # existing area owner so its gh620 payload contract cannot disappear in Small.
+  case "$1" in
+    *.md|*.txt)
+      [ "$(subsystem_of "$1" || true)" != skills-army-hq ] || return 1
+      ;;
+  esac
   case "$1" in
     *.md|*.txt|PROJECT/*|docs/*|relay-system/*|decisions/*|.pdda-*|.xyz-launch-artifact|TESTS-RESULTS/*) return 0 ;;
     releases.db|releases.sql|harnesses.db|harnesses.sql|LEADERBOARD.html|RELEASES-PREVIEW.html) return 0 ;;
@@ -109,6 +118,8 @@ case "$event_name" in
       'changed_tests=' \
       'route=full' \
       'tier=3' \
+      "policy_version=$POLICY_VERSION" \
+      'hosted_gate=full' \
       'tier2_subsystems=' \
       'tier2_tests=' \
       'tier_reason=operator-initiated full run'
@@ -496,6 +507,13 @@ else
   fi
 fi
 
+# GH-1076: hosted selection belongs to this policy, separate from local tier/width.
+# Medium deliberately remains full. Consumers dispatch only their fixed commands.
+hosted_gate=full
+if [[ "$tier" == 1 ]]; then
+  hosted_gate=small
+fi
+
 printf '%s\n' \
   "docs_only=$docs_only" \
   "pdda_needed=$pdda_needed" \
@@ -503,6 +521,8 @@ printf '%s\n' \
   "changed_tests=$changed_tests" \
   "route=$route" \
   "tier=$tier" \
+  "policy_version=$POLICY_VERSION" \
+  "hosted_gate=$hosted_gate" \
   "tier2_subsystems=$tier2_subsystems" \
   "tier2_tests=$tier2_tests" \
   "tier_reason=$tier_reason"

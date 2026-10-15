@@ -2,7 +2,7 @@
 gh_issue: 1076
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1076
 title: "GH-1076: consolidate selective-CI and batch-qualification policy"
-status: Proposed
+status: In Progress
 created: 2026-10-14
 updated: 2026-10-14
 owner: Codex (operator-authorized)
@@ -17,7 +17,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Read-only spike published to GH1076; fresh full source and baseline clones pinned at f974fcee. Full issue implementation and before/after benchmark authorized. | Agy/Claude consultation, Codex plan QA, then bounded implementation and verification. |
+| Codex plan QA Approved round2/3; first PARKED seed-delivery review retained. Claude advisory complete, Agy partial at300s cap. Baseline started at f974fcee after GH1064 gate finished. | Implement the approved coverage-preserving scope; retain full while batch/Medium evidence remains insufficient. |
 
 ## Table of contents
 
@@ -77,10 +77,9 @@ exhausted caps are explicit blockers. Accepted-start admission follows plan appr
 
 ## Phase 2: canonical policy and deterministic consumers
 
-4. Establish `docs/CI-QUALIFICATION-POLICY.md` as the canonical explanatory contract. Replace duplicated
+4. Extend the existing `ROUTER.md` CI qualification policy section as the canonical explanatory contract (consult disposition: smaller existing owner, no new governance file). Replace duplicated
    normative CI/qualification/batch rules in AGENTS, SOP and ROUTER with pointers, preserving local
-   command/resource guidance and role boundaries. Relevant merge-cleanup guidance points there;
-   preserve script-owned parity tables and do not overlap GH1064's active implementation files.
+   command/resource guidance and role boundaries. The existing CI churn guidance points there; leave GH1064-owned merge-cleanup files untouched while its owner is active. Preserve script-owned parity tables.
 5. Extend existing ci-route key/value output with versioned hosted-qualification decision metadata;
    current tier1 maps Small and other tiers full. Make existing wave selector consume that decision,
    retaining fixed command dispatch. Missing/unknown/duplicate/malformed decisions fail full.

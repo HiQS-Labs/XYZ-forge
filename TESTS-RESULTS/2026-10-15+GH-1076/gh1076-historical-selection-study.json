@@ -1,0 +1,809 @@
+{
+  "source_sha": "f974fcee15647aae6551fcc81b129f5a6127120b",
+  "method": "Read GitHub20most-recent naturally failed wave-reconcile runs; all20jobmetadata and six bounded original failedjoblogs. No triggers/reruns/suite execution. Logs selected newestpublisher,knownpayload,prequalificationdiscovery twice,oldertwoactualsuitefailures; purposive sample,not random.",
+  "runs": [
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-10-14T17:59:44Z",
+      "databaseId": 38611374289,
+      "displayTitle": "docs: keep skipped independent review notes neutral",
+      "event": "pull_request",
+      "headSha": "14d28d02f0f464efa76ba3d7a7c5fb3c52fb7bdd",
+      "updatedAt": "2026-10-14T19:26:02Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38611374289",
+      "jobs": [
+        {
+          "id": 116015310731,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38611374289/job/116015310731",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Commit declared artifacts and push",
+            "Report hosted lane"
+          ]
+        }
+      ],
+      "evidence_status": "original_failed_job_log_read",
+      "attribution": "environment_external_api",
+      "selection_decision": "Keep full: relay-xyz is an explicit full surface. Suite-selection reduction does not prevent this publication failure.",
+      "trigger_pr": 1056,
+      "tested_sha": "aec75f1d62179b5b6a5da1dcc283dd97ab473835",
+      "pending_landings": 1,
+      "failure_phase": "publish_after_qualification_pass",
+      "classification": "environment_external_api",
+      "failed_suite": null,
+      "cause": "Full qualification passed. First push rejected because development moved; receipt-first recovery published receipts, then GH960 GraphQL connection timed out during recompute; reporting API also timed out.",
+      "selection": "Keep full: relay-xyz is an explicit full surface. Suite-selection reduction does not prevent this publication failure.",
+      "log_artifact": "gh1076-historical-run-38611374289-failed.log",
+      "log_sha256": "92a9ee9fbd96bf773b9e5f5384b8182b8730a9d731ea42cd5efb56c8316d977a",
+      "first_outer_qualification_log_line": 449,
+      "trigger_merge_first_parent_changed_paths": [
+        "PROJECT/1-INBOX/GH-1055-REVIEW-NOTE-DISCLOSURE.md",
+        "TESTS-RESULTS/2026-10-14+GH-1055/provenance.jsonl",
+        "TESTS-RESULTS/2026-10-14+GH-1055/publication-gate.jsonl",
+        "TESTS-RESULTS/2026-10-14+GH-1055/publication-gate.log",
+        "relay-system/2026-10-14/gh1055-final.codex.md",
+        "releases.db",
+        "releases.sql",
+        "skills/1-hourly/relay-xyz/SKILL.md",
+        "skills/1-hourly/start-task/SKILL.md"
+      ],
+      "changed_scope_limit": "Exact trigger merge first-parent diff only; not proven complete catch-up union.",
+      "pr_metadata_artifact": "gh1076-historical-pr-1056.json",
+      "failure_log_evidence": [
+        {
+          "line": 16091,
+          "message": "wave-reconcile: ERROR \u2014 Malformed merged-PR recovery response: invalid merged_at timestamp"
+        },
+        {
+          "line": 16210,
+          "message": "wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-14+GH-591/wave-aec75f1d62179b5b6a5da1dcc283dd97ab473835/provenance.jsonl"
+        },
+        {
+          "line": 16268,
+          "message": "hosted-lane-publish: recompute: python3 utils/py/wave_reconcile.py --catch-up --gate --qualify --pr 1056 --only-receipted --skip-pull"
+        },
+        {
+          "line": 16292,
+          "message": "wave-reconcile: ERROR \u2014 gh issue view #960 failed (exit 1): Post \"https://api.github.com/graphql\": dial tcp 172.182.252.137:443: connect: operation timed out; refusing to guess issue state \u2014 fix gh access or pass --offline with an issues[] manifest"
+        },
+        {
+          "line": 16293,
+          "message": "hosted-lane-publish: ERROR \u2014 recompute failed after the receipts were published: wave-reconcile: ERROR \u2014 gh issue view #960 failed (exit 1): Post \"https://api.github.com/graphql\": dial tcp 172.182.252.137:443: connect: operation timed out; refusing to guess issue state \u2014 fix gh access or pass --offline with an issues[] manifest"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-10-08T03:33:35Z",
+      "databaseId": 37723297290,
+      "displayTitle": "fix(workhorse,merge-cleanup): Claude Stop guidance + merge-cleanup continuation contract (GH-985, GH-990)",
+      "event": "pull_request",
+      "headSha": "67e2df8c5d460515c9385519bbf3acc983759ce2",
+      "updatedAt": "2026-10-08T04:38:53Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37723297290",
+      "jobs": [
+        {
+          "id": 113135652468,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37723297290/job/113135652468",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "original_failed_job_log_read",
+      "attribution": "payload_contract_known_GH995",
+      "selection_decision": "Keep full: merge-cleanup/SKILL.md explicit full and stop-hook path unmapped. Small+known skills-army publication consumer selects gh620, but that consumer came from earlier GH988/989 payload changes, not this trigger PR diff.",
+      "trigger_pr": 992,
+      "tested_sha": "e0c0bc9172d56efe54fd62f1afb44d90a18b4b8c",
+      "pending_landings": 1,
+      "failure_phase": "qualification",
+      "classification": "payload_contract_known_GH995",
+      "failed_suite": "gh620-skills-army-mini-sync.sh",
+      "cause": "Actual payload had BOT-DAILY-HEALTH-CHECK.md; expected payload and manifest count were stale. Known GH995 express fix; not a newly discovered mapped-Medium regression.",
+      "selection": "Keep full: merge-cleanup/SKILL.md explicit full and stop-hook path unmapped. Small+known skills-army publication consumer selects gh620, but that consumer came from earlier GH988/989 payload changes, not this trigger PR diff.",
+      "log_artifact": "gh1076-historical-run-37723297290-failed.log",
+      "log_sha256": "ad1c294dcf66eef6f3ed5a84a22ea404283664eb1963283ab733009cec90b45f",
+      "first_outer_qualification_log_line": 34,
+      "trigger_merge_first_parent_changed_paths": [
+        "CHANGELOG.md",
+        "PROJECT/2-WORKING/GH-985-CLAUDE-WORKHORSE.md",
+        "PROJECT/2-WORKING/GH-990-MERGE-CLEANUP-CONTINUATION.md",
+        "TESTS-RESULTS/2026-10-06+GH-985/SUMMARY.md",
+        "TESTS-RESULTS/2026-10-06+GH-985/agy-build-r2-result.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/agy-build-r3-result.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/agy-build-result.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/comparison-final.json",
+        "TESTS-RESULTS/2026-10-06+GH-985/comparison.json",
+        "TESTS-RESULTS/2026-10-06+GH-985/fable-plan.md",
+        "TESTS-RESULTS/2026-10-06+GH-985/governance-identity.json",
+        "TESTS-RESULTS/2026-10-06+GH-985/governance-imports.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/governance-pdda.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/governance-releases.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/governance-route.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/manual-blocker-clause-failure.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/manual-first-failure.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/manual-hook-checks-final.json",
+        "TESTS-RESULTS/2026-10-06+GH-985/manual-hook-checks.json",
+        "TESTS-RESULTS/2026-10-06+GH-985/metadata-final-projection-validate.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/metadata-projection-validate.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/provenance.jsonl",
+        "TESTS-RESULTS/2026-10-06+GH-985/publication.json",
+        "TESTS-RESULTS/2026-10-06+GH-985/raw-final-validate.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/raw-validate.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/runtime-capabilities.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/runtime-recon.md",
+        "TESTS-RESULTS/2026-10-06+GH-985/source-controls.json",
+        "relay-system/2026-10-06/gh985-build.agy.md",
+        "relay-system/2026-10-06/gh985-final.fable.md",
+        "relay-system/2026-10-06/gh985-plan.fable.md",
+        "releases.db",
+        "releases.sql",
+        "skills/2-daily/merge-cleanup/SKILL.md",
+        "skills/2-daily/workhorse/SKILL.md",
+        "skills/2-daily/workhorse/stop-hook.sh"
+      ],
+      "changed_scope_limit": "Exact trigger merge first-parent diff only; not proven complete catch-up union.",
+      "pr_metadata_artifact": "gh1076-historical-pr-992.json",
+      "suite_log_evidence": [
+        {
+          "line": 7517,
+          "message": "FAIL: literal inclusion-only payload set missing=[] extra=['BOT-DAILY-HEALTH-CHECK.md']"
+        },
+        {
+          "line": 7518,
+          "message": "FAIL: manifest names exactly the nine managed payloads"
+        },
+        {
+          "line": 7544,
+          "message": "gh620-skills-army-mini-sync: 26 passed, 2 failed"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-10-02T12:51:57Z",
+      "databaseId": 37009287827,
+      "displayTitle": "Wave reconciliation",
+      "event": "schedule",
+      "headSha": "75b75181299d605b5458dbf4fd367680a05cbb53",
+      "updatedAt": "2026-10-02T12:53:15Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37009287827",
+      "jobs": [
+        {
+          "id": 110844881738,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37009287827/job/110844881738",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "original_failed_job_log_read",
+      "attribution": "external_issue_identity_or_access_unknown",
+      "selection_decision": "No suite execution or tested SHA observed. Unknown context keeps full; changing suite selection does not fix discovery.",
+      "trigger_pr": null,
+      "tested_sha": null,
+      "pending_landings": null,
+      "failure_phase": "prequalification_discovery",
+      "classification": "external_issue_identity_or_access_unknown",
+      "failed_suite": null,
+      "cause": "gh issue view506 could not resolve issue or PR; refused to guess state before any qualification. Cannot distinguish incorrect recorded issue reference from access issue with this log alone.",
+      "selection": "No suite execution or tested SHA observed. Unknown context keeps full; changing suite selection does not fix discovery.",
+      "log_artifact": "gh1076-historical-run-37009287827-failed.log",
+      "log_sha256": "d9a3f55b78403e88fc792e3ec08da0f41ecd3cda02165d3dc9bab313dbe05e55",
+      "first_outer_qualification_log_line": null,
+      "failure_log_evidence": [
+        {
+          "line": 378,
+          "message": "wave-reconcile: ERROR \u2014 gh issue view #506 failed (exit 1): GraphQL: Could not resolve to an issue or pull request with the number of 506. (repository.issue); refusing to guess issue state \u2014 fix gh access or pass --offline with an issues[] manifest"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-10-02T07:32:07Z",
+      "databaseId": 36979067253,
+      "displayTitle": "feat(task-sync): native Codex sidebar heartbeat (GH-901)",
+      "event": "pull_request",
+      "headSha": "2d1af74efb6584a3a4f7f79a51089d34c132409e",
+      "updatedAt": "2026-10-02T07:33:11Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36979067253",
+      "jobs": [
+        {
+          "id": 110749223778,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36979067253/job/110749223778",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-10-02T07:30:57Z",
+      "databaseId": 36978963707,
+      "displayTitle": "feat(skills): unified task-sync \u2014 central core + per-IDE adapters (GH-896)",
+      "event": "pull_request",
+      "headSha": "4df8a87deb2529e9628d26158c0e23d467827de3",
+      "updatedAt": "2026-10-02T07:32:04Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36978963707",
+      "jobs": [
+        {
+          "id": 110748903773,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36978963707/job/110748903773",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "original_failed_job_log_read",
+      "attribution": "external_issue_identity_or_access_unknown",
+      "selection_decision": "No suite execution or tested SHA observed. Unknown context keeps full; changing suite selection does not fix discovery.",
+      "trigger_pr": 900,
+      "tested_sha": null,
+      "pending_landings": null,
+      "failure_phase": "prequalification_discovery",
+      "classification": "external_issue_identity_or_access_unknown",
+      "failed_suite": null,
+      "cause": "Same issue506 unresolved GraphQL error before any qualification; root attribution unknown.",
+      "selection": "No suite execution or tested SHA observed. Unknown context keeps full; changing suite selection does not fix discovery.",
+      "log_artifact": "gh1076-historical-run-36978963707-failed.log",
+      "log_sha256": "ee609acc9414b15e10f49de23a295ed4788582a9c9e97aa7e5122aece870aba6",
+      "first_outer_qualification_log_line": null,
+      "failure_log_evidence": [
+        {
+          "line": 25,
+          "message": "wave-reconcile: ERROR \u2014 gh issue view #506 failed (exit 1): GraphQL: Could not resolve to an issue or pull request with the number of 506. (repository.issue); refusing to guess issue state \u2014 fix gh access or pass --offline with an issues[] manifest"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-10-02T05:53:38Z",
+      "databaseId": 36970981161,
+      "displayTitle": "Wave reconciliation",
+      "event": "schedule",
+      "headSha": "1b40d57c36c70eb045341ec95403de93ba056b92",
+      "updatedAt": "2026-10-02T05:54:54Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36970981161",
+      "jobs": [
+        {
+          "id": 110724696577,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36970981161/job/110724696577",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-25T02:46:46Z",
+      "databaseId": 36087662555,
+      "displayTitle": "fix: repair four regressions from merge batch #791",
+      "event": "pull_request",
+      "headSha": "df1353de59dd44e2c6b50a63b9a7d3bcd851bbb7",
+      "updatedAt": "2026-09-25T04:48:02Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36087662555",
+      "jobs": [
+        {
+          "id": 107934118571,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36087662555/job/107934118571",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "original_failed_job_log_read",
+      "attribution": "bridge_assertion_failure_root_cause_unknown",
+      "selection_decision": "Keep full: trigger has unclaimed test changes and merge-cleanup implementation; full pending4-member union not recovered. Bridge is in agent-chorus focused area, absent Small; cannot declare that area inferred from this trigger.",
+      "trigger_pr": 794,
+      "tested_sha": "0ae3452a5774c6e72b633dd61648137e80516e6b",
+      "pending_landings": 4,
+      "failure_phase": "qualification",
+      "classification": "bridge_assertion_failure_root_cause_unknown",
+      "failed_suite": "agent-chorus-bridge.sh",
+      "cause": "Bridge summary38 passed,10 failed; turn2 and subsequent state assertions missing. Cannot prove product-vs-fixture/environment cause from this log. Later readiness-poll/diagnostic commits are contextual clues, not root-cause proof.",
+      "selection": "Keep full: trigger has unclaimed test changes and merge-cleanup implementation; full pending4-member union not recovered. Bridge is in agent-chorus focused area, absent Small; cannot declare that area inferred from this trigger.",
+      "log_artifact": "gh1076-historical-run-36087662555-failed.log",
+      "log_sha256": "c522030856ae427fcfa0551065f8c6acf770c06a330d4f3a61d1c2bef5d49469",
+      "first_outer_qualification_log_line": 27,
+      "trigger_merge_first_parent_changed_paths": [
+        "CHANGELOG.md",
+        "LEADERBOARD.md",
+        "PROJECT/1-INBOX/GH-793-IDLE-CONTROL-PARALLEL.md",
+        "PROJECT/2-WORKING/GH-791-MERGE-REGRESSIONS.md",
+        "TESTS-RESULTS/2026-09-24+GH-791/REVIEW.md",
+        "TESTS-RESULTS/2026-09-24+GH-791/cleanup-green.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/docs-green.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/fresh-clone-import-red.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/frozen-guard.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/hosted-green.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/hosted-red.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/idle-alone.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/idle-parallel.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/inventory-green.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/inventory-red.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/poll-green.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/poll-red.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/provenance.jsonl",
+        "TESTS-RESULTS/2026-09-24+GH-791/push-gate.log",
+        "TESTS-RESULTS/2026-09-24+GH-791/validate-batch.log",
+        "releases.db",
+        "releases.sql",
+        "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
+        "test/gh534_phase_c_tests.py",
+        "test/gh674-merge-cleanup-hosted-lookup.sh",
+        "utils/pdda/inventory_ratchet_baseline.json"
+      ],
+      "changed_scope_limit": "Exact trigger merge first-parent diff only; not proven complete catch-up union.",
+      "pr_metadata_artifact": "gh1076-historical-pr-794.json",
+      "suite_log_evidence": [
+        {
+          "line": 7739,
+          "message": "FAIL: remote agent2 send succeeds (missing: \"turn\": 2)"
+        },
+        {
+          "line": 7740,
+          "message": "FAIL: turn 2 routes to agent1 (missing: \"next\": \"agent1\")"
+        },
+        {
+          "line": 7741,
+          "message": "FAIL: local agent1 advances to turn 3 (missing: Recorded turn 3)"
+        },
+        {
+          "line": 7742,
+          "message": "FAIL: turns endpoint returns turn 2 (missing: \"turn\": 2)"
+        },
+        {
+          "line": 7743,
+          "message": "FAIL: turns endpoint returns turn 3 (missing: \"turn\": 3)"
+        },
+        {
+          "line": 7744,
+          "message": "FAIL: remote agent2 advances to turn 4 (missing: \"turn\": 4)"
+        },
+        {
+          "line": 7745,
+          "message": "FAIL: local agent1 closes discussion (missing: Closed XYZ AgentChorus #777001)"
+        },
+        {
+          "line": 7746,
+          "message": "FAIL: remote client observes Closed status (missing: \"status\": \"Closed\")"
+        },
+        {
+          "line": 7770,
+          "message": "FAIL: restarted bridge recovers status of closed discussion 777001 (missing: \"status\": \"Closed\")"
+        },
+        {
+          "line": 7771,
+          "message": "FAIL: restarted bridge recovers turn count 5 (missing: \"current_turn\": 5)"
+        },
+        {
+          "line": 7782,
+          "message": "AgentChorus Bridge Test Summary: 38 passed, 10 failed"
+        }
+      ]
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-24T21:36:46Z",
+      "databaseId": 36062581982,
+      "displayTitle": "Wave reconciliation",
+      "event": "schedule",
+      "headSha": "337813e042e50bf4c09a6c7daa0247355bba5b58",
+      "updatedAt": "2026-09-25T03:40:20Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36062581982",
+      "jobs": [
+        {
+          "id": 107917713956,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36062581982/job/107917713956",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-24T18:57:48Z",
+      "databaseId": 36044868273,
+      "displayTitle": "marathon(/10days 2026-09-21): 12 lanes \u2014 vendor ESM, review-once oracle, merge-cleanup hosted lookup/exclude/gid, express bounds, reconcile envelope, hq guard, raw_text asterisk (#742 #558 #720 #651 #711 #567 #570 #674 #703 #707 #594 #736)",
+      "event": "pull_request",
+      "headSha": "8acebff6d2b43c0e50ad3799ca7b58c41d6de5f2",
+      "updatedAt": "2026-09-25T02:21:41Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36044868273",
+      "jobs": [
+        {
+          "id": 107904173330,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36044868273/job/107904173330",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-24T18:40:44Z",
+      "databaseId": 36042902034,
+      "displayTitle": "feat(GH-646): explicit task starts and confirmed endings \u2014 shared in-progress label through the roadmap writer",
+      "event": "pull_request",
+      "headSha": "2709573181bb15909a31058be8acd4838a6fa297",
+      "updatedAt": "2026-09-25T01:19:01Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36042902034",
+      "jobs": [
+        {
+          "id": 107885296136,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36042902034/job/107885296136",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-24T18:24:55Z",
+      "databaseId": 36041060266,
+      "displayTitle": "fix(merge-cleanup): --exclude <PR#> drops the PR; poll post-landing UNKNOWN mergeability (GH-736 items 1\u20132)",
+      "event": "pull_request",
+      "headSha": "874b2b61b2a1da6605d122c53d26a788f48da455",
+      "updatedAt": "2026-09-24T23:59:02Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36041060266",
+      "jobs": [
+        {
+          "id": 107864257226,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36041060266/job/107864257226",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-24T17:37:09Z",
+      "databaseId": 36035559968,
+      "displayTitle": "fix(GH-773): gate RSS watchdog warns when ps is unreadable; never logs a fake 0MB peak",
+      "event": "pull_request",
+      "headSha": "c4fade5c6d976378e7d7c41018735910a6b55237",
+      "updatedAt": "2026-09-24T22:39:39Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36035559968",
+      "jobs": [
+        {
+          "id": 107839054439,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36035559968/job/107839054439",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-24T17:21:13Z",
+      "databaseId": 36033702443,
+      "displayTitle": "Wave reconciliation",
+      "event": "schedule",
+      "headSha": "322e258973c3ea2be8f758281c37aef40f4796e2",
+      "updatedAt": "2026-09-24T21:20:19Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36033702443",
+      "jobs": [
+        {
+          "id": 107816701769,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36033702443/job/107816701769",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-24T17:19:59Z",
+      "databaseId": 36033552439,
+      "displayTitle": "Restore baseline macOS gate suites for GH-764",
+      "event": "pull_request",
+      "headSha": "75c6e01fbc2272bf615379e9134b9d4330c52ae8",
+      "updatedAt": "2026-09-24T20:19:41Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36033552439",
+      "jobs": [
+        {
+          "id": 107790088201,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36033552439/job/107790088201",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-24T16:10:34Z",
+      "databaseId": 36025506150,
+      "displayTitle": "test: add agent-chorus-bridge failure diagnostics and a GET / ready poll (Refs #760)",
+      "event": "pull_request",
+      "headSha": "8504f310a055123bd193895a77b194d84dcc8a92",
+      "updatedAt": "2026-09-24T17:41:57Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36025506150",
+      "jobs": [
+        {
+          "id": 107720889968,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/36025506150/job/107720889968",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up",
+            "Report hosted lane"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-24T04:52:41Z",
+      "databaseId": 35957506810,
+      "displayTitle": "intake(GH-768, GH-769): audits of releases_app.py and marathon_drive.py; capture #770-#775",
+      "event": "pull_request",
+      "headSha": "733194e094cc1c12dca3ecc8e28956da88f5c9b9",
+      "updatedAt": "2026-09-24T06:10:41Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/35957506810",
+      "jobs": [
+        {
+          "id": 107498844078,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/35957506810/job/107498844078",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-22T18:32:35Z",
+      "databaseId": 35767844928,
+      "displayTitle": "skills: organize skills/ into frequency-of-use tier folders (GH-744)",
+      "event": "pull_request",
+      "headSha": "fef571047b10a81a6d446963391047fa740db65a",
+      "updatedAt": "2026-09-22T20:16:29Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/35767844928",
+      "jobs": [
+        {
+          "id": 106891908965,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/35767844928/job/106891908965",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-22T00:14:03Z",
+      "databaseId": 35671086913,
+      "displayTitle": "feat(debug-mantra): add explicit Root Cause Analysis gate (GH-737)",
+      "event": "pull_request",
+      "headSha": "177597512dee322f0f03e63d7ff7dc5a846674fa",
+      "updatedAt": "2026-09-22T01:22:02Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/35671086913",
+      "jobs": [
+        {
+          "id": 106567462745,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/35671086913/job/106567462745",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-21T16:10:53Z",
+      "databaseId": 35623940059,
+      "displayTitle": "feat(skills): /merge-cleanup-deep \u2014 read-only sub-agent triage of the checkouts /merge-cleanup preserves (GH-728)",
+      "event": "pull_request",
+      "headSha": "a9ff8cd6185eba7c16c2af263a1804425afbde80",
+      "updatedAt": "2026-09-21T17:23:54Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/35623940059",
+      "jobs": [
+        {
+          "id": 106413521129,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/35623940059/job/106413521129",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Commit declared artifacts and push"
+          ]
+        }
+      ],
+      "evidence_status": "metadata_only",
+      "attribution": "unknown",
+      "selection_decision": "full; source scope/failure uninvestigated"
+    },
+    {
+      "conclusion": "failure",
+      "createdAt": "2026-09-21T02:05:35Z",
+      "databaseId": 35552996436,
+      "displayTitle": "feat(flightdeck): show established work and isolate invalid evidence (GH-673)",
+      "event": "pull_request",
+      "headSha": "4030698b0cd85b10200b673faef7c75971473603",
+      "updatedAt": "2026-09-21T03:12:44Z",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/35552996436",
+      "jobs": [
+        {
+          "id": 106191118351,
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/35552996436/job/106191118351",
+          "conclusion": "failure",
+          "failed_steps": [
+            "Reconcile merged PR or catch up"
+          ]
+        }
+      ],
+      "evidence_status": "original_failed_job_log_read",
+      "attribution": "bridge_assertion_failure_root_cause_unknown",
+      "selection_decision": "Keep full: src/flightdeck/* and unclaimed test changes are full surfaces. Bridge is agent-chorus area, absent Small; full20-member union not recovered.",
+      "trigger_pr": 719,
+      "tested_sha": "5e60cb01541a4c32f59cba899aa6d77d33d29277",
+      "pending_landings": 20,
+      "failure_phase": "qualification",
+      "classification": "bridge_assertion_failure_root_cause_unknown",
+      "failed_suite": "agent-chorus-bridge.sh",
+      "cause": "Bridge summary34 passed,10 failed; turn2 and subsequent state assertions missing. Cannot prove product-vs-fixture/environment cause from this log;20pending landings mean trigger is not full attribution.",
+      "selection": "Keep full: src/flightdeck/* and unclaimed test changes are full surfaces. Bridge is agent-chorus area, absent Small; full20-member union not recovered.",
+      "log_artifact": "gh1076-historical-run-35552996436-failed.log",
+      "log_sha256": "d65ea30400455b7dc0907f70a4c23e14dc9f6f399b120e0619e1ed14b944f79b",
+      "first_outer_qualification_log_line": 334,
+      "trigger_merge_first_parent_changed_paths": [
+        "CHANGELOG.md",
+        "LEADERBOARD.md",
+        "PROJECT/2-WORKING/GH-673-FLIGHTDECK-STATUS.md",
+        "TESTS-RESULTS/2026-09-17+GH-673/completion.md",
+        "TESTS-RESULTS/2026-09-17+GH-673/implementation-audit.md",
+        "TESTS-RESULTS/2026-09-17+GH-673/provenance.jsonl",
+        "TESTS-RESULTS/2026-09-17+GH-673/writer-reader-crosscheck.py",
+        "TESTS-RESULTS/2026-09-20+GH-673/README.md",
+        "TESTS-RESULTS/2026-09-20+GH-673/browser.log",
+        "TESTS-RESULTS/2026-09-20+GH-673/dev-control-gh268-relay-cue-and-target-checks.log",
+        "TESTS-RESULTS/2026-09-20+GH-673/dev-control-gh649-pdda-migration.log",
+        "TESTS-RESULTS/2026-09-20+GH-673/gh53.log",
+        "TESTS-RESULTS/2026-09-20+GH-673/manual.log",
+        "TESTS-RESULTS/2026-09-20+GH-673/provenance.jsonl",
+        "TESTS-RESULTS/2026-09-20+GH-673/pytest.log",
+        "TESTS-RESULTS/2026-09-20+GH-673/validate-full.log",
+        "TESTS-RESULTS/2026-09-20+GH-673/validate-identity.txt",
+        "TESTS-RESULTS/2026-09-20+GH-673/work-status.log",
+        "relay-system/2026-09-17/gh673-replacement-focused.md",
+        "releases.db",
+        "releases.sql",
+        "src/flightdeck/aggregate.py",
+        "src/flightdeck/connectors.py",
+        "src/flightdeck/contract.py",
+        "src/flightdeck/manual_harness.py",
+        "test/flightdeck/browser-status-checks.mjs",
+        "test/flightdeck/test_flightdeck.py",
+        "test/flightdeck/test_work_status.py",
+        "test/flightdeck/work-status-checks.mjs",
+        "utils/py/releases_app.py",
+        "utils/py/releases_cycle.py",
+        "web/flightdeck/app.js",
+        "web/flightdeck/issue-context.mjs"
+      ],
+      "changed_scope_limit": "Exact trigger merge first-parent diff only; not proven complete catch-up union.",
+      "pr_metadata_artifact": "gh1076-historical-pr-719.json",
+      "suite_log_evidence": [
+        {
+          "line": 7864,
+          "message": "FAIL: remote agent2 send succeeds (missing: \"turn\": 2)"
+        },
+        {
+          "line": 7865,
+          "message": "FAIL: turn 2 routes to agent1 (missing: \"next\": \"agent1\")"
+        },
+        {
+          "line": 7866,
+          "message": "FAIL: local agent1 advances to turn 3 (missing: Recorded turn 3)"
+        },
+        {
+          "line": 7867,
+          "message": "FAIL: turns endpoint returns turn 2 (missing: \"turn\": 2)"
+        },
+        {
+          "line": 7868,
+          "message": "FAIL: turns endpoint returns turn 3 (missing: \"turn\": 3)"
+        },
+        {
+          "line": 7869,
+          "message": "FAIL: remote agent2 advances to turn 4 (missing: \"turn\": 4)"
+        },
+        {
+          "line": 7870,
+          "message": "FAIL: local agent1 closes discussion (missing: Closed XYZ AgentChorus #777001)"
+        },
+        {
+          "line": 7871,
+          "message": "FAIL: remote client observes Closed status (missing: \"status\": \"Closed\")"
+        },
+        {
+          "line": 7892,
+          "message": "FAIL: restarted bridge recovers status of closed discussion 777001 (missing: \"status\": \"Closed\")"
+        },
+        {
+          "line": 7893,
+          "message": "FAIL: restarted bridge recovers turn count 5 (missing: \"current_turn\": 5)"
+        },
+        {
+          "line": 7904,
+          "message": "AgentChorus Bridge Test Summary: 34 passed, 10 failed"
+        }
+      ]
+    }
+  ],
+  "conclusions": {
+    "new_mapped_medium_failure_examples_validated": 0,
+    "known_GH995_not_counted_new": true,
+    "ready_for_blanket_hosted_medium_reduction": false,
+    "reason": "No validated mapped-Medium change/failure pairs in bounded six-log sample. Existing failures are full-surface, mixed catch-up, prequalification, publication, or known payload;14logs remain unattributed. No empirical recall estimate or passing-run denominator.",
+    "minimum_before_reduction": [
+      "Actual eligible mapped-Medium changed range paired with original full-run failing suite and attributed consumer ownership.",
+      "All pending landing scopes at tested SHA; unowned/mixed dependency remains full.",
+      "Consumer inclusion should be evaluated against shadow selections without changing required execution; retain first failures/retries separately.",
+      "Reviewed workflow/branch-protection/receipt compatibility and rollback before reducing gates."
+    ]
+  },
+  "observed_clone_head_after_research": "3a129202589e0a82830fac44097f837446fe9cf4",
+  "source_limit": "Focused selector membership was inspected at f974fcee before implementation owner advanced shared clone. Later HEAD is observation only; no current implementation review performed.",
+  "raw_failed_log_bytes": 7870189
+}

@@ -593,7 +593,8 @@ def committed_qualifications(repo_root):
 def select_qualification_gate(clone, metas, env):
     """GH-831 D5: classify the pending landings' union diff at the tested commit.
 
-    Tier 1 runs the Small list; anything else, or any doubt, runs the full registry.
+    Consume the router's versioned hosted decision; any doubt runs the full registry.
+    Authority and compatibility: ROUTER.md#ci-qualification-policy.
     Returns (gate, expected Small list or None, reason).
     """
     paths = []
@@ -609,10 +610,15 @@ def select_qualification_gate(clone, metas, env):
                                 input="".join(p + "\n" for p in paths), capture_output=True,
                                 text=True, check=False, timeout=120)
         tier = re.findall(r"^tier=(\S*)$", routed.stdout, re.M)
-        if routed.returncode or len(tier) != 1:
-            return QUALIFICATION_GATE, None, "the classifier could not run"
-        if tier[0] != "1":
-            return QUALIFICATION_GATE, None, f"tier {tier[0]}"
+        version = re.findall(r"^policy_version=(.*)$", routed.stdout, re.M)
+        hosted = re.findall(r"^hosted_gate=(.*)$", routed.stdout, re.M)
+        if (routed.returncode or version != ["ci-route@1"] or len(tier) != 1
+                or len(hosted) != 1 or hosted[0] not in ("small", "full")):
+            return QUALIFICATION_GATE, None, "unsupported or malformed classifier decision"
+        if hosted[0] != "small":
+            return QUALIFICATION_GATE, None, f"policy {version[0]}: tier {tier[0]}"
+        if tier != ["1"]:
+            return QUALIFICATION_GATE, None, "inconsistent Small classifier decision"
         return SMALL_GATE, small_suites_at(clone, "HEAD"), "tier 1"
     except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError) as exc:
         return QUALIFICATION_GATE, None, f"classification failed: {exc}"
