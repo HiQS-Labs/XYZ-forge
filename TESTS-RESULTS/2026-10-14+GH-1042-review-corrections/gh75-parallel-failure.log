@@ -1,0 +1,12 @@
+== test: gh75-dashboard ==
+1. Empty states and read-only invariants
+  PASS: dashboard runs on empty db
+  PASS: dashboard outputs HTML
+  PASS: dashboard trust header
+  PASS: dashboard displays release version
+<disposable-clone>/test/gh75-dashboard.sh: line 11: printf: write error: Broken pipe
+  FAIL: dashboard displays release status
+  PASS: dashboard displays roadmap section
+  PASS: dashboard displays roadmap item
+  PASS: dashboard does not bump generation
+gh75-dashboard.sh: 1 failed

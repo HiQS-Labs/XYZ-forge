@@ -1,0 +1,8 @@
+marathon-drive: phase p1 already reached a terminal relay (STATUS: Approved, token done) — skipping render/reseed, re-running only the pre-advance gate
+marathon-drive: relay approved — running pre-advance gate: true
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 0MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: <disposable-clone>/temp/recovery-manual/two-phase-_2lu0zlx/relay-system/two-phase-_2lu0zlx/2026-10-14/marathon-p1-233717.md
+marathon-drive: warn: host free swap is critically low (453MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-complete boundary — compressor=7223MB, swap_free=453MB
+marathon-drive: phase p1 complete — lane_already_satisfied, reviewer approved, gate passed
+marathon-drive: result receipt written: <disposable-clone>/temp/recovery-manual/two-phase-_2lu0zlx/result.json (outcome: approved, exit 0)

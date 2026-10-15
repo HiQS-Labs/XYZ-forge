@@ -1,0 +1,1918 @@
+[
+  {
+    "name": "force-gate-only",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:06Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/force-y4bs62ob",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "bc601914a5236afcc9277f531952c2444e5fd65f",
+      "reviewed_candidate": "bc601914a5236afcc9277f531952c2444e5fd65f",
+      "reviewed_head": "fda9f7687a84bb6a8a7c6c6001cea974d4d0501d",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/force-y4bs62ob/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/force-y4bs62ob/.xyz/receipts/bc601914a5236afcc9277f531952c2444e5fd65f.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:04Z",
+        "finished_at": "2026-10-15T02:51:06Z"
+      }
+    }
+  },
+  {
+    "name": "initial-completion",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:09Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/history-if5vtvqm",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "9f9ee9d3018ff516b1a2938dbdc0178b7e5d6007",
+      "reviewed_candidate": "9f9ee9d3018ff516b1a2938dbdc0178b7e5d6007",
+      "reviewed_head": "0d18146043a2899a2b7acdd08b0860101c2f7e16",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/history-if5vtvqm/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/history-if5vtvqm/.xyz/receipts/9f9ee9d3018ff516b1a2938dbdc0178b7e5d6007.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:07Z",
+        "finished_at": "2026-10-15T02:51:09Z"
+      }
+    }
+  },
+  {
+    "name": "historical-recovery",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:11Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/history-if5vtvqm",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "c7916a9cf15d414925ae0fe4da802ae883c5f383",
+      "reviewed_candidate": "9f9ee9d3018ff516b1a2938dbdc0178b7e5d6007",
+      "reviewed_head": "0d18146043a2899a2b7acdd08b0860101c2f7e16",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/history-if5vtvqm/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": null
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:09Z",
+        "finished_at": "2026-10-15T02:51:11Z"
+      }
+    }
+  },
+  {
+    "name": "force-token-family",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:13Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN-R2",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/force-family-fdbsd1_x",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "8142ad20ab1b4061245436a01dede95c47226f8b",
+      "reviewed_candidate": "8142ad20ab1b4061245436a01dede95c47226f8b",
+      "reviewed_head": "debd7f57ae5e71828be327b35ae83e74984def5e",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/force-family-fdbsd1_x/.git/relay-attest/MARATHON-P1-TURN-R2.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/force-family-fdbsd1_x/.xyz/receipts/8142ad20ab1b4061245436a01dede95c47226f8b.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:11Z",
+        "finished_at": "2026-10-15T02:51:13Z"
+      }
+    }
+  },
+  {
+    "name": "unreviewed-refusal",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:14Z",
+      "outcome": "escalated",
+      "reason": "unattested-terminal",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/drift-i2sm5l8r",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "82e95709a4237b7d58b010aceee18cd0a822f188",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:14Z",
+        "finished_at": "2026-10-15T02:51:14Z"
+      }
+    }
+  },
+  {
+    "name": "explicit-rebuild",
+    "rc": 7,
+    "expected": 7,
+    "ok": true,
+    "dispatched": true,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:16Z",
+      "outcome": "escalated",
+      "reason": "timeout-no-artifact",
+      "exit_code": 7,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN-2",
+      "attempt": {
+        "count": 1,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/explicit-koe8fmin",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "3774eb1cab1313d0e5f62201c824aafd59b3f564",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Open",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:15Z",
+        "finished_at": "2026-10-15T02:51:16Z"
+      }
+    }
+  },
+  {
+    "name": "numeric-force-recovery",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:19Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN-2",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/numeric-4ioaq8ak",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "48712fa1c98cdb478b94b0a2029bdd30777eebd8",
+      "reviewed_candidate": "48712fa1c98cdb478b94b0a2029bdd30777eebd8",
+      "reviewed_head": "8d0095656b2d05b5d8806543f0f99bf890317a38",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/numeric-4ioaq8ak/.git/relay-attest/MARATHON-P1-TURN-2.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/numeric-4ioaq8ak/.xyz/receipts/48712fa1c98cdb478b94b0a2029bdd30777eebd8.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:17Z",
+        "finished_at": "2026-10-15T02:51:19Z"
+      }
+    }
+  },
+  {
+    "name": "red-gate-no-completion",
+    "rc": 5,
+    "expected": 5,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:21Z",
+      "outcome": "escalated",
+      "reason": "pre-advance-failed",
+      "exit_code": 5,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/red-gate-mqdi7g6r",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "e5cc6f40b2dd64e4508ce00810c2ac2ff90ad425",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "false",
+        "result": "red",
+        "exit": 1,
+        "receipt_path": null
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:19Z",
+        "finished_at": "2026-10-15T02:51:21Z"
+      }
+    }
+  },
+  {
+    "name": "red-gate-force-recovery",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:23Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/red-gate-mqdi7g6r",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "5b38b122fab85b696939ac508da11e09ed602a83",
+      "reviewed_candidate": "5b38b122fab85b696939ac508da11e09ed602a83",
+      "reviewed_head": "e94c6256ce8ed034ddc5e0c77f595bf2dbb35721",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/red-gate-mqdi7g6r/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/red-gate-mqdi7g6r/.xyz/receipts/5b38b122fab85b696939ac508da11e09ed602a83.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:21Z",
+        "finished_at": "2026-10-15T02:51:23Z"
+      }
+    }
+  },
+  {
+    "name": "legacy-later-refuses",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:24Z",
+      "outcome": "escalated",
+      "reason": "unattested-terminal",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/legacy-later-o6_7pyqr",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "72b6a27feed4ea7aaad5af86156c78ab56f4c3f4",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:23Z",
+        "finished_at": "2026-10-15T02:51:24Z"
+      }
+    }
+  },
+  {
+    "name": "legacy-force-rebuild",
+    "rc": 7,
+    "expected": 7,
+    "ok": true,
+    "dispatched": true,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:25Z",
+      "outcome": "escalated",
+      "reason": "timeout-no-artifact",
+      "exit_code": 7,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN-R2",
+      "attempt": {
+        "count": 1,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/legacy-later-o6_7pyqr",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "fade349c77ce394ed4a772a9d9906f7785832423",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Open",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:24Z",
+        "finished_at": "2026-10-15T02:51:25Z"
+      }
+    }
+  },
+  {
+    "name": "seed-null",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:28Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-null-n1e56cu0",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "4ac3de6c771133d58c429949ffc8fea188fc7f9e",
+      "reviewed_candidate": "4ac3de6c771133d58c429949ffc8fea188fc7f9e",
+      "reviewed_head": "a7d86477f0024e0df9d7b5f1fa0c0f4e24a9f3bc",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-null-n1e56cu0/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-null-n1e56cu0/.xyz/receipts/4ac3de6c771133d58c429949ffc8fea188fc7f9e.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:26Z",
+        "finished_at": "2026-10-15T02:51:28Z"
+      }
+    }
+  },
+  {
+    "name": "refuse-null",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:28Z",
+      "outcome": "escalated",
+      "reason": "unattested-terminal",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-null-n1e56cu0",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "d9c1bde05bff1d41826ff6b3cb16abf18abf0008",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:28Z",
+        "finished_at": "2026-10-15T02:51:28Z"
+      }
+    }
+  },
+  {
+    "name": "seed-wrong-phase",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:31Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-wrong-phase-u57kmne2",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "e08522c73dd4b0f47a3f58015a74b3d97d3b59ad",
+      "reviewed_candidate": "e08522c73dd4b0f47a3f58015a74b3d97d3b59ad",
+      "reviewed_head": "1a1011aad2e8e0049e44e426e3ed52f0dccfa7aa",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-wrong-phase-u57kmne2/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-wrong-phase-u57kmne2/.xyz/receipts/e08522c73dd4b0f47a3f58015a74b3d97d3b59ad.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:29Z",
+        "finished_at": "2026-10-15T02:51:31Z"
+      }
+    }
+  },
+  {
+    "name": "refuse-wrong-phase",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:31Z",
+      "outcome": "escalated",
+      "reason": "unattested-terminal",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-wrong-phase-u57kmne2",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "9d43b58bd2ab036936adfbe7215eb4d1ac64e981",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:31Z",
+        "finished_at": "2026-10-15T02:51:31Z"
+      }
+    }
+  },
+  {
+    "name": "seed-wrong-lane",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:34Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-wrong-lane-c36yqx4l",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "01e50bff79ee2882cb3142494cae3d889a0db7f7",
+      "reviewed_candidate": "01e50bff79ee2882cb3142494cae3d889a0db7f7",
+      "reviewed_head": "20f3d35cac1effe1bdbf2d7e60bfac6487381f6a",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-wrong-lane-c36yqx4l/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-wrong-lane-c36yqx4l/.xyz/receipts/01e50bff79ee2882cb3142494cae3d889a0db7f7.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:32Z",
+        "finished_at": "2026-10-15T02:51:34Z"
+      }
+    }
+  },
+  {
+    "name": "refuse-wrong-lane",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:34Z",
+      "outcome": "escalated",
+      "reason": "unattested-terminal",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-wrong-lane-c36yqx4l",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "15cc3cd74d1bf7ac422203dd68798025af65747f",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:34Z",
+        "finished_at": "2026-10-15T02:51:34Z"
+      }
+    }
+  },
+  {
+    "name": "seed-wrong-review",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:37Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-wrong-review-u2o_vy_e",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "bf44bb611c965ffa17212ca38bc9bd67061cf2ea",
+      "reviewed_candidate": "bf44bb611c965ffa17212ca38bc9bd67061cf2ea",
+      "reviewed_head": "ed35a138ad4a3190bd080cbe76bd57f1fc81b0c6",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-wrong-review-u2o_vy_e/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-wrong-review-u2o_vy_e/.xyz/receipts/bf44bb611c965ffa17212ca38bc9bd67061cf2ea.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:35Z",
+        "finished_at": "2026-10-15T02:51:37Z"
+      }
+    }
+  },
+  {
+    "name": "refuse-wrong-review",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:37Z",
+      "outcome": "escalated",
+      "reason": "unattested-terminal",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-wrong-review-u2o_vy_e",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "0ce55240e838140114845c9a9f85bb0a2d0a9a0e",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:37Z",
+        "finished_at": "2026-10-15T02:51:37Z"
+      }
+    }
+  },
+  {
+    "name": "seed-bad-sha",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:40Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-bad-sha-1fspn929",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "0c6101e9d34c4fca1a5f414ae28283ee8639de27",
+      "reviewed_candidate": "0c6101e9d34c4fca1a5f414ae28283ee8639de27",
+      "reviewed_head": "b0417efab651b553de3bdd24778f0b5b8c0b676a",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-bad-sha-1fspn929/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-bad-sha-1fspn929/.xyz/receipts/0c6101e9d34c4fca1a5f414ae28283ee8639de27.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:38Z",
+        "finished_at": "2026-10-15T02:51:40Z"
+      }
+    }
+  },
+  {
+    "name": "refuse-bad-sha",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:40Z",
+      "outcome": "escalated",
+      "reason": "unattested-terminal",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/malformed-bad-sha-1fspn929",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "4590f76ac1783b3fc9e0b6ee27f997d30507c638",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:40Z",
+        "finished_at": "2026-10-15T02:51:40Z"
+      }
+    }
+  },
+  {
+    "name": "missing-attestation-refuses",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:41Z",
+      "outcome": "escalated",
+      "reason": "unattested-terminal",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/missing-attest-0_o74o93",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "8828d4127ab4e71bd015ae704d4d30409fc87354",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:41Z",
+        "finished_at": "2026-10-15T02:51:41Z"
+      }
+    }
+  },
+  {
+    "name": "empty-attestation-refuses",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:42Z",
+      "outcome": "escalated",
+      "reason": "unattested-terminal",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/empty-attest-jkb31m0c",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "7fc7d377c2a572faa57a846d7740837da548d28c",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:42Z",
+        "finished_at": "2026-10-15T02:51:42Z"
+      }
+    }
+  },
+  {
+    "name": "unrelated-token-rebuild",
+    "rc": 7,
+    "expected": 7,
+    "ok": true,
+    "dispatched": true,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:44Z",
+      "outcome": "escalated",
+      "reason": "timeout-no-artifact",
+      "exit_code": 7,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": 1,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/unrelated-8xug5uc4",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "5b4c88c9be68fd526d5174e6c851e4a8e2b1cfee",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Open",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:43Z",
+        "finished_at": "2026-10-15T02:51:44Z"
+      }
+    }
+  },
+  {
+    "name": "seed-divergent",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:47Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/divergent-nmg9a3wv",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "0d7f810730ade5cff8aa738b0150928d7f83f797",
+      "reviewed_candidate": "0d7f810730ade5cff8aa738b0150928d7f83f797",
+      "reviewed_head": "eabe912bc595ec52ff912cff35218eb2b21af065",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/divergent-nmg9a3wv/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/divergent-nmg9a3wv/.xyz/receipts/0d7f810730ade5cff8aa738b0150928d7f83f797.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:45Z",
+        "finished_at": "2026-10-15T02:51:47Z"
+      }
+    }
+  },
+  {
+    "name": "divergent-head-refuses",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:47Z",
+      "outcome": "escalated",
+      "reason": "unattested-terminal",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/divergent-nmg9a3wv",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "divergent-root",
+      "head_sha": "7a2e946812a02c6c1bcee667dd945b654a30f8d5",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "not-run",
+        "exit": null,
+        "receipt_path": null
+      },
+      "acceptance": null,
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:47Z",
+        "finished_at": "2026-10-15T02:51:47Z"
+      }
+    }
+  },
+  {
+    "name": "post-approve-mutation-refuses",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:50Z",
+      "outcome": "escalated",
+      "reason": "candidate-drifted-from-reviewed-head",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/post-mutation-pzyksj12",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "9bca1fd79bd333a013e51cfa4dfe84dc1909e4bc",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": null
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:48Z",
+        "finished_at": "2026-10-15T02:51:50Z"
+      }
+    }
+  },
+  {
+    "name": "seed-gate-mutation",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:52Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/recovery-gate-mutation-2fqd7qg0",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "059c9dfaccc4334c260bca51372bd73456d5f7d9",
+      "reviewed_candidate": "059c9dfaccc4334c260bca51372bd73456d5f7d9",
+      "reviewed_head": "3a54f5c898cc32a2f77f87bb88e29185752b6a62",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/recovery-gate-mutation-2fqd7qg0/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/recovery-gate-mutation-2fqd7qg0/.xyz/receipts/059c9dfaccc4334c260bca51372bd73456d5f7d9.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:50Z",
+        "finished_at": "2026-10-15T02:51:52Z"
+      }
+    }
+  },
+  {
+    "name": "recovery-gate-mutation-refuses",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:54Z",
+      "outcome": "escalated",
+      "reason": "candidate-drifted-from-reviewed-head",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/recovery-gate-mutation-2fqd7qg0",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "18e27d876ced989db0dca6dcdab7651eaacb55af",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "printf unreviewed > src.txt; git add src.txt; git commit -qm post-mutation",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": null
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:52Z",
+        "finished_at": "2026-10-15T02:51:54Z"
+      }
+    }
+  },
+  {
+    "name": "seed-effects",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:57Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/historical-effects-qiz7e7z1",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "83e1f8a316cb43550830eb0cb799c7263f0eb4c7",
+      "reviewed_candidate": "83e1f8a316cb43550830eb0cb799c7263f0eb4c7",
+      "reviewed_head": "a675e59394314c6c734d03139a95f98af2642353",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/historical-effects-qiz7e7z1/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/historical-effects-qiz7e7z1/.xyz/receipts/83e1f8a316cb43550830eb0cb799c7263f0eb4c7.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:55Z",
+        "finished_at": "2026-10-15T02:51:57Z"
+      }
+    }
+  },
+  {
+    "name": "historical-effects-not-repeated",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:51:58Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/historical-effects-qiz7e7z1",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "97726680bd19d1e4e06564f1336d9282db5cfcc2",
+      "reviewed_candidate": "83e1f8a316cb43550830eb0cb799c7263f0eb4c7",
+      "reviewed_head": "a675e59394314c6c734d03139a95f98af2642353",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/historical-effects-qiz7e7z1/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": null
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:57Z",
+        "finished_at": "2026-10-15T02:51:58Z"
+      }
+    }
+  },
+  {
+    "name": "completion-write-failure-refuses",
+    "rc": 4,
+    "expected": 4,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:52:01Z",
+      "outcome": "escalated",
+      "reason": "phase-completion-write-failed",
+      "exit_code": 4,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/write-failure-gn86eq_9",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "ccc39bbdf8465b6e52a78075e2259a563e77fa34",
+      "reviewed_candidate": null,
+      "reviewed_head": null,
+      "added_sha256": null,
+      "attest_path": null,
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": null
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:51:59Z",
+        "finished_at": "2026-10-15T02:52:01Z"
+      }
+    }
+  },
+  {
+    "name": "seed-two-phase",
+    "rc": 0,
+    "expected": 0,
+    "ok": true,
+    "dispatched": false,
+    "result": {
+      "schema": "marathon-drive/result@1",
+      "execution_id": "manual-recovery",
+      "generated_at": "2026-10-15T02:52:03Z",
+      "outcome": "approved",
+      "reason": "already-satisfied",
+      "exit_code": 0,
+      "approval_preserved": false,
+      "issue": null,
+      "phase": "p1",
+      "lane": "p1",
+      "token": "MARATHON-P1-TURN",
+      "attempt": {
+        "count": null,
+        "max": 2
+      },
+      "builder": "claude",
+      "reviewer": "agy",
+      "target_repo": {
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/two-phase-2h3aruwb",
+        "origin_url": null
+      },
+      "base_branch": null,
+      "head_branch": "main",
+      "head_sha": "d2e9ff86c657c06280c1df81907a7c9e1497ad51",
+      "reviewed_candidate": "d2e9ff86c657c06280c1df81907a7c9e1497ad51",
+      "reviewed_head": "bc2f4609a3db4326961b395f5615d1d673b9bdfc",
+      "added_sha256": "e49d4ce44750428e54c1f0eec1ff567853c19a5273e7f7ab88d3dc33bd10a13c",
+      "attest_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/two-phase-2h3aruwb/.git/relay-attest/MARATHON-P1-TURN.json",
+      "branch_redirect": false,
+      "gate": {
+        "cmd": "true",
+        "result": "green",
+        "exit": 0,
+        "receipt_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/two-phase-2h3aruwb/.xyz/receipts/d2e9ff86c657c06280c1df81907a7c9e1497ad51.json"
+      },
+      "acceptance": {
+        "checked": false,
+        "unmet_count": 0
+      },
+      "pr": {
+        "number": null,
+        "url": null,
+        "state": null
+      },
+      "pr_note": null,
+      "relay_status": "Approved",
+      "timestamps": {
+        "started_at": "2026-10-15T02:52:02Z",
+        "finished_at": "2026-10-15T02:52:03Z"
+      }
+    }
+  },
+  {
+    "name": "two-phase-later-retry",
+    "rc": 7,
+    "expected": 7,
+    "ok": true,
+    "dispatched": true,
+    "result": null
+  }
+]

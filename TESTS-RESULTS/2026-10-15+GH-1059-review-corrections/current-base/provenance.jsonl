@@ -1,0 +1,1 @@
+{"at": "2026-10-15T03:04:58.366449+00:00", "commit": "469736386ef43ff1164995d6386d7d35fb0968ea", "pr": 1061, "command": "python3 utils/py/releases_app.py check", "rc": 0, "result": "pass", "evidence": "post-review-ledger-check.log", "limits": "local canonical ledger check only, zero failures/nine existing warnings; no full publication/hosted qualification claim"}

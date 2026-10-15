@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-15T03:08:04.974246+00:00",
+  "finding": "Producer keyed changelog sections by heading; duplicate historical headings collapsed and older entries were lost. This supersedes the earlier section-preservation claim. Never published.",
+  "observedBrokenHead": "7611b88c357b2a8e15dfd17eefe6df02d180a7db",
+  "incoming": "0215c276713c0609800e7037411e6db9502187ca",
+  "ownAdditionsFrom": "880d14526d614cf8f6bd766a6bd5a5391bb51a51",
+  "incomingSha256": "343e2255d4cef86a0572e6237da1c7c37f378647fbd83c3987501c24e8725829",
+  "ownAdditionSha256": "1bf44a6edf420b6a957ca9964332854f8d30e459ce01390eee825ae1d6dafc90",
+  "correctedSha256": "a231e2eda409b3475d85954bc4536cf452f65d835fc1faafde12df4786686a66",
+  "removeExactlyTwoOwnSectionsEqualsWholeIncomingBytes": true,
+  "brokenAfterRemovingOwnAdditionEqualsIncoming": false,
+  "incomingHeaders": 196,
+  "correctedHeaders": 198,
+  "runtimePolicyChanged": false,
+  "originalQaUnchanged": true
+}

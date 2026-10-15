@@ -4,6 +4,100 @@
 
 The Pages workflow admits development pushes and manual development runs. Nondevelopment job guards and per-ref concurrency prevent main/tag dispatches from attempting publication or cancelling development publication. Existing environment protections, action versions and build steps are unchanged. Draft PR only; no merge or deployment authorized.
 
+## 2026-10-15 — Preserve unpublished historical HiQS review receipts
+
+Recover three approved historical review records from the operator’s primary checkout
+through eleven source-traced cherry-picks. Preserve their exact bytes, earlier findings,
+rounds and evidence limits; record file hashes and source identities. The original checkout
+and a verified bundle retain its source history. Do not carry older staged development
+reversions into this documentation PR.
+
+These records document prior HiQS artifact reviews and confer no fresh Forge approval or
+current runtime/deployment qualification. Easy to reverse by reverting the documentation
+addition; no source work is discarded and no runtime, installation or activation occurs.
+
+## 2026-10-15 — PR1058 architecture and historical-evidence corrections
+
+Document the existing projections boundary accurately: ordinary ledger writes and hosted
+reconciliation honour `projections: off`, while the merge resolver explicitly rebuilds
+adopted views and honours deletions independently of that setting. Regenerate the ledger
+diagram from its corrected spec; no resolver or other runtime behaviour changes.
+
+Separate the GH-1052 intake headings from their content. Export the historical HiQS deployment
+review with generic path placeholders and an explicit link/blob identity for the unmodified
+attested original. Qualify its historical PASS: retained catalog rows and add/update/sync/
+prerequisite history do not establish a separate catalog preview/apply operation. That
+procedure remains unverified; this correction performs no catalog apply or installation.
+
+Easy to reverse: revert these documentation changes. Existing diagram validation, normal
+publication checks and independent review qualify the correction; no new CI test or case.
+
+## 2026-10-15 — Preserve ignored content during published worktree closeout (GH-1059)
+
+A clean Git status and a fully published PR do not preserve ignored worktree files.
+Ordinary native worktree removal deletes those files. Both native cleanup paths now
+enumerate ignored files through the existing inspection owner and preserve linked
+worktrees when any remain, or when enumeration fails. Whole-clone Trash relocation and
+the ordinary merged-only history requirement are unchanged. This extends no test registry or CI case.
+
+Easy to reverse by reverting the scoped guard; preserving an uncertain worktree has no
+data-loss effect. A backed-up synthetic native-Git fixture demonstrated the deletion;
+existing cleanup checks and recorded manual evidence must verify the guarded mode before
+publication. No existing checkout was removed for this observation.
+
+## 2026-10-14 — Retire fully published task checkouts before merge (GH-1059)
+
+Start-task now invokes targeted checkout retirement after verified ready-PR publication.
+Merge-cleanup's opt-in published-PR mode verifies live canonical PR/head/ref recovery,
+then reuses existing local-state/session/dependency checks, fresh inspection and removal.
+Full clones go to Trash; linked worktrees use native Git removal. The primary working
+tree and unrelated checkouts are excluded; normal merged-only cleanup is unchanged.
+
+This changes cleanup eligibility, so unknown or local-only state preserves the checkout.
+Rollback by reverting GH-1059 or omitting the new mode; recover full clones from Trash.
+Existing cleanup180 tests, three focused start-task suites and41 isolated manual cases
+passed, with negative controls and committed provenance under `TESTS-RESULTS/2026-10-14+GH-1059/`.
+Independent plan/final QA approved; the full publication gate passed409/409 in a separate full clone.
+
+## 2026-10-14 — merge-cleanup keeps the batch record itself and holds Done until QA is recorded (GH-1064)
+
+The `merge-batch` issue protocol (GH-944) was caller-owned prose for queues of three or more PRs.
+In three weeks it produced six batch issues in six different formats, and its Done rule rested on
+the agent's own reading. The script now owns the record for queues of **two or more**:
+
+- It opens the issue before the first merge, with the planned order and each PR's dependency
+  reasons, and records every outcome where it happens: the remote merge and its commit, the
+  reconcile result, skips, and hard stops against the PR in hand.
+- It only ever edits a marked block of the issue, so the agent's sections survive.
+- After the loop it records the sweep inputs (the inclusive merged range, files shared across
+  landed PRs, repaired conflict sites, the classified gate and the exact command), and ends with a
+  new **exit 4 — landed, QA pending** until `--record-sweep <file>` stores a clean, findings or
+  deferred verdict.
+- `--resume` continues the batch even when nothing is left to land.
+- Resume never loses a recorded merge or skips pending QA (#1074): the landed set also counts any
+  outcome with a merge, a merged status is never downgraded, and a queue of only new PRs joins the
+  batch whose QA is still pending.
+
+Per the operator's scoping under GH-831, the script runs no test suite; the agent still runs the
+sweep. Verified on the existing `gh436` suite (180 tests, with updated 2-PR expectations and a
+repointed parity guard; no new tests) plus recorded manual checks and three red controls under
+`TESTS-RESULTS/2026-10-14+GH-1064/`. Revert the GH-1064 commits to undo; batch records live in the
+gitignored `.tick/`.
+
+## 2026-10-14 — PR1054 review evidence and base refresh (GH-1042, GH-1045)
+
+Correct the two-phase manual replay association by clearing its earlier seed result before shell traversal. Prior raw evidence is retained unchanged; the corrected replay must report a null result for the intentional failed p2 dispatch, rather than an earlier p1 approval. Refresh onto development7bc727cb through the existing ledger writer; preserve ratings, issue identity and original PR history. Update the verified plan state and add [the previously missing durable bet record](decisions/2026-10-14-gh1042-historical-completion.md).
+
+The original Costly bet now has an explicit expected signal by2026-10-28 and an iterate recommendation: use the next independently authorized multi-phase run to confirm historical recovery and strict current-head merge refusal, or retain an unverified operational claim if no run occurs. No live run is activated. The production recovery/attestation behavior is unchanged by these corrections. Updated-head independent final QA and normal publication qualification remain required.
+
+## 2026-10-13 — Completed Marathon phases retain their reviewed recovery revision (GH-1042, GH-1045)
+
+Force recovery resolves a completed lane before allocating another token. Completed phases accept their base, numeric retry or force generation, and retain a validated completion revision in the existing protected approval record. Later phase/operator commits no longer invalidate that recorded historical completion. Current-head merge eligibility remains strict; recovery does not approve successor code or repeat completed post-approve effects.
+
+The bet is that historical completion and current merge approval need separate candidate checks, within the existing attestation owner. Missing legacy metadata retains strict checks; no automatic backfill. Revert the Python repair to roll back; the optional metadata is inert to old readers. Revisit on any false historical satisfaction or receipt that names current unreviewed HEAD as reviewed.
+
+Existing focused suites and retained manual refusal/recovery controls verified the source; Marathon's post-approve suite caught an event-order regression, fixed without changing its expectations. Final independent review and publication gate are recorded in the GH-1042 relay/evidence. No new suites or gate machinery.
+
 ## 2026-10-12 — Muse relay turns no longer stall on an unanswerable approval prompt (GH-521)
 
 Driven Muse relay turns hit the wall cap with `cpu=0.00` and no relay block. The cause was
@@ -1384,6 +1478,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 - **GH-450: this repo consumes HiQS-Labs/Model-catalog v1.0.0 — the OpenRouter alias table is now a generated file with a verified pin.** `relay-automation/model-catalog/catalog.json` is a byte-identical vendored copy of the catalog at tag `v1.0.0` (`75e19139`), with `catalog.pin.json` recording repo, tag, tag commit, version and the sha256 of both the copy and the catalog repo's own renderer (`render_openrouter.py`, vendored at `324b0b34` because the tagged renderer predates `--catalog` and CI has no sibling checkout). `relay-automation/openrouter-model-aliases.yml` is rendered from that copy in the renderer's deterministic order and its first line names the catalog version; the seven rows are unchanged as data. `utils/py/model_catalog.py` (`check` / `render` / `pin` / `version`) verifies the pin sha256s and re-renders the copy, demanding byte equality with the committed YAML — a flipped row in the copy fails both edges by name, a hand-appended YAML line fails drift. `resolve-model-alias.sh` is byte-untouched. `test/model-alias.sh` keeps every hand-written assertion driving the real resolver and gains the tier-4 post-correction guard (the raw resolver's substring capture of an old exact id after a repin is pinned as documented behaviour; the guard lives at `utils/py/model_alias.py:resolve_model_slug`, the one seam every shim uses — an exact `provider/slug` never reaches the fuzzy table) and the named terminal-refusal control (a miss is exit 1 / no output at the resolver and an unchanged pass-through at the seam, never a default). The vendored `version` rides `resolve-profile.sh --env` as `XYZ_MODEL_CATALOG_VERSION` on every tier and `HarnessTurnLogger` stamps it into `harnesses.db` `invocation_logs.model_catalog_version` (additive nullable column; pre-existing databases are migrated on open; the tracked db/sql were migrated through the `dump` verb). The GH-120 hand-append flow is retired: `relay-automation/README.md` → "Adding a new model alias" and the AGENTS.md rail now describe the two-PR flow (row upstream → tag → `pin` / `render` / `check` here). New suite `test/gh450-model-catalog-pin.sh` (26/0) with negative controls on scratch copies; four mutation transcripts (flipped row, guard removed, default-on-miss, hand-appended line) each observed red then reverted — `TESTS-RESULTS/2026-09-05+GH-450/provenance.jsonl`. Reversibility: **Easy** — revert the PR; the column is nullable and the resolver never changed. Verification: affected suites 26/26, 26/26, 11/11, 51/51, 8/8, 8/8, 4/4 and the full `validate.sh` gate in a disposable full clone, un-sandboxed, with clone identity unchanged (candidate SHA and outcome in the PR body).
 - **Launch destination test isolation:** give the artifact builder a committed full-clone source fixture while retaining its current working bytes. Unrelated caller edits no longer trip its correct dirty-source refusal. Targeted positive and negative controls are retained in `TESTS-RESULTS/2026-09-05+GH-447/provenance.jsonl`; the disposable macOS full gate passed 350/350 with two automatic serial retries and unchanged clone identity. PR #440 reconciliation completed, including a canonical repoint of the structured document path after read-back caught it still targeting the old location.
+
+## [Unreleased] - 2026-10-14
+
+### Fixed
+- **GH-1057: docs: record standing authorization for configured AI reviewers.** (express hotfix, GH-267 lane; existing suite test/gh365-pdda-gov-scan.sh as the landing gate.)
 
 ## [Unreleased] - 2026-10-09
 

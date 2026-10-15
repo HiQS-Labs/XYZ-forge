@@ -1,0 +1,34 @@
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `published` | standalone_clone | `published` | ✅ | 🔥 Active (2 in 10m) | 0 | 0 | **SAFE_REMOVE_CLONE** | 100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees) |
+merge-cleanup: [DRY RUN] Would remove verified standalone clone: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1059-published-clone-retirement-2026-10-14-gate/temp/gh1059-manual-fifhitcc/published
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `published` | standalone_clone | `published` | ✅ | 🔥 Active (2 in 10m) | 0 | 0 | **SAFE_REMOVE_CLONE** | 100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees) |
+merge-cleanup: Removing verified clean standalone clone: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1059-published-clone-retirement-2026-10-14-gate/temp/gh1059-manual-fifhitcc/published...
+merge-cleanup: ✅ Moved clone published to Trash (/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1059-published-clone-retirement-2026-10-14-gate/temp/gh1059-manual-fifhitcc/home/.Trash/published-93756)
+
+merge-cleanup: ERROR — Published retirement refused: checkout origin differs from the protected primary: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1059-published-clone-retirement-2026-10-14-gate/temp/gh1059-manual-fifhitcc/dependent
+
+merge-cleanup: ERROR — Published retirement refused: protected primary/ancestor or executing directory: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1059-published-clone-retirement-2026-10-14-gate/temp/gh1059-manual-fifhitcc/primary
+
+merge-cleanup: ERROR — Published retirement refused: protected primary/ancestor or executing directory: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1059-published-clone-retirement-2026-10-14-gate/temp/gh1059-manual-fifhitcc
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `dependent` | standalone_clone | `dependent` | ✅ | 🔥 Active (2 in 10m) | 0 | 0 | **SAFE_REMOVE_CLONE** | 100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees) |
+merge-cleanup: Removing verified clean standalone clone: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1059-published-clone-retirement-2026-10-14-gate/temp/gh1059-manual-fifhitcc/dependent...
+merge-cleanup: ERROR — REFUSING to remove /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1059-published-clone-retirement-2026-10-14-gate/temp/gh1059-manual-fifhitcc/dependent: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1059-published-clone-retirement-2026-10-14-gate/temp/gh1059-manual-fifhitcc/missing-home/.Trash is unavailable and rmtree is not a permitted removal path
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `published-worktree` | linked_worktree | `` | ✅ | 🔥 Active (3 in 10m) | 0 | 0 | **SAFE_REMOVE_WORKTREE** | Clean linked worktree, safe to remove via `git worktree remove` |
+merge-cleanup: Removing linked worktree /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1059-published-clone-retirement-2026-10-14-gate/temp/gh1059-manual-fifhitcc/published-worktree from parent /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1059-published-clone-retirement-2026-10-14-gate/temp/gh1059-manual-fifhitcc/dependent...
+merge-cleanup: ✅ Cleaned linked worktree metadata for published-worktree
+
+merge-cleanup: dependent: SAFE_REMOVE_CLONE at scan time -> PRESERVE_UNVERIFIED_QUERY now (Safety query failed: published PR #1059: PR must be a non-draft OPEN/MERGED same-origin PR targeting the integration branch)
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `dependent` | standalone_clone | `dependent` | ✅ | 🔥 Active (2 in 10m) | 0 | 0 | **PRESERVE_UNVERIFIED_QUERY** | Safety query failed: published PR #1059: PR must be a non-draft OPEN/MERGED same-origin PR targeting the integration branch |
+merge-cleanup: Skipping dependent: disposition is PRESERVE_UNVERIFIED_QUERY (Safety query failed: published PR #1059: PR must be a non-draft OPEN/MERGED same-origin PR targeting the integration branch)

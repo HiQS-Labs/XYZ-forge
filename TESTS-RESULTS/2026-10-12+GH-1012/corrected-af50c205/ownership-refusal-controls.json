@@ -1,0 +1,337 @@
+{
+  "candidate": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+  "rows": [
+    {
+      "case": "unrelated-dirt",
+      "head_unchanged": true,
+      "dirty": " M README.md\n M notes.txt\n M skills-army-hq/README.md\n",
+      "warning": "skills-army-hq: WARN not committed in /private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt: unrelated uncommitted changes: notes.txt \u2014 commit by hand or the hourly pulse stays blocked\n",
+      "foreign_edit_preserved": true,
+      "limit": "Other dirty file bytes preserved."
+    },
+    {
+      "case": "preexisting-readme",
+      "head_unchanged": true,
+      "dirty": "MM README.md\n M skills-army-hq/README.md\n",
+      "warning": "skills-army-hq: WARN not committed in /private/tmp/xyz1012-final-controls-af50c205/preexisting-readme: unrelated uncommitted changes: README.md \u2014 commit by hand or the hourly pulse stays blocked\n",
+      "foreign_edit_preserved": true,
+      "limit": "Existing transaction still refreshes working root README; this check verifies it is not auto-committed and the staged original is preserved."
+    }
+  ],
+  "commands": [
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/manager-source",
+      "argv": [
+        "git",
+        "config",
+        "user.name",
+        "Ownership Fixture"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/manager-source",
+      "argv": [
+        "git",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/manager-source",
+      "argv": [
+        "git",
+        "add",
+        "--",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq/README.md"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/manager-source",
+      "argv": [
+        "git",
+        "commit",
+        "-qm",
+        "fixture second revision"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--quiet",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "/private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt",
+      "argv": [
+        "git",
+        "config",
+        "user.name",
+        "Ownership Fixture"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt",
+      "argv": [
+        "git",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "--root",
+        "/private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt",
+        "--apply",
+        "init",
+        "--adopt-existing"
+      ],
+      "exit": 0,
+      "stdout": "{\"operation\": \"adopt-existing\", \"root\": \"/private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt\", \"skills\": [\"skills-army-hq\"], \"apply\": true}\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt",
+      "argv": [
+        "git",
+        "add",
+        "notes.txt"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt",
+      "argv": [
+        "git",
+        "commit",
+        "-qm",
+        "fixture note baseline"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "f6ac7ce1ebfb6f5326fb53a727e86ca7e6a7117b\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "--root",
+        "/private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt",
+        "--apply",
+        "update",
+        "skills-army-hq",
+        "--source",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq"
+      ],
+      "exit": 0,
+      "stdout": "{\n  \"operation\": \"update\",\n  \"apply\": true,\n  \"name\": \"skills-army-hq\",\n  \"source\": \"/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq\",\n  \"before\": \"e0d5ca1dbb0fcfc4553b9a17e27b3baac282aef4d4dc49f4b70e3da7efda8058\",\n  \"after\": \"2d735d34e41ce163fe67b9392830a671ba265a3696d62f1d4c794a8ef7a2e12d\",\n  \"commit\": \"9501274e7d3dd3ba1f38f57b7ef79479c99e2781\",\n  \"backup\": \"backups/skills-army-hq-2026-10-12.zip\"\n}\n",
+      "stderr": "skills-army-hq: WARN not committed in /private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt: unrelated uncommitted changes: notes.txt \u2014 commit by hand or the hourly pulse stays blocked\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "f6ac7ce1ebfb6f5326fb53a727e86ca7e6a7117b\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/unrelated-dirt",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1"
+      ],
+      "exit": 0,
+      "stdout": " M README.md\n M notes.txt\n M skills-army-hq/README.md\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--quiet",
+        "/private/tmp/xyz1012-final-controls-af50c205/pulse-collection",
+        "/private/tmp/xyz1012-final-controls-af50c205/preexisting-readme"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/preexisting-readme",
+      "argv": [
+        "git",
+        "config",
+        "user.name",
+        "Ownership Fixture"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/preexisting-readme",
+      "argv": [
+        "git",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "--root",
+        "/private/tmp/xyz1012-final-controls-af50c205/preexisting-readme",
+        "--apply",
+        "init",
+        "--adopt-existing"
+      ],
+      "exit": 0,
+      "stdout": "{\"operation\": \"adopt-existing\", \"root\": \"/private/tmp/xyz1012-final-controls-af50c205/preexisting-readme\", \"skills\": [\"skills-army-hq\"], \"apply\": true}\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/preexisting-readme",
+      "argv": [
+        "git",
+        "add",
+        "README.md"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/preexisting-readme",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "43bc5f8cfc7981a341367d4805d9ef57c05190b2\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/preexisting-readme",
+      "argv": [
+        "git",
+        "show",
+        ":README.md"
+      ],
+      "exit": 0,
+      "stdout": "preexisting staged README edit\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "--root",
+        "/private/tmp/xyz1012-final-controls-af50c205/preexisting-readme",
+        "--apply",
+        "update",
+        "skills-army-hq",
+        "--source",
+        "/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq"
+      ],
+      "exit": 0,
+      "stdout": "{\n  \"operation\": \"update\",\n  \"apply\": true,\n  \"name\": \"skills-army-hq\",\n  \"source\": \"/private/tmp/xyz1012-final-controls-af50c205/manager-source/skills/3-weekly/skills-army-hq\",\n  \"before\": \"e0d5ca1dbb0fcfc4553b9a17e27b3baac282aef4d4dc49f4b70e3da7efda8058\",\n  \"after\": \"2d735d34e41ce163fe67b9392830a671ba265a3696d62f1d4c794a8ef7a2e12d\",\n  \"commit\": \"9501274e7d3dd3ba1f38f57b7ef79479c99e2781\",\n  \"backup\": \"backups/skills-army-hq-2026-10-12.zip\"\n}\n",
+      "stderr": "skills-army-hq: WARN not committed in /private/tmp/xyz1012-final-controls-af50c205/preexisting-readme: unrelated uncommitted changes: README.md \u2014 commit by hand or the hourly pulse stays blocked\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/preexisting-readme",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout": "43bc5f8cfc7981a341367d4805d9ef57c05190b2\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/preexisting-readme",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1"
+      ],
+      "exit": 0,
+      "stdout": "MM README.md\n M skills-army-hq/README.md\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-controls-af50c205/preexisting-readme",
+      "argv": [
+        "git",
+        "show",
+        ":README.md"
+      ],
+      "exit": 0,
+      "stdout": "preexisting staged README edit\n",
+      "stderr": ""
+    }
+  ]
+}

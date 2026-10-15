@@ -295,6 +295,21 @@ trash over immediate recursive deletion. Automation must additionally prove that
 is a descendant of its dedicated task-clone root—not `$HOME`, a workspace root, or a path supplied
 only through an unchecked variable.
 
+**Published task closeout (GH-1059).** A start-task checkout need not remain on disk
+until merge once its branch and ready PR are fully published to canonical origin.
+Use merge-cleanup's explicit `--retire-published-pr N --checkout /absolute/task/path`
+mode; do not turn an arbitrary pushed branch or cached tracking ref into proof.
+It must bind the live same-origin, non-draft PR to its fetched origin head and prove
+every local ref/HEAD recoverable from that head or an already verified landing.
+All local-state, session, dependency, protected-path and fresh-inspection checks
+still apply. Preserve local-only evidence and anything unknown; never delete the
+protected primary or broaden this into a clone sweep. Run from outside the retiring
+checkout. Full clones move only to Trash; linked worktrees use native Git removal
+and retain their parent repository. In either cleanup mode, preserve a linked
+worktree with any ignored files or a failed ignored-file enumeration: native removal
+deletes ignored content, and Git refs do not prove its recovery. Ordinary cleanup
+still requires the existing merged-only history proof.
+
 ---
 
 ## 8. Using fragile relative paths between checkouts

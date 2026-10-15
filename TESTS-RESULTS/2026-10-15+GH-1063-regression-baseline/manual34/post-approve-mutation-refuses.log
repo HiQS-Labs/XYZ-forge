@@ -1,0 +1,11 @@
+marathon-drive: phase p1 already reached a terminal relay (STATUS: Approved, token done) — skipping render/reseed, re-running only the pre-advance gate
+marathon-drive: relay approved — running pre-advance gate: true
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 0MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/post-mutation-pzyksj12/relay-system/post-mutation-pzyksj12/2026-10-15/marathon-p1-025149.md
+marathon-drive: phase approved — running post-approve command: printf unreviewed > src.txt; git add src.txt; git commit -qm post-mutation
+marathon-drive: phase p1 post-approve: attested approval found but candidate 801293a008a2 is not the reviewed revision — candidate 801293a008a2 changes non-transcript content after reviewed head 4e495f5108e0 — not accepting it (GH-505)
+marathon-drive: phase p1: relay exited 0 but its approval is not attested for candidate 801293a008a2 — refusing to publish success
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/post-mutation-pzyksj12/relay-system/post-mutation-pzyksj12/2026-10-15/marathon-p1-025150.md
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7160MB, swap_free=1523MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/post-mutation-pzyksj12/phases/p1/ESCALATION.md (reason: candidate-drifted-from-reviewed-head)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/post-mutation-pzyksj12/result.json (outcome: escalated, exit 4)

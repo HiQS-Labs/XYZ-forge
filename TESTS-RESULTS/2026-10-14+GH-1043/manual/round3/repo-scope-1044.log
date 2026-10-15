@@ -1,0 +1,9 @@
+[WARN] Direct releases.db roadmap intake failed (controlled direct-reader failure); falling back to CLI.
+[WARN] Direct releases.db roadmap intake failed (controlled failure); falling back to CLI.
+[WARN] Direct releases.db roadmap intake failed (controlled failure); falling back to CLI.
+DB GH418 titles: ['Marathon planner still reads the frozen ROADMAP.md']
+CLI GH418 titles: ['Marathon planner still reads the frozen ROADMAP.md']
+CLI repo identity keys: ['repo_slug']
+Old producer rejected: Native roadmap CLI lacks repository/rating metadata; update the owning repo's releases CLI first
+PASS selected repository fallback and old-producer stop
+RED CONTROL witnessed foreign row when selected-repository filter is removed

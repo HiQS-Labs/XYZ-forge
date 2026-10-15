@@ -1,0 +1,31 @@
+{
+  "beforeBatch": "69666c474c4b27ddacd7c865d32ebee7713d1541",
+  "finalImplementation": "5c46c49b6580711300fc141c6896c1946028e4ab",
+  "files": [
+    {
+      "path": "test/gh648-l4-285-revalidate.sh",
+      "beforeBatchBlob": "5cb7a6ce8f404e83bdf259a56acc43bd73db2d6a",
+      "finalImplementationBlob": "5cb7a6ce8f404e83bdf259a56acc43bd73db2d6a",
+      "byteIdentical": true
+    },
+    {
+      "path": "utils/py/codex-turn.py",
+      "beforeBatchBlob": "75f8398f9b78835e8380282f2d26b7488c5a3bf1",
+      "finalImplementationBlob": "75f8398f9b78835e8380282f2d26b7488c5a3bf1",
+      "byteIdentical": true
+    },
+    {
+      "path": "utils/py/agy-turn.py",
+      "beforeBatchBlob": "ed6c754eae47d71ecb67bcbab482e1eea78cdb3d",
+      "finalImplementationBlob": "ed6c754eae47d71ecb67bcbab482e1eea78cdb3d",
+      "byteIdentical": true
+    },
+    {
+      "path": "utils/py/proc_group.py",
+      "beforeBatchBlob": "bfd6353cea8d108517a682c45ccb23c89d1afdd9",
+      "finalImplementationBlob": "bfd6353cea8d108517a682c45ccb23c89d1afdd9",
+      "byteIdentical": true
+    }
+  ],
+  "limits": "unchanged source does not establish cause of the observed PermissionError"
+}

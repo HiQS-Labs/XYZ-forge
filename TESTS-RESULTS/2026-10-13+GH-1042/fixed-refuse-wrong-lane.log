@@ -1,0 +1,7 @@
+marathon-drive: phase p1 startup: historical completion refused — phase completion does not match this phase, lane or approval
+marathon-drive: phase p1: terminal relay is NOT attested — refusing to treat it as satisfied; its token 'MARATHON-P1-TURN' is done and cannot be reopened, so this run halts (see GH-505)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/malformed-wrong-lane-u7jtnbnv/relay-system/malformed-wrong-lane-u7jtnbnv/2026-10-13/marathon-p1-154729.md
+marathon-drive: warn: host free swap is critically low (990MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7266MB, swap_free=990MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/malformed-wrong-lane-u7jtnbnv/phases/p1/ESCALATION.md (reason: unattested-terminal)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1042-force-gate-only-refire-2026-10-13-verify/temp/recovery-manual/malformed-wrong-lane-u7jtnbnv/result.json (outcome: escalated, exit 4)

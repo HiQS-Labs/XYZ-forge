@@ -1,0 +1,23 @@
+[
+  {
+    "name": "manual-final",
+    "command": [
+      "python3",
+      "temp/manual-replay.py",
+      "--expect-fixed"
+    ],
+    "exit_code": 0,
+    "duration_s": 65.15,
+    "sha": "9b392b358189545b0d077ca0cc3b9a51d778e8ba"
+  },
+  {
+    "name": "marathon-drive-final",
+    "command": [
+      "bash",
+      "test/marathon-drive.sh"
+    ],
+    "exit_code": 0,
+    "duration_s": 116.8,
+    "sha": "9b392b358189545b0d077ca0cc3b9a51d778e8ba"
+  }
+]

@@ -1,0 +1,6 @@
+marathon-drive: phase p1 startup: historical completion refused — phase completion does not match this phase, lane or approval
+marathon-drive: phase p1: terminal relay is NOT attested — refusing to treat it as satisfied; its token 'MARATHON-P1-TURN' is done and cannot be reopened, so this run halts (see GH-505)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/malformed-wrong-review-_btzyla5/relay-system/malformed-wrong-review-_btzyla5/2026-10-15/marathon-p1-034420.md
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7688MB, swap_free=1643MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/malformed-wrong-review-_btzyla5/phases/p1/ESCALATION.md (reason: unattested-terminal)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/malformed-wrong-review-_btzyla5/result.json (outcome: escalated, exit 4)

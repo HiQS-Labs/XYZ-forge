@@ -1,0 +1,43 @@
+{
+  "candidate": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+  "exit": 0,
+  "identity_unchanged": true,
+  "start": {
+    "v": 1,
+    "ts_ms": 1791847120937,
+    "run": "af50c205e-34635",
+    "runner": "ci-local",
+    "event": "run.start",
+    "commit": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+    "host": "noels-Mac-Studio",
+    "mode": "sequential",
+    "width": 1,
+    "tier": 3,
+    "registered": 406
+  },
+  "summary": {
+    "v": 1,
+    "ts_ms": 1791850551566,
+    "run": "af50c205e-34635",
+    "runner": "ci-local",
+    "event": "run.summary",
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "envelope_rc": "0",
+    "envelope_drift": "none",
+    "declared": "406",
+    "recorded": "yes"
+  },
+  "verdicts_recorded": 408,
+  "pass_verdicts": 407,
+  "duplicate_skip": [
+    "acorn-extract.sh"
+  ],
+  "acorn_ran_in_npm_stage": true,
+  "suite_transcript_hash_verified": true,
+  "record_output_bytes": 916525,
+  "record_output_sha256": "0b16ebea7fe76cd28c7a28d9e6fac24b008ca6b2e1d8ec0d3f17831e47e97ea0",
+  "full_log_sha256": "66021f7b4333a831c9ae0fca43c0bf41ab7c583156e05706b4e9c5e16b42cf5f",
+  "limit": "local self-reported full gate; live-agent turn deliberately skipped; exact resulting-main hosted boundary still required"
+}
