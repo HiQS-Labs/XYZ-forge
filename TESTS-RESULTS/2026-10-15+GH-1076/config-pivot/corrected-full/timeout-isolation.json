@@ -1,0 +1,34 @@
+{
+  "timestamp": "2026-10-15T22:50:07.005178+00:00",
+  "method": "Same existing suite, existing TEST_SOFT_FAIL mode to observe all six original cases; no case/parameter added or source/test edits. Full gate remains failed regardless of targeted result.",
+  "records": [
+    {
+      "label": "current",
+      "before": {
+        "head": "10325ce107ba45d21910e5a05a5d03486bd4ea65",
+        "status": ""
+      },
+      "after": {
+        "head": "10325ce107ba45d21910e5a05a5d03486bd4ea65",
+        "status": ""
+      },
+      "exit_code": 1,
+      "wall_seconds": 13.862,
+      "log": "gh1076-timeout-current.log"
+    },
+    {
+      "label": "baseline",
+      "before": {
+        "head": "f974fcee15647aae6551fcc81b129f5a6127120b",
+        "status": ""
+      },
+      "after": {
+        "head": "f974fcee15647aae6551fcc81b129f5a6127120b",
+        "status": ""
+      },
+      "exit_code": 0,
+      "wall_seconds": 13.376,
+      "log": "gh1076-timeout-baseline.log"
+    }
+  ]
+}

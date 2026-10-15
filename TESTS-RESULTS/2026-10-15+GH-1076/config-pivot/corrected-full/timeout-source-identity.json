@@ -1,0 +1,37 @@
+{
+  "baseline": "f974fcee15647aae6551fcc81b129f5a6127120b",
+  "current": "10325ce107ba45d21910e5a05a5d03486bd4ea65",
+  "files": [
+    {
+      "path": "test/relay-turn-timeout.sh",
+      "baseline_sha256": "36a29d8b4cefde1597bc9e2ed3aef4483073a1a7f9ff449be8a1ca9de305f042",
+      "current_sha256": "36a29d8b4cefde1597bc9e2ed3aef4483073a1a7f9ff449be8a1ca9de305f042",
+      "equal": true
+    },
+    {
+      "path": "relay-automation/codex-turn.sh",
+      "baseline_sha256": "ba6d351e23816dd50b662961a5fdde0189774dbfa0aa49bf18ac2845abeed412",
+      "current_sha256": "ba6d351e23816dd50b662961a5fdde0189774dbfa0aa49bf18ac2845abeed412",
+      "equal": true
+    },
+    {
+      "path": "utils/py/codex-turn.py",
+      "baseline_sha256": "85a4ac243e2c38296db59d5d8fe5ac3ea347cef7efc2845e81aa1fc1a20165f2",
+      "current_sha256": "85a4ac243e2c38296db59d5d8fe5ac3ea347cef7efc2845e81aa1fc1a20165f2",
+      "equal": true
+    },
+    {
+      "path": "utils/py/proc_group.py",
+      "baseline_sha256": "e5dbc41b0e48ded0a9a30ce381f141a27be1322963ce8fd5a44a94adb5ef0130",
+      "current_sha256": "e5dbc41b0e48ded0a9a30ce381f141a27be1322963ce8fd5a44a94adb5ef0130",
+      "equal": true
+    },
+    {
+      "path": "bin/tick",
+      "baseline_sha256": "bb1ab5c96ab865dfa6d5d7ac7200ab95a06b2eb30c8ae2e92d517a7a14cb4710",
+      "current_sha256": "bb1ab5c96ab865dfa6d5d7ac7200ab95a06b2eb30c8ae2e92d517a7a14cb4710",
+      "equal": true
+    }
+  ],
+  "scope": "Exact file equality does not establish latency/environment equivalence; current vs baseline targeted outcomes differ, cause unresolved."
+}

@@ -17,7 +17,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Configuration pivot implemented;13 existing focused suites pass. Supplemental final1/1 FAIL found drift wrongly entering proof fallback; two fatal-stop corrections verified by existing23-case suite and before/after manual control. | Retain original FAIL/counter; collect normal full-gate evidence for parent’s conditional procedural decision and publish GH1076/PR1079. No merge or activation. |
+| Configuration pivot implemented and drift finding corrected/verified. Both full attempts retained408/409; doc-path defect fixed, current Codex fast-stub timeout remains RED after serial retry. | BLOCKED on required timeout gate; parent judges separate procedural QA exception. Publish findings to GH1076, preserve local commits/clones, no bypass, merge or activation. |
 
 ## Table of contents
 
@@ -546,3 +546,24 @@ than stopping solely on the administrative count. We retain the finalFAIL and pa
 durability/landing decision; run the mandatory normal full pre-push gate on frozen corrected source
 for that decision. This does not waive real findings, required checks or access denial, and is not
 an Approved review claim. No second final reviewer turn, merge, primary activation or deployment.
+
+## Current handoff: mandatory full gate blocked (2026-10-15)
+
+Both complete normal pre-push attempts are retained in config-pivot/first-full and corrected-full.
+The first atf91e04b7 failed only the hardcoded plan-path check;10325ce1 made that one-line
+portable-path correction. Its existing targeted PDDA check passed, and PDDA passed in the nextfull.
+The corrected full at10325ce1 remained408/409,rc1: relay-turn-timeout failed its Codex fast-stub
+assertion both in the pool and alone. Five other first failures passed the native serial retries.
+The hook refused both pushes; remote PR1079 remains46c1317c and the new configuration code is local.
+
+A bounded existing-suite comparison (existing TEST_SOFT_FAIL mode, no added cases) reported
+current8pass/1fail and pinnedf974baseline9pass/0fail. Relevant suite/relay runtime files are equal;
+causality remains unresolved. Do not call this a harmless flake or claim the new code caused it.
+No timeout expectation was weakened, no bypass or third full/review round attempted. The parent
+can judge the retained supplemental QAFAIL/correction separately, but procedural discretion does
+not clear this real mandatory gate. Fix/verify the timeout cause before another normal source push.
+
+Only isolated override-file optimization was exercised. Fresh shared default-file read resolves
+optimizedfalse/errornull; no primary setting write. Hosted declaration remains unmerged/inactive
+through this PR. No live@2 writer/publication-race proof, exact-main qualification or stable-main
+claim. All eight owned task/evidence clones remain preserved with their ignored telemetry.

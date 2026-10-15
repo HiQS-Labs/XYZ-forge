@@ -1,0 +1,2 @@
+Negative control failed, fuzz_inputs.py returned non-zero on patched script
+{"target": "argv", "seed": 123, "iteration": 0, "minimized_input": ["-k", "val with space"]}

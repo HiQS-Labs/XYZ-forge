@@ -1,0 +1,18 @@
+== test: gh115-round-cap ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh115-round-cap.XXXXXX.KcZlsszwgp
+  PASS: Stalled run exits 4 and reports cap-stalled
+  PASS: Progressing run grants extension, approves, and records it
+  PASS: Progressing run hits hard ceiling and escalates
+  PASS: marathon-drive respects round-cap: in brief when no CLI arg given
+  PASS: marathon-drive --round-cap=7 overrides brief
+  PASS: marathon-drive --round-cap 9 overrides brief
+  FAIL: marathon-drive ESCALATION.md missing cap-stalled reason. Content: # ESCALATION — Marathon Phase p1
+
+phase: p1
+task: TASK6
+relay-drive-exit: 4
+reason: cap-or-close-mismatch
+gate: not-run
+relay-file: phases/p1/RELAY.md
+
+turn-log: unavailable (no turn log was created for the failing turn)

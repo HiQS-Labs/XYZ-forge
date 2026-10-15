@@ -1,0 +1,10 @@
+== test: relay-loop ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-relay-loop.XXXXXX.zN4tpJCF0m
+  PASS: default tick: run-runner -> NEXT-POLL: 0, exit 0
+  PASS: default tick: idle (not my turn) -> NEXT-POLL: 300 (adaptive backoff)
+  PASS: default tick: runner dispatched once
+  PASS: sleep-loop: terminal STATUS -> exit 10 (no sleep)
+  PASS: sleep-loop: iterates (runner ran) then stops on flip-to-Approved (exit 10)
+  PASS: background: dispatches detached (returns before runner finishes; pidfile written)
+  PASS: background: a running turn blocks a second dispatch (BG-RUNNING)
+  FAIL: runner should run once (got 0)
