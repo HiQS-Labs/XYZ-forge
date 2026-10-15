@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -145,3 +145,31 @@ This is the original remaining third final QA turn, not a new/reset review budge
 Integration refresh now includes development e09556a5. Canonical B1 refused same GH1043 key because updated_at differed; retained exact three-side diagnosis proves every business field identical. Caller handoff preserved incoming ledger and replayed only GH1059 through supported writer, then canonical rebuild/check: zero failures/nine existing warnings. all-native/base-preservation.json proves all incoming business rows preserved, one GH1059 add, runtime/policy blobs unchanged from0494f1ba; routine view bytes match incoming development. This is not a classifier bypass or manual SQL union: the refusal and semantic decision remain explicit evidence. Check the actual current diff and full touched files against acceptance, including existing removal consumer and shared guard. Runtime remains local CLI; no production/live activation/install/security change.
 
 Read-only review: only this thread writable; no git/test/validate/pytest/executable fixtures or network. Narrow file/byte probes with bytecode disabled permitted. No speculative scope expansion; concrete observed input/scope/falsifier required for behavior-change findings. Append at absolute EOF exact heading `### Reviewer (codex) · Round 3`, VERDICT PASS/FAIL, Basis and swept file yes/no. On PASS header Approved/NEXT — and tick done RELAY-GH1059-FINAL-R3-20261015; on failure use Escalated since3/3. Normal publication, exact-head hosted reviews/checks and destination qualification remain producer obligations. Handing off to Reviewer.
+
+
+### Reviewer (codex) · Round 3
+
+Block on the required current-run receipt format only; no runtime change or additional test run is requested.
+
+VERDICT: FAIL
+Basis: The shared native-worktree preservation correction and its consumers match the bounded acceptance. Retained source, inputs and logs support the correction, but the newer runs are attributed only in provenance.json while this repository requires their provenance.jsonl in the PR. That concrete evidence-packaging requirement remains unmet. Round3/3 therefore escalates without another review cycle.
+swept file: yes
+
+Evidence paths below are relative to TESTS-RESULTS/2026-10-15+GH-1059-review-corrections/ unless fully qualified.
+
+- [Should] Append truthful receipts for the newer runs to the existing required JSONL. `provenance.jsonl:1` contains only source1fb2d9f4 / manual45 / cleanup180. Newer attributions are instead in `all-native/provenance.json:3` (fb6b7f28, manual47 + cleanup180) and `:5` (359f7766, manual48). `AGENTS.md:112` requires: “Any run cited as evidence in an issue, PR, ROADMAP entry, or decision record must have its `provenance.jsonl` committed in the same PR”; `:160` applies it to retained manual checks. Cheapest correction: append records for those already retained runs, naming source, command/check, result and evidence/identity limitations. Keep the historical record; no suite, case, gate, code change or rerun is needed for this finding.
+  Observed input: the nonempty JSONL reports `records: 1 sources: ['1fb2d9f4']`; current correction runs are absent.
+  Affected scope: receipt packaging for the newer verification claims in this QA packet and task record.
+  Falsifier: retained JSONL records attributing manual47/cleanup180 to fb6b7f28 and manual48 to359f7766 close the finding.
+  Reviewer read-only command, with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`: `python3 -c 'import json; from pathlib import Path; p=Path("TESTS-RESULTS/2026-10-15+GH-1059-review-corrections/provenance.jsonl"); rows=[json.loads(s) for s in p.read_text().splitlines() if s.strip()]; assert rows; print("records:",len(rows),"sources:",[r.get("source") for r in rows])'`. Exit **0**; decisive output quoted above. Capture: `.relay-scratch/tmp/r3-receipts.out`.
+- [Pass] Shared inspection preserves both native flows: `skills/2-daily/merge-cleanup/scripts/scan_clones.py:968` enumerates ignored files only for linked worktrees, `:971` treats failed commands or stderr as incomplete evidence, `:1080` preserves failed queries, and `:1085` returns PRESERVE_IGNORED for nonempty results. `merge_cleanup.py:734` repeats inspection before removal; `:754` requires freshness and `:758` accepts only SAFE_REMOVE dispositions. Ordinary consumers (`:1516`, `:1542`) and published consumers (`:1265`, `:1267`, `:1271`) share this chain. Whole-clone Trash remains at `:803`.
+- [Pass] Publication and path containment remain bounded. `scan_clones.py:460` binds live same-origin PR metadata to exact fetched head; `:563` requires ref ancestry. `merge_cleanup.py:1241` validates explicit paths and `:1316` rejects malformed/mixed mode selection before ordinary routing. Policy agrees at `WORKTREE-SAFETY.md:298` and `skills/2-daily/merge-cleanup/SKILL.md:465`, including shared native ignored-file preservation. Start-task Step9 retains publication evidence, outside-target invocation, supporting-driver and preserve-on-unknown requirements (`skills/1-hourly/start-task/SKILL.md:288`).
+- [Pass] Retained observations are concrete, subject to the JSONL requirement above. `native-ignored-proof.json` records “nativeRemoveRc”:0 and “candidateStillExists”:false. `all-native/git-warning-proof.json` records rc0, empty stdout and the unreadable-directory warning. `all-native/final-manual-input.md` includes guard-removal red controls for published and ordinary inputs; `all-native/final-manual48.log:293` reports “Manual cases: 48”. `all-native/shared-guard-cleanup180.log:1921` reports “Ran 180 tests in 286.110s”, followed by “OK” at `:1923`. These are inspected producer artifacts, not reviewer reruns; cleanup180 is not claimed at359f7766.
+- [Pass] The integration decision is explicit: `all-native/pr1061-current-base-resolution.json` records “handoff”:true for the GH1043 same-key conflict. `all-native/pr1061-same-key-diagnosis.json` retains all three exact rows; a file-only JSON comparison exited0 and found the sole differing column was updated_at. `all-native/pr1061-semantic-handoff-resolution.json` records incoming-ledger preservation and owned-row replay through writer verbs, with “check: clean (0 failures, 9 warning(s))”. `all-native/base-preservation.json` records “allIncomingBusinessRowsPreserved”:true and six runtime/policy paths unchanged from0494f1ba. No writer or remote-state query was rerun here.
+- [Unverified — needs clone run] The corrected integrated head still needs the normal publication gate, exact-head hosted checks and destination qualification. Earlier gates attest their own revisions. No Git command, network request, suite, pytest, executable fixture or gate ran this turn.
+
+Coverage: swept both Python owners and all four named policy files in full, including pre-existing sections; reviewed canonical acceptance, current manual input/results, native-loss/warning/red-control artifacts and integration diagnosis. No additional material pre-existing runtime defect was found in this bounded sweep. Filesystem diff comparisons with the maintained primary copies exited1 and exposed opt-in propagation, targeted dispatch and the shared guard; these are not an independently established Git merge-base diff.
+
+Evidence limits: Verify-tier graph project Users-noelsaw-Documents-GH-Repos-XYZ-forge, generation2026-10-13T06:40:42Z, returned four relevant Function owners with no further page. Coverage reported no recorded issues for the six source/policy paths, changed start-task metadata and an excluded cache subtree. That index describes the maintained primary, so current seeded source supplied authority. Graph tracing was unavailable under the approval policy; source caller inspection supplied the consumer chain. No repository-wide completeness or live-retirement claim is made.
+
+Handing off to Producer (codex-producer) — record the existing newer runs in the required JSONL receipt and disposition this final-round escalation through the owning workflow. No further reviewer cycle is opened; publication, checks and qualification remain pending.
