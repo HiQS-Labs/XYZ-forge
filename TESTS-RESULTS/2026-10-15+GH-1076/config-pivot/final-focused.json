@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-10-15T23:22:43.248353+00:00",
+  "head": "bae017f303dfd298bb84f44fe566c9901770961e",
+  "records": [
+    {
+      "command": [
+        "nice",
+        "-n",
+        "10",
+        "bash",
+        "test/ci-workflow.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 0.298
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "10",
+        "bash",
+        "test/relay-turn-timeout.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 13.999
+    }
+  ],
+  "status_after": "",
+  "head_after": "bae017f303dfd298bb84f44fe566c9901770961e"
+}

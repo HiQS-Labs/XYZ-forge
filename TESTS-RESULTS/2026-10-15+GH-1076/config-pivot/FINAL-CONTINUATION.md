@@ -1,0 +1,21 @@
+# GH1076 final continuation checkpoint
+
+The normal full pre-push gate on bae017f303dfd298bb84f44fe566c9901770961e passed409/409 and published that exact source at23:43:24UTC. Runner1177.381s; outer push1182.024s. This is a local balanced4 full self-check, not hosted sequential qualification or stable-main proof. The406 registered shell suites plus3 non-shell/envelope outcomes are not an assertion count.
+
+Two first attempts failed: relay-turn-timeout (Codex fast stub exited7 under1s) and agent-chorus-bridge (restart observed stale Open/turn1). Both passed the gate's unchanged native serial retries: timeout9/9, bridge48/48. Complete outer telemetry/log and both first/serial logs are retained in conditioned-full. No deadline, case, worker count or gate was changed. Earlier f91e04b7 and10325ce1 full failures remain failures. Exact original timeout scheduling cause is unresolved; source-identical matched checks and native child timing reject a deterministic new-code explanation but do not prove a cause. Only this validation gate was observed at23:36; host one-minute load64.20 is a snapshot, not retroactive causality.
+
+Counted omissions: ci-workflow one skip line, marathon-plan two. RELAY_SELF_SUFFICIENCY_SKIP=1 omits optional live probes; optional LLM readiness does not establish independent review or live-service health. Source/status/config remained identical; only the expected remote-tracking task ref changed after successful push.
+
+## Acceptance blocker: normal PR receipts force full
+
+A second retained controlled Git fixture demonstrates an admission gap. A content-only README change passes the complete raw scope predicate but has no passing committed premerge receipt. Adding a clearly simulated receipt passes the generic receipt predicate, but the actual merged raw diff then contains TESTS-RESULTS and is rejected by the profile. See admission-scope.json and the exact executed manual script. No CI case was added and no simulated result is software proof.
+
+wave_reconcile.py:497-513 rejects every companion path;1044-1169 validates committed premerge receipts;2275 calls it unconditionally. AGENTS.md:120-123 requires cited provenance in the same PR. The merge-cleanup ledger gate is distinct; it does not itself invoke this receipt command. This demonstrates the ordinary in-PR receipt flow, not every conceivable metadata arrangement. Do not bypass the receipt policy or broadly exempt evidence paths. Keep full fallback and profile acceptance/activation blocked pending a design that validates any permitted receipt-only companions against the complete scope contract.
+
+## Scope and retained review
+
+Production diff against pinned development d48aa774 remains four files,+330/-37. Existing ci-route expectations change5->8 without adding a case. Separate docs/ledger/review/evidence are larger. The supplemental final review remains FAIL1/1 with incomplete full-file sweep. Its one Should was corrected by9e3e220c and manual red/green controls plus the existing23-case suite passed; the passing full gate is not a reviewer approval or cap reset. Parent owns the separate procedural acceptance decision; the new eligibility finding remains an actual acceptance gap.
+
+Controlled @2 writer/reader/publication recovery is proved only in the retained simulated-validation fixture: real local FF rejection, receipts-first recovery, one recompute, no suite replay, unchanged receipt hashes. No real governed eligible GitHub landing, executed current-source @2 registered suites or live hosted recovery is proved. The earlier real f874 component runs remain historical. No primary setting, hosted variable, installation, deployment, live Marathon/Jog, merge or cleanup changed. Local primary setting readback was false; proposed future hosted workflow defaulton is not active on this draft PR.
+
+The lossless compatibility delta and preserved original blob reduce duplicate evidence by5149 lines. Known-pattern audits found no secrets; arbitrary-format guarantees are not made. Full new environment/debug streams stay local. All task clones and controlled fixtures remain retained with unique commits/refs. Latest source publication is recorded here; subsequent hosted/head metadata is retained separately in the final handoff.

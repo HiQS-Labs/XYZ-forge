@@ -1,0 +1,124 @@
+{
+  "metadata": "gh1076-conditioned-full.json",
+  "tested_sha": "bae017f303dfd298bb84f44fe566c9901770961e",
+  "run": "bae017f30-62017",
+  "full_suite_wall_seconds": 1177.381,
+  "outer_command_wall_seconds": 1182.024,
+  "outer_rc": 0,
+  "start": {
+    "v": 1,
+    "ts_ms": 1792106624450,
+    "run": "bae017f30-62017",
+    "runner": "validate",
+    "event": "run.start",
+    "commit": "bae017f303dfd298bb84f44fe566c9901770961e",
+    "host": "noels-Mac-Studio",
+    "mode": "parallel",
+    "width": 4,
+    "tier": 3,
+    "registered": 406
+  },
+  "summary": {
+    "v": 1,
+    "ts_ms": 1792107801831,
+    "run": "bae017f30-62017",
+    "runner": "validate",
+    "event": "run.summary",
+    "passed": 409,
+    "failed": 0,
+    "total": 409,
+    "envelope_rc": "0",
+    "envelope_drift": "none",
+    "suite_events": "410",
+    "run_set": "406",
+    "registered": "406",
+    "suite_events_match": "yes"
+  },
+  "first_failure_events": [
+    {
+      "v": 1,
+      "ts_ms": 1792107219748,
+      "run": "bae017f30-62017",
+      "runner": "validate",
+      "event": "suite",
+      "lane": "pool",
+      "name": "relay-turn-timeout.sh",
+      "queued_ms": 1792106624469,
+      "started_ms": 1792107215890,
+      "ended_ms": 1792107219741,
+      "duration_ms": 3851,
+      "rc": 1,
+      "worker": 28652,
+      "out_bytes": 280,
+      "out_sha256": "dc93c4a733b2",
+      "skip_lines": 0
+    },
+    {
+      "v": 1,
+      "ts_ms": 1792107261810,
+      "run": "bae017f30-62017",
+      "runner": "validate",
+      "event": "suite",
+      "lane": "pool",
+      "name": "agent-chorus-bridge.sh",
+      "queued_ms": 1792106624469,
+      "started_ms": 1792107253118,
+      "ended_ms": 1792107261797,
+      "duration_ms": 8679,
+      "rc": 1,
+      "worker": 64141,
+      "out_bytes": 12907,
+      "out_sha256": "8c0aca3f7a9c",
+      "skip_lines": 0
+    }
+  ],
+  "retries": [
+    {
+      "v": 1,
+      "ts_ms": 1792107767948,
+      "run": "bae017f30-62017",
+      "runner": "validate",
+      "event": "retry",
+      "lane": "retry",
+      "name": "relay-turn-timeout.sh",
+      "started_ms": 1792107748138,
+      "ended_ms": 1792107767939,
+      "duration_ms": 19801,
+      "rc": 0,
+      "rc_first": "1",
+      "classified": "contended"
+    },
+    {
+      "v": 1,
+      "ts_ms": 1792107775358,
+      "run": "bae017f30-62017",
+      "runner": "validate",
+      "event": "retry",
+      "lane": "retry",
+      "name": "agent-chorus-bridge.sh",
+      "started_ms": 1792107768062,
+      "ended_ms": 1792107775348,
+      "duration_ms": 7286,
+      "rc": 0,
+      "rc_first": "1",
+      "classified": "contended"
+    }
+  ],
+  "skipped_output": [
+    {
+      "name": "ci-workflow.sh",
+      "lane": "pool",
+      "skip_lines": 1
+    },
+    {
+      "name": "marathon-plan.sh",
+      "lane": "pool",
+      "skip_lines": 2
+    }
+  ],
+  "telemetry_sha256": "45166b2443e5fccc7a5d6d15980668182d88217b03dc8be778df92b7ed20a12d",
+  "telemetry_source": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate/.tick/telemetry/validate-parallel-1792106624450-62017.jsonl",
+  "identity_unchanged": false,
+  "identity_unchanged_except_expected_push_tracking": true,
+  "coverage_note": "406 registered shell suites plus3 non-shell/envelope outcomes=409 reported total. Count is not individual assertions; skip_lines marks output omissions, not waived coverage."
+}

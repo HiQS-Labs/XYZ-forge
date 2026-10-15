@@ -1,0 +1,42 @@
+{
+  "tested_sha": "bae017f303dfd298bb84f44fe566c9901770961e",
+  "files": {
+    "metrics.json": {
+      "bytes": 3340,
+      "sha256": "bc46ddc8a0e14fd9f7b7a4799e79bc8ddd2bfe3ef240d69d8c59adcfb2469de3"
+    },
+    "timeout-first.log": {
+      "bytes": 280,
+      "sha256": "dc93c4a733b274000cf50ff052bf6bfa4d3c2c68e0b68e332fda417b7c8ae0a7"
+    },
+    "metadata.json": {
+      "bytes": 9842,
+      "sha256": "d32ee5cf4eb251d40bac7df48f8b0cddb5844044338b625aa7fe7d481408d949"
+    },
+    "timeout-serial.log": {
+      "bytes": 680,
+      "sha256": "7d7e5da5f7672834a3a58e6095c90e9a35e98d6e3e2aaea2b6b05382762b9bdd"
+    },
+    "validation.jsonl": {
+      "bytes": 131251,
+      "sha256": "45166b2443e5fccc7a5d6d15980668182d88217b03dc8be778df92b7ed20a12d"
+    },
+    "bridge-first.log": {
+      "bytes": 12907,
+      "sha256": "8c0aca3f7a9c539bddda06148b4fc79a6ee7f32ad930836e6b3c5216eeece6ef"
+    },
+    "bridge-serial.log": {
+      "bytes": 2956,
+      "sha256": "e9179041f1faff936744073c1e909d5ef8021dd3ec9802d323899866fb430cc7"
+    },
+    "queue.json": {
+      "bytes": 123,
+      "sha256": "4bcb89c67cbddd9d84d6ab3a8b5f03e8a13059e709d0e80b073a4d210912d277"
+    },
+    "gate.log": {
+      "bytes": 35338,
+      "sha256": "33bd800d7710bac0b0fb08c68adda0e2846d211cfa5ed14e51c5f9b7e0329de1"
+    }
+  },
+  "qualification": "Local normal balanced full self-check; not hosted sequential or exact-main proof"
+}

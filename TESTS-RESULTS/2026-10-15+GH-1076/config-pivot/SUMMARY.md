@@ -1,3 +1,5 @@
+Latest continuation: [FINAL-CONTINUATION.md](FINAL-CONTINUATION.md). Earlier paragraphs below are retained historical checkpoints.
+
 # GH1076 configuration-pivot verification
 
 Source implementation ddb52b5f, reconciled with development14081d61 at1a550df6. The native ledger resolver verified a clean trio after preserving11 ours-changed and4 incoming-changed INSERT rows, with no missing rows and generation floor1666; incoming generated view retained.

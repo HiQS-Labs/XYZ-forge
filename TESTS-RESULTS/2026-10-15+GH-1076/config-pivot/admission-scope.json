@@ -1,0 +1,18 @@
+{
+  "kind": "CONTROLLED MANUAL ADMISSION TRACE; simulated receipt only, no software qualification",
+  "source_head": "bae017f303dfd298bb84f44fe566c9901770961e",
+  "fixture": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/admission-fixture",
+  "base": "cfcf7e5ceeb25e5a746d5e7a02853d0c9b97052a",
+  "content_head": "3c9382a9c17495277b6c794b74e71d04d28d295f",
+  "landing": "b5622218acedf0ad33be77f5414cc8884875f9c2",
+  "content_only_scope_accepts": true,
+  "content_only_premerge_error": "No committed provenance.jsonl or error_log.jsonl receipts found under TESTS-RESULTS/ at HEAD 3c9382a9c1.",
+  "receipt_bearing_premerge_error": null,
+  "receipt_bearing_scope_error": "profile scope includes unknown, mixed, added or high-risk files",
+  "landing_paths": [
+    "TESTS-RESULTS/CONTROLLED-ADMISSION-ONLY/provenance.jsonl",
+    "skills/3-weekly/skills-army-hq/README.md"
+  ],
+  "conclusion": "The demonstrated ordinary in-PR receipt flow passes generic premerge receipt validation but forces full profile fallback. No admission policy or receipt exemption was changed.",
+  "limits": "This does not prove all conceivable metadata arrangements are unreachable; no real PR, suite, installation, GitHub write, or setting change."
+}

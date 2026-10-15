@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-15T23:36:13.660124+00:00",
+  "load": "16:36  up 7 days,  7:19, 1 user, load averages: 64.20 48.94 40.23",
+  "active_gate_processes": [
+    {
+      "pid": "62017",
+      "ppid": "61701",
+      "nice": "0",
+      "command": "bash /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate/validate.sh"
+    }
+  ]
+}
