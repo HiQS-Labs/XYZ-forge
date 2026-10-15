@@ -29,8 +29,8 @@ the agent's own reading. The script now owns the record for queues of **two or m
 - `--resume` continues the batch even when nothing is left to land.
 
 Per the operator's scoping under GH-831, the script runs no test suite; the agent still runs the
-sweep. Verified on the existing `gh436` suite (185 tests, with updated 2-PR expectations and a
-repointed parity guard; no new suite) and three red controls under
+sweep. Verified on the existing `gh436` suite (180 tests, with updated 2-PR expectations and a
+repointed parity guard; no new tests) plus recorded manual checks and three red controls under
 `TESTS-RESULTS/2026-10-14+GH-1064/`. Revert the GH-1064 commits to undo; batch records live in the
 gitignored `.tick/`.
 

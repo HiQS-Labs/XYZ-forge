@@ -275,6 +275,18 @@ All paths are under `skills/2-daily/merge-cleanup/scripts/` unless given as repo
   which covers every site, including :935 (before `p_num`). The parity guard's AST pins move to
   `_land_prs_loop`.
 - **Landing order:** kept as `landed_order` in the record (append on merge), not derived from keys.
+- **Amendment after PR #1069 opened (operator decision, 2026-10-14):** a ponytail review against
+  AGENTS.md's *No new tests* rail found that step 5's `TestBatchIssue` pinned new behaviour rather
+  than keeping an existing suite truthful. It was dropped, with the held-PR outcome asserts and the
+  `teardown_ok` fixture knob. Kept: the exit-4 expectation edits, the `GH_STUB` issue verbs that
+  every 2-PR run now calls, the AST repoints, the 1-PR no-issue assert and the resume test's
+  one-issue-before-first-merge assert. The `batch-issue-threshold` and `batch-issue-resume-append`
+  rows now name `TestGh623Resilience.test_resume_lands_a_pr_whose_last_repair_resolved`.
+  `batch-sweep-record` points at the manual evidence and is no longer in `REQUIRED_CAPABILITIES`.
+  The five scenarios now run as a manual check (`manual-batch-checks.py.md`, kept out of the repo's suites).
 - **Verification:**
-  - `bash test/gh436-merge-cleanup.sh`: 185 tests OK.
-  - Red controls (each mutation restored byte for byte): `TESTS-RESULTS/2026-10-14+GH-1064/provenance.jsonl`.
+  - `bash test/gh436-merge-cleanup.sh`: 180 tests OK (185 before the amendment).
+  - Manual batch-record checks: 6 tests OK (`TESTS-RESULTS/2026-10-14+GH-1064/manual-batch-checks.log`).
+  - Red controls (each mutation restored byte for byte), re-witnessed after the amendment:
+    threshold on the gh436 resume test, the two body/verdict controls on the manual checks.
+    See `TESTS-RESULTS/2026-10-14+GH-1064/provenance.jsonl`.
