@@ -412,3 +412,89 @@ Conditional procedural discretion is not a claimed approval; report concrete dur
 and bounded recommendations if anything remains rather than silently resetting a budget.
 Current development remainsdc7245b4; publication/recovery correction above supersedes the earlier
 separate physical phase-file wording. Only the container and provenance physical files are written.
+
+
+## Operator pivot: configurable optimized qualification — 2026-10-15T21:20Z
+
+This section SUPERSEDES the dormant-only activation requirement above. Noel: "I’d rather turn on
+optimized CI and if problems arise then turn it off. Can we have it be a local config setting in
+the currently designated settings folder. Let’s pivot to that." He explicitly accepts this bounded
+project risk. Parent instructs enabling the bounded strategy after verification, preserving full
+fallback and exact-main/full, no new CI cases, no merge/deploy/access bypass. Primary activation must
+be coordinated through parent to avoid the other worker's in-flight1053/1082 checks.
+The supplemental disabled-layout plan PASS at073b8aa5 is retained, but cannot approve this later
+configuration/activation pivot. This pivot receives one scoped independent plan review under the
+explicit new instruction to include it, without resetting any historical counters. The approved
+extra final QA remains unspent. Procedural discretion never waives actual Critical/High defects.
+
+### Configuration recon and precise effect
+
+Actual existing owner: utils/py/device_config.py::get_device_config_path, load_local_device_config_
+diagnostic and resolve_device_block. Default path ~/.xyz/device_config.json; override existing
+XYZ_DEVICE_CONFIG_PATH. On this Mac the actual file exists at /Users/noelsaw/.xyz/device_config.json,
+not a symlink, no path override or ci block is set. No values/secrets are copied. Current block
+precedence is environment > local JSON > defaults. Reuse that owner, not .claude/settings.json,
+RELEASES DB settings or a new project config service. Add optional strict validation to its existing
+nested resolver (default False preserves other callers) and use ci.optimized, boolean defaultfalse,
+with XYZ_CI_OPTIMIZED environment override (strict0/1/false/true spellings). Malformed file/block/key/
+value/override returns a diagnostic and optimizedfalse, even if another tier could mask the error.
+Only known ci key optimized is accepted. Extend existing device_config CLI with --ci to print this
+non-secret resolved block/diagnostic/path. Its ordinary runtime-config output remains unchanged.
+
+The switch controls the existing wave qualification selector, both local wave_reconcile --qualify
+and hosted wave jobs that explicitly supply the env override. It does NOT redefine explicit
+validate.sh, ci-local.sh or the existing local pre-push tiers; these retain their current contract.
+Off means hosted/qualified Mediumfull; existing Small and exact-mainfull remain unchanged. Unknown,
+mixed or high-risk scopes remainfull regardless of switch. The only new narrower profile is the
+already bounded skills-army-content@1, Small72+area8 with their real two envelopes/stages. Candidate-
+specific activation approval is superseded by Noel's explicit bounded risk acceptance; exact scope,
+actual complete landing/proof and ordinary merge/review rules are not waived.
+
+Hosted contract: add XYZ_CI_OPTIMIZED to the existing wave job env using the native repository
+variable of the same name, default'1' when unset. Existing device config env tier consumes it; the
+Mac file is never uploaded/read by hosted runners. Setting the repository variable to'0' disables
+future Medium optimization without editing code; no repository variable/settings/access changes
+are performed by this task. Workflow declaration is not an actual live run: PR1079 remains draft,
+so this hosted setting becomes effective only after its separately authorized future landing.
+Main workflow's explicit sequentialfull is untouched and cannot be narrowed by this switch.
+
+Local verification enables only a minimal isolated config file through the EXISTING
+XYZ_DEVICE_CONFIG_PATH override; no global Mac file or primary checkout activation occurs here.
+The default file's ci.optimized=false (or env XYZ_CI_OPTIMIZED=0 overriding true) restores Mediumfull
+locally. Primary-wide enablement is a parent-coordinated action, not inferred from this branch.
+
+### Updated bounded sequence and durability checks
+
+1. Keep the publisher-compatible two-row container and all strict source/environment/phase proof
+   rules from the corrected layout. Extend the same wave/router owners; additionally extend the
+   existing device_config nested resolver and the existing wave job env. No new module/config store,
+   runner/lane or CI test. Router emits supported profile/candidate and resolved enabled metadata.
+   Wave checks exactly one merged development PR with actual tested=landing snapshot, exact source
+   head/base and raw modified regular tracked top-level .md/.txt scope. All doubt returnsfull.
+2. Replace the obsolete literalfalse check with strict resolved configuration and supported profile
+   code at the tested/current revisions. Record resolved optimized=true plus source policy revision
+   with @2 evidence. Off/error cannot accept @2 to suppress full qualification. Keep @1 semantics.
+   Capture the setting BEFORE sanitizing child gate environments; pass the resolved enablement only
+   to classification. Strip CI override/path override from actual suite children to avoid leaking
+   the parent policy into fixture suites. Existing gate_env remains the baseline sanitizer; no new
+   telemetry stage. Runtime fingerprint records actual OS/arch/tool/package versions and tracked
+   dependency hashes, not raw environment/secrets. No verdict transfer across candidate/environment.
+3. Existing phase runner executes exactly the two fixed sequential commands as argument arrays,
+   validates each launched process's original telemetry, writes a two-row container + provenance via
+   the existing journal, and preserves publisher/recovery unchanged. Strict profile summary requires
+   actual Small PDDA/Python/envelope and area envelope, complete lists/counts/width1, no failed rc,
+   retry, unexplained skip or identity drift. The @2 generic premerge fallthrough guard is required.
+4. Verify configuration precedence/on/off/malformed observations using the actual owner and isolated
+   config path; original real two-stream byte/hash/identity roundtrip; strict validation and rejection
+   using retained actual data/manual controls; current @1 replay equality. Run existing ci-route,
+   gh35/gh365, gh425/wave/gh421/gh740/gh674/gh496, gh174/gh346/gh549 config consumers and ci-workflow
+   checks as applicable, serial per local host in the disposable helper. No new collected assertion.
+   Existing publisher race/recovery suite supplies real recovery coverage; don't claim a live @2
+   hosted qualification on this Large source. Report the boundary of each observation accurately.
+5. Refresh development and resolve material movement BEFORE the already approved extra final QA.
+   Preserve original3/3 histories and disabled-layout PASS separately. Grade the full actual pivot
+   diff/evidence in that final review; report exact material remaining issues with a bounded
+   recommendation if procedural counts arise. After PASS, freeze source, run the normal mandatory
+   full pre-push gate once at exact source in the disposable helper, push ONLY1079 through ordinary
+   access and verify actual natural exact-head hosted outcomes. No force/bypass/new identities on
+   access denial. Publish outcomes/settings scope/disable procedure to1076/1079; no merge or cleanup.
