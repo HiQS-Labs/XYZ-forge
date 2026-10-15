@@ -1,3 +1,5 @@
+Current disposition (2026-10-15 UTC): original final QA remains Escalated3/3. Noel authorized two additional rounds; extension1/2 independently PASSED atb55594b7, attested46973638. The exact missing-JSONL finding is closed. Current-base0215 canonical replay preserves incoming business content and native runtime/policy bytes; current-base/ retains details. Normal current-head publication, exact-head checks and destination qualification remain pending. No cap reset or new CI case. Historical progression below is retained.
+
 Current correction: the shared native inspection now preserves ignored content in both
 ordinary and published cleanup. `all-native/` records the additional ordinary admission
 RED, shared-guard manual47 + existing cleanup180 pass, and final manual48 covering real
