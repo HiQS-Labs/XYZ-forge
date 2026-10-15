@@ -2,7 +2,7 @@
 title: "GH-1059: Retire fully published task checkouts before merge"
 gh_issue: 1059
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1059
-status: "In progress (2-WORKING — planning)"
+status: Complete
 created: 2026-10-14
 updated: 2026-10-15
 owner: Codex
