@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -131,3 +131,42 @@ Added a concise README scope limitation and recovery34-receipt-scope.json with a
 Review the clarity/accuracy of the scope correction and unchanged overall qualified disposition against the named existing inputs/contract/source; rest of report/receipts unchanged except optional prior log-alias Nit fixed before normal publication. Earlier normalDocsgates86/89/102 belong their exact prior heads; the current post-review publication must run normally again and retain a fresh Doc receipt because this relay changed outside TESTS. Native hosted qualification is still independently pending.
 
 Only this relay writable; no Git/network/tests/pytest/executable fixtures/repository imports. Narrow readonly file/JSON probes allowed with bytecode disabled. Append exact `### Reviewer (codex) · Round 2`, VERDICT PASS/FAIL, Basis, swept file yes/no; PASS Approved/NEXT — and tickdone RELAY-GH1063-QA-EVIDENCE-R2-20261015. Handing off to Reviewer.
+
+### Reviewer (codex) · Round 2
+
+VERDICT: PASS
+
+Basis: Approve the evidence scope correction. The missing p2 receipt is an explicitly unqualified observation from an unarmed invocation; no p1 receipt is substituted and no complete receipt-contract coverage is claimed. This approves evidence accuracy only. The original native failure remains unresolved; no fresh native formal approval, cap reset, hosted qualification or live retirement authority follows.
+
+swept file: yes
+
+Scope: all 67 retained files under `TESTS-RESULTS/2026-10-15+GH-1063-final-regression-QA/` (`QA/` below), including the complete report, receipts, recorded inputs, recovery logs, native diagnostics and validator/publication investigations. No additional substantive reporting defect found in the pre-existing material. This checkout has no graph project; the consulted `XYZ-forge` generation was 2026-09-01T15:54:30Z, with missing artifact freshness, changed source metadata and a shell parse gap at line 351 (read directly). Direct reads and standard-library comparisons supplied the evidence; no graph completeness claim is made.
+
+- [Pass] Recovery count and receipt coverage are separated accurately. `QA/README.md:15` excludes complete terminal-receipt coverage and p2 receipt fields/attempt count. `QA/recovery34-results.json:1911` retains `rc: 7`, `expected: 7`, `dispatched: true`, `result: null`; the raw JSON log equals this array and all 34 exit expectations agree. `QA/recovery34-logs/two-phase-later-retry.log:10` records p1 completion, line 18 names the fresh p2 token, and lines 21–25 preserve timeout/no-artifact escalation. Keep the limitation and raw null.
+- [Pass] The explanation follows the retained input and writer contract. `TESTS-RESULTS/2026-10-13+GH-1042/manual-replay.py:143` deletes the earlier root result; line 144 invokes the shell without progress/result flags. `MACHINE-CONTRACTS.md:62` identifies the writer as armed by `--result-file`; `utils/py/marathon_drive.py:152` returns when unarmed and line 1137 conditions arming on that argument. `relay-automation/marathon.sh:393` initializes progress to zero; lines 405–406 opt in, and lines 623–631 condition result-flag forwarding on that opt-in. `QA/recovery34-receipt-scope.json:8` reflects this invocation with fixture-relative paths. Its inventory at line 25 is a retained Producer observation, not an independently reconstructed historical filesystem inventory this turn. No armed-writer violation or contract completeness is established.
+- [Pass] Overall qualification survives the sweep. `QA/README.md:5` forbids calling the whole QA clean/PASS; rows 9–13 retain distinct observations. `QA/native48.log:3` and line 8 preserve the failed predicate/AssertionError; `QA/provenance.jsonl:2` retains exit 1. Both diagnostic raw arrays equal their decoded 48-PASS copies; `QA/native-replay-investigation/diagnostic-inspections.jsonl:10` and `diagnostic-inspections2.jsonl:10` retain the injected query failure as `PRESERVE_UNVERIFIED_QUERY`, with the warning at each line 11. Complete input comparison shows only the inspect logging wrapper changes within executable content (`QA/native48-original-recorded-input.md:43` versus both instrumented inputs at line 43). Followup identity limits remain explicit in `QA/native-replay-investigation/provenance.jsonl:1` and line 2. Keep the unresolved original result and attribution limits.
+- [Pass] Validator/publication boundaries remain intact. `QA/validation.jsonl:414` records 409 passed/0 failed; the sole initial nonzero attempt and built-in retry match retained telemetry, including 445 / `6d565ec80457` / rc 1 and 1628 / `4ec813a55a9b` / rc 0. `QA/full-validator-investigation/FINDING.md:5` rejects proven-cause inference from “contended.” Main before/after identities agree (`QA/result.json:2` and line 9). Six current source hashes and four current blob digests match retained receipts; historical commit associations were not independently queried with Git. The alias Nit is resolved by `QA/full-validator-investigation/retry-observation.json:4` and line 5, with capture aliases separately labelled. `QA/publication/result.json:2` binds its gate to earlier head `1eefc4ef...`; it supplies no current-head publication attestation. Keep normal publication and hosted qualification as outstanding Producer obligations, consistent with `QA/README.md:21`.
+
+Focused read-only probe (exit 0; no repository imports or fixture execution):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+from pathlib import Path
+import json
+b=Path('TESTS-RESULTS/2026-10-15+GH-1063-final-regression-QA')
+r=json.loads((b/'recovery34-results.json').read_text())
+s=json.loads((b/'recovery34-receipt-scope.json').read_text())
+x=next(x for x in r if x['name']==s['case'])
+print('recovery',len(r),sum(x['ok'] and x['rc']==x['expected'] for x in r))
+print('p2',x['rc'],x['expected'],x['dispatched'],x['result'])
+print('arming_flags',[x for x in s['shellInvocation'] if x.startswith('--progress-') or x=='--result-file'])
+print('raw_log_equals_results',json.loads((b/'recovery34.log').read_text())==r)
+PY
+```
+
+Decisive output: `recovery 34 34`; `p2 7 7 True None`; `arming_flags []`; `raw_log_equals_results True`.
+
+No Git command, network request, validate/test suite, pytest, executable fixture or repository import was run. Runtime reproduction and fresh publication qualification remain [Unverified — needs clone run]; this turn measures retained evidence only. Only this relay file was edited; the harness owns the file-scoped commit.
+
+Relay closed (Approved), no further turn needed.
