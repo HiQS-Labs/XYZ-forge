@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/1066
 title: "merge-cleanup: CI-heavy landing groups"
 status: In Progress
 created: 2026-10-14
-updated: 2026-10-14
+updated: 2026-10-15
 owner: Codex
 goal: "Reduce repeated qualification through coherent group preparation without waiving required checks."
 doc_type: feature
@@ -16,7 +16,7 @@ doc_type: feature
 
 | What was just completed | What's next |
 |---|---|
-| Strategy, plan/final QA and full publication gate complete; PR #1068 opened for final receipts. | Verify final remote checks, mark ready and retire owned safe checkouts; merge/deploy remain separate. |
+| Historical full409/409 at759b34e and readyPR1068; current-base integration/receipt correction final QA2/3 approved. | Fresh normal classified publication for the corrected head, typed receipt and exact-head/landing/hosted gates; source deployment remains separate. |
 
 ## Scope and decision
 
@@ -96,8 +96,9 @@ The strategy cannot force one/two full runs while a repo independently mandates 
 
 - [x] Plan relay approved.
 - [x] Revised skill and retained manual scenarios satisfy the requirements.
-- [x] Final relay approved and classified gate passes at the final revision.
-- [x] Reviewed PR published: #1068. Ready transition and owned checkout retirement follow final live checks.
+- [x] Historical final QA1/3 and full409/409 at759b34e retained; current integration/packaging final QA2/3 approved (reviewedc8ff6234/attested69c07613).
+- [ ] Fresh normal classified publication and typed receipt for the corrected metadata head, then exact-head/landing/hosted gates.
+- [x] Reviewed ready PR published: #1068. Original source/helper paths later observed externally absent; this merge executor did not retire them or verify their recovery destination.
 
 Plan QA approved in round1: attestation c6fa142, reviewed315fa63. The reviewer clarified that batch strategy review does not replace required per-PR QA; implemented explicitly. Owned helper: `$(dirname "$PRIMARY_REPO")/XYZ-forge-gh1066-merge-cleanup-ci-groups-2026-10-14-verify`. Seven manual scenarios, two manual red variants and existing codex-turn43/0 retained with limitations. Final QA and final classified gate remain pending.
 
@@ -106,3 +107,5 @@ Final QA approved in round1 at b21dcac (reviewed ee3e803); production skill SHA2
 Qualification found a hardcoded local path in this plan (pdda-check-hardcoded-paths); replaced with a portable primary-sibling reference. Skill bytes still match final QA; metadata correction receives the focused portability check before a fresh final gate. The preceding gate is interrupted/non-passing evidence.
 
 Publication: https://github.com/HiQS-Labs/XYZ-forge/pull/1068 (development). Full gate at759b34e passed409/409 in989s with unchanged verify-clone identity; retained qualified-publication.log and validation.jsonl prove publication, not main promotion. This final receipt-only commit uses the normal documentation push gate. Required scope is fulfilled; merge/deploy need separate authorization.
+
+Merge continuation2026-10-15: same final relay round2/3 approved receipt packaging/current-base integration. Historical759b34e full gate does not certify subsequent plan/ledger edits. Round2 status Nit disposition: live table and progress now name the historical SHA and fresh normal publication as next; older continuation paragraphs above retain their historical observations. Current source skill bytes remain exactly reviewedee3e8034. No runtime/test/CI change or counter reset.
