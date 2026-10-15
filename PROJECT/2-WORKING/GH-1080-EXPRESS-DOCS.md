@@ -41,7 +41,7 @@ Changes cover the express driver, its skill, SOP and task evidence. No new suite
 
 ## Verification
 
-Pending execution. No separate pre-implementation plan relay claimed; final independent QA will inspect both the chosen rule and implementation.
+Existing express regression: 113 pass at d741ae2a; Codex prerequisite: 43 pass. Final candidate manual docs controls: 11 pass at 1984ef66, including README+PNG acceptance, mixed code, policy, executable, symlink and code-to-text rename refusals, permission-change identity, truthful docs scaffold, parser defaults and exact receipt matching. Focused clone identity unchanged. Evidence: `TESTS-RESULTS/2026-10-15+GH-1080/`. Normal full publication gate and independent review remain pending. No separate pre-implementation plan relay claimed; final independent QA will inspect both the chosen rule and implementation.
 
 ## Lessons Learned (For Future Agents)
 
