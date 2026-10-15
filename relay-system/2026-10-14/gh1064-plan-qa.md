@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -245,5 +245,43 @@ All four findings hold against the cited source and are in scope. All are implem
 - **Parity note taken:** `TestBatchIssue` is imported into phase_c's globals following the :34 pattern.
 
 This is round 3 of 3. Handing off to Reviewer (codex) for the final plan review.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: PASS
+Basis: Approve the plan for implementation within the recorded operator scope. R1–R7 and both rounds of follow-ups are addressed. The batch lifecycle now survives shrinking discovery, separates QA coverage from continuation, retains sweep metadata, and preserves existing landing/teardown policy. This is plan approval, not runtime attestation.
+swept file: yes
+
+Scope/evidence: Read the entire relay and plan, the complete driver, sorter, attempt-record module, SKILL.md and gh534 Phase B/C files; inspected scanner helper ownership, tool resolution, qualification selection, routing and caller references. Verify-tier graph discovery returned no matching driver/sorter symbols. Complete project pagination found no index for this worktree; the nearest XYZ-forge index belongs to another checkout. Coverage generation 2026-09-01T15:54:30Z reports the merge-cleanup scripts/tests not_tracked and selector metadata changed, so this review uses this worktree's exact source. No git command, suite, executable fixture or artifact edit was run. Below, plan means PROJECT/1-INBOX/GH-1064-MERGE-BATCH-ISSUE-QA.md and scripts/ means skills/2-daily/merge-cleanup/scripts/.
+
+- [Pass] **DoD 1 — Recon and hook inputs.** The driver boundaries and bool merge result match scripts/merge_cleanup.py:902,1230,1378,1162,215-227. OPEN-only discovery is scripts/toposort_prs.py:34; hard/soft metadata and the count-only warning are :101-104,145-158. Main prints warnings at scripts/merge_cleanup.py:1388-1391. Soft reasons and normalized file lists supply the missing reporting data (plan:110-122,175-182).
+- [Pass] **DoD 2 / R2 — Before-first-merge and resume.** Plan:150-158 looks up an existing batch before applying the fresh threshold, matches an empty queue by repo/integration, and creates when a 2+ executing resume has no batch. These cover the empty-loop dispatch (scripts/merge_cleanup.py:1443) and existing no-batch resume input (test/gh534_phase_c_tests.py:793-805). Creation before the loop precedes skips/deferrals and the merge (scripts/merge_cleanup.py:928,962-979,1162). Plan:229-251 specifies the one/zero-PR continuation and no-record countercases.
+- [Pass] **DoD 3 / R1/R5/R7 — Existing owners extended.** Batch state differs from attempt_record.load's required per-PR keys (scripts/attempt_record.py:112). Reusing its lock/atomic save (:61-89,117-122), injecting driver _gh (scripts/merge_cleanup.py:70-74; plan:113-116), and using the native/vendored resolver (scripts/ledger_merge.py:263-273) avoids parallel mechanisms. The selector contract/full fallback matches utils/py/wave_reconcile.py:593-618. Marked-block updates protect caller sections (plan:137-146,245-248). Retained file lists cover hard pairs with no soft edge (scripts/toposort_prs.py:128-129; plan:118-122,178).
+- [Pass] **DoD 4 / R3 — Exit precedence and recording.** Independent QA/continuation predicates (plan:123-133) cover the held-PR landing (test/gh534_phase_b_tests.py:491-498). Keeping Phase 5 at 0/2/3 preserves early stops and allows successful cleanup to reach Phase 6; its failure returns 2 before the proposed final exit 4 (scripts/merge_cleanup.py:1448-1459,1492-1497; plan:184-191). Standalone recording before Phase 0 invokes no discovery, landing or teardown (plan:192-200). Additive prose can preserve the pinned Drive-loop phrases (plan:207-208; test/gh534_phase_c_tests.py:897-905).
+- [Pass] **DoD 5 — GH-831 and falsifiability.** Verification stays in the existing suite, adjusting changed assertions, stub verbs, ownership rows and the Phase C import (plan:212-252). This fits AGENTS.md:154-162 and the callable-method parity contract (test/gh534_phase_c_tests.py:592-596; import pattern :34). Each red control names a mutation, failing method and retained provenance (plan:253-257). The full-gate route follows utils/ci-route.sh:333-337.
+- [Pass] **DoD 6 — Recorded operator scope.** Script-owned records, caller-run QA, exit 4 and threshold 2 are explicit (plan:24-30,134-148,184-211), without auto-closing or carry-over execution. Caller analysis and verbatim dual-sink carry-overs remain intact (plan:100-106,140-146,204-211; skills/2-daily/merge-cleanup/SKILL.md:352-359). Inclusive range and conflict/shared-file inputs match the sweep requirement (plan:175-183; SKILL.md:344-351).
+- [Pass] **DoD 7 / R4 — Whole-file sweep.** The relevant pre-existing hazards are incomplete outcomes, early hard returns and nonzero Phase-5 dispatch (scripts/merge_cleanup.py:925,973-979,1137-1142,1162-1188,1194-1207,1448-1450). The plan now names every stop, separates remote merge from reconciliation, initializes later rows as unattempted and finalizes on early returns (plan:120,159-174,239-244). No additional pre-existing defect was identified in the inspected paths that requires changing this plan's design.
+- [Nit] **Implementation precision; no further plan round required.** Honor "in landing order" (plan:177): the held-PR input can land PR 2 before a later PR 1, so planned positions or sorted JSON keys are not landing order (test/gh534_phase_b_tests.py:491-498; scripts/attempt_record.py:121). Retain actual order or derive it from the retained OIDs. Also attribute the stop at scripts/merge_cleanup.py:935 to the current pr: it precedes p_num assignment at :939. Preserve the recorded merge OID/reconciliation failure on post-merge stops. These clarify existing contracts, not new policy or machinery.
+- [Unverified — needs clone run] Runtime behavior, changed assertions, imports, Phase-6 failure precedence and red controls remain for the disposable full clone (plan:253-259). Only non-mutating source/AST probes ran here. The decisive hard-return probe was:
+  ~~~sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 -B - <<'PROBE'
+  import ast
+  from pathlib import Path
+  p=Path("skills/2-daily/merge-cleanup/scripts/merge_cleanup.py")
+  t=ast.parse(p.read_text())
+  f=next(n for n in t.body if isinstance(n, ast.FunctionDef) and n.name=="land_prs")
+  loop=next(n for n in ast.walk(f) if isinstance(n, ast.For) and isinstance(n.target, ast.Name) and n.target.id=="pr")
+  lines=sorted(n.lineno for n in ast.walk(loop) if isinstance(n, ast.Return) and (isinstance(n.value, ast.Constant) and n.value.value==2 or isinstance(n.value, ast.IfExp) and isinstance(n.value.body, ast.Constant) and n.value.body.value==2))
+  print("in-loop hard-return sites:", lines)
+  print("count:", len(lines))
+  PROBE
+  ~~~
+  Exit 0; decisive output: "in-loop hard-return sites: [935, 968, 982, 991, 999, 1011, 1053, 1079, 1086, 1096, 1112, 1117, 1125, 1130, 1142, 1151, 1158, 1163, 1171, 1176, 1181, 1188]", "count: 22". This enumerates branches; it does not execute them.
+- [Unverified — source unavailable] **DoD 6, live issue:** command "gh issue view 1064 --repo HiQS-Labs/XYZ-forge --json body,title" exited 1 with "error connecting to api.github.com"; opening https://github.com/HiQS-Labs/XYZ-forge/issues/1064 returned "Failed to fetch ... Cache miss". Approval covers the recorded operator scope, not unseen live issue text.
+
+Root cause: batch history and QA coverage were caller-owned prose around an invocation-local failure map; fix site: durable batch records and existing orchestration/reporting boundaries; why not elsewhere: sequencing, repair policy, gate execution and teardown retain their owners.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed to implementation and disposable-clone verification. The harness owns the relay-file commit; this reviewer ran no git command.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
