@@ -609,7 +609,7 @@ def select_qualification_gate(clone, metas, env):
         routed = subprocess.run(["bash", "utils/ci-route.sh", "push"], cwd=clone, env=env,
                                 input="".join(p + "\n" for p in paths), capture_output=True,
                                 text=True, check=False, timeout=120)
-        tier = re.findall(r"^tier=(\S*)$", routed.stdout, re.M)
+        tier = re.findall(r"^tier=(.*)$", routed.stdout, re.M)
         version = re.findall(r"^policy_version=(.*)$", routed.stdout, re.M)
         hosted = re.findall(r"^hosted_gate=(.*)$", routed.stdout, re.M)
         if (routed.returncode or version != ["ci-route@1"] or len(tier) != 1

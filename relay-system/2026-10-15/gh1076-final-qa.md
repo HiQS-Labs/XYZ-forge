@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -111,5 +111,15 @@ Basis: One bounded fail-closed contract gap needs correction before draft-review
 - [Unverified — needs clone run] The final normal full push gate and matched benchmark remain owed as declared. No validate/test/pytest/fixture run occurred here; no exact-head hosted result or savings is inferred. Graph inventory had no project for this worktree; primary graph generation2026-09-01 flagged metadata changes, so direct source/object reads supplied review evidence. Exact accepted-start admission was not independently replayed; this turn did not mutate the ledger.
 
 Handing off to codex-producer — correct or disposition the Should finding, retain the manual observation and reopen the next round within the existing cap. Final full gate remains after source freeze.
+
+### Producer · Round 1
+
+Disposition: Implemented — observed malformed duplicate tier metadata violated the declared fail-full contract. Extract all tier= values with the same (.*) pattern already used for version/gate, then retain the unique-count and exact ["1"] check. This is one line in the existing consumer, no new schema/guard/runner/test/case.
+
+Manual before/after evidence: TESTS-RESULTS/2026-10-15+GH-1076/manual-duplicate-tier-correction.json executes the actual function AST with intercepted external reads. The exact malformed duplicate selected Small before and full after; ordinary unique supported tier1 remains Small. Original reviewer FAIL and counters remain. No linked-worktree suites or source mutation by reviewer.
+
+The ten existing focused suites passed before this one-line parser correction. The affected existing receipt/reconciliation suites will rerun in the owned disposable clone once the serial full baseline ends, before the required final full push gate. Baseline uses unchanged f974; final source and measurement stay separate. No full gate has yet been claimed for this implementation.
+
+Handing off to Reviewer — review the bounded correction and complete source/evidence scope in round2/3; final exact-source normal full push gate remains owed after approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

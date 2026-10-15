@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-10-15T07:49:15.256402+00:00",
+  "source_before": "47c901bb",
+  "method": "Actual function AST executed in memory; Git/router subprocess and Small-list reader intercepted. No suites, fixtures or CI assertions added.",
+  "observations": [
+    {
+      "revision": "before",
+      "description": "malformed duplicate tier",
+      "stdout": "tier=1\ntier=2 trailing\npolicy_version=ci-route@1\nhosted_gate=small\n",
+      "selected": [
+        "validate.sh --sequential --subsystem small",
+        [
+          "existing-small-suite"
+        ],
+        "tier 1"
+      ]
+    },
+    {
+      "revision": "before",
+      "description": "ordinary Small",
+      "stdout": "tier=1\npolicy_version=ci-route@1\nhosted_gate=small\n",
+      "selected": [
+        "validate.sh --sequential --subsystem small",
+        [
+          "existing-small-suite"
+        ],
+        "tier 1"
+      ]
+    },
+    {
+      "revision": "after",
+      "description": "malformed duplicate tier",
+      "stdout": "tier=1\ntier=2 trailing\npolicy_version=ci-route@1\nhosted_gate=small\n",
+      "selected": [
+        "validate.sh --sequential",
+        null,
+        "unsupported or malformed classifier decision"
+      ]
+    },
+    {
+      "revision": "after",
+      "description": "ordinary Small",
+      "stdout": "tier=1\npolicy_version=ci-route@1\nhosted_gate=small\n",
+      "selected": [
+        "validate.sh --sequential --subsystem small",
+        [
+          "existing-small-suite"
+        ],
+        "tier 1"
+      ]
+    }
+  ]
+}
