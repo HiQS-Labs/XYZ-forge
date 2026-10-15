@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -80,5 +80,25 @@ Operational envelope: local orchestration guidance only. No runtime/CI/settings/
 4. Are manual scenarios/red controls sufficient for this prose-only change without new persistent tests? Is the recorded rating65/25/50/85 grounded and modest? Any real requirement missing?
 
 Only this relay thread writable. No git commands, validate/test/pytest/executable fixtures in the reviewer worktree. Grade with file:line citations, swept file: yes/no, and literal VERDICT: PASS|FAIL|PARKED plus Basis. Approve by STATUS: Approved and NEXT: — only if supported; do not self-commit (the harness records the turn). Scope proposed fixes to concrete observed contradictions; no new machinery. No previous plan turn exists; this is round1/3.
+
+### Reviewer · Round 1
+
+Ship the bounded plan; approval covers planning only.
+
+swept file: yes
+
+Reviewed all 100 lines of `PROJECT/2-WORKING/GH-1066-MERGE-CLEANUP-CI-GROUPS.md`, all 558 lines of `skills/2-daily/merge-cleanup/SKILL.md`, and all 385 lines of `docs/CI-CHURN-RECOVERY-SOP.md`. No additional pre-existing substantive defects found in that prose scope. No graph tools were exposed; this was direct document inspection, not a code/runtime audit.
+
+- [Pass] Preparation is separated from qualification without promising fewer mandatory runs. Plan lines 23–27 and 93 preserve policy; skill lines 238–265 require final-head checks, candidate invalidation, supported landing, and sequential fallback. Phase5's per-merge durability sequence remains explicit at skill lines 280–286. This fits recovery SOP lines 25–27 and 183–202; historical exceptions are not renewed.
+- [Pass] One additional batch-level strategy review is proportionate: plan lines 53–62 and 68–77 specify actual model-family difference, identities, exact revisions, grouping/order, conflicts, qualification, rollback, cap3, material-change invalidation, and no claim of approval when review is unavailable. Read “no per-PR duplicate reviews” as avoiding another copy of this strategy review, while preserving existing required per-PR QA receipts (recovery SOP lines 201–202 and 220–221). Final implementation QA must check that distinction in the resulting prose.
+- [Pass] The verification plan is falsifiable without adding persistent tests: plan lines 78–85 distinguish three PRs from two, reject one model behind different CLIs, invalidate changed plans, retain sequential fallback, and require threshold/model-condition mutations to be detected. These are planned controls, not witnessed results. The full gate is reserved for the final revision in a separate full clone; no suite or executable fixture was run here.
+- [Pass] Rating rationale is modest and explicitly disclaims incident growth and measured CI savings (plan lines 90–93). Read-only probe: `python3 -c 'import sqlite3; c=sqlite3.connect("file:releases.db?mode=ro",uri=True); print(c.execute("select rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr from roadmap_items where gh_number=1066").fetchall())'`; exit 0; decisive output `[(65, 25, 50, 85, None)]`. This verifies persistence only, not a performance result or live remote state.
+- [Nit] Correct the artifact reference on the next invocation. `nl -ba .relay-artifacts/GH-1066-MERGE-CLEANUP-CI-GROUPS.md` exited 1: `No such file or directory`; the available seed instead identifies GH182 at `.relay-artifacts/gh182-claim-guards.md:1`. The bounded packet explicitly directs reading the canonical PROJECT plan, so that supplied file was reviewed in full. Revision binding: `shasum -a 256 PROJECT/2-WORKING/GH-1066-MERGE-CLEANUP-CI-GROUPS.md` exited 0 and returned `a7cbea28d0ea049d048d46f8ec49203f99bdd5d126467ce422dd1548a68984db`. Approval is for those bytes, not the unrelated seed.
+- [Nit] When implementing plan lines 78–85, explicitly place the retained manual scenarios and witnessed red controls under `TESTS-RESULTS/<date>+GH-1066/` with committed `provenance.jsonl`, including reviewed revision and outcomes. This makes the existing retention requirement concrete; it does not require a new test or runner (recovery SOP line 202; `TESTS-RESULTS/README.md:7`).
+
+VERDICT: PASS
+Basis: The bounded plan reuses existing caller/relay/batch records, preserves mandatory landing checks and review authority, and defines observable manual acceptance. The two notes are non-blocking documentation clarifications. No implementation, CI reduction, current remote state, or successful gate is attested by this approval.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with the approved scope and must obtain final implementation QA and applicable gate evidence before publication.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
