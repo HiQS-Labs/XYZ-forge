@@ -6,8 +6,11 @@ The router now emits a versioned hosted Small/full decision, consumed by the exi
 selector with full fallback for missing, malformed, inconsistent or unsupported metadata.
 Canonical explanation lives in ROUTER; AGENTS, SOP and CI recovery guidance point there.
 Known skills-army package text retains its existing publication-consumer area, covering the
-historical GH995 payload-pin miss without adding CI cases. Registries, hosted Medium/full,
-exact-main full promotion, fixed commands and historical qualification receipts are unchanged.
+historical GH995 payload-pin miss without adding CI cases. A bounded reverse-consumer audit adds
+three already registered suites (canonical drift, skill links, interpreter patterns) to that same
+local area, five to eight; its existing count expectation is updated without adding an assertion.
+Full/Small registries, hosted Medium/full, exact-main full promotion, fixed commands and historical
+qualification receipts are unchanged.
 
 Easy to reverse by reverting this scoped decision/pointer change; no receipt-schema migration
 or cached cross-candidate evidence is introduced. Verification uses existing checks, recorded manual refusal/red

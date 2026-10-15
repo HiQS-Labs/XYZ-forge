@@ -32,7 +32,7 @@ SUBSYSTEM_TESTS_swe_diagram="swe-diagram.sh"
 SUBSYSTEM_TESTS_pdda="gh649-pdda-migration.sh pdda-changelog.sh pdda-install-startup-docs.sh pdda-roadmap-coverage.sh pdda-repo-contract.sh pdda-local-checks.sh gh400-acceptance-fidelity.sh gh400-source-url.sh gh422-backfill-source-url.sh gh425-source-url-slug.sh wave-reconcile.sh gh202-wave-reconcile-issue-state.sh gh232-wave-reconcile-multiphase.sh gh358-wave-reconcile-vendored-paths.sh gh496-phase2-reconciliation-views.sh"
 SUBSYSTEM_TESTS_agent_chorus="agent-chorus.sh agent-chorus-bridge.sh gh233-agent-chorus-concurrency.sh"
 SUBSYSTEM_TESTS_standup="gh77-standup-triage.sh"
-SUBSYSTEM_TESTS_skills_army_hq="skills-army-hq.sh gh620-skills-army-mini-sync.sh gh589-xyz-mini-sync.sh gh589-consult-no-tick.sh gh589-skill-viewer.sh"
+SUBSYSTEM_TESTS_skills_army_hq="skills-army-hq.sh gh620-skills-army-mini-sync.sh gh589-xyz-mini-sync.sh gh589-consult-no-tick.sh gh589-skill-viewer.sh gh660-skill-drift.sh path-integrity.sh gh788-python-path-space.sh"
 # GH-831 D2: Small — the PDDA and PRS (releases/reconcile) suites plus the canaries. The hosted
 # reconcile qualifies a tier-1 landing with `validate.sh --sequential --subsystem small`, and
 # utils/py/wave_reconcile.py replays old receipts against THIS line at the tested commit, so keep

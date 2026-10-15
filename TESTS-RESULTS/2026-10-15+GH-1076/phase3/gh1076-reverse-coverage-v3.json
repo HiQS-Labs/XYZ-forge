@@ -1,0 +1,3271 @@
+{
+  "kind": "Read-only reverse coverage audit; not a test registry or executable expected set",
+  "immutable_source": "8bf95a1ebb2a915f4cad4c127b69bccf68fcf4a8",
+  "full_shell_registry_count": 406,
+  "proposed78_count": 78,
+  "scan_scope": "Every full TESTS shell source; specific dependency references plus broad global skills/inventory scanner references; manually inspected relevant bodies and called helpers; no imported project modules or executed checks",
+  "specific_pattern": "skills.army|test_deploy_skills|xyz_mini_sync|skill_drift|push-downstream|skills-army-mini",
+  "broad_pattern": "skills/|SKILL\\.md|list_skills|rglob\\(|git .*ls-files|git .*grep",
+  "classifications": [
+    {
+      "suite": "skills-army-hq.sh",
+      "classification": "included",
+      "evidence": "test/skills-army-hq.sh:8-15",
+      "reason": "Runs actual test_deploy_skills.py; wrappers may named-skip without pytest. Preserve non-shell stage and explicit skip handling.",
+      "full_registry_present": true,
+      "proposed78_included": true
+    },
+    {
+      "suite": "gh620-skills-army-mini-sync.sh",
+      "classification": "included",
+      "evidence": "test/gh620-skills-army-mini-sync.sh:43-80,167-215",
+      "reason": "Real publisher package projection, pinned complete payload, child root intake/sync.",
+      "full_registry_present": true,
+      "proposed78_included": true
+    },
+    {
+      "suite": "gh589-xyz-mini-sync.sh",
+      "classification": "included",
+      "evidence": "test/gh589-xyz-mini-sync.sh:34,61-80,95-147",
+      "reason": "Shared publisher generic profile/manifest/ownership; first package candidate does not imply all three profiles safe.",
+      "full_registry_present": true,
+      "proposed78_included": true
+    },
+    {
+      "suite": "gh589-consult-no-tick.sh",
+      "classification": "included",
+      "evidence": "test/gh589-consult-no-tick.sh:22",
+      "reason": "Calls shared publisher to generate default XYZ-mini then tests consult; preserves current area.",
+      "full_registry_present": true,
+      "proposed78_included": true
+    },
+    {
+      "suite": "gh589-skill-viewer.sh",
+      "classification": "included",
+      "evidence": "test/gh589-skill-viewer.sh:17-25,36-56",
+      "reason": "Global all-skills metadata inventory includes package SKILL.md; parse/count/nonempty controls.",
+      "full_registry_present": true,
+      "proposed78_included": true
+    },
+    {
+      "suite": "gh660-skill-drift.sh",
+      "classification": "included_consumer_addition",
+      "evidence": "test/gh660-skill-drift.sh:10-74",
+      "reason": "Real checker semantics flat/tiered canonical/collection; belongs to actual sync drift dependency.",
+      "full_registry_present": true,
+      "proposed78_included": true
+    },
+    {
+      "suite": "test/test_python_layer.py",
+      "classification": "existing_python_non_shell",
+      "evidence": "test/test_python_layer.py:13-19",
+      "reason": "Runs unittest discovery test_deploy_skills.py with nonzero/nonempty checks.",
+      "full_registry_present": false,
+      "proposed78_included": false
+    },
+    {
+      "suite": "test/test_deploy_skills.py",
+      "classification": "existing_python_non_shell",
+      "evidence": "test/test_deploy_skills.py:21-24,39-67,562-623",
+      "reason": "Importlib intake; copies actual package, runs actual intake/sync in fixtures, drift integration. Reached by area wrapper and Python stage.",
+      "full_registry_present": false,
+      "proposed78_included": false
+    },
+    {
+      "suite": "path-integrity.sh",
+      "classification": "genuinely_omitted_semantic_consumer",
+      "evidence": "test/path-integrity.sh:165-198",
+      "reason": "Reads all skills/**/*.md cross-folder and canonical development links, fails broken path; applies package Markdown. Also tracked shell references at45-163.",
+      "full_registry_present": true,
+      "proposed78_included": false
+    },
+    {
+      "suite": "gh788-python-path-space.sh",
+      "classification": "genuinely_omitted_global_content_consumer",
+      "evidence": "test/gh788-python-path-space.sh:89-105",
+      "reason": "Git-grep test/utils/relay-automation/skills with no extension filter; package Markdown examples and scripts can introduce matched interpreter violations.",
+      "full_registry_present": true,
+      "proposed78_included": false
+    },
+    {
+      "suite": "gh251-validate-pytest-skip.sh",
+      "classification": "route_registry_infrastructure_only",
+      "evidence": "test/gh251-validate-pytest-skip.sh:13-22,41-58",
+      "reason": "Names sync.py as nested paths-file routing input; validates pytest skipped/passed reporting, not manager semantics.",
+      "full_registry_present": true,
+      "proposed78_included": false
+    },
+    {
+      "suite": "ci-route.sh",
+      "classification": "route_registry_infrastructure_only",
+      "evidence": "test/ci-route.sh:187-205,235-238,283-291",
+      "reason": "Synthetic paths and count pin; does not execute manager/publisher functionality.",
+      "full_registry_present": true,
+      "proposed78_included": false
+    },
+    {
+      "suite": "gh365-tier-fail-closed.sh",
+      "classification": "route_registry_infrastructure_only",
+      "evidence": "test/gh365-tier-fail-closed.sh:39-62,72,103-116",
+      "reason": "Global classifier/registry family validation, not behavioral consumer.",
+      "full_registry_present": true,
+      "proposed78_included": false
+    },
+    {
+      "suite": "find-harness.sh",
+      "classification": "not_package_consumer",
+      "evidence": "test/find-harness.sh:11-12,116-143",
+      "reason": "Copies relay-xyz find-harness directly; Skills Army mention describes deployment context, not package intake/sync execution.",
+      "full_registry_present": true,
+      "proposed78_included": false
+    },
+    {
+      "suite": "gh678-installer-live-links.sh",
+      "classification": "conditional_excluded_consumer",
+      "evidence": "test/gh678-installer-live-links.sh:12-22",
+      "reason": "Discovers skills/*/*/install.sh; immutable skills-army package has no install.sh. Would matter if installer added, excluded from narrow pilot.",
+      "full_registry_present": true,
+      "proposed78_included": false
+    },
+    {
+      "suite": "mktemp-trap-guard.sh",
+      "classification": "included_global_script_guard",
+      "evidence": "test/mktemp-trap-guard.sh:42-62",
+      "reason": "Already in Small; scans skills shell/executable Bash files, no skills-army shell file now.",
+      "full_registry_present": true,
+      "proposed78_included": true
+    },
+    {
+      "suite": "gh777-inventory-ratchet.sh",
+      "classification": "included_global_guard",
+      "evidence": "test/gh777-inventory-ratchet.sh:7;utils/pdda/check_inventory_ratchet.py:50-80",
+      "reason": "Already in Small; scans script inventory and global sqlite bypasses. Not a substitute for missing link/interpreter guards.",
+      "full_registry_present": true,
+      "proposed78_included": true
+    },
+    {
+      "suite": "gh245-agy-probe-verb-invariant.sh",
+      "classification": "not_package_consumer",
+      "evidence": "test/gh245-agy-probe-verb-invariant.sh:58-78",
+      "reason": "Rglob invoked against utils/py only; no actual package matching agy probe.",
+      "full_registry_present": true,
+      "proposed78_included": false
+    }
+  ],
+  "additional_to_proposed78_for_general_package_content": [
+    "path-integrity.sh",
+    "gh788-python-path-space.sh"
+  ],
+  "hypothetical_union_count": 80,
+  "conservative_current_local_closure": [
+    "gh660-skill-drift.sh",
+    "path-integrity.sh"
+  ],
+  "local_closure_limit": "Area5->7 is coverage addition preserving hosted full; it is not complete broad content-pilot closure while gh788 remains out. Explicitly exclude interpreter-pattern/example changes or include existing gh788 before any reduction proposal. No claim universal closure complete.",
+  "raw_source_matches": [
+    {
+      "suite": "gh251-validate-pytest-skip.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 16,
+          "kind": [
+            "specific"
+          ],
+          "source": "# releases lane and made this suite ~22% of the full gate. skills-army-hq is the"
+        },
+        {
+          "line": 18,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "printf 'skills/3-weekly/skills-army-hq/scripts/sync.py\\n' > \"$PATHS_FILE\""
+        }
+      ]
+    },
+    {
+      "suite": "codex-turn.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 82,
+          "kind": [
+            "broad"
+          ],
+          "source": "[ \"$(git -C \"$A\" log -1 --format='%s')\" != \"\" ] && [ -z \"$(git -C \"$A\" log -1 --format='%D' | grep -o 'origin/')\" ] && pass \"no push (no origin ref on the commit)\" || pass \"no push (local-only fixture)\""
+        }
+      ]
+    },
+    {
+      "suite": "gh278-turn-timeout-parity.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 11,
+          "kind": [
+            "broad"
+          ],
+          "source": "SKILL=\"$ROOT/skills/1-hourly/relay-xyz/SKILL.md\""
+        }
+      ]
+    },
+    {
+      "suite": "gh308-frozen-twin-guard.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 459,
+          "kind": [
+            "broad"
+          ],
+          "source": "old_rule=\"$(git -C \"$exc\" log --format='%H %s%n%b' \"${EXC_BASE}..HEAD\" | grep -c '^Frozen-twin-exception:' || true)\""
+        }
+      ]
+    },
+    {
+      "suite": "gh245-agy-probe-verb-invariant.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 66,
+          "kind": [
+            "broad"
+          ],
+          "source": "for p in sorted(root.rglob(\"*.py\")):"
+        }
+      ]
+    },
+    {
+      "suite": "gh267-express-skill.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 456,
+          "kind": [
+            "broad"
+          ],
+          "source": "FIX_SHA=\"$(git -C \"$FX\" log --format=%H --grep='\\[express\\]' -1)\""
+        },
+        {
+          "line": 477,
+          "kind": [
+            "broad"
+          ],
+          "source": "SHIP_COMMIT=\"$(git -C \"$FX\" log --format=%H --grep='express ship GH-999' -1)\""
+        },
+        {
+          "line": 489,
+          "kind": [
+            "broad"
+          ],
+          "source": "INJ_FIX_SHA=\"$(git -C \"$FX\" log --format=%H --grep='\\[express\\]' -1)\""
+        },
+        {
+          "line": 507,
+          "kind": [
+            "broad"
+          ],
+          "source": "# GH-278 review finding: SKILL.md documents this as an equally-valid alternative"
+        },
+        {
+          "line": 616,
+          "kind": [
+            "broad"
+          ],
+          "source": "grep -q \"no COMMITTED valid express receipt bound to commit\" \"$ERR\" && grep -q \"write_receipt\" \"$ERR\" && grep -q \"skills/2-daily/express/SKILL.md\" \"$ERR\" && grep -q \"fails closed\" \"$ERR\" && grep -q \"VOIDs on any difference\" \"$ERR\" && ok \"control (iii): refusal carries the recovery recipe incl. identity snapshot\" || bad \"recipe missing: $(tail -1 \"$ERR\")\""
+        }
+      ]
+    },
+    {
+      "suite": "gh788-python-path-space.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 98,
+          "kind": [
+            "broad"
+          ],
+          "source": "git -C \"$dir\" grep -n -E -e \"$BARE\" -e \"$UNQ\" -e \"$BASHPY\" \"$@\""
+        },
+        {
+          "line": 103,
+          "kind": [
+            "broad"
+          ],
+          "source": "1) pass \"ratchet: no bare-shebang or unquoted-interpreter sites in test/ utils/ relay-automation/ skills/\" ;;"
+        },
+        {
+          "line": 105,
+          "kind": [
+            "broad"
+          ],
+          "source": "*) fail \"ratchet: scan error (git grep rc=$rc) \u2014 not treated as zero sites\" ;;"
+        }
+      ]
+    },
+    {
+      "suite": "gh609-sdlc-agent-gaps.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 32,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"skills/2-daily/workhorse/SKILL.md\""
+        },
+        {
+          "line": 33,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"skills/1-hourly/start-task/SKILL.md\""
+        },
+        {
+          "line": 34,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"skills/1-hourly/swe/SKILL.md\""
+        },
+        {
+          "line": 35,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"skills/1-hourly/recon/SKILL.md\""
+        },
+        {
+          "line": 36,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"skills/4-occasional/ci-optimize/SKILL.md\""
+        },
+        {
+          "line": 37,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"skills/2-daily/ci-debug/SKILL.md\""
+        },
+        {
+          "line": 175,
+          "kind": [
+            "broad"
+          ],
+          "source": "WORKHORSE=\"$ROOT/skills/2-daily/workhorse/SKILL.md\""
+        },
+        {
+          "line": 176,
+          "kind": [
+            "broad"
+          ],
+          "source": "START_TASK=\"$ROOT/skills/1-hourly/start-task/SKILL.md\""
+        },
+        {
+          "line": 177,
+          "kind": [
+            "broad"
+          ],
+          "source": "SWE=\"$ROOT/skills/1-hourly/swe/SKILL.md\""
+        },
+        {
+          "line": 178,
+          "kind": [
+            "broad"
+          ],
+          "source": "RECON=\"$ROOT/skills/1-hourly/recon/SKILL.md\""
+        },
+        {
+          "line": 179,
+          "kind": [
+            "broad"
+          ],
+          "source": "CI_OPT=\"$ROOT/skills/4-occasional/ci-optimize/SKILL.md\""
+        },
+        {
+          "line": 180,
+          "kind": [
+            "broad"
+          ],
+          "source": "CI_DEBUG=\"$ROOT/skills/2-daily/ci-debug/SKILL.md\""
+        }
+      ]
+    },
+    {
+      "suite": "gh346-gateway-allowlists.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 386,
+          "kind": [
+            "broad"
+          ],
+          "source": "FH=\"$ROOT/skills/1-hourly/relay-xyz/find-harness.sh\""
+        },
+        {
+          "line": 401,
+          "kind": [
+            "broad"
+          ],
+          "source": "if grep -qi \"deepseek\" \"$ROOT/skills/1-hourly/relay-xyz/SKILL.md\"; then"
+        },
+        {
+          "line": 402,
+          "kind": [
+            "broad"
+          ],
+          "source": "pass \"2.8 relay-xyz SKILL.md documents the deepseek worker\""
+        },
+        {
+          "line": 404,
+          "kind": [
+            "broad"
+          ],
+          "source": "fail \"2.8 relay-xyz SKILL.md still omits deepseek \u2014 the original discovery gap\""
+        }
+      ]
+    },
+    {
+      "suite": "gh610-claude-subscription.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 119,
+          "kind": [
+            "broad"
+          ],
+          "source": "answers=list(out.rglob('*.claude.md')); self.assertEqual(len(answers),1)"
+        },
+        {
+          "line": 139,
+          "kind": [
+            "broad"
+          ],
+          "source": "answers=list(out.rglob('*.claude.md')); self.assertEqual(len(answers),1)"
+        }
+      ]
+    },
+    {
+      "suite": "claude-turn.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 91,
+          "kind": [
+            "broad"
+          ],
+          "source": "if git -C \"$A\" ls-files --error-unmatch claude.log.stderr >/dev/null 2>&1; then fail \"stderr committed as artifact\"; fi"
+        }
+      ]
+    },
+    {
+      "suite": "worktree-isolation.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 143,
+          "kind": [
+            "broad"
+          ],
+          "source": "# Capture-then-match (NOT `git log | grep -q`: grep -q closes the pipe on match \u2192 git SIGPIPE \u2192"
+        }
+      ]
+    },
+    {
+      "suite": "marathon-drive.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 495,
+          "kind": [
+            "broad"
+          ],
+          "source": "git -C \"$A\" reset -q --hard \"$(git -C \"$A\" log --format=%H --grep='render phase p1 relay' -1)\" >/dev/null 2>&1"
+        }
+      ]
+    },
+    {
+      "suite": "gh308-swarm-gate-path.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 68,
+          "kind": [
+            "broad"
+          ],
+          "source": "for tool in python3 git bash sh env sed grep awk cat cut tr wc head tail sort uniq \\"
+        }
+      ]
+    },
+    {
+      "suite": "gh369-find-doc-root-resolution.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 3,
+          "kind": [
+            "broad"
+          ],
+          "source": "# test/gh369-find-doc-root-resolution.sh \u2014 skills/3-weekly/10days/find-doc.sh root resolution + arg parsing."
+        },
+        {
+          "line": 24,
+          "kind": [
+            "broad"
+          ],
+          "source": "SUT=\"$ROOT/skills/3-weekly/10days/find-doc.sh\""
+        }
+      ]
+    },
+    {
+      "suite": "gh400-source-url.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 5,
+          "kind": [
+            "broad"
+          ],
+          "source": "# This criterion shipped in b026737 as PROSE ONLY \u2014 `skills/3-weekly/10days/SKILL.md` told the model to put"
+        }
+      ]
+    },
+    {
+      "suite": "litmus-release.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 119,
+          "kind": [
+            "broad"
+          ],
+          "source": "untracked) ( cd \"$tree\" && ! git ls-files --error-unmatch \"$arg\" >/dev/null 2>&1 ) || return 1 ;;"
+        }
+      ]
+    },
+    {
+      "suite": "gh448-driver-lock-resolver.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 14,
+          "kind": [
+            "broad"
+          ],
+          "source": "#      skills/1-hourly/relay-xyz/find-harness.sh --check, run for real against a `git worktree add` fixture"
+        },
+        {
+          "line": 23,
+          "kind": [
+            "broad"
+          ],
+          "source": "FH=\"$ROOT/skills/1-hourly/relay-xyz/find-harness.sh\""
+        },
+        {
+          "line": 208,
+          "kind": [
+            "broad"
+          ],
+          "source": "mkdir -p \"$HARNESS_MAIN/relay-automation\" \"$HARNESS_MAIN/skills/1-hourly/relay-xyz\""
+        },
+        {
+          "line": 212,
+          "kind": [
+            "broad"
+          ],
+          "source": "cp \"$FH\" \"$HARNESS_MAIN/skills/1-hourly/relay-xyz/find-harness.sh\""
+        },
+        {
+          "line": 228,
+          "kind": [
+            "broad"
+          ],
+          "source": "fh_out=\"$(cd \"$FOREIGN\" && bash \"$HARNESS_WT/skills/1-hourly/relay-xyz/find-harness.sh\" --check 2>&1)\""
+        }
+      ]
+    },
+    {
+      "suite": "gh505-relay-attest.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 170,
+          "kind": [
+            "broad"
+          ],
+          "source": "SHIM_COMMIT=\"$(git -C \"$A\" log --format=%H --grep='rev turn' -1)\""
+        }
+      ]
+    },
+    {
+      "suite": "meter-release.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 367,
+          "kind": [
+            "broad"
+          ],
+          "source": "done < <(cd \"$art\" 2>/dev/null && /usr/bin/git ls-files -z 2>/dev/null \\"
+        }
+      ]
+    },
+    {
+      "suite": "gh438-acceptance-recheck.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 7,
+          "kind": [
+            "broad"
+          ],
+          "source": "# landed. On the reported lane the detector was `git ls-files --error-unmatch .mcp.json`: it read"
+        },
+        {
+          "line": 35,
+          "kind": [
+            "broad"
+          ],
+          "source": "# Probes describe the BUG, not the fix. `git ls-files --error-unmatch .mcp.json` exits 0 while the"
+        },
+        {
+          "line": 51,
+          "kind": [
+            "broad"
+          ],
+          "source": "{ \"type\": \"command\", \"cmd\": \"git ls-files --error-unmatch .mcp.json\" }"
+        },
+        {
+          "line": 109,
+          "kind": [
+            "broad"
+          ],
+          "source": "git -C \"$A\" ls-files --error-unmatch .mcp.json >/dev/null 2>&1 \\"
+        },
+        {
+          "line": 156,
+          "kind": [
+            "broad"
+          ],
+          "source": "git -C \"$A\" ls-files --error-unmatch .mcp.json >/dev/null 2>&1 \\"
+        }
+      ]
+    },
+    {
+      "suite": "gh549-work-events.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 600,
+          "kind": [
+            "broad"
+          ],
+          "source": "MC=\"$ROOT/skills/2-daily/merge-cleanup/scripts/merge_cleanup.py\""
+        }
+      ]
+    },
+    {
+      "suite": "gh365-tier-fail-closed.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 51,
+          "kind": [
+            "broad"
+          ],
+          "source": "done < <(git -C \"$REPO\" ls-files)"
+        },
+        {
+          "line": 72,
+          "kind": [
+            "specific"
+          ],
+          "source": "skills-army-hq.sh)                              printf 'skills-army-hq' ;;"
+        }
+      ]
+    },
+    {
+      "suite": "gh365-shellcheck-parallel.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 49,
+          "kind": [
+            "broad"
+          ],
+          "source": "git ls-files -z -- '*.sh' | xargs -0 -P \"$2\" -n 1 shellcheck -S error )"
+        },
+        {
+          "line": 89,
+          "kind": [
+            "broad"
+          ],
+          "source": "grep -q 'git ls-files -z' \"$REPO/ci-local.sh\" \\"
+        }
+      ]
+    },
+    {
+      "suite": "gh91-relay-scratch.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 169,
+          "kind": [
+            "broad"
+          ],
+          "source": "[ -z \"$(git -C \"$E\" status --porcelain | grep -v '^?? \\.tick/')\" ] \\"
+        }
+      ]
+    },
+    {
+      "suite": "gh660-skill-drift.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 2,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "# GH-660: skill_drift_check names vendored SKILL.md copies that diverge from"
+        },
+        {
+          "line": 3,
+          "kind": [
+            "broad"
+          ],
+          "source": "# canonical skills/, stays silent on identical vendors, and treats"
+        },
+        {
+          "line": 11,
+          "kind": [
+            "broad"
+          ],
+          "source": "mkdir -p \"$FIX/canonical/skills/alpha\" \"$FIX/canonical/skills/beta\" \"$FIX/canonical/skills/1-hourly/delta\" \\"
+        },
+        {
+          "line": 13,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf 'canonical alpha\\n' > \"$FIX/canonical/skills/alpha/SKILL.md\""
+        },
+        {
+          "line": 14,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf 'canonical beta\\n'  > \"$FIX/canonical/skills/beta/SKILL.md\""
+        },
+        {
+          "line": 15,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf 'canonical delta\\n' > \"$FIX/canonical/skills/1-hourly/delta/SKILL.md\"   # GH-744: tiered canonical"
+        },
+        {
+          "line": 16,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf 'canonical alpha\\n' > \"$FIX/collection/alpha/SKILL.md\"   # identical vendor"
+        },
+        {
+          "line": 17,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf 'stale beta\\n'      > \"$FIX/collection/beta/SKILL.md\"    # DRIFTED"
+        },
+        {
+          "line": 18,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf 'foreign\\n'         > \"$FIX/collection/gamma/SKILL.md\"   # unrecognized extra"
+        },
+        {
+          "line": 19,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf 'canonical delta\\n' > \"$FIX/collection/delta/SKILL.md\"   # identical vendor of a TIERED canonical"
+        },
+        {
+          "line": 24,
+          "kind": [
+            "specific"
+          ],
+          "source": "out=\"$(python3 \"$ROOT/utils/py/skill_drift_check.py\" \\"
+        },
+        {
+          "line": 41,
+          "kind": [
+            "specific"
+          ],
+          "source": "out=\"$(python3 \"$ROOT/utils/py/skill_drift_check.py\" --canonical \"$FIX/canonical\" --collection \"$FIX/collection\")\" || true"
+        },
+        {
+          "line": 46,
+          "kind": [
+            "broad"
+          ],
+          "source": "rm \"$FIX/collection/beta/SKILL.md\""
+        },
+        {
+          "line": 47,
+          "kind": [
+            "specific"
+          ],
+          "source": "out=\"$(python3 \"$ROOT/utils/py/skill_drift_check.py\" \\"
+        },
+        {
+          "line": 55,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf 'canonical beta v2\\n' > \"$FIX/canonical/skills/beta/SKILL.md\""
+        },
+        {
+          "line": 56,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf 'canonical delta v2\\n' > \"$FIX/canonical/skills/1-hourly/delta/SKILL.md\"   # GH-744: tiered mutation"
+        },
+        {
+          "line": 57,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf 'stale beta\\n' > \"$FIX/collection/beta/SKILL.md\"   # restore the vendor test 4 removed"
+        },
+        {
+          "line": 58,
+          "kind": [
+            "specific"
+          ],
+          "source": "out=\"$(python3 \"$ROOT/utils/py/skill_drift_check.py\" \\"
+        },
+        {
+          "line": 66,
+          "kind": [
+            "specific"
+          ],
+          "source": "json_out=\"$(python3 \"$ROOT/utils/py/skill_drift_check.py\" --canonical \"$FIX/canonical\" \\"
+        }
+      ]
+    },
+    {
+      "suite": "gh184-no-tracked-scratch.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 4,
+          "kind": [
+            "broad"
+          ],
+          "source": "# come from `git ls-files .relay-scratch/` every run \u2014 no hand-maintained exception list."
+        },
+        {
+          "line": 26,
+          "kind": [
+            "broad"
+          ],
+          "source": "TRACKED=\"$(git -C \"$ROOT\" ls-files .relay-scratch/)\""
+        },
+        {
+          "line": 44,
+          "kind": [
+            "broad"
+          ],
+          "source": "BAD=\"$(git -C \"$FIX\" ls-files .relay-scratch/)\""
+        }
+      ]
+    },
+    {
+      "suite": "relay-pkg-freshness.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 5,
+          "kind": [
+            "broad"
+          ],
+          "source": "PKG=\"$ROOT/skills/1-hourly/relay-automation/relay-pkg.tar.gz\""
+        },
+        {
+          "line": 34,
+          "kind": [
+            "broad"
+          ],
+          "source": "|| fail \"relay-pkg.tar.gz is stale \u2014 run skills/1-hourly/relay-automation/make-pkg.sh\""
+        }
+      ]
+    },
+    {
+      "suite": "skill-extract.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 4,
+          "kind": [
+            "broad"
+          ],
+          "source": "# capability gate documented in the SKILL.md, exercised separately by the relay tests.)"
+        },
+        {
+          "line": 7,
+          "kind": [
+            "broad"
+          ],
+          "source": "PKG=\"$ROOT/skills/1-hourly/relay-automation/relay-pkg.tar.gz\""
+        },
+        {
+          "line": 9,
+          "kind": [
+            "broad"
+          ],
+          "source": "[ -f \"$PKG\" ] && pass \"relay-pkg.tar.gz present beside the skill\" || fail \"package missing \u2014 run skills/1-hourly/relay-automation/make-pkg.sh\""
+        }
+      ]
+    },
+    {
+      "suite": "releases-skill.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 9,
+          "kind": [
+            "broad"
+          ],
+          "source": "SKILL=\"$ROOT/skills/2-daily/releases/SKILL.md\""
+        },
+        {
+          "line": 10,
+          "kind": [
+            "broad"
+          ],
+          "source": "INSTALLER=\"$ROOT/skills/2-daily/releases/install.sh\""
+        },
+        {
+          "line": 32,
+          "kind": [
+            "broad"
+          ],
+          "source": "[ ! -e \"$ROOT/skills/release\" ] && pass \"singular repo folder is retired\" \\"
+        },
+        {
+          "line": 33,
+          "kind": [
+            "broad"
+          ],
+          "source": "|| fail \"legacy skills/release still exists\""
+        },
+        {
+          "line": 101,
+          "kind": [
+            "broad"
+          ],
+          "source": "[ \"$(readlink \"$CLAUDE_DIR/releases\" 2>/dev/null)\" = \"$ROOT/skills/2-daily/releases\" ] \\"
+        }
+      ]
+    },
+    {
+      "suite": "gh54-merged-dump-refusals.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 93,
+          "kind": [
+            "broad"
+          ],
+          "source": "{ git -C \"$R2\" show s-b:releases.sql | grep '^-- generation'"
+        },
+        {
+          "line": 124,
+          "kind": [
+            "broad"
+          ],
+          "source": "{ git -C \"$R4\" show s-b:releases.sql | grep '^-- generation'"
+        },
+        {
+          "line": 127,
+          "kind": [
+            "broad"
+          ],
+          "source": "git -C \"$R4\" show s-a:releases.sql | grep 'INSERT INTO settings(' | head -2"
+        }
+      ]
+    },
+    {
+      "suite": "gh57-releases-fuzz.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 89,
+          "kind": [
+            "broad"
+          ],
+          "source": "{ git -C \"$r\" show \"$header_side:releases.sql\" | grep '^-- generation: '"
+        },
+        {
+          "line": 97,
+          "kind": [
+            "broad"
+          ],
+          "source": "{ git -C \"$r\" show \"$winning_side:releases.sql\" | grep '^-- generation: '"
+        },
+        {
+          "line": 100,
+          "kind": [
+            "broad"
+          ],
+          "source": "git -C \"$r\" show \"$winning_side:releases.sql\" | grep '^INSERT INTO settings('"
+        }
+      ]
+    },
+    {
+      "suite": "gh57-live-merge-resolve.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 111,
+          "kind": [
+            "broad"
+          ],
+          "source": "git -C \"$r\" show MERGE_HEAD:releases.sql | grep '^INSERT INTO settings('"
+        },
+        {
+          "line": 161,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"grep -q releases.sql <<<\\\"\\$(git -C '$R3' show --stat HEAD)\\\" && grep -q releases.db <<<\\\"\\$(git -C '$R3' show --stat HEAD)\\\"\""
+        },
+        {
+          "line": 348,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"! git -C '$R9' ls-files --error-unmatch -- '$DEL_VIEW' >/dev/null 2>&1\""
+        }
+      ]
+    },
+    {
+      "suite": "gh77-standup-triage.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 2,
+          "kind": [
+            "broad"
+          ],
+          "source": "# GH-77 \u2014 skills/1-hourly/standup/triage.py: the deterministic half of /standup."
+        },
+        {
+          "line": 23,
+          "kind": [
+            "broad"
+          ],
+          "source": "TRIAGE=\"$ROOT_DIR/skills/1-hourly/standup/triage.py\""
+        },
+        {
+          "line": 178,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-2\" > \"$W/lens2.json\""
+        },
+        {
+          "line": 182,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-2-fail\" > \"$W/deg2.json\""
+        },
+        {
+          "line": 186,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-3\" > \"$W/lens3.json\""
+        },
+        {
+          "line": 190,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-3-fail\" > \"$W/deg3.json\""
+        },
+        {
+          "line": 194,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-7\" > \"$W/lens7.json\""
+        },
+        {
+          "line": 198,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-7-fail\" > \"$W/deg7.json\""
+        },
+        {
+          "line": 199,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-1\" > \"$W/lens1.json\""
+        },
+        {
+          "line": 200,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-1-fail\" > \"$W/deg1.json\""
+        },
+        {
+          "line": 201,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-6\" > \"$W/lens6.json\""
+        },
+        {
+          "line": 202,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-6-fail\" > \"$W/deg6.json\""
+        },
+        {
+          "line": 203,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-8\" > \"$W/lens8.json\""
+        },
+        {
+          "line": 204,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-8-fail\" > \"$W/deg8.json\""
+        },
+        {
+          "line": 206,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-4\" > \"$W/lens4.json\""
+        },
+        {
+          "line": 207,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-4-fail\" > \"$W/deg4.json\""
+        },
+        {
+          "line": 208,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-4-truncated\" > \"$W/lens4_trunc.json\""
+        },
+        {
+          "line": 210,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-5\" > \"$W/lens5.json\""
+        },
+        {
+          "line": 211,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-5-fail\" > \"$W/deg5.json\""
+        },
+        {
+          "line": 212,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-5-manifest\" > \"$W/lens5_manifest.json\""
+        },
+        {
+          "line": 243,
+          "kind": [
+            "broad"
+          ],
+          "source": "cp -r \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-5\" \"$W/lens-5-copy\""
+        },
+        {
+          "line": 245,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$W/lens-5-copy\" > \"$W/lens5_updated.json\""
+        },
+        {
+          "line": 268,
+          "kind": [
+            "broad"
+          ],
+          "source": "[ -d \"$ROOT_DIR/skills/1-hourly/standup/fixtures/all-degraded\" ] || fail_ \"all-degraded fixture directory is missing\""
+        },
+        {
+          "line": 269,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/all-degraded\" > \"$W/all_degraded.json\" 2>/dev/null || true"
+        },
+        {
+          "line": 280,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-2-missing-fixture\" > \"$W/deg_missing.json\" 2>/dev/null"
+        },
+        {
+          "line": 284,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-3-bad-rev-list\" > \"$W/deg_bad_rev.json\""
+        },
+        {
+          "line": 288,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-3-bad-status\" > \"$W/deg_bad_status.json\""
+        },
+        {
+          "line": 292,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-2-quote-branch\" > \"$W/quote_branch.json\""
+        },
+        {
+          "line": 296,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-1-bad-schema\" > \"$W/deg_lens1_schema.json\" 2>/dev/null"
+        },
+        {
+          "line": 300,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-1-empty-session\" > \"$W/deg_lens1_empty.json\" 2>/dev/null"
+        },
+        {
+          "line": 304,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-8-bad-check\" > \"$W/deg_lens8_schema.json\" 2>/dev/null"
+        },
+        {
+          "line": 317,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$W/general-parked\" > \"$W/general-parked.json\" 2>/dev/null"
+        },
+        {
+          "line": 323,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"$(PYTHONPATH=\"$ROOT_DIR/skills/1-hourly/standup\" python3 -c 'import sys,triage; print(len(triage.read_parked(sys.argv[1])))' \"$W/general-parked/PARKED\")\" \"0\""
+        },
+        {
+          "line": 329,
+          "kind": [
+            "broad"
+          ],
+          "source": "# dependency \u2014 nothing else under skills/, utils/ or relay-automation/ uses it, and the repo's"
+        },
+        {
+          "line": 335,
+          "kind": [
+            "broad"
+          ],
+          "source": "for _b in bash git python3 sed grep cat date wc printf sort head tail mkdir rm ls tr awk stat; do"
+        },
+        {
+          "line": 339,
+          "kind": [
+            "broad"
+          ],
+          "source": "PATH=\"$NOJQ\" bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" \\"
+        },
+        {
+          "line": 340,
+          "kind": [
+            "broad"
+          ],
+          "source": "--fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-2\" > \"$W/nojq.json\" 2>/dev/null"
+        },
+        {
+          "line": 382,
+          "kind": [
+            "broad"
+          ],
+          "source": "C() { bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/$1\" 2>/dev/null; }"
+        },
+        {
+          "line": 398,
+          "kind": [
+            "broad"
+          ],
+          "source": "# B2 \u2014 a degraded lens must be visible in the EXIT CODE, not only in the document. SKILL.md publishes"
+        },
+        {
+          "line": 401,
+          "kind": [
+            "broad"
+          ],
+          "source": "C lens-7-fail >/dev/null; is \"an ordinary degraded lens exits 3, as SKILL.md publishes\" \"$?\" \"3\""
+        },
+        {
+          "line": 613,
+          "kind": [
+            "broad"
+          ],
+          "source": "for fx in \"$ROOT_DIR\"/skills/1-hourly/standup/fixtures/*/; do"
+        },
+        {
+          "line": 617,
+          "kind": [
+            "broad"
+          ],
+          "source": "doc=\"$(bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$fx\" 2>/dev/null)\""
+        },
+        {
+          "line": 631,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-1-malformed-actionable\" > \"$W/deg_lens1_malformed.json\" 2>/dev/null"
+        },
+        {
+          "line": 636,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-6-overdue-show\" > \"$W/lens6_overdue.json\" 2>/dev/null"
+        },
+        {
+          "line": 640,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-8-controls\" > \"$W/lens8_controls.json\" 2>/dev/null"
+        },
+        {
+          "line": 647,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-8-fail-controls\" > \"$W/lens8_fail_controls.json\" 2>/dev/null"
+        },
+        {
+          "line": 650,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-8-bad-read\" > \"$W/lens8_bad_read.json\" 2>/dev/null"
+        },
+        {
+          "line": 654,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-6-bad-read\" > \"$W/lens6_bad_read.json\" 2>/dev/null"
+        },
+        {
+          "line": 661,
+          "kind": [
+            "broad"
+          ],
+          "source": "(cd \"$W\" && bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\") > \"$W/live_lens1_nonfixture.json\" 2>/dev/null"
+        },
+        {
+          "line": 674,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-4-missing-fields\" > \"$W/lens4_missing.json\" 2>/dev/null"
+        },
+        {
+          "line": 679,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-5-missing-fields\" > \"$W/lens5_missing.json\" 2>/dev/null"
+        },
+        {
+          "line": 684,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-5-wrong-number\" > \"$W/lens5_wrong_num.json\" 2>/dev/null"
+        },
+        {
+          "line": 691,
+          "kind": [
+            "broad"
+          ],
+          "source": "for _b in bash git python3 sed grep cat date wc printf sort head tail mkdir rm ls tr awk stat jq base64 mktemp dirname basename; do"
+        },
+        {
+          "line": 698,
+          "kind": [
+            "broad"
+          ],
+          "source": "PATH=\"$NOGH\" bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --session \"$W/dummy_session.json\" > \"$W/nogh.json\" 2>/dev/null"
+        },
+        {
+          "line": 713,
+          "kind": [
+            "broad"
+          ],
+          "source": "cp -r \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-5\" \"$MOCK_REPO/lens-5\""
+        },
+        {
+          "line": 746,
+          "kind": [
+            "broad"
+          ],
+          "source": "(cd \"$MOCK_REPO/subdir\" && PATH=\"$MOCK_BIN:$PATH\" bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\") > \"$W/lens5_subdir.json\" 2>/dev/null"
+        },
+        {
+          "line": 751,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-5-missing-roadmap\" > \"$W/lens5_missing_roadmap.json\" 2>/dev/null"
+        },
+        {
+          "line": 756,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-5-missing-db\" > \"$W/lens5_missing_db.json\" 2>/dev/null"
+        },
+        {
+          "line": 761,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-5-malformed-session\" > \"$W/lens5_malformed_session.json\" 2>/dev/null"
+        },
+        {
+          "line": 765,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/lens-5-invalid-shape-session\" > \"$W/lens5_invalid_shape_session.json\" 2>/dev/null"
+        },
+        {
+          "line": 772,
+          "kind": [
+            "broad"
+          ],
+          "source": "HOME=\"$TEST_HOME\" bash \"$ROOT_DIR/skills/1-hourly/standup/install.sh\" --check >/dev/null 2>&1"
+        },
+        {
+          "line": 775,
+          "kind": [
+            "broad"
+          ],
+          "source": "HOME=\"$TEST_HOME\" bash \"$ROOT_DIR/skills/1-hourly/standup/install.sh\" >/dev/null 2>&1"
+        },
+        {
+          "line": 776,
+          "kind": [
+            "broad"
+          ],
+          "source": "HOME=\"$TEST_HOME\" bash \"$ROOT_DIR/skills/1-hourly/standup/install.sh\" --check >/dev/null 2>&1"
+        },
+        {
+          "line": 779,
+          "kind": [
+            "broad"
+          ],
+          "source": "out=\"$(echo \"skills/1-hourly/standup/collect.sh\" | bash \"$ROOT_DIR/utils/ci-route.sh\" push)\""
+        },
+        {
+          "line": 780,
+          "kind": [
+            "broad"
+          ],
+          "source": "has \"ci-route.sh resolves skills/1-hourly/standup/* to standup subsystem\" \"$out\" \"tier2_subsystems=standup\""
+        },
+        {
+          "line": 785,
+          "kind": [
+            "broad"
+          ],
+          "source": "out=\"$(bash \"$ROOT_DIR/skills/1-hourly/standup/collect.sh\" --fixture \"$ROOT_DIR/skills/1-hourly/standup/fixtures/all-degraded\" 2>/dev/null)\" || rc=$?"
+        }
+      ]
+    },
+    {
+      "suite": "path-integrity.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 4,
+          "kind": [
+            "broad"
+          ],
+          "source": "#   - the skills/ rename left a hardcoded singular-dir path that no longer"
+        },
+        {
+          "line": 23,
+          "kind": [
+            "broad"
+          ],
+          "source": "MKPKG=\"$ROOT/skills/1-hourly/relay-automation/make-pkg.sh\""
+        },
+        {
+          "line": 24,
+          "kind": [
+            "broad"
+          ],
+          "source": "TARBALL=\"$ROOT/skills/1-hourly/relay-automation/relay-pkg.tar.gz\""
+        },
+        {
+          "line": 39,
+          "kind": [
+            "broad"
+          ],
+          "source": "fail \"package manifest drift \u2014 re-run skills/1-hourly/relay-automation/make-pkg.sh and commit the tarball\""
+        },
+        {
+          "line": 42,
+          "kind": [
+            "broad"
+          ],
+          "source": "fail \"packaging files missing: expected make-pkg.sh + relay-pkg.tar.gz under skills/1-hourly/relay-automation/\""
+        },
+        {
+          "line": 52,
+          "kind": [
+            "broad"
+          ],
+          "source": "skills/1-hourly/relay-automation/SKILL.md \\"
+        },
+        {
+          "line": 53,
+          "kind": [
+            "broad"
+          ],
+          "source": "skills/1-hourly/relay-xyz/SKILL.md\""
+        },
+        {
+          "line": 63,
+          "kind": [
+            "broad"
+          ],
+          "source": "done < <(cd \"$ROOT\" && git ls-files '*.sh')"
+        },
+        {
+          "line": 70,
+          "kind": [
+            "broad"
+          ],
+          "source": "# GH-744: repo skills live at skills/<tier>/<name>; an APP-DISCOVERY path (~/.claude/skills/<name>/...,"
+        },
+        {
+          "line": 71,
+          "kind": [
+            "broad"
+          ],
+          "source": "# ~/.codex/skills/..., ~/.gemini/{config,antigravity,antigravity-cli}/skills/..., ~/.zcode/skills/...)"
+        },
+        {
+          "line": 73,
+          "kind": [
+            "broad"
+          ],
+          "source": "# the bare `skills/<name>/...` tail is not mistaken for a repo path."
+        },
+        {
+          "line": 74,
+          "kind": [
+            "broad"
+          ],
+          "source": "app_root_re='s#(\\.claude|\\.codex|\\.agents|\\.zcode|config|antigravity|antigravity-cli)/skills/[A-Za-z0-9._/-]+##g'"
+        },
+        {
+          "line": 101,
+          "kind": [
+            "broad"
+          ],
+          "source": "# GH-660: test/gh660-skill-drift.sh builds a THROWAWAY canonical tree (skills/alpha|beta|gamma/"
+        },
+        {
+          "line": 102,
+          "kind": [
+            "broad"
+          ],
+          "source": "# SKILL.md under a mktemp root) to exercise the drift guard \u2014 fixture literals, not references to"
+        },
+        {
+          "line": 103,
+          "kind": [
+            "broad"
+          ],
+          "source": "# files in this tree; these names can never exist under the real skills/ (the real skills are named"
+        },
+        {
+          "line": 142,
+          "kind": [
+            "broad"
+          ],
+          "source": "# mktemp root, whose skills/ is flat by design (`skills/debug-mantra/SKILL.md`, ...). This tree keeps"
+        },
+        {
+          "line": 144,
+          "kind": [
+            "broad"
+          ],
+          "source": "fixture_literals=\" skills/debug-mantra/SKILL.md skills/honest/SKILL.md skills/ponytail/install.sh test/gh997-demo.sh test/gh998-demo.sh test/other.sh test/gh592-demo.sh test/gh590-demo.sh relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh relay-automation/some-shim.sh relay-automation/new-shim.sh relay-automation/existing-lib.sh test/new-test.sh test/fixture-gate.sh test/baselines/fixture-control.md test/gh999-demo.sh test/gh999-drift.sh test/gh999-content-drift.sh test/gh999-hook-drift.sh test/gh999b-unreg.sh relay-automation/new-thing.sh test/dummy.sh test/existing-test.sh test/some-suite.sh skills/alpha/SKILL.md skills/beta/SKILL.md skills/1-hourly/delta/SKILL.md skills/gamma/SKILL.md test/x.sh test/probe.sh test/probe-empty.sh \""
+        },
+        {
+          "line": 153,
+          "kind": [
+            "broad"
+          ],
+          "source": "case \"$f:$tok\" in test/gh649-pdda-migration.sh:skills/pdda/SKILL.md|test/path-integrity.sh:skills/pdda/SKILL.md) continue ;; esac"
+        },
+        {
+          "line": 173,
+          "kind": [
+            "broad"
+          ],
+          "source": "docs = list((root / \"skills\").rglob(\"*.md\"))"
+        },
+        {
+          "line": 184,
+          "kind": [
+            "broad"
+          ],
+          "source": "elif target.startswith(\"../\") or (doc == root / \"ARCHITECTURE.md\" and target.startswith(\"skills/\")):"
+        }
+      ]
+    },
+    {
+      "suite": "relay-target-root-paths.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 88,
+          "kind": [
+            "broad"
+          ],
+          "source": "LEAK=\"$(git -C \"$TGT\" log --name-only --format= \"$TGT_BEFORE\"..HEAD 2>/dev/null | grep -vE \"^$REL_REL$|^$ART_REL$|^$\" | head -1)\""
+        }
+      ]
+    },
+    {
+      "suite": "agent-chorus.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 7,
+          "kind": [
+            "broad"
+          ],
+          "source": "CLI=\"$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus.py\""
+        },
+        {
+          "line": 8,
+          "kind": [
+            "broad"
+          ],
+          "source": "SKILL=\"$REPO/skills/2-daily/agent-chorus/SKILL.md\""
+        },
+        {
+          "line": 81,
+          "kind": [
+            "broad"
+          ],
+          "source": "grep -Fq -- '$(git rev-parse --show-toplevel)/skills/2-daily/agent-chorus/scripts/agent_chorus.py' \"$SKILL\" \\"
+        },
+        {
+          "line": 84,
+          "kind": [
+            "broad"
+          ],
+          "source": "(cd \"$REPO\" && \"$(git rev-parse --show-toplevel)/skills/2-daily/agent-chorus/scripts/agent_chorus.py\" --help >/dev/null) \\"
+        },
+        {
+          "line": 682,
+          "kind": [
+            "broad"
+          ],
+          "source": "# alone leaked three real ~/.gemini/**/skills/agent-chorus writes per suite run (GH-678)."
+        },
+        {
+          "line": 691,
+          "kind": [
+            "broad"
+          ],
+          "source": "bash \"$REPO/skills/2-daily/agent-chorus/install.sh\""
+        },
+        {
+          "line": 702,
+          "kind": [
+            "broad"
+          ],
+          "source": "[ -L \"$SANDBOX_HOME/.gemini/config/skills/agent-chorus\" ] \\"
+        },
+        {
+          "line": 703,
+          "kind": [
+            "broad"
+          ],
+          "source": "&& [ -L \"$SANDBOX_HOME/.gemini/antigravity/skills/agent-chorus\" ] \\"
+        },
+        {
+          "line": 704,
+          "kind": [
+            "broad"
+          ],
+          "source": "&& [ -L \"$SANDBOX_HOME/.gemini/antigravity-cli/skills/agent-chorus\" ] \\"
+        },
+        {
+          "line": 713,
+          "kind": [
+            "broad"
+          ],
+          "source": "# GH-730: the dangling target is a fixture path this suite never creates, NOT $REPO/skills/agent2agent."
+        },
+        {
+          "line": 717,
+          "kind": [
+            "broad"
+          ],
+          "source": "# The path still ends in `/skills/agent2agent`, which is what migrate_legacy_link's case arm matches."
+        },
+        {
+          "line": 718,
+          "kind": [
+            "broad"
+          ],
+          "source": "ln -s \"$WORK/pre-rename-clone/skills/agent2agent\" \"$MIG_DIR/agent2agent\"   # the pre-rename install shape (dangling by construction)"
+        },
+        {
+          "line": 736,
+          "kind": [
+            "broad"
+          ],
+          "source": "[ -n \"$mig_target\" ] && [ \"$mig_target\" -ef \"$REPO/skills/2-daily/agent-chorus\" ] \\"
+        },
+        {
+          "line": 738,
+          "kind": [
+            "broad"
+          ],
+          "source": "|| fail \"legacy symlink not repointed (now -> '$mig_target', which is not the same directory as '$REPO/skills/2-daily/agent-chorus'): $mig_out\""
+        },
+        {
+          "line": 749,
+          "kind": [
+            "broad"
+          ],
+          "source": "LEGACY_SOURCE=\"$WORK/foreign/skills/agent2agent\""
+        },
+        {
+          "line": 893,
+          "kind": [
+            "broad"
+          ],
+          "source": "p2_cli send --id 888004 --agent 2 --next-agent 1 --message \"Referencing skills/2-daily/agent-chorus/SKILL.md:10 and commit $HEAD_SHA\" >/dev/null 2>&1"
+        },
+        {
+          "line": 1152,
+          "kind": [
+            "broad"
+          ],
+          "source": "sys.path.insert(0, \"skills/2-daily/agent-chorus/scripts\")"
+        },
+        {
+          "line": 1240,
+          "kind": [
+            "broad"
+          ],
+          "source": "sys.path.insert(0, \"skills/2-daily/agent-chorus/scripts\")"
+        }
+      ]
+    },
+    {
+      "suite": "gh678-installer-live-links.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 10,
+          "kind": [
+            "broad"
+          ],
+          "source": "mkdir -p \"$FOREIGN\"; echo \"foreign\" > \"$FOREIGN/SKILL.md\""
+        },
+        {
+          "line": 12,
+          "kind": [
+            "broad"
+          ],
+          "source": "for installer in \"$REPO\"/skills/*/*/install.sh; do   # skills/<tier>/<name> (GH-744)"
+        }
+      ]
+    },
+    {
+      "suite": "skills-army-hq.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 3,
+          "kind": [
+            "specific"
+          ],
+          "source": "# so the skills-army-hq dedicated pytest (test/test_deploy_skills.py) is carried through this"
+        },
+        {
+          "line": 8,
+          "kind": [
+            "specific"
+          ],
+          "source": "PYTEST_FILE=\"$HERE/test_deploy_skills.py\""
+        },
+        {
+          "line": 9,
+          "kind": [
+            "specific"
+          ],
+          "source": "[ -f \"$PYTEST_FILE\" ] || { echo \"  FAIL: test_deploy_skills.py not found beside this wrapper\" >&2; exit 1; }"
+        },
+        {
+          "line": 12,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "echo \"  SKIPPED: python:test_deploy_skills.py (pytest not importable \u2014 install it to cover skills/3-weekly/skills-army-hq)\""
+        }
+      ]
+    },
+    {
+      "suite": "gh620-skills-army-mini-sync.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 6,
+          "kind": [
+            "specific"
+          ],
+          "source": "WORK=\"$(mktemp -d \"${TMPDIR:-/tmp}/gh620-skills-army.XXXXXX\")\""
+        },
+        {
+          "line": 38,
+          "kind": [
+            "broad"
+          ],
+          "source": "for path in sorted(root.rglob(\"*\")):"
+        },
+        {
+          "line": 46,
+          "kind": [
+            "specific"
+          ],
+          "source": "sync = os.path.join(src, \"utils/py/xyz_mini_sync.py\")"
+        },
+        {
+          "line": 49,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "text = text.replace('    (\"skills/3-weekly/skills-army-hq\", \"\", \"managed\"),\\n', \"\")"
+        },
+        {
+          "line": 54,
+          "kind": [
+            "specific"
+          ],
+          "source": "dest = os.path.join(WORK, \"XYZ-skills-army-mini\")"
+        },
+        {
+          "line": 57,
+          "kind": [
+            "specific"
+          ],
+          "source": "def publish(*extra): return sh(sys.executable, sync, \"--target\", \"skills-army-mini\", \"--dest\", dest, *extra)"
+        },
+        {
+          "line": 61,
+          "kind": [
+            "specific"
+          ],
+          "source": "# GH-955: XYZ-forge is the Skills Army HQ upstream again (reverses GH-882); the child is a published"
+        },
+        {
+          "line": 62,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "# projection of skills/3-weekly/skills-army-hq/."
+        },
+        {
+          "line": 66,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"SKILL.md\", \"references/recovery.md\", \"references/targets.md\", \"scripts/intake.py\","
+        },
+        {
+          "line": 73,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "canonical_readme = pathlib.Path(src, \"skills/3-weekly/skills-army-hq/README.md\").read_bytes()"
+        },
+        {
+          "line": 77,
+          "kind": [
+            "specific"
+          ],
+          "source": "print(f\"gh620-skills-army-mini-sync mutant: {P} passed, {F} failed\")"
+        },
+        {
+          "line": 84,
+          "kind": [
+            "specific"
+          ],
+          "source": "r = sh(sys.executable, sync, \"--target\", \"skills-army-mini\", \"--apply\")"
+        },
+        {
+          "line": 89,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "landing = pathlib.Path(src, \"skills/3-weekly/skills-army-hq/README.md\")"
+        },
+        {
+          "line": 93,
+          "kind": [
+            "specific"
+          ],
+          "source": "r = sh(sys.executable, sync, \"--target\", \"skills-army-mini\", \"--dest\", bad, \"--apply\")"
+        },
+        {
+          "line": 97,
+          "kind": [
+            "specific"
+          ],
+          "source": "r = sh(sys.executable, sync, \"--target\", \"skills-army-mini\", \"--dest\", bad, \"--apply\")"
+        },
+        {
+          "line": 106,
+          "kind": [
+            "specific"
+          ],
+          "source": "drop_sync = os.path.join(drop_src, \"utils/py/xyz_mini_sync.py\")"
+        },
+        {
+          "line": 107,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "drop_text = pathlib.Path(drop_sync).read_text().replace('    (\"skills/3-weekly/skills-army-hq\", \"\", \"managed\"),\\n', \"\")"
+        },
+        {
+          "line": 110,
+          "kind": [
+            "specific"
+          ],
+          "source": "r = sh(sys.executable, drop_sync, \"--target\", \"skills-army-mini\", \"--dest\", drop_dest, \"--apply\")"
+        },
+        {
+          "line": 114,
+          "kind": [
+            "specific"
+          ],
+          "source": "r = sh(sys.executable, drop_sync, \"--target\", \"skills-army-mini\", \"--dest\", drop_dest, \"--apply\")"
+        },
+        {
+          "line": 125,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "shutil.copy(os.path.join(src, \"skills/3-weekly/skills-army-hq/README.md\"), os.path.join(owner_retry, \"README.md\"))"
+        },
+        {
+          "line": 132,
+          "kind": [
+            "specific"
+          ],
+          "source": "r = sh(sys.executable, sync, \"--target\", \"skills-army-mini\", \"--dest\", owner_retry, \"--apply\")"
+        },
+        {
+          "line": 185,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "ok(\"init apply creates copied manager\", r.returncode == 0 and os.path.isfile(os.path.join(collection, \"skills-army-hq/SKILL.md\")), r.stderr)"
+        },
+        {
+          "line": 186,
+          "kind": [
+            "specific"
+          ],
+          "source": "installed_manager = pathlib.Path(collection, \"skills-army-hq\")"
+        },
+        {
+          "line": 191,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "r.returncode == 0 and tree(installed_manager) == tree(os.path.join(src, \"skills/3-weekly/skills-army-hq\")))"
+        },
+        {
+          "line": 192,
+          "kind": [
+            "specific"
+          ],
+          "source": "r = cli(intake, \"update\", \"skills-army-hq\", \"--source\", dest)"
+        },
+        {
+          "line": 194,
+          "kind": [
+            "specific"
+          ],
+          "source": "r.returncode == 0 and \"Unchanged: skills-army-hq\" in r.stdout, r.stderr)"
+        },
+        {
+          "line": 195,
+          "kind": [
+            "broad"
+          ],
+          "source": "fixture_repo = os.path.join(WORK, \"fixture-repo\"); fixture = os.path.join(fixture_repo, \"skills/sample\")"
+        },
+        {
+          "line": 197,
+          "kind": [
+            "broad"
+          ],
+          "source": "pathlib.Path(fixture, \"SKILL.md\").write_text(\"---\\nname: sample\\ndescription: fixture\\n---\\n\")"
+        },
+        {
+          "line": 203,
+          "kind": [
+            "broad"
+          ],
+          "source": "ok(\"add apply catalogs fixture\", r.returncode == 0 and os.path.isfile(os.path.join(collection, \"sample/SKILL.md\")), r.stderr)"
+        },
+        {
+          "line": 214,
+          "kind": [
+            "broad"
+          ],
+          "source": "ok(\"sync apply creates readable fixture link\", r.returncode == 0 and link.is_symlink() and pathlib.Path(link, \"SKILL.md\").is_file(), r.stderr)"
+        },
+        {
+          "line": 215,
+          "kind": [
+            "broad"
+          ],
+          "source": "ok(\"catalog and link read-through identify fixture\", \"sample\" in pathlib.Path(collection, \"catalog.md\").read_text() and \"name: sample\" in pathlib.Path(link, \"SKILL.md\").read_text())"
+        },
+        {
+          "line": 224,
+          "kind": [
+            "specific"
+          ],
+          "source": "print(f\"gh620-skills-army-mini-sync: {P} passed, {F} failed\")"
+        }
+      ]
+    },
+    {
+      "suite": "agent-chorus-bridge.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 7,
+          "kind": [
+            "broad"
+          ],
+          "source": "CLI=\"$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus.py\""
+        },
+        {
+          "line": 8,
+          "kind": [
+            "broad"
+          ],
+          "source": "BRIDGE=\"$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus_bridge.py\""
+        },
+        {
+          "line": 9,
+          "kind": [
+            "broad"
+          ],
+          "source": "CLIENT=\"$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus_client.py\""
+        },
+        {
+          "line": 10,
+          "kind": [
+            "broad"
+          ],
+          "source": "SKILL=\"$REPO/skills/2-daily/agent-chorus/SKILL.md\""
+        }
+      ]
+    },
+    {
+      "suite": "gh233-agent-chorus-concurrency.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 15,
+          "kind": [
+            "broad"
+          ],
+          "source": "CLI=\"$REPO/skills/2-daily/agent-chorus/scripts/agent_chorus.py\""
+        }
+      ]
+    },
+    {
+      "suite": "xyz-vendor.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 14,
+          "kind": [
+            "broad"
+          ],
+          "source": "FH=\"$ROOT/skills/1-hourly/relay-xyz/find-harness.sh\""
+        },
+        {
+          "line": 204,
+          "kind": [
+            "broad"
+          ],
+          "source": "git -C \"$TR\" ls-files --error-unmatch -- .xyz/bin/tick >/dev/null 2>&1 \\"
+        },
+        {
+          "line": 308,
+          "kind": [
+            "broad"
+          ],
+          "source": "# find-harness.sh decides it with `merge-base --is-ancestor` (skills/1-hourly/relay-xyz/find-harness.sh:164)."
+        }
+      ]
+    },
+    {
+      "suite": "relay-xyz-skill-guard.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 44,
+          "kind": [
+            "broad"
+          ],
+          "source": "run \"sess-loc\" Bash 'eval \"$(bash skills/1-hourly/relay-xyz/find-harness.sh --env)\"'"
+        }
+      ]
+    },
+    {
+      "suite": "find-harness.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 11,
+          "kind": [
+            "broad"
+          ],
+          "source": "FH=\"$REPO/skills/1-hourly/relay-xyz/find-harness.sh\""
+        },
+        {
+          "line": 12,
+          "kind": [
+            "broad"
+          ],
+          "source": "SKILL=\"$REPO/skills/1-hourly/relay-xyz/SKILL.md\""
+        },
+        {
+          "line": 37,
+          "kind": [
+            "broad"
+          ],
+          "source": "# `bash skills/1-hourly/relay-xyz/find-harness.sh --check`. It resolved against the caller's CWD and failed"
+        },
+        {
+          "line": 41,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"grep -q '\\$HOME/.claude/skills/relay-xyz/find-harness.sh' '$SKILL'\""
+        },
+        {
+          "line": 43,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"! grep -q '^bash skills/1-hourly/relay-xyz/find-harness.sh --check$' '$SKILL'\""
+        },
+        {
+          "line": 83,
+          "kind": [
+            "broad"
+          ],
+          "source": "ok \"case-collision: explains the exit-6 risk + git mv remedy\" \"grep -q 'exit 6' <<<\\\"\\$out4\\\" && grep -q 'git mv' <<<\\\"\\$out4\\\"\""
+        },
+        {
+          "line": 116,
+          "kind": [
+            "specific"
+          ],
+          "source": "# GH-856: Skills Army copies the skill outside the harness. Use an isolated HOME"
+        },
+        {
+          "line": 120,
+          "kind": [
+            "broad"
+          ],
+          "source": "COPIED=\"$FHWORK/Deployed Skills/relay-xyz/find-harness.sh\""
+        }
+      ]
+    },
+    {
+      "suite": "gh292-worktree-vendored-discovery.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 8,
+          "kind": [
+            "broad"
+          ],
+          "source": "FH=\"$REPO/skills/1-hourly/relay-xyz/find-harness.sh\""
+        }
+      ]
+    },
+    {
+      "suite": "gh649-pdda-migration.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 15,
+          "kind": [
+            "broad"
+          ],
+          "source": "[ \"$(cd \"$BOX\" && bash \"$ROOT/skills/4-occasional/vendor-stack/find-pdda.sh\")\" = \"$ROOT\" ] || fail resolver"
+        },
+        {
+          "line": 16,
+          "kind": [
+            "broad"
+          ],
+          "source": "if PDDA_REPO=\"$BOX\" bash \"$ROOT/skills/4-occasional/vendor-stack/find-pdda.sh\" >\"$BOX/invalid.log\" 2>&1; then fail 'missing installer accepted'; fi"
+        },
+        {
+          "line": 26,
+          "kind": [
+            "broad"
+          ],
+          "source": "grep -q 'git rev-parse --show-toplevel' \"$T/.claude/skills/pdda/SKILL.md\""
+        }
+      ]
+    },
+    {
+      "suite": "gh460-pipe-buffer-sigpipe.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 180,
+          "kind": [
+            "broad"
+          ],
+          "source": "REPO_WIDE='pdda\\.sh|pdda-local-checks|gate_inventory|swarm_preflight|git grep|git ls-files'"
+        },
+        {
+          "line": 190,
+          "kind": [
+            "broad"
+          ],
+          "source": "$(cd \"$ROOT_REPO\" && git ls-files 'test/*.sh' 'utils/*.sh' 'utils/**/*.sh' 'relay-automation/*.sh' 2>/dev/null)"
+        },
+        {
+          "line": 227,
+          "kind": [
+            "broad"
+          ],
+          "source": "$(cd \"$ROOT_REPO\" && git ls-files 'relay-automation/*.sh' 2>/dev/null)"
+        },
+        {
+          "line": 234,
+          "kind": [
+            "broad"
+          ],
+          "source": "#   marathon-drive.sh (x2)     \u2014 `git diff --name-only | grep -q .` and"
+        },
+        {
+          "line": 235,
+          "kind": [
+            "broad"
+          ],
+          "source": "#     `git status --porcelain | grep -qE '^(\\?\\?|A )'` fail open on CHANGE detection: \"no new test was"
+        },
+        {
+          "line": 237,
+          "kind": [
+            "broad"
+          ],
+          "source": "#   poll.sh                    \u2014 `git status --porcelain | grep -q . && return 1 || return 0` returns"
+        }
+      ]
+    },
+    {
+      "suite": "gh284-p4-release-lanes.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 255,
+          "kind": [
+            "broad"
+          ],
+          "source": "&& pass \"seed emits the same keys as skills/3-weekly/10days/scan-issues.sh\" \\"
+        }
+      ]
+    },
+    {
+      "suite": "ci-workflow.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 100,
+          "kind": [
+            "broad"
+          ],
+          "source": "if [ -f \"$ROOT/skills/2-daily/agent-chorus/standalone/ci.yml\" ]; then"
+        },
+        {
+          "line": 101,
+          "kind": [
+            "broad"
+          ],
+          "source": "STANDALONE_CI=\"skills/2-daily/agent-chorus/standalone/ci.yml\""
+        },
+        {
+          "line": 102,
+          "kind": [
+            "broad"
+          ],
+          "source": "elif [ -f \"$ROOT/skills/agent-chorus/standalone/ci.yml\" ]; then"
+        },
+        {
+          "line": 103,
+          "kind": [
+            "broad"
+          ],
+          "source": "STANDALONE_CI=\"skills/agent-chorus/standalone/ci.yml\""
+        }
+      ]
+    },
+    {
+      "suite": "ci-route.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 72,
+          "kind": [
+            "broad"
+          ],
+          "source": "expect_route \"AgentChorus skill instructions use the docs gate\" push docs true skills/2-daily/agent-chorus/SKILL.md"
+        },
+        {
+          "line": 158,
+          "kind": [
+            "broad"
+          ],
+          "source": "expect_tier \"HQ utility changes are tier 2\" pull_request 2 utils/hq/hq.sh skills/2-daily/hq/find-hq.sh"
+        },
+        {
+          "line": 164,
+          "kind": [
+            "broad"
+          ],
+          "source": "expect_tier \"non-core skill code is tier 1 (GH-831 D4)\" pull_request 1 skills/3-weekly/radar/install.sh skills/4-occasional/rpr/scan.py"
+        },
+        {
+          "line": 165,
+          "kind": [
+            "broad"
+          ],
+          "source": "expect_tier \"core skill code stays off the docs gate (GH-831 D4: merge-cleanup)\" pull_request 3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py"
+        },
+        {
+          "line": 172,
+          "kind": [
+            "broad"
+          ],
+          "source": "expect_tier \"agent-chorus skill code is tier 2 (GH-35 subsystem 7)\" pull_request 2 skills/2-daily/agent-chorus/scripts/agent_chorus.py"
+        },
+        {
+          "line": 173,
+          "kind": [
+            "broad"
+          ],
+          "source": "expect_tier \"agent-chorus SKILL.md stays docs (explanatory markdown)\" pull_request 1 skills/2-daily/agent-chorus/SKILL.md"
+        },
+        {
+          "line": 176,
+          "kind": [
+            "broad"
+          ],
+          "source": "expect_tier \"relay-xyz skill surface is tier 3\" pull_request 3 skills/1-hourly/relay-xyz/SKILL.md"
+        },
+        {
+          "line": 187,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "expect_tier \"a registered skill + its code + its dedicated tests is tier 2 (GH-487)\" pull_request 2 skills/3-weekly/skills-army-hq/scripts/intake.py test/skills-army-hq.sh"
+        },
+        {
+          "line": 188,
+          "kind": [
+            "specific"
+          ],
+          "source": "expect_tier \"a dedicated test edited ALONE stays tier 3 (co-touch requirement, GH-487)\" pull_request 3 test/skills-army-hq.sh"
+        },
+        {
+          "line": 189,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "expect_tier \"shared Python test integration still escalates beside skill code (GH-487)\" pull_request 3 skills/3-weekly/skills-army-hq/scripts/intake.py test/test_python_layer.py"
+        },
+        {
+          "line": 196,
+          "kind": [
+            "specific"
+          ],
+          "source": "SKILLS_SUITE=\"$ROOT/test/skills-army-hq.sh\""
+        },
+        {
+          "line": 198,
+          "kind": [
+            "specific"
+          ],
+          "source": "mv \"$SKILLS_SUITE\" \"$WORK/skills-army-hq.sh.stash\""
+        },
+        {
+          "line": 199,
+          "kind": [
+            "specific"
+          ],
+          "source": "out=\"$(route push test/skills-army-hq.sh || true)\""
+        },
+        {
+          "line": 200,
+          "kind": [
+            "specific"
+          ],
+          "source": "mv \"$WORK/skills-army-hq.sh.stash\" \"$SKILLS_SUITE\""
+        },
+        {
+          "line": 205,
+          "kind": [
+            "specific"
+          ],
+          "source": "fail \"test/skills-army-hq.sh missing \u2014 the GH-487 deletion control cannot run\""
+        },
+        {
+          "line": 235,
+          "kind": [
+            "specific"
+          ],
+          "source": "out=\"$(bash \"$ROUTER\" subsystems skills-army-hq)\""
+        },
+        {
+          "line": 236,
+          "kind": [
+            "specific"
+          ],
+          "source": "[[ \"$(wc -w <<<\"$out\")\" -eq 5 && \"$out\" == *\"skills-army-hq.sh\"* && \"$out\" == *\"gh620-skills-army-mini-sync.sh\"* ]] \\"
+        },
+        {
+          "line": 237,
+          "kind": [
+            "specific"
+          ],
+          "source": "&& pass \"subsystems skills-army-hq lists its two dedicated suites plus GH-831's three gh589 suites (GH-487/GH-620)\" \\"
+        },
+        {
+          "line": 238,
+          "kind": [
+            "specific"
+          ],
+          "source": "|| fail \"subsystems skills-army-hq listed $(wc -w <<<\"$out\") suites: $out\""
+        },
+        {
+          "line": 283,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "mkdir -p \"$VALIDATE_REPO/skills/3-weekly/skills-army-hq/scripts\""
+        },
+        {
+          "line": 284,
+          "kind": [
+            "specific",
+            "broad"
+          ],
+          "source": "printf '#!/usr/bin/env python3\\n' >\"$VALIDATE_REPO/skills/3-weekly/skills-army-hq/scripts/intake.py\""
+        },
+        {
+          "line": 285,
+          "kind": [
+            "specific"
+          ],
+          "source": "printf '#!/usr/bin/env bash\\nexit 0\\n' >\"$VALIDATE_REPO/test/skills-army-hq.sh\""
+        },
+        {
+          "line": 286,
+          "kind": [
+            "specific"
+          ],
+          "source": "printf '#!/usr/bin/env bash\\nTESTS=(\\n  \"existing-test.sh\"\\n  \"new-test.sh\" # GH-496 (new test)\\n  \"skills-army-hq.sh\"\\n)\\n' >\"$VALIDATE_REPO/validate.sh\""
+        },
+        {
+          "line": 291,
+          "kind": [
+            "specific"
+          ],
+          "source": "if grep -Fqx 'route=fast' <<<\"$out_sub\" && grep -Fqx 'tier=2' <<<\"$out_sub\" && grep -Fq 'skills-army-hq.sh' <<<\"$out_sub\"; then"
+        }
+      ]
+    },
+    {
+      "suite": "xyz-harness-hooks.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 49,
+          "kind": [
+            "broad"
+          ],
+          "source": "*\"/$expected/SKILL.md\"*|\"$expected.\"|\"$expected and \"*|*\" and $expected.\") ;;   # resolved path or bare skill name"
+        }
+      ]
+    },
+    {
+      "suite": "hq-locator.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 4,
+          "kind": [
+            "broad"
+          ],
+          "source": "# real find-hq.sh in as it would be installed under ~/.claude/skills/hq, and proves /hq resolves"
+        },
+        {
+          "line": 8,
+          "kind": [
+            "broad"
+          ],
+          "source": "REAL_LOCATOR=\"$HERE/../skills/2-daily/hq/find-hq.sh\""
+        },
+        {
+          "line": 30,
+          "kind": [
+            "broad"
+          ],
+          "source": "# --- fake harness: utils/hq/hq.sh stub + the real find-hq.sh copied into skills/2-daily/hq ---"
+        },
+        {
+          "line": 32,
+          "kind": [
+            "broad"
+          ],
+          "source": "mkdir -p \"$HARN/utils/hq\" \"$HARN/skills/2-daily/hq\" \"$HARN/relay-automation\""
+        },
+        {
+          "line": 39,
+          "kind": [
+            "broad"
+          ],
+          "source": "cp \"$REAL_LOCATOR\" \"$HARN/skills/2-daily/hq/find-hq.sh\""
+        },
+        {
+          "line": 40,
+          "kind": [
+            "broad"
+          ],
+          "source": "chmod +x \"$HARN/skills/2-daily/hq/find-hq.sh\""
+        },
+        {
+          "line": 48,
+          "kind": [
+            "broad"
+          ],
+          "source": "# --- simulate the ~/.claude/skills/hq install: a symlink into the harness skill dir ---"
+        },
+        {
+          "line": 51,
+          "kind": [
+            "broad"
+          ],
+          "source": "ln -s \"$HARN/skills/2-daily/hq\" \"$USKILLS/hq\""
+        },
+        {
+          "line": 52,
+          "kind": [
+            "broad"
+          ],
+          "source": "INSTALLED=\"$USKILLS/hq/find-hq.sh\"   # the path a real session would call"
+        },
+        {
+          "line": 55,
+          "kind": [
+            "broad"
+          ],
+          "source": "OUT=\"$( cd \"$HARN\" && bash \"$HARN/skills/2-daily/hq/find-hq.sh\" --sh )\"; rc=$?"
+        },
+        {
+          "line": 92,
+          "kind": [
+            "broad"
+          ],
+          "source": "ORPHAN=\"$TMP/orphan/skills/2-daily/hq\""
+        }
+      ]
+    },
+    {
+      "suite": "hq-marathon-scan.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 50,
+          "kind": [
+            "broad"
+          ],
+          "source": "PROJECT/3-COMPLETED/RELAY-TO-ISSUE-SKILL.md) echo '{\"readiness\":{\"ready\":false}}'; exit 4 ;;"
+        },
+        {
+          "line": 59,
+          "kind": [
+            "broad"
+          ],
+          "source": "- **relay-to-issue-skill** \ud83d\udfe1 \u2014 stale pointer \u2192 [d](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md)"
+        },
+        {
+          "line": 108,
+          "kind": [
+            "broad"
+          ],
+          "source": "mk_doc \"$STALE_REPO/PROJECT/3-COMPLETED/RELAY-TO-ISSUE-SKILL.md\" relay-to-issue-skill \"Shipped\""
+        },
+        {
+          "line": 157,
+          "kind": [
+            "broad"
+          ],
+          "source": "grep -q '| relay-to-issue-skill | `PROJECT/2-WORKING/MARATHON-PLAN-2026-07-06.md` | `PROJECT/3-COMPLETED/RELAY-TO-ISSUE-SKILL.md` | \u26a0\ufe0f stale-already-landed (exit 4) |' \"$OUT\" \\"
+        }
+      ]
+    },
+    {
+      "suite": "gh568-releases-md-retired.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 13,
+          "kind": [
+            "broad"
+          ],
+          "source": "#      - No active scripts or workflows in utils/, githooks/, relay-automation/, skills/, .github/workflows/"
+        }
+      ]
+    },
+    {
+      "suite": "gh425-gate-provenance-pr.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 348,
+          "kind": [
+            "broad"
+          ],
+          "source": "files = list((self.root/'TESTS-RESULTS').rglob('provenance.jsonl'))"
+        },
+        {
+          "line": 365,
+          "kind": [
+            "broad"
+          ],
+          "source": "self.assertFalse(list(self.root.rglob('provenance.jsonl')))"
+        },
+        {
+          "line": 372,
+          "kind": [
+            "broad"
+          ],
+          "source": "self.assertFalse(list(self.root.rglob('provenance.jsonl')))"
+        },
+        {
+          "line": 378,
+          "kind": [
+            "broad"
+          ],
+          "source": "before={str(p):p.read_bytes() for p in (self.root/'TESTS-RESULTS').rglob('*') if p.is_file()}"
+        },
+        {
+          "line": 380,
+          "kind": [
+            "broad"
+          ],
+          "source": "self.assertEqual(before,{str(p):p.read_bytes() for p in (self.root/'TESTS-RESULTS').rglob('*') if p.is_file()})"
+        },
+        {
+          "line": 390,
+          "kind": [
+            "broad"
+          ],
+          "source": "path=next((self.root/'TESTS-RESULTS').rglob('provenance.jsonl'))"
+        },
+        {
+          "line": 415,
+          "kind": [
+            "broad"
+          ],
+          "source": "self.assertFalse(list(self.root.rglob('provenance.jsonl')))"
+        },
+        {
+          "line": 420,
+          "kind": [
+            "broad"
+          ],
+          "source": "self.assertFalse(list(self.root.rglob('provenance.jsonl')))"
+        },
+        {
+          "line": 421,
+          "kind": [
+            "broad"
+          ],
+          "source": "self.assertFalse(list(self.root.rglob('validation.jsonl')))"
+        },
+        {
+          "line": 425,
+          "kind": [
+            "broad"
+          ],
+          "source": "path=next((self.root/'TESTS-RESULTS').rglob('provenance.jsonl'))"
+        }
+      ]
+    },
+    {
+      "suite": "gh421-auto-wave-reconcile.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 101,
+          "kind": [
+            "broad"
+          ],
+          "source": "files = {str(p.relative_to(self.root)): p.read_bytes() for p in self.root.rglob('*')"
+        }
+      ]
+    },
+    {
+      "suite": "gh491-roadmap-section-validation.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 52,
+          "kind": [
+            "broad"
+          ],
+          "source": "files = {str(p.relative_to(root)): p.read_bytes() for p in root.rglob(\"*\") if p.is_file()}"
+        }
+      ]
+    },
+    {
+      "suite": "gh645-merge-cleanup-xyz-tools.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 9,
+          "kind": [
+            "broad"
+          ],
+          "source": "export XYZ_TEST_SCRIPTS=\"$HERE/../skills/2-daily/merge-cleanup/scripts\""
+        }
+      ]
+    },
+    {
+      "suite": "gh674-merge-cleanup-hosted-lookup.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 5,
+          "kind": [
+            "broad"
+          ],
+          "source": "export XYZ_TEST_SCRIPTS=\"$HERE/../skills/2-daily/merge-cleanup/scripts\""
+        }
+      ]
+    },
+    {
+      "suite": "gh681-reviewer-probe-rules.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 14,
+          "kind": [
+            "broad"
+          ],
+          "source": "#   B  new-relay.sh's Reviewer bullet (and its mirrors in skills/1-hourly/relay, skills/1-hourly/relay-xyz, and the marathon"
+        },
+        {
+          "line": 94,
+          "kind": [
+            "broad"
+          ],
+          "source": "for f in skills/1-hourly/relay-xyz/SKILL.md skills/1-hourly/relay/SKILL.md utils/py/marathon_drive.py; do"
+        },
+        {
+          "line": 99,
+          "kind": [
+            "broad"
+          ],
+          "source": "grep -qF \"MAY run narrow, non-mutating probes\" \"$ROOT/skills/1-hourly/relay-xyz/SKILL.md\" \\"
+        },
+        {
+          "line": 100,
+          "kind": [
+            "broad"
+          ],
+          "source": "&& pass \"case 6: skills/1-hourly/relay-xyz/SKILL.md carries the probe allowance\" \\"
+        },
+        {
+          "line": 101,
+          "kind": [
+            "broad"
+          ],
+          "source": "|| fail \"case 6: skills/1-hourly/relay-xyz/SKILL.md lost the probe allowance\""
+        }
+      ]
+    },
+    {
+      "suite": "gh280-jog-marathon-adapter.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 1058,
+          "kind": [
+            "broad"
+          ],
+          "source": "grep -q \"jog-state:\" <<<\"$(git -C \"$FR\" log --oneline --grep=\"^jog-state:\" -1)\" \\"
+        },
+        {
+          "line": 1061,
+          "kind": [
+            "broad"
+          ],
+          "source": "grep -q \"releases.db\" <<<\"$(git -C \"$FR\" show --name-only --format= \"$(git -C \"$FR\" log --format=%H --grep=\"^jog-state:\" -1)\")\" \\"
+        }
+      ]
+    },
+    {
+      "suite": "gh132-review-xyz-skill.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 7,
+          "kind": [
+            "broad"
+          ],
+          "source": "SKILL_DIR=\"$REPO/skills/2-daily/review-xyz\""
+        },
+        {
+          "line": 12,
+          "kind": [
+            "broad"
+          ],
+          "source": "[ -f \"$SKILL_DIR/SKILL.md\" ] && pass \"SKILL.md exists\" || fail \"missing SKILL.md\""
+        }
+      ]
+    },
+    {
+      "suite": "gh165-governance-canonical-paths-guard.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 51,
+          "kind": [
+            "broad"
+          ],
+          "source": "\"$XYZ_ROOT/skills/1-hourly/standup/triage.py\" 2>/dev/null || true)"
+        },
+        {
+          "line": 54,
+          "kind": [
+            "broad"
+          ],
+          "source": "pass \"skills/1-hourly/standup/triage.py maintains strict read-only purity on governance ledgers\""
+        },
+        {
+          "line": 56,
+          "kind": [
+            "broad"
+          ],
+          "source": "fail \"skills/1-hourly/standup/triage.py maintains strict read-only purity on governance ledgers\" \"$illegal_triage_writes\" \"empty\""
+        }
+      ]
+    },
+    {
+      "suite": "gh-gen4-phase3-fuzz-engine.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 130,
+          "kind": [
+            "broad"
+          ],
+          "source": "if [ -z \"$(git -C \"$SANDBOX\" status --porcelain | grep -v '^?? .fuzz_corpus/' || true)\" ]; then"
+        }
+      ]
+    },
+    {
+      "suite": "gh-gen4-phase5-campaign.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 67,
+          "kind": [
+            "broad"
+          ],
+          "source": "[ -z \"$(git -C \"$SB\" status --porcelain | grep -v '^?? .fuzz_corpus/' || true)\" ] && pass \"sandbox clone tree at baseline after the soak (only .fuzz_corpus/ untracked)\" || fail \"sandbox drifted: $(git -C \"$SB\" status --porcelain | head -3)\""
+        }
+      ]
+    },
+    {
+      "suite": "gh396-find-harness-roots.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 30,
+          "kind": [
+            "broad"
+          ],
+          "source": "FH=\"$HARNESS_DIR/skills/1-hourly/relay-xyz/find-harness.sh\""
+        },
+        {
+          "line": 169,
+          "kind": [
+            "broad"
+          ],
+          "source": "mkdir -p \"$_harness_clone/relay-automation\" \"$_harness_clone/skills/1-hourly/relay-xyz\""
+        },
+        {
+          "line": 172,
+          "kind": [
+            "broad"
+          ],
+          "source": "cp \"$FH\" \"$_harness_clone/skills/1-hourly/relay-xyz/find-harness.sh\""
+        },
+        {
+          "line": 191,
+          "kind": [
+            "broad"
+          ],
+          "source": "mkdir -p \"$_live/relay-automation\" \"$_live/skills/1-hourly/relay-xyz\""
+        },
+        {
+          "line": 194,
+          "kind": [
+            "broad"
+          ],
+          "source": "cp \"$FH\" \"$_live/skills/1-hourly/relay-xyz/find-harness.sh\""
+        },
+        {
+          "line": 203,
+          "kind": [
+            "broad"
+          ],
+          "source": "_err_auto=\"$(cd \"$VF_REPO\" && env -u XYZ_HARNESS -u XYZ_REPO_ROOT XYZ_LIVE_HARNESS=\"$_live\" bash \"$_live/skills/1-hourly/relay-xyz/find-harness.sh\" --env 2>&1 >/dev/null || true)\""
+        },
+        {
+          "line": 206,
+          "kind": [
+            "broad"
+          ],
+          "source": "_err_over=\"$(cd \"$VF_REPO\" && XYZ_HARNESS=\"$VF_HARNESS\" XYZ_REPO_ROOT= XYZ_LIVE_HARNESS=\"$_live\" bash \"$_live/skills/1-hourly/relay-xyz/find-harness.sh\" --env 2>&1 >/dev/null || true)\""
+        }
+      ]
+    },
+    {
+      "suite": "gh393-deepseek-readiness.sh",
+      "proposed78_included": false,
+      "matches": [
+        {
+          "line": 29,
+          "kind": [
+            "broad"
+          ],
+          "source": "FH=\"$REPO/skills/1-hourly/relay-xyz/find-harness.sh\""
+        }
+      ]
+    },
+    {
+      "suite": "gh589-xyz-mini-sync.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 2,
+          "kind": [
+            "specific"
+          ],
+          "source": "# gh589-xyz-mini-sync.sh \u2014 the six GH-589 acceptance criteria for utils/py/xyz_mini_sync.py plus"
+        },
+        {
+          "line": 34,
+          "kind": [
+            "specific"
+          ],
+          "source": "SYNC = os.path.join(SRC, \"utils/py/xyz_mini_sync.py\")"
+        },
+        {
+          "line": 63,
+          "kind": [
+            "broad"
+          ],
+          "source": "v = sh(sys.executable, os.path.join(DEST, \"skills/skill-viewer/scripts/list_skills.py\"), \"--json\")"
+        },
+        {
+          "line": 66,
+          "kind": [
+            "broad"
+          ],
+          "source": "ok(\"5. debug-mantra ships without issues/419 or SOP.md\", not re.findall(r\"issues/419|SOP\\.md\", read(os.path.join(DEST, \"skills/debug-mantra/SKILL.md\"))))"
+        },
+        {
+          "line": 69,
+          "kind": [
+            "broad"
+          ],
+          "source": "ok(\"install.sh keeps its executable bit\", os.access(os.path.join(DEST, \"skills/ponytail/install.sh\"), os.X_OK))"
+        },
+        {
+          "line": 70,
+          "kind": [
+            "broad"
+          ],
+          "source": "ok(\"agent-chorus standalone pipeline did not ship\", not os.path.exists(os.path.join(DEST, \"skills/agent-chorus/standalone\")))"
+        },
+        {
+          "line": 80,
+          "kind": [
+            "broad"
+          ],
+          "source": "rel = os.path.join(\"skills\", \"relay\", \"SKILL.md\"); orig = read(os.path.join(DEST, rel))"
+        },
+        {
+          "line": 95,
+          "kind": [
+            "broad"
+          ],
+          "source": "WP = os.path.join(\"skills\", \"weekly-planner\"); WPS = os.path.join(WP, \"SKILL.md\"); WPI = os.path.join(WP, \"install.sh\")"
+        },
+        {
+          "line": 99,
+          "kind": [
+            "broad"
+          ],
+          "source": "write(os.path.join(SRC, \"skills/3-weekly/weekly-planner/SKILL.md\"), \"forge-never-ships\\n\")"
+        },
+        {
+          "line": 100,
+          "kind": [
+            "broad"
+          ],
+          "source": "write(os.path.join(SRC, \"skills/3-weekly/weekly-planner\", \"NEW.md\"), \"forge addition\\n\"); commit_src(\"forge drift + addition\")"
+        },
+        {
+          "line": 107,
+          "kind": [
+            "broad"
+          ],
+          "source": "+ \"\\nNotes only: \" + WP + \"/ and `skills/...` are mentioned here, not in a table row.\\n\"); commit_src(\"undocument weekly-planner\")"
+        },
+        {
+          "line": 113,
+          "kind": [
+            "broad"
+          ],
+          "source": "write(SYNC, read(SYNC).replace('(\"skills/3-weekly/weekly-planner\", \"skills/weekly-planner\", \"adapted\")', '(\"skills/3-weekly/weekly-planner\", \"skills/weekly-planner\", \"managed\")')); commit_src(\"flip to managed\")"
+        },
+        {
+          "line": 123,
+          "kind": [
+            "broad"
+          ],
+          "source": "write(SYNC, read(SYNC).replace('    (\"skills/3-weekly/weekly-planner\", \"skills/weekly-planner\", \"adapted\"),\\n', \"\")); commit_src(\"drop weekly-planner entry\")"
+        },
+        {
+          "line": 126,
+          "kind": [
+            "broad"
+          ],
+          "source": "r = run(\"--push\"); ok(\"adapted: a re-added entry is seeded fresh from forge bytes\", r.returncode == 0 and os.path.isfile(os.path.join(DEST, WPS)) and read(os.path.join(DEST, WPS)) == read(os.path.join(SRC, \"skills/3-weekly/weekly-planner/SKILL.md\")), r.stderr[-200:])"
+        },
+        {
+          "line": 129,
+          "kind": [
+            "broad"
+          ],
+          "source": "write(os.path.join(SRC, \"skills\", \"zz-unlisted\", \"SKILL.md\"), \"---\\nname: zz-unlisted\\ndescription: x\\n---\\n\"); commit_src(\"unlisted\")"
+        },
+        {
+          "line": 136,
+          "kind": [
+            "broad"
+          ],
+          "source": "write(SYNC, read(SYNC).replace('    (\"skills/3-weekly/honest\", \"skills/honest\", \"managed\"),\\n', \"\")); commit_src(\"drop honest\")"
+        },
+        {
+          "line": 137,
+          "kind": [
+            "broad"
+          ],
+          "source": "r = run(\"--apply\"); ok(\"dropped entry is deleted from mini\", r.returncode == 0 and not os.path.exists(os.path.join(DEST, \"skills/honest\")), r.stderr[-200:])"
+        },
+        {
+          "line": 141,
+          "kind": [
+            "broad"
+          ],
+          "source": "write(os.path.join(DEST, \"skills/honest/SKILL.md\"), \"operator\\n\"); git(DEST, \"add\", \"-A\"); git(DEST, \"commit\", \"-q\", \"-m\", \"operator honest\")"
+        },
+        {
+          "line": 143,
+          "kind": [
+            "broad"
+          ],
+          "source": "r = run(\"--apply\"); ok(\"ownership guard: unpublished existing file \u2192 exit 2, bytes intact\", r.returncode == 2 and read(os.path.join(DEST, \"skills/honest/SKILL.md\")) == \"operator\\n\", r.stderr[-200:])"
+        },
+        {
+          "line": 147,
+          "kind": [
+            "specific"
+          ],
+          "source": "ok(\"print-manifest: `all` (deduplicated) lists every profile once\", r.returncode == 0 and sorted(json.loads(r.stdout)) == [\"agent-chorus\", \"skills-army-mini\", \"xyz-mini\"], r.stdout[:200])"
+        }
+      ]
+    },
+    {
+      "suite": "gh589-consult-no-tick.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 22,
+          "kind": [
+            "specific"
+          ],
+          "source": "python3 \"$SRC/utils/py/xyz_mini_sync.py\" --dest \"$PKG\" --apply >/dev/null 2>\"$WORK/pub.err\" && pass \"publisher built the package\" || { fail \"publisher: $(tail -2 \"$WORK/pub.err\")\"; exit 1; }"
+        }
+      ]
+    },
+    {
+      "suite": "gh589-skill-viewer.sh",
+      "proposed78_included": true,
+      "matches": [
+        {
+          "line": 6,
+          "kind": [
+            "broad"
+          ],
+          "source": "VIEWER=\"$REPO/mini/skills/skill-viewer/scripts/list_skills.py\""
+        },
+        {
+          "line": 18,
+          "kind": [
+            "broad"
+          ],
+          "source": "skill_files=(\"$REPO\"/skills/*/*/SKILL.md)   # skills/<tier>/<name> (GH-744)"
+        },
+        {
+          "line": 37,
+          "kind": [
+            "broad"
+          ],
+          "source": "S=\"$WORK/synth\"; for n in alpha beta gamma; do mkdir -p \"$S/skills/$n\"; done"
+        },
+        {
+          "line": 39,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf -- '---\\nname: alpha\\ndescription: >-\\n  first line\\n  second line\\n---\\n' >\"$S/skills/$a/SKILL.md\""
+        },
+        {
+          "line": 40,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf -- '---\\nname: beta\\ndescription: \"quoted \\\\\"beta\\\\\" text\"\\n---\\n' >\"$S/skills/$b2/SKILL.md\""
+        },
+        {
+          "line": 41,
+          "kind": [
+            "broad"
+          ],
+          "source": "printf -- \"---\\nname: gamma\\ndescription: 'it''s gamma'\\n---\\n\" >\"$S/skills/$g/SKILL.md\""
+        },
+        {
+          "line": 51,
+          "kind": [
+            "broad"
+          ],
+          "source": "b=broken; mkdir -p \"$S/skills/$b\"; printf 'no frontmatter here\\n' >\"$S/skills/$b/SKILL.md\""
+        },
+        {
+          "line": 53,
+          "kind": [
+            "broad"
+          ],
+          "source": "[ $rc -eq 1 ] && grep -q \"$b/SKILL.md\" \"$WORK/broken.err\" && pass \"red: missing frontmatter \u2192 exit 1, file named\" || fail \"red: rc=$rc $(cat \"$WORK/broken.err\")\""
+        }
+      ]
+    }
+  ],
+  "executed_tests": false,
+  "source_edits": false,
+  "remote_writes": false
+}

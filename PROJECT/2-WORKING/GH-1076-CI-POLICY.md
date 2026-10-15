@@ -229,3 +229,38 @@ committed under TESTS-RESULTS/2026-10-15+GH-1076/SUMMARY.md. Read that outcome w
 than treating a pending gate here as completed. Verification evidence commits do not alter source;
 any later non-evidence source change invalidates the attributed final full run. The umbrella stays
 In progress while reduced-Medium/batch prerequisites remain unmet; no early lifecycle completion.
+
+## Continuation: concrete proof work after PR1079 publication
+
+The parent requested completing feasible evidence rather than stopping at “unproved.” This remains
+the approved existing-owner/consumer audit scope; no new tier, runner, CLI, receipt schema or hosted
+coverage reduction is introduced. Source changes since the prior full gate invalidate that gate for
+the new source; retain it historically and use the remaining normal final-review round3, then a
+fresh required exact-source full push gate. Prior review rounds/counters are not reset.
+
+Read-only source and real-data work now supplies:218 actual committed @1 historical receipts accepted
+identically by baseline/current readers; two complete single-member naturally full-qualified mapped
+Medium snapshots; exact six-member GH988/GH989 Small union and byte-equivalent known gh620 failure
+inputs at the later full-red snapshot; direct and reverse coverage maps across406 registered suite
+sources. Prior v1/v2 and the narrower initial v3 consumer proposal remain historical artifacts.
+
+The reverse audit found three concrete consumer suites absent from the area's five: gh660 drift
+checker called by sync, path-integrity reading every skill Markdown cross-folder link, and gh788
+interpreter-pattern scanning all skills content including code examples. All already run in full.
+The existing area now includes them, eight total. The existing route-count expectation changes5→8;
+no assertion, method, parameter case or full/Small registry entry is added. Full fallback stays.
+The proposed study union is Small72+area8=80 existing shell suites; no new Medium gate is active.
+
+Current batch source4691b4a3 still reproduces both filed stale-snapshot and stale repaired-scope
+observations, using the same already-published local JSON interleavings in this session's disposable
+review clone. GH1074 fixes other history/resume paths; it does not refute either observation.
+Existing gh436 and current production premerge receipt checks are retained separately. Five new
+methods were removed; three pre-existing added assertions still need admission or removal by their
+owner. PR1069 final review binds older9a64, and its author lists four post-review changes. No owner
+handoff was established; live Claude processes in the primary checkout make absence of a running
+gate insufficient proof of exclusive ownership. This session only reads immutable batch source.
+
+The staged rollout's remaining actions must be concrete. A candidate-specific freeze contract,
+80-suite posthoc projection, exact runner/receipt shape, workflow/protection readback, current gate
+evidence and minimal external decisions are recorded under TESTS-RESULTS/2026-10-15+GH-1076/phase3.
+No ready coupled fold is invented from held/draft/unreviewed PRs or shared ledger alone.

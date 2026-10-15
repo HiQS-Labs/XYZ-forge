@@ -1,0 +1,131 @@
+{
+  "timestamp": "2026-10-15T08:33:40.279534+00:00",
+  "method": "Verbatim public-helper interleavings already published in GH1072/GH1073, repeated against4691b4a3. Temporary local JSON only; no GitHub calls, source writes or CI cases.",
+  "before": {
+    "head": "4691b4a304f7abda698f2093217a3e9a9c73a947",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*",
+    "refs": "f974fcee15647aae6551fcc81b129f5a6127120b refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0"
+  },
+  "GH1072": {
+    "before_stale_write": {
+      "created": "2026-10-15T08:33:40Z",
+      "integration": "development",
+      "issue": null,
+      "issue_error": "",
+      "issue_url": "",
+      "landed_order": [
+        1,
+        2
+      ],
+      "outcomes": {
+        "1": {
+          "merge_oid": "1111111111111111111111111111111111111111",
+          "reconcile": "ok",
+          "status": "merged"
+        },
+        "2": {
+          "merge_oid": "2222222222222222222222222222222222222222",
+          "reconcile": "ok",
+          "status": "merged"
+        }
+      },
+      "path": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpv7plbs9n/.tick/merge-cleanup/owner-repo/batch-20261015T083340Z-1.json",
+      "planned": [
+        {
+          "files": [],
+          "hard": [],
+          "pos": 1,
+          "pr": 1,
+          "soft": {},
+          "title": ""
+        },
+        {
+          "files": [],
+          "hard": [],
+          "pos": 2,
+          "pr": 2,
+          "soft": {},
+          "title": ""
+        }
+      ],
+      "repo": "https://example.invalid/owner/repo.git",
+      "schema": 1,
+      "sweep_inputs": {},
+      "verdict": null
+    },
+    "after_stale_write": {
+      "created": "2026-10-15T08:33:40Z",
+      "integration": "development",
+      "issue": null,
+      "issue_error": "",
+      "issue_url": "",
+      "landed_order": [
+        1
+      ],
+      "outcomes": {
+        "1": {
+          "merge_oid": "1111111111111111111111111111111111111111",
+          "reconcile": "ok",
+          "status": "merged"
+        },
+        "2": {
+          "status": "handoff"
+        }
+      },
+      "path": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpv7plbs9n/.tick/merge-cleanup/owner-repo/batch-20261015T083340Z-1.json",
+      "planned": [
+        {
+          "files": [],
+          "hard": [],
+          "pos": 1,
+          "pr": 1,
+          "soft": {},
+          "title": ""
+        },
+        {
+          "files": [],
+          "hard": [],
+          "pos": 2,
+          "pr": 2,
+          "soft": {},
+          "title": ""
+        }
+      ],
+      "repo": "https://example.invalid/owner/repo.git",
+      "schema": 1,
+      "sweep_inputs": {},
+      "verdict": {
+        "at": "2026-10-15T08:33:40Z",
+        "body": "reused PR1 evidence",
+        "covers": [
+          1
+        ],
+        "value": "clean"
+      }
+    },
+    "qa_pending": false,
+    "verdict_return": [
+      true,
+      "verdict clean recorded for #1"
+    ]
+  },
+  "GH1073": {
+    "discovered": [
+      "shared.py"
+    ],
+    "stored": [
+      "original.py"
+    ],
+    "shared": {},
+    "gate": "validate.sh --sequential",
+    "gate_reason": "classifier unavailable: [Errno 2] No such file or directory: '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmp8ljsa8n0/utils/py/wave_reconcile.py'"
+  },
+  "after": {
+    "head": "4691b4a304f7abda698f2093217a3e9a9c73a947",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*",
+    "refs": "f974fcee15647aae6551fcc81b129f5a6127120b refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0"
+  },
+  "identity_unchanged": true
+}

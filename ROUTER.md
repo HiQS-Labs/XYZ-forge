@@ -144,8 +144,12 @@ skills-army package Markdown payload; the existing gh620 publisher pin failed in
 ([issue995](https://github.com/HiQS-Labs/XYZ-forge/issues/995)). The router now retains the existing
 skills-army area for its text inputs before generic docs precedence, retaining the existing PDDA
 documentation gate alongside area coverage. No suite is added. Existing
-safety text/full rules remain. This is one verified consumer edge, not a claim that every published
-text input or transitive consumer is mapped. Changes to publisher manifests and new consumers must
+safety text/full rules remain. The bounded reverse audit additionally follows package sync into the canonical drift checker and
+scans all registered suite sources for package-wide consumers. The existing area now includes the
+already registered gh660 drift, path-integrity Markdown-link and gh788 interpreter-pattern suites;
+its eight existing shell suites add coverage locally. Small, the full registry and hosted Medium/full
+are unchanged. This is a bounded consumer closure, not a claim that arbitrary shared-publisher,
+all-device sync or probabilistic app behavior is fully mapped. Changes to publisher manifests and new consumers must
 be audited before any narrower route is accepted; unknown/shared/global/safety scope keeps full.
 
 ### Evidence identity, invalidation and recovery
