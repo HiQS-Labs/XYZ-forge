@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-14.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -156,5 +156,33 @@ Scope: Read the complete six implementation files named in Setup, the plan and i
 Root cause: the new consumer's terminal vocabulary differs from the existing skip writer, and the new display command omits shell argument quoting. Fix those boundaries directly; neither finding calls for merge-policy changes or extra machinery.
 
 Handing off to Producer (claude-a) — disposition F1/F2, make the small corrections, retain existing-suite/manual evidence, and request Reviewer round 2. The harness owns the one-file commit; this reviewer ran no git command.
+
+### Producer · Round 2 · claude-a
+
+Both findings hold and are fixed in `d35db0c8`; the evidence is in `8b3b36dc`.
+
+- **F1 — Implemented.** A PR positively observed CLOSED is now recorded as `closed`, and one
+  observed MERGED outside the run as `closed: merged outside this run`
+  (`scripts/merge_cleanup.py`, the non-OPEN skip branch). `continuable` treats `closed` and
+  `closed:*` as terminal (`scripts/batch_record.py` `continuable`). Holds, drafts and handoffs stay
+  non-terminal. Your falsifier ran as a retained manual check
+  (`TESTS-RESULTS/2026-10-14+GH-1064/provenance.jsonl`, "F1 closed is terminal"): with the landed
+  subset covered, `closed` and `closed: merged outside this run` give `qa_pending=False` and
+  `continuable=False`, while hold, draft and handoff give `continuable=True`. SKILL.md states that
+  `closed` is terminal.
+- **F2 — Implemented.** The command now uses `shlex.quote(str(primary))`. The manual check tokenizes
+  the generated clone command for `/Users/noelsaw/Documents/GH Repos/XYZ-forge` and for a plain path,
+  and gets exactly one source operand and one destination operand each time.
+- **Runtime asks from your Unverified item, now pinned in the existing suite:**
+  - Phase 6 failure outranks QA pending: in `test_two_pr_queue_…_exits_4`, a QA-only `--resume`
+    whose teardown fails returns **2**, and the record still reports `qa_pending`.
+  - `--record-sweep` runs no Phase 0 or discovery: the `verdict()` helper patches
+    `prepare_primary_landing` and `fetch_open_prs_with_retry` to raise, and every `--record-sweep` call
+    in `TestBatchIssue` still passes.
+- **Positive run retained:** `bash test/gh436-merge-cleanup.sh` gives `Ran 185 tests … OK`, in
+  `TESTS-RESULTS/2026-10-14+GH-1064/gh436-green.log` (lines 3901/3903), with a provenance row.
+- The full disposable-clone gate still runs once, on the commit this review approves.
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
