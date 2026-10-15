@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Intake and source trace complete | Implement, verify and independently review the bounded docs mode |
+| Intake and source trace complete | Publish through the normal full gate after independent approval |
 
 The operator authorizes changing express admission so ordinary documentation text and images do not need a critical-hotfix rationale or a behavior-covering runtime suite. Extend the existing driver and skill together, preserve safe landing and receipts, and leave the README diagram for a subsequent request.
 
@@ -41,7 +41,7 @@ Changes cover the express driver, its skill, SOP and task evidence. No new suite
 
 ## Verification
 
-Existing express regression: 113 pass at d741ae2a; Codex prerequisite: 43 pass. Final candidate manual docs controls: 11 pass at 1984ef66, including README+PNG acceptance, mixed code, policy, executable, symlink and code-to-text rename refusals, permission-change identity, truthful docs scaffold, parser defaults and exact receipt matching. Focused clone identity unchanged. Evidence: `TESTS-RESULTS/2026-10-15+GH-1080/`. Normal full publication gate and independent review remain pending. No separate pre-implementation plan relay claimed; final independent QA will inspect both the chosen rule and implementation.
+Existing express regression: 113 pass at d741ae2a; Codex prerequisite: 43 pass. Final candidate manual docs controls: 11 pass at 1984ef66, including README+PNG acceptance, mixed code, policy, executable, symlink and code-to-text rename refusals, permission-change identity, truthful docs scaffold, parser defaults and exact receipt matching. Focused clone identity unchanged. Evidence: `TESTS-RESULTS/2026-10-15+GH-1080/`. Independent native Codex QA approved Round 2 with mechanical attestation at reviewed head b8ce0544efb13e40de8a41d89157282bd0a56823; the 16-control corrected paperwork falsifier is retained separately. The reviewer's optional stale-dashboard filename nit was removed. Normal full publication gate remains pending. No separate pre-implementation plan relay claimed; final independent QA will inspect both the chosen rule and implementation.
 
 ## Lessons Learned (For Future Agents)
 
