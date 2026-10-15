@@ -76,3 +76,13 @@ assert hashlib.sha256(raw).hexdigest()==d['original_sha256']
 Necessary original gate telemetry and failures remain committed. Future diagnostic raw streams
 are preserved locally; concise observations and compressed controlled proof keep the proposed
 diff smaller without deleting unique evidence or resetting review history.
+
+After the competing gate completed, the complete original suite was run uninstrumented at
+nice10 with the same sanitized controls on current then baseline. Both passed9/9 with clean
+identities; wall13.304/13.428s, one-minute loads approximately9–11. This supports one normal
+conditioned full attempt; it neither upgrades old failed runs nor proves their exact origin.
+
+Development subsequently advanced to PR1053 merge d48aa774. Integration52c59c5f preserves both
+CHANGELOG sections and12 ours-changed/9 incoming-changed INSERT rows, no missing rows, generation
+floor1671, using the native rebuild/check. Incoming generated view retained. The source-only
+production diff remains +330/-37 across four files against that current base.

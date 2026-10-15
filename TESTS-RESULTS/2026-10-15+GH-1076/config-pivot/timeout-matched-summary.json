@@ -145,5 +145,34 @@
       }
     ]
   },
-  "interpretation": "Not a deterministic source regression: identical timeout/relay files and matched passing observations. Original fast timeout lacks a retained internal timing trace; exact original scheduling cause unresolved. Observed high-load/competing-gate snapshot does not retroactively prove the original cause. No deadline weakened, test edited, or full result upgraded."
+  "interpretation": "Not a deterministic source regression: identical timeout/relay files and matched passing observations. Original fast timeout lacks a retained internal timing trace; exact original scheduling cause unresolved. Observed high-load/competing-gate snapshot does not retroactively prove the original cause. No deadline weakened, test edited, or full result upgraded.",
+  "uninstrumented_existing_suite_after_competing_gate": {
+    "method": "Existing suite unchanged; existing soft-fail observes all original assertions. No Node/Python instrumentation; gate priority nice10; one-second cap unchanged. Current/baseline order after competing gate completed; identical sanitized environment and executables. No new CI case.",
+    "records": [
+      {
+        "label": "current",
+        "head": "10325ce107ba45d21910e5a05a5d03486bd4ea65",
+        "load_before": "16:16  up 7 days, 7 hrs, 1 user, load averages: 8.98 22.14 35.19",
+        "rc": 0,
+        "wall_seconds": 13.304,
+        "load_after": "16:17  up 7 days, 7 hrs, 1 user, load averages: 10.37 21.99 34.99",
+        "status_after": ""
+      },
+      {
+        "label": "baseline",
+        "head": "f974fcee15647aae6551fcc81b129f5a6127120b",
+        "load_before": "16:17  up 7 days, 7 hrs, 1 user, load averages: 10.37 21.99 34.99",
+        "rc": 0,
+        "wall_seconds": 13.428,
+        "load_after": "16:17  up 7 days, 7 hrs, 1 user, load averages: 11.07 21.55 34.60",
+        "status_after": ""
+      }
+    ],
+    "executables": {
+      "bash": "/bin/bash",
+      "node": "/Users/noelsaw/.local/bin/node",
+      "python3": "/opt/homebrew/bin/python3",
+      "git": "/usr/bin/git"
+    }
+  }
 }

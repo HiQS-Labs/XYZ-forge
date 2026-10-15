@@ -589,3 +589,9 @@ Known sensitive-pattern scans including decompressed retained logs found no matc
 and tool inventories remain metadata. The duplicate220-record report became a59-line lossless
 delta over the old218 records, with original bytes backed up and exact reconstruction verified.
 No unique artifact was deleted or history rewritten. Raw new diagnostics remain local.
+
+The uninstrumented original suite subsequently passed9/9 on both current/baseline at nice10
+with identical sanitized controls and no competing gate, retaining the1s cap and clean identities.
+This supports one normal conditioned full attempt; no previous failure is relabeled. Integration
+52c59c5f adopts PR1053 merge d48aa774 before the next gate, with12/9 changed INSERT rows preserved,
+no omissions and the native ledger check. Production code remains the same four-file330/37diff.

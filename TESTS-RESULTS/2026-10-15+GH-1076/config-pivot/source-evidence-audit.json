@@ -1,6 +1,6 @@
 {
-  "source_base": "14081d61",
-  "source_head": "a6d1676dbff5331a29434a1c0dcd58288758fe3c",
+  "source_base": "d48aa774dc1e22fbab393a9324057b8acff47d4b",
+  "source_head": "52c59c5f315eb29fe75f85373457d4204b968a5c",
   "production_files": [
     {
       "path": ".github/workflows/wave-reconcile.yml",
@@ -86,5 +86,7 @@
   ],
   "limits": "Read-only known credential/private-key/URL-userinfo patterns including decompressed retained gz and authored docs/source. No secret match values printed; this is not a proof against every arbitrary secret format.",
   "metadata_note": "Evidence contains workstation paths, process IDs and tool/package versions; full new environment/diagnostic dumps are retained locally rather than added to the proposed PR. No arbitrary-format secret-free guarantee.",
-  "compaction": "220-record report reduced5208->59lines, full original preserved locally and in prior Git objects; byte-exact reconstruction verified; no history rewrite or unique deletion."
+  "compaction": "220-record report reduced5208->59lines, full original preserved locally and in prior Git objects; byte-exact reconstruction verified; no history rewrite or unique deletion.",
+  "history_note": "Final-tree duplicate compacted; original local commits retained because review/gate provenance pins their identities. No history rewrite. New full environment/debug dumps stay local.",
+  "controlled_archive_known_pattern_matches": 0
 }
