@@ -67,6 +67,14 @@ ROUND: 1 / 2
 
 ## Log
 
+
+### Attestation · relay-drive — 2026-10-15T03:04:19Z
+task: RELAY-PR1061-EXTENSION-20261015
+reviewer: codex
+status: Approved
+reviewed-head: b55594b7a1570c454dd37f59c1a1e889bd0bd8e7
+added-range: 9139+6393
+added-sha256: 045660b853cca6b08f23473e51585c6a12b7a64c982e5bec2d0908fa81d42df5
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 
