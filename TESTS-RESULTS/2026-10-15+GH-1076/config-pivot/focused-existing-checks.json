@@ -1,0 +1,121 @@
+{
+  "before": {
+    "head": "ddb52b5f14c871286751b9d4370a06e987ffbd60",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.remote=origin\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.merge=refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+    "refs": "390bce7f8fe7bd936fe1c1d5bae2d417072fb400 refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\n390bce7f8fe7bd936fe1c1d5bae2d417072fb400 refs/remotes/origin/HEAD\n390bce7f8fe7bd936fe1c1d5bae2d417072fb400 refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\nf974fcee15647aae6551fcc81b129f5a6127120b refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0"
+  },
+  "commands": [
+    {
+      "command": [
+        "bash",
+        "test/ci-route.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 5.788
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh35-test-tiers.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 16.353
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh365-tier-fail-closed.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 354.418
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh425-gate-provenance-pr.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 7.964
+    },
+    {
+      "command": [
+        "bash",
+        "test/wave-reconcile.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 2.338
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh421-auto-wave-reconcile.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 4.919
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh740-hosted-lane-publish.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 6.214
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh674-merge-cleanup-hosted-lookup.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 0.17
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh496-phase2-reconciliation-views.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 8.944
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh174-harness-registry.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 0.639
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh346-profile-resolve.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 3.005
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh549-work-events.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 256.76
+    },
+    {
+      "command": [
+        "bash",
+        "test/ci-workflow.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 0.321
+    }
+  ],
+  "after": {
+    "head": "ddb52b5f14c871286751b9d4370a06e987ffbd60",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.remote=origin\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.merge=refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+    "refs": "390bce7f8fe7bd936fe1c1d5bae2d417072fb400 refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\n390bce7f8fe7bd936fe1c1d5bae2d417072fb400 refs/remotes/origin/HEAD\n390bce7f8fe7bd936fe1c1d5bae2d417072fb400 refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\nf974fcee15647aae6551fcc81b129f5a6127120b refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0"
+  },
+  "identity_unchanged": true
+}

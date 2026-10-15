@@ -1,0 +1,9 @@
+# GH1076 configuration-pivot verification
+
+Source implementation ddb52b5f, reconciled with development14081d61 at1a550df6. The native ledger resolver verified a clean trio after preserving11 ours-changed and4 incoming-changed INSERT rows, with no missing rows and generation floor1666; incoming generated view retained.
+
+Actual manual on/off/config precedence/malformed controls use isolated XYZ_DEVICE_CONFIG_PATH files outside the repository. Fileon selects the bounded path candidate; fileoff and envoff selectfull. Malformed JSON with envon failsclosed/full. This Large source change remainsfull. The shared ~/.xyz/device_config.json was never written.
+
+The current consumer accepted all220 actual committed @1 receipts, equal to the f974 old consumer with zero differences. This compares production parser replay, not independent GitHub ownership. Both original retained f874 component streams pass strict phase validation with unchanged hashes: Small75/75 and area9/9, distinct real IDs. These old runs are not current-source execution or a live @2 qualification. A nested @2 outcome does not satisfy the legacy generic passing-receipt predicate. Current environment fingerprint collection succeeded with no installations.
+
+All13 focused existing suites passed at implementationddb52b5f; before/after HEAD, working tree, refs and local config were identical. The subsequent development merge only reconciled ledger/docs/evidence. The current actual committed PR union selectsfull/tier3 even with isolated configon. Supplemental final QA and frozen-source full gate have not run at this checkpoint. No primary/hosted activation, merge, new test/case or deployment. The forthcoming workflow env declaration defaults hosted wave optimizationon after landing; repo variable0 disables future jobs. A Mac file cannot change hosted configuration. No eligible post-policy landing or executed @2 publication race is claimed.

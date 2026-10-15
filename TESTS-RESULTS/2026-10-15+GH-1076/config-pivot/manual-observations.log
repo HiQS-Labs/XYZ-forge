@@ -1,0 +1,98 @@
+{
+  "config_controls": [
+    {
+      "observation": "file-on",
+      "config": {
+        "optimized": true,
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-settings/on.json",
+        "error": null
+      },
+      "config_rc": 0,
+      "router_rc": 0,
+      "router": {
+        "tier": "2",
+        "hosted_gate": "skills-army-content@1",
+        "profile_enabled": "true",
+        "profile_candidate": "true"
+      }
+    },
+    {
+      "observation": "file-off",
+      "config": {
+        "optimized": false,
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-settings/off.json",
+        "error": null
+      },
+      "config_rc": 0,
+      "router_rc": 0,
+      "router": {
+        "tier": "2",
+        "hosted_gate": "full",
+        "profile_enabled": "false",
+        "profile_candidate": "true"
+      }
+    },
+    {
+      "observation": "env-off-over-file-on",
+      "config": {
+        "optimized": false,
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-settings/on.json",
+        "error": null
+      },
+      "config_rc": 0,
+      "router_rc": 0,
+      "router": {
+        "tier": "2",
+        "hosted_gate": "full",
+        "profile_enabled": "false",
+        "profile_candidate": "true"
+      }
+    },
+    {
+      "observation": "malformed-file-even-with-env-on",
+      "config": {
+        "optimized": false,
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-settings/malformed.json",
+        "error": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-settings/malformed.json is unreadable (Expecting property name enclosed in double quotes: line 1 column 3 (char 2))"
+      },
+      "config_rc": 0,
+      "router_rc": 0,
+      "router": {
+        "tier": "2",
+        "hosted_gate": "full",
+        "profile_enabled": "false",
+        "profile_candidate": "true"
+      }
+    }
+  ],
+  "large_change_router": {
+    "tier": "3",
+    "hosted_gate": "full",
+    "profile_enabled": "true",
+    "profile_candidate": "false"
+  },
+  "current_commit_raw_scope": "profile scope includes unknown, mixed, added or high-risk files",
+  "historical_original_phase_replay": [
+    {
+      "phase": "small",
+      "gate": "validate.sh --sequential --subsystem small",
+      "original_sha256": "bfee71ff5b9121a91e6575a157c9952714ea44521d8479010bc04e2aa6a16f95",
+      "hash_matches": true,
+      "run": "f874fa8d4-47453",
+      "passed": 75,
+      "total": 75,
+      "strict_summary_accepted": true
+    },
+    {
+      "phase": "skills-army-hq",
+      "gate": "validate.sh --sequential --subsystem skills-army-hq",
+      "original_sha256": "11955e7669aa6798ff34f6a65d23b2688249b829ac4c1e7565c2ed1127efa04f",
+      "hash_matches": true,
+      "run": "f874fa8d4-81198",
+      "passed": 9,
+      "total": 9,
+      "strict_summary_accepted": true
+    }
+  ],
+  "legacy_generic_accepts_nested_outcome": false
+}

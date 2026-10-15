@@ -17,7 +17,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Configurable optimization pivot plan Approved; original plan3/3 FAIL and corrected-layout supplemental PASS retained. | Implement and verify existing-owner ci.optimized; keep primary activation coordinated and use the approved extra final QA. |
+| Configurable optimization pivot implemented; existing-owner ci.optimized and strict two-phase evidence verified in isolation. Original failed/approved review history retained. | Supplemental final QA, then frozen-source full pre-push gate and GH1076/PR1079 evidence publication. Primary activation and landing stay with the merge owner. |
 
 ## Table of contents
 
@@ -505,3 +505,23 @@ older generic PR receipt readers cannot treat it as an ordinary passing PR recei
 also reserves unsupported qualification namespaces. Agent instruction manifests (SKILL/AGENTS/CLAUDE)
 and requirements text are conservatively excluded from the content profile because their metadata
 can affect operational permissions/dependencies. Existing area suites and Small/full lists are unchanged.
+
+## Configuration pivot implementation checkpoint (2026-10-15)
+
+Implementation ddb52b5f extends device_config.py, ci-route.sh and wave_reconcile.py and declares
+the hosted environment contract in the existing wave job. Development14081d61 was integrated at
+1a550df6 before final QA. Ledger resolution preserved11 ours-changed and4 incoming-changed INSERT
+rows with no omissions and used the native rebuild/check; generated incoming view was retained.
+
+The config-pivot evidence folder owns the current observations and focused checks. Local files
+turn the candidate on/off through XYZ_DEVICE_CONFIG_PATH, env0 overrides fileon, malformed JSON
+with env1 returnsfull; the actual Large change remainsfull. Historical @1 replay is220/220 through
+both old/current consumers. Strict replay of the two actual f874 original streams preserves the
+75/75 and9/9 independent phase totals, IDs and hashes. That replay is not a new execution, a live
+@2 receipt, or executed optimized publication recovery. No global Mac setting was changed.
+
+The already approved extra final QA is scoped1/1 in gh1076-config-final-qa-extension.md; its result
+and the subsequent frozen-source normal full pre-push gate are retained in the evidence folder.
+No old full result qualifies this new implementation. No new CI cases/suites, installs, deployment,
+main qualification, merge or teardown is performed. Configuration default/scope/disable procedure
+is the normative ROUTER section; future live hosted optimization needs the reviewed PR to land.

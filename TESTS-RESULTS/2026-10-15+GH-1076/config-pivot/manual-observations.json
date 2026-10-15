@@ -1,0 +1,324 @@
+{
+  "timestamp": "2026-10-15T21:45:12.228293+00:00",
+  "consumer": "1a550df6582696ced47195d2576c2c5455cc6e38",
+  "kind": "Unregistered manual observation; no new tests, suite runs, installs, remote actions or live optimized qualification",
+  "config_controls": [
+    {
+      "observation": "file-on",
+      "config": {
+        "optimized": true,
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-settings/on.json",
+        "error": null
+      },
+      "config_rc": 0,
+      "router_rc": 0,
+      "router": {
+        "tier": "2",
+        "hosted_gate": "skills-army-content@1",
+        "profile_enabled": "true",
+        "profile_candidate": "true"
+      }
+    },
+    {
+      "observation": "file-off",
+      "config": {
+        "optimized": false,
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-settings/off.json",
+        "error": null
+      },
+      "config_rc": 0,
+      "router_rc": 0,
+      "router": {
+        "tier": "2",
+        "hosted_gate": "full",
+        "profile_enabled": "false",
+        "profile_candidate": "true"
+      }
+    },
+    {
+      "observation": "env-off-over-file-on",
+      "config": {
+        "optimized": false,
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-settings/on.json",
+        "error": null
+      },
+      "config_rc": 0,
+      "router_rc": 0,
+      "router": {
+        "tier": "2",
+        "hosted_gate": "full",
+        "profile_enabled": "false",
+        "profile_candidate": "true"
+      }
+    },
+    {
+      "observation": "malformed-file-even-with-env-on",
+      "config": {
+        "optimized": false,
+        "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-settings/malformed.json",
+        "error": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-settings/malformed.json is unreadable (Expecting property name enclosed in double quotes: line 1 column 3 (char 2))"
+      },
+      "config_rc": 0,
+      "router_rc": 0,
+      "router": {
+        "tier": "2",
+        "hosted_gate": "full",
+        "profile_enabled": "false",
+        "profile_candidate": "true"
+      }
+    }
+  ],
+  "large_change_router": {
+    "tier": "3",
+    "hosted_gate": "full",
+    "profile_enabled": "true",
+    "profile_candidate": "false"
+  },
+  "current_commit_raw_scope": "profile scope includes unknown, mixed, added or high-risk files",
+  "historical_original_phase_replay": [
+    {
+      "phase": "small",
+      "gate": "validate.sh --sequential --subsystem small",
+      "original_sha256": "bfee71ff5b9121a91e6575a157c9952714ea44521d8479010bc04e2aa6a16f95",
+      "hash_matches": true,
+      "run": "f874fa8d4-47453",
+      "passed": 75,
+      "total": 75,
+      "strict_summary_accepted": true
+    },
+    {
+      "phase": "skills-army-hq",
+      "gate": "validate.sh --sequential --subsystem skills-army-hq",
+      "original_sha256": "11955e7669aa6798ff34f6a65d23b2688249b829ac4c1e7565c2ed1127efa04f",
+      "hash_matches": true,
+      "run": "f874fa8d4-81198",
+      "passed": 9,
+      "total": 9,
+      "strict_summary_accepted": true
+    }
+  ],
+  "historical_limit": "Actual original bytes at f874, not current-source execution, not an @2 receipt, not a combined run",
+  "legacy_generic_accepts_nested_outcome": false,
+  "environment_fingerprint": {
+    "system": "Darwin",
+    "release": "24.6.0",
+    "version": "Darwin Kernel Version 24.6.0: Mon Jul 14 11:30:29 PDT 2025; root:xnu-11417.140.69~1/RELEASE_ARM64_T6000",
+    "macos": "15.6.1",
+    "machine": "arm64",
+    "python": [
+      "3.14.7 (main, Aug  5 2026, 10:29:49) [Clang 17.0.0 (clang-1700.6.4.2)]",
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      [
+        [
+          "PyYAML",
+          "6.0.3"
+        ],
+        [
+          "Pygments",
+          "2.20.0"
+        ],
+        [
+          "annotated-types",
+          "0.7.0"
+        ],
+        [
+          "anyio",
+          "4.13.0"
+        ],
+        [
+          "certifi",
+          "2026.2.25"
+        ],
+        [
+          "cffi",
+          "2.0.0"
+        ],
+        [
+          "charset-normalizer",
+          "3.4.7"
+        ],
+        [
+          "cryptography",
+          "46.0.6"
+        ],
+        [
+          "distro",
+          "1.9.0"
+        ],
+        [
+          "google-api-core",
+          "2.30.1"
+        ],
+        [
+          "google-auth",
+          "2.49.1"
+        ],
+        [
+          "google-cloud-bigquery",
+          "3.41.0"
+        ],
+        [
+          "google-cloud-core",
+          "2.5.1"
+        ],
+        [
+          "google-crc32c",
+          "1.8.0"
+        ],
+        [
+          "google-genai",
+          "1.70.0"
+        ],
+        [
+          "google-resumable-media",
+          "2.8.2"
+        ],
+        [
+          "googleapis-common-protos",
+          "1.73.1"
+        ],
+        [
+          "grpcio",
+          "1.80.0"
+        ],
+        [
+          "grpcio-status",
+          "1.80.0"
+        ],
+        [
+          "h11",
+          "0.16.0"
+        ],
+        [
+          "httpcore",
+          "1.0.9"
+        ],
+        [
+          "httpx",
+          "0.28.1"
+        ],
+        [
+          "hypothesis",
+          "6.167.1"
+        ],
+        [
+          "idna",
+          "3.11"
+        ],
+        [
+          "iniconfig",
+          "2.3.0"
+        ],
+        [
+          "mlx",
+          "0.31.1"
+        ],
+        [
+          "packaging",
+          "26.0"
+        ],
+        [
+          "pip",
+          "26.2.1"
+        ],
+        [
+          "pluggy",
+          "1.6.0"
+        ],
+        [
+          "proto-plus",
+          "1.27.2"
+        ],
+        [
+          "protobuf",
+          "6.33.6"
+        ],
+        [
+          "pyasn1",
+          "0.6.3"
+        ],
+        [
+          "pyasn1_modules",
+          "0.4.2"
+        ],
+        [
+          "pycparser",
+          "3.0"
+        ],
+        [
+          "pydantic",
+          "2.12.5"
+        ],
+        [
+          "pydantic_core",
+          "2.41.5"
+        ],
+        [
+          "pytest",
+          "9.1.1"
+        ],
+        [
+          "python-dateutil",
+          "2.9.0.post0"
+        ],
+        [
+          "requests",
+          "2.33.1"
+        ],
+        [
+          "rpds-py",
+          "2026.6.3"
+        ],
+        [
+          "six",
+          "1.17.0"
+        ],
+        [
+          "sniffio",
+          "1.3.1"
+        ],
+        [
+          "sortedcontainers",
+          "2.4.0"
+        ],
+        [
+          "tenacity",
+          "9.1.4"
+        ],
+        [
+          "typing-inspection",
+          "0.4.2"
+        ],
+        [
+          "typing_extensions",
+          "4.15.0"
+        ],
+        [
+          "urllib3",
+          "2.6.3"
+        ],
+        [
+          "websockets",
+          "16.0"
+        ],
+        [
+          "wheel",
+          "0.47.0"
+        ]
+      ]
+    ],
+    "tools": {
+      "git": "git version 2.50.1 (Apple Git-155)",
+      "bash": "GNU bash, version 3.2.57(1)-release (arm64-apple-darwin24)\nCopyright (C) 2007 Free Software Foundation, Inc.",
+      "node": "v22.22.3",
+      "npm": "10.9.8",
+      "shellcheck": "ShellCheck - shell script analysis tool\nversion: 0.11.0\nlicense: GNU General Public License, version 3\nwebsite: https://www.shellcheck.net"
+    },
+    "dependencies": {
+      "package-lock.json": "6000fdc232ad0f233435001c3dfab8ac6565b24d",
+      "pytest.ini": "3cd8190aedbeb8d9baabd6533e20391ef937b6bc",
+      "tools/vscode-cockpit/package-lock.json": "fc96328146b393d883a7410f8004b03d3f22c254"
+    }
+  },
+  "global_settings_written": false
+}
