@@ -211,4 +211,12 @@ Basis: The whole updated skill satisfies the clarified Definition of Done: it ca
 
 Done — relay closed (Approved), no further review turn needed. Handing off to codex-producer for harness closeout with the token marked done.
 
+
+### Attestation · relay-drive — 2026-10-15T07:12:41Z
+task: RELAY-GH1077-FINAL-R2-20261015
+reviewer: codex
+status: Approved
+reviewed-head: 2f4e2930250f41b4bc98e2c73630ce2089c37bc6
+added-range: 14420+6858
+added-sha256: ba34b3d608bde3c00b6d14e1cd83f38abc0a2d5a248ffdbbf6889134c5436c75
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
