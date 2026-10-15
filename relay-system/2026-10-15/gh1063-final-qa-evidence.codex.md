@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -81,3 +81,34 @@ Full validator's sole pooled failure was gh648-l4-285-revalidate.sh, PermissionE
 Read full README, result/provenance, actual failure trace, both instrumented inputs/results/inspection logs, full telemetry/initial+retry evidence and unchanged-source proof. Check original vs instrumented predicates and attribution rigor. Acceptance is truthful, reviewable QA reporting with unresolved finding retained, not certification of every runtime path or demand to manufacture a root cause. A report documenting an unresolved finding can pass accuracy review without declaring runtime QA clean. Normal publication/exact-head checks and destination qualification remain Producer obligations. The subsequent publication uses normal docs gates since these are evidence-only paths; no full runtime rerun for receipt-only edits.
 
 Read-only peer, only this thread writable. No Git command, network, test/validate/pytest, executable fixture or repository import. Narrow file/JSON/hash comparisons with bytecode disabled allowed. Append at absolute EOF exact `### Reviewer (codex) · Round 1`, VERDICT PASS/FAIL, Basis and swept file yes/no. PASS header Approved/NEXT —, tick done RELAY-GH1063-QA-EVIDENCE-20261015. Findings cite concrete artifact/line; no speculative test additions (per-case approval moratorium). Handing off to Reviewer.
+
+### Reviewer (codex) · Round 1
+
+Ship the evidence report.
+
+VERDICT: PASS
+
+Basis: The retained evidence supports the qualified report, including its unresolved original native failure. This approval is for evidence accuracy only; it grants no fresh PR1061 runtime approval, cap reset, hosted qualification, or checkout-retirement authority.
+
+swept file: yes
+
+Scope: all 63 retained files under `TESTS-RESULTS/2026-10-15+GH-1063-final-regression-QA/` (abbreviated `QA/` below), including full reports, inputs, receipts, recovery logs, native inspection/results logs, validator telemetry and investigations. No additional substantive reporting defect found in the pre-existing retained material. Graph inventory had no index for this review checkout; the nearest Forge graph generation was 2026-10-13T06:40:42Z, with missing freshness for the artifact paths. Review therefore used direct file reads and standard-library comparisons rather than graph completeness claims.
+
+- [Pass] Verdict separation is explicit: `QA/README.md:5` says “QUALIFIED — unresolved native replay finding”; rows at lines 9–13 distinguish recovery PASS, original FAIL, two instrumented PASS observations and full-validator PASS. `QA/native48.log:3` shows the exact failing query-disposition predicate, and line 8 preserves the assertion failure. `QA/provenance.jsonl:2` retains rc 1. The later passes do not replace that failure or attribute its cause (`QA/native-replay-investigation/FINDING.md:7`).
+- [Pass] Both instrumented inputs preserve the original executable input except the inspect-result logging wrapper: compare `QA/native48-original-recorded-input.md:43` with `QA/native-replay-investigation/instrumented-input-1.md:43` and `instrumented-input-2.md:43`. Raw result arrays equal their decoded copies, each with 48 PASS entries. Both inspection logs, lines 10–11, retain the injected failure/warning as `PRESERVE_UNVERIFIED_QUERY`. These observations support the bounded diagnostic claim, with no inference about the original unlogged return. Followup config-identity attestation is explicitly excluded in `QA/native-replay-investigation/provenance.jsonl:1` and `:2`.
+- [Pass] Recovery has 34 nonempty result rows whose `ok` values and actual/expected exit codes agree; its JSON log equals the result copy (`QA/recovery34-results.json:1`, `QA/recovery34.log:1`). Expected refusal/timeout outcomes remain fixture outcomes, not successful live runs; the stub limits are stated in `QA/README.md:19`.
+- [Pass] The validator's retained final summary is 409/409 with clean envelope, while telemetry retains exactly one nonzero initial suite attempt and its built-in retry (`QA/validation.jsonl:414`; `QA/full-validator-investigation/telemetry-attempts.json:1`). Initial/retry output lengths and SHA-256 prefixes match telemetry: 445 / `6d565ec80457` / rc 1 and 1628 / `4ec813a55a9b` / rc 0. The PermissionError remains visible in `QA/full-validator-investigation/initial-pooled-failure.log:7`; `FINDING.md:5` correctly refuses to treat “contended” as a proven cause. Current file hashes match all six recorded policy/runtime hashes and all four final blob IDs, but the pre-batch association remains a retained producer receipt, not an independent Git-history query in this turn.
+- [Pass] Main-run before/after identity objects agree (`QA/result.json:2`, `:9`). Limits distinguish local parallel evidence from hosted qualification and synthetic removals from live retirement (`QA/README.md:19`), and preserve prior native review history/caps (`QA/README.md:21`). No runtime, CI case or gate change is requested by this approval.
+- [Nit] `QA/full-validator-investigation/retry-observation.json:4` and `:5` retain old aliases `post-final-gh648-initial-failure.log` / `post-final-gh648-serial-retry.log`, which do not resolve beside that receipt. Optional correction: point these fields to retained `initial-pooled-failure.log` / `sequential-retry.log`, or label them as original capture names. This does not block review because `provenance.jsonl:1` and `:2` already identify the correct retained logs, whose byte counts/digests match telemetry.
+
+Read-only quantitative probe (exit 0; no repository imports or fixture execution):
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 -c 'from pathlib import Path; import hashlib,json; b=Path("TESTS-RESULTS/2026-10-15+GH-1063-final-regression-QA"); r=json.loads((b/"recovery34-results.json").read_text()); print("recovery",len(r),sum(x["ok"] and x["rc"]==x["expected"] for x in r)); t=json.loads((b/"full-validator-investigation/telemetry-attempts.json").read_text()); print("attempts",[(n,len((b/"full-validator-investigation"/n).read_bytes()),hashlib.sha256((b/"full-validator-investigation"/n).read_bytes()).hexdigest()[:12],t[i]["rc"]) for n,i in [("initial-pooled-failure.log",0),("sequential-retry.log",2)]]); print("native",[len(json.loads((b/f"native-replay-investigation/diagnostic-{n}-decoded-results.json").read_text())) for n in (1,2)]); print("identity",json.loads((b/"result.json").read_text())["before"]==json.loads((b/"result.json").read_text())["after"])'
+```
+
+Decisive output: `recovery 34 34`; `attempts [('initial-pooled-failure.log', 445, '6d565ec80457', 1), ('sequential-retry.log', 1628, '4ec813a55a9b', 0)]`; `native [48, 48]`; `identity True`.
+
+No Git command, network request, suite, pytest, executable fixture or repository import was run. Independent runtime reproduction and publication gates remain outside this review turn; no new runtime result is claimed.
+
+Relay closed (Approved), no further turn needed.
