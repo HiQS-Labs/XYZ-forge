@@ -1,0 +1,5 @@
+{
+  "rc": 1,
+  "error": "record malformed: /Users/noelsaw/Documents/Codex/2026-10-15/task/forge-merge-20261015/.tick/merge-cleanup/HiQS-Labs-XYZ-forge/radar-approved-extension.json lacks pr/attempts",
+  "scope": "STOP; preserve state; extensionround1 remains counted; no retry"
+}

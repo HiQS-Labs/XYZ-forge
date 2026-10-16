@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-10-16T04:24:26.019623+00:00",
+  "review_comment": 4290849562,
+  "valid": true,
+  "classification": "Minor, deferred",
+  "issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/1095",
+  "rating": [
+    35,
+    25,
+    50,
+    75
+  ],
+  "needed_for_current_three_contracts_or_issue_set_completeness": false,
+  "reason": "Step3explicitissue-set scope; PR collision/shipped evidence separate; combineditemsemanticsnewboundedfollowup",
+  "product_changed": false,
+  "extension_rounds_used": 1,
+  "remaining": 1
+}
