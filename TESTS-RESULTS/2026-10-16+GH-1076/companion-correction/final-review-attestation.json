@@ -1,0 +1,19 @@
+{
+  "added_len": 7282,
+  "added_sha256": "6b3e0c3554ad8267f549e9bccfd69c54f0dabdbb18382f11516ca8e58e34d2a2",
+  "added_start": 5682,
+  "artifact_sha256": "d8869c82b27f37d5f377127e7b251b9a64474181524276bf9a21bfab42936ef4",
+  "attested_at": "2026-10-16T01:43:48Z",
+  "driver_pid": 20824,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike/relay-system/2026-10-16/gh1076-companion-final-extension.md",
+  "relay_file_rel": "relay-system/2026-10-16/gh1076-companion-final-extension.md",
+  "reviewed_head": "cd38420024dfd524a6e9a1053324e71a1c8780b8",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike",
+  "task": "RELAY-GH1076-COMPANION-FINAL-EXT-20261016",
+  "trailer_sha256": "3bbec3d1b81a2919a0bee20bdd5f30e3beaf3f8a4f611c2d8e56b524ee7b8784",
+  "transcript_repo": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike"
+}

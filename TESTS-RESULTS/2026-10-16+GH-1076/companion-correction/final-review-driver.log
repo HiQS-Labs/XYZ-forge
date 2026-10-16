@@ -1,0 +1,21 @@
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike) changed-files=0
+codex-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.BtrIdy)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.BtrIdy) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.BtrIdy) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.BtrIdy) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.BtrIdy) changed-files=1
+rtl: GH-654 off-lane candidate: .relay-artifacts/gh1076-companion-final-packet.md
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike/relay-system/2026-10-16/gh1076-companion-final-extension.md
+codex-turn: committed codex turn (file-scoped, no push)
+relay-drive: attested Approved by codex — reviewed cd38420024df, 7282 bytes of review text, record /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike/.git/relay-attest/RELAY-GH1076-COMPANION-FINAL-EXT-20261016.json
+relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/7 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 18h 33m
+per done-task: ≥0 tokens, 2h 39m wall-clock
+  turn peak RSS: codex: 315MB peak RSS
+
