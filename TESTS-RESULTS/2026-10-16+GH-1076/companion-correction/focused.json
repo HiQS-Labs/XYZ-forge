@@ -1,0 +1,85 @@
+{
+  "at": "2026-10-16T00:38:13.803699+00:00",
+  "before": {
+    "head": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+    "status": "",
+    "refs": "1c379689723b568c8d2592b07fe3dd76e81d913f3b3b8e49ea87d92939e6914a",
+    "config": "33c83682ce5a533ecc0840a6b50d83c86c39fd644ccce43beccba53c2d6f1534",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "commands": [
+    {
+      "command": [
+        "bash",
+        "test/ci-route.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 8.281,
+      "log": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-companion-evidence/existing-ci-route.sh.log",
+      "identity_after": {
+        "head": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+        "status": "",
+        "refs": "1c379689723b568c8d2592b07fe3dd76e81d913f3b3b8e49ea87d92939e6914a",
+        "config": "33c83682ce5a533ecc0840a6b50d83c86c39fd644ccce43beccba53c2d6f1534",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git"
+      }
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh425-gate-provenance-pr.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 8.004,
+      "log": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-companion-evidence/existing-gh425-gate-provenance-pr.sh.log",
+      "identity_after": {
+        "head": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+        "status": "",
+        "refs": "1c379689723b568c8d2592b07fe3dd76e81d913f3b3b8e49ea87d92939e6914a",
+        "config": "33c83682ce5a533ecc0840a6b50d83c86c39fd644ccce43beccba53c2d6f1534",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git"
+      }
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh740-hosted-lane-publish.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 6.473,
+      "log": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-companion-evidence/existing-gh740-hosted-lane-publish.sh.log",
+      "identity_after": {
+        "head": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+        "status": "",
+        "refs": "1c379689723b568c8d2592b07fe3dd76e81d913f3b3b8e49ea87d92939e6914a",
+        "config": "33c83682ce5a533ecc0840a6b50d83c86c39fd644ccce43beccba53c2d6f1534",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git"
+      }
+    },
+    {
+      "command": [
+        "bash",
+        "test/wave-reconcile.sh"
+      ],
+      "rc": 0,
+      "wall_seconds": 2.26,
+      "log": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-companion-evidence/existing-wave-reconcile.sh.log",
+      "identity_after": {
+        "head": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+        "status": "",
+        "refs": "1c379689723b568c8d2592b07fe3dd76e81d913f3b3b8e49ea87d92939e6914a",
+        "config": "33c83682ce5a533ecc0840a6b50d83c86c39fd644ccce43beccba53c2d6f1534",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git"
+      }
+    }
+  ],
+  "mode": "Existing unchanged focused suites, serialized. NODE_PATH uses verified existing dependencies; no install.",
+  "after": {
+    "head": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+    "status": "",
+    "refs": "1c379689723b568c8d2592b07fe3dd76e81d913f3b3b8e49ea87d92939e6914a",
+    "config": "33c83682ce5a533ecc0840a6b50d83c86c39fd644ccce43beccba53c2d6f1534",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "identity_unchanged": true
+}

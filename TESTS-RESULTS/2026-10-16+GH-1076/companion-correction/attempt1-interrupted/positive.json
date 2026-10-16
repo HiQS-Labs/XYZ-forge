@@ -1,0 +1,116 @@
+{
+  "kind": "CONTROLLED LOCAL PR METADATA; REAL existing source and qualification commands, not a GitHub landing or live activation",
+  "implementation": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+  "fixture": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-companion-positive",
+  "base": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+  "source": "527760b836a364ba1591b025ad6e5594a33d9096",
+  "source_before": {
+    "head": "527760b836a364ba1591b025ad6e5594a33d9096",
+    "status": "",
+    "refs_sha256": "65fb47d10ea39ee99cbd0ef41189db329cea4b8c8a191404246b589efabde89a",
+    "config_sha256": "65496d74b64e87fb0b54da97e58bed189e4d1d44897e167ae0466ccb8d6f0d75"
+  },
+  "stage": "fresh actual landing qualification running",
+  "installations": 0,
+  "source_small": {
+    "command": [
+      "bash",
+      "validate.sh",
+      "--sequential",
+      "--subsystem",
+      "small"
+    ],
+    "pid": 17477,
+    "rc": 0,
+    "wall_seconds": 935.24
+  },
+  "source_after": {
+    "head": "527760b836a364ba1591b025ad6e5594a33d9096",
+    "status": "",
+    "refs_sha256": "65fb47d10ea39ee99cbd0ef41189db329cea4b8c8a191404246b589efabde89a",
+    "config_sha256": "65496d74b64e87fb0b54da97e58bed189e4d1d44897e167ae0466ccb8d6f0d75"
+  },
+  "source_identity_unchanged": true,
+  "carrier": "11ab8bdeecc6755f501af3032acd9b223be24f94",
+  "landing": "c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31",
+  "meta": {
+    "number": 9001076,
+    "state": "MERGED",
+    "baseRefName": "development",
+    "headRefOid": "11ab8bdeecc6755f501af3032acd9b223be24f94",
+    "mergeCommit": {
+      "oid": "c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31"
+    },
+    "title": "CONTROLLED LOCAL METADATA ONLY"
+  },
+  "premerge_error": null,
+  "source_small_summary": {
+    "v": 1,
+    "ts_ms": 1792112263303,
+    "run": "527760b83-17477",
+    "runner": "validate",
+    "event": "run.summary",
+    "passed": 75,
+    "failed": 0,
+    "total": 75,
+    "envelope_rc": "0",
+    "envelope_drift": "none",
+    "suite_events": "74",
+    "run_set": "72",
+    "registered": "406",
+    "suite_events_match": "yes"
+  },
+  "scope": [
+    "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+    "11ab8bdeecc6755f501af3032acd9b223be24f94",
+    {
+      "source_commit": "527760b836a364ba1591b025ad6e5594a33d9096",
+      "source_tree": "a666519c38e9ed3f4591dfe2b640ab4e53389d47",
+      "carrier_head": "11ab8bdeecc6755f501af3032acd9b223be24f94",
+      "files": [
+        {
+          "path": "TESTS-RESULTS/2026-10-16+GH-9001076-controlled/provenance.jsonl",
+          "blob": "e2bc283f9706c18dff29e21e3b0b72bbc64ff56a",
+          "sha256": "43120c15d6eb1126b7cea825f0db79f8b488535313958232c58fc05ced15c8f0"
+        },
+        {
+          "path": "TESTS-RESULTS/2026-10-16+GH-9001076-controlled/validation.jsonl",
+          "blob": "3f044fac45ec66032a60ae3c393f1c1634cac742",
+          "sha256": "5c22acd75def7b94ccaa041e06074ae7d3d6c7fc310e11680d6e4f0367b7500f"
+        }
+      ]
+    }
+  ],
+  "selected": [
+    "validate.sh --sequential --subsystem small && ./validate.sh --sequential --subsystem skills-army-hq",
+    null,
+    "skills-army-content@2"
+  ],
+  "campaign": "TESTS-RESULTS/2026-10-16+GH-9001076-controlled",
+  "setup_interceptions": [
+    {
+      "command": [
+        "npm",
+        "ci"
+      ],
+      "method": "Verified existing matching dependency snapshot copied; npm ci not executed. Validation never simulated."
+    }
+  ],
+  "actual_qualifying_commands": [
+    {
+      "command": [
+        "bash",
+        "validate.sh",
+        "--sequential",
+        "--subsystem",
+        "small"
+      ],
+      "rc": 0,
+      "timed_out": false,
+      "pgid": 35513,
+      "wall_seconds": 965.01,
+      "retained": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-companion-evidence/landing-small-validation.jsonl",
+      "sha256": "248ab5a022ecd88943f988b94e106f7f78210ce46fdcbccb7d08ef46854aaadd"
+    }
+  ]
+}

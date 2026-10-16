@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-10-16T01:16:40.416844+00:00",
+  "classification": "Interrupted incomplete qualification; NOT PASS",
+  "observed_transport_error": "exec-server transport disconnected; recovery timed out after25s",
+  "outer_python_pid17136_absent": true,
+  "small_complete": true,
+  "area_last_suite": "gh589-xyz-mini-sync.sh",
+  "area_last_rc": 120,
+  "area_summary_present": false,
+  "temporary_full_clone": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wave-qualification-nmwef5vd/repo",
+  "head": "c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31",
+  "status": "",
+  "config_sha256": "e17e0fa7f04c43a3c4f668332d2cc65c78cfe1a68efffcd3993c368e6f382ab4",
+  "limits": "Transport interruption coincides with process loss and incomplete telemetry. Exit120 origin not yet established; do not label product regression or harmless flake."
+}

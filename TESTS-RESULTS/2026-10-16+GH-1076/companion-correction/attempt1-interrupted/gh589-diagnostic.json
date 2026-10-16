@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-16T01:17:37.416648+00:00",
+  "command": [
+    "bash",
+    "test/gh589-xyz-mini-sync.sh"
+  ],
+  "rc": 0,
+  "wall_seconds": 29.312,
+  "before": {
+    "head": "c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31",
+    "status": "",
+    "config_sha256": "e17e0fa7f04c43a3c4f668332d2cc65c78cfe1a68efffcd3993c368e6f382ab4"
+  },
+  "after": {
+    "head": "c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31",
+    "status": "",
+    "config_sha256": "e17e0fa7f04c43a3c4f668332d2cc65c78cfe1a68efffcd3993c368e6f382ab4"
+  },
+  "scope": "Existing diagnostic suite only, not a completed qualification or proof of a harmless flake"
+}

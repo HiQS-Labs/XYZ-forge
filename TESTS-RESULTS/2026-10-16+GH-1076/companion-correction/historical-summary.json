@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-10-16T00:43:35.351813+00:00",
+  "old_consumer": "f974fcee15647aae6551fcc81b129f5a6127120b",
+  "current_consumer": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+  "repository_head": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+  "method": "Production functions on actual committed wave receipts and raw files at current source HEAD. No receipt mutations, fixtures, tests, gates or remote actions. Metadata uses each recorded landing/pr identity; this compares parser/replay compatibility, not independent GitHub PR ownership truth.",
+  "count": 221,
+  "accepted_old": 221,
+  "accepted_current": 221,
+  "differences": [],
+  "prior_count": 220,
+  "new_records": [
+    {
+      "pr": 1053,
+      "kind": "pr",
+      "tested": "d48aa774dc1e22fbab393a9324057b8acff47d4b",
+      "landing": "d48aa774dc1e22fbab393a9324057b8acff47d4b",
+      "gate": "validate.sh --sequential",
+      "suites": null,
+      "old_accepts": true,
+      "current_accepts": true
+    }
+  ],
+  "full_raw_local_path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-companion-evidence/historical-replay.json",
+  "full_raw_sha256": "c7520c1d02f7cd18f0a5cc8274f600ceff8efc11695dd68cb0e53115a8aaf547",
+  "scope": "Read-only replay compatibility; no independent GitHub ownership or new software qualification. Full per-record duplicate retained locally rather than recommitted."
+}

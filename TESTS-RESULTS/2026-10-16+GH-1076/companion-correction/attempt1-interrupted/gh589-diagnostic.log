@@ -1,0 +1,41 @@
+== test: gh589-xyz-mini-sync ==
+  PASS: preview exits 0 and writes nothing
+  PASS: 2. missing manifest source → exit 2, no push
+  PASS: secret in a shipped file → exit 4, nothing written
+  PASS: red control: scan disabled → the same plant passes preview
+  PASS: first publication --push exits 0
+  PASS: remote main == local HEAD
+  PASS: skill set is exactly the eleven expected
+  PASS: 6. viewer names == skills on disk
+  PASS: 5. debug-mantra ships without issues/419 or SOP.md
+  PASS: LICENSE byte-identical
+  PASS: LICENSE-COMMERCIAL.md byte-identical
+  PASS: install.sh keeps its executable bit
+  PASS: agent-chorus standalone pipeline did not ship
+  PASS: 1. second run: exit 0, no new commit, remote unchanged
+  PASS: check: matching detached child → exit 0
+  PASS: check: one changed managed byte → exit 1 naming the path
+  PASS: check: a lost executable bit → exit 1
+  PASS: check + --apply → exit 2, child untouched
+  PASS: check: matching + drifting targets → exit 1, one summary line each
+  PASS: adapted: child bytes kept, forge drift not shipped
+  PASS: adapted: child-added install.sh kept and recorded in MANIFEST.txt
+  PASS: adapted: forge addition under an established entry is not shipped
+  PASS: adapted: entry without an exact ORIGIN row → exit 2 (a Notes mention documents nothing)
+  PASS: adapted: ORIGIN row with the wrong kind → exit 2
+  PASS: stale ORIGIN 'adapted' row for a managed entry → exit 2, mini bytes intact
+  PASS: uncommitted ORIGIN edit + --allow-dirty → exit 2
+  PASS: adapted: a child deletion is recorded, never re-created from forge bytes
+  PASS: adapted: a child re-addition is recorded on the next publication
+  PASS: adapted: dropping the whole entry deletes it, child-only files included
+  PASS: adapted: a re-added entry is seeded fresh from forge bytes
+  PASS: 3. unlisted skill never ships
+  PASS: dropped entry is deleted from mini
+  PASS: seeded TODO.md and unrelated NOTES.local survive
+  PASS: ownership guard: unpublished existing file → exit 2, bytes intact
+  PASS: print-manifest: `all` (deduplicated) lists every profile once
+  PASS: --dest with two targets → exit 2
+  PASS: multi-target: refused first target does not stop the next; worst exit wins
+  PASS: agent-chorus: the 13 payload paths shipped, no legacy TSV
+  PASS: agent-chorus: published child passes --check
+gh589-xyz-mini-sync: 39 passed, 0 failed
