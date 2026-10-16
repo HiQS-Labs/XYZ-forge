@@ -1,6 +1,6 @@
 # Marathon Phase gh-942-skill-desc-1024-limit
-STATUS: Open
-NEXT: agy (Builder)
+STATUS: Escalated
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-942-SKILL-DESC-1024-LIMIT-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -259,3 +259,20 @@ threshold: 1025 verdict: 1
 **Evidence limits:** Fully paginated project listing found no graph project for this worktree. The nearest Forge index belongs to another checkout, generation 2026-09-01T15:54:30Z; exact-path coverage reports missing/not-tracked freshness for the capture and flagged skills. The finding relies on current direct reads/YAML parsing, not graph completeness. No new actionable pre-existing body defect is claimed from this targeted recheck. **[Unverified — needs clone run]** Runtime suites and the post-turn harness gate remain outstanding. No git command, suite, executable fixture, source edit, consumer restart, or re-vendor was performed.
 
 Handing off to agy — agy, take your turn.
+
+### Round 3 · Builder · agy
+
+- **Disposition of Round 2 `[Blocker — unresolved contract/scope mismatch]`:**
+  - **Action:** **Escalated to parent orchestrator (`STATUS: Escalated` → `human-escalation`, exit 4)** per Reviewer `codex`'s Round 2 required disposition (`RELAY.md:225`: *"Preserve the valid scoped edits and report the contract mismatch to the parent. Outside this isolated turn, the parent must reseed permitted work covering the remaining paths, or explicitly authorize and record a narrower completion contract with ownership of the remaining failures... If escalation requires the harness to exit, an honest stopped phase is preferable to unsupported approval"*) and `AGENTS.md` marathon rule 4 (*"The point is the failures. A marathon that completes cleanly and teaches nothing is a weaker result than one that escalates and names a defect. Report what broke; do not smooth it"*).
+  - **Preserved on-lane state (`0` files modified in Round 3; Round 1 edits intact):**
+    - All 11 allowlisted `SKILL.md` files (`skills/1-hourly/five/SKILL.md`, `skills/1-hourly/recon/SKILL.md`, `skills/2-daily/workhorse/SKILL.md`, `skills/3-weekly/10days/SKILL.md`, `skills/3-weekly/dry/SKILL.md`, `skills/3-weekly/radar/SKILL.md`, `skills/4-occasional/feynman/SKILL.md`, `skills/4-occasional/front-door/SKILL.md`, `skills/4-occasional/readme-audit/SKILL.md`, `skills/4-occasional/spike-360/SKILL.md`, `skills/4-occasional/timbre/SKILL.md`) and all 9 skills enumerated in `PROJECT/2-WORKING/GH-942-SKILL-DESC-1024-LIMIT.md:32-42` are `<= 1005` characters (`642–1005` YAML/folded/`intake.skill_info` chars; `<= 1009` UTF-8 bytes) with trigger wording front-loaded within chars `50–239` and full body alignment verified in Round 1/Round 2.
+    - `test/gh609-sdlc-agent-gaps.sh`, `test/gh779-radar-ci-health.sh`, and `test/_setup.sh` remain untouched.
+  - **Contract / scope defect reported for parent orchestrator resolution outside this isolated turn:**
+    1. **Why the contract contradicted its own allowlist:** `PROJECT/2-WORKING/GH-942-SKILL-DESC-1024-LIMIT.md:70`'s `fix_probes` regex (`^description:[ \t]*(?:>-?|\|)?[ \t]*\n?((?:[ \t]+\S.*\n?)+|.*)`) stops at the first blank line inside a multi-paragraph YAML literal block scalar (`description: |`). Because of that single-paragraph regex, two tracked skills with blank lines inside `description: |` escaped detection when GH-942's `## Affected` list (`lines 32-42`) and `artifacts` / `lanes.agy_safe` allowlists (`lines 75-87, 93-105`) were authored:
+       - `skills/1-hourly/better-options/SKILL.md:3` (`description: |` with blank lines at lines `5` and `7`): `1603` YAML chars / `1602` folded & `intake.skill_info` chars.
+       - `skills/4-occasional/vscode-color/SKILL.md:3` (`description: |` with blank lines at lines `12` and `17`): `1042` YAML chars / `1041` folded & `intake.skill_info` chars.
+    2. **Required parent orchestrator action before re-running this phase:**
+       - **Option A (widen allowlist + fix probe):** Add `skills/1-hourly/better-options/SKILL.md` and `skills/4-occasional/vscode-color/SKILL.md` to `artifacts` and `lanes.agy_safe` in `PROJECT/2-WORKING/GH-942-SKILL-DESC-1024-LIMIT.md`, update `fix_probes` (`line 70`) to parse full YAML frontmatter (`yaml.safe_load` or `intake.skill_info`), re-run `swarm-preflight.sh`, and re-dispatch so the Builder can trim those two files on-lane; **OR**
+       - **Option B (narrow contract criteria to the 9 enumerated GH-942 skills):** Amend `PROJECT/2-WORKING/GH-942-SKILL-DESC-1024-LIMIT.md:12,90` (`goal` and `remediation.criteria`) to scope this phase to the 9 skills enumerated in `## Affected` (`lines 32-42`) and split `better-options` and `vscode-color` into an explicit follow-up issue/lane.
+
+Handing off to codex — codex, take your turn.
