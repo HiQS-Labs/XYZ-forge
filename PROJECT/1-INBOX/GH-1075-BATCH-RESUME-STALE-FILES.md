@@ -4,6 +4,9 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/1075
 title: merge-cleanup batch record keeps stale per-PR file lists on resume
 status: Proposed (1-INBOX — not yet active; deferred by the operator 2026-10-14)
 created: 2026-10-14
+fix_probes:
+  - test -f skills/2-daily/merge-cleanup/scripts/batch_record.py
+  - python3 test/gh436-merge-cleanup.py --help
 doc_type: feedback
 effort: 1
 complexity: 1
@@ -23,3 +26,36 @@ Keep order and outcomes unchanged. Verify with a manual check (GH-831).
 ## Merge evidence
 
 - PR #1069 merged 2026-10-15 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash ci-local.sh",
+  "fix_probes": [
+    {
+      "type": "command",
+      "cmd": "cd skills/2-daily/merge-cleanup/scripts && python3 -c \"import batch_record as b,tempfile,os,sys;d=tempfile.mkdtemp();rec={'planned':[b._row(1,{'number':1,'files':['a']})],'outcomes':{'1':{'status':'unattempted'}},'path':os.path.join(d,'r.json')};b.extend(rec,[{'number':1,'files':['a','b']}]);sys.exit(0 if rec['planned'][0]['files']==['a','b'] else 1)\"",
+      "expect_nonzero": true,
+      "note": "pre-fix: extend() leaves a known PR's files stale (exit 1); landed when files refresh (exit 0)"
+    }
+  ],
+  "artifacts": [
+    "skills/2-daily/merge-cleanup/scripts/batch_record.py"
+  ],
+  "remediation": {
+    "source": "issue#1075",
+    "criteria": "On --resume, extend() refreshes files and soft for already-planned PRs from the current queue; order and outcomes unchanged. Verify with the existing gh436 suite plus a manual check (GH-831)."
+  },
+  "lanes": {
+    "agy_safe": [
+      "skills/2-daily/merge-cleanup/scripts/batch_record.py"
+    ],
+    "orchestrator_only": []
+  }
+}
+```
