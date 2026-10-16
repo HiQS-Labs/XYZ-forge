@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-15 — GitHub-first radar work evidence (GH-1083)
+
+Radar now verifies doc-derived work facts against live GitHub issues/PRs, reports stale-doc drift, and uses docs as discovery hints or labelled degraded fallback. Explicit GitHub RGT declarations replace doc-only authority. The narrow adopted-SOP policy exception cannot override adoption/status/supersession evidence. Missing or partial GitHub access lowers report confidence; missing PROJECT removes hints only.
+
+Instruction-only, Easy to reverse by reverting the skill change. No new tests, runtime code or data schema. Skills Army deployment follows merge and remains a tracked handoff.
+
 ## 2026-10-15 — Express documentation admission checkpoint (GH-1080)
 
 Complete the Costly bet recorded in the original bounded documentation-lane entry; that entry and its evidence remain unchanged. By 2026-10-22, review any independently authorized documentation-mode landings for preserved bounds, exact PDDA receipts and recorded content/link/rendering checks. If none occurs, operational evidence remains unverified; do not launch work to manufacture it.

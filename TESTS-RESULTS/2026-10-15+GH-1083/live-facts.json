@@ -1,0 +1,91 @@
+{
+  "observed_at": "2026-10-15T20:56:21.949571+00:00",
+  "scope": "Bounded facts for changed radar behaviors; not exhaustive issue/PR inventory",
+  "observations": [
+    {
+      "command": [
+        "gh",
+        "api",
+        "repos/HiQS-Labs/XYZ-forge/issues/1083",
+        "--jq",
+        "{number,title,state,state_reason,milestone,url:.html_url,updated_at}"
+      ],
+      "rc": 0,
+      "data": {
+        "milestone": null,
+        "number": 1083,
+        "state": "open",
+        "state_reason": null,
+        "title": "radar: treat GitHub issues and PRs as the primary source of truth; PDDA docs as starting point and fallback",
+        "updated_at": "2026-10-15T18:58:41Z",
+        "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1083"
+      }
+    },
+    {
+      "command": [
+        "gh",
+        "pr",
+        "view",
+        "1078",
+        "--repo",
+        "HiQS-Labs/XYZ-forge",
+        "--json",
+        "number,title,state,mergedAt,mergeCommit,baseRefName,url"
+      ],
+      "rc": 0,
+      "data": {
+        "baseRefName": "development",
+        "mergeCommit": {
+          "oid": "9061df4bb3530670f3a3ba2dcae322ae5082cf13"
+        },
+        "mergedAt": "2026-10-15T07:23:12Z",
+        "number": 1078,
+        "state": "MERGED",
+        "title": "docs(skills): close-the-loop documentation and execution handoff sweep",
+        "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1078"
+      }
+    },
+    {
+      "command": [
+        "gh",
+        "pr",
+        "list",
+        "--repo",
+        "HiQS-Labs/XYZ-forge",
+        "--state",
+        "open",
+        "--limit",
+        "3",
+        "--json",
+        "number,title,state,isDraft,baseRefName,url"
+      ],
+      "rc": 0,
+      "data": [
+        {
+          "baseRefName": "development",
+          "isDraft": false,
+          "number": 1082,
+          "state": "OPEN",
+          "title": "feat(express): allow bounded documentation text and image updates",
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1082"
+        },
+        {
+          "baseRefName": "development",
+          "isDraft": true,
+          "number": 1079,
+          "state": "OPEN",
+          "title": "Unify CI qualification policy and close skills consumer coverage gaps",
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1079"
+        },
+        {
+          "baseRefName": "development",
+          "isDraft": false,
+          "number": 1062,
+          "state": "OPEN",
+          "title": "skills(GH-1060): add review-pr-xyz (claim-validated, report-only PR review); rename review-code \u2192 review-code-xyz",
+          "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1062"
+        }
+      ]
+    }
+  ]
+}
