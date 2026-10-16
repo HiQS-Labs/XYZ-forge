@@ -174,3 +174,11 @@ sync.py and intake.py: syntax parsed without execution
 - Turn bookkeeping: the first attempt to append this block failed shell parsing (exit 1, unmatched backtick caused by a nested heredoc delimiter); it made no file changes. The following token `done` succeeded before the corrected append. This corrected append records the completed review before ending the turn.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-16T04:08:55Z
+task: MARATHON-GH-960-SKILLS-ARMY-DUPLICATE-PULSE-CLONE-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 85f65e4b372fe9954e5f9f9e264afd156252a494
+added-range: 12417+4634
+added-sha256: 5592b251fbda1a4ae4a9d07bd5c1fdf046cced254f577e4b0466af567fb60108
