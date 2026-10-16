@@ -121,4 +121,12 @@ PY
 
 Relay closed (Approved), no further turn needed. Producer may proceed with the authorized implementation and separate final-review1/1; all prior counters and accepted local trust remain intact. Harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-10-16T00:31:58Z
+task: RELAY-GH1076-COMPANION-PLAN-EXT-20261016
+reviewer: codex
+status: Approved
+reviewed-head: 12fa1656ca5eac58469fb08ea7542c82c5cf82db
+added-range: 5589+6820
+added-sha256: 746f41eea6b2b4be792546f4886dc64a37e7ea2d92584037de781c1cecad9127
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
