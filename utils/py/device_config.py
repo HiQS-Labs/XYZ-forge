@@ -74,7 +74,7 @@ def load_device_config_diagnostic() -> Tuple[Dict[str, Any], Optional[str]]:
 
 
 def resolve_device_block(block: str, defaults: Dict[str, Any],
-                         env_prefix: str) -> Tuple[Dict[str, Any], Optional[str]]:
+                         env_prefix: str, strict: bool = False) -> Tuple[Dict[str, Any], Optional[str]]:
     """3-tier resolution for a NESTED config object (GH-549).
 
     resolve_device_setting handles top-level keys, and its env tier can only ever produce a
@@ -92,6 +92,11 @@ def resolve_device_block(block: str, defaults: Dict[str, Any],
     local = loaded.get(block, {})
     if not isinstance(local, dict):
         return cfg, "%s setting is not an object — ignoring it" % block
+    if strict:
+        if error:
+            return cfg, error
+        if set(local) - set(defaults) or any(type(v) is not type(defaults[k]) for k, v in local.items() if k in defaults):
+            return cfg, "%s contains an unknown key or invalid value type" % block
     for key in defaults:
         env = "%s_%s" % (env_prefix, key.upper())
         if env in os.environ:
@@ -99,6 +104,8 @@ def resolve_device_block(block: str, defaults: Dict[str, Any],
             if isinstance(defaults[key], list):
                 raw = [p.strip() for p in raw.split(",") if p.strip()]
             elif isinstance(defaults[key], bool):
+                if strict and raw not in ("0", "false", "False", "", "1", "true", "True"):
+                    return dict(defaults), "%s must be 0/1 or false/true" % env
                 raw = raw not in ("0", "false", "False", "")
             elif isinstance(defaults[key], int):
                 try:
@@ -115,6 +122,11 @@ def resolve_device_block(block: str, defaults: Dict[str, Any],
         if isinstance(default, list) and isinstance(cfg.get(key), str):
             cfg[key] = [cfg[key]]
     return cfg, error
+
+
+def resolve_ci_optimization() -> Tuple[Dict[str, Any], Optional[str]]:
+    """Fail closed for qualification; other device blocks retain their existing coercion."""
+    return resolve_device_block("ci", {"optimized": False}, "XYZ_CI", strict=True)
 
 
 def resolve_device_setting(key: str, env_var: Optional[str] = None) -> Any:
@@ -160,5 +172,10 @@ def get_effective_runtime_config() -> Dict[str, Any]:
 
 
 if __name__ == "__main__":
-    cfg = get_effective_runtime_config()
+    if sys.argv[1:] == ["--ci"]:
+        cfg, error = resolve_ci_optimization()
+        cfg = {"optimized": cfg["optimized"] if not error else False,
+               "path": get_device_config_path(), "error": error}
+    else:
+        cfg = get_effective_runtime_config()
     print(json.dumps(cfg, indent=2))

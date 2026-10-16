@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-10-15T08:42:31.520593+00:00",
+  "source": "4691b4a304f7abda698f2093217a3e9a9c73a947",
+  "existing_command": "bash test/gh436-merge-cleanup.sh",
+  "exit_status": 0,
+  "raw_log_sha256": "19d445528107b6706a873e2bf4377be908cdf450f74df4106b582a00b49dbead",
+  "tail": " | Mergeable | Files |\n|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|\n| 1 | [#1](https://example.invalid/pr/1) | PR 1 | `feat/a` | `development` | no | PASS | UNKNOWN | 0 |\n\nmerge-cleanup: Refreshing remote refs before the first merge, then re-checking the primary...\nPrimary checkout: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh534b.368rfqql/primary\n  branch: development  (integration: development)\n  clean: yes\n  landing: READY\n\n================================================================================\nPHASE 5: EXECUTING PR MERGES & RECONCILIATION\n================================================================================\n\nmerge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)\nmerge-cleanup: PR #1: mergeable is 'UNKNOWN' \u2014 waiting 15s for GitHub to decide (1/6)\nmerge-cleanup: PR #1: mergeable is 'UNKNOWN' \u2014 waiting 15s for GitHub to decide (2/6)\nmerge-cleanup: PR #1: mergeable is 'UNKNOWN' \u2014 waiting 15s for GitHub to decide (3/6)\nmerge-cleanup: PR #1: mergeable is 'UNKNOWN' \u2014 waiting 15s for GitHub to decide (4/6)\nmerge-cleanup: PR #1: mergeable is 'UNKNOWN' \u2014 waiting 15s for GitHub to decide (5/6)\nmerge-cleanup: PR #1: mergeable is 'UNKNOWN' \u2014 waiting 15s for GitHub to decide (6/6)\n",
+  "identity_before": {
+    "head": "4691b4a304f7abda698f2093217a3e9a9c73a947",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*",
+    "refs": "f974fcee15647aae6551fcc81b129f5a6127120b refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0"
+  },
+  "identity_after": {
+    "head": "4691b4a304f7abda698f2093217a3e9a9c73a947",
+    "status": "",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*",
+    "refs": "f974fcee15647aae6551fcc81b129f5a6127120b refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0"
+  },
+  "identity_unchanged": true,
+  "current_premerge_receipt_error": "No committed passing test receipt at HEAD matches PR #1069 in TESTS-RESULTS/ (AGENTS.md: uncommitted provenance is not proof).",
+  "note": "Existing180-method collector at immutable4691; no CI cases/assertions added. ResourceWarnings retained. This does not admit the three existing new assertions or exercise the independently reproduced stale-snapshot/scope defects."
+}

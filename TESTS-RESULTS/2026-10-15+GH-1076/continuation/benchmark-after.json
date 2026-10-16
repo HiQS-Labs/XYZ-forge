@@ -1,0 +1,186 @@
+{
+  "queued_at": "2026-10-15T09:00:19.378712+00:00",
+  "started_at": "2026-10-15T09:01:20.324857+00:00",
+  "source": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate",
+  "command": [
+    "git",
+    "push",
+    "origin",
+    "HEAD:refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14"
+  ],
+  "effective_suite_command": [
+    "./validate.sh"
+  ],
+  "mode_probe": "validate.sh: suite workers run under nice -n 10 \u2014 an interactive-session hint, not a CPU limit (GH-35)\nvalidate.sh: PARALLEL mode 4-wide \u2014 auto-detected 10 cores \u2014 balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)\n  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).\n",
+  "controls": {
+    "RELAY_SELF_SUFFICIENCY_SKIP": "1",
+    "worker_selection": "normal balanced default, verified four workers; no inherited worker override"
+  },
+  "before": {
+    "head": "debbfe4e8c22d68dad5c069fa71976d92f584323",
+    "status": "",
+    "refs_sha256": "5ccc6160df71cc894ba42893afc4da5ba24ecad74ea85bee956e24330c4ad135",
+    "refs": {
+      "refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14": "debbfe4e8c22d68dad5c069fa71976d92f584323",
+      "refs/remotes/origin/HEAD": "4aceedbfea70ed6a0d1c254866ae906ea499dc63",
+      "refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14": "c6e50bf30d0d9012ce58dd9af5aa587f3ea305bb",
+      "refs/remotes/origin/development": "4aceedbfea70ed6a0d1c254866ae906ea499dc63",
+      "refs/tags/0.9.0": "a076b1b117a68252dc3d9d1c4901b0c31fcb4db3"
+    },
+    "config_sha256": "438fa10372140527d95a9a159699e644a05554862171f83621936779c10700af",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "full_clone": true
+  },
+  "environment": [
+    {
+      "command": [
+        "sw_vers"
+      ],
+      "rc": 0,
+      "stdout": "ProductName:\t\tmacOS\nProductVersion:\t\t15.6.1\nBuildVersion:\t\t24G90\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "uname",
+        "-m"
+      ],
+      "rc": 0,
+      "stdout": "arm64\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "sysctl",
+        "-n",
+        "hw.logicalcpu"
+      ],
+      "rc": 0,
+      "stdout": "10\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "Python 3.14.7\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "-c",
+        "import sys,requests,yaml,pytest; print(sys.executable); print('requests',requests.__version__,'yaml',yaml.__version__,'pytest',pytest.__version__)"
+      ],
+      "rc": 0,
+      "stdout": "/opt/homebrew/opt/python@3.14/bin/python3.14\nrequests 2.33.1 yaml 6.0.3 pytest 9.1.1\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "git version 2.50.1 (Apple Git-155)\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "GNU bash, version 3.2.57(1)-release (arm64-apple-darwin24)\nCopyright (C) 2007 Free Software Foundation, Inc.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "v22.22.3\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "npm",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "10.9.8\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "shellcheck",
+        "--version"
+      ],
+      "rc": 0,
+      "stdout": "ShellCheck - shell script analysis tool\nversion: 0.11.0\nlicense: GNU General Public License, version 3\nwebsite: https://www.shellcheck.net\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "uptime"
+      ],
+      "rc": 0,
+      "stdout": " 2:01  up 6 days, 16:44, 1 user, load averages: 45.51 63.62 46.23\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "pmset",
+        "-g",
+        "therm"
+      ],
+      "rc": 0,
+      "stdout": "Note: No thermal warning level has been recorded\nNote: No performance warning level has been recorded\nNote: No CPU power status has been recorded\n",
+      "stderr": ""
+    }
+  ],
+  "claim": "Local full self-check benchmark, not hosted qualification or stable-main evidence.",
+  "finished_at": "2026-10-15T09:16:47.806452+00:00",
+  "wall_seconds": 926.922,
+  "rc": 0,
+  "after": {
+    "head": "debbfe4e8c22d68dad5c069fa71976d92f584323",
+    "status": "",
+    "refs_sha256": "b1289f30fd2e25a3731882ef51c1adbd92f18024cb538430680763a2eb701bb5",
+    "refs": {
+      "refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14": "debbfe4e8c22d68dad5c069fa71976d92f584323",
+      "refs/remotes/origin/HEAD": "4aceedbfea70ed6a0d1c254866ae906ea499dc63",
+      "refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14": "debbfe4e8c22d68dad5c069fa71976d92f584323",
+      "refs/remotes/origin/development": "4aceedbfea70ed6a0d1c254866ae906ea499dc63",
+      "refs/tags/0.9.0": "a076b1b117a68252dc3d9d1c4901b0c31fcb4db3"
+    },
+    "config_sha256": "438fa10372140527d95a9a159699e644a05554862171f83621936779c10700af",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "full_clone": true
+  },
+  "end_load": {
+    "command": [
+      "uptime"
+    ],
+    "rc": 0,
+    "stdout": " 2:16  up 6 days, 17 hrs, 1 user, load averages: 32.59 41.47 44.19\n",
+    "stderr": ""
+  },
+  "identity_unchanged": false,
+  "intentional_tracking_ref": "refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+  "identity_unchanged_except_expected_push_tracking": true,
+  "telemetry_files": [
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate/.tick/telemetry/validate-parallel-1792055473360-49575.jsonl",
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate/.tick/telemetry/validate-sequential-1792055159238-8974.jsonl",
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate/.tick/telemetry/validate-parallel-1792055515364-97419.jsonl",
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate/.tick/telemetry/validate-parallel-1792054882487-11728.jsonl",
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate/.tick/telemetry/validate-parallel-1792055493669-72850.jsonl",
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate/.tick/telemetry/validate-parallel-1792054947979-69845.jsonl",
+    "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate/.tick/telemetry/validate-parallel-1792054885356-13280.jsonl"
+  ]
+}

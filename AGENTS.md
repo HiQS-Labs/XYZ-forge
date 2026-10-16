@@ -161,7 +161,7 @@ local change.
   when the behaviour it pins changes. A red control (see *Verified beats plausible*) is witnessed on an
   existing suite or recorded as a manual check. Reviewers treat a new test file as a finding.
 
-  The gate is being cut to Small/Medium/Large tiers under [#831](https://github.com/HiQS-Labs/XYZ-forge/issues/831).
+  Selection and qualification follow [ROUTER policy](ROUTER.md#ci-qualification-policy); #831 records the tiering decision.
   #815, #816, #817 and #819 are superseded; do not implement them.
 
 - **This repo's purpose is to keep a long-horizon marathon under load — and that is a work-selection
@@ -198,33 +198,12 @@ local change.
   a one-command resolver (`utils/releases-merge-resolve.sh`). The whole contract, including what a real
   merge conflict looks like: [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
 
-- **The local gate runs at the push boundary; hosted CI independently attests public-repo changes
-  (GH-544, XYZ-forge #16).** The private-phase bridge ended when this repository became public on
-  2026-08-15. `.github/workflows/ci.yml` now covers `push`/`pull_request` on `main` and `development`;
-  the macOS promotion boundary remains restricted to a push on `main`, while the Ubuntu job is an
-  advisory portability canary. Local commits are ungated on purpose; pushes are still gated by
-  `githooks/pre-push` so failures are caught before the remote round trip.
-  - Wire a new clone once: `bash githooks/install.sh` (idempotent). It installs a dispatch stub into
-    `.git/hooks/`, which covers **every branch and linked worktree** of that clone, including branches
-    with no `githooks/` directory (GH-549 — the first design wired `core.hooksPath` at the in-tree
-    directory, and git skips a hook path that does not resolve *in total silence*). **The wiring is
-    still per clone and does not travel** — a fresh clone or second machine has NO gate until this
-    runs. Check with `bash githooks/install.sh --check`.
-  - `./validate.sh` is **parallel by default** (see the hook’s measured `GREEN in Ns` line; GH-35 balanced width is cores/2 capped 4; `--burst`
-  restores the old full-core width), auto-sized to the host, and announces a
-    sequential fallback with its reason. `bash ci-local.sh` is still the qualifying run that writes
-    the evidence record — it stays sequential and does not call `validate.sh`.
-  - **Three tiers qualify a landing (GH-831).** After a merge, the hosted reconcile qualifies each
-    landing with one run chosen by its tier, and promotion always runs the full registry. The tiers,
-    their commands and the suites turned off are in `ROUTER.md` (command rails); those suites stay off.
-  - Bypasses are `git push --no-verify` and `XYZ_SKIP_PREPUSH=1`. Both announce themselves. Use them
-    deliberately, not reflexively — they skip the local boundary even when hosted CI later runs.
-    Draft-review publication (GH-487) is a legitimate bypass use and is NOT merge readiness: an
-    operator-requested WIP draft may bypass only with current focused evidence for the changed area,
-    the skipped-gate disclosure echoed into the PR description, and merge readiness still
-    outstanding — a bypassed push never authorises merge, promotion, or teardown.
-  - **PR checks are meaningful again only after a hosted run actually appears for the commit.** A
-    configured workflow is not evidence; query the run and cite its SHA.
+- **CI selection, qualification and batching:** [ROUTER's CI qualification policy](ROUTER.md#ci-qualification-policy)
+  owns these rules, evidence/invalidation limits and rollout authority. Follow its existing executable
+  router and consumers; do not create another suite map or normative policy copy here.
+  Wire each clone with `bash githooks/install.sh` and verify with `bash githooks/install.sh --check`;
+  the Git hook does not travel with a clone. Required local checks and actual exact-head hosted
+  results remain distinct. A published draft is not merge readiness.
 
 - **Never use a git command that overwrites the working tree from a committed state to undo a
   working-tree experiment.** In this clone other agents hold uncommitted work you cannot see.
@@ -421,18 +400,10 @@ local change.
     ledger, timestamp-correlated to each gate run), inspect it directly before building a
     process-hunting hypothesis chain. Full writeup:
     [GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md](PROJECT/3-COMPLETED/GH-195-MARATHON-ROOT-AUDIT-BLIND-SPOT.md).
-- **The local macOS run is the gate; hosted ubuntu is advisory (GH-509).** XYZ is a developer toolkit
-  for **macOS**; Linux and Windows are on the roadmap and not here yet. So `./validate.sh` (or
-  `./ci-local.sh`) on your Mac is the highest-fidelity evidence available — it is the shipping
-  platform with the real toolchain. Operator-retired suites stay out of both runners;
-  their retained manual files are listed in gh306 EXEMPT (GH-854). The hosted `canary-ubuntu`
-  job is `continue-on-error: true`: its red means *portability drift*, not breakage, and must not be
-  reported as a broken commit. Two consequences that bite: **never defer a test run to CI** — CI is
-  advisory and tests the wrong OS; and **a green local run is self-reported**, so it does not qualify a
-  promotion. Two hosted **macOS** rules follow (GH-831): a landing on `development` is qualified by the
-  reconcile run its tier selects (the tiers are in `ROUTER.md`), and promotion needs a hosted
-  full-registry run for that exact commit. When a claim really is about
-  Linux, the canary is the right instrument and its red is authoritative.
+- **Platform evidence:** follow [CI qualification policy](ROUTER.md#ci-qualification-policy)
+  for local macOS, development qualification, exact-main promotion and advisory portability claims.
+  Disclose the actual job, tested SHA, skipped coverage and first failures; do not infer platform
+  qualification from a green workflow summary.
 - **Commit to the QUEUE; re-anchor, don't rabbit-hole (GH-45).** A wave's committed lane list *is* the
   active commitment — after each lane attempt, re-read it before acting further. A driven lane that
   fails **parks** after `LANE_MAX_ATTEMPTS` (default 2): the driver (`marathon-drive.sh` /

@@ -233,8 +233,8 @@ out="$(bash "$ROUTER" subsystems pdda)"
   && pass "subsystems pdda lists its 15 suites (GH-649 adds migration, changelog and installer checks)" \
   || fail "subsystems pdda listed $(wc -w <<<"$out") suites: $out"
 out="$(bash "$ROUTER" subsystems skills-army-hq)"
-[[ "$(wc -w <<<"$out")" -eq 5 && "$out" == *"skills-army-hq.sh"* && "$out" == *"gh620-skills-army-mini-sync.sh"* ]] \
-  && pass "subsystems skills-army-hq lists its two dedicated suites plus GH-831's three gh589 suites (GH-487/GH-620)" \
+[[ "$(wc -w <<<"$out")" -eq 8 && "$out" == *"skills-army-hq.sh"* && "$out" == *"gh620-skills-army-mini-sync.sh"* ]] \
+  && pass "subsystems skills-army-hq lists its eight existing consumer suites (GH-1076 adds drift, links and interpreter patterns)" \
   || fail "subsystems skills-army-hq listed $(wc -w <<<"$out") suites: $out"
 # GH-831 D2: Small is what the hosted reconcile runs for a tier-1 landing. Its count is pinned so a
 # dropped member is a visible change, not a quieter gate. GH-836 D1 moved gh436-merge-cleanup to Large.

@@ -1,0 +1,5 @@
+== test: relay-turn-timeout ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-relay-turn-timeout.XXXXXX.bTGH2wbkKZ
+  PASS: codex: timed-out stub -> shim exits 7
+  PASS: codex: turn killed fast (1s < stub's 5s sleep)
+  FAIL: codex: fast stub should exit 0, got 7

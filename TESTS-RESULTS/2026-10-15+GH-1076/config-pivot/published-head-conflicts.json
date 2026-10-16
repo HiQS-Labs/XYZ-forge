@@ -1,0 +1,9 @@
+{
+  "head": "dedcf91988824d2b28c16bb06fbf4dc17c19f3e2",
+  "development": "ded6208053d5a714fb6aac8a98744a6237d4dd95",
+  "command": "git merge-tree --write-tree --name-only --no-messages HEAD origin/development",
+  "rc": 1,
+  "output": "0cde7a9cf997359cede06af083d600db10eb91b1\nreleases.db\nreleases.sql",
+  "stderr": "",
+  "working_tree_changed": false
+}

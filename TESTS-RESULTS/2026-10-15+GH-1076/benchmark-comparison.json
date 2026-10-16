@@ -1,0 +1,63 @@
+{
+  "before_sha": "f974fcee15647aae6551fcc81b129f5a6127120b",
+  "after_sha": "d1ca36b5bac1a3f208f6392908c4496f5fd77ab2",
+  "before_runner_seconds": 1090.831,
+  "after_runner_seconds": 911.376,
+  "difference_seconds": -179.455,
+  "relative_difference_percent": -16.45,
+  "outer_before_seconds": 1091.305,
+  "outer_after_push_seconds": 916.015,
+  "tool_versions_identical": true,
+  "normal_workers": 4,
+  "registered_shell_suites": 406,
+  "reported_outcomes": 409,
+  "retries_before": [],
+  "retries_after": [],
+  "runner_counted_skip_lines_before": [
+    {
+      "name": "ci-workflow.sh",
+      "lane": "pool",
+      "skip_lines": 1
+    },
+    {
+      "name": "marathon-plan.sh",
+      "lane": "pool",
+      "skip_lines": 2
+    }
+  ],
+  "runner_counted_skip_lines_after": [
+    {
+      "name": "ci-workflow.sh",
+      "lane": "pool",
+      "skip_lines": 1
+    },
+    {
+      "name": "marathon-plan.sh",
+      "lane": "pool",
+      "skip_lines": 2
+    }
+  ],
+  "additional_known_omission": "Live relay-self-sufficiency probe skipped by RELAY_SELF_SUFFICIENCY_SKIP=1 in both; its telemetry skip_lines=0 does not capture its SKIPPED output.",
+  "load_before": [
+    {
+      "command": [
+        "uptime"
+      ],
+      "rc": 0,
+      "stdout": " 0:45  up 6 days, 15:28, 1 user, load averages: 104.49 151.91 193.76\n",
+      "stderr": ""
+    }
+  ],
+  "load_after": [
+    {
+      "command": [
+        "uptime"
+      ],
+      "rc": 0,
+      "stdout": " 1:04  up 6 days, 15:48, 1 user, load averages: 22.78 73.55 110.61\n",
+      "stderr": ""
+    }
+  ],
+  "claim": "Descriptive single pair; no controlled speedup or CI savings claim. Command/width/full registry/machine/runtime match; ambient load and caches do not. Intended source/policy/evidence/ledger plus already-landed PR1078 docs/reconciliation differ. Final timing reused actual normal push gate; no additional full run.",
+  "hosted_comparison": "No natural exact-f974 CI run available; no dispatch/rerun. Future PR smoke is not equivalent to local/full macOS or exact-main qualification."
+}

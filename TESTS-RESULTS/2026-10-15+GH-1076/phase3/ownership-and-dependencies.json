@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-10-15T08:43:22.929830+00:00",
+  "pr1069": {
+    "head": "4691b4a304f7abda698f2093217a3e9a9c73a947",
+    "state": "OPEN",
+    "final_reviewed_head": "9a64c66db6ac28451dd64174be030602e18fe4b3",
+    "recorded_final_round": "2/3",
+    "handoff": "No exclusive handoff established; no owner checkout writes."
+  },
+  "potential_writers": [
+    {
+      "pid": 35624,
+      "cwd": "/Users/noelsaw/Documents/GH Repos/XYZ-forge",
+      "runtime": "Claude Code native session; task ownership not inferable from cwd alone"
+    },
+    {
+      "pid": 41484,
+      "cwd": "/Users/noelsaw/Documents/GH Repos/XYZ-forge",
+      "runtime": "Claude Code native session; task ownership not inferable from cwd alone"
+    },
+    {
+      "pid": 72556,
+      "cwd": "/Users/noelsaw/Documents/GH Repos/XYZ-forge",
+      "runtime": "Claude Code native session; task ownership not inferable from cwd alone"
+    }
+  ],
+  "review_locations": "Only immutable Git objects and this session-owned forge-pr1069-review-checks full clone were used.",
+  "case_admission": "Five added methods removed; three added assertion statements remain at phaseB693/phaseC813/814. Their absence of admission is separate from current runtime defects; owner can remove them or obtain per-case approval. Running existing suite is not admission."
+}

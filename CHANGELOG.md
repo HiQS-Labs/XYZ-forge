@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-10-15 — Configurable bounded CI qualification (GH-1076)
+
+Route machine-consumed skills-army package text through its existing area plus PDDA, expanding
+selection from five to eight already registered consumer suites. The existing router owns its
+versioned hosted decision; ROUTER owns the canonical explanation.
+
+Reuse device_config ci.optimized (local defaultfalse) for the one bounded Medium content profile.
+One exact eligible landing gets fixed Small and area commands, separate original streams and
+strict typed@2 provenance through the existing two-file publisher layout. Unknown scope or
+incomplete proof retains full; detected identity drift stops. Historical@1 semantics and exact-main
+macOS/full remain. Hosted wave declares its own environment setting, independent of the Mac file.
+
+No new CI cases, test retirement, branch-protection change or automated batch authority. Original
+review/gate failures remain retained; this implementation does not claim live activation.
+
 ## 2026-10-15 — Admit and refresh the development-only Pages fix (GH-1051)
 
 Keep the reviewed four-declaration Pages policy unchanged and adopt current development ledger/history through the canonical writer. The operator approved PR1053 review admission and conditional development landing; current review and normal qualification remain required. No workflow dispatch or environment-policy change.

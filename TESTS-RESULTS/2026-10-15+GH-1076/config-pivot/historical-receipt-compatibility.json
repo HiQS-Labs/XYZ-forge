@@ -1,0 +1,59 @@
+{
+  "encoding": "lossless-record-delta@1",
+  "scope": "Same original actual historical replay; representation compacted, no new execution or qualification.",
+  "base_report": "../phase3/historical-receipt-compatibility.json",
+  "base_sha256": "705dd39d2c9ee77631ae1e2801945f7dabe359a1b8d8616a9a9b8e5c35f298ba",
+  "original_sha256": "4d6838cd6f24d846cd5b8e44445b879c8d95d1201040e13d3f610b3e62636e9f",
+  "original_bytes": 177961,
+  "key_order": [
+    "timestamp",
+    "old_consumer",
+    "current_consumer",
+    "repository_head",
+    "method",
+    "records",
+    "count",
+    "accepted_old",
+    "accepted_current",
+    "differences"
+  ],
+  "metadata": {
+    "timestamp": "2026-10-15T21:45:31.777695+00:00",
+    "old_consumer": "f974fcee15647aae6551fcc81b129f5a6127120b",
+    "current_consumer": "1a550df6582696ced47195d2576c2c5455cc6e38",
+    "repository_head": "1a550df6582696ced47195d2576c2c5455cc6e38",
+    "method": "Production functions on actual committed wave receipts and raw files at current source HEAD. No receipt mutations, fixtures, tests, gates or remote actions. Metadata uses each recorded landing/pr identity; this compares parser/replay compatibility, not independent GitHub PR ownership truth.",
+    "count": 220,
+    "accepted_old": 220,
+    "accepted_current": 220,
+    "differences": []
+  },
+  "record_insertions": [
+    {
+      "at": 213,
+      "record": {
+        "pr": 1069,
+        "kind": "pr",
+        "tested": "05f693d5d5b2c0f4fb510d3682396ad966106506",
+        "landing": "05f693d5d5b2c0f4fb510d3682396ad966106506",
+        "gate": "validate.sh --sequential",
+        "suites": null,
+        "old_accepts": true,
+        "current_accepts": true
+      }
+    },
+    {
+      "at": 218,
+      "record": {
+        "pr": 1068,
+        "kind": "pr",
+        "tested": "dc7245b4d34e49b9adfba25cf5efbae08bf99c0e",
+        "landing": "dc7245b4d34e49b9adfba25cf5efbae08bf99c0e",
+        "gate": "validate.sh --sequential",
+        "suites": null,
+        "old_accepts": true,
+        "current_accepts": true
+      }
+    }
+  ]
+}

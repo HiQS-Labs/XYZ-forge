@@ -199,6 +199,8 @@ An in-flight failing test or runner error is not automatically an urgent blocker
 > maintainers to ignore them, or write a script that strips this section on pull from upstream.
 > Nothing in the codebase enforces them.
 
+- **CI and batch policy.** [ROUTER](ROUTER.md#ci-qualification-policy) owns selection,
+  qualification evidence/invalidation, batch authority and rollout. This SOP owns execution practice.
 - **CI churn recovery.** When CI churn is suspected, follow [`docs/CI-CHURN-RECOVERY-SOP.md`](docs/CI-CHURN-RECOVERY-SOP.md) (#857). It covers the entry gate for declaring an episode, the phased strategy checklist, and the exit gates for closing it. It grants no standing exception to `AGENTS.md`.
 - **The primary clone stays on `development`.** Each device has exactly one
   **operator-designated primary clone** — the long-lived checkout the operator opens by default
@@ -252,15 +254,11 @@ An in-flight failing test or runner error is not automatically an urgent blocker
    Follow-ups then arrive as scheduled phases instead of surprises. Evidence this works:
    the GH-280 plan's follow-up record listed six items before execution began; all six
    landed in that order, with review findings landed on top.
-2. **Batch same-seam scopes into one PR.** Five small PRs touching one seam is five
-   gate + merge + reconcile cycles for what is really one unit of review. GH-291 shipped
-   Scopes 1+5, 3+4, and 2 as three PRs; two would have carried the same review weight.
-3. **Reconciliation ownership and batching.** Hosted `wave-reconcile.yml` is the primary landing
-   writer on `development`, automatically reconciling docs, ledger, and views. If running local
-   reconciliation as fallback, the rule is to let hosted runs finish (or pass `--force-local-reconcile`
-   in emergencies) and batch multiple PRs (`wave_reconcile.py --pr <N> <M>`) rather than running
-   instantly per merge. Task branches must not commit routine view updates (`ROADMAP-DASHBOARD.md`,
-   `LEADERBOARD.md`).
+2. **Batch preparation:** follow [CI qualification policy](ROUTER.md#ci-qualification-policy)
+   for same-seam scope, freeze/provenance, per-PR gates, supported fold authority and rollback.
+3. **Reconciliation ownership:** follow that same policy and the existing merge-cleanup durability
+   sequence. Task branches do not commit routine generated views. Local fallback does not create
+   a second qualification authority or permission to overlap an active hosted writer.
 4. **Never write bare `#N` for another repo's issues in a PR body.** The reconciler
    resolves every `#N` against *this* repo and exits 6 when it cannot (GH-301 needed an
    offline-manifest escape mid-reconcile). Cross-repo references are written `GH-N`;

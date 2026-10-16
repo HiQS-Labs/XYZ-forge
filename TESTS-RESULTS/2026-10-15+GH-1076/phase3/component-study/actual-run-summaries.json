@@ -1,0 +1,80 @@
+[
+  {
+    "name": "small",
+    "run": "f874fa8d4-47453",
+    "start": {
+      "v": 1,
+      "ts_ms": 1792054042820,
+      "run": "f874fa8d4-47453",
+      "runner": "validate",
+      "event": "run.start",
+      "commit": "f874fa8d4d69e2db4f56a8863e6de9b61275842c",
+      "host": "noels-Mac-Studio",
+      "mode": "sequential",
+      "width": 1,
+      "tier": 2,
+      "registered": 406
+    },
+    "summary": {
+      "v": 1,
+      "ts_ms": 1792054789501,
+      "run": "f874fa8d4-47453",
+      "runner": "validate",
+      "event": "run.summary",
+      "passed": 75,
+      "failed": 0,
+      "total": 75,
+      "envelope_rc": "0",
+      "envelope_drift": "none",
+      "suite_events": "74",
+      "run_set": "72",
+      "registered": "406",
+      "suite_events_match": "yes"
+    },
+    "runner_wall_seconds": 746.681,
+    "telemetry": "small-validation.jsonl",
+    "sha256": "bfee71ff5b9121a91e6575a157c9952714ea44521d8479010bc04e2aa6a16f95",
+    "retries": [],
+    "skip_output": [],
+    "claim": "Actual separate existing-command execution; no synthesized Medium receipt."
+  },
+  {
+    "name": "skills-army-hq",
+    "run": "f874fa8d4-81198",
+    "start": {
+      "v": 1,
+      "ts_ms": 1792054789920,
+      "run": "f874fa8d4-81198",
+      "runner": "validate",
+      "event": "run.start",
+      "commit": "f874fa8d4d69e2db4f56a8863e6de9b61275842c",
+      "host": "noels-Mac-Studio",
+      "mode": "sequential",
+      "width": 1,
+      "tier": 2,
+      "registered": 406
+    },
+    "summary": {
+      "v": 1,
+      "ts_ms": 1792054874478,
+      "run": "f874fa8d4-81198",
+      "runner": "validate",
+      "event": "run.summary",
+      "passed": 9,
+      "failed": 0,
+      "total": 9,
+      "envelope_rc": "0",
+      "envelope_drift": "none",
+      "suite_events": "8",
+      "run_set": "8",
+      "registered": "406",
+      "suite_events_match": "yes"
+    },
+    "runner_wall_seconds": 84.558,
+    "telemetry": "skills-army-hq-validation.jsonl",
+    "sha256": "11955e7669aa6798ff34f6a65d23b2688249b829ac4c1e7565c2ed1127efa04f",
+    "retries": [],
+    "skip_output": [],
+    "claim": "Actual separate existing-command execution; no synthesized Medium receipt."
+  }
+]

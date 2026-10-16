@@ -1,0 +1,3875 @@
+{
+  "version": 3,
+  "base_policy_source_sha": "f974fcee15647aae6551fcc81b129f5a6127120b",
+  "prior_reports_preserved": [
+    "gh1076-historical-selection-study.json",
+    "gh1076-historical-selection-study.md",
+    "gh1076-historical-selection-study-v2.json",
+    "gh1076-historical-selection-study-v2.md"
+  ],
+  "scope": "Candidate skills-army-hq; purposive successful full snapshots plus known inherited payload failure, exact pending identities from committed receipts matched to original outer counts. Not a general catch-rate study.",
+  "read_only": true,
+  "new_ci_cases": 0,
+  "workflows_triggered_or_rerun": 0,
+  "suites_executed": 0,
+  "records": [
+    {
+      "id": "single_medium_1047",
+      "run_id": 38346799359,
+      "run_url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38346799359",
+      "tested_sha": "ecbe7722f0018ff50f3298c61441457e7520c776",
+      "gate": "validate.sh --sequential",
+      "outer_pending_count": 1,
+      "outer_qualification_line": 461,
+      "outer_qualification_message": "wave-reconcile: Qualifying 1 landing(s) in integrated snapshot ecbe7722f0018ff50f3298c61441457e7520c776 with `validate.sh --sequential` (tier 2)",
+      "pending_members": [
+        {
+          "kind": "pr",
+          "pr": 1047,
+          "landing_sha": "ecbe7722f0018ff50f3298c61441457e7520c776",
+          "parent_sha": "d86f647b245e866f23245211b8d36e4cc49ecc67",
+          "subject": "Merge pull request #1047 from HiQS-Labs/feat/XYZ-forge-gh1046-copy-not-link-2026-10-12",
+          "changed_paths": [
+            "PROJECT/2-WORKING/GH-1046-COPY-NOT-LINK.md",
+            "TESTS-RESULTS/2026-10-12+GH-1046/manual-check.log",
+            "TESTS-RESULTS/2026-10-12+GH-1046/provenance.jsonl",
+            "TESTS-RESULTS/2026-10-12+GH-1046/r1-null-commit-probe.log",
+            "TESTS-RESULTS/2026-10-12+GH-1046/tier2-gate.log",
+            "relay-system/2026-10-12/gh1046-final-qa.md",
+            "relay-system/2026-10-12/gh1046-plan-qa.md",
+            "releases.db",
+            "releases.sql",
+            "skills/3-weekly/skills-army-hq/SKILL.md",
+            "skills/3-weekly/skills-army-hq/scripts/intake.py",
+            "skills/3-weekly/skills-army-hq/scripts/sync.py"
+          ],
+          "commit_ancestor_of_tested": true
+        }
+      ],
+      "pending_identity_complete": true,
+      "complete_union_paths": [
+        "PROJECT/2-WORKING/GH-1046-COPY-NOT-LINK.md",
+        "TESTS-RESULTS/2026-10-12+GH-1046/manual-check.log",
+        "TESTS-RESULTS/2026-10-12+GH-1046/provenance.jsonl",
+        "TESTS-RESULTS/2026-10-12+GH-1046/r1-null-commit-probe.log",
+        "TESTS-RESULTS/2026-10-12+GH-1046/tier2-gate.log",
+        "relay-system/2026-10-12/gh1046-final-qa.md",
+        "relay-system/2026-10-12/gh1046-plan-qa.md",
+        "releases.db",
+        "releases.sql",
+        "skills/3-weekly/skills-army-hq/SKILL.md",
+        "skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "skills/3-weekly/skills-army-hq/scripts/sync.py"
+      ],
+      "receipt_path": "TESTS-RESULTS/2026-10-13+GH-591/wave-ecbe7722f0018ff50f3298c61441457e7520c776/provenance.jsonl",
+      "receipt_sha256": "e10cacbb0b4de5378928edc78a3640c46c683692b15b358f9d6416995672cbb9",
+      "telemetry_path": "TESTS-RESULTS/2026-10-13+GH-591/wave-ecbe7722f0018ff50f3298c61441457e7520c776/validation.jsonl",
+      "telemetry_sha256": "9467ccc20b6bfd3166d875303c5ed07eb2dab58932c8e91fe60807e7fd26b723",
+      "receipt_telemetry_digest_matches": true,
+      "original_log": "gh1076-v3-run-38346799359.log",
+      "original_log_sha256": "91ef1ff6cf1812924a0f8eb2892d780ffdffdcc56b3ee09852eeece78a9250c7",
+      "historical_summary": [
+        {
+          "line": 411,
+          "record": {
+            "v": 1,
+            "ts_ms": 1791870046969,
+            "run": "ecbe7722f-5140",
+            "runner": "validate",
+            "event": "run.summary",
+            "passed": 409,
+            "failed": 0,
+            "total": 409,
+            "envelope_rc": "0",
+            "envelope_drift": "none",
+            "suite_events": "408",
+            "run_set": "406",
+            "registered": "406",
+            "suite_events_match": "yes"
+          }
+        }
+      ],
+      "posthoc_candidate_small_plus_skills_army_shell_names": [
+        "ballast-release.sh",
+        "gh1-adoption-guard.sh",
+        "gh1-fixture-guard.sh",
+        "gh103-timeline-exporter.sh",
+        "gh107-timeline-json-seam.sh",
+        "gh139-pipe-grep-guard.sh",
+        "gh153-releases-sidebar-rollup.sh",
+        "gh168-wave-reconcile-scope.sh",
+        "gh184-no-tracked-scratch.sh",
+        "gh202-wave-reconcile-issue-state.sh",
+        "gh232-wave-reconcile-multiphase.sh",
+        "gh257-roadmap-ledger-fixes.sh",
+        "gh269-roadmap-retired.sh",
+        "gh284-p3-release-milestone.sh",
+        "gh284-p4-release-lanes.sh",
+        "gh306-registry-bidirectional.sh",
+        "gh308-frozen-twin-guard.sh",
+        "gh32-release-target-advisory.sh",
+        "gh32-releases-app.sh",
+        "gh32-releases-artifacts.sh",
+        "gh349-releases-roadmap-vendored.sh",
+        "gh351-manifest-unship.sh",
+        "gh358-wave-reconcile-vendored-paths.sh",
+        "gh360-scoped-receipt-chain-rebuild.sh",
+        "gh39-releases-project-sync.sh",
+        "gh400-acceptance-fidelity.sh",
+        "gh400-source-url.sh",
+        "gh421-auto-wave-reconcile.sh",
+        "gh422-backfill-source-url.sh",
+        "gh424-roadmap-status-marker.sh",
+        "gh425-source-url-slug.sh",
+        "gh429-wave-reconcile-vendored-observe.sh",
+        "gh448-driver-lock-resolver.sh",
+        "gh454-reconciler-defects.sh",
+        "gh491-roadmap-section-validation.sh",
+        "gh492-roadmap-state-sweep.sh",
+        "gh496-phase2-reconciliation-views.sh",
+        "gh527-issue-url-repair.sh",
+        "gh53-releases-merge-resolve.sh",
+        "gh54-merged-dump-refusals.sh",
+        "gh549-work-events.sh",
+        "gh567-roadmap-dashboard-retired.sh",
+        "gh568-releases-md-retired.sh",
+        "gh57-live-merge-resolve.sh",
+        "gh57-releases-fuzz.sh",
+        "gh589-consult-no-tick.sh",
+        "gh589-skill-viewer.sh",
+        "gh589-xyz-mini-sync.sh",
+        "gh605-board-policy.sh",
+        "gh605-work-state.sh",
+        "gh620-skills-army-mini-sync.sh",
+        "gh645-merge-cleanup-xyz-tools.sh",
+        "gh646-status-label.sh",
+        "gh649-pdda-migration.sh",
+        "gh674-merge-cleanup-hosted-lookup.sh",
+        "gh69-roadmap-shadow.sh",
+        "gh75-dashboard.sh",
+        "gh777-inventory-ratchet.sh",
+        "gh784-marathon-qa-gate.sh",
+        "litmus-release.sh",
+        "meter-release.sh",
+        "mktemp-trap-guard.sh",
+        "nightwatch-release.sh",
+        "pdda-changelog.sh",
+        "pdda-install-startup-docs.sh",
+        "pdda-local-checks.sh",
+        "pdda-repo-contract.sh",
+        "pdda-roadmap-coverage.sh",
+        "relay-target-root-newfile.sh",
+        "relay-target-root-paths.sh",
+        "relay-target-root-relayfile.sh",
+        "relay-target-root.sh",
+        "releases-skill.sh",
+        "security-scan.sh",
+        "sentinel-network-guard.sh",
+        "skills-army-hq.sh",
+        "wave-reconcile.sh"
+      ],
+      "candidate_shell_names_count": 77,
+      "candidate_names_present": [
+        "ballast-release.sh",
+        "gh1-adoption-guard.sh",
+        "gh1-fixture-guard.sh",
+        "gh103-timeline-exporter.sh",
+        "gh107-timeline-json-seam.sh",
+        "gh139-pipe-grep-guard.sh",
+        "gh153-releases-sidebar-rollup.sh",
+        "gh168-wave-reconcile-scope.sh",
+        "gh184-no-tracked-scratch.sh",
+        "gh202-wave-reconcile-issue-state.sh",
+        "gh232-wave-reconcile-multiphase.sh",
+        "gh257-roadmap-ledger-fixes.sh",
+        "gh269-roadmap-retired.sh",
+        "gh284-p3-release-milestone.sh",
+        "gh284-p4-release-lanes.sh",
+        "gh306-registry-bidirectional.sh",
+        "gh308-frozen-twin-guard.sh",
+        "gh32-release-target-advisory.sh",
+        "gh32-releases-app.sh",
+        "gh32-releases-artifacts.sh",
+        "gh349-releases-roadmap-vendored.sh",
+        "gh351-manifest-unship.sh",
+        "gh358-wave-reconcile-vendored-paths.sh",
+        "gh360-scoped-receipt-chain-rebuild.sh",
+        "gh39-releases-project-sync.sh",
+        "gh400-acceptance-fidelity.sh",
+        "gh400-source-url.sh",
+        "gh421-auto-wave-reconcile.sh",
+        "gh422-backfill-source-url.sh",
+        "gh424-roadmap-status-marker.sh",
+        "gh425-source-url-slug.sh",
+        "gh429-wave-reconcile-vendored-observe.sh",
+        "gh448-driver-lock-resolver.sh",
+        "gh454-reconciler-defects.sh",
+        "gh491-roadmap-section-validation.sh",
+        "gh492-roadmap-state-sweep.sh",
+        "gh496-phase2-reconciliation-views.sh",
+        "gh527-issue-url-repair.sh",
+        "gh53-releases-merge-resolve.sh",
+        "gh54-merged-dump-refusals.sh",
+        "gh549-work-events.sh",
+        "gh567-roadmap-dashboard-retired.sh",
+        "gh568-releases-md-retired.sh",
+        "gh57-live-merge-resolve.sh",
+        "gh57-releases-fuzz.sh",
+        "gh589-consult-no-tick.sh",
+        "gh589-skill-viewer.sh",
+        "gh589-xyz-mini-sync.sh",
+        "gh605-board-policy.sh",
+        "gh605-work-state.sh",
+        "gh620-skills-army-mini-sync.sh",
+        "gh645-merge-cleanup-xyz-tools.sh",
+        "gh646-status-label.sh",
+        "gh649-pdda-migration.sh",
+        "gh674-merge-cleanup-hosted-lookup.sh",
+        "gh69-roadmap-shadow.sh",
+        "gh75-dashboard.sh",
+        "gh777-inventory-ratchet.sh",
+        "gh784-marathon-qa-gate.sh",
+        "litmus-release.sh",
+        "meter-release.sh",
+        "mktemp-trap-guard.sh",
+        "nightwatch-release.sh",
+        "pdda-changelog.sh",
+        "pdda-install-startup-docs.sh",
+        "pdda-local-checks.sh",
+        "pdda-repo-contract.sh",
+        "pdda-roadmap-coverage.sh",
+        "relay-target-root-newfile.sh",
+        "relay-target-root-paths.sh",
+        "relay-target-root-relayfile.sh",
+        "relay-target-root.sh",
+        "releases-skill.sh",
+        "security-scan.sh",
+        "sentinel-network-guard.sh",
+        "skills-army-hq.sh",
+        "wave-reconcile.sh"
+      ],
+      "candidate_names_missing": [],
+      "candidate_nonzero_suite_events": [],
+      "candidate_suite_events": {
+        "ballast-release.sh": [
+          {
+            "line": 139,
+            "rc": 0,
+            "duration_ms": 1746,
+            "lane": "sequential"
+          }
+        ],
+        "gh1-adoption-guard.sh": [
+          {
+            "line": 182,
+            "rc": 0,
+            "duration_ms": 6817,
+            "lane": "sequential"
+          }
+        ],
+        "gh1-fixture-guard.sh": [
+          {
+            "line": 181,
+            "rc": 0,
+            "duration_ms": 1497,
+            "lane": "sequential"
+          }
+        ],
+        "gh103-timeline-exporter.sh": [
+          {
+            "line": 245,
+            "rc": 0,
+            "duration_ms": 6231,
+            "lane": "sequential"
+          }
+        ],
+        "gh107-timeline-json-seam.sh": [
+          {
+            "line": 385,
+            "rc": 0,
+            "duration_ms": 676,
+            "lane": "sequential"
+          }
+        ],
+        "gh139-pipe-grep-guard.sh": [
+          {
+            "line": 200,
+            "rc": 0,
+            "duration_ms": 2683,
+            "lane": "sequential"
+          }
+        ],
+        "gh153-releases-sidebar-rollup.sh": [
+          {
+            "line": 367,
+            "rc": 0,
+            "duration_ms": 1090,
+            "lane": "sequential"
+          }
+        ],
+        "gh168-wave-reconcile-scope.sh": [
+          {
+            "line": 231,
+            "rc": 0,
+            "duration_ms": 2786,
+            "lane": "sequential"
+          }
+        ],
+        "gh184-no-tracked-scratch.sh": [
+          {
+            "line": 237,
+            "rc": 0,
+            "duration_ms": 249,
+            "lane": "sequential"
+          }
+        ],
+        "gh202-wave-reconcile-issue-state.sh": [
+          {
+            "line": 238,
+            "rc": 0,
+            "duration_ms": 6731,
+            "lane": "sequential"
+          }
+        ],
+        "gh232-wave-reconcile-multiphase.sh": [
+          {
+            "line": 239,
+            "rc": 0,
+            "duration_ms": 2073,
+            "lane": "sequential"
+          }
+        ],
+        "gh257-roadmap-ledger-fixes.sh": [
+          {
+            "line": 339,
+            "rc": 0,
+            "duration_ms": 4199,
+            "lane": "sequential"
+          }
+        ],
+        "gh269-roadmap-retired.sh": [
+          {
+            "line": 341,
+            "rc": 0,
+            "duration_ms": 31023,
+            "lane": "sequential"
+          }
+        ],
+        "gh284-p3-release-milestone.sh": [
+          {
+            "line": 310,
+            "rc": 0,
+            "duration_ms": 4041,
+            "lane": "sequential"
+          }
+        ],
+        "gh284-p4-release-lanes.sh": [
+          {
+            "line": 311,
+            "rc": 0,
+            "duration_ms": 2809,
+            "lane": "sequential"
+          }
+        ],
+        "gh306-registry-bidirectional.sh": [
+          {
+            "line": 395,
+            "rc": 0,
+            "duration_ms": 3987,
+            "lane": "sequential"
+          }
+        ],
+        "gh308-frozen-twin-guard.sh": [
+          {
+            "line": 44,
+            "rc": 0,
+            "duration_ms": 4831,
+            "lane": "sequential"
+          }
+        ],
+        "gh32-release-target-advisory.sh": [
+          {
+            "line": 263,
+            "rc": 0,
+            "duration_ms": 2324,
+            "lane": "sequential"
+          }
+        ],
+        "gh32-releases-app.sh": [
+          {
+            "line": 248,
+            "rc": 0,
+            "duration_ms": 30953,
+            "lane": "sequential"
+          }
+        ],
+        "gh32-releases-artifacts.sh": [
+          {
+            "line": 249,
+            "rc": 0,
+            "duration_ms": 843,
+            "lane": "sequential"
+          }
+        ],
+        "gh349-releases-roadmap-vendored.sh": [
+          {
+            "line": 258,
+            "rc": 0,
+            "duration_ms": 3036,
+            "lane": "sequential"
+          }
+        ],
+        "gh351-manifest-unship.sh": [
+          {
+            "line": 256,
+            "rc": 0,
+            "duration_ms": 3332,
+            "lane": "sequential"
+          }
+        ],
+        "gh358-wave-reconcile-vendored-paths.sh": [
+          {
+            "line": 261,
+            "rc": 0,
+            "duration_ms": 1499,
+            "lane": "sequential"
+          }
+        ],
+        "gh360-scoped-receipt-chain-rebuild.sh": [
+          {
+            "line": 257,
+            "rc": 0,
+            "duration_ms": 4814,
+            "lane": "sequential"
+          }
+        ],
+        "gh39-releases-project-sync.sh": [
+          {
+            "line": 264,
+            "rc": 0,
+            "duration_ms": 2838,
+            "lane": "sequential"
+          }
+        ],
+        "gh400-acceptance-fidelity.sh": [
+          {
+            "line": 100,
+            "rc": 0,
+            "duration_ms": 1640,
+            "lane": "sequential"
+          }
+        ],
+        "gh400-source-url.sh": [
+          {
+            "line": 102,
+            "rc": 0,
+            "duration_ms": 913,
+            "lane": "sequential"
+          }
+        ],
+        "gh421-auto-wave-reconcile.sh": [
+          {
+            "line": 348,
+            "rc": 0,
+            "duration_ms": 9923,
+            "lane": "sequential"
+          }
+        ],
+        "gh422-backfill-source-url.sh": [
+          {
+            "line": 106,
+            "rc": 0,
+            "duration_ms": 821,
+            "lane": "sequential"
+          }
+        ],
+        "gh424-roadmap-status-marker.sh": [
+          {
+            "line": 345,
+            "rc": 0,
+            "duration_ms": 1685,
+            "lane": "sequential"
+          }
+        ],
+        "gh425-source-url-slug.sh": [
+          {
+            "line": 107,
+            "rc": 0,
+            "duration_ms": 2412,
+            "lane": "sequential"
+          }
+        ],
+        "gh429-wave-reconcile-vendored-observe.sh": [
+          {
+            "line": 260,
+            "rc": 0,
+            "duration_ms": 3347,
+            "lane": "sequential"
+          }
+        ],
+        "gh448-driver-lock-resolver.sh": [
+          {
+            "line": 122,
+            "rc": 0,
+            "duration_ms": 753,
+            "lane": "sequential"
+          }
+        ],
+        "gh454-reconciler-defects.sh": [
+          {
+            "line": 344,
+            "rc": 0,
+            "duration_ms": 1440,
+            "lane": "sequential"
+          }
+        ],
+        "gh491-roadmap-section-validation.sh": [
+          {
+            "line": 351,
+            "rc": 0,
+            "duration_ms": 21081,
+            "lane": "sequential"
+          }
+        ],
+        "gh492-roadmap-state-sweep.sh": [
+          {
+            "line": 352,
+            "rc": 0,
+            "duration_ms": 10120,
+            "lane": "sequential"
+          }
+        ],
+        "gh496-phase2-reconciliation-views.sh": [
+          {
+            "line": 393,
+            "rc": 0,
+            "duration_ms": 7933,
+            "lane": "sequential"
+          }
+        ],
+        "gh527-issue-url-repair.sh": [
+          {
+            "line": 359,
+            "rc": 0,
+            "duration_ms": 2432,
+            "lane": "sequential"
+          }
+        ],
+        "gh53-releases-merge-resolve.sh": [
+          {
+            "line": 250,
+            "rc": 0,
+            "duration_ms": 7092,
+            "lane": "sequential"
+          }
+        ],
+        "gh54-merged-dump-refusals.sh": [
+          {
+            "line": 251,
+            "rc": 0,
+            "duration_ms": 4549,
+            "lane": "sequential"
+          }
+        ],
+        "gh549-work-events.sh": [
+          {
+            "line": 167,
+            "rc": 0,
+            "duration_ms": 247662,
+            "lane": "sequential"
+          }
+        ],
+        "gh567-roadmap-dashboard-retired.sh": [
+          {
+            "line": 338,
+            "rc": 0,
+            "duration_ms": 930,
+            "lane": "sequential"
+          }
+        ],
+        "gh568-releases-md-retired.sh": [
+          {
+            "line": 342,
+            "rc": 0,
+            "duration_ms": 2803,
+            "lane": "sequential"
+          }
+        ],
+        "gh57-live-merge-resolve.sh": [
+          {
+            "line": 254,
+            "rc": 0,
+            "duration_ms": 16875,
+            "lane": "sequential"
+          }
+        ],
+        "gh57-releases-fuzz.sh": [
+          {
+            "line": 253,
+            "rc": 0,
+            "duration_ms": 14272,
+            "lane": "sequential"
+          }
+        ],
+        "gh589-consult-no-tick.sh": [
+          {
+            "line": 406,
+            "rc": 0,
+            "duration_ms": 4648,
+            "lane": "sequential"
+          }
+        ],
+        "gh589-skill-viewer.sh": [
+          {
+            "line": 407,
+            "rc": 0,
+            "duration_ms": 1108,
+            "lane": "sequential"
+          }
+        ],
+        "gh589-xyz-mini-sync.sh": [
+          {
+            "line": 405,
+            "rc": 0,
+            "duration_ms": 21682,
+            "lane": "sequential"
+          }
+        ],
+        "gh605-board-policy.sh": [
+          {
+            "line": 354,
+            "rc": 0,
+            "duration_ms": 1156,
+            "lane": "sequential"
+          }
+        ],
+        "gh605-work-state.sh": [
+          {
+            "line": 353,
+            "rc": 0,
+            "duration_ms": 2051,
+            "lane": "sequential"
+          }
+        ],
+        "gh620-skills-army-mini-sync.sh": [
+          {
+            "line": 289,
+            "rc": 0,
+            "duration_ms": 18993,
+            "lane": "sequential"
+          }
+        ],
+        "gh645-merge-cleanup-xyz-tools.sh": [
+          {
+            "line": 356,
+            "rc": 0,
+            "duration_ms": 321,
+            "lane": "sequential"
+          }
+        ],
+        "gh646-status-label.sh": [
+          {
+            "line": 168,
+            "rc": 0,
+            "duration_ms": 10600,
+            "lane": "sequential"
+          }
+        ],
+        "gh649-pdda-migration.sh": [
+          {
+            "line": 302,
+            "rc": 0,
+            "duration_ms": 39334,
+            "lane": "sequential"
+          }
+        ],
+        "gh674-merge-cleanup-hosted-lookup.sh": [
+          {
+            "line": 357,
+            "rc": 0,
+            "duration_ms": 270,
+            "lane": "sequential"
+          }
+        ],
+        "gh69-roadmap-shadow.sh": [
+          {
+            "line": 255,
+            "rc": 0,
+            "duration_ms": 10425,
+            "lane": "sequential"
+          }
+        ],
+        "gh75-dashboard.sh": [
+          {
+            "line": 246,
+            "rc": 0,
+            "duration_ms": 940,
+            "lane": "sequential"
+          }
+        ],
+        "gh777-inventory-ratchet.sh": [
+          {
+            "line": 49,
+            "rc": 0,
+            "duration_ms": 467,
+            "lane": "sequential"
+          }
+        ],
+        "gh784-marathon-qa-gate.sh": [
+          {
+            "line": 308,
+            "rc": 0,
+            "duration_ms": 6861,
+            "lane": "sequential"
+          }
+        ],
+        "litmus-release.sh": [
+          {
+            "line": 104,
+            "rc": 0,
+            "duration_ms": 3182,
+            "lane": "sequential"
+          }
+        ],
+        "meter-release.sh": [
+          {
+            "line": 138,
+            "rc": 0,
+            "duration_ms": 852,
+            "lane": "sequential"
+          }
+        ],
+        "mktemp-trap-guard.sh": [
+          {
+            "line": 333,
+            "rc": 0,
+            "duration_ms": 16163,
+            "lane": "sequential"
+          }
+        ],
+        "nightwatch-release.sh": [
+          {
+            "line": 131,
+            "rc": 0,
+            "duration_ms": 3320,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-changelog.sh": [
+          {
+            "line": 303,
+            "rc": 0,
+            "duration_ms": 5555,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-install-startup-docs.sh": [
+          {
+            "line": 304,
+            "rc": 0,
+            "duration_ms": 108238,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-local-checks.sh": [
+          {
+            "line": 307,
+            "rc": 0,
+            "duration_ms": 18235,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-repo-contract.sh": [
+          {
+            "line": 306,
+            "rc": 0,
+            "duration_ms": 83349,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-roadmap-coverage.sh": [
+          {
+            "line": 305,
+            "rc": 0,
+            "duration_ms": 3792,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root-newfile.sh": [
+          {
+            "line": 270,
+            "rc": 0,
+            "duration_ms": 3205,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root-paths.sh": [
+          {
+            "line": 268,
+            "rc": 0,
+            "duration_ms": 3367,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root-relayfile.sh": [
+          {
+            "line": 269,
+            "rc": 0,
+            "duration_ms": 1042,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root.sh": [
+          {
+            "line": 267,
+            "rc": 0,
+            "duration_ms": 14087,
+            "lane": "sequential"
+          }
+        ],
+        "releases-skill.sh": [
+          {
+            "line": 244,
+            "rc": 0,
+            "duration_ms": 278,
+            "lane": "sequential"
+          }
+        ],
+        "security-scan.sh": [
+          {
+            "line": 369,
+            "rc": 0,
+            "duration_ms": 17669,
+            "lane": "sequential"
+          }
+        ],
+        "sentinel-network-guard.sh": [
+          {
+            "line": 371,
+            "rc": 0,
+            "duration_ms": 338,
+            "lane": "sequential"
+          }
+        ],
+        "skills-army-hq.sh": [
+          {
+            "line": 288,
+            "rc": 0,
+            "duration_ms": 27333,
+            "lane": "sequential"
+          }
+        ],
+        "wave-reconcile.sh": [
+          {
+            "line": 392,
+            "rc": 0,
+            "duration_ms": 2849,
+            "lane": "sequential"
+          }
+        ]
+      },
+      "counterfactual_limit": "Posthoc membership of original full/Small telemetry is not execution or qualification of a reduced selection; no reruns. New code/consumer/receipt contracts not certified."
+    },
+    {
+      "id": "single_medium_1035",
+      "run_id": 38313598719,
+      "run_url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38313598719",
+      "tested_sha": "489ba1b45b6924dbb57f70ba1bed98645db54644",
+      "gate": "validate.sh --sequential",
+      "outer_pending_count": 1,
+      "outer_qualification_line": 422,
+      "outer_qualification_message": "wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 489ba1b45b6924dbb57f70ba1bed98645db54644 with `validate.sh --sequential` (tier 2)",
+      "pending_members": [
+        {
+          "kind": "pr",
+          "pr": 1035,
+          "landing_sha": "489ba1b45b6924dbb57f70ba1bed98645db54644",
+          "parent_sha": "2f8969a292e8dd230ab69ab9fe4ddc96a898ab55",
+          "subject": "Merge pull request #1035 from HiQS-Labs/docs/gh1012-release-review-20261012",
+          "changed_paths": [
+            "CHANGELOG.md",
+            "PROJECT/2-WORKING/GH-1037-SYNC-FIXES.md",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/INDEPENDENT-QA.md",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/MANIFEST.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/REVIEW.md",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/SUMMARY.md",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/board-fallback.txt",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-INT/ready.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-INT/worker.py",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-TERM/ready.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-TERM/worker.py",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-cap/ready.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-cap/worker.py",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-resistant-TERM/ready.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-resistant-TERM/worker.py",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-INT/ready.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-INT/worker.py",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-TERM/ready.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-TERM/worker.py",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-cap/ready.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-cap/worker.py",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-resistant-TERM/ready.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-resistant-TERM/worker.py",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/provenance.jsonl",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/results.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/distribution-falsifiers-r2.py",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/distribution-falsifiers.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/distribution-falsifiers.py",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/finish-regression.py",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/frozen-range.txt",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/full-regression-summary.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/full-regression.log",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/full-regression.log.gz",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/full-regression.telemetry.jsonl",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/gh976-controls-safe.sh",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/issue-identity.txt",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/ledger-changed-roadmap.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/ledger-semantic-delta.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/observer-manual.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/package-parity.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/promotion-range.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/provenance.jsonl",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/recovery-rehearsal.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/recovery-rehearsal.py",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/regression-identity-after.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/regression-identity-before.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/regression-identity-comparison.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/relay-progress-A.txt",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/relay-progress-C.txt",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/relay-progress-F.txt",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/relay-progress-G.txt",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/seam-results.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/target.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/verification-attempts.json",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/work-selectors.txt",
+            "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/work-status-pytest.txt",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/MANIFEST.json",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/SUMMARY.md",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/baseline-distribution-red.json",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/distribution-falsifiers.json",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/distribution-green.log",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/distribution-green.py",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/focused-gate.log",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/focused-identity-after.json",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/focused-identity-before.json",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/focused-telemetry.jsonl",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/issue-body.md",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/marker-retry-control.json",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/marker-retry-control.log",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/marker-retry-control.py",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/ownership-refusal-controls.json",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/ownership-refusal-controls.log",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/ownership-refusal-controls.py",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/provenance.jsonl",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/roadmap-before.json",
+            "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/roadmap-registered.json",
+            "mini/ADAPTATIONS.md",
+            "relay-system/2026-10-12/gh1012-promotion-2f8969a2.codex.md",
+            "relay-system/2026-10-12/gh1037-final.codex.md",
+            "relay-system/2026-10-12/gh1037-plan.codex.md",
+            "releases.db",
+            "releases.sql",
+            "skills/3-weekly/skills-army-hq/scripts/intake.py",
+            "utils/py/xyz_mini_sync.py"
+          ],
+          "commit_ancestor_of_tested": true
+        }
+      ],
+      "pending_identity_complete": true,
+      "complete_union_paths": [
+        "CHANGELOG.md",
+        "PROJECT/2-WORKING/GH-1037-SYNC-FIXES.md",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/INDEPENDENT-QA.md",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/MANIFEST.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/REVIEW.md",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/SUMMARY.md",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/board-fallback.txt",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-INT/ready.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-INT/worker.py",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-TERM/ready.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-TERM/worker.py",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-cap/ready.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-cap/worker.py",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-resistant-TERM/ready.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/domain_oracles-resistant-TERM/worker.py",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-INT/ready.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-INT/worker.py",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-TERM/ready.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-TERM/worker.py",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-cap/ready.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-cap/worker.py",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-resistant-TERM/ready.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/metamorphic_oracle-resistant-TERM/worker.py",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/provenance.jsonl",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/cancellation/results.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/distribution-falsifiers-r2.py",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/distribution-falsifiers.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/distribution-falsifiers.py",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/finish-regression.py",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/frozen-range.txt",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/full-regression-summary.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/full-regression.log",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/full-regression.log.gz",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/full-regression.telemetry.jsonl",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/gh976-controls-safe.sh",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/issue-identity.txt",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/ledger-changed-roadmap.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/ledger-semantic-delta.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/observer-manual.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/package-parity.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/promotion-range.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/provenance.jsonl",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/recovery-rehearsal.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/recovery-rehearsal.py",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/regression-identity-after.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/regression-identity-before.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/regression-identity-comparison.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/relay-progress-A.txt",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/relay-progress-C.txt",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/relay-progress-F.txt",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/relay-progress-G.txt",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/seam-results.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/target.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/verification-attempts.json",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/work-selectors.txt",
+        "TESTS-RESULTS/2026-10-12+GH-1012/release-review-2f8969a2/work-status-pytest.txt",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/MANIFEST.json",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/SUMMARY.md",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/baseline-distribution-red.json",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/distribution-falsifiers.json",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/distribution-green.log",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/distribution-green.py",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/focused-gate.log",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/focused-identity-after.json",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/focused-identity-before.json",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/focused-telemetry.jsonl",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/issue-body.md",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/marker-retry-control.json",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/marker-retry-control.log",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/marker-retry-control.py",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/ownership-refusal-controls.json",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/ownership-refusal-controls.log",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/ownership-refusal-controls.py",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/provenance.jsonl",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/roadmap-before.json",
+        "TESTS-RESULTS/2026-10-12+GH-1037/focused-11597ea6/roadmap-registered.json",
+        "mini/ADAPTATIONS.md",
+        "relay-system/2026-10-12/gh1012-promotion-2f8969a2.codex.md",
+        "relay-system/2026-10-12/gh1037-final.codex.md",
+        "relay-system/2026-10-12/gh1037-plan.codex.md",
+        "releases.db",
+        "releases.sql",
+        "skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "utils/py/xyz_mini_sync.py"
+      ],
+      "receipt_path": "TESTS-RESULTS/2026-10-12+GH-591/wave-489ba1b45b6924dbb57f70ba1bed98645db54644/provenance.jsonl",
+      "receipt_sha256": "db2f228eb8def34c637d2efdc390ec2aac21d1df70fcf33c7cbac8b5a9bcd221",
+      "telemetry_path": "TESTS-RESULTS/2026-10-12+GH-591/wave-489ba1b45b6924dbb57f70ba1bed98645db54644/validation.jsonl",
+      "telemetry_sha256": "c41ae3751e74ad0c143099bfaa14328f66b93b0171524729bd841057e6082983",
+      "receipt_telemetry_digest_matches": true,
+      "original_log": "gh1076-v3-run-38313598719.log",
+      "original_log_sha256": "c7ee18a7e71b203cda057eb12f7ca3ce78181f63246b275b059054799fa6c2b4",
+      "historical_summary": [
+        {
+          "line": 411,
+          "record": {
+            "v": 1,
+            "ts_ms": 1791846723719,
+            "run": "489ba1b45-10833",
+            "runner": "validate",
+            "event": "run.summary",
+            "passed": 409,
+            "failed": 0,
+            "total": 409,
+            "envelope_rc": "0",
+            "envelope_drift": "none",
+            "suite_events": "408",
+            "run_set": "406",
+            "registered": "406",
+            "suite_events_match": "yes"
+          }
+        }
+      ],
+      "posthoc_candidate_small_plus_skills_army_shell_names": [
+        "ballast-release.sh",
+        "gh1-adoption-guard.sh",
+        "gh1-fixture-guard.sh",
+        "gh103-timeline-exporter.sh",
+        "gh107-timeline-json-seam.sh",
+        "gh139-pipe-grep-guard.sh",
+        "gh153-releases-sidebar-rollup.sh",
+        "gh168-wave-reconcile-scope.sh",
+        "gh184-no-tracked-scratch.sh",
+        "gh202-wave-reconcile-issue-state.sh",
+        "gh232-wave-reconcile-multiphase.sh",
+        "gh257-roadmap-ledger-fixes.sh",
+        "gh269-roadmap-retired.sh",
+        "gh284-p3-release-milestone.sh",
+        "gh284-p4-release-lanes.sh",
+        "gh306-registry-bidirectional.sh",
+        "gh308-frozen-twin-guard.sh",
+        "gh32-release-target-advisory.sh",
+        "gh32-releases-app.sh",
+        "gh32-releases-artifacts.sh",
+        "gh349-releases-roadmap-vendored.sh",
+        "gh351-manifest-unship.sh",
+        "gh358-wave-reconcile-vendored-paths.sh",
+        "gh360-scoped-receipt-chain-rebuild.sh",
+        "gh39-releases-project-sync.sh",
+        "gh400-acceptance-fidelity.sh",
+        "gh400-source-url.sh",
+        "gh421-auto-wave-reconcile.sh",
+        "gh422-backfill-source-url.sh",
+        "gh424-roadmap-status-marker.sh",
+        "gh425-source-url-slug.sh",
+        "gh429-wave-reconcile-vendored-observe.sh",
+        "gh448-driver-lock-resolver.sh",
+        "gh454-reconciler-defects.sh",
+        "gh491-roadmap-section-validation.sh",
+        "gh492-roadmap-state-sweep.sh",
+        "gh496-phase2-reconciliation-views.sh",
+        "gh527-issue-url-repair.sh",
+        "gh53-releases-merge-resolve.sh",
+        "gh54-merged-dump-refusals.sh",
+        "gh549-work-events.sh",
+        "gh567-roadmap-dashboard-retired.sh",
+        "gh568-releases-md-retired.sh",
+        "gh57-live-merge-resolve.sh",
+        "gh57-releases-fuzz.sh",
+        "gh589-consult-no-tick.sh",
+        "gh589-skill-viewer.sh",
+        "gh589-xyz-mini-sync.sh",
+        "gh605-board-policy.sh",
+        "gh605-work-state.sh",
+        "gh620-skills-army-mini-sync.sh",
+        "gh645-merge-cleanup-xyz-tools.sh",
+        "gh646-status-label.sh",
+        "gh649-pdda-migration.sh",
+        "gh674-merge-cleanup-hosted-lookup.sh",
+        "gh69-roadmap-shadow.sh",
+        "gh75-dashboard.sh",
+        "gh777-inventory-ratchet.sh",
+        "gh784-marathon-qa-gate.sh",
+        "litmus-release.sh",
+        "meter-release.sh",
+        "mktemp-trap-guard.sh",
+        "nightwatch-release.sh",
+        "pdda-changelog.sh",
+        "pdda-install-startup-docs.sh",
+        "pdda-local-checks.sh",
+        "pdda-repo-contract.sh",
+        "pdda-roadmap-coverage.sh",
+        "relay-target-root-newfile.sh",
+        "relay-target-root-paths.sh",
+        "relay-target-root-relayfile.sh",
+        "relay-target-root.sh",
+        "releases-skill.sh",
+        "security-scan.sh",
+        "sentinel-network-guard.sh",
+        "skills-army-hq.sh",
+        "wave-reconcile.sh"
+      ],
+      "candidate_shell_names_count": 77,
+      "candidate_names_present": [
+        "ballast-release.sh",
+        "gh1-adoption-guard.sh",
+        "gh1-fixture-guard.sh",
+        "gh103-timeline-exporter.sh",
+        "gh107-timeline-json-seam.sh",
+        "gh139-pipe-grep-guard.sh",
+        "gh153-releases-sidebar-rollup.sh",
+        "gh168-wave-reconcile-scope.sh",
+        "gh184-no-tracked-scratch.sh",
+        "gh202-wave-reconcile-issue-state.sh",
+        "gh232-wave-reconcile-multiphase.sh",
+        "gh257-roadmap-ledger-fixes.sh",
+        "gh269-roadmap-retired.sh",
+        "gh284-p3-release-milestone.sh",
+        "gh284-p4-release-lanes.sh",
+        "gh306-registry-bidirectional.sh",
+        "gh308-frozen-twin-guard.sh",
+        "gh32-release-target-advisory.sh",
+        "gh32-releases-app.sh",
+        "gh32-releases-artifacts.sh",
+        "gh349-releases-roadmap-vendored.sh",
+        "gh351-manifest-unship.sh",
+        "gh358-wave-reconcile-vendored-paths.sh",
+        "gh360-scoped-receipt-chain-rebuild.sh",
+        "gh39-releases-project-sync.sh",
+        "gh400-acceptance-fidelity.sh",
+        "gh400-source-url.sh",
+        "gh421-auto-wave-reconcile.sh",
+        "gh422-backfill-source-url.sh",
+        "gh424-roadmap-status-marker.sh",
+        "gh425-source-url-slug.sh",
+        "gh429-wave-reconcile-vendored-observe.sh",
+        "gh448-driver-lock-resolver.sh",
+        "gh454-reconciler-defects.sh",
+        "gh491-roadmap-section-validation.sh",
+        "gh492-roadmap-state-sweep.sh",
+        "gh496-phase2-reconciliation-views.sh",
+        "gh527-issue-url-repair.sh",
+        "gh53-releases-merge-resolve.sh",
+        "gh54-merged-dump-refusals.sh",
+        "gh549-work-events.sh",
+        "gh567-roadmap-dashboard-retired.sh",
+        "gh568-releases-md-retired.sh",
+        "gh57-live-merge-resolve.sh",
+        "gh57-releases-fuzz.sh",
+        "gh589-consult-no-tick.sh",
+        "gh589-skill-viewer.sh",
+        "gh589-xyz-mini-sync.sh",
+        "gh605-board-policy.sh",
+        "gh605-work-state.sh",
+        "gh620-skills-army-mini-sync.sh",
+        "gh645-merge-cleanup-xyz-tools.sh",
+        "gh646-status-label.sh",
+        "gh649-pdda-migration.sh",
+        "gh674-merge-cleanup-hosted-lookup.sh",
+        "gh69-roadmap-shadow.sh",
+        "gh75-dashboard.sh",
+        "gh777-inventory-ratchet.sh",
+        "gh784-marathon-qa-gate.sh",
+        "litmus-release.sh",
+        "meter-release.sh",
+        "mktemp-trap-guard.sh",
+        "nightwatch-release.sh",
+        "pdda-changelog.sh",
+        "pdda-install-startup-docs.sh",
+        "pdda-local-checks.sh",
+        "pdda-repo-contract.sh",
+        "pdda-roadmap-coverage.sh",
+        "relay-target-root-newfile.sh",
+        "relay-target-root-paths.sh",
+        "relay-target-root-relayfile.sh",
+        "relay-target-root.sh",
+        "releases-skill.sh",
+        "security-scan.sh",
+        "sentinel-network-guard.sh",
+        "skills-army-hq.sh",
+        "wave-reconcile.sh"
+      ],
+      "candidate_names_missing": [],
+      "candidate_nonzero_suite_events": [],
+      "candidate_suite_events": {
+        "ballast-release.sh": [
+          {
+            "line": 139,
+            "rc": 0,
+            "duration_ms": 1719,
+            "lane": "sequential"
+          }
+        ],
+        "gh1-adoption-guard.sh": [
+          {
+            "line": 182,
+            "rc": 0,
+            "duration_ms": 3972,
+            "lane": "sequential"
+          }
+        ],
+        "gh1-fixture-guard.sh": [
+          {
+            "line": 181,
+            "rc": 0,
+            "duration_ms": 1314,
+            "lane": "sequential"
+          }
+        ],
+        "gh103-timeline-exporter.sh": [
+          {
+            "line": 245,
+            "rc": 0,
+            "duration_ms": 4869,
+            "lane": "sequential"
+          }
+        ],
+        "gh107-timeline-json-seam.sh": [
+          {
+            "line": 385,
+            "rc": 0,
+            "duration_ms": 1084,
+            "lane": "sequential"
+          }
+        ],
+        "gh139-pipe-grep-guard.sh": [
+          {
+            "line": 200,
+            "rc": 0,
+            "duration_ms": 4085,
+            "lane": "sequential"
+          }
+        ],
+        "gh153-releases-sidebar-rollup.sh": [
+          {
+            "line": 367,
+            "rc": 0,
+            "duration_ms": 2132,
+            "lane": "sequential"
+          }
+        ],
+        "gh168-wave-reconcile-scope.sh": [
+          {
+            "line": 231,
+            "rc": 0,
+            "duration_ms": 1445,
+            "lane": "sequential"
+          }
+        ],
+        "gh184-no-tracked-scratch.sh": [
+          {
+            "line": 237,
+            "rc": 0,
+            "duration_ms": 127,
+            "lane": "sequential"
+          }
+        ],
+        "gh202-wave-reconcile-issue-state.sh": [
+          {
+            "line": 238,
+            "rc": 0,
+            "duration_ms": 4089,
+            "lane": "sequential"
+          }
+        ],
+        "gh232-wave-reconcile-multiphase.sh": [
+          {
+            "line": 239,
+            "rc": 0,
+            "duration_ms": 1260,
+            "lane": "sequential"
+          }
+        ],
+        "gh257-roadmap-ledger-fixes.sh": [
+          {
+            "line": 339,
+            "rc": 0,
+            "duration_ms": 6772,
+            "lane": "sequential"
+          }
+        ],
+        "gh269-roadmap-retired.sh": [
+          {
+            "line": 341,
+            "rc": 0,
+            "duration_ms": 45130,
+            "lane": "sequential"
+          }
+        ],
+        "gh284-p3-release-milestone.sh": [
+          {
+            "line": 310,
+            "rc": 0,
+            "duration_ms": 5670,
+            "lane": "sequential"
+          }
+        ],
+        "gh284-p4-release-lanes.sh": [
+          {
+            "line": 311,
+            "rc": 0,
+            "duration_ms": 3910,
+            "lane": "sequential"
+          }
+        ],
+        "gh306-registry-bidirectional.sh": [
+          {
+            "line": 395,
+            "rc": 0,
+            "duration_ms": 3919,
+            "lane": "sequential"
+          }
+        ],
+        "gh308-frozen-twin-guard.sh": [
+          {
+            "line": 44,
+            "rc": 0,
+            "duration_ms": 6411,
+            "lane": "sequential"
+          }
+        ],
+        "gh32-release-target-advisory.sh": [
+          {
+            "line": 263,
+            "rc": 0,
+            "duration_ms": 1993,
+            "lane": "sequential"
+          }
+        ],
+        "gh32-releases-app.sh": [
+          {
+            "line": 248,
+            "rc": 0,
+            "duration_ms": 31044,
+            "lane": "sequential"
+          }
+        ],
+        "gh32-releases-artifacts.sh": [
+          {
+            "line": 249,
+            "rc": 0,
+            "duration_ms": 685,
+            "lane": "sequential"
+          }
+        ],
+        "gh349-releases-roadmap-vendored.sh": [
+          {
+            "line": 258,
+            "rc": 0,
+            "duration_ms": 3133,
+            "lane": "sequential"
+          }
+        ],
+        "gh351-manifest-unship.sh": [
+          {
+            "line": 256,
+            "rc": 0,
+            "duration_ms": 3372,
+            "lane": "sequential"
+          }
+        ],
+        "gh358-wave-reconcile-vendored-paths.sh": [
+          {
+            "line": 261,
+            "rc": 0,
+            "duration_ms": 750,
+            "lane": "sequential"
+          }
+        ],
+        "gh360-scoped-receipt-chain-rebuild.sh": [
+          {
+            "line": 257,
+            "rc": 0,
+            "duration_ms": 4724,
+            "lane": "sequential"
+          }
+        ],
+        "gh39-releases-project-sync.sh": [
+          {
+            "line": 264,
+            "rc": 0,
+            "duration_ms": 2620,
+            "lane": "sequential"
+          }
+        ],
+        "gh400-acceptance-fidelity.sh": [
+          {
+            "line": 100,
+            "rc": 0,
+            "duration_ms": 2080,
+            "lane": "sequential"
+          }
+        ],
+        "gh400-source-url.sh": [
+          {
+            "line": 102,
+            "rc": 0,
+            "duration_ms": 760,
+            "lane": "sequential"
+          }
+        ],
+        "gh421-auto-wave-reconcile.sh": [
+          {
+            "line": 348,
+            "rc": 0,
+            "duration_ms": 8952,
+            "lane": "sequential"
+          }
+        ],
+        "gh422-backfill-source-url.sh": [
+          {
+            "line": 106,
+            "rc": 0,
+            "duration_ms": 952,
+            "lane": "sequential"
+          }
+        ],
+        "gh424-roadmap-status-marker.sh": [
+          {
+            "line": 345,
+            "rc": 0,
+            "duration_ms": 1863,
+            "lane": "sequential"
+          }
+        ],
+        "gh425-source-url-slug.sh": [
+          {
+            "line": 107,
+            "rc": 0,
+            "duration_ms": 2859,
+            "lane": "sequential"
+          }
+        ],
+        "gh429-wave-reconcile-vendored-observe.sh": [
+          {
+            "line": 260,
+            "rc": 0,
+            "duration_ms": 2165,
+            "lane": "sequential"
+          }
+        ],
+        "gh448-driver-lock-resolver.sh": [
+          {
+            "line": 122,
+            "rc": 0,
+            "duration_ms": 598,
+            "lane": "sequential"
+          }
+        ],
+        "gh454-reconciler-defects.sh": [
+          {
+            "line": 344,
+            "rc": 0,
+            "duration_ms": 1563,
+            "lane": "sequential"
+          }
+        ],
+        "gh491-roadmap-section-validation.sh": [
+          {
+            "line": 351,
+            "rc": 0,
+            "duration_ms": 21107,
+            "lane": "sequential"
+          }
+        ],
+        "gh492-roadmap-state-sweep.sh": [
+          {
+            "line": 352,
+            "rc": 0,
+            "duration_ms": 11298,
+            "lane": "sequential"
+          }
+        ],
+        "gh496-phase2-reconciliation-views.sh": [
+          {
+            "line": 393,
+            "rc": 0,
+            "duration_ms": 10539,
+            "lane": "sequential"
+          }
+        ],
+        "gh527-issue-url-repair.sh": [
+          {
+            "line": 359,
+            "rc": 0,
+            "duration_ms": 2514,
+            "lane": "sequential"
+          }
+        ],
+        "gh53-releases-merge-resolve.sh": [
+          {
+            "line": 250,
+            "rc": 0,
+            "duration_ms": 6359,
+            "lane": "sequential"
+          }
+        ],
+        "gh54-merged-dump-refusals.sh": [
+          {
+            "line": 251,
+            "rc": 0,
+            "duration_ms": 4459,
+            "lane": "sequential"
+          }
+        ],
+        "gh549-work-events.sh": [
+          {
+            "line": 167,
+            "rc": 0,
+            "duration_ms": 267695,
+            "lane": "sequential"
+          }
+        ],
+        "gh567-roadmap-dashboard-retired.sh": [
+          {
+            "line": 338,
+            "rc": 0,
+            "duration_ms": 2020,
+            "lane": "sequential"
+          }
+        ],
+        "gh568-releases-md-retired.sh": [
+          {
+            "line": 342,
+            "rc": 0,
+            "duration_ms": 3971,
+            "lane": "sequential"
+          }
+        ],
+        "gh57-live-merge-resolve.sh": [
+          {
+            "line": 254,
+            "rc": 0,
+            "duration_ms": 16046,
+            "lane": "sequential"
+          }
+        ],
+        "gh57-releases-fuzz.sh": [
+          {
+            "line": 253,
+            "rc": 0,
+            "duration_ms": 17296,
+            "lane": "sequential"
+          }
+        ],
+        "gh589-consult-no-tick.sh": [
+          {
+            "line": 406,
+            "rc": 0,
+            "duration_ms": 6818,
+            "lane": "sequential"
+          }
+        ],
+        "gh589-skill-viewer.sh": [
+          {
+            "line": 407,
+            "rc": 0,
+            "duration_ms": 1463,
+            "lane": "sequential"
+          }
+        ],
+        "gh589-xyz-mini-sync.sh": [
+          {
+            "line": 405,
+            "rc": 0,
+            "duration_ms": 25848,
+            "lane": "sequential"
+          }
+        ],
+        "gh605-board-policy.sh": [
+          {
+            "line": 354,
+            "rc": 0,
+            "duration_ms": 1741,
+            "lane": "sequential"
+          }
+        ],
+        "gh605-work-state.sh": [
+          {
+            "line": 353,
+            "rc": 0,
+            "duration_ms": 3602,
+            "lane": "sequential"
+          }
+        ],
+        "gh620-skills-army-mini-sync.sh": [
+          {
+            "line": 289,
+            "rc": 0,
+            "duration_ms": 15288,
+            "lane": "sequential"
+          }
+        ],
+        "gh645-merge-cleanup-xyz-tools.sh": [
+          {
+            "line": 356,
+            "rc": 0,
+            "duration_ms": 285,
+            "lane": "sequential"
+          }
+        ],
+        "gh646-status-label.sh": [
+          {
+            "line": 168,
+            "rc": 0,
+            "duration_ms": 10786,
+            "lane": "sequential"
+          }
+        ],
+        "gh649-pdda-migration.sh": [
+          {
+            "line": 302,
+            "rc": 0,
+            "duration_ms": 28110,
+            "lane": "sequential"
+          }
+        ],
+        "gh674-merge-cleanup-hosted-lookup.sh": [
+          {
+            "line": 357,
+            "rc": 0,
+            "duration_ms": 235,
+            "lane": "sequential"
+          }
+        ],
+        "gh69-roadmap-shadow.sh": [
+          {
+            "line": 255,
+            "rc": 0,
+            "duration_ms": 9837,
+            "lane": "sequential"
+          }
+        ],
+        "gh75-dashboard.sh": [
+          {
+            "line": 246,
+            "rc": 0,
+            "duration_ms": 815,
+            "lane": "sequential"
+          }
+        ],
+        "gh777-inventory-ratchet.sh": [
+          {
+            "line": 49,
+            "rc": 0,
+            "duration_ms": 508,
+            "lane": "sequential"
+          }
+        ],
+        "gh784-marathon-qa-gate.sh": [
+          {
+            "line": 308,
+            "rc": 0,
+            "duration_ms": 9925,
+            "lane": "sequential"
+          }
+        ],
+        "litmus-release.sh": [
+          {
+            "line": 104,
+            "rc": 0,
+            "duration_ms": 3344,
+            "lane": "sequential"
+          }
+        ],
+        "meter-release.sh": [
+          {
+            "line": 138,
+            "rc": 0,
+            "duration_ms": 1112,
+            "lane": "sequential"
+          }
+        ],
+        "mktemp-trap-guard.sh": [
+          {
+            "line": 333,
+            "rc": 0,
+            "duration_ms": 27247,
+            "lane": "sequential"
+          }
+        ],
+        "nightwatch-release.sh": [
+          {
+            "line": 131,
+            "rc": 0,
+            "duration_ms": 3481,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-changelog.sh": [
+          {
+            "line": 303,
+            "rc": 0,
+            "duration_ms": 3986,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-install-startup-docs.sh": [
+          {
+            "line": 304,
+            "rc": 0,
+            "duration_ms": 113526,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-local-checks.sh": [
+          {
+            "line": 307,
+            "rc": 0,
+            "duration_ms": 25472,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-repo-contract.sh": [
+          {
+            "line": 306,
+            "rc": 0,
+            "duration_ms": 108345,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-roadmap-coverage.sh": [
+          {
+            "line": 305,
+            "rc": 0,
+            "duration_ms": 4620,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root-newfile.sh": [
+          {
+            "line": 270,
+            "rc": 0,
+            "duration_ms": 4505,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root-paths.sh": [
+          {
+            "line": 268,
+            "rc": 0,
+            "duration_ms": 3969,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root-relayfile.sh": [
+          {
+            "line": 269,
+            "rc": 0,
+            "duration_ms": 1230,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root.sh": [
+          {
+            "line": 267,
+            "rc": 0,
+            "duration_ms": 11852,
+            "lane": "sequential"
+          }
+        ],
+        "releases-skill.sh": [
+          {
+            "line": 244,
+            "rc": 0,
+            "duration_ms": 221,
+            "lane": "sequential"
+          }
+        ],
+        "security-scan.sh": [
+          {
+            "line": 369,
+            "rc": 0,
+            "duration_ms": 30451,
+            "lane": "sequential"
+          }
+        ],
+        "sentinel-network-guard.sh": [
+          {
+            "line": 371,
+            "rc": 0,
+            "duration_ms": 683,
+            "lane": "sequential"
+          }
+        ],
+        "skills-army-hq.sh": [
+          {
+            "line": 288,
+            "rc": 0,
+            "duration_ms": 28060,
+            "lane": "sequential"
+          }
+        ],
+        "wave-reconcile.sh": [
+          {
+            "line": 392,
+            "rc": 0,
+            "duration_ms": 3958,
+            "lane": "sequential"
+          }
+        ]
+      },
+      "counterfactual_limit": "Posthoc membership of original full/Small telemetry is not execution or qualification of a reduced selection; no reruns. New code/consumer/receipt contracts not certified."
+    },
+    {
+      "id": "payload_small_988_989",
+      "run_id": 37700855208,
+      "run_url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37700855208",
+      "tested_sha": "a48fa48fd45e0ebae6c64f50651f58534b0d872d",
+      "gate": "validate.sh --sequential --subsystem small",
+      "outer_pending_count": 6,
+      "outer_qualification_line": 407,
+      "outer_qualification_message": "wave-reconcile: Qualifying 6 landing(s) in integrated snapshot a48fa48fd45e0ebae6c64f50651f58534b0d872d with `validate.sh --sequential --subsystem small` (tier 1)",
+      "pending_members": [
+        {
+          "kind": "commit",
+          "pr": null,
+          "landing_sha": "db85c19984f2b4bdcadb287e736ecd78b1815851",
+          "parent_sha": "0abfca03818a11d6f9f293d6ec2f716a18776600",
+          "subject": "docs(skills-army-hq): add bot-monitor-prompt.md daily QA prompt for always-on agents (GH-988)",
+          "changed_paths": [
+            "skills/3-weekly/skills-army-hq/bot-monitor-prompt.md"
+          ],
+          "commit_ancestor_of_tested": true
+        },
+        {
+          "kind": "commit",
+          "pr": null,
+          "landing_sha": "35bb4037b0738201600ee492f5fc5a249482626c",
+          "parent_sha": "7da198eaa11904c56e1a5deb5f9ce5f169ecdddb",
+          "subject": "chore(releases): express ship GH-988 (commit 7da198eaa119)",
+          "changed_paths": [
+            "TESTS-RESULTS/2026-10-07+GH-988-express/provenance.jsonl",
+            "releases.db",
+            "releases.sql"
+          ],
+          "commit_ancestor_of_tested": true
+        },
+        {
+          "kind": "commit",
+          "pr": null,
+          "landing_sha": "42d5bf65231bf90b7549bff86ea509f2aafb1cf9",
+          "parent_sha": "35bb4037b0738201600ee492f5fc5a249482626c",
+          "subject": "chore(pdda): express reconcile GH-988 (commit 7da198eaa119)",
+          "changed_paths": [
+            "LEADERBOARD.md",
+            "PROJECT/3-COMPLETED/GH-988-SKILLS-ARMY-HQ-SHIP-BOT-MONITOR-PROMPT-MD-A-PASTE-ABLE-DAILY.md",
+            "releases.db",
+            "releases.sql"
+          ],
+          "commit_ancestor_of_tested": true
+        },
+        {
+          "kind": "commit",
+          "pr": null,
+          "landing_sha": "59b0e386b771c830b26d383040be205dec7bffd2",
+          "parent_sha": "42d5bf65231bf90b7549bff86ea509f2aafb1cf9",
+          "subject": "docs(skills-army-hq): rename bot-monitor-prompt.md to BOT-DAILY-HEALTH-CHECK.md (GH-989)",
+          "changed_paths": [
+            "skills/3-weekly/skills-army-hq/BOT-DAILY-HEALTH-CHECK.md"
+          ],
+          "commit_ancestor_of_tested": true
+        },
+        {
+          "kind": "commit",
+          "pr": null,
+          "landing_sha": "e427db63162946edb773e06068741d01409979f0",
+          "parent_sha": "eb4b403a30cfa87ec3f97aef1df038cf541266c0",
+          "subject": "chore(releases): express ship GH-989 (commit eb4b403a30cf)",
+          "changed_paths": [
+            "TESTS-RESULTS/2026-10-07+GH-989-express/provenance.jsonl",
+            "releases.db",
+            "releases.sql"
+          ],
+          "commit_ancestor_of_tested": true
+        },
+        {
+          "kind": "commit",
+          "pr": null,
+          "landing_sha": "a48fa48fd45e0ebae6c64f50651f58534b0d872d",
+          "parent_sha": "e427db63162946edb773e06068741d01409979f0",
+          "subject": "chore(pdda): express reconcile GH-989 (commit eb4b403a30cf)",
+          "changed_paths": [
+            "LEADERBOARD.md",
+            "PROJECT/3-COMPLETED/GH-989-SKILLS-ARMY-HQ-RENAME-BOT-MONITOR-PROMPT-MD-TO-BOT-DAILY-HEA.md",
+            "releases.db",
+            "releases.sql"
+          ],
+          "commit_ancestor_of_tested": true
+        }
+      ],
+      "pending_identity_complete": true,
+      "complete_union_paths": [
+        "LEADERBOARD.md",
+        "PROJECT/3-COMPLETED/GH-988-SKILLS-ARMY-HQ-SHIP-BOT-MONITOR-PROMPT-MD-A-PASTE-ABLE-DAILY.md",
+        "PROJECT/3-COMPLETED/GH-989-SKILLS-ARMY-HQ-RENAME-BOT-MONITOR-PROMPT-MD-TO-BOT-DAILY-HEA.md",
+        "TESTS-RESULTS/2026-10-07+GH-988-express/provenance.jsonl",
+        "TESTS-RESULTS/2026-10-07+GH-989-express/provenance.jsonl",
+        "releases.db",
+        "releases.sql",
+        "skills/3-weekly/skills-army-hq/BOT-DAILY-HEALTH-CHECK.md",
+        "skills/3-weekly/skills-army-hq/bot-monitor-prompt.md"
+      ],
+      "receipt_path": "TESTS-RESULTS/2026-10-07+GH-591/wave-a48fa48fd45e0ebae6c64f50651f58534b0d872d/provenance.jsonl",
+      "receipt_sha256": "a07a8b9689d7c5ce84ac089ccc3f078c9b193fd23cc06e332f51693fe9b575d7",
+      "telemetry_path": "TESTS-RESULTS/2026-10-07+GH-591/wave-a48fa48fd45e0ebae6c64f50651f58534b0d872d/validation.jsonl",
+      "telemetry_sha256": "4af338b24c035ea1272e303b0fe67318b1a9649a8cab905b7f769d7c6feb2f5a",
+      "receipt_telemetry_digest_matches": true,
+      "original_log": "gh1076-v3-run-37700855208.log",
+      "original_log_sha256": "5a28bb2e6fdcb6db24099c8a9d30bda438cd9c2d6e613222634b44468a32a1ec",
+      "historical_summary": [
+        {
+          "line": 77,
+          "record": {
+            "v": 1,
+            "ts_ms": 1791415446150,
+            "run": "a48fa48fd-5558",
+            "runner": "validate",
+            "event": "run.summary",
+            "passed": 75,
+            "failed": 0,
+            "total": 75,
+            "envelope_rc": "0",
+            "envelope_drift": "none",
+            "suite_events": "74",
+            "run_set": "72",
+            "registered": "407",
+            "suite_events_match": "yes"
+          }
+        }
+      ],
+      "posthoc_candidate_small_plus_skills_army_shell_names": [
+        "ballast-release.sh",
+        "gh1-adoption-guard.sh",
+        "gh1-fixture-guard.sh",
+        "gh103-timeline-exporter.sh",
+        "gh107-timeline-json-seam.sh",
+        "gh139-pipe-grep-guard.sh",
+        "gh153-releases-sidebar-rollup.sh",
+        "gh168-wave-reconcile-scope.sh",
+        "gh184-no-tracked-scratch.sh",
+        "gh202-wave-reconcile-issue-state.sh",
+        "gh232-wave-reconcile-multiphase.sh",
+        "gh257-roadmap-ledger-fixes.sh",
+        "gh269-roadmap-retired.sh",
+        "gh284-p3-release-milestone.sh",
+        "gh284-p4-release-lanes.sh",
+        "gh306-registry-bidirectional.sh",
+        "gh308-frozen-twin-guard.sh",
+        "gh32-release-target-advisory.sh",
+        "gh32-releases-app.sh",
+        "gh32-releases-artifacts.sh",
+        "gh349-releases-roadmap-vendored.sh",
+        "gh351-manifest-unship.sh",
+        "gh358-wave-reconcile-vendored-paths.sh",
+        "gh360-scoped-receipt-chain-rebuild.sh",
+        "gh39-releases-project-sync.sh",
+        "gh400-acceptance-fidelity.sh",
+        "gh400-source-url.sh",
+        "gh421-auto-wave-reconcile.sh",
+        "gh422-backfill-source-url.sh",
+        "gh424-roadmap-status-marker.sh",
+        "gh425-source-url-slug.sh",
+        "gh429-wave-reconcile-vendored-observe.sh",
+        "gh448-driver-lock-resolver.sh",
+        "gh454-reconciler-defects.sh",
+        "gh491-roadmap-section-validation.sh",
+        "gh492-roadmap-state-sweep.sh",
+        "gh496-phase2-reconciliation-views.sh",
+        "gh527-issue-url-repair.sh",
+        "gh53-releases-merge-resolve.sh",
+        "gh54-merged-dump-refusals.sh",
+        "gh549-work-events.sh",
+        "gh567-roadmap-dashboard-retired.sh",
+        "gh568-releases-md-retired.sh",
+        "gh57-live-merge-resolve.sh",
+        "gh57-releases-fuzz.sh",
+        "gh589-consult-no-tick.sh",
+        "gh589-skill-viewer.sh",
+        "gh589-xyz-mini-sync.sh",
+        "gh605-board-policy.sh",
+        "gh605-work-state.sh",
+        "gh620-skills-army-mini-sync.sh",
+        "gh645-merge-cleanup-xyz-tools.sh",
+        "gh646-status-label.sh",
+        "gh649-pdda-migration.sh",
+        "gh674-merge-cleanup-hosted-lookup.sh",
+        "gh69-roadmap-shadow.sh",
+        "gh75-dashboard.sh",
+        "gh777-inventory-ratchet.sh",
+        "gh784-marathon-qa-gate.sh",
+        "litmus-release.sh",
+        "meter-release.sh",
+        "mktemp-trap-guard.sh",
+        "nightwatch-release.sh",
+        "pdda-changelog.sh",
+        "pdda-install-startup-docs.sh",
+        "pdda-local-checks.sh",
+        "pdda-repo-contract.sh",
+        "pdda-roadmap-coverage.sh",
+        "relay-target-root-newfile.sh",
+        "relay-target-root-paths.sh",
+        "relay-target-root-relayfile.sh",
+        "relay-target-root.sh",
+        "releases-skill.sh",
+        "security-scan.sh",
+        "sentinel-network-guard.sh",
+        "skills-army-hq.sh",
+        "wave-reconcile.sh"
+      ],
+      "candidate_shell_names_count": 77,
+      "candidate_names_present": [
+        "ballast-release.sh",
+        "gh1-adoption-guard.sh",
+        "gh1-fixture-guard.sh",
+        "gh103-timeline-exporter.sh",
+        "gh107-timeline-json-seam.sh",
+        "gh139-pipe-grep-guard.sh",
+        "gh153-releases-sidebar-rollup.sh",
+        "gh168-wave-reconcile-scope.sh",
+        "gh184-no-tracked-scratch.sh",
+        "gh202-wave-reconcile-issue-state.sh",
+        "gh232-wave-reconcile-multiphase.sh",
+        "gh257-roadmap-ledger-fixes.sh",
+        "gh269-roadmap-retired.sh",
+        "gh284-p3-release-milestone.sh",
+        "gh284-p4-release-lanes.sh",
+        "gh306-registry-bidirectional.sh",
+        "gh308-frozen-twin-guard.sh",
+        "gh32-release-target-advisory.sh",
+        "gh32-releases-app.sh",
+        "gh32-releases-artifacts.sh",
+        "gh349-releases-roadmap-vendored.sh",
+        "gh351-manifest-unship.sh",
+        "gh358-wave-reconcile-vendored-paths.sh",
+        "gh360-scoped-receipt-chain-rebuild.sh",
+        "gh39-releases-project-sync.sh",
+        "gh400-acceptance-fidelity.sh",
+        "gh400-source-url.sh",
+        "gh421-auto-wave-reconcile.sh",
+        "gh422-backfill-source-url.sh",
+        "gh424-roadmap-status-marker.sh",
+        "gh425-source-url-slug.sh",
+        "gh429-wave-reconcile-vendored-observe.sh",
+        "gh448-driver-lock-resolver.sh",
+        "gh454-reconciler-defects.sh",
+        "gh491-roadmap-section-validation.sh",
+        "gh492-roadmap-state-sweep.sh",
+        "gh496-phase2-reconciliation-views.sh",
+        "gh527-issue-url-repair.sh",
+        "gh53-releases-merge-resolve.sh",
+        "gh54-merged-dump-refusals.sh",
+        "gh549-work-events.sh",
+        "gh567-roadmap-dashboard-retired.sh",
+        "gh568-releases-md-retired.sh",
+        "gh57-live-merge-resolve.sh",
+        "gh57-releases-fuzz.sh",
+        "gh605-board-policy.sh",
+        "gh605-work-state.sh",
+        "gh645-merge-cleanup-xyz-tools.sh",
+        "gh646-status-label.sh",
+        "gh649-pdda-migration.sh",
+        "gh674-merge-cleanup-hosted-lookup.sh",
+        "gh69-roadmap-shadow.sh",
+        "gh75-dashboard.sh",
+        "gh777-inventory-ratchet.sh",
+        "gh784-marathon-qa-gate.sh",
+        "litmus-release.sh",
+        "meter-release.sh",
+        "mktemp-trap-guard.sh",
+        "nightwatch-release.sh",
+        "pdda-changelog.sh",
+        "pdda-install-startup-docs.sh",
+        "pdda-local-checks.sh",
+        "pdda-repo-contract.sh",
+        "pdda-roadmap-coverage.sh",
+        "relay-target-root-newfile.sh",
+        "relay-target-root-paths.sh",
+        "relay-target-root-relayfile.sh",
+        "relay-target-root.sh",
+        "releases-skill.sh",
+        "security-scan.sh",
+        "sentinel-network-guard.sh",
+        "wave-reconcile.sh"
+      ],
+      "candidate_names_missing": [
+        "gh589-consult-no-tick.sh",
+        "gh589-skill-viewer.sh",
+        "gh589-xyz-mini-sync.sh",
+        "gh620-skills-army-mini-sync.sh",
+        "skills-army-hq.sh"
+      ],
+      "candidate_nonzero_suite_events": [],
+      "candidate_suite_events": {
+        "ballast-release.sh": [
+          {
+            "line": 13,
+            "rc": 0,
+            "duration_ms": 1622,
+            "lane": "sequential"
+          }
+        ],
+        "gh1-adoption-guard.sh": [
+          {
+            "line": 17,
+            "rc": 0,
+            "duration_ms": 1830,
+            "lane": "sequential"
+          }
+        ],
+        "gh1-fixture-guard.sh": [
+          {
+            "line": 16,
+            "rc": 0,
+            "duration_ms": 719,
+            "lane": "sequential"
+          }
+        ],
+        "gh103-timeline-exporter.sh": [
+          {
+            "line": 24,
+            "rc": 0,
+            "duration_ms": 3743,
+            "lane": "sequential"
+          }
+        ],
+        "gh107-timeline-json-seam.sh": [
+          {
+            "line": 71,
+            "rc": 0,
+            "duration_ms": 415,
+            "lane": "sequential"
+          }
+        ],
+        "gh139-pipe-grep-guard.sh": [
+          {
+            "line": 18,
+            "rc": 0,
+            "duration_ms": 1398,
+            "lane": "sequential"
+          }
+        ],
+        "gh153-releases-sidebar-rollup.sh": [
+          {
+            "line": 68,
+            "rc": 0,
+            "duration_ms": 690,
+            "lane": "sequential"
+          }
+        ],
+        "gh168-wave-reconcile-scope.sh": [
+          {
+            "line": 19,
+            "rc": 0,
+            "duration_ms": 1099,
+            "lane": "sequential"
+          }
+        ],
+        "gh184-no-tracked-scratch.sh": [
+          {
+            "line": 20,
+            "rc": 0,
+            "duration_ms": 95,
+            "lane": "sequential"
+          }
+        ],
+        "gh202-wave-reconcile-issue-state.sh": [
+          {
+            "line": 21,
+            "rc": 0,
+            "duration_ms": 3150,
+            "lane": "sequential"
+          }
+        ],
+        "gh232-wave-reconcile-multiphase.sh": [
+          {
+            "line": 22,
+            "rc": 0,
+            "duration_ms": 843,
+            "lane": "sequential"
+          }
+        ],
+        "gh257-roadmap-ledger-fixes.sh": [
+          {
+            "line": 55,
+            "rc": 0,
+            "duration_ms": 3034,
+            "lane": "sequential"
+          }
+        ],
+        "gh269-roadmap-retired.sh": [
+          {
+            "line": 56,
+            "rc": 0,
+            "duration_ms": 19517,
+            "lane": "sequential"
+          }
+        ],
+        "gh284-p3-release-milestone.sh": [
+          {
+            "line": 51,
+            "rc": 0,
+            "duration_ms": 2552,
+            "lane": "sequential"
+          }
+        ],
+        "gh284-p4-release-lanes.sh": [
+          {
+            "line": 52,
+            "rc": 0,
+            "duration_ms": 1845,
+            "lane": "sequential"
+          }
+        ],
+        "gh306-registry-bidirectional.sh": [
+          {
+            "line": 74,
+            "rc": 0,
+            "duration_ms": 2117,
+            "lane": "sequential"
+          }
+        ],
+        "gh308-frozen-twin-guard.sh": [
+          {
+            "line": 3,
+            "rc": 0,
+            "duration_ms": 3005,
+            "lane": "sequential"
+          }
+        ],
+        "gh32-release-target-advisory.sh": [
+          {
+            "line": 38,
+            "rc": 0,
+            "duration_ms": 1727,
+            "lane": "sequential"
+          }
+        ],
+        "gh32-releases-app.sh": [
+          {
+            "line": 26,
+            "rc": 0,
+            "duration_ms": 21032,
+            "lane": "sequential"
+          }
+        ],
+        "gh32-releases-artifacts.sh": [
+          {
+            "line": 27,
+            "rc": 0,
+            "duration_ms": 603,
+            "lane": "sequential"
+          }
+        ],
+        "gh349-releases-roadmap-vendored.sh": [
+          {
+            "line": 35,
+            "rc": 0,
+            "duration_ms": 1911,
+            "lane": "sequential"
+          }
+        ],
+        "gh351-manifest-unship.sh": [
+          {
+            "line": 33,
+            "rc": 0,
+            "duration_ms": 2381,
+            "lane": "sequential"
+          }
+        ],
+        "gh358-wave-reconcile-vendored-paths.sh": [
+          {
+            "line": 37,
+            "rc": 0,
+            "duration_ms": 593,
+            "lane": "sequential"
+          }
+        ],
+        "gh360-scoped-receipt-chain-rebuild.sh": [
+          {
+            "line": 34,
+            "rc": 0,
+            "duration_ms": 3044,
+            "lane": "sequential"
+          }
+        ],
+        "gh39-releases-project-sync.sh": [
+          {
+            "line": 39,
+            "rc": 0,
+            "duration_ms": 2262,
+            "lane": "sequential"
+          }
+        ],
+        "gh400-acceptance-fidelity.sh": [
+          {
+            "line": 5,
+            "rc": 0,
+            "duration_ms": 1660,
+            "lane": "sequential"
+          }
+        ],
+        "gh400-source-url.sh": [
+          {
+            "line": 6,
+            "rc": 0,
+            "duration_ms": 843,
+            "lane": "sequential"
+          }
+        ],
+        "gh421-auto-wave-reconcile.sh": [
+          {
+            "line": 60,
+            "rc": 0,
+            "duration_ms": 4353,
+            "lane": "sequential"
+          }
+        ],
+        "gh422-backfill-source-url.sh": [
+          {
+            "line": 8,
+            "rc": 0,
+            "duration_ms": 775,
+            "lane": "sequential"
+          }
+        ],
+        "gh424-roadmap-status-marker.sh": [
+          {
+            "line": 59,
+            "rc": 0,
+            "duration_ms": 907,
+            "lane": "sequential"
+          }
+        ],
+        "gh425-source-url-slug.sh": [
+          {
+            "line": 9,
+            "rc": 0,
+            "duration_ms": 2616,
+            "lane": "sequential"
+          }
+        ],
+        "gh429-wave-reconcile-vendored-observe.sh": [
+          {
+            "line": 36,
+            "rc": 0,
+            "duration_ms": 1465,
+            "lane": "sequential"
+          }
+        ],
+        "gh448-driver-lock-resolver.sh": [
+          {
+            "line": 10,
+            "rc": 0,
+            "duration_ms": 554,
+            "lane": "sequential"
+          }
+        ],
+        "gh454-reconciler-defects.sh": [
+          {
+            "line": 58,
+            "rc": 0,
+            "duration_ms": 864,
+            "lane": "sequential"
+          }
+        ],
+        "gh491-roadmap-section-validation.sh": [
+          {
+            "line": 61,
+            "rc": 0,
+            "duration_ms": 9738,
+            "lane": "sequential"
+          }
+        ],
+        "gh492-roadmap-state-sweep.sh": [
+          {
+            "line": 62,
+            "rc": 0,
+            "duration_ms": 5339,
+            "lane": "sequential"
+          }
+        ],
+        "gh496-phase2-reconciliation-views.sh": [
+          {
+            "line": 73,
+            "rc": 0,
+            "duration_ms": 4525,
+            "lane": "sequential"
+          }
+        ],
+        "gh527-issue-url-repair.sh": [
+          {
+            "line": 67,
+            "rc": 0,
+            "duration_ms": 1759,
+            "lane": "sequential"
+          }
+        ],
+        "gh53-releases-merge-resolve.sh": [
+          {
+            "line": 28,
+            "rc": 0,
+            "duration_ms": 6288,
+            "lane": "sequential"
+          }
+        ],
+        "gh54-merged-dump-refusals.sh": [
+          {
+            "line": 29,
+            "rc": 0,
+            "duration_ms": 3122,
+            "lane": "sequential"
+          }
+        ],
+        "gh549-work-events.sh": [
+          {
+            "line": 14,
+            "rc": 0,
+            "duration_ms": 182195,
+            "lane": "sequential"
+          }
+        ],
+        "gh567-roadmap-dashboard-retired.sh": [
+          {
+            "line": 54,
+            "rc": 0,
+            "duration_ms": 742,
+            "lane": "sequential"
+          }
+        ],
+        "gh568-releases-md-retired.sh": [
+          {
+            "line": 57,
+            "rc": 0,
+            "duration_ms": 2292,
+            "lane": "sequential"
+          }
+        ],
+        "gh57-live-merge-resolve.sh": [
+          {
+            "line": 31,
+            "rc": 0,
+            "duration_ms": 8587,
+            "lane": "sequential"
+          }
+        ],
+        "gh57-releases-fuzz.sh": [
+          {
+            "line": 30,
+            "rc": 0,
+            "duration_ms": 9137,
+            "lane": "sequential"
+          }
+        ],
+        "gh605-board-policy.sh": [
+          {
+            "line": 64,
+            "rc": 0,
+            "duration_ms": 697,
+            "lane": "sequential"
+          }
+        ],
+        "gh605-work-state.sh": [
+          {
+            "line": 63,
+            "rc": 0,
+            "duration_ms": 1264,
+            "lane": "sequential"
+          }
+        ],
+        "gh645-merge-cleanup-xyz-tools.sh": [
+          {
+            "line": 65,
+            "rc": 0,
+            "duration_ms": 187,
+            "lane": "sequential"
+          }
+        ],
+        "gh646-status-label.sh": [
+          {
+            "line": 15,
+            "rc": 0,
+            "duration_ms": 7181,
+            "lane": "sequential"
+          }
+        ],
+        "gh649-pdda-migration.sh": [
+          {
+            "line": 44,
+            "rc": 0,
+            "duration_ms": 22152,
+            "lane": "sequential"
+          }
+        ],
+        "gh674-merge-cleanup-hosted-lookup.sh": [
+          {
+            "line": 66,
+            "rc": 0,
+            "duration_ms": 163,
+            "lane": "sequential"
+          }
+        ],
+        "gh69-roadmap-shadow.sh": [
+          {
+            "line": 32,
+            "rc": 0,
+            "duration_ms": 7830,
+            "lane": "sequential"
+          }
+        ],
+        "gh75-dashboard.sh": [
+          {
+            "line": 25,
+            "rc": 0,
+            "duration_ms": 607,
+            "lane": "sequential"
+          }
+        ],
+        "gh777-inventory-ratchet.sh": [
+          {
+            "line": 4,
+            "rc": 0,
+            "duration_ms": 339,
+            "lane": "sequential"
+          }
+        ],
+        "gh784-marathon-qa-gate.sh": [
+          {
+            "line": 50,
+            "rc": 0,
+            "duration_ms": 5014,
+            "lane": "sequential"
+          }
+        ],
+        "litmus-release.sh": [
+          {
+            "line": 7,
+            "rc": 0,
+            "duration_ms": 3169,
+            "lane": "sequential"
+          }
+        ],
+        "meter-release.sh": [
+          {
+            "line": 12,
+            "rc": 0,
+            "duration_ms": 943,
+            "lane": "sequential"
+          }
+        ],
+        "mktemp-trap-guard.sh": [
+          {
+            "line": 53,
+            "rc": 0,
+            "duration_ms": 14039,
+            "lane": "sequential"
+          }
+        ],
+        "nightwatch-release.sh": [
+          {
+            "line": 11,
+            "rc": 0,
+            "duration_ms": 3408,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-changelog.sh": [
+          {
+            "line": 45,
+            "rc": 0,
+            "duration_ms": 2887,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-install-startup-docs.sh": [
+          {
+            "line": 46,
+            "rc": 0,
+            "duration_ms": 71356,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-local-checks.sh": [
+          {
+            "line": 49,
+            "rc": 0,
+            "duration_ms": 12539,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-repo-contract.sh": [
+          {
+            "line": 48,
+            "rc": 0,
+            "duration_ms": 49325,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-roadmap-coverage.sh": [
+          {
+            "line": 47,
+            "rc": 0,
+            "duration_ms": 2458,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root-newfile.sh": [
+          {
+            "line": 43,
+            "rc": 0,
+            "duration_ms": 2443,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root-paths.sh": [
+          {
+            "line": 41,
+            "rc": 0,
+            "duration_ms": 2506,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root-relayfile.sh": [
+          {
+            "line": 42,
+            "rc": 0,
+            "duration_ms": 786,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root.sh": [
+          {
+            "line": 40,
+            "rc": 0,
+            "duration_ms": 10598,
+            "lane": "sequential"
+          }
+        ],
+        "releases-skill.sh": [
+          {
+            "line": 23,
+            "rc": 0,
+            "duration_ms": 137,
+            "lane": "sequential"
+          }
+        ],
+        "security-scan.sh": [
+          {
+            "line": 69,
+            "rc": 0,
+            "duration_ms": 10050,
+            "lane": "sequential"
+          }
+        ],
+        "sentinel-network-guard.sh": [
+          {
+            "line": 70,
+            "rc": 0,
+            "duration_ms": 242,
+            "lane": "sequential"
+          }
+        ],
+        "wave-reconcile.sh": [
+          {
+            "line": 72,
+            "rc": 0,
+            "duration_ms": 1489,
+            "lane": "sequential"
+          }
+        ]
+      },
+      "counterfactual_limit": "Posthoc membership of original full/Small telemetry is not execution or qualification of a reduced selection; no reruns. New code/consumer/receipt contracts not certified."
+    },
+    {
+      "id": "mixed_recovery_995",
+      "run_id": 37729005966,
+      "run_url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37729005966",
+      "tested_sha": "f44edf4ef33a266cdfa34761d1671ce5c10956a7",
+      "gate": "validate.sh --sequential",
+      "outer_pending_count": 7,
+      "outer_qualification_line": 439,
+      "outer_qualification_message": "wave-reconcile: Qualifying 7 landing(s) in integrated snapshot f44edf4ef33a266cdfa34761d1671ce5c10956a7 with `validate.sh --sequential` (tier 3)",
+      "pending_members": [
+        {
+          "kind": "pr",
+          "pr": 992,
+          "landing_sha": "e0c0bc9172d56efe54fd62f1afb44d90a18b4b8c",
+          "parent_sha": "33a03acc2916bc63a5ad0e2e7e8d696a1ead196d",
+          "subject": "fix(workhorse,merge-cleanup): Claude Stop guidance and merge-cleanup continuation contract (GH-985, GH-990) (#992)",
+          "changed_paths": [
+            "CHANGELOG.md",
+            "PROJECT/2-WORKING/GH-985-CLAUDE-WORKHORSE.md",
+            "PROJECT/2-WORKING/GH-990-MERGE-CLEANUP-CONTINUATION.md",
+            "TESTS-RESULTS/2026-10-06+GH-985/SUMMARY.md",
+            "TESTS-RESULTS/2026-10-06+GH-985/agy-build-r2-result.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/agy-build-r3-result.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/agy-build-result.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/comparison-final.json",
+            "TESTS-RESULTS/2026-10-06+GH-985/comparison.json",
+            "TESTS-RESULTS/2026-10-06+GH-985/fable-plan.md",
+            "TESTS-RESULTS/2026-10-06+GH-985/governance-identity.json",
+            "TESTS-RESULTS/2026-10-06+GH-985/governance-imports.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/governance-pdda.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/governance-releases.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/governance-route.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/manual-blocker-clause-failure.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/manual-first-failure.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/manual-hook-checks-final.json",
+            "TESTS-RESULTS/2026-10-06+GH-985/manual-hook-checks.json",
+            "TESTS-RESULTS/2026-10-06+GH-985/metadata-final-projection-validate.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/metadata-projection-validate.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/provenance.jsonl",
+            "TESTS-RESULTS/2026-10-06+GH-985/publication.json",
+            "TESTS-RESULTS/2026-10-06+GH-985/raw-final-validate.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/raw-validate.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/runtime-capabilities.txt",
+            "TESTS-RESULTS/2026-10-06+GH-985/runtime-recon.md",
+            "TESTS-RESULTS/2026-10-06+GH-985/source-controls.json",
+            "relay-system/2026-10-06/gh985-build.agy.md",
+            "relay-system/2026-10-06/gh985-final.fable.md",
+            "relay-system/2026-10-06/gh985-plan.fable.md",
+            "releases.db",
+            "releases.sql",
+            "skills/2-daily/merge-cleanup/SKILL.md",
+            "skills/2-daily/workhorse/SKILL.md",
+            "skills/2-daily/workhorse/stop-hook.sh"
+          ],
+          "commit_ancestor_of_tested": true
+        },
+        {
+          "kind": "commit",
+          "pr": null,
+          "landing_sha": "f48a08a511bccb6baddb5f598614e7dc4c309043",
+          "parent_sha": "e0c0bc9172d56efe54fd62f1afb44d90a18b4b8c",
+          "subject": "fix(skills-army-hq): commit own skill paths in a git-backed collection; status warns on stalled repo (GH-993)",
+          "changed_paths": [
+            "skills/3-weekly/skills-army-hq/SKILL.md",
+            "skills/3-weekly/skills-army-hq/scripts/intake.py",
+            "skills/3-weekly/skills-army-hq/scripts/sync.py"
+          ],
+          "commit_ancestor_of_tested": true
+        },
+        {
+          "kind": "commit",
+          "pr": null,
+          "landing_sha": "d822996cc083e1775501703302736184fe64d8de",
+          "parent_sha": "a9c6b7f76e7c17b78ca5e194a75d97a9becb3c44",
+          "subject": "chore(releases): express ship GH-993 (commit a9c6b7f76e7c)",
+          "changed_paths": [
+            "TESTS-RESULTS/2026-10-08+GH-993-express/provenance.jsonl",
+            "releases.db",
+            "releases.sql"
+          ],
+          "commit_ancestor_of_tested": true
+        },
+        {
+          "kind": "commit",
+          "pr": null,
+          "landing_sha": "18b07225eae0c20133fa9307bd95cba1bd16e54a",
+          "parent_sha": "d822996cc083e1775501703302736184fe64d8de",
+          "subject": "chore(pdda): express reconcile GH-993 (commit a9c6b7f76e7c)",
+          "changed_paths": [
+            "LEADERBOARD.md",
+            "PROJECT/3-COMPLETED/GH-993-SKILLS-ARMY-HQ-INTAKE-APPLY-LEAVES-GIT-PULSE-COLLECTION-DIRT.md",
+            "releases.db",
+            "releases.sql"
+          ],
+          "commit_ancestor_of_tested": true
+        },
+        {
+          "kind": "commit",
+          "pr": null,
+          "landing_sha": "dc4dd65d1cad5e81ac9b5af2a97fa80530630741",
+          "parent_sha": "18b07225eae0c20133fa9307bd95cba1bd16e54a",
+          "subject": "test(gh620): pin BOT-DAILY-HEALTH-CHECK.md in the skills-army-mini payload (GH-995)",
+          "changed_paths": [
+            "test/gh620-skills-army-mini-sync.sh"
+          ],
+          "commit_ancestor_of_tested": true
+        },
+        {
+          "kind": "commit",
+          "pr": null,
+          "landing_sha": "b9b284fafda3afde845d4162b7f4a50e10e9dfb1",
+          "parent_sha": "3d945aad2ed7a1f118c488f825f8f351e68ea3d8",
+          "subject": "chore(releases): express ship GH-995 (commit 3d945aad2ed7)",
+          "changed_paths": [
+            "TESTS-RESULTS/2026-10-08+GH-995-express/provenance.jsonl",
+            "releases.db",
+            "releases.sql"
+          ],
+          "commit_ancestor_of_tested": true
+        },
+        {
+          "kind": "commit",
+          "pr": null,
+          "landing_sha": "f44edf4ef33a266cdfa34761d1671ce5c10956a7",
+          "parent_sha": "b9b284fafda3afde845d4162b7f4a50e10e9dfb1",
+          "subject": "chore(pdda): express reconcile GH-995 (commit 3d945aad2ed7)",
+          "changed_paths": [
+            "LEADERBOARD.md",
+            "PROJECT/3-COMPLETED/GH-995-TEST-GH620-SKILLS-ARMY-MINI-PAYLOAD-PIN-IS-RED-SINCE-GH-988-.md",
+            "releases.db",
+            "releases.sql"
+          ],
+          "commit_ancestor_of_tested": true
+        }
+      ],
+      "pending_identity_complete": true,
+      "complete_union_paths": [
+        "CHANGELOG.md",
+        "LEADERBOARD.md",
+        "PROJECT/2-WORKING/GH-985-CLAUDE-WORKHORSE.md",
+        "PROJECT/2-WORKING/GH-990-MERGE-CLEANUP-CONTINUATION.md",
+        "PROJECT/3-COMPLETED/GH-993-SKILLS-ARMY-HQ-INTAKE-APPLY-LEAVES-GIT-PULSE-COLLECTION-DIRT.md",
+        "PROJECT/3-COMPLETED/GH-995-TEST-GH620-SKILLS-ARMY-MINI-PAYLOAD-PIN-IS-RED-SINCE-GH-988-.md",
+        "TESTS-RESULTS/2026-10-06+GH-985/SUMMARY.md",
+        "TESTS-RESULTS/2026-10-06+GH-985/agy-build-r2-result.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/agy-build-r3-result.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/agy-build-result.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/comparison-final.json",
+        "TESTS-RESULTS/2026-10-06+GH-985/comparison.json",
+        "TESTS-RESULTS/2026-10-06+GH-985/fable-plan.md",
+        "TESTS-RESULTS/2026-10-06+GH-985/governance-identity.json",
+        "TESTS-RESULTS/2026-10-06+GH-985/governance-imports.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/governance-pdda.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/governance-releases.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/governance-route.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/manual-blocker-clause-failure.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/manual-first-failure.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/manual-hook-checks-final.json",
+        "TESTS-RESULTS/2026-10-06+GH-985/manual-hook-checks.json",
+        "TESTS-RESULTS/2026-10-06+GH-985/metadata-final-projection-validate.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/metadata-projection-validate.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/provenance.jsonl",
+        "TESTS-RESULTS/2026-10-06+GH-985/publication.json",
+        "TESTS-RESULTS/2026-10-06+GH-985/raw-final-validate.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/raw-validate.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/runtime-capabilities.txt",
+        "TESTS-RESULTS/2026-10-06+GH-985/runtime-recon.md",
+        "TESTS-RESULTS/2026-10-06+GH-985/source-controls.json",
+        "TESTS-RESULTS/2026-10-08+GH-993-express/provenance.jsonl",
+        "TESTS-RESULTS/2026-10-08+GH-995-express/provenance.jsonl",
+        "relay-system/2026-10-06/gh985-build.agy.md",
+        "relay-system/2026-10-06/gh985-final.fable.md",
+        "relay-system/2026-10-06/gh985-plan.fable.md",
+        "releases.db",
+        "releases.sql",
+        "skills/2-daily/merge-cleanup/SKILL.md",
+        "skills/2-daily/workhorse/SKILL.md",
+        "skills/2-daily/workhorse/stop-hook.sh",
+        "skills/3-weekly/skills-army-hq/SKILL.md",
+        "skills/3-weekly/skills-army-hq/scripts/intake.py",
+        "skills/3-weekly/skills-army-hq/scripts/sync.py",
+        "test/gh620-skills-army-mini-sync.sh"
+      ],
+      "receipt_path": "TESTS-RESULTS/2026-10-08+GH-591/wave-f44edf4ef33a266cdfa34761d1671ce5c10956a7/provenance.jsonl",
+      "receipt_sha256": "a2ff1d3b80ae8c8feacc4fea3468ff72184b3b63c6acfc16bd4debef2982b64a",
+      "telemetry_path": "TESTS-RESULTS/2026-10-08+GH-591/wave-f44edf4ef33a266cdfa34761d1671ce5c10956a7/validation.jsonl",
+      "telemetry_sha256": "1c9a7885be853003e8e6bbe3497f85e9ea1fbdf232cdaf5b10f75dab55cff621",
+      "receipt_telemetry_digest_matches": true,
+      "original_log": "gh1076-v3-run-37729005966.log",
+      "original_log_sha256": "618fc788e17ce2ca4ecc377cb284e50cd6334883da491de1d6d819061ae28748",
+      "historical_summary": [
+        {
+          "line": 412,
+          "record": {
+            "v": 1,
+            "ts_ms": 1791438205760,
+            "run": "f44edf4ef-9267",
+            "runner": "validate",
+            "event": "run.summary",
+            "passed": 410,
+            "failed": 0,
+            "total": 410,
+            "envelope_rc": "0",
+            "envelope_drift": "none",
+            "suite_events": "409",
+            "run_set": "407",
+            "registered": "407",
+            "suite_events_match": "yes"
+          }
+        }
+      ],
+      "posthoc_candidate_small_plus_skills_army_shell_names": [
+        "ballast-release.sh",
+        "gh1-adoption-guard.sh",
+        "gh1-fixture-guard.sh",
+        "gh103-timeline-exporter.sh",
+        "gh107-timeline-json-seam.sh",
+        "gh139-pipe-grep-guard.sh",
+        "gh153-releases-sidebar-rollup.sh",
+        "gh168-wave-reconcile-scope.sh",
+        "gh184-no-tracked-scratch.sh",
+        "gh202-wave-reconcile-issue-state.sh",
+        "gh232-wave-reconcile-multiphase.sh",
+        "gh257-roadmap-ledger-fixes.sh",
+        "gh269-roadmap-retired.sh",
+        "gh284-p3-release-milestone.sh",
+        "gh284-p4-release-lanes.sh",
+        "gh306-registry-bidirectional.sh",
+        "gh308-frozen-twin-guard.sh",
+        "gh32-release-target-advisory.sh",
+        "gh32-releases-app.sh",
+        "gh32-releases-artifacts.sh",
+        "gh349-releases-roadmap-vendored.sh",
+        "gh351-manifest-unship.sh",
+        "gh358-wave-reconcile-vendored-paths.sh",
+        "gh360-scoped-receipt-chain-rebuild.sh",
+        "gh39-releases-project-sync.sh",
+        "gh400-acceptance-fidelity.sh",
+        "gh400-source-url.sh",
+        "gh421-auto-wave-reconcile.sh",
+        "gh422-backfill-source-url.sh",
+        "gh424-roadmap-status-marker.sh",
+        "gh425-source-url-slug.sh",
+        "gh429-wave-reconcile-vendored-observe.sh",
+        "gh448-driver-lock-resolver.sh",
+        "gh454-reconciler-defects.sh",
+        "gh491-roadmap-section-validation.sh",
+        "gh492-roadmap-state-sweep.sh",
+        "gh496-phase2-reconciliation-views.sh",
+        "gh527-issue-url-repair.sh",
+        "gh53-releases-merge-resolve.sh",
+        "gh54-merged-dump-refusals.sh",
+        "gh549-work-events.sh",
+        "gh567-roadmap-dashboard-retired.sh",
+        "gh568-releases-md-retired.sh",
+        "gh57-live-merge-resolve.sh",
+        "gh57-releases-fuzz.sh",
+        "gh589-consult-no-tick.sh",
+        "gh589-skill-viewer.sh",
+        "gh589-xyz-mini-sync.sh",
+        "gh605-board-policy.sh",
+        "gh605-work-state.sh",
+        "gh620-skills-army-mini-sync.sh",
+        "gh645-merge-cleanup-xyz-tools.sh",
+        "gh646-status-label.sh",
+        "gh649-pdda-migration.sh",
+        "gh674-merge-cleanup-hosted-lookup.sh",
+        "gh69-roadmap-shadow.sh",
+        "gh75-dashboard.sh",
+        "gh777-inventory-ratchet.sh",
+        "gh784-marathon-qa-gate.sh",
+        "litmus-release.sh",
+        "meter-release.sh",
+        "mktemp-trap-guard.sh",
+        "nightwatch-release.sh",
+        "pdda-changelog.sh",
+        "pdda-install-startup-docs.sh",
+        "pdda-local-checks.sh",
+        "pdda-repo-contract.sh",
+        "pdda-roadmap-coverage.sh",
+        "relay-target-root-newfile.sh",
+        "relay-target-root-paths.sh",
+        "relay-target-root-relayfile.sh",
+        "relay-target-root.sh",
+        "releases-skill.sh",
+        "security-scan.sh",
+        "sentinel-network-guard.sh",
+        "skills-army-hq.sh",
+        "wave-reconcile.sh"
+      ],
+      "candidate_shell_names_count": 77,
+      "candidate_names_present": [
+        "ballast-release.sh",
+        "gh1-adoption-guard.sh",
+        "gh1-fixture-guard.sh",
+        "gh103-timeline-exporter.sh",
+        "gh107-timeline-json-seam.sh",
+        "gh139-pipe-grep-guard.sh",
+        "gh153-releases-sidebar-rollup.sh",
+        "gh168-wave-reconcile-scope.sh",
+        "gh184-no-tracked-scratch.sh",
+        "gh202-wave-reconcile-issue-state.sh",
+        "gh232-wave-reconcile-multiphase.sh",
+        "gh257-roadmap-ledger-fixes.sh",
+        "gh269-roadmap-retired.sh",
+        "gh284-p3-release-milestone.sh",
+        "gh284-p4-release-lanes.sh",
+        "gh306-registry-bidirectional.sh",
+        "gh308-frozen-twin-guard.sh",
+        "gh32-release-target-advisory.sh",
+        "gh32-releases-app.sh",
+        "gh32-releases-artifacts.sh",
+        "gh349-releases-roadmap-vendored.sh",
+        "gh351-manifest-unship.sh",
+        "gh358-wave-reconcile-vendored-paths.sh",
+        "gh360-scoped-receipt-chain-rebuild.sh",
+        "gh39-releases-project-sync.sh",
+        "gh400-acceptance-fidelity.sh",
+        "gh400-source-url.sh",
+        "gh421-auto-wave-reconcile.sh",
+        "gh422-backfill-source-url.sh",
+        "gh424-roadmap-status-marker.sh",
+        "gh425-source-url-slug.sh",
+        "gh429-wave-reconcile-vendored-observe.sh",
+        "gh448-driver-lock-resolver.sh",
+        "gh454-reconciler-defects.sh",
+        "gh491-roadmap-section-validation.sh",
+        "gh492-roadmap-state-sweep.sh",
+        "gh496-phase2-reconciliation-views.sh",
+        "gh527-issue-url-repair.sh",
+        "gh53-releases-merge-resolve.sh",
+        "gh54-merged-dump-refusals.sh",
+        "gh549-work-events.sh",
+        "gh567-roadmap-dashboard-retired.sh",
+        "gh568-releases-md-retired.sh",
+        "gh57-live-merge-resolve.sh",
+        "gh57-releases-fuzz.sh",
+        "gh589-consult-no-tick.sh",
+        "gh589-skill-viewer.sh",
+        "gh589-xyz-mini-sync.sh",
+        "gh605-board-policy.sh",
+        "gh605-work-state.sh",
+        "gh620-skills-army-mini-sync.sh",
+        "gh645-merge-cleanup-xyz-tools.sh",
+        "gh646-status-label.sh",
+        "gh649-pdda-migration.sh",
+        "gh674-merge-cleanup-hosted-lookup.sh",
+        "gh69-roadmap-shadow.sh",
+        "gh75-dashboard.sh",
+        "gh777-inventory-ratchet.sh",
+        "gh784-marathon-qa-gate.sh",
+        "litmus-release.sh",
+        "meter-release.sh",
+        "mktemp-trap-guard.sh",
+        "nightwatch-release.sh",
+        "pdda-changelog.sh",
+        "pdda-install-startup-docs.sh",
+        "pdda-local-checks.sh",
+        "pdda-repo-contract.sh",
+        "pdda-roadmap-coverage.sh",
+        "relay-target-root-newfile.sh",
+        "relay-target-root-paths.sh",
+        "relay-target-root-relayfile.sh",
+        "relay-target-root.sh",
+        "releases-skill.sh",
+        "security-scan.sh",
+        "sentinel-network-guard.sh",
+        "skills-army-hq.sh",
+        "wave-reconcile.sh"
+      ],
+      "candidate_names_missing": [],
+      "candidate_nonzero_suite_events": [],
+      "candidate_suite_events": {
+        "ballast-release.sh": [
+          {
+            "line": 140,
+            "rc": 0,
+            "duration_ms": 1847,
+            "lane": "sequential"
+          }
+        ],
+        "gh1-adoption-guard.sh": [
+          {
+            "line": 183,
+            "rc": 0,
+            "duration_ms": 4958,
+            "lane": "sequential"
+          }
+        ],
+        "gh1-fixture-guard.sh": [
+          {
+            "line": 182,
+            "rc": 0,
+            "duration_ms": 1324,
+            "lane": "sequential"
+          }
+        ],
+        "gh103-timeline-exporter.sh": [
+          {
+            "line": 246,
+            "rc": 0,
+            "duration_ms": 5768,
+            "lane": "sequential"
+          }
+        ],
+        "gh107-timeline-json-seam.sh": [
+          {
+            "line": 386,
+            "rc": 0,
+            "duration_ms": 465,
+            "lane": "sequential"
+          }
+        ],
+        "gh139-pipe-grep-guard.sh": [
+          {
+            "line": 201,
+            "rc": 0,
+            "duration_ms": 3401,
+            "lane": "sequential"
+          }
+        ],
+        "gh153-releases-sidebar-rollup.sh": [
+          {
+            "line": 368,
+            "rc": 0,
+            "duration_ms": 907,
+            "lane": "sequential"
+          }
+        ],
+        "gh168-wave-reconcile-scope.sh": [
+          {
+            "line": 232,
+            "rc": 0,
+            "duration_ms": 1924,
+            "lane": "sequential"
+          }
+        ],
+        "gh184-no-tracked-scratch.sh": [
+          {
+            "line": 238,
+            "rc": 0,
+            "duration_ms": 174,
+            "lane": "sequential"
+          }
+        ],
+        "gh202-wave-reconcile-issue-state.sh": [
+          {
+            "line": 239,
+            "rc": 0,
+            "duration_ms": 5192,
+            "lane": "sequential"
+          }
+        ],
+        "gh232-wave-reconcile-multiphase.sh": [
+          {
+            "line": 240,
+            "rc": 0,
+            "duration_ms": 1410,
+            "lane": "sequential"
+          }
+        ],
+        "gh257-roadmap-ledger-fixes.sh": [
+          {
+            "line": 340,
+            "rc": 0,
+            "duration_ms": 3536,
+            "lane": "sequential"
+          }
+        ],
+        "gh269-roadmap-retired.sh": [
+          {
+            "line": 342,
+            "rc": 0,
+            "duration_ms": 21174,
+            "lane": "sequential"
+          }
+        ],
+        "gh284-p3-release-milestone.sh": [
+          {
+            "line": 311,
+            "rc": 0,
+            "duration_ms": 2963,
+            "lane": "sequential"
+          }
+        ],
+        "gh284-p4-release-lanes.sh": [
+          {
+            "line": 312,
+            "rc": 0,
+            "duration_ms": 2261,
+            "lane": "sequential"
+          }
+        ],
+        "gh306-registry-bidirectional.sh": [
+          {
+            "line": 396,
+            "rc": 0,
+            "duration_ms": 2166,
+            "lane": "sequential"
+          }
+        ],
+        "gh308-frozen-twin-guard.sh": [
+          {
+            "line": 44,
+            "rc": 0,
+            "duration_ms": 5311,
+            "lane": "sequential"
+          }
+        ],
+        "gh32-release-target-advisory.sh": [
+          {
+            "line": 264,
+            "rc": 0,
+            "duration_ms": 2375,
+            "lane": "sequential"
+          }
+        ],
+        "gh32-releases-app.sh": [
+          {
+            "line": 249,
+            "rc": 0,
+            "duration_ms": 35295,
+            "lane": "sequential"
+          }
+        ],
+        "gh32-releases-artifacts.sh": [
+          {
+            "line": 250,
+            "rc": 0,
+            "duration_ms": 983,
+            "lane": "sequential"
+          }
+        ],
+        "gh349-releases-roadmap-vendored.sh": [
+          {
+            "line": 259,
+            "rc": 0,
+            "duration_ms": 2635,
+            "lane": "sequential"
+          }
+        ],
+        "gh351-manifest-unship.sh": [
+          {
+            "line": 257,
+            "rc": 0,
+            "duration_ms": 2907,
+            "lane": "sequential"
+          }
+        ],
+        "gh358-wave-reconcile-vendored-paths.sh": [
+          {
+            "line": 262,
+            "rc": 0,
+            "duration_ms": 1041,
+            "lane": "sequential"
+          }
+        ],
+        "gh360-scoped-receipt-chain-rebuild.sh": [
+          {
+            "line": 258,
+            "rc": 0,
+            "duration_ms": 3305,
+            "lane": "sequential"
+          }
+        ],
+        "gh39-releases-project-sync.sh": [
+          {
+            "line": 265,
+            "rc": 0,
+            "duration_ms": 2886,
+            "lane": "sequential"
+          }
+        ],
+        "gh400-acceptance-fidelity.sh": [
+          {
+            "line": 100,
+            "rc": 0,
+            "duration_ms": 1468,
+            "lane": "sequential"
+          }
+        ],
+        "gh400-source-url.sh": [
+          {
+            "line": 102,
+            "rc": 0,
+            "duration_ms": 729,
+            "lane": "sequential"
+          }
+        ],
+        "gh421-auto-wave-reconcile.sh": [
+          {
+            "line": 349,
+            "rc": 0,
+            "duration_ms": 4305,
+            "lane": "sequential"
+          }
+        ],
+        "gh422-backfill-source-url.sh": [
+          {
+            "line": 106,
+            "rc": 0,
+            "duration_ms": 887,
+            "lane": "sequential"
+          }
+        ],
+        "gh424-roadmap-status-marker.sh": [
+          {
+            "line": 346,
+            "rc": 0,
+            "duration_ms": 1028,
+            "lane": "sequential"
+          }
+        ],
+        "gh425-source-url-slug.sh": [
+          {
+            "line": 107,
+            "rc": 0,
+            "duration_ms": 2408,
+            "lane": "sequential"
+          }
+        ],
+        "gh429-wave-reconcile-vendored-observe.sh": [
+          {
+            "line": 261,
+            "rc": 0,
+            "duration_ms": 2239,
+            "lane": "sequential"
+          }
+        ],
+        "gh448-driver-lock-resolver.sh": [
+          {
+            "line": 123,
+            "rc": 0,
+            "duration_ms": 499,
+            "lane": "sequential"
+          }
+        ],
+        "gh454-reconciler-defects.sh": [
+          {
+            "line": 345,
+            "rc": 0,
+            "duration_ms": 949,
+            "lane": "sequential"
+          }
+        ],
+        "gh491-roadmap-section-validation.sh": [
+          {
+            "line": 352,
+            "rc": 0,
+            "duration_ms": 10883,
+            "lane": "sequential"
+          }
+        ],
+        "gh492-roadmap-state-sweep.sh": [
+          {
+            "line": 353,
+            "rc": 0,
+            "duration_ms": 5820,
+            "lane": "sequential"
+          }
+        ],
+        "gh496-phase2-reconciliation-views.sh": [
+          {
+            "line": 394,
+            "rc": 0,
+            "duration_ms": 4627,
+            "lane": "sequential"
+          }
+        ],
+        "gh527-issue-url-repair.sh": [
+          {
+            "line": 360,
+            "rc": 0,
+            "duration_ms": 2202,
+            "lane": "sequential"
+          }
+        ],
+        "gh53-releases-merge-resolve.sh": [
+          {
+            "line": 251,
+            "rc": 0,
+            "duration_ms": 7577,
+            "lane": "sequential"
+          }
+        ],
+        "gh54-merged-dump-refusals.sh": [
+          {
+            "line": 252,
+            "rc": 0,
+            "duration_ms": 5301,
+            "lane": "sequential"
+          }
+        ],
+        "gh549-work-events.sh": [
+          {
+            "line": 168,
+            "rc": 0,
+            "duration_ms": 181518,
+            "lane": "sequential"
+          }
+        ],
+        "gh567-roadmap-dashboard-retired.sh": [
+          {
+            "line": 339,
+            "rc": 0,
+            "duration_ms": 817,
+            "lane": "sequential"
+          }
+        ],
+        "gh568-releases-md-retired.sh": [
+          {
+            "line": 343,
+            "rc": 0,
+            "duration_ms": 2178,
+            "lane": "sequential"
+          }
+        ],
+        "gh57-live-merge-resolve.sh": [
+          {
+            "line": 255,
+            "rc": 0,
+            "duration_ms": 13454,
+            "lane": "sequential"
+          }
+        ],
+        "gh57-releases-fuzz.sh": [
+          {
+            "line": 254,
+            "rc": 0,
+            "duration_ms": 14644,
+            "lane": "sequential"
+          }
+        ],
+        "gh589-consult-no-tick.sh": [
+          {
+            "line": 407,
+            "rc": 0,
+            "duration_ms": 2900,
+            "lane": "sequential"
+          }
+        ],
+        "gh589-skill-viewer.sh": [
+          {
+            "line": 408,
+            "rc": 0,
+            "duration_ms": 666,
+            "lane": "sequential"
+          }
+        ],
+        "gh589-xyz-mini-sync.sh": [
+          {
+            "line": 406,
+            "rc": 0,
+            "duration_ms": 14455,
+            "lane": "sequential"
+          }
+        ],
+        "gh605-board-policy.sh": [
+          {
+            "line": 355,
+            "rc": 0,
+            "duration_ms": 879,
+            "lane": "sequential"
+          }
+        ],
+        "gh605-work-state.sh": [
+          {
+            "line": 354,
+            "rc": 0,
+            "duration_ms": 1681,
+            "lane": "sequential"
+          }
+        ],
+        "gh620-skills-army-mini-sync.sh": [
+          {
+            "line": 290,
+            "rc": 0,
+            "duration_ms": 13150,
+            "lane": "sequential"
+          }
+        ],
+        "gh645-merge-cleanup-xyz-tools.sh": [
+          {
+            "line": 357,
+            "rc": 0,
+            "duration_ms": 268,
+            "lane": "sequential"
+          }
+        ],
+        "gh646-status-label.sh": [
+          {
+            "line": 169,
+            "rc": 0,
+            "duration_ms": 6841,
+            "lane": "sequential"
+          }
+        ],
+        "gh649-pdda-migration.sh": [
+          {
+            "line": 303,
+            "rc": 0,
+            "duration_ms": 24429,
+            "lane": "sequential"
+          }
+        ],
+        "gh674-merge-cleanup-hosted-lookup.sh": [
+          {
+            "line": 358,
+            "rc": 0,
+            "duration_ms": 195,
+            "lane": "sequential"
+          }
+        ],
+        "gh69-roadmap-shadow.sh": [
+          {
+            "line": 256,
+            "rc": 0,
+            "duration_ms": 11245,
+            "lane": "sequential"
+          }
+        ],
+        "gh75-dashboard.sh": [
+          {
+            "line": 247,
+            "rc": 0,
+            "duration_ms": 976,
+            "lane": "sequential"
+          }
+        ],
+        "gh777-inventory-ratchet.sh": [
+          {
+            "line": 49,
+            "rc": 0,
+            "duration_ms": 366,
+            "lane": "sequential"
+          }
+        ],
+        "gh784-marathon-qa-gate.sh": [
+          {
+            "line": 309,
+            "rc": 0,
+            "duration_ms": 5853,
+            "lane": "sequential"
+          }
+        ],
+        "litmus-release.sh": [
+          {
+            "line": 104,
+            "rc": 0,
+            "duration_ms": 3013,
+            "lane": "sequential"
+          }
+        ],
+        "meter-release.sh": [
+          {
+            "line": 139,
+            "rc": 0,
+            "duration_ms": 845,
+            "lane": "sequential"
+          }
+        ],
+        "mktemp-trap-guard.sh": [
+          {
+            "line": 334,
+            "rc": 0,
+            "duration_ms": 15231,
+            "lane": "sequential"
+          }
+        ],
+        "nightwatch-release.sh": [
+          {
+            "line": 132,
+            "rc": 0,
+            "duration_ms": 3489,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-changelog.sh": [
+          {
+            "line": 304,
+            "rc": 0,
+            "duration_ms": 3549,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-install-startup-docs.sh": [
+          {
+            "line": 305,
+            "rc": 0,
+            "duration_ms": 87260,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-local-checks.sh": [
+          {
+            "line": 308,
+            "rc": 0,
+            "duration_ms": 14756,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-repo-contract.sh": [
+          {
+            "line": 307,
+            "rc": 0,
+            "duration_ms": 60016,
+            "lane": "sequential"
+          }
+        ],
+        "pdda-roadmap-coverage.sh": [
+          {
+            "line": 306,
+            "rc": 0,
+            "duration_ms": 3113,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root-newfile.sh": [
+          {
+            "line": 271,
+            "rc": 0,
+            "duration_ms": 4476,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root-paths.sh": [
+          {
+            "line": 269,
+            "rc": 0,
+            "duration_ms": 4131,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root-relayfile.sh": [
+          {
+            "line": 270,
+            "rc": 0,
+            "duration_ms": 1220,
+            "lane": "sequential"
+          }
+        ],
+        "relay-target-root.sh": [
+          {
+            "line": 268,
+            "rc": 0,
+            "duration_ms": 12747,
+            "lane": "sequential"
+          }
+        ],
+        "releases-skill.sh": [
+          {
+            "line": 245,
+            "rc": 0,
+            "duration_ms": 378,
+            "lane": "sequential"
+          }
+        ],
+        "security-scan.sh": [
+          {
+            "line": 370,
+            "rc": 0,
+            "duration_ms": 11453,
+            "lane": "sequential"
+          }
+        ],
+        "sentinel-network-guard.sh": [
+          {
+            "line": 372,
+            "rc": 0,
+            "duration_ms": 249,
+            "lane": "sequential"
+          }
+        ],
+        "skills-army-hq.sh": [
+          {
+            "line": 289,
+            "rc": 0,
+            "duration_ms": 19936,
+            "lane": "sequential"
+          }
+        ],
+        "wave-reconcile.sh": [
+          {
+            "line": 393,
+            "rc": 0,
+            "duration_ms": 1449,
+            "lane": "sequential"
+          }
+        ]
+      },
+      "counterfactual_limit": "Posthoc membership of original full/Small telemetry is not execution or qualification of a reduced selection; no reruns. New code/consumer/receipt contracts not certified."
+    }
+  ],
+  "inherited_payload_case": {
+    "small_tested_sha": "a48fa48fd45e0ebae6c64f50651f58534b0d872d",
+    "full_failed_tested_sha": "e0c0bc9172d56efe54fd62f1afb44d90a18b4b8c",
+    "full_run_url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/37723297290",
+    "full_pending_members": [
+      {
+        "pr": 992,
+        "landing_sha": "e0c0bc9172d56efe54fd62f1afb44d90a18b4b8c",
+        "changed_paths": [
+          "CHANGELOG.md",
+          "PROJECT/2-WORKING/GH-985-CLAUDE-WORKHORSE.md",
+          "PROJECT/2-WORKING/GH-990-MERGE-CLEANUP-CONTINUATION.md",
+          "TESTS-RESULTS/2026-10-06+GH-985/SUMMARY.md",
+          "TESTS-RESULTS/2026-10-06+GH-985/agy-build-r2-result.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/agy-build-r3-result.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/agy-build-result.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/comparison-final.json",
+          "TESTS-RESULTS/2026-10-06+GH-985/comparison.json",
+          "TESTS-RESULTS/2026-10-06+GH-985/fable-plan.md",
+          "TESTS-RESULTS/2026-10-06+GH-985/governance-identity.json",
+          "TESTS-RESULTS/2026-10-06+GH-985/governance-imports.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/governance-pdda.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/governance-releases.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/governance-route.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/manual-blocker-clause-failure.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/manual-first-failure.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/manual-hook-checks-final.json",
+          "TESTS-RESULTS/2026-10-06+GH-985/manual-hook-checks.json",
+          "TESTS-RESULTS/2026-10-06+GH-985/metadata-final-projection-validate.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/metadata-projection-validate.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/provenance.jsonl",
+          "TESTS-RESULTS/2026-10-06+GH-985/publication.json",
+          "TESTS-RESULTS/2026-10-06+GH-985/raw-final-validate.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/raw-validate.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/runtime-capabilities.txt",
+          "TESTS-RESULTS/2026-10-06+GH-985/runtime-recon.md",
+          "TESTS-RESULTS/2026-10-06+GH-985/source-controls.json",
+          "relay-system/2026-10-06/gh985-build.agy.md",
+          "relay-system/2026-10-06/gh985-final.fable.md",
+          "relay-system/2026-10-06/gh985-plan.fable.md",
+          "releases.db",
+          "releases.sql",
+          "skills/2-daily/merge-cleanup/SKILL.md",
+          "skills/2-daily/workhorse/SKILL.md",
+          "skills/2-daily/workhorse/stop-hook.sh"
+        ]
+      }
+    ],
+    "full_pending_count": 1,
+    "full_gate": "validate.sh --sequential; outer tier3",
+    "failed_suites": [
+      {
+        "name": "gh620-skills-army-mini-sync.sh",
+        "driver_summary_line": 14980,
+        "focused_membership_at_baseline": [
+          "skills_army_hq"
+        ],
+        "small_selects": false,
+        "selection_limit": "Membership is not proof of failure detection or complete area-consumer closure.",
+        "bounded_suite_failure_evidence": [
+          {
+            "line": 7517,
+            "message": "FAIL: literal inclusion-only payload set missing=[] extra=['BOT-DAILY-HEALTH-CHECK.md']"
+          },
+          {
+            "line": 7518,
+            "message": "FAIL: manifest names exactly the nine managed payloads"
+          },
+          {
+            "line": 7544,
+            "message": "gh620-skills-army-mini-sync: 26 passed, 2 failed"
+          }
+        ]
+      }
+    ],
+    "known_issue": 995,
+    "introduced_payload_commit": "db85c19984f2b4bdcadb287e736ecd78b1815851",
+    "renamed_payload_commit": "59b0e386b771c830b26d383040be205dec7bffd2",
+    "correcting_expectations_commit": "dc4dd65d1cad5e81ac9b5af2a97fa80530630741",
+    "source_identity_comparison": [
+      {
+        "path": "skills/3-weekly/skills-army-hq",
+        "blob_or_tree_at_small": "512318816b7efd318df7af1d8f4a95cea8c3823e",
+        "blob_or_tree_at_full_failure": "512318816b7efd318df7af1d8f4a95cea8c3823e",
+        "equal": true
+      },
+      {
+        "path": "utils/py/xyz_mini_sync.py",
+        "blob_or_tree_at_small": "1fccda6e24b41af810d143d07e7525e1b9bce6be",
+        "blob_or_tree_at_full_failure": "1fccda6e24b41af810d143d07e7525e1b9bce6be",
+        "equal": true
+      },
+      {
+        "path": "test/gh620-skills-army-mini-sync.sh",
+        "blob_or_tree_at_small": "906beda6eb1c699074949ab4c16eba4ca84892a3",
+        "blob_or_tree_at_full_failure": "906beda6eb1c699074949ab4c16eba4ca84892a3",
+        "equal": true
+      },
+      {
+        "path": "test/lib/fixture-guard.sh",
+        "blob_or_tree_at_small": "676fc06a49938ccaab379b172685b42e20ed9055",
+        "blob_or_tree_at_full_failure": "676fc06a49938ccaab379b172685b42e20ed9055",
+        "equal": true
+      },
+      {
+        "path": "LICENSE",
+        "blob_or_tree_at_small": "dba13ed2ddf783ee8118c6a581dbf75305f816a3",
+        "blob_or_tree_at_full_failure": "dba13ed2ddf783ee8118c6a581dbf75305f816a3",
+        "equal": true
+      },
+      {
+        "path": "LICENSE-COMMERCIAL.md",
+        "blob_or_tree_at_small": "89e5c7c008a2843da2a58406e696a76b14edaff8",
+        "blob_or_tree_at_full_failure": "89e5c7c008a2843da2a58406e696a76b14edaff8",
+        "equal": true
+      },
+      {
+        "path": "mini/skills-army-gitignore",
+        "blob_or_tree_at_small": "90823697b042783831e35fc20df94a5889f22818",
+        "blob_or_tree_at_full_failure": "90823697b042783831e35fc20df94a5889f22818",
+        "equal": true
+      }
+    ],
+    "whole_scope_diff_empty": true,
+    "inference": "The literal payload and expectation inputs responsible for observed gh620 failure are identical at earlier Small-qualified snapshot and later full-failed snapshot. Existing gh620 would be selected by proposed package-area routing; Small omitted it. No full run at earlier snapshot is claimed. Environment/history/whole-repository equivalence is not implied."
+  },
+  "conclusion": {
+    "two_single_member_natural_medium_full_pass_snapshots": true,
+    "complete_pending_unions_reconstructed": 4,
+    "known_small_omission_has_identical_failed_consumer_inputs": true,
+    "supports": "Concrete bounded skills-army-hq pilot candidate and existing consumer mapping; evidence gap is no longer absence of any eligible full snapshot.",
+    "does_not_establish": [
+      "Coverage completeness for arbitrary area changes or broad Medium policy",
+      "Measured reduced-mode walltime/environment/fixture behavior",
+      "Exact reduced receipts or workflow/protection compatibility",
+      "Full qualification at a48 or introduction of a runtime product bug rather than stale contract expectation"
+    ],
+    "minimum_remaining_artifact": "A reviewed frozen candidate selection/receipt contract paired with exact-base full-vs-proposed existing-check evidence and explicit scope/rollback; historical positives and known consumer counterexample now supplied. If requiring a naturally full-red mapped-only tested snapshot, none was found here: the known natural red occurs at inherited Large PR992; cannot invent a full-red run at a48."
+  }
+}

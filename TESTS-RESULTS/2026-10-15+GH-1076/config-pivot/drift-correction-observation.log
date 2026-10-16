@@ -1,0 +1,96 @@
+[
+  {
+    "observation": "before-environment-drift",
+    "exit_code": 0,
+    "fixture_validation_commands": [
+      [
+        "bash",
+        "validate.sh",
+        "--sequential"
+      ],
+      [
+        "bash",
+        "validate.sh",
+        "--sequential"
+      ],
+      [
+        "bash",
+        "validate.sh",
+        "--sequential"
+      ]
+    ],
+    "passing_fixture_receipt_written": true,
+    "fixture_schemas": [
+      "wave-qualification@1"
+    ]
+  },
+  {
+    "observation": "after-environment-drift",
+    "exit_code": 6,
+    "fixture_validation_commands": [
+      [
+        "bash",
+        "validate.sh",
+        "--sequential"
+      ],
+      [
+        "bash",
+        "validate.sh",
+        "--sequential"
+      ]
+    ],
+    "passing_fixture_receipt_written": false,
+    "fixture_schemas": []
+  },
+  {
+    "observation": "before-process-drift",
+    "exit_code": 6,
+    "fixture_validation_commands": [
+      [
+        "bash",
+        "validate.sh",
+        "--sequential"
+      ],
+      [
+        "bash",
+        "validate.sh",
+        "--sequential"
+      ]
+    ],
+    "passing_fixture_receipt_written": false,
+    "fixture_schemas": []
+  },
+  {
+    "observation": "after-process-drift",
+    "exit_code": 6,
+    "fixture_validation_commands": [
+      [
+        "bash",
+        "validate.sh",
+        "--sequential"
+      ]
+    ],
+    "passing_fixture_receipt_written": false,
+    "fixture_schemas": []
+  },
+  {
+    "observation": "after-stable-incomplete-proof",
+    "exit_code": 0,
+    "fixture_validation_commands": [
+      [
+        "bash",
+        "validate.sh",
+        "--sequential"
+      ],
+      [
+        "bash",
+        "validate.sh",
+        "--sequential"
+      ]
+    ],
+    "passing_fixture_receipt_written": true,
+    "fixture_schemas": [
+      "wave-qualification@1"
+    ]
+  }
+]

@@ -1,0 +1,65 @@
+{
+  "kind": "Local component study; two unmodified existing commands and distinct run identities. Not an activated or qualified Medium gate; never splice receipts.",
+  "timestamp": "2026-10-15T08:47:22.529324+00:00",
+  "source": "f874fa8d4d69e2db4f56a8863e6de9b61275842c",
+  "before": {
+    "head": "f874fa8d4d69e2db4f56a8863e6de9b61275842c",
+    "status": "",
+    "refs": "f874fa8d4d69e2db4f56a8863e6de9b61275842c refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\nd1ca36b5bac1a3f208f6392908c4496f5fd77ab2 refs/remotes/origin/HEAD\nd1ca36b5bac1a3f208f6392908c4496f5fd77ab2 refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\n4aceedbfea70ed6a0d1c254866ae906ea499dc63 refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.remote=origin\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.merge=refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false"
+  },
+  "commands": [
+    {
+      "command": [
+        "./validate.sh",
+        "--sequential",
+        "--subsystem",
+        "small"
+      ],
+      "started_at": "2026-10-15T08:47:22.529524+00:00",
+      "finished_at": "2026-10-15T08:59:49.514223+00:00",
+      "rc": 0,
+      "wall_seconds": 746.98,
+      "identity_after": {
+        "head": "f874fa8d4d69e2db4f56a8863e6de9b61275842c",
+        "status": "",
+        "refs": "f874fa8d4d69e2db4f56a8863e6de9b61275842c refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\nd1ca36b5bac1a3f208f6392908c4496f5fd77ab2 refs/remotes/origin/HEAD\nd1ca36b5bac1a3f208f6392908c4496f5fd77ab2 refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\n4aceedbfea70ed6a0d1c254866ae906ea499dc63 refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0",
+        "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.remote=origin\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.merge=refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "bare": "false"
+      }
+    },
+    {
+      "command": [
+        "./validate.sh",
+        "--sequential",
+        "--subsystem",
+        "skills-army-hq"
+      ],
+      "started_at": "2026-10-15T08:59:49.636724+00:00",
+      "finished_at": "2026-10-15T09:01:14.489797+00:00",
+      "rc": 0,
+      "wall_seconds": 84.853,
+      "identity_after": {
+        "head": "f874fa8d4d69e2db4f56a8863e6de9b61275842c",
+        "status": "",
+        "refs": "f874fa8d4d69e2db4f56a8863e6de9b61275842c refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\nd1ca36b5bac1a3f208f6392908c4496f5fd77ab2 refs/remotes/origin/HEAD\nd1ca36b5bac1a3f208f6392908c4496f5fd77ab2 refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\n4aceedbfea70ed6a0d1c254866ae906ea499dc63 refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0",
+        "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.remote=origin\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.merge=refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+        "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+        "bare": "false"
+      }
+    }
+  ],
+  "after": {
+    "head": "f874fa8d4d69e2db4f56a8863e6de9b61275842c",
+    "status": "",
+    "refs": "f874fa8d4d69e2db4f56a8863e6de9b61275842c refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\nd1ca36b5bac1a3f208f6392908c4496f5fd77ab2 refs/remotes/origin/HEAD\nd1ca36b5bac1a3f208f6392908c4496f5fd77ab2 refs/remotes/origin/chore/XYZ-forge-gh1076-ci-policy-2026-10-14\n4aceedbfea70ed6a0d1c254866ae906ea499dc63 refs/remotes/origin/development\na076b1b117a68252dc3d9d1c4901b0c31fcb4db3 refs/tags/0.9.0",
+    "config": "core.repositoryformatversion=0\ncore.filemode=true\ncore.bare=false\ncore.logallrefupdates=true\ncore.ignorecase=true\ncore.precomposeunicode=true\nremote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git\nremote.origin.fetch=+refs/heads/*:refs/remotes/origin/*\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.remote=origin\nbranch.chore/XYZ-forge-gh1076-ci-policy-2026-10-14.merge=refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false"
+  },
+  "identity_unchanged": true,
+  "finished_at": "2026-10-15T09:01:14.731569+00:00"
+}

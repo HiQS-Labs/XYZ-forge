@@ -1,0 +1,19 @@
+{
+  "added_len": 5505,
+  "added_sha256": "f2216dbf3235c79da1974dba5547939c5b6e42f375052d9c52cf6021a3425c87",
+  "added_start": 12860,
+  "artifact_sha256": "529f61215c87d083ca108bf89fb512887568671c1ec057be0e678ebaa3ebc9a4",
+  "attested_at": "2026-10-15T07:52:30Z",
+  "driver_pid": 22799,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike/relay-system/2026-10-15/gh1076-final-qa.md",
+  "relay_file_rel": "relay-system/2026-10-15/gh1076-final-qa.md",
+  "reviewed_head": "b334e98d7fb3b16ce5c3c7a8ad91ccb2569333f8",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike",
+  "task": "RELAY-GH1076-FINAL-20261015",
+  "trailer_sha256": "e06ff4a04ecf057be55112df3f647031a19fe41bdcdee35f8de9471315e70c6b",
+  "transcript_repo": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike"
+}

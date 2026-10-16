@@ -1,0 +1,68 @@
+{
+  "schema": "gh1076-batch-spike@1",
+  "pr": 1069,
+  "head": "4691b4a304f7abda698f2093217a3e9a9c73a947",
+  "baseline": "f974fcee15647aae6551fcc81b129f5a6127120b",
+  "mode": "source-only plus retained evidence inspection",
+  "tests_run": false,
+  "mutations": "only requested report files",
+  "source_hashes": {
+    "batch_record.py": "c8cefa60e4aadb18e4d952775ac9621b629d5fbc1850d5a31d8fcadf6a1d9438",
+    "merge_cleanup.py": "22c0fdcc81b5374adfe4312107fb1ff65731ed71bd54315ecd1a7c060e2e0c4e",
+    "attempt_record.py": "199c2693db2763f2bbd94f2a5cc6bddc215dfe460f8c109613bfa86b40798f97"
+  },
+  "ci_methods": {
+    "phase_b": {
+      "base": 39,
+      "head": 39,
+      "added": [],
+      "removed": []
+    },
+    "phase_c": {
+      "base": 47,
+      "head": 47,
+      "added": [],
+      "removed": []
+    }
+  },
+  "ci_added_behavior_assertions": [
+    {
+      "path": "test/gh534_phase_b_tests.py",
+      "line": 693,
+      "behavior": "single PR creates no batch issue"
+    },
+    {
+      "path": "test/gh534_phase_c_tests.py",
+      "line": 813,
+      "behavior": "resume creates exactly one batch issue"
+    },
+    {
+      "path": "test/gh534_phase_c_tests.py",
+      "line": 814,
+      "behavior": "batch issue precedes first merge"
+    }
+  ],
+  "findings": {
+    "GH1074": "specific history/resume repair implemented; retained manual 9 OK inspected, not rerun",
+    "GH1072": "still applicable: save-only lock, stale read-modify-write remains",
+    "GH1073": "still applicable: known member scope not refreshed; PR body also defers GH1075 same class"
+  },
+  "qualification": "batch verdict is accounting, not checked gate receipt; no frozen head/environment/selection binding",
+  "safe_next": "shadow selection comparison with existing full gates authoritative",
+  "blocked_only_if": "authoritative batch-based evidence reuse/sweep coverage requires scheduled transaction/scope fixes; not a blanket block on read-only GH1076 work",
+  "assertion_history": "three statements retained unchanged from d2; added versus f974, admission not resolved by five-method removal",
+  "review_source": {
+    "status": "Approved",
+    "round": "2 / 3",
+    "reviewed_head": "9a64c66db6ac28451dd64174be030602e18fe4b3",
+    "nominal_original_rounds_remaining": 1,
+    "mutable_harness_state_checked": false,
+    "current_available_budget_claim": false,
+    "post_approval_changes_from_pr_body": [
+      "gh549 AST repoint",
+      "doc goal field",
+      "CI methods removed into manual pack",
+      "GH1074 fix"
+    ]
+  }
+}

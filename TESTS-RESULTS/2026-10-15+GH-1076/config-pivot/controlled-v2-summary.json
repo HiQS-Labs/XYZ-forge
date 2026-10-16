@@ -1,0 +1,70 @@
+{
+  "kind": "CONTROLLED FIXTURE ONLY; not software/PR qualification or live hosted activation",
+  "source_head": "a6d1676dbff5331a29434a1c0dcd58288758fe3c",
+  "fixture_tested": "134e0a2930747f7b14a1473742d7d0a31210be3c",
+  "actual_selected_gate": "validate.sh --sequential --subsystem small && ./validate.sh --sequential --subsystem skills-army-hq",
+  "production_writer_schema": "wave-qualification@2",
+  "publisher_rc": 0,
+  "push_results": [
+    false,
+    true,
+    true
+  ],
+  "raw_receipts_byte_equal": true,
+  "production_reader_accepts": true,
+  "generic_premerge_error": "No committed passing test receipt at HEAD matches PR #7 in TESTS-RESULTS/ (AGENTS.md: uncommitted provenance is not proof).",
+  "disabled_reader_accepts": false,
+  "recompute": {
+    "argv": [
+      "--catch-up",
+      "--gate",
+      "--qualify",
+      "--pr",
+      "7",
+      "--only-receipted",
+      "--skip-pull"
+    ],
+    "accepted": 1,
+    "suite_reruns": 0
+  },
+  "racer_preserved": true,
+  "stale_transition_discarded": true,
+  "validation_simulated": true,
+  "npm_ci_simulated": true,
+  "installations": 0,
+  "limits": "Actual production writer/reader/publisher with real local Git FF rejection and recovery. Validation outcomes and recompute transitions are fixture stubs. This is not a real eligible GitHub PR, executed registered suites or live hosted recovery.",
+  "archive": "controlled-v2-proof.tar.gz",
+  "archive_sha256": "789965d1a63cd13a072d86cedd0667e641a1f052e4722bf2a5c610370ad37acd",
+  "archive_members": [
+    {
+      "path": "README.txt",
+      "bytes": 283,
+      "sha256": "70364c276eefc32c329eef27e3c1a514e2da87a387466485a63eb2030f29f47f"
+    },
+    {
+      "path": "controlled-qualification-record.json",
+      "bytes": 9244,
+      "sha256": "96034556526f2bea21d26f8dcb9b339f09be03083889acb968a98e3a7b9cc5dc"
+    },
+    {
+      "path": "controlled-v2-driver.log",
+      "bytes": 1803,
+      "sha256": "5c283c53a4fa409efd6e09f6d659fe208065d3e4190037b296f31f5c561d1cfe"
+    },
+    {
+      "path": "controlled-v2-report.json",
+      "bytes": 7188,
+      "sha256": "8e792e3e1920953ebf34d80ceedb1867d7917b1ac77a92f14bed22730a05d1d7"
+    },
+    {
+      "path": "controlled-v2.py",
+      "bytes": 10928,
+      "sha256": "1dc0e9f7cfd4b31787d74ddf92063549c83313b5b23b4a5c1798bcb9d17e2f16"
+    },
+    {
+      "path": "controlled-validation-container.jsonl",
+      "bytes": 16112,
+      "sha256": "648a0b1ba56ac8ee863cbb2eff01edd187e4939a3bc42360510dc8f76ab8a590"
+    }
+  ]
+}

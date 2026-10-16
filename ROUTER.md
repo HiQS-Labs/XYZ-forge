@@ -105,42 +105,118 @@ detection; malformed values exit 2 naming the variable). Below 4 cores, or where
 unsupported, the run **falls back to sequential and says so** — every run prints the mode it chose
 and the reason, so a fallback is never silent.
 
-**GH-35 also added TIERED SELECTION on top, as a separate axis from width.** `utils/ci-route.sh`
-owns one fail-closed subsystem registry (hq, releases, telemetry, ate, swe-diagram, pdda,
-agent-chorus, standup, skills-army-hq, plus `small`, a gate-only list that claims no paths); a push the classifier rates `tier=2` runs only those focused
-suites at the boundary, `--tier 1` runs the docs gate, and everything else — unknown paths, unclaimed
-test edits, kernel surfaces — runs the full suite. `--auto` classifies a local diff the same way.
-Tiers 1 and 2 are pre-push speed and are labelled NOT promotion evidence; only `ci-local.sh`'s
-sequential full run qualifies (GH-509).
+## CI qualification policy
 
-**GH-831 (2026-09-25) made these three tiers for what qualifies a landing.** The push hook is unchanged.
-After a merge, the hosted reconcile (`wave-reconcile.yml`) qualifies each landing with **one** run,
-picked by classifying the landing's changes at the tested commit:
+This section owns the normative explanation of selection, qualifying evidence and batch authority.
+`utils/ci-route.sh` is the single executable owner of path→area→suite and hosted-gate decisions;
+its registry is not copied here. AGENTS and SOP point here. Execution, resource width, receipt
+validation and publication stay in their existing consumers; no second policy map or framework.
 
-- **Small** — docs, the ledger dumps (`releases.*`, `harnesses.*`) and non-core skill files (tier 1):
-  `validate.sh --sequential --subsystem small`, the PDDA, PRS and canary suites plus the PDDA gate
-  and the Python layer. The receipt records the list it ran.
-- **Medium** — mapped non-core code (tier 2): the full registry at the reconcile, the area's suites at push.
-- **Large** — core harness, unmapped code, gate surfaces (tier 3): the full registry.
+### Current boundaries
 
-Promotion always runs the full registry. Eight skill-text suites are off, recorded in
-`test/gh306-registry-bidirectional.sh`'s EXEMPT list, and no new suites are added (AGENTS.md). The code of
-core skills (`relay`, `relay-xyz`, `relay-automation`, `merge-cleanup`, `express`, `jog`) never routes as
-docs. Skill markdown keeps its existing docs routing, except that `relay-xyz` and `relay-automation` stay
-full-gate surfaces for every file. merge-cleanup's `SKILL.md` and `WORKTREE-SAFETY.md` are full-gate files too:
-they are what `gh436-merge-cleanup` reads, and GH-836 D1 moved that suite from Small to Large.
-Plan: [GH-831](PROJECT/2-WORKING/GH-831-THREE-TIER-GATE.md).
+| Boundary | Selection and evidence |
+|---|---|
+| Local push / `validate.sh --auto` | Router tier1 uses the docs gate; tier2 uses its registered areas; unknown/empty/unverifiable ranges, unclaimed test edits, kernel/gate/containment/safety inputs use full. Local runs are self-checks. |
+| Hosted development landing | Router `hosted_gate=small` uses the existing sequential Small list plus PDDA, Python and identity stages. Medium defaults to full; the configured, strictly proved skills-army-content@1 profile uses existing Small then area commands. Large remains full. |
+| Main promotion | Full sequential hosted macOS for the **actual exact main commit**, regardless of range classification. A local PASS, ancestor receipt or equal tree does not qualify main. |
+| PR feedback | Existing vendored-smoke, reconciliation-wiring, frozen-twin and vendored checks remain required by repository policy. A workflow declaration is not an actual run. |
+| Ubuntu canary | Advisory portability signal on development push/manual dispatch; its job conclusion and skipped steps must be disclosed. Its inner PR Fast Gate predicate is unreachable under the current enclosing job predicate; do not count it as active PR selective coverage. |
 
-`--burst` / `XYZ_VALIDATE_MAX_JOBS` are honoured for tier 2: 2 is the default width, not a pin.
-Run one gate at a time on a host: a concurrent relay turn, second gate or pollers lengthen the run
-(`nice` protects the editor, not the wall-clock).
+Selection and worker width are separate axes. Local parallel defaults/resource controls remain in
+[command rails](#command-rails); `ci-local.sh` stays sequential and writes local evidence. Hosted
+qualification and promotion stay sequential, with one gate per local host and one reconciliation
+writer. GH528's multi-width stress evidence remains outstanding; an increased width is not a
+qualifying-coverage decision. Operator-retired suites remain off; their retained files/exemptions
+are in gh306. No test retirement or new suite/case is authorized here.
 
-**What still qualifies a claim is unchanged.** `./validate.sh` in either mode is a self-check;
-`ci-local.sh` is the run that writes the evidence record, it does **not** call `validate.sh`, and it
-stays sequential. The macOS promotion boundary in `ci.yml` pins `--sequential` explicitly for the same
-reason. GH-528 Phase 2 (multi-width stress evidence) is still **owed** — the flip was an operator
-decision taken with that evidence outstanding, mitigated by the announced fallback rather than
-discharged. See `PROJECT/2-WORKING/GH-528-TEST-SUITE-RECALIBRATION.md`, #509 and #544.
+### Router decision and consumer compatibility
+
+The push/PR key/value output identifies `policy_version=ci-route@1` and the supported
+`hosted_gate=small|full|skills-army-content@1` decision. The profile is a path candidate only;
+its resolved setting and complete raw Git scope must also pass the wave consumer. The version
+identifies the contract; the tested commit identifies its exact content. Local readers continue
+using their existing route/tier fields. Unsupported/missing/duplicate/malformed metadata selects
+full, including a new consumer paired with an older router. Commands are fixed arrays; classifier
+text is never evaluated as shell. Main's explicit full command is unchanged. The bounded profile's
+configuration and versioned two-phase receipt contract are specified below.
+
+Machine-consumed text must follow its consumers, not its suffix. GH988/GH989 added/renamed a
+skills-army package Markdown payload; the existing gh620 publisher pin failed in hosted run37723297290
+([issue995](https://github.com/HiQS-Labs/XYZ-forge/issues/995)). The router now retains the existing
+skills-army area for its text inputs before generic docs precedence, retaining the existing PDDA
+documentation gate alongside area coverage. No suite is added. Existing
+safety text/full rules remain. The bounded reverse audit additionally follows package sync into the canonical drift checker and
+scans all registered suite sources for package-wide consumers. The existing area now includes the
+already registered gh660 drift, path-integrity Markdown-link and gh788 interpreter-pattern suites;
+its eight existing shell suites add coverage locally. Small and the full registry are unchanged;
+Medium remains full unless the bounded configured qualification below is proved. This is a bounded consumer closure, not a claim that arbitrary shared-publisher,
+all-device sync or probabilistic app behavior is fully mapped. Changes to publisher manifests and new consumers must
+be audited before any narrower route is accepted; unknown/shared/global/safety scope keeps full.
+
+### Evidence identity, invalidation and recovery
+
+Existing wave receipts bind actual tested SHA, each landing SHA/PR, typed passing result, gate,
+telemetry digest and list/count/identity evidence. Small's list is read at the **tested historical
+commit**, not current HEAD. Preserve the literal historical Small-list reader and `wave-qualification@1`
+semantics. An integrated snapshot may qualify older included landings with per-PR provenance; it does
+not mean each historical tree ran or every descendant is qualified. Old valid receipts remain valid
+for their recorded historical landing. Receipt publication commits are not new tested source heads.
+
+No generic candidate/environment PASS cache exists. A frozen candidate must name exact base, ordered
+member heads, interaction/dependency scope, candidate/tested/actual landed SHA, routing/suite revision,
+lockfiles, OS/runtime/toolchain/dependency environment, review evidence and rollback boundary. Changes
+to those inputs require fresh affected verification; tree equality alone cannot transfer history-
+sensitive or exact-main qualification. Current receipts do not persist all those freeze/environment
+fields and must not be presented as implementing such equivalence. The smallest future pilot should
+avoid cross-candidate/cross-environment transfer entirely.
+
+Failed, canceled, skipped, partial and advisory observations never become PASS. Preserve first
+failures, retries and qualified outcomes. Existing strict replay checks complete top-level envelopes;
+it does not inspect every nested `skip_lines` value, so disclose internal omissions separately.
+Legacy provenance attribution is distinct from strict wave/premerge passing qualification.
+
+Hosted reconciliation remains serialized with cancellation disabled. On a publication FF race,
+existing GH740 recovery retains receipts first with bounded attempts, then recomputes transitions
+once using only applicable retained evidence. No stale SQLite/generated-transition rebase, force
+push, second writer or duplicate expensive replay. Unknown newcomers wait for their own qualification.
+Reconciliation mutation rollback is not rollback of already merged code.
+
+### Batch authority and rollout
+
+Prepare dependencies/conflicts and combined review before freezing a candidate. Same-seam work may
+be proposed as one bounded landing; a shared CHANGELOG/ledger alone is not semantic coupling.
+Ordinary separate PRs keep per-PR checks, holds, drafts, review caps and the current ordered merge/
+reconcile durability barrier. A batch issue or plaintext verdict is an audit record, not a checked
+qualification receipt or permission to merge ahead of that barrier.
+
+An actual fold needs explicit authority, compatible workflow/protection behavior, ordered member
+provenance, fixed evidence and an atomic-group/dependency-suffix rollback plan. Required failure or
+identity drift stops landing. The GH854 staging-only exception expired October7; PR880/PR936/PR939
+are historical approved-fold precedents, not standing scheduling authority. No automatic retargeting,
+exception revival, canceled required run, gate bypass or cap reset follows from grouping.
+
+GH1072/GH1073 identify stale verdict-write and repaired-scope defects in unmerged PR1069, not this
+base's wave receipts. Until resolved and independently verified, that proposed batch state cannot
+be evidence authority. Its active owner must not be duplicated. A single-landing selection study can
+proceed without depending on that unsafe state; broader automated batching cannot be called ready.
+
+Medium defaults to full. Noel approved the bounded configurable profile below; any further
+coverage reduction requires an audited non-core scope, deduplicated existing
+Small+area+known-consumer coverage plus mandatory non-shell stages, reconstructible expected selection
+at tested policy, retained attributed historical full failures, receipt-version coexistence and
+separately reviewed policy/workflow/protection compatibility. A relevant missed failure, unknown
+edge, incompatible identity, unexplained skip, blocking review or exhausted cap retains/restores full.
+Existing fixtures/manual evidence come first; **every individual new CI assertion/parameter case
+requires Noel's approval**, even inside an existing file. No second runner/registry or speculative
+framework is needed. No new test is approved by this policy.
+
+Measure queue delay, execution/wall time, runner-minutes, setup/suite/reconcile costs, failures,
+retries and relevant failure catch rate separately. Match command, coverage, machine/configuration,
+width and load for before/after comparisons; disclose differences and single-sample limits. A Small
+PR smoke job is not a full macOS benchmark. Use naturally occurring comparable hosted jobs; no
+manual trigger/rerun, claimed causal speedup or measured savings follows merely from consolidation.
+
+## Document hygiene commands
 
 For document hygiene:
 
@@ -219,3 +295,36 @@ no-ops here by design (it would delete `add`-parked rows). Pinned by `test/gh69-
 - If the task is blocked by a failing test, unexpected error, or disputed requirement, invoke the `sanity-check` skill (`skills/1-hourly/sanity-check/SKILL.md`) to establish whether the obstacle must block the goal before spending hours debugging or repairing it.
 - If the task is about **managing skills for the system** — adding a skill to the machine-wide collection, deploying/refreshing/removing it across the configured app targets (`targets.json`, machine-local), or asking what is deployed — the mechanism is the `skills-army-hq` skill (`skills/3-weekly/skills-army-hq/SKILL.md`). Forge authors its own skills in `skills/`, Skills Army HQ included; XYZ-skills-army-mini and the other standalone repos are published children (`push-downstream`, GH-955). Intake accepts any local folder. The durable collection lives wherever `XYZ_SKILLS_ROOT` points (machine-local, never committed; falls back to `~/git-pulse-sync/Deployed Skills`), and only `intake.py` / `sync.py` mutate it or the app symlinks. Never hand-copy a skill folder into an app's skills directory.
 - Issue-first SOP: any change beyond a 2–3 line fix (and every project plan) opens a GitHub issue *first*, then gets a pointer doc named after the issue at `PROJECT/1-INBOX/GH-<number>-VERY-SHORT-DESC.md` — e.g. `GH-1234-SHOWME-COMMAND.md` — and that capture is parked in the roadmap ledger queue immediately via `releases roadmap add` (format + lifecycle owned by `PROJECT/PDDA.md` → "GitHub issue intake"), following the normal `1-INBOX` → `2-WORKING` flow. Genuinely trivial edits (≤2–3 line fixes, typos, path repoints, doc-only one-liners) are exempt and commit directly.
+
+
+### Configurable bounded Medium qualification (GH1076)
+
+The existing device configuration owner reads `ci.optimized` from `~/.xyz/device_config.json`, or
+the existing `XYZ_DEVICE_CONFIG_PATH` override. `XYZ_CI_OPTIMIZED=0|1|false|true` has precedence over
+the file; the library default is false. Invalid JSON/block/key/type/override fails to full, even if
+another tier would mask the error. Inspect with `python3 utils/py/device_config.py --ci`.
+
+The switch controls wave qualification, including local `wave_reconcile --qualify`; explicit full
+commands, `ci-local.sh`, existing local pre-push tiers and exact-main macOS/full are unchanged.
+The only optimized Medium profile is `skills-army-content@1`: exactly one merged development PR
+whose actual tested snapshot is its landing, with verified source/base and only modified regular
+tracked top-level package `.md`/`.txt` data. Agent manifests, requirements, adds/deletes/renames, mode
+changes, symlinks, shared/code/mixed/unknown/high-risk inputs retain full. Name-only classification
+is only a candidate; the wave verifies the complete raw Git diff.
+
+Two fixed existing sequential commands run separately: Small (including PDDA/Python/envelope), then
+skills-army area (including its own envelope). Their original streams, IDs, hashes, lists and counts
+remain separate in a two-row container at the existing `validation.jsonl` path. Typed @2 provenance
+uses a nested outcome; no synthetic combined run or count is created. Strict validation rejects
+failed stages, omissions, retries, extra stages, wrong identities or policy/environment mismatch.
+Incomplete proof after otherwise successful commands gets one full fallback on the unchanged clone;
+a real test failure or clone drift stops qualification. The original rejected proof is retained.
+Historical @1 semantics remain. Off/error/incompatible @2 cannot suppress required full qualification.
+
+Hosted runners do not read the Mac file. The wave workflow explicitly maps repository variable
+`XYZ_CI_OPTIMIZED` into the existing environment tier, defaulting to `1` when unset. Set that variable
+to `0` to restore Medium full for future hosted jobs; removing it returns the workflow's explicit
+on default. Local off is `ci.optimized: false` (or environment `XYZ_CI_OPTIMIZED=0`). Changing the Mac
+file alone cannot switch hosted jobs. This workflow contract becomes live only after this PR lands;
+a PR smoke pass is not an actual optimized qualification. Primary-checkout activation is coordinated
+with the merge owner; isolated verification must not alter the shared Mac file.

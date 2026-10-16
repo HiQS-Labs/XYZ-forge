@@ -1,0 +1,717 @@
+
+COMMAND ['bash', 'test/ci-route.sh']
+== test: ci-route ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-ci-route.XXXXXX.MCV4CWKG16
+  PASS: markdown-only PR uses the docs gate
+  PASS: ordinary code-only PR uses the fast gate without PDDA
+  PASS: mixed docs and ordinary code runs both fast tests and PDDA
+  PASS: Tick/event changes require the full pre-merge gate
+  PASS: relay containment changes require the full pre-merge gate
+  PASS: Python-authoritative twin changes require the full pre-merge gate
+  PASS: worktree safety test changes require the full pre-merge gate
+  PASS: CI workflow changes require the full pre-merge gate
+  PASS: PDDA implementation changes run the PDDA subsystem gate (GH-35)
+  PASS: releases DB and dump files are docs surfaces (GH-831 D4; the releases gate before, GH-496)
+  PASS: wave_reconcile changes run the PDDA subsystem gate (GH-496)
+  PASS: a deleted regression test fails closed into the full gate
+  PASS: a push with no usable range fails closed into the full gate
+  PASS: scheduled runs remain the full fallback boundary
+  PASS: fast routes include a directly matching changed-area test
+  PASS: an empty PR diff fails closed into the full gate
+  PASS: unknown events fail loudly
+  PASS: docs-only push uses the docs gate (was blanket full)
+  PASS: text documentation uses the docs gate
+  PASS: AgentChorus skill instructions use the docs gate
+  PASS: a relay-system .txt sidecar alone uses the docs gate
+  PASS: a relay-system transcript plus its .txt sidecar both use the docs gate
+  PASS: ordinary code-only push uses the fast gate
+  PASS: a push touching the kernel still fails closed to full
+  PASS: a push touching relay containment still fails closed to full
+  PASS: workflow_dispatch stays unconditionally full even for a docs-only path list
+  PASS: control: plain --name-only reports ONE path for a rename (the source is invisible)
+  PASS: a renamed regression test selects full (--no-renames surfaces the removal)
+  PASS: an ordinary test edit is not forced to full (the rename rule is not a blanket)
+  PASS: docs-only changes are tier 1
+  PASS: text and markdown anywhere are docs (GH-35 widened)
+  PASS: HQ utility changes are tier 2
+  PASS: releases subsystem (incl. the one non-twin utils/py file) is tier 2
+  PASS: releases DB and dump files are tier 1 (GH-831 D4; tier 2 before, GH-496)
+  PASS: the other data dumps are tier 1 too (GH-831 D4)
+  PASS: non-core skill code is tier 1 (GH-831 D4)
+  PASS: core skill code stays off the docs gate (GH-831 D4: merge-cleanup)
+  PASS: a ledger dump beside core fails closed to tier 3 (GH-831 D4)
+  PASS: releases utilities are tier 2 (GH-496)
+  PASS: wave_reconcile is tier 2 under PDDA (GH-496)
+  PASS: telemetry is tier 2
+  PASS: ATE + fuzzing are tier 2
+  PASS: swe-diagram is tier 2
+  PASS: agent-chorus skill code is tier 2 (GH-35 subsystem 7)
+  PASS: agent-chorus SKILL.md stays docs (explanatory markdown)
+  PASS: kernel changes are tier 3
+  PASS: authoritative Python twins are tier 3
+  PASS: relay-xyz skill surface is tier 3
+  PASS: an UNMAPPED code path is tier 3 even though route=fast
+  PASS: an ordinary test EDIT is tier 3 (the contract's own evidence)
+  PASS: a test-like path outside test/ and outside a subsystem dir is unmapped
+  PASS: mixed docs + subsystem is tier 2 with PDDA still on
+  PASS: mixed subsystem + kernel fails closed to tier 3
+  PASS: scheduled runs stay tier 3
+  PASS: a registered skill + its code + its dedicated tests is tier 2 (GH-487)
+  PASS: a dedicated test edited ALONE stays tier 3 (co-touch requirement, GH-487)
+  PASS: shared Python test integration still escalates beside skill code (GH-487)
+  PASS: a TESTS-RESULTS receipt alone uses the docs gate (GH-487)
+  PASS: a TESTS-RESULTS receipt alone is tier 1 (GH-487)
+  PASS: a receipt beside subsystem code keeps the subsystem gate (GH-487)
+  PASS: a deleted dedicated suite fails closed into the full gate (GH-487)
+  PASS: subsystems listing names hq and its suites
+  PASS: an unknown subsystem fails loudly (exit 2)
+  PASS: subsystems hq lists its 13 suites
+  PASS: subsystems releases lists its 24 suites (GH-496; +gh549-work-events; +gh567-roadmap-dashboard; +gh568-releases-md-retired; +gh646-status-label)
+  PASS: subsystems pdda lists its 15 suites (GH-649 adds migration, changelog and installer checks)
+  PASS: subsystems skills-army-hq lists its eight existing consumer suites (GH-1076 adds drift, links and interpreter patterns)
+  PASS: subsystems small lists its 72 suites, without gh436 (GH-831; GH-836 D1)
+  PASS: append-only test addition in validate.sh routes to fast and extracts changed test
+  PASS: append-only test addition in validate.sh beside subsystem code + dedicated test preserves tier 2
+  PASS: non-append code addition in validate.sh fails closed to route=full tier=3
+  PASS: deletion in validate.sh fails closed to route=full tier=3
+  PASS: syntax error in validate.sh fails closed to route=full tier=3
+  PASS: top-level addition outside TESTS array fails closed to route=full tier=3
+  PASS: multi-commit push with earlier runner edit fails closed to route=full tier=3 across full range
+  PASS: invalid explicit CI_BASE fails closed to route=full tier=3
+  PASS: all-zeros explicit CI_BASE fails closed to route=full tier=3
+  PASS: missing validate.sh on disk fails closed to route=full tier=3
+  PASS: non-git directory diff failure fails closed to route=full tier=3
+  PASS: in-array comment deletion while adding suite fails closed to route=full tier=3
+  PASS: forced git diff failure (rc > 1) with working git show fails closed to route=full tier=3
+  ci-route: 81 pass, 0 fail
+
+COMMAND ['bash', 'test/gh35-test-tiers.sh']
+== test: gh35-test-tiers ==
+  PASS: auto-detected default width is <= 4 (got 4-wide; was cores-2 up to 8 pre-GH-35)
+  PASS:   and the reason names the balanced default and the escape hatch
+  PASS:   and announces nice on the workers
+  PASS: --throttle pins 2 workers
+  PASS:   and names quiet-CPU + nice in the reason
+  PASS: --quiet-cpu is the documented alias of --throttle
+  PASS: --burst restores the full-core width (>= balanced default)
+  PASS:   and says so in the reason
+  PASS: XYZ_VALIDATE_THROTTLE=1 selects the 2-worker quiet mode
+  PASS:   and names the env var as the reason
+  PASS: XYZ_VALIDATE_MAX_JOBS=3 pins 3 workers
+  PASS: a width lever beats a throttle lever in the environment
+  PASS: an explicit flag beats the ambient throttle env (flag > env, GH-544 contract)
+  PASS: --max-parallel N is the documented alias of --parallel N
+  PASS: a throttle flag still overrides XYZ_VALIDATE_PARALLEL=0
+  PASS: a malformed XYZ_VALIDATE_MAX_JOBS is refused (exit 2)
+  PASS:   and names the variable
+  PASS: a malformed XYZ_VALIDATE_THROTTLE is refused (exit 2)
+  PASS: --throttle + --burst is a conflict (exit 2), not a silent last-wins
+  PASS: --parallel + --sequential is a conflict (exit 2)
+  PASS: --tier 9 is refused (exit 2)
+  PASS: --tier 2 respects the low-core sequential fallback
+  PASS: --tier 2 defaults to the throttled 2-worker pool on an eligible host
+  PASS:   and a tier below 3 disclaims promotion evidence in its own header
+  PASS: --tier 1 print-mode names tier 1 and disclaims promotion evidence
+  PASS: --subsystem hq selects tier 2 and names the subsystem
+  PASS: an unknown subsystem is refused (exit 2)
+  PASS: --tier 2 --subsystem hq (the ROUTER.md example) works (rc=0)
+  PASS: a CONTRADICTING --tier 1 --subsystem hq is refused (exit 2)
+  PASS:   and the error says which tier the selector chose
+  PASS: every registered suite is in validate.sh's TESTS array (drift: 'none')
+  PASS: a registered suite missing from test/ fails the listing loudly (exit 2)
+  PASS:   and names the ghost suite
+  PASS: tier 1 runs the docs gate and exits green
+  PASS:   and really ran the PDDA stub
+  PASS:   and ran NO test suite (no 'Running <suite>' banner)
+  PASS:   and disclaims promotion evidence
+  PASS: a RED docs gate fails tier 1 (exit 1)
+  PASS:   and says the documentation gate is RED
+  PASS: tier 2 runs the classified subsystem suite and exits green
+  PASS:   and really ran the hq stub (marker written by the suite itself)
+  PASS:   and ran the identity bracket (tier 2 still runs fixtures)
+  PASS:   and disclaims promotion evidence in the tier-2 banner
+  PASS:   and the GH-15 summary tallies (no INTERNAL ERROR)
+  PASS:   and the static syntax check ran on the changed file
+  PASS: the suite worker ran 10 below its caller (caller nice=0, worker nice=10, wanted 10)
+  PASS: a RED subsystem suite fails tier 2 (exit 1)
+  PASS: --paths-file with an unmapped path refuses (exit 2, fail-closed)
+  PASS:   and says which tier it classified as
+  PASS: a subsystem with no runnable suites on disk refuses the narrow gate (exit 2)
+  PASS:   and the classifier said why: no runnable tests, failing closed
+  PASS: a deleted path in the tier-2 list is skipped, not 127'd (exit 0)
+  PASS: a changed file with broken bash syntax fails tier 2 (exit 1)
+  PASS: docs + subsystem runs the pdda stub in-band (exit 0) and the hq stub in the pool
+  PASS: a RED docs gate fails the mixed tier-2 run (exit 1)
+  PASS: --auto classifies a docs-only over-upstream diff as tier 1
+  PASS: --auto classifies an hq-only diff as tier 2
+  PASS: --auto with an unusable range fails closed to tier 3 (zero-path branch or explicit refusal)
+  PASS: pre-push hands the push's paths to validate.sh --paths-file (GH-35 dispatch)
+  PASS:   and only after the classifier explicitly said tier=2
+  PASS: validate.sh --tier 2 exits 2 on a non-tier-2 path list (the hook's fail-closed partner)
+  PASS: GH-45: a linked worktree is REFUSED before anything runs (exit 2)
+  PASS:   and the message names the real consequence (core.bare)
+  PASS:   and names the rest (origin repointed, remote refs deleted, development overwritten)
+  PASS:   and names the explicit override
+  PASS:   and NOTHING ran — no docs gate, no suite banners
+  PASS: GH-45: the override runs the gate AND announces itself (exit 0)
+  PASS: GH-45 CONTROL: the normal checkout of the SAME repo still runs the gate (exit 0)
+  PASS:   and says nothing about worktrees (silent pass-through)
+  PASS: GH-45: ci-local.sh refuses from a linked worktree too (exit 2)
+  PASS:   with the same consequence message and override
+  PASS: GH-45: an absolute-path invocation whose HERE is the worktree is still refused (exit 2)
+  gh35-test-tiers: 72 pass, 0 fail
+
+COMMAND ['bash', 'test/gh365-tier-fail-closed.sh']
+== test: gh365-tier-fail-closed ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh365-tier-fail-closed.XXXXXX.kWBhejrdKD
+== test: gh365-tier-fail-closed ==
+  PASS: T1: every tracked file classifies with a reason (tier1=5522 tier2=363 tier3=1316) — no third state
+  PASS: T1b: tier-2 paths resolve to runnable suites (hq.sh,hq-park.sh,hq-park-synthesis.sh,hq-dispatch.sh,hq-next.sh,hq-locator.sh,hq-hardening.sh,hq-promote.sh,hq-marathon-scan.sh,hq-rollup.sh,hq-marathon-live.sh,gh238-hq-releases-mode.sh,gh239-hq-status-releases-mode.sh)
+  PASS: T2: every family-named suite is registered in its subsystem lane or carries a cited exemption
+  PASS: T3a RED: an unknown path family is tier 3 with the reason naming it
+  PASS: T3b RED: a new family-named suite outside the registry is NAMED by the T2 detector
+== gh365-tier-fail-closed: 5 passed, 0 failed ==
+
+COMMAND ['bash', 'test/gh425-gate-provenance-pr.sh']
+test_batch_qualifies_once_and_retains_each_landing (__main__.Qualification.test_batch_qualifies_once_and_retains_each_landing) ... wave-reconcile: Qualifying 2 landing(s) in integrated snapshot 56b62107e0ca6e9a8ad8823b411566ae881d40ba with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-56b62107e0ca6e9a8ad8823b411566ae881d40ba/provenance.jsonl
+ok
+test_bounded_runner_timeout_refuses_receipts (__main__.Qualification.test_bounded_runner_timeout_refuses_receipts) ... wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['git', 'clone', '--no-local', '--quiet', '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh591-qualification-dw066jdn/source', '/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wave-qualification-w38k33b1/repo']' returned non-zero exit status 124.
+ok
+test_committed_proof_makes_replay_idempotent (__main__.Qualification.test_committed_proof_makes_replay_idempotent) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot db4bd0ca55372d9226bbaa9d59d98687e87d8244 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-db4bd0ca55372d9226bbaa9d59d98687e87d8244/provenance.jsonl
+ok
+test_full_gate_produces_attributable_retained_proof (__main__.Qualification.test_full_gate_produces_attributable_retained_proof) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot b1033c18987d64d8a49e6919cc5a9798da866cf0 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-b1033c18987d64d8a49e6919cc5a9798da866cf0/provenance.jsonl
+wave-reconcile:   Full-suite integration receipt matched for PR #425: TESTS-RESULTS/2026-10-15+GH-591/wave-b1033c18987d64d8a49e6919cc5a9798da866cf0/provenance.jsonl:1
+ok
+test_incomplete_or_quarantined_telemetry_is_rejected (__main__.Qualification.test_incomplete_or_quarantined_telemetry_is_rejected) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot b1033c18987d64d8a49e6919cc5a9798da866cf0 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-b1033c18987d64d8a49e6919cc5a9798da866cf0/provenance.jsonl
+ok
+test_new_schema_cannot_fall_through_to_legacy_pr_match (__main__.Qualification.test_new_schema_cannot_fall_through_to_legacy_pr_match) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 07b02e16475f45feded8164a305233fd77ce3bef with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-07b02e16475f45feded8164a305233fd77ce3bef/provenance.jsonl
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+wave-reconcile: ERROR — --gate failure: No provenance.jsonl or error_log.jsonl entry matches PR #425 by pr/pr_number or exact merge commit in TESTS-RESULTS/
+ok
+test_receipts_participate_in_rollback (__main__.Qualification.test_receipts_participate_in_rollback) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot 3da19a6850a618b3f7e96eb56f8e845455e61294 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: Qualification passed (`validate.sh --sequential`); retained TESTS-RESULTS/2026-10-15+GH-591/wave-3da19a6850a618b3f7e96eb56f8e845455e61294/provenance.jsonl
+wave-reconcile: Rolling back all uncommitted mutations...
+ok
+test_red_partial_and_identity_drift_produce_no_receipt (__main__.Qualification.test_red_partial_and_identity_drift_produce_no_receipt) ... wave-reconcile: Qualifying 1 landing(s) in integrated snapshot befb2dbf0b192dcb287888ca8e76584c9198fe72 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['bash', 'validate.sh', '--sequential']' returned non-zero exit status 42.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot befb2dbf0b192dcb287888ca8e76584c9198fe72 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: ERROR — Qualification failed; no receipt produced: validation telemetry has no unique completed run
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot befb2dbf0b192dcb287888ca8e76584c9198fe72 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['git', 'status', '--porcelain']' returned non-zero exit status 128.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot befb2dbf0b192dcb287888ca8e76584c9198fe72 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: ERROR — Qualification failed; no receipt produced: missing or malformed validation telemetry
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot befb2dbf0b192dcb287888ca8e76584c9198fe72 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: ERROR — Qualification failed; no receipt produced: missing or malformed validation telemetry
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot befb2dbf0b192dcb287888ca8e76584c9198fe72 with `validate.sh --sequential` (no diff for PR #425)
+wave-reconcile: ERROR — Qualification failed; no receipt produced: Qualification telemetry does not identify the launched process
+ok
+test_wrong_landing_fails_before_qualification (__main__.Qualification.test_wrong_landing_fails_before_qualification) ... wave-reconcile: ERROR — Qualification refuses PR #425: merge not in the tested development snapshot
+ok
+test_cli_commit_landing_gate_express_receipt (__main__.Receipts.test_cli_commit_landing_gate_express_receipt)
+GH-592 red control: --commit <sha> --gate on a direct (express) landing. ... ok
+test_cli_gate_and_ungated_path (__main__.Receipts.test_cli_gate_and_ungated_path) ... ok
+test_empty_or_malformed_receipts_fail (__main__.Receipts.test_empty_or_malformed_receipts_fail) ... ok
+test_later_record_and_error_log (__main__.Receipts.test_later_record_and_error_log) ... ok
+test_matching_pr_names_receipt_and_field (__main__.Receipts.test_matching_pr_names_receipt_and_field) ... ok
+test_merge_commit_matches_exactly (__main__.Receipts.test_merge_commit_matches_exactly) ... ok
+test_metadata_requests_merge_commit (__main__.Receipts.test_metadata_requests_merge_commit) ... ok
+test_missing_directory_fails (__main__.Receipts.test_missing_directory_fails) ... ok
+test_missing_identity_cannot_match_null (__main__.Receipts.test_missing_identity_cannot_match_null) ... ok
+test_names_and_symlinks_are_not_evidence (__main__.Receipts.test_names_and_symlinks_are_not_evidence) ... ok
+test_short_sha_matches_candidate_prefix (__main__.Receipts.test_short_sha_matches_candidate_prefix) ... ok
+test_squashed_branch_commit_lineage_matches (__main__.Receipts.test_squashed_branch_commit_lineage_matches) ... ok
+test_unattributable_receipts_fail (__main__.Receipts.test_unattributable_receipts_fail) ... ok
+test_wrong_pr_is_rejected (__main__.Receipts.test_wrong_pr_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 23 tests in 7.827s
+
+OK
+
+COMMAND ['bash', 'test/wave-reconcile.sh']
+== test: wave-reconcile ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-wave-reconcile.XXXXXX.PLQX2R1OFU
+=== Running wave-reconcile.sh test suite ===
+  ✅ PASS: Top-level help lists canonical purpose
+  ✅ PASS: Dirty working tree is rejected (exit 3)
+wave-reconcile: Rolling back all uncommitted mutations...
+  ✅ PASS: GH-707 rollback envelope projects without a phantom task
+  ✅ PASS: GH-707 red control reproduces the old bare-record defect
+  ✅ PASS: Dry-run exits 0
+  ✅ PASS: Dry-run preserves exact byte-state of repo
+  ✅ PASS: Direct-commit dry-run exits 0
+  ✅ PASS: Direct-commit reconciliation preserves commit identity
+  ✅ PASS: Missing lessons learned is a WARN, not a refusal (exit 0)
+  ✅ PASS: WARN names the doc and the missing section
+  ✅ PASS: promotion proceeds past the WARN
+  ✅ PASS: Live reconciliation exits 0
+  ✅ PASS: Merged active doc moved from 2-WORKING to 3-COMPLETED
+  ✅ PASS: Merged doc frontmatter status updated to Complete
+  ✅ PASS: Unmerged/declined active doc moved from 2-WORKING to 4-MISC
+  ✅ PASS: Unmerged doc frontmatter status updated to Declined
+  ✅ PASS: Declined PR with unconfirmed issue state reconciles cleanly (exit 0)
+  ✅ PASS: Declined PR with unconfirmed issue state leaves the active doc in 2-WORKING (GH-646)
+  ✅ PASS: Declined/unconfirmed closeout is logged as preserved, not promoted
+  ✅ PASS: ROADMAP.md entry archived to Completed with shipping badge
+  ✅ PASS: ROADMAP.md entry archived separator-less fixture entry with correct formatting
+  ✅ PASS: Archived line carries no nested/mismatched bold markers
+  ✅ PASS: Mangled GH-222 entry is fixed and canonicalized
+=== wave-reconcile.sh Results: 23 passed, 0 failed ===
+
+COMMAND ['bash', 'test/gh421-auto-wave-reconcile.sh']
+test_catch_up_applies_missed_event (__main__.ReconcileTests.test_catch_up_applies_missed_event) ... ok
+test_catch_up_finds_roadmap_only_drift (__main__.ReconcileTests.test_catch_up_finds_roadmap_only_drift) ... ok
+test_catch_up_promotes_a_lessons_less_backlog_doc_with_a_warning (__main__.ReconcileTests.test_catch_up_promotes_a_lessons_less_backlog_doc_with_a_warning) ... ok
+test_corrupt_ledger_fails_closed (__main__.ReconcileTests.test_corrupt_ledger_fails_closed) ... ok
+test_declined_marker_uses_existing_enum (__main__.ReconcileTests.test_declined_marker_uses_existing_enum) ... ok
+test_direct_commit_with_catch_up (__main__.ReconcileTests.test_direct_commit_with_catch_up) ... ok
+test_doc_write_failure_and_legacy (__main__.ReconcileTests.test_doc_write_failure_and_legacy) ... ok
+test_dry_run_transitions (__main__.ReconcileTests.test_dry_run_transitions) ... ok
+test_explicit_landing_with_a_lessons_less_doc_warns_and_lands (__main__.ReconcileTests.test_explicit_landing_with_a_lessons_less_doc_warns_and_lands) ... ok
+test_legacy_row_does_not_block_attributable_pr (__main__.ReconcileTests.test_legacy_row_does_not_block_attributable_pr) ... ok
+test_lifecycle_and_second_apply (__main__.ReconcileTests.test_lifecycle_and_second_apply) ... ok
+test_live_catch_up_pagination_and_foreign_reference (__main__.ReconcileTests.test_live_catch_up_pagination_and_foreign_reference) ... ok
+test_missing_merge_sha_rolls_back (__main__.ReconcileTests.test_missing_merge_sha_rolls_back) ... ok
+test_no_manifest_and_missing_evidence (__main__.ReconcileTests.test_no_manifest_and_missing_evidence) ... ok
+test_only_receipted_defers_the_unreceipted_older_closer_and_keeps_newest_owner (__main__.ReconcileTests.test_only_receipted_defers_the_unreceipted_older_closer_and_keeps_newest_owner) ... ok
+test_only_receipted_explicit_target_keeps_open_issue_merge_evidence (__main__.ReconcileTests.test_only_receipted_explicit_target_keeps_open_issue_merge_evidence) ... ok
+test_only_receipted_refuses_an_explicit_unreceipted_target (__main__.ReconcileTests.test_only_receipted_refuses_an_explicit_unreceipted_target) ... ok
+test_only_receipted_requires_catch_up_and_qualify (__main__.ReconcileTests.test_only_receipted_requires_catch_up_and_qualify) ... ok
+test_only_receipted_with_both_receipted_still_lets_the_newest_closer_own (__main__.ReconcileTests.test_only_receipted_with_both_receipted_still_lets_the_newest_closer_own) ... ok
+test_open_issue_and_empty_closers (__main__.ReconcileTests.test_open_issue_and_empty_closers) ... ok
+test_planner_drift_for_a_lessons_less_issue_is_owned (__main__.ReconcileTests.test_planner_drift_for_a_lessons_less_issue_is_owned) ... ok
+test_planner_drift_for_a_reconciled_issue_stays_fatal (__main__.ReconcileTests.test_planner_drift_for_a_reconciled_issue_stays_fatal) ... ok
+test_pre_merge_ignores_supporting_notes_in_active_and_completed_dirs (__main__.ReconcileTests.test_pre_merge_ignores_supporting_notes_in_active_and_completed_dirs) ... ok
+test_qualified_empty_sweep_writes_nothing (__main__.ReconcileTests.test_qualified_empty_sweep_writes_nothing) ... ok
+test_recovered_closers_have_one_newest_lifecycle_owner (__main__.ReconcileTests.test_recovered_closers_have_one_newest_lifecycle_owner) ... ok
+test_recovery_covers_no_issue_and_open_reference_prs (__main__.ReconcileTests.test_recovery_covers_no_issue_and_open_reference_prs) ... wave-reconcile: Receipt recovery found 3 pending PR(s) since workflow activation 2026-09-10T00:00:00+00:00
+ok
+test_recovery_fails_closed_on_missing_history_or_api_error (__main__.ReconcileTests.test_recovery_fails_closed_on_missing_history_or_api_error) ... wave-reconcile: ERROR — Merged-PR recovery requires a full, non-shallow clone
+wave-reconcile: ERROR — Merged-PR recovery failed: API unavailable
+ok
+test_recovery_rejects_shallow_and_malformed_metadata (__main__.ReconcileTests.test_recovery_rejects_shallow_and_malformed_metadata) ... wave-reconcile: ERROR — Merged-PR recovery requires a full, non-shallow clone
+wave-reconcile: ERROR — Malformed merged-PR recovery response: pull request lacks merged_at or base.ref
+wave-reconcile: ERROR — Malformed merged-PR recovery response: pull request lacks merged_at or base.ref
+wave-reconcile: ERROR — Malformed merged-PR recovery response: invalid merged_at timestamp
+ok
+test_roadmap_catch_up_preserves_repository_identity (__main__.ReconcileTests.test_roadmap_catch_up_preserves_repository_identity) ... ok
+test_rollback_each_boundary (__main__.ReconcileTests.test_rollback_each_boundary) ... ok
+test_supporting_note_cannot_steal_canonical_closeout (__main__.ReconcileTests.test_supporting_note_cannot_steal_canonical_closeout) ... ok
+test_three_close_events_and_catch_up (__main__.ReconcileTests.test_three_close_events_and_catch_up) ... ok
+test_publish_allowlist_and_plan_lands (__main__.WorkflowTests.test_publish_allowlist_and_plan_lands) ... ok
+test_publish_recovers_from_a_raced_push_with_receipts_first_and_one_recompute (__main__.WorkflowTests.test_publish_recovers_from_a_raced_push_with_receipts_first_and_one_recompute) ... ok
+test_report_step_and_permissions (__main__.WorkflowTests.test_report_step_and_permissions) ... ok
+test_trigger_permissions_and_queue (__main__.WorkflowTests.test_trigger_permissions_and_queue) ... ok
+
+----------------------------------------------------------------------
+Ran 36 tests in 4.731s
+
+OK
+
+COMMAND ['bash', 'test/gh740-hosted-lane-publish.sh']
+test_no_race_is_one_commit_one_push (__main__.PublishTests.test_no_race_is_one_commit_one_push) ... ok
+test_race_publishes_receipts_first_then_recomputes_once (__main__.PublishTests.test_race_publishes_receipts_first_then_recomputes_once) ... ok
+test_race_without_receipts_exits_without_retry (__main__.PublishTests.test_race_without_receipts_exits_without_retry) ... ok
+test_retry_argv_coalesces_targets_for_the_production_parser (__main__.PublishTests.test_retry_argv_coalesces_targets_for_the_production_parser) ... ok
+test_second_race_exits_loudly_with_receipts_kept_and_one_recompute (__main__.PublishTests.test_second_race_exits_loudly_with_receipts_kept_and_one_recompute) ... ok
+test_undeclared_artifact_is_refused_before_any_push (__main__.PublishTests.test_undeclared_artifact_is_refused_before_any_push) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 6.107s
+
+OK
+
+COMMAND ['bash', 'test/gh674-merge-cleanup-hosted-lookup.sh']
+.merge-cleanup: WARNING — Hosted wave-reconcile run #791 completed as success; using local reconciliation
+...merge-cleanup: ERROR — Hosted wave-reconcile run #791 is still in_progress after 0s; refusing to start the local reconciler while it is in flight
+..
+----------------------------------------------------------------------
+Ran 6 tests in 0.033s
+
+OK
+merge-cleanup: No hosted wave-reconcile run found for mmmmmmmmmm; using local reconciliation
+merge-cleanup: Hosted wave-reconcile run #791 is in_progress; waiting
+merge-cleanup: No hosted wave-reconcile run found for mmmmmmmmmm; using local reconciliation
+merge-cleanup: Hosted wave-reconcile run #791 is in_progress; waiting
+merge-cleanup: Hosted wave-reconcile run #1 is in_progress; waiting
+merge-cleanup: ✅ Hosted wave-reconcile run #2 succeeded for mmmmmmmmmm
+merge-cleanup: Hosted wave-reconcile run #67401 is in_progress; waiting
+merge-cleanup: ✅ Hosted wave-reconcile run #67401 succeeded for mmmmmmmmmm
+merge-cleanup: Hosted wave-reconcile run #62901 is in_progress; waiting
+merge-cleanup: ✅ Hosted wave-reconcile run #62901 succeeded for mmmmmmmmmm
+
+COMMAND ['bash', 'test/gh496-phase2-reconciliation-views.sh']
+== test: gh496-phase2 ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh496-phase2.XXXXXX.orEhuW9tlb
+=== Running gh496-phase2-reconciliation-views.sh test suite ===
+  PASS: In-flight hosted reconciler fails closed (exit 8)
+  PASS: Error message identifies in-flight wave-reconcile run
+  PASS: In-flight check bypassed with --force-local-reconcile (exit 0)
+  PASS: Warning logged when overriding in-flight run
+  PASS: --force-local-reconcile rejected inside GITHUB_ACTIONS (exit 2)
+  PASS: Error correctly explains GITHUB_ACTIONS prohibition
+  PASS: gh failure fails closed (exit 8)
+  PASS: gh error produces clean failure message
+  PASS: Pre-merge check passes when all conditions are met (exit 0)
+  PASS: Pre-merge confirmation message output
+  PASS: Placeholder lessons learned is not a doc-contract failure (exit 6, not 5)
+  PASS: WARN cites empty/placeholder lessons learned
+  PASS: Missing frontmatter owner field is rejected (exit 5)
+  PASS: Error message cites missing owner field
+  PASS: Missing committed test receipt is rejected (exit 6)
+  PASS: Error message cites missing committed receipt at HEAD
+  PASS: Uncommitted test receipt does not satisfy check (exit 6)
+  PASS: Stale test receipt with code changes is rejected (exit 6)
+  PASS: Error confirms stale receipt rejected
+PASS committed outcome {'result': 'pass'}
+PASS committed outcome {'result': 'passed'}
+PASS committed outcome {'result': 'PASS'}
+PASS committed outcome {'status': 'pass'}
+PASS committed outcome {'status': 'passed'}
+PASS committed outcome {'status': 'PASS'}
+PASS committed outcome {'rc': 0}
+PASS committed outcome {'result': 'pass', 'status': 'passed', 'rc': 0}
+PASS committed outcome {'result': 'pass', 'rc': 1}
+PASS committed outcome {'result': 'fail', 'rc': 0}
+PASS committed outcome {'result': 'pass', 'status': 'fail', 'rc': 0}
+PASS committed outcome {'rc': False}
+PASS committed outcome {'rc': True}
+PASS committed outcome {'result': 'fail', 'status': 'pass'}
+PASS committed outcome {'result': 'pass', 'status': 'fail'}
+PASS committed outcome {'result': 'pass', 'rc': False}
+PASS committed outcome {'result': 'pass', 'rc': True}
+PASS committed outcome {'rc': '0'}
+PASS committed outcome {'rc': 0.0}
+PASS committed outcome {'rc': None}
+PASS committed outcome {'result': None, 'rc': 0}
+PASS committed outcome {'result': [], 'rc': 0}
+PASS committed outcome {'status': {}, 'rc': 0}
+PASS committed outcome {'result': 'unknown', 'rc': 0}
+PASS committed outcome {'result': '', 'rc': 0}
+PASS committed outcome {'status': None, 'rc': 0}
+PASS committed outcome {'status': '', 'rc': 0}
+PASS committed outcome {'rc': -1}
+PASS committed outcome {}
+PASS committed outcome {'result': 'pass', 'rc': None}
+PASS committed outcome {'result': 'pass', 'rc': ''}
+  PASS: Pre-merge fails closed when PR metadata cannot be fetched (exit 2)
+  PASS: Error message explains PR query failure
+  PASS: Reconciler runs successfully (exit 0)
+  PASS: Marathon planner executed on initial run
+  PASS: Fingerprint file created on initial run
+  PASS: Second run exits 0
+  PASS: Marathon planner skipped when canonical inputs unchanged
+  PASS: Log confirms marathon-plan.sh was skipped due to unchanged fingerprint
+  PASS: Third run exits 0 after roadmap mutation
+  PASS: Marathon planner re-executed when roadmap inputs modified
+  PASS: Fourth run exits 0 after active doc content mutation
+  PASS: Marathon planner re-executed when active doc contents modified
+=== All GH-496 Phase 2 tests passed successfully! ===
+
+COMMAND ['bash', 'test/gh174-harness-registry.sh']
+== test: gh174-harness-registry ==
+  PASS: All GH-174 Python executables and alias entry points exist and are executable
+  PASS: harness.py check verifies foreign_keys and SQLite integrity
+  PASS: device_config.py resolves 3-tier config hierarchy correctly
+  PASS: HarnessTurnLogger logs telemetry and records evaluation successfully
+  PASS: harness_app.py blog gen synthesizes publishable Markdown case study
+  PASS: Negative control: Invalid evaluation grade correctly rejected by SQLite CHECK constraint
+  PASS: harness_app.py log automatically derives lab name for novel model IDs
+  PASS: Negative control: tracked harnesses.db, harnesses.sql, and docs remain 100% byte-unchanged
+gh174-harness-registry: 8 pass, 0 fail
+
+COMMAND ['bash', 'test/gh346-profile-resolve.sh']
+== test: gh346-profile-resolve ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh346-profile-resolve.XXXXXX.qW1vMLUQpn
+  PASS: resolve-profile.sh is present and executable
+  PASS: qwen 3.8 max -> DEEPSEEK_AGENT
+  PASS: qwen 3.8 max -> the requested model
+  PASS: qwen 3.8 max -> OpenRouter via DEEPSEEK_PROVIDER (not _GATEWAY)
+  PASS: qwen 3.8 max -> the deepseek shim
+  PASS: glm 5.3 max -> COMMANDCODE_AGENT
+  PASS: glm 5.3 max -> the requested model
+  PASS: glm 5.3 max -> effort max
+  PASS: self-routed harness exports NO gateway variable
+  PASS: the omission is explained in the output, not just absent
+  PASS: fuzzy match: 'GLM5.3 Max'
+  PASS: fuzzy match: 'glm 5.3 MAX'
+  PASS: fuzzy match: 'max glm 5.3'
+  PASS: tier 1: explicit env beats a named profile
+  PASS: tier 1: the operator's model survives untouched
+  PASS: malformed config: exits 0 (never blocks a turn)
+  PASS: malformed config: degrades to tier 4 (today's behavior)
+  PASS: wrongtype config: exits 0 (never blocks a turn)
+  PASS: wrongtype config: degrades to tier 4 (today's behavior)
+  PASS: wrongprofile config: exits 0 (never blocks a turn)
+  PASS: wrongprofile config: degrades to tier 4 (today's behavior)
+  PASS: empty config: exits 0 (never blocks a turn)
+  PASS: empty config: degrades to tier 4 (today's behavior)
+  PASS: missing config: exits 0 (never blocks a turn)
+  PASS: missing config: degrades to tier 4 (today's behavior)
+  PASS: unmatched name: falls through to tier 4, exit 0
+  PASS: malformed config names the PARSE error, not just 'no profiles'
+  PASS: an unmatched name says so, and lists what exists
+  PASS: a wrong-typed profiles key says so
+  PASS: route_agent() exposes a lane set to compare against
+  PASS: resolver lane set == route_agent's, derived not copied (agy aider claude codex commandcode deepseek pi smallcode)
+  PASS: every routable lane has a turn shim on disk
+  PASS: deepseek's gateway var derived as DEEPSEEK_PROVIDER (not the assumed _GATEWAY)
+  PASS: a profile naming a dead lane is flagged by --list
+  PASS: a profile with no gateway is flagged
+  PASS: gateway echoing the harness name is flagged (use 'self')
+  PASS: a broken profile refuses --env rather than emitting a half-correct block
+  PASS: --list renders a self-routed path with two elements
+  PASS: --list renders a routed path with three
+  PASS: --explain names the tier that answered
+  PASS: --explain calls out self-routing rather than printing a bare 'self'
+  PASS: --list on an empty config shows a usable example block
+  PASS: --list names the harnesses a profile may reference
+  PASS: injection (sq): hostile model value survives as literal data
+  PASS: injection (dq): hostile model value survives as literal data
+  PASS: injection (sub): hostile model value survives as literal data
+  PASS: injection (bt): hostile model value survives as literal data
+  PASS: injection: eval of --env output executed nothing (no EVIL_* artifacts)
+  PASS: R1: --env emits RELAY_AGENT (the shims refuse to act without it)
+  PASS: R2: RELAY_AGENT matches the harness agent var (commandcode) — the shim acts instead of deferring
+  PASS: R3: a profile whose harness CLI is missing warns at resolution time
+  gh346-profile-resolve: 51 pass, 0 fail
+
+COMMAND ['bash', 'test/gh549-work-events.sh']
+GH-549 work-state event stream:
+1. migration 008
+  ok  - schema_migrations carries version 8
+  ok  - work_events, connector_cursors and both triggers exist
+  ok  - trigger work_events_no_update present
+  ok  - trigger work_events_no_delete present
+2. work_events is append-only (witnessed refusals)
+  ok  - UPDATE refused: work_events is append-only
+  ok  - DELETE refused: work_events is append-only
+5. real verbs emit the right events
+  ok  - roadmap add/rate/update emitted parked,rated,in_flight
+  ok  - check is clean after three emitting writes
+6. dump placement (the load-bearing decision), with rows present
+  ok  - work_events is in the canonical dump but NOT in the business-digest view
+  ok  - connector_cursors is in neither — device-local by design
+7. the extractor registry is total
+  ok  - every derived op is mapped or allowlisted (ops=28 unclassified=none)
+  ok  - an unclassified op raises, so a new verb cannot silently drop a state
+8. rebuild round-trips work_events
+  ok  - check --rebuild preserved all 758 work_events rows
+9. RED CONTROL A — work_events above the include_receipts guard breaks the chain
+  ok  - mutated placement makes check report receipt-chain (the red fires)
+10. RED CONTROL B — connector_cursors in the dump breaks the dump comparison
+  ok  -   baseline: mutated build is clean before any cursor exists
+  ok  - cursor in the dump + post-transaction advance => dump-divergence (the red fires)
+  ok  - SHIPPED code is clean under the identical cursor advance (the fix holds)
+11. shared nested-block config resolution (device_config.resolve_device_block)
+  ok  - an absent config is a silent no-op returning the defaults
+  ok  - a malformed config reports an error instead of looking absent
+  ok  - an empty config file counts as absent, not malformed
+  ok  - the file tier resolves, and a bare string where a list belongs is coerced
+  ok  - the env tier outranks the file and coerces to the default's type
+  ok  - board_sync config still resolves through the shared block resolver
+12. connector dispatch: concurrent, bounded, isolated
+  ok  - two connectors, one failing: the good one advanced, the bad one did not, its error was recorded
+  ok  - two 5s connectors finished in 5.07s — launched concurrently, not serially
+  ok  - two hung connectors cost ONE 2.06s window, not one timeout each
+  ok  - a connector killed at the deadline does not advance its cursor
+13. dispatch never changes a host verb's exit code
+  ok  - a ledger verb exits 0 even with a connector configured that cannot succeed
+  ok  - and the ledger row is committed regardless
+  ok  - and check is clean after a dispatching write
+14. work emit — one row, real txn_id, its own receipt
+  ok  - one work emit creates EXACTLY one row (not zero, not two)
+  ok  - the row carries the real transaction id minted inside perform_write
+  ok  - and it went through perform_write — its own receipt is on the chain
+  ok  - check is clean after work emit
+15. work reconcile — replay, idempotence, reset
+  ok  - unconfigured reconcile is a no-op that says so
+  ok  - reconcile replays the events after the cursor
+  ok  - a second run is idempotent — the cursor is current
+  ok  - --reset replays from the beginning (the rebuild recovery path)
+  ok  - red control: an overshot cursor skips real events — which is why replay is cursor-driven, not scan-driven
+15b. a connector cannot advance its own cursor out of the batch it was handed (impl QA r1)
+  ok  - an overshooting connector is REFUSED, with the reason named
+  ok  - and its cursor did NOT move — the batch stays replayable
+  ok  - the refusal is recorded on the cursor row, not just printed
+  ok  - a backwards report is refused too, so acknowledged events are not replayed
+15c. red control — the bounds guard is load-bearing
+  ok  - red control: without the guard the overshoot IS stored (765 > 760) — the guard is what stops it
+16. the merge emitter keys on the issue, never the PR
+  ok  - a merged PR's closed issues are what get the event
+  ok  - a PR that closes nothing emits nothing — no card for a non-work-item
+  ok  - a dry run emits nothing
+  ok  - merge-cleanup waits for hosted reconciliation before emission, then commits and pushes the event
+17. the VENDORED github_board connector, through normal config, offline (impl QA r2)
+  ok  - the vendored connector runs from normal config with no registry overlay
+  ok  - and it MOVED THE CARD to the configured column (was 'absent', now 'Done')
+  ok  - and its cursor advanced past the seeded tail to this leg's own event (758 -> 759)
+mapping-ok
+  ok  - the event -> column mapping is user config: an override wins and an empty value disables it
+18. XYZ_WORK_CONNECTORS=0 is a GLOBAL kill switch, not just a hot-path one (impl QA r2)
+  ok  - with the switch off, work reconcile spawned NO connector child
+  ok  - and no cursor was written
+  ok  - and it says why, rather than looking like an empty config
+  ok  - red control: without the switch the SAME command does run the child — the switch is what stopped it
+19. two overlapping dispatches are serialized, and a cursor never goes backwards (impl QA r3)
+  ok  - two concurrent dispatches ran exactly ONE child — the second saw the advanced cursor
+  ok  - and the cursor finished at the NEWEST event (760), not an older batch's
+  ok  - red control: without the lock BOTH dispatches ran the same batch (2 children) — the lock is what stops it
+monotonic-ok
+  ok  - a late older persist cannot lower the cursor (9 stays 9)
+20. the connector lock fails CLOSED, and --reset is inside it (impl QA r4)
+work_connectors: cannot open the connector lock (NotADirectoryError(20, 'Not a directory')) — deferring this batch
+work_connectors: another dispatch holds the connector lock — leaving this batch for the next run
+fail-closed-ok
+  ok  - a lock that cannot be opened DEFERS the batch instead of dispatching unserialized
+  ok  - and no connector child ran at all under the unopenable lock
+  ok  - and no cursor moved, so the batch stays replayable
+  ok  - --reset still replays from zero with the delete inside the lock
+21. work backfill — projects existing ledger state, idempotent, through the one seam (GH-564)
+  ok  - fixture rows built through the verbs, one per mapping cell
+  ok  - 21a dry-run: zero events and zero receipts written
+  ok  - 21a dry-run prints the plan and says 0 written
+  ok  - 21a red: without the dry-run return, --dry-run DOES write (767 -> 1126)
+  ok  - 21b Completed/🆕 -> completed (section wins; NOT pr_merged)
+  ok  - 21b 🚧 -> in_flight
+  ok  - 21b rated 🆕 -> rated
+  ok  - 21b unrated 🆕 -> parked
+  ok  - 21g Deferred + 🚧 -> skipped (Deferred is checked first)
+  ok  - 21b backfill never emits pr_merged
+  ok  - 21g red: with the order swapped, Deferred/🚧 DOES emit in_flight — the order is load-bearing
+  ok  - 21c a second backfill emits zero (backfill: 0 emitted, 368 skipped, 0 failed)
+  ok  - 21c red: without the transactional guard a second backfill DUPLICATES (1126 -> 1485)
+  ok  - 21d every backfill event (359) has its own work-emit receipt, joined on txn_id (0 orphans)
+  ok  - 21d releases check is clean after backfill
+  ok  - 21e two concurrent backfills produced exactly one event per row (359 = 359), not two
+  ok  - 21e red: no racer crashed (exit codes: 0 4; 4 = writer-lock refusal)
+  ok  - 21e red: with the read moved outside the transaction, the race DUPLICATES (364 > 359)
+22. review_ready from open non-draft PRs, inside reconcile, fail-soft (GH-564)
+  ok  - 22a an open non-draft PR closing #405 emitted review_ready
+  ok  - 22a and the card reached the configured review_ready column
+  ok  - 22b a DRAFT PR emitted nothing
+  ok  - 22b a PR closing nothing emitted nothing
+  ok  - 22g the scan passed --repo from the connector's identity, not the CWD
+  ok  - 22g ...and still does from a directory with no git checkout
+  ok  - 22c a second reconcile emits no second review_ready
+  ok  - 21f fixture: backfill then reconcile gives ...,review_ready (parked,parked,review_ready)
+  ok  - 21f backfill after a review_ready does NOT re-emit — it compares against its OWN last projection
+  ok  - 21f reconcile after a backfill does NOT re-emit review_ready — it ignores backfill rows
+  ok  - 21f an open PR against a COMPLETED issue does not pull it back to review_ready
+  ok  - 21f red(i): with the global latest, backfill DOES re-emit after review_ready (1 -> 2) — the ping-pong
+  ok  - 21f red(iii): with backfill rows visible, reconcile DOES re-emit review_ready (1 -> 2)
+  ok  - 21f red(ii): without completed in the suppression set the card IS pulled back
+  ok  - 22a red: with the event name swapped, 405 does NOT get review_ready
+  ok  - 22b red: without the isDraft filter, the draft PR DOES emit (for its own number, since linked_issues is bypassed in the same copy)
+  ok  - 22b red: with linked_issues bypassed, the closes-nothing PR DOES emit for its own number
+  ok  - 22d with gh pr list failing, reconcile exits 0
+  ok  - 22d ...and says why
+  ok  - 22d ...and still replayed
+  ok  - 22f one emission raising: reconcile still exits 0
+  ok  - 22f ...the OTHER issue's event still landed
+  ok  - 22f ...and the failure was named
+  ok  - 22f ...and dispatch still ran (cursor 758 -> 759)
+  ok  - 22f red: without the per-emission except, the verb FAILS (rc=1)
+  ok  - 22e XYZ_WORK_CONNECTORS=0: the scan made no gh call
+  ok  - 22e red: without the switch the SAME command calls gh
+23. completed is a mapped column, user-overridable (GH-564)
+ok
+  ok  - 23 completed -> Done by default; a user's empty override disables it
+  ok  - 23 red: with the key deleted, completed is unmapped — the entry is load-bearing
+24. the producer-scoped lookup has no row cap (impl QA r1), and every backfill event has ITS OWN receipt
+views-ok
+  ok  - 24 backfill's own latest is still found under 60 newer rows from another producer
+  ok  - 24 ...so a backfill after 60 unrelated events still emits nothing
+  ok  - 24 red: with LIMIT 50 restored, the own-row is hidden and backfill DUPLICATES (1 -> 2)
+  ok  - 24 every one of the 2 new backfill events has its OWN work-emit receipt (join on txn_id)
+  ok  - 24 red: a copy that bypasses perform_write leaves 360 receipt-less event(s) — the join catches it
+25. a non-object payload on an older row cannot break the producer views (impl QA r2)
+views-ok
+  ok  - 25 both producer views survive list/null/string payloads above the backfill row
+  ok  - 25 backfill exits 0 and skips 9930 (still its own latest) with non-object rows present
+  ok  - 25 red: with the raw .get restored, backfill DIES with AttributeError (rc=1)
+26. a writer REFUSAL for one issue cannot take reconcile down before dispatch (impl QA r3)
+  ok  - 26 with one emission REFUSING (SystemExit), reconcile still exits 0
+  ok  - 26 ...the other issue's event landed
+  ok  - 26 ...and the refusal was named
+  ok  - 26 ...and dispatch still ran (cursor 758 -> 759)
+  ok  - 26 red: re-raising SystemExit takes the verb down (rc=3) with NO dispatch — the catch is load-bearing
+  ok  - 26 on a ledger without work_events the scan returns (0,0,0) instead of exiting
+
+GH-549 work-state event stream: 125 passed, 0 failed
+
+COMMAND ['bash', 'test/ci-workflow.sh']
+== test: ci-workflow ==
+  workflow: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-focused-verify/.github/workflows/ci.yml
+  PASS: workflow exists and is non-empty
+  PASS: workflow runs on a GitHub-hosted Ubuntu runner (ubuntu-latest)
+  PASS: no third-party runner labels remain
+  PASS: workflow triggers on push and pull_request
+  PASS: workflow scopes both triggers to main and development
+  PASS: workflow is still reachable manually via workflow_dispatch
+  PASS: workflow references shellcheck
+  PASS: workflow references bash -n
+  PASS: workflow references node --check
+  PASS: workflow references .claude/settings JSON validation
+  PASS: workflow references utils/pdda/pdda.sh run
+  PASS: workflow delegates routing to the tested classifier
+  PASS: PDDA is path-routed instead of unconditional
+  PASS: workflow declares the fast PR route
+  PASS: workflow declares the full integration route
+  PASS: fast route consumes changed-area tests
+  PASS: concurrency is scoped by event and PR/branch
+  PASS: superseded runs are cancelled
+  PASS: .github/workflows/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/pages.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/pages.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: .github/workflows/wave-reconcile.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: .github/workflows/wave-reconcile.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: no deprecated checkout or setup-python versions (<v7)
+  PASS: skills/2-daily/agent-chorus/standalone/ci.yml: uses Node 24-native actions/checkout (@v7+)
+  PASS: pages.yml: no deprecated Pages action versions (<v5)
+  PASS: pages.yml: uses Node 24-native actions/setup-python (@v7+)
+  PASS: pages.yml: uses Node 24-native upload-pages-artifact and deploy-pages (@v5+)
+  PASS: full-suite fallback is manual rather than an automatic daily burn
+  PASS: full gate retains PDDA fixture/negative-control tests
+  PASS: legacy docs-only filter references are gone
+  PASS: validate.sh wires ci-workflow.sh
+  PASS: validate.sh wires ci-route.sh
+  PASS: workflow parses as YAML when PyYAML is available
+  PASS: the workflow collects changed files with --no-renames (a rename's source path stays visible)
+  PASS: the workflow supplies the pushed range so a push can be classified
+  PASS: an unusable push range fails closed to full
+  PASS: the workflow declares a macOS promotion-boundary job
+  PASS: the boundary job runs on macos-latest
+  PASS: the boundary job never runs on pull_request (macOS bills ~10x; the boundary is deliberate)
+  PASS: the boundary job invokes ./validate.sh directly (no second list to keep honest)
+  PASS: the boundary job carries no skip list (full means full)
+  PASS: the boundary job bounds its runtime (an unbounded hang bills at ~10x)
+  PASS: the boundary cap (120m) fits the suite: >= wave-reconcile's 120m for the same sequential run
+  PASS: the boundary job records its resolved SHA as promotion evidence
+  PASS: the ubuntu job declares continue-on-error (advisory, cannot mark a commit broken)
+  PASS: the ubuntu canary runs on push-to-development with deliberate dispatch fallback
+  PASS: the ubuntu canary is off pull requests and push-to-main
+  PASS: the workflow emits a portability canary verdict step
+  PASS: the canary verdict runs with if: always() (reports when an earlier step failed)
+  PASS: GH-459: the frozen twin guard sits inside the PR-reachable vendored-smoke job
+  PASS: the canary verdict names drift as drift and explicitly denies breakage
+  PASS: ci.yml does not re-derive validate.sh's registry (it calls validate.sh — GH-379)
+  PASS: ci-local.sh still re-derives the registry via the KNOWN expression — tracked on GH-379, not a new defect
+  PASS: both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)
+  PASS: ci-local.sh states the real limit: a local pass is self-reported and does not qualify a promotion
+
+Summary
+  passed: 57
+  failed: 0
+  skipped: 0

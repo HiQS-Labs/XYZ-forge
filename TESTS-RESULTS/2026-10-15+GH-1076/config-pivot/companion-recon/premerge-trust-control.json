@@ -1,0 +1,10 @@
+{
+  "kind": "MANUAL TRUST-BOUNDARY CONTROL; no suites executed",
+  "at": "2026-10-16T00:01:18.491904+00:00",
+  "canonical_reader": "utils/py/gate_receipt.py:check_receipt",
+  "synthetic_success_claim_accepted": true,
+  "failed_claim_accepted": false,
+  "failed_reason": "Receipt exit_code is 1, expected 0",
+  "implication": "Existing local reader is self-reported, not authenticated producer authority. This is documented behavior, not a new security defect.",
+  "limitations": "Does not evaluate signed/hosted attestations or alter any source, gate, primary setting or CI case."
+}

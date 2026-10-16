@@ -1,0 +1,7 @@
+{
+  "base": "14081d61d3c42e662479a53637c9399eb772e8e2",
+  "ours_changed_insert_rows": 12,
+  "incoming_changed_insert_rows": 9,
+  "missing_rows": [],
+  "generation_floor": 1671
+}
