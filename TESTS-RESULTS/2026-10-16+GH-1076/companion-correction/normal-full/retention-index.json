@@ -1,0 +1,46 @@
+{
+  "tested_sha": "fb02ccccbbaa2d9509b6e817e8c2e44e66320886",
+  "files": {
+    "metrics.json": {
+      "bytes": 2524,
+      "sha256": "5fa723dc6febb5ebbac9a7ccbe57839d78e7eb53691953e622c594778b857058"
+    },
+    "late-host-overlap.json": {
+      "bytes": 506,
+      "sha256": "afe383b56ff9a9e5b1ad932390f09115627afe6f5c0e1e84382b980c9dc1d074"
+    },
+    "failure-log-retention.json": {
+      "bytes": 1136,
+      "sha256": "d68bffe34c4c3115b8a204b15e3eca0c07f42f1202ad4a09cb8a09bf5609e673"
+    },
+    "metadata.json": {
+      "bytes": 10858,
+      "sha256": "561d7c3256d63f107eb03861c3959a237378425234cf11fa48bf357cfb82bbc0"
+    },
+    "late-host-overlap-first-observation.txt": {
+      "bytes": 926,
+      "sha256": "92b04ca1e46cd1a05931d012a1d757d550bf0e48ffdf692a73ec0d0f46090ca1"
+    },
+    "validation.jsonl": {
+      "bytes": 130703,
+      "sha256": "1f686f54d9b2156ac4e627a3fc7bc619d470e035c302c521e928ac1622d024a0"
+    },
+    "dependency-environment.json": {
+      "bytes": 557,
+      "sha256": "77b693fcc83d2d1a173d3713fa27c4ebe4dd91ae3e968af10cc8d8c0d77f50be"
+    },
+    "queue.json": {
+      "bytes": 123,
+      "sha256": "26496a089d286c2931dd87d66ad05fefed783b3d160cfefd35cede8eb4bc9226"
+    },
+    "gate.log": {
+      "bytes": 34970,
+      "sha256": "5dd05dcec101f729ca5b07a060e85ea6ceadc47676956c3063451f43be9d1638"
+    },
+    "6d565ec804573c14-gh648-l4-285-revalidate.sh.log": {
+      "bytes": 445,
+      "sha256": "6d565ec804573c14ed281922c24d5c51bc130214f15b75e0ec004c8249cef192"
+    }
+  },
+  "qualification": "Local normal balanced full only; late host overlap and native retry disclosed."
+}

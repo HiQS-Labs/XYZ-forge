@@ -1,0 +1,8 @@
+{
+  "observed_at": "2026-10-16T02:06:48.926988+00:00",
+  "initial_queue_inventory": "No active validator at our01:46:19 launch; see full.queue.json",
+  "observed_later": [
+    "47923 47444       03:42 bash /Users/noelsaw/Documents/Codex/2026-10-15/task/radar1085-second-clone/verify-17b06bdc/validate.sh"
+  ],
+  "scope": "Different owned verification roots. No cancel/kill or change to other session. No isolated timing or causal contention claim. First gh648 failure predates this observed later gate."
+}

@@ -1,0 +1,8 @@
+Copied from successful ps output in this session before our gate completed; exact observation clock was not queried. Elapsed times and simultaneous lines are retained as observed.
+
+47923 47444       02:33 bash /Users/noelsaw/Documents/Codex/2026-10-15/task/radar1085-second-clone/verify-17b06bdc/validate.sh
+54254 52794       19:15 bash /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate/validate.sh
+60912 54550       04:47 bash -c vp_run_one "$1" pool _ gh436-merge-cleanup.sh
+60925 60912       04:47 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate/test/gh436-merge-cleanup.py
+
+The prior PermissionError occurred before the later radar gate began. No causal attribution or isolated benchmark claim; no other session was cancelled or modified.

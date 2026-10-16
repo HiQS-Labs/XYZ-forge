@@ -1,0 +1,170 @@
+{
+  "at": "2026-10-16T02:09:33.409201+00:00",
+  "scope": "Owned spike/support checkout snapshots before TESTS-only evidence commit; not a blanket GH Repos cleanup inventory",
+  "retained_checkouts": [
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike",
+      "role": "Only implementation writer; published source and TESTS-only successors",
+      "head": "fb02ccccbbaa2d9509b6e817e8c2e44e66320886",
+      "status": "M TESTS-RESULTS/2026-10-16+GH-1076/companion-correction/PUBLICATION.md\n M TESTS-RESULTS/2026-10-16+GH-1076/companion-correction/provenance.jsonl\n?? TESTS-RESULTS/2026-10-16+GH-1076/companion-correction/dependencies-after-normal-full.json\n?? TESTS-RESULTS/2026-10-16+GH-1076/companion-correction/normal-full-evidence-audit.json\n?? TESTS-RESULTS/2026-10-16+GH-1076/companion-correction/normal-full/",
+      "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike\nHEAD fb02ccccbbaa2d9509b6e817e8c2e44e66320886\nbranch refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+      "index_lock": false,
+      "ignored_file_count": 121,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-benchmark-gate",
+      "role": "Failed initial calibration and original ignored telemetry",
+      "head": "f974fcee15647aae6551fcc81b129f5a6127120b",
+      "status": "",
+      "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-benchmark-gate\nHEAD f974fcee15647aae6551fcc81b129f5a6127120b\nbranch refs/heads/development",
+      "index_lock": false,
+      "ignored_file_count": 31,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-before-matched-gate",
+      "role": "Pinned f974 historical full baseline and current existing timeout comparison, ignored telemetry retained",
+      "head": "f974fcee15647aae6551fcc81b129f5a6127120b",
+      "status": "",
+      "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-before-matched-gate\nHEAD f974fcee15647aae6551fcc81b129f5a6127120b\nbranch refs/heads/development",
+      "index_lock": false,
+      "ignored_file_count": 31,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-focused-verify",
+      "role": "Completed four unchanged focused suites atd8a6f875; ignored originals retained",
+      "head": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+      "status": "",
+      "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-focused-verify\nHEAD d8a6f87570c24eeb82fcfb4ee24ef593911678ba\ndetached",
+      "index_lock": false,
+      "ignored_file_count": 30,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-final-gate",
+      "role": "Prior d1 full evidence and actual f874 separate Small/area component runs",
+      "head": "f874fa8d4d69e2db4f56a8863e6de9b61275842c",
+      "status": "",
+      "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-final-gate\nHEAD f874fa8d4d69e2db4f56a8863e6de9b61275842c\nbranch refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+      "index_lock": false,
+      "ignored_file_count": 33,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate",
+      "role": "Normal full sourcefb02cccc pushed; original full telemetry and first failure retained",
+      "head": "fb02ccccbbaa2d9509b6e817e8c2e44e66320886",
+      "status": "",
+      "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate\nHEAD fb02ccccbbaa2d9509b6e817e8c2e44e66320886\nbranch refs/heads/chore/XYZ-forge-gh1076-ci-policy-2026-10-14",
+      "index_lock": false,
+      "ignored_file_count": 88,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-pr1069-readonly-review",
+      "role": "Immutable earlier separately owned PR1069 source study",
+      "head": "d2e7369a5343270a8134372391d549795c82cc20",
+      "status": "",
+      "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-pr1069-readonly-review\nHEAD d2e7369a5343270a8134372391d549795c82cc20\ndetached",
+      "index_lock": false,
+      "ignored_file_count": 0,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-pr1069-review-checks",
+      "role": "Immutable current4691 source study and existing180-test gh436 execution",
+      "head": "4691b4a304f7abda698f2093217a3e9a9c73a947",
+      "status": "",
+      "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-pr1069-review-checks\nHEAD 4691b4a304f7abda698f2093217a3e9a9c73a947\ndetached",
+      "index_lock": false,
+      "ignored_file_count": 0,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/gh740-u6v4m3h9/seed",
+      "role": "Retained controlled local FF-race fixture; simulated validation, no real PR",
+      "head": "5033d3fd56c0cf77284a9c384d25f98e8628a7bb",
+      "status": "",
+      "origin": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/gh740-u6v4m3h9/origin.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/gh740-u6v4m3h9/seed\nHEAD 5033d3fd56c0cf77284a9c384d25f98e8628a7bb\nbranch refs/heads/development",
+      "index_lock": false,
+      "ignored_file_count": 0,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/gh740-u6v4m3h9/clone",
+      "role": "Retained controlled local FF-race fixture; simulated validation, no real PR",
+      "head": "c010022c17fbed58d9cbdb4968697caa5e275159",
+      "status": "",
+      "origin": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/gh740-u6v4m3h9/origin.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/gh740-u6v4m3h9/clone\nHEAD c010022c17fbed58d9cbdb4968697caa5e275159\nbranch refs/heads/development",
+      "index_lock": false,
+      "ignored_file_count": 0,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/gh740-u6v4m3h9/racer",
+      "role": "Retained controlled local FF-race fixture; simulated validation, no real PR",
+      "head": "440509125556815bf91bd501fd9665aea0f7a561",
+      "status": "",
+      "origin": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/gh740-u6v4m3h9/origin.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/gh740-u6v4m3h9/racer\nHEAD 440509125556815bf91bd501fd9665aea0f7a561\nbranch refs/heads/development",
+      "index_lock": false,
+      "ignored_file_count": 0,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/admission-fixture",
+      "role": "Retained manual admission fixture; simulated receipt outcome only",
+      "head": "b5622218acedf0ad33be77f5414cc8884875f9c2",
+      "status": "",
+      "origin": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/gh740-u6v4m3h9/origin.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/admission-fixture\nHEAD b5622218acedf0ad33be77f5414cc8884875f9c2\ndetached",
+      "index_lock": false,
+      "ignored_file_count": 0,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-companion-positive",
+      "role": "Controlled real source/carrier/landing verification;54 retained refs and original Small/area streams",
+      "head": "9e4e2746fd6f8cc6de4c09ad9902907790c74334",
+      "status": "",
+      "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "worktrees": "worktree /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-companion-positive\nHEAD 9e4e2746fd6f8cc6de4c09ad9902907790c74334\ndetached",
+      "index_lock": false,
+      "ignored_file_count": 28,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    },
+    {
+      "path": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wave-qualification-nmwef5vd/repo",
+      "role": "Retained interrupted first qualification clone; original incomplete area and complete Small",
+      "head": "c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31",
+      "status": "",
+      "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+      "worktrees": "worktree /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wave-qualification-nmwef5vd/repo\nHEAD c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31\ndetached",
+      "index_lock": false,
+      "ignored_file_count": 29,
+      "disposition": "RETAIN: valuable ignored evidence/unique fixture commits or ownership/dependency context; no Trash, removal, metadata relocation or pruning."
+    }
+  ],
+  "checkout_count": 14,
+  "controlled_bare_remote": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/gh740-u6v4m3h9/origin.git",
+  "additional_manual_control": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug/local-receipt-trust-control",
+  "raw_debug_preserved": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-debug",
+  "duplicate_raw_preserved": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-preserved-evidence",
+  "local_controlled_history_bundle": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-companion-evidence/controlled-history.bundle",
+  "observed_external_active_validator": "/Users/noelsaw/Documents/Codex/2026-10-15/task/radar1085-second-clone/verify-17b06bdc; ownership not assumed, untouched",
+  "no_cleanup": true,
+  "no_worktree_metadata_relocation": true,
+  "restoration": "All original paths remain in place; bundle requires originald8a6f875 base. No removed path needs restoration. Local backup is not remote preservation or teardown authorization."
+}

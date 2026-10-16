@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-16T02:09:30.418981+00:00",
+  "checks": [
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-existing-node-deps/node_modules",
+      "files": 19,
+      "original_hashes_match": true
+    },
+    {
+      "path": "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-continuation-gate/node_modules",
+      "files": 19,
+      "original_hashes_match": true
+    }
+  ]
+}

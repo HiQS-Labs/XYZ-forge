@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-16T01:58:13.155644+00:00",
+  "tested_head": "fb02ccccbbaa2d9509b6e817e8c2e44e66320886",
+  "NODE_PATH": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-existing-node-deps/node_modules",
+  "existing_snapshot_files": 19,
+  "hashes_verified_before_launch": true,
+  "source": "gh1076-existing-node-deps-manifest.json",
+  "helper_has_identical_copy": true,
+  "method": "Explicit NODE_PATH on the unchanged normal runner invocation; existing deps avoid the acorn fixture installation fallback. No source/hook/gate override or install."
+}
