@@ -1,0 +1,8 @@
+{
+  "reviewed": "fb2fcb8e940a3539d8c0a6afc6d0681483391a19",
+  "native_final": "1/3 PASS",
+  "repair": "2/2 exhausted; first failure retained; later repair blocked",
+  "focused": "20+17+43 pass; clean unchanged full-clone identity",
+  "normal_publication": "pending",
+  "upstream_requirement": "1091integration review complete before1085landing;1085qualified before1091landing"
+}
