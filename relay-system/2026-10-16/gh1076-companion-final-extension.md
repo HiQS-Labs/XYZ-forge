@@ -90,4 +90,12 @@ Remaining verification: [Unverified — needs clone run] normal exact-source ful
 
 Relay closed (Approved), no further turn needed. Producer/parent may proceed only with the already authorized publication verification and reporting.
 
+
+### Attestation · relay-drive — 2026-10-16T01:43:48Z
+task: RELAY-GH1076-COMPANION-FINAL-EXT-20261016
+reviewer: codex
+status: Approved
+reviewed-head: cd38420024dfd524a6e9a1053324e71a1c8780b8
+added-range: 5682+7282
+added-sha256: 6b3e0c3554ad8267f549e9bccfd69c54f0dabdbb18382f11516ca8e58e34d2a2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
