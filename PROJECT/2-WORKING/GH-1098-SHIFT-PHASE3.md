@@ -137,7 +137,7 @@ PRS pri/sev/appeal/effort = 75/55/50/55. Severity: no data loss; the cost is was
   ],
   "remediation": {
     "source": "issue#1098",
-    "criteria": "A1 preflight resolved from root with SWARM_PREFLIGHT_ROOT; A2 promoted docs carry updated/owner/goal; A3 dispatched env sets RELAY_TURN_IDLE_S to the wall cap unless exported; A4 default full gate rewritten to ./validate.sh --auto <ref> and recorded in the packet."
+    "criteria": "A1 preflight resolved from root with SWARM_PREFLIGHT_ROOT; A2 promoted docs carry updated/owner/goal; A3 dispatched env sets RELAY_TURN_IDLE_S to the wall cap unless exported; A4 default full gate rewritten to bash validate.sh --auto <ref> and recorded in the packet."
   },
   "lanes": {
     "agy_safe": [
