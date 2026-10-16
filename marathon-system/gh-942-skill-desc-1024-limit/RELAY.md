@@ -1,6 +1,6 @@
 # Marathon Phase gh-942-skill-desc-1024-limit
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-942-SKILL-DESC-1024-LIMIT-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -207,3 +207,55 @@ Handing off to agy — agy, take your turn.
     - Off-lane `SKILL.md` files (`58`): `56` are `<= 1024` chars; `2` off-lane literal-block-scalar skills (`skills/1-hourly/better-options/SKILL.md` at `1603` YAML / `1602` folded & `intake` chars; `skills/4-occasional/vscode-color/SKILL.md` at `1042` YAML / `1041` folded & `intake` chars) exceed `1024` and are outside this lane's `ALLOW_PATHS` scope lock.
 
 Handing off to codex — codex, take your turn.
+
+### Round 2 · Reviewer · codex
+
+**Verdict:** Changes requested
+
+swept file: no
+
+This round rechecked the owning capture doc in full, the builder response, and the complete YAML description values for all 69 on-disk tiered skills. This is a targeted disposition review of the unresolved Round 1 blocker, not a new full-body sweep of all 14 artifacts. The Round 1 full-file sweep remains the recorded evidence for those bodies; I am not claiming to have repeated it here.
+
+The receipt correction is accepted. The builder correctly obeyed containment. No request here authorizes an off-lane edit.
+
+**[Blocker — unresolved contract/scope mismatch] Inability to finish does not satisfy the completion condition.**
+
+- **Observed input:** PROJECT/2-WORKING/GH-942-SKILL-DESC-1024-LIMIT.md:12 still requires “Every committed SKILL.md” to fit; its remediation.criteria likewise says “Trim every committed SKILL.md”. The current YAML probe still finds skills/1-hourly/better-options/SKILL.md:3 at **1602 folded characters** (1603 YAML characters) and skills/4-occasional/vscode-color/SKILL.md:3 at **1041 folded characters** (1042 YAML characters). Round 1 established both are tracked; the builder now agrees with the measurements.
+- **Affected scope:** The repository-wide GH-942 outcome and phase approval. The affected list and immutable artifact allowlist conflict with the explicit goal/remediation. Inability to expand the allowlist during this run is an execution blocker; it cannot silently narrow the definition of done. A regex green that misses these values does not resolve that mismatch.
+- **Required disposition:** Preserve the valid scoped edits and report the contract mismatch to the parent. Outside this isolated turn, the parent must reseed permitted work covering the remaining paths, or explicitly authorize and record a narrower completion contract with ownership of the remaining failures. Neither builder nor reviewer should edit forbidden paths or invent that authorization. No further permitted source edit is requested merely to consume another round. If escalation requires the harness to exit, an honest stopped phase is preferable to unsupported approval.
+- **Falsifier:** A complete nonempty YAML-value scan reports zero descriptions over 1024 folded characters, or the parent supplies an explicit authoritative contract amendment narrowing this phase's outcome. Neither is present here.
+
+**Current non-mutating reproduction:** After exporting PYTHONDONTWRITEBYTECODE=1 and TMPDIR="$PWD/.relay-scratch/tmp" and running mkdir -p "$TMPDIR", executed:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import yaml
+files=sorted(Path("skills").glob("*/*/SKILL.md"))
+assert files
+bad=[]
+for p in files:
+    d=yaml.safe_load(p.read_text().split("---",2)[1])["description"]
+    assert isinstance(d,str) and d.strip(), str(p)
+    folded=" ".join(d.splitlines())
+    if len(folded)>1024:
+        bad.append((str(p),len(d),len(folded)))
+print("scanned:",len(files),"bad (YAML chars, folded chars):",bad)
+for n in (1024,1025):
+    d=yaml.safe_load("description: >-\n  "+"x"*n+"\n")["description"]
+    print("threshold:",len(d),"verdict:",int(len(d)>1024))
+raise SystemExit(bool(bad))
+PY
+```
+
+Exit status **1**; decisive output:
+
+```text
+scanned: 69 bad (YAML chars, folded chars): [('skills/1-hourly/better-options/SKILL.md', 1603, 1602), ('skills/4-occasional/vscode-color/SKILL.md', 1042, 1041)]
+threshold: 1024 verdict: 0
+threshold: 1025 verdict: 1
+```
+
+**Evidence limits:** Fully paginated project listing found no graph project for this worktree. The nearest Forge index belongs to another checkout, generation 2026-09-01T15:54:30Z; exact-path coverage reports missing/not-tracked freshness for the capture and flagged skills. The finding relies on current direct reads/YAML parsing, not graph completeness. No new actionable pre-existing body defect is claimed from this targeted recheck. **[Unverified — needs clone run]** Runtime suites and the post-turn harness gate remain outstanding. No git command, suite, executable fixture, source edit, consumer restart, or re-vendor was performed.
+
+Handing off to agy — agy, take your turn.
