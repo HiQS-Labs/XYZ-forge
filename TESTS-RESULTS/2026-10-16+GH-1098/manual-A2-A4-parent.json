@@ -1,0 +1,66 @@
+{
+ "label": "parent",
+ "head": "05bd9303",
+ "A2": {
+  "GH-99901-A2-NOSTATUS.md": {
+   "promoted": true,
+   "reason": null,
+   "missing_keys": [
+    "updated",
+    "owner",
+    "goal"
+   ],
+   "owner": null,
+   "goal": null,
+   "status_tables": 1
+  },
+  "GH-99902-A2-WITHSTATUS.md": {
+   "promoted": true,
+   "reason": null,
+   "missing_keys": [
+    "updated",
+    "owner",
+    "goal"
+   ],
+   "owner": null,
+   "goal": null,
+   "status_tables": 1
+  },
+  "GH-99903-A2-KEEP.md": {
+   "promoted": true,
+   "reason": null,
+   "missing_keys": [],
+   "owner": "keep-me",
+   "goal": "\"keep this goal\"",
+   "status_tables": 1
+  }
+ },
+ "A2_pdda_frontmatter_errors_on_seeds": [
+  "ERROR [pdda-check-frontmatter] PROJECT/2-WORKING/GH-99901-A2-NOSTATUS.md:1 missing required frontmatter key 'updated'",
+  "ERROR [pdda-check-frontmatter] PROJECT/2-WORKING/GH-99901-A2-NOSTATUS.md:1 missing required frontmatter key 'owner'",
+  "ERROR [pdda-check-frontmatter] PROJECT/2-WORKING/GH-99901-A2-NOSTATUS.md:1 missing required frontmatter key 'goal'",
+  "ERROR [pdda-check-frontmatter] PROJECT/2-WORKING/GH-99902-A2-WITHSTATUS.md:1 missing required frontmatter key 'updated'",
+  "ERROR [pdda-check-frontmatter] PROJECT/2-WORKING/GH-99902-A2-WITHSTATUS.md:1 missing required frontmatter key 'owner'",
+  "ERROR [pdda-check-frontmatter] PROJECT/2-WORKING/GH-99902-A2-WITHSTATUS.md:1 missing required frontmatter key 'goal'"
+ ],
+ "A4": {
+  "99904": {
+   "preflight_rc": 0,
+   "json_gate": "bash ci-local.sh",
+   "pre_advance_cmd": "bash ci-local.sh",
+   "packet_gate_line": [
+    "- Gate: `bash ci-local.sh`"
+   ],
+   "stderr_tail": []
+  },
+  "99905": {
+   "preflight_rc": 0,
+   "json_gate": "./validate.sh --tier 2 --subsystem skills-army-hq",
+   "pre_advance_cmd": "./validate.sh --tier 2 --subsystem skills-army-hq",
+   "packet_gate_line": [
+    "- Gate: `./validate.sh --tier 2 --subsystem skills-army-hq`"
+   ],
+   "stderr_tail": []
+  }
+ }
+}

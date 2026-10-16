@@ -24,7 +24,7 @@ fix_probes:
 
 | What was just completed | What's next |
 |---|---|
-| Phase 2 (#1081) ran five live shifts; one PR (#1097); four pre-build deaths each traced to a seam | Plan QA (Codex), then Scope A fixes, then Scope C measured run |
+| Plan QA Approved (Codex, 3 rounds, `relay-system/2026-10-16/gh1098-plan-qa.md`); A1–A4 implemented (`4dc76a33`, `e358dd86`); manual checks A1–A4 witnessed on candidate and parent in the `-gate` clone (`TESTS-RESULTS/2026-10-16+GH-1098/`) | Focused suites + full `ci-local.sh` in the gate clone, final Codex QA, PR; Scope C after landing |
 
 ## Observed problem (from Phase 2, 2026-10-15/16, runner clone `XYZ-forge-gh1081-factory-manager-spike-2026-10-15-verify`)
 

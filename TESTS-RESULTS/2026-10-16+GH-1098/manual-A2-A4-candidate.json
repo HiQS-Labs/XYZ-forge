@@ -1,0 +1,51 @@
+{
+ "label": "candidate",
+ "head": "e358dd86",
+ "A2": {
+  "GH-99901-A2-NOSTATUS.md": {
+   "promoted": true,
+   "reason": null,
+   "missing_keys": [],
+   "owner": "Noel Saw",
+   "goal": "\"A2 seed without status table\"",
+   "status_tables": 1
+  },
+  "GH-99902-A2-WITHSTATUS.md": {
+   "promoted": true,
+   "reason": null,
+   "missing_keys": [],
+   "owner": "Noel Saw",
+   "goal": "\"A2 seed with status table\"",
+   "status_tables": 1
+  },
+  "GH-99903-A2-KEEP.md": {
+   "promoted": true,
+   "reason": null,
+   "missing_keys": [],
+   "owner": "keep-me",
+   "goal": "\"keep this goal\"",
+   "status_tables": 1
+  }
+ },
+ "A2_pdda_frontmatter_errors_on_seeds": [],
+ "A4": {
+  "99904": {
+   "preflight_rc": 0,
+   "json_gate": "./validate.sh --auto development",
+   "pre_advance_cmd": "./validate.sh --auto development",
+   "packet_gate_line": [
+    "- Gate: `./validate.sh --auto development` (routed by validate.sh --auto from contract gate `bash ci-local.sh`)"
+   ],
+   "stderr_tail": []
+  },
+  "99905": {
+   "preflight_rc": 0,
+   "json_gate": "./validate.sh --tier 2 --subsystem skills-army-hq",
+   "pre_advance_cmd": "./validate.sh --tier 2 --subsystem skills-army-hq",
+   "packet_gate_line": [
+    "- Gate: `./validate.sh --tier 2 --subsystem skills-army-hq`"
+   ],
+   "stderr_tail": []
+  }
+ }
+}

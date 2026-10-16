@@ -1,0 +1,24 @@
+{
+ "label": "candidate",
+ "head": "e358dd86",
+ "XYZ_HARNESS": "/Users/noelsaw/Documents/GH Repos/XYZ-forge",
+ "harness_home": "/Users/noelsaw/Documents/GH Repos/XYZ-forge",
+ "jog_resolves_root_first": true,
+ "jog_pins_env": true,
+ "A1": {
+  "preflight_script": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-gate/utils/py/swarm_preflight.py",
+  "rc": 0,
+  "packet_target_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-gate",
+  "target_root_is_clone": true,
+  "tail": [
+   "",
+   "Packet written: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/pfa1candidate"
+  ]
+ },
+ "A3": {
+  "jog_sets_idle_bound": true,
+  "agy_turn_reads_env": true,
+  "emulated_env_no_export": "900",
+  "emulated_env_operator_export_0": "0"
+ }
+}
