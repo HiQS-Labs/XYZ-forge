@@ -1,6 +1,6 @@
 # Marathon Phase gh-1087-gh1051-record-spacing
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1087-GH1051-RECORD-SPACING-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -103,3 +103,9 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+- **Files touched:** `PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md`, `marathon-system/gh-1087-gh1051-record-spacing/RELAY.md`
+- **Summary of changes:** Restored word separators and wrapped branch names, SHAs, paths, and workflow identifiers in backticks across `PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md` (including `onlydevelopment` -> `only \`development\``, `pushdevelopment/main` -> `\`push\` \`development\`/\`main\``, `registeredci-workflow` -> `registered \`ci-workflow\``, and all sibling joined tokens in the status table, body paragraphs, numbered steps, acceptance bullets, draft verification checkpoint, and merge continuation section). Preserved all facts, dates, SHAs, and links unchanged.
+- **Verification:** Confirmed `rg -n 'onlydevelopment|pushdevelopment/main|registeredci-workflow' PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md` exits 1 (no matches remain).
