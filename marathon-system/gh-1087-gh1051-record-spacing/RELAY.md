@@ -1,5 +1,5 @@
 # Marathon Phase gh-1087-gh1051-record-spacing
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1087-GH1051-RECORD-SPACING-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -109,3 +109,20 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 - **Files touched:** `PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md`, `marathon-system/gh-1087-gh1051-record-spacing/RELAY.md`
 - **Summary of changes:** Restored word separators and wrapped branch names, SHAs, paths, and workflow identifiers in backticks across `PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md` (including `onlydevelopment` -> `only \`development\``, `pushdevelopment/main` -> `\`push\` \`development\`/\`main\``, `registeredci-workflow` -> `registered \`ci-workflow\``, and all sibling joined tokens in the status table, body paragraphs, numbered steps, acceptance bullets, draft verification checkpoint, and merge continuation section). Preserved all facts, dates, SHAs, and links unchanged.
 - **Verification:** Confirmed `rg -n 'onlydevelopment|pushdevelopment/main|registeredci-workflow' PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md` exits 1 (no matches remain).
+
+
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Approved
+
+Read the entire 58-line `PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md`, including frontmatter, status table, historical authorization, acceptance, evidence checkpoint and later authorization continuation. The three named tokens now have separators/code formatting, and sibling identifiers read cleanly. No additional pre-existing editorial defects found. Historical statements remain historical; this review does not re-attest the underlying Pages deployment or old CI results.
+
+Manual probe (exit 0): `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` read the artifact with `Path.read_text()`, asserted nonempty text, asserted each of `only ` + backtick-wrapped `development`, backtick-wrapped `push` followed by backtick-wrapped `development`/`main`, and `registered ` + backtick-wrapped `ci-workflow`, and asserted `not re.search(r"onlydevelopment|pushdevelopment/main|registeredci-workflow", s)`. Decisive output: `PASS: nonempty artifact; all three corrected phrases present; all three joined tokens absent`. In-memory red control replaced the first corrected phrase with `onlydevelopment` and asserted the same regex detected it; output: `RED CONTROL: in-memory reintroduction of onlydevelopment detected`. No artifact was written.
+
+Read-only comparison probe (exit 0): `python3 -` used `difflib.unified_diff` against the same artifact under the env-pinned parent root. Output: `parent snapshot bytes: 5918 candidate bytes: 5918`, empty diff, `text equal after removing whitespace/backticks: True`, `remaining named joined tokens: []`. The parent already contains the candidate, so this is not independent before/after or changed-path evidence; edit-scope attribution remains with the harness.
+
+[Unverified — needs clone run] `bash utils/pdda/pdda.sh run` was not run in this reviewer worktree. The required documentation gate remains for the harness; this approval is the editorial review, not a claim that the gate passed. No git command, suite, executable fixture, source/artifact write or other tracked-file edit was performed.
+
+relay closed, no further turn needed
