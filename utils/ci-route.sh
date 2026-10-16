@@ -15,7 +15,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Executable decisions live here; explanation/authority: ROUTER.md#ci-qualification-policy.
 POLICY_VERSION="ci-route@1"
-CONTENT_PROFILE="skills-army-content@1"
+CONTENT_PROFILE="skills-army-content@2"
 
 # ── GH-35 Tier-2 subsystem registry ──────────────────────────────────────────────────────────────
 # The ONE mapping from changed paths to the focused suites that cover them, consumed by

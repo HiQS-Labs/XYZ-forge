@@ -466,7 +466,7 @@ QUALIFICATION_GATE = "validate.sh --sequential"
 # through the Small run. Its receipt records the list it ran, replayed against the tested commit.
 SMALL_GATE = "validate.sh --sequential --subsystem small"
 SMALL_NON_SUITE = ("tier2:pdda", "python:test_python_layer.py")
-CONTENT_PROFILE = "skills-army-content@1"
+CONTENT_PROFILE = "skills-army-content@2"
 CONTENT_SCHEMA = "wave-qualification@2"
 CONTENT_AREA_GATE = "validate.sh --sequential --subsystem skills-army-hq"
 CONTENT_GATE = SMALL_GATE + " && ./" + CONTENT_AREA_GATE
@@ -494,22 +494,40 @@ def content_profile_phases(repo_root, commit):
             ("skills-army-hq", CONTENT_AREA_GATE, area[0].split(), ())]
 
 
-def content_landing_base(repo_root, tested):
-    """Only modified regular top-level package text; no new payload/mode/rename contract."""
-    base = subprocess.check_output(["git", "rev-parse", f"{tested}^1"], cwd=repo_root, text=True).strip()
+def raw_tree_changes(repo_root, base, tested):
+    """Complete immutable raw scope; shared by functional and evidence-carrier checks."""
     raw = subprocess.check_output(["git", "diff", "--raw", "--no-renames", "--abbrev=40", "-z",
                                    base, tested], cwd=repo_root).decode("utf-8").split("\0")
     if raw[-1] != "" or len(raw) < 3 or len(raw) % 2 != 1:
         raise ValueError("missing or malformed complete profile diff")
+    changes = {}
     for header, path in zip(raw[:-1:2], raw[1:-1:2]):
         parts = header.split()
-        if (len(parts) != 5 or parts[0] not in (":100644", ":100755")
+        if len(parts) != 5 or not path or path in changes:
+            raise ValueError("malformed or duplicate raw path")
+        changes[path] = parts
+    return changes
+
+
+def content_landing_base(repo_root, tested, source, pr):
+    """Original functional scope, with only a canonically verified carrier pair excluded."""
+    base = subprocess.check_output(["git", "rev-parse", f"{tested}^1"], cwd=repo_root, text=True).strip()
+    changes = raw_tree_changes(repo_root, base, tested)
+    companions, functional = [], []
+    for path, parts in changes.items():
+        if (parts[0] not in (":100644", ":100755")
                 or parts[0][1:] != parts[1] or parts[4] != "M"
                 or Path(path).name in ("SKILL.md", "AGENTS.md", "CLAUDE.md")
                 or (Path(path).name.startswith("requirements") and path.endswith(".txt"))
                 or not re.fullmatch(r"skills/3-weekly/skills-army-hq/[^/\n]+\.(?:md|txt)", path)):
-            raise ValueError("profile scope includes unknown, mixed, added or high-risk files")
-    return base
+            companions.append(path)
+        else:
+            functional.append(path)
+    if not functional:
+        raise ValueError("profile has no eligible functional change")
+    binding = (validate_pre_merge_receipts(repo_root, source, pr, strict_companions={
+        "base": base, "landing": tested, "paths": companions}) if companions else None)
+    return base, binding
 
 
 def content_source_identity(repo_root, meta, tested):
@@ -521,7 +539,8 @@ def content_source_identity(repo_root, meta, tested):
             or subprocess.run(["git", "merge-base", "--is-ancestor", source, tested],
                               cwd=repo_root, capture_output=True).returncode):
         raise ValueError("profile requires one exact merged PR/source/landing snapshot")
-    return content_landing_base(repo_root, tested), source
+    base, companions = content_landing_base(repo_root, tested, source, meta["number"])
+    return base, source, companions
 
 
 def content_policy_revision(repo_root, commit):
@@ -688,9 +707,10 @@ def content_receipt_matches(repo_root, entry, meta):
                 or ("pr_number" in entry and entry["pr_number"] != entry.get("pr"))
                 or entry.get("landing_commit") != tested or entry.get("gate") != CONTENT_GATE):
             return False
-        base, source = content_source_identity(repo_root, meta, tested)
+        base, source, companions = content_source_identity(repo_root, meta, tested)
         revision = content_policy_revision(repo_root, tested)
         if (entry.get("base_commit") != base or entry.get("source_head") != source
+                or "companions" not in entry or entry["companions"] != companions
                 or entry.get("policy_revision") != revision
                 or content_policy_revision(repo_root, "HEAD") != revision
                 or entry.get("environment") != qualification_environment(repo_root, "HEAD")
@@ -766,6 +786,15 @@ def select_qualification_gate(clone, metas, env):
             if diff.returncode:
                 return QUALIFICATION_GATE, None, f"no diff for {landing_label(meta)}"
             paths += diff.stdout.splitlines()
+        if len(metas) == 1:
+            tested = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=clone, text=True).strip()
+            try:
+                _, _, companions = content_source_identity(clone, metas[0], tested)
+                if companions:
+                    excluded = {item["path"] for item in companions["files"]}
+                    paths = [path for path in paths if path not in excluded]
+            except (OSError, ValueError, KeyError, TypeError, UnicodeError, subprocess.SubprocessError):
+                pass  # Keep the complete original range: unverified evidence cannot narrow it.
         routed = subprocess.run(["bash", "utils/ci-route.sh", "push"], cwd=clone, env=env,
                                 input="".join(p + "\n" for p in paths), capture_output=True,
                                 text=True, check=False, timeout=120)
@@ -857,10 +886,10 @@ def qualify_landings(repo_root, metas, journal):
             profile_identity = None
             if gate == CONTENT_GATE:
                 try:
-                    base, source_head = content_source_identity(clone, pending[0], tested)
+                    base, source_head, companions = content_source_identity(clone, pending[0], tested)
                     policy_revision = content_policy_revision(clone, tested)
                     environment = qualification_environment(clone, tested, env)
-                    profile_identity = dict(base_commit=base, source_head=source_head,
+                    profile_identity = dict(base_commit=base, source_head=source_head, companions=companions,
                                             policy_revision=policy_revision, environment=environment)
                 except (OSError, ValueError, subprocess.SubprocessError) as exc:
                     rejected_profile = dict(reason=str(exc), streams=[])
@@ -1041,8 +1070,88 @@ def check_provenance_receipts(repo_root, pr_meta):
         "by pr/pr_number or exact merge commit in TESTS-RESULTS/", code=6)
 
 
-def validate_pre_merge_receipts(repo_root, head_sha, pr_num=None):
+def validate_pre_merge_receipts(repo_root, head_sha, pr_num=None, *, strict_companions=None):
     """Ensure a passing test receipt matching HEAD SHA or PR number is COMMITTED in Git tree (GH-496)."""
+    if strict_companions is not None:
+        # Classification-only local proof. This does not authenticate the producer or replace
+        # fresh landing checks. Unsupported shapes raise into the selector's full fallback.
+        context = strict_companions
+        base, landing, paths = context["base"], context["landing"], context["paths"]
+        if (any(not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{40}", sha)
+                for sha in (head_sha, base, landing))
+                or type(pr_num) is not int or pr_num <= 0 or len(paths) != 2 or len(set(paths)) != 2):
+            raise ValueError("carrier requires exact source identities and two distinct paths")
+        names = {}
+        for path in paths:
+            match = re.fullmatch(r"(TESTS-RESULTS/[A-Za-z0-9][A-Za-z0-9.+_-]*)/(provenance|validation)\.jsonl", path)
+            if not match or match[2] in names:
+                raise ValueError("unsupported carrier file")
+            names[match[2]] = (match[1], path)
+        if set(names) != {"provenance", "validation"} or names["provenance"][0] != names["validation"][0]:
+            raise ValueError("carrier files must be one flat sibling pair")
+
+        def unique_object(pairs):
+            value = {}
+            for key, item in pairs:
+                if key in value:
+                    raise ValueError("duplicate evidence JSON key")
+                value[key] = item
+            return value
+
+        def blob(path):
+            return subprocess.check_output(["git", "show", f"{head_sha}:{path}"], cwd=repo_root)
+
+        raw_record = blob(names["provenance"][1])
+        lines = [line for line in raw_record.decode("utf-8").splitlines() if line.strip()]
+        if len(lines) != 1:
+            raise ValueError("carrier requires one local provenance record")
+        record = json.loads(lines[0], object_pairs_hook=unique_object)
+        required = {"schema_version", "commit", "pr", "result", "rc", "evidence", "sha256"}
+        if (not isinstance(record, dict) or not required <= set(record)
+                or set(record) - required - {"timestamp"} or record["schema_version"] != "1.0"
+                or type(record["pr"]) is not int or record["pr"] != pr_num
+                or record["result"] != "pass" or type(record["rc"]) is not int or record["rc"] != 0
+                or record["evidence"] != "validation.jsonl"
+                or ("timestamp" in record and (not isinstance(record["timestamp"], str) or not record["timestamp"]))
+                or not isinstance(record["commit"], str) or not re.fullmatch(r"[0-9a-f]{40}", record["commit"])
+                or not isinstance(record["sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", record["sha256"])):
+            raise ValueError("unsupported local carrier schema, identity or outcome")
+        source = record["commit"]
+        parents = subprocess.check_output(["git", "rev-list", "--parents", "-n", "1", head_sha],
+                                          cwd=repo_root, text=True).split()
+        if parents != [head_sha, source]:
+            raise ValueError("carrier must be one single-parent commit after the tested source")
+        source_changes = raw_tree_changes(repo_root, source, head_sha)
+        landing_changes = raw_tree_changes(repo_root, base, landing)
+        if set(source_changes) != set(paths):
+            raise ValueError("source-to-carrier changes are not exactly the evidence pair")
+        for path in paths:
+            before, after = source_changes[path], landing_changes.get(path)
+            if (before[0:2] != [":000000", "100644"] or before[4] != "A"
+                    or after is None or after != before):
+                raise ValueError("carrier and landing require identical newly added regular evidence blobs")
+        raw = blob(names["validation"][1])
+        if hashlib.sha256(raw).hexdigest() != record["sha256"]:
+            raise ValueError("carrier telemetry integrity mismatch")
+        rows = [json.loads(line, object_pairs_hook=unique_object)
+                for line in raw.decode("utf-8").splitlines() if line.strip()]
+        suites = small_suites_at(repo_root, source)
+        if (len(rows) != len(suites) + len(SMALL_NON_SUITE) + 3
+                or any(not isinstance(row, dict) or type(row.get("v")) is not int or row["v"] != 1
+                       for row in rows)
+                or rows[0].get("event") != "run.start" or type(rows[0].get("tier")) is not int
+                or any(row.get("event") == "run.summary" and any(
+                    type(row.get(key)) is not int for key in ("passed", "failed", "total")) for row in rows)):
+            raise ValueError("unsupported carrier telemetry schema or event set")
+        summary = qualification_summary(raw, source, suites, strict=True)
+        if not re.fullmatch(re.escape(source[:9]) + r"-\d+", summary["run"]):
+            raise ValueError("carrier run/source producer metadata mismatch")
+        return dict(source_commit=source, source_tree=subprocess.check_output(
+            ["git", "rev-parse", f"{source}^{{tree}}"], cwd=repo_root, text=True).strip(),
+            carrier_head=head_sha, files=[dict(path=path, blob=source_changes[path][3],
+                sha256=hashlib.sha256(raw_record if path == names["provenance"][1] else raw).hexdigest())
+                for path in sorted(paths)])
+
     try:
         tree_files = subprocess.check_output(
             ["git", "ls-tree", "-r", "--name-only", "HEAD", "TESTS-RESULTS/"],

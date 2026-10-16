@@ -1,0 +1,29 @@
+{
+  "source": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/node_modules",
+  "copy": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-existing-node-deps/node_modules",
+  "package_lock_sha256": "edebece11cc41181aeb33e5c53cff70a4a730de3a5a62ba02f5301a1fec674a0",
+  "files": 19,
+  "source_unchanged": true,
+  "copied_file_hashes": {
+    ".package-lock.json": "28a322a5dae1d781f2df8369b01e4a4b602e6e0215a260aaaf102100723dda62",
+    "acorn/LICENSE": "76a876cf886ff9be2a8b5e2e86514fed06223c8c9f0c1e9ee9606e93841e00b7",
+    "acorn/CHANGELOG.md": "fd0adcc2f6b428b2e8ef1f50aaab2a48d56fcaa4d15ff47ffea5156b12339c40",
+    "acorn/README.md": "397654c060a069536924ed22cac5abf6f4cfc782fb2c7520b79e34c68fb2b080",
+    "acorn/package.json": "fa3612cc9493702b7520947eec276d7b4a73001dafd68c4a9dcb58791a4145c6",
+    "acorn-walk/LICENSE": "c2d8184ea9becd063aa40be243e8c6ec2c4f72828fdfe4b0752664ef73e96ed3",
+    "acorn-walk/CHANGELOG.md": "d869142cd036770183e845016bd4a1c16df8061a9f66db220b723a09fde4e7e3",
+    "acorn-walk/README.md": "fb88ea37472b9f72ef2e9357f5d1a4611ab3ec7c23edfc6bea13303fe153649c",
+    "acorn-walk/package.json": "73c77feaf1224859bc6995cefe976d51cfd2abcd1edc0362df3149d8bd3633e3",
+    "acorn-walk/dist/walk.mjs": "24bc7ea73dcc319360090f4849746b7493bf234f951ea99ae0b89105981b1b42",
+    "acorn-walk/dist/walk.d.ts": "18190ee9c0ce0451e8a4bddfdab39d4ce50a22f7be5bfac436da7ee1d2e2cc30",
+    "acorn-walk/dist/walk.js": "1aa9615d8ea06e2126a21a4c21eb7b8b97a69e5eda256f06d2c48834a57cbf0e",
+    "acorn-walk/dist/walk.d.mts": "18190ee9c0ce0451e8a4bddfdab39d4ce50a22f7be5bfac436da7ee1d2e2cc30",
+    "acorn/bin/acorn": "4c3eb6f1d8932790dbff043839f8ee7686bc614a59ef577e96fed618a4a4b1b8",
+    "acorn/dist/bin.js": "fffd9df1d9158c4580068ad17c3176c34fe46f59021b8cd5780454994764dc30",
+    "acorn/dist/acorn.mjs": "1cbcbf252a5800e496dc505c706f309a9dd4e1789392e12963c77ae9497ff6f7",
+    "acorn/dist/acorn.d.ts": "402b3b3436cdcf865edbef6af24bfcb27dba79865d680f6d103376449edf9f92",
+    "acorn/dist/acorn.js": "b373ccd10e9deb63654289f73216eeefcaf0405d9ee24289aabf596b91b4c318",
+    "acorn/dist/acorn.d.mts": "402b3b3436cdcf865edbef6af24bfcb27dba79865d680f6d103376449edf9f92"
+  },
+  "method": "Read-only copy of existing matching dependency tree. No npm/pip install, chmod, settings or primary write."
+}

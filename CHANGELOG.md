@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-16 — Bound local evidence companions for selective qualification (GH-1076)
+
+The content@2 classifier can exclude only a canonically verified two-file local Small receipt
+carrier, with exact source/tree/PR, new regular-file scope, original telemetry integrity and matching
+landing blobs. All other raw functional constraints remain; actual landing Small and area commands
+still run. This retains the existing operator-trusted local proof boundary, not producer authentication.
+Unsupported proof stays full; failures/drift remain fatal. No new CI cases, producer service, setting
+activation or merge authority. Separate plan1/1 passed; implementation verification/final1/1 pending.
+
 ## 2026-10-15 — Configurable bounded CI qualification (GH-1076)
 
 Route machine-consumed skills-army package text through its existing area plus PDDA, expanding

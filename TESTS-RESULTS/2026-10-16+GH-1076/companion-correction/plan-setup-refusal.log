@@ -1,0 +1,6 @@
+relay-drive: NOTE — TICK_REPO_ROOT unset; self-resolved to /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike (#129)
+relay-drive: RELAY-GH1076-COMPANION-PLAN-EXT-20261016 not found in the resolved tick log
+  TICK_REPO_ROOT: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike
+  searched:       /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-gh1076-spike/.tick/events/
+  hint: if you seeded the token in another shell, export the same env —
+        eval "$(find-harness.sh --env)"

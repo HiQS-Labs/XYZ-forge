@@ -1,0 +1,1 @@
+{"artifact_kind": "plan-and-preparation", "commit": "b6e3ac29", "evidence": "IMPLEMENTATION.md", "schema_version": "1.0", "scope": "Separate planPASS1/1 and syntax/preparation only; no runtime qualification or final review claim.", "sha256": "130331e97f2b0419811487a205f7f3afa20864baf1b2f720f3aa1a2c46330e9b", "timestamp": "2026-10-16T00:37:03.123359+00:00"}

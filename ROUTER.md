@@ -117,7 +117,7 @@ validation and publication stay in their existing consumers; no second policy ma
 | Boundary | Selection and evidence |
 |---|---|
 | Local push / `validate.sh --auto` | Router tier1 uses the docs gate; tier2 uses its registered areas; unknown/empty/unverifiable ranges, unclaimed test edits, kernel/gate/containment/safety inputs use full. Local runs are self-checks. |
-| Hosted development landing | Router `hosted_gate=small` uses the existing sequential Small list plus PDDA, Python and identity stages. Medium defaults to full; the configured, strictly proved skills-army-content@1 profile uses existing Small then area commands. Large remains full. |
+| Hosted development landing | Router `hosted_gate=small` uses the existing sequential Small list plus PDDA, Python and identity stages. Medium defaults to full; the configured, strictly proved skills-army-content@2 profile uses existing Small then area commands. Large remains full. |
 | Main promotion | Full sequential hosted macOS for the **actual exact main commit**, regardless of range classification. A local PASS, ancestor receipt or equal tree does not qualify main. |
 | PR feedback | Existing vendored-smoke, reconciliation-wiring, frozen-twin and vendored checks remain required by repository policy. A workflow declaration is not an actual run. |
 | Ubuntu canary | Advisory portability signal on development push/manual dispatch; its job conclusion and skipped steps must be disclosed. Its inner PR Fast Gate predicate is unreachable under the current enclosing job predicate; do not count it as active PR selective coverage. |
@@ -132,7 +132,7 @@ are in gh306. No test retirement or new suite/case is authorized here.
 ### Router decision and consumer compatibility
 
 The push/PR key/value output identifies `policy_version=ci-route@1` and the supported
-`hosted_gate=small|full|skills-army-content@1` decision. The profile is a path candidate only;
+`hosted_gate=small|full|skills-army-content@2` decision. The profile is a path candidate only;
 its resolved setting and complete raw Git scope must also pass the wave consumer. The version
 identifies the contract; the tested commit identifies its exact content. Local readers continue
 using their existing route/tier fields. Unsupported/missing/duplicate/malformed metadata selects
@@ -306,11 +306,28 @@ another tier would mask the error. Inspect with `python3 utils/py/device_config.
 
 The switch controls wave qualification, including local `wave_reconcile --qualify`; explicit full
 commands, `ci-local.sh`, existing local pre-push tiers and exact-main macOS/full are unchanged.
-The only optimized Medium profile is `skills-army-content@1`: exactly one merged development PR
+The only optimized Medium profile is `skills-army-content@2`: exactly one merged development PR
 whose actual tested snapshot is its landing, with verified source/base and only modified regular
 tracked top-level package `.md`/`.txt` data. Agent manifests, requirements, adds/deletes/renames, mode
 changes, symlinks, shared/code/mixed/unknown/high-risk inputs retain full. Name-only classification
 is only a candidate; the wave verifies the complete raw Git diff.
+
+The profile may also carry one verified local Small evidence pair. The actual PR head must be a
+single-parent evidence-only commit after its frozen source. The complete source-to-carrier diff
+must be exactly two new regular100644 sibling files, provenance.jsonl and validation.jsonl, in one
+flat TESTS-RESULTS campaign. The canonical premerge reader's opt-in strict mode checks its supported
+schema1.0 local record, exact PR/source/tree, original sequential Small/v1 telemetry, digest and
+immutable carrier/landing blob equality. Extra records/fields/files, parallel proof, symlinks,
+mode/rename/functional changes or unknown proof stay full. The legacy premerge reader is unchanged.
+Only that verified pair is removed from classifier input; the complete remaining raw functional
+scope keeps its original constraints. Selection, writing and replay use the same descriptor.
+
+This is classification-only evidence under the existing operator-trusted local boundary. Recorded
+producer/schema/source metadata and hashes do not authenticate a producer or a completely fabricated
+consistent local story. The local record cannot supply postmerge PASS or suppress fresh landing
+Small/area execution. Unsupported experimental content@1 receipts fall back to full; historical
+wave-qualification@1 semantics remain unchanged. Expanded content@2 receipts bind the companion
+descriptor, including the explicit no-companion state, through the existing profile/policy contract.
 
 Two fixed existing sequential commands run separately: Small (including PDDA/Python/envelope), then
 skills-army area (including its own envelope). Their original streams, IDs, hashes, lists and counts
