@@ -1,8 +1,8 @@
 ---
 Goal: Plan QA — GH-1098 Shift outer loop Phase 3 (Scope A: four surgical fixes)
 Date: 2026-10-16
-NEXT: codex (Reviewer)
-STATUS: Open
+NEXT: claude (Producer)
+STATUS: Approved
 ---
 
 # Context
@@ -40,6 +40,8 @@ Write your verdict below (`**Verdict:** Approved` or `**Verdict:** Changes reque
 <!-- ▽ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK ▽ -->
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
+
+## Log
 
 ## Codex review — 2026-10-16
 
@@ -145,3 +147,31 @@ Both `[Should]` findings accepted; plan revised in the same commit.
 | Note: quote `target.ref`; preserve owner/goal + Status; A1 needs clone target_root AND successful dispatch | **Accepted**, recorded in A2/A4 rows and Scope C. | A2, A4, "Scope C" |
 
 Round 3 is the last within the cap. Handing off to codex — codex, take your turn.
+
+
+### Round 3 · Reviewer · codex
+
+**Verdict:** Approved
+
+Approved for the bounded A1–A4 implementation plan. The round-2 material findings are addressed: the frontmatter goal now permits up to three invocations, Requirements A3/A4 describe the actual proposed role and gate policies, and Scope C explicitly requires post-landing `development` for the routed-gate timing claim. An earlier branch run cannot satisfy criterion 4. No additional code, gate machinery, or tests are requested.
+
+This verdict approves the technical plan, not external acceptance of the changed issue requirements or runtime completion. The explicit proposal/pending-acceptance statement at plan line 45 governs the later shorthand “reconciled”; operator acceptance remains pending unless separately evidenced. The referenced comment was not independently fetched this turn: `gh api repos/HiQS-Labs/XYZ-forge/issues/comments/6218983571 --jq '{html_url,user:.user.login,body}'` exited 1 with `error connecting to api.github.com`. No remote acceptance is inferred from that failed query.
+
+One nonblocking precision note remains: A4's row still says `base..HEAD` at plan line 54. The accurate semantics are the single-ref diff stated in Scope C line 95: all tracked working-tree differences against the supplied ref, including committed candidate changes. Source read command `sed -n '871,895p' validate.sh` (equivalent numbered source read this turn), exit 0: `_auto_head` becomes empty for one ref and the command is `git diff --no-renames --name-only "$_auto_base"`. Scope C already uses this correct interpretation and baseline, so this wording does not change the approved implementation or measurement setup. Likewise, line 97's successful-dispatch requirement governs A1; a non-6 refusal by itself is not a passing check.
+
+A1 root selection and root-pinned doc/probe evaluation, A2 missing-key fill while preserving existing owner/goal and Status table, A3 inherited dispatch env with operator override, and A4 normalization of the shared gate variable remain appropriately small extensions of the existing writers. Retain shell quoting of `target.ref` as specified at line 97. Existing suites and seeded parent/candidate checks are verification recipes, not executed results. The proposed all-agy-turns policy and delayed Scope C baseline are deliberate limitations, not silently satisfied original issue criteria.
+
+Evidence/recon: re-read the complete revised plan, requested jog/preflight/harness/agy/gate/PDDA sections, and the relevant inherited-env and gate-call consumers in marathon/relay drivers. Local source reads exited 0. Verify-tier intent; `list_projects(limit=100)` returned 84 projects with `has_more=false`, none at this checkout. Canonical `XYZ-forge` coverage generation is `2026-09-01T15:54:30Z`; coverage checks on all nine runtime/gate paths report changed metadata (harness_paths not tracked). Used exact local source fallback; did not create or refresh an index. The four fix sites remain upstream dispatch/promotion/default-gate choices, so no parallel supervisor is justified. The one-day rating evidence limit remains explicit.
+
+**[Unverified — needs clone run]** All suites, actual promotion/dispatch, wall/idle behavior, red controls, and routed-gate duration. The implementation must retain nonempty parent/candidate receipts and committed `provenance.jsonl`, run the specified gate in a disposable full clone, and measure Scope C on the stated baseline. This plan approval does not attest those outcomes.
+
+Containment: only this relay file was edited. Scratch directory setup used `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`. No git command, validate/test suite, pytest, or executable fixture was run. A tick usage query (`release --help`) returned usage exit 2 without releasing the held token; final handoff uses `done` as instructed.
+
+Handing back to claude. STATUS: Approved.
+
+Handoff receipt: the first `tick done` exited 8 because the seeded relay lacked `## Log` (`Log: ## Log section is missing`). Added that section heading above the existing review history, within this relay file only, and retried the same handoff.
+
+The retry also exited 8: this installed tick validator requires a machine verdict of PASS/FAIL/PARKED. The human plan verdict remains Approved above; its matching machine receipt follows.
+
+VERDICT: PASS
+Basis: Revised plan addresses the material round-2 findings; technical plan approved, with runtime evidence and external requirement acceptance explicitly unverified as detailed in Round 3.
