@@ -2,12 +2,12 @@
 gh_issue: 942
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/942
 title: "9 skills exceed the 1024-char frontmatter description limit"
-status: Proposed
+status: Active
 created: 2026-10-02
 fix_probes:
   - test -f skills/4-occasional/feynman/SKILL.md
   - bash test/skills-army-hq.sh --help
-updated: 2026-10-02
+updated: 2026-10-16
 owner: operator
 goal: "Every committed SKILL.md folds its frontmatter description to ≤1024 chars so skill loaders stop silently dropping skills."
 complexity: 1
