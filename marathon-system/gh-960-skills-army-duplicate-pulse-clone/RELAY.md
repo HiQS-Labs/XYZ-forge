@@ -1,6 +1,6 @@
 # Marathon Phase gh-960-skills-army-duplicate-pulse-clone
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-960-SKILLS-ARMY-DUPLICATE-PULSE-CLONE-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -101,3 +101,20 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+- **Files touched:**
+  - `skills/3-weekly/skills-army-hq/scripts/sync.py`
+  - `skills/3-weekly/skills-army-hq/references/recovery.md`
+  - `marathon-system/gh-960-skills-army-duplicate-pulse-clone/RELAY.md`
+- **Key decisions & implementation (GH-960):**
+  - Added read-only Git Pulse clone health checks in `sync.py` (`repo_health`, invoked on normal preview, `--status`, and `--apply` runs without network calls or filesystem writes):
+    - Resolves `sync_repo_dir` from `${GIT_PULSE_CONFIG_DIR:-~/.config/git-pulse}/config.sh` (also respecting `GIT_HISTORY_CONFIG_DIR` and `HOME` overrides, expanding `$CONFIG_DIR`, `$HOME`, and `~` via `shlex.split(..., comments=True)` without executing shell code) and defaults to `$CONFIG_DIR/repo` as `git-pulse` does.
+    - Emits `WARN duplicate-clone check skipped: no git-pulse config at <path>` when `config.sh` is absent instead of passing silently.
+    - Compares the resolved git top-level of `sync_repo_dir` against the collection root's git top-level (`collection_repo(root)`). When they differ and share a normalized remote URL, emits `WARN DUPLICATE_PULSE_CLONE` naming both paths, stating which checkout `git-pulse` maintains and which checkout the skill links read, reporting each checkout's ahead/behind count against its last-fetched `origin`, and printing the 4-step remediation sequence.
+    - Emits `WARN STALE_PULSE_COLLECTION` when the collection checkout is behind its last-fetched upstream (`behind > 0`) or when its `FETCH_HEAD` is at least 24 hours old (`PULSE_STALE_HOURS = 24`), printing the fast-forward + `catalog`/`sync` recovery steps.
+    - Mirrors the 4-step remediation procedure in `skills/3-weekly/skills-army-hq/references/recovery.md` under `### Reconciling a duplicate or stale Git Pulse clone (GH-960)`.
+- **Verification:**
+  - `PYTHONDONTWRITEBYTECODE=1 python3 -B test/test_deploy_skills.py` -> 33 passed in 31.5s.
+  - `.relay-scratch/verify_gh960.py` -> verified all 4 acceptance scenarios on temporary git repos in `$TMPDIR`: (1) two clones of one remote with `config.sh` pointing at the writer clone warns `DUPLICATE_PULSE_CLONE` with paths, ahead/behind counts, and remediation steps; (2) `config.sh` pointing at the collection root is clean; (3) missing `config.sh` reports `duplicate-clone check skipped: no git-pulse config`; (4) collection behind upstream or with `FETCH_HEAD` >= 24h warns `STALE_PULSE_COLLECTION`.
