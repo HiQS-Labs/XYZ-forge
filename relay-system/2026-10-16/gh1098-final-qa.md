@@ -63,3 +63,11 @@ Containment: only this relay file was edited; scratch setup stayed under `.relay
 
 VERDICT: PASS
 Basis: Bounded A1–A4 implementation matches the approved technical plan and retained focused evidence; no material source finding. Clean full-gate, complete diff hygiene and live Scope C claims remain unverified as specified above.
+
+### Attestation · relay-drive — 2026-10-16T16:56:31Z
+task: RELAY-gh1098-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 1b83d6e46c61858444dd93671ab9fc5dba118034
+added-range: 3961+8147
+added-sha256: 76958f75b0ba93c653fb762691d5b42061c62f14431c96f0a6d3fe9bc9aad92e
