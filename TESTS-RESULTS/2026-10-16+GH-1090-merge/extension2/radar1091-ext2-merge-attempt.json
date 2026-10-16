@@ -1,0 +1,13 @@
+{
+  "args": [
+    "git",
+    "merge",
+    "--no-commit",
+    "--no-ff",
+    "origin/development"
+  ],
+  "cwd": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1091-radar-prep",
+  "rc": 1,
+  "stdout": "warning: Cannot merge binary files: releases.db (HEAD vs. origin/development)\nAuto-merging releases.db\nCONFLICT (content): Merge conflict in releases.db\nAuto-merging releases.sql\nCONFLICT (content): Merge conflict in releases.sql\nAuto-merging skills/3-weekly/radar/SKILL.md\nAutomatic merge failed; fix conflicts and then commit the result.\n",
+  "stderr": ""
+}

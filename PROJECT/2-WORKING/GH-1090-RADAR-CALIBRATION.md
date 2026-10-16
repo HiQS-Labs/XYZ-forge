@@ -20,7 +20,7 @@ goal: Preserve GitHub-first authority and calibration while clarifying time, rec
 
 | What was just completed | What's next |
 |---|---|
-| Original proposal and issue verified; native plan1/3 PASS | Combine sources, independent final1/3, existing checks and normal publication; conditionally merge after upstream1085qualification |
+| Qualified1085base integrated; combined Radar blob and incoming business rows preserved | Final3/3 QA, existing current-base checks and normal publication before conditional1091merge |
 
 ## Authority and ground truth
 
@@ -60,3 +60,8 @@ Code snapshots and live tracker observations have different clocks. Historical c
 ## Retained caller failure and explicit remaining limit
 
 Attempt1/2 stopped after successful canonical add/rate because the caller passed issue/section/marker alongside accepted-start; the writer correctly refused and no skill edit had been applied. Source/input/logs are retained. The supported gid-only invocation was traced in releases_app.py:3905 and previewed successfully. This explicit resumption consumes repair2/2, without replaying add/rate or resetting any record. The earlier prospective slot2 base-refresh estimate is superseded: any later distinct repair must STOP at the cap for operator decision. Current native final1/3 and gates remain pending.
+
+
+## Approved extension and actual-base checkpoint — 2026-10-16
+
+Noel approved up to2additional repair rounds without resetting original2/2. Extension1fixed required Status format and complete milestone membership, passed nativefinal2/3 and existing80checks/normaldocs gates. Upstream1085merged `ba32126b2aac98f7333f71ac6d16fcb26d845c7a`, qualified and durably reconciled to `e271416c52a290ddf51de15fc36fc46811cf788c`. This extension2integrates that actual base through canonical B1, preserving incoming business rows, GH1090business fields and the complete combined Radar blob. Original nativeplan1/final1/2 histories and all caller failures remain. Minor milestone-PR coverage is deferred toGH1095: Step3currently promises issue-set completeness; combined issue/PR counting is a separate bounded follow-up, not part of these three contracts. No further repair extension remains; current nativefinal3/3 and normal current-head gates precede conditional landing.

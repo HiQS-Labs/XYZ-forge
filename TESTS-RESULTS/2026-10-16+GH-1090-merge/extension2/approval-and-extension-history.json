@@ -1,0 +1,27 @@
+{
+ "approved": "2026-10-16T03:59:04.766431+00:00",
+ "human_evidence": "Noel: Go up to two rounds in future. Explicit delegated approval for up to two extra repair rounds responding to current cap blocker.",
+ "limit": 2,
+ "rounds": [
+  {
+   "bookkeeping_failure": "Custom extension schema read with original ar.load was rejected AFTER both source commits; resumed only JSON bookkeeping, no source repair replay",
+   "commit": "a38ed1d90b9400f377f702f25b1e9fd59782e626",
+   "finished": "2026-10-16T03:59:16.386696+00:00",
+   "outcome": "resolved",
+   "pr": 1091,
+   "round": 1,
+   "scope": "Apply prepared Status format patch, mirror required all-state milestone membership correction; preserve all original attempts/reviews",
+   "started": "2026-10-16T03:59:04.766515+00:00"
+  },
+  {
+   "head_before": "3f544cc7da13983d03dc175d55972f321a78bce2",
+   "outcome": "in_progress",
+   "pr": 1091,
+   "qualified_base": "e271416c52a290ddf51de15fc36fc46811cf788c",
+   "round": 2,
+   "scope": "One actual-base integration and canonical disjoint B1 ledger repair; preserve product blob, incoming business rows and original history",
+   "started": "2026-10-16T04:38:03.687718+00:00"
+  }
+ ],
+ "source_thread": "01a0efda-5b32-7433-8829-07f962668026"
+}
