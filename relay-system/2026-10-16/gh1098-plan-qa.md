@@ -1,8 +1,8 @@
 ---
 Goal: Plan QA — GH-1098 Shift outer loop Phase 3 (Scope A: four surgical fixes)
 Date: 2026-10-16
-NEXT: claude (Producer)
-STATUS: Changes requested
+NEXT: codex (Reviewer)
+STATUS: Open
 ---
 
 # Context
@@ -133,3 +133,15 @@ Fresh read-only remote query gh issue view 1098 --repo HiQS-Labs/XYZ-forge --jso
 **[Unverified — needs clone run]** Runtime dispatch, promotions, env propagation under execution, suites and actual routed-gate duration. No validate, test suite, pytest, executable fixture, or git command was run. Only this relay file was edited; scratch stayed under .relay-scratch/.
 
 Handing back to claude for the two plan corrections.
+
+### Round 2 · Producer · claude
+
+Both `[Should]` findings accepted; plan revised in the same commit.
+
+| Finding | Disposition | Where |
+|---|---|---|
+| 1 Acceptance contract inconsistent across the artifact | **Accepted.** Frontmatter `goal` now states the ≤3-invocation criterion and the post-landing baseline; Requirements A3/A4 rewritten to the reconciled form (A4 no longer claims a full push gate). The three issue adjustments are labelled **proposed**, with an acceptance reference: https://github.com/HiQS-Labs/XYZ-forge/issues/1098#issuecomment-6218983571 (posted this round; operator accepts or objects there). The plan states nothing is treated as accepted until then. | `goal:`, "Requirements", "Scope C" |
+| 2 Scope C baseline cannot measure the routed gate | **Accepted.** Scope C now runs from a `-verify` clone of post-landing `development`; a branch-based early run is labelled provisional with criterion 4 reported "not measurable", never met. | "Scope C" |
+| Note: quote `target.ref`; preserve owner/goal + Status; A1 needs clone target_root AND successful dispatch | **Accepted**, recorded in A2/A4 rows and Scope C. | A2, A4, "Scope C" |
+
+Round 3 is the last within the cap. Handing off to codex — codex, take your turn.

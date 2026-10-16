@@ -6,7 +6,7 @@ status: Proposed
 created: 2026-10-16
 updated: 2026-10-16
 owner: noelsaw1
-goal: "One unattended `jog run` from a disposable clone takes >= 2 of 3 contract-complete items to PR-ready with no wrong-tree preflight, no idle-killed builder, no promoted-doc frontmatter failure, and every pre-advance gate inside the guard cap."
+goal: "Unattended `jog run` invocations from a disposable clone take >= 2 of 3 contract-complete items to PR-ready across at most three invocations (one stop per landing boundary, zero operator edits between), with no wrong-tree preflight, no idle-killed builder, no promoted-doc frontmatter failure, and every pre-advance gate inside the guard cap when measured on a post-landing development baseline."
 doc_type: plan
 effort: 2
 complexity: 2
@@ -39,8 +39,10 @@ fix_probes:
 
 - **A1** Jog pins preflight to the repo it runs in. Closes #1093.
 - **A2** Jog promotion yields a 2-WORKING doc that passes `pdda-check-frontmatter`.
-- **A3** A jog-dispatched builder turn is not idle-killed before its wall cap.
-- **A4** When a contract names the default full gate, the pre-advance gate is the routed tier, not the full suite; the full gate stays on the pre-push hook.
+- **A3** No agy turn dispatched by a jog invocation is idle-killed before its wall cap (operator export still wins; non-jog relays unchanged).
+- **A4** When a contract names the default full gate, the pre-advance gate is the tier `validate.sh --auto` classifies for the lane's diff, consistent with the pre-push hook's existing tiered policy; the hook is not changed.
+
+Issue #1098's original wording for criterion 1, A3 and A4 differs from the above. The adjustments are **proposed**, recorded with their source-grounded reasons at https://github.com/HiQS-Labs/XYZ-forge/issues/1098#issuecomment-6218983571; the operator accepts or objects there. Nothing in this plan treats them as accepted until that happens.
 
 ## Smallest affected surface and canonical writers
 
@@ -90,7 +92,9 @@ Final gate for this PR: the changed paths route `full` (kernel/gate surface), so
 
 ## Scope C — the measured run (after A1–A4 are on the branch)
 
-Fresh `-verify` clone of this branch; `XYZ_HARNESS` left as the shell has it (A1 must make that irrelevant); queue GH-1075, GH-942 and one fresh item passing the Scope B checklist; `releases jog run --reviewer codex --builder agy --max-tasks 3`; no env overrides. Day report on #1098 against the exit criteria.
+**Baseline (plan QA round 2, finding 2).** `validate.sh --auto development` diffs every tracked change against `development`, so on the unmerged Scope A branch the harness edits themselves (tier 3, kernel/gate surface) force the full gate for every lane and exit criterion 4 cannot be measured. Scope C therefore runs from a fresh `-verify` clone of **`development` after the Scope A PR has landed**. If the operator chooses to run it earlier on the branch, that run is labelled provisional: criteria 1–3 and 5 are measured, criterion 4 is reported as "not measurable on this baseline", never as met.
+
+Run: `XYZ_HARNESS` left as the shell has it (A1 must make that irrelevant); queue GH-1075, GH-942 and one fresh item passing the Scope B checklist; `releases jog run --reviewer codex --builder agy --max-tasks 3`; no env overrides. A1's manual check requires the recorded preflight packet's `target_root` to be the clone **and** a successful marathon dispatch; a non-6 refusal alone is not success. A4's command quotes `target.ref` as one shell argument. Day report on #1098 against the exit criteria.
 
 **Exit criterion 1 reconciled (plan QA round 1, finding 1).** Jog's documented landing boundary stops the queue at the first PR-ready item (`jog_run.py:405–426` returns `parked`, `:1717–1725` breaks) unless `--auto-merge` is set, which Phase 3 forbids. "≥ 2 of 3 PR-ready from one invocation" is therefore unreachable by design, and none of A1–A4 may change queue policy. The measured criterion is: **≥ 2 of 3 items reach PR-ready across at most three `jog run` invocations, each started only after the previous one stopped at its landing boundary, with zero operator edits to code, docs, env or ledger between invocations.** Each invocation is one row in the day report. #1098's criterion 1 is recorded as reconciled to this wording.
 
