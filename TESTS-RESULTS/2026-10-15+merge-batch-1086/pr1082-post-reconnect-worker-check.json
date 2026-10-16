@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-10-16T01:24:17.040424+00:00",
+  "monitor_pid": 27587,
+  "closeout_pid": 27899,
+  "ps_rc": 0,
+  "ps": "  PID COMMAND\n27587 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u pr1082-hosted-monitor-transport.py\n27899 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python -u pr1082-postmerge-closeout.py\n",
+  "deadline": "2026-10-16T01:37:45.515698+00:00",
+  "closeout_clone_exists": false
+}

@@ -1,0 +1,7 @@
+{
+  "['rev-parse', 'HEAD']": "3765101e890d24b6bb05a177a56636554a13ab52\n",
+  "['remote', '-v']": "origin\t/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1083-radar-github-first-2026-10-15 (fetch)\norigin\t/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1083-radar-github-first-2026-10-15 (push)\n",
+  "['config', '--get', 'core.bare']": "false\n",
+  "['config', '--local', '--get', 'user.email']": "",
+  "['status', '--porcelain']": ""
+}

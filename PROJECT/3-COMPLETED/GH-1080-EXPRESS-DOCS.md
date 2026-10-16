@@ -1,8 +1,8 @@
 ---
 title: 'GH-1080: Allow documentation text and images through express'
-status: Active
+status: Complete
 created: 2026-10-15
-updated: 2026-10-15
+updated: 2026-10-16
 owner: Codex
 gh_issue: 1080
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1080

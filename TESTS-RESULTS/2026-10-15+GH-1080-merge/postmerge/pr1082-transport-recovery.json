@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-10-16T01:16:25.503503+00:00",
+  "failure": "exec-server transport disconnected, recovery timed out after25s",
+  "prior_monitor_pid": 3838,
+  "prior_closeout_pid": 6211,
+  "worker_proof": "ps-p3838,6211 onlyheader; filteredprocessinventory noPythonworker; lsof bothownlogs empty; no postmergegate clone exists",
+  "phase": "Both workers had still been waiting; no event/governance/closeout source mutation",
+  "same_hosted_run": 38827672739,
+  "same_access_status": "in_progress",
+  "original_deadline": "2026-10-16T01:37:45.515698+00:00",
+  "scope": "Resume only remainder of original deadline; no workflow, merge, review, gate, event or cap reset"
+}

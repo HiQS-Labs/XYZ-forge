@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-16T01:50:08.746813+00:00", "pr": 1085, "commit": "17b06bdc072698f1f1d4c4136b21b0cf270cf4ae", "result": "pass", "rc": 0, "command": "Canonical B1 repair and existing independent full-clone ledger validation", "scope": "No suite/full-gate claim; product blob unchanged", "proof": "radar1085-preservation.json"}

@@ -1,0 +1,181 @@
+{
+  "timestamp": "2026-10-16T01:25:51.981997+00:00",
+  "range": "d48aa774dc1e22fbab393a9324057b8acff47d4b^1..87f132e6a1f532559ba2686d31313b47785875eb",
+  "actual_per_pr_files": {
+    "1053": [
+      ".github/workflows/pages.yml",
+      "CHANGELOG.md",
+      "LEADERBOARD.md",
+      "PROJECT/2-WORKING/GH-1051-PAGES-DEVELOPMENT.md",
+      "TESTS-RESULTS/2026-10-12+GH-1051/focused-55d47011/MANIFEST.json",
+      "TESTS-RESULTS/2026-10-12+GH-1051/focused-55d47011/SUMMARY.md",
+      "TESTS-RESULTS/2026-10-12+GH-1051/focused-55d47011/ci-workflow.log",
+      "TESTS-RESULTS/2026-10-12+GH-1051/focused-55d47011/express-preflight.log",
+      "TESTS-RESULTS/2026-10-12+GH-1051/focused-55d47011/manual-routing.json",
+      "TESTS-RESULTS/2026-10-12+GH-1051/focused-55d47011/manual-routing.py",
+      "TESTS-RESULTS/2026-10-12+GH-1051/focused-55d47011/pages-before.yml",
+      "TESTS-RESULTS/2026-10-12+GH-1051/focused-55d47011/provenance.jsonl",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/MANIFEST.json",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/SUMMARY.md",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/agent-chorus-bridge-attempt2-pooled.log",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt1-telemetry.jsonl",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/attempt2-telemetry.jsonl",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/base-change-review.json",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/diagnostic-ledger.json",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/full-attempt2-after-publication.json",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/full-attempt2-before.json",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/full-publish-gate-attempt1.log",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/full-publish-gate-attempt2.log",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/gh251-attempt2-pooled.log",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/gh648-focused-unsandboxed.log",
+      "TESTS-RESULTS/2026-10-12+GH-1051/full-baf31e72/gh648-pooled-sandbox-failure.log",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/README.md",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/candidate-freeze.json",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/ci-workflow.log",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/current-B1-classification.json",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/final-review-r2.md",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/ledger-check.log",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/manual-routing.json",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/provenance.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/additional-validation-records/validate-parallel-1792100896668-84078.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/additional-validation-records/validate-parallel-1792100971169-38800.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/additional-validation-records/validate-parallel-1792101513470-19631.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/additional-validation-records/validate-parallel-1792101533734-36596.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/additional-validation-records/validate-parallel-1792101556204-66293.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/full-validation.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/pr1053-E6.json",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/pr1053-full-summary.json",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/pr1053-normal-publication.log",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/pr1053-publication-after.json",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/pr1053-publication-before.json",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/pr1053-publication-result.json",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/publication/pr1053-telemetry-inventory.json",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/repair-command-log.json",
+      "TESTS-RESULTS/2026-10-15+GH-1051-merge/repair-proof.json",
+      "relay-system/2026-10-12/gh1051-final.codex.md",
+      "releases.db",
+      "releases.sql"
+    ],
+    "1082": [
+      "ARCHITECTURE.md",
+      "CHANGELOG.md",
+      "LEADERBOARD.md",
+      "PROJECT/2-WORKING/GH-1080-EXPRESS-DOCS.md",
+      "PROJECT/2-WORKING/recon-gh1080-express-docs.md",
+      "SOP.md",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/candidate-freeze.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-current-B1-commands.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-current-B1-dryrun.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-current-B1-result.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-current-codex-prerequisite.log",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-current-express.log",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-current-manual-docs.log",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-current-merge-attempt.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-current-preservation-proof.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-focused-after.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-focused-before.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-focused-result.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-native-final-r3.md",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/pr1082-original-manual-probe-source.txt",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/provenance.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/publication/pr1082-normal-publication.log",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/publication/pr1082-publication-after.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/publication/pr1082-publication-before.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/publication/pr1082-publication-result.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/publication/provenance.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/publication/validate-parallel-1792107796341-42782.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/publication/validate-parallel-1792107801948-44927.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/publication/validate-parallel-1792107919982-10050.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/publication/validate-parallel-1792108598142-50744.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/publication/validate-parallel-1792108621095-73593.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/publication/validate-parallel-1792108644340-3641.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1080-merge/publication/validate-sequential-1792108196463-92171.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1080/codex-prerequisite.log",
+      "TESTS-RESULTS/2026-10-15+GH-1080/express-suite.log",
+      "TESTS-RESULTS/2026-10-15+GH-1080/identity-after.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080/identity-before.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080/ledger-check.log",
+      "TESTS-RESULTS/2026-10-15+GH-1080/manual-docs-r2.log",
+      "TESTS-RESULTS/2026-10-15+GH-1080/manual-docs.log",
+      "TESTS-RESULTS/2026-10-15+GH-1080/provenance.jsonl",
+      "TESTS-RESULTS/2026-10-15+GH-1080/publication-identity-after.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080/publication-identity-before.json",
+      "TESTS-RESULTS/2026-10-15+GH-1080/publication.log",
+      "TESTS-RESULTS/2026-10-15+GH-1080/relay-drive-r2.log",
+      "TESTS-RESULTS/2026-10-15+GH-1080/relay-drive.log",
+      "TESTS-RESULTS/2026-10-15+GH-1080/skill-validation.log",
+      "decisions/2026-10-15-gh1080-express-documentation-admission.md",
+      "relay-system/2026-10-15/gh1080-final.codex.md",
+      "releases.db",
+      "releases.sql",
+      "skills/2-daily/express/SKILL.md",
+      "utils/py/express.py"
+    ]
+  },
+  "actual_shared_files": {
+    "CHANGELOG.md": [
+      1053,
+      1082
+    ],
+    "LEADERBOARD.md": [
+      1053,
+      1082
+    ],
+    "releases.db": [
+      1053,
+      1082
+    ],
+    "releases.sql": [
+      1053,
+      1082
+    ]
+  },
+  "actual_repaired_conflict_sites": {
+    "1053": [
+      "LEADERBOARD.md",
+      "releases.db",
+      "releases.sql"
+    ],
+    "1082": [
+      "CHANGELOG.md",
+      "releases.db",
+      "releases.sql"
+    ]
+  },
+  "regression": {
+    "command": "bash validate.sh --sequential",
+    "tested_commit": "87f132e6a1f532559ba2686d31313b47785875eb",
+    "landing_commit": "87f132e6a1f532559ba2686d31313b47785875eb",
+    "passed": 409,
+    "total": 409,
+    "rc": 0,
+    "run_url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38827672739",
+    "receipt": "TESTS-RESULTS/2026-10-16+GH-591/wave-87f132e6a1f532559ba2686d31313b47785875eb/provenance.jsonl",
+    "telemetry_sha256": "41b320da9b2ce5b1091000fc83e7a56fc3db754e71494578c473a6e69d925f7b",
+    "scope": "Final hosted full integrated run covers both actual landing sources; no duplicate gate or promotion claim"
+  },
+  "interaction_review": "Pages blob preserved after second landing; six CI/gate policies unchanged. Express admission excludes workflow/policy paths; mandatory normal hook unchanged. Canonical B1 preserves incoming ledger rows and append-only changelog history. Focused113+43+original16 controls, source final3/3 native and current normalfull409/409 retained. No new tests/cases/parameters.",
+  "deferred": [
+    {
+      "issue": 1087,
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1087",
+      "item": "Minor GH1051 record spacing, facts and counters preserved"
+    }
+  ],
+  "excluded": [
+    1062,
+    1024,
+    1079,
+    1081,
+    1085,
+    1089
+  ],
+  "cleanup": "No clone deletion/archive; historical1070 and nine folders/145unique ignored artifacts remain deferred; no Skills Army sync",
+  "gate_clone_identity": {
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "config_sha256": "dbd6637112bf4a0e94cb523432fbbd9cd7e2f01c150ab4d5a6516702237d188c"
+  },
+  "main_head": "4895148683120b8b6f808d4dcd66267a3754fd2c",
+  "main": "Observed remote main 4895148683120b8b6f808d4dcd66267a3754fd2c; not qualified or promoted by this batch"
+}

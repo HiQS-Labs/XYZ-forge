@@ -1,9 +1,9 @@
 ---
 name: radar
 description: >-
-  Per-repo SDLC process coach and strategic compass over the last 2-3 weeks of activity:
-  celebrates high-level wins, evaluates engineering momentum, diagnoses process health,
-  and spots potential regressions alongside recurring defect clusters. Analyzes
+  Per-repo SDLC coach over the last 2-3 weeks: progress, process health, recurring
+  defects and regressions. GitHub issues/PRs are primary work evidence; docs seed
+  discovery and degraded fallback. Analyzes
   Run/Grow/Transform flow distribution, checks open-PR collisions, and flags release
   plan drift; scans RADAR/, docs/radar/, or PROJECT/1-INBOX/ for multi-week trajectory
   arcs. Read-only analysis; findings persist to two sinks (an immutable dated report
@@ -50,11 +50,13 @@ Then begin work.
   operator's confirmation), never push.
 - **Never edit releases.db.** Absent, sparse, or stale are all valid states (its §GH-381 forbids
   topping it up). Report drift; stop there.
-- **Documents and the ledger never supply state.** Issue, PR and run state comes from GitHub at the
-  time of the run; a `PROJECT/**` doc, a ledger row or a host-repo rule that says otherwise is
-  reported as drift, never used as the fact.
+- **Documents and the ledger never supply verified work state.** Issue, PR and run state comes from
+  GitHub at its recorded observation time; a disagreeing doc, ledger row or host work-state claim
+  is drift, never the fact. When GitHub is unavailable, doc-reported fallback stays explicitly
+  unverified under the evidence-authority/degradation rules below; it earns no quiet/solved credit.
 - **Transform is declared, never inferred.** No commit prefix promotes work to Transform — only an
-  explicit `rgt: transform` frontmatter key on the governing `PROJECT/**` doc. Auto-promoting
+  explicit `rgt: transform` declaration on the governing GitHub issue or PR (labelled
+  doc-frontmatter fallback only when live GitHub evidence is unavailable). Auto-promoting
   `perf:`/`refactor:` would inflate the one number this exercise exists to keep honest.
 - **Cite or drop.** An uncited target is a guess.
 - **No targets and no umbrella observations → write nothing.** Report the flow distribution
@@ -66,14 +68,47 @@ Then begin work.
 - **Degrade loudly.** Missing `gh`, no `PROJECT/**`, no conventional commits → run the lenses you
   can and state plainly which signal was unavailable and what that costs the verdict (table below).
 
+## Evidence authority — GitHub first
+
+GitHub issues and PRs are the primary source of truth for work facts: issue state, kinship,
+recurrence, closure/reopen history, milestone membership and what landed. Read current bodies,
+comments, linked PRs and relevant timeline events, not only titles or cached search results.
+A merged PR on the evaluated trunk establishes landed work; an open PR or a closed issue alone
+does not. Git history remains direct evidence for changed code and commit-flow tallies.
+
+Use PDDA docs and prior reports as a starting point: candidate clusters, `related:` hints,
+capture context and historical observations. **Check every doc-derived work claim against its
+live issue/PR when accessible.** A reference resolving proves existence, not kinship; verify the
+relationship or shared failure from the linked evidence. When GitHub and a doc disagree, use
+GitHub and report **doc drift** with both citations; do not repair the doc during Radar.
+Historical reports remain immutable observations, not current completion authority.
+
+Bound reads to the window and candidate members. State coverage/pagination limits; a truncated
+list or unreadable history is not an exhaustive negative result. On missing/partial GitHub access,
+label the whole report **degraded / partially verified**, identify affected claims and confidence,
+and use docs/git only as explicitly unverified fallback for unavailable work facts. Never turn
+missing history into zero reopens, zero RGT adoption or quiet/solved credit. Missing PROJECT alone
+removes hints, not GitHub authority. Step 2c's adopted operational-policy exception is narrow.
+
 ## Step 0 — Frame the window & discover prior reports
 
-Default **21 days**; honor an operator override. Resolve to explicit dates **with a time of day and
-a time zone** (start 00:00 on the first day, end 00:00 on the day after the last, in the repo's
-operating zone) and state them. Read the repo's trunk (`main`, or `development` where that is the
-declared WIP branch), not the current feature branch. Record `git rev-parse <trunk>` at the window
-end as the **trunk SHA** in the report header; every code and tracker claim in the report is about
-that commit. Compute the prior window of equal length for the trend comparison.
+Default **21 days**; honor an operator override. State an explicit **[start, end)** window with
+clock times and time zone: start 00:00 on the first day, exclusive end 00:00 on the day after the
+last, in the repo's operating zone. Use the declared trunk (`main` or `development`), not the
+current feature branch. Resolve and record its commit at that explicit window boundary as the
+**trunk SHA** (`<trunk-sha>`), with the resolution method and commit timestamp. Verify its ancestry
+on trunk; if the boundary snapshot cannot be established, report that code coverage unavailable.
+`git rev-parse <trunk>` gives the **current trunk SHA**, not a historical window-boundary SHA:
+record that tip separately as `<current-trunk-sha>` at observation time. Code/tree claims and
+commit-flow tallies use the pinned window SHA; post-window fixes are checked through the separately
+pinned current tip and disclosed without silently changing the old window. Compute the prior
+window of equal length for the trend comparison.
+
+**Live tracker observations are not commit snapshots.** Record UTC observation times (or the
+bounded read interval) and coverage for issue, PR, review, membership and run reads. Those facts
+are GitHub state when observed, not state at `<trunk-sha>`. An as-of-window tracker claim requires
+complete relevant timeline reconstruction at that cutoff; otherwise label it unknown and keep
+the later live observation distinct. Do not infer historical tracker state from the code SHA.
 
 **Discover prior reports and historical arc:**
 Scan the repository for historical Radar reports across standard locations:
@@ -103,8 +138,8 @@ rewrite or **silently truncate** `git` output — a `tail` view of a piped tally
 contradicting the `head` view of the same pipeline, and on another machine-repo the RTK proxy
 capped `git log` at exactly **50 lines for both windows of a 548-commit repo**, which would have
 bucketed 50 commits and reported a confidently wrong distribution with no visible symptom. A
-partial read is indistinguishable from a real distribution; the sum check is the only thing that
-tells them apart. Cross-check the total against `git rev-list --no-merges --count` as well when the
+partial read can still have internally consistent buckets: the sum check proves accounting, not
+source completeness. Cross-check the total against `git rev-list --no-merges --count` when the
 numbers matter.
 An unproven tally is exactly the reads-as-authoritative-while-wrong failure this tool exists to
 catch; do not let the radar commit it.
@@ -114,12 +149,17 @@ Then bucket by conventional-commit prefix, into **five** buckets:
 | Bucket | Prefixes / rule |
 |---|---|
 | **Harness** | `relay*:` `marathon*:` `plan:` `capture:` `triage:` `wip:` `reconcile*:`, plus the reconciler and version-record families `chore: reconcile …`, `chore(<scope>): post-merge reconcile …`, `docs: reconcile …`, `chore: record <version> at merge …` — machine-generated turn/render/reconcile commits, matched as **prefix families** (`relay-pkg:` is harness; exact-match lists leak — first calibration run caught exactly this). Report the count, then **exclude from the RGT denominator**: they are the machinery running, not work chosen. In a harness-driven repo they can outnumber everything else (validated here: 178 of 438 commits) and silently swamp the signal. |
-| **Run** (KTLO) | `fix:` `chore:` `docs:` `refactor:` `test:` `ci:` `hotfix:` `cleanup:` — or the governing doc says `rgt: run` / `doc_type: bugfix` |
-| **Grow** | `feat:` — or the governing doc says `rgt: grow` |
-| **Transform** | **only** an explicit `rgt: transform` on the governing `PROJECT/**` doc. **Always report `rgt:` adoption alongside the figure** — at zero adopting docs, "Transform 0%" means *nobody has declared anything*, not *no transformative work happened*, and the number cannot become non-zero until the key is adopted. Print it as `0% (rgt: adoption: N docs)` so the distinction is never left to the reader. |
+| **Run** (KTLO) | `fix:` `chore:` `docs:` `refactor:` `test:` `ci:` `hotfix:` `cleanup:` — or the governing GitHub issue/PR explicitly says `rgt: run` |
+| **Grow** | `feat:` — or the governing GitHub issue/PR explicitly says `rgt: grow` |
+| **Transform** | **only** an explicit `rgt: transform` on the governing GitHub issue or PR. **Always report `rgt:` adoption alongside the figure** — count the governing GitHub records checked and those with an explicit declaration. Zero declarations in that checked set does not mean no transformative work happened. Missing/partial reads make adoption unknown for the uncovered scope; doc-fallback adoption is labelled separately. |
 | **Unclassified** | everything else, including unprefixed. Reported, never silently bucketed — a large share is itself a finding (inconsistent conventional commits). |
 
-An explicit `rgt:` key on the governing doc always beats prefix inference. Report the ratio over
+An explicit `rgt:` declaration on the governing GitHub issue/PR beats prefix inference. If live
+GitHub declarations conflict, report the conflict and keep that work in Unclassified (unresolved),
+rather than choosing a convenient doc or prefix. A quoted `rgt:` example or discussion of the
+classifier is not a declaration about the work itself. A doc-only declaration is a hint while GitHub is readable;
+when the governing GitHub evidence is unavailable, use it only as labelled, lower-confidence fallback.
+Transform is never inferred from `feat:`, `perf:` or `refactor:`. Report the ratio over
 the RGT denominator (Run+Grow+Transform+Unclassified), the trend vs. the prior window, and a
 one-line verdict. No threshold blocks anything.
 
@@ -153,7 +193,9 @@ produced), and rank targets by the evidence that actually materialized. Validate
 whose sharpest signals were exact inverses: in `xyz-3-agents-swarm` signal 1 was decisive and
 signal 2 flat; in `giant-brains-claude-skills` signal 1 yielded nothing and signal 2 carried the run.
 
-1. **`related:` frontmatter** in `PROJECT/**/GH-*.md` — human-authored sibling links. **Two shapes
+1. **GitHub kinship, seeded by optional doc hints.** Issue/PR links, bodies, comments and
+   shared-failure evidence establish kinship. `related:` frontmatter in `PROJECT/**/GH-*.md`
+   seeds candidates, never establishes a cluster without live verification when accessible. **Two shapes
    exist and both must be parsed**: a block array of prose entries citing `#refs`, and a scalar
    pointing at a sibling *filename* (`related: GH-8-FOO.md`) with no issue number at all — resolve
    filename form to its issue via the target doc's `gh_issue:` key. **Report the extraction yield
@@ -175,18 +217,25 @@ signal 2 flat; in `giant-brains-claude-skills` signal 1 yielded nothing and sign
    (Second calibration run: 13 of 13 window `fix:` commits landed on one directory, which reads as
    an overwhelming top target until you check the dates — all 13 on a single day, all from PR #10.
    That is a skill being written, not a defect recurring.)
-3. **Issue-text similarity** across `gh issue list --state all --limit 1000 --json number,title,state,closedAt,stateReason,labels,body`.
-   Without `--limit`, `gh` returns 30 issues. **Carry `state` on every member**: a cluster lists each
-   issue with its state, and a closed issue counts toward a *live* class only when a later issue or a
-   qualifying reopen (signal 4) shows the class returned; otherwise it is history of the class. Where
-   most bodies are agent-written reports, similarity finds shared report templates, not shared
-   defects; say so and weight it down.
-4. **False closes, then reopens** — a capture doc recording a *doc-only / no-code-change*
-   resolution for a code defect is the primary form of this signal and greps cheaply. Reopen
-   events need per-issue `gh api` timeline calls — expensive; sample them only for cluster
-   members already found by other signals. A reopen counts as a recurrence only when it comes
-   **more than 24 hours** after the close; a reopen within minutes is a corrected or batched close,
-   and a close that lasted minutes is never a "declared fixed" event. Treat doc-only closure as a strong recurrence
+3. **Issue-text similarity** across `gh issue list --state all --limit 1000 --json number,title,state,createdAt,closedAt,stateReason,labels,body`.
+   Without `--limit`, `gh` returns 30 issues. **Carry `state` on every member** and distinguish
+   historical incidents from current live evidence. A closed issue remains history, never open
+   backlog because a doc or ledger calls it active. To establish a return after a claimed fix,
+   compare the later issue's `createdAt` with the earlier completed-close timestamp and verify
+   that both describe the same failure class; a later title alone is insufficient. A currently
+   open returned issue or current operational evidence can establish a live class; keep closed
+   historical member counts separate from live/open counts. Where bodies are agent-written,
+   similarity can find shared report templates rather than defects; say so and weight it down.
+4. **False closes, then reopens** — use GitHub state/reason, closing/reopen timeline events,
+   resolution comments and linked merged PRs. Capture-doc *doc-only / no-code-change* resolutions
+   are discovery hints; verify them against live issue/PR evidence. Read candidate-member
+   timelines before claiming reopen history/counts. A reopen qualifies for this signal only
+   **more than 24 hours** after the corresponding close; at or below 24 hours it supplies no
+   qualifying recurrence or declared-fixed duration. Match the actual timeline close/reopen pair,
+   rather than using a later `closedAt` after another closure. Unknown or partial history stays
+   unknown, not zero. Scope recurrence events to the stated window and label earlier context
+   historical. This time rule does not replace signal 2's AND discriminator or signal 7's OR
+   discriminator. Treat verified doc-only closure as a strong recurrence
    predictor: first confirmed instance is #18, closed doc-only within 2 hours, same seam
    re-fired at day 34 (#314) and day 44 (#440).
    **This signal is structurally unavailable in a repo with zero closed issues** — check the closed
@@ -302,10 +351,11 @@ it recurs, and what a single durable fix would retire.
 **Verify before naming a fix.** "Cite or drop" requires a citation; this requires the cited thing to
 be true at the trunk SHA. Before a target names a cause or a fix: open the named file or function at
 the trunk SHA and quote the lines that show the mechanism is absent or broken; search
-`git log <trunk-sha>..<trunk>` for a fix that landed after the window end; and check whether the
+`git log <trunk-sha>..<current-trunk-sha>` for a fix that landed after the window end; and check whether the
 proposed shape (a gateway, a transition table, a typed context) already exists under another name.
-If any of the three cannot be shown, print the fix as **`hypothesis, not checked against code`**.
-A hub file (`pyproject.toml`, `CHANGELOG.md`, a ledger) is a seam only at the diff level: touches
+If a later verified fix exists, report the window finding and post-window resolution separately;
+do not recommend duplicating that fix. If any check cannot be shown, print the proposed fix as
+**`hypothesis, not checked against code`**. A hub file (`pyproject.toml`, `CHANGELOG.md`, a ledger) is a seam only at the diff level: touches
 that each change one version line are bookkeeping, not a recurring defect.
 
 ## Step 2b — Open-PR collision check
@@ -366,20 +416,27 @@ Is the repo in a CI churn state, and does it have a playbook for one? Measure fr
 only — no new suite, guard or telemetry (the SOP's own rule). Check the repo under review, not
 XYZ-forge specifically; XYZ-forge paths below are examples.
 
-**SOP detection** (shared with `whack-a-mole` §2):
-1. **A landed doc wins.** On trunk, check `docs/CI-CHURN-RECOVERY-SOP.md`, then any `docs/**` or root
+**SOP detection** (retain the existing discovery paths; verify adoption through GitHub):
+1. **Start with a landed-policy candidate.** On trunk, check `docs/CI-CHURN-RECOVERY-SOP.md`, then any `docs/**` or root
    `*.md` whose frontmatter has `doc_type: sop` and whose title or `context_tags` name CI churn, then a
    pointer line in `SOP.md` §4. Found → `SOP: <path> (landed)`; use its trigger and exit-gate tables
-   verbatim.
-2. **Otherwise, an SOP issue.** `gh issue list --state all --limit 100 --search 'in:title "CI churn" SOP'` for a
+   verbatim only after checking its governing GitHub adoption/supersession evidence when accessible.
+2. **Check the governing SOP issue/PR, or discover one.** `gh issue list --state all --limit 100 --search 'in:title "CI churn" SOP'` for a
    title containing both `SOP` and `CI churn` (case-insensitive), or an issue labelled `sop`.
-   Open → `SOP: #<n> (draft, not landed)`, with every threshold labelled `draft`. Closed as completed
-   without a doc → apply it and say the doc is missing. Closed as not planned → no SOP; name the issue.
+   Open/unadopted proposal → `SOP: #<n> (draft, not landed)`, with thresholds labelled `draft`.
+   An explicit adopted policy without a doc → use that policy and report the missing doc;
+   closure alone is not adoption. Not planned → no adopted policy from that issue; name it.
 3. **Otherwise** `SOP: none`: use the defaults below.
 
-If a doc and an issue disagree, the doc wins; note the issue.
+**Narrow policy exception:** operational trigger/exit tables come from the currently adopted SOP,
+usually its landed trunk doc, because an unmerged proposal must not silently change operating policy.
+GitHub remains authoritative for adoption/status/version and supersession, never the doc's status
+label. A newer adopted GitHub decision/merged policy PR supersedes stale doc thresholds: use the
+adopted version and report doc drift. An unadopted proposal stays draft beside the adopted policy.
+If adoption/version cannot be verified, label the policy source unverified and lower confidence;
+do not use the exception to overrule any issue/PR work fact.
 
-**Triggers (defaults; a landed SOP's table wins — cite by ID, so a changed threshold needs no skill edit):**
+**Triggers (defaults; the verified adopted SOP's table takes precedence — cite by ID):**
 
 | Trigger | Signal | Default threshold | Source (radar input) |
 |---|---|---|---|
@@ -422,16 +479,20 @@ fix, not a window.
 
 Read the DB using `releases check`, `releases list`, and the `python3 utils/timeline/export_timeline.py --json` payload. In a repo that vendors the harness, those live at `.xyz/utils/py/releases_app.py` and `.xyz/utils/timeline/export_timeline.py`; `check` takes a lock in the git directory, so run it against a copy of `releases.db` and `releases.sql` in a scratch git repo. Cite the DB generation numbers in the report.
 
-**Join the ledger to GitHub before counting it.** For every roadmap row keyed to an issue, read the issue's `state` and `closedAt` (`gh issue list --state all --limit 1000 --json number,state,closedAt`, one call) and report the rows that contradict it (a closed issue still Queue or In progress). Those rows are drift, never backlog, and their issues are never live cluster members in Lens 2. Where the repo has a drift checker, run it read-only and print its result.
+**Join the ledger to GitHub before counting it.** For every roadmap row keyed to an issue, read the issue's `state` and `closedAt` (`gh issue list --state all --limit 1000 --json number,state,closedAt`, one call) and report the rows that contradict it (a closed issue still Queue or In progress). Those rows are drift, never backlog. Their closed issues can remain historical incident members
+under signals 3–4, but never become live/open members because of the stale row. Where the repo has a drift checker, run it read-only and print its result.
 
 Skip silently if the DB is absent, has no unshipped releases, or contains only the installer's seed block (e.g., a release whose description says EXAMPLE / "replace this", or that has an empty target date and tracking issue). Reporting drift against a seed is precisely the "do not treat a sparse file as an incomplete one" failure §GH-381 forbids.
 
 Otherwise, for each unshipped release in the payload: join its `milestoneRef` (or `milestone`) to its issue set
-(`gh issue list --milestone "<title>" --state open --limit 500`).
+(`gh issue list --milestone "<title>" --state open --limit 500`). GitHub owns actual membership and
+open/closed state; the DB defines planned bands, not live membership. Verify doc-derived joins
+against GitHub and report mismatches as drift.
 
 **If `milestone` is null, `milestoneRef` is empty or a placeholder such as `milestones`, or the repo
-has no milestones at all, the join is impossible — fall back to reading claim status from the
-release's `blurb` or `exit` prose and say that is what you did.**
+has no milestones at all, the join is impossible — fall back to the release's planned intent in
+its `blurb` or `exit` prose, labelling the membership/status join unavailable; prose does not
+establish actual issue state or membership.**
 Do not report a 100% orphan share as backlog drift in that case: with no milestones to belong to,
 that number measures a **missing binding**, and the actionable finding is "bind a milestone (or
 create the milestones) so the next run can join" — not "the backlog is unplanned."
@@ -471,7 +532,8 @@ a merged fix PR is not a completed backfill.
 The first two paragraphs set the human context and direction for the entire report. Avoid dense cybernetic jargon, cold acronyms, or adversarial auditor language.
 
 #### Paragraph 1 — High-Level Wins & Velocity (Celebrate Momentum)
-- **Acknowledge and celebrate progress first**: Recap what actually went well during this window. Highlight newly shipped user-facing features (`feat:`), major architectural milestones, closed blockers, and performance or DX wins.
+- **Acknowledge and celebrate progress first**: Recap verified progress from merged PRs on trunk;
+  do not call an unmerged PR, closed issue or completed capture doc shipped work. Highlight newly shipped user-facing features (`feat:`), major architectural milestones, closed blockers, and performance or DX wins.
 - **Affirm team effort**: Give the engineering team genuine credit for moving the needle, recognizing where delivery momentum is strong and durable improvements were made.
 
 *Example*: "Over the past three weeks, the team has sustained impressive feature momentum—landing major capabilities including the GitHub Pages documentation portal and the cross-device AgentChorus bridge. Crucially, the team also demonstrated excellent follow-through on quality by knocking out repeat blockers in the telemetry subsystem, turning hard-won operational lessons directly into durable repo policies."
@@ -498,7 +560,7 @@ first action item.
 
 Translate the underlying analytical lenses into clean, easily digested human takeaways:
 - **CI churn (Step 2c)**: the SOP line and the trigger table.
-- **Flow Balance & RGT Arc**: Summarize the Run/Grow/Transform effort mix alongside the trend across prior runs or windows (e.g. "Run/Maintenance: 76.9% [vs 76.7% in Run 2] · Grow/Features: 14.2% [vs 14.4%] · Transform: 0% (rgt: adoption: 0 docs) · Denominator: 607 commits"), clearly illustrating whether the development arc is trending toward feature momentum or stuck in KTLO.
+- **Flow Balance & RGT Arc**: Summarize the Run/Grow/Transform effort mix alongside the trend across prior runs or windows (e.g. "Run/Maintenance: 76.9% [vs 76.7% in Run 2] · Grow/Features: 14.2% [vs 14.4%] · Transform: 0% (rgt: declarations: 0 of 20 governing GitHub records checked) · Denominator: 607 commits"), clearly illustrating whether the development arc is trending toward feature momentum or stuck in KTLO.
 - **Top Recurring Targets & Regressions**: List the top 2–4 defect clusters in a simple bulleted format, clearly distinguishing **Recent Regressions** (bounceback on recently touched code) from **Chronic Tech Debt** (long-standing multi-week issues). Include why each recurs and what a single clean fix accomplishes.
 - **Regressed After Declared Fixed**: one row per class that was declared fixed and came back
   (GH-779; format of HiQS-Labs/rebalanceOS#257). Evidence is signal 4 (false closes) plus a closed
@@ -544,7 +606,8 @@ If invoked directly with `/radar --arc`, `/radar --summary`, or when the operato
 
 3. **Defect & Regression Scorecard**:
    - **Total Unique Targets Tracked**: Count of all targets across all historical runs.
-   - **Durable Retirements**: Targets struck through citing fixing commits (and verified quiet).
+   - **Durable Retirements**: Recheck cited fixing commits/merged PRs and current GitHub issue history
+     before treating historical strike-throughs as durable retirements (and require verified quiet).
    - **Recent Regressions vs. Chronic Debt**: Targets that bounced back vs targets remaining open across multiple runs.
    - **Symptom-Masked / Unresolved**: Targets marked quiet without verified code fixes.
 4. **Strategic Recommendation for the Next Arc**:
@@ -565,12 +628,16 @@ A target is identified by what it centers on, never by its prose:
 - **Seam-shaped, one file:** `RADAR-<basename-sans-extension>`.
 - **Class-shaped:** `RADAR-class-<short-class-slug>`, chosen once at first sighting.
 
-Slug rule: lowercase, non-alphanumerics → hyphens. **Match before you slug**: compare a new cluster's
-member issues and seam with every target recorded in Sink B and the latest Sink A, and reuse the ID
-on any overlap of two or more members or the same seam file. **Never re-slug a live target.** If its seam is
-renamed, keep the original ID and add a `formerly <old name>` note under the target's heading in
-the issue body — an alias that fails visibly beats a silent identity split that resets the aging
-clock exactly when it matters.
+Slug rule: lowercase, non-alphanumerics → hyphens. **Match before you slug**: compare with targets
+in Sink B and the latest Sink A before minting an ID. Two or more overlapping member issues or
+the same qualified function/file seam identify **candidate matches**, not automatic identity.
+Verify the shared failure mechanism and affected scope using GitHub/code evidence; the same hub
+file or similar name alone must not collapse unrelated defects. Reuse a uniquely confirmed ID.
+If multiple IDs plausibly match, preserve their identities and links, report the ambiguity and
+ask which is canonical before merging/renumbering; do not mint a duplicate to escape the choice.
+Incomplete prior-board coverage leaves matching unverified, not proof of a new target.
+**Never re-slug a live target.** A verified seam rename keeps its original ID and a
+`formerly <old name>` alias; preserve first-seen and run history rather than resetting age.
 
 ### Sink A — evidence, immutable
 
@@ -600,6 +667,10 @@ The checklist only, plus a link to the newest report doc. Search first:
 
     gh issue list --label radar --state all --limit 50
 
+Apply the evidence-authority coverage rule before selecting or creating a board: if the cap or
+unreadable pages leave the candidate set incomplete, read the remaining pages or report board
+selection unavailable. A bounded/truncated search is never proof that no canonical board exists.
+
 - **none** → `gh issue create --label radar --title "radar: <repo> — recurring targets" --body-file <preview>`
   (create the `radar` label first if the repo lacks it; without `--body-file`, `gh` prompts and a
   headless run cannot answer)
@@ -619,7 +690,8 @@ The checklist only, plus a link to the newest report doc. Search first:
   have silenced the ceiling's symptom while its defect — no enforced bound — stayed exactly where
   it was. A false strike-through is worse than a missed one: it resets the aging clock on a live
   defect and destroys the one signal reconciliation exists to produce.
-  So: strike through only when a commit or PR **names the seam**. If the symptom stopped but no
+  So: strike through only when a verified trunk commit or merged PR **names the seam**, with
+  live issue/PR history checked; a doc-only completion claim or unavailable live evidence earns no retirement. If the symptom stopped but no
   such commit exists, keep the target open, increment `runs:`, and annotate it
   **`quiet, unexplained — possible symptom masking by <other target>`**. Where two targets are
   causally linked, say so under both.
@@ -680,8 +752,8 @@ Then offer — do not assume — to hand the targets to `start-marathon`.
 
 | Missing | Lost | Still runs |
 |---|---|---|
-| `gh` / auth | Lens 2 signals 3-5, open-PR collision check, Lens 3 joins, Sink B | Lenses 1-2 (signals 1-2), Sink A; state that no in-flight-work check or live checklist was available this run |
-| `PROJECT/**` | Lens 2 signal 1, `rgt:` overrides, Sink A's normal location | Lenses 1-3 from git + `gh`; offer repo-root fallback for Sink A |
+| `gh` / auth, including partial API/history access | Authoritative work-state, relationship/history and membership checks; affected PR/CI reads; Sink B without access | Mark the **whole report degraded / partially verified** and identify affected confidence/claims. Git/docs can seed labelled fallback; unavailable history earns no zero counts or quiet/solved credit. Preview Sink A with these limits; confirmation is still required to write it |
+| `PROJECT/**` | Doc hints/capture context, doc-fallback RGT and Sink A's normal location | GitHub-first Lenses 1-3, including kinship and explicit GitHub RGT, still run; offer repo-root fallback for Sink A |
 | Conventional commits | Lens 1 inference | Report the Unclassified share as the finding it is |
 | `releases.db` absent, or seed-only | Lens 3 | Everything else; PLAN reads "no release plan" — a valid state, not a gap |
 | `releases` CLI or timeline script not at the named path (vendored under `.xyz/`, or absent) | Lens 3 joins | Everything else; state the path tried |
@@ -691,7 +763,8 @@ Then offer — do not assume — to hand the targets to `start-marathon`.
 | No CI churn SOP | The SOP's own thresholds | Step 2c on its defaults, with the no-SOP pause-and-RCA wording when the rule is met |
 | History < ~2 windows | The trend line, and most of Lens 2 | Lens 1 for the current window only; state that recurrence is structurally unobservable this young |
 
-Always state which rows applied and what they cost the verdict.
+Always state which rows applied and what they cost the verdict. A successful `gh` command does
+not establish complete coverage of every needed endpoint/page; record claim-level read failures too.
 
 ## Sibling: sanity-check for a disputed blocker
 
