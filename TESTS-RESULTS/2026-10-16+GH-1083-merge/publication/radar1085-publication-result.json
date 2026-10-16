@@ -1,0 +1,11 @@
+{
+  "pr": 1085,
+  "rc": 0,
+  "head": "ffe8b7c373da155502719f2f06154e09a07abcc2",
+  "branch": "docs/XYZ-forge-gh1083-radar-github-first-2026-10-15",
+  "started": "2026-10-16T02:03:04.322626+00:00",
+  "finished": "2026-10-16T02:20:28.821332+00:00",
+  "elapsed_seconds": 1044.5058083750773,
+  "identity_drift": [],
+  "log": "radar1085-normal-publication.log"
+}

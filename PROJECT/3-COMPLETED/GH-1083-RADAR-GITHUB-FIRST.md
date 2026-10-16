@@ -1,8 +1,8 @@
 ---
 title: 'GH-1083: GitHub-first radar evidence'
-status: Active
+status: Complete
 created: 2026-10-15
-updated: 2026-10-15
+updated: 2026-10-16
 owner: Codex
 gh_issue: 1083
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1083
