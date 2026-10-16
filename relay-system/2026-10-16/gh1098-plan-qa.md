@@ -1,8 +1,8 @@
 ---
 Goal: Plan QA — GH-1098 Shift outer loop Phase 3 (Scope A: four surgical fixes)
 Date: 2026-10-16
-NEXT: claude (Producer)
-STATUS: Changes requested
+NEXT: codex (Reviewer)
+STATUS: Open
 ---
 
 # Context
@@ -89,3 +89,18 @@ Read the plan in full and the requested source sections, then traced the invocat
 Read-only GitHub queries (each exit 0): `gh issue view 1098 --repo HiQS-Labs/XYZ-forge --json body,comments`; same for #1093; #1081 with `--json comments`. Decisive historical comment: https://github.com/HiQS-Labs/XYZ-forge/issues/1081#issuecomment-6208473721. Historic raw logs remain runner-local; their execution was not reproduced here.
 
 **[Unverified — needs clone run]** All suites, actual promotion, preflight execution, wall/idle behavior and routed gate duration. Only source inspection, remote read-only queries and in-memory YAML probes ran here. Existing suites plus nonempty manual receipts and witnessed red controls in the disposable clone remain required. Root cause: dispatch/promotion/default gate choices are made upstream of the failed turns; fix sites: existing jog and preflight writers; no parallel supervisor or new gate is justified.
+
+### Round 1 · Producer · claude
+
+All four `[Should]` findings and both implementation notes accepted; plan revised in `PROJECT/1-INBOX/GH-1098-SHIFT-PHASE3.md` (same commit as this block).
+
+| Finding | Disposition | Where in the plan |
+|---|---|---|
+| 1 Scope C contradicts the landing boundary | **Accepted.** Criterion rewritten: ≥ 2 of 3 PR-ready across ≤ 3 `jog run` invocations, each started only after the prior stopped at its boundary, zero operator edits between. No queue-policy change in A1–A4; added to Non-goals. #1098 criterion 1 recorded as reconciled. | "Scope C", "Non-goals" |
+| 2 Vacuous A2/A4 controls | **Accepted.** A2: two seeded scratch captures with the three keys stripped (with/without Status table) plus a third that keeps existing `owner`/`goal` byte-for-byte; parent shows 6 errors. A4: red control asserts the invocation JSON `gate` and `--pre-advance-cmd` argv are rewritten on the candidate and not on the parent; explicit-tier passthrough demoted to a compatibility check. | "Verification" table |
+| 3 "Full gate on push" is false | **Accepted.** Prose corrected: `githooks/pre-push:258–299` is tiered; A4 makes the pre-advance gate consistent with push, adds/removes nothing; landing evidence = hook's routed gate + hosted checks. #1098 wording recorded as reconciled. `githooks/pre-push` added to Non-goals. | A4 row, "Verification" footer, "Non-goals" |
+| 4 A3 is not builder-only | **Accepted.** Stated as a deliberate all-agy-turns-in-jog policy; role-aware variant named and declined as new machinery (`relay_drive.py` seam). #1098 wording recorded as reconciled. | A3 row, "Non-goals" |
+| Note A1 second site | **Accepted.** Second site is the legacy relay-executor call (~:1728), not a marathon retry path; env pin added there; retry verbs covered via `run_marathon_phase`. "Refuse loudly" recorded as superseded by pin-and-log per #1093. | A1 row |
+| Note A2 marker | **Accepted.** Marker is a YAML `#` comment line, not an HTML comment. | A2 row |
+
+Re-review requested on the revised plan only. Handing off to codex — codex, take your turn.
