@@ -4,6 +4,9 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/942
 title: "9 skills exceed the 1024-char frontmatter description limit"
 status: Proposed
 created: 2026-10-02
+fix_probes:
+  - test -f skills/4-occasional/feynman/SKILL.md
+  - bash test/skills-army-hq.sh --help
 updated: 2026-10-02
 owner: operator
 goal: "Every committed SKILL.md folds its frontmatter description to ≤1024 chars so skill loaders stop silently dropping skills."
@@ -52,6 +55,55 @@ ZCode sessions despite a healthy skills-army-hq deployment (payload + symlinks v
 
 - PR #943 merged 2026-10-03 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
 
-## Merge evidence
+## Swarm Preflight Contract
 
-- PR #1091 merged 2026-10-16 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash ci-local.sh",
+  "fix_probes": [
+    {
+      "type": "command",
+      "cmd": "python3 -c 'import re,glob,sys; bad=[]\nfor p in sorted(glob.glob('\"'\"'skills/*/*/SKILL.md'\"'\"')):\n    m=re.search(r'\"'\"'^---\\n(.*?)\\n---'\"'\"', open(p).read(), re.S)\n    if not m: continue\n    d=re.search(r'\"'\"'^description:[ \\t]*(?:>-?|\\|)?[ \\t]*\\n?((?:[ \\t]+\\S.*\\n?)+|.*)'\"'\"', m.group(1), re.M)\n    if d and len('\"'\"' '\"'\"'.join(l.strip() for l in d.group(1).splitlines()))>1024: bad.append(p)\nprint(bad); sys.exit(1 if bad else 0)'",
+      "expect_nonzero": true,
+      "note": "pre-fix: at least one committed SKILL.md description folds over 1024 chars (exit 1); landed when none do (exit 0)"
+    }
+  ],
+  "artifacts": [
+    "skills/1-hourly/five/SKILL.md",
+    "skills/1-hourly/recon/SKILL.md",
+    "skills/2-daily/workhorse/SKILL.md",
+    "skills/3-weekly/10days/SKILL.md",
+    "skills/3-weekly/dry/SKILL.md",
+    "skills/3-weekly/radar/SKILL.md",
+    "skills/4-occasional/feynman/SKILL.md",
+    "skills/4-occasional/front-door/SKILL.md",
+    "skills/4-occasional/readme-audit/SKILL.md",
+    "skills/4-occasional/spike-360/SKILL.md",
+    "skills/4-occasional/timbre/SKILL.md"
+  ],
+  "remediation": {
+    "source": "issue#942",
+    "criteria": "Trim every committed SKILL.md frontmatter description to <=1024 folded chars, front-loading trigger wording; move cut detail into the body. Frontmatter-only edits; no new suite (GH-831)."
+  },
+  "lanes": {
+    "agy_safe": [
+      "skills/1-hourly/five/SKILL.md",
+      "skills/1-hourly/recon/SKILL.md",
+      "skills/2-daily/workhorse/SKILL.md",
+      "skills/3-weekly/10days/SKILL.md",
+      "skills/3-weekly/dry/SKILL.md",
+      "skills/3-weekly/radar/SKILL.md",
+      "skills/4-occasional/feynman/SKILL.md",
+      "skills/4-occasional/front-door/SKILL.md",
+      "skills/4-occasional/readme-audit/SKILL.md",
+      "skills/4-occasional/spike-360/SKILL.md",
+      "skills/4-occasional/timbre/SKILL.md"
+    ],
+    "orchestrator_only": []
+  }
+}
+```
