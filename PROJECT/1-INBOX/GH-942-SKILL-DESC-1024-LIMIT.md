@@ -51,3 +51,7 @@ ZCode sessions despite a healthy skills-army-hq deployment (payload + symlinks v
 ## Merge evidence
 
 - PR #943 merged 2026-10-03 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1091 merged 2026-10-16 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

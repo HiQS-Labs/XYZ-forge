@@ -1,6 +1,6 @@
 ---
 title: 'GH-1090: Integrate GitHub-first Radar calibration'
-status: Active
+status: Complete
 created: 2026-10-16
 updated: 2026-10-16
 owner: Codex

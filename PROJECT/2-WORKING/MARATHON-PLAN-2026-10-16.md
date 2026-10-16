@@ -84,7 +84,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #591 GH-591 · Reconciler provenance lifecycle — `already-closed`
 - #807 GH-807 · test: pre-existing signal-triage quiet-grep pipeline produces false failure under load — `already-closed`
 - #886 GH-886 · Linux portability canary: 3 advisory failures (gh425, gh478, gh153) — `already-closed`
-- #1090 GH-1090 · Radar GitHub-first calibration integration — `already-closed`
 - #215 GH-215 — wave_reconcile.py and roadmap-dashboard.sh hardcode pre-vendoring path depth — `already-closed`
 - #18 GH-18 · Harness evaluation: Command Code (cmd) and model matrix — `already-closed`
 - #275 GH-275 · medium-level write-ops logging of agent disk-write commands — `already-landed`
@@ -100,7 +99,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #589 GH-589 · Build XYZ mini: beginner-friendly stripped repo (relay, consult, agent-chorus, skill viewer) — `already-closed`
 - #644 GH-644 · xyz-vendor.sh reconcile_ignore_state: part B — stop re-asserting .xyz/ on repos that track the harness (part A landed #685) — `already-closed`
 - #690 GH-690 · Clone/worktree teardown reminders at landing time (express, marathon_drive, start-task, jog) — `already-closed`
-- #774 GH-774 · ci-route: ~25 releases_app suites missing from SUBSYSTEM_TESTS_releases; 2 test files never run — `already-closed`
 - #904 GH-904 · pdda roadmap-coverage: empty releases.db is reported as 'no ledger present' — every fresh releases-mode repo errors — `already-closed`
 - #907 GH-907 · router_audit.py remediation hint prints bare utils/py path in vendored .xyz/ installs — `already-closed`
 - #906 GH-906 · pdda-install.sh aborts mid-install when .claude/skills is unwritable, skipping buckets, seeds, mode file and registry — `already-closed`

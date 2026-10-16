@@ -2,7 +2,7 @@
 gh_issue: 774
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/774
 title: "ci-route: ~25 releases_app suites missing from SUBSYSTEM_TESTS_releases; 2 test files never run"
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-09-23
 owner: unassigned
 doc_type: bugfix
