@@ -1,6 +1,6 @@
 {
  "label": "candidate",
- "head": "e358dd86",
+ "head": "c2fcf906",
  "A2": {
   "GH-99901-A2-NOSTATUS.md": {
    "promoted": true,
@@ -31,10 +31,10 @@
  "A4": {
   "99904": {
    "preflight_rc": 0,
-   "json_gate": "./validate.sh --auto development",
-   "pre_advance_cmd": "./validate.sh --auto development",
+   "json_gate": "bash validate.sh --auto development",
+   "pre_advance_cmd": "bash validate.sh --auto development",
    "packet_gate_line": [
-    "- Gate: `./validate.sh --auto development` (routed by validate.sh --auto from contract gate `bash ci-local.sh`)"
+    "- Gate: `bash validate.sh --auto development` (routed by validate.sh --auto from contract gate `bash ci-local.sh`)"
    ],
    "stderr_tail": []
   },
