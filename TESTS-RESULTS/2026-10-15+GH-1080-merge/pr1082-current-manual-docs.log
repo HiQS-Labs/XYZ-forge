@@ -1,0 +1,18 @@
+express-docs: born complete -> PROJECT/2-WORKING/GH-1080-DOCUMENTATION-UPDATE.md (+ CHANGELOG entry)
+{"case": "README and real PNG accepted without runtime suite", "expected": "PASS", "output": "express-check [dry-run]: PASS\n  issue   : #1080 Documentation update\n  files   : 2 core, 3 insertions (bounds 4/150)\n  suite   : test/pdda-repo-contract.sh (registered docs gate; no runtime coverage claim)\n  changes : README.md, docs/diagram.png"}
+{"case": "mixed code refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 utils/py/code.py is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "shared PDDA policy refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 PROJECT/PDDA.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "shared SOP policy refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 SOP.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "executable README refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 README.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "symlink image refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 docs/diagram.png is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "code renamed to documentation still refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 utils/py/code.py is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "size-exempt executable CHANGELOG refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 CHANGELOG.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "standalone land cannot exempt executable CHANGELOG", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 CHANGELOG.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "size-exempt symlink capture refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 PROJECT/2-WORKING/GH-1080-CAPTURE.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "standalone land cannot exempt symlink capture", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 PROJECT/2-WORKING/GH-1080-CAPTURE.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "regular paperwork remains eligible and size-exempt", "expected": "PASS", "output": "express-check [dry-run]: PASS\n  issue   : #1080 Documentation update\n  files   : 2 core, 3 insertions (bounds 4/150)\n  suite   : test/pdda-repo-contract.sh (registered docs gate; no runtime coverage claim)\n  changes : CHANGELOG.md, PROJECT/2-WORKING/GH-1080-CAPTURE.md, README.md, docs/diagram.png"}
+{"case": "generated docs select truthful documentation verification wording", "expected": "PASS"}
+{"case": "permission mutation changes qualified identity", "expected": "PASS"}
+{"case": "check and resume default exact docs suite; explicit replacement refused", "expected": "PASS"}
+{"case": "receipt binds exact docs suite; runtime substitution refused", "expected": "PASS"}
+manual-docs: 16 passed, 0 failed

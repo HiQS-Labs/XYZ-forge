@@ -1,0 +1,99 @@
+express-docs: born complete -> PROJECT/2-WORKING/GH-1080-DOCUMENTATION-UPDATE.md (+ CHANGELOG entry)
+{"case": "README and real PNG accepted without runtime suite", "expected": "PASS", "output": "express-check [dry-run]: PASS\n  issue   : #1080 Documentation update\n  files   : 2 core, 3 insertions (bounds 4/150)\n  suite   : test/pdda-repo-contract.sh (registered docs gate; no runtime coverage claim)\n  changes : README.md, docs/diagram.png"}
+{"case": "mixed code refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 utils/py/code.py is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "shared PDDA policy refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 PROJECT/PDDA.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "shared SOP policy refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 SOP.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "executable README refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 README.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "symlink image refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 docs/diagram.png is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "code renamed to documentation still refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 utils/py/code.py is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "size-exempt executable CHANGELOG refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 CHANGELOG.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "standalone land cannot exempt executable CHANGELOG", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 CHANGELOG.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "size-exempt symlink capture refused", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 PROJECT/2-WORKING/GH-1080-CAPTURE.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "standalone land cannot exempt symlink capture", "expected": "docs-only", "output": "express-refused: rule=docs-only \u2014 PROJECT/2-WORKING/GH-1080-CAPTURE.md is not an ordinary documentation text/image update; use the normal PR or code hotfix lane"}
+{"case": "regular paperwork remains eligible and size-exempt", "expected": "PASS", "output": "express-check [dry-run]: PASS\n  issue   : #1080 Documentation update\n  files   : 2 core, 3 insertions (bounds 4/150)\n  suite   : test/pdda-repo-contract.sh (registered docs gate; no runtime coverage claim)\n  changes : CHANGELOG.md, PROJECT/2-WORKING/GH-1080-CAPTURE.md, README.md, docs/diagram.png"}
+{"case": "generated docs select truthful documentation verification wording", "expected": "PASS"}
+{"case": "permission mutation changes qualified identity", "expected": "PASS"}
+{"case": "check and resume default exact docs suite; explicit replacement refused", "expected": "PASS"}
+{"case": "receipt binds exact docs suite; runtime substitution refused", "expected": "PASS"}
+manual-docs: 16 passed, 0 failed
+
+Manual probe source (temporary, not a registered suite):
+import argparse, base64, contextlib, importlib.util, io, json, os, shutil, subprocess, tempfile
+from pathlib import Path
+from unittest.mock import patch
+root=Path.cwd()
+spec=importlib.util.spec_from_file_location('express',root/'utils/py/express.py');e=importlib.util.module_from_spec(spec);spec.loader.exec_module(e)
+checks=[]
+with tempfile.TemporaryDirectory(prefix='gh1080-',dir=root/'temp') as td:
+    fx=Path(td).resolve()
+    assert fx.is_relative_to((root/'temp').resolve())
+    def git(*args):
+        return subprocess.run(['git','-C',str(fx),*args],check=True,capture_output=True,text=True).stdout.strip()
+    git('init','-q');git('config','user.name','fixture');git('config','user.email','fixture@example.invalid')
+    for p,data in {'README.md':'# Original\n','utils/py/code.py':'print(1)\n','PROJECT/PDDA.md':'# Policy\n','SOP.md':'# Policy\n','.gitignore':'.tick/\n'}.items():
+        t=fx/p;t.parent.mkdir(parents=True,exist_ok=True);t.write_text(data)
+    for p in ['githooks/install.sh','githooks/pre-push',e.DOCS_SUITE]:
+        t=fx/p;t.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(root/p,t)
+    (fx/'validate.sh').write_text('TESTS=("pdda-repo-contract.sh")\n')
+    git('add','.');git('commit','-qm','baseline');git('update-ref','refs/remotes/origin/development','HEAD');git('checkout','-qb','docs/task')
+    subprocess.run(['bash',str(fx/'githooks/install.sh')],cwd=fx,check=True,capture_output=True)
+    (fx/'README.md').write_text('# Updated\n\n![Diagram](docs/diagram.png)\n')
+    (fx/'docs').mkdir();(fx/'docs/diagram.png').write_bytes(base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jEioAAAAASUVORK5CYII='))
+    args=argparse.Namespace(root=str(fx),issue=1080,repo='H/H',suite=e.DOCS_SUITE,docs_only=True,max_files=4,max_insertions=150,allow_multi_subsystem=False,dry_run=True,slug=None,summary='Manual fixture documentation checks')
+    def gh(argv,check=True):
+        return subprocess.CompletedProcess(argv,0,json.dumps(dict(state='OPEN',title='Documentation update',url='https://github.com/H/H/issues/1080')),'')
+    def expect(label,wanted=None,driver_outputs=frozenset()):
+        out=io.StringIO()
+        with patch.object(e,'gh',gh),contextlib.redirect_stdout(out),contextlib.redirect_stderr(out):
+            try:
+                state=e.cmd_check(args,expect_driver=driver_outputs)
+                assert wanted is None,(label,'unexpected acceptance')
+                assert state['insertions']==3,state
+            except SystemExit as ex:
+                assert wanted and ex.code==e.EXIT_REFUSED and ('rule='+wanted) in out.getvalue(),out.getvalue()
+        checks.append({'case':label,'expected':wanted or 'PASS','output':out.getvalue().strip()})
+    expect('README and real PNG accepted without runtime suite')
+    code=fx/'utils/py/code.py';saved=code.read_bytes();code.write_text('print(2)\n');expect('mixed code refused','docs-only');code.write_bytes(saved)
+    policy=fx/'PROJECT/PDDA.md';saved=policy.read_bytes();policy.write_text('# Changed policy\n');expect('shared PDDA policy refused','docs-only');policy.write_bytes(saved)
+    sop=fx/'SOP.md';saved=sop.read_bytes();sop.write_text('# Changed SOP\n');expect('shared SOP policy refused','docs-only');sop.write_bytes(saved)
+    readme=fx/'README.md';readme.chmod(0o755);expect('executable README refused','docs-only');readme.chmod(0o644)
+    image=fx/'docs/diagram.png';saved=image.read_bytes();image.unlink();image.symlink_to('../README.md');expect('symlink image refused','docs-only');image.unlink();image.write_bytes(saved)
+    code.rename(fx/'docs/code.txt');expect('code renamed to documentation still refused','docs-only');(fx/'docs/code.txt').rename(code)
+    (fx/'CHANGELOG.md').write_text('# Changelog\n')
+    changelog=fx/'CHANGELOG.md';changelog.chmod(0o755)
+    expect('size-exempt executable CHANGELOG refused','docs-only')
+    expect('standalone land cannot exempt executable CHANGELOG','docs-only',{'CHANGELOG.md','releases.db'})
+    changelog.chmod(0o644)
+    capture=fx/'PROJECT/2-WORKING/GH-1080-CAPTURE.md';capture.parent.mkdir(parents=True,exist_ok=True);capture.symlink_to('../../README.md')
+    expect('size-exempt symlink capture refused','docs-only')
+    expect('standalone land cannot exempt symlink capture','docs-only',{'PROJECT/2-WORKING/GH-1080-CAPTURE.md','CHANGELOG.md','releases.db'})
+    capture.unlink()
+    capture.write_text('# Regular capture\n')
+    expect('regular paperwork remains eligible and size-exempt')
+    capture.unlink()
+    args.dry_run=False
+    with patch.object(e,'gh',gh):
+        e.cmd_docs(args)
+    generated=next((fx/'PROJECT/2-WORKING').glob('GH-1080-*.md')).read_text()
+    assert 'no runtime coverage claim' in generated and 'Express documentation update' in generated
+    assert 'test/pdda-repo-contract.sh' in generated and 'existing suite test/pdda-repo-contract.sh covers it' not in generated
+    checks.append({'case':'generated docs select truthful documentation verification wording','expected':'PASS'})
+    snapshot=e.path_fingerprint(str(readme));readme.chmod(0o755)
+    assert snapshot != e.path_fingerprint(str(readme))
+    readme.chmod(0o644)
+    checks.append({'case':'permission mutation changes qualified identity','expected':'PASS'})
+    for command in ('check','resume'):
+        captured=[]
+        with patch.object(e,'cmd_'+command,lambda parsed:captured.append(parsed)),patch('sys.argv',['express.py',command,'--issue','1080','--docs-only']):
+            e.main()
+        assert captured[0].suite==e.DOCS_SUITE and captured[0].docs_only
+    with patch('sys.argv',['express.py','check','--issue','1080','--docs-only','--suite','test/runtime.sh']),contextlib.redirect_stderr(io.StringIO()):
+        try:e.main();raise AssertionError('suite substitution accepted')
+        except SystemExit as ex:assert ex.code==2
+    checks.append({'case':'check and resume default exact docs suite; explicit replacement refused','expected':'PASS'})
+    rec={'commit':'abc','issue':1080,'case':e.RECEIPT_CASE,'gate':e.RECEIPT_GATE,'command':e.receipt_command(e.DOCS_SUITE),'rc':0,'result':'pass'}
+    assert e.valid_express_receipt(rec,'abc',1080,e.DOCS_SUITE)
+    assert not e.valid_express_receipt(rec,'abc',1080,'test/runtime.sh')
+    checks.append({'case':'receipt binds exact docs suite; runtime substitution refused','expected':'PASS'})
+for result in checks:print(json.dumps(result))
+print('manual-docs: %d passed, 0 failed'%len(checks))

@@ -79,7 +79,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [ci-debug](skills/2-daily/ci-debug/SKILL.md) | Debug failing CI pipelines and pre-push gates in safe full-clone isolation via debug-mantra, recon, and ponytail. |
 | [close-the-loop](skills/2-daily/close-the-loop/SKILL.md) | Report possible forgotten follow-ups from the current conversation, with evidence and next actions. |
 | [daily-planner](skills/2-daily/daily-planner/SKILL.md) | Adapt the weekly plan to daily outcomes using the shared planning engine. |
-| [express](skills/2-daily/express/SKILL.md) | Hotfix fast lane — one motion: fix + its existing covering suite, ledger writes, born-complete docs, gateless development landing, reconcile. |
+| [express](skills/2-daily/express/SKILL.md) | Explicit hotfix or documentation fast lane — existing covering suite or PDDA docs gate, bounded direct development landing, commit-bound receipts and reconciliation. |
 | [file-xyz-bug](skills/2-daily/file-xyz-bug/SKILL.md) | File a bug against the xyz harness from any repo/session. |
 | [hq](skills/2-daily/hq/SKILL.md) | Multi-repo command center — resolve a project name and act across repos. |
 | [jog](skills/2-daily/jog/SKILL.md) | Capture and execute an immediate serial task queue one item at a time. |
