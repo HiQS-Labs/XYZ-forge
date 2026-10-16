@@ -15,6 +15,12 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/1076
 
 Commit:7c5d5aa5; grep/read-only, one local lane across the existing reader/writer/publisher. No graph used. This extends the earlier GH1076 map for one new contract seam; no parallel implementation writer exists.
 
+## Status
+
+| What was just completed | What is next |
+|---|---|
+| Canonical reader/producer/carrier boundaries traced; current ledger reconciled without runtime changes. | Parent judgment on strict premerge producer trust/schema and review allowance; no activation or expensive full run. |
+
 ## Subject and change class
 
 Receipt-aware functional-scope selection. Contract/authority change if a receipt authorizes excluding a changed file. It cannot be treated as a path-only correction.
