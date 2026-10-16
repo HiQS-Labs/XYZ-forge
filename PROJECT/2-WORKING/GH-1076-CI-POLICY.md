@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/1076
 title: "GH-1076: consolidate selective-CI and batch-qualification policy"
 status: In Progress
 created: 2026-10-14
-updated: 2026-10-14
+updated: 2026-10-16
 owner: Codex (operator-authorized)
 goal: "One canonical policy and existing deterministic consumers preserve qualification coverage; evaluate remaining batch and selective-Medium phases with evidence rather than assumed readiness."
 complexity: 3
@@ -17,7 +17,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Configuration pivot implemented and drift finding corrected/verified. Both full attempts retained408/409; doc-path defect fixed, current Codex fast-stub timeout remains RED after serial retry. | BLOCKED on required timeout gate; parent judges separate procedural QA exception. Publish findings to GH1076, preserve local commits/clones, no bypass, merge or activation. |
+| Current base87f132e6 reconciled; bounded companion classification correction authorized under existing local trust. Prior full409/409 and failures retained; supplemental finalFAIL1/1 remains historical. | Run the separately authorized companion plan review1/1, then implement/verify/final review1/1 if PASS. Primary stays off; no merge or activation. |
 
 ## Table of contents
 
