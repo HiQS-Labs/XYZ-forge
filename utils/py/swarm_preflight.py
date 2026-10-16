@@ -1396,7 +1396,7 @@ def main():
     # Any other contract gate passes through untouched.
     contract_gate = gate_cmd
     if gate_cmd.strip() in ("bash ci-local.sh", "bash validate.sh", "./validate.sh"):
-        gate_cmd = f"./validate.sh --auto {shlex.quote(merged['target']['ref'])}"
+        gate_cmd = f"bash validate.sh --auto {shlex.quote(merged['target']['ref'])}"
     gate_routed_note = (f" (routed by validate.sh --auto from contract gate `{contract_gate}`)"
                         if gate_cmd != contract_gate else "")
     all_artifacts = effective_artifacts["artifacts"]
