@@ -1,0 +1,8 @@
+{
+  "base": "ded6208053d5a714fb6aac8a98744a6237d4dd95",
+  "ours_changed_rows": 14,
+  "incoming_changed_rows": 9,
+  "missing": [],
+  "generation_floor": 1679,
+  "after_native_generation": "-- generation: 1680"
+}
