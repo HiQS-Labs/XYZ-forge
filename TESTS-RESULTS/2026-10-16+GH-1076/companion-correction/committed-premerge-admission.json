@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-16T02:10:30.571952+00:00",
+  "head": "0eeeeca622d9cac8686d502d08e9ca53dc439ac4",
+  "pr": 1079,
+  "canonical_function": "wave_reconcile.validate_pre_merge_receipts default mode",
+  "error": null,
+  "accepted": true,
+  "full_tested_source": "fb02ccccbbaa2d9509b6e817e8c2e44e66320886",
+  "scope": "Actual committed full receipt; only TESTS-RESULTS successors after the tested source. No controlled PR proof substitution."
+}
