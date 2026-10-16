@@ -7,7 +7,10 @@ carrier, with exact source/tree/PR, new regular-file scope, original telemetry i
 landing blobs. All other raw functional constraints remain; actual landing Small and area commands
 still run. This retains the existing operator-trusted local proof boundary, not producer authentication.
 Unsupported proof stays full; failures/drift remain fatal. No new CI cases, producer service, setting
-activation or merge authority. Separate plan1/1 passed; implementation verification/final1/1 pending.
+activation or merge authority. Separate plan1/1 passed; real sourceSmall75/75, fresh landingSmall75/75
+and area9/9,32 manual observations, four unchanged focused suites and221-receipt replay are retained.
+The interrupted first attempt remains incomplete. Final extension1/1 and normal publication status:
+TESTS-RESULTS/2026-10-16+GH-1076/companion-correction/PUBLICATION.md.
 
 ## 2026-10-15 — Configurable bounded CI qualification (GH-1076)
 

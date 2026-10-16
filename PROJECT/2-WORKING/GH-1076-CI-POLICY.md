@@ -17,7 +17,7 @@ phases: 4
 
 | What was just completed | What's next |
 |---|---|
-| Current base87f132e6 reconciled; bounded companion classification correction authorized under existing local trust. Prior full409/409 and failures retained; supplemental finalFAIL1/1 remains historical. | Run the separately authorized companion plan review1/1, then implement/verify/final review1/1 if PASS. Primary stays off; no merge or activation. |
+| Two-file correctiond8a6f875: real sourceSmall75/75, fresh landingSmall75/75 and area9/9;32 manual observations and four unchanged focused suites passed,221 historical receipts agree. Interrupted first attempt and prior FAIL/counters retained. | Separate companion final extension1/1 and normal publication status are recorded in TESTS-RESULTS/2026-10-16+GH-1076/companion-correction/PUBLICATION.md. Parent retains merge/activation judgment; primary stays off. |
 
 ## Table of contents
 
@@ -630,3 +630,18 @@ Selection, writer and replay all use the same scope/companion resolver. New prof
 7. Publish evidence-only successors through normal gates, recheck exact remote head/checks/reviews and save outcomes to1076/1079. → report actual source/base/head, real vs controlled data, local/smoke/skipped/advisory/full distinctions and all remaining blockers. No merge, activation, stable-main claim or cleanup; retain restoration inventory.
 
 This plan claims no verification result at this checkpoint. Parent retains activation/merge/procedural judgment. It does not require a new trusted producer service or change the repository's local-proof trust boundary.
+
+
+### Companion verification findings — 2026-10-16
+
+Implementation d8a6f875 changes exactly utils/ci-route.sh and utils/py/wave_reconcile.py relative to the approved plan revision12fa1656. No registered test/case/assertion was added. The separate companion plan extension passed1/1; the sole final extension1/1 has not run at this verification checkpoint. Its eventual verdict and normal publication outcome are in TESTS-RESULTS/2026-10-16+GH-1076/companion-correction/PUBLICATION.md; that record supersedes pending checkpoint wording only, never the retained historical FAILs/counters.
+
+Real source527760b836a364ba1591b025ad6e5594a33d9096 passed existing sequential Small75/75 in935.240s, preserving HEAD/status/refs/config. Carrier11ab8bdeecc6755f501af3032acd9b223be24f94 adds exactly the two original local proof files; canonical premerge admission accepts it. Controlled local mergec3fe69e0f6c2ef26806ab3a4f7b230c0df103b31 selects content@2 only with the exact binding, while off selects full. Fresh canonical qualification then passed Small75/75 in884.706s and area9/9 in88.082s with distinct original run/process IDs. The production writer/reader accepted the bound nested @2 receipt; altered binding/off reject it. Controlled proof is retained as wrapper data, not real PR1079 or GitHub landing PASS.
+
+The interrupted first qualification remains incomplete: its Small75/75 took965.010s, then area stopped after three suite events, last gh589 exit120, with no summary/receipt. The parent confirmed a Mac outage at01:14UTC and reconnection at01:23UTC. Original processes were verified absent before one fresh qualification. Direct unchanged gh589 later passed39/39 with identity unchanged. The exact exit120 mechanism is unproved; do not label it harmless or rewrite it as PASS. Original streams, logs and temporary clone remain retained.
+
+Four unchanged focused suites passed. Current and pinned oldf974 consumers accept all221 actual historical wave@1 records identically; this is compatibility, not independent GitHub ownership or backdated execution. All32 manual observations behaved as expected:24 unsupported eligibility variants select full, six fault controls stop with code6/no receipt, wrong source-tree replay rejects, and @2-only evidence cannot provide premerge PASS. Negative fault commands/metadata are intentionally injected and are never positive software verification.
+
+The complete successful flow uses three REAL validating commands (source Small, fresh landing Small and area); two earlier interrupted-attempt invocations are retained separately. Setup alone copied the verified19-file existing matching dependency snapshot instead of running npm ci. No validation result was simulated, replayed or stitched. There was no installation, shared setting/hosted-variable change, merge, deployment, Marathon/Jog activation, new CI case or cleanup. Local ci.optimized remains unset/default false. No full-source publication gate, hosted live optimized landing, stable main or causal speedup is claimed at this checkpoint. A completely consistent fabricated local story remains outside the accepted local-proof trust guarantee. Parallel and other unsupported proofs stay full; this is a supported subset, not a universal adapter.
+
+Raw results, exact immutable Git observations, trust/setup limits, manual command text, recovery bundle manifest and evidence hashes are under TESTS-RESULTS/2026-10-16+GH-1076/companion-correction; EVIDENCE.md is the reader entry point. Actual source/landing Small timings and area timing do not establish net end-to-end savings. Normal full publication and any later exact-main macOS qualification remain separate contracts. Automatic batch authority and its existing dependencies remain unshipped.

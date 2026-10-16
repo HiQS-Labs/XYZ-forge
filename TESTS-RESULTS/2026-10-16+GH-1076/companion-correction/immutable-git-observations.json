@@ -1,0 +1,102 @@
+{
+  "fixture": "Retained controlled local full clone; no real GitHub PR/landing",
+  "observations": [
+    {
+      "command": [
+        "git",
+        "rev-list",
+        "--parents",
+        "-n",
+        "1",
+        "d8a6f87570c24eeb82fcfb4ee24ef593911678ba"
+      ],
+      "rc": 0,
+      "stdout": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba b6e3ac29c3b26f54858a120a06d99693d46c65db"
+    },
+    {
+      "command": [
+        "git",
+        "rev-list",
+        "--parents",
+        "-n",
+        "1",
+        "527760b836a364ba1591b025ad6e5594a33d9096"
+      ],
+      "rc": 0,
+      "stdout": "527760b836a364ba1591b025ad6e5594a33d9096 d8a6f87570c24eeb82fcfb4ee24ef593911678ba"
+    },
+    {
+      "command": [
+        "git",
+        "rev-list",
+        "--parents",
+        "-n",
+        "1",
+        "11ab8bdeecc6755f501af3032acd9b223be24f94"
+      ],
+      "rc": 0,
+      "stdout": "11ab8bdeecc6755f501af3032acd9b223be24f94 527760b836a364ba1591b025ad6e5594a33d9096"
+    },
+    {
+      "command": [
+        "git",
+        "rev-list",
+        "--parents",
+        "-n",
+        "1",
+        "c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31"
+      ],
+      "rc": 0,
+      "stdout": "c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31 d8a6f87570c24eeb82fcfb4ee24ef593911678ba 11ab8bdeecc6755f501af3032acd9b223be24f94"
+    },
+    {
+      "command": [
+        "git",
+        "rev-list",
+        "--parents",
+        "-n",
+        "1",
+        "9e4e2746fd6f8cc6de4c09ad9902907790c74334"
+      ],
+      "rc": 0,
+      "stdout": "9e4e2746fd6f8cc6de4c09ad9902907790c74334 c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31"
+    },
+    {
+      "command": [
+        "git",
+        "rev-parse",
+        "527760b836a364ba1591b025ad6e5594a33d9096^{tree}"
+      ],
+      "rc": 0,
+      "stdout": "a666519c38e9ed3f4591dfe2b640ab4e53389d47"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--raw",
+        "--no-renames",
+        "--abbrev=40",
+        "-z",
+        "527760b836a364ba1591b025ad6e5594a33d9096",
+        "11ab8bdeecc6755f501af3032acd9b223be24f94"
+      ],
+      "rc": 0,
+      "stdout": ":000000 100644 0000000000000000000000000000000000000000 e2bc283f9706c18dff29e21e3b0b72bbc64ff56a A\u0000TESTS-RESULTS/2026-10-16+GH-9001076-controlled/provenance.jsonl\u0000:000000 100644 0000000000000000000000000000000000000000 3f044fac45ec66032a60ae3c393f1c1634cac742 A\u0000TESTS-RESULTS/2026-10-16+GH-9001076-controlled/validation.jsonl\u0000"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--raw",
+        "--no-renames",
+        "--abbrev=40",
+        "-z",
+        "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+        "c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31"
+      ],
+      "rc": 0,
+      "stdout": ":000000 100644 0000000000000000000000000000000000000000 e2bc283f9706c18dff29e21e3b0b72bbc64ff56a A\u0000TESTS-RESULTS/2026-10-16+GH-9001076-controlled/provenance.jsonl\u0000:000000 100644 0000000000000000000000000000000000000000 3f044fac45ec66032a60ae3c393f1c1634cac742 A\u0000TESTS-RESULTS/2026-10-16+GH-9001076-controlled/validation.jsonl\u0000:100644 100644 2cc4adaa56dca8744d8f622271bda4c75ca004e0 42f887bcb932432521be835e5083371c39c98bb5 M\u0000skills/3-weekly/skills-army-hq/README.md\u0000"
+    }
+  ]
+}

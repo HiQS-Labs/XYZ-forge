@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-16T01:38:03.247640+00:00",
+  "read_only": true,
+  "file_sha256": "cab5119c17b1b9f3d4f7755764ad731abf850b4a941d2003fd36358645b33e0d",
+  "optimized_key_present": false,
+  "effective_default": false,
+  "scope": "Only ci key/default and hash retained; no setting write and no full config contents."
+}

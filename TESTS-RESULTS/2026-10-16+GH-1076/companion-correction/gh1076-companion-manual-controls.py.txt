@@ -1,0 +1,138 @@
+"""Unregistered manual observations; no CI assertion/case or synthetic positive qualification."""
+from pathlib import Path
+from unittest.mock import patch
+from types import SimpleNamespace
+import contextlib,copy,datetime,hashlib,json,os,shutil,subprocess,sys
+sys.dont_write_bytecode=True
+root=Path.cwd();out=root/'gh1076-companion-evidence';positive=json.loads((out/'positive.json').read_text())
+assert positive['stage']=='PASS real source/carrier/landing flow'
+repo=Path(positive['fixture']);source=positive['source'];carrier=positive['carrier'];base=positive['base'];landing=positive['landing'];published=positive['qualification_evidence_commit'];campaign=positive['campaign']
+provenance=campaign+'/provenance.jsonl';validation=campaign+'/validation.jsonl'
+sys.path.insert(0,str(root/'forge-gh1076-spike/utils/py'))
+import wave_reconcile as wave
+import proc_group
+def git(*a,input=None,env=None):return subprocess.check_output(['git',*a],cwd=repo,input=input,env=env,text=True).strip()
+raw_record=json.loads(git('show',carrier+':'+provenance));raw_stream=git('show',carrier+':'+validation)+'\n'
+meta=positive['meta'];routing=dict(os.environ,XYZ_CI_OPTIMIZED='1',XYZ_DEVICE_CONFIG_PATH=str(root/'gh1076-settings/on.json'),PYTHONDONTWRITEBYTECODE='1',NODE_PATH=str(root/'gh1076-existing-node-deps/node_modules'),RELAY_SELF_SUFFICIENCY_SKIP='1')
+records=[];counter=0
+run_id=datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S')
+def save(): (out/'manual-controls.json').write_text(json.dumps(dict(kind='Manual negative observations only; no registered tests and no synthetic positive proof',implementation=positive['implementation'],observations=records),indent=2)+'\n')
+def tree_from(ref,changes):
+ global counter
+ counter+=1
+ env=dict(os.environ,GIT_INDEX_FILE=str(out/('retained-negative-index-'+str(counter))))
+ git('read-tree',ref,env=env)
+ for path,value in changes.items():
+  if value is None:git('update-index','--force-remove','--',path,env=env)
+  else:
+   mode,body=value;blob=git('hash-object','-w','--stdin',input=body)
+   git('update-index','--add','--cacheinfo',mode+','+blob+','+path,env=env)
+ return git('write-tree',env=env)
+def commit(tree,parents,label):
+ args=['commit-tree',tree]
+ for parent in parents:args+=['-p',parent]
+ sha=git(*args,input='CONTROLLED negative '+label+'\n')
+ git('update-ref','refs/gh1076-retained/negative-'+run_id+'-'+label,sha)
+ return sha
+def observe(label,changes=None,parents=None,landing_changes=None,meta_changes=None):
+ tree=tree_from(carrier,changes or {})
+ c=commit(tree,parents or [source],label+'-carrier')
+ mtree=tree_from(c,landing_changes) if landing_changes else tree
+ m=commit(mtree,[base,c],label+'-landing')
+ git('switch','--detach',m)
+ target=dict(meta,headRefOid=c,mergeCommit=dict(oid=m));target.update(meta_changes or {})
+ with patch.dict(os.environ,routing):
+  selected=wave.select_qualification_gate(str(repo),[target],dict(os.environ))
+ record=dict(label=label,carrier=c,landing=m,gate=selected[0],reason=selected[2],expected='full')
+ records.append(record);save();assert selected[0]==wave.QUALIFICATION_GATE,record
+def record_change(**values):
+ r=dict(raw_record);r.update(values);return {provenance:('100644',json.dumps(r,sort_keys=True)+'\n')}
+def stream_change(change):
+ rows=[json.loads(x) for x in raw_stream.splitlines()];change(rows);body=''.join(json.dumps(x)+'\n' for x in rows)
+ r=dict(raw_record,sha256=hashlib.sha256(body.encode()).hexdigest());return {validation:('100644',body),provenance:('100644',json.dumps(r)+'\n')}
+try:
+ observe('bare-pass',{provenance:('100644',json.dumps(dict(pr=9001076,result='pass'))+'\n')})
+ observe('wrong-digest',record_change(sha256='0'*64))
+ observe('stale-source',record_change(commit=base))
+ observe('wrong-pr',record_change(pr=9001077))
+ observe('foreign-schema',record_change(schema_version='wave-qualification@1'))
+ observe('unknown-field',record_change(status='pass'))
+ observe('extra-record',{provenance:('100644',json.dumps(raw_record)+'\n'+json.dumps(raw_record)+'\n')})
+ body=json.dumps(raw_record);body=body[:-1]+', "pr":9001076}\n'
+ observe('duplicate-key',{provenance:('100644',body)})
+ observe('wrong-producer',stream_change(lambda rows:[r.update(runner='another-producer') for r in rows]))
+ observe('parallel',stream_change(lambda rows:rows[0].update(mode='parallel',width=4)))
+ observe('wrong-event-source',stream_change(lambda rows:rows[0].update(commit=base)))
+ observe('wrong-event-schema',stream_change(lambda rows:[r.update(v=2) for r in rows]))
+ observe('malformed-counter',stream_change(lambda rows:rows[-1].update(failed=False)))
+ observe('missing-telemetry',{validation:None})
+ observe('extra-file',{campaign+'/notes.txt':('100644','CONTROLLED unexpected file\n')})
+ observe('executable-mode',{validation:('100755',raw_stream)})
+ observe('symlink',{validation:('120000','elsewhere')})
+ observe('renamed-proof',{validation:None,campaign+'/renamed.jsonl':('100644',raw_stream)})
+ readme='skills/3-weekly/skills-army-hq/README.md'
+ observe('payload-changed-after-source',{readme:('100644',git('show',source+':'+readme)+'\nCONTROLLED post-source edit\n')})
+ observe('mixed-runtime',{'src/identity.js':('100644',git('show',source+':src/identity.js')+'\n// CONTROLLED mixed runtime edit\n')})
+ observe('multiple-parent-carrier',parents=[source,base])
+ observe('extra-carrier-commit',parents=[carrier])
+ observe('landing-blob-mismatch',landing_changes={validation:('100644',raw_stream+'\n')})
+ observe('wrong-metadata',meta_changes=dict(headRefOid=source))
+ # Negative fault injection into the actual qualifier. These never claim execution/PASS of a
+ # validating suite. Actual exit17/config drift and replayed real streams exercise stop paths.
+ original=proc_group.run_bounded
+ retained={}
+ for call in positive['actual_qualifying_commands']:
+  retained[call['command'][-1]]=(Path(call['retained']).read_bytes(),call['pgid'])
+ def fault(kind):
+  git('switch','--detach',landing)
+  calls=[];environment_calls=0;environment_original=wave.qualification_environment
+  def environment(*args,**kwargs):
+   nonlocal environment_calls
+   environment_calls+=1;value=environment_original(*args,**kwargs)
+   if kind=='environment' and environment_calls>=2:value=dict(value,controlled_identity_drift=True)
+   return value
+  def intercepted(args,**kwargs):
+   if args==['npm','ci']:
+    target=Path(kwargs['cwd'])/'node_modules';shutil.copytree(root/'gh1076-existing-node-deps/node_modules',target,symlinks=True)
+    return SimpleNamespace(rc=0,timed_out=False,stdout='CONTROLLED copied dependencies; no install.\n',stderr='',pgid=None)
+   if args[:2]!=['bash','validate.sh']:return original(args,**kwargs)
+   calls.append(args)
+   if kind=='failure':return original(['bash','-c','exit 17'],**kwargs)
+   if kind=='missing-profile':return original(['bash','-c','exit 0' if args[-1]=='small' else 'exit 17'],**kwargs)
+   if kind=='missing-full':return original(['bash','-c','exit 0'],**kwargs)
+   if kind=='config':return original(['bash','-c','git config --local gh1076.controlledDrift 1'],**kwargs)
+   result=original(['bash','-c','exit 0'],**kwargs)
+   raw,old_pid=retained[args[-1]]
+   pgid=result.pgid if kind=='process' else old_pid
+   telemetry=Path(kwargs['cwd'])/'.tick/telemetry';telemetry.mkdir(parents=True,exist_ok=True)
+   (telemetry/('validate-sequential-controlled-'+str(pgid)+'.jsonl')).write_bytes(raw)
+   return SimpleNamespace(rc=result.rc,timed_out=result.timed_out,stdout=result.stdout,stderr=result.stderr,pgid=pgid)
+  code=0
+  with patch.dict(os.environ,dict(routing,XYZ_CI_OPTIMIZED='0') if kind=='missing-full' else routing),patch.object(proc_group,'run_bounded',side_effect=intercepted),patch.object(wave,'qualification_environment',side_effect=environment):
+   with (out/('fault-'+kind+'.log')).open('w') as log,contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
+    try:wave.qualify_landings(str(repo),[meta],wave.RollbackJournal(repo))
+    except wave.ReconcileError as exc:code=exc.code
+  receipt=list((repo/'TESTS-RESULTS').glob('*+GH-591/wave-'+landing+'/provenance.jsonl'))
+  r=dict(label='qualifier-'+kind,rc=code,qualifying_command_attempts=calls,receipt_count=len(receipt),kind='Explicit negative fault injection; validation outcomes are not software evidence')
+  records.append(r);save();assert code==6 and not receipt,r
+  assert len(calls)==(2 if kind in ['environment','missing-profile'] else 1),r
+  decisive=(out/('fault-'+kind+'.log')).read_text();assert decisive
+  expected={'failure':'Qualification failed; no receipt produced','config':'Qualification clone identity/content changed under the suite','process':'Qualification telemetry does not identify the launched process','environment':'Profile run/environment identity changed between phases','missing-profile':'running the full gate','missing-full':'exactly one retained validation run'}[kind]
+  assert expected in decisive,(kind,decisive)
+ for kind in ['failure','config','process','environment','missing-profile','missing-full']:fault(kind)
+ # Actual proof replay rejects a wrong source tree or altered descriptor.
+ git('switch','--detach',published)
+ with patch.dict(os.environ,routing):
+  good=positive['qualification_entry'];assert wave.qualification_receipt_matches(str(repo),good,meta)
+  wrong=copy.deepcopy(good);wrong['companions']['source_tree']='0'*40
+  assert not wave.qualification_receipt_matches(str(repo),wrong,meta)
+  records.append(dict(label='wrong-source-tree-replay',accepted=False));save()
+ # Strict @2 cannot become generic PR PASS: remove local carrier evidence in a retained branch.
+ tree=tree_from(published,{provenance:None});no_local=commit(tree,[published],'postmerge-proof-is-not-premerge-pass')
+ git('switch','--detach',no_local)
+ error=wave.validate_pre_merge_receipts(str(repo),no_local,9001076)
+ records.append(dict(label='postmerge-proof-not-premerge-pass',error=error));save();assert error
+finally:
+ git('switch','--detach',published)
+save()
+print(json.dumps(dict(observations=len(records),all_expected=True,restored_head=git('rev-parse','HEAD'),status=git('status','--porcelain'),limits='Fault controls use actual failing/config commands or intentionally replayed real stream bytes with injected runner/environment metadata. None is a positive validating run; only the separate positive flow executes actual Small/area.'),indent=2))

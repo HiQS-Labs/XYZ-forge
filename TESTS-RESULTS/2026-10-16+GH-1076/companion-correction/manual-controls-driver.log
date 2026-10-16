@@ -1,0 +1,69 @@
+Previous HEAD position was 9e4e2746 CONTROLLED retain real landing qualification evidence
+HEAD is now at 6c13f7f0 CONTROLLED negative bare-pass-landing
+Previous HEAD position was 6c13f7f0 CONTROLLED negative bare-pass-landing
+HEAD is now at 25fe7dc4 CONTROLLED negative wrong-digest-landing
+Previous HEAD position was 25fe7dc4 CONTROLLED negative wrong-digest-landing
+HEAD is now at 98253d34 CONTROLLED negative stale-source-landing
+Previous HEAD position was 98253d34 CONTROLLED negative stale-source-landing
+HEAD is now at 13d70ccd CONTROLLED negative wrong-pr-landing
+Previous HEAD position was 13d70ccd CONTROLLED negative wrong-pr-landing
+HEAD is now at 52609ce6 CONTROLLED negative foreign-schema-landing
+Previous HEAD position was 52609ce6 CONTROLLED negative foreign-schema-landing
+HEAD is now at e7741060 CONTROLLED negative unknown-field-landing
+Previous HEAD position was e7741060 CONTROLLED negative unknown-field-landing
+HEAD is now at e87f81ab CONTROLLED negative extra-record-landing
+Previous HEAD position was e87f81ab CONTROLLED negative extra-record-landing
+HEAD is now at 2fac8b64 CONTROLLED negative duplicate-key-landing
+Previous HEAD position was 2fac8b64 CONTROLLED negative duplicate-key-landing
+HEAD is now at 0b5dff92 CONTROLLED negative wrong-producer-landing
+Previous HEAD position was 0b5dff92 CONTROLLED negative wrong-producer-landing
+HEAD is now at 1c3092f2 CONTROLLED negative parallel-landing
+Previous HEAD position was 1c3092f2 CONTROLLED negative parallel-landing
+HEAD is now at a1da938c CONTROLLED negative wrong-event-source-landing
+Previous HEAD position was a1da938c CONTROLLED negative wrong-event-source-landing
+HEAD is now at c39e7683 CONTROLLED negative wrong-event-schema-landing
+Previous HEAD position was c39e7683 CONTROLLED negative wrong-event-schema-landing
+HEAD is now at 44dd63dc CONTROLLED negative malformed-counter-landing
+Previous HEAD position was 44dd63dc CONTROLLED negative malformed-counter-landing
+HEAD is now at 5f620d97 CONTROLLED negative missing-telemetry-landing
+Previous HEAD position was 5f620d97 CONTROLLED negative missing-telemetry-landing
+HEAD is now at 8b8f6ce8 CONTROLLED negative extra-file-landing
+Previous HEAD position was 8b8f6ce8 CONTROLLED negative extra-file-landing
+HEAD is now at 69f4de00 CONTROLLED negative executable-mode-landing
+Previous HEAD position was 69f4de00 CONTROLLED negative executable-mode-landing
+HEAD is now at 94a58626 CONTROLLED negative symlink-landing
+Previous HEAD position was 94a58626 CONTROLLED negative symlink-landing
+HEAD is now at 6e2aeb18 CONTROLLED negative renamed-proof-landing
+Previous HEAD position was 6e2aeb18 CONTROLLED negative renamed-proof-landing
+HEAD is now at 9481fe53 CONTROLLED negative payload-changed-after-source-landing
+Previous HEAD position was 9481fe53 CONTROLLED negative payload-changed-after-source-landing
+HEAD is now at cb333ca6 CONTROLLED negative mixed-runtime-landing
+Previous HEAD position was cb333ca6 CONTROLLED negative mixed-runtime-landing
+HEAD is now at 2009dfdb CONTROLLED negative multiple-parent-carrier-landing
+Previous HEAD position was 2009dfdb CONTROLLED negative multiple-parent-carrier-landing
+HEAD is now at 7e6732bf CONTROLLED negative extra-carrier-commit-landing
+Previous HEAD position was 7e6732bf CONTROLLED negative extra-carrier-commit-landing
+HEAD is now at d51681ce CONTROLLED negative landing-blob-mismatch-landing
+Previous HEAD position was d51681ce CONTROLLED negative landing-blob-mismatch-landing
+HEAD is now at fda5ee7f CONTROLLED negative wrong-metadata-landing
+fatal: path 'TESTS-RESULTS/2026-10-16+GH-9001076-controlled/provenance.jsonl' exists on disk, but not in '527760b836a364ba1591b025ad6e5594a33d9096'
+Previous HEAD position was fda5ee7f CONTROLLED negative wrong-metadata-landing
+HEAD is now at c3fe69e0 CONTROLLED local merged landing; metadata is fixture-only
+HEAD is now at c3fe69e0 CONTROLLED local merged landing; metadata is fixture-only
+HEAD is now at c3fe69e0 CONTROLLED local merged landing; metadata is fixture-only
+HEAD is now at c3fe69e0 CONTROLLED local merged landing; metadata is fixture-only
+HEAD is now at c3fe69e0 CONTROLLED local merged landing; metadata is fixture-only
+HEAD is now at c3fe69e0 CONTROLLED local merged landing; metadata is fixture-only
+Previous HEAD position was c3fe69e0 CONTROLLED local merged landing; metadata is fixture-only
+HEAD is now at 9e4e2746 CONTROLLED retain real landing qualification evidence
+Previous HEAD position was 9e4e2746 CONTROLLED retain real landing qualification evidence
+HEAD is now at f17c80aa CONTROLLED negative postmerge-proof-is-not-premerge-pass
+Previous HEAD position was f17c80aa CONTROLLED negative postmerge-proof-is-not-premerge-pass
+HEAD is now at 9e4e2746 CONTROLLED retain real landing qualification evidence
+{
+  "observations": 32,
+  "all_expected": true,
+  "restored_head": "9e4e2746fd6f8cc6de4c09ad9902907790c74334",
+  "status": "",
+  "limits": "Fault controls use actual failing/config commands or intentionally replayed real stream bytes with injected runner/environment metadata. None is a positive validating run; only the separate positive flow executes actual Small/area."
+}

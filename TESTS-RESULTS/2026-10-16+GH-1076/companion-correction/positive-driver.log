@@ -1,0 +1,53 @@
+{
+  "stage": "PASS real source/carrier/landing flow",
+  "implementation": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+  "source": "527760b836a364ba1591b025ad6e5594a33d9096",
+  "carrier": "11ab8bdeecc6755f501af3032acd9b223be24f94",
+  "landing": "c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31",
+  "qualification_evidence_commit": "9e4e2746fd6f8cc6de4c09ad9902907790c74334",
+  "source_small": {
+    "command": [
+      "bash",
+      "validate.sh",
+      "--sequential",
+      "--subsystem",
+      "small"
+    ],
+    "pid": 17477,
+    "rc": 0,
+    "wall_seconds": 935.24
+  },
+  "actual_qualifying_commands": [
+    {
+      "command": [
+        "bash",
+        "validate.sh",
+        "--sequential",
+        "--subsystem",
+        "small"
+      ],
+      "rc": 0,
+      "timed_out": false,
+      "pgid": 57271,
+      "wall_seconds": 884.706,
+      "retained": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-companion-evidence/landing-small-validation.jsonl",
+      "sha256": "63ed2d953d62c75b4702b373b9a249ddd48dae0ca64fff09a1a35109547cffd5"
+    },
+    {
+      "command": [
+        "bash",
+        "validate.sh",
+        "--sequential",
+        "--subsystem",
+        "skills-army-hq"
+      ],
+      "rc": 0,
+      "timed_out": false,
+      "pgid": 3407,
+      "wall_seconds": 88.082,
+      "retained": "/Users/noelsaw/Documents/Codex/2026-10-14/task/gh1076-companion-evidence/landing-skills-army-hq-validation.jsonl",
+      "sha256": "5a3fdd8dbeb5c2e7611982d9cede4f3b00aed494ddc4cd5bb9776af4f32dc9d2"
+    }
+  ],
+  "limits": "GitHub PR metadata is controlled. Three real commands executed: source Small, fresh landing Small and area. npm-ci setup was intercepted solely to copy existing verified dependencies. No installation, GitHub merge, primary/hosted activation or CI case addition."
+}

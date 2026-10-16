@@ -1,0 +1,99 @@
+"""Manual retained real Git/source/carrier/landing verification; no registered CI case."""
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+import contextlib,datetime,hashlib,json,os,re,shutil,subprocess,sys,time
+sys.dont_write_bytecode=True
+root=Path.cwd();implementation=root/'forge-gh1076-spike';repo=root/'forge-gh1076-companion-positive'
+out=root/'gh1076-companion-evidence';out.mkdir(exist_ok=True)
+sys.path.insert(0,str(implementation/'utils/py'))
+import wave_reconcile as wave
+import proc_group
+from gate_env import gate_env
+expected='d8a6f87570c24eeb82fcfb4ee24ef593911678ba'
+assert subprocess.check_output(['git','-C',str(implementation),'rev-parse','HEAD'],text=True).strip()==expected
+if repo.exists():raise SystemExit('Retain existing fixture; refusing overwrite or re-run')
+subprocess.run(['git','clone','--no-hardlinks','--quiet',str(implementation),str(repo)],check=True)
+def git(*args):return subprocess.check_output(['git',*args],cwd=repo,text=True).strip()
+git('config','user.name','GH1076 Controlled Fixture');git('config','user.email','fixture@example.invalid')
+git('remote','set-url','origin','https://github.com/HiQS-Labs/XYZ-forge.git')
+base=git('rev-parse','HEAD');git('update-ref','refs/gh1076-retained/base',base)
+readme=repo/'skills/3-weekly/skills-army-hq/README.md'
+readme.write_text(readme.read_text()+'\nControlled local verification keeps the primary collection unchanged.\n')
+git('add','skills/3-weekly/skills-army-hq/README.md');git('commit','-qm','CONTROLLED local content source; no GitHub PR')
+source=git('rev-parse','HEAD');git('update-ref','refs/gh1076-retained/source',source)
+shutil.copytree(root/'gh1076-existing-node-deps/node_modules',repo/'node_modules',symlinks=True)
+env=gate_env(dict(os.environ))
+for key in ['XYZ_HARNESS','TICK_REPO_ROOT','RT_SHARD','XYZ_VALIDATE_SKIP','XYZ_VALIDATE_MAX_JOBS','XYZ_VALIDATE_PARALLEL','XYZ_VALIDATE_THROTTLE','PYTEST_ADDOPTS']:env.pop(key,None)
+env.update(PYTHONDONTWRITEBYTECODE='1',RELAY_SELF_SUFFICIENCY_SKIP='1',XYZ_CI_OPTIMIZED='0',XYZ_DEVICE_CONFIG_PATH=str(root/'gh1076-settings/off.json'),NODE_PATH=str(root/'gh1076-existing-node-deps/node_modules'))
+def identity():
+ return dict(head=git('rev-parse','HEAD'),status=git('status','--porcelain'),refs_sha256=hashlib.sha256(git('show-ref').encode()).hexdigest(),config_sha256=hashlib.sha256(git('config','--local','--list').encode()).hexdigest())
+before=identity();assert not before['status']
+report=dict(kind='CONTROLLED LOCAL PR METADATA; REAL existing source and qualification commands, not a GitHub landing or live activation',implementation=expected,fixture=str(repo),base=base,source=source,source_before=before,stage='source Small running',installations=0)
+def save():(out/'positive.json').write_text(json.dumps(report,indent=2)+'\n')
+save()
+start=time.monotonic()
+with (out/'source-small.log').open('w') as log:
+ process=subprocess.Popen(['bash','validate.sh','--sequential','--subsystem','small'],cwd=repo,env=env,stdout=log,stderr=subprocess.STDOUT)
+ pid=process.pid;rc=process.wait()
+after=identity();report.update(source_small=dict(command=['bash','validate.sh','--sequential','--subsystem','small'],pid=pid,rc=rc,wall_seconds=round(time.monotonic()-start,3)),source_after=after,source_identity_unchanged=before==after);save()
+if rc or before!=after:raise SystemExit('Real source Small failed or drifted; no carrier/qualification created')
+files=list((repo/'.tick/telemetry').glob('validate-sequential-*-'+str(pid)+'.jsonl'));assert len(files)==1
+raw=files[0].read_bytes();summary=wave.qualification_summary(raw,source,wave.small_suites_at(str(repo),source),strict=True)
+assert summary['run']==source[:9]+'-'+str(pid)
+(out/'source-small-validation.jsonl').write_bytes(raw)
+campaign='TESTS-RESULTS/2026-10-16+GH-9001076-controlled'
+folder=repo/campaign;folder.mkdir()
+(folder/'validation.jsonl').write_bytes(raw)
+record=dict(schema_version='1.0',commit=source,pr=9001076,result='pass',rc=0,evidence='validation.jsonl',sha256=hashlib.sha256(raw).hexdigest(),timestamp=datetime.datetime.now(datetime.timezone.utc).isoformat())
+(folder/'provenance.jsonl').write_text(json.dumps(record,sort_keys=True)+'\n')
+git('add',campaign+'/provenance.jsonl',campaign+'/validation.jsonl');git('commit','-qm','CONTROLLED exact two-file local Small carrier')
+carrier=git('rev-parse','HEAD');git('update-ref','refs/gh1076-retained/carrier',carrier)
+error=wave.validate_pre_merge_receipts(str(repo),carrier,9001076);assert error is None,error
+git('switch','--detach',base)
+git('merge','--no-ff','--no-edit','-m','CONTROLLED local merged landing; metadata is fixture-only',carrier)
+landing=git('rev-parse','HEAD');git('update-ref','refs/gh1076-retained/landing',landing)
+meta=dict(number=9001076,state='MERGED',baseRefName='development',headRefOid=carrier,mergeCommit=dict(oid=landing),title='CONTROLLED LOCAL METADATA ONLY')
+routing=dict(env,XYZ_CI_OPTIMIZED='1',XYZ_DEVICE_CONFIG_PATH=str(root/'gh1076-settings/on.json'))
+with patch.dict(os.environ,routing):
+ selected=wave.select_qualification_gate(str(repo),[meta],dict(os.environ))
+ assert selected[0]==wave.CONTENT_GATE,selected
+ scope=wave.content_source_identity(str(repo),meta,landing)
+assert wave.select_qualification_gate(str(repo),[meta],dict(routing,XYZ_CI_OPTIMIZED='0'))[0]==wave.QUALIFICATION_GATE
+report.update(carrier=carrier,landing=landing,meta=meta,premerge_error=error,source_small_summary=summary,scope=scope,selected=selected,campaign=campaign,stage='fresh actual landing qualification running',setup_interceptions=[],actual_qualifying_commands=[])
+save()
+original=proc_group.run_bounded
+def observed(args,**kwargs):
+ if args==['npm','ci']:
+  target=Path(kwargs['cwd'])/'node_modules'
+  assert not target.exists()
+  shutil.copytree(root/'gh1076-existing-node-deps/node_modules',target,symlinks=True)
+  report['setup_interceptions'].append(dict(command=args,method='Verified existing matching dependency snapshot copied; npm ci not executed. Validation never simulated.'));save()
+  return SimpleNamespace(rc=0,timed_out=False,stdout='CONTROLLED SETUP: copied existing verified dependencies; no npm install.\n',stderr='',pgid=None)
+ start=time.monotonic();result=original(args,**kwargs)
+ if args[:2]==['bash','validate.sh']:
+  entry=dict(command=args,rc=result.rc,timed_out=result.timed_out,pgid=result.pgid,wall_seconds=round(time.monotonic()-start,3))
+  phase=args[-1]
+  for path in (Path(kwargs['cwd'])/'.tick/telemetry').glob('validate-sequential-*-'+str(result.pgid)+'.jsonl'):
+   destination=out/('landing-'+phase+'-validation.jsonl');shutil.copy2(path,destination);entry['retained']=str(destination);entry['sha256']=hashlib.sha256(destination.read_bytes()).hexdigest()
+  report['actual_qualifying_commands'].append(entry);save()
+ return result
+with patch.dict(os.environ,routing),patch.object(proc_group,'run_bounded',side_effect=observed):
+ with (out/'actual-qualification.log').open('w') as log,contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
+  wave.qualify_landings(str(repo),[meta],wave.RollbackJournal(repo))
+receipt=repo/'TESTS-RESULTS/2026-10-16+GH-591'/('wave-'+landing)/'provenance.jsonl'
+# UTC day is selected by the real writer; locate by exact immutable landing rather than guessing midnight.
+matches=list((repo/'TESTS-RESULTS').glob('*+GH-591/wave-'+landing+'/provenance.jsonl'));assert len(matches)==1;receipt=matches[0]
+entry=json.loads(receipt.read_text());assert entry['schema_version']==wave.CONTENT_SCHEMA and entry['profile']==wave.CONTENT_PROFILE and entry['companions']==scope[2]
+assert not any(k in entry for k in ['result','status','rc'])
+with patch.dict(os.environ,routing):
+ assert wave.qualification_receipt_matches(str(repo),entry,meta)
+ assert not wave.qualification_receipt_matches(str(repo),dict(entry,companions=None),meta)
+with patch.dict(os.environ,dict(routing,XYZ_CI_OPTIMIZED='0')):assert not wave.qualification_receipt_matches(str(repo),entry,meta)
+assert len(report['actual_qualifying_commands'])==2 and all(x['rc']==0 and not x['timed_out'] for x in report['actual_qualifying_commands'])
+(out/'qualification-record.json').write_text(json.dumps(dict(kind='REAL qualification in CONTROLLED local Git metadata; not real GitHub landing',entry=entry),indent=2)+'\n')
+shutil.copy2(receipt.parent/'validation.jsonl',out/'qualification-validation-container.jsonl')
+git('add',str(receipt.parent.relative_to(repo)));git('commit','-qm','CONTROLLED retain real landing qualification evidence')
+published=git('rev-parse','HEAD');git('update-ref','refs/gh1076-retained/qualification-evidence',published)
+report.update(stage='PASS real source/carrier/landing flow',qualification_evidence_commit=published,qualification_entry=entry,final_identity=identity(),limits='GitHub PR metadata is controlled. Three real commands executed: source Small, fresh landing Small and area. npm-ci setup was intercepted solely to copy existing verified dependencies. No installation, GitHub merge, primary/hosted activation or CI case addition.')
+save();print(json.dumps({k:report[k] for k in ['stage','implementation','source','carrier','landing','qualification_evidence_commit','source_small','actual_qualifying_commands','limits']},indent=2))

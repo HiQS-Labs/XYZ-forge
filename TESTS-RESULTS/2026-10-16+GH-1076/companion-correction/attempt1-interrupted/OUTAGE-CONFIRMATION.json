@@ -1,0 +1,7 @@
+{
+  "at": "2026-10-16T01:25:28.159376+00:00",
+  "source_thread": "01a0efda-5b32-7433-8829-07f962668026",
+  "parent_message": "Mac Studio offline at01:14UTC; confirmed connected and authorized again at01:23UTC. Preserve caps/deadlines, check survivor before resuming, no overlapping workers or extra scope.",
+  "observed": "Original17136 and35513 absent before restart. One fresh canonical qualification54422/57271 now running; no overlap. Original interrupted streams retained.",
+  "limits": "Parent confirms outage. Exact exit120 mechanism is not independently traced; no source fix or changed gate."
+}

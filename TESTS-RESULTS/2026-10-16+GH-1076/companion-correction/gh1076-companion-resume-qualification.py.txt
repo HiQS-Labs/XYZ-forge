@@ -1,0 +1,61 @@
+"""Continue the interrupted experiment; original attempt retained. All qualification commands run afresh."""
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+import contextlib,datetime,hashlib,json,os,re,shutil,subprocess,sys,time
+sys.dont_write_bytecode=True
+root=Path.cwd();implementation=root/'forge-gh1076-spike';out=root/'gh1076-companion-evidence'
+report=json.loads((out/'positive.json').read_text());repo=Path(report['fixture'])
+assert (out/'attempt1-interrupted/INTERRUPTION.json').exists()
+assert report['stage']=='fresh actual landing qualification running' and len(report['actual_qualifying_commands'])==1
+sys.path.insert(0,str(implementation/'utils/py'))
+import wave_reconcile as wave
+import proc_group
+expected=report['implementation'];assert subprocess.check_output(['git','-C',str(implementation),'rev-parse','HEAD'],text=True).strip()==expected
+def git(*args):return subprocess.check_output(['git',*args],cwd=repo,text=True).strip()
+def identity():return dict(head=git('rev-parse','HEAD'),status=git('status','--porcelain'),refs_sha256=hashlib.sha256(git('show-ref').encode()).hexdigest(),config_sha256=hashlib.sha256(git('config','--local','--list').encode()).hexdigest())
+meta=report['meta'];scope=report['scope'];source=report['source'];carrier=report['carrier'];landing=report['landing'];base=report['base']
+assert git('rev-parse','HEAD')==landing and not git('status','--porcelain')
+assert wave.validate_pre_merge_receipts(str(repo),carrier,9001076) is None
+assert not list((repo/'TESTS-RESULTS').glob('*+GH-591/wave-'+landing+'/provenance.jsonl'))
+routing=dict(os.environ,XYZ_CI_OPTIMIZED='1',XYZ_DEVICE_CONFIG_PATH=str(root/'gh1076-settings/on.json'),NODE_PATH=str(root/'gh1076-existing-node-deps/node_modules'),PYTHONDONTWRITEBYTECODE='1',RELAY_SELF_SUFFICIENCY_SKIP='1')
+for k in ['XYZ_HARNESS','TICK_REPO_ROOT','RT_SHARD']:routing.pop(k,None)
+with patch.dict(os.environ,routing):assert wave.content_source_identity(str(repo),meta,landing)==(scope[0],scope[1],scope[2])
+report.update(attempt=2,previous_attempt='attempt1-interrupted: Small75/75, area incomplete with last suite exit120, exec-server disconnect and parent process gone; no receipt. Original streams/logs retained. Root cause unproved.',stage='fresh actual landing qualification running (attempt2)',setup_interceptions=[],actual_qualifying_commands=[])
+def save():(out/'positive.json').write_text(json.dumps(report,indent=2)+'\n')
+save()
+original=proc_group.run_bounded
+def observed(args,**kwargs):
+ if args==['npm','ci']:
+  target=Path(kwargs['cwd'])/'node_modules'
+  assert not target.exists()
+  shutil.copytree(root/'gh1076-existing-node-deps/node_modules',target,symlinks=True)
+  report['setup_interceptions'].append(dict(command=args,method='Verified existing matching dependency snapshot copied; npm ci not executed. Validation never simulated.'));save()
+  return SimpleNamespace(rc=0,timed_out=False,stdout='CONTROLLED SETUP: copied existing verified dependencies; no npm install.\n',stderr='',pgid=None)
+ start=time.monotonic();result=original(args,**kwargs)
+ if args[:2]==['bash','validate.sh']:
+  entry=dict(command=args,rc=result.rc,timed_out=result.timed_out,pgid=result.pgid,wall_seconds=round(time.monotonic()-start,3))
+  phase=args[-1]
+  for path in (Path(kwargs['cwd'])/'.tick/telemetry').glob('validate-sequential-*-'+str(result.pgid)+'.jsonl'):
+   destination=out/('landing-'+phase+'-validation.jsonl');shutil.copy2(path,destination);entry['retained']=str(destination);entry['sha256']=hashlib.sha256(destination.read_bytes()).hexdigest()
+  report['actual_qualifying_commands'].append(entry);save()
+ return result
+with patch.dict(os.environ,routing),patch.object(proc_group,'run_bounded',side_effect=observed):
+ with (out/'actual-qualification.log').open('w') as log,contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
+  wave.qualify_landings(str(repo),[meta],wave.RollbackJournal(repo))
+receipt=repo/'TESTS-RESULTS/2026-10-16+GH-591'/('wave-'+landing)/'provenance.jsonl'
+# UTC day is selected by the real writer; locate by exact immutable landing rather than guessing midnight.
+matches=list((repo/'TESTS-RESULTS').glob('*+GH-591/wave-'+landing+'/provenance.jsonl'));assert len(matches)==1;receipt=matches[0]
+entry=json.loads(receipt.read_text());assert entry['schema_version']==wave.CONTENT_SCHEMA and entry['profile']==wave.CONTENT_PROFILE and entry['companions']==scope[2]
+assert not any(k in entry for k in ['result','status','rc'])
+with patch.dict(os.environ,routing):
+ assert wave.qualification_receipt_matches(str(repo),entry,meta)
+ assert not wave.qualification_receipt_matches(str(repo),dict(entry,companions=None),meta)
+with patch.dict(os.environ,dict(routing,XYZ_CI_OPTIMIZED='0')):assert not wave.qualification_receipt_matches(str(repo),entry,meta)
+assert len(report['actual_qualifying_commands'])==2 and all(x['rc']==0 and not x['timed_out'] for x in report['actual_qualifying_commands'])
+(out/'qualification-record.json').write_text(json.dumps(dict(kind='REAL qualification in CONTROLLED local Git metadata; not real GitHub landing',entry=entry),indent=2)+'\n')
+shutil.copy2(receipt.parent/'validation.jsonl',out/'qualification-validation-container.jsonl')
+git('add',str(receipt.parent.relative_to(repo)));git('commit','-qm','CONTROLLED retain real landing qualification evidence')
+published=git('rev-parse','HEAD');git('update-ref','refs/gh1076-retained/qualification-evidence',published)
+report.update(stage='PASS real source/carrier/landing flow',qualification_evidence_commit=published,qualification_entry=entry,final_identity=identity(),limits='GitHub PR metadata is controlled. Three real commands executed: source Small, fresh landing Small and area. npm-ci setup was intercepted solely to copy existing verified dependencies. No installation, GitHub merge, primary/hosted activation or CI case addition.')
+save();print(json.dumps({k:report[k] for k in ['stage','implementation','source','carrier','landing','qualification_evidence_commit','source_small','actual_qualifying_commands','limits']},indent=2))

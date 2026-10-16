@@ -1,0 +1,306 @@
+{
+  "kind": "Manual negative observations only; no registered tests and no synthetic positive proof",
+  "implementation": "d8a6f87570c24eeb82fcfb4ee24ef593911678ba",
+  "observations": [
+    {
+      "label": "bare-pass",
+      "carrier": "5cfc29e6b6ca5b7dee54b8e12894ebb74358b4ea",
+      "landing": "6c13f7f002a0088c240b10412c248981fdb847b0",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "wrong-digest",
+      "carrier": "d6730765e0d49663c1329b0e4d2d4cc422810d9c",
+      "landing": "25fe7dc4a0f837c425c13c4ad8a28bcadcc5aecb",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "stale-source",
+      "carrier": "980029689e210f79a762bb9a0273f4faffddc3fb",
+      "landing": "98253d34b20c27a0ed6ff8d04aed20225f9b2f78",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "wrong-pr",
+      "carrier": "27f188434946aceec7bbd56c5c34d92d2d2491fe",
+      "landing": "13d70ccdb369d3d3519e5a0ad492dedf9d8a696e",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "foreign-schema",
+      "carrier": "7bce329bd76b1e934b7877952168a70b87de86a5",
+      "landing": "52609ce65055b68a7f2fe66018e3c14e50dab8a1",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "unknown-field",
+      "carrier": "bcd6bf792fae8e56d95420f1b96b014ba92f8da7",
+      "landing": "e77410606ca5a51fb3611846b83cc08dce26a9a1",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "extra-record",
+      "carrier": "21f069c95b691a03a1780336b0bccc9daf27b8a7",
+      "landing": "e87f81abc66dc0cbd06e46cb531869a302f61330",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "duplicate-key",
+      "carrier": "bc7abbd1907390562a6ee8a3cc7d5f6e2b82a323",
+      "landing": "2fac8b64c0a676ab9cbbf33c785241c0e41d3f25",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "wrong-producer",
+      "carrier": "22650bae63fbfdf766b387afe1c5e77ab61f508d",
+      "landing": "0b5dff92f133890797a0367ddf3a847e3a5cc145",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "parallel",
+      "carrier": "3837ac759304571dc80323014243eb64a3d65491",
+      "landing": "1c3092f2bb1bc4638ef6931be40891687cdacae6",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "wrong-event-source",
+      "carrier": "43c6992d9e7759f17b8c28a8eb4996c79512598f",
+      "landing": "a1da938c063ae2b5be37b3e8aa694dedcda18014",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "wrong-event-schema",
+      "carrier": "35d0e88fa388916bca23b7a46c23eaefa3b70cf5",
+      "landing": "c39e7683a63519b41ca090bcd568115231aaf189",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "malformed-counter",
+      "carrier": "22aef57125ce1705719135fc588410ab840e23a0",
+      "landing": "44dd63dc88990905b62cf5918dce2ddafc7ea6b1",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "missing-telemetry",
+      "carrier": "d4a5bb29f5db2651ddc2073a4b5a45a0022ced2a",
+      "landing": "5f620d975b04e4aecdfdadd46f47792e0ad58547",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "extra-file",
+      "carrier": "67e157b4d376bb0c9eac15d8d873c6968cc95eab",
+      "landing": "8b8f6ce87c0f8dcd18049badb401b09b177df522",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "executable-mode",
+      "carrier": "2c1e8bb4ca7afb6e12b2899f91732fda5bfeee2d",
+      "landing": "69f4de00738a53b041b4bfc79beeafd5f38c4f53",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "symlink",
+      "carrier": "eb6977f8d6c5cd7586ffc08eda9d3c6f65e480e0",
+      "landing": "94a586264a6a91648f424c778293e463c569d6c7",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "renamed-proof",
+      "carrier": "a94e8d057bdc5f27a608276ab332bfc42a8cd570",
+      "landing": "6e2aeb185106be227e8bcfc4b87716476dab7247",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "payload-changed-after-source",
+      "carrier": "3fb2cba1706906ebf0b22e2b2de3a1d60cc654ea",
+      "landing": "9481fe53849e7a2078a8b402cce1a8754220cf6e",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "mixed-runtime",
+      "carrier": "3e297b226a21fc6767735d04c03cbe7b1fb2b802",
+      "landing": "cb333ca658a19904cf86900af5e68c549ae90fca",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 3",
+      "expected": "full"
+    },
+    {
+      "label": "multiple-parent-carrier",
+      "carrier": "e460da6ad7a02efd8ddbfe4d5da27f34dac4462a",
+      "landing": "2009dfdbddb7175007b536a8bf7d0a8f2c922631",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "extra-carrier-commit",
+      "carrier": "926ad84e8ae6f60726650244a119598a2eaaa99b",
+      "landing": "7e6732bfa1883f00a51195b34ace1158539aaa7a",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "landing-blob-mismatch",
+      "carrier": "d9ecabc9302cd299efe8eb92d4dcb258df10ef2b",
+      "landing": "d51681cef735020fde89e68961eca6f044f88dd5",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "wrong-metadata",
+      "carrier": "46fe94e35cdffef68b3239ca009d0da420f19fb1",
+      "landing": "fda5ee7f08ee862db540364b9edcd82203247e92",
+      "gate": "validate.sh --sequential",
+      "reason": "policy ci-route@1: tier 2",
+      "expected": "full"
+    },
+    {
+      "label": "qualifier-failure",
+      "rc": 6,
+      "qualifying_command_attempts": [
+        [
+          "bash",
+          "validate.sh",
+          "--sequential",
+          "--subsystem",
+          "small"
+        ]
+      ],
+      "receipt_count": 0,
+      "kind": "Explicit negative fault injection; validation outcomes are not software evidence"
+    },
+    {
+      "label": "qualifier-config",
+      "rc": 6,
+      "qualifying_command_attempts": [
+        [
+          "bash",
+          "validate.sh",
+          "--sequential",
+          "--subsystem",
+          "small"
+        ]
+      ],
+      "receipt_count": 0,
+      "kind": "Explicit negative fault injection; validation outcomes are not software evidence"
+    },
+    {
+      "label": "qualifier-process",
+      "rc": 6,
+      "qualifying_command_attempts": [
+        [
+          "bash",
+          "validate.sh",
+          "--sequential",
+          "--subsystem",
+          "small"
+        ]
+      ],
+      "receipt_count": 0,
+      "kind": "Explicit negative fault injection; validation outcomes are not software evidence"
+    },
+    {
+      "label": "qualifier-environment",
+      "rc": 6,
+      "qualifying_command_attempts": [
+        [
+          "bash",
+          "validate.sh",
+          "--sequential",
+          "--subsystem",
+          "small"
+        ],
+        [
+          "bash",
+          "validate.sh",
+          "--sequential",
+          "--subsystem",
+          "skills-army-hq"
+        ]
+      ],
+      "receipt_count": 0,
+      "kind": "Explicit negative fault injection; validation outcomes are not software evidence"
+    },
+    {
+      "label": "qualifier-missing-profile",
+      "rc": 6,
+      "qualifying_command_attempts": [
+        [
+          "bash",
+          "validate.sh",
+          "--sequential",
+          "--subsystem",
+          "small"
+        ],
+        [
+          "bash",
+          "validate.sh",
+          "--sequential"
+        ]
+      ],
+      "receipt_count": 0,
+      "kind": "Explicit negative fault injection; validation outcomes are not software evidence"
+    },
+    {
+      "label": "qualifier-missing-full",
+      "rc": 6,
+      "qualifying_command_attempts": [
+        [
+          "bash",
+          "validate.sh",
+          "--sequential"
+        ]
+      ],
+      "receipt_count": 0,
+      "kind": "Explicit negative fault injection; validation outcomes are not software evidence"
+    },
+    {
+      "label": "wrong-source-tree-replay",
+      "accepted": false
+    },
+    {
+      "label": "postmerge-proof-not-premerge-pass",
+      "error": "No committed passing test receipt at HEAD matches PR #9001076 in TESTS-RESULTS/ (AGENTS.md: uncommitted provenance is not proof)."
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+Note: switching to 'c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c <new-branch-name>
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+CONTROLLED copied dependencies; no install.
+wave-reconcile: Qualifying 1 landing(s) in integrated snapshot c3fe69e0f6c2ef26806ab3a4f7b230c0df103b31 with `validate.sh --sequential --subsystem small && ./validate.sh --sequential --subsystem skills-army-hq` (skills-army-content@2)
+wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['bash', 'validate.sh', '--sequential', '--subsystem', 'small']' returned non-zero exit status 17.
