@@ -126,3 +126,11 @@ Read-only comparison probe (exit 0): `python3 -` used `difflib.unified_diff` aga
 [Unverified — needs clone run] `bash utils/pdda/pdda.sh run` was not run in this reviewer worktree. The required documentation gate remains for the harness; this approval is the editorial review, not a claim that the gate passed. No git command, suite, executable fixture, source/artifact write or other tracked-file edit was performed.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-16T21:57:20Z
+task: MARATHON-GH-1087-GH1051-RECORD-SPACING-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 587fc5a26876a61b76450bb8ab44efe65725a4bb
+added-range: 10245+2179
+added-sha256: bcff4c145520a1fd4ecef2fb77dd830a583a6817d5714cf8cefcb4af419356ef
