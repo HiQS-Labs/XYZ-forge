@@ -1,5 +1,5 @@
 # Marathon Phase gh-960-skills-army-duplicate-pulse-clone
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-960-SKILLS-ARMY-DUPLICATE-PULSE-CLONE-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -27,7 +27,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 ## Acceptance criteria — the build is DONE when these hold
 *Inlined verbatim from `/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1081-factory-manager-spike-2026-10-15-verify/PROJECT/2-WORKING/GH-960-SKILLS-ARMY-DUPLICATE-PULSE-CLONE.md` (0 checkbox(es) found across the WHOLE document — the doc has no `## Acceptance` section, so this list may include phase checklists). Continuation lines included; if a
 criterion here reads as a fragment, that is the source text, not a truncation.*
-*NOT verified, and NOT verifiable as things stand — issue #960 has no '## Acceptance' section — nothing to copy from. This list exists only in the capture doc; reading the issue will not confirm it, because the issue states no criteria. Establish the criteria on the issue before treating anything below as the definition of done.*
+*NOT verified, and NOT verifiable as things stand — issue #960 has no '## Acceptance' section — nothing to copy from. This list exists only in the capture doc; reading the issue will not confirm it, because the issue states no criteria. Establish the criteria on the issue before treating anything below as the definition of done.*  [Unverified — no citation]
 (no '- [ ]' checklist found in /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1081-factory-manager-spike-2026-10-15-verify/PROJECT/2-WORKING/GH-960-SKILLS-ARMY-DUPLICATE-PULSE-CLONE.md — add an Acceptance criteria list)
 
 ## Scope lock — builder, do exactly this and nothing else
@@ -118,3 +118,59 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 - **Verification:**
   - `PYTHONDONTWRITEBYTECODE=1 python3 -B test/test_deploy_skills.py` -> 33 passed in 31.5s.
   - `.relay-scratch/verify_gh960.py` -> verified all 4 acceptance scenarios on temporary git repos in `$TMPDIR`: (1) two clones of one remote with `config.sh` pointing at the writer clone warns `DUPLICATE_PULSE_CLONE` with paths, ahead/behind counts, and remediation steps; (2) `config.sh` pointing at the collection root is clean; (3) missing `config.sh` reports `duplicate-clone check skipped: no git-pulse config`; (4) collection behind upstream or with `FETCH_HEAD` >= 24h warns `STALE_PULSE_COLLECTION`.
+
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: yes
+
+Ship within this relay's review scope. Read all of `skills/3-weekly/skills-army-hq/scripts/sync.py` and `skills/3-weekly/skills-army-hq/references/recovery.md`, including the pre-existing reconciliation, retirement, drift, and recovery paths. No blocking or should-fix pre-existing defects found in either artifact. No source or artifact was changed by this reviewer.
+
+The implementation matches the remediation contract in the GH-960 working document: the normal sync path calls `repo_health`, config absence produces an explicit skip, different checkouts sharing a normalized remote produce `DUPLICATE_PULSE_CLONE`, and behind/old-fetch state produces `STALE_PULSE_COLLECTION`. The new health functions use local reads and read-only Git queries, with no fetch, config mutation, or automatic clone retirement. The printed four-step recovery sequence agrees with recovery.md and preserves unique work before retirement. The parser deliberately does not execute config shell code; review confidence covers the supported literal/HOME/CONFIG_DIR forms, not arbitrary shell evaluation.
+
+Evidence and limits:
+
+- Direct source fallback: graph project `XYZ-forge` is rooted in another checkout, generation `2026-09-01T15:54:30Z`; discovery returned no matching helper symbols, and coverage marked the three relevant source/doc paths `not_tracked`. The current worktree files, rather than that stale index, supplied the review evidence. Read `intake.py`'s `regular_bytes`, `git_at`, `collection_repo`, and `dirty_paths` to check the health helper contracts. Compared config defaults and supported path spelling against Git Pulse's `config.example.sh` and `collect.sh` in the local rebalanceOS checkout.
+- Narrow probe command (no Git invocation; writes confined to temporary config text under `.relay-scratch/tmp`):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 -B - <<'PY'
+import ast, os, re, shlex, tempfile, types
+from pathlib import Path
+source = Path('skills/3-weekly/skills-army-hq/scripts/sync.py').read_text()
+tree = ast.parse(source)
+selected = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in ('pulse_sync_repo', 'normalize_remote')]
+ns = dict(Path=Path, os=os, shlex=shlex, shared=types.SimpleNamespace(re=re, regular_bytes=lambda p:p.read_bytes()))
+exec(compile(ast.Module(body=selected, type_ignores=[]), '<seeded sync.py functions>', 'exec'), ns)
+with tempfile.TemporaryDirectory(dir=os.environ['TMPDIR']) as d:
+    config = Path(d)
+    for line, expected in [('', config/'repo'), ('sync_repo_dir=""', config/'repo'), ('sync_repo_dir="$CONFIG_DIR/repo" # writer', config/'repo'), ('export sync_repo_dir="${HOME}/git-pulse-sync"', Path.home()/'git-pulse-sync'), ('sync_repo_dir="/tmp/skills with spaces"', Path('/tmp/skills with spaces'))]:
+        (config/'config.sh').write_text(line+'\n')
+        got = ns['pulse_sync_repo'](config)
+        assert got == expected, (line, got, expected)
+    print('config parsing: 5 supported forms passed')
+    urls = ['git@github.com:HiQS-Labs/pulse.git', 'https://github.com/HiQS-Labs/pulse.git', 'ssh://git@github.com/HiQS-Labs/pulse.git']
+    normalized = [ns['normalize_remote'](u) for u in urls]
+    assert len(set(normalized)) == 1, normalized
+    print('remote normalization:', normalized)
+    ast.parse(Path('skills/3-weekly/skills-army-hq/scripts/intake.py').read_text())
+    print('sync.py and intake.py: syntax parsed without execution')
+PY
+```
+
+Exit status: **0**. Decisive output:
+
+```text
+config parsing: 5 supported forms passed
+remote normalization: ['github.com/HiQS-Labs/pulse', 'github.com/HiQS-Labs/pulse', 'github.com/HiQS-Labs/pulse']
+sync.py and intake.py: syntax parsed without execution
+```
+
+- **[Unverified — needs clone run]** End-to-end duplicate/same-checkout/stale warning scenarios and the existing suite were not run by this reviewer. The builder's stated runs are claims, not independently reproduced receipts in this turn. No `validate.sh`, `test/*.sh`, pytest, executable fixtures, or Git commands were run here; the harness's post-turn disposable-clone gate remains required. Approval is code-review approval, not an attestation that the gate passed.
+- Turn bookkeeping: the first attempt to append this block failed shell parsing (exit 1, unmatched backtick caused by a nested heredoc delimiter); it made no file changes. The following token `done` succeeded before the corrected append. This corrected append records the completed review before ending the turn.
+
+relay closed, no further turn needed
