@@ -16,7 +16,9 @@ goal: Preserve GitHub-first authority and calibration while clarifying time, rec
 
 # GH-1090 — Radar calibration integration
 
-| Just completed | Next |
+## Status
+
+| What was just completed | What's next |
 |---|---|
 | Original proposal and issue verified; native plan1/3 PASS | Combine sources, independent final1/3, existing checks and normal publication; conditionally merge after upstream1085qualification |
 
