@@ -1,0 +1,4 @@
+merge-cleanup: Running post-merge reconciliation for PR #1082 in /Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1082-postmerge-gate...
+merge-cleanup: ✅ Hosted wave-reconcile run #38827672739 succeeded for 87f132e6a1
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ pdda issue-doc-sync clean

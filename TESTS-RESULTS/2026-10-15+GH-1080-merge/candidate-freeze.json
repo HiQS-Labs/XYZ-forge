@@ -1,0 +1,25 @@
+{
+  "pr": 1082,
+  "original_head": "906b8fcfdf29703e017eb3d640c8abb753c0af6e",
+  "qualified_base": "ded6208053d5a714fb6aac8a98744a6237d4dd95",
+  "canonical_merge": "9d5fa5a4cf9316f77dd7b14f2b1d7849582c653e",
+  "reviewed_head": "7a526d4312266ab00ef2ea557623e305381b2fcd",
+  "native_final": "3/3 PASS; native peer review, not Forge mechanical attestation; original rounds retained",
+  "caller_repair": "1/2 resolved; no reset",
+  "focused": {
+    "express": 113,
+    "codex_prerequisite": 43,
+    "original_manual_controls": 16,
+    "failed": 0
+  },
+  "full_normal_publication": "pending",
+  "policy_sha256": {
+    ".github/workflows/pages.yml": "19596de4c9c8291857038f488dec79f3588ccb9d5e6e3e85ad844eec8370a6c5",
+    "utils/ci-route.sh": "9d2cc686a6ae9ac3e071e73a8a60b2096c40f0b52ed3c17c43ea09c83b946565",
+    "githooks/pre-push": "29edf96df79282e39f497d89f222c30ad27e71eea35ecf88dfe5baee4d474268",
+    "validate.sh": "b2cb6d1ef04b48f6a6f29e486c92476054fe29c296b21a08ff6ce190a6108dae",
+    "ci-local.sh": "d386f3d0dd0304b26d32a3333d90a246ce07511fa947ac8ad1232cb0b5328672",
+    "utils/py/wave_reconcile.py": "a5bcd0d369b651191b5d8b06ec85e5f8821faa25ed2c69343286d8f8decbd3ee"
+  },
+  "scope": "Development only; existing landed policy. No new tests/assertions/cases, selective-CI activation, settings, deployment of skills, main promotion or clone cleanup."
+}

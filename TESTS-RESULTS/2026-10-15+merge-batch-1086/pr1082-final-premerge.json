@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-10-16T00:07:29.680848+00:00",
+  "policy": {
+    "preserve_commit_history": true,
+    "strategy": "merge",
+    "source": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-merge-20261015/.merge-cleanup.json"
+  },
+  "base": "ded6208053d5a714fb6aac8a98744a6237d4dd95",
+  "pr": {
+    "baseRefName": "development",
+    "body": "## Current landing checkpoint \u2014 2026-10-16 UTC\nAn explicitly requested `--docs-only` express landing can admit bounded ordinary prose and images while retaining the existing admission, landing, receipt and resume contracts. It selects the existing PDDA documentation suite, rejects mixed runtime/policy/executable/symlink/code-to-text inputs, and assigns semantic content/link/rendering review to the agent. The README diagram remains separate.\n\n- Original member head: `906b8fcfdf29703e017eb3d640c8abb753c0af6e`; qualified integration base: `ded6208053d5a714fb6aac8a98744a6237d4dd95`.\n- Canonical B1 merge: `9d5fa5a4cf9316f77dd7b14f2b1d7849582c653e`; current reviewed source: `7a526d4312266ab00ef2ea557623e305381b2fcd`. Incoming rows/history, the four original product blobs and Pages/CI policies are preserved. The append-only Costly-bet continuation supplies the required signal deadline, revisit conditions, recommendation and rollback.\n- Cumulative final QA **3/3 PASS**: independent native current-base review; this is not a new mechanical relay attestation. Original Round1 FAIL, corrected Round2 mechanical approval and all raw results remain retained. Caller repair **1/2**, one bounded declared episode; no cap reset or extra driver fire.\n- Current focused controls passed **113 + 43 + the exact original16**, with Git identity unchanged. No new tests/assertions/cases/parameters.\n- Current normal full publication passed **409/409**, rc0, at `96baa6b6ab62863c04698f46db2595fa55f7926d`. Final receipt carrier `4d7235d940c8a0029eea621af29ca13ba7d037a3` changes only TESTS-RESULTS and passed the normal documentation publication gate. Production committed-receipt validation and current-head E6 passed; the exact hosted PR checks must also pass before merge. Raw logs, source telemetry, identity brackets and native review are committed under `TESTS-RESULTS/2026-10-15+GH-1080-merge/`.\n\nDevelopment merge only. Hosted sequential landing qualification remains pending until the actual merge is tested; no main promotion, selective CI/settings activation, installed-skill sync, live express run or cleanup. Revert the driver/skill/SOP/architecture contract together to restore the prior admission rule; receipts retain the existing schema.\n\nCloses #1080\n\n<details><summary>Original implementation and validation history (preserved)</summary>\n\nA README plus diagram can now use an explicitly requested documentation express landing without claiming to be a critical hotfix or naming a runtime behavior suite. `--docs-only` selects the existing registered PDDA repository-docs suite; the driver, canonical skill, SOP and skill index agree on that rule.\n\nThe mode accepts ordinary README/docs/project text and image assets, keeps file/text bounds and the existing landing/receipt/resume flow, and rejects practical mixed code, policy-root, executable, symlink and code-to-text rename inputs. Image bytes do not count as text insertions. Content, link and rendering checks remain agent obligations; a filename or passing PDDA check does not establish semantic accuracy. The pending README diagram is not included.\n\nValidation: existing express regression suite (113 checks), existing Codex-turn prerequisite (43 checks), and 16 recorded manual admission/negative controls in a separate full clone. Independent native Codex QA approved Round 2 with mechanical attestation after correcting paperwork eligibility. No new test suite, registry entry, gate runner, dependency or receipt schema.\n\nNormal full publication gate: 409/409 green in 929 seconds at 824c9288; clone identity unchanged. The log, clone identity bracket and provenance are retained under `TESTS-RESULTS/2026-10-15+GH-1080/`; subsequent receipt-only publication uses the normal docs gate. Direct-landing admission is Costly: revert driver/skill/SOP together to restore the prior rule; existing receipts stay compatible.\n\nCloses #1080\n\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n\n## Summary by CodeRabbit\n\n* **New Features**\n  * Added an explicitly requested documentation-only express lane for eligible text and image updates. It uses the registered documentation gate and does not require a critical-hotfix rationale or runtime coverage suite.\n  * Documentation updates now have distinct labels in landing messages and issue comments; existing hotfix handling remains unchanged.\n* **Documentation**\n  * Updated express guidance and procedures to describe both lanes and their eligibility limits.\n* **Tests**\n  * Recorded verification results for the documentation lane and publication checks.\n\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->\n\n</details>\n",
+    "headRefName": "feat/XYZ-forge-gh1080-express-docs-2026-10-15",
+    "headRefOid": "4d7235d940c8a0029eea621af29ca13ba7d037a3",
+    "isDraft": false,
+    "labels": [],
+    "mergeStateStatus": "CLEAN",
+    "mergeable": "MERGEABLE",
+    "number": 1082,
+    "reviewDecision": "",
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-16T00:05:26Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38827452375/job/116738123442",
+        "name": "promotion boundary (macOS \u2014 the platform we ship to)",
+        "startedAt": "2026-10-16T00:05:26Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-16T00:05:26Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38827452375/job/116738124156",
+        "name": "portability canary (ubuntu \u2014 advisory, never breakage)",
+        "startedAt": "2026-10-16T00:05:26Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-10-16T00:05:48Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38827452375/job/116738121985",
+        "name": "vendored smoke gate (blocking on development + main)",
+        "startedAt": "2026-10-16T00:05:28Z",
+        "status": "COMPLETED",
+        "workflowName": "CI"
+      },
+      {
+        "__typename": "StatusContext",
+        "context": "CodeRabbit",
+        "startedAt": "2026-10-16T00:05:34Z",
+        "state": "SUCCESS",
+        "targetUrl": ""
+      }
+    ],
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1082"
+  }
+}

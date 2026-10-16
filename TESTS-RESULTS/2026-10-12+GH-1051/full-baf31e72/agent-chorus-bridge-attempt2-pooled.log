@@ -1,0 +1,209 @@
+agent-chorus-bridge (GH-384):
+  PASS: GH-760: wait_bridge_ready fails closed when nothing is listening
+  PASS: bridge parses with Python 3.8 floor
+  PASS: client parses with Python 3.8 floor
+  PASS: bridge server started on 127.0.0.1:54378
+  PASS: GET / returns HTTP 200
+  PASS: health body reports service name
+  PASS: POST /sessions creates discussion 777001 (HTTP 201)
+  PASS: response contains discussion id
+  PASS: response reports NEXT is agent2
+  PASS: canonical conversation.md created on local filesystem
+  PASS: agent2 join receives take-turn decision
+  PASS: agent2 join receives capability token
+  PASS: agent2 capability token extracted
+  PASS: agent1 join receives wait decision
+  FAIL: remote agent2 send succeeds (missing: "turn": 2)
+    GH-760 diag [remote agent2 send succeeds]: usage: agent_chorus_client.py send [-h] --id ID --agent AGENT
+                                   --next-agent NEXT_AGENT [--token TOKEN]
+                                   [--token-file TOKEN_FILE]
+                                   [--message MESSAGE]
+                                   [--message-file MESSAGE_FILE]
+                                   [--expected-turn EXPECTED_TURN]
+                                   [--idempotency-key IDEMPOTENCY_KEY]
+agent_chorus_client.py send: error: argument --token: expected one argument
+    GH-760 bridge log (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-bridge-test.1yg5Y0/bridge.log, last 50 lines):
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions HTTP/1.1" 201 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+  FAIL: turn 2 routes to agent1 (missing: "next": "agent1")
+    GH-760 diag [turn 2 routes to agent1]: usage: agent_chorus_client.py send [-h] --id ID --agent AGENT
+                                   --next-agent NEXT_AGENT [--token TOKEN]
+                                   [--token-file TOKEN_FILE]
+                                   [--message MESSAGE]
+                                   [--message-file MESSAGE_FILE]
+                                   [--expected-turn EXPECTED_TURN]
+                                   [--idempotency-key IDEMPOTENCY_KEY]
+agent_chorus_client.py send: error: argument --token: expected one argument
+    GH-760 bridge log (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-bridge-test.1yg5Y0/bridge.log, last 50 lines):
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions HTTP/1.1" 201 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+  FAIL: local agent1 advances to turn 3 (missing: Recorded turn 3)
+    GH-760 diag [local agent1 advances to turn 3]: agent-chorus: out of turn: NEXT is agent2, not agent1
+    GH-760 bridge log (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-bridge-test.1yg5Y0/bridge.log, last 50 lines):
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions HTTP/1.1" 201 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+  FAIL: turns endpoint returns turn 2 (missing: "turn": 2)
+    GH-760 diag [turns endpoint returns turn 2]: {
+  "count": 0,
+  "current_turn": 1,
+  "id": "777001",
+  "lease_expires_at": "2026-10-13T06:38:48+00:00",
+  "next": "agent2",
+  "status": "Open",
+  "turns": []
+}
+    GH-760 bridge log (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-bridge-test.1yg5Y0/bridge.log, last 50 lines):
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions HTTP/1.1" 201 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:48] [agent-chorus-bridge] 127.0.0.1 - "GET /sessions/777001/turns?after=1&limit=100 HTTP/1.1" 200 -
+  FAIL: turns endpoint returns turn 3 (missing: "turn": 3)
+    GH-760 diag [turns endpoint returns turn 3]: {
+  "count": 0,
+  "current_turn": 1,
+  "id": "777001",
+  "lease_expires_at": "2026-10-13T06:38:48+00:00",
+  "next": "agent2",
+  "status": "Open",
+  "turns": []
+}
+    GH-760 bridge log (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-bridge-test.1yg5Y0/bridge.log, last 50 lines):
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions HTTP/1.1" 201 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:48] [agent-chorus-bridge] 127.0.0.1 - "GET /sessions/777001/turns?after=1&limit=100 HTTP/1.1" 200 -
+  FAIL: remote agent2 advances to turn 4 (missing: "turn": 4)
+    GH-760 diag [remote agent2 advances to turn 4]: usage: agent_chorus_client.py send [-h] --id ID --agent AGENT
+                                   --next-agent NEXT_AGENT [--token TOKEN]
+                                   [--token-file TOKEN_FILE]
+                                   [--message MESSAGE]
+                                   [--message-file MESSAGE_FILE]
+                                   [--expected-turn EXPECTED_TURN]
+                                   [--idempotency-key IDEMPOTENCY_KEY]
+agent_chorus_client.py send: error: argument --token: expected one argument
+    GH-760 bridge log (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-bridge-test.1yg5Y0/bridge.log, last 50 lines):
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions HTTP/1.1" 201 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:48] [agent-chorus-bridge] 127.0.0.1 - "GET /sessions/777001/turns?after=1&limit=100 HTTP/1.1" 200 -
+  FAIL: local agent1 closes discussion (missing: Closed XYZ AgentChorus #777001)
+    GH-760 diag [local agent1 closes discussion]: agent-chorus: out of turn: NEXT is agent2, not agent1
+    GH-760 bridge log (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-bridge-test.1yg5Y0/bridge.log, last 50 lines):
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions HTTP/1.1" 201 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:48] [agent-chorus-bridge] 127.0.0.1 - "GET /sessions/777001/turns?after=1&limit=100 HTTP/1.1" 200 -
+  FAIL: remote client observes Closed status (missing: "status": "Closed")
+    GH-760 diag [remote client observes Closed status]: {
+  "active": true,
+  "agents": [
+    "agent1",
+    "agent2"
+  ],
+  "current_turn": 1,
+  "id": "777001",
+  "lease_expires_at": "2026-10-13T06:38:48+00:00",
+  "next": "agent2",
+  "status": "Open",
+  "subject": "Bridge Architecture Verification",
+  "transcript_hash": "sha256:497d5679499a67bd0bb7c18a86496f9cda5e145dfbe9279784065b7e37dbbc6e",
+  "updated": "2026-10-13T06:28:47+00:00"
+}
+    GH-760 bridge log (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-bridge-test.1yg5Y0/bridge.log, last 50 lines):
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions HTTP/1.1" 201 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:47] [agent-chorus-bridge] 127.0.0.1 - "POST /sessions/777001/join HTTP/1.1" 200 -
+[2026-10-13 06:28:48] [agent-chorus-bridge] 127.0.0.1 - "GET /sessions/777001/turns?after=1&limit=100 HTTP/1.1" 200 -
+[2026-10-13 06:28:48] [agent-chorus-bridge] 127.0.0.1 - "GET /sessions/777001/status HTTP/1.1" 200 -
+Testing authentication failure modes:
+  PASS: missing token rejected with HTTP 401
+  PASS: wrong seat capability token rejected with HTTP 403
+  PASS: out of turn write rejected with HTTP 409
+  PASS: stale version rejected with HTTP 409
+  PASS: first send with idempotency key commits turn 2
+  PASS: duplicate send with idempotency key returns identical turn 2
+  PASS: idempotent retry produced exactly one committed turn on disk
+Testing Cloudflare Access Service Token validation:
+  PASS: CF-auth bridge started on 127.0.0.1:54379
+  PASS: missing CF Access headers rejected with HTTP 401
+  PASS: invalid CF Access secret rejected with HTTP 401
+  PASS: valid CF Access headers accepted with HTTP 200
+Testing idle lease expiration:
+  PASS: idle-lease bridge started on 127.0.0.1:54380
+  PASS: write on expired session rejected with HTTP 410 Gone
+  PASS: canonical transcript preserved after session expiry
+Auditing bridge access logs for zero secret / message content leakage:
+  PASS: access log contains no capability tokens
+  PASS: access log contains no CF Access secret
+  PASS: access log contains no message content
+Testing crash and restart recovery:
+  PASS: restarted bridge listening on 127.0.0.1:54381
+  FAIL: restarted bridge recovers status of closed discussion 777001 (missing: "status": "Closed")
+    GH-760 diag [restarted bridge recovers status of closed discussion 777001]: {
+  "active": true,
+  "agents": [
+    "agent1",
+    "agent2"
+  ],
+  "current_turn": 1,
+  "id": "777001",
+  "lease_expires_at": "2026-10-13T06:38:53+00:00",
+  "next": "agent2",
+  "status": "Open",
+  "subject": "Bridge Architecture Verification",
+  "transcript_hash": "sha256:497d5679499a67bd0bb7c18a86496f9cda5e145dfbe9279784065b7e37dbbc6e",
+  "updated": "2026-10-13T06:28:47+00:00"
+}
+    GH-760 bridge log (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-bridge-test.1yg5Y0/bridge.log.restart, last 50 lines):
+[2026-10-13 06:28:53] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:53] [agent-chorus-bridge] 127.0.0.1 - "GET /sessions/777001/status HTTP/1.1" 200 -
+  FAIL: restarted bridge recovers turn count 5 (missing: "current_turn": 5)
+    GH-760 diag [restarted bridge recovers turn count 5]: {
+  "active": true,
+  "agents": [
+    "agent1",
+    "agent2"
+  ],
+  "current_turn": 1,
+  "id": "777001",
+  "lease_expires_at": "2026-10-13T06:38:53+00:00",
+  "next": "agent2",
+  "status": "Open",
+  "subject": "Bridge Architecture Verification",
+  "transcript_hash": "sha256:497d5679499a67bd0bb7c18a86496f9cda5e145dfbe9279784065b7e37dbbc6e",
+  "updated": "2026-10-13T06:28:47+00:00"
+}
+    GH-760 bridge log (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//agent-chorus-bridge-test.1yg5Y0/bridge.log.restart, last 50 lines):
+[2026-10-13 06:28:53] [agent-chorus-bridge] 127.0.0.1 - "GET / HTTP/1.1" 200 -
+[2026-10-13 06:28:53] [agent-chorus-bridge] 127.0.0.1 - "GET /sessions/777001/status HTTP/1.1" 200 -
+
+── unauthenticated-by-default guard (GH-384 review) ──
+  PASS: GH-625: bridge binds and reaches tunnel refusal without socket.getfqdn
+  PASS: A1: --tunnel refuses without CF Access credentials
+  PASS: A1b: the refusal exits 2 rather than continuing
+  PASS: A2: --insecure-allow-unauthenticated is available as an explicit opt-out
+  PASS: A3: banner names DISABLED auth on an unauthenticated bridge
+  PASS: A3b: banner names ENABLED when creds come from the ENVIRONMENT (not argv)
+
+==========================================
+AgentChorus Bridge Test Summary: 38 passed, 10 failed
+==========================================

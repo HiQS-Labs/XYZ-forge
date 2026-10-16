@@ -2,7 +2,7 @@
 gh_issue: 1066
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1066
 title: "merge-cleanup: CI-heavy landing groups"
-status: In Progress
+status: Complete
 created: 2026-10-14
 updated: 2026-10-15
 owner: Codex

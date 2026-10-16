@@ -1,0 +1,20 @@
+{
+  "root_cause": "The one-off helper stripped leading whitespace from porcelain output, then parsed fixed columns; first record path lost its first character. Repository governance/qualification passed.",
+  "fix_site": "One-off workspace helper status parsing, preserving raw porcelain bytes before column extraction",
+  "why_not_upstream_or_downstream": "Git returned the correct porcelain record. Avoid changing Git/repository policy or repeating the already emitted merge event.",
+  "observed_records": [
+    " M releases.db",
+    " M releases.sql",
+    "?? TESTS-RESULTS/2026-10-15+GH-1051-merge/postmerge/original-hosted-provenance.jsonl",
+    "?? TESTS-RESULTS/2026-10-15+GH-1051-merge/postmerge/pr1053-hosted-terminal.json",
+    "?? TESTS-RESULTS/2026-10-15+GH-1051-merge/postmerge/pr1053-hosted-wait-recovered.log",
+    "?? TESTS-RESULTS/2026-10-15+GH-1051-merge/postmerge/pr1053-issue-closure.json",
+    "?? TESTS-RESULTS/2026-10-15+GH-1051-merge/postmerge/pr1053-pages-jobs.json",
+    "?? TESTS-RESULTS/2026-10-15+GH-1051-merge/postmerge/pr1053-postmerge-governance.log",
+    "?? TESTS-RESULTS/2026-10-15+GH-1051-merge/postmerge/pr1053-retained-branch.json",
+    "?? TESTS-RESULTS/2026-10-15+GH-1051-merge/postmerge/pr1053-transport-recovery.json",
+    "?? TESTS-RESULTS/2026-10-15+GH-1051-merge/postmerge/provenance.jsonl"
+  ],
+  "resume": "Stage retained allowed paths, commit and normal gated push; no re-emission.",
+  "pr_repair_or_qa_budget_change": false
+}

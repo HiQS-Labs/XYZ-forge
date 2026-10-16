@@ -6,6 +6,26 @@ Radar now verifies doc-derived work facts against live GitHub issues/PRs, report
 
 Instruction-only, Easy to reverse by reverting the skill change. No new tests, runtime code or data schema. Skills Army deployment follows merge and remains a tracked handoff.
 
+## 2026-10-15 — Express documentation admission checkpoint (GH-1080)
+
+Complete the Costly bet recorded in the original bounded documentation-lane entry; that entry and its evidence remain unchanged. By 2026-10-22, review any independently authorized documentation-mode landings for preserved bounds, exact PDDA receipts and recorded content/link/rendering checks. If none occurs, operational evidence remains unverified; do not launch work to manufacture it.
+
+Revisit on an admitted runtime/governance payload, qualified-byte drift, or a receipt/resume mismatch. Recommendation: iterate until authorized use supplies the signal; graduate the operational claim only with that evidence, and abandon the documentation lane if it cannot remain bounded. Roll back the driver, canonical skill and SOP together to restore the prior hotfix-only rule. This checkpoint schedules no automation or live run.
+
+## 2026-10-15 — Bounded express documentation lane (GH-1080)
+
+Explicit documentation express requests now accept ordinary text and image updates without a critical-hotfix rationale or runtime coverage suite. `--docs-only` reuses the registered PDDA repository documentation gate; its exact command remains in existing commit-bound receipts and resume. Image assets count toward file limits, not binary newlines. Code/configuration, executable policy, symlinks and executable files remain outside documentation admission.
+
+The bet is that structural docs checks plus recorded agent content/link/rendering checks suit these small updates. Direct-landing admission is Costly: revert the driver, skill and SOP changes together to restore the old rule; existing receipts remain readable. No new suites, gate runners or receipt schema.
+
+## 2026-10-15 — Admit and refresh the development-only Pages fix (GH-1051)
+
+Keep the reviewed four-declaration Pages policy unchanged and adopt current development ledger/history through the canonical writer. The operator approved PR1053 review admission and conditional development landing; current review and normal qualification remain required. No workflow dispatch or environment-policy change.
+
+## 2026-10-12 — Pages publishing follows development-only policy (GH-1051)
+
+The Pages workflow admits development pushes and manual development runs. Nondevelopment job guards and per-ref concurrency prevent main/tag dispatches from attempting publication or cancelling development publication. Existing environment protections, action versions and build steps are unchanged. Draft PR only; no merge or deployment authorized.
+
 ## 2026-10-15 — Preserve unpublished historical HiQS review receipts
 
 Recover three approved historical review records from the operator’s primary checkout

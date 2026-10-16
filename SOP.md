@@ -207,7 +207,8 @@ An in-flight failing test or runner error is not automatically an urgent blocker
   exempt (they live on their own task branch and are disposable).
 - **Express-to-development is explicit; everything else gets a fresh full clone.** Direct
   commit + push into `development` happens only when the user **explicitly asks** for an express
-  commit of critical work. In every other case, the LLM begins new work by provisioning a
+  commit of critical code work or a small documentation text/image update (`--docs-only`,
+  per the express skill). In every other case, the LLM begins new work by provisioning a
   **new local full-clone folder** — a full clone, *not* a git worktree (GH-564) — cloned from
   the GitHub remote so `origin` points at GitHub, wired with the gate, and branched off
   `origin/development`:

@@ -1,0 +1,34 @@
+{
+  "telemetry": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1053-current-gate/.tick/telemetry/validate-parallel-1792100893451-82357.jsonl",
+  "start": {
+    "v": 1,
+    "ts_ms": 1792100893451,
+    "run": "b85b52ab2-82357",
+    "runner": "validate",
+    "event": "run.start",
+    "commit": "b85b52ab283b49c357945adfdd862d9859de3730",
+    "host": "noels-Mac-Studio",
+    "mode": "parallel",
+    "width": 4,
+    "tier": 3,
+    "registered": 406
+  },
+  "summary": {
+    "v": 1,
+    "ts_ms": 1792101863955,
+    "run": "b85b52ab2-82357",
+    "runner": "validate",
+    "event": "run.summary",
+    "passed": 409,
+    "failed": 0,
+    "total": 409,
+    "envelope_rc": "0",
+    "envelope_drift": "none",
+    "suite_events": "408",
+    "run_set": "406",
+    "registered": "406",
+    "suite_events_match": "yes"
+  },
+  "source": "b85b52ab283b49c357945adfdd862d9859de3730",
+  "selection": "Unique actual full tier3/registered406/run_set406 validation record inside normal publication time bracket; other partial/nested records retained separately, not used as full qualification."
+}
