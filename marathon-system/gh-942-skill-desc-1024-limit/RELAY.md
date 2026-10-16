@@ -1,6 +1,6 @@
 # Marathon Phase gh-942-skill-desc-1024-limit
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-942-SKILL-DESC-1024-LIMIT-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -27,7 +27,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 ## Acceptance criteria — the build is DONE when these hold
 *Inlined verbatim from `/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/PROJECT/2-WORKING/GH-942-SKILL-DESC-1024-LIMIT.md` (0 checkbox(es) found across the WHOLE document — the doc has no `## Acceptance` section, so this list may include phase checklists). Continuation lines included; if a
 criterion here reads as a fragment, that is the source text, not a truncation.*
-*NOT verified, and NOT verifiable as things stand — issue #942 has no '## Acceptance' section — nothing to copy from. This list exists only in the capture doc; reading the issue will not confirm it, because the issue states no criteria. Establish the criteria on the issue before treating anything below as the definition of done.*
+*NOT verified, and NOT verifiable as things stand — issue #942 has no '## Acceptance' section — nothing to copy from. This list exists only in the capture doc; reading the issue will not confirm it, because the issue states no criteria. Establish the criteria on the issue before treating anything below as the definition of done.*  [Unverified — no citation]
 (no '- [ ]' checklist found in /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/PROJECT/2-WORKING/GH-942-SKILL-DESC-1024-LIMIT.md — add an Acceptance criteria list)
 
 ## Scope lock — builder, do exactly this and nothing else
@@ -121,3 +121,50 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 - **Verification:**
   - Ran the `PROJECT/2-WORKING/GH-942-SKILL-DESC-1024-LIMIT.md` `fix_probes` check across `skills/*/*/SKILL.md` -> `bad: []` (exit `0`; all 38 committed skills have `len(desc) <= 1024`).
   - Verified via `skills/3-weekly/skills-army-hq/scripts/intake.py` `skill_info()` that every allowlisted skill parses cleanly with `description: >-`, `<= 1005` chars, `<= 1009` UTF-8 bytes, and trigger phrases starting within chars `50..203`.
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Changes requested
+
+swept file: yes
+
+Read all 14 allowlisted files in full (11 skills and three shell specs/helpers), including pre-existing content, and the owning GH-942 capture doc. All 11 allowlisted descriptions parse as YAML and fit the limit (798–1005 characters; at most 1009 UTF-8 bytes); their trigger wording begins within the first 250 characters. Their metadata agrees with their actual bodies. No additional actionable pre-existing defect was established in those 14 files by this static sweep. No suite, fixture, pytest, gate, or git command was executed.
+
+**[Blocker] The repository-wide completion condition remains false.**
+
+- **Observed input:** `skills/1-hourly/better-options/SKILL.md:3` has a `description: |` value of 1603 YAML characters (1602 folded); `skills/4-occasional/vscode-color/SKILL.md:3` has 1042 YAML characters (1041 folded). Both paths were confirmed present in this worktree's version-2 index by read-only binary parsing without invoking git. There are 69 tracked `skills/*/*/SKILL.md` inputs, not 38.
+- **Affected scope:** The capture doc's goal and remediation criteria require every committed SKILL.md to fit. These two skills still violate that condition and remain exposed to the loader rejection this task addresses. Both are outside the artifact allowlist: this is also a scope-contract omission. Do not edit them until the parent orchestrator expands the allowlist.
+- **Misleading green probe:** Applying the capture doc's exact description-extraction regex to all 69 tracked inputs returns `capture regex bad: []`. Its repeated indented-nonempty-line pattern stops at the first blank paragraph in these literal YAML scalars. A YAML parse measures the complete value and detects both violations.
+- **Smallest correction:** Have the parent add these two paths to the permitted artifacts, then shorten their descriptions while retaining triggers and body detail. Use a YAML-based whole-value measurement for completion evidence; no new suite or gate is needed. Append corrected evidence rather than rewriting prior relay blocks.
+- **Falsifier:** A nonempty scan of all tracked skill frontmatter using complete YAML values reports no description over 1024 characters, with witnessed rejection at 1025. If either flagged path is proven uncommitted in the reviewed candidate, exclude it with evidence; direct index parsing currently establishes both are tracked.
+
+**Reproduction:** Exported `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`, then ran this non-mutating probe:
+
+```bash
+python3 - <<'PY'
+from pathlib import Path
+import yaml
+files=sorted(Path("skills").glob("*/*/SKILL.md"))
+assert files
+bad=[]
+for p in files:
+    d=yaml.safe_load(p.read_text().split("---",2)[1])["description"]
+    if len(d)>1024: bad.append((str(p),len(d),len(" ".join(d.splitlines()))))
+print("scanned:",len(files),"bad (YAML chars, folded chars):",bad)
+raise SystemExit(bool(bad))
+PY
+```
+
+Exit status **1**; decisive output:
+
+```text
+scanned: 69 bad (YAML chars, folded chars): [('skills/1-hourly/better-options/SKILL.md', 1603, 1602), ('skills/4-occasional/vscode-color/SKILL.md', 1042, 1041)]
+```
+
+Threshold sensitivity was witnessed in isolated Python subprocesses, without executable fixtures. Command: `python3 -c 'import sys,yaml; d=yaml.safe_load(sys.stdin.read())["description"]; print(len(d)); sys.exit(int(len(d)>1024))'`. Fed `description: >-` plus an indented 1024-character string, it exited **0**, output `1024`; with 1025 characters it exited **1**, output `1025`.
+
+**Builder receipt correction:** Several summaries describe different skills than those actually seeded here: `five` is a 5-and-5 decision checksum, not Elon's process; `feynman` uses six translation moves and Express/Full modes, not explain/quiz/audit; `dry` discovers disjoint resource/policy owners; `spike-360` classifies authority through five gates, not four reviewer lenses; and `timbre` uses a Cartographer/Drafter/blind Reader pipeline, not VOICE.md with match/blend/cleanup modes. The on-disk descriptions match their actual bodies, so these are receipt inaccuracies, not requests to change those skills. Correct them in an appended response and replace the unsupported “all 38 committed skills” claim with complete measured evidence.
+
+**Evidence limits:** Verify-tier intent; `list_projects` found no index for this worktree. The nearest `XYZ-forge` graph is another checkout, generation `2026-09-01T15:54:30Z`; coverage returned not-tracked freshness for the skills/specs and metadata-changed for `_setup.sh`. Conclusions therefore rely on direct current-source reads and parsing, not graph completeness. **[Unverified — needs clone run]** Runtime suites and the post-turn harness gate remain outstanding under reviewer containment rules. No consumer restart or device re-vendor was attempted.
+
+Handing off to agy — agy, take your turn.
