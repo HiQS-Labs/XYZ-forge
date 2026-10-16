@@ -17,7 +17,7 @@ Commit:7c5d5aa5; grep/read-only, one local lane across the existing reader/write
 
 ## Status
 
-| What was just completed | What is next |
+| What was just completed | What's next |
 |---|---|
 | Canonical reader/producer/carrier boundaries traced; current ledger reconciled without runtime changes. | Parent judgment on strict premerge producer trust/schema and review allowance; no activation or expensive full run. |
 
