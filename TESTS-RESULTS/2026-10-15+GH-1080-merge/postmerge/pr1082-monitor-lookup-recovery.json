@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-10-16T00:50:21.677177+00:00",
+  "failure": "Existing hosted lookup unexpected EOF while38827672739 in progress; no test verdict",
+  "old_monitor_exit": 1,
+  "old_closeout_exit": 1,
+  "old_closeout_mutations": "none; terminal check stopped before clone creation, reconcile or emission",
+  "same_access_followup": "Existing gh run view succeeded; run still in_progress; no access/credential changes",
+  "original_deadline": "2026-10-16T01:37:45.515698+00:00",
+  "resume": "Only remaining original wallclock budget, same hosted run. Old failures/logs retained; no duplicate run, local writer, cap reset or new review."
+}

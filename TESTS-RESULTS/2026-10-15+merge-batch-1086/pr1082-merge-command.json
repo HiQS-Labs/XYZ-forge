@@ -1,0 +1,11 @@
+{
+  "rc": 0,
+  "stdout": "",
+  "stderr": "",
+  "strategy": {
+    "preserve_commit_history": true,
+    "strategy": "merge",
+    "source": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-merge-20261015/.merge-cleanup.json"
+  },
+  "expected_head": "4d7235d940c8a0029eea621af29ca13ba7d037a3"
+}

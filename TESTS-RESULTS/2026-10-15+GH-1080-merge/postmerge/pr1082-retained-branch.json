@@ -1,0 +1,10 @@
+{
+  "ref": "refs/heads/feat/XYZ-forge-gh1080-express-docs-2026-10-15",
+  "node_id": "REF_kwDOT5mrCNoAOHJlZnMvaGVhZHMvZmVhdC9YWVotZm9yZ2UtZ2gxMDgwLWV4cHJlc3MtZG9jcy0yMDI2LTEwLTE1",
+  "url": "https://api.github.com/repos/HiQS-Labs/XYZ-forge/git/refs/heads/feat/XYZ-forge-gh1080-express-docs-2026-10-15",
+  "object": {
+    "sha": "4d7235d940c8a0029eea621af29ca13ba7d037a3",
+    "type": "commit",
+    "url": "https://api.github.com/repos/HiQS-Labs/XYZ-forge/git/commits/4d7235d940c8a0029eea621af29ca13ba7d037a3"
+  }
+}
