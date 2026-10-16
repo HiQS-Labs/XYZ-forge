@@ -2,16 +2,16 @@
 name: radar
 description: >-
   Per-repo SDLC coach over the last 2-3 weeks: progress, process health, recurring
-  defects and regressions. GitHub issues/PRs are primary work evidence; docs seed
-  discovery and degraded fallback. Analyzes
-  Run/Grow/Transform flow distribution, checks open-PR collisions, and flags release
-  plan drift; scans RADAR/, docs/radar/, or PROJECT/1-INBOX/ for multi-week trajectory
-  arcs. Read-only analysis; findings persist to two sinks (an immutable dated report
-  + one live radar-labeled issue checklist). Trigger when the operator asks "how is our
-  development cycle going", "are we just fixing bugs", "what keeps breaking", "did we
+  defects and regressions. Trigger when the operator asks "how is our development
+  cycle going", "are we just fixing bugs", "what keeps breaking", "did we
   introduce any regressions", "summarize radar history", "radar arc", "is the plan
   still right", "strategic review", "impact review", "run the radar", "/radar", or
-  "/radar --arc". Not for shipped recaps (weekly-shipped), marathon ranking
+  "/radar --arc". GitHub issues/PRs are primary work evidence; docs seed discovery
+  and degraded fallback. Analyzes Run/Grow/Transform flow distribution, checks
+  open-PR collisions, and flags release plan drift; scans RADAR/, docs/radar/, or
+  PROJECT/1-INBOX/ for multi-week trajectory arcs. Read-only analysis; findings
+  persist to two sinks (an immutable dated report + one live radar-labeled issue
+  checklist). Not for shipped recaps (weekly-shipped), marathon ranking
   (start-marathon), or maturity assessment (/honest); never executes fixes (/10days
   does that).
 ---

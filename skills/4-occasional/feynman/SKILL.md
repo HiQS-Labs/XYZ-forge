@@ -1,6 +1,18 @@
 ---
 name: feynman
-description: Convert a highly technical document or subject into a plain, accurate, layman-friendly explanation using Feynman-style teaching moves — everyday analogy, a first-principles ladder, jargon stripping, and honesty about the limits. Use this whenever the user wants to "explain this simply", "make this understandable to a non-technical audience", "translate this for stakeholders / execs / new hires / customers", "ELI5 this doc", "de-jargon this", give me the "plain-English version", "what does this actually mean", or hands over a dense technical doc, spec, paper, RFC, or codebase writeup and wants it made digestible — even if they don't say the word "Feynman". Produces a layered explanation (one-sentence core, then gist, then full plain walkthrough), a jargon-to-plain glossary bridge, analogies that each name where they break down, and a flagged list of anything the source left genuinely unclear. Do NOT use this to merely shorten a document that is already clear (that is a summary, not a translation), to write marketing or persuasive copy, or to "dumb down" in a way that sacrifices accuracy. Do NOT fire on a code snippet, stack trace, error message, or a debugging question — those want a direct answer, not a layered explainer.
+description: >-
+  Convert a dense technical document or subject into a plain, accurate,
+  layman-friendly explanation. Use whenever the user wants to "explain this
+  simply", "make this understandable to a non-technical audience", "translate
+  this for stakeholders / execs / new hires / customers", "ELI5 this doc",
+  "de-jargon this", get the "plain-English version", asks "what does this
+  actually mean", or hands over a technical doc, spec, paper, RFC, or codebase
+  writeup to make digestible — even without saying "Feynman". Uses first-principles
+  ladders, a jargon-to-plain glossary, analogies that name where they break, and
+  an honesty pass flagging what the source left unclear. Do NOT use to merely
+  shorten an already-clear doc (a summary), write marketing/persuasive copy, or
+  dumb down at the expense of accuracy. Do NOT fire on a code snippet, stack
+  trace, error message, or debugging question.
 ---
 
 # feynman
