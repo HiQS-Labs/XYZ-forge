@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -67,5 +67,27 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: The bounded correction at d8a6f875 implements the approved companion contract within the explicitly accepted operator-trusted local boundary. No concrete Blocker/Should defect was found, including in the pre-existing portions of the two production files. This approves this separate final extension1/1 only; historical FAILs/counters remain. Publication verification is still owed; this is no merge, deployment or activation approval.
+
+swept file: yes
+
+Sweep: Read the entire seeded packet, canonical 647-line plan, 550-line ci-route.sh and 2775-line wave_reconcile.py, ROUTER qualification policy, AUTHORIZATION.md and EVIDENCE.md. Followed strict-reader callers, selector/writer/replay, committed receipt discovery, premerge entry point and publisher receipt/target/retry interfaces; inspected device configuration resolution and workflow environment wiring. Read retained positive/resume/manual drivers, results, fault logs, historical summary and interruption records; checked raw positive streams/container. This is a complete sweep of the requested production files, not an exhaustive repository or all historical evidence audit. Graph project XYZ-forge is the different primary checkout, generation2026-09-01T15:54:30Z; graph lookup returned no wave symbols and coverage marked changed/not-tracked inputs. Current exact source reads and literal caller searches supplied the evidence; no freshness/completeness claim rests on that graph.
+
+- [Pass] Q1–2: Complete raw B→M scope is partitioned by the original functional predicate, with every other path sent to the strict canonical reader. The pair must be two flat siblings, one supported typed schema1.0 record, unique JSON keys, source-bound sequential v1 Small telemetry and digest, C's sole parent S, exactly two new100644 S→C additions and identical B→M addition/blob tuples. A third nonfunctional change cannot disappear through the projection. Filtering follows verification; failure retains original input. Citations: utils/py/wave_reconcile.py:496, :512, :789, :1073–1156. The legacy reader body is unchanged in the immutable revision comparison; strict mode is opt-in. No fix requested.
+- [Pass] Q3: Selection, writer and replay all call content_source_identity; writer stores companions, including None, and replay requires that key and exact descriptor equality. Both owners use skills-army-content@2. Discovery accepts only wave schemas, not local schema1.0, and @2 outcomes are nested; default premerge excludes unsupported qualification namespaces. Fresh landing phases remain required. Citations: utils/ci-route.sh:18; utils/py/wave_reconcile.py:710, :758, :889, :961, :1209. No fix requested.
+- [Pass] Q4: Retained native-command evidence supports source527760b83-17477 Small75/75, fresh landingc3fe69e0f-57271 Small75/75 and c3fe69e0f-3407 area9/9. Separate container streams match original bytes/digests; true launch IDs are recorded. The positive/resume drivers intercept only npm-ci setup and delegate every validating command to original run_bounded. Controlled PR9001076 metadata and copied existing dependencies are explicitly disclosed. Citations: companion-correction/positive.json (under TESTS-RESULTS/2026-10-16+GH-1076), gh1076-companion-resume-qualification.py.txt, qualification-record.json and the three *-validation.jsonl streams; EVIDENCE.md:3–21. No live GitHub qualification is inferred. No fix requested.
+- [Pass] Q5: The manual driver and fault logs distinguish24 unsupported-shape/full observations from six deliberately injected fatal/fallback controls, wrong-tree replay refusal and generic premerge refusal. failure/config/process/environment controls stop with code6/no receipt; missing-profile attempts exactly one full fallback, deliberately failed; missing-full proof is fatal. These are negative-path evidence, not passing software runs. Four retained unchanged focused logs report81/0,23 tests OK,6 tests OK and23/0, with unchanged identity in focused.json. Historical-summary.json reports221/221 old/current equality with explicit metadata/compatibility limits; this reviewer did not independently rerun the historical reader or any suite. Citations: companion-correction/gh1076-companion-manual-controls.py.txt, manual-controls.json, fault-*.log, focused.json and historical-summary.json. No fix requested.
+- [Pass] Q6: SHA-verified loose-object tree comparison12fa1656→d8a6f875 finds exactly two production changes, utils/ci-route.sh and utils/py/wave_reconcile.py, with no test/ or validate.sh change. Current production bytes equal d8a6f875 blobs. The diff extends existing owners, preserves the functional predicate and legacy reader, and introduces no broad TESTS exemption, runner or registry. Citations: utils/ci-route.sh:18; utils/py/wave_reconcile.py:496, :1073 and reviewer probe below. No fix requested.
+- [Pass] Q7: The first attempt remains incomplete, last gh589 rc120/no summary; its later diagnostic does not establish the cause. PUBLICATION.md explicitly says the normal exact-source gate remains owed. Authorization, trust limits, prior FAIL/counters, no primary/hosted activation and no stable-main/savings claim are preserved. Citations: companion-correction/attempt1-interrupted/INTERRUPTION.json, OUTAGE-CONFIRMATION.json, EVIDENCE.md:23–29, PUBLICATION.md:3; PROJECT/2-WORKING/GH-1076-CI-POLICY.md:619. No fix requested.
+
+Reviewer read-only probe: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 .relay-scratch/review_evidence.py` → exit0. It imports only the production telemetry parser, reads retained bytes, hashes evidence and reads SHA-verified loose commit/tree/blob objects directly; no git command, gate or executable fixture was run. Decisive output: `source-small 527760b83-17477 75/75`; `landing-small c3fe69e0f-57271 75/75`; `landing-skills-army-hq c3fe69e0f-3407 9/9`; `container: two original byte-identical streams; digest bound`; `provenance evidence digests: 7 matched`; `interrupted area: no summary; last suite ('gh589-xyz-mini-sync.sh', 120)`; `SHA-verified production delta: ['utils/ci-route.sh', 'utils/py/wave_reconcile.py'] ; no test/ or validate.sh change`. An in-memory width2 mutation of each stream was rejected with `profile phase contains extra stages, retries, omissions or drift`. Earlier probe revisions exited1: first attempted to read an unchanged packed subtree as loose; second incorrectly asserted the entire delta contained only production files although authorized docs/evidence also changed. Restricting traversal to changed subtrees and the assertion to production scope resolved those reviewer-probe errors; neither was a product failure.
+
+Remaining verification: [Unverified — needs clone run] normal exact-source full publication gate and natural exact-head hosted results. These follow approval under the approved sequence; no future run is counted here. The original interrupted qualification is not upgraded to PASS. Fully fabricated consistent local evidence remains outside the accepted guarantee; no cryptographic producer authentication was requested or claimed.
+
+Relay closed (Approved), no further turn needed. Producer/parent may proceed only with the already authorized publication verification and reporting.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
