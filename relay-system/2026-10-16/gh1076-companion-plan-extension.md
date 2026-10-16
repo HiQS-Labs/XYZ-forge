@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-15.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -67,5 +67,58 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+Ship the scoped plan to implementation.
+
+VERDICT: PASS
+
+Basis: The bounded correction has a coherent immutable carrier contract, preserves the original functional-scope predicate, and requires fresh landing qualification. This approves the plan only, within the explicitly accepted local trust boundary; it does not approve unwritten code, qualification results, publication readiness or activation.
+
+swept file: yes
+
+Read the entire seeded packet and canonical GH-1076-CI-POLICY.md, including historical failures and superseding sections, the retained receipt-companion recon/design, and the separate AUTHORIZATION.md. Inspected current router in full and the relevant wave selection, strict summary, premerge admission, writer, replay and recovery callers, plus hosted_lane_publish.py. No additional pre-existing defect found in the reviewed packet/plan. This is not an exhaustive audit of unrelated reconciler lifecycle code. Graph lookup used XYZ-forge generation 2026-09-01T15:54:30Z; coverage reported changed/missing metadata for the four requested source/plan paths, so current source reads replace stale graph evidence here.
+
+- [Pass] **Scope and identities:** canonical plan lines 616–618 require C to be the actual PR head, one single-parent commit after S, exactly two new regular100644 sibling files, and matching new B→M paths/blobs. The remaining complete raw B→M predicate is preserved, including modes/status/exclusions. Thus the proposed exclusion cannot excuse a third functional path merely because it is under TESTS-RESULTS. Implement the contract as written; no requested change.
+- [Pass] **Accepted trust, not authentication:** plan lines 606 and 612–614 explicitly limit the supported schema1.0 subset, bind original stream bytes, require strict historical Small telemetry, and acknowledge a fully consistent fabricated local story cannot be authenticated. AUTHORIZATION.md explicitly accepts classification-only local proof. This is sufficient for the authorized classification decision; it is not independent producer attestation. No new witness/service is needed for this scope.
+- [Pass] **One owner and compatibility:** plan lines 612 and 618–620 retain the legacy default reader, require the same resolver for selection/writer/replay, bind the empty or populated descriptor, and version CONTENT_PROFILE to skills-army-content@2 while retaining wave-qualification@1 behavior. Current seams are wave_reconcile.py:675 (profile replay), :734 (committed qualifications), :753 (selection), :798 (writer), :1044 (legacy premerge reader), and :2457 (only-receipted recovery). These are the right existing owners to extend; generic schema1.0 must remain classification data rather than postmerge PASS.
+- [Pass] **Fresh execution and fatal failures:** plan lines 620 and 626–628 require real S Small proof followed by fresh independent Small72/area8 streams at controlled M, with true launched identities. Current wave_reconcile.py:873–887 makes command/config/process failures fatal, :898–907 distinguishes environment drift from incomplete-proof fallback, and :918–934 retains the publisher-compatible two physical files. hosted_lane_publish.py's RECEIPT allowlist and receipt_targets consume those existing paths without a companion-path exemption. Preserve these contracts as written.
+- [Pass] **Feasible acceptance, bounded authority:** plan lines 624–630 specify disposable full clones, dependency copying and disclosed setup interception, real qualifying commands, manual negative controls, unchanged existing suites, pinned historical replay, one final review and normal publication gates. Plan lines 602 and 606 preserve historical FAIL/counters, cap each extension at1/1, name disable/revert rollback and stop signals; line 630 prohibits merge/activation/cleanup. No new test machinery or installation is needed by the proposed procedure.
+- [Pass] **Narrow parser reuse observation:** the command below exited **0**. It extracts only the current canonical pure summary function, checks nonempty retained streams, and changes a suite omission field in memory as a red control. Decisive output: `small bytes 23509 PASS 75 75 f874fa8d4-47453`; `skills-army-hq bytes 3146 PASS 9 9 f874fa8d4-81198`; both controls printed `skip-control REJECTED: profile phase contains extra stages, retries, omissions or drift`. Sources: wave_reconcile.py:568–627 and TESTS-RESULTS/2026-10-15+GH-1076/phase3/component-study/{small,skills-army-hq}-validation.jsonl. This establishes only reuse of the present parser with retained bytes, not execution or correctness of the proposed resolver.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+import ast, json, re
+from pathlib import Path
+source = Path("utils/py/wave_reconcile.py").read_text()
+fn = next(n for n in ast.parse(source).body if isinstance(n, ast.FunctionDef) and n.name == "qualification_summary")
+ns = dict(json=json, SMALL_NON_SUITE=("tier2:pdda", "python:test_python_layer.py"))
+exec(compile(ast.Module(body=[fn], type_ignores=[]), "<canonical-summary>", "exec"), ns)
+router = Path("utils/ci-route.sh").read_text()
+root = Path("TESTS-RESULTS/2026-10-15+GH-1076/phase3/component-study")
+for phase, registry, extra in [("small", "small", ns["SMALL_NON_SUITE"]), ("skills-army-hq", "skills_army_hq", ())]:
+    raw = (root / (phase + "-validation.jsonl")).read_bytes()
+    assert raw
+    rows = [json.loads(line) for line in raw.splitlines() if line.strip()]
+    sha = rows[0]["commit"]
+    suites = re.search(r'^SUBSYSTEM_TESTS_' + registry + r'="([^"]*)"$', router, re.M)[1].split()
+    summary = ns["qualification_summary"](raw, sha, suites, extra, strict=True)
+    print(phase, "bytes", len(raw), "PASS", summary["passed"], summary["total"], summary["run"])
+    next(r for r in rows if r.get("event") == "suite")["skip_lines"] = 1
+    try:
+        ns["qualification_summary"]("\n".join(json.dumps(r) for r in rows), sha, suites, extra, strict=True)
+    except ValueError as e:
+        print(phase, "skip-control REJECTED:", str(e))
+    else:
+        raise AssertionError("skip control accepted")
+PY
+```
+
+- [Unverified — needs clone run] The correction does not exist yet. Actual S→C→M admission, fresh qualification, full negative/history matrix, publication gates and final implementation review remain pending under plan lines 625–630. No validate.sh, test/*.sh, pytest, executable fixture or git command was run in this turn. No performance saving or live hosted qualification is claimed.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with the authorized implementation and separate final-review1/1; all prior counters and accepted local trust remain intact. Harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
