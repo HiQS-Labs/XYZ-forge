@@ -6,6 +6,7 @@ import time
 import re
 import json
 import shutil
+import shlex
 import datetime
 
 DEFAULT_ORCHESTRATOR_ONLY = (
@@ -1388,6 +1389,16 @@ def main():
     ready = 1
     ready_next = ""
     gate_cmd = merged.get("gate", "")
+    # GH-1098 A4: a contract that names the repo's default FULL gate gets the tier
+    # validate.sh --auto classifies for the lane's actual diff (ci-route.sh; fails closed to
+    # tier 3). The pre-push hook already applies that tiered policy, so the pre-advance gate
+    # now agrees with it instead of running ~20-30 min of full suite inside the gate guard.
+    # Any other contract gate passes through untouched.
+    contract_gate = gate_cmd
+    if gate_cmd.strip() in ("bash ci-local.sh", "bash validate.sh", "./validate.sh"):
+        gate_cmd = f"bash validate.sh --auto {shlex.quote(merged['target']['ref'])}"
+    gate_routed_note = (f" (routed by validate.sh --auto from contract gate `{contract_gate}`)"
+                        if gate_cmd != contract_gate else "")
     all_artifacts = effective_artifacts["artifacts"]
     art_csv = ",".join(all_artifacts)
     art_count = len(all_artifacts)
@@ -1831,7 +1842,7 @@ def main():
 - Suggested branch: `{suggested_branch}` (branch_ready={br_ready_str}{br_prompt_str})
 - Verdict: {verdict}
 - {issue_state_packet_line[2:]}
-- Gate: `{gate_cmd}`
+- Gate: `{gate_cmd}`{gate_routed_note}
 {gh108_gate_caveat}
 - Artifacts: {art_csv}
 - Suggested turn budget: {gh39_budget_line}

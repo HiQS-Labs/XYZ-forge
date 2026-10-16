@@ -518,11 +518,19 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     ("failed", reason) for jog_set_status. All durable state lands in the execution ledger
     under .tick/jog/<gid>/ so a restart can reconcile without a second dispatch.
     """
+    # GH-1093/GH-1098 A1: prefer the preflight that ships IN this repo so a disposable clone is
+    # judged against its own tree, not whatever a shell-global XYZ_HARNESS points at. Only a
+    # root without its own copy (vendored .xyz/ layouts) falls through to the harness home.
     home = harness_home()
-    preflight_py = os.path.join(home, "utils", "py", "swarm_preflight.py")
+    preflight_py = os.path.join(root, "utils", "py", "swarm_preflight.py")
+    if not os.path.isfile(preflight_py):
+        preflight_py = os.path.join(home, "utils", "py", "swarm_preflight.py")
     if not os.path.isfile(preflight_py):
         return "parked", f"marathon executor: swarm_preflight not found at {preflight_py} " \
                         f"(vendored installs resolve .xyz via the harness home — GH-279 #2)"
+    if os.path.realpath(os.path.dirname(os.path.dirname(os.path.dirname(preflight_py)))) != os.path.realpath(root):
+        print(f"jog: preflight script resolved outside this root ({preflight_py}); "
+              f"SWARM_PREFLIGHT_ROOT pins evaluation to {root}")
 
     state = jog_load_state(root, gid)
     exec_id = f"gh{gh_num}-exec{len(state['executions']) + 1}"
@@ -545,7 +553,8 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
 
     pf = subprocess.run(
         [sys.executable, preflight_py, "--gh-issue", str(gh_num), "--out", packet_dir],
-        cwd=root, capture_output=True, text=True)
+        cwd=root, capture_output=True, text=True,
+        env={**os.environ, "SWARM_PREFLIGHT_ROOT": root})
     if pf.returncode == 4:
         record["status"] = "completed-preflight-stale"
         jog_save_state(root, gid, state)
@@ -585,6 +594,11 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     # Jog already holds the outer driver lock; exporting it keeps marathon-drive from
     # contending with its own supervisor on the same lock directory.
     env["RELAY_DRIVER_LOCKED"] = "1"
+    # GH-1098 A3: the agy shim's GH-492 idle bound (300 s of no CPU / no file writes) kills a
+    # healthy builder that is waiting on its backend for a large brief (observed 2026-10-16,
+    # GH-942). For jog-dispatched lanes the idle bound equals the wall cap; an operator export
+    # still wins, and non-jog relays keep the shim default.
+    env.setdefault("RELAY_TURN_IDLE_S", env.get("RELAY_TURN_TIMEOUT_S", "900"))
 
     # GH-292 F1: supervisor-owned writes are committed BEFORE any turn dispatches, so the
     # supervisor's to revert.
@@ -1184,6 +1198,7 @@ def promote_contract_to_working(root, gh_num, doc_path, interactive=True):
         content = f.read()
 
     # Ensure status table exists
+    status_table = ""
     if "## Status" not in content:
         status_table = (
             "\n## Status\n\n"
@@ -1191,15 +1206,28 @@ def promote_contract_to_working(root, gh_num, doc_path, interactive=True):
             "|---|---|\n"
             "| Promoted to active working contract via jog | Execute implementation and verify probes |\n\n"
         )
-        if "---" in content:
-            parts = content.split("---", 2)
-            if len(parts) >= 3:
-                fm = re.sub(r"(?m)^status:\s*.*$", "status: Active", parts[1])
-                today = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d")
-                fm = re.sub(r"(?m)^updated:\s*.*$", f"updated: {today}", fm)
-                content = f"---{fm}---{status_table}{parts[2].lstrip()}"
-        else:
-            content = status_table + content
+    # GH-1098 A2: a 2-WORKING doc must carry title/status/created/updated/owner/goal
+    # (utils/pdda/pdda.sh REQUIRED_KEYS); 1-INBOX docs often lack the last three, and a
+    # verbatim copy then fails the PDDA gate after the build (observed 2026-10-16). Fill only
+    # the absent keys; never overwrite an existing owner/goal.
+    parts = content.split("---", 2)
+    if content.startswith("---") and len(parts) >= 3:
+        fm = re.sub(r"(?m)^status:\s*.*$", "status: Active", parts[1])
+        today = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d")
+        fm = re.sub(r"(?m)^updated:\s*.*$", f"updated: {today}", fm)
+        if not re.search(r"(?m)^updated:", fm):
+            fm = fm.rstrip("\n") + f"\nupdated: {today}\n"
+        if not re.search(r"(?m)^owner:", fm):
+            owner = subprocess.run(["git", "config", "user.name"], cwd=root,
+                                   capture_output=True, text=True).stdout.strip() or "operator"
+            fm = fm.rstrip("\n") + f"\nowner: {owner}\n"
+        if not re.search(r"(?m)^goal:", fm):
+            title = re.search(r"(?m)^title:\s*(.*)$", fm)
+            goal = (title.group(1).strip().strip('"') if title else f"GH-{gh_num}").replace('"', "'")
+            fm = fm.rstrip("\n") + f'\ngoal: "{goal}"\n# jog: goal auto-filled from title; refine\n'
+        content = f"---{fm}---{status_table}{parts[2].lstrip() if status_table else parts[2]}"
+    elif status_table:
+        content = status_table + content
 
     probes = extract_probes_from_doc(doc_path)
     valid_probes = []
@@ -1735,6 +1763,7 @@ def jog_run_main(args=None):
                     cwd=root,
                     capture_output=True,
                     text=True,
+                    env={**os.environ, "SWARM_PREFLIGHT_ROOT": root},  # GH-1098 A1
                 )
                 if pf_res.returncode == 4:
                     print(f"jog: GH-{gh_num} preflight reported already-landed (auto-dropping).")
