@@ -64,3 +64,8 @@ Plan QA Approved with mechanical attestation at reviewed head 35b5d75cd622f26e56
 ## Lessons Learned (For Future Agents)
 
 An opening precedence rule cannot correct explicit contradictory per-lens instructions. Keep observation authority distinct from adopted operational policy and unavailable evidence distinct from a negative result.
+
+
+## Authorized Radar pair reconciliation — 2026-10-16
+
+Noel requested canonical PR1085ledger/changelog repair and integration into PR1091 before either conditional development landing. Current qualified base `33adc9b9376cc569877846c53e1a936bea428af2`; canonical merge `17b06bdc072698f1f1d4c4136b21b0cf270cf4ae` preserves all incoming rows and the original Radar product blob. Caller repair 1/2; original plan/final round1 and mechanical attestations retained, current native final2/3 pending. The paired1091source must preserve GitHub authority and calibration safeguards while clarifying pinned code SHA versus live tracker observation times, recurrence, and stable target identity. Existing checks/normal gates and independent final review precede landing; no new CI tests/cases/assertions, live Radar, skill install,1079changes, cleanup or main promotion. Deployment/sync handoff remains unchecked and separate. Completed batch1086 is not rerun.

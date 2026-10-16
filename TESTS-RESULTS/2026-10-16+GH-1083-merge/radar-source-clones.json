@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-10-16T01:45:19.303388+00:00",
+  "clones": [
+    {
+      "pr": 1085,
+      "clone": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1085-radar-prep",
+      "head": "5db3866308c66e3b506b7fcf87edb41ebdd0cbd0",
+      "branch": "docs/pr1085-current-base-20261016",
+      "hooks": "normal installed/checked",
+      "scope": "Source clone only; no suite or product edit yet"
+    },
+    {
+      "pr": 1091,
+      "clone": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1091-radar-prep",
+      "head": "f57b99a50cba0b9ae29de83addefeaa797684b20",
+      "branch": "docs/pr1091-radar-reconcile-20261016",
+      "hooks": "normal installed/checked",
+      "scope": "Source clone only; no suite or product edit yet"
+    }
+  ]
+}
