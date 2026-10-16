@@ -1,6 +1,6 @@
 ---
 title: "GH-1051: development-only Pages publishing"
-status: Working
+status: Complete
 created: 2026-10-12
 updated: 2026-10-15
 owner: Codex

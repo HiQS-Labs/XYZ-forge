@@ -1,0 +1,11 @@
+# Receipt-companion design checkpoint
+
+The ordinary-PR eligibility blocker is in scope and remains open. This checkpoint does not retire the feature or request another optimization-risk decision from Noel.
+
+Recommendation: add a strict companion-set mode to the canonical premerge reader, then consume that exact verified set in complete raw-scope classification. Do not add a TESTS-RESULTS path exemption or equate generic PASS with companion integrity. The record must bind a frozen pre-carrier source commit/tree, actual producer/revision, versioned schema and every regular evidence file's immutable Git blob/hash. Source→carrier must contain exactly that verified set. Reuse qualification_summary and existing writer/publisher semantics; preserve historical @1 and @2 behavior unless explicitly versioned. Unknown, extra, stale, forged/mismatched or mixed functional inputs keep full; identity drift/test failure remain fatal.
+
+Inspection found no existing independently attested committed premerge producer. The canonical wave producer requires MERGED; local gate_receipt/gate-record are explicitly self-reported/tamper-evident. Held evidence-carrier planning rules do not create proof authority. The earlier controlled writer accepts simulated telemetry under its fixture and cannot be cited as authentication.
+
+This makes the producer/trust boundary and any new schema a real contract/review decision. A strict local resolver can reject tampered bytes, stale identity, wrong producer metadata and incomplete/mixed sets within the existing self-report trust boundary. It cannot reject a fully resealed false producer story without an independent witness. Parent should judge whether that existing trust model is intended or require a narrowly scoped trusted premerge producer. Do not silently invent a second policy or reset finalFAIL1/1. No expensive full run is justified before this boundary is settled.
+
+Current independent permitted work: reconcile development ded62080 into the owned branch with the canonical ledger tool, preserve both sides' INSERT rows, and verify/publish the resulting documentation/ledger snapshot through normal gates. No #1053/#1082 coordinator branch must move; primary setting remains false. No source correction, new CI case, extra review, activation, merge-to-development or cleanup at this checkpoint.

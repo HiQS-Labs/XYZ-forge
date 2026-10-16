@@ -1,0 +1,11 @@
+{
+  "base": "d48aa774dc1e22fbab393a9324057b8acff47d4b",
+  "ours_changed_insert_rows": 13,
+  "incoming_changed_insert_rows": 6,
+  "missing_changed_rows": [],
+  "header_floor": 1674,
+  "resolution": "Higher generation/settings row; union all op_receipts. Native resolver rebuild/check follows.",
+  "after_native_missing_rows": [],
+  "after_native_generation": "-- generation: 1675",
+  "native_check": "0 failures,9 warnings"
+}
