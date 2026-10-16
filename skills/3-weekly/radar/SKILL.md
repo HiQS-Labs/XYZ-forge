@@ -428,9 +428,11 @@ Read the DB using `releases check`, `releases list`, and the `python3 utils/time
 Skip silently if the DB is absent, has no unshipped releases, or contains only the installer's seed block (e.g., a release whose description says EXAMPLE / "replace this", or that has an empty target date and tracking issue). Reporting drift against a seed is precisely the "do not treat a sparse file as an incomplete one" failure §GH-381 forbids.
 
 Otherwise, for each unshipped release in the payload: join its `milestoneRef` (or `milestone`) to its issue set
-(`gh issue list --milestone "<title>" --state open`). GitHub owns actual membership and
+(`gh issue list --milestone "<title>" --state all --limit 500 --json number,state,closedAt`). GitHub owns actual membership and
 open/closed state; the DB defines planned bands, not live membership. Verify doc-derived joins
-against GitHub and report mismatches as drift.
+against GitHub and report mismatches as drift. Separate open members as current backlog from
+closed members as historical delivery; retain both in membership/theme analysis. Paginate the
+remaining members or label coverage incomplete when the result limit is reached.
 
 **If `milestoneRef` is empty, or the repo has no milestones at all, the join is impossible — fall
 back to reading the release's planned intent from its `blurb` or `exit` prose and label the
