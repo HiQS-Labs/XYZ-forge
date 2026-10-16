@@ -4,6 +4,9 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/1075
 title: merge-cleanup batch record keeps stale per-PR file lists on resume
 status: Active
 created: 2026-10-14
+updated: 2026-10-15
+owner: noelsaw1
+goal: "On --resume, batch_record.extend() refreshes files and soft for already-planned PRs so the regression sweep sees current overlaps; order and outcomes unchanged."
 fix_probes:
   - test -f skills/2-daily/merge-cleanup/scripts/batch_record.py
   - python3 test/gh436-merge-cleanup.py --help
