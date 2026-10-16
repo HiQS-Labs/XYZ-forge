@@ -1,8 +1,8 @@
 ---
 Goal: Plan QA — GH-1098 Shift outer loop Phase 3 (Scope A: four surgical fixes)
 Date: 2026-10-16
-NEXT: codex (Reviewer)
-STATUS: Open
+NEXT: claude (Producer)
+STATUS: Changes requested
 ---
 
 # Context
@@ -104,3 +104,32 @@ All four `[Should]` findings and both implementation notes accepted; plan revise
 | Note A2 marker | **Accepted.** Marker is a YAML `#` comment line, not an HTML comment. | A2 row |
 
 Re-review requested on the revised plan only. Handing off to codex — codex, take your turn.
+
+
+### Round 2 · Reviewer · codex
+
+**Verdict:** Changes requested
+
+The revised A1–A4 implementation approach is suitable for this small local harness change. The missing-key seeds, actual default-gate red control, YAML comment, legacy-call env pin, and explicit all-agy-turns scope address the earlier design findings. Two bounded plan corrections remain; neither asks for more code, tests, flags, or queue machinery.
+
+1. **[Should] Finish reconciling the acceptance contract throughout the artifact.** PROJECT/1-INBOX/GH-1098-SHIFT-PHASE3.md:9 still requires two PR-ready items from **one** invocation, while :95 explicitly says that is unreachable and replaces it with up to three invocations. :43 still promises the full gate on push, while :52 correctly describes the tiered hook. Update the goal and A4 requirement to agree with the revised detailed sections. Distinguish a proposed reconciliation from externally accepted issue requirements; the producer response alone does not establish operator/issue acceptance.
+   Observed input: the revised plan contains the old goal/full-push guarantee and their replacements simultaneously.
+   Affected scope: plan frontmatter goal, Requirements A4, and claims that issue requirements have been reconciled; no source change.
+   Falsifier: one consistent acceptance contract throughout, with changed issue requirements either backed by an acceptance reference or explicitly described as proposed adjustments.
+   Evidence command: read-only python3 using Path("PROJECT/1-INBOX/GH-1098-SHIFT-PHASE3.md").read_text().splitlines(), printing lines starting with goal:, - **A4**, and **Exit criterion 1 reconciled; exit 0. Decisive output: line 9 says "One unattended ... >= 2 of 3"; line 95 says that condition is "unreachable by design"; line 43 says "the full gate stays on the pre-push hook". Hook source confirms eligible tier-2 success exits without the full fallback (githooks/pre-push:267–281).
+
+2. **[Should] Specify a Scope C baseline that can measure the routed-gate claim.** Scope C still says to clone **this branch** (:91–93), while the contract base remains development. The plan itself says these harness edits route full (:82). validate.sh --auto development classifies all tracked differences against that ref, including unmerged harness changes, not just the GH-960-shaped task. The setup risks deliberately selecting the same full gate whose duration it intends to avoid. Use the post-landing development baseline for Scope C, or label the branch-based run provisional and defer the tier-2 duration claim until that baseline exists. Correct A4's base..HEAD description to include tracked working-tree changes; the implementation uses a single-ref diff.
+   Observed input: Scope C starts on the unmerged A1–A4 branch, target.ref is development, and A4 acceptance expects the GH-960-shaped gate inside 1800 s.
+   Affected scope: Scope C setup and A4 measurement interpretation only; route and gate guard stay unchanged.
+   Falsifier: the specified baseline already contains A1–A4 in the compared development ref, or a disposable-clone receipt lists the complete compared paths and demonstrates those harness changes do not force tier 3.
+   Evidence commands: nl -ba validate.sh | sed -n '871,895p'; nl -ba utils/py/marathon_drive.py | sed -n '2328,2343p;2682,2696p;3210,3295p'; exit 0. Decisive output: _auto_head="" for a single supplied ref, then git diff --no-renames --name-only "$_auto_base"; gate runs after relay approval in the target checkout; branch guard returns when current branch is not protected (:3233–3234), so it does not re-anchor an existing task branch onto development. This is a source-grounded measurement risk, not an executed failure.
+
+Implementation notes retained: quote target.ref as one shell argument when constructing A4's command; preserve existing owner/goal and Status table in A2. The new seeded A2/A4 controls are meaningful recipes, not yet witnessed passes. A1 must demonstrate the clone target and successful dispatch, rather than treating any non-6 refusal alone as success. Rating remains reasonable with its stated one-day evidence limit.
+
+Evidence/containment: read the revised plan in full and requested source sections. Verify-tier intent. list_projects(limit=100) returned all 84 projects (has_more=false), none rooted at this checkout. Canonical XYZ-forge graph lookup returned three relevant jog symbols, but coverage generation remains 2026-09-01T15:54:30Z, with changed metadata for jog, preflight, agy, marathon/relay drivers, validate, hook and PDDA, and untracked harness_paths metadata. Used exact local source fallback rather than treating that graph as current; no index mutation.
+
+Fresh read-only remote query gh issue view 1098 --repo HiQS-Labs/XYZ-forge --json body,comments failed with exit 1: "error connecting to api.github.com". Its redirected scratch file was empty and was not used as evidence; the subsequent JSON read also failed. This turn therefore does not attest current remote acceptance of the proposed requirement adjustments. Earlier historical receipts remain as recorded above.
+
+**[Unverified — needs clone run]** Runtime dispatch, promotions, env propagation under execution, suites and actual routed-gate duration. No validate, test suite, pytest, executable fixture, or git command was run. Only this relay file was edited; scratch stayed under .relay-scratch/.
+
+Handing back to claude for the two plan corrections.
