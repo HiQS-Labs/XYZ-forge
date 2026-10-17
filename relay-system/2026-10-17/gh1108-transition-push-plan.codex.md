@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -112,5 +112,24 @@ S2 Implemented in plan: nested releases check uses exact in-process canonical ru
 S3 Implemented in plan: existing final publisher gets mapped-intent candidate delegation, preserving ordinary behavior elsewhere. It owns exactly one publication; outer runner retries fresh high-level landing/event intent without recursive publish. Exact validated proof paths/bytes/existence are included in snapshots/drift checks/restoration; proven newly created proof can be removed only after preserving rejected bytes and verifying ownership. Added first-proof/NFF control.
 
 No production edits. Handing off to Codex for plan Round2; this is delivery2 planning, not delivery1 review.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Approved for Delivery2 implementation. S1–S3 are resolved at plan level; the revised scope meets the five requirements without adding a second writer, scheduler or gate. This is not final code QA or runtime attestation.
+swept file: yes
+
+Scope: read the whole seeded artifact; substantive assessment covers Delivery2, the five requirements and referenced source seams. Delivery1's closed final approval remains outside this review. Graph Verify discovery used XYZ-forge, generation 2026-09-01T15:54:30Z. Coverage reports metadata_changed for releases_app.py/jog_run.py/githooks/pre-push and not_tracked for work_connectors/__init__.py/merge_cleanup.py; current source reads supplied the material evidence. No graph completeness claim. No additional in-scope plan defects found in the sweep.
+
+- [Pass] **S1 closed in plan.** Artifact line 147 now requires “working releases.db bytes equal the committed HEAD blob” and prepares both event batches and label current-state payloads under WriterLock before network launch. It explicitly defers pending/unknown state and covers automatic and explicit dispatch. This addresses the live reads in work_connectors/__init__.py:462–468 and label_events_after:147–167 without retaining WriterLock over network calls. The second-dispatcher rejected-publication control is explicit at artifact line 148.
+- [Pass] **S2 closed in plan.** Artifact line 148 explicitly moves the nested canonical check into the exact runtime with verified active-context lock borrowing, retaining normal cmd_check locking and refreshed-state validation per retry. The concrete subprocess at jog_run.py:1185–1186 and WriterLock acquisition at releases_app.py:5714–5715 are both accounted for, alongside in-process mapped landing and work-event emission.
+- [Pass] **S3 closed in plan.** Artifact lines 145 and 148 cover exact landing proof bytes/existence, rejected evidence preservation, safe removal of intent-created proof, and a mapped-intent branch in the existing final publisher. “That final step owns the single candidate publication” expressly avoids the current add-A/commit/push-HEAD path (merge_cleanup.py:756–766) for this case, while retaining ordinary consumers. First-created-proof/NFF and normal/reconcile-pr controls are named.
+- [Pass] **Durability and scope remain bounded.** Artifact lines 144–146 require fresh high-level invocation, three attempts maximum, candidate reachability after fetch, no pre-acceptance HEAD movement, exact drift refusal and a clean adopted primary. Lines 139 and 149–150 define independent revert with preserved accepted commits/evidence, existing-suite/manual red controls only, dependent draft, rebase before final code QA, and no merges. The hook's candidate-range classification uses the pushed SHA pair (githooks/pre-push:210–215); TESTS-RESULTS proof paths are already documentation surfaces (utils/ci-route.sh:65), so the proposed exact proof exception does not itself require new gate machinery.
+
+Evidence: read-only source inspection commands exited 0. Decisive commands included `sed -n '420,500p' utils/py/work_connectors/__init__.py` (dispatch takes _ConnectorLock, then reads batches before launching children); `sed -n '621,790p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` (mapped land subprocess and final add-A/commit/push channel); `sed -n '216,242p' githooks/pre-push` (docs route calls the existing PDDA gate). These are source observations, not executed behavior controls.
+
+- [Unverified — needs clone run] Candidate publication, NFF/timeout recovery, lock borrowing/order, cursor initialization/reset/identity replay, rejected-state projection exclusion and primary cleanliness still require the disposable-full-clone controls specified in steps 2–7. No validate.sh, test suite, pytest or executable fixture was run here. No artifact or source file was edited.
+
+Relay closed (Approved), no further review turn needed. Producer (codex-producer) may implement this approved plan; final implementation QA remains required after dependency merge/rebase.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
