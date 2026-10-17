@@ -9,3 +9,5 @@ The existing real-chain adapter suite passed **223 checks, 0 failures**. Full ou
 Initial full PDDA run failed solely on the new recon document's missing frontmatter, status table and coverage exemption. Those were fixed; each failed subcheck reran green. PRS check was clean; frozen-twin staged guard passed. Full publication gate is required and remains pending final review/publication.
 
 Independent plan review Approved: `relay-system/2026-10-16/gh1100-plan.codex.md`, structured attestation here. Final review and publication receipts follow.
+
+Final Codex review Approved at reviewed head b92d66c8 (`final-attestation.json`). Integration base advanced to 746b1148; existing ledger_merge disjoint replay kept upstream queue/roadmap state, replayed only GH-1100 via writer and resolver, and reminted the row as rmi-01M53Y2G9AG6656690Q53F8ZPW. Its status_label was NULL after replay, so it was explicitly re-admitted with accepted-start. Original pre-implementation admission remains in commit d6c7e9b0 history; no runtime code changed during integration. Routine generated leaderboard view is excluded from the task diff.

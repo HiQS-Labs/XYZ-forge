@@ -18,7 +18,7 @@ Jog must dispatch Marathon against the preflight target even when preflight and 
 
 | What was just completed | What's next |
 |---|---|
-| Adapter implemented; 223 existing checks and red/green controls pass | Final Codex QA, then full publication gate |
+| Both Codex reviews Approved; focused checks pass; integration conflicts resolved | Full push gate and development PR |
 
 ## Grounding and bet
 
@@ -52,3 +52,7 @@ Runtime commit d6c7e9b0: base/target-only controls fail as intended; full candid
 ## Lessons Learned (For Future Agents)
 
 Pinning preflight's evaluation root does not pin its downstream process. Explicit artifact target and coordination/tooling roots are separate existing contracts. Validate both; cwd alone is insufficient.
+
+## Integration and handoff
+
+Final Codex QA Approved in `relay-system/2026-10-16/gh1100-final.codex.md`. Base advanced to 746b1148; existing disjoint ledger replay preserved upstream queue records and replayed only this task through the canonical writer/resolver. Owned row is now rmi-01M53Y2G9AG6656690Q53F8ZPW (re-admitted explicitly after replay); rating remains 80/85/50/90 with no override. Runtime is byte-identical to the reviewed and focused-tested d6c7e9b0. Original accepted-start happened before that runtime edit. Publication gate pending.
