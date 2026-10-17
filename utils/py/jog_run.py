@@ -31,6 +31,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
 # Ensure utils/py is in sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -526,7 +527,7 @@ def _execution_root(root, target):
 
 
 def _ledger_bytes(root):
-    return {p: hashlib.sha256(open(os.path.join(root, p), "rb").read()).hexdigest()
+    return {p: hashlib.sha256(Path(root, p).read_bytes()).hexdigest()
             for p in ("releases.db", "releases.sql") if os.path.isfile(os.path.join(root, p))}
 
 
@@ -973,7 +974,7 @@ def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, pu
     branch = _git(target, "symbolic-ref", "--short", "HEAD").decode().strip()
     if push and (branch != receipt.get("head_branch") or branch == "development"):
         raise ContractError("receipt publication requires its existing lane branch")
-    original = open(result_path, "rb").read()
+    original = Path(result_path).read_bytes()
     result = _validate_marathon_result(json.loads(original))
     if result != receipt:
         raise ContractError("publication result differs from original receipt")
@@ -983,7 +984,7 @@ def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, pu
     rel = f"TESTS-RESULTS/{date}+GH-{issue}/jog/{execution}"
     directory = os.path.join(target, rel)
     gate_path = os.path.join(target, ".xyz", "receipts", f"{receipt['head_sha']}.json")
-    gate_bytes = (open(gate_path, "rb").read() if os.path.isfile(gate_path)
+    gate_bytes = (Path(gate_path).read_bytes() if os.path.isfile(gate_path)
                   else (json.dumps(gate, indent=2) + "\n").encode())
     provenance = (json.dumps({"source": "approved Marathon result", "execution_id": execution,
                               "approved_sha": receipt["head_sha"],
@@ -1002,7 +1003,7 @@ def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, pu
     os.makedirs(directory, exist_ok=True)
     for name, data in files.items():
         path = os.path.join(directory, name)
-        if os.path.exists(path) and open(path, "rb").read() != data:
+        if os.path.exists(path) and Path(path).read_bytes() != data:
             raise ContractError(f"refusing to replace existing committed execution evidence: {rel}/{name}")
     for name, data in files.items():
         with open(os.path.join(directory, name), "wb") as stream:
@@ -1204,7 +1205,7 @@ def jog_land(root, gh_num, pr_arg=None):
                "tail_proof": proof, "hosted_reconcile": matching[0]}
     path = os.path.join(root, bundle, "landing.json")
     encoded = json.dumps(landing, indent=2) + "\n"
-    if not os.path.isfile(path) or open(path, encoding="utf-8").read() != encoded:
+    if not os.path.isfile(path) or Path(path).read_text(encoding="utf-8") != encoded:
         with open(path, "w", encoding="utf-8") as stream:
             stream.write(encoded)
     print(f"jog: GH-{gh_num} landed from committed receipt — PR #{pr_number}, {merged[:8]}; "

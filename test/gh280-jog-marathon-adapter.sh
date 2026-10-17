@@ -520,8 +520,12 @@ FT="$WORK/root-execution"; FVT="$WORK/vendor-execution"
 prepare_execution_target() {
   local primary="$1" target="$2"
   if [ -d "$target" ]; then require_fixture "$target" "execution clone"; rm -rf "$target"; fi
-  git -C "$primary" checkout -q development 2>/dev/null || git -C "$primary" checkout -q -b development
+  if [ "$(git -C "$primary" branch --show-current)" != development ]; then
+    git -C "$primary" branch -f development HEAD
+    git -C "$primary" checkout -q development
+  fi
   git clone -q --no-local "$primary" "$target"
+  git -C "$target" branch --no-track main origin/main
   git -C "$target" remote set-url origin "$(git -C "$primary" remote get-url origin)"
   git -C "$target" config gh280.fixtureRemote "$primary"
   git -C "$target" config user.name gh280
@@ -941,6 +945,7 @@ git -C "$FR" add -A >/dev/null 2>&1; git -C "$FR" commit -qm "wave fixture prep"
 git -C "$FR" push -q origin HEAD:refs/heads/development
 "$REAL_GIT" --git-dir="$REMOTE" update-ref refs/pull/42/head "$LANE_TIP"
 LAND_BUNDLE="$(find "$FR/TESTS-RESULTS" -path '*/jog/*/receipt.json' | sort | tail -1)"
+[ -n "$LAND_BUNDLE" ] && [ -s "$LAND_BUNDLE" ] || { fail "landing fixture has no committed receipt bundle"; exit 1; }
 LAND_BUNDLE_DIR="$(dirname "$LAND_BUNDLE")"
 LAND_BUNDLE_REL="${LAND_BUNDLE_DIR#"$FR/"}"
 cp -R "$LAND_BUNDLE_DIR" "$WORK/landing-bundle"
