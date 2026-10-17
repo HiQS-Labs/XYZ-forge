@@ -18,7 +18,7 @@ Jog must dispatch Marathon against the preflight target even when preflight and 
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA Approved; accepted-start recorded; adapter implemented | Disposable-clone verification and final Codex QA |
+| Adapter implemented; 223 existing checks and red/green controls pass | Final Codex QA, then full publication gate |
 
 ## Grounding and bet
 
@@ -44,3 +44,11 @@ PRS read-back: **80/85/50/90**, no override. Priority retains issue value (block
 
 The pre-fix intercepted dispatch must fail the missing-target/root assertions (nonempty captured dispatch required). A target-only mutation must still fail the harness-root assertion; this prevents a cosmetic fix. Verify explicit packet target is preserved, and vendored .xyz harness and consumer coordination roots remain distinct. No standalone resolver policy change is in scope.
 Review whether the adapter's executable-parent assumption matches all supported preflight packets, whether explicit same-root target causes a relay containment conflict, and whether root/phase/coordination pinning addresses the incident without widening the contract. Operational envelope: a local operator-controlled harness, not an unrequested multi-tenant security model. Grade commensurate complexity and actual requirements.
+
+## Verification so far
+
+Runtime commit d6c7e9b0: base/target-only controls fail as intended; full candidate passes. Existing gh280 adapter: 223 pass, 0 fail in disposable full clone, identity unchanged. Real Marathon dry-run phase root is clone-local. See [verification summary](../../TESTS-RESULTS/2026-10-16+GH-1100/SUMMARY.md). Plan QA Approved in `relay-system/2026-10-16/gh1100-plan.codex.md`. Full routed publication gate remains pending; no ready claim yet.
+
+## Lessons Learned (For Future Agents)
+
+Pinning preflight's evaluation root does not pin its downstream process. Explicit artifact target and coordination/tooling roots are separate existing contracts. Validate both; cwd alone is insufficient.
