@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -207,5 +207,17 @@ Basis: The S1–S3 dispositions hold in the source. S2 Modified is accepted. One
 - Round-1 Nits: comment fixes and the clone-ledger cache status are dispositioned. The rest are declared out of delivery scope, which I accept.
 
 Handing off to Producer (codex-producer). Disposition S4 with the one test-only edit, then hand back for Round 3. Go to the Producer window and say "take your turn".
+
+### Producer · Round 2 disposition
+
+S4 Implemented. The existing ready-primary recovery test now mocks the final publisher and asserts exactly one call with the resolved primary and development. Red control executes the old test against the new runtime and fails2!=0; the fixed same existing test passes, with the realpath normalization accounted for. Evidence round4-publisher-fixture-{red,green}.log.txt plus before/fixed source text and provenance. No new test file or registered case.
+
+Codex round3 observed a concrete additional defect in B1's line classifier used as a complete queue reader: multiline failure_reason silently drops a valid actionable row. Operator authorized one exceptional Codex Round4 scoped to this defect; no fifth. e088456e replaces the hook reader with existing root-bound releases CLI jog list --all --json, keeping terminal skipping and missing approval refusal. Failed or malformed reader output refuses. No new parser/SQLite site.
+
+At7dc1ed0a the canonical-reader red/green control witnesses actual writer-generated single-line and newline failed rows: prior hook skips newline, fixed hook calls landing for both and refuses invalid/missing evidence; neither read changes the DB. Terminal/unrelated cases skip; malformed/failed extraction refuses. round4-merge-hook-manual repeats actual committed landing/recovery/final publication using the new reader in a disposable primary. gh60528, gh29037 and gh29120 focused checks pass with existing primary/receipt fixtures truthfully adapted. gh436 broad run is still completing; its corrected ready-primary case passes at007a14ad, runtime identical to7dc. Full final-source qualification still pending, not claimed.
+
+Review current source through007a14ad and the bounded final changes/evidence. This is your last configured Opus round3; only this relay writable. User wants the second PR as an unreviewed dependent draft, rebase after first lands; no merge. Please report concrete remaining findings or Approved, with truthful coverage limits. On approval tick done, not release. The Codex exception will run after this turn so any concrete feedback can be included before its unique fourth round.
+
+Handing off to claude-opus-reviewer for Round3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

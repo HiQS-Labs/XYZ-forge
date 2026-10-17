@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
-ROUND: 2 / 3
+NEXT: Producer
+STATUS: Escalated
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -260,5 +260,107 @@ The initial Round3 dispatch was interrupted before producing any review block or
 `merge-hook-review-manual.py.txt` / `.log.txt` retain actual prior recovery exit0/dirty (red) and fixed real queue completion/publication clean at origin (green), prior terminal follow-up land invocation/refusal versus fixed skip, and old vendored consumer invoked by prior capability check versus fixed pre-writer refusal. Manual controls in disposable primary use real Git/release writer/check/landing/publisher, fixture GH and stubbed unrelated issue-doc-sync only. Provenance and actual Opus5.5-high round1 model receipt retained. Please review final source through03fb2fd9 plus these controls, and complete remaining whole-file sweep. Final full gate and machine-primary historical recovery remain pending, not claimed.
 
 Handing off to codex for resumed Round3; only this relay writable. Approval must tick done, as specified.
+
+
+### Reviewer · Round 3
+
+VERDICT: FAIL
+
+Basis: The prior supervisor findings are addressed, but the revised post-merge hook silently skips an actionable Jog row for a supported multiline reason. This violates requirement 5 even when the canonical dump is valid. The three-round cap is reached: STATUS is Escalated, not Approved. No Git command, suite, pytest, executable fixture, real writer, network request or source/artifact edit was run here.
+
+swept file: no
+
+Coverage: read current jog_run.py, harness_paths.py and ledger_merge.py; examined merge-cleanup's mapping, normal landing, recovery, final publisher and teardown flows, the releases writer/guard/CRUD/dump/parser seams, canonical plan, retained manual controls and provenance. The remaining whole releases_app.py sweep, whole marathon_drive.py sweep and independently established complete changed-file inventory remain outstanding. No whole-artifact approval or absence-of-pre-existing-defects claim is made. The finding below is a pre-existing limitation of B1's classifier newly promoted into an authoritative queue reader. Graph lookup used XYZ-forge generation 2026-09-01T15:54:30Z in another checkout; graph search returned no relevant matches, and coverage reports metadata_changed/not_tracked for the relevant paths. Current source fallback supports the findings; the graph does not establish freshness or completeness.
+
+- [Blocker] **Use a complete canonical reader for Jog mapping; B1's line classifier loses valid rows.** `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:631–635` treats B1's parsed `jog_queue` as authoritative. `ledger_merge.py:107–112` processes individual lines and puts unmatched content into `other`; the hook ignores `other`. The canonical writer `_sql_str`/`_emit` preserves newlines inside SQL strings (`utils/py/releases_app.py:1077–1093`), and its actual `parse_dump` accumulates multiline statements (`:5990–6024`). Consequently, changing only an actionable row's reason to contain a newline makes the hook omit that row and return success without `jog land`. A prior clean `releases check` does not establish completeness of this different parser.
+
+  Observed input: the actual seeded GH-942 failed queue row from `releases.sql:888`, with only `failure_reason` changed in memory to the supported value `"gate failed\nretry required"`, re-emitted by the actual canonical `_emit`, and PR identity `1102`, body `Fixes #942`. The canonical parser still returns that row; the hook's reader does not. A single-line reason on the same row reaches land. `cmd_jog_skip` accepts `args.reason` without a one-line restriction (`utils/py/releases_app.py:4756–4795`); low-level `jog_set_status` also accepts this value (`:4878–4912`). The probe substitutes the external land call and filesystem/GitHub reads, so it measures routing, not a remote merge or actual queue transition.
+
+  Affected scope: actionable queue rows whose canonical INSERT spans lines, demonstrated specifically with a multiline `failure_reason`. Keep terminal-row skipping and the mapped-row evidence requirement. Do not turn an incomplete extraction into “no Jog row”.
+
+  Falsifier: for the same canonical GH-942 row and mapped PR, both the single-line and multiline versions must reach the same committed-receipt landing path; missing/invalid receipt must refuse, rather than silently skip. A normal non-Jog PR and terminal rows must retain their skip behavior. Evidence that the canonical writer rejects or normalizes this exact multiline value would disprove the finding; the actual emitter/parser control below shows the opposite. Record a red/green manual control in the disposable full clone or use existing coverage; no new suite.
+
+  Root cause: a conservative B1 classification parser (which can preserve unsupported text in `other`) is used as a complete row reader without checking that contract. Fix site: the hook's queue-reading seam. Why not upstream/downstream: rejecting valid multiline reasons would unnecessarily change the writer contract, and downstream land cannot check a row it is never asked to land. Reuse an existing complete authoritative reader (for example the existing root-bound read-only Jog JSON interface or canonical dump reader), rather than adding a second parser or raw SQLite writer site. Preserve the inventory ratchet.
+
+  Probe command (exit **0**; AST-loaded seeded definitions, in-memory canonical dump and substituted external dependencies only):
+
+  ```python
+  # export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  # mkdir -p "$TMPDIR"; python3 - <<'PY' [body below] PY
+  import ast, pathlib, re, types, json, sys
+  from typing import Any, Dict, List, Optional
+
+  def seeded(path, names, ns):
+      tree = ast.parse(pathlib.Path(path).read_text())
+      nodes = [n for n in tree.body
+          if (isinstance(n, ast.FunctionDef) and n.name in names)
+          or (isinstance(n, ast.Assign) and any(
+              isinstance(a, ast.Name) and a.id in names for a in n.targets))]
+      exec(compile(ast.Module(body=nodes, type_ignores=[]), path, 'exec'), ns)
+
+  writer = {'re': re}
+  seeded('utils/py/releases_app.py',
+      {'_sql_str', '_emit', 'INSERT_RE', '_split_values', '_value', 'parse_dump'}, writer)
+  b1 = dict(re=re, Any=Any, Dict=Dict, List=List, Optional=Optional)
+  seeded('skills/2-daily/merge-cleanup/scripts/ledger_merge.py',
+      {'_INSERT_RE', '_split_values', 'parse_dump'}, b1)
+  original = pathlib.Path('releases.sql').read_text()
+  rows = writer['parse_dump'](original)['jog_queue']
+  row = next(dict(r) for r in rows if r['gh_number'] == '942')
+  line = next(l for l in original.splitlines()
+      if l.startswith('INSERT INTO jog_queue') and row['global_id'] in l)
+
+  class Root:
+      def __truediv__(self, name): return self
+      def is_file(self): return True
+      def read_text(self, **kw): return dump
+      def __str__(self): return '/validated/primary'
+
+  events = []
+  policy = types.SimpleNamespace(
+      github_slug_from_origin=lambda _: 'HiQS-Labs/XYZ-forge',
+      require_primary=lambda _: None)
+  ns = dict(Path=pathlib.Path, LEDGER_DUMP='releases.sql', sys=sys, re=re, json=json,
+      ledger_merge=types.SimpleNamespace(parse_dump=b1['parse_dump'],
+          harness_paths_module=lambda *a, **kw: policy),
+      tool_path=lambda *a: pathlib.Path('/seeded/utils/py/releases_app.py'),
+      linked_issues=lambda pr: [942], log=lambda _: None, log_err=print,
+      _gh=lambda *a, **kw: types.SimpleNamespace(returncode=0,
+          stdout=json.dumps({'body': 'Fixes #942'})),
+      subprocess=types.SimpleNamespace(run=lambda argv, **kw:
+          (events.append(argv) or types.SimpleNamespace(
+              returncode=0, stdout='captured land', stderr=''))))
+  seeded('skills/2-daily/merge-cleanup/scripts/merge_cleanup.py',
+      {'run_jog_post_merge_land'}, ns)
+  for reason in ['gate failed', 'gate failed\nretry required']:
+      row['failure_reason'] = reason
+      emitted = []
+      writer['_emit'](emitted.append, 'jog_queue', list(row), [row])
+      dump = original.replace(line, emitted[1])
+      events.clear()
+      canonical = writer['parse_dump'](dump)['jog_queue']
+      parsed = b1['parse_dump'](dump)['tables'].get('jog_queue', {})
+      result = ns['run_jog_post_merge_land'](1102, Root())
+      print('reason=', repr(reason),
+          'canonical942=', sum(r['gh_number'] == '942' for r in canonical),
+          'hook942=', sum(r['gh_number'] == '942' for r in parsed.values()),
+          'hook_result=', result, 'land_calls=', len(events))
+  ```
+
+  Decisive output:
+  ```text
+  reason= 'gate failed' canonical942= 1 hook942= 1 hook_result= True land_calls= 1
+  reason= 'gate failed\nretry required' canonical942= 1 hook942= 0 hook_result= True land_calls= 0
+  ```
+
+- [Pass] **Prior interactive-merge and target-lock findings are closed at the supervisor seam.** `utils/py/jog_run.py:1993–2001` parks real legacy execution without entering `handle_landing_boundary`; `:1559–1565` removes `RELAY_DRIVER_LOCKED` and pins the target environment. `TESTS-RESULTS/2026-10-17+GH-1108/legacy-boundary-manual.log.txt` retains the prior merge/completion versus fixed park, and live/stale/absent target-lock controls. This closes those concrete findings, not all legacy compatibility claims.
+
+- [Pass] **The three supplemental fixes have source and retained red/green support.** `merge_cleanup.py:1512–1514` calls the existing final publisher after executed recovery; `:632–633` limits mapping to actionable statuses; `:651–655` checks capability beside the exact resolved releases CLI. `merge-hook-review-manual.log.txt` records old recovery exit0/dirty versus fixed clean-at-origin publication, terminal follow-up skips, and old-runtime pre-writer refusal. These passes are limited to those controls and do not establish the multiline mapping case above.
+
+- [Pass] **Retained evidence integrity checks pass.** A read-only Python probe (exit 0) read each provenance JSON line, loaded its named nonempty artifact, decompressed where `sha256_uncompressed` was specified, and asserted SHA-256 equality for `sha256_output`/`sha256_uncompressed`/`sha256`; it also compared the focused identity JSON objects. Output: `nonempty retained provenance hashes matched: 13`; `focused identity snapshots equal`. Citations: `TESTS-RESULTS/2026-10-17+GH-1108/provenance.jsonl`, `final-focused-identity-before.json`, `final-focused-identity-after.json`. This is retained-byte consistency, not a new gate or original-source equality claim.
+
+- [Unverified — needs clone run] Full final-source push qualification and machine-primary historical recovery remain pending, as the canonical plan/SUMMARY explicitly state. The retained focused suites ran at 7551ca55; later manual controls do not substitute for final full qualification. No gate was run here and no merge readiness is asserted.
+
+Handing off to codex-producer — the relay is Escalated at the three-round cap. Address the concrete canonical-reader mismatch with recorded red/green evidence, then obtain an authorized continuation/new independent review to finish the outstanding sweep and qualification. No approval or merge authorization is given.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

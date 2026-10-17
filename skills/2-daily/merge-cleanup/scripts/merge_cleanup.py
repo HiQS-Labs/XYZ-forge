@@ -622,15 +622,23 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     """Complete only positively mapped Jog rows using the committed-receipt primary writer."""
     if not (repo_path / "releases.db").is_file():
         return True
-    dump = repo_path / LEDGER_DUMP
-    if not dump.is_file():
-        log_err("Cannot map Jog rows without the canonical releases.sql dump; run releases check")
+    releases_cli = tool_path(repo_path, "releases_app.py")
+    # Use the canonical root-bound reader: B1's conservative line classifier
+    # deliberately preserves unsupported SQL as `other`, including multiline reasons.
+    try:
+        listed = subprocess.run([sys.executable, str(releases_cli), "--root", str(repo_path),
+                                 "jog", "list", "--all", "--json"],
+                                cwd=str(repo_path), capture_output=True, text=True, timeout=300)
+        if listed.returncode:
+            raise ValueError((listed.stderr or listed.stdout).strip())
+        rows = json.loads(listed.stdout)
+        if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+            raise ValueError("Jog JSON reader did not return a row list")
+        queue = {int(row["gh_number"]) for row in rows
+                 if row.get("status") in {"pending", "running", "failed", "parked"}}
+    except (OSError, subprocess.TimeoutExpired, ValueError, TypeError, KeyError) as exc:
+        log_err(f"Cannot read canonical Jog rows: {exc}")
         return False
-    # The preceding reconciliation/check qualifies this dump. Reuse B1's canonical
-    # reader instead of opening a parallel SQLite connection in the landing hook.
-    rows = ledger_merge.parse_dump(dump.read_text(encoding="utf-8"))["tables"].get("jog_queue", {})
-    queue = {int(row["gh_number"]) for row in rows.values()
-             if row.get("status") in {"pending", "running", "failed", "parked"}}
     if not queue:
         return True
     query = ["pr", "view", str(pr_num), "--json", "number,title,body,headRefName"]
@@ -649,12 +657,12 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     # Capability belongs to the exact runtime the subprocess will execute, not
     # the newer copy supplying this skill or B1's shared repair policy.
     runtime_policy = ledger_merge.harness_paths_module(
-        repo_path, source=tool_path(repo_path, "releases_app.py").with_name("harness_paths.py"))
+        repo_path, source=releases_cli.with_name("harness_paths.py"))
     if mapped and (not runtime_policy or not hasattr(runtime_policy, "require_primary")):
         log_err("Mapped Jog landing requires the updated primary/committed-receipt harness; upgrade before continuing")
         return False
     for issue in sorted(mapped):
-        result = subprocess.run([sys.executable, str(tool_path(repo_path, "releases_app.py")),
+        result = subprocess.run([sys.executable, str(releases_cli),
                                  "--root", str(repo_path), "jog", "land", str(issue), "--pr", str(pr_num)],
                                 cwd=str(repo_path), capture_output=True, text=True)
         if result.returncode:
