@@ -9,7 +9,7 @@ fix_probes:
   - bash test/skills-army-hq.sh --help
 updated: 2026-10-16
 owner: operator
-goal: "Every committed SKILL.md folds its frontmatter description to ≤1024 chars so skill loaders stop silently dropping skills."
+goal: "The 13 committed SKILL.md files that exceed the 1024-char folded description limit (five, recon, workhorse, 10days, dry, radar, feynman, front-door, readme-audit, spike-360, timbre, better-options, vscode-color) are trimmed under it so skill loaders stop silently dropping them; any skill not in that list is out of this phase."
 complexity: 1
 risk: 1
 effort: 2
@@ -67,9 +67,9 @@ ZCode sessions despite a healthy skills-army-hq deployment (payload + symlinks v
   "fix_probes": [
     {
       "type": "command",
-      "cmd": "python3 -c 'import re,glob,sys; bad=[]\nfor p in sorted(glob.glob('\"'\"'skills/*/*/SKILL.md'\"'\"')):\n    m=re.search(r'\"'\"'^---\\n(.*?)\\n---'\"'\"', open(p).read(), re.S)\n    if not m: continue\n    d=re.search(r'\"'\"'^description:[ \\t]*(?:>-?|\\|)?[ \\t]*\\n?((?:[ \\t]+\\S.*\\n?)+|.*)'\"'\"', m.group(1), re.M)\n    if d and len('\"'\"' '\"'\"'.join(l.strip() for l in d.group(1).splitlines()))>1024: bad.append(p)\nprint(bad); sys.exit(1 if bad else 0)'",
+      "cmd": "python3 -c 'import re,glob,sys,yaml\nbad=[]\nfor p in sorted(glob.glob(\"skills/*/*/SKILL.md\")):\n    t=open(p).read()\n    m=re.match(r\"^---\\n(.*?)\\n---\", t, re.S)\n    if not m: continue\n    try: fm=yaml.safe_load(m.group(1)) or {}\n    except Exception: continue\n    d=fm.get(\"description\")\n    if isinstance(d,str) and len(\" \".join(d.split()))>1024: bad.append(p)\nprint(bad)\nsys.exit(1 if bad else 0)'",
       "expect_nonzero": true,
-      "note": "pre-fix: at least one committed SKILL.md description folds over 1024 chars (exit 1); landed when none do (exit 0)"
+      "note": "pre-fix: at least one committed SKILL.md description (full YAML value, folded on whitespace) exceeds 1024 chars (exit 1); landed when none do (exit 0)"
     }
   ],
   "artifacts": [
@@ -83,11 +83,13 @@ ZCode sessions despite a healthy skills-army-hq deployment (payload + symlinks v
     "skills/4-occasional/front-door/SKILL.md",
     "skills/4-occasional/readme-audit/SKILL.md",
     "skills/4-occasional/spike-360/SKILL.md",
-    "skills/4-occasional/timbre/SKILL.md"
+    "skills/4-occasional/timbre/SKILL.md",
+    "skills/1-hourly/better-options/SKILL.md",
+    "skills/4-occasional/vscode-color/SKILL.md"
   ],
   "remediation": {
     "source": "issue#942",
-    "criteria": "Trim every committed SKILL.md frontmatter description to <=1024 folded chars, front-loading trigger wording; move cut detail into the body. Frontmatter-only edits; no new suite (GH-831)."
+    "criteria": "Trim the 13 listed SKILL.md frontmatter descriptions to <=1024 folded chars (full YAML value, literal blocks included), front-loading trigger wording; move cut detail into the body. Frontmatter-only edits; no new suite (GH-831). Skills outside the artifact list are not part of this phase."
   },
   "lanes": {
     "agy_safe": [
@@ -101,7 +103,9 @@ ZCode sessions despite a healthy skills-army-hq deployment (payload + symlinks v
       "skills/4-occasional/front-door/SKILL.md",
       "skills/4-occasional/readme-audit/SKILL.md",
       "skills/4-occasional/spike-360/SKILL.md",
-      "skills/4-occasional/timbre/SKILL.md"
+      "skills/4-occasional/timbre/SKILL.md",
+      "skills/1-hourly/better-options/SKILL.md",
+      "skills/4-occasional/vscode-color/SKILL.md"
     ],
     "orchestrator_only": []
   }
