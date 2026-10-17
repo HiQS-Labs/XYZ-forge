@@ -28,7 +28,7 @@ Before landing: nothing on development to roll back; keep source refs and integr
 
 ## Traceability and closure
 
-Batch PR body should close only issues1060,1088,960,1119 with actual delivered changes. Source originals stay open until final development landing proves ancestry. Their commits may cause GitHub to mark originals merged when batch lands; observe and verify. Hosted reconcile catch-up may rediscover these originals; inspect receipts and do not race active hosted writer. Source1097 Jog remains failed; current receipt reproduction restricts non-ledger merge deltas, and integration resolutions include index/changelog; must inspect whether original Jog land can certify, else honestly retain failed/blocked without false completion. Batch issue records outcome and sweep; no-op reconciliation is reported as no-op.
+Batch PR body should close only issues1060,1088,960,1119 with actual delivered changes. Source originals stay open until final development landing proves ancestry. Their commits may cause GitHub to mark originals merged when batch lands; observe and verify. Hosted reconcile catch-up may rediscover these originals; inspect receipts and do not race active hosted writer. Source1097 reported a failed Jog run in its verify clone, but read-only SQL now confirms neither the current base nor pinned primary has a GH960 Jog row. Keep that absence; do not recreate stale verify-clone execution state. Current hook leaves unbundled mapped rows unchanged with a warning. Standard roadmap and issue-doc-sync reconciliation remain required. Batch issue records outcome and sweep; no-op reconciliation is reported as no-op.
 
 ## Carry-overs (not authorized deployment)
 
@@ -36,3 +36,9 @@ Batch PR body should close only issues1060,1088,960,1119 with actual delivered c
 1089: Refresh the deployed /start-task copy (Skills Army HQ) from the repo. That copy is also behind on GH-1059.
 1097: Jog row for GH-960 stays failed until this lands and jog land GH-960 --pr <n> reconciles it.
 1120: Skill installation/deployment not requested; source upstream stays open at pinned revision.
+
+## Review round1 failure and bounded continuation
+
+Round1 Gemini4 Argon High completed a report but driver exit6 rejected attestation: caller created manual-preservation.txt in the source while review ran; guard preserved it then reverted that untracked caller file. Source production bytes unchanged. Report also contains unsupported citations (e.g. claiming .merge-cleanup.json has batch keys; actual file only preserve_commit_history:true; fabricated full merge SHA suffixes and incorrect worth-it behavior/hash claims). No round1 approval accepted. Evidence and caller file restored from orphan-backup. Second/final round stays under the same batch record cap2, not a reset. No source writes during reviewer lifetime. No harness changes. Review actual current production files and only cite observed output; do not parse Git packs. Source ancestry/preservation is author-measured in manual-preservation.txt; distinguish it from independently verified source content.
+
+Verified Low findings for GH1121 follow-up: mini/README.md still says eleven while mapping has twelve; architecture1-hourly/3-weekly headings stale; source1089 three Minor findings already retained. GH960 Jog absence is now corrected factual closeout metadata rather than an unresolved execution transition. No Low finding is fixed in production in this batch.

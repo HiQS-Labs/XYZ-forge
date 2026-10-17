@@ -1,0 +1,29 @@
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/Codex/2026-10-17/task-3/forge-non-ci) changed-files=0
+agy-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.wBbvA3)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wBbvA3) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wBbvA3) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wBbvA3) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wBbvA3) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wBbvA3) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wBbvA3) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wBbvA3) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wBbvA3) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wBbvA3) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wBbvA3) changed-files=2
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.wBbvA3) changed-files=2
+rtl: GH-654 off-lane candidate: .relay-artifacts/BATCH-PLAN.md
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/Codex/2026-10-17/task-3/forge-non-ci/relay-system/2026-10-17/gh1121-batch.agy.md
+agy-turn: OFF-ALLOWLIST change: TESTS-RESULTS/2026-10-17+GH-1121/manual-preservation.txt — reverting
+agy-turn: pre-revert copy of TESTS-RESULTS/2026-10-17+GH-1121/manual-preservation.txt saved under /Users/noelsaw/Documents/Codex/2026-10-17/task-3/forge-non-ci/.tick/orphan-backups/20261017T235025Z-33110
+agy-turn: off-lane edits reverted; failing the turn
+relay-drive: terminal STATUS Approved written by FAILED reviewer turn (agy; shim returned non-zero) — reverting to Open
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 11m 32s
+per done-task: ≥0 tokens, 11m 32s wall-clock
+  turn peak RSS: agy: 178MB peak RSS
+
