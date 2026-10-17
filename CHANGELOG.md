@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-16 — Keep Jog Marathon dispatch in its selected clone (GH-1100)
+
+Jog now supplies an explicit Marathon target when preflight omits it and pins tooling and coordination roots from the invocation packet for run, retry-build and gate-retry. This prevents a shell-global XYZ_HARNESS from redirecting phase files and commits into the primary clone after #1099. Existing explicit targets, packet formats and standalone resolver precedence are preserved.
+
+Containment boundary: Costly; rollback is a code revert before dispatch, with no schema migration. Verification and red controls: `TESTS-RESULTS/2026-10-16+GH-1100/`; independent plan/final QA: `relay-system/2026-10-16/gh1100-*.codex.md`.
+
 ## 2026-10-16 — GitHub-first Radar calibration integration (GH-1090)
 
 Preserve the GitHub-first authority/RGT/adopted-policy rules alongside existing calibration safeguards. Separate window code SHA from live tracker observation times, verified historical recurrence from live backlog, and candidate seam/member matches from confirmed stable target identity. This instruction-only change retains report confirmation, existing checks and honest degraded coverage; no new test, gate, live Radar run, deployed-skill change or model-efficacy claim.
