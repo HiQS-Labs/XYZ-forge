@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -388,5 +388,80 @@ round4-pre-jog-compat-manual.{py,log}.txt copies the actual pre-Jog firebase-AI-
 Opus3 is Escalated at its own cap; model receipts and full graded findings retained, no approval claimed. We implemented its B5 before this authorized Codex round instead of taking another Opus turn. Current final runtime is5f223ca3 (later commits only relay/evidence/capture metadata). No new suites/files/registry, no writer duplication. Please assess this final complete bounded closure and existing fixture controls in your one authorized Round4; Approved or concrete failure, then stop. No fifth is authorized.
 
 Handing off to codex for the single operator-authorized Round4. Tick done on approval, not release.
+
+### Reviewer · Round 4
+
+VERDICT: PASS
+
+Basis: Ship with the already scheduled qualification still pending. The operator-authorized bounded continuation closes Round3's multiline-reader defect and the replacement reader's pre-Jog compatibility regression. No further Blocker or Should was found in the affected functions and fixture changes examined. Approved applies to this explicitly bounded final review, using the retained earlier dispositions; it is not a new exhaustive audit or merge authorization.
+
+swept file: no
+
+Coverage: read the complete current `run_jog_post_merge_land`, `run_post_merge_reconcile`, `commit_and_push_phase5_writes`, canonical `cmd_jog_list` and connection helper; inspected both normal and recovery caller paths, linked-issue mapping, gh436's affected publisher fixture, gh605's lifecycle fixture, gh290's primary/bundle setup and refusal assertions, and gh291's primary/future-schema control. Read the retained Round4 manual sources/logs, focused results and provenance. No additional pre-existing defect was found within those inspected functions. The earlier outstanding whole releases_app.py / marathon_drive.py sweeps and independently complete inventory remain unperformed; the explicit Round4 scope does not reopen them or claim they happened. Graph project XYZ-forge is rooted in another checkout, generation 2026-09-01T15:54:30Z; symbol lookup and coverage were used, but current source fallback supports this review because material paths are metadata_changed/not_tracked. No graph completeness claim.
+
+- [Pass] **Multiline actionable rows reach the committed-receipt landing boundary.** `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:639–652` uses the existing root-bound `jog list --all --json` reader, checks extraction, and selects actionable statuses. `utils/py/releases_app.py:4574–4615` queries complete SQLite row values and JSON-encodes them without splitting SQL lines. `round4-canonical-reader-final.log.txt` retains the actual canonical writer/reader red-green at5f223ca3: prior newline input returns success with0 land calls, fixed single-line and newline inputs each reach land and refuse missing approval, with unchanged DB bytes. The correction reuses the existing reader and writer rather than extending B1's deliberately conservative classifier. No further fix requested.
+
+- [Pass] **Pre-Jog compatibility and failed extraction remain distinct.** `merge_cleanup.py:629–638` requires nonempty dump bytes and skips only when both canonical Jog surfaces are absent; this presence check does not count parsed rows. `round4-pre-jog-compat-manual.py.txt` and `.log.txt` retain the actual old-consumer-copy red/green: old hook refuses unsupported Jog, fixed hook invokes no CLI and changes no bytes; a declared queue with that unsupported reader still refuses, and empty dump refuses. Terminal/unrelated skip and nonJSON/object/failed-reader refusal are retained in `round4-canonical-reader-final.log.txt`. No blanket error suppression was introduced. No further fix requested.
+
+- [Pass] **Both caller paths retain the publication boundary.** Normal processing gates reconciliation before publication and next-PR advancement (`merge_cleanup.py:1304–1316`); executed recovery calls the same publisher (`:1521–1530`). `round4-merge-hook-manual.log.txt` records real disposable-primary queue completion and clean-at-origin publication through the replacement reader, using fixture GH and a stub for unrelated issue-doc-sync. It also retains the old recovery's dirty exit0 control. `test/gh436-merge-cleanup.py:375–384` now mocks and asserts the required publisher call with the resolved primary instead of accidentally pushing its synthetic primary. No further fix requested.
+
+- [Pass] **Fixture adaptations preserve meaningful failure assertions.** `test/test_gh605_work_state.py:373–384` establishes a real development primary; `test/gh290-ate-variation-grid.sh:453–460,494–522` pins the primary and commits evidence for the hostile landing variations, with refusal/untouched-row assertions still present; `test/gh291-contract-goldens.sh:283–320` preserves future-schema refusal, zero Tick mutation and parked bookkeeping. Retained focused logs report28 tests OK,37 pass/0 fail and20 pass/0 fail respectively. The gh436 evidence remains179 of180 plus the corrected existing case passing, not a claimed180/180 final run. No new suite or registry is needed for this closure. No further fix requested.
+
+- [Pass] **Independent non-mutating routing probe agrees with retained controls.** Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY'` using the following in-memory AST probe; exit **0**. It executes only the seeded hook function with substituted filesystem, runtime policy, GitHub and subprocess dependencies, not a real CLI/writer/merge. Its newline case is routing evidence, complemented by the retained actual canonical-reader controls above.
+
+```python
+import ast,json,pathlib,re,sys,types
+p=pathlib.Path('skills/2-daily/merge-cleanup/scripts/merge_cleanup.py')
+f=next(n for n in ast.parse(p.read_text()).body
+       if isinstance(n,ast.FunctionDef) and n.name=='run_jog_post_merge_land')
+class Root:
+ def __truediv__(self,k): return self
+ def is_file(self): return True
+ def read_text(self,**kw): return dump
+ def __str__(self): return '/probe/primary'
+calls=[]
+def run(argv,**kw):
+ calls.append(argv)
+ return types.SimpleNamespace(returncode=0 if 'list' in argv else 2,
+     stdout=payload if 'list' in argv else '',stderr='missing approval')
+policy=types.SimpleNamespace(github_slug_from_origin=lambda r:'owner/repo',
+                             require_primary=lambda r:None)
+ns=dict(Path=pathlib.Path,LEDGER_DUMP='releases.sql',sys=sys,json=json,re=re,
+ subprocess=types.SimpleNamespace(run=run,TimeoutExpired=TimeoutError),
+ tool_path=lambda *a:pathlib.Path('/runtime/releases_app.py'),
+ ledger_merge=types.SimpleNamespace(harness_paths_module=lambda *a,**kw:policy),
+ _gh=lambda *a:types.SimpleNamespace(returncode=0,
+                                    stdout=json.dumps({'body':'Fixes #942'})),
+ linked_issues=lambda p:[942],log=lambda x:None,log_err=lambda x:None)
+exec(compile(ast.Module(body=[f],type_ignores=[]),str(p),'exec'),ns)
+for label,dump,payload,want,lands in [
+ ('newline actionable','-- table: jog_queue',json.dumps([{'gh_number':942,
+   'status':'failed','failure_reason':'gate failed\nretry required'}]),False,1),
+ ('terminal','-- table: jog_queue',json.dumps([{'gh_number':942,
+   'status':'completed'}]),True,0),
+ ('malformed reader','-- table: jog_queue','{}',False,0),
+ ('pre-Jog','-- table: repos','unused',True,0),
+ ('empty dump','','unused',False,0)]:
+ calls.clear(); result=ns['run_jog_post_merge_land'](1102,Root())
+ n=sum('land' in a for a in calls)
+ assert (result,n)==(want,lands),(label,result,n)
+ print(label,': result=',result,'land_calls=',n,
+       'reader_calls=',sum('list' in a for a in calls))
+```
+
+Decisive output:
+```text
+newline actionable : result= False land_calls= 1 reader_calls= 1
+terminal : result= True land_calls= 0 reader_calls= 1
+malformed reader : result= False land_calls= 0 reader_calls= 1
+pre-Jog : result= True land_calls= 0 reader_calls= 0
+empty dump : result= False land_calls= 0 reader_calls= 0
+```
+
+- [Pass] **Retained evidence integrity.** Read-only command `python3 - <<'PY'` loaded every JSONL provenance row, read its named artifact, asserted nonempty bytes, decompressed for sha256_uncompressed, compared hashlib.sha256 to sha256_output/sha256_uncompressed/sha256, and compared the two Round4 focused identity JSON objects; exit **0**. Decisive output: `nonempty retained provenance hashes matched: 25`; `round4 focused identity snapshots equal`. Citations: `TESTS-RESULTS/2026-10-17+GH-1108/provenance.jsonl` and `round4-focused-identity-{before,after}.json`. This establishes retained-byte consistency, not a new gate run or independent historical source equality.
+
+- [Unverified — needs clone run] Full final-source qualification and actual machine-primary historical recovery remain pending as recorded in SUMMARY and the Producer handoff. No suite, pytest, executable fixture or Git command ran in this reviewer worktree. Only this relay was edited; no source or artifact was changed. Approved closes the authorized review; it does not waive those remaining steps, establish whole-artifact coverage, or authorize a merge.
+
+Relay closed (Approved), no further reviewer turn needed. Producer proceeds with the already required disposable-clone qualification and authorized downstream work; no fifth review turn is authorized.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
