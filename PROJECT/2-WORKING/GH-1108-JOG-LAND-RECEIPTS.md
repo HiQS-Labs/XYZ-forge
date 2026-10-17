@@ -17,13 +17,13 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Operator redirected symptom plan to five-point one-writer design; bounded source recon and base suite complete | Implement Approved delivery1 and verify in disposable full clone; direct-push publication is delivery2 |
+| Delivery1 implemented; existing focused suites and manual controls pass | Final independent QA and qualifying push gate |
 
 # GH-1108: one writer, durable receipts
 
 ## Authority and history
 
-The operator's design frame (issue comment 6231071222) supersedes the original symptom-only plan. No production edits were made. Original plan snapshot: `TESTS-RESULTS/2026-10-17+GH-1108/original-symptom-plan.txt`. The first relay declared PASS but its close attestation was refused (`close-mismatch`); it is not a qualified approval for implementation. The roadmap admission was recorded prematurely after the review content; no production work followed. A new review of this materially changed scope is required, with a valid terminal token/receipt.
+The operator's design frame (issue comment 6231071222) superseded the original symptom-only plan before any production edits. Original plan snapshot: `TESTS-RESULTS/2026-10-17+GH-1108/original-symptom-plan.txt`. The first relay declared PASS but its close attestation was refused (`close-mismatch`); it is not a qualified approval for implementation. The roadmap admission was recorded prematurely after the review content; no production work followed. The revised one-writer plan was Approved in round 2 before implementation; its valid attestation is `TESTS-RESULTS/2026-10-17+GH-1108/plan-attestation.json`.
 
 ## Recon Map
 
@@ -43,7 +43,7 @@ Base: `b26c9edb73f61587a71287f68cb4338409188042`. Task clone/branch follow the i
 
 No saved primary resolver exists: merge-cleanup requires explicit `--primary`. No safe meaningful-primary publish retry exists: hosted publisher resets/checks out on rejected push and must not run on primary. B1 replay handles roadmap verbs, not Jog transitions. The plan must extend these seams honestly rather than calling existing behavior sufficient.
 
-Existing `gh280-jog-marathon-adapter.sh` passes 223/223 on base in a separate full clone, with origin/config/HEAD unchanged (`TESTS-RESULTS/2026-10-17+GH-1108/gh280-base.log`). Base red controls reproduce exact-head refusal and unsupported source-ledger argument; these remain historical symptom evidence, not the new acceptance contract.
+Existing `gh280-jog-marathon-adapter.sh` passes 223/223 on base in a separate full clone, with origin/config/HEAD unchanged (`TESTS-RESULTS/2026-10-17+GH-1108/gh280-base.log.gz`). Base red controls reproduce exact-head refusal and unsupported source-ledger argument; these remain historical symptom evidence, not the new acceptance contract.
 
 ## Five-point requirements
 

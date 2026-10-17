@@ -1,0 +1,7 @@
+merge-cleanup: ERROR — Mapped Jog landing requires the updated primary/committed-receipt harness; upgrade before continuing
+PASS deployed skill with plain : {"preserve_commit_history": false, "strategy": "squash", "source": "legacy default (no .merge-cleanup.json)"}
+PASS deployed skill with older-harness : {"preserve_commit_history": false, "strategy": "squash", "source": "legacy default (no .merge-cleanup.json)"}
+PASS mapped Jog refuses older harness before any ledger write
+PASS global --root preserved from foreign CWD: jog: GH-999901 landed from committed receipt — PR #4242, d4ed1992; publish owned post-merge writes before continuing
+PASS native auto-merge refuses the interim unpublished-primary path: --auto-merge requires the separate durable-transition publisher; use the primary publication checkpoint and merge-cleanup for delivery 1
+ALL COMPATIBILITY AND ROOT CONTROLS PASSED
