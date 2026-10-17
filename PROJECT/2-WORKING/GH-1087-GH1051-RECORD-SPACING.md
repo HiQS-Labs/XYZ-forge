@@ -2,7 +2,7 @@
 gh_issue: 1087
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1087
 title: "docs: restore spacing in the GH-1051 work record"
-status: Proposed
+status: Active
 created: 2026-10-16
 updated: 2026-10-16
 owner: noelsaw1
@@ -16,6 +16,11 @@ fix_probes:
   - test -f PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md
   - bash utils/pdda/pdda.sh run
 ---
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Promoted to active working contract via jog | Execute implementation and verify probes |
 
 # GH-1087: restore spacing in the GH-1051 work record
 
@@ -70,3 +75,7 @@ PRS pri/sev/appeal/effort = 20/10/20/95 as the issue suggests (appeal 20 is the 
   }
 }
 ```
+
+## Merge evidence
+
+- PR #1101 merged 2026-10-17 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
