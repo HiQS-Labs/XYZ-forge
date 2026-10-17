@@ -631,7 +631,8 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     if not queue:
         return True
     query = ["pr", "view", str(pr_num), "--json", "number,title,body,headRefName"]
-    slug = ledger_merge.harness_paths_module(repo_path).github_slug_from_origin(str(repo_path))
+    paths_policy = ledger_merge.harness_paths_module(repo_path)
+    slug = paths_policy.github_slug_from_origin(str(repo_path)) if paths_policy else None
     if slug:
         query += ["--repo", slug]
     current = _gh(query, repo_path)
@@ -641,7 +642,11 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     pr = json.loads(current.stdout)
     issues = set(linked_issues(pr))
     issues.update(int(n) for n in re.findall(r"(?:^|[/_-])gh[-_]?(\d+)(?=[-_/]|$)", pr.get("headRefName") or "", re.I))
-    for issue in sorted(issues & queue):
+    mapped = issues & queue
+    if mapped and (not paths_policy or not hasattr(paths_policy, "require_primary")):
+        log_err("Mapped Jog landing requires the updated primary/committed-receipt harness; upgrade before continuing")
+        return False
+    for issue in sorted(mapped):
         result = subprocess.run([sys.executable, str(tool_path(repo_path, "releases_app.py")),
                                  "--root", str(repo_path), "jog", "land", str(issue), "--pr", str(pr_num)],
                                 cwd=str(repo_path), capture_output=True, text=True)
@@ -1412,18 +1417,19 @@ def main():
         primary_repo = Path(args.primary).expanduser().resolve()
         ledger_merge.TOOL_FALLBACK_ROOT = primary_repo
         policy_paths = ledger_merge.harness_paths_module(primary_repo)
-        try:
-            pinned = policy_paths.primary_root(str(primary_repo))
-        except (OSError, subprocess.CalledProcessError):
-            # No origin identity to bind here; normal Phase 0 owns repository readiness.
-            # Jog itself still refuses before any write without an explicit binding.
-            pass
-        except ValueError as exc:
-            if "primary is not pinned" not in str(exc):
-                raise
-        else:
-            if str(primary_repo) != pinned:
-                raise ValueError(f"--primary differs from the pinned Jog primary: {pinned}")
+        if policy_paths and hasattr(policy_paths, "primary_root"):
+            try:
+                pinned = policy_paths.primary_root(str(primary_repo))
+            except (OSError, subprocess.CalledProcessError):
+                # No origin identity to bind here; normal Phase 0 owns repository readiness.
+                # Jog itself still refuses before any write without an explicit binding.
+                pass
+            except ValueError as exc:
+                if "primary is not pinned" not in str(exc):
+                    raise
+            else:
+                if str(primary_repo) != pinned:
+                    raise ValueError(f"--primary differs from the pinned Jog primary: {pinned}")
     except (OSError, RuntimeError, ValueError, subprocess.CalledProcessError) as exc:
         log_err(f"cannot resolve the primary path {args.primary!r}: {exc}")
         return 2
