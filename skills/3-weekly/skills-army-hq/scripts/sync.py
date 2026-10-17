@@ -10,6 +10,7 @@ from pathlib import Path
 import shlex
 import subprocess
 import sys
+import time
 import uuid
 
 sys.dont_write_bytecode = True
@@ -28,6 +29,7 @@ def owned_record(root, state, target, name, previous=None):
 # refuses --apply while any forge-owned skill is drifted. Only names present in the forge's
 # skills/ are judged; collection-only skills stay informational ("unrecognized").
 CHECKER = Path("utils") / "py" / "skill_drift_check.py"
+PULSE_STALE_HOURS = 24
 
 
 def canonical_root(explicit, config, state):
@@ -68,24 +70,149 @@ def warn(warnings, message):
     print(f"skills-army-hq sync: WARN {message}", file=sys.stderr)
 
 
+def pulse_config_dir():
+    raw = os.environ.get("GIT_PULSE_CONFIG_DIR") or os.environ.get("GIT_HISTORY_CONFIG_DIR")
+    home = Path(os.environ.get("HOME") or Path.home()).expanduser()
+    return Path(raw).expanduser() if raw else home / ".config" / "git-pulse"
+
+
+def pulse_sync_repo(config_dir):
+    """GH-960: read sync_repo_dir from config.sh without executing shell code; default to $CONFIG_DIR/repo."""
+    cfg = config_dir / "config.sh"
+    if not cfg.is_file() or cfg.is_symlink():
+        return None
+    raw = None
+    for line in shared.regular_bytes(cfg).decode("utf-8", errors="replace").splitlines():
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        m = shared.re.match(r"^(?:export\s+)?sync_repo_dir=(.*)$", s)
+        if not m:
+            continue
+        try:
+            tokens = shlex.split(m.group(1), comments=True)
+            raw = tokens[0] if tokens else ""
+        except ValueError:
+            raw = m.group(1).split("#", 1)[0].strip().strip("\"'")
+    home = str(Path(os.environ.get("HOME") or Path.home()).expanduser())
+    if raw:
+        for key, repl in (("${CONFIG_DIR}", str(config_dir)), ("$CONFIG_DIR", str(config_dir)),
+                          ("${HOME}", home), ("$HOME", home)):
+            raw = raw.replace(key, repl)
+        if raw == "~" or raw.startswith("~/"):
+            raw = home + raw[1:]
+    return Path(raw).expanduser() if raw else config_dir / "repo"
+
+
+def ahead_behind(repo):
+    if repo is None or not repo.is_dir():
+        return None, None
+    head = shared.git_at(repo, "symbolic-ref", "-q", "--short", "HEAD")
+    branch_ref = f"origin/{head.stdout.strip()}" if head.returncode == 0 and head.stdout.strip() else None
+    for ref in ("@{upstream}", *((branch_ref,) if branch_ref else ()), "origin/HEAD", "origin/main", "origin/master", "FETCH_HEAD"):
+        run = shared.git_at(repo, "rev-list", "--left-right", "--count", f"HEAD...{ref}")
+        parts = run.stdout.split() if run.returncode == 0 else []
+        if len(parts) == 2 and all(p.isdigit() for p in parts):
+            return int(parts[0]), int(parts[1])
+    return None, None
+
+
+def remote_url(repo):
+    if repo is None or not repo.is_dir():
+        return None
+    for cmd in (("remote", "get-url", "origin"), ("config", "--get", "remote.origin.url")):
+        run = shared.git_at(repo, *cmd)
+        if run.returncode == 0 and run.stdout.strip():
+            return run.stdout.strip()
+    remotes = shared.git_at(repo, "remote").stdout.split()
+    if remotes:
+        run = shared.git_at(repo, "remote", "get-url", remotes[0])
+        if run.returncode == 0 and run.stdout.strip():
+            return run.stdout.strip()
+    return None
+
+
+def normalize_remote(url):
+    if not url:
+        return None
+    raw = url.strip().rstrip("/")
+    local = (Path(raw[7:] if raw.startswith("file://") else raw).expanduser()
+             if not raw.startswith(("http://", "https://", "ssh://", "git@")) else None)
+    if local is not None and local.exists():
+        return str(local.resolve())
+    if raw.endswith(".git"):
+        raw = raw[:-4]
+    for pattern in (r"^(?:ssh://)?git@([^:/]+)[:/](.+)$", r"^https?://([^/]+)/(.+)$"):
+        m = shared.re.match(pattern, raw)
+        if m:
+            return f"{m.group(1).lower()}/{m.group(2)}"
+    return raw
+
+
+def fetch_age_hours(top):
+    run = shared.git_at(top, "rev-parse", "--git-dir")
+    if run.returncode != 0 or not run.stdout.strip():
+        return None
+    fetch_head = (top / run.stdout.strip()) / "FETCH_HEAD"
+    if not fetch_head.is_file() or fetch_head.is_symlink():
+        return None
+    return max(0.0, (time.time() - fetch_head.stat().st_mtime) / 3600.0)
+
+
+def fmt_ahead_behind(ahead, behind):
+    return f"{ahead} ahead, {behind} behind origin" if ahead is not None and behind is not None else "ahead/behind origin unknown"
+
+
 def repo_health(root, warnings):
-    """GH-993: a dirty, diverged or detached collection repo silently stalls the hourly pulse."""
+    """GH-993 / GH-960: detect dirty, detached, stale or duplicate-clone Pulse collections."""
+    config_dir = pulse_config_dir()
+    cfg = config_dir / "config.sh"
+    writer_raw = pulse_sync_repo(config_dir)
+    if writer_raw is None:
+        warn(warnings, f"duplicate-clone check skipped: no git-pulse config at {cfg}")
     top = shared.collection_repo(root)
     if top is None:
         return None
     dirty = shared.dirty_paths(top)
     head = shared.git_at(top, "symbolic-ref", "-q", "--short", "HEAD")
     branch = head.stdout.strip() if head.returncode == 0 else "HEAD"
-    counts = shared.git_at(top, "rev-list", "--left-right", "--count", "HEAD...@{upstream}").stdout.split()
-    ahead, behind = (int(counts[0]), int(counts[1])) if len(counts) == 2 else (None, None)
+    ahead, behind = ahead_behind(top)
+    fetch_age_h = fetch_age_hours(top)
     if dirty:
         warn(warnings, f"collection repo {top} has {len(dirty)} uncommitted path(s) (git-pulse refuses to sync "
                        f"over them): {', '.join(dirty[:5])}{' …' if len(dirty) > 5 else ''}")
     if branch == "HEAD":
         warn(warnings, f"collection repo {top} is on a detached HEAD (stuck rebase?)")
+    stale = bool(behind or (fetch_age_h is not None and fetch_age_h >= PULSE_STALE_HOURS))
     if behind:
-        warn(warnings, f"collection repo {top} is {behind} commit(s) behind its upstream (as of the last fetch)")
-    return {"path": str(top), "dirty": dirty, "branch": branch, "ahead": ahead, "behind": behind}
+        warn(warnings, f"STALE_PULSE_COLLECTION: collection repo {top} is {behind} commit(s) behind its upstream "
+                       f"(as of the last fetch) — fast-forward {top} (git -C {shlex.quote(str(top))} pull --ff-only), "
+                       f"then run intake.py --apply catalog and sync.py --apply (see references/recovery.md)")
+    elif fetch_age_h is not None and fetch_age_h >= PULSE_STALE_HOURS:
+        warn(warnings, f"STALE_PULSE_COLLECTION: collection repo {top} last fetched {int(fetch_age_h)}h ago "
+                       f"(>= {PULSE_STALE_HOURS}h threshold) — fast-forward {top} "
+                       f"(git -C {shlex.quote(str(top))} pull --ff-only), then run intake.py --apply catalog "
+                       f"and sync.py --apply (see references/recovery.md)")
+    writer_top = None
+    duplicate = False
+    if writer_raw is not None:
+        writer_top = (shared.collection_repo(writer_raw) or writer_raw.resolve()) if writer_raw.exists() else Path(os.path.abspath(writer_raw))
+        c_remote, w_remote = remote_url(top), remote_url(writer_top)
+        c_norm, w_norm = normalize_remote(c_remote), normalize_remote(w_remote)
+        if writer_top != top and c_norm and c_norm == w_norm:
+            duplicate = True
+            w_ahead, w_behind = ahead_behind(writer_top)
+            warn(warnings,
+                 f"DUPLICATE_PULSE_CLONE: git-pulse maintains {writer_top} ({fmt_ahead_behind(w_ahead, w_behind)}) "
+                 f"while skill links read {root} in {top} ({fmt_ahead_behind(ahead, behind)}) for remote {c_remote} — "
+                 f"remediation: (1) point sync_repo_dir in {cfg} at {top}; "
+                 f"(2) fast-forward {top} (git -C {shlex.quote(str(top))} pull --ff-only); "
+                 f"(3) check {writer_top} for local changes, stashes, unpushed commits and ignored files, then retire it; "
+                 f"(4) run intake.py --apply catalog and sync.py --apply (see references/recovery.md)")
+    return {"path": str(top), "dirty": dirty, "branch": branch, "ahead": ahead, "behind": behind,
+            "pulse_config": str(cfg) if writer_raw is not None else None,
+            "pulse_sync_repo": str(writer_top) if writer_top is not None else None,
+            "duplicate_pulse_clone": duplicate, "stale_pulse_collection": stale}
 
 
 def drift_gate(root, state, config, found, explicit, apply, allow_drift, warnings):
