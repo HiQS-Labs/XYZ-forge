@@ -1,0 +1,7 @@
+Command: gh pr checks 1120 --repo HiQS-Labs/XYZ-forge --watch --interval 10
+Exit: 0
+Terminal status read-back:
+vendored smoke gate (blocking on development + main)	pass	22s	https://github.com/HiQS-Labs/XYZ-forge/actions/runs/39078623662/job/117530857183
+portability canary (ubuntu — advisory, never breakage)	skipping	0	https://github.com/HiQS-Labs/XYZ-forge/actions/runs/39078623662/job/117530857903
+promotion boundary (macOS — the platform we ship to)	skipping	0	https://github.com/HiQS-Labs/XYZ-forge/actions/runs/39078623662/job/117530858102
+CodeRabbit	pass	0		Review completed

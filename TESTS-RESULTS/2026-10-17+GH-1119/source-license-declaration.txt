@@ -1,0 +1,4 @@
+Pinned upstream README.md, revision 2e6e1b4a0336fb1badf64d47ae770acd291d2d8d:
+## License
+
+GPL v2 — see [LICENSE](LICENSE) for details. Provided "as is", without warranty of any kind.

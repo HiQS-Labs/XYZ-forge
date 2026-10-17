@@ -96,7 +96,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 | [xyz-mod](skills/2-daily/xyz-mod/SKILL.md) | Read-only Claude Code mod: `/xyz-status` prints hosted runs, tick claims and marathon/relay drivers with no model turn. |
 
-### `3-weekly` — Weekly (14)
+### `3-weekly` — Weekly (15)
 
 _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 
@@ -116,6 +116,7 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | [task-sync](skills/3-weekly/task-sync/SKILL.md) | Unified IDE task-list grooming (GH-896): one core + per-IDE adapters (ZCode, Antigravity, native Codex planner) date-stamp titles with last-activity mm-dd, write last-action descriptions, manage pins; dry-run default, doctor, one 15-minute heartbeat, Skills Army HQ-deployable. |
 | [weekly-shipped](skills/3-weekly/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |
 | [whack-a-mole](skills/3-weekly/whack-a-mole/SKILL.md) | Cluster 14 days of recurring bugs by churn and file one approved root-cause umbrella issue. |
+| [worth-it](skills/3-weekly/worth-it/SKILL.md) | Price initial or remaining value; `/worth-it continue` returns Continue / Pivot / Park / Stop, one bounded proof and approval-aware results capture. Pinned upstream source and update recipe: [NOTICE](skills/3-weekly/worth-it/NOTICE). |
 
 ### `4-occasional` — Least frequently (19)
 
