@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -72,5 +72,23 @@ ROUND: 1 / 3
 **Review this:** Whole changed adapter and its actual consumers. Check executable-parent derivation, stored packet compatibility, retry gates and selected phase root. No global resolver or frozen twin edits, no new suite/registry entry. Existing review findings: none open.
 **Verification:** Base red and target-only red fail as intended; candidate probe passes; real Marathon --dry-run renders clone-local phase path; existing gh280 suite 223 pass/0 fail and repository identity unchanged. Provenance/logs committed under TESTS-RESULTS. PDDA recon-format failures fixed; three affected checks rerun green. Full required gate pending final approval/push.
 **Commit:** d6c7e9b0 (runtime); review latest committed documentation/evidence as well.
+
+### Reviewer · Round 1 · codex · 2026-10-16
+**Ship with conditions — source approved; publication gate pending.**
+swept file: yes
+**VERDICT: PASS**
+**Basis:** Read all 1,821 lines of jog_run.py, the complete plan/recon, prior plan review and retained verification artifacts, and current material producer/resolver/driver consumers. No additional concrete pre-existing defect found in the swept file. This approves source under the local operator-controlled harness contract; it does not establish publication or merge readiness.
+
+- [Pass] Target policy is explicit and preserves packet inputs: utils/py/jog_run.py:491–514 copies argv and appends target_root only when the packet lacks --target-root. Existing reviewer/builder, phase-id and require-clean policies remain in that adapter. The packet producer's two supported layouts are rooted executable paths (utils/py/swarm_preflight.py:1098–1111), so executable-parent derivation fits both root and lexical .xyz installs without requiring optional harness_home.
+- [Pass] Root policy is applied after packet-env merge at utils/py/jog_run.py:517–525. It pins tooling through XYZ_HARNESS and coordination through MARATHON_ROOT. The actual consumer resolves these separately at utils/py/marathon_drive.py:1121–1128, places default phases under root at :1368 and propagates target into relay-drive and shim guard roots at :3384–3416. This directly addresses the recorded ambient-primary XYZ_HARNESS failure without changing the global resolver.
+- [Pass] Run and retry-build use the shared environment adapter at utils/py/jog_run.py:606; retry-build delegates to run_marathon_phase at :875. Stored-packet gate retry uses the same argv/env policy at :805–810. The existing driver-lock export remains in both dispatches, and run retains its idle-bound setdefault at :614. No new retry mechanism or schema is needed.
+- [Pass] Independent non-mutating probe: command `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` AST-extracted the current build_marathon_invocation_artifact plus both current adapters into an os-only namespace with MARATHON_INVOCATION_SCHEMA supplied, then generated root/vendored/explicit packets, removed harness_home, supplied stale packet and ambient root env, and asserted exactly one correct target, selected tooling/coordination roots, removed require-clean and unchanged input. Exit 0; decisive output: `root: PASS target, tooling, coordination, packet-env precedence, legacy packet, immutable input`, with identical PASS lines for vendored and explicit; AST call checks printed `run_marathon_phase: shared argv/env adapters present` and `_jog_retry_gate_locked: shared argv/env adapters present`. An initial extraction exited 1 on missing namespace constant MARATHON_INVOCATION_SCHEMA; supplying that unchanged constant corrected the probe. No application entry point, fixture or subprocess was executed.
+- [Pass] Retained falsification evidence is substantive: TESTS-RESULTS/2026-10-16+GH-1100/red-control.txt ends `AssertionError: missing explicit --target-root`; target-only-control.txt ends `AssertionError: driver harness root redirected to ambient primary`; green-control.txt reports all root/vendored/explicit cases passing. provenance.jsonl records exits 1/1/0, and probe-command.txt shows nonempty, unique dispatch assertions with subprocess/state writes intercepted. driver-dry-run.txt places the rendered relay beneath the disposable gate clone's marathon-system/gh1100-dry-root. These support argument/root behavior, not a live builder acceptance claim.
+- [Pass] Saved focused evidence was inspected, not rerun here: command `python3 - <<'PY'` read gh280.log.gz with gzip and compared the two focused-identity JSON files, exit 0. Decisive output: `suite bytes 13558`, `gh280-jog-marathon-adapter: 223 pass, 0 fail`, `identities match: True`; recorded HEAD is d6c7e9b0615aaa68949fe971c2a5bbafb884faf9, bare=false, origin=the task clone. The suite is nonempty and its receipt names the runtime revision (provenance.jsonl focused-suite row).
+- [Pass] Complexity and rating are commensurate: one small shared adapter, existing argv policy, no new suite/registry/gate requested by the implementation plan. releases.sql:867 carries 80/85/50/90 with NULL override, matching plan's Rating section; CHANGELOG.md:3–7 records the containment bet and rollback. The seeded evidence reports no suite/registry changes; no independent git diff was run because this turn prohibits git.
+- [Unverified — needs clone run] The required full gate remains pending and must run once at the push boundary in disposable full-clone isolation against the final state, followed by actual hosted-check/PR inspection. This worktree review ran no validate.sh, test/*.sh, pytest, executable fixtures or builders. The saved focused run is not a substitute for that gate.
+- Evidence limits: bounded Verify review; graph project XYZ-forge generation 2026-09-01T15:54:30Z belongs to the primary checkout, not this worktree. Search returned all nine matching Marathon symbols with no remaining page; coverage for jog_run.py/swarm_preflight.py/marathon_drive.py reported changed metadata, so material claims use current direct source. No repository-wide audit, external issue refresh, arbitrary packet executable support, or override-neutralization claim. Explicit TICK_BIN/TICK_REPO_ROOT/MARATHON_RELAY_DRIVE/MARATHON_AGENT_CMD remain operator overrides outside the ambient-XYZ_HARNESS acceptance case.
+
+Relay closed (Approved), no further review turn needed. Producer owns the pending disposable-clone publication gate and PR checks; harness owns the relay-only commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
