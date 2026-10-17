@@ -8,7 +8,7 @@ gh_issue: 1105
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1105
 doc_type: feature
 complexity: 2
-risk: 1
+risk: 2
 effort: 2
 phases: 1
 non_goals:
@@ -50,9 +50,13 @@ goal: >
   `~/.claude/projects/<cwd-slug>/<sessionId>.jsonl` (subagent transcripts live in subfolders).
   `/rename` appends `{"type":"custom-title","customTitle":T,"sessionId":S}`; title records are
   `last-wins`. The list label resolves as
-  `agentName || customTitle || aiTitle || summary || firstPrompt`. Messages carry ISO `timestamp`.
-  A live session re-appends its in-memory title on resume and when it rewrites its tail, so a live
-  session can revert a stamp. That's the existing "App-overwrites-active-titles" caveat.
+  `agentName || customTitle || aiTitle || summary || firstPrompt`. Messages carry ISO `timestamp`
+  (`…Z`). The session list reads only a 64 KiB head and a 64 KiB tail (`fv=65536`):
+  `customTitle` = last occurrence in the tail, else the sidecar
+  `<project-dir>/<sessionId>/custom-title.json` (`{"customTitle":…}`), else the head;
+  `aiTitle` = tail, else head. A running session keeps its title in memory and re-appends it when
+  it rewrites its tail, so stamping a running session can be reverted. Running sessions are listed
+  in `~/.claude/sessions/<pid>.json` (`{"pid","sessionId",…}`).
 - **Claude Code cloud sessions**: `list_sessions` returns `id`, `title`, `session_status`,
   `environment_kind` (`anthropic_cloud` = cloud container; `bridge` = a local session mirrored via
   Remote Control) and `updated_at`. `list_events(kinds=["user","assistant"])` returns events with
@@ -70,36 +74,58 @@ One new adapter module, `adapters/claude.py`, with two classes sharing the core:
    - Store: `~/.claude/projects/*/*.jsonl` (top level only), overridable with `--claude-root PATH`
      for probes. A missing root is an `AdapterError`, not an empty sweep.
    - Candidates: file mtime within `--hours`. Stream each file; activity = latest `timestamp`
-     on a `user`/`assistant` record; current label from the last `agent-name`/`custom-title`/
-     `ai-title`/`summary` record (last-wins), following the precedence above.
-   - Skip: `agentName` set (it outranks `customTitle`); activity older than `--hours`; activity
-     within the last 10 minutes (live session; restamped on a later tick); no title record at all
-     → `needs_summary` (same contract as ZCode; the heartbeat writes it via `--set-title`).
+     on a `user`/`assistant` record (`Z` normalized to `+00:00`, so macOS Python 3.9 parses it).
+   - Current label = the app's own resolution (above): tail → sidecar → head for `customTitle`,
+     then `aiTitle`, then `summary`. Comparing against what the app shows (not "last record in the
+     file") makes a stamp that scrolled out of the tail get re-appended on a later tick.
+   - Skip (fail closed): session listed as running in `~/.claude/sessions/*.json` with a live pid,
+     or that registry unreadable (same rule as the Antigravity app gate); `agentName` set (it
+     outranks `customTitle`); activity older than `--hours`; activity within the last 10 minutes
+     (backstop only). Running sessions include the heartbeat's own session.
+   - No title at all (only a first prompt) → `needs_summary`, no write. This deliberately differs
+     from ZCode, which stamps the raw prompt too: a stamped prompt would become a permanent
+     `customTitle` that outranks the AI title Claude Code generates later.
    - Desired = `local_stamp(activity) + " " + clean_base(label, max_length=None)`; write only on change.
    - Write: before appending, re-stat the file; require the size and mtime recorded at read time
      and a trailing newline, else skip it this tick. Append one `custom-title` line with
-     `O_APPEND`, then restore the original atime/mtime with `os.utime`, so the session list's
-     recency order doesn't jump. Undo = another `custom-title` (the old title is in the report).
+     `O_APPEND`; restore the original atime/mtime with `os.utime` only if the size is exactly
+     the precheck size plus our line, so the session list's recency order doesn't jump.
    - `--set-title <sessionId> TITLE` stamps with the session's own activity date (existing CLI verb).
-   - `doctor()`: root readable, ≥1 transcript parsed, the record shapes above are present.
+   - `--group`/`--unpin-days` refused (no pins/groups in Claude Code).
+   - `doctor()`: root readable, sessions registry readable, ≥1 transcript parsed with `timestamp`
+     and a known title record shape; each missing shape is named.
 2. **`ClaudeCloudAdapter`** (plan-only, mirrors `CodexAdapter`):
    - Snapshot `{captured_at, sessions: <list_sessions data>, activity_at: {id: unix seconds}}`,
      ≤300s old, non-empty, unique ids; `--claude-snapshot PATH` + `--exclude-thread <own session>`.
    - Candidates: `environment_kind == "anthropic_cloud"` only (bridge sessions are local and owned
-     by the local adapter), `session_status` not running, `updated_at` within `--hours`, not
-     excluded. Activity is required for each candidate; missing → abort.
+     by the local adapter), `session_status == "SESSION_STATUS_IDLE"`, `updated_at` within
+     `--hours`, not excluded. Activity is required for each candidate; missing → abort.
+   - Activity = the inner turn `timestamp` of the newest user/assistant event, else its
+     `created_at`. The native procedure pages `list_events` with `before_id` (bounded, 5 pages)
+     until one appears, because `kinds` filters after the page is read and a page can hold none;
+     `list_sessions` is paged on `has_more` up to 100 sessions.
    - Report `renamed` proposals with observed old title; `execution: native-tools-required`.
 3. **CLI wiring** (`task_sync.py`): `ADAPTERS += ("claude", "claude-cloud")`; `_build_adapter`
-   branches; `--claude-root`, `--claude-snapshot`; `claude-cloud` gets the same plan-only guard as
-   Codex. Default `--ide zcode,agy` unchanged.
+   maps both to `adapters/claude.py`; `--claude-root`, `--claude-snapshot`. The Codex-only
+   plan-only guard, required-argument checks and doctor receipt skip become a `PLAN_ONLY =
+   ("codex", "claude-cloud")` set. Default `--ide zcode,agy` unchanged.
 4. **Docs** (`task-sync/SKILL.md`): description/when_to_use mention Claude Code; a "Claude Code
-   (GH-1105)" section with the local semantics, the cloud native-sweep procedure
-   (list_sessions → list_events → snapshot → plan → recheck → `set_session_title` → read back),
-   heartbeat note (local: add `claude` to the existing ZCode heartbeat command or a Claude Code
-   `/loop`/scheduled task; cloud: a scheduled task running the native sweep), and Install SOP
-   step 2 gains Claude Code `~/.claude/skills/task-sync` via
-   `intake.py --apply targets --id claude --path ~/.claude/skills --consumer "Claude Code"`
-   then `sync.py` (preview, then `--apply`). No hand-copying.
+   (GH-1105)" section with the local semantics and the cloud native-sweep procedure
+   (list_sessions → list_events → snapshot → plan → recheck → `set_session_title` → read back).
+   **Single scheduler:** local Claude Code joins the one existing heartbeat
+   (`--ide zcode,agy,claude`), whose prompt also handles `needs_summary` from the `claude`
+   section; no second local writer. Cloud titles have exactly one writer, a Claude Code scheduled
+   task running the native sweep (the same exception the Codex native heartbeat already has).
+   Install SOP step 2 gains Claude Code `~/.claude/skills/task-sync`.
+5. **Skills Army HQ deployment to Claude Code (requirement 2, docs only):**
+   `references/targets.md` row becomes "Claude Code (CLI, desktop app, VS Code extension)".
+   The per-device operator step (run on each Mac, not from a cloud container):
+   `intake.py targets` (record before) →
+   `intake.py --apply targets --id claude --path ~/.claude/skills --consumer "Claude Code CLI, desktop app and VS Code extension"`
+   → `sync.py` preview → `sync.py --apply` → `sync.py --status`. Enabling the target links
+   **every** collection skill into `~/.claude/skills`; an existing same-name folder or foreign link
+   is reported and preserved, not overwritten (resolve with `--adopt`/`--migrate` per the skill).
+   Rollback: `intake.py --apply targets --id claude --disable` then `sync.py --apply`.
 
 ## Bet check
 
@@ -109,32 +135,59 @@ One new adapter module, `adapters/claude.py`, with two classes sharing the core:
 - *Rejected alternative:* use only cloud `set_session_title` for everything. Local CLI/desktop
   sessions not attached via Remote Control would be missed, and bridge renames aren't documented
   to write back to the local transcript.
-- *Rollback:* revert the PR; stamped sessions keep their titles, and an undo is one more
-  `custom-title` record (old titles are in the report).
+- *Rollback:* revert the PR. Stamped sessions keep their titles. The adapter only appends, so
+  each earlier `custom-title` line stays in the transcript and an undo is one more record with
+  that value. Not fully reversible: a session that only had an AI title now has a `customTitle`
+  that outranks later AI titles, so its description is frozen at the AI title seen when stamped.
+  Refreshing it from newer `ai-title` records was considered and rejected for this PR
+  (it can't tell an AI title from an operator `/rename`).
 
 ## Risks
 
 - Undocumented local format may change → the doctor names the missing record shapes; the adapter
   refuses rather than guessing.
-- Concurrent append from a live session → 10-minute quiet window + size/mtime precheck + single
-  `O_APPEND` line write.
+- Concurrent append from a live session → running-session registry (fail closed) + 10-minute
+  backstop + size/mtime precheck + single `O_APPEND` line write.
+- The mtime restore also hides the append from mtime-based file watchers; acceptable because
+  running sessions are skipped, and restore happens only when nobody else wrote.
 
 ## Verification (no new test/ suites)
 
 Manual probes against fixture roots in `temp/`, recorded under
 `TESTS-RESULTS/2026-10-17+GH-1105/`:
 
-1. Stamp happy path: fixture with an `ai-title` and activity 2 days ago → `renamed` proposal,
-   `--apply` appends exactly one line, mtime unchanged, re-run is a no-op.
-2. Red controls: missing root → error, exit 3; a file with no trailing newline → skipped, no write;
-   activity inside 10 minutes → skipped; an `agent-name` session → skipped; no title → `needs_summary`.
-3. Cloud planner: fresh snapshot → proposals only for `anthropic_cloud` idle sessions; stale
-   snapshot, missing activity, `--apply` → refused.
-4. Existing behavior: `--ide zcode,agy` and `--ide codex` paths unchanged (argparse help + a codex
+1. Stamp happy path: fixture with an `ai-title` and `…Z` activity 2 days ago → `renamed`
+   proposal, `--apply` appends exactly one line, mtime unchanged, re-run is a no-op.
+2. Red controls (each must leave the fixture byte-identical): missing root → error, exit 3;
+   no trailing newline → skipped; file changed between read and write → skipped; activity inside
+   10 minutes → skipped; session in the running registry → skipped; unreadable registry → error;
+   `agent-name` session → skipped; no title → `needs_summary`; doctor with a transcript missing
+   `timestamp` → red naming it.
+3. Sidecar: sidecar holds title A, no `custom-title` in the tail → proposal re-stamps A; after
+   apply, a re-run is a no-op.
+4. Cloud planner: fresh snapshot → proposals only for idle `anthropic_cloud` sessions (a
+   `bridge` and a running session in the fixture get none); stale snapshot, missing activity,
+   `--apply`/`--set-title` → refused.
+5. Existing behavior: `--ide zcode,agy` and `--ide codex` paths unchanged (argparse help + a codex
    snapshot probe). The route-selected gate on the final commit.
+6. Requirement 2 is operator-run per device (cloud containers can't reach the Mac); the SOP
+   above names the before/after evidence to record (`intake.py targets`, `sync.py --status`,
+   resolved `~/.claude/skills/task-sync` link, the skill listed in Claude Code).
+
+Receipts under `TESTS-RESULTS/2026-10-17+GH-1105/` with `provenance.jsonl` (AGENTS.md).
+
+## Plan QA
+
+Independent review (Claude subagent; the operator chose it because this cloud session has no
+Codex CLI), round 1: Changes requested, 6 Major / 6 Minor / 2 Nit, no blockers. All accepted and
+folded in above (sidecar-aware label, running-session gate, single scheduler, requirement-2 SOP
+and rollback, append-only undo wording, cloud paging, `Z` parsing, CLI generalization, guarded
+mtime restore, red controls, rating and risk). The AI-title refresh suggestion was considered and
+rejected (see Rollback).
 
 ## Rating rationale (2026-10-17)
 
-`rated 55/25/50/65`. Severity 25: a convenience gap with no data loss or blocked work. Priority 55:
-the operator asked for it now. Appeal 50: neutral (no explicit score given). Effort 65: one adapter
-of about 200 lines, reusing the core. Recurrence: not applicable (a feature, not a defect).
+`rated 55/25/50/55`. Severity 25: a convenience gap with no data loss or blocked work. Priority 55:
+the operator asked for it now. Appeal 50: neutral (no explicit score given). Effort 55 (re-rated
+from 65 after plan QA): two adapters (one writes, one plans), CLI generalization, docs and the
+install SOP. Recurrence: not applicable (a feature, not a defect).
