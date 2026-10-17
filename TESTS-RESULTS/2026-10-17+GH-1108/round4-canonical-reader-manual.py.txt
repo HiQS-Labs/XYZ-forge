@@ -1,0 +1,41 @@
+"""Round4 manual red/green for complete canonical Jog queue mapping."""
+import ast,hashlib,json,os,subprocess,sys
+from pathlib import Path
+from unittest.mock import patch
+source=Path.cwd();sys.path[:0]=[str(source/'utils/py'),str(source/'skills/2-daily/merge-cleanup/scripts')]
+import releases_app as r,merge_cleanup as mc
+fixture=Path(Path('temp/review-fix-one-writer-manual.log').read_text().rsplit('fixtures preserved at ',1)[1].strip());primary=fixture/'primary'
+oldtext=subprocess.check_output(['git','show','03fb2fd9:skills/2-daily/merge-cleanup/scripts/merge_cleanup.py'],text=True)
+node=next(n for n in ast.parse(oldtext).body if isinstance(n,ast.FunctionDef) and n.name=='run_jog_post_merge_land');ns=dict(mc.__dict__);exec(compile(ast.Module(body=[node],type_ignores=[]),'old_hook.py','exec'),ns)
+real_run=subprocess.run;real_tool=mc.tool_path;calls=[]
+def tool(root,name,*a):return source/'utils/py/releases_app.py' if name=='releases_app.py' else real_tool(root,name,*a)
+def run(argv,*a,**kw):
+ if 'jog' in argv and 'land' in argv:
+  calls.append(argv);return subprocess.CompletedProcess(argv,2,'','missing committed approval in this mapped fixture')
+ return real_run(argv,*a,**kw)
+pr={'body':'Fixes #942','headRefName':'marathon/gh-942-fixture'}
+fake_gh=lambda *a,**kw:subprocess.CompletedProcess([],0,json.dumps(pr),'')
+ns['_gh']=fake_gh;ns['tool_path']=tool
+for reason in ['gate failed','gate failed\nretry required']:
+ r.jog_set_status(str(primary),942,'failed',failure_reason=reason)
+ before=hashlib.sha256((primary/'releases.db').read_bytes()).hexdigest()
+ with patch.object(mc,'_gh',side_effect=fake_gh),patch.object(mc,'tool_path',side_effect=tool),patch.object(mc.subprocess,'run',side_effect=run):
+  calls.clear();old=ns['run_jog_post_merge_land'](1102,primary);old_calls=len(calls)
+  calls.clear();new=mc.run_jog_post_merge_land(1102,primary);new_calls=len(calls)
+ assert (old,old_calls)==((False,1) if '\n' not in reason else (True,0)),(reason,old,old_calls)
+ assert new is False and new_calls==1,(reason,new,new_calls)
+ assert hashlib.sha256((primary/'releases.db').read_bytes()).hexdigest()==before
+ print('PASS',repr(reason),'prior routing=',old,old_calls,'canonical routing=',new,new_calls,'reader leaves DB unchanged')
+for issue in [904,275,999980]:
+ pr['body']=f'Fixes #{issue}';pr['headRefName']='fix/plain-follow-up'
+ with patch.object(mc,'_gh',side_effect=fake_gh),patch.object(mc,'tool_path',side_effect=tool),patch.object(mc.subprocess,'run',side_effect=run):
+  calls.clear();assert mc.run_jog_post_merge_land(12345,primary) is True and not calls
+ print('PASS terminal/unrelated PR skips land',issue)
+for output,rc in [('not JSON',0),('{}',0),('',1)]:
+ def bad_reader(argv,*a,**kw):
+  if 'jog' in argv and 'list' in argv:return subprocess.CompletedProcess(argv,rc,output,'reader failed' if rc else '')
+  return run(argv,*a,**kw)
+ with patch.object(mc,'tool_path',side_effect=tool),patch.object(mc.subprocess,'run',side_effect=bad_reader):
+  calls.clear();assert mc.run_jog_post_merge_land(1102,primary) is False and not calls
+ print('PASS malformed/failed canonical extraction refuses',repr(output),rc)
+print('ALL ROUND4 CANONICAL READER CONTROLS PASSED')

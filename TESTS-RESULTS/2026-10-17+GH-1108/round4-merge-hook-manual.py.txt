@@ -1,0 +1,65 @@
+"""Manual recovery/publication, terminal mapping, and runtime-capability controls."""
+import ast,hashlib,json,os,subprocess,sys,tempfile,types
+from pathlib import Path
+from unittest.mock import patch
+source=Path('/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17');sys.path[:0]=[str(source/'utils/py'),str(source/'skills/2-daily/merge-cleanup/scripts')]
+import jog_run as j,releases_app as r,merge_cleanup as mc
+fixture=Path(Path('temp/review-fix-one-writer-manual.log').read_text().rsplit('fixtures preserved at ',1)[1].strip());primary=fixture/'primary';issue=999901;pr=4242
+real_run=subprocess.run;tool=mc.tool_path
+os.environ['PATH']=str(fixture/'bin')+os.pathsep+os.environ['PATH'];os.environ['MERGE_CLEANUP_GH_BIN']=str(fixture/'bin/gh')
+def git(*a):return subprocess.check_output(['git','-C',str(primary),*a],stderr=subprocess.STDOUT,text=True).strip()
+def current_tool(root,name,*a):return source/'utils/py/releases_app.py' if name=='releases_app.py' else tool(root,name,*a)
+# The prior evidence fixture has real canonical queue/dump, committed bundle, local bare remote.
+r.jog_set_status(str(primary),issue,'parked',failure_reason='manual recovery publication control')
+owned=set(git('diff','--name-only').splitlines());assert owned and owned <= j.LEDGER_REPAIR_PATHS
+git('add','--',*sorted(owned));git('commit','-qm','manual primary parked checkpoint');git('push','origin','HEAD:development');git('fetch','origin','development');assert not git('status','--porcelain')
+real_gh=mc._gh
+# Isolate hook policy from GH/landing while proving terminal rows do not dispatch.
+oldsource=subprocess.check_output(['git','-C',str(source),'show','bea9d480:skills/2-daily/merge-cleanup/scripts/merge_cleanup.py'],text=True)
+node=next(n for n in ast.parse(oldsource).body if isinstance(n,ast.FunctionDef) and n.name=='run_jog_post_merge_land')
+ns=dict(mc.__dict__);exec(compile(ast.Module(body=[node],type_ignores=[]),'old_merge_cleanup.py','exec'),ns);old_hook=ns['run_jog_post_merge_land']
+for terminal in [904,275]:
+ calls=[]
+ def fake_run(argv,*a,**kw):
+  if 'jog' in argv and 'land' in argv:calls.append(argv);return subprocess.CompletedProcess(argv,2,'','no committed receipt for plain follow-up')
+  return real_run(argv,*a,**kw)
+ fake_gh=lambda *a,**kw:subprocess.CompletedProcess([],0,json.dumps({'body':f'Fixes #{terminal}','headRefName':'fix/plain-follow-up'}),'')
+ with patch.object(mc,'_gh',side_effect=fake_gh),patch.object(mc,'tool_path',side_effect=current_tool),patch.object(mc.subprocess,'run',side_effect=fake_run):
+  ns['_gh']=fake_gh;ns['tool_path']=current_tool
+  assert old_hook(98765,primary) is False and len(calls)==1
+  calls.clear();assert mc.run_jog_post_merge_land(98765,primary) is True and not calls
+ print('PASS prior terminal follow-up invokes/refuses land; fixed terminal mapping skips issue',terminal)
+# Old vendored consumer: skill-resident policy is new, subprocess runtime is explicitly old.
+consumer=Path(tempfile.mkdtemp(prefix='gh1108-old-consumer-',dir=Path.cwd()/'temp'));(consumer/'releases.db').write_bytes((primary/'releases.db').read_bytes());(consumer/'releases.sql').write_bytes((primary/'releases.sql').read_bytes());vendored=consumer/'.xyz/utils/py';vendored.mkdir(parents=True);sentinel=consumer/'OLD_WRITER_INVOKED'
+(vendored/'harness_paths.py').write_text('def github_slug_from_origin(root): return None\n')
+(vendored/'releases_app.py').write_text('import json,sys\nfrom pathlib import Path\nif \"list\" in sys.argv: print(json.dumps([{\"gh_number\":999901,\"status\":\"parked\"}]))\nelse: Path('+repr(str(sentinel))+').write_text("old land invoked")\n')
+fake_gh=lambda *a,**kw:subprocess.CompletedProcess([],0,json.dumps({'body':f'Closes #{issue}','headRefName':f'marathon/gh-{issue}-manual'}),'')
+ns['_gh']=fake_gh;ns['tool_path']=tool
+with patch.object(mc,'_gh',side_effect=fake_gh):
+ assert old_hook(pr,consumer) is True and sentinel.exists();sentinel.unlink()
+ assert mc.run_jog_post_merge_land(pr,consumer) is False and not sentinel.exists()
+print('PASS prior skill-resident check invokes old runtime; fixed exact-runtime check refuses before old writer')
+# Actual --reconcile-pr control: real Git, real releases check and committed landing.
+# Only the fixture GH endpoint and unrelated issue-doc-sync network probe are stubbed.
+seen=[]
+def recovery_run(argv,*a,**kw):
+ if len(argv)>2 and str(argv[1]).endswith('pdda.sh') and argv[2]=='issue-doc-sync':
+  seen.append('fixture-pdda');return subprocess.CompletedProcess(argv,0,'fixture document-sync probe\n','')
+ return real_run(argv,*a,**kw)
+old_main_node=next(n for n in ast.parse(oldsource).body if isinstance(n,ast.FunctionDef) and n.name=='main')
+main_ns=dict(mc.__dict__);exec(compile(ast.Module(body=[old_main_node],type_ignores=[]),'old_main.py','exec'),main_ns)
+with patch.object(mc,'tool_path',side_effect=current_tool),patch.object(mc.subprocess,'run',side_effect=recovery_run),patch.object(sys,'argv',['merge_cleanup.py','--primary',str(primary),'--reconcile-pr',str(pr),'--execute']):
+ assert main_ns['main']()==0
+assert git('status','--porcelain') and git('rev-parse','HEAD')==git('rev-parse','origin/development')
+print('PASS red prior recovery exits0 with unpublished landing writes')
+assert mc.commit_and_push_phase5_writes(pr,primary,'development')
+r.jog_set_status(str(primary),issue,'parked',failure_reason='manual fixed recovery control')
+owned=set(git('diff','--name-only').splitlines());assert owned and owned <= j.LEDGER_REPAIR_PATHS
+git('add','--',*sorted(owned));git('commit','-qm','manual fixed recovery checkpoint');git('push','origin','HEAD:development');git('fetch','origin','development')
+with patch.object(mc,'tool_path',side_effect=current_tool),patch.object(mc.subprocess,'run',side_effect=recovery_run),patch.object(sys,'argv',['merge_cleanup.py','--primary',str(primary),'--reconcile-pr',str(pr),'--execute']):
+ assert mc.main()==0
+assert seen and not git('status','--porcelain'),git('status','--porcelain')
+assert git('rev-parse','HEAD')==git('rev-parse','origin/development')
+with r.connect(str(primary/'releases.db'),readonly=True) as c:assert c.execute('select status from jog_queue where gh_number=?',(issue,)).fetchone()[0]=='completed'
+print('PASS actual recovery mode completes actionable row and publishes owned writes; clean at origin/development')
+print('ALL MERGE HOOK REVIEW CONTROLS PASSED; fixture',primary)

@@ -1,0 +1,33 @@
+"""Resolve owned intake over the canonical primary after historical queue recovery."""
+import json,os,subprocess,sys
+from pathlib import Path
+sys.path.insert(0,'skills/2-daily/merge-cleanup/scripts');import ledger_merge as l
+root=Path.cwd()
+def git(*a):return subprocess.check_output(['git',*a],text=True).strip()
+def blob(ref,path):return subprocess.check_output(['git','show',ref+':'+path])
+base=git('merge-base','HEAD','MERGE_HEAD')
+b,o,t=[l.parse_dump(blob(ref,'releases.sql').decode()) for ref in [base,'HEAD','MERGE_HEAD']]
+classification=l.classify(blob(base,'releases.sql').decode(),blob('HEAD','releases.sql').decode(),blob('MERGE_HEAD','releases.sql').decode())
+assert set(classification['ours'])=={'roadmap_items'},classification['ours']
+changes=classification['ours']['roadmap_items'];assert list(changes.values())==['added'],changes
+row=o['tables']['roadmap_items'][next(iter(changes))]
+assert row['gh_number']=='1108' and row['issue_url']=='https://github.com/HiQS-Labs/XYZ-forge/issues/1108',row
+assert all(r.get('gh_number')!='1108' for r in t['tables']['roadmap_items'].values())
+# Preserve exact rejected task artifacts in ignored temp. Adopt exact canonical upstream bytes,
+# then replay only the positively proved owned roadmap addition through existing B1 writer verbs.
+for name in ['releases.db','releases.sql']:
+ (root/'temp'/('before-primary-sync-'+name)).write_bytes(blob('HEAD',name))
+ (root/name).write_bytes(blob('MERGE_HEAD',name))
+subprocess.run(['git','add','--','releases.db','releases.sql'],check=True)
+check=l._run(l._app(root)+['check'],root);assert check.returncode==0,check.stdout+check.stderr
+ok,log=l.replay_ops(root,[{'op':'add','row':row}]);assert ok,log
+import sqlite3
+c=sqlite3.connect('file:releases.db?mode=ro',uri=True);r=c.execute('select global_id,status_label from roadmap_items where gh_number=1108').fetchall();c.close();assert len(r)==1
+new=r[0][0]
+env=dict(os.environ,RELEASES_APP_NOW='2026-10-17T07:12:54Z')
+subprocess.run([*l._app(root),'roadmap','update','--gid',new,'--accepted-start'],env=env,check=True)
+check=l._run(l._app(root)+['check'],root);assert check.returncode==0,check.stdout+check.stderr
+c=sqlite3.connect('file:releases.db?mode=ro',uri=True);assert dict(c.execute('select gh_number,status from jog_queue where gh_number in (942,1087)'))=={942:'completed',1087:'completed'};assert c.execute('select status_label from roadmap_items where global_id=?',(new,)).fetchone()[0]=='in-progress';c.close()
+report={'reason':'automatic B1 keeps higher-generation task side and cannot replay primary Jog changes; preserve canonical primary and replay only proved branch-owned roadmap addition with existing replay_ops/perform_write','old_gid':next(iter(changes)),'new_gid':new,'original_accepted_start_retained':'2026-10-17T07:12:54Z','writer_log':log,'primary_head':git('rev-parse','MERGE_HEAD'),'releases_check':check.stdout}
+(root/'temp/primary-sync-result.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps(report,indent=2))
+subprocess.run(['git','add','--','releases.db','releases.sql'],check=True)

@@ -1,0 +1,13 @@
+import json,os,subprocess,tempfile
+from pathlib import Path
+paths=['releases.db','releases.sql','LEADERBOARD.md','RELEASES-PREVIEW.html','LEADERBOARD.html','CHANGELOG.md']
+def git(*a,env=None,input=None):return subprocess.check_output(['git',*a],env=env,input=input,text=True).strip()
+def stripped(rev):
+ with tempfile.TemporaryDirectory(dir='temp') as d:
+  env={**os.environ,'GIT_INDEX_FILE':str(Path(d,'index').resolve())}
+  git('read-tree',rev,env=env);git('update-index','--force-remove','--',*paths,env=env)
+  return git('write-tree',env=env)
+merge=git('rev-parse','974d98db');parents=git('show','-s','--format=%P',merge).split();trees=[stripped(x) for x in parents]
+commits=[git('commit-tree',t,'-p',p,input='GH-1108 stripped manual proof\n') for t,p in zip(trees,parents)]
+r=subprocess.run(['git','merge-tree','--write-tree',*commits],capture_output=True,text=True);actual=stripped(merge);recomputed=r.stdout.splitlines()[0] if r.stdout else None
+print(json.dumps({'merge':merge,'parents':parents,'stripped_input_trees':trees,'recomputed_tree':recomputed,'recorded_stripped_tree':actual,'excluded_paths':paths,'merge_exit':r.returncode,'identical':actual==recomputed},indent=2));assert r.returncode==0 and recomputed==actual

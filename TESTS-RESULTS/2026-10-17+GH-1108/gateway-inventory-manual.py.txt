@@ -1,0 +1,17 @@
+"""Manual canonical-gateway red/green and read-only URI controls."""
+import sqlite3,subprocess,sys,tempfile
+from pathlib import Path
+source=Path('/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17')
+for label,root,expected in [('red-9ec177d5',Path.cwd(),1),('green-bea9d480',source,0)]:
+ p=subprocess.run([sys.executable,str(root/'utils/pdda/check_inventory_ratchet.py'),'--check'],capture_output=True,text=True)
+ assert p.returncode==expected,(label,p.stdout,p.stderr);print(label,p.stdout.strip())
+sys.path.insert(0,str(source/'utils/py'));import releases_app as r
+with tempfile.TemporaryDirectory(prefix='gh1108-readonly-',dir='temp') as d:
+ p=Path(d)/'ledger #?.db'
+ with sqlite3.connect(p) as c:c.execute('create table sentinel(value)');c.execute('insert into sentinel values (1)')
+ c=r.connect(str(p),readonly=True);assert c.execute('select value from sentinel').fetchone()[0]==1
+ try:c.execute('insert into sentinel values (2)')
+ except sqlite3.OperationalError as e:assert 'readonly' in str(e);print('PASS canonical readonly gateway handles URI-special paths and refuses writes')
+ else:raise AssertionError('readonly gateway allowed write')
+ c.close()
+print('ALL GATEWAY AND INVENTORY CONTROLS PASSED')

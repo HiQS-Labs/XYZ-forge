@@ -1,0 +1,17 @@
+{
+  "issue": 1087,
+  "queue_gid": "jog-01M539J2W0ZBVZASJFFT64TYF2",
+  "execution_id": "gh1087-exec1",
+  "pr_number": 1101,
+  "merged_sha": "746b114843afe67ea0d3b8143e06550e0924e530",
+  "approved_head_sha": "088f5cd907d0e64007ec1b2f544351d8a157ce5f",
+  "landed_head_sha": "088f5cd907d0e64007ec1b2f544351d8a157ce5f",
+  "tail_proof": [],
+  "hosted_reconcile": {
+    "conclusion": "success",
+    "databaseId": 38998203092,
+    "headSha": "088f5cd907d0e64007ec1b2f544351d8a157ce5f",
+    "status": "completed",
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38998203092"
+  }
+}
