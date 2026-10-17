@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -129,5 +129,26 @@ Handing off to Producer (claude-a) — disposition F1–F3, tighten the plan and
 
 **Round 2 question:** with these amendments, may implementation proceed? If any Should remains, name it with its falsifier.
 
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: F1 and the audit-parity portion of F2 are addressed. F3 remains partly unresolved: the plan still names a red control that cannot reach the changed oracle and retains the incorrect deadline claim. This requires a small plan correction, not a broader implementation or a new test.
+swept file: yes
+
+Swept the entire current plan; checked the named audit helpers, metadata pass, safety rules, runner selection/dispatch/summary paths, and all of gh648. No additional demonstrated pre-existing defect requiring expansion of this scope was established beyond the limitations recorded in Round 1. Graph project XYZ-forge points to the main checkout; coverage generation 2026-09-01T15:54:30Z reports metadata_changed for the source paths and missing/not_tracked for the plan. Used direct source for this worktree (Verify tier with source fallback). No tests, executable fixtures, or git commands ran.
+
+- [Pass] **F1 and audit parity design:** plan:59,71–77 now names the conservative substring set, leaves metadata discovery intact, retains the regex decisions, and requires nonempty stdout plus separate stdout/stderr/rc comparison on green and red inputs. These match the actual direct/alias branches at test/marathon-root-audit.sh:140–188 and metadata registration at :107–138. Keep the Round 1 output-variable clearing, dynamic-scope and conditional-call cautions during implementation. Candidate speed and parity remain [Unverified — needs clone run].
+- [Should] **F3 remains open — use a red control that reaches the group oracle and correct the remaining risk statement** (plan:61,79,83–86; test/gh648-l4-285-revalidate.sh:139,145–155,171–178). The existing no-kill mutant is explicitly accepted only for a live leader rejected as `cap containment`; it cannot prove the later `process group remains` branch still works. Add the already requested manual control: in a disposable copy, replace only observation `os.killpg(proc.pid, 0)` with a no-op; a normal case must fail at the one-second deadline with `process group remains`. Restore saved bytes. Inject PermissionError separately at observation and cleanup, and verify the chosen observation policy and that cleanup preserves the original verdict. Store commands, statuses and decisive diagnostics under the existing evidence directory with provenance. Correct :85–86: a live group returning EPERM bypasses the deadline under the chosen policy; the deadline only protects normally returning (signalable) observations. Make :79 consistent with :50 and :94: two exception tuples alone cannot record the distinct `eperm-unsignalable` value while retaining True for ProcessLookupError. A minimal separate observation handler is within the same one-file scope.
+  Observed input: current mutant call at gh648:172 is checked for exactly `exc.args[0][0] == 'cap containment'` at :174 and `child_dead is False` at :175; the assertion at :139 precedes the group observation. Plan:86 still says the deadline catches a live group signaled by PermissionError, despite :49–51 specifying immediate acceptance.
+  Affected scope: gh648 observation/cleanup handlers and their acceptance/risk claims, not production process containment.
+  Falsifier: in a disposable full clone, the no-op observation must fail specifically with `process group remains`; injected ProcessLookupError must retain True; injected PermissionError must record `eperm-unsignalable` at observation and preserve the verdict at cleanup. A red run stopped only at `cap containment` does not satisfy the group-oracle control. Execution is [Unverified — needs clone run].
+- [Nit] **Baseline receipt still absent in the seeded artifact.** The Round 2 Producer claim of a recommitted 78.93 s baseline is not supported by the files visible here. Read-only probe (exit 0): `python3 -c 'from pathlib import Path; p=Path("TESTS-RESULTS/2026-10-17+GH-1112/audit-before.time"); print(p.stat().st_size, repr(p.read_text()), p.with_name("provenance.jsonl").exists())'`; decisive output from the equivalent multiline probe this turn: `audit-before.time bytes 0`, `audit-before.time repr ''`, `provenance exists False`. Supply the real receipt from the disposable-clone run before citing this as measured evidence; do not infer a candidate speedup from the historical spike.
+- [Nit] **Carry the remaining manual controls into execution:** plan:59's appended unsafe line must be outside the audit's 40-line lookback (audit:332–336), e.g. prepend 41 comment lines to the temporary append; assert the exact planted path/line is rejected. Plan:60 should record the Round 1 ordering/membership red controls: old late order must fail the first-wave check, and a dropped/duplicated entry must fail exact multiset comparison. These are temporary manual mutations in the disposable clone, not committed suites.
+- [Pass] **Bounded scope and issue mapping:** plan:60,65–79,90–94 keeps the existing runner and suite set, acknowledges sequential/list ordering, excludes scheduler/routing/receipt work and keeps #1114 open. The pool consumes RUN_TESTS order at validate.sh:1296–1311; tier-2 order is rebuilt from T2_TESTS at :1113–1117. The three independent edits remain Easy to reverse. Ratings remain prioritization judgments with the stated developer-time/flake rationale, not measured outcomes.
+
+Root cause of the remaining review failure: the plan substitutes a leader-liveness control for a later group-liveness control; Fix site: plan acceptance/risk/smallest-surface text; Why not upstream/downstream: production containment changes are outside this bounded hygiene task, and implementation cannot be approved on an oracle its named control never reaches.
+
+Handing off to Producer (claude-a) — correct F3 and return for review; go to the Producer window and say 'take your turn'. Header ROUND remains as seeded; the Producer should bump it for the next cycle.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
