@@ -69,9 +69,15 @@ REAL_GIT="$(command -v git)"; GH280_REAL_GIT="$REAL_GIT"; GH280_REMOTE="$REMOTE"
 export GH280_REAL_GIT GH280_REMOTE
 cat > "$STUB_BIN/git" <<'GIT_EOF'
 #!/usr/bin/env bash
+fixture_root="$PWD"; [ "${1:-}" != -C ] || fixture_root="$2"
 for command in "$@"; do
   case "$command" in fetch|push|ls-remote)
-    exec "$GH280_REAL_GIT" -c "url.$GH280_REMOTE.insteadOf=https://github.com/example/example.git" "$@" ;;
+    transport="$GH280_REMOTE"
+    if [ "$command" = fetch ]; then
+      fixture_remote="$("$GH280_REAL_GIT" -C "$fixture_root" config --get gh280.fixtureRemote || true)"
+      [ -z "$fixture_remote" ] || transport="$fixture_remote"
+    fi
+    exec "$GH280_REAL_GIT" -c "url.$transport.insteadOf=https://github.com/example/example.git" "$@" ;;
   esac
 done
 exec "$GH280_REAL_GIT" "$@"
@@ -497,7 +503,7 @@ sys.exit(rc)
 PY
 ) >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "F1 real packet argv chain exits 0 (Preflight → Marathon → Relay)" || fail "F1 packet argv chain exit=$rc"
-grep -q 'module.exports = 2' "$FT/src/feature.js" \
+grep -q 'module.exports = 2' "$FR/src/feature.js" \
   && pass "F2 stub builder landed the declared artifact" || fail "F2 artifact not built by the chain"
 [ -f "$RESF" ] && pass "F3 chain wrote the packet's result receipt" || fail "F3 no receipt at the packet's result_path"
 jassert "$RESF" 'd["outcome"]=="approved" and d["relay_status"]=="Approved"' "F4 receipt approved with relay STATUS Approved"
@@ -517,6 +523,7 @@ prepare_execution_target() {
   git -C "$primary" checkout -q development 2>/dev/null || git -C "$primary" checkout -q -b development
   git clone -q --no-local "$primary" "$target"
   git -C "$target" remote set-url origin "$(git -C "$primary" remote get-url origin)"
+  git -C "$target" config gh280.fixtureRemote "$primary"
   git -C "$target" config user.name gh280
   git -C "$target" config user.email gh280@test.invalid
   [ ! -d "$primary/.xyz" ] || cp -R "$primary/.xyz" "$target/.xyz"
