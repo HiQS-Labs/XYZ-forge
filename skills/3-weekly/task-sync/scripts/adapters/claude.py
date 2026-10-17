@@ -58,6 +58,8 @@ def _records(chunk: str, partial_first: bool):
 
 
 def _last(records, kind, field):
+    # The app matches the key in any record of its 64 KiB window; only the typed
+    # title records carry these keys in practice, so this reads them by type.
     value = None
     for record in records:
         if record.get("type") == kind and isinstance(record.get(field), str):
@@ -198,11 +200,11 @@ class ClaudeLocalAdapter:
         if not files:
             out.update(ok=False, reds=["claude: no session transcripts found"])
             return out
-        info = self._read(files[0])
-        if info["activity"] is None:
-            out["reds"].append(f"claude: newest transcript has no user/assistant timestamp: {files[0].name}")
-        if info["label"] is None and info["summary_source"] is None:
-            out["reds"].append(f"claude: newest transcript has no title or prompt record: {files[0].name}")
+        sample = [self._read(path) for path in files[:20]]
+        if not any(info["activity"] is not None for info in sample):
+            out["reds"].append("claude: no recent transcript has a user/assistant timestamp")
+        if not any(info["label"] is not None for info in sample):
+            out["reds"].append("claude: no recent transcript has a custom-title/ai-title/summary record")
         out["ok"] = not out["reds"]
         out["transcripts"] = len(files)
         return out

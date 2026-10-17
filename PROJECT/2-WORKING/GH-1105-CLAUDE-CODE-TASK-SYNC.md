@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved (round 2); rated 55/25/50/55 | Implement the `claude` adapters, CLI wiring and docs; run probes |
+| Implemented; 24/24 probes; docs gate green; final QA findings folded in | Final QA re-review, then ready PR; operator enables the Claude Code target per device after merge |
 
 ## Key concepts
 
@@ -197,3 +197,14 @@ folded in.
 the operator asked for it now. Appeal 50: neutral (no explicit score given). Effort 55 (re-rated
 from 65 after plan QA): two adapters (one writes, one plans), CLI generalization, docs and the
 install SOP. Recurrence: not applicable (a feature, not a defect).
+
+## Final QA
+
+Independent final review (Claude subagent), round 1: Changes requested, 2 Major / 2 Minor /
+4 Nit. Fixed: `provenance.jsonl` and the probe script committed with the receipt; the cloud
+procedure runs the planner with the operator's `TZ` (cloud containers are UTC); the Install SOP
+heartbeat command includes `claude`; the doctor checks the 20 newest transcripts for a timestamp
+and a known title record shape. Nits: the typed-record read is commented; the remaining nits
+(unparseable cloud `updated_at` skips, dry-run vs apply on a no-newline file, the generic
+`found: false` on a refused set-title) are left as they are and harmless.
+

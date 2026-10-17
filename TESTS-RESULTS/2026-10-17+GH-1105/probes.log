@@ -1,0 +1,25 @@
+PASS 1a dry-run proposes stamp | {"mode": "dry-run", "ides": {"claude": {"swept": 1, "renamed": [{"task_id": "s-ai", "old": "Fix login bug", "new": "10-16 Fix login bug"}], "pinned": [], "unpinned": [], "needs_summary": [], "skipped": 0, "error": null}}}
+PASS 1b dry-run writes nothing | 3
+PASS 1c apply appends exactly one custom-title line | "{\"type\": \"custom-title\", \"customTitle\": \"10-16 Fix login bug\", \"sessionId\": \"s-ai\"}"
+PASS 1d mtime preserved | [1792214455571162462, 1792214455571162462]
+PASS 1e re-run is a no-op | {"swept": 1, "renamed": [], "pinned": [], "unpinned": [], "needs_summary": [], "skipped": 0, "error": null}
+PASS 2a missing root -> error, exit 3 | "claude: projects dir not found at TESTS-RESULTS/2026-10-17+GH-1105/fixtures/missing/projects"
+PASS 2b no-newline/fresh/running/agent sessions untouched; no title -> needs_summary | {"swept": 2, "renamed": [], "pinned": [], "unpinned": [], "needs_summary": [{"task_id": "s-none", "workspace_path": "-proj", "summary_source": "please refactor the parser"}], "skipped": 4, "error": null}
+PASS 2c unparseable registry entry -> error, no write | "claude: sessions registry entry unreadable: bad.json"
+PASS 2d file changed between read and write -> skipped, no title appended | {"swept": 1, "renamed": [], "pinned": [], "unpinned": [], "needs_summary": [], "skipped": 1, "error": null}
+PASS 2e doctor red names missing timestamp | {"store": "TESTS-RESULTS/2026-10-17+GH-1105/fixtures/doctor", "ok": false, "reds": ["claude: no recent transcript has a user/assistant timestamp"], "transcripts": 1}
+PASS 2f doctor green on valid root; missing sessions/ = nothing running | {"store": "TESTS-RESULTS/2026-10-17+GH-1105/fixtures/happy", "ok": true, "reds": [], "transcripts": 1}
+PASS 3a tail empty -> sidecar label used and stamped | [{"task_id": "s-side", "old": "Sidecar title", "new": "10-16 Sidecar title"}]
+PASS 3b re-run no-op after stamp lands in tail | {"swept": 1, "renamed": [], "pinned": [], "unpinned": [], "needs_summary": [], "skipped": 0, "error": null}
+PASS 4a set-title dry-run stamps with own activity date | {"mode": "dry-run", "ides": {"claude": {"task_id": "s-ai", "found": true, "renamed": [{"old": "10-16 Fix login bug", "new": "10-16 Reviewed auth PR"}]}}}
+PASS 4b set-title refuses a running session | {"task_id": "s-run", "found": false, "renamed": [], "error": "claude: session s-run is running; it would revert the title"}
+PASS 5a only idle anthropic_cloud sessions proposed (running/bridge/self skipped) | {"swept": 1, "renamed": [{"task_id": "c-idle", "old": "Docs pass", "new": "10-17 Docs pass", "activity_at": 1792210916.0550542}], "pinned": [], "unpinned": [], "needs_summary": [], "skipped": 3, "error": null, "scope": "bounded native inventory; up to 100 recent sessions", "execution": "native-tools
+PASS 5b stale snapshot refused | "claude-cloud snapshot stale or invalid (freshness limit 300s)"
+PASS 5c missing activity aborts | "claude-cloud actual turn activity missing/invalid for c-idle"
+PASS 5d claude-cloud refuses --apply | "-group NAME] [--auto-pin]\ntask_sync.py: error: Claude cloud plans only: apply titles/pins via native tools; --apply/--set-title/--unpin-days/--group unsupported"
+PASS 5d claude-cloud refuses --set-title | "-group NAME] [--auto-pin]\ntask_sync.py: error: Claude cloud plans only: apply titles/pins via native tools; --apply/--set-title/--unpin-days/--group unsupported"
+PASS 5e claude-cloud requires --claude-snapshot | "unpin-days N]\n                    [--include-cron] [--group NAME] [--auto-pin]\ntask_sync.py: error: Claude cloud requires --claude-snapshot and --exclude-thread"
+PASS 6a codex guard unchanged | "URS] [--unpin-days N]\n                    [--include-cron] [--group NAME] [--auto-pin]\ntask_sync.py: error: Codex requires --codex-snapshot and --exclude-thread"
+PASS 6b codex plan-only guard unchanged | "ron] [--group NAME] [--auto-pin]\ntask_sync.py: error: Codex plans only: apply titles/pins via native tools; --apply/--set-title/--unpin-days/--group unsupported"
+PASS 6c zcode path unchanged (missing DB -> named error) | "zcode: task index DB not found at TESTS-RESULTS/2026-10-17+GH-1105/fixtures/nope.sqlite"
+24/24 PASS

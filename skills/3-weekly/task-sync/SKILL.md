@@ -186,8 +186,10 @@ Native cloud sweep procedure:
    inner turn `timestamp`, else its `created_at`, as Unix seconds. None found →
    abort the sweep. `updated_at` only selects candidates (renames move it).
 3. Write the snapshot to workspace `temp/` and run
-   `python3 <skill>/scripts/task_sync.py --ide claude-cloud --claude-snapshot <snapshot>
-   --exclude-thread <own session id>`. Require exit 0 and a null error.
+   `TZ=<operator IANA zone> python3 <skill>/scripts/task_sync.py --ide claude-cloud
+   --claude-snapshot <snapshot> --exclude-thread <own session id>`. Cloud containers run
+   in UTC; without `TZ` an evening session gets the next day's stamp. Require exit 0 and a
+   null error.
 4. Immediately before each rename, re-read the session (`get_session`) and its newest
    user/assistant event; require the same title, `SESSION_STATUS_IDLE` and activity as
    proposed, else skip it this tick.
@@ -196,9 +198,10 @@ Native cloud sweep procedure:
 
 ## The heartbeat (single scheduler)
 
-For ZCode/Agy (and local Claude Code, GH-1105: `--ide zcode,agy,claude` where Claude Code is
-installed; never a second local scheduler), one 15-minute ZCode automation runs `task_sync.py --apply --ide zcode,agy` in this
-workspace; the daemon/launchd/in-session `/schedule` options of the superseded
+For ZCode/Agy and local Claude Code, one 15-minute ZCode automation runs
+`task_sync.py --apply --ide zcode,agy` in this
+workspace (`--ide zcode,agy,claude` where Claude Code is installed, GH-1105; never a
+second local scheduler); the daemon/launchd/in-session `/schedule` options of the superseded
 originals are dropped. The installer SOP below creates or repoints it. The
 automation's own task is automation-owned and skipped by the ZCode adapter — no
 self-restamping loop.
@@ -239,7 +242,8 @@ first and repoint one instead of creating a duplicate.
 3. **Heartbeat:** for Codex, follow the native single-scheduler procedure above.
    For ZCode/Agy, create or repoint the 15-minute ZCode automation (CronCreate,
    `intervalUnit: minute`, `interval: 15`) with the prompt: run
-   `python3 <collection>/task-sync/scripts/task_sync.py --apply --ide zcode,agy`,
+   `python3 <collection>/task-sync/scripts/task_sync.py --apply --ide zcode,agy` (`zcode,agy,claude`
+   where Claude Code is installed),
    then for each `needs_summary` entry in the ZCode section read the task's
    `searchable_text`, craft a ≤8-word last-action summary, apply
    `--ide zcode --apply --set-title <task_id> "<summary>"` (for the `claude` section, summarize its

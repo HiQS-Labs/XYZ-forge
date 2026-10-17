@@ -37,8 +37,8 @@
     "probe": "1d mtime preserved",
     "pass": true,
     "detail": [
-      1792214137840853691,
-      1792214137840853691
+      1792214455571162462,
+      1792214455571162462
     ]
   },
   {
@@ -103,7 +103,7 @@
       "store": "TESTS-RESULTS/2026-10-17+GH-1105/fixtures/doctor",
       "ok": false,
       "reds": [
-        "claude: newest transcript has no user/assistant timestamp: s-nots.jsonl"
+        "claude: no recent transcript has a user/assistant timestamp"
       ],
       "transcripts": 1
     }
@@ -181,7 +181,7 @@
           "task_id": "c-idle",
           "old": "Docs pass",
           "new": "10-17 Docs pass",
-          "activity_at": 1792210598.3753142
+          "activity_at": 1792210916.0550542
         }
       ],
       "pinned": [],
