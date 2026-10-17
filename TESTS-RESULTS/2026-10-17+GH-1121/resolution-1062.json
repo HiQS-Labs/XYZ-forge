@@ -1,0 +1,21 @@
+{
+  "resolved": true,
+  "handoff": false,
+  "reason": "resolved through the writer path; merge commit 422bce73f7",
+  "log": [
+    "CHANGELOG: proven prefix-additive sections; existing history preserved",
+    "classification: keep=ours generation ours/theirs=(1753, 1631) replay=1 op(s)",
+    "check --rebuild on the kept side: rc=0",
+    "roadmap add GH-1060: rc=0 ",
+    "roadmap update GH-1060 (section/marker): rc=0 ",
+    "releases-merge-resolve.sh: rc=0",
+    "removed verified rebuild backup: releases.db.bak"
+  ],
+  "commit": "422bce73f7ec3033d69d815fb4c89156eecaf45f",
+  "conflict_set": [
+    "CHANGELOG.md",
+    "LEADERBOARD.md",
+    "releases.db",
+    "releases.sql"
+  ]
+}

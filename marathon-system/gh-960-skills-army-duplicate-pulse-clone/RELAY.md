@@ -10,7 +10,7 @@ NEXT: codex (Reviewer)
 
 - Generated: 2026-10-16T03:54:04Z
 - Mode: gh-bundle
-- Sources: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1081-factory-manager-spike-2026-10-15-verify/PROJECT/2-WORKING/GH-960-SKILLS-ARMY-DUPLICATE-PULSE-CLONE.md 
+- Sources: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1081-factory-manager-spike-2026-10-15-verify/PROJECT/2-WORKING/GH-960-SKILLS-ARMY-DUPLICATE-PULSE-CLONE.md
 - Target root: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1081-factory-manager-spike-2026-10-15-verify (development @ 6055afca2)
 - Suggested branch: `marathon/gh-960-skills-army-duplicate-pulse-clone-2026-10-16` (branch_ready=false — not cut yet; ask the operator before proceeding, per GUIDING-PRINCIPLES.md §8)
 - Verdict: ready
