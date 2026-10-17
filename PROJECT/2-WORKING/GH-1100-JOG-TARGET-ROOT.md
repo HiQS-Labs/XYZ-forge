@@ -18,7 +18,7 @@ Jog must dispatch Marathon against the preflight target even when preflight and 
 
 | What was just completed | What's next |
 |---|---|
-| Both Codex reviews Approved; 409/409 full gate passed; branch published | Open/inspect development PR; await merge |
+| Both Codex reviews Approved; 409/409 full gate passed; branch published | PR #1104 published against development; await merge |
 
 ## Grounding and bet
 
@@ -56,3 +56,6 @@ Pinning preflight's evaluation root does not pin its downstream process. Explici
 ## Integration and handoff
 
 Final Codex QA Approved in `relay-system/2026-10-16/gh1100-final.codex.md`. Base advanced to 746b1148; existing disjoint ledger replay preserved upstream queue records and replayed only this task through the canonical writer/resolver. Owned row is now rmi-01M53Y2G9AG6656690Q53F8ZPW (re-admitted explicitly after replay); rating remains 80/85/50/90 with no override. Runtime is byte-identical to the reviewed and focused-tested d6c7e9b0. Original accepted-start happened before that runtime edit. Publication gate passed 409/409 at 8a5041fd, with one pooled process-group PermissionError passing the built-in serial retry. Evidence-only receipt additions do not change runtime bytes.
+
+
+PR: https://github.com/HiQS-Labs/XYZ-forge/pull/1104 — non-draft, development base, mergeable at publication. Both Codex reviews Approved. Local full gate 409/409 at 8a5041fd; receipt-only documentation gate green at 8d65b0cb. Hosted smoke is checked against the live PR head separately; macOS promotion and Ubuntu advisory jobs are skipped for this PR event. Issue remains open until landing. No merge or live-shift execution is part of this task.
