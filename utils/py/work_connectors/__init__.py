@@ -527,7 +527,7 @@ def dispatch(db_path, at, connectors=None, window_s=None, reset=False):
         return {}
     try:
         read_lock = _accepted_read_lock(db_path)
-    except Exception as exc:
+    except (Exception,SystemExit) as exc:
         _warn(str(exc))
         return {}
     lock = _ConnectorLock(db_path)

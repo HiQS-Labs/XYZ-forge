@@ -1754,7 +1754,8 @@ def publish_jog_candidate(root):
     if not dirty:
         active['published'] = True
         return
-    route = subprocess.run(['bash', os.path.join(root, 'utils/ci-route.sh'), 'pull_request'],
+    from harness_paths import resolve_tool
+    route = subprocess.run(['bash', resolve_tool(root, 'utils/ci-route.sh'), 'pull_request'],
                            input='\n'.join(sorted(dirty))+'\n', text=True, capture_output=True)
     if route.returncode or 'route=docs\n' not in route.stdout or 'tier=1\n' not in route.stdout:
         raise RuntimeError('owned publication must use existing docs gate; refusing suites in primary')
