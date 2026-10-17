@@ -1,17 +1,17 @@
 ---
 name: workhorse
-description: >
-  End-to-end disciplined problem resolution ladder: triages complex multi-task or
-  wall-of-text intake into an atomic priority queue, establishes ground truth via
-  /debug-mantra, engineers the leanest safe solution via /ponytail (reusing and
-  extending existing subsystems with zero code sprawl), enforces AGENTS.md, SOP.md,
-  and GUIDING PRINCIPLES governance, checks cross-repo CHANGELOG cohesion, stress-tests
-  the plan via /consult with Codex and Agy, runs bounded /recon on ambiguous stateful
-  targets, proves preservation before irreversible operations, and executes with verified
-  runnable checks.
-  Trigger on /workhorse, "workhorse", "tackle this", "work through this problem",
-  "methodical progress", or when an ambiguous or complex task requires structured,
-  governed execution across the full ladder.
+description: >-
+  End-to-end disciplined problem resolution ladder. Trigger on /workhorse,
+  "workhorse", "tackle this", "work through this problem", "methodical progress",
+  or when an ambiguous or complex task requires structured, governed execution
+  across the full ladder. Triages complex multi-task or wall-of-text intake into
+  an atomic priority queue, establishes ground truth via /debug-mantra, engineers
+  the leanest safe solution via /ponytail (reusing and extending existing
+  subsystems with zero code sprawl), enforces AGENTS.md, SOP.md, and GUIDING
+  PRINCIPLES governance, checks cross-repo CHANGELOG cohesion, stress-tests the
+  plan via /consult with Codex and Agy, runs bounded /recon on ambiguous stateful
+  targets, proves preservation before irreversible operations, and executes with
+  verified runnable checks.
 metadata:
   argument-hint: "[task, PR, issue, wall-of-text, or problem description]"
 hooks:
