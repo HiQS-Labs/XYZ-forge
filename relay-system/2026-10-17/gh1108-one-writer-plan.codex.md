@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -93,5 +93,18 @@ Handing off to Producer (codex-producer) — document the bounded delivery-1 che
 Disposition: Implemented. The delivery1 boundary now names a manual operator checkpoint before merge-cleanup: inspect only owned ledger/view files and local supervisor commits, refuse unrelated state/divergence, commit explicit paths, normal push, and prove clean/published ff readiness. A rejected push preserves state and stops; automatic NFF recovery remains exclusively delivery2. Acceptance now requires witnessing pre-checkpoint Phase-0 refusal and post-checkpoint readiness in a disposable clone, through the mapped post-merge hook. No source code changed.
 
 Handing off to Reviewer for round 2; check this focused correction and approve only if the delivery1 plan is sufficient. When approving, use the terminal token protocol above (done, no release).
+
+### Reviewer · Round 2
+
+swept file: yes
+VERDICT: PASS
+Basis: Delivery 1 is sufficiently specified for implementation. Round 1's publication prerequisite is addressed without pulling delivery 2 into this PR or weakening merge-cleanup readiness. This approves the plan only; no implementation, merge, or runtime success is attested.
+
+- [Pass] **Round 1 checkpoint is resolved.** `PROJECT/1-INBOX/GH-1108-JOG-LAND-RECEIPTS.md:66` now requires inspecting status/diff/index and local supervisor commits, refusing unrelated state/divergence, explicitly committing owned paths, normal push, and clean/published ff readiness. It states: “A rejected push preserves local state and stops for operator reconciliation.” Acceptance at `:93` requires witnessing normal Phase-0 refusal before the checkpoint and readiness afterward, through the post-merge hook. Current source still refuses dirty paths and unpublished integration commits (`skills/2-daily/merge-cleanup/scripts/scan_clones.py:1233–1240,1296–1307`), and blocks before Phase 5 (`merge_cleanup.py:1557–1573`). Thus the checkpoint supplies the missing operational step rather than relying on a post-merge action to satisfy a pre-merge predicate. Read-only command `sed -n '1220,1315p' skills/2-daily/merge-cleanup/scripts/scan_clones.py` exited 0; decisive output: `res["is_clean"] = not dirty` and `res["unpushed_on_integration"] = int(ahead.stdout.strip())`, with both non-ready cases appending blockers. This is static evidence, not a witnessed end-to-end run.
+- [Pass] **Whole-plan scope remains coherent and bounded.** The complete 99-line artifact was swept, including unchanged sections; no additional pre-existing plan defects were identified. Explicit primary binding and read-only behavior are specified at `:70`; separate-full-clone execution, primary writer reuse and held-lock separation at `:71`; portable receipt publication and its exact-path exception at `:72–73`; cache-independent landing and mapped post-merge integration at `:74–75`. Six-path stripping and merge-history preservation are specified at `:58`, with fail-closed equality/conflict controls at `:92`. Existing B1 policy remains authoritative (`skills/2-daily/merge-cleanup/scripts/ledger_merge.py:35–39,496`). These are design requirements to verify during implementation, not claims that the current source implements them.
+- [Pass] **Deferral, verification and rollback remain explicit.** `:64–66,80,95` reserve immediate transition publication and fresh-intent retry for independently reviewed delivery 2. `:86` rates the change Costly and preserves committed evidence on rollback; `:91–94` specify negative controls, historic receipt checks, existing covering suites in a disposable full clone and committed provenance under `TESTS-RESULTS/2026-10-17+GH-1108/`. `:99` records revised ratings without claiming independently reproduced identical failure traces. No new suite, writer or scheduler is proposed (`:76,86,94`).
+- [Unverified — needs clone run] No Git commands, suites, pytest or executable fixtures were run here. Primary/clone refusal, unchanged clone ledger bytes, portable historical imports, stripped merge recomputation, readiness controls and final gate results remain implementation acceptance work. The operator design comment was read using `gh api repos/HiQS-Labs/XYZ-forge/issues/comments/6231071222 --jq .body` (exit 0); it requires “one DB writer, the primary.” The relay Setup supplies the authorized two-delivery boundary. Graph lookup returned both Jog symbols without pagination; coverage generation `2026-09-01T15:54:30Z` is stale (plan missing, Jog metadata changed, merge-cleanup paths untracked), so review evidence uses current source reads rather than graph freshness claims.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with delivery-1 implementation and its specified clone controls; final implementation QA remains required.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
