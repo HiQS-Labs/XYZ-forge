@@ -250,6 +250,32 @@ else
   bad "shipped code also failed — the fix does not hold"
 fi
 
+# GH-1108: cursor probes below address device-local storage; the schema/dump red
+# controls above deliberately continue to inspect the legacy ledger table.
+sqlite3() {
+  case "${2:-}" in
+    *connector_cursors*)
+      python3 - "$ROOT" "$1" "$2" <<'PYCURSOR'
+import os,sys
+sys.path.insert(0,os.path.join(sys.argv[1],'utils','py'))
+import work_connectors as W
+ledger=W._connector_connection(sys.argv[2],readonly=True)
+c=W._cursor_store(sys.argv[2]);sql=sys.argv[3]
+if sql.lstrip().upper().startswith('SELECT'):
+    for row in c.execute(sql):
+        print('|'.join('' if v is None else str(v) for v in row))
+else:
+    c.executescript(sql)
+    for name,number in c.execute('SELECT connector,last_event_id FROM connector_cursors').fetchall():
+        c.execute('INSERT OR REPLACE INTO event_identities VALUES (?,?)',(name,W._event_identity(ledger,number)))
+    c.commit()
+c.close();ledger.close()
+PYCURSOR
+      ;;
+    *) command sqlite3 "$@" ;;
+  esac
+}
+
 echo "11. shared nested-block config resolution (device_config.resolve_device_block)"
 # Absent config is a silent no-op; a malformed file must be distinguishable from it. That
 # distinction is the whole reason profile_resolve.py re-opens the file by hand today.
@@ -357,7 +383,7 @@ if mode == "isolation":
     # one failing, one succeeding: the good one must still advance, the bad one must not
     res = WC.dispatch(db, "2026-09-10T00:00:00Z",
                       connectors={"s_ok": cfg, "s_fail": cfg}, window_s=30)
-    c = sqlite3.connect(db)
+    c = WC._cursor_store(db)
     rows = dict(c.execute("SELECT connector, last_event_id FROM connector_cursors").fetchall())
     errs = dict(c.execute("SELECT connector, last_error IS NOT NULL FROM connector_cursors").fetchall())
     print("ok_advanced=%s fail_stuck=%s fail_recorded=%s" % (
@@ -377,9 +403,8 @@ elif mode == "window":
     # Reset the cursors first. The concurrency run above advanced them to the last event, so
     # without this there would be nothing pending, dispatch would return {} in 0.00s, and both
     # assertions would pass for the wrong reason.
+    WC._reset_cursors(db,['s_slow','s_slow2'])
     c = sqlite3.connect(db)
-    c.execute("DELETE FROM connector_cursors WHERE connector IN ('s_slow','s_slow2')")
-    c.commit()
     pending = c.execute("SELECT count(*) FROM work_events").fetchone()[0]
     c.close()
     if not pending:
@@ -514,8 +539,8 @@ sqlite3 "$FXE/releases.db" "UPDATE connector_cursors SET last_event_id = $((LAST
 R4="$(XYZ_DEVICE_CONFIG_PATH="$WORK/recon_cfg.json" XYZ_WORK_CONNECTORS_REGISTRY="$REG" \
       python3 "$APP" --root "$FXE" work reconcile 2>&1)"
 case "$R4" in
-  *"nothing to replay"*) ok "red control: an overshot cursor skips real events — which is why replay is cursor-driven, not scan-driven" ;;
-  *) bad "an overshot cursor still replayed: $R4" ;;
+  *"replayed through event"*) ok "an invalid missing-event cursor resets and replays rather than skipping real events" ;;
+  *) bad "a missing-event cursor did not replay: $R4" ;;
 esac
 
 echo "15b. a connector cannot advance its own cursor out of the batch it was handed (impl QA r1)"
@@ -637,7 +662,11 @@ for node in ast.walk(fn):
         isinstance(a, ast.Constant) and a.value == "--ff-only" for a in ast.walk(node)
     ):
         lines.setdefault("landing_fast_forward", node.lineno)
-assert lines["execute_pr_merge"] < lines["landing_fast_forward"] < lines["run_post_merge_reconcile"] < lines["emit_pr_merged"] < lines["commit_and_push_phase5_writes"], lines
+assert lines["execute_pr_merge"] < lines["landing_fast_forward"] < lines["run_post_merge_reconcile"], lines
+finish = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'finish_post_merge_writes')
+finish_calls = {getattr(n.func,'id',''):n.lineno for n in ast.walk(finish) if isinstance(n,ast.Call)}
+assert finish_calls['emit_pr_merged'] < finish_calls['commit_and_push_phase5_writes']
+assert any(getattr(n.func,'id','') == 'finish_post_merge_writes' for n in ast.walk(fn) if isinstance(n,ast.Call))
 post_calls = {
     node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
     for node in ast.walk(post) if isinstance(node, ast.Call)
@@ -880,7 +909,7 @@ db = sys.argv[2]
 W._persist(db, {"github_board": (9, None)}, "t1")
 W._persist(db, {"github_board": (4, None)}, "t2")   # an older batch persisting late
 import sqlite3
-c = sqlite3.connect(db)
+c = W._cursor_store(db)
 got = c.execute("SELECT last_event_id FROM connector_cursors WHERE connector='github_board'").fetchone()[0]
 assert got == 9, "cursor regressed to %s" % got
 print("monotonic-ok")

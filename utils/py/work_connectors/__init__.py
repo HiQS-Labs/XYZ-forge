@@ -185,7 +185,7 @@ def cursor_for(conn, name):
     sidecar = _connector_connection(path,readonly=True)
     try:
         row = sidecar.execute('SELECT c.last_event_id,e.fingerprint FROM connector_cursors c LEFT JOIN event_identities e USING(connector) WHERE connector=?',(name,)).fetchone()
-        if not row or _event_identity(conn,row[0]) != row[1]:
+        if not row or (row[0] and not row[1]) or _event_identity(conn,row[0]) != row[1]:
             return 0
         return int(row[0])
     finally:
@@ -431,7 +431,8 @@ def _persist(db_path, results, at):
         try:
             for name,(advanced,error) in results.items():
                 if advanced is not None:
-                    conn.execute('INSERT OR REPLACE INTO event_identities VALUES (?,?)',(name,_event_identity(ledger,advanced)))
+                    retained = conn.execute('SELECT last_event_id FROM connector_cursors WHERE connector=?',(name,)).fetchone()[0]
+                    conn.execute('INSERT OR REPLACE INTO event_identities VALUES (?,?)',(name,_event_identity(ledger,retained)))
         finally:
             ledger.close()
         conn.commit()
