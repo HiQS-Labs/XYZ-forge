@@ -1,0 +1,11 @@
+{
+  "resolved": false,
+  "handoff": true,
+  "reason": "ledger changes are not disjoint:\n  - jog_queue: 3 change(s) on the replayed side \u2014 the writer path cannot express this table (keys: jog-01M539FQNQ6CADG1W5QM2KZK00, jog-01M539J2W0ZBVZASJFFT64TYF2, jog-01M539FQG3BTC5GWT5VDHJ71JF)",
+  "log": [],
+  "commit": null,
+  "conflict_set": [
+    "releases.db",
+    "releases.sql"
+  ]
+}
