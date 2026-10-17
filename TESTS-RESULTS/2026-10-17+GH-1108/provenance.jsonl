@@ -1,0 +1,1 @@
+{"phase": "base-red", "revision": "b26c9edb73f61587a71287f68cb4338409188042", "command": "python3 <gate-clone>/temp/base-probe.py (retained as base-probe.txt)", "result": "observed exit 2 head SHA mismatch and unsupported ledger_root TypeError", "artifact": "base-red.txt", "note": "Mocked GitHub/receipt source; no production state mutation"}
