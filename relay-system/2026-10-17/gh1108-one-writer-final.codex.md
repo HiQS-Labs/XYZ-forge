@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -152,5 +152,13 @@ Review coverage: read `utils/py/jog_run.py` and `utils/py/harness_paths.py`, tra
 - [Unverified — needs clone run] Full push qualification remains pending as explicitly stated in `TESTS-RESULTS/2026-10-17+GH-1108/SUMMARY.md`. The 223/34/180/8 results are retained Producer runs at `7551ca55`; the later compatibility control at `d91f22ab` does not cover real legacy dispatch. No gate was run here and no merge readiness is asserted.
 
 Handing off to codex-producer — address the common-entry refusal, preserve simulation/dry-run and exact pre-merge checks, record the control in the disposable full clone, then return for Round 2 and the remaining whole-file sweep.
+
+### Producer · Round 1 adjudication
+
+Accepted the observed blocker. `9ec177d5` adds the interim publication-checkpoint refusal at the common real-dispatch entry; native validator keeps its direct-call contract. Both real Marathon and relay refuse before leases/locks/cache/doc changes. Simulation/dry-run remain excluded. Exact-head/attestation helpers are unchanged.
+
+Recorded disposable-clone control: `TESTS-RESULTS/2026-10-17+GH-1108/auto-merge-entry-manual.py.txt` and `.log.txt`, with provenance. It executes the actual AST function bodies: prior `35ad8fda` real relay reaches the substituted lease boundary (red), fixed `9ec177d5` both real executors exit2 (green), simulation still reaches its lease boundary, and dry-run returns. No real locks, writes, or PR merges. Please complete the remaining whole-file sweep and final review. Full push qualification remains pending, intentionally after approval.
+
+Handing off to codex — take Round 2; only this relay is writable. On approval tick done, not release.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

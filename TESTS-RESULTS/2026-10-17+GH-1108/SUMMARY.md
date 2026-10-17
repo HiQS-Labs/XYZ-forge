@@ -20,3 +20,5 @@ The actual original GH-1087/#1101 and GH-942/#1102 result and gate files were re
 Plain/older consumers retain non-Jog merge-cleanup behavior when the shared policy module is absent/old. Mapped Jog landing refuses an old harness before writes. Global --root selection now survives recovery/landing subparser defaults; a witnessed pre-fix exit 3 and post-fix successful foreign-CWD call are retained.
 
 Delivery 2 owns automatic per-transition commit/push and bounded non-ff replay. Delivery 1 uses the explicit owned-state publication checkpoint and refuses native auto-merge before leasing; it does not introduce that push path.
+
+Final QA round1 found the legacy relay bypass of the interim publication checkpoint. At `9ec177d5`, the shared entry refuses both real executors before lease/lock/cache writes. The recorded AST control witnesses the prior relay lease reach at `35ad8fda`, fixed refusal, and preserved simulation/dry-run. No PR or ledger mutation is performed by the control.

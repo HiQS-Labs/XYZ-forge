@@ -1,0 +1,19 @@
+jog: --auto-merge requires the separate durable-transition publisher; use the primary publication checkpoint and merge-cleanup for delivery 1
+legacy notice
+legacy notice
+jog: use the primary publication checkpoint
+jog: use the primary publication checkpoint
+legacy notice
+PASS 35ad8fda marathon simulate=False dry_run=False refused-2
+PASS 35ad8fda relay simulate=False dry_run=False lease-reached
+PASS 35ad8fda relay simulate=True dry_run=False lease-reached
+jog: [dry-run] simulating queue execution (root: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate)
+jog: [dry-run] queue is empty (0 pending items).
+PASS 35ad8fda relay simulate=False dry_run=True dry-run-return
+PASS HEAD marathon simulate=False dry_run=False refused-2
+PASS HEAD relay simulate=False dry_run=False refused-2
+PASS HEAD relay simulate=True dry_run=False lease-reached
+jog: [dry-run] simulating queue execution (root: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate)
+jog: [dry-run] queue is empty (0 pending items).
+PASS HEAD relay simulate=False dry_run=True dry-run-return
+ALL COMMON-ENTRY CONTROLS PASSED; prior real relay reaches lease, fixed real dispatches refuse before it
