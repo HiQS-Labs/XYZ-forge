@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -219,5 +219,36 @@ At7dc1ed0a the canonical-reader red/green control witnesses actual writer-genera
 Review current source through007a14ad and the bounded final changes/evidence. This is your last configured Opus round3; only this relay writable. User wants the second PR as an unreviewed dependent draft, rebase after first lands; no merge. Please report concrete remaining findings or Approved, with truthful coverage limits. On approval tick done, not release. The Codex exception will run after this turn so any concrete feedback can be included before its unique fourth round.
 
 Handing off to claude-opus-reviewer for Round3.
+
+### Reviewer · Round 3 (claude-opus-reviewer)
+
+swept file: yes
+Scope: I read the current working tree (HEAD `028ac16d`, runtime at `007a14ad`/`7dc1ed0a`): the whole round-4 Jog hook, reconcile, publisher and both callers in `merge_cleanup.py` (600–780, 1290–1312, 1505–1525); `ledger_merge.tool_path` (`ledger_merge.py:261-271`); `releases_app.py` `cmd_jog_list` (4574–4618), its parser (6809–6811) and `_ensure_jog_schema` (968–975); the S4 fixture (`test/gh436-merge-cleanup.py:340-385`) and `test/gh534_phase_b_tests.py:660-690`; SUMMARY.md and the round-4 logs. Probes: rg/sed; `sqlite3 "file:…?mode=ro"` on two consumer DBs outside this tree; one argparse-only invocation of an old consumer's CLI with `--root` set to an empty scratch dir (it exits in argparse before touching any DB; scratch dir stayed empty). No git, tests or fixtures run. No new pre-existing defect beyond round 1's Nits.
+
+VERDICT: FAIL
+Basis: S4 holds. The round-4 canonical reader (`e088456e`) fixes the multiline omission, but it introduces a regression against Q4's "existing plain/old/vendored consumer behavior survives": in a consumer whose resolved releases CLI predates Jog, the reader itself fails, and the hook hard-stops merge-cleanup after every merge — even with no Jog rows at all. Under B1's parser that same consumer had an empty queue and passed. The fix is narrow, with no new suite. This is the last configured Opus round, so per step 5 the relay is Escalated, not Approved.
+
+**[Blocker] B5: the canonical reader refuses every post-merge run in consumers whose releases CLI has no `jog` command.**
+- Path: `merge_cleanup.py:623-624` only skips when `releases.db` is absent. `:625` resolves the consumer's own CLI first (`ledger_merge.py:266-270`: `<root>/utils/py`, then `<root>/.xyz/utils/py`). `:629-633` runs `jog list --all --json` and treats a non-zero exit as `ValueError`. `:639-641` logs "Cannot read canonical Jog rows" and returns False, before the `if not queue: return True` short-circuit at `:642`. `run_post_merge_reconcile` returns that at `:739`, and the main loop returns 2 at `:1297-1301`, after the PR is already merged and fast-forwarded and before `emit_pr_merged` and the publisher at `:1305-1306`.
+- Observed input: the real consumers `/Users/noelsaw/Documents/GH Repos/firebase-AI-reports` (CLI at `.xyz/utils/py/releases_app.py`) and `/Users/noelsaw/Documents/GH Repos/rebalanceOS` (CLI at `utils/py/releases_app.py`). Both have a root `releases.db` with no `jog_queue` table (`sqlite3 mode=ro`: `Error: in prepare, no such table: jog_queue`), and neither CLI contains "jog" (`rg -c -i jog` rc=1). Command: `python3 "…/firebase-AI-reports/.xyz/utils/py/releases_app.py" --root "$TMPDIR/empty" jog list --all --json` gave exit=2 and `releases: error: argument cmd: invalid choice: 'jog' (choose from 'init', … 'project')`. That non-zero exit is exactly what `:632-633` turns into a refusal. The full merge-cleanup stop after merge is traced in code, not run [Unverified — needs clone run].
+- Affected scope: merge-cleanup runs (main loop and `--reconcile-pr --execute`) on any primary whose `releases.db` exists and whose resolved `releases_app.py` has no `jog list --all --json`. A newer CLI on a DB without the table is already fine: `releases_app.py:4579-4581` prints `[]`.
+- Coverage gap: `compat-and-root-manual.log.txt` (older-harness consumer) was recorded at `d91f22ab`, under the B1 reader. `round4-canonical-reader-manual.log.txt` covers only a new CLI ("malformed/failed canonical extraction refuses"). No retained control runs the new reader against a pre-Jog consumer.
+- Fix (smallest): treat "this runtime has no Jog queue" as an empty queue, without weakening refusal where rows can exist. For example, before calling the CLI, return True when the existing qualified dump the hook already parsed in Round 2 (`releases.sql`, via `ledger_merge`) contains no `jog_queue` table. Otherwise keep the canonical reader and its refusal unchanged. This adds no new SQLite site and no new parser. Do not instead suppress all reader failures: a new CLI that fails on a DB with actionable rows must still refuse (S2/requirement 5).
+- Falsifier: a disposable primary with a `releases.db`/`releases.sql` that has no `jog_queue`, plus a pre-Jog `.xyz/utils/py/releases_app.py` (copy of the firebase-AI-reports one). Run `run_jog_post_merge_land(N, primary)`. Expected after the fix: returns True, does not invoke `jog land`, writes nothing. Current code: logs `Cannot read canonical Jog rows: … invalid choice: 'jog'` and returns False. If current code already returns True there, this finding is wrong.
+
+**[Nit]**
+- `merge_cleanup.py:665-667`: the `jog land` subprocess still has no timeout, while the new reader has `timeout=300` (`:631`). Carried from round 1; optional.
+
+**[Pass]**
+- S4: `test/gh436-merge-cleanup.py` now patches `commit_and_push_phase5_writes` (`with mock.patch.object(merge_cleanup, "commit_and_push_phase5_writes", return_value=True) as publish:`) and asserts `publish.assert_called_once_with(42, self.primary.resolve(), "development")`. `round4-publisher-fixture-green.log.txt` shows "Ran 1 test … OK". Runtime untouched, no new test file.
+- Canonical reader content, for consumers that do have the Jog CLI:
+  - It reads JSON rows from the root-bound CLI (`:629-631`), validates list-of-dicts (`:635-636`) and keeps only `{"pending","running","failed","parked"}` (`:637-638`), so multiline `failure_reason` no longer drops a row.
+  - Malformed or failed output refuses (`:639-641`). Log: "PASS 'gate failed\nretry required' prior routing= True 0 canonical routing= False 1 reader leaves DB unchanged" and "PASS malformed/failed canonical extraction refuses '' 1".
+  - `cmd_jog_list` is a pure SELECT over `connect()` (`releases_app.py:4577-4608`), with no `perform_write`.
+- Recovery publication through the new reader: `round4-merge-hook-manual.log.txt` "PASS actual recovery mode completes actionable row and publishes owned writes; clean at origin/development".
+- Capability check placement (S3) is unchanged and still follows mapping (`:659-663`), so an old Jog-capable CLI without `require_primary` still refuses only when a row is mapped.
+- Coverage limits stated truthfully: SUMMARY.md says gh436's broad run was still completing and that final-source qualification "has not run and cannot be claimed". I claim no gate result either.
+
+Relay escalated: Round 3 of 3 ended without Approved. Handing off to Producer (codex-producer) — fix B5 narrowly, add its red/green control to the round-4 evidence, and carry it into the authorized Codex round 4. Go to the Producer window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
