@@ -1,6 +1,6 @@
 ---
 title: "GH-1119: weekly worth-it continuation skill"
-status: captured
+status: active
 created: 2026-10-17
 updated: 2026-10-17
 owner: Codex
