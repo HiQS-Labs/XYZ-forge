@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -81,5 +81,24 @@ Append graded findings with file:line; Blocker/Should behavior requests require 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+Ship — sufficient for this bounded documentation import.
+
+swept file: yes
+
+VERDICT: PASS
+Basis: Read the entire imported SKILL.md, NOTICE and LICENSE, active task document and requested evidence bundle, plus the README license paragraph and weekly index context. The instructions meet the four acceptance questions; no concrete remaining blocker or pre-existing defect was found in the reviewed bundle. Approval covers this documentation checkpoint, not publication, execution or live-model compliance.
+
+- [Pass] Remaining-value allocation is explicit: `skills/3-weekly/worth-it/SKILL.md:78–83` excludes sunk effort, counts future safe-exit cost, names the strongest alternative, preserves mandatory obligations, defines all four calls, and permits at most one affordable proof with fixed cap/oracle and early-stop criteria. `:93–102` supplies the five-line contract and Park revisit trigger. No change requested.
+- [Pass] Results guard: `skills/3-weekly/worth-it/SKILL.md:87–91` searches existing relevant records including closed results, discloses unavailable lookup, requires exact action/destination authorization, respects decline without renewed prompting, verifies writes, and forbids full closure while capture is pending or declined. `:81` preserves retries, sample/environment limits and non-additive gains. Issue 1118 is contextual in `skills/3-weekly/worth-it/NOTICE:26–29`, absent from the fully read SKILL.md. No change requested.
+- [Pass] Packaging and maintenance are explicit in `skills/3-weekly/worth-it/NOTICE:6–15,19–24,31–38`: exact PR-head pin, upstream attribution/GPL v2, no instruction modifications, helper-name resolution and standalone fallback, manual update path without a framework. `skills/3-weekly/worth-it/LICENSE:1–7` contains GPL version 2; `README.md:321–324` preserves the separately licensed exception. `ARCHITECTURE.md:118` points to the single bundle. This is a packaging/source review, not a legal compatibility opinion. No change requested.
+- [Pass] Local-byte probe: command `shasum -a 256 skills/3-weekly/worth-it/SKILL.md skills/3-weekly/worth-it/LICENSE`, exit 0, output `01d5711d5de7529b8aad6ade83a6ab38e348d40fd2ba0e718c762865f4c8c93d` and `8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643`. These match `skills/3-weekly/worth-it/NOTICE:13–14` and `TESTS-RESULTS/2026-10-17+GH-1119/provenance.jsonl:1–2`. Upstream byte equality itself relies on those retained author receipts: the attempted Python `urllib.request.urlopen` fetch of both raw pinned URLs reported `URLError ... nodename nor servname provided, or not known` (probe process exit 0 because exceptions were printed); browser fetch also failed. No claim of independent upstream equality or refreshed live PR state.
+- [Pass] Evidence is proportionate and honest: `TESTS-RESULTS/2026-10-17+GH-1119/SUMMARY.md:5–9` and `manual-walkthrough.md:3,79–83` distinguish hypothetical author walkthroughs and negative controls from live behavior, and leave publication pending. Scope/no-new-test and unchanged planner claims are recorded at `provenance.jsonl:9`; docs/tier1, PDDA exit 0 with 55 warnings and prerequisite 43/0 are recorded at `:10–12` with underlying logs retained. These are reviewed receipts, not reruns in this worktree. No added infrastructure is requested.
+- [Pass] Ratings have individual rationale at `PROJECT/2-WORKING/GH-1119-WORTH-IT.md:31`; `TESTS-RESULTS/2026-10-17+GH-1119/owned-ledger.json` carries matching 65/25/75/80 and `"rating_ovr": null`. No evidence of an operator override being lost. The plan's remaining QA/publication work is explicit at `PROJECT/2-WORKING/GH-1119-WORTH-IT.md:39,43`. No change requested.
+- [Unverified — needs clone run] No git commands, suites, executable fixtures or gates were run by this reviewer. Exact final-commit diff/gate attestation remains with the harness after this turn; scope assertions above rely on the cited retained evidence. Live-model compliance remains unmeasured, as declared in `SUMMARY.md:6`. Graph discovery had no project for this worktree; nearest Forge coverage generation was 2026-09-01, with missing/changed metadata for reviewed paths, so this review used direct source reads rather than graph completeness claims. The unrelated existing PDDA warnings in `pdda.log` do not justify widening this import.
+
+Relay closed (Approved), no further turn needed. Harness owns the file-scoped commit and subsequent final-state gate; Producer resumes the already planned publication workflow after those checks.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
