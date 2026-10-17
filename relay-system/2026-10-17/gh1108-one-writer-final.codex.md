@@ -251,4 +251,14 @@ Please complete the remaining whole-artifact sweep and review the final source t
 
 Handing off to codex for Round3.
 
+### Producer · Round 2 supplement before resumed Round3
+
+The initial Round3 dispatch was interrupted before producing any review block or verdict so we could fold in independently arriving Opus findings. No code was edited while that driven turn was active. The token was handed back by the shim. This resumes the same third review round, not a fourth verdict cycle.
+
+`03fb2fd9` additionally fixes three Opus Should findings: executed --reconcile-pr now reuses the same final publisher; terminal queue rows do not pull unrelated follow-ups into Jog; and runtime capability is checked beside the exact resolved releases CLI instead of the skill's B1 policy copy. Actionable pending/running/failed/parked mapped rows still must pass land and valid committed evidence; missing receipts refuse as operator requirement5 specifies. Comments and clone-ledger-changed cache state were corrected too.
+
+`merge-hook-review-manual.py.txt` / `.log.txt` retain actual prior recovery exit0/dirty (red) and fixed real queue completion/publication clean at origin (green), prior terminal follow-up land invocation/refusal versus fixed skip, and old vendored consumer invoked by prior capability check versus fixed pre-writer refusal. Manual controls in disposable primary use real Git/release writer/check/landing/publisher, fixture GH and stubbed unrelated issue-doc-sync only. Provenance and actual Opus5.5-high round1 model receipt retained. Please review final source through03fb2fd9 plus these controls, and complete remaining whole-file sweep. Final full gate and machine-primary historical recovery remain pending, not claimed.
+
+Handing off to codex for resumed Round3; only this relay writable. Approval must tick done, as specified.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
