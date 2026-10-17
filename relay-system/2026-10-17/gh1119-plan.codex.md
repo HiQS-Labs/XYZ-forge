@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -263,5 +263,23 @@ The operator sees, before spending the effort, whether the payoff is real and bi
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Approve the documentation-only import plan against the four questions in the embedded review request (the scaffold's Definition of Done remains a placeholder). This approves implementation preparation, not implementation correctness or publication readiness.
+swept file: yes
+
+- [Pass] Whole-file sweep covered all 43 lines of `PROJECT/2-WORKING/GH-1119-WORTH-IT.md` and the entire embedded upstream skill, including initial mode, continuation mode, results guard and examples. No additional pre-existing defect requiring correction was found in those artifacts.
+- [Pass] Behavior preservation is explicit at plan lines 36–37: “keep initial and continuation modes together” and “Preserve the upstream behavior and callable name”; the walkthrough acceptance names all four calls, sunk-cost exclusion, strongest alternative, maintenance/risk, bounded proof/oracle/cap, stop and Park trigger. The supplied source's continuation steps 2–4 and “exactly five short lines” supply the concrete import contract; no planner rewrite or new decision framework is needed.
+- [Pass] Capture acceptance is adequate at plan line 37: meaningful-results lookup, exact authorization, decline/no nag, duplicates and pending-capture truthfulness. The supplied source explicitly says “including closed results where relevant,” “absence of access is not evidence that no issue exists,” and “verify the write before claiming capture.” It also forbids helpers bypassing approval and permits useful work while capture is pending/declined. Preserve these spans verbatim.
+- [Pass] Scope fits existing taxonomy: `skills/README.md:10` defines weekly cadence reviews; plan lines 25, 29 and 36–39 add one bundle/index row and leave weekly-planner unchanged. Its existing frontmatter describes team planning/shared daily engine; a standalone value checkpoint has a distinct responsibility. No deployment, scheduler, new tests or gates are proposed.
+- [Pass] Provenance and verification are appropriately bounded as a plan: lines 20 and 27 pin the revision, acknowledge the open PR and separate license; line 36 requires NOTICE/LICENSE and recorded deviations; lines 38 and 43 explicitly limit author walkthroughs rather than claiming live-agent compliance.
+- [Nit] Make the promised manual update recipe easy to find in the eventual NOTICE: source repository/path/full revision, fetch/compare at a new explicit revision, review upstream changes and license, then update recorded deviations and provenance. Plan line 20 already promises this recipe; this is placement guidance, not a request for tooling or another workstream.
+- [Unverified — needs implementation QA] Exact upstream LICENSE/README bytes and current PR state were not independently verified this turn. `web.open` of the pinned raw LICENSE and README URLs returned “Failed to fetch … Cache miss” for each. The supplied skill text supports the behavior review; the import must still inspect and retain the actual pinned license and attribution as planned. No legal compatibility conclusion is asserted.
+- [Unverified — needs clone run] No gate, executable fixture or live model evaluation ran. The plan correctly leaves checks and final diff/evidence QA outstanding (lines 38–43).
+- Evidence limits: graph project `XYZ-forge` resolves to the main checkout, generation `2026-09-01T15:54:30Z`, not this relay checkout. Coverage reported missing/not-tracked/changed freshness for the four requested plan/taxonomy/index/planner paths. Used direct local source reads instead. Decisive read: `nl -ba PROJECT/2-WORKING/GH-1119-WORTH-IT.md`, exit 0, nonempty lines 1–43; taxonomy/index reads also exit 0. No runtime or exhaustive repository-discovery claim relies on that stale graph.
+
+Relay closed (Approved), no further review turn needed. Producer may proceed with the bounded import and final QA described in the plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
