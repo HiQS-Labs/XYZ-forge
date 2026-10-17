@@ -2,7 +2,7 @@
 gh_issue: 1108
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1108#issuecomment-6231071222
 title: "Jog one-writer execution, receipts and landing hook (delivery 1 of 2)"
-status: Planning
+status: Active
 created: 2026-10-17
 updated: 2026-10-17
 owner: noelsaw1
@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Operator redirected symptom plan to five-point one-writer design; bounded source recon and base suite complete | Complete revised first-delivery plan QA, then implement; direct-push publication is delivery 2 |
+| Operator redirected symptom plan to five-point one-writer design; bounded source recon and base suite complete | Implement Approved delivery1 and verify in disposable full clone; direct-push publication is delivery2 |
 
 # GH-1108: one writer, durable receipts
 
