@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-15 — start-task: the orchestrator smoke-runs the change before final QA (GH-1088)
+
+Step 7 now ends with a smoke check. The orchestrator runs the changed entry point once on its main
+path and once on one adjacent real-world path (resume, rerun, second invocation, empty input), and
+records it as a manual check under `TESTS-RESULTS/`. The receipt goes to the final reviewer as
+evidence and never replaces the independent review. Documentation-only work reads the changed
+instruction from its consumer's entry point, or skips with a reason. Motivated by GH-1064, whose
+resume and rerun defects (#1074, #1084) passed suites and an approved review. Instruction-only; no
+new tests (GH-831). Revert the one-file edit to undo.
+
 ## 2026-10-17 — task-sync grooms Claude Code session titles (GH-1105)
 
 task-sync gains two Claude Code adapters. `--ide claude` stamps local session titles (CLI, desktop app, VS Code extension) with each session's own last-activity mm-dd by appending the same `custom-title` record `/rename` writes; it compares against the label the session list actually resolves (tail, sidecar, head), skips running sessions via `~/.claude/sessions`, and restores the transcript mtime. `--ide claude-cloud` is a read-only planner for claude.ai/code sessions; `set_session_title` owns cloud writes. The Codex-only plan-only guard became a shared `PLAN_ONLY` set. The install SOP now enables Skills Army HQ's existing `claude` target (`~/.claude/skills`) through `intake.py`/`sync.py`; nothing is hand-copied.
