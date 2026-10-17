@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh942-exec2",
+  "generated_at": "2026-10-17T02:45:42Z",
+  "outcome": "approved",
+  "reason": "approved, gate passed",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "942",
+  "phase": "gh-942-skill-desc-1024-limit",
+  "lane": "gh-942-skill-desc-1024-limit",
+  "token": "MARATHON-GH-942-SKILL-DESC-1024-LIMIT-TURN",
+  "attempt": {
+    "count": 2,
+    "max": 2
+  },
+  "builder": "agy",
+  "reviewer": "codex",
+  "target_repo": {
+    "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": null,
+  "head_branch": "marathon/gh-942-skill-desc-1024-limit-2026-10-16",
+  "head_sha": "6f521bc52aa07f1657e5ea6ef624b111bd8ad568",
+  "reviewed_candidate": "6f521bc52aa07f1657e5ea6ef624b111bd8ad568",
+  "reviewed_head": "ab5e6ab227aaa5964ce559fc308570549acffd35",
+  "added_sha256": "3e6108a384caf6ed986a9c0663a6dedb9be31f17f91c06f94559e57bdf3cf449",
+  "attest_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/.git/relay-attest/MARATHON-GH-942-SKILL-DESC-1024-LIMIT-TURN.json",
+  "branch_redirect": false,
+  "gate": {
+    "cmd": "bash validate.sh --auto development",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/.xyz/receipts/6f521bc52aa07f1657e5ea6ef624b111bd8ad568.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-10-17T02:34:49Z",
+    "finished_at": "2026-10-17T02:45:42Z"
+  }
+}
