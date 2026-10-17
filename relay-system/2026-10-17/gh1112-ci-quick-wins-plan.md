@@ -180,4 +180,12 @@ Root cause: the prior acceptance named a leader-liveness control for a later gro
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may implement the plan and record the required green/red and performance evidence in a disposable full clone. Harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-10-17T23:52:02Z
+task: RELAY-gh1112-ci-quick-wins-plan
+reviewer: codex
+status: Approved
+reviewed-head: 77a6dd6dd4bc373e19e87b22ae860b4a54d229f6
+added-range: 27174+4633
+added-sha256: af8c49a3355d6113f6a425020aadafb006a884127475d266da9007d2be105cb5
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
