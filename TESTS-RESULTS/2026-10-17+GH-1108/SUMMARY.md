@@ -54,3 +54,10 @@ At5f223ca3 the replacement reader first checks the nonempty qualified dump for t
 ## Final independent QA
 
 The single operator-authorized Codex Round4 is Approved and mechanically attested, reviewed head64c02e8de2c6fc28cf13498951bacc57c92ca6e2. The bounded reader closure, direct caller/fixture regressions and retained proof integrity pass; the reviewer states the exact coverage limits and does not waive final qualification or machine-primary recovery. No fifth turn was run. final-round4-attestation.json is retained. Current runtime remains5f223ca3; following commits add only review/evidence/capture metadata. Proceed to the one final approved-source qualifying push gate in the disposable full clone.
+
+
+## Final qualification and actual primary recovery
+
+The normal pre-push gate at8738936282eba22e426a39435590566624fb2307 passed409/409 in859s (21 Python items also pass), with unchanged HEAD/origin/bare/identity and clean gate clone. Runtime is unchanged from Codex Round4 reviewed64c02e8d. Final log, merged telemetry and before/after identity are retained. This is the qualifying gate; the earlier405/409 run remains diagnostic.
+
+Actual machine primary recovery passed, using that qualified runtime and existing final post-merge publisher. Receipt-only data commit78e18761 adopted the two byte-preserved bundles; GH1087 completion9dbff8be and GH942 completion26eaaf54 were published on development with normal docs-route hooks. Both real queue rows are completed, replay leaves DB bytes unchanged, and primary is clean atorigin/development26eaaf54. See actual-primary-recovery.log.txt for exact published commits (the log is authoritative). No code PR was merged. GH942 proof records approved6f521bc5/delivered974d98db, both stripped input trees, matching recomputed/recorded121a3334 and six exclusions. Original source clone was read-only and retained.

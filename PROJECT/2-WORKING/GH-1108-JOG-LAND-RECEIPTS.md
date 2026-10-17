@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Delivery1 source and scoped controls recorded; final QA found a canonical-reader mismatch; diagnostic gate405/409 | Codex Round4 Approved/attested; qualifying push gate, primary historical recovery, then PR1 and dependent draft PR2 |
+| Codex Round4 Approved; final gate409/409; actual primary GH1087/GH942 completed and published | Sync recovered primary ledger, publish PR1; delivery2 separate dependent draft, no merges |
 
 # GH-1108: one writer, durable receipts
 
@@ -126,3 +126,8 @@ The operator also authorizes a dependent stack: delivery2 opens as a draft again
 The bounded reader closure also preserves the observed pre-Jog consumer case (Opus B5): a nonempty qualified dump without a canonical Jog marker/INSERT surface skips the unsupported CLI. When a queue surface exists, canonical JSON extraction remains authoritative and any reader failure refuses. Actual copied-consumer red/green and repeated multiline controls pass at5f223ca3. Opus3 is Escalated; its concrete B5 finding is implemented before the single authorized Codex4, with no fourth Opus turn or fifth Codex turn.
 
 Codex Round4 is Approved/attested at reviewed64c02e8d; no fifth. The final-source qualifying push gate and actual primary recovery now follow. Opus findings through round3 are retained, with its final B5 fixed and covered in the authorized Codex closure. No Opus approval is claimed.
+
+
+## Delivery1 qualification completed
+
+Codex Round4 Approved; final normal pre-push gate409/409 in859s at87389362, clone identity unchanged. Actual primary historical recovery completed and was normally published at26eaaf54; original approval and stripped merge proof preserved, replays emitted no duplicate transition. Evidence/provenance retained under the existing GH1108 directory. Primary is clean; no code PR merged. Delivery2 plan/implementation live only in the explicitly authorized separate stack; its final code QA waits for dependency merge/rebase.
