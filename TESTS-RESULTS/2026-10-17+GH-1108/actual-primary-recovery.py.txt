@@ -1,0 +1,66 @@
+"""Operator-requested historical data recovery with the qualified unmerged runtime."""
+import hashlib,json,os,subprocess,sys
+from pathlib import Path
+source=Path(__file__).resolve().parents[1]
+primary=source.parent/'XYZ-forge'
+sys.path.insert(0,str(source/'utils/py'))
+import harness_paths,jog_run
+sys.path.insert(0,str(source/'skills/2-daily/merge-cleanup/scripts'))
+import merge_cleanup
+
+def git(*args):
+ return subprocess.check_output(['git','-C',str(primary),*args],text=True).strip()
+def clean(): assert git('status','--porcelain','--untracked-files=all')=='','primary is not clean'
+def changed():
+ raw=subprocess.check_output(['git','-C',str(primary),'status','--porcelain','-z','--untracked-files=all'])
+ return [v[3:].decode() for v in raw.split(b'\0') if v]
+def route():
+ paths=git('diff','--name-only','origin/development','HEAD').splitlines()
+ assert paths
+ p=subprocess.run(['bash','utils/ci-route.sh','pull_request'],cwd=primary,input='\n'.join(paths)+'\n',text=True,capture_output=True,check=True)
+ print('PUBLICATION ROUTE',p.stdout,flush=True)
+ assert 'route=docs' in p.stdout and 'tier=1' in p.stdout,'refuse mutation-heavy gate in primary'
+def publish(pr,allowed):
+ dirty=changed();assert dirty and set(dirty)<=set(allowed),dirty
+ git('add','--',*dirty);git('commit','-m',f'chore: retain primary Jog recovery evidence for PR #{pr}')
+ route()
+ assert merge_cleanup.commit_and_push_phase5_writes(pr,primary,'development')
+ clean();assert git('rev-parse','HEAD')==git('rev-parse','origin/development')
+ print('PUBLISHED',pr,git('rev-parse','HEAD'),flush=True)
+
+assert primary.resolve()==Path('/Users/noelsaw/Documents/GH Repos/XYZ-forge').resolve()
+assert git('remote','get-url','origin')=='https://github.com/HiQS-Labs/XYZ-forge.git'
+assert git('symbolic-ref','--short','HEAD')=='development'
+clean();git('fetch','origin','development');git('merge','--ff-only','origin/development');clean()
+key=harness_paths.primary_config_key(str(primary))
+old=subprocess.run(['git','config','--global','--get',key],capture_output=True,text=True)
+assert old.returncode==1 or Path(old.stdout.strip()).resolve()==primary.resolve(),old.stdout
+if old.returncode==1:subprocess.run(['git','config','--global',key,str(primary)],check=True)
+assert harness_paths.require_primary(str(primary))==str(primary.resolve())
+paths=[]
+for date,issue,execution in [('2026-10-16',1087,'gh1087-exec1'),('2026-10-17',942,'gh942-exec2')]:
+ bundle=f'TESTS-RESULTS/{date}+GH-{issue}/jog/{execution}'
+ for name in ['receipt.json','marathon-result.json','gate-receipt.json','provenance.jsonl']:
+  rel=f'{bundle}/{name}'; src=source/rel;dst=primary/rel
+  assert src.is_file(),src
+  assert git('cat-file','-t',f'HEAD:{rel}')=='blob' if dst.exists() else True
+  data=src.read_bytes();assert data
+  if dst.exists():assert dst.read_bytes()==data,'existing bundle differs'
+  else:dst.parent.mkdir(parents=True,exist_ok=True);dst.write_bytes(data)
+  paths.append(rel)
+if changed():publish(1108,paths)
+for issue,pr in [(1087,1101),(942,1102)]:
+ clean()
+ assert jog_run.jog_land(str(primary),issue,str(pr))==0
+ bundle=next((primary/'TESTS-RESULTS').glob(f'*+GH-{issue}/jog/*/receipt.json')).parent
+ proof=json.loads((bundle/'landing.json').read_text())
+ print('LANDING',json.dumps(proof),flush=True)
+ owned=list(harness_paths.LEDGER_REPAIR_PATHS)+[str((bundle/'landing.json').relative_to(primary))]
+ if changed():publish(pr,owned)
+ before=hashlib.sha256((primary/'releases.db').read_bytes()).hexdigest()
+ assert jog_run.jog_land(str(primary),issue,str(pr))==0
+ assert hashlib.sha256((primary/'releases.db').read_bytes()).hexdigest()==before
+ clean()
+ (source/'temp'/f'actual-primary-{issue}-landing.json').write_text(json.dumps(proof,indent=2)+'\n')
+ print('PASS actual primary GH-'+str(issue)+' recovery and replay',flush=True)
+print('ALL ACTUAL PRIMARY RECOVERIES PASSED',git('rev-parse','HEAD'),flush=True)

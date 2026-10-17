@@ -128,6 +128,14 @@ The bounded reader closure also preserves the observed pre-Jog consumer case (Op
 Codex Round4 is Approved/attested at reviewed64c02e8d; no fifth. The final-source qualifying push gate and actual primary recovery now follow. Opus findings through round3 are retained, with its final B5 fixed and covered in the authorized Codex closure. No Opus approval is claimed.
 
 
+## Delivery1 qualification completed
+
+Codex Round4 Approved; final normal pre-push gate409/409 in859s at87389362, clone identity unchanged. Actual primary historical recovery completed and was normally published at26eaaf54; original approval and stripped merge proof preserved, replays emitted no duplicate transition. Evidence/provenance retained under the existing GH1108 directory. Primary is clean; no code PR merged. Delivery2 plan/implementation live only in the explicitly authorized separate stack; its final code QA waits for dependency merge/rebase.
+
+
+Primary recovery integration preserved canonical development26eaaf54 and its full Jog state. Automatic B1 refused because its generation ordering would retain the higher-generation task ledger and then need unsupported Jog replay. The only task-side business delta was the owned GH1108 roadmap addition; existing B1 replay_ops/canonical writer replayed that addition on the exact upstream ledger. Row reminted fromrmi-01M54B6DYYH7J2VXKTVPF01BZA tormi-01M557FZJD688H467QVVSBWJ3Y (single full issueURL); rating90/85/50/35 and original accepted-start2026-10-17T07:12:54Z retained through canonical admission. Both historical rows remain completed, clean RELEASES check. No Jog mutation was replayed in a task clone; no runtime source changed after final approval/gate. See primary-sync-result.json/provenance for the exact positive ownership proof and writer calls.
+
+
 ## Delivery 2 stacked plan (2026-10-17)
 
 Operator-authorized stack: separate full clone `XYZ-forge-gh1108-jog-transition-push-2026-10-17`, branch `fix/XYZ-forge-gh1108-jog-transition-push-2026-10-17`, stacked on delivery1 reviewed production plus evidence at87389362. Reuse this capture and the exact GH1108 roadmap row/rating90/85/50/35; no duplicate intake. Draft PR targets development, body `depends on #<delivery1 PR>`. Rebase onto development after delivery1 lands before code/PR review. No merges. This section is a separate **pre-implementation plan QA**, not a fifth final review of delivery1. Delivery1 Round4 approval is closed and immutable.
@@ -165,3 +173,6 @@ Manual controls pass: local-only delivery1 red; clean remotely durable add/runni
 Existing gh64642 tests pass after its existing cursor-error probe reads device state; inventory guard and its existing negative controls pass after locking in a reduction32→30 SQLite bypasses through its canonical updater. Existing gh549 cursor fixtures now address device state; the final focused run passes125/125 with matching before/after clone identity. The existing gh436 recovery callback fixture also passes. No new test files, registry entries or gate machinery. Broader Jog/merge-cleanup fixture adaptation and final validation remain required after rebase; this draft is not merge-ready.
 
 The operator-authorized dependent draft must say `depends on #1116`, target development, and receive no final code review until #1116 lands and this branch is rebased to show only publication changes. Independent review did not run. Final code QA is waiting for the required dependency/rebase. No final broad qualifying gate has run for delivery2. Preserve its unfinished clone and recovery evidence.
+
+
+Stack updated to the live first-PR head323602cd before draft publication. Its canonical recovered ledger and reminted GH1108 row are carried forward unchanged; this delivery adds no task-clone queue writes or ledger delta. First-PR runtime source remains unchanged. The capture conflict was resolved by retaining the full incoming first-delivery history/evidence and this separate approved delivery2 section. Required rebase onto development still waits for external merge of PR1116.
