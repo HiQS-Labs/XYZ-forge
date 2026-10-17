@@ -1081,6 +1081,11 @@ git -C "$FR" mv "PROJECT/2-WORKING/$CAPTURE_DOC_NAME" "PROJECT/1-INBOX/$CAPTURE_
 # 2026-08-29: a phantom GH-901 row parked at 04:09:08Z failed roadmap-dashboard.sh mid-gate
 # and — worse — neutered M1 below, because the fixture never held the row and the promotion's
 # repoint silently no-such-row'd, leaving the F3 assertion vacuously green).
+python3 - "$FR/PROJECT/1-INBOX/$CAPTURE_DOC_NAME" <<'PY_PROMOTION'
+from pathlib import Path
+import sys
+p=Path(sys.argv[1]);s=p.read_text().replace('doc_type: bugfix', "doc_type: bugfix\nfix_probes:\n  - \"grep -q 'module.exports = 1' src/feature.js\"");p.write_text(s)
+PY_PROMOTION
 python3 "$FR/utils/py/releases_app.py" --root "$FR" roadmap add --issue-num 901 \
   --issue-url "https://github.com/example/example/issues/901" \
   --title "GH-901 fixture lane" --created 2026-08-28 \
@@ -1262,7 +1267,7 @@ mkdir -p "$LOCK_DIR"; printf '%s\n' "$$" > "$LOCK_DIR/pid"
 N6_OUT="$(jog_verb retry-gate 901 --builder codex --reviewer agy 2>&1)"; rc=$?
 [ "$rc" -eq 4 ] && has "$N6_OUT" "another driver is active" \
   && pass "N6 retry-gate refuses under a live supervisor lock (exit 4)" || fail "N6 rc=$rc: $N6_OUT"
-N7_OUT="$(jog_verb retry-build 901 --builder codex --reviewer agy 2>&1)"; rc=$?
+N7_OUT="$(jog_verb retry-build 901 --target-root "$FT" --builder codex --reviewer agy 2>&1)"; rc=$?
 [ "$rc" -eq 4 ] && has "$N7_OUT" "another driver is active" \
   && pass "N7 retry-build refuses under a live supervisor lock (exit 4)" || fail "N7 rc=$rc: $N7_OUT"
 rm -rf "$LOCK_DIR"
