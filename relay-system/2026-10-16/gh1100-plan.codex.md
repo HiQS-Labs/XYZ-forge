@@ -93,4 +93,12 @@ Root cause: packet omission plus inherited harness selection lets Jog dispatch e
 
 Relay closed (Approved), no further turn needed. Producer may proceed with accepted-start and implementation; harness owns the relay-only commit.
 
+
+### Attestation · relay-drive — 2026-10-17T03:15:57Z
+task: RELAY-gh1100-plan
+reviewer: codex
+status: Approved
+reviewed-head: de47d0119b8ef0b840198250ea84ece0414ab8c8
+added-range: 6179+5019
+added-sha256: ded30bed2ffb2cb156b713499ddce59dabf98ea901273246704e8e4da1b979be
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
