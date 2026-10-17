@@ -112,3 +112,6 @@ audit/out/
 
 # browserbase skill: local env files must never be tracked (key lives in ~/secrets/)
 skills/4-occasional/browserbase/.env*
+
+# Device-local connector acknowledgements for non-Git ledger roots.
+releases.db-connectors.sqlite3*

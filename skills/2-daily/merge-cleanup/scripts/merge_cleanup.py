@@ -444,7 +444,7 @@ def linked_issues(pr):
     return out
 
 
-def emit_pr_merged(repo_path, pr, dry_run=False):
+def emit_pr_merged(repo_path, pr, dry_run=False, publication_runtime=None):
     """GH-549: report a merge this process actually WITNESSED.
 
     Placed here, and only here, for a reason the plan review made explicit: a completed roadmap
@@ -471,6 +471,14 @@ def emit_pr_merged(repo_path, pr, dry_run=False):
     emitted = 0
     for issue in linked_issues(pr):
         try:
+            if publication_runtime is not None:
+                from types import SimpleNamespace
+                publication_runtime.cmd_work_emit(SimpleNamespace(
+                    root=str(repo_path),event='pr_merged',gh_number=issue,
+                    payload_json=json.dumps({'pr':pr.get('number'),'base':pr.get('baseRefName')}),
+                    dry_run=False))
+                emitted += 1
+                continue
             r = subprocess.run(
                 [sys.executable, app, "--root", repo_path, "work", "emit",
                  "--event", "pr_merged", "--gh-number", str(issue),
@@ -618,10 +626,11 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
     return False
 
 
-def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
+def run_jog_post_merge_land(pr_num: int, repo_path: Path, finish=None) -> bool:
     """Complete only positively mapped Jog rows using the committed-receipt primary writer."""
+    done = lambda runtime=None: finish(runtime) if finish else True
     if not (repo_path / "releases.db").is_file():
-        return True
+        return done()
     releases_cli = tool_path(repo_path, "releases_app.py")
     # Use the canonical root-bound reader: B1's conservative line classifier
     # deliberately preserves unsupported SQL as `other`, including multiline reasons.
@@ -632,7 +641,7 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
         # A qualified pre-Jog ledger has neither surface. This is only a presence
         # check: never use B1's parsed row count to decide that a queue is absent.
         if "-- table: jog_queue" not in dump and "INSERT INTO jog_queue(" not in dump:
-            return True
+            return done()
         listed = subprocess.run([sys.executable, str(releases_cli), "--root", str(repo_path),
                                  "jog", "list", "--all", "--json"],
                                 cwd=str(repo_path), capture_output=True, text=True, timeout=300)
@@ -647,7 +656,7 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
         log_err(f"Cannot read canonical Jog rows: {exc}")
         return False
     if not queue:
-        return True
+        return done()
     query = ["pr", "view", str(pr_num), "--json", "number,title,body,headRefName"]
     paths_policy = ledger_merge.harness_paths_module(repo_path)
     slug = paths_policy.github_slug_from_origin(str(repo_path)) if paths_policy else None
@@ -668,6 +677,32 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     if mapped and (not runtime_policy or not hasattr(runtime_policy, "require_primary")):
         log_err("Mapped Jog landing requires the updated primary/committed-receipt harness; upgrade before continuing")
         return False
+    if mapped and finish:
+        # Use the exact selected runtime; ContextVar ownership must not cross module copies.
+        import importlib
+        runtime_dir = releases_cli.resolve().parent
+        loaded = sys.modules.get('releases_app')
+        if loaded is not None and Path(loaded.__file__).resolve() != releases_cli.resolve():
+            log_err('Jog publication runtime differs from the already loaded writer; refusing')
+            return False
+        sys.path.insert(0,str(runtime_dir))
+        runtime = importlib.import_module('releases_app')
+        if hasattr(runtime,'publish_jog_intent'):
+            jog = importlib.import_module('jog_run')
+            if Path(jog.__file__).resolve().parent != runtime_dir:
+                log_err('Jog landing runtime does not match selected writer; refusing')
+                return False
+            def fresh_completion():
+                for issue in sorted(mapped):
+                    if jog.jog_land(str(repo_path),issue,str(pr_num)) != 0:
+                        return False
+                return done(runtime)
+            try:
+                return bool(runtime.publish_jog_intent(str(repo_path),
+                            f'post-merge PR #{pr_num}',fresh_completion))
+            except (RuntimeError,OSError,subprocess.SubprocessError) as exc:
+                log_err(f'Jog post-merge publication refused: {exc}')
+                return False
     for issue in sorted(mapped):
         result = subprocess.run([sys.executable, str(releases_cli),
                                  "--root", str(repo_path), "jog", "land", str(issue), "--pr", str(pr_num)],
@@ -676,14 +711,14 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
             log_err(f"Jog landing GH-{issue} / PR #{pr_num} refused: {(result.stderr or result.stdout)[-600:]}")
             return False
         log(result.stdout.strip())
-    return True
+    return done()
 
 
 def run_post_merge_reconcile(pr_num: int, repo_path: Path,
                              integration_branch: str = "development",
                              dry_run: bool = True,
                              pr_head: Optional[str] = None,
-                             merged_head: Optional[str] = None) -> bool:
+                             merged_head: Optional[str] = None, finish=None) -> bool:
     """Wait for hosted reconciliation (or fall back locally), then run governance checks.
 
     `merged_head`, when given, is the PR's merge commit as GitHub reports it (--reconcile-pr);
@@ -743,11 +778,23 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
             log_err(f"pdda issue-doc-sync FAILED (exit {p_res.returncode}): {(p_res.stdout.strip() or p_res.stderr.strip())[-400:]}")
             ok = False
 
-    return ok and run_jog_post_merge_land(pr_num, repo_path)
+    return ok and run_jog_post_merge_land(pr_num, repo_path, finish=finish)
 
 
-def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_branch: str) -> bool:
+def finish_post_merge_writes(pr_num,repo_path,branch,pr=None,publication_runtime=None):
+    if pr:
+        emit_pr_merged(repo_path,pr,dry_run=False,publication_runtime=publication_runtime)
+    return commit_and_push_phase5_writes(pr_num,repo_path,branch,
+                                         publication_runtime=publication_runtime)
+
+
+def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_branch: str, publication_runtime=None) -> bool:
     """Commit, push, and verify every primary-side write made after a PR lands."""
+    if publication_runtime is not None:
+        if integration_branch != 'development':
+            return False
+        publication_runtime.publish_jog_candidate(str(repo_path))
+        return True
     status = run_git(repo_path, ["status", "--porcelain", "--untracked-files=all"])
     if status.returncode != 0:
         log_err(f"PR #{pr_num}: cannot inspect post-merge writes: {status.stderr.strip()}")
@@ -1303,15 +1350,10 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 return 2
             if not run_post_merge_reconcile(
                     p_num, primary_repo, integration_branch=branch, dry_run=False,
-                    pr_head=info.get("headRefOid")):
-                log_err(f"PR #{p_num}: post-merge reconciliation FAILED — stopping before the next PR")
-                return 2
-            # GH-549/GH-624: report only after the merge, primary fast-forward, and reconcile
-            # (including any fast-forward performed by reconciliation) all succeeded. `pr` rather
-            # than `info` because the emitter reads the body for `Closes #N`.
-            emit_pr_merged(primary_repo, pr, dry_run=False)
-            if not commit_and_push_phase5_writes(p_num, primary_repo, branch):
-                log_err(f"PR #{p_num}: post-merge writes were not made durable — stopping before the next PR")
+                    pr_head=info.get("headRefOid"),
+                    finish=lambda runtime: finish_post_merge_writes(
+                        p_num,primary_repo,branch,pr=pr,publication_runtime=runtime)):
+                log_err(f"PR #{p_num}: post-merge reconciliation/publication FAILED — stopping before the next PR")
                 return 2
             if track is not None:
                 track["reconciled"].add(p_num)
@@ -1522,10 +1564,9 @@ def main():
             args.reconcile_pr, primary_repo,
             integration_branch=args.integration_branch, dry_run=dry_run,
             pr_head=info.get("headRefOid"), merged_head=merge_oid,
+            finish=lambda runtime: finish_post_merge_writes(args.reconcile_pr,primary_repo,
+                args.integration_branch,publication_runtime=runtime),
         ):
-            return 2
-        if not dry_run and not commit_and_push_phase5_writes(
-                args.reconcile_pr, primary_repo, args.integration_branch):
             return 2
         return 0
 

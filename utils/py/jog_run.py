@@ -1135,6 +1135,12 @@ def _landing_tail_proof(root, approved, head, integration, bundle):
 
 
 def jog_land(root, gh_num, pr_arg=None):
+    from releases_app import publish_jog_intent
+    return publish_jog_intent(root, f'land GH-{gh_num}',
+                              lambda: _jog_land_once(root, gh_num, pr_arg))
+
+
+def _jog_land_once(root, gh_num, pr_arg=None):
     """Land committed evidence in the primary after hosted lifecycle reconciliation.
 
     Queue completion and landing evidence are published by merge-cleanup's existing final
@@ -1150,6 +1156,8 @@ def jog_land(root, gh_num, pr_arg=None):
                 raise ContractError("--pr expects a PR number or URL")
             pr_number = int(match.group(1))
         manifest, receipt, bundle = _committed_jog_receipt(root, gh_num, pr_number)
+        from releases_app import declare_jog_landing
+        declare_jog_landing(root, bundle+"/landing.json")
         pr_number = pr_number or manifest.get("pr_number")
         if not pr_number:
             raise ContractError("committed receipt has no PR identity; pass --pr")
@@ -1182,10 +1190,12 @@ def jog_land(root, gh_num, pr_arg=None):
         except ContractError as exc:
             raise ContractError(f"head SHA {receipt.get('head_sha')} not preserved: {exc}") from exc
         # A gate receipt on the approved candidate does not qualify a repaired ledger.
-        checked = subprocess.run([sys.executable, resolve_tool(root, "utils/py/releases_app.py"),
-                                  "--root", root, "check"], cwd=root, capture_output=True, text=True)
-        if checked.returncode:
-            raise ContractError(f"releases check is not clean: {(checked.stderr or checked.stdout).strip()}")
+        from releases_app import cmd_check
+        from types import SimpleNamespace
+        try:
+            cmd_check(SimpleNamespace(root=root, rebuild=False))
+        except SystemExit as exc:
+            raise ContractError(f"releases check is not clean: exit {exc.code}") from exc
         hosted_cmd = ["gh", "run", "list", "--workflow", "wave-reconcile.yml",
                       "--commit", head, "--limit", "20", "--json",
                       "databaseId,headSha,status,conclusion,url"]
@@ -1225,7 +1235,7 @@ def jog_land(root, gh_num, pr_arg=None):
         with open(path, "w", encoding="utf-8") as stream:
             stream.write(encoded)
     print(f"jog: GH-{gh_num} landed from committed receipt — PR #{pr_number}, {merged[:8]}; "
-          "publish owned post-merge writes before continuing")
+          "completion and proof included in the primary publication intent")
     return 0
 
 
