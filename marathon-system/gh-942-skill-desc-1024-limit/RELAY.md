@@ -1,5 +1,5 @@
 # Marathon Phase gh-942-skill-desc-1024-limit
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-942-SKILL-DESC-1024-LIMIT-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -27,7 +27,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 ## Acceptance criteria — the build is DONE when these hold
 *Inlined verbatim from `/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/PROJECT/2-WORKING/GH-942-SKILL-DESC-1024-LIMIT.md` (0 checkbox(es) found across the WHOLE document — the doc has no `## Acceptance` section, so this list may include phase checklists). Continuation lines included; if a
 criterion here reads as a fragment, that is the source text, not a truncation.*
-*NOT verified, and NOT verifiable as things stand — issue #942 has no '## Acceptance' section — nothing to copy from. This list exists only in the capture doc; reading the issue will not confirm it, because the issue states no criteria. Establish the criteria on the issue before treating anything below as the definition of done.*
+*NOT verified, and NOT verifiable as things stand — issue #942 has no '## Acceptance' section — nothing to copy from. This list exists only in the capture doc; reading the issue will not confirm it, because the issue states no criteria. Establish the criteria on the issue before treating anything below as the definition of done.*  [Unverified — no citation]
 (no '- [ ]' checklist found in /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/PROJECT/2-WORKING/GH-942-SKILL-DESC-1024-LIMIT.md — add an Acceptance criteria list)
 
 ## Scope lock — builder, do exactly this and nothing else
@@ -130,3 +130,53 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   - Verified `test/gh609-sdlc-agent-gaps.sh`, `test/gh779-radar-ci-health.sh`, and `test/_setup.sh` were read as specs without executing suites inside the isolated worktree.
 
 handing off to codex — codex, take your turn.
+
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: yes
+
+Read all 13 allowlisted SKILL.md files in full and all three covering test/helper files as source. Approval covers the GH-942 frontmatter-description remediation; executable gate results remain **[Unverified — needs clone run]** and belong to the harness after handoff. No git commands, suites, executable fixtures, or artifact edits were performed.
+
+- **[Pass] Length and extraction:** Independently parsed all 69 `skills/*/*/SKILL.md` frontmatters with PyYAML, rejecting missing frontmatter, empty descriptions, and an empty corpus. All YAML values, whitespace-folded values, and UTF-8 representations fit 1024. The 13 target YAML lengths are: five 899; recon 1005; workhorse 798; 10days 993; dry 959; radar 953; feynman 876; front-door 893; readme-audit 834; spike-360 946; timbre 860; better-options 963; vscode-color 920. Trigger wording begins at character offsets 50–239 across the targets. The formerly excluded better-options and vscode-color paths are now explicitly allowlisted, resolving the previous escalation's scope mismatch.
+- **[Pass] Content:** The short descriptions retain the skills' purpose, triggers, and principal boundaries; expanded procedures remain in the reviewed bodies. Existing workhorse/recon lane contracts and Radar CI-health wording remain present in the source read against their covering test specs. This is source verification, not a suite-run claim. No new test suite or gate machinery is needed.
+- **Evidence provenance limitation:** `list_projects` has no index for this relay worktree. Nearest same-repository graph `XYZ-forge` reports generation `2026-09-01T15:54:30Z`; coverage checked for all 16 paths reports untracked freshness for 15 and metadata-changed for `test/_setup.sh`. Consequently this review relies on complete direct file reads, not graph completeness or freshness.
+
+Read-only length probe (exit **0**, decisive output **`corpus=69 bad=[]`**), run with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`:
+
+```bash
+python3 - <<'PROBE'
+from pathlib import Path
+import re,yaml
+files=sorted(Path("skills").glob("*/*/SKILL.md"))
+assert files
+values=[]
+for p in files:
+    m=re.match(r"^---\n(.*?)\n---",p.read_text(),re.S)
+    assert m,str(p)
+    d=yaml.safe_load(m[1])["description"]
+    assert isinstance(d,str) and d.strip(),str(p)
+    values.append((str(p),len(d),len(" ".join(d.split())),len(d.encode())))
+bad=[v for v in values if max(v[1:])>1024]
+print(f"corpus={len(values)} bad={bad}")
+assert not bad
+PROBE
+```
+
+Manual red control, without mutating any artifact:
+
+```bash
+python3 -c 'assert len(" ".join(("x"*1025).split())) <= 1024, "1025-char description rejected"'
+```
+
+Exit **1**; decisive output **`AssertionError: 1025-char description rejected`**. The corresponding 1024-character input was accepted in the initial boundary probe.
+
+**[Should — nonblocking pre-existing safety concern]** `skills/3-weekly/10days/SKILL.md:501–507` tells an agent to fall back to `git worktree remove --force <path>` when ordinary removal reports uncommitted/stray state. Merged tracked commits alone do not prove that additional working-tree state is preserved. This concern is in the swept body; it is not a description-limit regression. The active contract explicitly requires frontmatter-only edits, so this approval does not authorize or attest that cleanup recipe. Before executing that recipe, apply the repository's preservation/cleanup SOP rather than the unconditional force fallback.
+
+Observed input: the literal instruction at lines 501–503, specifically `fall back to git worktree remove --force <path>` on `uncommitted/stray state`.
+Affected scope: `/10days` Step 7 lane-worktree retirement, including any remaining uncommitted or untracked lane evidence.
+Falsifier: show a required preservation check in this cleanup step that inventories and preserves unique remaining state before any force removal. No destructive reproduction was attempted; runtime impact is **[Unverified — needs clone run]**. Source probe: `nl -ba skills/3-weekly/10days/SKILL.md | sed -n '495,515p'` (exit **0**) printed the unconditional fallback quoted above. Recommended follow-up is to retain/report dirty worktrees pending preservation proof; this body change needs separately authorized scope.
+
+relay closed, no further turn needed
