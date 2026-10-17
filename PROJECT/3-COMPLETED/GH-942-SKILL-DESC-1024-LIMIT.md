@@ -2,12 +2,12 @@
 gh_issue: 942
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/942
 title: "9 skills exceed the 1024-char frontmatter description limit"
-status: Active
+status: Complete
 created: 2026-10-02
 fix_probes:
   - test -f skills/4-occasional/feynman/SKILL.md
   - bash test/skills-army-hq.sh --help
-updated: 2026-10-16
+updated: 2026-10-17
 owner: operator
 goal: "The 13 committed SKILL.md files that exceed the 1024-char folded description limit (five, recon, workhorse, 10days, dry, radar, feynman, front-door, readme-audit, spike-360, timbre, better-options, vscode-color) are trimmed under it so skill loaders stop silently dropping them; any skill not in that list is out of this phase."
 complexity: 1
