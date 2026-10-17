@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
-ROUND: 1 / 4
+NEXT: Producer
+STATUS: Approved
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -142,5 +142,63 @@ Read all 1,789 lines of merge_cleanup.py, both manual evidence files, and the ta
 
 **Question for Round 2:** does the field-type guard (identity + three `str|None` fields) close Q5 without rejecting a legitimate `gh pr view` object (null body/title are allowed)? Anything else? If the Definition of Done holds, set STATUS: Approved.
 
+
+
+### Reviewer · Round 2
+
+**VERDICT: PASS**
+
+**Basis:** The Round 1 Should is closed. The seeded hook satisfies the requested no-bundle skip, retains bundle-present refusal, and names malformed PR-object failures. Approval covers this bounded takeover review; final gate execution and PR-wide diff attribution remain harness responsibilities.
+
+swept file: yes
+
+Re-read all 1,792 lines of merge_cleanup.py, both manual-control records, the focused-suite summary and task document, including Takeover; rechecked publisher, land and Git-helper source. No additional actionable pre-existing defect was established. Graph project inventory has no project for this worktree; nearest XYZ-forge index generation is 2026-09-01T15:54:30Z in another checkout. Coverage was checked for all eight evidence paths and the swept source scope; local source fallback supplies current evidence.
+
+- **[Pass] Q5 / Round 2 guard closure.** merge_cleanup.py:660–671 validates identity and string-or-null fields before mapping. Numeric branch, wrong identity and missing identity now return False with the named diagnostic; nullable text and an ordinary branch reach mapping. No legitimate string/null field is excluded by this guard. The read-only source-span probe below exited **0**; removing only the new guard in memory reproduced the former TypeError, providing a red control.
+- **[Pass] Q1–Q4 remain satisfied.** merge_cleanup.py:680–689 uses the existing run_git helper, names ls-tree failure, matches publisher-shaped NUL-delimited paths, warns for missing bundles and intersects before landing. publish_jog_receipt at utils/py/jog_run.py:979–1015 writes the matching dated issue/execution layout; multiple executions collapse to the issue set. merge_cleanup.py:697–703 still returns False on land refusal. jog_land at utils/py/jog_run.py:1152–1211 still validates committed evidence before queue completion. scan_clones.py:87–110 accepts cwd then argv and returns captured text. The absence of a published bundle deliberately leaves even an unpublished genuine execution untouched under the revised operator requirement.
+- **[Pass] Q6–Q7 remain bounded.** hook-no-bundle-skip-manual.py.txt:14–16 imports the real module; its run_hook calls the real function, and the E controls use the same function. The retained log at hook-no-bundle-skip-manual.log.txt:23–31 records eight passing checks; lines 16–21 retain the no-bundle red control. The implementation adds no new subsystem or suite.
+- **[Nit] Evidence formatting only.** hook-no-bundle-skip-manual.log.txt:32 ends with a blank `green_rc=`; takeover-focused-suites.log.txt:2 reports a test count but no explicit gh436 exit or OK summary. These records are supporting evidence, not an independently attested final gate. Have the harness retain the actual final command status in its normal receipt; no source change requested.
+- **[Unverified — needs clone run]** No suite or executable fixture was run here. The harness must qualify final source in a disposable full clone.
+- **[Unverified — no citation]** PR-wide “nothing else changed” is still Producer-reported. Git was forbidden in this turn; the harness must verify the final diff against 323602cd. This review does not attest that comparison.
+
+Exact non-mutating probe command (stdout only; no imports of project code, subprocess calls or fixture execution):
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PROBE'
+from pathlib import Path
+import json, re, types
+s=Path("skills/2-daily/merge-cleanup/scripts/merge_cleanup.py").read_text()
+start=s.index('    try:\n        pr = json.loads(current.stdout)')
+span=s[start:s.index('    if not mapped:\n',start)]
+env=dict(json=json,re=re,pr_num=7,queue={1075},linked_issues=lambda pr:[1075],log_err=print)
+exec("def probe():\n"+span+"    return mapped\n",env)
+cases=[
+("numeric branch",dict(number=7,title="x",body="Closes #1075",headRefName=123),False),
+("wrong identity",dict(number=8,title="x",body="Closes #1075",headRefName="fix/gh1075-x"),False),
+("missing identity",{},False),
+("nullable text",dict(number=7,title=None,body=None,headRefName=None),{1075}),
+("valid branch",dict(number=7,title="x",body="Closes #1075",headRefName="fix/gh1075-x"),{1075})]
+for name,pr,want in cases:
+    env["current"]=types.SimpleNamespace(stdout=json.dumps(pr))
+    got=env["probe"]()
+    print(name, "=>",got)
+    assert got==want
+a=span.index('        if pr.get("number")')
+b=span.index('    except ValueError',a)
+exec("def old_probe():\n"+span[:a]+span[b:]+"    return mapped\n",env)
+env["current"]=types.SimpleNamespace(stdout=json.dumps(cases[0][1]))
+try:
+    env["old_probe"]()
+except TypeError as exc:
+    print("red control =>",type(exc).__name__+": "+str(exc))
+else:
+    raise AssertionError("red control failed to detect removed guard")
+PROBE
+```
+
+Decisive output (exit 0): each invalid object logged `Cannot map PR #7 to Jog rows: gh pr view returned an unusable PR object (identity or field types)`; numeric branch, wrong identity and missing identity printed `=> False`; nullable text and valid branch printed `=> {1075}`; red control printed `TypeError: expected string or bytes-like object, got 'int'`. The linked-issue helper is stubbed here, so this probe measures guard and branch mapping only; whole-hook behavior is supported by source and retained clone controls.
+
+**Handoff:** relay closed (Approved), no further turn needed. Producer/harness owns the final qualifying gate and diff-scope check. No Git command or artifact/source edit was made; only this relay file was changed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
