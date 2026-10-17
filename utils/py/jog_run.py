@@ -1557,7 +1557,8 @@ def run_single_phase_drive(root, gh_num, builder="agy", reviewer=None, simulate=
         "--reviewer", reviewer,
         "--builder", builder,
     ]
-    env = dict(os.environ)
+    env = _marathon_env_from_invocation({"argv": [drive_script],
+                                          "harness_root": root, "env": {}})
     # The primary supervisor lock grants no ownership of this full clone's lock.
     env.pop("RELAY_DRIVER_LOCKED", None)
     env["XYZ_ROOT"] = root
@@ -1970,7 +1971,8 @@ def jog_run_main(args=None):
                     jog_set_status(root, gh_num, "parked", failure_reason=f"preflight-refused (exit {pf_res.returncode})")
                     continue
 
-            # Execute single-phase drive
+            # Execute single-phase drive, retaining the same lane-ledger invariant.
+            ledger_before = _ledger_bytes(target)
             drive_rc = run_single_phase_drive(
                 target,
                 gh_num,
@@ -1979,6 +1981,10 @@ def jog_run_main(args=None):
                 simulate=getattr(args, "simulate", False),
             )
 
+            if _ledger_bytes(target) != ledger_before:
+                print("jog: execution changed the clone's releases artifacts; preserve and reconcile before continuing",
+                      file=sys.stderr)
+                drive_rc = 2
             if drive_rc != 0:
                 print(f"jog: drive execution failed for GH-{gh_num} (exit {drive_rc}).")
                 jog_set_status(root, gh_num, "failed", failure_reason=f"drive failed (exit {drive_rc})")
