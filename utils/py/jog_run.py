@@ -628,8 +628,7 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     jog_save_state(root, gid, state)
 
     env = _marathon_env_from_invocation(invocation)
-    # Jog already holds the outer driver lock; exporting it keeps marathon-drive from
-    # contending with its own supervisor on the same lock directory.
+    # The primary's outer lock does not own this separate execution clone's lock.
     env.pop("RELAY_DRIVER_LOCKED", None)
     # GH-1098 A3: the agy shim's GH-492 idle bound (300 s of no CPU / no file writes) kills a
     # healthy builder that is waiting on its backend for a large brief (observed 2026-10-16,
@@ -637,8 +636,6 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     # still wins, and non-jog relays keep the shim default.
     env.setdefault("RELAY_TURN_IDLE_S", env.get("RELAY_TURN_TIMEOUT_S", "900"))
 
-    # GH-292 F1: supervisor-owned writes are committed BEFORE any turn dispatches, so the
-    # supervisor's to revert.
     # Execution is in another clone; containment cannot touch primary supervisor state.
     # Immediate transition publication is the separately reviewed second delivery.
 
@@ -654,6 +651,8 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
         return "failed", (f"marathon-drive exited {proc.returncode} without a valid result "
                           f"receipt: {exc}")
     if _ledger_bytes(target) != ledger_before:
+        record["status"] = "clone-ledger-changed"
+        jog_save_state(root, gid, state)
         return "failed", "execution changed clone releases artifacts; preserve clone for inspection"
     if receipt.get("outcome") == "approved":
         try:

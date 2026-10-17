@@ -629,7 +629,8 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     # The preceding reconciliation/check qualifies this dump. Reuse B1's canonical
     # reader instead of opening a parallel SQLite connection in the landing hook.
     rows = ledger_merge.parse_dump(dump.read_text(encoding="utf-8"))["tables"].get("jog_queue", {})
-    queue = {int(row["gh_number"]) for row in rows.values() if row.get("status") != "archived"}
+    queue = {int(row["gh_number"]) for row in rows.values()
+             if row.get("status") in {"pending", "running", "failed", "parked"}}
     if not queue:
         return True
     query = ["pr", "view", str(pr_num), "--json", "number,title,body,headRefName"]
@@ -645,7 +646,11 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     issues = set(linked_issues(pr))
     issues.update(int(n) for n in re.findall(r"(?:^|[/_-])gh[-_]?(\d+)(?=[-_/]|$)", pr.get("headRefName") or "", re.I))
     mapped = issues & queue
-    if mapped and (not paths_policy or not hasattr(paths_policy, "require_primary")):
+    # Capability belongs to the exact runtime the subprocess will execute, not
+    # the newer copy supplying this skill or B1's shared repair policy.
+    runtime_policy = ledger_merge.harness_paths_module(
+        repo_path, source=tool_path(repo_path, "releases_app.py").with_name("harness_paths.py"))
+    if mapped and (not runtime_policy or not hasattr(runtime_policy, "require_primary")):
         log_err("Mapped Jog landing requires the updated primary/committed-receipt harness; upgrade before continuing")
         return False
     for issue in sorted(mapped):
@@ -1498,11 +1503,16 @@ def main():
         if info.get("state") != "MERGED" or not merge_oid:
             log_err(f"PR #{args.reconcile_pr} is {info.get('state')}, not merged — nothing to reconcile")
             return 2
-        return 0 if run_post_merge_reconcile(
+        if not run_post_merge_reconcile(
             args.reconcile_pr, primary_repo,
             integration_branch=args.integration_branch, dry_run=dry_run,
             pr_head=info.get("headRefOid"), merged_head=merge_oid,
-        ) else 2
+        ):
+            return 2
+        if not dry_run and not commit_and_push_phase5_writes(
+                args.reconcile_pr, primary_repo, args.integration_branch):
+            return 2
+        return 0
 
     # Phase 1..3: Scan & Audit checkouts
     checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude, integration_branch=args.integration_branch)
