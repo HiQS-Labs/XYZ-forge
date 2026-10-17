@@ -70,7 +70,7 @@ cat > "$STUB_BIN/git" <<'GIT_EOF'
 #!/usr/bin/env bash
 command="${1:-}"; [ "$command" != -C ] || command="${3:-}"
 if [ "$command" = fetch ] || [ "$command" = push ]; then
-  exec "$REAL_GIT" -c "remote.origin.url=$REMOTE" "$@"
+  exec "$REAL_GIT" -c "url.$REMOTE.insteadOf=https://github.com/example/example.git" "$@"
 fi
 exec "$REAL_GIT" "$@"
 GIT_EOF

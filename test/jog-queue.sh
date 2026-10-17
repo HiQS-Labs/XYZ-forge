@@ -208,7 +208,9 @@ ok "releases check clean after orphan lease reconciliation" $?
 # 15. Receipt-backed jog run execution loop (--simulate)
 out_run="$(ra "$R" jog run --simulate --auto-merge --max-tasks 1 2>&1)"
 has "$out_run" "simulated single-phase drive on GH-102"
-ok "jog run processes queue items in simulate mode" $?
+run_rc=$?
+[ "$run_rc" -eq 0 ] || printf '%s\n' "$out_run"
+ok "jog run processes queue items in simulate mode" "$run_rc"
 
 status_done="$(sqlite3 "$R/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 102;")"
 same "$status_done" "completed"

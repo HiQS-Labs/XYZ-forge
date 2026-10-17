@@ -768,12 +768,6 @@ def jog_retry_gate(root, gh_num, args):
     # GH-300 (B2): retry verbs dispatch marathon-drive exactly like the run executor, so
     # they hold the same supervisor lock — a retry fired beside a live drive is precisely
     # the concurrency the lock exists to prevent (GH-42 / GH-354).
-    _require_jog_primary(root)
-    try:
-        target = _execution_root(root, getattr(args, "target_root", None))
-    except (ContractError, OSError, subprocess.CalledProcessError) as exc:
-        print(f"jog: {exc}", file=sys.stderr)
-        sys.exit(2)
     supervisor_lock = JogSupervisorLock(root)
     supervisor_lock.acquire()
     try:
@@ -1798,6 +1792,12 @@ def jog_run_main(args=None):
             conn.close()
         return
 
+    _require_jog_primary(root)
+    try:
+        target = _execution_root(root, getattr(args, "target_root", None))
+    except (ContractError, OSError, subprocess.CalledProcessError) as exc:
+        print(f"jog: {exc}", file=sys.stderr)
+        sys.exit(2)
     supervisor_lock = JogSupervisorLock(root)
     supervisor_lock.acquire()
 
