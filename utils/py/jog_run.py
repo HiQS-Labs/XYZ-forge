@@ -940,14 +940,19 @@ def _jog_retry_build_locked(root, gh_num, args):
 
 
 def _gh_pr_view(root, pr_number):
-    out = subprocess.run(
-        ["gh", "pr", "view", str(pr_number), "--json",
-         "number,url,state,baseRefName,headRefName,headRefOid,mergedAt,mergeCommit,title,body"],
-        cwd=root, capture_output=True, text=True)
+    cmd = ["gh", "pr", "view", str(pr_number), "--json",
+           "number,url,state,baseRefName,headRefName,headRefOid,mergedAt,mergeCommit,title,body"]
+    slug = github_slug_from_origin(root)
+    if slug:
+        cmd += ["--repo", slug]
+    out = subprocess.run(cmd, cwd=root, capture_output=True, text=True)
     if out.returncode != 0:
         return None, (out.stderr or "gh pr view failed").strip()
     try:
-        return json.loads(out.stdout), None
+        value = json.loads(out.stdout)
+        if not isinstance(value, dict):
+            return None, "gh pr view returned a non-object"
+        return value, None
     except ValueError as exc:
         return None, f"gh pr view returned unparseable JSON: {exc}"
 
@@ -1173,10 +1178,13 @@ def jog_land(root, gh_num, pr_arg=None):
                                   "--root", root, "check"], cwd=root, capture_output=True, text=True)
         if checked.returncode:
             raise ContractError(f"releases check is not clean: {(checked.stderr or checked.stdout).strip()}")
-        hosted = subprocess.run(["gh", "run", "list", "--workflow", "wave-reconcile.yml",
-                                 "--commit", head, "--limit", "20", "--json",
-                                 "databaseId,headSha,status,conclusion,url"],
-                                cwd=root, capture_output=True, text=True)
+        hosted_cmd = ["gh", "run", "list", "--workflow", "wave-reconcile.yml",
+                      "--commit", head, "--limit", "20", "--json",
+                      "databaseId,headSha,status,conclusion,url"]
+        slug = github_slug_from_origin(root)
+        if slug:
+            hosted_cmd += ["--repo", slug]
+        hosted = subprocess.run(hosted_cmd, cwd=root, capture_output=True, text=True)
         runs = json.loads(hosted.stdout) if hosted.returncode == 0 else []
         if not isinstance(runs, list) or any(not isinstance(run, dict) for run in runs):
             raise ContractError("invalid hosted reconciliation evidence")

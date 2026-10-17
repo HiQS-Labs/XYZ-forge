@@ -6834,14 +6834,14 @@ def build_parser():
 
     sp_jres = jsub.add_parser("resume", help="reconcile durable Marathon state for an item (spends no token)")
     sp_jres.add_argument("target", help="issue number (e.g. 123 or GH-123)")
-    sp_jres.add_argument("--root", default=None, help="repository root path")
+    sp_jres.add_argument("--root", default=argparse.SUPPRESS, help="repository root path")
 
     sp_jrg = jsub.add_parser("retry-gate", help="re-run ONLY the gate against the same head SHA (no builder turn)")
     sp_jrg.add_argument("target", help="issue number (e.g. 123 or GH-123)")
     sp_jrg.add_argument("--builder", default="agy", help="builder identity recorded for the retry")
     sp_jrg.add_argument("--reviewer", default=None, help="reviewer agent (required; must differ from --builder)")
     sp_jrg.add_argument("--auto-merge", action="store_true", help="merge the PR if the gate retry approves")
-    sp_jrg.add_argument("--root", default=None, help="repository root path")
+    sp_jrg.add_argument("--root", default=argparse.SUPPRESS, help="repository root path")
 
     sp_jrb = jsub.add_parser("retry-build", help="fresh Marathon attempt on a fresh execution id (history preserved)")
     sp_jrb.add_argument("target", help="issue number (e.g. 123 or GH-123)")
@@ -6849,17 +6849,17 @@ def build_parser():
     sp_jrb.add_argument("--builder", default="agy", help="builder turn-taker (default: agy; or codex, aider)")
     sp_jrb.add_argument("--reviewer", default=None, help="reviewer agent (required; must differ from --builder)")
     sp_jrb.add_argument("--auto-merge", action="store_true", help="opt-in to auto-merge an approved PR")
-    sp_jrb.add_argument("--root", default=None, help="repository root path")
+    sp_jrb.add_argument("--root", default=argparse.SUPPRESS, help="repository root path")
 
     sp_jl = jsub.add_parser("land", help="verify committed delivery after hosted reconciliation, complete the primary queue row")
     sp_jl.add_argument("target", help="issue number (e.g. 123 or GH-123)")
     sp_jl.add_argument("--pr", default=None, help="PR number or URL (required when the receipt has no PR identity)")
-    sp_jl.add_argument("--root", default=None, help="repository root path")
+    sp_jl.add_argument("--root", default=argparse.SUPPRESS, help="repository root path")
 
     sp_jrec = jsub.add_parser("reconcile", help="idempotent replay entry for jog land (same verification and steps)")
     sp_jrec.add_argument("target", help="issue number (e.g. 123 or GH-123)")
     sp_jrec.add_argument("--pr", default=None, help="PR number or URL (required when the receipt has no PR identity)")
-    sp_jrec.add_argument("--root", default=None, help="repository root path")
+    sp_jrec.add_argument("--root", default=argparse.SUPPRESS, help="repository root path")
 
     sp_jrun = jsub.add_parser("run", help="execute the serial jog queue loop")
     sp_jrun.add_argument("--target-root", required=False, help="disposable full execution clone (required for dispatch)")
