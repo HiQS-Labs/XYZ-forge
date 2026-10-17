@@ -91,4 +91,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Producer owns the pending disposable-clone publication gate and PR checks; harness owns the relay-only commit.
 
+
+### Attestation · relay-drive — 2026-10-17T03:21:26Z
+task: RELAY-gh1100-final
+reviewer: codex
+status: Approved
+reviewed-head: b92d66c8cc7b7c2ee6f430ba731365b94edc52f4
+added-range: 6920+5675
+added-sha256: cccfc8444c7167daac95dae8265c2901a4a6ed2bc635489f54ddff8576cbd023
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
