@@ -23,7 +23,7 @@ fix_probes:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1 (Codex): 3 Should accepted (pre-gate token set, status-aware green+red parity, EPERM policy); plan tightened | Plan QA round 2, then implement the three items and measure |
+| Plan QA round 2 (Codex): F1/F2 Pass; F3 corrected (no-op observation red control reaches the group oracle; deadline claim fixed); baseline receipt re-recorded | Plan QA round 3 (final under the cap), then implement and measure |
 
 ## Problem
 
@@ -49,16 +49,17 @@ relay confirmed them:
    hypothesis, not something the observation proves. **Policy:** at the observation site EPERM is
    recorded as `group_absent: "eperm-unsignalable"` and treated as absent (the fixture's own group
    is gone or never existed as such); at the cleanup site EPERM is ignored like
-   `ProcessLookupError` so a cleanup error cannot mask the verdict. A group that stays
-   signalable keeps hitting the `deadline` branch and still raises `process group remains`.
+   `ProcessLookupError` so a cleanup error cannot mask the verdict. The `deadline` branch is
+   reached only when `killpg(pid, 0)` keeps returning normally (a signalable, still-present
+   group); it does not run for EPERM, which the policy above accepts immediately.
 
 ## Per-issue requirements
 
 | Issue | Requirement | Acceptance (falsifiable) |
 |---|---|---|
-| #1112 QW-2 | Audit stdout, stderr and exit status identical to the current script on the same tree, with non-empty stdout; wall time ≤ 10 s sequential (rc must be 0 for the timing to count) | Green parity: old/new run separately with stdout, stderr and rc captured to files; `cmp` both streams, rc equal, stdout non-empty. Red parity: in a disposable clone, temporarily append an unscoped `python3 utils/py/marathon_drive.py --dry-run` line to an existing `test/gh*.sh`, run old and new: both rc=1 with matching non-empty `FAIL:` stderr; revert. Existing covering suite `test/gh273-marathon-root-audit-python-shape.sh` (alias/flag/version/unscoped cases) must keep every verdict. All recorded under `TESTS-RESULTS/2026-10-17+GH-1112/` |
-| #1112 ordering | The three heavy suites appear first in `TESTS`; suite set and count unchanged; same sequential runner (sequential and `--list` order change accordingly, Tier-2 order comes from `T2_TESTS` and is untouched); `gh544-parallel-default.sh` stays green | `validate.sh --print-mode` unchanged; `--list` set-equal before/after; one 4-wide parallel run's telemetry shows the three suites dispatched in the first wave |
-| #1114 gh648 (partial hygiene item per #1118; #1114 stays open) | Guard both `killpg` sites under the documented EPERM policy; the suite still fails when a signalable group remains | existing suite green; the four previously rescued suites (`gh360-scoped-receipt-chain-rebuild.sh`, `gh484-phase-dir-default.sh`, `gh648-l4-285-revalidate.sh`, `jog-queue.sh`) run concurrently in a disposable clone, 0 failures; red control: the suite's existing surviving-group mutant (L171-178) still fails; manual control: an injected `PermissionError` at the probe follows the documented policy (recorded `eperm-unsignalable`, no exception) |
+| #1112 QW-2 | Audit stdout, stderr and exit status identical to the current script on the same tree, with non-empty stdout; wall time ≤ 10 s sequential (rc must be 0 for the timing to count) | Green parity: old/new run separately with stdout, stderr and rc captured to files; `cmp` both streams, rc equal, stdout non-empty. Red parity: in a disposable clone, temporarily append 41 comment lines (to clear the audit's 40-line lookback, L330-336) followed by an unscoped `python3 utils/py/marathon_drive.py --dry-run` line to an existing `test/gh*.sh`, run old and new: both rc=1, matching non-empty `FAIL:` stderr naming exactly that planted path:line; revert. Existing covering suite `test/gh273-marathon-root-audit-python-shape.sh` (alias/flag/version/unscoped cases) must keep every verdict. All recorded under `TESTS-RESULTS/2026-10-17+GH-1112/` |
+| #1112 ordering | The three heavy suites appear first in `TESTS`; suite set and count unchanged; same sequential runner (sequential and `--list` order change accordingly, Tier-2 order comes from `T2_TESTS` and is untouched); `gh544-parallel-default.sh` stays green | `validate.sh --print-mode` unchanged; `--list` exact multiset-equal before/after (a dropped or duplicated entry fails); one 4-wide parallel run's telemetry shows the three suites dispatched in the first wave; red control: the old order fails the same first-wave check on PR #1116's retained telemetry |
+| #1114 gh648 (partial hygiene item per #1118; #1114 stays open) | Guard both `killpg` sites under the documented EPERM policy; the suite still fails when a signalable group remains | existing suite green; the four previously rescued suites (`gh360-scoped-receipt-chain-rebuild.sh`, `gh484-phase-dir-default.sh`, `gh648-l4-285-revalidate.sh`, `jog-queue.sh`) run concurrently in a disposable clone, 0 failures; red control that reaches the group oracle: in a disposable copy, replace only the observation `os.killpg(proc.pid, 0)` with a no-op (`pass`) so the probe keeps "succeeding" — the suite must fail specifically with `process group remains` (the existing L171-178 mutant stops at `cap containment` and does not reach this oracle); manual controls: injected `ProcessLookupError` keeps `group_absent: True`; injected `PermissionError` records `eperm-unsignalable` at observation and leaves the verdict unchanged at cleanup |
 
 ## Non-goals
 
@@ -82,8 +83,9 @@ receipt-contract work (separate task).
 
 Each item is an independent one-file change; revert individually. The audit rewrite's only risk
 is a semantic drift, which the byte-identical diff detects. Ordering has no correctness
-surface. The gh648 guard could mask a real leak only if `PermissionError` were the signal of
-a live group; the existing `deadline` branch still raises `process group remains` for that.
+surface. The gh648 guard accepts EPERM as "not the fixture's group" by the same-uid argument; a
+group that remains signalable still fails at the `deadline` with `process group remains`, and
+the no-op-observation red control above proves that branch is still reachable after the edit.
 
 ## Ratings (RELEASES, dated 2026-10-17)
 

@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -150,5 +150,16 @@ Swept the entire current plan; checked the named audit helpers, metadata pass, s
 Root cause of the remaining review failure: the plan substitutes a leader-liveness control for a later group-liveness control; Fix site: plan acceptance/risk/smallest-surface text; Why not upstream/downstream: production containment changes are outside this bounded hygiene task, and implementation cannot be approved on an oracle its named control never reaches.
 
 Handing off to Producer (claude-a) — correct F3 and return for review; go to the Producer window and say 'take your turn'. Header ROUND remains as seeded; the Producer should bump it for the next cycle.
+
+### Round 3 — Producer (claude-a) → Reviewer (codex)
+
+**F3 corrected (plan L45-53, L61, L84-87):** the red control is now the one that reaches the group oracle — in a disposable copy replace only the observation `os.killpg(proc.pid, 0)` with a no-op; the suite must fail specifically with `process group remains`. The L171-178 mutant is named as *not* reaching that oracle. The deadline sentence now says the deadline runs only while `killpg(pid, 0)` keeps returning normally and does not run for EPERM, which the policy accepts immediately. Manual controls kept: injected `ProcessLookupError` keeps `group_absent: True`; injected `PermissionError` records `eperm-unsignalable` at observation and leaves the cleanup verdict unchanged.
+
+**Nits carried into the plan:** red parity appends 41 comment lines before the planted unscoped invocation (clears the 40-line lookback at audit L330-336) and asserts the exact planted path:line; ordering acceptance uses exact multiset comparison of `--list` and a red check that the old order fails the first-wave test on PR #1116's retained telemetry.
+
+**Baseline receipt:** `TESTS-RESULTS/2026-10-17+GH-1112/audit-before.{time,stdout,stderr}` are committed with this round (the previous commit carried an empty `.time` because of a redirect-ordering mistake); `provenance.jsonl` starts with that entry.
+
+Round 3 is the last under the start-task cap. May implementation proceed?
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
