@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import shutil
 import sqlite3
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -15,6 +16,7 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "utils" / "py"))
 import releases_app as app
+from harness_paths import primary_config_key
 
 
 class ClassifierTests(unittest.TestCase):
@@ -371,7 +373,11 @@ class JogLifecycleWriteTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix="gh605-jog-writer-")
         self.root = Path(self.tmp.name)
-        (self.root / ".git").mkdir()
+        subprocess.run(["git", "init", "-q", "-b", "development", str(self.root)], check=True)
+        subprocess.run(["git", "-C", str(self.root), "remote", "add", "origin",
+                        "https://github.com/owner/repo.git"], check=True)
+        subprocess.run(["git", "-C", str(self.root), "config", primary_config_key(str(self.root)),
+                        str(self.root)], check=True)
         with contextlib.redirect_stdout(io.StringIO()):
             app.main(["--root", str(self.root), "init", "--slug", "owner/repo"])
         self.roadmap_gid = app.new_gid("rmi-")

@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Delivery1 source and scoped controls recorded; final QA found a canonical-reader mismatch; diagnostic gate405/409 | Blocked at Codex3-round cap; operator continuation requested before reader/fixture fixes and final qualification |
+| Delivery1 source and scoped controls recorded; final QA found a canonical-reader mismatch; diagnostic gate405/409 | Operator authorized one Round4 exception; fix canonical reader and existing fixtures, then final review and qualification |
 
 # GH-1108: one writer, durable receipts
 
@@ -114,3 +114,11 @@ Final QA refinement: `--reconcile-pr --execute` uses the same final post-merge p
 No PR published and no code merged. Primary checkout remains clean at b26c9edb, with original GH1087 running/GH942 failed rows untouched. Final Codex3/3 Escalated: B1 line-parser cannot authoritatively read newline-containing Jog failure reasons; reuse canonical root-bound Jog JSON interface. Opus2/3 requests truthful gh436 publisher mock/assertion. Diagnostic full gate at9ec177d5 (not final source)405/409, identity intact; gh777 inventory corrected later, gh605 and gh290/gh291 fixtures still need primary/committed-receipt updates. All retained in evidence summary/provenance. No new suites.
 
 The exact next action is operator authorization for one additional bounded Codex round, followed by the reader and existing-fixture fixes, focused controls, remaining Opus3 review, approved final-source gate and only then publication/recovery. A stacking question is also pending; delivery2 production work is not started. Existing source is through03fb2fd9, followed only by review/evidence checkpoints. The first Round3 attempt was interrupted without a verdict before incorporating Opus findings; the resumed Round3 produced the concrete reader defect and reached the binding cap. Do not quietly restart or rename the relay to evade it.
+
+## Operator-authorized continuation (2026-10-17)
+
+Round 4 authorized by the operator as an exception to the three-round cap, scoped to the multiline queue-reader defect from round 3.
+
+Resolve that concrete reader defect through the canonical Jog JSON interface and truthfully update existing fixtures; no new test files or registry entries (GH-831). Run exactly one additional Codex final-review round. If Round4 is not Approved, stop and hand off the open finding; no fifth round.
+
+The operator also authorizes a dependent stack: delivery2 opens as a draft against development, with `depends on #<first PR>` in its body. After delivery1 lands, rebase delivery2 onto development so only transition publication is in its diff before any review. No merges authorized.
