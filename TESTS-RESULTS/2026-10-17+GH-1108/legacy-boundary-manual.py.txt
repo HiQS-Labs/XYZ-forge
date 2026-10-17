@@ -1,0 +1,52 @@
+"""Manual legacy supervisor and existing independent-target driver-lock controls."""
+import ast,datetime,os,sys,json,re,subprocess,tempfile,types
+from pathlib import Path
+source=Path('/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17')
+class Conn:
+ row_factory=None
+ def execute(self,*a):return self
+ def fetchone(self):return dict(id=1,global_id='probe',gh_number=999902,position=1,attempt_count=0)
+ def close(self):pass
+class Lock:
+ def __init__(self,*a):pass
+ def acquire(self):pass
+ def release(self):pass
+for rev in ['7d4ed1c5','bea9d480']:
+ tree=ast.parse(subprocess.check_output(['git','-C',str(source),'show',rev+':utils/py/jog_run.py'],text=True));node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='jog_run_main');events=[]
+ ns=dict(os=os,sys=sys,sqlite3=types.SimpleNamespace(connect=lambda *a,**k:Conn(),Row=object),JogSupervisorLock=Lock,atexit=types.SimpleNamespace(register=lambda *a:None),signal=types.SimpleNamespace(SIGINT=2,SIGTERM=15,signal=lambda *a:None),_require_jog_primary=lambda *a:None,_execution_root=lambda *a:'/validated/disposable',jog_reconcile_orphan_leases=lambda *a:[],_ensure_jog_schema=lambda *a:None,JOG_RELAY_DEPRECATION_NOTICE='legacy notice',JOG_AUTO_MERGE_CHECKPOINT='primary publication checkpoint',ContractError=Exception,subprocess=subprocess,jog_acquire_lease=lambda *a:None,find_issue_doc=lambda *a:None,run_single_phase_drive=lambda *a,**k:0,_ledger_bytes=lambda *a:{},handle_landing_boundary=lambda *a,**k:(events.append('interactive-merge-reached') or (True,'completed',None)),jog_set_status=lambda *a,**k:events.append(a[2]))
+ exec(compile(ast.Module(body=[node],type_ignores=[]),'jog_run.py','exec'),ns)
+ a=types.SimpleNamespace(executor='relay',simulate=False,dry_run=False,auto_merge=False,root=str(Path.cwd()),target_root='/validated/disposable',builder='codex',reviewer='agy',max_tasks=1)
+ ns['jog_run_main'](a)
+ expected=['interactive-merge-reached','completed'] if rev=='7d4ed1c5' else ['parked'];assert events==expected,(rev,events)
+ print('PASS legacy supervisor',rev,events)
+ nodes=[n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name in {'run_single_phase_drive','_marathon_env_from_invocation'}];captured=[]
+ def run(argv,**kw):
+  if '--agent-cmd' in argv:captured.append(kw['env'])
+  return types.SimpleNamespace(returncode=0,stdout='123',stderr='')
+ ns=dict(os=types.SimpleNamespace(path=types.SimpleNamespace(join=os.path.join,isfile=lambda *a:True,dirname=os.path.dirname),access=lambda *a:True,X_OK=os.X_OK,makedirs=lambda *a,**kw:None,environ={'RELAY_DRIVER_LOCKED':'1','XYZ_HARNESS':'/primary'},getpid=lambda:42),_dt=datetime,tempfile=tempfile,re=re,subprocess=types.SimpleNamespace(run=run),find_issue_doc=lambda *a:None)
+ exec(compile(ast.Module(body=nodes,type_ignores=[]),'jog_run.py','exec'),ns);ns['run_single_phase_drive']('/validated/disposable',999902,builder='codex',reviewer='agy')
+ env=captured[-1];assert env.get('RELAY_DRIVER_LOCKED')==('1' if rev=='7d4ed1c5' else None)
+ if rev=='bea9d480':assert env['XYZ_HARNESS']=='/validated/disposable' and env['MARATHON_ROOT']=='/validated/disposable'
+ print('PASS target dispatch env',rev,env.get('RELAY_DRIVER_LOCKED'),env.get('XYZ_HARNESS'))
+# Real existing relay driver lock, in a separate disposable full clone; no model may run.
+work=Path(tempfile.mkdtemp(prefix='gh1108-legacy-lock-',dir=Path.cwd()/'temp'));target=work/'target'
+subprocess.run(['git','clone','--quiet','--no-local',str(source),str(target)],check=True)
+sys.path.insert(0,str(source/'utils/py'));import jog_run as j
+subprocess.run([str(target/'bin/tick'),'init'],cwd=target,env={**os.environ,'TICK_REPO_ROOT':str(target)},check=True,capture_output=True)
+lock=target/'.git/relay-driver.lock';assert not lock.exists();lock.mkdir();(lock/'pid').write_text(str(os.getpid()))
+before=j._ledger_bytes(str(target));original=os.environ.get('RELAY_DRIVER_LOCKED');os.environ['RELAY_DRIVER_LOCKED']='1'
+try:
+ rc=j.run_single_phase_drive(str(target),999902,builder='codex',reviewer='agy');assert rc==1,rc;assert j._ledger_bytes(str(target))==before
+ print('PASS real existing target driver refuses live holder despite inherited bypass; no clone ledger change')
+ (lock/'pid').write_text('999999999')
+ # Dry run still acquires/reclaims the existing driver's lock but cannot start a model.
+ relay=next((target/'relay-system').glob('*/gh999902-jog-drive.md'))
+ env={**os.environ,'XYZ_HARNESS':str(target),'TICK_REPO_ROOT':str(target)};env.pop('RELAY_DRIVER_LOCKED',None)
+ p=subprocess.run([sys.executable,str(target/'utils/py/relay_drive.py'),'--relay-file',str(relay),'--relay-task','RELAY-gh999902-jog-drive','--dry-run'],cwd=target,env=env,capture_output=True,text=True)
+ assert p.returncode==0,(p.stdout,p.stderr);assert 'reclaiming stale' in p.stderr;assert not lock.exists();print('PASS existing target driver reclaims stale lock and releases it after dry run')
+ p=subprocess.run([sys.executable,str(target/'utils/py/relay_drive.py'),'--relay-file',str(relay),'--relay-task','RELAY-gh999902-jog-drive','--dry-run'],cwd=target,env=env,capture_output=True,text=True)
+ assert p.returncode==0,(p.stdout,p.stderr);assert not lock.exists();print('PASS absent target lock permits existing driver dry run and cleanup')
+finally:
+ if original is None:os.environ.pop('RELAY_DRIVER_LOCKED',None)
+ else:os.environ['RELAY_DRIVER_LOCKED']=original
+print('ALL LEGACY BOUNDARY AND LOCK CONTROLS PASSED; fixture',work)

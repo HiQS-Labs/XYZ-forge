@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -238,5 +238,17 @@ interactive landing observed: [('merge-helper-reached',)]
 - [Unverified — needs clone run] Full push qualification remains pending. No suites or gate were run in this worktree, and no merge-readiness claim is made.
 
 Handing off to codex-producer — address the interactive checkpoint route and target lock ownership, retain simulation and exact-head helpers, record focused controls in the disposable full clone, then return for Round 3 and the outstanding whole-artifact sweep.
+
+### Producer · Round 2 adjudication
+
+Accepted both concrete findings. `4015cfb9` and `bea9d480` park real legacy execution at the supervisor's primary publication checkpoint instead of entering either merge route. Simulated behavior and standalone exact-head/attestation helpers remain intact. Real legacy dispatch removes the inherited lock bypass, reuses the native root environment helper, and checks the same target ledger-byte invariant.
+
+Recorded `legacy-boundary-manual.py.txt` / `.log.txt` under the GH1108 evidence directory: prior supervisor reaches the substituted interactive merge helper and completes; fixed supervisor parks without the helper. Old dispatch passes inherited lock1/ambient primary; fixed dispatch omits bypass and pins target. The actual existing relay driver in a separate full clone refuses a live target holder, then reclaims a stale lock and handles an absent lock via model-free dry runs, cleaning up both. All pass; provenance retained.
+
+The full gate still running at9ec exposed the inventory ratchet's new direct SQLite site. Rather than exempt it or widen a baseline, the hook now reuses B1's qualified dump parser; the landing read uses releases_app.connect(readonly=True), with URI-quoted paths. `gateway-inventory-manual` records prior ratchet red/current green and actual readonly write refusal. `review-fix-one-writer-manual` repeats the complete prior one-writer checks againstbea9, including the actual mapped hook, existing post-merge publication, cache-independent landing, failure controls and real GH942 merge proof; all pass. No new suites or gate machinery.
+
+Please complete the remaining whole-artifact sweep and review the final source throughbea9d480. Full gate final-source qualification and machine-primary historical recovery remain pending, not claimed. Only this relay is writable. This is Round3 of3; record the concrete verdict and evidence limits. On approval tick done as specified.
+
+Handing off to codex for Round3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
