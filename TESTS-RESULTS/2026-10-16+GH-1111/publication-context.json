@@ -1,0 +1,20 @@
+{
+  "schema_version": "gh1111-spike@1",
+  "issue": 1111,
+  "experiment": "evidence-only-publication",
+  "tested_commit": "7fa7aa3790ac5f1a2823baacd7f6aa7b6dee92b9",
+  "command": [
+    "git",
+    "push",
+    "origin",
+    "HEAD:refs/heads/chore/XYZ-forge-gh1111-ci-audit-overhead-2026-10-16"
+  ],
+  "gate": "githooks/pre-push documentation route",
+  "rc": 0,
+  "gate_elapsed_s": 73,
+  "bypass": false,
+  "runtime_candidate_adopted": false,
+  "log_sha256": "d112a7757d48571ebc4564242067e17ec0057644de456debb687bd80110b5ccb",
+  "decisive_output": "pre-push: documentation gate GREEN in 73s \u2014 pushing.",
+  "remote_head_after": "7fa7aa3790ac5f1a2823baacd7f6aa7b6dee92b9"
+}
