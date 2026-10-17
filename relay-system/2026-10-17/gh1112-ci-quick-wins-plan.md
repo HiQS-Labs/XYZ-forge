@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
-ROUND: 1 / 4
+NEXT: Producer
+STATUS: Approved
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -161,5 +161,23 @@ Handing off to Producer (claude-a) — correct F3 and return for review; go to t
 
 Round 3 is the last under the start-task cap. May implementation proceed?
 
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: Ship the plan to implementation. F1–F3 are resolved at the design level: the revised red control reaches the changed group oracle, EPERM policy and deadline limits are explicit, and audit parity includes nonempty output and exit status. This approval is for the plan, not a claim that the candidate has passed runtime verification.
+swept file: yes
+
+Swept the entire plan and all three named source files, including audit safety/metadata handling and runner selection, dispatch, retry and summary paths. Verify tier with direct-source fallback: graph project `XYZ-forge` points at the main checkout; coverage generation `2026-09-01T15:54:30Z` reports missing/metadata_changed/not_tracked for these paths. No additional demonstrated pre-existing defect requiring this bounded plan to expand was found; the lexical audit and runner receipt/retry limitations recorded in prior rounds remain outside this change. No git, suites, pytest or executable fixtures ran.
+
+- [Pass] **F3 resolved:** plan:45–54,62,86–88 now distinguishes immediate EPERM acceptance from a normally returning observation reaching the deadline. Its no-op mutation targets exactly gh648:148 and must fail at :154 with `process group remains`; it explicitly excludes the existing mutant at :171–178, which fails earlier at :139. Separate injected-error controls name the expected True/string observation values and verdict-preserving cleanup. These are falsifiable implementation requirements, with evidence destination at plan:98–101. Runtime behavior remains [Unverified — needs clone run].
+- [Pass] **F1/F2 and ordering remain bounded:** plan:60–61,72–79 requires green/red stdout+stderr+rc parity, 41 comments before the planted unsafe line, existing gh273 coverage, exact registry multiset equality and a first-wave red control. The substring set still covers every direct/alias branch at audit:140–188 without filtering metadata discovery (:105–133). The runner copies TESTS to RUN_TESTS at validate:1106, rebuilds Tier-2 independently at :1113–1117, partitions the pool at :1294–1301 and dispatches at :1311. No new suite, registry, gate, routing or scheduler machinery is proposed (plan:64–68). Speed and scheduling gains remain [Unverified — needs clone run].
+- [Pass] **Baseline receipt is now present and internally consistent.** Read-only Python probe (exit 0): for each of `audit-before.time`, `.stdout`, `.stderr`, compute `hashlib.sha256((p/name).read_bytes()).hexdigest()` and compare against the first JSON record in `provenance.jsonl`. Decisive output: `audit-before.time bytes 35 hash_matches True`, `audit-before.stdout bytes 17028 hash_matches True`, `audit-before.stderr bytes 0 hash_matches True`; timing `real 79.845 user 27.615 sys 46.841`; 169 stdout lines ending with `PASS: audited 167 real marathon invocation(s)` and the phase-artifact PASS. This checks supplied receipt contents, not a fresh run or commit provenance. The current receipt supersedes the earlier 78.93-second prose claim.
+- [Nit] **Implementation wording:** plan:17,80 still says/counts two exception tuples while :50 requires a distinct observation value. This is implementable with `except (ProcessLookupError, PermissionError) as exc:` plus an explicit type-dependent receipt assignment; a separate observation handler is equally valid but requires updating the text-only fix probe. The runtime injected-error controls at :62 govern correctness; a grep count alone does not prove it. No further plan-review round is needed for this local wording choice.
+- [Pass] **Scope/rating disposition:** plan:92–96 grounds the ratings as developer-time and gate-flake prioritization judgments, keeps #1114 open, and attributes the hygiene authorization to #1118. Three independent one-file edits remain Easy to reverse. The registry extraction probe (Python regex over the nonempty TESTS block, exit 0) still reports `registry_count 406 unique 406`, heavy positions `354,363,404`; preserve the multiset and existing lane/runner contracts during implementation.
+
+Root cause: the prior acceptance named a leader-liveness control for a later group-liveness oracle; Fix site: the plan now targets the observation call itself; Why not upstream/downstream: production containment changes are outside this hygiene slice, and the corrected manual control directly falsifies the changed oracle.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may implement the plan and record the required green/red and performance evidence in a disposable full clone. Harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
