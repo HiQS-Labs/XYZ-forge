@@ -64,7 +64,7 @@ releases jog retry-build <GH-NUM> --target-root <disposable-full-clone>
     Fresh Marathon attempt on a fresh execution id (history preserved).
 
 releases jog land <GH-NUM> [--pr N]
-    Verify merged delivery against GitHub truth, complete the row, delegate lifecycle to wave_reconcile.
+    Verify committed delivery after hosted reconciliation and complete the primary queue row.
 
 releases jog reconcile <GH-NUM>
     Idempotent replay entry for jog land (same verification and steps).
@@ -114,8 +114,8 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
 7. **Receipt-Backed Landing & `--auto-merge`:**
    A row is never marked `completed` on a self-report. `jog land` verifies GitHub truth first —
    merged state, merge-SHA reachability, PR identity (repo, base, head, head SHA), and qualifying
-   gate evidence — then completes the row and delegates issue closure, doc promotion, and
-   dashboard refresh to `wave_reconcile`.
+   gate evidence after hosted `wave_reconcile` has completed issue/doc lifecycle — then completes
+   the primary row and records its landing proof.
    - **Default (Interactive):** Pauses at each landing boundary for human confirmation. On confirm: merges PR into `development` and re-anchors the checkout. On decline: marks row `parked` (`awaiting-landing`) so unmerged tasks are never misrepresented as `completed`.
    - **Unattended without `--auto-merge`:** Parks row as `parked` (`awaiting-landing (unattended run without --auto-merge)`) and halts advance.
    - **`--auto-merge` (verified, GH-300):** Verifies GitHub truth against the receipt BEFORE merging — the PR must still be OPEN on the receipt's base/head/head SHA in this repo with the gate green on that head — and refuses (parking the row) instead of merging blind; on pass, merges into `development` and re-anchors the checkout before advancing.

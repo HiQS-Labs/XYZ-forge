@@ -6851,7 +6851,7 @@ def build_parser():
     sp_jrb.add_argument("--auto-merge", action="store_true", help="opt-in to auto-merge an approved PR")
     sp_jrb.add_argument("--root", default=None, help="repository root path")
 
-    sp_jl = jsub.add_parser("land", help="verify merged delivery, complete the row, delegate lifecycle to wave_reconcile")
+    sp_jl = jsub.add_parser("land", help="verify committed delivery after hosted reconciliation, complete the primary queue row")
     sp_jl.add_argument("target", help="issue number (e.g. 123 or GH-123)")
     sp_jl.add_argument("--pr", default=None, help="PR number or URL (required when the receipt has no PR identity)")
     sp_jl.add_argument("--root", default=None, help="repository root path")

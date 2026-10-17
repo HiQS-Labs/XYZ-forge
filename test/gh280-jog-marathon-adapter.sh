@@ -705,6 +705,7 @@ esac
 H_CWD="$WORK/foreign-cwd"; mkdir -p "$H_CWD"
 GIDV="$(sqlite3 "$FV/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
 prepare_execution_target "$FV" "$FVT"
+git -C "$FVT" checkout -q -b feat/gh901-vendor
 H_OUT="$( cd "$H_CWD" && PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
   python3 "$FV/.xyz/utils/py/releases_app.py" --root "$FV" jog run --target-root "$FVT" \
     --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
@@ -1071,6 +1072,8 @@ L9_OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
 cleanup_root_fixture
 use_development
 GID="$(sqlite3 "$FR/releases.db" "SELECT global_id FROM jog_queue WHERE gh_number = 901;")"
+mkdir -p "$FR/PROJECT/1-INBOX"
+git -C "$FR" mv "PROJECT/2-WORKING/$CAPTURE_DOC_NAME" "PROJECT/1-INBOX/$CAPTURE_DOC_NAME"
 # Park a roadmap row so promotion genuinely repoints it (and the dashboard drifts);
 # commit the in-sync dashboard BEFORE the run so post-promotion drift is falsifiable (F3)
 # --root is REQUIRED: without it resolve_root() lands on the REAL clone running the gate
@@ -1101,7 +1104,7 @@ M_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
 # M3: promoted execution contract is committed, with no clone ledger write.
 CONTRACT_COMMIT="$(git -C "$FT" log --format=%H --grep='^jog: prepare GH-901' -1)"
 [ -n "$CONTRACT_COMMIT" ] && pass "M3 execution contract committed before dispatch" || fail "M3 no contract commit: $M_OUT"
-! grep -q 'releases.db' <<<"$(git -C "$FT" show --name-only --format= "$CONTRACT_COMMIT")" \
+[ -n "$CONTRACT_COMMIT" ] && ! grep -q 'releases.db' <<<"$(git -C "$FT" show --name-only --format= "$CONTRACT_COMMIT")" \
   && pass "M3 execution contract commit excludes ledger" || fail "M3 clone ledger committed"
 cp "$FT/releases.db" "$WORK/execution-ledger-before.db"
 printf 'fixture containment mutation\n' > "$FT/releases.db"
@@ -1119,7 +1122,7 @@ M2_OUT="$(jog_verb resume 901 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && has "$M2_OUT" "re-projected" \
   && pass "M2 resume finds the ledger by gh-number after re-add (F2)" \
   || fail "M2 resume lost the history: $M2_OUT"
-jassert "$FR/.tick/jog/$OLD_GID/state.json" 'any(e.get("packet_dir") and not e["packet_dir"].startswith("/") for e in d["executions"]) or True' "M2 ledger record present (relative-path form asserted below)"
+jassert "$FR/.tick/jog/$OLD_GID/state.json" 'any(e.get("packet_dir") and not e["packet_dir"].startswith("/") for e in d["executions"])' "M2 ledger record present (relative-path form asserted below)"
 jassert "$FR/.tick/jog/$OLD_GID/state.json" 'not d["executions"][0].get("result_path","").startswith("/")' "M2 result_path stored relative to the ledger (F2)"
 
 # ═══ N. GH-300 (PR #281 review): verified auto-merge (B1) + supervisor lock on retries (B2) ══

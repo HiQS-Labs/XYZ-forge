@@ -649,7 +649,7 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     if receipt.get("outcome") == "approved":
         try:
             record["committed_receipt"] = publish_jog_receipt(
-                target, receipt, invocation["result_path"], base_ref=invocation["base_ref"])
+                target, receipt, invocation["result_path"], base_ref="development")
             record["published_head"] = _git(target, "rev-parse", "HEAD").decode().strip()
         except (ContractError, OSError, subprocess.CalledProcessError) as exc:
             record["status"] = "receipt-publication-failed"
@@ -733,7 +733,7 @@ def jog_resume(root, gh_num, args=None):
             target = _execution_root(root, invocation["target_root"])
             publication["committed_receipt"] = publish_jog_receipt(
                 target, receipt, _ledger_abs_path(root, gid, publication.get("result_path")),
-                base_ref=invocation["base_ref"])
+                base_ref="development")
             publication["published_head"] = _git(target, "rev-parse", "HEAD").decode().strip()
         action, reason = jog_project_marathon_outcome(
             root, gh_num, receipt,
@@ -878,7 +878,7 @@ def _jog_retry_gate_locked(root, gh_num, args):
         raise ContractError("gate retry changed execution clone ledger")
     if new_receipt.get("outcome") == "approved":
         gate_retries[-1]["committed_receipt"] = publish_jog_receipt(
-            invocation["target_root"], new_receipt, result_path, base_ref=invocation["base_ref"])
+            invocation["target_root"], new_receipt, result_path, base_ref="development")
         gate_retries[-1]["published_head"] = _git(invocation["target_root"], "rev-parse", "HEAD").decode().strip()
         jog_save_state(root, gid, state)
     action, reason = jog_project_marathon_outcome(
