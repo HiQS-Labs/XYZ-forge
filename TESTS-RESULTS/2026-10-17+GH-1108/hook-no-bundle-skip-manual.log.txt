@@ -29,4 +29,4 @@ PASS: D non-JSON gh output: returns False without raising
 PASS: E unusable PR object {"number":7,"title":"x","body":"Closes #…: returns False without raising
 PASS: E unusable PR object {"number":8,"title":"x","body":"Closes #…: returns False without raising
 8 pass, 0 fail
-green_rc=
+green_rc=0
