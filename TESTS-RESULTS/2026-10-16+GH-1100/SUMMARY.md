@@ -15,3 +15,10 @@ Final Codex review Approved at reviewed head b92d66c8 (`final-attestation.json`)
 ## Publication gate
 
 Normal pre-push full gate at **8a5041fd**: **409/409 passed**, 869 seconds, no bypass. Raw output: `publication-gate.log.gz`; before/after identities match. `gh648-l4-285-revalidate.sh` initially raised process-group PermissionError under pooled load and passed the gate's built-in serial retry. Initial output retained in `gh648-pooled-failure.txt`; same signature was previously reported in [GH-1063](https://github.com/HiQS-Labs/XYZ-forge/issues/1063). The OS-level cause is unproven; this is a qualified green, not a claim that the initial failure was harmless. No suite was disabled or altered. Final evidence-only additions follow this tested commit; runtime bytes are unchanged. This local validation is not promotion evidence or a live GH-1098 shift run.
+
+
+## Additional requested Claude QA
+
+Claude Code 2.1.289, `claude-opus-5-5`, native `--effort high`, verified subscription route: **Approved**, one relay turn, exit 0. No Blocker or Should findings; one pre-existing Nit (gate retry appends a duplicate result-file option, accepted by argparse last-wins; no change requested). Review target d882a356; harness-reviewed seed f938e185 adds only the review packet/source diff. Actual returned modelUsage confirms claude-opus-5-5. Full report: `relay-system/2026-10-16/gh1100-opus55-high.claude.md`; structured model/attestation receipts are here. This review read source and retained receipts; it did not rerun runtime suites or execute a live builder shift.
+
+Integration status changed after the earlier PR-ready handoff: development advanced and GitHub reports a merge conflict. `opus55-high-integration-check.txt` records a non-mutating merge-tree check against that base. The additional code approval is not a claim of current merge readiness. No runtime changes were made in this QA follow-up.
