@@ -2,7 +2,7 @@
 gh_issue: 1100
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1100
 title: "Jog dispatch must keep the task root explicit"
-status: "Planning — awaiting independent QA"
+status: "Active — implementation and verification"
 updated: 2026-10-16
 owner: codex
 goal: "Keep Jog-dispatched Marathon writes in the selected clone"
@@ -18,7 +18,7 @@ Jog must dispatch Marathon against the preflight target even when preflight and 
 
 | What was just completed | What's next |
 |---|---|
-| Root leak reproduced with intercepted dispatch; recon complete | Codex plan QA, then accepted-start and implementation |
+| Codex plan QA Approved; accepted-start recorded; adapter implemented | Disposable-clone verification and final Codex QA |
 
 ## Grounding and bet
 

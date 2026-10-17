@@ -4,9 +4,14 @@ from types import SimpleNamespace
 from unittest.mock import patch
 sys.path.insert(0, str(Path.cwd() / 'utils/py'))
 import jog_run as j
+if os.environ.get('PROBE_BASE'):
+    import subprocess
+    exec(compile(subprocess.check_output(['git','show','ccb900746c5c2d011522299246f111ce0a49db0f:utils/py/jog_run.py'],text=True), j.__file__, 'exec'), j.__dict__)
+if os.environ.get('PROBE_TARGET_ONLY'):
+    j._marathon_env_from_invocation = lambda inv: {**os.environ, **inv['env']}
 root = str(Path.cwd())
 primary = str(Path.cwd().parent / 'XYZ-forge')
-inv = {'argv':['driver','--phase-brief','packet'], 'target_root':root, 'harness_root':root,
+inv = {'argv':[root+'/relay-automation/marathon-drive.sh','--phase-brief','packet'], 'target_root':root, 'harness_root':root,
        'harness_home':root, 'drive_command':'driver', 'env':{}, 'phase':'gh1100', 'result_path':root+'/temp/result.json'}
 seen=[]
 def run(argv, **kw):
@@ -25,7 +30,25 @@ with patch.dict(os.environ,kw['env'],clear=True):
     resolved = repo_root()
 print(json.dumps({'argv':argv,'cwd':kw['cwd'],'XYZ_HARNESS':kw['env'].get('XYZ_HARNESS'),
                   'MARATHON_ROOT':kw['env'].get('MARATHON_ROOT'),'resolved_root':resolved}))
+assert len(seen) == 1, 'dispatch capture must be nonempty and unique'
 assert '--target-root' in argv, 'missing explicit --target-root'
 assert argv[argv.index('--target-root')+1] == root
 assert resolved == root, 'driver harness root redirected to ambient primary'
 print('PASS: explicit target and clone-local harness root')
+
+import copy
+for shape, home, target in [('root',root,root),('vendored',root+'/.xyz',root),('explicit',root,primary)]:
+    packet=copy.deepcopy(inv)
+    packet.pop('harness_home')
+    packet['argv'][0]=home+'/relay-automation/marathon-drive.sh'
+    packet['target_root']=target
+    if shape=='explicit': packet['argv'] += ['--target-root',target]
+    before=copy.deepcopy(packet)
+    adapted=j._marathon_argv_from_invocation(packet,'codex','agy')
+    with patch.dict(os.environ, {'XYZ_HARNESS':primary, 'MARATHON_ROOT':primary}):
+        env=j._marathon_env_from_invocation(packet)
+    assert adapted.count('--target-root')==1
+    assert adapted[adapted.index('--target-root')+1]==target
+    assert env['XYZ_HARNESS']==home and env['MARATHON_ROOT']==root
+    assert packet==before
+    print('PASS:',shape,'explicit target, selected tooling/coordination roots, legacy packet, immutable input')

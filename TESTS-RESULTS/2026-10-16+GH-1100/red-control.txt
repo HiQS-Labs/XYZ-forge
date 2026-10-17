@@ -1,8 +1,8 @@
 jog: marathon execution gh1100-exec1 for GH-1100 (packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16/.tick/jog/probe/gh1100-exec1/preflight)
 jog: dispatching marathon-drive (driver)
-{"argv": ["driver", "--phase-brief", "packet", "--reviewer", "agy", "--builder", "codex", "--phase-id", "gh1100", "--execution-id", "gh1100-exec1"], "cwd": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16", "XYZ_HARNESS": "/Users/noelsaw/Documents/GH Repos/XYZ-forge", "MARATHON_ROOT": null, "resolved_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge"}
+{"argv": ["/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16/relay-automation/marathon-drive.sh", "--phase-brief", "packet", "--reviewer", "agy", "--builder", "codex", "--phase-id", "gh1100", "--execution-id", "gh1100-exec1"], "cwd": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16", "XYZ_HARNESS": "/Users/noelsaw/Documents/GH Repos/XYZ-forge", "MARATHON_ROOT": null, "resolved_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge"}
 Traceback (most recent call last):
-  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16/temp/root-probe.py", line 28, in <module>
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16/temp/root-probe.py", line 34, in <module>
     assert '--target-root' in argv, 'missing explicit --target-root'
            ^^^^^^^^^^^^^^^^^^^^^^^
 AssertionError: missing explicit --target-root
