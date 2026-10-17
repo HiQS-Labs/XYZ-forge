@@ -1,11 +1,20 @@
 ---
 name: better-options
-description: |
-  Pressure-test an option set before the operator picks. Catches an AI agent — this one included — conflating two separate problems into one menu, or quietly narrowing the field to a false dilemma that skips the boring option. Borrows debug-mantra's falsify-the-hypothesis rigor (disprove each option before trusting it) then ponytail's minimalism bias (of what survives, favor the smallest) to surface the option nobody named because it wasn't impressive enough.
-
-  Trigger when an agent — this one included — or a user presents two or more options for a non-trivial engineering decision, especially when every option involves new abstractions, infrastructure, or a rewrite; when the framing sounds like "you have to either X or Y," "there's no way around it," or "we'd need to..."; or when the user asks "is that really the only way," "feels like you're overcomplicating this," "are these actually the same problem," or "what's the simplest version that still works." Also self-trigger internally before presenting any option menu on a complicated technical decision — pressure-test it before the menu ever reaches the operator.
-
-  Do not trigger merely because two or more options are on the table — reach for it when the menu bundles separate concerns, omits a simpler path, or treats an assumption as unavoidable. Skip it when only one viable path exists and the menu is honest about that, when the choice is low-stakes and reversible (take-a-step-back's "lighter than it feels" territory), or when an option list already exists and the ask is just to compress it into a call — that's bottom-line's job.
+description: >-
+  Pressure-test an option set before the operator picks. Trigger when an agent
+  or user presents 2+ options for a non-trivial engineering decision —
+  especially when every option adds abstractions, infrastructure, or a rewrite;
+  when framing says "you have to either X or Y," "there's no way around it," or
+  "we'd need to..."; or when the user asks "is that really the only way,"
+  "feels like you're overcomplicating this," "are these actually the same
+  problem," or "what's the simplest version that still works." Self-trigger
+  before presenting any complex option menu. Catches conflated problems and
+  false dilemmas that skip the boring fix via debug-mantra falsification and
+  ponytail minimalism (smallest survivor wins). Skip when options don't bundle
+  concerns, omit a simpler path, or treat assumptions as unavoidable; when only
+  one honest path exists; for low-stakes reversible choices
+  (take-a-step-back); or when compressing an honest list into a call
+  (bottom-line).
 ---
 
 # Better Options

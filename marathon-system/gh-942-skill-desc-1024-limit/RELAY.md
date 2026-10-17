@@ -1,6 +1,6 @@
 # Marathon Phase gh-942-skill-desc-1024-limit
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-942-SKILL-DESC-1024-LIMIT-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -106,3 +106,27 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+- **Files modified in this turn:**
+  - `skills/1-hourly/better-options/SKILL.md`: Trimmed frontmatter `description` from `1603` YAML chars (`1600` folded) to `963` YAML/folded chars (`965` UTF-8 bytes) using `description: >-`. Front-loaded `Trigger when...` at character `55` (`< 250` chars), preserving all trigger phrases (`"you have to either X or Y,"`, `"there's no way around it,"`, `"we'd need to..."`, `"is that really the only way,"`, `"feels like you're overcomplicating this,"`, `"are these actually the same problem,"`, `"what's the simplest version that still works"`), self-trigger behavior, `debug-mantra` falsification + `ponytail` minimalism summary, and all skip conditions (`take-a-step-back`, `bottom-line`); body already covers the expanded discipline and sibling comparisons in full.
+  - `skills/4-occasional/vscode-color/SKILL.md`: Trimmed frontmatter `description` from `1042` YAML chars (`1039` folded) to `920` YAML/folded chars (`924` UTF-8 bytes) using `description: >-`. Front-loaded `Trigger when...` at character `102` (`< 250` chars), preserving all trigger phrases (`"tint this repo"`, `"give this workspace a background color"`, `"make this window a different color"`, `"set the editor background for this repo"`, `"color-code my repos"`, `"/vscode-repo-tint"`, unprompted window-confusion offer), `.vscode/settings.json` (`workbench.colorCustomizations`) scope, deterministic (`SHA-256` of GitHub slug) and manual override modes, the seven tinted surfaces, `--light` variant, and non-goals; body already covers these details in full.
+  - `marathon-system/gh-942-skill-desc-1024-limit/RELAY.md`: Updated `NEXT: codex (Reviewer)` and appended this Round 1 block.
+- **Verified preserved state across the remaining 11 allowlisted `SKILL.md` artifacts (all `<= 1024` YAML/folded chars and UTF-8 bytes, with trigger wording within the first 250 chars and bodies intact):**
+  - `skills/1-hourly/five/SKILL.md`: `899` YAML/folded chars (`903` bytes) — 5-and-5 decision checksum (`Does (5)` / `Does NOT (5)` + `Not specified` + reading pointer).
+  - `skills/1-hourly/recon/SKILL.md`: `1005` YAML/folded chars (`1009` bytes) — end-to-end system trace producing a Recon Map across Lanes A–D (`test/gh609-sdlc-agent-gaps.sh` pins intact).
+  - `skills/2-daily/workhorse/SKILL.md`: `798` YAML/folded chars (`798` bytes) — 7-rung governed problem resolution ladder (`test/gh609-sdlc-agent-gaps.sh` pins intact).
+  - `skills/3-weekly/10days/SKILL.md`: `993` YAML/folded chars (`994` bytes) — 10-day GitHub issue sweep, PRS 4-axis prioritization, validation, preflight, and unattended disposable-clone marathon execution.
+  - `skills/3-weekly/dry/SKILL.md`: `959` YAML/folded chars (`963` bytes) — resource-first duplicate subsystem / policy owner discovery producing a Convergence Map.
+  - `skills/3-weekly/radar/SKILL.md`: `953` YAML/folded chars (`953` bytes) — per-repo SDLC coach over 2–3 weeks mining 9 evidence signals and persisting to two sinks (`test/gh779-radar-ci-health.sh` pins intact).
+  - `skills/4-occasional/feynman/SKILL.md`: `876` YAML/folded chars (`878` bytes) — plain-English technical translation via first-principles ladders, glossary, bounded analogies, and honesty pass.
+  - `skills/4-occasional/front-door/SKILL.md`: `893` YAML/folded chars (`899` bytes) — new-user clone-to-working onboarding, install-script, auth-gate, and secret-leak audit.
+  - `skills/4-occasional/readme-audit/SKILL.md`: `834` YAML/folded chars (`842` bytes) — root README accuracy, legibility, operator UX, and outbound-link audit.
+  - `skills/4-occasional/spike-360/SKILL.md`: `946` YAML/folded chars (`948` bytes) — five-level state authority classification before planning/architecture work.
+  - `skills/4-occasional/timbre/SKILL.md`: `860` YAML/folded chars (`862` bytes) — three-role human-voice writing pipeline (Cartographer, Drafter, blind Adversarial Reader).
+- **Verification:**
+  - Ran the contract YAML/folded-length probe across all `69` `skills/*/*/SKILL.md` files: `bad: []` (exit `0`), confirming zero committed `SKILL.md` descriptions exceed `1024` YAML, folded, or UTF-8 byte length.
+  - Verified `test/gh609-sdlc-agent-gaps.sh`, `test/gh779-radar-ci-health.sh`, and `test/_setup.sh` were read as specs without executing suites inside the isolated worktree.
+
+handing off to codex — codex, take your turn.
