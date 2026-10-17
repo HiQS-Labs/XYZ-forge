@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-17 — task-sync grooms Claude Code session titles (GH-1105)
+
+task-sync gains two Claude Code adapters. `--ide claude` stamps local session titles (CLI, desktop app, VS Code extension) with each session's own last-activity mm-dd by appending the same `custom-title` record `/rename` writes; it compares against the label the session list actually resolves (tail, sidecar, head), skips running sessions via `~/.claude/sessions`, and restores the transcript mtime. `--ide claude-cloud` is a read-only planner for claude.ai/code sessions; `set_session_title` owns cloud writes. The Codex-only plan-only guard became a shared `PLAN_ONLY` set. The install SOP now enables Skills Army HQ's existing `claude` target (`~/.claude/skills`) through `intake.py`/`sync.py`; nothing is hand-copied.
+
+Containment boundary: Easy to reverse; revert the PR. Stamps are appended, never rewritten, so earlier titles stay in each transcript. The one lasting effect: a session's AI title stays frozen at the wording seen when stamped. No new tests or schema. Verification and red controls: `TESTS-RESULTS/2026-10-17+GH-1105/` (24/24 probes); independent plan/final QA by a Claude subagent (this cloud session has no Codex CLI). Enabling the Claude Code target is a per-device operator step after merge.
+
 ## 2026-10-17 — Jog primary writer, portable receipts and landing hook (GH-1108, delivery 1)
 
 Jog queue/cache mutations now require an explicit origin-specific primary pin on development.
@@ -17,12 +23,6 @@ then, publish owned primary transitions at the documented manual checkpoint befo
 Verification and review evidence: `TESTS-RESULTS/2026-10-17+GH-1108/` and
 `relay-system/2026-10-17/gh1108-one-writer-*.codex.md`. No new suite, registry entry or scheduler.
 
-## 2026-10-17 — task-sync grooms Claude Code session titles (GH-1105)
-
-task-sync gains two Claude Code adapters. `--ide claude` stamps local session titles (CLI, desktop app, VS Code extension) with each session's own last-activity mm-dd by appending the same `custom-title` record `/rename` writes; it compares against the label the session list actually resolves (tail, sidecar, head), skips running sessions via `~/.claude/sessions`, and restores the transcript mtime. `--ide claude-cloud` is a read-only planner for claude.ai/code sessions; `set_session_title` owns cloud writes. The Codex-only plan-only guard became a shared `PLAN_ONLY` set. The install SOP now enables Skills Army HQ's existing `claude` target (`~/.claude/skills`) through `intake.py`/`sync.py`; nothing is hand-copied.
-
-Containment boundary: Easy to reverse; revert the PR. Stamps are appended, never rewritten, so earlier titles stay in each transcript. The one lasting effect: a session's AI title stays frozen at the wording seen when stamped. No new tests or schema. Verification and red controls: `TESTS-RESULTS/2026-10-17+GH-1105/` (24/24 probes); independent plan/final QA by a Claude subagent (this cloud session has no Codex CLI). Enabling the Claude Code target is a per-device operator step after merge.
-
 ## 2026-10-16 — Keep Jog Marathon dispatch in its selected clone (GH-1100)
 
 Jog now supplies an explicit Marathon target when preflight omits it and pins tooling and coordination roots from the invocation packet for run, retry-build and gate-retry. This prevents a shell-global XYZ_HARNESS from redirecting phase files and commits into the primary clone after #1099. Existing explicit targets, packet formats and standalone resolver precedence are preserved.
@@ -32,6 +32,47 @@ Containment boundary: Costly; rollback is a code revert before dispatch, with no
 ## 2026-10-16 — GitHub-first Radar calibration integration (GH-1090)
 
 Preserve the GitHub-first authority/RGT/adopted-policy rules alongside existing calibration safeguards. Separate window code SHA from live tracker observation times, verified historical recurrence from live backlog, and candidate seam/member matches from confirmed stable target identity. This instruction-only change retains report confirmation, existing checks and honest degraded coverage; no new test, gate, live Radar run, deployed-skill change or model-efficacy claim.
+
+## 2026-10-15 — Preserve unpublished historical HiQS review receipts
+
+Recover three approved historical review records from the operator’s primary checkout
+through eleven source-traced cherry-picks. Preserve their exact bytes, earlier findings,
+rounds and evidence limits; record file hashes and source identities. The original checkout
+and a verified bundle retain its source history. Do not carry older staged development
+reversions into this documentation PR.
+
+These records document prior HiQS artifact reviews and confer no fresh Forge approval or
+current runtime/deployment qualification. Easy to reverse by reverting the documentation
+addition; no source work is discarded and no runtime, installation or activation occurs.
+
+## 2026-10-15 — Preserve ignored content during published worktree closeout (GH-1059)
+
+A clean Git status and a fully published PR do not preserve ignored worktree files.
+Ordinary native worktree removal deletes those files. Both native cleanup paths now
+enumerate ignored files through the existing inspection owner and preserve linked
+worktrees when any remain, or when enumeration fails. Whole-clone Trash relocation and
+the ordinary merged-only history requirement are unchanged. This extends no test registry or CI case.
+
+Easy to reverse by reverting the scoped guard; preserving an uncertain worktree has no
+data-loss effect. A backed-up synthetic native-Git fixture demonstrated the deletion;
+existing cleanup checks and recorded manual evidence must verify the guarded mode before
+publication. No existing checkout was removed for this observation.
+
+## 2026-10-15 — PR1058 architecture and historical-evidence corrections
+
+Document the existing projections boundary accurately: ordinary ledger writes and hosted
+reconciliation honour `projections: off`, while the merge resolver explicitly rebuilds
+adopted views and honours deletions independently of that setting. Regenerate the ledger
+diagram from its corrected spec; no resolver or other runtime behaviour changes.
+
+Separate the GH-1052 intake headings from their content. Export the historical HiQS deployment
+review with generic path placeholders and an explicit link/blob identity for the unmodified
+attested original. Qualify its historical PASS: retained catalog rows and add/update/sync/
+prerequisite history do not establish a separate catalog preview/apply operation. That
+procedure remains unverified; this correction performs no catalog apply or installation.
+
+Easy to reverse: revert these documentation changes. Existing diagram validation, normal
+publication checks and independent review qualify the correction; no new CI test or case.
 
 ## 2026-10-15 — GitHub-first radar work evidence (GH-1083)
 
@@ -54,65 +95,6 @@ The bet is that structural docs checks plus recorded agent content/link/renderin
 ## 2026-10-15 — Admit and refresh the development-only Pages fix (GH-1051)
 
 Keep the reviewed four-declaration Pages policy unchanged and adopt current development ledger/history through the canonical writer. The operator approved PR1053 review admission and conditional development landing; current review and normal qualification remain required. No workflow dispatch or environment-policy change.
-
-## 2026-10-12 — Pages publishing follows development-only policy (GH-1051)
-
-The Pages workflow admits development pushes and manual development runs. Nondevelopment job guards and per-ref concurrency prevent main/tag dispatches from attempting publication or cancelling development publication. Existing environment protections, action versions and build steps are unchanged. Draft PR only; no merge or deployment authorized.
-
-## 2026-10-15 — Preserve unpublished historical HiQS review receipts
-
-Recover three approved historical review records from the operator’s primary checkout
-through eleven source-traced cherry-picks. Preserve their exact bytes, earlier findings,
-rounds and evidence limits; record file hashes and source identities. The original checkout
-and a verified bundle retain its source history. Do not carry older staged development
-reversions into this documentation PR.
-
-These records document prior HiQS artifact reviews and confer no fresh Forge approval or
-current runtime/deployment qualification. Easy to reverse by reverting the documentation
-addition; no source work is discarded and no runtime, installation or activation occurs.
-
-## 2026-10-15 — PR1058 architecture and historical-evidence corrections
-
-Document the existing projections boundary accurately: ordinary ledger writes and hosted
-reconciliation honour `projections: off`, while the merge resolver explicitly rebuilds
-adopted views and honours deletions independently of that setting. Regenerate the ledger
-diagram from its corrected spec; no resolver or other runtime behaviour changes.
-
-Separate the GH-1052 intake headings from their content. Export the historical HiQS deployment
-review with generic path placeholders and an explicit link/blob identity for the unmodified
-attested original. Qualify its historical PASS: retained catalog rows and add/update/sync/
-prerequisite history do not establish a separate catalog preview/apply operation. That
-procedure remains unverified; this correction performs no catalog apply or installation.
-
-Easy to reverse: revert these documentation changes. Existing diagram validation, normal
-publication checks and independent review qualify the correction; no new CI test or case.
-
-## 2026-10-15 — Preserve ignored content during published worktree closeout (GH-1059)
-
-A clean Git status and a fully published PR do not preserve ignored worktree files.
-Ordinary native worktree removal deletes those files. Both native cleanup paths now
-enumerate ignored files through the existing inspection owner and preserve linked
-worktrees when any remain, or when enumeration fails. Whole-clone Trash relocation and
-the ordinary merged-only history requirement are unchanged. This extends no test registry or CI case.
-
-Easy to reverse by reverting the scoped guard; preserving an uncertain worktree has no
-data-loss effect. A backed-up synthetic native-Git fixture demonstrated the deletion;
-existing cleanup checks and recorded manual evidence must verify the guarded mode before
-publication. No existing checkout was removed for this observation.
-
-## 2026-10-14 — Retire fully published task checkouts before merge (GH-1059)
-
-Start-task now invokes targeted checkout retirement after verified ready-PR publication.
-Merge-cleanup's opt-in published-PR mode verifies live canonical PR/head/ref recovery,
-then reuses existing local-state/session/dependency checks, fresh inspection and removal.
-Full clones go to Trash; linked worktrees use native Git removal. The primary working
-tree and unrelated checkouts are excluded; normal merged-only cleanup is unchanged.
-
-This changes cleanup eligibility, so unknown or local-only state preserves the checkout.
-Rollback by reverting GH-1059 or omitting the new mode; recover full clones from Trash.
-Existing cleanup180 tests, three focused start-task suites and41 isolated manual cases
-passed, with negative controls and committed provenance under `TESTS-RESULTS/2026-10-14+GH-1059/`.
-Independent plan/final QA approved; the full publication gate passed409/409 in a separate full clone.
 
 ## 2026-10-14 — merge-cleanup keeps the batch record itself and holds Done until QA is recorded (GH-1064)
 
@@ -139,11 +121,39 @@ repointed parity guard; no new tests) plus recorded manual checks and three red 
 `TESTS-RESULTS/2026-10-14+GH-1064/`. Revert the GH-1064 commits to undo; batch records live in the
 gitignored `.tick/`.
 
+## 2026-10-14 — Retire fully published task checkouts before merge (GH-1059)
+
+Start-task now invokes targeted checkout retirement after verified ready-PR publication.
+Merge-cleanup's opt-in published-PR mode verifies live canonical PR/head/ref recovery,
+then reuses existing local-state/session/dependency checks, fresh inspection and removal.
+Full clones go to Trash; linked worktrees use native Git removal. The primary working
+tree and unrelated checkouts are excluded; normal merged-only cleanup is unchanged.
+
+This changes cleanup eligibility, so unknown or local-only state preserves the checkout.
+Rollback by reverting GH-1059 or omitting the new mode; recover full clones from Trash.
+Existing cleanup180 tests, three focused start-task suites and41 isolated manual cases
+passed, with negative controls and committed provenance under `TESTS-RESULTS/2026-10-14+GH-1059/`.
+Independent plan/final QA approved; the full publication gate passed409/409 in a separate full clone.
+
 ## 2026-10-14 — PR1054 review evidence and base refresh (GH-1042, GH-1045)
 
 Correct the two-phase manual replay association by clearing its earlier seed result before shell traversal. Prior raw evidence is retained unchanged; the corrected replay must report a null result for the intentional failed p2 dispatch, rather than an earlier p1 approval. Refresh onto development7bc727cb through the existing ledger writer; preserve ratings, issue identity and original PR history. Update the verified plan state and add [the previously missing durable bet record](decisions/2026-10-14-gh1042-historical-completion.md).
 
 The original Costly bet now has an explicit expected signal by2026-10-28 and an iterate recommendation: use the next independently authorized multi-phase run to confirm historical recovery and strict current-head merge refusal, or retain an unverified operational claim if no run occurs. No live run is activated. The production recovery/attestation behavior is unchanged by these corrections. Updated-head independent final QA and normal publication qualification remain required.
+
+## 2026-10-14 — PR review checks the PR's claims first: review-pr-xyz; review-code is now review-code-xyz (GH-1060)
+
+New `review-pr-xyz` owns GitHub PR review. Before reading the code it lists what the PR and its
+linked issue claim and checks each one: the bug reproduces on the base branch, the issue asks for
+this, the change has not already landed, and claimed test runs actually pass. If the core claim
+fails, the review stops early with `Changes Requested`. Otherwise it runs the recon and
+debug-mantra phases and posts graded findings. It only reports: it never pushes, approves or merges.
+
+`review-code` is renamed `review-code-xyz` to match `relay-xyz`, and its `--pr` mode moves to the
+new skill. It now reviews local diffs and branches only, and keeps its reversible-fix loop. Clean
+rename with no alias. XYZ-mini picks up both skills and drops `review-code` on the next
+`/push-downstream`, and deployed copies need a Skills Army HQ refresh. No new suites (GH-831);
+existing suites were repointed. Revert the GH-1060 commit to undo.
 
 ## 2026-10-13 — Completed Marathon phases retain their reviewed recovery revision (GH-1042, GH-1045)
 
@@ -152,6 +162,10 @@ Force recovery resolves a completed lane before allocating another token. Comple
 The bet is that historical completion and current merge approval need separate candidate checks, within the existing attestation owner. Missing legacy metadata retains strict checks; no automatic backfill. Revert the Python repair to roll back; the optional metadata is inert to old readers. Revisit on any false historical satisfaction or receipt that names current unreviewed HEAD as reviewed.
 
 Existing focused suites and retained manual refusal/recovery controls verified the source; Marathon's post-approve suite caught an event-order regression, fixed without changing its expectations. Final independent review and publication gate are recorded in the GH-1042 relay/evidence. No new suites or gate machinery.
+
+## 2026-10-12 — Pages publishing follows development-only policy (GH-1051)
+
+The Pages workflow admits development pushes and manual development runs. Nondevelopment job guards and per-ref concurrency prevent main/tag dispatches from attempting publication or cancelling development publication. Existing environment protections, action versions and build steps are unchanged. Draft PR only; no merge or deployment authorized.
 
 ## 2026-10-12 — Muse relay turns no longer stall on an unanswerable approval prompt (GH-521)
 

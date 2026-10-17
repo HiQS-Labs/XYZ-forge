@@ -69,7 +69,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [triangulate](skills/1-hourly/triangulate/SKILL.md) | Reconcile three independent probes into an evidence-ranked verdict. |
 | [unstuck](skills/1-hourly/unstuck/SKILL.md) | Interrupt a stalled AI session and restore movement toward the original outcome. |
 
-### `2-daily` — A few times a day (19)
+### `2-daily` — A few times a day (20)
 
 _landing, queueing and driving work; multi-session and multi-repo coordination._
 
@@ -87,7 +87,8 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [phase-qa](skills/2-daily/phase-qa/SKILL.md) | Add phase-appropriate QA checks to plans and review completed phases. |
 | [relay-to-issue](skills/2-daily/relay-to-issue/SKILL.md) | Turn a finished relay thread into a checklist-style GitHub issue. |
 | [releases](skills/2-daily/releases/SKILL.md) | Read/author/publish the releases.db planning ledger. |
-| [review-code](skills/2-daily/review-code/SKILL.md) | Meticulous ground-truth code and PR review using recon, debug-mantra, and workhorse/unstuck ladders. |
+| [review-code-xyz](skills/2-daily/review-code-xyz/SKILL.md) | Meticulous ground-truth review of a local diff or branch using recon, debug-mantra, and workhorse/unstuck ladders (fixes reversible issues). |
+| [review-pr-xyz](skills/2-daily/review-pr-xyz/SKILL.md) | Report-only GitHub PR review: validate the PR's claims first, then recon + debug-mantra, post graded findings. |
 | [review-xyz](skills/2-daily/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
 | [start-marathon](skills/2-daily/start-marathon/SKILL.md) | Review intake and plans, prepare collision-safe lanes, and dry-run the marathon. |
 | [where-are-we-at](skills/2-daily/where-are-we-at/SKILL.md) | Deep ground-truth status assessment of a topic/subsystem using recon, debug-mantra, and merge-cleanup. |
