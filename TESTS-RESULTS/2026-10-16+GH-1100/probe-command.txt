@@ -1,0 +1,31 @@
+import json, os, sys
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+sys.path.insert(0, str(Path.cwd() / 'utils/py'))
+import jog_run as j
+root = str(Path.cwd())
+primary = str(Path.cwd().parent / 'XYZ-forge')
+inv = {'argv':['driver','--phase-brief','packet'], 'target_root':root, 'harness_root':root,
+       'harness_home':root, 'drive_command':'driver', 'env':{}, 'phase':'gh1100', 'result_path':root+'/temp/result.json'}
+seen=[]
+def run(argv, **kw):
+    if '--gh-issue' not in argv: seen.append((argv,kw))
+    return SimpleNamespace(returncode=0,stdout='',stderr='')
+with patch.dict(os.environ, {'XYZ_HARNESS':primary}), \
+     patch.object(j,'jog_load_state',return_value={'executions':[]}), \
+     patch.object(j,'jog_save_state'), patch.object(j,'jog_commit_supervisor_state'), \
+     patch.object(j,'load_marathon_invocation',return_value=inv), \
+     patch.object(j,'load_marathon_result',side_effect=j.ContractError('probe stops before receipt')), \
+     patch.object(j.subprocess,'run',side_effect=run):
+    j.run_marathon_phase(root,1100,'probe','codex','agy')
+argv, kw = seen[0]
+from harness_paths import harness_home, repo_root
+with patch.dict(os.environ,kw['env'],clear=True):
+    resolved = repo_root()
+print(json.dumps({'argv':argv,'cwd':kw['cwd'],'XYZ_HARNESS':kw['env'].get('XYZ_HARNESS'),
+                  'MARATHON_ROOT':kw['env'].get('MARATHON_ROOT'),'resolved_root':resolved}))
+assert '--target-root' in argv, 'missing explicit --target-root'
+assert argv[argv.index('--target-root')+1] == root
+assert resolved == root, 'driver harness root redirected to ambient primary'
+print('PASS: explicit target and clone-local harness root')

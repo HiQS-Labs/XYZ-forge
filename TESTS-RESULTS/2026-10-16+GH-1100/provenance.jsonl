@@ -1,0 +1,1 @@
+{"stage": "red-control", "revision": "ccb900746c5c2d011522299246f111ce0a49db0f", "command": "PYTHONDONTWRITEBYTECODE=1 python3 temp/root-probe.py", "source": "probe-command.txt", "exit_code": 1, "result": "missing explicit target; resolved ambient primary", "artifact": "red-control.txt", "scope": "intercepted dispatch; no real builder"}
