@@ -1,0 +1,25 @@
+## Prior-Art Reconnaissance Summary
+- **Query**: `worth-it`
+- **Status**: `PASS`
+- ⛔ **Possible existing fix**: 7 merged PR(s) or completed issue(s) match. Confirm before planning new work.
+  - current #1058: docs: correct ledger and relay architecture; preserve GH1052 intake (https://github.com/HiQS-Labs/XYZ-forge/pull/1058)
+  - current #755: ci: upgrade GitHub Actions to Node 24 versions across all workflows (#754) (https://github.com/HiQS-Labs/XYZ-forge/pull/755)
+  - current #1009: Sharpen SWE governance and justify recurring test cost (https://github.com/HiQS-Labs/XYZ-forge/pull/1009)
+  - current #1091: radar(GH-1090): verify before naming a fix, read tracker state, deterministic window, Sink B on a closed board (https://github.com/HiQS-Labs/XYZ-forge/pull/1091)
+  - current #692: feat(GH-690): clone-retirement pointers at landing time (express, marathon_drive, start-task, jog) (https://github.com/HiQS-Labs/XYZ-forge/pull/692)
+- **Open PRs Found**: 1
+  - current #1024: feat(weekly): held intake and preserved rollover with tracked review limits (GH-1022) (`feat/gh1022-weekly-intake`)
+- **Merged PRs (last 30 days)**: 7
+  - current #1058: docs: correct ledger and relay architecture; preserve GH1052 intake
+  - current #755: ci: upgrade GitHub Actions to Node 24 versions across all workflows (#754)
+  - current #1009: Sharpen SWE governance and justify recurring test cost
+  - current #1091: radar(GH-1090): verify before naming a fix, read tracker state, deterministic window, Sink B on a closed board
+  - current #692: feat(GH-690): clone-retirement pointers at landing time (express, marathon_drive, start-task, jog)
+- **Matching Issues (any state)**: 30
+  - current #1119: feat(skills): vendor worth-it continuation checkpoint in weekly category [OPEN]
+  - current #1118: CI experiments leaderboard — measured value, remaining risk, and continue/pivot/stop decisions [OPEN]
+  - current #469: Two leftovers from the HiQS-Suite→HiQS-Labs org repoint and the AGENTS.md safety sweep, recovered from abandoned stashes [OPEN]
+  - current #68: P3: HARNESS-MODELS-REGISTRY.md — PR #60's new row is off-schema (date in the Harness column) [OPEN]
+  - current #56: chore(P3): split the 2,214-line skills/xyz/SKILL.md into SKILL.md + MANUAL.md [OPEN]
+- **Active/Matching Roadmap Items**: 0
+- **Existing Matching Helpers**: 0
