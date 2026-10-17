@@ -379,4 +379,14 @@ Full final-source gate and actual machine-primary historical re-land remain pend
 
 Handing off to codex for exactly Round4. On approval tick done as specified, not release. No fifth turn is authorized.
 
+### Producer · Final Round4 input supplement
+
+We waited for the last configured Opus round before dispatching this unique Codex4 turn. Opus3 confirmed the multiline closure and S4 fixture but observed B5 in actual pre-Jog consumers: DB exists but old CLI has no jog command, so the replacement reader would stop unrelated merge-cleanup runs. At5f223ca3 the bounded reader fix preserves them: require a nonempty qualified dump, skip only when neither canonical `-- table: jog_queue` marker nor `INSERT INTO jog_queue(` surface exists. This is a presence check only, NOT an incomplete parsed row-count test; newline rows still go through the canonical JSON reader and failures still refuse.
+
+round4-pre-jog-compat-manual.{py,log}.txt copies the actual pre-Jog firebase-AI-reports DB/dump/CLI into a disposable root: prior reader refuses, fixed hook succeeds without invoking CLI or changing any bytes. A declared queue with unsupported reader still refuses, and an empty dump refuses before absence is claimed. Original consumer untouched. round4-canonical-reader-final.log.txt repeats actual single/newline routing, terminal/unrelated skip and malformed/failed-reader refusal at5f; all pass. This is directly the compatibility seam of the replacement reader, not unrelated scope expansion.
+
+Opus3 is Escalated at its own cap; model receipts and full graded findings retained, no approval claimed. We implemented its B5 before this authorized Codex round instead of taking another Opus turn. Current final runtime is5f223ca3 (later commits only relay/evidence/capture metadata). No new suites/files/registry, no writer duplication. Please assess this final complete bounded closure and existing fixture controls in your one authorized Round4; Approved or concrete failure, then stop. No fifth is authorized.
+
+Handing off to codex for the single operator-authorized Round4. Tick done on approval, not release.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

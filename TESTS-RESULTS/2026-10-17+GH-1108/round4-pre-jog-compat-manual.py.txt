@@ -1,0 +1,29 @@
+"""Read-only consumer compatibility red/green in a disposable root."""
+import ast,hashlib,shutil,subprocess,sys,tempfile
+from pathlib import Path
+from unittest.mock import patch
+source=Path.cwd();sys.path.insert(0,str(source/'skills/2-daily/merge-cleanup/scripts'));import merge_cleanup as mc
+consumer=Path('/Users/noelsaw/Documents/GH Repos/firebase-AI-reports');fixture=Path(tempfile.mkdtemp(prefix='gh1108-pre-jog-',dir=source/'temp'));runtime=fixture/'.xyz/utils/py';runtime.mkdir(parents=True)
+for name in ['releases.db','releases.sql']:shutil.copyfile(consumer/name,fixture/name)
+shutil.copyfile(consumer/'.xyz/utils/py/releases_app.py',runtime/'releases_app.py')
+assert '-- table: jog_queue' not in (fixture/'releases.sql').read_text() and 'INSERT INTO jog_queue(' not in (fixture/'releases.sql').read_text()
+oldtext=subprocess.check_output(['git','show','e088456e:skills/2-daily/merge-cleanup/scripts/merge_cleanup.py'],text=True);node=next(n for n in ast.parse(oldtext).body if isinstance(n,ast.FunctionDef) and n.name=='run_jog_post_merge_land');ns=dict(mc.__dict__);exec(compile(ast.Module(body=[node],type_ignores=[]),'prior_reader.py','exec'),ns)
+before={p.relative_to(fixture).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in fixture.rglob('*') if p.is_file()};real_run=subprocess.run;calls=[]
+def spy(argv,*a,**kw):
+ if 'jog' in argv:calls.append(argv)
+ return real_run(argv,*a,**kw)
+with patch.object(mc.subprocess,'run',side_effect=spy):
+ assert ns['run_jog_post_merge_land'](42,fixture) is False and len(calls)==1
+ calls.clear();assert mc.run_jog_post_merge_land(42,fixture) is True and not calls
+ assert before=={p.relative_to(fixture).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in fixture.rglob('*') if p.is_file()}
+print('PASS real pre-Jog consumer copy: prior reader refuses; fixed hook skips without invoking CLI; all file bytes unchanged')
+# A declared queue surface must still use the canonical reader and fail closed if unsupported.
+(fixture/'releases.sql').write_text((source/'releases.sql').read_text())
+with patch.object(mc.subprocess,'run',side_effect=spy):
+ calls.clear();assert mc.run_jog_post_merge_land(42,fixture) is False and len(calls)==1
+print('PASS declared queue with unsupported reader refuses; no blanket reader-error suppression')
+(fixture/'releases.sql').write_bytes(b'')
+with patch.object(mc.subprocess,'run',side_effect=spy):
+ calls.clear();assert mc.run_jog_post_merge_land(42,fixture) is False and not calls
+print('PASS empty qualified-dump input refuses before absence claim')
+print('ALL ROUND4 PRE-JOG COMPATIBILITY CONTROLS PASSED; original consumer untouched; fixture',fixture)
