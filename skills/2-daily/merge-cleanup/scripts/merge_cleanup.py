@@ -630,7 +630,11 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
         queue = {row[0] for row in conn.execute("SELECT gh_number FROM jog_queue WHERE status!='archived'")}
     if not queue:
         return True
-    current = _gh(["pr", "view", str(pr_num), "--json", "number,title,body,headRefName"], repo_path)
+    query = ["pr", "view", str(pr_num), "--json", "number,title,body,headRefName"]
+    slug = ledger_merge.harness_paths_module(repo_path).github_slug_from_origin(str(repo_path))
+    if slug:
+        query += ["--repo", slug]
+    current = _gh(query, repo_path)
     if current.returncode:
         log_err(f"Cannot map PR #{pr_num} to Jog rows: {current.stderr.strip()}")
         return False
