@@ -2,8 +2,8 @@
 gh_issue: 1100
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1100
 title: "Jog dispatch must keep the task root explicit"
-status: "Active — implementation and verification"
-updated: 2026-10-16
+status: Complete
+updated: 2026-10-17
 owner: codex
 goal: "Keep Jog-dispatched Marathon writes in the selected clone"
 created: 2026-10-16
