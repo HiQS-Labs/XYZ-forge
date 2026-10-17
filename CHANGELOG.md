@@ -4,7 +4,7 @@
 
 A/B/B/A in disposable full clones measured a test-only candidate at 162.136 -> 79.101 s mean (51.213% reduction), with the same 7,412 path checks and five assertions. N=2 per revision on a heavily loaded host; no hosted or whole-suite speedup claim. Parser/registry equivalence, witnessed red/restoration and focused suites passed.
 
-The full candidate gate was red (408/409; process-group PermissionError in gh648-l4-285-revalidate, including its retry). Later isolated base/candidate checks passed; cause remains unresolved. The push was refused and not bypassed. Original test bytes are restored at the report tip; candidate commit/patch and all structured receipts remain under `TESTS-RESULTS/2026-10-16+GH-1111/`. Easy to drop the experiment; no CI policy, runner, suite membership or production optimization is adopted. Independent Agy reporting QA is pending.
+The full candidate gate was red (408/409; process-group PermissionError in gh648-l4-285-revalidate, including its retry). Later isolated base/candidate checks passed; cause remains unresolved. The push was refused and not bypassed. Original test bytes are restored at the report tip; candidate commit/patch and all structured receipts remain under `TESTS-RESULTS/2026-10-16+GH-1111/`. Easy to drop the experiment; no CI policy, runner, suite membership or production optimization is adopted. Independent Agy relay reporting QA returned PASS/Approved (2m41s; source/evidence review plus arithmetic/hash checks, no test reruns). Runtime adoption stays held.
 
 ## 2026-10-16 — Keep Jog Marathon dispatch in its selected clone (GH-1100)
 

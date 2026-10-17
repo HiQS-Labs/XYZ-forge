@@ -1,0 +1,19 @@
+{
+  "added_len": 9064,
+  "added_sha256": "384398ffcc7392f5a36fba1e69feafb7d66b41724554485c168f699db8792814",
+  "added_start": 10247,
+  "artifact_sha256": null,
+  "attested_at": "2026-10-17T06:49:28Z",
+  "driver_pid": 91633,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1111-ci-audit-overhead-2026-10-16/relay-system/2026-10-16/gh1111-agy-results.md",
+  "relay_file_rel": "relay-system/2026-10-16/gh1111-agy-results.md",
+  "reviewed_head": "21f3b7653edd14a8106d299e3f3058872a2ce9f8",
+  "reviewer": "agy",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1111-ci-audit-overhead-2026-10-16",
+  "task": "GH1111-AGY-RESULTS",
+  "trailer_sha256": "af9cd98c703c2458307e66373f595c5b6039cad3ddf207abf651b551ac61387a",
+  "transcript_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1111-ci-audit-overhead-2026-10-16"
+}

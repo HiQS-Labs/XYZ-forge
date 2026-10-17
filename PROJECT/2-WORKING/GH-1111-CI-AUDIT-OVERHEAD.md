@@ -16,7 +16,7 @@ Author: Codex / GPT-6 family / exact model and effort unavailable.
 
 | What was just completed | What's next |
 |---|---|
-| Full gate red 408/409; refused push; later isolated base/candidate checks both green; source restored for evidence-only publication | Publish truthful issue findings and run Agy methodology/results QA; optimization stays held |
+| Experiment reported; Agy relay PASS/Approved for methodology/report accuracy; original test bytes restored at report tip | Keep optimization held until full-gate failure is attributed/resolved; no runtime landing authorized |
 
 ## Recon Map
 
@@ -56,3 +56,7 @@ Base 188.768/135.504 s; candidate 81.145/77.058 s. Observed means 162.136 -> 79.
 ## Full-gate disposition
 
 Candidate full gate: 408/409, 1,018.258 s validator time, unchanged identity and no envelope drift. `gh648-l4-285-revalidate.sh` failed pooled and on isolated retry with PermissionError; later isolated base/candidate controls passed (11.244/11.225 s). Attribution remains unresolved; GH-1063 contains prior same-error evidence. No whole-gate speedup or merge-ready claim. The hook refused the push; no bypass. Candidate c2d875fa is retained in history and candidate.patch; baseline test bytes restored at the publication tip, allowing evidence-only normal documentation publication. Agy will review the frozen candidate, raw receipts and posted report.
+
+## Independent reporting QA complete
+
+Agy relay `relay-system/2026-10-16/gh1111-agy-results.md`: PASS/Approved, first turn, 2m41s, driver exit0, reviewed21f3b765. Basis: source/evidence review and read-only arithmetic/hash/inventory queries, no test reruns. No required changes. The exact posted report matches the committed snapshot. Approval does not clear the 408/409 red runtime gate; source candidate remains held. Normal documentation-only evidence publication passed in73s with no bypass.

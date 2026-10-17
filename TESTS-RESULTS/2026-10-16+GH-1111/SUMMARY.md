@@ -52,7 +52,9 @@ Standard hook live-agent self-sufficiency opt-out (`RELAY_SELF_SUFFICIENCY_SKIP=
 
 ## Independent QA
 
-Pending: Agy via relay-xyz, after findings are posted to GH-1111. Reviewer will receive this report, raw structured results, exact issue report and source diff. Textual verification of retained evidence must not be described as independently rerunning the suite.
+Agy via relay-xyz completed in **2m 41s**, exit **0**, first reviewer turn **PASS / STATUS: Approved**, independently attested at reviewed head `21f3b7653edd14a8106d299e3f3058872a2ce9f8`. Full review: `relay-system/2026-10-16/gh1111-agy-results.md`; retained attestation: `agy-attestation.json`. No findings required changes.
+
+Basis: textual source/retained-execution-evidence review plus read-only arithmetic, hash and inventory queries. Agy did not rerun tests. The optional `.relay-artifacts` pointer was not materialized because the driver was not given an artifact-file argument; the reviewer explicitly read the identical committed ISSUE-REPORT.md and snapshot instead. Its five numbered answers and citations verify the actual tracked report and frozen candidate. Approval covers methodology/reporting only; the runtime candidate remains held after the red full gate. Evidence-only publication passed the normal documentation gate in 73 s without a bypass.
 
 ## Disposition and limits
 
