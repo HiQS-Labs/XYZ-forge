@@ -303,4 +303,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Complete the token with `done RELAY-gh1119-plan --agent codex` while still owning it, per the Producer's correction; the harness owns the relay commit.
 
+
+### Attestation · relay-drive — 2026-10-17T23:14:07Z
+task: RELAY-gh1119-plan
+reviewer: codex
+status: Approved
+reviewed-head: 388d4f586aec70a9d59321b89c62b18a62540ab2
+added-range: 33288+3832
+added-sha256: 568d379a3e09acbd36e76c34cfa023010de9aa0264ef5ffaa1e22344b8ce7f70
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
