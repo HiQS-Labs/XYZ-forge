@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -84,7 +84,53 @@ ROUND: 1 / 4
 6. Does the manual control actually exercise the real function (not a copy), and does its red run at 323602cd falsify the claim? Note it stubs `subprocess.run` and `_gh` by module attribute.
 7. Anything in this one-function change that is over-built for the envelope, or a simpler equivalent?
 
-Grade each finding [Blocker]/[Should]/[Nit]/[Pass]; a [Blocker]/[Should] requesting a behaviour change must carry Observed input / Affected scope / Falsifier. Do not ask for new tests. End with STATUS: Approved if the Definition of Done holds.
+Grade each finding [Blocker]/[Should]/[Nit]/[Unverified — no citation]; a [Blocker]/[Should] requesting a behaviour change must carry Observed input / Affected scope / Falsifier. Do not ask for new tests. End with STATUS: Approved if the Definition of Done holds.
 
+
+### Reviewer · Round 1
+
+**VERDICT: FAIL**
+
+**Basis:** The no-bundle skip meets its purpose, but bad `gh pr view` output is not always a named failure. One Should remains. No source edits, Git commands, suites, or executable fixtures were run.
+
+swept file: yes
+
+Read all 1,789 lines of merge_cleanup.py, both manual evidence files, and the task document; checked publisher, committed-reader, landing and Git-helper source. No additional pre-existing defect was established beyond the malformed-object path below. Verify-tier graph discovery found no project for this worktree across both project-list pages. Nearest XYZ-forge generation is 2026-09-01T15:54:30Z; coverage reports untracked/changed/missing paths. Current local source supplies the evidence, not that stale graph.
+
+- **[Should] Q5 — finish validating the PR object (merge_cleanup.py:660–668).** The guard rejects non-JSON and non-objects but accepts a numeric branch field. Mapping then raises TypeError outside the guard. A whole-function AST probe with stubbed read-only dependencies reproduced this; it also observed `{}` returning True without a diagnostic. These are malformed-output controls, not claims that GitHub normally emits these shapes.
+  **Observed input:** rc=0 stdout `{"number":7,"title":"x","body":"Closes #1075","headRefName":123}`, actionable queue `{1075}`. Output: `TypeError: expected string or bytes-like object, got 'int'`, rather than a named failure.
+  **Affected scope:** unusable PR objects at this hook's `gh pr view --json number,title,body,headRefName` boundary.
+  **Falsifier:** numeric branch and missing required identity should log `Cannot map PR #7 to Jog rows: …` and return False without raising; a valid string branch must preserve mapping, skip and refusal behavior.
+  **Concrete fix:** validate requested PR identity and usable field types inside the existing JSON guard, raising ValueError there on malformed objects. Preserve ordinary nullable text semantics where appropriate. Reuse the manual evidence surface; no new suite.
+
+  Exact repeat probe command (non-mutating, exit 0 because exceptions are printed):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PY'
+  from pathlib import Path
+  import json,re,types
+  s=Path("skills/2-daily/merge-cleanup/scripts/merge_cleanup.py").read_text()
+  start=s.index('    try:\n        pr = json.loads(current.stdout)')
+  s=s[start:s.index('    if not mapped:\n',start)]
+  env=dict(json=json,re=re,pr_num=7,queue={1075},linked_issues=lambda pr:[1075],log_err=print)
+  exec("def probe():\n"+s+"    return mapped\n",env)
+  for raw in ['not json','[]','{"number":7,"title":"x","body":"Closes #1075","headRefName":123}','{"number":7,"title":"x","body":"Closes #1075","headRefName":"fix/gh1075-x"}']:
+      env["current"]=types.SimpleNamespace(stdout=raw)
+      try: print(raw,"=>",env["probe"]())
+      except Exception as e: print(raw,"=>",type(e).__name__+": "+str(e))
+  PY
+  ```
+  Decisive output: non-JSON and `[]` log named errors and return False; numeric branch prints `TypeError: expected string or bytes-like object, got 'int'`; valid string branch prints `{1075}`. An initial source-span probe failed to compile (`return outside function`); the function wrapper above corrected that probe. The earlier whole-function AST observation agrees.
+
+- **[Pass] Q1 — all publisher paths are included, though the matcher is broader.** `jog_run.py:979–997,1015` restricts execution IDs to `[A-Za-z0-9][A-Za-z0-9_.-]*` and writes the dated issue directory plus receipt.json. `merge_cleanup.py:681–682` accepts those paths with NUL boundaries and exact parent depth. Multiple executions collapse to one issue; unrelated issue directories are removed by intersection. An execution component containing a space also matches the hook, but the strict reader rejects it (`jog_run.py:1046,1084–1085`); it cannot gain approval. No change requested.
+- **[Pass] Q2 — absent publication intentionally skips without completing a row.** `merge_cleanup.py:683–686` warns and leaves the row unchanged. Publication failure can leave a genuine execution without a bundle; ordinary squash preserving files retains it. The revised requirement explicitly permits the absent-bundle skip. Publisher commit/push steps are at `jog_run.py:1016–1037`; the operator choice is recorded in the Takeover section (`GH-1108-JOG-LAND-RECEIPTS.md:145–152`).
+- **[Pass] Q3 — refusal remains gating.** `merge_cleanup.py:686,694–700` intersects, invokes land for surviving issues, and returns False on nonzero status. `jog_run.py:1152,1209–1211` verifies committed evidence and returns 2 on refusal; completion follows at 1213–1229. The hook introduces no weaker approval predicate.
+- **[Pass] Q4 — helper call and error handling fit.** `scan_clones.py:87–110` accepts `(cwd, args, timeout=None)` and returns subprocess text output. The call at `merge_cleanup.py:677` uses that order; lines 678–680 name a nonzero tree-listing failure and return False.
+- **[Pass] Q6 — manual control calls the real function.** `hook-no-bundle-skip-manual.py.txt:14–16,66–72` imports and calls `mc.run_jog_post_merge_land`. Rebinding mc.subprocess leaves scan_clones.run_git's separate subprocess binding intact. Lines 78–102 cover skip, refusal, success and non-JSON output. Recorded log lines 5–13 show six green checks; 14–21 show pre-fix A checks red and red_rc=1, a useful red control for the skip. The log does not contain the claimed D traceback, so that red crash is not independently evidenced by this log.
+- **[Pass] Q7 — bounded mechanism.** `merge_cleanup.py:677–686` uses one existing helper, a set and the original landing loop. No additional subsystem or suite is needed; complete only the existing malformed-output guard.
+- **[Unverified — needs clone run]** Retained manual/focused-suite results were inspected, not rerun in this worktree. Final qualifying execution remains the harness's responsibility.
+- **[Unverified — no citation]** “Nothing else in PR #1116 changed” cannot be independently attested from the seeded files with Git forbidden. Producer/harness must verify the commit diff against 323602cd; no PR-wide unchanged claim is made here.
+
+**Handoff:** Producer (claude-a) should disposition the single Should and repair only the existing malformed-output guard if accepted. STATUS remains Open.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
