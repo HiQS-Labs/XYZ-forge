@@ -1,0 +1,108 @@
+"""One-off GH-1108 manual verification, recorded as text, never a registered suite."""
+import hashlib,json,os,sqlite3,subprocess,sys,tempfile
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+candidate=Path('/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17');sys.path.insert(0,str(candidate/'utils/py'))
+import jog_run as j, releases_app as r, gate_receipt as g
+from harness_paths import primary_config_key
+real_run=subprocess.run
+work=Path(tempfile.mkdtemp(prefix='gh1108-one-writer-',dir=Path.cwd()/'temp'))
+def git(root,*args):
+ return subprocess.check_output(['git','-C',str(root),*args],stderr=subprocess.STDOUT,text=True).strip()
+def command(*args):
+ return subprocess.check_output(args,stderr=subprocess.STDOUT,text=True).strip()
+remote=work/'remote.git';primary=work/'primary';target=work/'target'
+command('git','clone','--bare','--no-local',str(candidate),str(remote))
+command('git','--git-dir',str(remote),'update-ref','refs/heads/development',git(candidate,'rev-parse','origin/development'))
+for root in (primary,target):
+ command('git','clone','--no-local','--branch','development',str(remote),str(root));git(root,'config','user.name','GH1108 Manual');git(root,'config','user.email','gh1108@example.invalid');git(root,'config',primary_config_key(str(root)),str(primary))
+# Candidate code can run against the disposable primary's real ledger; the actual machine primary is untouched.
+try:r.jog_set_status(str(target),942,'completed')
+except SystemExit as e:assert e.code==3;print('PASS task-clone write refused with named primary')
+else:raise AssertionError('task-clone writer accepted')
+issue=999901
+r.cmd_jog_add(SimpleNamespace(root=str(primary),target=str(issue),dry_run=False,pos=None))
+r.jog_acquire_lease(str(primary),issue,os.getpid())
+with sqlite3.connect(primary/'releases.db') as c:gid=c.execute('select global_id from jog_queue where gh_number=?',(issue,)).fetchone()[0]
+before=j._ledger_bytes(str(target));calls=[];publication_fail=[True]
+def stub(args,*a,**kw):
+ if args[:4]==['git','-C',str(target),'push'] and publication_fail[0]:
+  publication_fail[0]=False;return SimpleNamespace(returncode=1,stdout=b'',stderr=b'injected first receipt push failure')
+ if len(args)>1 and str(args[1]).endswith('swarm_preflight.py'):
+  assert kw['cwd']==str(target) and kw['env']['SWARM_PREFLIGHT_ROOT']==str(target)
+  out=Path(args[args.index('--out')+1]);out.mkdir(parents=True,exist_ok=True);packet=out/'packet.md';packet.write_text('manual packet')
+  inv={'schema':'swarm-preflight/marathon-invocation@1','argv':[str(target/'relay-automation/marathon-drive.sh')], 'env':{},'harness_root':str(target),'target_root':str(target),'packet_path':str(packet),'issue':str(issue),'phase':'manual','lane':'manual','gate':'true','builder':'codex','reviewer':'agy','base_ref':'development','result_path':str(out/'marathon-result.json'),'packet_dir':str(out),'artifacts':[],'drive_command':'marathon-drive.sh'}
+  (out/'marathon-invocation.json').write_text(json.dumps(inv));return SimpleNamespace(returncode=0,stdout='',stderr='')
+ if args and str(args[0]).endswith('marathon-drive.sh'):
+  assert kw['cwd']==str(target);assert kw['env']['MARATHON_ROOT']==str(target);assert 'RELAY_DRIVER_LOCKED' not in kw['env'];calls.append(args)
+  git(target,'switch','-c',f'marathon/gh-{issue}-manual');(target/'src/manual-feature.js').write_text('module.exports = true;\n');git(target,'add','src/manual-feature.js');git(target,'commit','-qm','manual approved feature');sha=git(target,'rev-parse','HEAD')
+  receipt={'schema':'marathon-drive/result@1','execution_id':args[args.index('--execution-id')+1], 'generated_at':'2026-10-17T00:00:00Z','outcome':'approved','reason':'manual approved','exit_code':0,'issue':str(issue),'phase':'manual','lane':'manual','token':'manual','attempt':{'count':1,'max':2},'target_repo':{'path':str(target),'origin_url':str(remote)},'base_branch':'development','head_branch':git(target,'branch','--show-current'),'head_sha':sha,'gate':{'result':'green','cmd':'manual','exit':0,'receipt_path':str(target/'.xyz/receipts'/f'{sha}.json')},'acceptance':{},'pr':{'number':4242},'timestamps':{'started_at':'2026-10-17T00:00:00Z','finished_at':'2026-10-17T00:00:01Z'}}
+  g.write_receipt(str(target),sha,'manual','manual',0);state=j.jog_load_state(str(primary),gid);result=j._ledger_abs_path(str(primary),gid,state['executions'][-1]['result_path']);Path(result).write_text(json.dumps(receipt));return SimpleNamespace(returncode=0)
+ return real_run(args,*a,**kw)
+with patch.object(j.subprocess,'run',side_effect=stub):
+ action,reason=j.run_marathon_phase(str(primary),issue,gid,'codex','agy',target_root=str(target))
+assert calls and action=='parked',(action,reason)
+assert 'receipt not published' in reason,(action,reason)
+r.jog_set_status(str(primary),issue,action,failure_reason=reason)
+assert j.jog_resume(str(primary),issue)==0 and len(calls)==1
+print('PASS injected receipt push failure resumes publication without another builder')
+assert before==j._ledger_bytes(str(target));print('PASS primary dispatch pins clone roots; clone ledger byte-identical')
+head=git(target,'rev-parse','HEAD');approved=json.loads(next((target/'TESTS-RESULTS').glob(f'*+GH-{issue}/jog/*/marathon-result.json')).read_text())['head_sha']
+bundle=str(next((target/'TESTS-RESULTS').glob(f'*+GH-{issue}/jog/*/receipt.json')).parent.relative_to(target))
+assert not git(target,'diff','--name-only','development...HEAD','--','releases.db','releases.sql');print('PASS lane delivery has no ledger diff and contains committed receipt')
+sys.path.insert(0,str(candidate/'skills/2-daily/merge-cleanup/scripts'))
+import scan_clones as scan, merge_cleanup as mc
+assert not scan.inspect_primary_landing(primary)['landing_ready'];print('PASS pre-checkpoint Phase0 refuses dirty/unpublished primary')
+owned=set(git(primary,'diff','--name-only').splitlines());assert owned <= j.LEDGER_REPAIR_PATHS and owned
+# Delivery1 explicit operator checkpoint: stage only owned artifacts, normal commit/push.
+git(primary,'add','--',*sorted(owned));git(primary,'commit','-qm','manual Jog owned transition checkpoint');git(primary,'push','origin','HEAD:development');git(primary,'fetch','origin','development')
+assert scan.inspect_primary_landing(primary)['landing_ready'];print('PASS post-checkpoint primary clean, published and ff-ready')
+git(primary,'fetch','origin');git(primary,'merge','--no-ff',f'origin/marathon/gh-{issue}-manual','-m','manual lane merge');merged=git(primary,'rev-parse','HEAD');git(primary,'push','origin','HEAD:development')
+command('git','--git-dir',str(remote),'update-ref','refs/pull/4242/head',head)
+pr={'number':4242,'state':'MERGED','baseRefName':'development','headRefName':f'marathon/gh-{issue}-manual','headRefOid':head,'mergeCommit':{'oid':merged},'body':f'Closes #{issue}','title':'manual'}
+view=work/'pr.json';view.write_text(json.dumps(pr));binpath=work/'bin';binpath.mkdir();gh=binpath/'gh';gh.write_text('#!/usr/bin/env python3\nimport json,sys\np=json.load(open('+repr(str(view))+'))\nif sys.argv[1:3]==["pr","view"]:print(json.dumps(p))\nelif sys.argv[1:3]==["run","list"]:print(json.dumps([{"databaseId":4242,"headSha":p["headRefOid"],"status":"completed","conclusion":"success","url":"https://example.invalid/manual"}]))\nelse:sys.exit(1)\n');gh.chmod(0o755);os.environ['PATH']=str(binpath)+os.pathsep+os.environ['PATH'];os.environ['MERGE_CLEANUP_GH_BIN']=str(gh)
+assert j.jog_land(str(primary),issue,'4242')==0
+with sqlite3.connect(primary/'releases.db') as c:assert c.execute('select status from jog_queue where gh_number=?',(issue,)).fetchone()[0]=='completed';count=c.execute('select count(*) from op_receipts').fetchone()[0]
+assert j.jog_land(str(primary),issue,'4242')==0
+with sqlite3.connect(primary/'releases.db') as c:assert c.execute('select count(*) from op_receipts').fetchone()[0]==count
+print('PASS cache-independent committed landing, receipt-only tail and idempotent queue completion')
+# The direct entry reads committed bundle; remove cache using rename, preserving evidence.
+cache=primary/'.tick/jog';cache.rename(primary/'.tick/jog-cache-preserved');assert j.jog_land(str(primary),issue,'4242')==0;print('PASS absent .tick/jog cache does not block landing')
+# Shared post-merge helper executes the candidate CLI against disposable primary.
+actual_tool=mc.tool_path
+with patch.object(mc,'tool_path',side_effect=lambda root,name,*a: candidate/'utils/py/releases_app.py' if name=='releases_app.py' else actual_tool(root,name,*a)):
+ assert mc.run_jog_post_merge_land(4242,primary)
+assert mc.commit_and_push_phase5_writes(4242,primary,'development');print('PASS mapped merge-cleanup hook and existing post-merge publication')
+# Real historical merge proof uses this candidate's existing objects, no live ledger writes.
+proof=j._landing_tail_proof(str(candidate),'6f521bc52aa07f1657e5ea6ef624b111bd8ad568','974d98dbd9c958975ef3b4797f93b212618b0f96','origin/development','unused')
+assert any(p['kind']=='upstream-merge' and p['recomputed_tree']==p['recorded_stripped_tree'] for p in proof);print('PASS real GH942 ledger tail + stripped upstream merge; tree IDs recorded:',json.dumps(proof))
+# Refuse invalid gate/hosted/fetch evidence before touching even a completed queue.
+queue_hash=hashlib.sha256((primary/'releases.db').read_bytes()).hexdigest()
+def reject_fetch(args,*a,**kw):
+ if args[:4]==['git','-C',str(primary),'fetch']:return SimpleNamespace(returncode=1,stdout=b'',stderr=b'injected fetch failure')
+ return real_run(args,*a,**kw)
+with patch.object(j.subprocess,'run',side_effect=reject_fetch):assert j.jog_land(str(primary),issue,'4242')==2
+print('PASS failed integration fetch refuses before writes')
+def reject_hosted(args,*a,**kw):
+ if args[:3]==['gh','run','list']:return SimpleNamespace(returncode=0,stdout=json.dumps([{'headSha':head,'status':'completed','conclusion':'failure'}]),stderr='')
+ return real_run(args,*a,**kw)
+with patch.object(j.subprocess,'run',side_effect=reject_hosted):assert j.jog_land(str(primary),issue,'4242')==2
+print('PASS non-green hosted reconcile refuses before writes')
+assert queue_hash==hashlib.sha256((primary/'releases.db').read_bytes()).hexdigest()
+with patch.object(sys,'argv',['merge_cleanup.py','--primary',str(target),'--scan-only']):assert mc.main()==2
+print('PASS merge-cleanup explicit primary must match the same pin')
+# Empty provenance is rejected even when its declared hash is updated.
+manifest_path=primary/bundle/'receipt.json';provenance_path=primary/bundle/'provenance.jsonl';saved_manifest=manifest_path.read_bytes();saved_provenance=provenance_path.read_bytes()
+provenance_path.write_bytes(b'');invalid=json.loads(saved_manifest);invalid['files']['provenance.jsonl']=hashlib.sha256(b'').hexdigest();manifest_path.write_text(json.dumps(invalid));git(primary,'add',str(manifest_path),str(provenance_path));git(primary,'commit','-qm','manual empty provenance red control')
+assert j.jog_land(str(primary),issue,'4242')==2;assert queue_hash==hashlib.sha256((primary/'releases.db').read_bytes()).hexdigest();print('PASS empty committed provenance refuses without queue mutation')
+manifest_path.write_bytes(saved_manifest);provenance_path.write_bytes(saved_provenance);git(primary,'add',str(manifest_path),str(provenance_path));git(primary,'commit','-qm','restore owned provenance control bytes')
+# Red controls mutate the actual boundary and observe refusal.
+try:j._landing_tail_proof(str(target),approved,git(target,'rev-parse','HEAD'),f'origin/development','wrong-bundle')
+except j.ContractError:print('PASS evidence publication outside its exact bundle refused')
+else:raise AssertionError('wrong bundle accepted')
+git(target,'switch','-c','unapproved-tail');(target/'src/manual-feature.js').write_text('module.exports = false;\n');git(target,'add','src/manual-feature.js');git(target,'commit','-qm','unreviewed source change')
+try:j._landing_tail_proof(str(target),approved,git(target,'rev-parse','HEAD'),'origin/development',bundle)
+except j.ContractError:print('PASS unreviewed source tail refused')
+else:raise AssertionError('source change accepted')
+assert j._ledger_bytes(str(target))==before;print('ALL MANUAL CHECKS PASSED; fixtures preserved at',work)

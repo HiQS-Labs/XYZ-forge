@@ -2,13 +2,13 @@
 """jog_run.py — GH-259: Jog serial immediate-queue execution engine supervisor.
 
 Supervises the serial execution of tasks in jog_queue:
-1. Acquires the outer driver lock (`relay-driver.lock`) and exports RELAY_DRIVER_LOCKED=1.
+1. Acquires the primary outer driver lock; execution clones acquire their own lock.
 2. Reconciles any orphan `running` leases on startup via perform_write (resets dead PIDs to pending).
 3. Pops pending tasks in strict position order.
 4. Auto-promotes 1-INBOX contracts to 2-WORKING with probe linting and safety checks.
 5. Executes swarm-preflight (ready -> drive, already-landed -> drop, not-ready -> park).
 6. Dispatches single-phase turn runner.
-7. Defaults to pausing at landing boundaries for operator confirmation before merging PRs into development (with --auto-merge as opt-in).
+7. Parks real execution at the primary publication / merge-cleanup landing checkpoint.
 8. Re-anchors same-seam tasks on development and tears down throwaway worktrees cleanly.
 
 GH-280 Phase 5: the DEFAULT per-task executor is marathon (the reviewed one-phase driver —
@@ -42,6 +42,7 @@ from rtl import driver_lock_path  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: validated reader of relay-drive/attest@1
 from releases_app import (  # noqa: E402
     _ensure_jog_schema,
+    connect,
     _require_jog_primary,
     _table_exists,
     jog_acquire_lease,
@@ -627,8 +628,7 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     jog_save_state(root, gid, state)
 
     env = _marathon_env_from_invocation(invocation)
-    # Jog already holds the outer driver lock; exporting it keeps marathon-drive from
-    # contending with its own supervisor on the same lock directory.
+    # The primary's outer lock does not own this separate execution clone's lock.
     env.pop("RELAY_DRIVER_LOCKED", None)
     # GH-1098 A3: the agy shim's GH-492 idle bound (300 s of no CPU / no file writes) kills a
     # healthy builder that is waiting on its backend for a large brief (observed 2026-10-16,
@@ -636,8 +636,6 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     # still wins, and non-jog relays keep the shim default.
     env.setdefault("RELAY_TURN_IDLE_S", env.get("RELAY_TURN_TIMEOUT_S", "900"))
 
-    # GH-292 F1: supervisor-owned writes are committed BEFORE any turn dispatches, so the
-    # supervisor's to revert.
     # Execution is in another clone; containment cannot touch primary supervisor state.
     # Immediate transition publication is the separately reviewed second delivery.
 
@@ -653,6 +651,8 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
         return "failed", (f"marathon-drive exited {proc.returncode} without a valid result "
                           f"receipt: {exc}")
     if _ledger_bytes(target) != ledger_before:
+        record["status"] = "clone-ledger-changed"
+        jog_save_state(root, gid, state)
         return "failed", "execution changed clone releases artifacts; preserve clone for inspection"
     if receipt.get("outcome") == "approved":
         try:
@@ -1199,7 +1199,7 @@ def jog_land(root, gh_num, pr_arg=None):
         matching = [run for run in runs if run.get("headSha") in (head, merged)]
         if not matching or matching[0].get("status") != "completed" or matching[0].get("conclusion") != "success":
             raise ContractError("hosted wave-reconcile is not green for the landed PR head")
-        conn = sqlite3.connect(f"file:{os.path.abspath(os.path.join(root, 'releases.db'))}?mode=ro", uri=True)
+        conn = connect(os.path.join(root, "releases.db"), readonly=True)
         try:
             rows = conn.execute("SELECT global_id,status FROM jog_queue WHERE gh_number=? LIMIT 2", (gh_num,)).fetchall()
         finally:
@@ -1556,8 +1556,10 @@ def run_single_phase_drive(root, gh_num, builder="agy", reviewer=None, simulate=
         "--reviewer", reviewer,
         "--builder", builder,
     ]
-    env = dict(os.environ)
-    env["RELAY_DRIVER_LOCKED"] = "1"
+    env = _marathon_env_from_invocation({"argv": [drive_script],
+                                          "harness_root": root, "env": {}})
+    # The primary supervisor lock grants no ownership of this full clone's lock.
+    env.pop("RELAY_DRIVER_LOCKED", None)
     env["XYZ_ROOT"] = root
     env["MARATHON_BUILDER"] = builder
     env["MARATHON_REVIEWER"] = reviewer
@@ -1968,7 +1970,8 @@ def jog_run_main(args=None):
                     jog_set_status(root, gh_num, "parked", failure_reason=f"preflight-refused (exit {pf_res.returncode})")
                     continue
 
-            # Execute single-phase drive
+            # Execute single-phase drive, retaining the same lane-ledger invariant.
+            ledger_before = _ledger_bytes(target)
             drive_rc = run_single_phase_drive(
                 target,
                 gh_num,
@@ -1977,15 +1980,24 @@ def jog_run_main(args=None):
                 simulate=getattr(args, "simulate", False),
             )
 
+            if _ledger_bytes(target) != ledger_before:
+                print("jog: execution changed the clone's releases artifacts; preserve and reconcile before continuing",
+                      file=sys.stderr)
+                drive_rc = 2
             if drive_rc != 0:
                 print(f"jog: drive execution failed for GH-{gh_num} (exit {drive_rc}).")
                 jog_set_status(root, gh_num, "failed", failure_reason=f"drive failed (exit {drive_rc})")
                 print("jog: stopping queue execution on task failure.")
                 break
 
-            # Handle landing boundary
-            landed, status, reason = handle_landing_boundary(target, gh_num, auto_merge=args.auto_merge, reviewer=args.reviewer,
-                                                             simulate=getattr(args, "simulate", False))
+            # Real legacy execution needs the same primary publication checkpoint as
+            # Marathon. A TTY merge prompt cannot establish that durability boundary.
+            if not getattr(args, "simulate", False):
+                landed, status, reason = False, "parked", JOG_AUTO_MERGE_CHECKPOINT
+            else:
+                landed, status, reason = handle_landing_boundary(
+                    target, gh_num, auto_merge=args.auto_merge, reviewer=args.reviewer,
+                    simulate=True)
             jog_set_status(root, gh_num, status, failure_reason=reason)
 
             if landed:

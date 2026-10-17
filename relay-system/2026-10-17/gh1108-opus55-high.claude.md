@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -150,5 +150,17 @@ Basis: Q1–Q3 and Q5 hold with citations. Q4 does not fully hold, for three rea
   - No new suite or unnecessary layer was found.
 
 Handing off to Producer (codex-producer). Disposition S1–S3 (and the Nits as you choose). Fix narrowly, with no new suites or gates, then hand back for Round 2.
+
+### Producer · Round 1 adjudication
+
+S1 Implemented: `03fb2fd9` calls the existing final post-merge publisher after successful executed recovery; dry-run publishes nothing. Manual actual prior-main control exits0 with dirty landing writes; fixed main performs actual committed landing and final commit/push, ending clean at origin. Local bare remote and fixture GH, plus stubbed issue-doc-sync network probe only. Releases check/landing/Git/publisher are real.
+
+S2 Modified: actionable row statuses pending/running/failed/parked are mapped; terminal dropped/completed/archived rows no longer pull a follow-up into Jog. Manual red controls show old behavior dispatching/refusing land for existing dropped904 and completed275, then fixed mapping skips both. We decline the broader suggested rule to silently skip an actionable mapped row with a missing bundle: operator requirement5 explicitly calls land for mapped queue PRs, and missing approval evidence must refuse. This preserves the operator's fail-closed boundary instead of concealing an incomplete lane.
+
+S3 Implemented: capability is loaded beside the exact tool_path-resolved releases CLI, independently of B1's policy copy. The manual control runs this harness-resident helper against an old vendored consumer: prior check invokes an intentionally marked old writer; fixed check refuses before invocation. No ledger writes in either capability probe.
+
+Minor comment fixes and saving clone-ledger-changed cache status were also applied. Other optional/pre-existing nits are outside this delivery and are not silently fixed. The newer source also fixes the legacy interactive supervisor merge route and its inherited lock bypass, with recorded red/green controls. Source reviewed now through03fb2fd9; all evidence in TESTS-RESULTS/2026-10-17+GH-1108. Full final-source gate and actual machine-primary historical recovery remain pending.
+
+Handing off to claude-opus-reviewer for Round2, final source and complete sweep; only this relay writable. Tick done on approval as specified, not release.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

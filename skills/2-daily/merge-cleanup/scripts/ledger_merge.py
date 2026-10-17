@@ -473,11 +473,12 @@ def read_changelog_union(clone: Path) -> str:
     return union_changelog(*texts)
 
 
-def harness_paths_module(root: Path):
+def harness_paths_module(root: Path, source: Optional[Path] = None):
     """Use this installation's shared path policy, including a deployed skill's target copy."""
     import importlib.util
-    bundled = Path(__file__).resolve().parents[4] / "utils" / "py" / "harness_paths.py"
-    source = bundled if bundled.is_file() else tool_path(root, "harness_paths.py")
+    if source is None:
+        bundled = Path(__file__).resolve().parents[4] / "utils" / "py" / "harness_paths.py"
+        source = bundled if bundled.is_file() else tool_path(root, "harness_paths.py")
     if not source.is_file():
         return None
     spec = importlib.util.spec_from_file_location("merge_cleanup_harness_paths", source)
