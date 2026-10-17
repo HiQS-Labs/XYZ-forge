@@ -1410,6 +1410,10 @@ def main():
         policy_paths = ledger_merge.harness_paths_module(primary_repo)
         try:
             pinned = policy_paths.primary_root(str(primary_repo))
+        except (OSError, subprocess.CalledProcessError):
+            # No origin identity to bind here; normal Phase 0 owns repository readiness.
+            # Jog itself still refuses before any write without an explicit binding.
+            pass
         except ValueError as exc:
             if "primary is not pinned" not in str(exc):
                 raise

@@ -958,6 +958,8 @@ def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, pu
     branch = _git(target, "symbolic-ref", "--short", "HEAD").decode().strip()
     if push and (branch != receipt.get("head_branch") or branch == "development"):
         raise ContractError("receipt publication requires its existing lane branch")
+    if push and _git(target, "rev-parse", "HEAD").decode().strip() != receipt.get("head_sha"):
+        raise ContractError("lane head moved before receipt publication")
     original = open(result_path, "rb").read()
     result = _validate_marathon_result(json.loads(original))
     if result != receipt:
@@ -967,7 +969,9 @@ def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, pu
         raise ContractError("receipt has no publication date")
     rel = f"TESTS-RESULTS/{date}+GH-{issue}/jog/{execution}"
     directory = os.path.join(target, rel)
-    gate_bytes = (json.dumps(gate, indent=2) + "\n").encode()
+    gate_path = os.path.join(target, ".xyz", "receipts", f"{receipt['head_sha']}.json")
+    gate_bytes = (open(gate_path, "rb").read() if os.path.isfile(gate_path)
+                  else (json.dumps(gate, indent=2) + "\n").encode())
     provenance = (json.dumps({"source": "approved Marathon result", "execution_id": execution,
                               "approved_sha": receipt["head_sha"],
                               "result_sha256": hashlib.sha256(original).hexdigest(),
@@ -1027,9 +1031,16 @@ def _committed_jog_receipt(root, gh_num, pr_number=None):
                 raise ContractError(f"missing or changed committed evidence: {base}/{name}")
             data[name] = raw
         receipt = _validate_marathon_result(json.loads(data["marathon-result.json"]))
+        if not re.fullmatch(r"[0-9a-f]{40}", receipt.get("head_sha") or ""):
+            raise ContractError("committed receipt has no full approved commit SHA")
         gate = json.loads(data["gate-receipt.json"])
         provenance = [json.loads(line) for line in data["provenance.jsonl"].splitlines() if line.strip()]
-        if (not provenance or receipt.get("outcome") != "approved"
+        provenance_ok = bool(provenance) and provenance[0] == {
+            "source": "approved Marathon result", "execution_id": receipt.get("execution_id"),
+            "approved_sha": receipt.get("head_sha"),
+            "result_sha256": hashlib.sha256(data["marathon-result.json"]).hexdigest(),
+            "gate_sha256": hashlib.sha256(data["gate-receipt.json"]).hexdigest()}
+        if (not provenance_ok or receipt.get("outcome") != "approved"
                 or receipt.get("gate", {}).get("result") != "green"
                 or not valid_pass_receipt(gate, receipt.get("head_sha"))
                 or str(receipt.get("issue")) != str(gh_num)
@@ -1771,10 +1782,12 @@ def jog_run_main(args=None):
     # Hermetic --dry-run: zero mutations, zero locks, zero DB writes
     if getattr(args, "dry_run", False):
         print(f"jog: [dry-run] simulating queue execution (root: {root})")
-        conn = sqlite3.connect(db_path)
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
         conn.row_factory = sqlite3.Row
         try:
-            _ensure_jog_schema(conn)
+            if not _table_exists(conn, "jog_queue"):
+                print("jog: [dry-run] queue is empty (not initialized).")
+                return
             rows = conn.execute(
                 "SELECT gh_number, position, attempt_count FROM jog_queue WHERE status = 'pending' ORDER BY position ASC"
             ).fetchall()

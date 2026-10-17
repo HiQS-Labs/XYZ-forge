@@ -68,10 +68,11 @@ chmod +x "$STUB_BIN/gh"
 REAL_GIT="$(command -v git)"; export REAL_GIT REMOTE
 cat > "$STUB_BIN/git" <<'GIT_EOF'
 #!/usr/bin/env bash
-command="${1:-}"; [ "$command" != -C ] || command="${3:-}"
-if [ "$command" = fetch ] || [ "$command" = push ]; then
-  exec "$REAL_GIT" -c "url.$REMOTE.insteadOf=https://github.com/example/example.git" "$@"
-fi
+for command in "$@"; do
+  case "$command" in fetch|push|ls-remote)
+    exec "$REAL_GIT" -c "url.$REMOTE.insteadOf=https://github.com/example/example.git" "$@" ;;
+  esac
+done
 exec "$REAL_GIT" "$@"
 GIT_EOF
 chmod +x "$STUB_BIN/git"
