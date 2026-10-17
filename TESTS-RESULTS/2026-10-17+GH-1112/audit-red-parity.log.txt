@@ -1,0 +1,7 @@
+== red parity control (planted unscoped invocation at test/gh115-round-cap.sh:     220 after 41 comment lines; temp copies of test/, no lib/ so fixture guard is skipped as in gh273)
+old rc: rc=1  new rc: rc=1
+stdout cmp: identical
+stderr cmp: identical
+new stderr:
+FAIL: gh115-round-cap.sh:220 marathon_drive invocation lacks MARATHON_ROOT and fixture-local cwd
+FAIL: 1 unsafe marathon invocation(s) found

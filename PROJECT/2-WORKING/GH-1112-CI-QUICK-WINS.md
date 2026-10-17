@@ -23,7 +23,7 @@ fix_probes:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 2 (Codex): F1/F2 Pass; F3 corrected (no-op observation red control reaches the group oracle; deadline claim fixed); baseline receipt re-recorded | Plan QA round 3 (final under the cap), then implement and measure |
+| Plan QA Approved (round 3); three edits implemented and committed; audit 78.9 s → 8.8 s with identical stdout/stderr/rc; gh273 20/20; --list multiset identical, heavy suites first | Verify clone: gh648 suite + no-op/EPERM/ESRCH controls, four rescued suites concurrently, one 4-wide parallel validate.sh run; final Codex QA; PR |
 
 ## Problem
 
@@ -71,11 +71,16 @@ receipt-contract work (separate task).
 
 - `test/marathon-root-audit.sh`: `find_invocation_target` and `get_alias_target` return through a
   variable instead of `printf` + `$(…)`; the per-line call site reads that variable. A cheap
-  substring pre-gate runs only on invocation detection (never on `discover_file_metadata`, which
-  learns safe variables and aliases): a line is examined only if it contains `marathon`, `python`
-  or `sh` (the two vendored literals contain `marathon`; every Python branch, direct or alias,
-  contains `python`; every shell branch contains `sh`, which covers bash/zsh/dash). This admits
-  false positives on purpose; the existing regexes still decide. Nothing else in the rules changes.
+  Three substring pre-gates, each provably unable to exclude a line or file the regexes could
+  match; the regexes still decide: (a) invocation detection examines a line only if it contains
+  `marathon` or `relay` (every direct branch: vendored literals, marathon_drive.py,
+  marathon-drive.sh, marathon.sh, relay_drive.py, relay-drive.sh, relay-automation/…), or `$`
+  together with `python` or `sh` (every alias branch: alias variable plus bash/zsh/sh/dash or
+  python); (b) `discover_file_metadata` examines a line only if it starts with an uppercase
+  identifier followed by `=` (all three registrations anchor on `^VAR=`); (c) a file is audited
+  only if `grep -q -E 'marathon|relay'` finds either substring anywhere (a direct invocation line
+  contains one; an alias invocation needs an alias registered from a line containing one), 139 of
+  414 files today. Measured here: 78.9 s → 13.5 s with (a) alone, 8.8 s with all three.
 - `validate.sh`: move three entries within `TESTS` (comments travel with them).
 - `test/gh648-l4-285-revalidate.sh`: two `except` tuples.
 
