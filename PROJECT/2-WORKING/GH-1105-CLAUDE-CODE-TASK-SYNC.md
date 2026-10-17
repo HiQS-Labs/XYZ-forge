@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Implemented; 24/24 probes; docs gate green; final QA findings folded in | Final QA re-review, then ready PR; operator enables the Claude Code target per device after merge |
+| Implemented; 24/24 probes; docs gate green; final QA Approved (round 2) | PR ready, awaiting merge; operator enables the Claude Code target per device after merge |
 
 ## Key concepts
 
@@ -208,3 +208,5 @@ and a known title record shape. Nits: the typed-record read is commented; the re
 (unparseable cloud `updated_at` skips, dry-run vs apply on a no-newline file, the generic
 `found: false` on a refused set-title) are left as they are and harmless.
 
+Round 2: Approved; its Minor (the live read-only receipt mis-stated the doctor exit code) is corrected in
+`provenance.jsonl`.
