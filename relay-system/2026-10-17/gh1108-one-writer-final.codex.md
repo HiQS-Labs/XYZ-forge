@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -70,5 +70,87 @@ Claim first as the shim instructs. Approval requires `TICK_REPO_ROOT="/Users/noe
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+
+Basis: The delivery-1 publication checkpoint is bypassable through a real legacy relay run. The native Marathon refusal works, but it is not a supervisor-wide refusal. No production state, source, or artifact was changed during this review; no Git command, suite, executable fixture, or network mutation was run.
+
+swept file: no
+
+Review coverage: read `utils/py/jog_run.py` and `utils/py/harness_paths.py`, traced the Jog writer guards and post-merge mapping/reconcile/publication seams in `releases_app.py`, `merge_cleanup.py`, and `ledger_merge.py`, and inspected the canonical plan, portable bundle manifests, provenance, retained logs and manual-control sources. The full-file sweep of those three larger supporting modules and the complete changed-file inventory remains outstanding; this is an early return with an observed blocker, not whole-artifact approval. The graph is XYZ-forge generation `2026-09-01T15:54:30Z`, rooted in a different checkout. Coverage reports changed metadata for Jog/releases and untracked metadata for the other modules; current source, not graph freshness, supports this finding. No exhaustive absence-of-defects claim is made about pre-existing supporting code.
+
+- [Blocker] **Refuse real legacy auto-merge before leasing, too.** `utils/py/jog_run.py:1792` invokes the checkpoint refusal only when `executor == "marathon"`. With `executor="relay", simulate=False, dry_run=False, auto_merge=True`, the actual supervisor function reaches `jog_acquire_lease`. Downstream, `handle_landing_boundary` still calls `_merge_reviewed_pr` (`:1693–1709`), returns `completed` (`:1720`), and the supervisor can advance. This happens while the primary's lease/status transitions have no automatic publication in delivery 1. Existing attestation/head checks do not implement the missing primary publication checkpoint. The retained latest control (`TESTS-RESULTS/2026-10-17+GH-1108/compat-and-root-manual.py.txt:24`) calls the validator directly, so it does not exercise this routing gap.
+
+  Observed input: `jog run --executor relay --auto-merge --builder codex --reviewer agy --target-root <valid-disposable-clone>` against a valid primary with one pending row. The non-mutating control below observes the lease boundary, with identity/DB/lock dependencies replaced in memory; it does not claim a real PR was merged.
+
+  Affected scope: real supervisor dispatches with `auto_merge=True`, including the supported explicit legacy relay executor. Keep `--simulate` and `--dry-run` compatibility; keep the existing exact-head/attestation helpers intact. This asks for the delivery-1 refusal at the common dispatch entry, not delivery-2 publication machinery.
+
+  Falsifier: the same real relay input must exit 2 with the publication-checkpoint explanation before lock/lease/doc/cache changes. The Marathon input must retain that refusal, and relay simulation/dry-run must retain their documented behavior. Reuse an existing covering suite or record a manual control in the disposable gate clone; do not add a suite. An observed pre-lease refusal for this real relay input would disprove this finding.
+
+  Root cause: executor-specific validation owns a supervisor-wide interim policy; Fix site: the common real-dispatch validation in `jog_run_main`; Why not downstream: a merge-time refusal is too late to satisfy refusal before lease and leaves the policy split between executors.
+
+  Probe command (exit **0**; AST-loaded seeded functions only, no module initialization, Git, DB writes, subprocess calls, real locks or dispatch):
+
+  ```python
+  # Run with: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  # mkdir -p "$TMPDIR"; python3 - <<'PY'  [body below]  PY
+  import ast, pathlib, types, os, sys
+  p = pathlib.Path('utils/py/jog_run.py')
+  tree = ast.parse(p.read_text())
+  names = {'jog_run_main', 'validate_marathon_executor'}
+  code = compile(ast.Module(body=[n for n in tree.body
+      if isinstance(n, ast.FunctionDef) and n.name in names],
+      type_ignores=[]), str(p), 'exec')
+  class LeaseReached(Exception): pass
+  class Conn:
+      row_factory = None
+      def execute(self, *a): return self
+      def fetchone(self):
+          return dict(id=1, global_id='probe-gid', gh_number=999901,
+                      position=1, attempt_count=0)
+      def close(self): pass
+  class Lock:
+      def __init__(self, *a): pass
+      def acquire(self): pass
+      def release(self): pass
+  ns = dict(os=os, sys=sys,
+      sqlite3=types.SimpleNamespace(connect=lambda *a: Conn(), Row=object),
+      JogSupervisorLock=Lock,
+      atexit=types.SimpleNamespace(register=lambda *a: None),
+      signal=types.SimpleNamespace(SIGINT=2, SIGTERM=15, signal=lambda *a: None),
+      _require_jog_primary=lambda *a: None,
+      _execution_root=lambda *a: '/validated/disposable',
+      jog_reconcile_orphan_leases=lambda *a: [],
+      _ensure_jog_schema=lambda *a: None,
+      JOG_RELAY_DEPRECATION_NOTICE='legacy notice', ContractError=Exception,
+      subprocess=types.SimpleNamespace(CalledProcessError=RuntimeError),
+      jog_acquire_lease=lambda *a: (_ for _ in ()).throw(LeaseReached()))
+  exec(code, ns)
+  a = types.SimpleNamespace(executor='relay', simulate=False, dry_run=False,
+      auto_merge=True, root=os.getcwd(), target_root='/validated/disposable',
+      builder='codex', reviewer='agy', max_tasks=1)
+  for executor, simulate in [('marathon', False), ('relay', False), ('relay', True)]:
+      a.executor = executor; a.simulate = simulate
+      try: ns['jog_run_main'](a)
+      except LeaseReached:
+          print(f'executor={executor}, simulate={simulate}, auto_merge=True -> LEASE REACHED')
+      except SystemExit as e:
+          print(f'executor={executor}, simulate={simulate}, auto_merge=True -> REFUSED exit={e.code}')
+  ```
+
+  Decisive output:
+  ```text
+  executor=marathon, simulate=False, auto_merge=True -> REFUSED exit=2
+  executor=relay, simulate=False, auto_merge=True -> LEASE REACHED
+  executor=relay, simulate=True, auto_merge=True -> LEASE REACHED
+  ```
+
+- [Pass] **Retained evidence bytes are internally consistent.** A read-only Python hash probe (exit 0) checked all six nonempty files named by the two historical manifests, plus all four compressed focused-log hashes against `TESTS-RESULTS/2026-10-17+GH-1108/provenance.jsonl`, and compared the before/after identity JSON objects. Output: `bundle 1087 PR 1101 approved 088f5cd907d0e64007ec1b2f544351d8a157ce5f hashes OK`; `bundle 942 PR 1102 approved 6f521bc52aa07f1657e5ea6ef624b111bd8ad568 hashes OK`; `focused clone identity snapshots equal`; `nonempty portable files checked 6`. Citations: `TESTS-RESULTS/2026-10-16+GH-1087/jog/gh1087-exec1/receipt.json`, `TESTS-RESULTS/2026-10-17+GH-942/jog/gh942-exec2/receipt.json`, and the cited focused provenance. This verifies retained-byte consistency, not original-source equality or a new suite run.
+
+- [Unverified — needs clone run] Full push qualification remains pending as explicitly stated in `TESTS-RESULTS/2026-10-17+GH-1108/SUMMARY.md`. The 223/34/180/8 results are retained Producer runs at `7551ca55`; the later compatibility control at `d91f22ab` does not cover real legacy dispatch. No gate was run here and no merge readiness is asserted.
+
+Handing off to codex-producer — address the common-entry refusal, preserve simulation/dry-run and exact pre-merge checks, record the control in the disposable full clone, then return for Round 2 and the remaining whole-file sweep.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
