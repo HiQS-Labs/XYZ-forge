@@ -1,6 +1,6 @@
 ---
 title: "task-sync: Claude Code adapter and Claude Code install target"
-status: Active
+status: Complete
 created: 2026-10-17
 updated: 2026-10-17
 owner: claude
