@@ -101,3 +101,8 @@ Initial symptom rating 85/80/50/60 is superseded by broader one-writer scope; pr
 ## Implementation recon refinement
 
 Clone promotion moves/commits only the issue contract in the disposable clone. Its primary roadmap pointer stays at the existing primary doc until that movement lands; hosted wave reconciliation then uses the canonical roadmap writer. Repointing primary immediately would name a doc that exists only in an unmerged clone. The old supervisor-state commit helper is replaced with an explicit execution-contract-only commit; it cannot stage clone ledger files. Primary transition publication remains the manual checkpoint until delivery2.
+
+
+Native `--auto-merge` dispatch/retry refuses before leasing in delivery1, since the manual primary publication checkpoint must precede merge-cleanup. Legacy simulate mode and exact pre-merge verification helpers remain unchanged. Automatic publication and any automatic advance through that checkpoint belong to delivery2; the flag cannot silently bypass the first delivery's documented boundary.
+
+Final implementation recon also witnessed the global `--root` argument being overwritten by landing/recovery subparser defaults. Those defaults now use `argparse.SUPPRESS`, preserving explicit primary selection from a foreign CWD. GitHub verification/mapping explicitly names the primary origin repository, so ambient `GH_REPO` cannot redirect this proof. Plain/older non-Jog consumers retain merge-cleanup behavior; mapped committed-receipt Jog landing requires the upgraded harness.

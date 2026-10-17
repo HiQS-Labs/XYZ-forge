@@ -199,6 +199,9 @@ JOG_RELAY_DEPRECATION_NOTICE = (
 def validate_marathon_executor(args):
     """Fail-closed executor validation. Returns an error string or None; called before any
     lease mutation, lock acquisition, or dispatch (GH-280 reviewer policy: explicit only)."""
+    if getattr(args, "auto_merge", False):
+        return ("--auto-merge requires the separate durable-transition publisher; "
+                "use the primary publication checkpoint and merge-cleanup for delivery 1")
     reviewer = getattr(args, "reviewer", None)
     if not reviewer:
         return ("--reviewer <agent> is required with --executor marathon (the default "

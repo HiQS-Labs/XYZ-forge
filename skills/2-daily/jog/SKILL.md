@@ -159,7 +159,8 @@ Before merge-cleanup, inspect the primary's status, index and local supervisor c
 only owned Jog ledger/view paths explicitly, then normally push development. Confirm a clean,
 published, fast-forward-ready primary. Unrelated changes, divergence or rejected push stop and
 preserve state for reconciliation; do not bypass Phase 0. The automatic direct-push/rebuild
-path is a separate PR so it can be reverted independently. Use merge-cleanup for actual landing;
+path is a separate PR so it can be reverted independently. `--auto-merge` on native Jog dispatch/retry refuses before leasing during this interim;
+it cannot skip the publication checkpoint. Use merge-cleanup for actual landing;
 its mapped Jog hook runs after hosted reconciliation and before the existing final post-merge
 commit/push. A direct `jog land` call likewise needs that final publication checkpoint.
 
