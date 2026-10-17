@@ -1,16 +1,17 @@
 ---
 name: timbre
 description: >-
-  Write copy in a specific human voice using a three-role, layered pipeline —
-  a Cartographer that maps the voice from real samples, a Drafter that writes
-  conditioned on verbatim exemplars, and a blind Adversarial Reader that never
-  sees the voice map and grades against a planted control. Use when the user
-  wants copy that "sounds like me", "sounds human", "matches our brand voice",
-  "doesn't read like AI", "rewrite this in my voice", "humanize this draft",
-  "make this less ChatGPT-ish", or hands over writing samples and asks for new
-  copy in that register. Also fires on /timbre. Produces a voice map, a draft,
-  a blind review with a falsification control, and a receipt stating what the
-  pass did and did not achieve. Do NOT use this to pass work off as a human's in an academic-integrity or legal-attestation context, or to impersonate a named person without their consent — see Non-negotiables. Do NOT fire for plain explanation of technical material (that is /feynman), for shortening text that is already clear (a summary), or when no voice samples exist and none can be obtained — say so instead of inventing a voice from adjectives.
+  Write copy in a specific human voice using a three-role pipeline. Use when the
+  user wants copy that "sounds like me", "sounds human", "matches our brand
+  voice", "doesn't read like AI", "rewrite this in my voice", "humanize this
+  draft", "make this less ChatGPT-ish", hands over writing samples for new copy
+  in that register, or invokes /timbre. A Cartographer maps the voice from real
+  samples, a Drafter writes from verbatim exemplars, and a blind Adversarial
+  Reader (never shown the map) grades against a planted control — producing a
+  voice map, draft, blind review, and limits receipt. Do NOT use for academic-integrity
+  or legal-attestation evasion, or to impersonate a named person without consent.
+  Do NOT fire for plain technical explanation (/feynman), shortening clear text
+  (summary), or when no voice samples exist (never invent a voice from adjectives).
 argument-hint: "[target artifact] [voice-sample paths or 'paste']"
 ---
 

@@ -1,21 +1,18 @@
 ---
 name: five
-description: >
-  The 5-and-5 decision checksum for a plan, feature, or bug fix that is in
-  scope: exactly five load-bearing things the artifact DOES — the decisions and
-  behaviors, especially choices the agent made that nobody explicitly asked
-  for — and five things it explicitly does NOT do, so unwelcome decisions
-  surface before approval instead of after. Use whenever the user asks for a
-  decision checksum of an in-scope plan, spec, PR description, or fix —
-  "five", "/five", "give me the five", "key highlights", "top five", "what
-  does this plan do", "what did you decide", "what does this NOT do", "what am
-  I not getting" — during planning, writing, or mid-implementation, and before
-  final reports. Every item cites where the artifact says it; silence in the
-  artifact is reported as "not specified", never dressed up as an explicit
-  non-goal. Not a substitute for reading the artifact — it is the layer that
-  tells you when to go read it. Not for ordinary content summaries when no
-  artifact is under decision, and not when the user asks one specific question
-  about the artifact.
+description: >-
+  The 5-and-5 decision checksum for an in-scope plan, spec, PR description, or
+  fix. Use whenever the user asks for a decision checksum — "five", "/five",
+  "give me the five", "key highlights", "top five", "what does this plan do",
+  "what did you decide", "what does this NOT do", "what am I not getting" —
+  during planning, writing, mid-implementation, or before final reports. Emits
+  exactly five load-bearing things the artifact DOES (especially unasked-for
+  agent decisions) and five things it explicitly does NOT do, so unwelcome
+  choices surface before approval. Every item cites where the artifact says it;
+  silence is reported as "not specified", never dressed up as an explicit
+  non-goal. Routes you to the section worth reading rather than replacing the
+  artifact. Not for ordinary content summaries with no artifact under decision,
+  and not when the user asks one specific question about the artifact.
 argument-hint: "[artifact path, or omit to use the plan/branch under discussion]"
 ---
 

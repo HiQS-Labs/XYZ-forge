@@ -2,18 +2,18 @@
 name: 10days
 description: >-
   Sweep GitHub issues opened or updated in an age window (default: last 10 days;
-  adjustable, e.g. an 11-14-day slice), evaluate PRS 4-axis ratings (priority,
-  severity, appeal, effort cheapness; calc sum + ovr overrides) as the prioritization
-  signal, verify each issue is still valid, reproducible, and not already fixed
-  (subagents check issue state, comments, and history), build a marathon plan from
-  the survivors, run swarm-preflight, then cut a branch and execute the marathon
-  end-to-end unattended in a dedicated disposable full clone (worktree isolation or
-  throwaway sub-clones for parallel lanes). Operator-authorized exception to the
-  default "ask before cutting a branch / firing a marathon" rule
-  (GUIDING-PRINCIPLES.md §8). Trigger on "/10days", "run the 10 day sweep", or the
-  operator's canned request to sweep recent GH issues, validate them, plan,
-  preflight, and execute the marathon. Requires swarm-preflight.sh + marathon-plan.sh
-  from the harness root, plus the repo's PROJECT/** + releases.db + gh + jq.
+  adjustable, e.g. an 11-14-day slice) and execute the resulting marathon
+  unattended. Trigger on "/10days", "run the 10 day sweep", or the operator's
+  canned request to sweep recent GH issues, validate them, plan, preflight, and
+  execute the marathon. Evaluates PRS 4-axis ratings (priority, severity, appeal,
+  effort cheapness; calc sum + ovr overrides), verifies each issue is still valid,
+  reproducible, and not already fixed (subagents check issue state, comments, and
+  history), builds a marathon plan from the survivors, runs swarm-preflight, then
+  cuts a branch and executes in a dedicated disposable full clone (worktree
+  isolation or throwaway sub-clones for parallel lanes). Operator-authorized
+  exception to the default "ask before cutting a branch / firing a marathon" rule
+  (GUIDING-PRINCIPLES.md §8). Requires swarm-preflight.sh + marathon-plan.sh from
+  the harness root, plus PROJECT/** + releases.db + gh + jq.
 ---
 
 # /10days — recent-issue sweep → PRS rating prioritization → marathon → fire
