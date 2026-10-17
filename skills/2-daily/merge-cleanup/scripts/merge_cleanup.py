@@ -618,6 +618,36 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
     return False
 
 
+def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
+    """Complete only positively mapped Jog rows using the committed-receipt primary writer."""
+    import sqlite3
+    db = repo_path / "releases.db"
+    if not db.is_file():
+        return True
+    with sqlite3.connect(db.as_uri() + "?mode=ro", uri=True) as conn:
+        if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='jog_queue'").fetchone():
+            return True
+        queue = {row[0] for row in conn.execute("SELECT gh_number FROM jog_queue WHERE status!='archived'")}
+    if not queue:
+        return True
+    current = _gh(["pr", "view", str(pr_num), "--json", "number,title,body,headRefName"], repo_path)
+    if current.returncode:
+        log_err(f"Cannot map PR #{pr_num} to Jog rows: {current.stderr.strip()}")
+        return False
+    pr = json.loads(current.stdout)
+    issues = set(linked_issues(pr))
+    issues.update(int(n) for n in re.findall(r"(?:^|[/_-])gh[-_]?(\d+)(?=[-_/]|$)", pr.get("headRefName") or "", re.I))
+    for issue in sorted(issues & queue):
+        result = subprocess.run([sys.executable, str(tool_path(repo_path, "releases_app.py")),
+                                 "--root", str(repo_path), "jog", "land", str(issue), "--pr", str(pr_num)],
+                                cwd=str(repo_path), capture_output=True, text=True)
+        if result.returncode:
+            log_err(f"Jog landing GH-{issue} / PR #{pr_num} refused: {(result.stderr or result.stdout)[-600:]}")
+            return False
+        log(result.stdout.strip())
+    return True
+
+
 def run_post_merge_reconcile(pr_num: int, repo_path: Path,
                              integration_branch: str = "development",
                              dry_run: bool = True,
@@ -682,7 +712,7 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
             log_err(f"pdda issue-doc-sync FAILED (exit {p_res.returncode}): {(p_res.stdout.strip() or p_res.stderr.strip())[-400:]}")
             ok = False
 
-    return ok
+    return ok and run_jog_post_merge_land(pr_num, repo_path)
 
 
 def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_branch: str) -> bool:
@@ -1377,7 +1407,16 @@ def main():
     try:
         primary_repo = Path(args.primary).expanduser().resolve()
         ledger_merge.TOOL_FALLBACK_ROOT = primary_repo
-    except (OSError, RuntimeError) as exc:
+        policy_paths = ledger_merge.harness_paths_module(primary_repo)
+        try:
+            pinned = policy_paths.primary_root(str(primary_repo))
+        except ValueError as exc:
+            if "primary is not pinned" not in str(exc):
+                raise
+        else:
+            if str(primary_repo) != pinned:
+                raise ValueError(f"--primary differs from the pinned Jog primary: {pinned}")
+    except (OSError, RuntimeError, ValueError, subprocess.CalledProcessError) as exc:
         log_err(f"cannot resolve the primary path {args.primary!r}: {exc}")
         return 2
     if args.retire_published_pr is not None or args.checkout:

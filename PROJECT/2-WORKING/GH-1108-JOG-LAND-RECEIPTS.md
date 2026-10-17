@@ -97,3 +97,7 @@ Reversibility: Costly across queue, Git publication, execution routing and post-
 ## Rating
 
 Initial symptom rating 85/80/50/60 is superseded by broader one-writer scope; proposed 90/85/50/35 (priority/severity/neutral appeal/effort cheapness). The queue's canonical durability and all execution state transitions are affected; this is materially more work and risk. #1093/#1100/#1108 are operator-identified same design-class failures, not three independently proven identical traces. No unsupported 14-day trend multiplier or override.
+
+## Implementation recon refinement
+
+Clone promotion moves/commits only the issue contract in the disposable clone. Its primary roadmap pointer stays at the existing primary doc until that movement lands; hosted wave reconciliation then uses the canonical roadmap writer. Repointing primary immediately would name a doc that exists only in an unmerged clone. The old supervisor-state commit helper is replaced with an explicit execution-contract-only commit; it cannot stage clone ledger files. Primary transition publication remains the manual checkpoint until delivery2.

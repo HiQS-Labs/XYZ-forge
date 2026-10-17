@@ -1667,6 +1667,8 @@ def perform_write(root, conn, op, target_gid, mutate, work_event=None, work_even
     is appended HERE so no writer can forget it. Recovery per boundary is `check`'s job
     (recover_from_journal); RELEASES_APP_CRASH_AT lands on the five named boundaries. The caller
     must NOT hold the writer lock (this function takes it)."""
+    if op.startswith("jog-"):
+        _require_jog_primary(root)
     if work_event is not None and work_events is not None:
         raise ValueError("work_event and work_events are mutually exclusive")
     paths = artifact_paths(root)
@@ -4487,8 +4489,18 @@ def resolve_issue_number(target):
     refuse("invalid-issue-target", "cannot resolve GitHub issue number from %r" % target)
 
 
+def _require_jog_primary(root):
+    from harness_paths import require_primary
+    try:
+        require_primary(root)
+    except (ValueError, subprocess.CalledProcessError, OSError) as exc:
+        refuse("jog-primary", str(exc))
+
+
 def cmd_jog_add(args):
     root = resolve_root(args.root)
+    if not args.dry_run:
+        _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4618,6 +4630,8 @@ def cmd_jog_list(args):
 
 def cmd_jog_bump(args):
     root = resolve_root(args.root)
+    if not args.dry_run:
+        _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4653,6 +4667,8 @@ def cmd_jog_bump(args):
 
 def cmd_jog_drop(args):
     root = resolve_root(args.root)
+    if not args.dry_run:
+        _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4695,6 +4711,8 @@ def cmd_jog_drop(args):
 
 def cmd_jog_retry(args):
     root = resolve_root(args.root)
+    if not args.dry_run:
+        _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4735,6 +4753,8 @@ def cmd_jog_retry(args):
 
 def cmd_jog_skip(args):
     root = resolve_root(args.root)
+    if not args.dry_run:
+        _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4775,6 +4795,8 @@ def cmd_jog_skip(args):
 
 def cmd_jog_clear(args):
     root = resolve_root(args.root)
+    if not args.dry_run:
+        _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4824,6 +4846,7 @@ def cmd_jog_to_marathon(args):
 
 def jog_acquire_lease(root, gh_num, pid):
     """Acquire a lease on an enqueued item via perform_write (receipt-backed)."""
+    _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4852,6 +4875,7 @@ def jog_acquire_lease(root, gh_num, pid):
 
 def jog_set_status(root, gh_num, status, failure_reason=None, clear_lease=True):
     """Transition a jog queue item to a new status via perform_write (receipt-backed)."""
+    _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4888,6 +4912,7 @@ def jog_set_status(root, gh_num, status, failure_reason=None, clear_lease=True):
 
 def jog_reconcile_orphan_leases(root):
     """Inspect and reconcile orphan running rows whose lease_pid is dead via perform_write."""
+    _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4962,7 +4987,12 @@ def _jog_verb_dispatch(fn_name):
         import jog_run
         root = resolve_root(getattr(args, "root", None))
         gh_num = resolve_issue_number(args.target)
-        sys.exit(getattr(jog_run, fn_name)(root, gh_num, args))
+        try:
+            result = getattr(jog_run, fn_name)(root, gh_num, args)
+        except jog_run.ContractError as exc:
+            print(f"jog: {exc}", file=sys.stderr)
+            sys.exit(2)
+        sys.exit(result)
     return handler
 
 
@@ -6815,6 +6845,7 @@ def build_parser():
 
     sp_jrb = jsub.add_parser("retry-build", help="fresh Marathon attempt on a fresh execution id (history preserved)")
     sp_jrb.add_argument("target", help="issue number (e.g. 123 or GH-123)")
+    sp_jrb.add_argument("--target-root", help="disposable full execution clone")
     sp_jrb.add_argument("--builder", default="agy", help="builder turn-taker (default: agy; or codex, aider)")
     sp_jrb.add_argument("--reviewer", default=None, help="reviewer agent (required; must differ from --builder)")
     sp_jrb.add_argument("--auto-merge", action="store_true", help="opt-in to auto-merge an approved PR")
@@ -6831,6 +6862,7 @@ def build_parser():
     sp_jrec.add_argument("--root", default=None, help="repository root path")
 
     sp_jrun = jsub.add_parser("run", help="execute the serial jog queue loop")
+    sp_jrun.add_argument("--target-root", required=False, help="disposable full execution clone (required for dispatch)")
     sp_jrun.add_argument("--auto-merge", action="store_true", help="opt-in to auto-merge passing PRs on same-seam tasks")
     sp_jrun.add_argument("--builder", default="agy", help="builder turn-taker (default: agy; or codex, aider)")
     sp_jrun.add_argument("--reviewer", default=None,

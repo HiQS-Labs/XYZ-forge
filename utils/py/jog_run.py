@@ -21,6 +21,7 @@ import argparse
 import atexit
 import datetime as _dt
 import glob
+import hashlib
 import json
 import os
 import re
@@ -33,11 +34,14 @@ import tempfile
 
 # Ensure utils/py is in sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from harness_paths import harness_home, repo_root, is_vendored, resolve_tool  # noqa: E402
+from harness_paths import (harness_home, repo_root, is_vendored, resolve_tool,
+                           primary_config_key, require_primary, github_slug_from_origin,
+                           LEDGER_REPAIR_PATHS)  # noqa: E402
 from rtl import driver_lock_path  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: validated reader of relay-drive/attest@1
 from releases_app import (  # noqa: E402
     _ensure_jog_schema,
+    _require_jog_primary,
     _table_exists,
     jog_acquire_lease,
     jog_set_status,
@@ -134,6 +138,12 @@ def load_marathon_result(path):
     """
     obj = _load_contract_json(path, MARATHON_RESULT_SCHEMA, "marathon result")
 
+    return _validate_marathon_result(obj)
+
+
+def _validate_marathon_result(obj):
+    if not isinstance(obj, dict) or obj.get("schema") != MARATHON_RESULT_SCHEMA:
+        raise ContractError("invalid Marathon result schema")
     for key in ("execution_id", "outcome", "reason", "exit_code", "issue", "phase", "lane",
                 "token", "attempt", "target_repo", "base_branch", "head_branch", "head_sha",
                 "gate", "acceptance", "pr", "timestamps"):
@@ -241,47 +251,19 @@ def _ledger_rel_path(root, gid, path):
     return rel
 
 
-def jog_commit_supervisor_state(root, gh_num, exec_id):
-    """GH-292 F1: commit the supervisor's own ledger/doc writes before dispatch.
-
-    The turn-containment pass restores tracked working-tree modifications to HEAD, and jog's
-    uncommitted writes (releases.db/sql, regenerated views, the promoted doc pair) are
-    indistinguishable from an agent's off-lane edits — the Phase-4 dogfood lost queue rows to
-    exactly this, twice. Committing supervisor-owned paths BEFORE any turn dispatches makes
-    containment have nothing of the supervisor's to revert.
-
-    Stages an explicit path list only — never `git add -A` (the GH-124 sweep lesson). The
-    promotion's own `git rm`/`git add` of the doc pair is already staged by promotion.
-    Commits only on the integration branch: a retry-build dispatches from a lane branch,
-    and a ledger commit there would ride into the lane PR and block later branch switches.
-    Returns True when a commit was made."""
-    integration = os.environ.get("MARATHON_INTEGRATION_BRANCH", "development")
-    current = subprocess.run(["git", "-C", root, "symbolic-ref", "--quiet", "--short", "HEAD"],
-                             capture_output=True, text=True)
-    if current.returncode == 0 and current.stdout.strip() != integration:
-        print(f"jog: supervisor-state commit skipped — on branch '{current.stdout.strip()}' "
-              f"(not the integration branch '{integration}'); uncommitted ledger writes on a "
-              f"lane are the containment-revert tradeoff (GH-292 F1)")
-        return False
-    paths = [p for p in ("releases.db", "releases.sql", "releases.gen",
-                         "LEADERBOARD.html", "RELEASES-PREVIEW.html")
-             if os.path.exists(os.path.join(root, p))]
+def jog_commit_execution_contract(target, gh_num):
+    """Protect only this clone's promoted contract from turn containment; never stage ledger."""
+    paths = [os.path.relpath(path, target) for bucket in ("1-INBOX", "2-WORKING")
+             for path in glob.glob(os.path.join(target, "PROJECT", bucket, f"GH-{gh_num}-*.md"))]
+    # git rm already staged the source side of a promotion.
+    staged = set(_git(target, "diff", "--cached", "--name-only", "-z").decode().split("\0")) - {""}
+    allowed = {path for path in staged if re.fullmatch(rf"PROJECT/(?:1-INBOX|2-WORKING)/GH-{gh_num}-[^/]+\.md", path)} | set(paths)
+    if staged - allowed:
+        raise ContractError("unrelated staged changes before execution contract commit")
     if paths:
-        subprocess.run(["git", "-C", root, "add", "--"] + paths, capture_output=True)
-    staged = subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet"],
-                            capture_output=True)
-    if staged.returncode == 0:
-        return False
-    res = subprocess.run(
-        ["git", "-C", root, "commit", "-q", "-m",
-         f"jog-state: intake + lease for GH-{gh_num} (execution {exec_id}) — supervisor-owned "
-         f"ledger, doc, and view writes committed before dispatch (GH-292 F1)"],
-        capture_output=True, text=True)
-    if res.returncode != 0:
-        print(f"jog: warning: supervisor-state commit failed: {(res.stderr or '').strip()}",
-              file=sys.stderr)
-        return False
-    return True
+        _git(target, "add", "--", *paths)
+    if _git(target, "diff", "--cached", "--name-only").strip():
+        _git(target, "commit", "-m", f"jog: prepare GH-{gh_num} execution contract")
 
 
 def jog_resolve_ledger_gid(root, gh_num):
@@ -332,6 +314,7 @@ def jog_load_state(root, gid):
 
 
 def jog_save_state(root, gid, state):
+    _require_jog_primary(root)
     _base, path = _jog_state_paths(root, gid)
     os.makedirs(_base, exist_ok=True)
     tmp = path + f".tmp.{os.getpid()}"
@@ -525,7 +508,25 @@ def _marathon_env_from_invocation(invocation):
     return env
 
 
-def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, mode="run"):
+def _execution_root(root, target):
+    _require_jog_primary(root)
+    if not target:
+        raise ContractError("--target-root <disposable-full-clone> is required for Jog dispatch")
+    target = os.path.realpath(os.path.expanduser(target))
+    if target == os.path.realpath(root) or not os.path.isdir(os.path.join(target, ".git")):
+        raise ContractError("execution target must be a separate full clone, not the primary or a worktree")
+    if primary_config_key(root) != primary_config_key(target):
+        raise ContractError("execution target origin differs from the primary")
+    return target
+
+
+def _ledger_bytes(root):
+    return {p: hashlib.sha256(open(os.path.join(root, p), "rb").read()).hexdigest()
+            for p in ("releases.db", "releases.sql") if os.path.isfile(os.path.join(root, p))}
+
+
+def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, mode="run",
+                       target_root=None):
     """Execute one leased queue item through Preflight → Marathon's one-phase driver.
 
     Returns (queue_status, failure_reason): one of ("completed", reason) / ("parked", reason) /
@@ -535,16 +536,18 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     # GH-1093/GH-1098 A1: prefer the preflight that ships IN this repo so a disposable clone is
     # judged against its own tree, not whatever a shell-global XYZ_HARNESS points at. Only a
     # root without its own copy (vendored .xyz/ layouts) falls through to the harness home.
+    target = _execution_root(root, target_root)
+    ledger_before = _ledger_bytes(target)
     home = harness_home()
-    preflight_py = os.path.join(root, "utils", "py", "swarm_preflight.py")
+    preflight_py = os.path.join(target, "utils", "py", "swarm_preflight.py")
     if not os.path.isfile(preflight_py):
         preflight_py = os.path.join(home, "utils", "py", "swarm_preflight.py")
     if not os.path.isfile(preflight_py):
         return "parked", f"marathon executor: swarm_preflight not found at {preflight_py} " \
                         f"(vendored installs resolve .xyz via the harness home — GH-279 #2)"
-    if os.path.realpath(os.path.dirname(os.path.dirname(os.path.dirname(preflight_py)))) != os.path.realpath(root):
+    if os.path.realpath(os.path.dirname(os.path.dirname(os.path.dirname(preflight_py)))) != os.path.realpath(target):
         print(f"jog: preflight script resolved outside this root ({preflight_py}); "
-              f"SWARM_PREFLIGHT_ROOT pins evaluation to {root}")
+              f"SWARM_PREFLIGHT_ROOT pins evaluation to {target}")
 
     state = jog_load_state(root, gid)
     exec_id = f"gh{gh_num}-exec{len(state['executions']) + 1}"
@@ -567,8 +570,8 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
 
     pf = subprocess.run(
         [sys.executable, preflight_py, "--gh-issue", str(gh_num), "--out", packet_dir],
-        cwd=root, capture_output=True, text=True,
-        env={**os.environ, "SWARM_PREFLIGHT_ROOT": root})
+        cwd=target, capture_output=True, text=True,
+        env={**os.environ, "SWARM_PREFLIGHT_ROOT": target})
     if pf.returncode == 4:
         record["status"] = "completed-preflight-stale"
         jog_save_state(root, gid, state)
@@ -606,7 +609,7 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     env = _marathon_env_from_invocation(invocation)
     # Jog already holds the outer driver lock; exporting it keeps marathon-drive from
     # contending with its own supervisor on the same lock directory.
-    env["RELAY_DRIVER_LOCKED"] = "1"
+    env.pop("RELAY_DRIVER_LOCKED", None)
     # GH-1098 A3: the agy shim's GH-492 idle bound (300 s of no CPU / no file writes) kills a
     # healthy builder that is waiting on its backend for a large brief (observed 2026-10-16,
     # GH-942). For jog-dispatched lanes the idle bound equals the wall cap; an operator export
@@ -615,7 +618,8 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
 
     # GH-292 F1: supervisor-owned writes are committed BEFORE any turn dispatches, so the
     # supervisor's to revert.
-    jog_commit_supervisor_state(root, gh_num, exec_id)
+    # Execution is in another clone; containment cannot touch primary supervisor state.
+    # Immediate transition publication is the separately reviewed second delivery.
 
     print(f"jog: dispatching marathon-drive ({invocation['drive_command']})")
     proc = subprocess.run(argv, cwd=invocation["target_root"], env=env)
@@ -628,6 +632,16 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
         jog_save_state(root, gid, state)
         return "failed", (f"marathon-drive exited {proc.returncode} without a valid result "
                           f"receipt: {exc}")
+    if _ledger_bytes(target) != ledger_before:
+        return "failed", "execution changed clone releases artifacts; preserve clone for inspection"
+    if receipt.get("outcome") == "approved":
+        try:
+            record["committed_receipt"] = publish_jog_receipt(
+                target, receipt, invocation["result_path"], base_ref=invocation["base_ref"])
+        except (ContractError, OSError, subprocess.CalledProcessError) as exc:
+            record["status"] = "receipt-publication-failed"
+            jog_save_state(root, gid, state)
+            return "parked", f"approved receipt not published: {exc}"
     record["status"] = "terminal"
     record["outcome"] = receipt["outcome"]
     record["reason"] = receipt["reason"]
@@ -682,6 +696,8 @@ def jog_resume(root, gh_num, args=None):
     no token); a dispatched execution without a receipt parks the row (the operator chooses
     retry-build); anything else is reported. Resume never fires Marathon on its own — a new
     fire is always the explicit retry-build decision."""
+    _require_jog_primary(root)
+    _require_jog_primary(root)
     gid = jog_resolve_ledger_gid(root, gh_num)
     if not gid:
         print(f"jog: GH-{gh_num} is not in the jog queue")
@@ -738,6 +754,7 @@ def jog_retry_gate(root, gh_num, args):
     terminal and its tick token done, re-invoking marathon-drive skips render/reseed/dispatch
     and re-runs the pre-advance gate alone. Jog refuses if the head SHA moves during the
     retry — that state needs retry-build, not a gate check."""
+    _require_jog_primary(root)
     error = validate_marathon_executor(args)
     if error:
         print(f"jog: {error}", file=sys.stderr)
@@ -745,6 +762,12 @@ def jog_retry_gate(root, gh_num, args):
     # GH-300 (B2): retry verbs dispatch marathon-drive exactly like the run executor, so
     # they hold the same supervisor lock — a retry fired beside a live drive is precisely
     # the concurrency the lock exists to prevent (GH-42 / GH-354).
+    _require_jog_primary(root)
+    try:
+        target = _execution_root(root, getattr(args, "target_root", None))
+    except (ContractError, OSError, subprocess.CalledProcessError) as exc:
+        print(f"jog: {exc}", file=sys.stderr)
+        sys.exit(2)
     supervisor_lock = JogSupervisorLock(root)
     supervisor_lock.acquire()
     try:
@@ -778,6 +801,9 @@ def _jog_retry_gate_locked(root, gh_num, args):
         print(f"jog: cannot gate-retry — {exc}", file=sys.stderr)
         sys.exit(2)
 
+    _execution_root(root, invocation["target_root"])
+    ledger_before = _ledger_bytes(invocation["target_root"])
+
     # The head-moved guard runs BEFORE dispatch: marathon's own runs commit transcripts (the
     # receipt head legitimately advances by those), so the meaningful invariant is that the
     # head is UNCHANGED between the execution and this retry — checked against the live repo
@@ -807,7 +833,7 @@ def _jog_retry_gate_locked(root, gh_num, args):
              "--result-file", os.path.join(retry_dir, "marathon-result.json")]
 
     env = _marathon_env_from_invocation(invocation)
-    env["RELAY_DRIVER_LOCKED"] = "1"
+    env.pop("RELAY_DRIVER_LOCKED", None)
     print(f"jog: gate-only retry for GH-{gh_num} against head {prior_head} "
           f"(no builder turn; satisfied-lane path)")
     proc = subprocess.run(argv, cwd=invocation["target_root"], env=env)
@@ -826,6 +852,11 @@ def _jog_retry_gate_locked(root, gh_num, args):
                          "result_path": result_path})
     jog_save_state(root, gid, state)
 
+    if _ledger_bytes(invocation["target_root"]) != ledger_before:
+        raise ContractError("gate retry changed execution clone ledger")
+    if new_receipt.get("outcome") == "approved":
+        publish_jog_receipt(invocation["target_root"], new_receipt, result_path,
+                            base_ref=invocation["base_ref"])
     action, reason = jog_project_marathon_outcome(
         root, gh_num, new_receipt,
         auto_merge=getattr(args, "auto_merge", False),
@@ -842,6 +873,8 @@ def jog_retry_build(root, gh_num, args):
     Marathon's namespaced attempt record is the sole retry cap: the lane key is unchanged, so
     attempts accumulate and the cap parks the lane exactly as an ordinary marathon caller
     would experience. All prior Tick history and execution records are preserved."""
+    _require_jog_primary(root)
+    _execution_root(root, getattr(args, "target_root", None))
     error = validate_marathon_executor(args)
     if error:
         print(f"jog: {error}", file=sys.stderr)
@@ -875,7 +908,8 @@ def _jog_retry_build_locked(root, gh_num, args):
     action, reason = run_marathon_phase(
         root, gh_num, gid,
         builder=getattr(args, "builder", "agy"), reviewer=args.reviewer,
-        auto_merge=getattr(args, "auto_merge", False), mode="retry-build")
+        auto_merge=getattr(args, "auto_merge", False), mode="retry-build",
+        target_root=getattr(args, "target_root", None))
     jog_set_status(root, gh_num, action, failure_reason=reason)
     print(f"jog: retry-build GH-{gh_num} → {action} — {reason}")
     return 0 if action in ("completed", "parked") else 1
@@ -894,180 +928,239 @@ def _gh_pr_view(root, pr_number):
         return None, f"gh pr view returned unparseable JSON: {exc}"
 
 
+def _git(root, *args, env=None, input=None):
+    proc = subprocess.run(["git", "-C", root, *args], capture_output=True,
+                          env=env, input=input)
+    if proc.returncode:
+        raise ContractError(f"git {' '.join(args[:3])} failed: {proc.stderr.decode(errors='replace').strip()}")
+    return proc.stdout
+
+
+def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, push=True):
+    """Publish exact terminal evidence on the existing lane; never touch its ledger."""
+    from gate_receipt import check_receipt
+    issue, execution = str(receipt["issue"]), receipt["execution_id"]
+    if not issue.isdigit() or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", execution):
+        raise ContractError("invalid issue/execution identity for committed receipt")
+    if receipt.get("outcome") != "approved" or receipt.get("gate", {}).get("result") != "green":
+        raise ContractError("only an approved green result can be published")
+    ok, gate = check_receipt(target, receipt["head_sha"])
+    if not ok:
+        raise ContractError(str(gate))
+    branch = _git(target, "symbolic-ref", "--short", "HEAD").decode().strip()
+    if push and (branch != receipt.get("head_branch") or branch == "development"):
+        raise ContractError("receipt publication requires its existing lane branch")
+    original = open(result_path, "rb").read()
+    result = _validate_marathon_result(json.loads(original))
+    if result != receipt:
+        raise ContractError("publication result differs from original receipt")
+    date = str(receipt.get("generated_at") or receipt["timestamps"].get("finished_at"))[:10]
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
+        raise ContractError("receipt has no publication date")
+    rel = f"TESTS-RESULTS/{date}+GH-{issue}/jog/{execution}"
+    directory = os.path.join(target, rel)
+    gate_bytes = (json.dumps(gate, indent=2) + "\n").encode()
+    provenance = (json.dumps({"source": "approved Marathon result", "execution_id": execution,
+                              "approved_sha": receipt["head_sha"],
+                              "result_sha256": hashlib.sha256(original).hexdigest(),
+                              "gate_sha256": hashlib.sha256(gate_bytes).hexdigest()}) + "\n").encode()
+    files = {"marathon-result.json": original, "gate-receipt.json": gate_bytes,
+             "provenance.jsonl": provenance}
+    binding = pr or receipt.get("pr") or {}
+    manifest = {"schema": "jog/receipt-bundle@1", "issue": int(issue),
+                "execution_id": execution, "repository": primary_config_key(target),
+                "base_branch": receipt.get("base_branch") or base_ref,
+                "head_branch": receipt.get("head_branch"), "pr_number": binding.get("number"),
+                "result": "marathon-result.json", "gate_receipt": "gate-receipt.json",
+                "files": {name: hashlib.sha256(data).hexdigest() for name, data in files.items()}}
+    files["receipt.json"] = (json.dumps(manifest, indent=2) + "\n").encode()
+    os.makedirs(directory, exist_ok=True)
+    for name, data in files.items():
+        path = os.path.join(directory, name)
+        if os.path.exists(path) and open(path, "rb").read() != data:
+            raise ContractError(f"refusing to replace existing committed execution evidence: {rel}/{name}")
+    for name, data in files.items():
+        with open(os.path.join(directory, name), "wb") as stream:
+            stream.write(data)
+    paths = [f"{rel}/{name}" for name in files]
+    if push:
+        _git(target, "add", "--", *paths)
+        if subprocess.run(["git", "-C", target, "diff", "--cached", "--quiet"], capture_output=True).returncode:
+            # Refuse to sweep a pre-existing staged path into the evidence commit.
+            staged = set(_git(target, "diff", "--cached", "--name-only", "-z").decode().split("\0")) - {""}
+            if staged != set(paths):
+                raise ContractError("receipt publication has unrelated staged changes")
+            _git(target, "commit", "-m", f"jog: publish {execution} approved execution receipts")
+        _git(target, "push", "origin", f"HEAD:refs/heads/{branch}")
+    return rel
+
+
+def _committed_jog_receipt(root, gh_num, pr_number=None):
+    from gate_receipt import valid_pass_receipt
+    paths = _git(root, "ls-tree", "-r", "--name-only", "-z", "HEAD", "--", "TESTS-RESULTS").decode().split("\0")
+    candidates = []
+    for path in paths:
+        if not re.fullmatch(rf"TESTS-RESULTS/\d{{4}}-\d{{2}}-\d{{2}}\+GH-{gh_num}/jog/[A-Za-z0-9][A-Za-z0-9_.-]*/receipt.json", path):
+            continue
+        base = path.rsplit("/", 1)[0]
+        manifest = json.loads(_git(root, "show", f"HEAD:{path}"))
+        if manifest.get("schema") != "jog/receipt-bundle@1" or manifest.get("issue") != gh_num:
+            raise ContractError("invalid committed Jog bundle identity")
+        if manifest.get("repository") != primary_config_key(root):
+            raise ContractError("committed receipt belongs to another repository")
+        if pr_number and manifest.get("pr_number") not in (None, int(pr_number)):
+            continue
+        if set(manifest.get("files", {})) != {"marathon-result.json", "gate-receipt.json", "provenance.jsonl"}:
+            raise ContractError("committed bundle has unexpected files")
+        data = {}
+        for name, digest in manifest["files"].items():
+            raw = _git(root, "show", f"HEAD:{base}/{name}")
+            if not raw or hashlib.sha256(raw).hexdigest() != digest:
+                raise ContractError(f"missing or changed committed evidence: {base}/{name}")
+            data[name] = raw
+        receipt = _validate_marathon_result(json.loads(data["marathon-result.json"]))
+        gate = json.loads(data["gate-receipt.json"])
+        provenance = [json.loads(line) for line in data["provenance.jsonl"].splitlines() if line.strip()]
+        if (not provenance or receipt.get("outcome") != "approved"
+                or receipt.get("gate", {}).get("result") != "green"
+                or not valid_pass_receipt(gate, receipt.get("head_sha"))
+                or str(receipt.get("issue")) != str(gh_num)
+                or manifest.get("execution_id") != receipt.get("execution_id")
+                or manifest.get("head_branch") != receipt.get("head_branch")
+                or manifest.get("result") != "marathon-result.json"
+                or manifest.get("gate_receipt") != "gate-receipt.json"):
+            raise ContractError("committed receipt approval/gate/identity verification failed")
+        candidates.append((receipt.get("generated_at") or "", manifest, receipt, base))
+    if not candidates:
+        raise ContractError(f"GH-{gh_num} has no committed approved Jog receipt bundle")
+    _, manifest, receipt, base = max(candidates, key=lambda row: row[0])
+    return manifest, receipt, base
+
+
+def _stripped_tree(root, revision):
+    os.makedirs(os.path.join(root, "temp"), exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="jog-tree-", dir=os.path.join(root, "temp")) as temp:
+        env = {**os.environ, "GIT_INDEX_FILE": os.path.join(temp, "index")}
+        _git(root, "read-tree", revision, env=env)
+        _git(root, "update-index", "--force-remove", "--", *sorted(LEDGER_REPAIR_PATHS), env=env)
+        return _git(root, "write-tree", env=env).decode().strip()
+
+
+def _landing_tail_proof(root, approved, head, integration, bundle):
+    _git(root, "merge-base", "--is-ancestor", approved, head)
+    cursor, proof, publication = head, [], False
+    bundle_paths = {f"{bundle}/{name}" for name in
+                    ("receipt.json", "marathon-result.json", "gate-receipt.json", "provenance.jsonl")}
+    while cursor != approved:
+        parents = _git(root, "show", "-s", "--format=%P", cursor).decode().split()
+        if not parents:
+            raise ContractError("approved SHA is not on the lane's first-parent chain")
+        changed = set(_git(root, "diff", "--name-only", "--no-renames", "-z", parents[0], cursor, "--").decode().split("\0")) - {""}
+        if len(parents) == 1:
+            if not changed <= LEDGER_REPAIR_PATHS:
+                added = set(_git(root, "diff", "--diff-filter=A", "--name-only", "-z", parents[0], cursor).decode().split("\0")) - {""}
+                if publication or changed != bundle_paths or added != bundle_paths:
+                    raise ContractError(f"unapproved nonledger tail commit: {cursor}")
+                publication = True
+            proof.append({"commit": cursor, "kind": "receipt-publication" if changed == bundle_paths else "ledger-only"})
+        elif len(parents) == 2:
+            _git(root, "merge-base", "--is-ancestor", parents[1], integration)
+            inputs = [_stripped_tree(root, parent) for parent in parents]
+            env = {**os.environ, "GIT_AUTHOR_NAME": "Jog merge proof", "GIT_COMMITTER_NAME": "Jog merge proof",
+                   "GIT_AUTHOR_EMAIL": "jog-proof@example.invalid", "GIT_COMMITTER_EMAIL": "jog-proof@example.invalid"}
+            commits = [_git(root, "commit-tree", tree, "-p", parent, env=env,
+                            input=b"Jog stripped merge proof\n").decode().strip()
+                       for tree, parent in zip(inputs, parents)]
+            recomputed = _git(root, "merge-tree", "--write-tree", *commits).decode().splitlines()[0]
+            recorded = _stripped_tree(root, cursor)
+            if recomputed != recorded:
+                raise ContractError(f"upstream merge tree differs outside ledger paths: {cursor}")
+            proof.append({"commit": cursor, "kind": "upstream-merge", "parents": parents,
+                          "stripped_input_trees": inputs, "recomputed_tree": recomputed,
+                          "recorded_stripped_tree": recorded, "excluded_paths": sorted(LEDGER_REPAIR_PATHS)})
+        else:
+            raise ContractError("octopus merge cannot preserve Jog approval")
+        cursor = parents[0]
+    return list(reversed(proof))
+
+
 def jog_land(root, gh_num, pr_arg=None):
-    """`jog land <GH> [--pr N|URL]` — verify merged delivery, complete the row, delegate lifecycle.
+    """Land committed evidence in the primary after hosted lifecycle reconciliation.
 
-    Replay-safe order (the plan's idempotency key is (repo, gid, execution id, merged SHA)):
-      1. verify GitHub truth (PR identity, merged state, base/head/head-SHA match against the
-         execution receipt, merge-SHA reachability, qualifying gate evidence)
-      2. persist the landing projection (queue completed + ledger landing record)
-      3. invoke wave_reconcile.py --pr <N> with the verified PR metadata as its offline manifest
-      4. persist reconciliation evidence
-    A crash at any boundary resumes at the first missing durable step on re-run."""
-    gid = jog_resolve_ledger_gid(root, gh_num)
-    if not gid:
-        print(f"jog: GH-{gh_num} has no jog queue row and no execution ledger", file=sys.stderr)
-        sys.exit(2)
-    record, receipt = _jog_latest_receipt(root, gid, outcomes=("approved",))
-    if record is None:
-        print(f"jog: GH-{gh_num} has no approved Marathon execution to land — nothing terminal "
-              f"with a green outcome is on record", file=sys.stderr)
-        sys.exit(2)
-
-    # A gate-only retry inherits its lane from the original dispatch but never passes the
-    # branch guard (the satisfied-lane short-circuit runs first), and a rebuild fired while
-    # the lane branch is already checked out likewise records no redirect. Branch identity is
-    # stable across one issue's execution family: fall back to the newest receipt in the
-    # ledger that carries base/head — never guess.
-    if not receipt.get("base_branch") or not receipt.get("head_branch"):
-        _state_all = jog_load_state(root, gid)
-        for _rec in reversed(_state_all.get("executions") or []):
-            for _path in ([g.get("result_path") for g in reversed(_rec.get("gate_retries") or [])]
-                          + [_rec.get("result_path")]):
-                _path = _ledger_abs_path(root, gid, _path)
-                if not _path or not os.path.isfile(_path):
-                    continue
-                try:
-                    _other = load_marathon_result(_path)
-                except (ContractError, OSError):
-                    continue
-                for field in ("base_branch", "head_branch"):
-                    if not receipt.get(field) and _other.get(field):
-                        receipt[field] = _other[field]
-            if receipt.get("base_branch") and receipt.get("head_branch"):
-                break
-
-    # ── PR identity: explicit --pr wins, but only after matching it against the receipt.
-    pr_number = None
-    if pr_arg:
-        m = re.search(r"/pull/(\d+)|^#?(\d+)$", str(pr_arg).strip())
-        pr_number = (m.group(1) or m.group(2)) if m else None
+    Queue completion and landing evidence are published by merge-cleanup's existing final
+    post-merge commit, or the documented manual checkpoint until delivery 2 lands.
+    No local execution cache or task-clone path is required.
+    """
+    _require_jog_primary(root)
+    try:
+        pr_number = None
+        if pr_arg:
+            match = re.fullmatch(r"(?:https://[^/]+/[^/]+/[^/]+/pull/|#?)(\d+)", str(pr_arg).strip())
+            if not match:
+                raise ContractError("--pr expects a PR number or URL")
+            pr_number = int(match.group(1))
+        manifest, receipt, bundle = _committed_jog_receipt(root, gh_num, pr_number)
+        pr_number = pr_number or manifest.get("pr_number")
         if not pr_number:
-            print(f"jog: --pr expects a PR number or URL, got {pr_arg!r}", file=sys.stderr)
-            sys.exit(2)
-    else:
-        pr_number = (receipt.get("pr") or {}).get("number")
-        if not pr_number:
-            print(f"jog: receipt for {record['execution_id']} has no PR identity — pass "
-                  f"`--pr <N|URL>` after opening one from its branches "
-                  f"(head={receipt.get('head_branch')}, base={receipt.get('base_branch')})",
-                  file=sys.stderr)
-            sys.exit(2)
+            raise ContractError("committed receipt has no PR identity; pass --pr")
+        pr, error = _gh_pr_view(root, pr_number)
+        if pr is None:
+            raise ContractError(f"could not verify PR #{pr_number}: {error}")
+        base, head, merged = pr.get("baseRefName"), pr.get("headRefOid"), (pr.get("mergeCommit") or {}).get("oid")
+        if (pr.get("state") != "MERGED" or base != manifest.get("base_branch")
+                or pr.get("headRefName") != manifest.get("head_branch") or not head or not merged
+                or receipt.get("base_branch") not in (None, base)
+                or (receipt.get("pr") or {}).get("number") not in (None, int(pr_number))):
+            raise ContractError("merged PR state/base/head/identity does not match committed receipt")
+        _git(root, "check-ref-format", f"refs/heads/{base}")
+        integration = f"refs/remotes/origin/{base}"
+        _git(root, "fetch", "--no-tags", "origin", f"+refs/heads/{base}:{integration}")
+        _git(root, "merge-base", "--is-ancestor", merged, integration)
+        _git(root, "merge-base", "--is-ancestor", merged, "HEAD")
+        if receipt.get("head_sha") != head:
+            _git(root, "fetch", "--no-tags", "origin",
+                 f"+refs/pull/{int(pr_number)}/head:refs/remotes/origin/jog-pr-{int(pr_number)}")
+        proof = _landing_tail_proof(root, receipt.get("head_sha"), head, integration, bundle)
+        # A gate receipt on the approved candidate does not qualify a repaired ledger.
+        checked = subprocess.run([sys.executable, resolve_tool(root, "utils/py/releases_app.py"),
+                                  "--root", root, "check"], cwd=root, capture_output=True, text=True)
+        if checked.returncode:
+            raise ContractError(f"releases check is not clean: {(checked.stderr or checked.stdout).strip()}")
+        hosted = subprocess.run(["gh", "run", "list", "--workflow", "wave-reconcile.yml",
+                                 "--commit", head, "--limit", "20", "--json",
+                                 "databaseId,headSha,status,conclusion,url"],
+                                cwd=root, capture_output=True, text=True)
+        runs = json.loads(hosted.stdout) if hosted.returncode == 0 else []
+        matching = [run for run in runs if run.get("headSha") in (head, merged)]
+        if not matching or matching[0].get("status") != "completed" or matching[0].get("conclusion") != "success":
+            raise ContractError("hosted wave-reconcile is not green for the landed PR head")
+        conn = sqlite3.connect(f"file:{os.path.abspath(os.path.join(root, 'releases.db'))}?mode=ro", uri=True)
+        try:
+            rows = conn.execute("SELECT global_id,status FROM jog_queue WHERE gh_number=? LIMIT 2", (gh_num,)).fetchall()
+        finally:
+            conn.close()
+        if len(rows) != 1:
+            raise ContractError("landing requires exactly one canonical Jog queue row")
+    except (ContractError, OSError, ValueError, KeyError, sqlite3.Error) as exc:
+        print(f"jog: refusing to land GH-{gh_num}: {exc}", file=sys.stderr)
+        return 2
 
-    # ── Step 1: verify GitHub truth against the execution receipt.
-    pr, err = _gh_pr_view(root, pr_number)
-    if pr is None:
-        print(f"jog: could not verify PR #{pr_number}: {err}", file=sys.stderr)
-        sys.exit(2)
-    checks = [
-        ("state MERGED", pr.get("state") == "MERGED"),
-        (f"base {receipt.get('base_branch')}", pr.get("baseRefName") == receipt.get("base_branch")),
-        (f"head {receipt.get('head_branch')}", pr.get("headRefName") == receipt.get("head_branch")),
-        (f"head SHA {str(receipt.get('head_sha') or '')[:8]}",
-         pr.get("headRefOid") == receipt.get("head_sha")),
-        ("receipt repo is this repo",
-         not receipt.get("target_repo", {}).get("path")
-         or os.path.realpath(receipt["target_repo"]["path"]) == os.path.realpath(root)),
-    ]
-    gate = receipt.get("gate") or {}
-    checks.append(("gate green on the landed head",
-                   gate.get("result") == "green"
-                   and (not gate.get("receipt_path") or os.path.isfile(gate["receipt_path"]))))
-    merged_sha = ((pr.get("mergeCommit") or {}).get("oid")) or None
-    checks.append(("merge commit present", bool(merged_sha)))
-    failed = [name for name, ok in checks if not ok]
-    if failed:
-        print(f"jog: refusing to land GH-{gh_num} via PR #{pr_number} — failed verification: "
-              f"{', '.join(failed)}", file=sys.stderr)
-        sys.exit(2)
-    base_ref = pr.get("baseRefName")
-    reach = subprocess.run(["git", "merge-base", "--is-ancestor", merged_sha, base_ref],
-                           cwd=root, capture_output=True)
-    if reach.returncode != 0:
-        print(f"jog: merge commit {merged_sha[:8]} is not reachable from '{base_ref}' — refusing "
-              f"to land GH-{gh_num}", file=sys.stderr)
-        sys.exit(2)
-
-    # ── Step 2: persist the landing projection (idempotent by key).
-    state = jog_load_state(root, gid)
-    entry = next((e for e in state.get("executions") or []
-                  if e.get("execution_id") == record["execution_id"]), None)
-    if entry is None:
-        print(f"jog: ledger lost execution {record['execution_id']} — refusing to land",
-              file=sys.stderr)
-        sys.exit(2)
-    landing = entry.setdefault("landing", {})
-    key = {
-        "repo": (receipt.get("target_repo") or {}).get("origin_url") or root,
-        "gid": gid,
-        "execution_id": record["execution_id"],
-        "merged_sha": merged_sha,
-    }
-    if landing.get("key") != key:
-        landing.update({
-            "key": key,
-            "pr_number": int(pr_number),
-            "pr_url": pr.get("url"),
-            "merged_at": pr.get("mergedAt"),
-            "landed_via": "jog land",
-            "landed_at": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        })
-        jog_save_state(root, gid, state)
+    # Complete before the evidence marker; a failed writer is safe to retry from queue truth.
+    gid, status = rows[0]
+    if status != "completed":
         jog_set_status(root, gh_num, "completed",
-                       failure_reason=f"landed via PR #{pr_number} (merged {merged_sha[:8]})")
-        print(f"jog: GH-{gh_num} landed — PR #{pr_number} merged into {base_ref} at {merged_sha[:8]}")
-    else:
-        print(f"jog: landing projection already recorded for PR #{pr_number} — replaying "
-              f"missing steps only")
-
-    # ── Step 3: delegate lifecycle closeout to wave_reconcile.py (idempotent).
-    if landing.get("reconciled"):
-        print(f"jog: GH-{gh_num} already reconciled at {landing.get('reconciled_at')} — nothing to do")
-        return 0
-    manifest = {
-        "prs": [{
-            "number": int(pr_number),
-            "title": pr.get("title") or f"GH-{gh_num}",
-            "state": "MERGED",
-            "mergedAt": pr.get("mergedAt"),
-            "mergeCommit": {"oid": merged_sha},
-            "baseRefName": pr.get("baseRefName"),
-            "headRefName": pr.get("headRefName"),
-            "body": pr.get("body") or f"Closes #{gh_num}",
-        }],
-        "source": "jog land (verified gh pr view)",
-    }
-    exec_dir = _jog_exec_dir(root, gid, record)
-    os.makedirs(exec_dir, exist_ok=True)
-    manifest_path = os.path.join(exec_dir, "wave-manifest.json")
-    with open(manifest_path, "w", encoding="utf-8") as f:
-        json.dump(manifest, f, indent=2)
-        f.write("\n")
-    # The tree is never pristine here (jog's own tracked releases.db/sql writes), and the pull/
-    # branch checks belong to an operator's working context, not this supervised closeout; the
-    # offline manifest carries the PR truth verified seconds ago, so no second network fetch.
-    reconcile_py = os.path.join(harness_home(), "utils", "py", "wave_reconcile.py")
-    proc = subprocess.run(
-        [sys.executable, reconcile_py, "--root", root, "--pr", str(pr_number),
-         "--offline", manifest_path, "--skip-pull", "--skip-branch-check", "--allow-dirty"],
-        cwd=root)
-    if proc.returncode != 0:
-        print(f"jog: wave_reconcile exited {proc.returncode} — landing is recorded; re-run "
-              f"`jog land GH-{gh_num}` to resume reconciliation at this step", file=sys.stderr)
-        sys.exit(6)
-
-    # ── Step 4: persist reconciliation evidence.
-    state = jog_load_state(root, gid)
-    for entry in state.get("executions") or []:
-        if entry.get("execution_id") == record["execution_id"]:
-            entry.setdefault("landing", {}).update({
-                "key": key,
-                "reconciled": True,
-                "reconciled_at": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "manifest_path": manifest_path,
-            })
-    jog_save_state(root, gid, state)
-    print(f"jog: GH-{gh_num} lifecycle reconciled (wave_reconcile --pr {pr_number})")
+                       failure_reason=f"landed via PR #{pr_number} (merged {merged[:8]})")
+    landing = {"issue": gh_num, "queue_gid": gid, "execution_id": receipt["execution_id"],
+               "pr_number": int(pr_number), "merged_sha": merged,
+               "approved_head_sha": receipt["head_sha"], "landed_head_sha": head,
+               "tail_proof": proof, "hosted_reconcile": matching[0]}
+    path = os.path.join(root, bundle, "landing.json")
+    encoded = json.dumps(landing, indent=2) + "\n"
+    if not os.path.isfile(path) or open(path, encoding="utf-8").read() != encoded:
+        with open(path, "w", encoding="utf-8") as stream:
+            stream.write(encoded)
+    print(f"jog: GH-{gh_num} landed from committed receipt — PR #{pr_number}, {merged[:8]}; "
+          "publish owned post-merge writes before continuing")
     return 0
 
 
@@ -1200,8 +1293,9 @@ def extract_probes_from_doc(doc_path):
     return probes
 
 
-def promote_contract_to_working(root, gh_num, doc_path, interactive=True):
+def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primary=None):
     """Promote a 1-INBOX doc to 2-WORKING/ with verified status table and probes."""
+    _require_jog_primary(primary or root)
     basename = os.path.basename(doc_path)
     new_doc_path = os.path.join(root, "PROJECT", "2-WORKING", basename)
     rel_new_path = os.path.relpath(new_doc_path, root)
@@ -1280,11 +1374,18 @@ def promote_contract_to_working(root, gh_num, doc_path, interactive=True):
     except Exception:
         pass
 
+    # Primary pointer changes when this clone doc lands, through wave_reconcile.
+    if primary and os.path.realpath(primary) != os.path.realpath(root):
+        jog_commit_execution_contract(root, gh_num)
+        return new_doc_path, None
     # Repoint roadmap item
+    ledger_root = primary or root
+    _require_jog_primary(ledger_root)
     rp_res = subprocess.run(
         [
             sys.executable,
-            os.path.join(root, "utils", "py", "releases_app.py"),
+            os.path.join(ledger_root, "utils", "py", "releases_app.py"),
+            "--root", ledger_root,
             "roadmap",
             "repoint",
             "--issue-num",
@@ -1292,7 +1393,7 @@ def promote_contract_to_working(root, gh_num, doc_path, interactive=True):
             "--doc-path",
             rel_new_path,
         ],
-        cwd=root,
+        cwd=ledger_root,
         capture_output=True,
         text=True,
     )
@@ -1601,6 +1702,7 @@ def jog_run_main(args=None):
     if args is None:
         parser = argparse.ArgumentParser(description="Jog serial execution runner")
         parser.add_argument("--root", default=None, help="repository root path")
+        parser.add_argument("--target-root", help="disposable full execution clone")
         parser.add_argument("--auto-merge", action="store_true", help="auto-merge passing PRs")
         parser.add_argument("--builder", default="agy", help="builder turn-taker (agy, codex, aider)")
         parser.add_argument("--reviewer", default=None,
@@ -1731,11 +1833,11 @@ def jog_run_main(args=None):
             print(f"jog: processing GH-{gh_num} (attempt {att}) at position {row['position']}")
             print(f"{'=' * 60}")
 
-            doc_path = find_issue_doc(root, gh_num)
+            doc_path = find_issue_doc(target, gh_num)
             if doc_path and "/PROJECT/1-INBOX/" in doc_path:
                 print(f"jog: promoting 1-INBOX contract for GH-{gh_num} to 2-WORKING...")
                 promoted_path, err = promote_contract_to_working(
-                    root, gh_num, doc_path, interactive=sys.stdin.isatty()
+                    target, gh_num, doc_path, interactive=sys.stdin.isatty(), primary=root
                 )
                 if err:
                     print(f"jog: contract promotion failed: {err}")
@@ -1753,7 +1855,7 @@ def jog_run_main(args=None):
                 action, reason = run_marathon_phase(
                     root, gh_num, ledger_gid,
                     builder=args.builder, reviewer=args.reviewer,
-                    auto_merge=getattr(args, "auto_merge", False))
+                    auto_merge=getattr(args, "auto_merge", False), target_root=target)
                 jog_set_status(root, gh_num, action, failure_reason=reason)
                 if action == "completed":
                     tasks_processed += 1
@@ -1765,17 +1867,17 @@ def jog_run_main(args=None):
                 break
 
             # Swarm Preflight check
-            preflight_py = os.path.join(root, "utils", "py", "swarm_preflight.py")
+            preflight_py = os.path.join(target, "utils", "py", "swarm_preflight.py")
             if os.path.isfile(preflight_py) and not getattr(args, "simulate", False):
                 pf_res = subprocess.run(
                     # swarm_preflight.py has no --root flag (it resolves the repo from cwd,
                     # which this subprocess already pins below); passing one is a usage error
                     # that parked every queue item on the first real run.
                     [sys.executable, preflight_py, "--gh-issue", str(gh_num)],
-                    cwd=root,
+                    cwd=target,
                     capture_output=True,
                     text=True,
-                    env={**os.environ, "SWARM_PREFLIGHT_ROOT": root},  # GH-1098 A1
+                    env={**os.environ, "SWARM_PREFLIGHT_ROOT": target},  # GH-1098 A1
                 )
                 if pf_res.returncode == 4:
                     print(f"jog: GH-{gh_num} preflight reported already-landed (auto-dropping).")
@@ -1789,7 +1891,7 @@ def jog_run_main(args=None):
 
             # Execute single-phase drive
             drive_rc = run_single_phase_drive(
-                root,
+                target,
                 gh_num,
                 builder=args.builder,
                 reviewer=args.reviewer,
@@ -1803,7 +1905,7 @@ def jog_run_main(args=None):
                 break
 
             # Handle landing boundary
-            landed, status, reason = handle_landing_boundary(root, gh_num, auto_merge=args.auto_merge, reviewer=args.reviewer,
+            landed, status, reason = handle_landing_boundary(target, gh_num, auto_merge=args.auto_merge, reviewer=args.reviewer,
                                                              simulate=getattr(args, "simulate", False))
             jog_set_status(root, gh_num, status, failure_reason=reason)
 
