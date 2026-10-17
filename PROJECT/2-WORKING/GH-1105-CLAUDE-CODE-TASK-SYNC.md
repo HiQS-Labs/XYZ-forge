@@ -150,8 +150,9 @@ One new adapter module, `adapters/claude.py`, with two classes sharing the core:
   refuses rather than guessing.
 - Concurrent append from a live session → running-session registry (fail closed) + 10-minute
   backstop + size/mtime precheck + single `O_APPEND` line write.
-- The mtime restore also hides the append from mtime-based file watchers; acceptable because
-  running sessions are skipped, and restore happens only when nobody else wrote.
+- The mtime restore also hides the append from mtime-based file watchers, and a write landing
+  between the post-write size check and the restore gets its mtime rolled back (ordering only).
+  Accepted: running sessions and those active in the last 10 minutes are skipped.
 
 ## Verification (no new test/ suites)
 

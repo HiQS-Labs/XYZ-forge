@@ -164,7 +164,9 @@ rewritten, so earlier titles stay in the transcript for undo.
   wording seen when it was stamped.
 - Write guard: the file's size and mtime must match the read and it must end in a
   newline, else skip until the next tick. The original mtime is restored after the
-  append (only when nobody else wrote) so the session list's recency order holds.
+  append when the post-write size check passes, so the session list's recency order
+  holds. Not concurrency-safe: a write landing between that check and the restore
+  gets its mtime rolled back (ordering only, no data loss).
 - Probe override: `--claude-root PATH` (a fixture holding `projects/` and `sessions/`).
 
 **`--ide claude-cloud` — cloud sessions** (claude.ai/code): a read-only planner
@@ -216,18 +218,22 @@ before enabling the replacement. Never introduce launchd, a daemon or a second
 writer. A Codex-only installation runs only the native sweep; adding Codex does
 not authorize enabling absent ZCode/Agy stores. Keep it quiet while unchanged.
 
-Cloud Claude Code titles have exactly one writer: one Claude Code scheduled task
-(15 minutes) whose prompt runs the native cloud sweep procedure above, the same
-native-scheduler exception Codex has. Inspect existing task-sync scheduled tasks
-first and repoint one instead of creating a duplicate.
+Cloud Claude Code titles have exactly one writer: one hourly Claude Code scheduled
+task (cloud tasks run at most hourly) that selects the XYZ-forge repository and runs
+the native cloud sweep procedure above with
+`skills/3-weekly/task-sync/scripts/task_sync.py` from that checkout; a cloud container
+has no `~/.claude/skills`, so never rely on it. This is the same native-scheduler
+exception Codex has. Inspect existing task-sync scheduled tasks first and repoint one
+instead of creating a duplicate.
 
 ## Install SOP (this skill is the installer)
 
 1. **Doctor first:** `python3 $S --doctor` — all stores must be green or
    pending-receipt before installing.
 2. **Vendor via Skills Army HQ** (canonical source = this repo's skills tree):
-   `intake.py add task-sync --source <forge>/skills/3-weekly/task-sync` (preview,
-   then `--apply`) into the Deployed Skills collection, then `sync.py` to this
+   `intake.py add <forge>/skills/3-weekly/task-sync` (or, when already vendored,
+   `intake.py update task-sync --source <forge>/skills/3-weekly/task-sync`; preview,
+   then `--apply` before the verb) into the Deployed Skills collection, then `sync.py` to this
    device's app targets (Codex `~/.codex/skills/task-sync`, ZCode `~/.zcode/skills/task-sync`, Antigravity
    `~/.gemini/antigravity/skills/task-sync`, `~/.gemini/antigravity-cli/skills/`
    when present, Claude Code `~/.claude/skills/task-sync`). Verify each symlink resolves into the collection and the app's
