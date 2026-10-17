@@ -1,0 +1,52 @@
+diff --git a/utils/py/jog_run.py b/utils/py/jog_run.py
+index f081c0bf..6135a0fd 100755
+--- a/utils/py/jog_run.py
++++ b/utils/py/jog_run.py
+@@ -504,6 +504,9 @@ def _marathon_argv_from_invocation(invocation, builder, reviewer):
+             argv[argv.index(flag) + 1] = value
+         else:
+             argv += [flag, value]
++    # GH-1100: cwd does not override Marathon's ambient harness resolver.
++    if "--target-root" not in argv:
++        argv += ["--target-root", invocation["target_root"]]
+     if "--require-clean" in argv:
+         argv.remove("--require-clean")
+     if "--phase-id" not in argv and invocation.get("phase"):
+@@ -511,6 +514,17 @@ def _marathon_argv_from_invocation(invocation, builder, reviewer):
+     return argv
+ 
+ 
++def _marathon_env_from_invocation(invocation):
++    """Keep Jog's tooling and coordination roots with its selected invocation."""
++    env = dict(os.environ)
++    env.update(invocation["env"])
++    # GH-1100: target-root alone leaves phase files under the ambient harness root.
++    # Preflight's executable is <harness>/relay-automation/marathon-drive.sh, also in .xyz/.
++    env["XYZ_HARNESS"] = os.path.dirname(os.path.dirname(invocation["argv"][0]))
++    env["MARATHON_ROOT"] = invocation["harness_root"]
++    return env
++
++
+ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, mode="run"):
+     """Execute one leased queue item through Preflight → Marathon's one-phase driver.
+ 
+@@ -589,8 +603,7 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
+     # orphans a receipt that was actually written (the ledger's newest record still says null).
+     jog_save_state(root, gid, state)
+ 
+-    env = dict(os.environ)
+-    env.update(invocation["env"])
++    env = _marathon_env_from_invocation(invocation)
+     # Jog already holds the outer driver lock; exporting it keeps marathon-drive from
+     # contending with its own supervisor on the same lock directory.
+     env["RELAY_DRIVER_LOCKED"] = "1"
+@@ -793,8 +806,7 @@ def _jog_retry_gate_locked(root, gh_num, args):
+     argv += ["--execution-id", f"{record['execution_id']}-gateretry{attempt_no}",
+              "--result-file", os.path.join(retry_dir, "marathon-result.json")]
+ 
+-    env = dict(os.environ)
+-    env.update(invocation["env"])
++    env = _marathon_env_from_invocation(invocation)
+     env["RELAY_DRIVER_LOCKED"] = "1"
+     print(f"jog: gate-only retry for GH-{gh_num} against head {prior_head} "
+           f"(no builder turn; satisfied-lane path)")
