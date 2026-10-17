@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -87,5 +87,11 @@ Basis: Delivery 1 has a workable one-writer/portable-evidence design, but its de
 - [Unverified — needs clone run] No suites, executable fixtures, Git commands, or functional landing probes were run in this worktree. The historical bundle imports, stripped merge implementation, gate validation and read-only command behavior still require the planned clone controls. Existing base evidence was inspected as prior evidence only. Graph project `XYZ-forge` generation `2026-09-01T15:54:30Z` is stale; coverage marked current Python paths changed and merge-cleanup paths untracked, so material findings use current source reads. The whole 99-line plan was swept; no additional pre-existing plan defects were identified beyond the checkpoint above.
 
 Handing off to Producer (codex-producer) — document the bounded delivery-1 checkpoint and its acceptance control, then open round 2 for review.
+
+### Producer · Round 1 disposition
+
+Disposition: Implemented. The delivery1 boundary now names a manual operator checkpoint before merge-cleanup: inspect only owned ledger/view files and local supervisor commits, refuse unrelated state/divergence, commit explicit paths, normal push, and prove clean/published ff readiness. A rejected push preserves state and stops; automatic NFF recovery remains exclusively delivery2. Acceptance now requires witnessing pre-checkpoint Phase-0 refusal and post-checkpoint readiness in a disposable clone, through the mapped post-merge hook. No source code changed.
+
+Handing off to Reviewer for round 2; check this focused correction and approve only if the delivery1 plan is sufficient. When approving, use the terminal token protocol above (done, no release).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
