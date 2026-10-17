@@ -1,0 +1,152 @@
+[
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "README.md",
+    "old": "1\u0000docs-only\u0000\u0000",
+    "new": "1\u0000docs-only\u0000\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "utils/hq/hq.sh",
+    "old": "2\u0000subsystems: hq\u0000hq\u0000",
+    "new": "2\u0000subsystems: hq\u0000hq\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "src/project.js",
+    "old": "3\u0000kernel/gate surface (route=full)\u0000\u0000",
+    "new": "3\u0000kernel/gate surface (route=full)\u0000\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "utils/py/releases_app.py",
+    "old": "2\u0000subsystems: releases\u0000releases\u0000",
+    "new": "2\u0000subsystems: releases\u0000releases\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "utils/py/wave_reconcile.py",
+    "old": "2\u0000subsystems: pdda\u0000pdda\u0000",
+    "new": "2\u0000subsystems: pdda\u0000pdda\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "test/gh549-work-events.sh",
+    "old": "3\u0000test change \u2014 the routing contract's own evidence stays on the full gate\u0000releases\u0000",
+    "new": "3\u0000test change \u2014 the routing contract's own evidence stays on the full gate\u0000releases\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "validate.sh",
+    "old": "3\u0000kernel/gate surface (route=full)\u0000\u0000",
+    "new": "3\u0000kernel/gate surface (route=full)\u0000\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": ".github/workflows/ci.yml",
+    "old": "3\u0000kernel/gate surface (route=full)\u0000\u0000",
+    "new": "3\u0000kernel/gate surface (route=full)\u0000\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "releases.sql",
+    "old": "1\u0000docs-only\u0000\u0000",
+    "new": "1\u0000docs-only\u0000\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "test/deleted-suite.sh",
+    "old": "3\u0000kernel/gate surface (route=full)\u0000\u0000",
+    "new": "3\u0000kernel/gate surface (route=full)\u0000\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "unknown.file",
+    "old": "3\u0000unmapped path: unknown.file\u0000\u0000",
+    "new": "3\u0000unmapped path: unknown.file\u0000\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "a path with spaces.py",
+    "old": "3\u0000unmapped path: a path with spaces.py\u0000\u0000",
+    "new": "3\u0000unmapped path: a path with spaces.py\u0000\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "path=with=equals.py",
+    "old": "3\u0000unmapped path: path=with=equals.py\u0000\u0000",
+    "new": "3\u0000unmapped path: path=with=equals.py\u0000\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "",
+    "old": "3\u0000kernel/gate surface (route=full)\u0000\u0000",
+    "new": "3\u0000kernel/gate surface (route=full)\u0000\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "skills/1-hourly/relay-xyz/SKILL.md",
+    "old": "3\u0000kernel/gate surface (route=full)\u0000\u0000",
+    "new": "3\u0000kernel/gate surface (route=full)\u0000\u0000",
+    "equal": true
+  },
+  {
+    "control": "real-classifier-parser-equivalence",
+    "input": "utils/ate/anything.py",
+    "old": "2\u0000subsystems: ate\u0000ate\u0000",
+    "new": "2\u0000subsystems: ate\u0000ate\u0000",
+    "equal": true
+  },
+  {
+    "control": "registry-membership-equivalence",
+    "count": 411,
+    "old_sha256": "e60e16b4641274069e9bd24a902739d4af99fb3a2f7fb31a312938f70f5e31fa",
+    "new_sha256": "e60e16b4641274069e9bd24a902739d4af99fb3a2f7fb31a312938f70f5e31fa",
+    "equal": true
+  },
+  {
+    "control": "failed-registry",
+    "rc": 1,
+    "expected_rc": 1,
+    "output": "FAIL: could not read subsystem registry\n"
+  },
+  {
+    "control": "empty-registry",
+    "rc": 1,
+    "expected_rc": 1,
+    "output": "FAIL: empty subsystem registry\n"
+  },
+  {
+    "control": "valid-registry",
+    "rc": 0,
+    "expected_rc": 0,
+    "output": ""
+  },
+  {
+    "control": "existing-suite-detects-broken-tier-parser",
+    "rc": 1,
+    "original_blob_sha256": "81d451b5403068d1566030b4c5f28ab33cc16fc32e22f586710dadf79ffdd1ca",
+    "mutated_blob_sha256": "53d715bfe6e5e99db4fd67e9c9cbb5af3b4347f5ecb79134c6d2483bfc88c5ae",
+    "mutation": "tier output assignment changed to BROKEN",
+    "output_first_1200": "== test: gh365-tier-fail-closed ==\n  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh365-tier-fail-closed.XXXXXX.oNYHhqTlu0\n== test: gh365-tier-fail-closed ==\n  FAIL: T1: some tracked paths classify to neither a reasoned tier nor fail closed: .claude/commands/post-marathon.md: unclassified (tier='BROKEN'); .claude/commands/pre-marathon.md: unclassified (tier='BROKEN'); .claude/loose-ends-sequence.md: unclassified (tier='BROKEN'); .claude/settings.json: unclassified (tier='BROKEN'); .gitattributes: unclassified (tier='BROKEN'); .github/dependabot.yml: unclassified (tier='BROKEN'); .github/pull_request_template.md: unclassified (tier='BROKEN'); .github/workflows/ci.yml: unclassified (tier='BROKEN'); .github/workflows/pages.yml: unclassified (tier='BROKEN'); .github/workflows/wave-reconcile.yml: unclassified (tier='BROKEN'); .gitignore: unclassified (tier='BROKEN'); .merge-cleanup.json: unclassified (tier='BROKEN'); .pdda-mode: unclassified (tier='BROKEN'); .pdda-quad: unclassified (tier='BROKEN'); .relay-artifacts/gh182-claim-guards.md: unclassified (tier='BROKEN'); .xyz-launch-artifact: unclassified (tier='BROKEN'); AGENTS.md: unclassified (tier='BROKEN'); ARCHITECT"
+  },
+  {
+    "control": "red-control-restoration",
+    "identity_equal": true,
+    "restored_blob_sha256": "81d451b5403068d1566030b4c5f28ab33cc16fc32e22f586710dadf79ffdd1ca"
+  }
+]

@@ -16,7 +16,7 @@ Author: Codex / GPT-6 family / exact model and effort unavailable.
 
 | What was just completed | What's next |
 |---|---|
-| Fresh remote full clone, clean development base 2454a781, source trace and bounded scope | Freeze baseline, implement builtin parsing and per-run registry reuse, measure A/B/B/A |
+| A/B/B/A, equivalence checks, deliberate red and focused routing suites complete; retained receipts | Await normal full pre-push gate, report results to issue, then Agy relay QA |
 
 ## Recon Map
 
@@ -48,3 +48,7 @@ No lost path checks, assertions, registry members, tests or negative controls; i
 ## Unknowns
 
 Measured size of the speedup; host variability; whole-gate regressions; hosted applicability. The experiment measures the first two locally, checks the third once, and leaves hosted applicability explicitly unproven.
+
+## Spike findings (before full gate)
+
+Base 188.768/135.504 s; candidate 81.145/77.058 s. Observed means 162.136 -> 79.101 s (51.213% reduction), N=2 each on a heavily loaded shared host. All 7,412 tracked paths and 5 assertions retained; all normalized outputs match. Parser equivalence (16 inputs), membership equivalence (411 suite files), failed/empty extraction refusals, deliberate parser mutation red and exact restoration pass. Three focused routing suites pass. Full gate and independent QA remain pending; no hosted or whole-suite speedup claim. Full details: `TESTS-RESULTS/2026-10-16+GH-1111/SUMMARY.md`.
