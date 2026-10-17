@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Delivery1 PR [#1116](https://github.com/HiQS-Labs/XYZ-forge/pull/1116) open; delivery2 plan Approved, candidate implementation and focused controls recorded | Publish dependent draft; await #1116 landing, rebase to development before final code QA and qualifying gate; no merges |
+| Delivery1 PR [#1116](https://github.com/HiQS-Labs/XYZ-forge/pull/1116) ready; dependent draft [#1117](https://github.com/HiQS-Labs/XYZ-forge/pull/1117) published with plan approval and focused evidence | Await #1116 external landing, rebase #1117 to development before final code QA and qualifying gate; no merges |
 
 # GH-1108: one writer, durable receipts
 
@@ -178,3 +178,6 @@ The operator-authorized dependent draft must say `depends on #1116`, target deve
 Stack updated to the live first-PR head323602cd before draft publication. Its canonical recovered ledger and reminted GH1108 row are carried forward unchanged; this delivery adds no task-clone queue writes or ledger delta. First-PR runtime source remains unchanged. The capture conflict was resolved by retaining the full incoming first-delivery history/evidence and this separate approved delivery2 section. Required rebase onto development still waits for external merge of PR1116.
 
 After external dependency merge/rebase, final QA includes Codex and the operator-requested Claude Code Opus5.5 high peer review, with results retained in the second PR. Neither final review runs on the stacked duplicate diff. The in-process merge event emitter retains its established nonfatal refusal contract (including SystemExit from the canonical CLI); queue/proof durability still uses the gated publication intent.
+
+
+Published handoff: PR1117 is draft against development and its body contains `depends on #1116`. Initial WIP publication deliberately skipped the runtime push gate with current focused evidence and explicit PR disclosure; final readiness remains outstanding. Both PRs are open; first is conflict-free and passed its blocking hosted smoke check. Primary clean at published26eaaf54. Safe first task/gate clones moved to recoverable Trash; the Opus helper retains unlanded local refc5f7b96ed4 and is preserved. Delivery2 task/gate clones are unfinished and preserved, including failed/unknown candidate evidence. Historical source is untouched.
