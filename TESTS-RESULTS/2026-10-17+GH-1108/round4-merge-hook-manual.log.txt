@@ -1,0 +1,46 @@
+merge-cleanup: ERROR — Jog landing GH-904 / PR #98765 refused: no committed receipt for plain follow-up
+merge-cleanup: ERROR — Jog landing GH-275 / PR #98765 refused: no committed receipt for plain follow-up
+merge-cleanup: ERROR — Mapped Jog landing requires the updated primary/committed-receipt harness; upgrade before continuing
+PASS prior terminal follow-up invokes/refuses land; fixed terminal mapping skips issue 904
+PASS prior terminal follow-up invokes/refuses land; fixed terminal mapping skips issue 275
+merge-cleanup: 
+PASS prior skill-resident check invokes old runtime; fixed exact-runtime check refuses before old writer
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/primary/.merge-cleanup.json
+merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Running post-merge reconciliation for PR #4242 in /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/primary...
+merge-cleanup: ✅ Hosted wave-reconcile run #4242 succeeded for 9e0fcadff3
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ pdda issue-doc-sync clean
+merge-cleanup: jog: GH-999901 landed from committed receipt — PR #4242, 9e0fcadf; publish owned post-merge writes before continuing
+PASS red prior recovery exits0 with unpublished landing writes
+merge-cleanup: ✅ PR #4242 post-merge writes committed; primary is clean at origin/development
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/primary/.merge-cleanup.json
+merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+merge-cleanup: Running post-merge reconciliation for PR #4242 in /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/primary...
+merge-cleanup: ✅ Hosted wave-reconcile run #4242 succeeded for 9e0fcadff3
+merge-cleanup: ✅ RELEASES DB check passed
+merge-cleanup: ✅ pdda issue-doc-sync clean
+merge-cleanup: jog: GH-999901 landed from committed receipt — PR #4242, 9e0fcadf; publish owned post-merge writes before continuing
+merge-cleanup: ✅ PR #4242 post-merge writes committed; primary is clean at origin/development
+PASS actual recovery mode completes actionable row and publishes owned writes; clean at origin/development
+ALL MERGE HOOK REVIEW CONTROLS PASSED; fixture /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/primary
