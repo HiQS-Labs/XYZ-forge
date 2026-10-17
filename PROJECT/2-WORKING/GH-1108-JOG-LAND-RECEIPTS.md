@@ -134,3 +134,27 @@ Codex Round4 Approved; final normal pre-push gate409/409 in859s at87389362, clon
 
 
 Primary recovery integration preserved canonical development26eaaf54 and its full Jog state. Automatic B1 refused because its generation ordering would retain the higher-generation task ledger and then need unsupported Jog replay. The only task-side business delta was the owned GH1108 roadmap addition; existing B1 replay_ops/canonical writer replayed that addition on the exact upstream ledger. Row reminted fromrmi-01M54B6DYYH7J2VXKTVPF01BZA tormi-01M557FZJD688H467QVVSBWJ3Y (single full issueURL); rating90/85/50/35 and original accepted-start2026-10-17T07:12:54Z retained through canonical admission. Both historical rows remain completed, clean RELEASES check. No Jog mutation was replayed in a task clone; no runtime source changed after final approval/gate. See primary-sync-result.json/provenance for the exact positive ownership proof and writer calls.
+
+## Takeover — operator review disposition (2026-10-17, Claude Fable 5.1)
+
+Operator decision after the independent review on PR #1116 and the sanity-check on #1118:
+land delivery 1 with the review's Blocker fixed and nothing else; **stop** delivery 2
+(draft #1117); freeze Jog after landing. Codex pushed no change after the review, so the
+PR was taken over in a disposable clone.
+
+**Blocker fixed (surgical):** `run_jog_post_merge_land` mapped every `pending|running|failed|parked`
+row reachable from the PR's linked issues or any `gh<N>` token in its branch name and failed the
+landing when `jog land` refused — including the five stale rows in development's DB (GH-269,
+310, 529, 533, 1075) that have no committed bundle. The hook now lists committed
+`TESTS-RESULTS/*+GH-<n>/jog/*/receipt.json` bundles in the merged tree and only calls `jog land`
+for mapped rows that have one; rows without a bundle are logged as `warn: … not a Jog delivery —
+row left as-is`. A bundle that exists and fails verification still stops the run. Non-JSON
+`gh pr view` output now returns a named failure instead of a traceback (CodeRabbit item).
+
+Evidence: `TESTS-RESULTS/2026-10-17+GH-1108/hook-no-bundle-skip-manual.{py,log}.txt` (green 6/6
+on the fix; red 2 fails + crash on the pre-fix hook at 323602cd), `takeover-focused-suites.log.txt`
+(gh436 merge-cleanup, gh280 Jog/Marathon adapter), relay QA under `relay-system/2026-10-17/`.
+
+Deferred, not done here (recorded on the PR review and #1118): integration branch hardcoded on
+the vendored path; pin scope wording; manual `jog land` dirty-primary message; `temp/` scratch
+index; CodeRabbit's remaining minor items. Frozen with Jog.

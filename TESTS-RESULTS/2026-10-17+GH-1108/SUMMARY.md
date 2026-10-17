@@ -61,3 +61,11 @@ The single operator-authorized Codex Round4 is Approved and mechanically atteste
 The normal pre-push gate at8738936282eba22e426a39435590566624fb2307 passed409/409 in859s (21 Python items also pass), with unchanged HEAD/origin/bare/identity and clean gate clone. Runtime is unchanged from Codex Round4 reviewed64c02e8d. Final log, merged telemetry and before/after identity are retained. This is the qualifying gate; the earlier405/409 run remains diagnostic.
 
 Actual machine primary recovery passed, using that qualified runtime and existing final post-merge publisher. Receipt-only data commit78e18761 adopted the two byte-preserved bundles; GH1087 completionf1d532ac and GH942 completion26eaaf54 were published on development with normal docs-route hooks. Both real queue rows are completed, replay leaves DB bytes unchanged, and primary is clean atorigin/development26eaaf54. See actual-primary-recovery.log.txt for exact published commits (the log is authoritative). No code PR was merged. GH942 proof records approved6f521bc5/delivered974d98db, both stripped input trees, matching recomputed/recorded121a3334 and six exclusions. Original source clone was read-only and retained.
+
+## Takeover close-out (operator review Blocker)
+
+Hook reduced to skip-with-warning when the merged tree holds no committed receipt bundle for a
+mapped row; fail only when a bundle exists and `jog land` refuses. Manual control
+`hook-no-bundle-skip-manual.py.txt`: green 6/6 on the fix, red on the 323602cd hook (A1/A2 fail,
+D crashes). Focused suites re-run in the takeover clone: see `takeover-focused-suites.log.txt`.
+Delivery 2 (#1117) stopped by operator decision; Jog frozen after this landing (#1118).

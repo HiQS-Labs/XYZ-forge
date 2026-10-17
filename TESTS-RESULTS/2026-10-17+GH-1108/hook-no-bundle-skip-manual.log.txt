@@ -1,0 +1,21 @@
+== GREEN (fixed hook)
+merge-cleanup: ERROR — Jog landing GH-1075 / PR #7 refused: jog: refusing to land
+merge-cleanup: ERROR — Cannot map PR #7 to Jog rows: Expecting value: line 1 column 1 (char 0)
+merge-cleanup: warn: Jog row GH-1075 is mapped to PR #7 but the merged tree has no committed receipt bundle; not a Jog delivery — row left as-is
+PASS: A no-bundle mapped row: hook returns True
+PASS: A no-bundle mapped row: jog land not invoked
+PASS: B bundle present + refusal: hook returns False
+PASS: B bundle present + refusal: jog land invoked once
+merge-cleanup: jog: landed
+PASS: C bundle present + success: hook returns True
+PASS: D non-JSON gh output: returns False without raising
+6 pass, 0 fail
+green_rc=0
+hook reverted to 323602cd for the red control
+== RED (hook at 323602cd, before the fix)
+FAIL: A no-bundle mapped row: hook returns True
+FAIL: A no-bundle mapped row: jog land not invoked
+PASS: B bundle present + refusal: hook returns False
+PASS: B bundle present + refusal: jog land invoked once
+PASS: C bundle present + success: hook returns True
+red_rc=1

@@ -657,10 +657,33 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     if current.returncode:
         log_err(f"Cannot map PR #{pr_num} to Jog rows: {current.stderr.strip()}")
         return False
-    pr = json.loads(current.stdout)
+    try:
+        pr = json.loads(current.stdout)
+        if not isinstance(pr, dict):
+            raise ValueError("gh pr view returned a non-object")
+    except ValueError as exc:
+        log_err(f"Cannot map PR #{pr_num} to Jog rows: {exc}")
+        return False
     issues = set(linked_issues(pr))
     issues.update(int(n) for n in re.findall(r"(?:^|[/_-])gh[-_]?(\d+)(?=[-_/]|$)", pr.get("headRefName") or "", re.I))
     mapped = issues & queue
+    if not mapped:
+        return True
+    # A mapped row is a Jog delivery only when the merged tree carries its committed
+    # receipt bundle. A row without one (hand-built PR, stale queue row, branch name that
+    # merely contains gh<N>) is left as-is with a warning; it must not fail a landing that
+    # already happened on the remote. Only a bundle that exists and fails `jog land`'s
+    # verification stops the run.
+    tree = run_git(repo_path, ["ls-tree", "-r", "--name-only", "-z", "HEAD", "--", "TESTS-RESULTS"])
+    if tree.returncode:
+        log_err(f"Cannot list committed Jog receipt bundles: {tree.stderr.strip()}")
+        return False
+    bundled = {int(m.group(1)) for m in re.finditer(
+        r"(?:^|\0)TESTS-RESULTS/\d{4}-\d{2}-\d{2}\+GH-(\d+)/jog/[^/\0]+/receipt\.json(?=\0|$)", tree.stdout)}
+    for issue in sorted(mapped - bundled):
+        log(f"warn: Jog row GH-{issue} is mapped to PR #{pr_num} but the merged tree has no committed "
+            f"receipt bundle; not a Jog delivery — row left as-is")
+    mapped &= bundled
     # Capability belongs to the exact runtime the subprocess will execute, not
     # the newer copy supplying this skill or B1's shared repair policy.
     runtime_policy = ledger_merge.harness_paths_module(
