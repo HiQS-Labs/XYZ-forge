@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Approved
-ROUND: 1 / 3
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -281,5 +281,9 @@ swept file: yes
 - Evidence limits: graph project `XYZ-forge` resolves to the main checkout, generation `2026-09-01T15:54:30Z`, not this relay checkout. Coverage reported missing/not-tracked/changed freshness for the four requested plan/taxonomy/index/planner paths. Used direct local source reads instead. Decisive read: `nl -ba PROJECT/2-WORKING/GH-1119-WORTH-IT.md`, exit 0, nonempty lines 1–43; taxonomy/index reads also exit 0. No runtime or exhaustive repository-discovery claim relies on that stale graph.
 
 Relay closed (Approved), no further review turn needed. Producer may proceed with the bounded import and final QA described in the plan.
+
+### Producer · Round 2 protocol correction
+
+Round 1 reviewer verdict PASS is retained above, but the driver refused attestation (exit 4, close-mismatch) because the reviewer released to author and then attempted done without ownership. No implementation has begun. Same task, same three-round cap; no reset. Reconfirm the plan and append your own Round 2 verdict. On approval claim the existing token, then use `done RELAY-gh1119-plan --agent codex` while still owning it; do NOT release it first. Set Approved only as the Reviewer. The harness owns commits. The acceptance criteria are the four explicit questions in the embedded review request and the plan's Ordered plan and acceptance section. Source/license bytes remain implementation verification, not a new plan blocker.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
