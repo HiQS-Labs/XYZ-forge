@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Codex Round4 Approved; final gate409/409; actual primary GH1087/GH942 completed and published | Sync recovered primary ledger, publish PR1; delivery2 separate dependent draft, no merges |
+| PR [#1116](https://github.com/HiQS-Labs/XYZ-forge/pull/1116) open against development; final QA/gate and actual primary recovery passed | Await external landing; delivery2 dependent draft and rebase before its final code QA; no merges |
 
 # GH-1108: one writer, durable receipts
 
