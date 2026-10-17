@@ -1,0 +1,17 @@
+.
+----------------------------------------------------------------------
+Ran 1 test in 0.045s
+
+OK
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmphd7e0iot/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmphd7e0iot/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+

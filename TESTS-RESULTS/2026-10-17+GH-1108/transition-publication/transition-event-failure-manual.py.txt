@@ -1,0 +1,21 @@
+"""Witness existing nonfatal emitter contract across the new in-process branch."""
+import ast,json,os,subprocess,sys
+from pathlib import Path
+from types import SimpleNamespace
+sys.path.insert(0,str(Path.cwd()/'skills/2-daily/merge-cleanup/scripts'))
+import merge_cleanup as m
+path='skills/2-daily/merge-cleanup/scripts/merge_cleanup.py'
+old=subprocess.check_output(['git','show','13b469b7^:'+path],text=True)
+new=Path(path).read_text()
+def broken(args):raise SystemExit(3)
+runtime=SimpleNamespace(cmd_work_emit=broken)
+for label,source in [('red',old),('green',new)]:
+ node=next(n for n in ast.parse(source).body if isinstance(n,ast.FunctionDef) and n.name=='emit_pr_merged')
+ ns=dict(m.__dict__);exec(compile(ast.Module(body=[node],type_ignores=[]),path,'exec'),ns)
+ try:result=ns['emit_pr_merged'](str(Path.cwd()),{'number':1102,'body':'Closes #942','baseRefName':'development'},publication_runtime=runtime)
+ except SystemExit as e:
+  assert label=='red' and e.code==3
+  print('RED witnessed in-process refusal escaping the established nonfatal emitter')
+ else:
+  assert label=='green' and result==0
+  print('PASS canonical in-process emission refusal remains nonfatal; no false event count')

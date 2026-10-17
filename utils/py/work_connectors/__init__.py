@@ -16,8 +16,8 @@ Two boundaries this module must never cross:
    the lock across network time. perform_write calls dispatch_for_txn() from one common
    post-lock section — one seam, not 29 call sites.
 2. A child owns NO database handle. It receives its event batch as JSON on stdin and reports
-   on stdout; this parent is the sole writer of connector_cursors, in one short transaction
-   taken after the join.
+   on stdout; this parent persists device-local cursor state in the Git-common-dir sidecar,
+   in one short transaction after the join. The legacy ledger table is only an initialization seed.
 """
 
 import errno

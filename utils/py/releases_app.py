@@ -1902,7 +1902,8 @@ def perform_write(root, conn, op, target_gid, mutate, work_event=None, work_even
     `mutate(conn)` does the business writes; the op_receipt (before/after business-state digests)
     is appended HERE so no writer can forget it. Recovery per boundary is `check`'s job
     (recover_from_journal); RELEASES_APP_CRASH_AT lands on the five named boundaries. The caller
-    must NOT hold the writer lock (this function takes it)."""
+    must not hold the writer lock outside a declared Jog publication intent. An active
+    root-owned intent borrows its verified lock and defers connector dispatch until Git acceptance."""
     if op.startswith("jog-"):
         _require_jog_primary(root)
         if not _jog_context(root):
