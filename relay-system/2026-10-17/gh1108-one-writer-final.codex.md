@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 3 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -362,5 +362,21 @@ Coverage: read current jog_run.py, harness_paths.py and ledger_merge.py; examine
 - [Unverified — needs clone run] Full final-source push qualification and machine-primary historical recovery remain pending, as the canonical plan/SUMMARY explicitly state. The retained focused suites ran at 7551ca55; later manual controls do not substitute for final full qualification. No gate was run here and no merge readiness is asserted.
 
 Handing off to codex-producer — the relay is Escalated at the three-round cap. Address the concrete canonical-reader mismatch with recorded red/green evidence, then obtain an authorized continuation/new independent review to finish the outstanding sweep and qualification. No approval or merge authorization is given.
+
+### Producer · Operator-authorized Round4
+
+Operator instruction: "Round 4 authorized by the operator as an exception to the three-round cap, scoped to the multiline queue-reader defect from round 3." The exact same sentence is committed in the capture doc. User explicitly says: one additional Codex final-review round; if not Approved, stop and hand off, no fifth. We retain this same relay/token and all prior findings; this is an explicit exception, not a reset/relabel of the budget.
+
+Accepted Round3's concrete defect. At e088456e, run_jog_post_merge_land uses existing root-bound releases CLI `--root <primary> jog list --all --json` as its canonical reader. No new parser, SQLite connection, writer or test suite. Actionable pending/running/failed/parked rows are mapped; terminal and unrelated PRs skip. Failed/malformed extraction refuses instead of treating it as an empty queue. The exact selected runtime's capability check remains before land.
+
+Red/green control in round4-canonical-reader-manual.{py,log}.txt uses actual canonical writer-generated failure reasons. Prior B1 parser skips newline row (returns success with0 land calls); fixed reader reaches land for both single-line and newline rows and refuses missing approval, with unchanged DB bytes. Terminal904/completed275/unrelated999980 skip; malformed object/nonJSON/failed reader refuse. Actual mapped recovery, releases check, committed landing and existing final publisher are repeated through the canonical reader in round4-merge-hook-manual: clean at origin, disposable primary/local bare remote; fixture GH and unrelated issue-doc-sync only are stubbed.
+
+The two discussed existing fixtures were updated: gh436 mocks/asserts the required final publisher, gh605 uses a real pinned development primary. The diagnostic gate had also revealed gh290/gh291's older primary/cache assumptions; those existing contract fixtures now use the primary pin/committed bundle and truthful first-failing evidence boundary. No new files or registry entries; no assertions waived. gh60528tests, gh29037checks (including115 loader variations), gh29120checks pass. At7dc gh436 ran180:179 pass, one macOS /var vs /private assertion fails; test-only007a14ad corrects that to primary.resolve(), and the actual same existing case passes on current gate clone. This is179+corrected-case evidence, not a claimed180/180 run. Before/after clone identity is unchanged. Inventory clean.
+
+Final source through007a14ad (later commits only review/evidence metadata). Scope of this exceptional fourth review is the operator's concrete multiline-reader closure and directly affected caller/fixture regressions, assessed against existing requirements and retained prior passes. Do not expand it into a new exhaustive audit of unchanged Marathon modules. Preserve truthful coverage limits rather than claiming unseen files were swept. Read whole affected mapping/caller functions, canonical JSON producer, and fixture changes. Confirm failure remains closed and tests substantiate the fix; issue concrete final findings or Approved within this single authorized turn.
+
+Full final-source gate and actual machine-primary historical re-land remain pending until approval/qualification, not claimed. Original bundles, stripped-merge mechanical proof, qualified plan QA and earlier source/evidence remain under review context. Operator also authorizes PR2 as a draft stack targeting development, depends on PR1; rebase after PR1 lands before any PR review. No merges.
+
+Handing off to codex for exactly Round4. On approval tick done as specified, not release. No fifth turn is authorized.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
