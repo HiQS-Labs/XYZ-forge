@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Delivery1 source and scoped controls recorded; final QA found a canonical-reader mismatch; diagnostic gate405/409 | Operator authorized one Round4 exception; fix canonical reader and existing fixtures, then final review and qualification |
+| Delivery1 source and scoped controls recorded; final QA found a canonical-reader mismatch; diagnostic gate405/409 | Codex Round4 Approved/attested; qualifying push gate, primary historical recovery, then PR1 and dependent draft PR2 |
 
 # GH-1108: one writer, durable receipts
 
@@ -124,3 +124,5 @@ Resolve that concrete reader defect through the canonical Jog JSON interface and
 The operator also authorizes a dependent stack: delivery2 opens as a draft against development, with `depends on #<first PR>` in its body. After delivery1 lands, rebase delivery2 onto development so only transition publication is in its diff before any review. No merges authorized.
 
 The bounded reader closure also preserves the observed pre-Jog consumer case (Opus B5): a nonempty qualified dump without a canonical Jog marker/INSERT surface skips the unsupported CLI. When a queue surface exists, canonical JSON extraction remains authoritative and any reader failure refuses. Actual copied-consumer red/green and repeated multiline controls pass at5f223ca3. Opus3 is Escalated; its concrete B5 finding is implemented before the single authorized Codex4, with no fourth Opus turn or fifth Codex turn.
+
+Codex Round4 is Approved/attested at reviewed64c02e8d; no fifth. The final-source qualifying push gate and actual primary recovery now follow. Opus findings through round3 are retained, with its final B5 fixed and covered in the authorized Codex closure. No Opus approval is claimed.
