@@ -1,0 +1,2 @@
+PASS exactly three fresh-intent attempts; all upstream rows preserved, no accepted queue transition, clean primary; all three candidate recovery refs retained
+fixture /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-transition-push-2026-10-17-gate/temp/publication-ewkbgvmw/bounded-primary

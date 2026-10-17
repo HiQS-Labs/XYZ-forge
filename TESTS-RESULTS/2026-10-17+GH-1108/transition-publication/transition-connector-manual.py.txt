@@ -1,0 +1,35 @@
+"""Manual device-state and accepted-reader checks; existing connector seam only."""
+import hashlib,json,os,re,sqlite3,subprocess,sys
+from pathlib import Path
+root=Path.cwd();sys.path.insert(0,str(root/'utils/py'))
+import releases_app as app,work_connectors as wc
+log=(root/'temp/transition-publication-manual.log').read_text();primary=Path(re.search(r'^fixture (.+)$',log,re.M)[1]);db=str(primary/'releases.db')
+def digest():return hashlib.sha256(Path(db).read_bytes()).hexdigest()
+def git(*a):return subprocess.check_output(['git','-C',str(primary),*a],text=True).strip()
+child=primary.parent/'connector.py';seen=primary.parent/'seen.json';child.write_text('import json,sys\nfrom pathlib import Path\na=json.load(sys.stdin);Path('+repr(str(seen))+').write_text(json.dumps(a));print("advanced_to:",max(e["id"] for e in a["events"]))\n')
+os.environ['XYZ_WORK_CONNECTORS_REGISTRY']=json.dumps({'manual':str(child)})
+before=digest();result=wc.dispatch(db,app.now_iso(),connectors={'manual':{}});assert result.get('manual',(None,'missing'))[1] is None,result
+assert digest()==before and seen.exists();assert not git('status','--porcelain');print('PASS configured connector success stores acknowledgements outside tracked ledger')
+lock=app.WriterLock(str(primary)).acquire();lock.release();print('PASS connector network completion leaves writer lock available')
+# Failed connectors store local errors without touching releases.db.
+child.write_text('import sys\nsys.exit(7)\n');result=wc.dispatch(db,app.now_iso(),connectors={'manual':{}},reset=True);assert result['manual'][1] and digest()==before
+print('PASS failed connector/reset leaves tracked DB bytes unchanged')
+# Hold a provisional transition inside writer lock and invoke another dispatcher after releasing
+# the writer, as if publication failed with preserved dirty state. Neither lock nor dirty state projects.
+seen.unlink();real=app._publication_git
+
+def failed(where,*a,**kw):
+ if where==str(primary) and a[:2]==('push','origin'):
+  lockcheck=wc.dispatch(db,app.now_iso(),connectors={'manual':{}})
+  assert lockcheck=={} and not seen.exists()
+  return subprocess.CompletedProcess([],1,b'',b'authentication refused')
+ return real(where,*a,**kw)
+app._publication_git=failed
+try:
+ try:app.jog_set_status(str(primary),999990,'pending')
+ except RuntimeError:pass
+ else:raise AssertionError('failed publication reported success')
+finally:app._publication_git=real
+assert wc.dispatch(db,app.now_iso(),connectors={'manual':{}})=={} and not seen.exists()
+assert git('status','--porcelain');print('PASS pending lock and preserved unpublished DB both defer automatic/explicit dispatch')
+print('ALL CONNECTOR CONTROLS PASSED; failed candidate deliberately preserved',primary)

@@ -1,0 +1,5 @@
+RED observed delivery1 local-only queue mutation; owned snapshot restored
+PASS accepted-but-timeout push proven by fetch, no duplicate replay
+PASS mapped primary landing and exact proof published through existing final step in one clean commit
+PASS verification-fetch failure preserves candidate/dirty artifacts and stops without blind retry
+ALL EXTRA CONTROLS PASSED; unknown-outcome fixture deliberately preserved /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-transition-push-2026-10-17-gate/temp/publication-ewkbgvmw/primary

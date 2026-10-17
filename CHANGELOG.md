@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-17 — GH-1108 transition publication (delivery 2)
+
+Primary Jog transitions publish through the canonical writer with ff-only candidate commits and at most three fresh-intent retries; failed/unknown candidates remain recoverable. Connector cursor persistence moves to ignored device state so accepted queue publication remains clean, and rejected queue state cannot project. Mapped landing completion/proof reuses the existing merge-cleanup final publisher. Costly shared writer/Git/connector change: revert this delivery independently to restore the first delivery's manual checkpoint; preserve accepted ledger commits and receipts. Draft depends on PR1116 and awaits rebase/final QA before landing.
+
 ## 2026-10-17 — Jog primary writer, portable receipts and landing hook (GH-1108, delivery 1)
 
 Jog queue/cache mutations now require an explicit origin-specific primary pin on development.

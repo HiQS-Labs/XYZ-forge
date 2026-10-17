@@ -187,3 +187,10 @@ After an interrupted or failed item, pick the verb that matches what actually ne
   intake-hygiene fixes).
 - `jog retry-build <GH-NUM>` — the real rebuild: a fresh Marathon attempt on a fresh execution id
   when the build itself must be redone; all prior Tick history and execution records are preserved.
+
+
+### Transition publication (GH-1108 delivery2)
+
+In the pinned primary on development, each mutating queue verb and low-level lease/status/orphan transition returns only after an owned ledger-only candidate is accepted on origin/development and the primary is clean. Keep unrelated files/index clean first. Confirmed non-fast-forward rejection rebuilds fresh high-level intent at most three times; unknown outcomes, fetch failures, auth/hook errors and drift preserve candidate refs plus before/candidate bytes in the Git-common-dir `jog-publication/` state and stop. Never reset or force-push to resume. Inspect/reconcile preserved state before another dispatch. Connector acknowledgements are device-local; uncommitted primary DB state cannot project.
+
+Landing completion and its exact validated landing.json share the existing post-merge publication step. This delivery does not restore automatic PR merging; the separate landing/checkpoint policy still applies. Reverting delivery2 restores delivery1's explicit manual owned-ledger checkpoint while retaining committed execution receipts.

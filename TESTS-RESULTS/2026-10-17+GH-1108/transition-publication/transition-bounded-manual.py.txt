@@ -1,0 +1,33 @@
+"""Manual three-collision exhaustion control using actual Git and canonical upstream writes."""
+import json,os,re,sqlite3,subprocess,sys
+from pathlib import Path
+root=Path.cwd();sys.path.insert(0,str(root/'utils/py'))
+import releases_app as app
+from harness_paths import primary_config_key
+text=(root/'temp/transition-extra-manual.log').read_text();old=Path(re.search(r'preserved (.+)$',text,re.M)[1]);work=old.parent;remote=work/'remote.git';primary=work/'bounded-primary';racer=work/'bounded-racer'
+def cmd(*a):return subprocess.check_output(list(a),stderr=subprocess.STDOUT,text=True).strip()
+def git(where,*a):return cmd('git','-C',str(where),*a)
+for path in [primary,racer]:
+ cmd('git','clone','--quiet','--no-local','--branch','development',str(remote),str(path));git(path,'config','user.name','bounded manual');git(path,'config','user.email','manual@example.invalid')
+git(primary,'remote','set-url','origin','https://github.com/HiQS-Labs/XYZ-forge.git');os.environ['PATH']=str(work/'bin')+os.pathsep+os.environ['PATH'];git(primary,'config',primary_config_key(str(primary)),str(primary))
+real=app._publication_git;pushes=0
+
+def collide(where,*a,**kw):
+ global pushes
+ if where==str(primary) and a[:2]==('push','origin'):
+  pushes+=1;git(racer,'fetch','origin','development');git(racer,'merge','--ff-only','origin/development')
+  issue=999992+pushes
+  cmd(sys.executable,str(root/'utils/py/releases_app.py'),'--root',str(racer),'roadmap','add','--issue-num',str(issue),'--issue-url','https://github.com/HiQS-Labs/XYZ-forge/issues/'+str(issue),'--title','collision '+str(pushes),'--created','2026-10-17','--doc-path','PROJECT/2-WORKING/GH-1108-JOG-LAND-RECEIPTS.md')
+  git(racer,'add','--','releases.db','releases.sql');git(racer,'commit','-qm','racing canonical upstream');git(racer,'push','--quiet','origin','HEAD:development')
+ return real(where,*a,**kw)
+app._publication_git=collide
+try:
+ try:app.jog_set_status(str(primary),1087,'running')
+ except RuntimeError as e:assert 'three publication attempts exhausted' in str(e),e
+ else:raise AssertionError('unbounded/false-success collision')
+finally:app._publication_git=real
+assert pushes==3 and not git(primary,'status','--porcelain')
+c=sqlite3.connect(primary/'releases.db');assert c.execute('select status from jog_queue where gh_number=1087').fetchone()[0]=='pending';assert c.execute('select count(*) from roadmap_items where gh_number in (999993,999994,999995)').fetchone()[0]==3;c.close()
+refs=git(primary,'for-each-ref','--format=%(refname)','refs/jog-recovery/').splitlines();assert len(refs)==3
+print('PASS exactly three fresh-intent attempts; all upstream rows preserved, no accepted queue transition, clean primary; all three candidate recovery refs retained')
+print('fixture',primary)

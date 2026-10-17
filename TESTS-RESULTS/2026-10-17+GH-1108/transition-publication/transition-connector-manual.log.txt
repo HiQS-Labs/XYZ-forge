@@ -1,0 +1,10 @@
+work_connectors: XYZ_WORK_CONNECTORS_REGISTRY is active — running non-vendored connector(s) manual from the environment
+work_connectors: XYZ_WORK_CONNECTORS_REGISTRY is active — running non-vendored connector(s) manual from the environment
+refused: rule=writer-lock: another releases-app writer holds /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-transition-push-2026-10-17-gate/temp/publication-5k_dtf24/primary/.git/releases-app.lock; refusal recorded in the lock-audit sidecar; no committed artifact was changed
+work_connectors: 4
+work_connectors: primary database is not accepted published state; connector deferred
+PASS configured connector success stores acknowledgements outside tracked ledger
+PASS connector network completion leaves writer lock available
+PASS failed connector/reset leaves tracked DB bytes unchanged
+PASS pending lock and preserved unpublished DB both defer automatic/explicit dispatch
+ALL CONNECTOR CONTROLS PASSED; failed candidate deliberately preserved /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-transition-push-2026-10-17-gate/temp/publication-5k_dtf24/primary

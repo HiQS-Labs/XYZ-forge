@@ -1,7 +1,7 @@
 ---
 gh_issue: 1108
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1108#issuecomment-6231071222
-title: "Jog one-writer execution, receipts and landing hook (delivery 1 of 2)"
+title: "Jog transition publication (delivery 2 of 2)"
 status: Active
 created: 2026-10-17
 updated: 2026-10-17
@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Delivery1 source and scoped controls recorded; final QA found a canonical-reader mismatch; diagnostic gate405/409 | Codex Round4 Approved/attested; qualifying push gate, primary historical recovery, then PR1 and dependent draft PR2 |
+| Delivery1 PR [#1116](https://github.com/HiQS-Labs/XYZ-forge/pull/1116) open; delivery2 plan Approved, candidate implementation and focused controls recorded | Publish dependent draft; await #1116 landing, rebase to development before final code QA and qualifying gate; no merges |
 
 # GH-1108: one writer, durable receipts
 
@@ -154,3 +154,14 @@ Reversibility: Costly because canonical writer locking, Git durability and devic
 Publishing inside perform_write alone is smaller but cannot recreate high-level connection/identity/event closures on NFF, nor include landing proof or existing final post-merge writes. Pushing the dirty DB after releasing WriterLock races another writer and violates one-writer durability. Disabling connectors avoids tracked dirt but silently removes existing enabled behavior. Keeping their cursor in the committed DB requires a second publication and makes acknowledgment a shared ledger fact despite device-local config; existing ignored state is smaller. A separate scheduler/publisher daemon is unnecessary. Native commit-tree/temp-index reuse the mechanism already present in delivery1 stripped-tree proof and keep rejected candidates off primary HEAD. If an existing non-destructive primitive can satisfy all acceptance checks with less code, prefer it and document the replacement before implementation.
 
 The plan does not claim implementation/verification yet. A failure that requires material architecture expansion returns to this plan relay; no fifth review of delivery1 is opened. The second PR remains explicitly reversible and draft until its dependency lands and its own final QA/gate complete.
+
+
+## Delivery2 implementation checkpoint
+
+Plan Approved/attested in Codex round2 at0fb71ca9 before production edits. Canonical writer now supports a root-owned borrowed WriterLock/fresh-intent publication envelope; six CLI mutation verbs and three low-level queue writers recreate their connections/closures on each NFF. Native Git candidates leave HEAD/index in place until acceptance, retain recovery refs and exact pre/candidate snapshots, resolve lost push results through fetch, and stop after three confirmed collisions. Connector acknowledgements use ignored device storage and published-state read/batch boundaries; network starts after writer release. Mapped/standalone land uses the same envelope and exact proof declaration; the existing merge-cleanup final publisher supplies its candidate delegation, with legacy consumers retaining their normal path. Nested releases check borrows the canonical lock in-process.
+
+Manual controls pass: local-only delivery1 red; clean remotely durable add/running/failed; actual NFF preserves upstream roadmap row and emits one accepted event; unrelated dirt refuses before DB mutation; accepted-but-timeout does not replay; verification-fetch failure preserves unknown state/candidate and stops; three collisions stop exactly at3 with all upstream rows and candidate refs retained; configured connector success/failure does not dirty tracked DB; provisional lock and preserved dirty state both defer other dispatchers; actual mapped historic GH942 proof plus completion publishes in one existing final-step commit. Real GH reads are used for the mapped historical proof; Git transport targets disposable bare repositories. No real primary transition uses unreviewed delivery2 code.
+
+Existing gh64642 tests pass after its existing cursor-error probe reads device state; inventory guard and its existing negative controls pass after locking in a reduction32→30 SQLite bypasses through its canonical updater. Existing gh549 cursor fixtures now address device state; the final focused run passes125/125 with matching before/after clone identity. The existing gh436 recovery callback fixture also passes. No new test files, registry entries or gate machinery. Broader Jog/merge-cleanup fixture adaptation and final validation remain required after rebase; this draft is not merge-ready.
+
+The operator-authorized dependent draft must say `depends on #1116`, target development, and receive no final code review until #1116 lands and this branch is rebased to show only publication changes. Independent review did not run. Final code QA is waiting for the required dependency/rebase. No final broad qualifying gate has run for delivery2. Preserve its unfinished clone and recovery evidence.
