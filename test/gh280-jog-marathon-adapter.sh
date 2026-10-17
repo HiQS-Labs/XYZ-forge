@@ -65,15 +65,16 @@ exit 1
 GH_EOF
 chmod +x "$STUB_BIN/gh"
 # Keep a GitHub identity while all fixture network IO goes to the local bare remote.
-REAL_GIT="$(command -v git)"; export REAL_GIT REMOTE
+REAL_GIT="$(command -v git)"; GH280_REAL_GIT="$REAL_GIT"; GH280_REMOTE="$REMOTE"
+export GH280_REAL_GIT GH280_REMOTE
 cat > "$STUB_BIN/git" <<'GIT_EOF'
 #!/usr/bin/env bash
 for command in "$@"; do
   case "$command" in fetch|push|ls-remote)
-    exec "$REAL_GIT" -c "url.$REMOTE.insteadOf=https://github.com/example/example.git" "$@" ;;
+    exec "$GH280_REAL_GIT" -c "url.$GH280_REMOTE.insteadOf=https://github.com/example/example.git" "$@" ;;
   esac
 done
-exec "$REAL_GIT" "$@"
+exec "$GH280_REAL_GIT" "$@"
 GIT_EOF
 chmod +x "$STUB_BIN/git"
 export PATH="$STUB_BIN:$PATH"
@@ -211,7 +212,7 @@ jassert() {
   python3 -c 'import json,sys,os,subprocess
 d = json.load(open(sys.argv[1]))
 sys.exit(0 if eval(sys.argv[2]) else 1)' "$1" "$2" 2>/dev/null \
-    && pass "$3" || fail "$3 ($(head -c 400 "$1" 2>/dev/null))"
+    && pass "$3" || fail "$3 ($(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("pr_note") or json.dumps(d)[:400])' "$1" 2>/dev/null))"
 }
 
 # fixed-substring helper (jog-queue.sh has one; this suite is standalone)
