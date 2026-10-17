@@ -661,6 +661,9 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
         pr = json.loads(current.stdout)
         if not isinstance(pr, dict):
             raise ValueError("gh pr view returned a non-object")
+        if pr.get("number") != pr_num or any(
+                not isinstance(pr.get(field), (str, type(None))) for field in ("title", "body", "headRefName")):
+            raise ValueError("gh pr view returned an unusable PR object (identity or field types)")
     except ValueError as exc:
         log_err(f"Cannot map PR #{pr_num} to Jog rows: {exc}")
         return False

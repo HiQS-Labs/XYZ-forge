@@ -19,3 +19,14 @@ PASS: B bundle present + refusal: hook returns False
 PASS: B bundle present + refusal: jog land invoked once
 PASS: C bundle present + success: hook returns True
 red_rc=1
+== GREEN round 2 (3715e2ba+hook field guard)
+PASS: A no-bundle mapped row: hook returns True
+PASS: A no-bundle mapped row: jog land not invoked
+PASS: B bundle present + refusal: hook returns False
+PASS: B bundle present + refusal: jog land invoked once
+PASS: C bundle present + success: hook returns True
+PASS: D non-JSON gh output: returns False without raising
+PASS: E unusable PR object {"number":7,"title":"x","body":"Closes #…: returns False without raising
+PASS: E unusable PR object {"number":8,"title":"x","body":"Closes #…: returns False without raising
+8 pass, 0 fail
+green_rc=

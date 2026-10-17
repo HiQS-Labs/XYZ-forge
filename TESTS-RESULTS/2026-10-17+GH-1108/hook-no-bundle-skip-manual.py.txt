@@ -101,6 +101,20 @@ try:
 finally:
     mc.subprocess = subprocess
 
+# E. relay QA round 1 (codex): numeric headRefName / wrong PR number -> named failure, no TypeError
+for raw in ('{"number":7,"title":"x","body":"Closes #1075","headRefName":123}',
+            '{"number":8,"title":"x","body":"Closes #1075","headRefName":"fix/gh1075-x"}'):
+    mc._gh = lambda args, cwd, timeout=180, raw=raw: Proc(0, raw)
+    mc.subprocess = types.SimpleNamespace(run=lambda argv, **kw: Proc(0, json.dumps(rows)),
+                                          TimeoutExpired=subprocess.TimeoutExpired)
+    try:
+        ok = mc.run_jog_post_merge_land(7, repo_a)
+        check(f"E unusable PR object {raw[:40]}…: returns False without raising", ok is False)
+    except Exception as exc:  # noqa: BLE001 — the control must observe, not mask
+        check(f"E unusable PR object {raw[:40]}…: raised {type(exc).__name__}", False)
+    finally:
+        mc.subprocess = subprocess
+
 bad = [n for n, ok in RESULTS if not ok]
 print(f"{len(RESULTS) - len(bad)} pass, {len(bad)} fail")
 sys.exit(1 if bad else 0)

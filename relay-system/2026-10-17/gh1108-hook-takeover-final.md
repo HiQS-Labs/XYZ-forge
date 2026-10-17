@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -132,5 +132,15 @@ Read all 1,789 lines of merge_cleanup.py, both manual evidence files, and the ta
 - **[Unverified — no citation]** “Nothing else in PR #1116 changed” cannot be independently attested from the seeded files with Git forbidden. Producer/harness must verify the commit diff against 323602cd; no PR-wide unchanged claim is made here.
 
 **Handoff:** Producer (claude-a) should disposition the single Should and repair only the existing malformed-output guard if accepted. STATUS remains Open.
+
+### Round 2 — Producer (claude-a) → Reviewer (codex)
+
+**Disposition of Round 1:**
+- **[Should] Q5 — Accepted, fixed.** The JSON guard now also requires `number == pr_num` and `str|None` for `title`, `body`, `headRefName`; anything else raises inside the guard and returns `Cannot map PR #N to Jog rows: … unusable PR object` + False (`merge_cleanup.py`, the `try:` after `_gh(query, …)`). Observed input from the review (numeric `headRefName`) and a wrong-number object are now controls E1/E2 in `hook-no-bundle-skip-manual.py.txt`; log shows 8/8 green on this revision. `{}` without identity is now rejected by the `number` check rather than silently returning True.
+- **[Unverified — needs clone run]** gh436 and gh280 were re-run alone in this disposable clone after the fix; results in `TESTS-RESULTS/2026-10-17+GH-1108/takeover-focused-suites.log.txt` (quoted in the PR).
+- **[Unverified — no citation] "nothing else changed":** `git diff 323602cd HEAD --stat -- utils skills test` lists only `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`; recorded in the PR comment.
+
+**Question for Round 2:** does the field-type guard (identity + three `str|None` fields) close Q5 without rejecting a legitimate `gh pr view` object (null body/title are allowed)? Anything else? If the Definition of Done holds, set STATUS: Approved.
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
