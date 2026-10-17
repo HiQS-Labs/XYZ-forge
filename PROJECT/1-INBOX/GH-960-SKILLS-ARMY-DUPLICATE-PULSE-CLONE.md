@@ -4,6 +4,9 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/960
 title: "skills-army-hq: normal sync run should flag a duplicate Git Pulse Sync clone (git-pulse writes one, skill links read another)"
 status: Proposed (1-INBOX — not yet active)
 created: 2026-10-03
+fix_probes:
+  - test -f skills/3-weekly/skills-army-hq/scripts/sync.py
+  - bash test/gh620-skills-army-mini-sync.sh --help
 doc_type: bugfix
 ---
 
@@ -28,3 +31,38 @@ the links read is a different clone, or is behind its remote. Full detail is in 
 ## Merge evidence
 
 - PR #962 merged 2026-10-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash ci-local.sh",
+  "fix_probes": [
+    {
+      "type": "grep_absent",
+      "path": "skills/3-weekly/skills-army-hq/scripts/sync.py",
+      "pattern": "DUPLICATE_PULSE_CLONE",
+      "note": "landed when the named warning exists in sync.py"
+    }
+  ],
+  "artifacts": [
+    "skills/3-weekly/skills-army-hq/scripts/sync.py",
+    "skills/3-weekly/skills-army-hq/references/recovery.md"
+  ],
+  "remediation": {
+    "source": "issue#960",
+    "criteria": "Read-only check in the normal sync.py run (preview and --status): warn DUPLICATE_PULSE_CLONE when git-pulse's sync_repo_dir and the collection root are different clones of one remote, STALE_PULSE_COLLECTION when the collection is behind its last-fetched upstream, and report a skip when no git-pulse config exists. No network, no writes, remediation steps printed and mirrored in references/recovery.md. Verify with the existing gh620 suite (GH-831)."
+  },
+  "lanes": {
+    "agy_safe": [
+      "skills/3-weekly/skills-army-hq/scripts/sync.py",
+      "skills/3-weekly/skills-army-hq/references/recovery.md"
+    ],
+    "orchestrator_only": []
+  }
+}
+```
