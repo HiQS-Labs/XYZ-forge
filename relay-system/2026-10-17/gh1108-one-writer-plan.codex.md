@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -70,5 +70,22 @@ Claim the token first as instructed by the shim. If APPROVED, finish with `TICK_
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+VERDICT: FAIL
+Basis: Delivery 1 has a workable one-writer/portable-evidence design, but its deferred publisher leaves the existing merge-cleanup entry gate unsatisfied. Specify the interim operational checkpoint before implementation. This is plan QA, not implementation or runtime attestation.
+
+- [Should] **Make delivery 1's pre-merge primary publication checkpoint explicit.** The plan at `PROJECT/1-INBOX/GH-1108-JOG-LAND-RECEIPTS.md:64` relies on the *post*-merge commit/push, while acceptance step 4 (`:93`) starts after reconciliation/ff. Existing `jog_commit_supervisor_state` commits intake/lease locally without pushing (`utils/py/jog_run.py:244–289`), and the terminal projection writes again (`:1754–1757`). Merge-cleanup checks readiness *before* Phase 5 (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1526–1573`): dirty paths and local-only integration commits both refuse (`scan_clones.py:1233–1240,1296–1307`). Its post-merge publisher cannot clear a prerequisite that prevents reaching it. Fix: retain the authorized delivery-2 deferral, but document an explicit operator checkpoint to inspect and commit only owned Jog ledger/view changes and normally push existing supervisor commits before merge-cleanup, with refusal/preservation on divergence or unrelated changes. Include an end-to-end delivery-1 acceptance control from run completion through clean, published primary to the post-merge hook; do not weaken Phase 0 or introduce automatic NFF repair in this PR.
+  Observed input: the retained primary-run sequence is local supervisor commit → terminal `jog_set_status` → merge-cleanup. Static source input `dirty != []` appends “uncommitted path(s)”; `unpushed_on_integration > 0` appends “local commit(s) ... are not on origin”. Command `sed -n '244,295p' utils/py/jog_run.py; sed -n '1174,1318p' skills/2-daily/merge-cleanup/scripts/scan_clones.py; sed -n '1520,1585p' skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` exited 0 and showed those predicates and the pre-Phase-5 refusal. No runtime reproduction is claimed.
+  Affected scope: delivery-1 primary-supervised runs producing owned local ledger mutations/commits before a normal merge-cleanup invocation; historical receipt-only imports into an already clean primary are not evidence for this path.
+  Falsifier: in a disposable full clone, finish a delivery-1 run, then run normal merge-cleanup readiness without a manual checkpoint or delivery-2 publisher. If primary is clean, has zero unpublished integration commits and is ff-ready, this concern is unnecessary. Otherwise record the refusal, apply the documented owned-state checkpoint, and require readiness to pass. Record commands/results/provenance in the planned GH-1108 evidence directory.
+
+- [Pass] **Scope, reuse and receipt exception are explicit.** The plan says “No immediate transition-push or NFF replay path is added in this PR” (`:64`), keeps canonical `perform_write`/Marathon/B1/post-merge publication (`:71–76,84`), and limits the necessary receipt-publication exception to “this execution's exact bundle paths” (`:73`). B1's current five-path set is at `skills/2-daily/merge-cleanup/scripts/ledger_merge.py:35–39`; its CHANGELOG exception is at `:496`. No second DB writer or suite is proposed. Preserve these boundaries while resolving the checkpoint.
+- [Pass] **Verification and rollback are proportionate at plan time.** `:86` rates the cross-surface change Costly and provides code rollback while preserving evidence; `:91–94` names negative controls, historical cases, existing suites in a disposable full clone, and committed provenance. Revised ratings at `:99` distinguish the broader design from the symptom fix. These are acceptance promises, not witnessed implementation passes.
+- [Unverified — needs clone run] No suites, executable fixtures, Git commands, or functional landing probes were run in this worktree. The historical bundle imports, stripped merge implementation, gate validation and read-only command behavior still require the planned clone controls. Existing base evidence was inspected as prior evidence only. Graph project `XYZ-forge` generation `2026-09-01T15:54:30Z` is stale; coverage marked current Python paths changed and merge-cleanup paths untracked, so material findings use current source reads. The whole 99-line plan was swept; no additional pre-existing plan defects were identified beyond the checkpoint above.
+
+Handing off to Producer (codex-producer) — document the bounded delivery-1 checkpoint and its acceptance control, then open round 2 for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
