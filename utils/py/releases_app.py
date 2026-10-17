@@ -429,12 +429,14 @@ class WriterLock:
 
 # ── DB connection (PRAGMA foreign_keys asserted per connection) ─────────────────────────────────
 
-def connect(db_path, must_exist=True):
+def connect(db_path, must_exist=True, readonly=False):
     if must_exist and not os.path.exists(db_path):
         refuse("not-initialized", "no %s here; run `releases init` first" % DB_NAME)
     # isolation_level=None: transactions are BEGIN/COMMIT'd explicitly by perform_write, so the
     # intent journal -> COMMIT -> stage -> rename ordering is the ONLY ordering that exists.
-    conn = sqlite3.connect(db_path, isolation_level=None)
+    location = ("file:%s?mode=ro" % urllib.parse.quote(os.path.abspath(db_path), safe="/")
+                if readonly else db_path)
+    conn = sqlite3.connect(location, isolation_level=None, uri=readonly)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     if conn.execute("PRAGMA foreign_keys").fetchone()[0] != 1:

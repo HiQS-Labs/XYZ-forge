@@ -620,14 +620,16 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
 
 def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     """Complete only positively mapped Jog rows using the committed-receipt primary writer."""
-    import sqlite3
-    db = repo_path / "releases.db"
-    if not db.is_file():
+    if not (repo_path / "releases.db").is_file():
         return True
-    with sqlite3.connect(db.as_uri() + "?mode=ro", uri=True) as conn:
-        if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='jog_queue'").fetchone():
-            return True
-        queue = {row[0] for row in conn.execute("SELECT gh_number FROM jog_queue WHERE status!='archived'")}
+    dump = repo_path / LEDGER_DUMP
+    if not dump.is_file():
+        log_err("Cannot map Jog rows without the canonical releases.sql dump; run releases check")
+        return False
+    # The preceding reconciliation/check qualifies this dump. Reuse B1's canonical
+    # reader instead of opening a parallel SQLite connection in the landing hook.
+    rows = ledger_merge.parse_dump(dump.read_text(encoding="utf-8"))["tables"].get("jog_queue", {})
+    queue = {int(row["gh_number"]) for row in rows.values() if row.get("status") != "archived"}
     if not queue:
         return True
     query = ["pr", "view", str(pr_num), "--json", "number,title,body,headRefName"]
