@@ -3,11 +3,13 @@
   "attempt": "documentation publication unexpectedly selected full validation",
   "action": "terminated only owned git-push descendant tree; no push bypass",
   "head_after": "7fa7aa3790ac5f1a2823baacd7f6aa7b6dee92b9",
-  "tracked_clean_after": false,
   "origin_after": "https://github.com/HiQS-Labs/XYZ-forge.git",
   "core_bare_after": "false",
   "observed_cached_development": "2454a781a7bfa08ad87ccd7037b237e3d4914f3a",
   "observed_advertised_development": "db7715dddf3abc64bfa9a3d7fbe8d3949dde4cad",
   "cause": "not independently attributed; refresh integration reference before disposable-clone retry",
-  "terminal_summary": false
+  "terminal_summary": false,
+  "status_clean_at_capture_including_new_receipts": false,
+  "post_cancel_observed_clean": true,
+  "status_note": "Immediate post-cancellation git status was empty. Context capture happened after creating the untracked aborted-validation receipt, so its inclusive status check is false; preserve both observations."
 }
