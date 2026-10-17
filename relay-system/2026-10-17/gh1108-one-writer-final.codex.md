@@ -464,4 +464,12 @@ empty dump : result= False land_calls= 0 reader_calls= 0
 
 Relay closed (Approved), no further reviewer turn needed. Producer proceeds with the already required disposable-clone qualification and authorized downstream work; no fifth review turn is authorized.
 
+
+### Attestation · relay-drive — 2026-10-17T15:03:27Z
+task: RELAY-gh1108-one-writer-final
+reviewer: codex
+status: Approved
+reviewed-head: 64c02e8de2c6fc28cf13498951bacc57c92ca6e2
+added-range: 43157+8654
+added-sha256: 2e826aab2080243e5da500ccf03caccd34f31e716608abe427db811b01fbb96c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
