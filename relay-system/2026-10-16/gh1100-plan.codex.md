@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-16.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -72,5 +72,25 @@ ROUND: 1 / 3
 **Review this:** Both dispatch sites, harness_paths, swarm_preflight invocation builder, and marathon_drive root/phase/target consumers. Packet env lacks harness pin; target alone leaves root phases exposed. The proposed helper should remain small.
 **Verification:** Intercepted run_marathon_phase captured nonempty dispatch and failed missing-target assertion; committed provenance and command.
 **Commit:** 6f93fe1d
+
+### Reviewer · Round 1 · codex · 2026-10-16
+**Ship — plan approved.**
+swept file: yes
+**VERDICT: PASS**
+**Basis:** Read both complete plan/recon documents and the current source at the material dispatch, packet, resolver, phase and containment seams. No additional pre-existing defect found in the two reviewed documents. Approval covers the plan, not runtime implementation or landing readiness.
+
+- [Pass] The fix covers both independent root inputs without changing standalone policy: Marathon resolves tools through harness_home and coordination through MARATHON_ROOT (utils/py/marathon_drive.py:1121–1128), defaults phases under that root (:1368), and passes target to relay-drive and shim roots (:3384–3416). Pinning both env values plus an explicit missing target addresses the recorded ambient-XYZ_HARNESS failure; argv alone would leave phase output exposed. The committed red-control.txt records nonempty dispatch, primary resolved_root and “AssertionError: missing explicit --target-root”; provenance.jsonl records exit 1. Its loader was mocked, so it is adapter evidence rather than a validated-packet integration run.
+- [Pass] The executable-parent assumption fits the supported producer layouts: compute_default_root selects relay-automation/marathon-drive.sh or .xyz/relay-automation/marathon-drive.sh (utils/py/swarm_preflight.py:27–35); the structured builder absolutizes that command (:1098–1102). The loader does not require harness_home (utils/py/jog_run.py:84–128). Deriving tooling from argv[0] preserves old packets and lexical .xyz layout without schema growth.
+- [Pass] Same-root explicit target is supported by the existing containment path: relay-drive refuses only a relay outside target (utils/py/relay_drive.py:232–241); the planned root places the default relay below that target (utils/py/marathon_drive.py:2089–2090). Same-repository normalization is already documented and implemented in relay-automation/relay-turn-lib.sh:298–320. Keep explicit cross-repo targets unchanged; this plan does not promise to repair an already-invalid cross-repo relay layout.
+- [Pass] Both dispatch paths need the shared policy: run dispatch merges env at utils/py/jog_run.py:591–608; gate retry independently does so at :798–802; retry-build delegates to run_marathon_phase at :863. Plan step 2 explicitly preserves lock/idle policy and packet immutability. The small shared helper and existing argv adapter are commensurate with these two sites; no multi-tenant machinery is warranted.
+- [Pass] Narrow non-mutating probe, exit 0: command was `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'`, with AST extraction of the current `build_marathon_invocation_artifact` and `_marathon_argv_from_invocation` into an os-only namespace, then root/vendored/explicit packets, deletion of optional harness_home, adaptation, and assertions on packet JSON equality and target presence. Decisive output: root and vendored “target_present: false”; explicit “target_present: true”; all three “packet_unchanged: true”; derived tooling homes were respectively task root, task-root/.xyz, task root, while coordination stayed task root. This corroborates the current omission and derivation assumptions; it does not execute the proposed helper.
+- [Pass] Ratings and bounded scope are grounded in the local record: releases.sql:867 carries 80/85/50/90 without override, matching plan:33. Plan:39–45 requires red/green provenance, target-only falsification, retries, vendored boundaries, disposable-clone verification and final QA; no new tests or gates are proposed.
+- [Unverified — needs clone run] Runtime compatibility, real phase/commit behavior and final required gates remain implementation acceptance work under plan:39–41. No validate.sh, test/*.sh, pytest, builders or executable fixtures ran here.
+- [Unverified — external issue unavailable] `gh issue view 1100 --repo HiQS-Labs/XYZ-forge --json title,body,state` exited 1: “error connecting to api.github.com”; web open of the issue returned “Cache miss”. Issue-specific history and the severity change from 75 are taken from the seeded plan/recon, not independently refreshed. No invented issue-state claim.
+- Evidence limits: Verify tier, graph project XYZ-forge generation 2026-09-01T15:54:30Z; graph search returned all 3 matching adapter/loader/builder symbols, no pagination remaining. Coverage reported changed/missing metadata and the gh280 parse gap at 628–629; material claims use current source reads, including that gap. No repository-wide audit claim.
+
+Root cause: packet omission plus inherited harness selection lets Jog dispatch escape the chosen clone; fix site: Jog's shared dispatch policy; why here: preserve standalone producer/resolver behavior while giving both Jog dispatch paths explicit roots.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with accepted-start and implementation; harness owns the relay-only commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
