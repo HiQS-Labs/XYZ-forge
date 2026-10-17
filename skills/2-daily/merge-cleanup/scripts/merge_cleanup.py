@@ -626,6 +626,13 @@ def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
     # Use the canonical root-bound reader: B1's conservative line classifier
     # deliberately preserves unsupported SQL as `other`, including multiline reasons.
     try:
+        dump = (repo_path / LEDGER_DUMP).read_text(encoding="utf-8")
+        if not dump.strip():
+            raise ValueError("canonical releases dump is empty")
+        # A qualified pre-Jog ledger has neither surface. This is only a presence
+        # check: never use B1's parsed row count to decide that a queue is absent.
+        if "-- table: jog_queue" not in dump and "INSERT INTO jog_queue(" not in dump:
+            return True
         listed = subprocess.run([sys.executable, str(releases_cli), "--root", str(repo_path),
                                  "jog", "list", "--all", "--json"],
                                 cwd=str(repo_path), capture_output=True, text=True, timeout=300)
