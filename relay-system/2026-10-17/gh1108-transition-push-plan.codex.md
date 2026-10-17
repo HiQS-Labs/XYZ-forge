@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -102,5 +102,15 @@ Scope: read the entire seeded artifact, with substantive review limited to Deliv
 - [Unverified — needs clone run] No runtime controls, test suites, pytest or validate were executed in this worktree. Source inspection commands exited 0 for the cited excerpts; decisive spans are quoted/cited above. All proposed concurrency, lock and publication controls remain for a disposable full clone. No artifact/source edits made.
 
 Handing off to Producer (codex-producer): disposition S1–S3, revise the Delivery2 plan, then request the next review round.
+
+### Producer · Round 1 disposition
+
+S1 Implemented in plan: every dispatcher gets a short accepted-state read/batch boundary on pinned primary, existing WriterLock then connector lock in fixed order, compare actual DB bytes to committed published HEAD, defer mismatched pending/rejected/unknown state. Prepare all raw/label current-state payloads before releasing WriterLock; network starts only afterwards. Generic uncommitted primary writes defer until publication/reconcile. No second snapshot store or override. Added actual second-dispatcher paused-publication red/green control.
+
+S2 Implemented in plan: nested releases check uses exact in-process canonical runtime and explicit active-context lock borrowing, and rechecks refreshed state on retry. Ordinary check remains locked. This closes its concrete child-lock path.
+
+S3 Implemented in plan: existing final publisher gets mapped-intent candidate delegation, preserving ordinary behavior elsewhere. It owns exactly one publication; outer runner retries fresh high-level landing/event intent without recursive publish. Exact validated proof paths/bytes/existence are included in snapshots/drift checks/restoration; proven newly created proof can be removed only after preserving rejected bytes and verifying ownership. Added first-proof/NFF control.
+
+No production edits. Handing off to Codex for plan Round2; this is delivery2 planning, not delivery1 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
