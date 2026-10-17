@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-16 — CI audit overhead experiment, evidence only (GH-1111)
+
+A/B/B/A in disposable full clones measured a test-only candidate at 162.136 -> 79.101 s mean (51.213% reduction), with the same 7,412 path checks and five assertions. N=2 per revision on a heavily loaded host; no hosted or whole-suite speedup claim. Parser/registry equivalence, witnessed red/restoration and focused suites passed.
+
+The full candidate gate was red (408/409; process-group PermissionError in gh648-l4-285-revalidate, including its retry). Later isolated base/candidate checks passed; cause remains unresolved. The push was refused and not bypassed. Original test bytes are restored at the report tip; candidate commit/patch and all structured receipts remain under `TESTS-RESULTS/2026-10-16+GH-1111/`. Easy to drop the experiment; no CI policy, runner, suite membership or production optimization is adopted. Independent Agy reporting QA is pending.
+
 ## 2026-10-16 — Keep Jog Marathon dispatch in its selected clone (GH-1100)
 
 Jog now supplies an explicit Marathon target when preflight omits it and pins tooling and coordination roots from the invocation packet for run, retry-build and gate-retry. This prevents a shell-global XYZ_HARNESS from redirecting phase files and commits into the primary clone after #1099. Existing explicit targets, packet formats and standalone resolver precedence are preserved.

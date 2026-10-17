@@ -1,0 +1,41 @@
+{
+  "start": {
+    "v": 1,
+    "ts_ms": 1792218156346,
+    "run": "c2d875fab-60733",
+    "runner": "validate",
+    "event": "run.start",
+    "commit": "c2d875fab7dd1bc3fb3648a2f7b94d60ed8fceb4",
+    "host": "noels-Mac-Studio",
+    "mode": "parallel",
+    "width": 4,
+    "tier": 3,
+    "registered": 406
+  },
+  "summary": {
+    "v": 1,
+    "ts_ms": 1792219174604,
+    "run": "c2d875fab-60733",
+    "runner": "validate",
+    "event": "run.summary",
+    "passed": 408,
+    "failed": 1,
+    "total": 409,
+    "envelope_rc": "0",
+    "envelope_drift": "none",
+    "suite_events": "409",
+    "run_set": "406",
+    "registered": "406",
+    "suite_events_match": "yes"
+  },
+  "validator_wall_s": 1018.258,
+  "explicit_env": {
+    "RELAY_SELF_SUFFICIENCY_SKIP": "1"
+  },
+  "push_refused": true,
+  "candidate_failure_cause": "unresolved",
+  "earlier_same_error_issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/1063",
+  "failure_excerpt": "FAILED in parallel (rc=1): gh648-l4-285-revalidate.sh \u2014 re-running it alone to see if that verdict survives\n===============================\n  ... fails alone too. Real failure; last 40 lines of the SERIAL run:\nPASS: codex pty=0\nPASS: agy pty=0\nPASS: agy pty=1\nTraceback (most recent call last):\n  File \"<stdin>\", line 142, in run_case\nPermissionError: [Errno 1] Operation not permitted\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"<stdin>\", line 163, in <module>\n  File \"<stdin>\", line 153, in run_case\nPermissionError: [Errno 1] Operation not permitted\n\n",
+  "log_sha256": "48304edbee4110add07254f0cde55c443c3a2c55ea8210c292f4be507b6a2b14",
+  "tail": "-vendor-tier-split.sh\n  + relay-uncited-findings.sh\n  + gh312-vendor-preserves-state.sh\n  + wave-reconcile.sh\n  + gh693-lessons-learned-advisory.sh\n  + gh306-registry-bidirectional.sh\n  + gh496-phase2-reconciliation-views.sh\n  + gh298-ate-gen4-ci-smoke.sh\n  + gh-gen4-phase2-adaptive-ate.sh\n  + gh-gen4-phase4-repro-synth.sh\n  + gh-gen4-phase3-fuzz-engine.sh\n  + gh712-jev-triage.sh\n  + gh396-find-harness-roots.sh\n  + gh393-deepseek-readiness.sh\n  + gh591-prepush-commit-boundary.sh\n  + gh-gen4-phase5-campaign.sh\n  + gh589-consult-no-tick.sh\n  + gh589-skill-viewer.sh\n  + gh589-xyz-mini-sync.sh\n  + gh280-jog-marathon-adapter.sh\n  + gh436-merge-cleanup.sh\n  + python:test_python_layer.py\n  + clone-identity-invariant\n  + gamma-poison-staleness-probe\nfailed:\n  - gh648-l4-285-revalidate.sh\n\npre-push: full validation RED (exit 1) after 1019s \u2014 push REFUSED.\n\n  The failing checks are named in the output above.\n\n  Hosted CI may run after the push, but this local boundary is the earliest full signal and the\n  Ubuntu pull-request lane is advisory. Do not use downstream CI as a reason to ignore this red.\n\n  To push anyway (and you may have a good reason \u2014 a WIP branch, a known-red baseline):\n    git push --no-verify\nerror: failed to push some refs to 'https://github.com/HiQS-Labs/XYZ-forge.git'\n"
+}

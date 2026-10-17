@@ -16,7 +16,7 @@ Author: Codex / GPT-6 family / exact model and effort unavailable.
 
 | What was just completed | What's next |
 |---|---|
-| A/B/B/A, equivalence checks, deliberate red and focused routing suites complete; retained receipts | Await normal full pre-push gate, report results to issue, then Agy relay QA |
+| Full gate red 408/409; refused push; later isolated base/candidate checks both green; source restored for evidence-only publication | Publish truthful issue findings and run Agy methodology/results QA; optimization stays held |
 
 ## Recon Map
 
@@ -52,3 +52,7 @@ Measured size of the speedup; host variability; whole-gate regressions; hosted a
 ## Spike findings (before full gate)
 
 Base 188.768/135.504 s; candidate 81.145/77.058 s. Observed means 162.136 -> 79.101 s (51.213% reduction), N=2 each on a heavily loaded shared host. All 7,412 tracked paths and 5 assertions retained; all normalized outputs match. Parser equivalence (16 inputs), membership equivalence (411 suite files), failed/empty extraction refusals, deliberate parser mutation red and exact restoration pass. Three focused routing suites pass. Full gate and independent QA remain pending; no hosted or whole-suite speedup claim. Full details: `TESTS-RESULTS/2026-10-16+GH-1111/SUMMARY.md`.
+
+## Full-gate disposition
+
+Candidate full gate: 408/409, 1,018.258 s validator time, unchanged identity and no envelope drift. `gh648-l4-285-revalidate.sh` failed pooled and on isolated retry with PermissionError; later isolated base/candidate controls passed (11.244/11.225 s). Attribution remains unresolved; GH-1063 contains prior same-error evidence. No whole-gate speedup or merge-ready claim. The hook refused the push; no bypass. Candidate c2d875fa is retained in history and candidate.patch; baseline test bytes restored at the publication tip, allowing evidence-only normal documentation publication. Agy will review the frozen candidate, raw receipts and posted report.

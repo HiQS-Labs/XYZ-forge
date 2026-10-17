@@ -7,7 +7,7 @@ Author: Codex / GPT-6 family / exact model and effort unavailable.
 Base: `c9ecd0bf4c08e77765968a7bf797849658386a6e`.
 Candidate: `c2d875fab7dd1bc3fb3648a2f7b94d60ed8fceb4`.
 Upstream starting point: `2454a781a7bfa08ad87ccd7037b237e3d4914f3a`.
-The code commit changes only `test/gh365-tier-fail-closed.sh` (16 insertions, 7 deletions). The final tracked-file inventories match exactly: 7,412 paths each. No suite, assertion, path classification, runtime setting, production selector or qualification contract was removed or changed. Registry extraction now refuses a failed or empty read rather than trusting an empty cache.
+The code commit changes only `test/gh365-tier-fail-closed.sh` (16 insertions, 7 deletions). The frozen base/candidate tracked-file inventories match exactly: 7,412 paths each. No suite, assertion, path classification, runtime setting, production selector or qualification contract was removed or changed. Registry extraction now refuses a failed or empty read rather than trusting an empty cache.
 
 Three micro-optimizations: Bash builtin output-field parsing instead of nine external text commands per path; one subsystem listing per audit invocation; builtin basename expansion in the two file loops.
 
@@ -40,7 +40,15 @@ Existing focused suites: `ci-route.sh` **4.584 s**, `gh35-test-tiers.sh` **17.71
 
 ## Full gate and publication
 
-Pending: normal full pre-push gate on the frozen candidate, from the disposable gate clone. No bypass. Standard hook live-agent self-sufficiency opt-out (`RELAY_SELF_SUFFICIENCY_SKIP=1`) is explicit. Parallel full results are regression evidence, not sequential promotion qualification. No hosted speedup is claimed.
+**RED: 408 passed / 1 failed / 409 total**, 406 registered shell suites, width 4. Validator start-to-summary: **1,018.258 s**; hook reported **1,019 s**; complete attempted push: **1,020.369 s**. The normal hook refused publication; no bypass was used. Identity remained unchanged, envelope rc=0/no drift, run-set=406 and suite-event consistency=yes. `full-validation.jsonl` is the complete exact-candidate parallel receipt; incomplete nested probe telemetry was excluded.
+
+`gh648-l4-285-revalidate.sh` failed pooled and on the runner's isolated retry with `PermissionError: [Errno 1] Operation not permitted` at its process-group observation/cleanup calls. All other shell suites, Python layer and final identity/poison checks passed. The optimized audit passed in the pool. This is **not a clean full gate or merge readiness**.
+
+Subsequent isolated comparisons both passed: base **11.244 s**, candidate **11.225 s**, with identities intact. Those observations do not establish the cause of the earlier failure. GH-1063 records the same suite/error before this spike; this is relevant antecedent evidence, not proof that this instance is harmless or unrelated. No full base run was performed, and causal attribution remains unresolved. Do not count the later isolated successes as erasing the pooled or retry failures.
+
+Standard hook live-agent self-sufficiency opt-out (`RELAY_SELF_SUFFICIENCY_SKIP=1`) is explicit; it is not a blanket push bypass. Parallel full results are regression evidence, not sequential promotion qualification. No hosted or whole-suite speedup is claimed.
+
+**Publication disposition:** preserve candidate `c2d875fa` and its patch, then restore the original test bytes at the report branch tip. Publish only documentation, ledger and experiment receipts through their normal classified documentation gate. This does not publish the optimization as the branch-tip implementation, waive the red runtime gate, or claim production adoption. The frozen candidate remains reachable in branch history for independent review.
 
 ## Independent QA
 
@@ -48,4 +56,4 @@ Pending: Agy via relay-xyz, after findings are posted to GH-1111. Reviewer will 
 
 ## Disposition and limits
 
-The bounded optimization has a useful local signal without dropping coverage; production adoption remains unmerged. It cannot turn the measured ~64-minute hosted suite into single-digit CI. Larger selective routing or parallel qualification changes remain outside this quick-win spike. Evidence collectors are manual analysis under TESTS-RESULTS, not new gate suites, registry entries, runners or telemetry stages.
+The bounded optimization has a useful local signal without dropping coverage; production adoption is held after a red full gate. The report branch tip restores the baseline test; `candidate.patch` and the immutable candidate commit preserve the experiment. It cannot turn the measured ~64-minute hosted suite into single-digit CI. Larger selective routing or parallel qualification changes remain outside this quick-win spike. Evidence collectors are manual analysis under TESTS-RESULTS, not new gate suites, registry entries, runners or telemetry stages.

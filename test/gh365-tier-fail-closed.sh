@@ -26,17 +26,11 @@ ROUTER="$REPO/utils/ci-route.sh"
 echo "== test: gh365-tier-fail-closed =="
 
 classify() {  # <path> -> sets CL_tier / CL_reason / CL_sub (from one ci-route run)
-  local out key value
+  local out
   out="$(printf '%s\n' "$1" | bash "$ROUTER" push 2>/dev/null)" || { CL_tier="?"; CL_reason="ci-route failed"; return; }
-  # Keep the per-path classifier call; parse its fields without nine processes per path.
-  CL_tier=""; CL_reason=""; CL_sub=""
-  while IFS='=' read -r key value; do
-    case "$key" in
-      tier) CL_tier="$value" ;;
-      tier_reason) CL_reason="$value" ;;
-      tier2_subsystems) CL_sub="$value" ;;
-    esac
-  done <<<"$out"
+  CL_tier="$(grep -F 'tier=' <<<"$out" | tail -1 | cut -d= -f2)"
+  CL_reason="$(grep -F 'tier_reason=' <<<"$out" | tail -1 | cut -d= -f2-)"
+  CL_sub="$(grep -F 'tier2_subsystems=' <<<"$out" | tail -1 | cut -d= -f2-)"
 }
 
 # ── T1: the full-repo sweep ──────────────────────────────────────────────────────────────────────
@@ -97,20 +91,17 @@ EXEMPT_from_family() {  # <suite> -> 0 when exempt (reasons inline), 1 when it m
     *) return 1 ;;
   esac
 }
-# The audit never mutates the router; every membership query uses the same listing.
-SUBSYSTEM_REGISTRY="$(bash "$ROUTER" subsystems 2>/dev/null)" || fail "could not read subsystem registry"
-[ -n "$SUBSYSTEM_REGISTRY" ] || fail "empty subsystem registry"
 registered_anywhere() {  # <suite> -> 0 when some subsystem registers it (cross-family OK)
   # word membership via case (fork-free, and immune to the repo's pipe-into-grep -q ban)
   local b="$1" _sub line
   while IFS=$'\t' read -r _sub line; do
     case " $line " in *" $b "*) return 0 ;; esac
-  done <<<"$SUBSYSTEM_REGISTRY"
+  done < <(bash "$ROUTER" subsystems 2>/dev/null)
   return 1
 }
 _missing=""
 for f in "$REPO"/test/*.sh; do
-  b="${f##*/}"
+  b="$(basename "$f")"
   fam="$(family_of "$b")"
   [ -n "$fam" ] || continue
   # a suite registered in ANY subsystem lane is covered — filenames cross families
@@ -139,7 +130,7 @@ require_fixture "$PLANT" "planted family suite dir"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$PLANT/hq-planted-new-lane.sh"
 caught=""
 for f in "$PLANT"/*.sh; do
-  b="${f##*/}"; fam="$(family_of "$b")"
+  b="$(basename "$f")"; fam="$(family_of "$b")"
   [ -n "$fam" ] || continue
   registered_anywhere "$b" && continue
   EXEMPT_from_family "$b" || caught="$caught$b "
