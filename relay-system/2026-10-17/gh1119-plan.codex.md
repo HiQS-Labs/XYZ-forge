@@ -5,7 +5,7 @@
 -->
 
 NEXT: Producer
-STATUS: Open
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -285,5 +285,22 @@ Relay closed (Approved), no further review turn needed. Producer may proceed wit
 ### Producer · Round 2 protocol correction
 
 Round 1 reviewer verdict PASS is retained above, but the driver refused attestation (exit 4, close-mismatch) because the reviewer released to author and then attempted done without ownership. No implementation has begun. Same task, same three-round cap; no reset. Reconfirm the plan and append your own Round 2 verdict. On approval claim the existing token, then use `done RELAY-gh1119-plan --agent codex` while still owning it; do NOT release it first. Set Approved only as the Reviewer. The harness owns commits. The acceptance criteria are the four explicit questions in the embedded review request and the plan's Ordered plan and acceptance section. Source/license bytes remain implementation verification, not a new plan blocker.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Approve the bounded documentation-only import plan against the four embedded review questions and its Ordered plan and acceptance section. The user explicitly assigns this Reviewer turn, and the Producer's Round 2 correction requests reconfirmation; these resolve the stale `NEXT: Producer` header for entry into this turn. Approval covers the plan, not implementation or publication readiness.
+swept file: yes
+
+- [Pass] Read the entire 43-line plan and entire embedded upstream skill, including both modes, capture guard, examples and standalone fallback. No additional pre-existing defect requiring correction was found in these artifacts. Scope remains “one skill bundle plus its required index row and evidence” (`PROJECT/2-WORKING/GH-1119-WORTH-IT.md:29`).
+- [Pass] Preservation is sufficient: plan lines 36–37 require both modes, callable name and the concrete continuation/capture walkthroughs. The embedded source explicitly says “Ignore time, money and polish already spent,” names Continue/Pivot/Park/Stop, prices remaining value against the strongest alternative, includes maintenance/risk, caps proof at one bounded step, and requires stop/revisit conditions. No planner rewrite is needed.
+- [Pass] Capture retains the required controls: plan line 37 names authorization, decline/no nag, duplicate avoidance and pending truthfulness. The embedded guard requires lookup “including closed results where relevant,” says “absence of access is not evidence that no issue exists,” and requires “verify the write before claiming capture.” Its explicit authorization exception and decline rule avoid repeated approval prompts; pending/declined capture cannot claim full closure.
+- [Pass] Placement and maintenance remain surgical: plan lines 20, 27 and 36–39 specify a pinned single import, same-directory NOTICE/LICENSE, recorded deviations, manual update recipe and one index row, with existing weekly skills unchanged. `skills/README.md` identifies `3-weekly/` as “cadence reviews”; `weekly-planner` frontmatter owns team planning and its shared daily engine. Preserve the manual recipe in NOTICE as Round 1 recommends; no tooling is needed.
+- [Pass] Verification limits are explicit: plan line 38 calls the records “author walkthroughs, not live model behavior evaluations” and forbids new cases/suites/gates. Lines 39 and 43 leave final QA and relevant gates outstanding. The upstream proof step likewise authorizes no execution or weakening of required coverage.
+- [Unverified — implementation check] Exact pinned LICENSE/README bytes, source equality, and live upstream PR state were not independently revalidated. Plan line 27 supplies the full source revision and separate-license intent; line 36 requires retaining the upstream LICENSE. Implementation QA must inspect those actual bytes and deviations. This turn asserts no legal compatibility conclusion or current external state.
+- [Unverified — needs clone run] No gate, test suite, executable fixture or live-agent evaluation ran. The harness/implementation phase owns clone-run verification.
+- Evidence: `nl -ba PROJECT/2-WORKING/GH-1119-WORTH-IT.md` exited 0 and returned nonempty lines 1–43; decisive lines 36–39 require preserving behavior, manual walkthroughs, durable provenance and final QA. Direct reads of `skills/README.md` and weekly-planner frontmatter exited 0. No graph tools were callable in this turn; this is a bounded direct-source review, with no exhaustive repository-discovery claim. No artifact/source file was edited and no git command was run.
+
+Relay closed (Approved), no further review turn needed. Complete the token with `done RELAY-gh1119-plan --agent codex` while still owning it, per the Producer's correction; the harness owns the relay commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
