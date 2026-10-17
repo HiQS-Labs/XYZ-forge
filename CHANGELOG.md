@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-17 — task-sync grooms Claude Code session titles (GH-1105)
+
+task-sync gains two Claude Code adapters. `--ide claude` stamps local session titles (CLI, desktop app, VS Code extension) with each session's own last-activity mm-dd by appending the same `custom-title` record `/rename` writes; it compares against the label the session list actually resolves (tail, sidecar, head), skips running sessions via `~/.claude/sessions`, and restores the transcript mtime. `--ide claude-cloud` is a read-only planner for claude.ai/code sessions; `set_session_title` owns cloud writes. The Codex-only plan-only guard became a shared `PLAN_ONLY` set. The install SOP now enables Skills Army HQ's existing `claude` target (`~/.claude/skills`) through `intake.py`/`sync.py`; nothing is hand-copied.
+
+Containment boundary: Easy to reverse; revert the PR. Stamps are appended, never rewritten, so earlier titles stay in each transcript. The one lasting effect: a session's AI title stays frozen at the wording seen when stamped. No new tests or schema. Verification and red controls: `TESTS-RESULTS/2026-10-17+GH-1105/` (24/24 probes); independent plan/final QA by a Claude subagent (this cloud session has no Codex CLI). Enabling the Claude Code target is a per-device operator step after merge.
+
 ## 2026-10-16 — Keep Jog Marathon dispatch in its selected clone (GH-1100)
 
 Jog now supplies an explicit Marathon target when preflight omits it and pins tooling and coordination roots from the invocation packet for run, retry-build and gate-retry. This prevents a shell-global XYZ_HARNESS from redirecting phase files and commits into the primary clone after #1099. Existing explicit targets, packet formats and standalone resolver precedence are preserved.
