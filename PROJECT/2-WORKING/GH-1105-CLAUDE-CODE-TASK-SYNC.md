@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake parked (rated 55/25/50/65), recon and plan written | Independent plan review, then implement the `claude` adapter and docs |
+| Plan QA approved (round 2); rated 55/25/50/55 | Implement the `claude` adapters, CLI wiring and docs; run probes |
 
 ## Key concepts
 
@@ -79,7 +79,8 @@ One new adapter module, `adapters/claude.py`, with two classes sharing the core:
      then `aiTitle`, then `summary`. Comparing against what the app shows (not "last record in the
      file") makes a stamp that scrolled out of the tail get re-appended on a later tick.
    - Skip (fail closed): session listed as running in `~/.claude/sessions/*.json` with a live pid,
-     or that registry unreadable (same rule as the Antigravity app gate); `agentName` set (it
+     or that registry unreadable/unparseable (same rule as the Antigravity app gate; a missing
+     `~/.claude/sessions/` directory means nothing is running); `agentName` set (it
      outranks `customTitle`); activity older than `--hours`; activity within the last 10 minutes
      (backstop only). Running sessions include the heartbeat's own session.
    - No title at all (only a first prompt) → `needs_summary`, no write. This deliberately differs
@@ -114,7 +115,8 @@ One new adapter module, `adapters/claude.py`, with two classes sharing the core:
    (list_sessions → list_events → snapshot → plan → recheck → `set_session_title` → read back).
    **Single scheduler:** local Claude Code joins the one existing heartbeat
    (`--ide zcode,agy,claude`), whose prompt also handles `needs_summary` from the `claude`
-   section; no second local writer. Cloud titles have exactly one writer, a Claude Code scheduled
+   section; no second local writer. The summary source is the transcript's last `last-prompt` record, else the last user message text.
+   Cloud titles have exactly one writer, a Claude Code scheduled
    task running the native sweep (the same exception the Codex native heartbeat already has).
    Install SOP step 2 gains Claude Code `~/.claude/skills/task-sync`.
 5. **Skills Army HQ deployment to Claude Code (requirement 2, docs only):**
@@ -162,7 +164,9 @@ Manual probes against fixture roots in `temp/`, recorded under
    no trailing newline → skipped; file changed between read and write → skipped; activity inside
    10 minutes → skipped; session in the running registry → skipped; unreadable registry → error;
    `agent-name` session → skipped; no title → `needs_summary`; doctor with a transcript missing
-   `timestamp` → red naming it.
+   `timestamp` → red naming it; unparseable pid file → error; missing registry dir → treated as
+   nothing running. On the Mac (operator): confirm CLI, desktop and VS Code sessions each write
+   `~/.claude/sessions/<pid>.json`.
 3. Sidecar: sidecar holds title A, no `custom-title` in the tail → proposal re-stamps A; after
    apply, a re-run is a no-op.
 4. Cloud planner: fresh snapshot → proposals only for idle `anthropic_cloud` sessions (a
@@ -183,7 +187,9 @@ Codex CLI), round 1: Changes requested, 6 Major / 6 Minor / 2 Nit, no blockers. 
 folded in above (sidecar-aware label, running-session gate, single scheduler, requirement-2 SOP
 and rollback, append-only undo wording, cloud paging, `Z` parsing, CLI generalization, guarded
 mtime restore, red controls, rating and risk). The AI-title refresh suggestion was considered and
-rejected (see Rollback).
+rejected (see Rollback). Round 2: Approved; its Minor (missing registry = nothing running, red
+control each way, Mac probe that CLI/desktop/VS Code sessions all write a pid file) and two Nits are
+folded in.
 
 ## Rating rationale (2026-10-17)
 
