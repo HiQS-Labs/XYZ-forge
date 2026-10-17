@@ -57,3 +57,7 @@ Pending: Agy via relay-xyz, after findings are posted to GH-1111. Reviewer will 
 ## Disposition and limits
 
 The bounded optimization has a useful local signal without dropping coverage; production adoption is held after a red full gate. The report branch tip restores the baseline test; `candidate.patch` and the immutable candidate commit preserve the experiment. It cannot turn the measured ~64-minute hosted suite into single-digit CI. Larger selective routing or parallel qualification changes remain outside this quick-win spike. Evidence collectors are manual analysis under TESTS-RESULTS, not new gate suites, registry entries, runners or telemetry stages.
+
+## Incomplete publication attempt
+
+An additional documentation publication attempt unexpectedly selected full validation in the task clone. It was terminated after detection; no terminal summary exists, so it is excluded from completed gate counts and timing comparisons. `aborted-publication-validation.jsonl` and `aborted-publication-context.json` retain this event. Task HEAD/origin/configuration and tracked state remained intact. The cached integration tip was behind the advertised tip when checked; the routing cause is not independently attributed. Further publication/gate work moved to the disposable clone with a refreshed integration ref, where normal documentation routing was observed. No push bypass or runtime approval is inferred.
