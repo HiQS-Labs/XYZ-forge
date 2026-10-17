@@ -132,4 +132,12 @@ Evidence: read-only source inspection commands exited 0. Decisive commands inclu
 
 Relay closed (Approved), no further review turn needed. Producer (codex-producer) may implement this approved plan; final implementation QA remains required after dependency merge/rebase.
 
+
+### Attestation · relay-drive — 2026-10-17T15:18:30Z
+task: RELAY-gh1108-transition-push-plan
+reviewer: codex
+status: Approved
+reviewed-head: 0fb71ca91a2a25dea70c2fb808e0846662b17ad3
+added-range: 15270+4120
+added-sha256: 30fa3f1811d3839dafd9b7553f98623757c319981196d5b791d0e6ca3e8c51a3
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
