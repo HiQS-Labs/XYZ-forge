@@ -180,3 +180,11 @@ Affected scope: `/10days` Step 7 lane-worktree retirement, including any remaini
 Falsifier: show a required preservation check in this cleanup step that inventories and preserves unique remaining state before any force removal. No destructive reproduction was attempted; runtime impact is **[Unverified — needs clone run]**. Source probe: `nl -ba skills/3-weekly/10days/SKILL.md | sed -n '495,515p'` (exit **0**) printed the unconditional fallback quoted above. Recommended follow-up is to retain/report dirty worktrees pending preservation proof; this body change needs separately authorized scope.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-17T02:44:32Z
+task: MARATHON-GH-942-SKILL-DESC-1024-LIMIT-TURN
+reviewer: codex
+status: Approved
+reviewed-head: ab5e6ab227aaa5964ce559fc308570549acffd35
+added-range: 18085+4383
+added-sha256: 3e6108a384caf6ed986a9c0663a6dedb9be31f17f91c06f94559e57bdf3cf449
