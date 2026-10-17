@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -71,5 +71,36 @@ Only this relay is writable; never edit plan/production. Append concrete cited f
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: Block implementation pending three bounded clarifications below. The canonical writer/fresh-intent approach is sound, but the proposed publication envelope does not yet close every existing reader/lock/publisher seam.
+swept file: yes
+
+Scope: read the entire seeded artifact, with substantive review limited to Delivery2, the five requirements and referenced current source seams; delivery1's closed final approval is not reopened. Graph Verify lookup used XYZ-forge generation `2026-09-01T15:54:30Z`; coverage reported metadata_changed for releases_app/jog_run and not_tracked for work_connectors/merge_cleanup, so current source was used instead. No exhaustive graph-completeness claim. No other in-scope plan defects identified in the sweep.
+
+- [Should] **S1 — Deferred dispatch does not isolate provisional events from other dispatchers.** Artifact lines 135, 144–147 promise that a rejected transition never projects, but only defer the current intent's dispatch. Existing `work_connectors.dispatch` takes only `_ConnectorLock` (utils/py/work_connectors/__init__.py:431–436); `_dispatch_locked` opens the live DB and reads all events after its cursor (462–468), then launches connectors (485). `perform_write` commits the DB before Git publication (utils/py/releases_app.py:1735), so a delayed prior dispatch or explicit reconcile can read the next intent's unaccepted event. Moving cursors and validating their identity cannot retract that external projection.
+  Observed input: the concrete reader is `events_after(read, last)` at work_connectors/__init__.py:468 with `WHERE e.id > ?` at 136; the planned writer leaves its committed candidate DB visible during push. Schedule: candidate DB commit → another process dispatches that event → NFF rejects candidate.
+  Affected scope: automatic and explicit dispatch against the pinned primary while a Jog publication is pending/unknown, including github_labels' live current-state reads.
+  Falsifier: in a disposable clone pause publication after DB commit, run a second dispatcher/reconcile, then reject publication; no payload/current-state projection may contain the rejected intent. After acceptance, the accepted event must remain replayable without holding WriterLock over network calls.
+  Concrete fix: specify a short, consistently ordered writer-lock-protected accepted-state snapshot/read boundary, or an equally small accepted-state source, for **all** dispatcher entry paths. Release the writer lock before connector network time. Explicitly handle preserved dirty state after unknown/failed publication; acquiring the lock alone after failure must not make an unpublished DB accepted.
+
+- [Should] **S2 — In-process landing still contains a lock-taking subprocess.** Artifact line 148 addresses the outer land and work-emit subprocesses, but current `jog_land` invokes `releases check` as a child (utils/py/jog_run.py:1185–1188), and `cmd_check` independently acquires WriterLock (utils/py/releases_app.py:5714–5715). Moving land itself in-process does not pass a ContextVar into that child. Under the proposed outer intent this path waits/refuses on its parent's lock before completion.
+  Observed input: `[sys.executable, resolve_tool(root, "utils/py/releases_app.py"), "--root", root, "check"]` at jog_run.py:1185–1186.
+  Affected scope: standalone and mapped landing when verification executes within the new publication lock.
+  Falsifier: a clone run of both landing paths under the outer intent completes without writer-lock refusal and retains canonical check validation on each refreshed retry state.
+  Concrete fix: explicitly place check outside the held-lock portion with revalidation of the checked state, or reuse the exact runtime's check in-process with deliberate lock borrowing. Inventory this nested lock path in step 6; do not merely replace the outer subprocess.
+
+- [Should] **S3 — Define how the existing final publisher joins candidate publication and proof rollback.** Artifact line 145 snapshots/restores only six B1 paths; line 148 adds landing.json and reuses the final publisher as callback. That publisher currently runs `git add -A`, `git commit`, then pushes HEAD (skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:756–766), moving primary HEAD before acceptance. `jog_land` also creates/updates landing.json outside those six paths (utils/py/jog_run.py:1222–1226). Calling the existing publisher unchanged contradicts steps 3–4; restoring only the six files on NFF leaves the rejected proof in the worktree.
+  Observed input: the exact final callback `commit_and_push_phase5_writes` above, plus a first landing whose execution bundle has no landing.json at the pre-intent snapshot.
+  Affected scope: mapped normal/reconcile-pr final publication and standalone landing with raced or unknown push outcome.
+  Falsifier: clone control with first-created landing.json and forced NFF keeps primary HEAD unchanged until acceptance, rebuilds proof from fresh queue truth, and produces one clean accepted commit containing only six owned paths plus exact validated proof paths; injected unrelated dirt is refused.
+  Concrete fix: state that the **existing final publisher entry point** gains a narrowly scoped mapped-intent branch delegating to the same candidate engine, while ordinary consumers keep its existing behavior. Include exact proof path bytes/existence in that intent's snapshot, drift checks and restoration, preserving rejected bytes in recovery evidence before removing only a proven intent-created file. Name callback ownership so it cannot recursively publish or commit HEAD early.
+
+- [Unverified — no citation] Scope, rollback and verification restraint are appropriate at plan level: artifact lines 139 and 149–150 retain independent delivery2 rollback, existing-suite/manual controls, dependent draft publication, rebase before final code QA, and no merges/new gates. Steps 144–146 explicitly require fresh high-level retries, a three-attempt budget, preserved unknown outcomes and no destructive rollback. These are design requirements, not executed implementation proof.
+- [Unverified — needs clone run] No runtime controls, test suites, pytest or validate were executed in this worktree. Source inspection commands exited 0 for the cited excerpts; decisive spans are quoted/cited above. All proposed concurrency, lock and publication controls remain for a disposable full clone. No artifact/source edits made.
+
+Handing off to Producer (codex-producer): disposition S1–S3, revise the Delivery2 plan, then request the next review round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
