@@ -13,8 +13,8 @@ complexity: 2
 risk: 2
 phases: 1
 fix_probes:
-  - "bash -c 'time bash test/marathon-root-audit.sh >/dev/null' 2>&1 | grep real"
-  - "grep -n 'PermissionError' test/gh648-l4-285-revalidate.sh"
+  - "bash -c 's=$(date +%s); bash test/marathon-root-audit.sh >/dev/null 2>&1; rc=$?; e=$(( $(date +%s) - s )); [ $rc -eq 0 ] && [ $e -le 10 ]'"
+  - "grep -c 'except (ProcessLookupError, PermissionError)' test/gh648-l4-285-revalidate.sh | grep -qx 2"
 ---
 
 # GH-1112 — CI quick wins (decided on #1118, 2026-10-17)
@@ -23,7 +23,7 @@ fix_probes:
 
 | What was just completed | What's next |
 |---|---|
-| Intake: clone `XYZ-forge-gh1112-ci-quick-wins-2026-10-17`, branch `fix/…`, base `a984865e` (origin/development after PR #1116) | Plan QA (Codex relay), then implement the three items and measure |
+| Plan QA round 1 (Codex): 3 Should accepted (pre-gate token set, status-aware green+red parity, EPERM policy); plan tightened | Plan QA round 2, then implement the three items and measure |
 
 ## Problem
 
@@ -39,19 +39,26 @@ relay confirmed them:
    (621→841 s), `gh280-jog-marathon-adapter.sh` (632→776 s) and `gh589-xyz-mini-sync.sh`
    (720→738 s) are scheduled late and strand one worker for the final ~100 s. Moving them to the
    front of `TESTS` removes up to ~70 s of tail overhang. One list edit; no scheduler change.
-3. **`test/gh648-l4-285-revalidate.sh` PermissionError (#1114 attribution, #1111 408/409).**
-   `os.killpg(proc.pid, 0)` and the cleanup `os.killpg(proc.pid, SIGKILL)` catch only
-   `ProcessLookupError`; when the group has already been reaped and the pgid reused by a process
-   the test may not signal, `PermissionError` escapes and the suite fails. Catch
-   `(ProcessLookupError, PermissionError)` at both sites with the same disposition.
+3. **`test/gh648-l4-285-revalidate.sh` PermissionError (authorized by #1118 "pre-measurement
+   hygiene"; observed as #1111's 408/409; associated with #1114 only as the parallel-contention
+   track, not its original subject).** `os.killpg(proc.pid, 0)` (L148) and the cleanup
+   `os.killpg(proc.pid, SIGKILL)` (L159) catch only `ProcessLookupError`. `PermissionError`
+   (EPERM) from `killpg` means a process group with that id exists but this uid may not signal
+   it. Every descendant this fixture launches shares the test's uid, so a group it cannot signal
+   is not the fixture's group; the most likely cause is pgid reuse after reaping, which is a
+   hypothesis, not something the observation proves. **Policy:** at the observation site EPERM is
+   recorded as `group_absent: "eperm-unsignalable"` and treated as absent (the fixture's own group
+   is gone or never existed as such); at the cleanup site EPERM is ignored like
+   `ProcessLookupError` so a cleanup error cannot mask the verdict. A group that stays
+   signalable keeps hitting the `deadline` branch and still raises `process group remains`.
 
 ## Per-issue requirements
 
 | Issue | Requirement | Acceptance (falsifiable) |
 |---|---|---|
-| #1112 QW-2 | Audit output byte-identical to the current script on the same tree; wall time ≤ 10 s sequential | `diff <(bash old) <(bash new)` empty, both stdout and stderr; `time` recorded before/after in `TESTS-RESULTS/2026-10-17+GH-1112/` |
-| #1112 ordering | The three heavy suites appear first in `TESTS`; registry count unchanged; `gh544-parallel-default.sh` and the registry suites stay green | `validate.sh --print-mode` unchanged; one 4-wide parallel run shows the heavy suites start at t≈0 |
-| #1114 gh648 | Guard both `killpg` sites; the suite still fails when a process group genuinely remains | existing suite green; the four previously rescued suites (`gh360-scoped-receipt-chain-rebuild.sh`, `gh484-phase-dir-default.sh`, `gh648-l4-285-revalidate.sh`, `jog-queue.sh`) run concurrently in a disposable clone, 0 failures; red control: a deliberate still-alive group still raises `process group remains` |
+| #1112 QW-2 | Audit stdout, stderr and exit status identical to the current script on the same tree, with non-empty stdout; wall time ≤ 10 s sequential (rc must be 0 for the timing to count) | Green parity: old/new run separately with stdout, stderr and rc captured to files; `cmp` both streams, rc equal, stdout non-empty. Red parity: in a disposable clone, temporarily append an unscoped `python3 utils/py/marathon_drive.py --dry-run` line to an existing `test/gh*.sh`, run old and new: both rc=1 with matching non-empty `FAIL:` stderr; revert. Existing covering suite `test/gh273-marathon-root-audit-python-shape.sh` (alias/flag/version/unscoped cases) must keep every verdict. All recorded under `TESTS-RESULTS/2026-10-17+GH-1112/` |
+| #1112 ordering | The three heavy suites appear first in `TESTS`; suite set and count unchanged; same sequential runner (sequential and `--list` order change accordingly, Tier-2 order comes from `T2_TESTS` and is untouched); `gh544-parallel-default.sh` stays green | `validate.sh --print-mode` unchanged; `--list` set-equal before/after; one 4-wide parallel run's telemetry shows the three suites dispatched in the first wave |
+| #1114 gh648 (partial hygiene item per #1118; #1114 stays open) | Guard both `killpg` sites under the documented EPERM policy; the suite still fails when a signalable group remains | existing suite green; the four previously rescued suites (`gh360-scoped-receipt-chain-rebuild.sh`, `gh484-phase-dir-default.sh`, `gh648-l4-285-revalidate.sh`, `jog-queue.sh`) run concurrently in a disposable clone, 0 failures; red control: the suite's existing surviving-group mutant (L171-178) still fails; manual control: an injected `PermissionError` at the probe follows the documented policy (recorded `eperm-unsignalable`, no exception) |
 
 ## Non-goals
 
@@ -63,8 +70,11 @@ receipt-contract work (separate task).
 
 - `test/marathon-root-audit.sh`: `find_invocation_target` and `get_alias_target` return through a
   variable instead of `printf` + `$(…)`; the per-line call site reads that variable. A cheap
-  pre-gate skips lines that contain none of the driver tokens before any regex work. Nothing
-  else in the audit's rules changes.
+  substring pre-gate runs only on invocation detection (never on `discover_file_metadata`, which
+  learns safe variables and aliases): a line is examined only if it contains `marathon`, `python`
+  or `sh` (the two vendored literals contain `marathon`; every Python branch, direct or alias,
+  contains `python`; every shell branch contains `sh`, which covers bash/zsh/dash). This admits
+  false positives on purpose; the existing regexes still decide. Nothing else in the rules changes.
 - `validate.sh`: move three entries within `TESTS` (comments travel with them).
 - `test/gh648-l4-285-revalidate.sh`: two `except` tuples.
 
@@ -79,8 +89,9 @@ a live group; the existing `deadline` branch still raises `process group remains
 
 - #1112: `rated 70/40/50/85` — pri: decided on #1118 as the targeted CI win; sev: no user
   harm, developer time only; appeal neutral; effort: three small one-file edits.
-- #1114 (gh648 item only): `rated 65/55/50/90` — sev: a flake that fails the full gate
-  (408/409 observed on #1111); effort: two-line guard.
+- #1114 (gh648 item only; cross-track association, authorized by #1118): `rated 65/55/50/90` —
+  sev: a flake that fails the full gate (408/409 observed on #1111); effort: two `except`
+  tuples plus one recorded field. #1114's own subject (bookkeeping re-trigger) is untouched here.
 
 ## Evidence
 

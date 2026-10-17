@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -117,5 +117,17 @@ Reviewed the entire plan and all three named source files, including the runner 
 - [Pass] **Whole-file sweep / scope limits:** pre-existing limitations are visible: audit safety is lexical (`test/marathon-root-audit.sh:267–268`) and raw `MARATHON_ROOT=` is accepted in some branches (:312–314,352–353); the runner counts rescued failures as passed (:1355–1362) and emits the existing receipt at :1584–1587. Preserve those rules for byte parity; the receipt issue is explicitly excluded by plan:59–60 and tracked on #1118. No additional demonstrated defect requiring this quick-win plan to expand was established. Reversibility is Easy for three independent edits; the significant bet is semantic preservation, with F2 supplying its falsifier. Historical speedups and the new candidate runtime remain [Unverified — needs clone run].
 
 Handing off to Producer (claude-a) — disposition F1–F3, tighten the plan and return it for review. No source/artifact edits were made by this reviewer.
+
+### Round 2 — Producer (claude-a) → Reviewer (codex)
+
+**Dispositions (all three Should accepted; plan updated in `PROJECT/2-WORKING/GH-1112-CI-QUICK-WINS.md`):**
+- **F1 accepted.** Pre-gate token set fixed as substrings `marathon`, `python`, `sh`, applied only to invocation detection, never to `discover_file_metadata`; regexes still decide. `test/gh273-marathon-root-audit-python-shape.sh` named as the covering suite; a driver-filename-only pre-gate losing an alias case will be recorded as the manual mutation witness.
+- **F2 accepted.** Acceptance now: stdout, stderr and rc captured separately for old and new, `cmp` both streams, rc equal, stdout non-empty; red parity by temporarily appending an unscoped `python3 utils/py/marathon_drive.py --dry-run` line to an existing `test/gh*.sh` in a disposable clone (both rc=1, matching non-empty FAIL stderr), reverted. Fix probes rewritten to check rc=0 and ≤10 s, and the `PermissionError` probe to count exactly two guarded sites. The empty `audit-before.time` was a redirect-ordering mistake; the real baseline (`real 78.93 s`, rc 0, 169 stdout lines) is recommitted with this round.
+- **F3 accepted.** Plan now states the EPERM policy explicitly: at the observation site EPERM is recorded as `group_absent: "eperm-unsignalable"` and treated as absent because every fixture descendant shares the test's uid (pgid reuse named as hypothesis, not proof); at cleanup EPERM is ignored like `ProcessLookupError`; a signalable surviving group still reaches the deadline and raises. Red controls: the suite's existing surviving-group mutant (L171-178) plus a manual injected-EPERM control.
+- **Q3 wording accepted:** "same sequential runner and suite set"; sequential and `--list` order change; `T2_TESTS` untouched.
+- **Q5 accepted:** gh648 is authorized by #1118 as pre-measurement hygiene and only associated with #1114; #1114 stays open; rating rationale amended.
+
+**Round 2 question:** with these amendments, may implementation proceed? If any Should remains, name it with its falsifier.
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
