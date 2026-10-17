@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -66,5 +66,23 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+Ship the bounded plan.
+
+swept file: yes
+VERDICT: PASS
+Basis: Read the complete 63-line artifact and traced the current landing, receipt lookup, CLI aliases, canonical queue writer and reconciliation entry. No blocking or mandatory-change defect found in the plan, including its pre-existing sections. Approval is for implementation of this plan, not live landing or merge readiness.
+
+- [Pass] Ground truth matches the issue and current seam: exact head equality and root identity at `utils/py/jog_run.py:961–969`, local-base reachability at `:988–994`, landing-marker-before-queue ordering at `:1014–1017`, and replay's reconciled shortcut at `:1024–1026`. `gh issue view 1108 --repo HiQS-Labs/XYZ-forge --json title,body,comments` exited 0; decisive issue input: “The receipt's approved head is 6f521bc5” and the comment requires landing writes in the primary. The plan addresses both requirements (artifact lines 36–40).
+- [Pass] The six-path exception is bounded and intentionally does not promise to land historic #1102 (artifact lines 28, 36, 42). Read-only probe `gh api repos/HiQS-Labs/XYZ-forge/compare/6f521bc5...974d98db --jq '{status,ahead_by,total_commits,paths:[.files[].filename]}'` exited 0: `status="ahead", ahead_by=12`; paths included `PROJECT/2-WORKING/GH-1087-GH1051-RECORD-SPACING.md`, `TESTS-RESULTS/2026-10-17+GH-591/wave-746b114843afe67ea0d3b8143e06550e0924e530/provenance.jsonl`, and `marathon-system/gh-1087-gh1051-record-spacing/RELAY.md`. Thus the historical example exceeds the explicit allowlist; renewed approval is an honest limitation.
+- [Pass] Root ownership and replay requirements are sufficient at plan granularity: source evidence/state, destination GitHub/Git/PRS/lifecycle, origin and source-path validation, unique destination queue identity, destination-qualified key, reconciliation reset and queue completion before the shortcut (artifact lines 38–40, 55–58). Existing `jog_set_status` always calls `perform_write` (`utils/py/releases_app.py:4853–4890`), so checking completion before calling it is necessary to meet the stated no-duplicate-receipt criterion. Preserve that requirement during implementation.
+- [Nit] Clarify “Relative evidence resolves against the source execution directory” (artifact line 38) to distinguish gate evidence from state-record paths. `_ledger_abs_path` explicitly resolves relative `result_path`/`packet_dir` from `<source>/.tick/jog/<source-gid>/` (`utils/py/jog_run.py:217–229`); `_jog_latest_receipt` and `_jog_exec_dir` depend on that convention (`:647–676`). Preserve this existing convention while resolving gate evidence at its specified source location. This is wording clarification, not a request to broaden the feature.
+- [Pass] Ratings are recorded without an unsupported recurrence boost (artifact line 63). Read-only SQLite probe `sqlite3.connect('file:releases.db?mode=ro', uri=True)` with `SELECT * FROM roadmap_items WHERE gh_number=1108` exited 0 and returned one row, `rmi-01M54B6DYYH7J2VXKTVPF01BZA`, ratings `85/80/50/60`, `rating_ovr=None`, and the artifact's doc path. The stated Costly boundary and rollback are proportionate (artifact line 44).
+- [Unverified — no citation] Verification scope uses existing coverage and manual red controls in a disposable full clone, retains provenance, checks nonempty extraction and Git identity, and requires final independent QA (artifact lines 49–51, 59). No new suite/gate is proposed.
+- [Unverified — needs clone run] Candidate behavior, red controls, duplicate-receipt counts and interrupted recovery are future implementation evidence. No suite, executable fixture, gate, or live landing was run here. Graph tools were unavailable in this reviewer tool inventory; source fallback was used, and the artifact's old graph generation was not treated as current proof.
+
+Done. Relay closed (Approved), no further review turn needed. Producer acts next to implement the approved plan and carry the path-convention clarification into the work.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
