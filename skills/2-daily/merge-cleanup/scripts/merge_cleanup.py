@@ -489,7 +489,7 @@ def emit_pr_merged(repo_path, pr, dry_run=False, publication_runtime=None):
                 emitted += 1
             else:
                 print(f"  (work event not recorded for #{issue}: {r.stderr.strip()[:120]})")
-        except Exception as exc:
+        except (Exception,SystemExit) as exc:
             print(f"  (work event not recorded for #{issue}: {exc})")
     return emitted
 

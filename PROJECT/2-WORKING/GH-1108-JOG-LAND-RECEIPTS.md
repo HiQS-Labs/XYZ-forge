@@ -176,3 +176,5 @@ The operator-authorized dependent draft must say `depends on #1116`, target deve
 
 
 Stack updated to the live first-PR head323602cd before draft publication. Its canonical recovered ledger and reminted GH1108 row are carried forward unchanged; this delivery adds no task-clone queue writes or ledger delta. First-PR runtime source remains unchanged. The capture conflict was resolved by retaining the full incoming first-delivery history/evidence and this separate approved delivery2 section. Required rebase onto development still waits for external merge of PR1116.
+
+After external dependency merge/rebase, final QA includes Codex and the operator-requested Claude Code Opus5.5 high peer review, with results retained in the second PR. Neither final review runs on the stacked duplicate diff. The in-process merge event emitter retains its established nonfatal refusal contract (including SystemExit from the canonical CLI); queue/proof durability still uses the gated publication intent.
