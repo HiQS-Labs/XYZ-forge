@@ -101,4 +101,12 @@ Basis: Read the entire imported SKILL.md, NOTICE and LICENSE, active task docume
 
 Relay closed (Approved), no further turn needed. Harness owns the file-scoped commit and subsequent final-state gate; Producer resumes the already planned publication workflow after those checks.
 
+
+### Attestation · relay-drive — 2026-10-17T23:18:19Z
+task: RELAY-gh1119-final
+reviewer: codex
+status: Approved
+reviewed-head: bc12452087118d8d37dcd76f5c2e625bdcac426e
+added-range: 7928+4564
+added-sha256: 776dfafb1d270b437b2341ed17a8c53343a22368dc889db0c9340a47666c2279
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
