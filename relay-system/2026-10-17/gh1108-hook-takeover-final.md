@@ -201,4 +201,12 @@ Decisive output (exit 0): each invalid object logged `Cannot map PR #7 to Jog ro
 
 **Handoff:** relay closed (Approved), no further turn needed. Producer/harness owns the final qualifying gate and diff-scope check. No Git command or artifact/source edit was made; only this relay file was changed.
 
+
+### Attestation · relay-drive — 2026-10-17T16:31:18Z
+task: RELAY-gh1108-hook-takeover-final
+reviewer: codex
+status: Approved
+reviewed-head: b30b17223db93f478190791b828bb2769d2fd647
+added-range: 16678+5621
+added-sha256: c8ed558cc078be205105fb1093e85107549c681ef0c4bfac32abe6407457635a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
