@@ -199,7 +199,7 @@ def _accepted_read_lock(db_path):
     root = os.path.realpath(os.path.dirname(db_path))
     try:
         primary = primary_root(root)
-    except ValueError:
+    except (ValueError,subprocess.CalledProcessError):
         return None
     if root != primary:
         return None
