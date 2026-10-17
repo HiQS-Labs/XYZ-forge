@@ -1,0 +1,4 @@
+== takeover focused suites (clone GH, runtime afa23d58)
+gh436-merge-cleanup.py: Ran 180 tests in 273.870s -> merge-cleanup: PR #1: mergeable is 'UNKNOWN' — waiting 15s for GitHub to decide (6/6)
+gh280-jog-marathon-adapter.sh (env -u XYZ_HARNESS -u TICK_REPO_ROOT):   gh280-jog-marathon-adapter: 223 pass, 0 fail
+note: a first gh280 run with the shell-global XYZ_HARNESS=<primary> exported failed at C1 (exit 8) and stopped at 22 PASS; the same suite with that variable unset passes 223/223 — the GH-1093 harness-override trap, not a code regression.

@@ -1,0 +1,11 @@
+merge-cleanup: ERROR — Cannot read canonical Jog rows: usage: releases [-h] [--root ROOT]
+                {init,import,add,update,migrate,baseline,ship,manifest,marathon,list,show,next,gen,check,reconcile,roadmap,project} ...
+releases: error: argument cmd: invalid choice: 'jog' (choose from 'init', 'import', 'add', 'update', 'migrate', 'baseline', 'ship', 'manifest', 'marathon', 'list', 'show', 'next', 'gen', 'check', 'reconcile', 'roadmap', 'project')
+merge-cleanup: ERROR — Cannot read canonical Jog rows: usage: releases [-h] [--root ROOT]
+                {init,import,add,update,migrate,baseline,ship,manifest,marathon,list,show,next,gen,check,reconcile,roadmap,project} ...
+releases: error: argument cmd: invalid choice: 'jog' (choose from 'init', 'import', 'add', 'update', 'migrate', 'baseline', 'ship', 'manifest', 'marathon', 'list', 'show', 'next', 'gen', 'check', 'reconcile', 'roadmap', 'project')
+merge-cleanup: ERROR — Cannot read canonical Jog rows: canonical releases dump is empty
+PASS real pre-Jog consumer copy: prior reader refuses; fixed hook skips without invoking CLI; all file bytes unchanged
+PASS declared queue with unsupported reader refuses; no blanket reader-error suppression
+PASS empty qualified-dump input refuses before absence claim
+ALL ROUND4 PRE-JOG COMPATIBILITY CONTROLS PASSED; original consumer untouched; fixture /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-pre-jog-dgxcskap

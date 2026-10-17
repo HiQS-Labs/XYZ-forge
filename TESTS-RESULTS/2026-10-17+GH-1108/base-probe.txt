@@ -1,0 +1,13 @@
+import json,sys
+from pathlib import Path
+from unittest.mock import patch
+sys.path.insert(0,str(Path.cwd()/"utils/py"))
+import jog_run
+root=str(Path.cwd())
+receipt={"base_branch":"development","head_branch":"lane","head_sha":"6f521bc5","target_repo":{"path":root},"gate":{"result":"green"}}
+pr={"state":"MERGED","baseRefName":"development","headRefName":"lane","headRefOid":"974d98db","mergeCommit":{"oid":"16bb9f3f"}}
+with patch.object(jog_run,"jog_resolve_ledger_gid",return_value="source-gid"), patch.object(jog_run,"_jog_latest_receipt",return_value=({"execution_id":"e"},receipt)), patch.object(jog_run,"_gh_pr_view",return_value=(pr,None)):
+    try: jog_run.jog_land(root,942,"1102")
+    except SystemExit as e: print("OBSERVED_EXIT",e.code)
+try: jog_run.jog_land(root,942,"1102",ledger_root=root)
+except TypeError as e: print("SPLIT_ROOT_UNSUPPORTED",e)

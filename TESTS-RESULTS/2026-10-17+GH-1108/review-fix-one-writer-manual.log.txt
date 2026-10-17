@@ -1,0 +1,31 @@
+refused: rule=jog-primary: Jog ledger writes require the primary: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/primary; task clone refused: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/target
+jog: refusing to land GH-999901: git fetch --no-tags origin failed: injected fetch failure
+jog: refusing to land GH-999901: hosted wave-reconcile is not green for the landed PR head
+merge-cleanup: ERROR — cannot resolve the primary path '/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/target': --primary differs from the pinned Jog primary: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/primary
+jog: refusing to land GH-999901: missing or changed committed evidence: TESTS-RESULTS/2026-10-17+GH-999901/jog/gh999901-exec1/provenance.jsonl
+PASS task-clone write refused with named primary
+jog: enqueued GH-999901
+jog: marathon execution gh999901-exec1 for GH-999901 (packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q/primary/.tick/jog/jog-01M54EWDDCSY2CPVK0TG0D1A0P/gh999901-exec1/preflight)
+jog: dispatching marathon-drive (marathon-drive.sh)
+jog: resume GH-999901: terminal Marathon result re-projected (parked) — awaiting-landing (PR #4242: url unavailable)
+PASS injected receipt push failure resumes publication without another builder
+PASS primary dispatch pins clone roots; clone ledger byte-identical
+PASS lane delivery has no ledger diff and contains committed receipt
+PASS pre-checkpoint Phase0 refuses dirty/unpublished primary
+PASS post-checkpoint primary clean, published and ff-ready
+jog: GH-999901 landed from committed receipt — PR #4242, 9e0fcadf; publish owned post-merge writes before continuing
+jog: GH-999901 landed from committed receipt — PR #4242, 9e0fcadf; publish owned post-merge writes before continuing
+PASS cache-independent committed landing, receipt-only tail and idempotent queue completion
+jog: GH-999901 landed from committed receipt — PR #4242, 9e0fcadf; publish owned post-merge writes before continuing
+PASS absent .tick/jog cache does not block landing
+merge-cleanup: jog: GH-999901 landed from committed receipt — PR #4242, 9e0fcadf; publish owned post-merge writes before continuing
+merge-cleanup: ✅ PR #4242 post-merge writes committed; primary is clean at origin/development
+PASS mapped merge-cleanup hook and existing post-merge publication
+PASS real GH942 ledger tail + stripped upstream merge; tree IDs recorded: [{"commit": "b3811f0a013598af8cab7c4c398d96b2497f8d52", "kind": "ledger-only"}, {"commit": "974d98dbd9c958975ef3b4797f93b212618b0f96", "kind": "upstream-merge", "parents": ["b3811f0a013598af8cab7c4c398d96b2497f8d52", "0a4f8f0729433fe1ed01367c989662cbea436f5a"], "stripped_input_trees": ["d1ed14db33b0c92361ac3232dc8f26eaeac1d6ed", "8a92a3b1ad7877e38f8b93ed40a94de4f56e1d3f"], "recomputed_tree": "121a33348db69fdd2bb30ff164c83c007c6206dc", "recorded_stripped_tree": "121a33348db69fdd2bb30ff164c83c007c6206dc", "excluded_paths": ["CHANGELOG.md", "LEADERBOARD.html", "LEADERBOARD.md", "RELEASES-PREVIEW.html", "releases.db", "releases.sql"]}]
+PASS failed integration fetch refuses before writes
+PASS non-green hosted reconcile refuses before writes
+PASS merge-cleanup explicit primary must match the same pin
+PASS empty committed provenance refuses without queue mutation
+PASS evidence publication outside its exact bundle refused
+PASS unreviewed source tail refused
+ALL MANUAL CHECKS PASSED; fixtures preserved at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-one-writer-6r2nlb9q

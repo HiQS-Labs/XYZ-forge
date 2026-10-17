@@ -1,0 +1,25 @@
+"""Manual compatibility and explicit-root controls against the latest task source."""
+import hashlib,json,os,shutil,sqlite3,subprocess,sys,tempfile
+from pathlib import Path
+source=Path('/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17')
+work=Path(tempfile.mkdtemp(prefix='gh1108-compat-',dir=Path.cwd()/'temp'))
+scripts=work/'collection/merge-cleanup/scripts';shutil.copytree(source/'skills/2-daily/merge-cleanup/scripts',scripts,ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+primary=work/'plain-primary';primary.mkdir();subprocess.run(['git','init','-q',str(primary)],check=True)
+for version in ['plain','older-harness']:
+ if version=='older-harness':
+  legacy=primary/'utils/py/harness_paths.py';legacy.parent.mkdir(parents=True);legacy.write_text('def github_slug_from_origin(root): return None\n')
+ p=subprocess.run([sys.executable,str(scripts/'merge_cleanup.py'),'--primary',str(primary),'--show-merge-policy'],capture_output=True,text=True)
+ assert p.returncode==0,(version,p.stdout,p.stderr);print('PASS deployed skill with',version,':',p.stdout.strip())
+with sqlite3.connect(primary/'releases.db') as conn:conn.execute('create table jog_queue (gh_number integer,status text)');conn.execute('insert into jog_queue values (942,"failed")')
+before=hashlib.sha256((primary/'releases.db').read_bytes()).hexdigest();sys.path.insert(0,str(scripts));import merge_cleanup as mc
+mc._gh=lambda *a,**kw:subprocess.CompletedProcess([],0,json.dumps({'body':'Closes #942','headRefName':'marathon/gh-942-fix'}),'')
+assert mc.run_jog_post_merge_land(1102,primary) is False
+assert hashlib.sha256((primary/'releases.db').read_bytes()).hexdigest()==before;print('PASS mapped Jog refuses older harness before any ledger write')
+log=Path('temp/final-one-writer-manual.log').read_text();marker='fixtures preserved at ';assert marker in log;fixture=Path(log.rsplit(marker,1)[1].strip());root=fixture/'primary'
+env={**os.environ,'PATH':str(fixture/'bin')+os.pathsep+os.environ['PATH']};before=hashlib.sha256((root/'releases.db').read_bytes()).hexdigest()
+p=subprocess.run([sys.executable,str(source/'utils/py/releases_app.py'),'--root',str(root),'jog','land','999901','--pr','4242'],cwd=Path.cwd(),env=env,capture_output=True,text=True)
+assert p.returncode==0,(p.stdout,p.stderr);assert hashlib.sha256((root/'releases.db').read_bytes()).hexdigest()==before;print('PASS global --root preserved from foreign CWD:',p.stdout.strip())
+sys.path.insert(0,str(source/'utils/py'));import jog_run
+from types import SimpleNamespace
+message=jog_run.validate_marathon_executor(SimpleNamespace(auto_merge=True,builder='codex',reviewer='agy'));assert 'publication checkpoint' in message;print('PASS native auto-merge refuses the interim unpublished-primary path:',message)
+print('ALL COMPATIBILITY AND ROOT CONTROLS PASSED')

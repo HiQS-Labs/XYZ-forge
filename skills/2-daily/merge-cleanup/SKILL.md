@@ -593,3 +593,18 @@ python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/D
 4. **Canonical Worktree Protocol:** Linked worktrees are always cleanly deregistered from git metadata.
 5. **Governed Landing:** Every PR is gated on the ledger against the current integration head before it merges, verified `MERGED` after, then fast-forwarded, reconciled, emitted, committed, pushed, and verified clean/equal to the remote integration head before the next PR is looked at; any failure stops the run.
 6. **Bounded Repair:** every repair attempt on a PR — the script's B1 and each caller rung — is counted in one record at the pinned coordinator under one lock; the third is refused wherever it starts, and a dependent of a parked PR is never attempted.
+
+
+### Jog post-merge completion (GH-1108, delivery 1)
+
+When an origin-specific Jog primary pin exists, `--primary` must name that same checkout.
+After successful merge/reconciliation and primary fast-forward, positively mapped issue/body
+or branch references are intersected with existing Jog rows. The hook calls `jog land` in
+that primary using committed execution bundles; it never reads a task clone's `.tick` cache.
+A refusal stops advancement. Completion and `landing.json` ride the existing post-merge
+commit/push step. Non-Jog PRs keep their existing behavior.
+
+Until the separate automatic transition-push PR lands, a Jog run may leave owned primary
+ledger changes/local supervisor commits. Inspect and publish those explicitly before invoking
+merge-cleanup; Phase 0 still requires a clean, published, fast-forward-ready primary. Do not
+use `--allow-unready-primary` to skip that checkpoint.

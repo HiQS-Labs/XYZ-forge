@@ -618,6 +618,93 @@ def run_local_wave_reconcile(pr_num: int, repo_path: Path) -> bool:
     return False
 
 
+def run_jog_post_merge_land(pr_num: int, repo_path: Path) -> bool:
+    """Complete only positively mapped Jog rows using the committed-receipt primary writer."""
+    if not (repo_path / "releases.db").is_file():
+        return True
+    releases_cli = tool_path(repo_path, "releases_app.py")
+    # Use the canonical root-bound reader: B1's conservative line classifier
+    # deliberately preserves unsupported SQL as `other`, including multiline reasons.
+    try:
+        dump = (repo_path / LEDGER_DUMP).read_text(encoding="utf-8")
+        if not dump.strip():
+            raise ValueError("canonical releases dump is empty")
+        # A qualified pre-Jog ledger has neither surface. This is only a presence
+        # check: never use B1's parsed row count to decide that a queue is absent.
+        if "-- table: jog_queue" not in dump and "INSERT INTO jog_queue(" not in dump:
+            return True
+        listed = subprocess.run([sys.executable, str(releases_cli), "--root", str(repo_path),
+                                 "jog", "list", "--all", "--json"],
+                                cwd=str(repo_path), capture_output=True, text=True, timeout=300)
+        if listed.returncode:
+            raise ValueError((listed.stderr or listed.stdout).strip())
+        rows = json.loads(listed.stdout)
+        if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+            raise ValueError("Jog JSON reader did not return a row list")
+        queue = {int(row["gh_number"]) for row in rows
+                 if row.get("status") in {"pending", "running", "failed", "parked"}}
+    except (OSError, subprocess.TimeoutExpired, ValueError, TypeError, KeyError) as exc:
+        log_err(f"Cannot read canonical Jog rows: {exc}")
+        return False
+    if not queue:
+        return True
+    query = ["pr", "view", str(pr_num), "--json", "number,title,body,headRefName"]
+    paths_policy = ledger_merge.harness_paths_module(repo_path)
+    slug = paths_policy.github_slug_from_origin(str(repo_path)) if paths_policy else None
+    if slug:
+        query += ["--repo", slug]
+    current = _gh(query, repo_path)
+    if current.returncode:
+        log_err(f"Cannot map PR #{pr_num} to Jog rows: {current.stderr.strip()}")
+        return False
+    try:
+        pr = json.loads(current.stdout)
+        if not isinstance(pr, dict):
+            raise ValueError("gh pr view returned a non-object")
+        if pr.get("number") != pr_num or any(
+                not isinstance(pr.get(field), (str, type(None))) for field in ("title", "body", "headRefName")):
+            raise ValueError("gh pr view returned an unusable PR object (identity or field types)")
+    except ValueError as exc:
+        log_err(f"Cannot map PR #{pr_num} to Jog rows: {exc}")
+        return False
+    issues = set(linked_issues(pr))
+    issues.update(int(n) for n in re.findall(r"(?:^|[/_-])gh[-_]?(\d+)(?=[-_/]|$)", pr.get("headRefName") or "", re.I))
+    mapped = issues & queue
+    if not mapped:
+        return True
+    # A mapped row is a Jog delivery only when the merged tree carries its committed
+    # receipt bundle. A row without one (hand-built PR, stale queue row, branch name that
+    # merely contains gh<N>) is left as-is with a warning; it must not fail a landing that
+    # already happened on the remote. Only a bundle that exists and fails `jog land`'s
+    # verification stops the run.
+    tree = run_git(repo_path, ["ls-tree", "-r", "--name-only", "-z", "HEAD", "--", "TESTS-RESULTS"])
+    if tree.returncode:
+        log_err(f"Cannot list committed Jog receipt bundles: {tree.stderr.strip()}")
+        return False
+    bundled = {int(m.group(1)) for m in re.finditer(
+        r"(?:^|\0)TESTS-RESULTS/\d{4}-\d{2}-\d{2}\+GH-(\d+)/jog/[^/\0]+/receipt\.json(?=\0|$)", tree.stdout)}
+    for issue in sorted(mapped - bundled):
+        log(f"warn: Jog row GH-{issue} is mapped to PR #{pr_num} but the merged tree has no committed "
+            f"receipt bundle; not a Jog delivery — row left as-is")
+    mapped &= bundled
+    # Capability belongs to the exact runtime the subprocess will execute, not
+    # the newer copy supplying this skill or B1's shared repair policy.
+    runtime_policy = ledger_merge.harness_paths_module(
+        repo_path, source=releases_cli.with_name("harness_paths.py"))
+    if mapped and (not runtime_policy or not hasattr(runtime_policy, "require_primary")):
+        log_err("Mapped Jog landing requires the updated primary/committed-receipt harness; upgrade before continuing")
+        return False
+    for issue in sorted(mapped):
+        result = subprocess.run([sys.executable, str(releases_cli),
+                                 "--root", str(repo_path), "jog", "land", str(issue), "--pr", str(pr_num)],
+                                cwd=str(repo_path), capture_output=True, text=True)
+        if result.returncode:
+            log_err(f"Jog landing GH-{issue} / PR #{pr_num} refused: {(result.stderr or result.stdout)[-600:]}")
+            return False
+        log(result.stdout.strip())
+    return True
+
+
 def run_post_merge_reconcile(pr_num: int, repo_path: Path,
                              integration_branch: str = "development",
                              dry_run: bool = True,
@@ -682,7 +769,7 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
             log_err(f"pdda issue-doc-sync FAILED (exit {p_res.returncode}): {(p_res.stdout.strip() or p_res.stderr.strip())[-400:]}")
             ok = False
 
-    return ok
+    return ok and run_jog_post_merge_land(pr_num, repo_path)
 
 
 def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_branch: str) -> bool:
@@ -1377,7 +1464,21 @@ def main():
     try:
         primary_repo = Path(args.primary).expanduser().resolve()
         ledger_merge.TOOL_FALLBACK_ROOT = primary_repo
-    except (OSError, RuntimeError) as exc:
+        policy_paths = ledger_merge.harness_paths_module(primary_repo)
+        if policy_paths and hasattr(policy_paths, "primary_root"):
+            try:
+                pinned = policy_paths.primary_root(str(primary_repo))
+            except (OSError, subprocess.CalledProcessError):
+                # No origin identity to bind here; normal Phase 0 owns repository readiness.
+                # Jog itself still refuses before any write without an explicit binding.
+                pass
+            except ValueError as exc:
+                if "primary is not pinned" not in str(exc):
+                    raise
+            else:
+                if str(primary_repo) != pinned:
+                    raise ValueError(f"--primary differs from the pinned Jog primary: {pinned}")
+    except (OSError, RuntimeError, ValueError, subprocess.CalledProcessError) as exc:
         log_err(f"cannot resolve the primary path {args.primary!r}: {exc}")
         return 2
     if args.retire_published_pr is not None or args.checkout:
@@ -1443,11 +1544,16 @@ def main():
         if info.get("state") != "MERGED" or not merge_oid:
             log_err(f"PR #{args.reconcile_pr} is {info.get('state')}, not merged — nothing to reconcile")
             return 2
-        return 0 if run_post_merge_reconcile(
+        if not run_post_merge_reconcile(
             args.reconcile_pr, primary_repo,
             integration_branch=args.integration_branch, dry_run=dry_run,
             pr_head=info.get("headRefOid"), merged_head=merge_oid,
-        ) else 2
+        ):
+            return 2
+        if not dry_run and not commit_and_push_phase5_writes(
+                args.reconcile_pr, primary_repo, args.integration_branch):
+            return 2
+        return 0
 
     # Phase 1..3: Scan & Audit checkouts
     checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude, integration_branch=args.integration_branch)

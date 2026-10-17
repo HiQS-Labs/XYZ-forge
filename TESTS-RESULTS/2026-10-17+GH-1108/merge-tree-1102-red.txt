@@ -1,0 +1,15 @@
+Command: git merge-tree --write-tree 974d98db^1 974d98db^2
+Exit: 1
+ca4364e5679c958a987ce68baedb38fe133e2978
+100644 11589b7f7903f3b7afe8cb8770f9bf527200c2be 1	releases.db
+100644 614731c1a4a71d76121d19c329b8667b11a616c8 2	releases.db
+100644 d5c50cef8d03c2ec350123924e0f2d1783ab9c2b 3	releases.db
+100644 ae109c2e00686fd86f5a251ae820f7d0c932f25a 1	releases.sql
+100644 77355cdf0fefa1ad977178ecf6a51f0cff4c0127 2	releases.sql
+100644 660c5f3c484e3fe0bc4f22ce22c22f79e9a23214 3	releases.sql
+
+warning: Cannot merge binary files: releases.db (974d98db^1 vs. 974d98db^2)
+Auto-merging releases.db
+CONFLICT (content): Merge conflict in releases.db
+Auto-merging releases.sql
+CONFLICT (content): Merge conflict in releases.sql

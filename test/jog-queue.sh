@@ -53,16 +53,30 @@ repo() {
   local r="$WORK/$1"
   mkdir -p "$r"
   require_fixture "$r" "fixture repo"
-  git -C "$r" init -q
+  git -C "$r" init -q -b development
   git -C "$r" config user.email jog@test.invalid
   git -C "$r" config user.name jog
+  git -C "$r" remote add origin "$WORK/origin-$1"
+  local pin
+  pin="$(PYTHONPATH="$ROOT/utils/py" python3 -c 'import sys; from harness_paths import primary_config_key; print(primary_config_key(sys.argv[1]))' "$r")"
+  git -C "$r" config "$pin" "$r"
+  git -C "$r" commit -q --allow-empty -m fixture
   printf '%s\n' "$r"
 }
 ra() {
   local r="$1"
   shift
   require_fixture "$r" "releases fixture"
-  python3 "$APP" --root "$r" "$@"
+  if [ "${1:-}" = jog ] && [ "${2:-}" = run ]; then
+    local target="$WORK/$(basename "$r")-execution"
+    if [ ! -d "$target" ]; then
+      git clone -q --no-local "$r" "$target"
+      git -C "$target" remote set-url origin "$(git -C "$r" remote get-url origin)"
+    fi
+    python3 "$APP" --root "$r" "$@" --target-root "$target"
+  else
+    python3 "$APP" --root "$r" "$@"
+  fi
 }
 
 R="$(repo r1)"
@@ -194,7 +208,9 @@ ok "releases check clean after orphan lease reconciliation" $?
 # 15. Receipt-backed jog run execution loop (--simulate)
 out_run="$(ra "$R" jog run --simulate --auto-merge --max-tasks 1 2>&1)"
 has "$out_run" "simulated single-phase drive on GH-102"
-ok "jog run processes queue items in simulate mode" $?
+run_rc=$?
+[ "$run_rc" -eq 0 ] || printf '%s\n' "$out_run"
+ok "jog run processes queue items in simulate mode" "$run_rc"
 
 status_done="$(sqlite3 "$R/releases.db" "SELECT status FROM jog_queue WHERE gh_number = 102;")"
 same "$status_done" "completed"
