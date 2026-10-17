@@ -109,4 +109,12 @@ Full sweep of `.relay-artifacts/gh1114-qa-pack.md` (lines 1–152) and the refer
 
 relay closed (Approved), no further turn needed
 
+
+### Attestation · relay-drive — 2026-10-17T06:57:05Z
+task: RELAY-gh-1114-spike-qa
+reviewer: agy
+status: Approved
+reviewed-head: b9f07ea5b8d95bac62a3ed9f886770fee883030f
+added-range: 5405+8103
+added-sha256: 82e6ac56f4bc2d3dd799e9139b678cdc0f59159163e5507ed818e93942816983
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
