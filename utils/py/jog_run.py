@@ -196,12 +196,17 @@ JOG_RELAY_DEPRECATION_NOTICE = (
 )
 
 
+JOG_AUTO_MERGE_CHECKPOINT = (
+    "--auto-merge requires the separate durable-transition publisher; "
+    "use the primary publication checkpoint and merge-cleanup for delivery 1"
+)
+
+
 def validate_marathon_executor(args):
     """Fail-closed executor validation. Returns an error string or None; called before any
     lease mutation, lock acquisition, or dispatch (GH-280 reviewer policy: explicit only)."""
     if getattr(args, "auto_merge", False):
-        return ("--auto-merge requires the separate durable-transition publisher; "
-                "use the primary publication checkpoint and merge-cleanup for delivery 1")
+        return JOG_AUTO_MERGE_CHECKPOINT
     reviewer = getattr(args, "reviewer", None)
     if not reviewer:
         return ("--reviewer <agent> is required with --executor marathon (the default "
@@ -1784,6 +1789,12 @@ def jog_run_main(args=None):
     executor = getattr(args, "executor", "marathon") or "marathon"
     simulate = getattr(args, "simulate", False)
     dry_run = getattr(args, "dry_run", False)
+
+    # Delivery 1 needs an explicit primary publication checkpoint before landing,
+    # regardless of executor. Refuse before any supervisor state mutation.
+    if not simulate and not dry_run and getattr(args, "auto_merge", False):
+        print(f"jog: {JOG_AUTO_MERGE_CHECKPOINT}", file=sys.stderr)
+        sys.exit(2)
 
     # GH-280: reviewer/executor validation happens BEFORE the driver lock or any lease — an
     # invalid configuration must not mutate queue state at all. --simulate and --dry-run are
