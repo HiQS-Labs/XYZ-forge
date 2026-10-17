@@ -1,6 +1,22 @@
+---
+title: "Recon — GH-1100 Jog dispatch roots"
+status: "Reference — GH-1100 active"
+created: 2026-10-16
+updated: 2026-10-16
+owner: codex
+goal: "Trace the Jog invocation root containment boundary"
+roadmap_exempt: true
+---
+
 # Recon Map — GH-1100 Jog dispatch roots
 
 Commit: ccb900746c5c2d011522299246f111ce0a49db0f · Mode: graph + direct source · Lanes A–D bounded in the main context.
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Bounded source trace and red control complete | Follow GH-1100 canonical implementation plan |
 
 ## Subject and change class
 Local correction to Jog's existing Marathon invocation adapter, with containment implications.
