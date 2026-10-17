@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -160,5 +160,83 @@ Accepted the observed blocker. `9ec177d5` adds the interim publication-checkpoin
 Recorded disposable-clone control: `TESTS-RESULTS/2026-10-17+GH-1108/auto-merge-entry-manual.py.txt` and `.log.txt`, with provenance. It executes the actual AST function bodies: prior `35ad8fda` real relay reaches the substituted lease boundary (red), fixed `9ec177d5` both real executors exit2 (green), simulation still reaches its lease boundary, and dry-run returns. No real locks, writes, or PR merges. Please complete the remaining whole-file sweep and final review. Full push qualification remains pending, intentionally after approval.
 
 Handing off to codex — take Round 2; only this relay is writable. On approval tick done, not release.
+
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+
+Basis: The Round 1 common-entry auto-merge refusal is corrected, but two supported legacy-relay branches still violate the new separate-clone / manual-publication boundary. These are local operator concurrency and landing contracts already required by this plan. No production file, Git command, suite, executable fixture, network request or real subprocess dispatch was used in the probe.
+
+swept file: no
+
+Coverage: read all of current jog_run.py and harness_paths.py, the merge-cleanup orchestrator through its Phase-6 flow, ledger_merge.py classification/replay/resolution, the Jog CRUD/low-level writer portion of releases_app.py, the updated canonical plan, retained summary and common-entry control. The complete releases_app.py sweep, remaining supporting-file tail and complete changed-file inventory remain outstanding; this is another observed-blocker return, not whole-artifact approval. No absence-of-pre-existing-defects claim is made for unswept portions. Graph project XYZ-forge remains generation 2026-09-01T15:54:30Z in another checkout; coverage reports metadata_changed for Jog/relay-drive and not_tracked for the actual skills/2-daily/merge-cleanup/scripts paths. Current source fallback supports the findings.
+
+- [Pass] **Round 1 refusal is now common to both executors before mutation.** utils/py/jog_run.py:1795 checks real dispatch plus auto_merge before root/lock/lease work, independent of executor. The retained auto-merge-entry-manual.log.txt records prior real relay lease reach and fixed exit 2 for both real executors, with simulation/dry-run preserved. This closes the specific Round 1 finding; it does not establish the interactive branch below.
+
+- [Blocker] **The interactive legacy landing branch still bypasses the primary publication checkpoint.** With auto_merge=False, a TTY and response Y, handle_landing_boundary reaches _merge_reviewed_pr and returns completed (utils/py/jog_run.py:1727–1763). jog_run_main calls it with target, then completes the primary queue row and can advance (:1985–1993). At this point the primary has acquired a lease and written queue state, and no checkpoint has required that primary state to be committed/pushed/clean. A Y to merging is not the plan's owned-state publication procedure. The new entry refusal only covers the flag, so this second merge route survives it.
+
+  Observed input: executor relay, simulate=False, auto_merge=False, interactive stdin, input Y, valid legacy attestation/open PR. The AST probe below observes the actual seeded boundary reaching the substituted merge helper and returning (True, 'completed', None); it does not claim a remote PR was merged.
+
+  Affected scope: real interactive legacy relay landing reached from the delivery-1 supervisor. Preserve simulation and the standalone exact-head/attestation helpers. Cheapest correction: have this supervisor landing route park with the primary-publication/merge-cleanup instruction too; do not add delivery-2 publication here.
+
+  Falsifier: with the same TTY/Y input the delivery-1 supervisor must park before the merge helper and must not advance. Simulation should retain its current behavior. A control showing an actual enforced clean/published primary checkpoint before this route merges would disprove the finding.
+
+  Root cause: the interim publication policy guards one dispatch option while the legacy landing boundary retains another merge-and-advance route; Fix site: the real legacy supervisor landing route; Why not downstream: the generic attestation merge helper has no primary publication context and should retain its existing exact-head contract.
+
+- [Should] **Do not claim the target clone's driver lock is already held.** run_single_phase_drive sets RELAY_DRIVER_LOCKED=1 unconditionally (utils/py/jog_run.py:1559–1561). Its caller now passes the separate target clone (:1970–1976), while JogSupervisorLock was acquired against the primary (:1861–1862). relay_drive.py:506 skips its entire target lock acquisition for that value, including the live-holder refusal at :537–540. Thus the supported legacy path can run beside an existing target driver. The native Marathon path already removes this bypass, as the plan requires.
+
+  Observed input: run_single_phase_drive('/validated/disposable', 999901, builder='codex', reviewer='agy', simulate=False) with inherited RELAY_DRIVER_LOCKED=1 from the primary supervisor. The seeded function passes env value '1' to the captured target dispatch.
+
+  Affected scope: legacy relay dispatch into the separately validated full target clone. Its primary lock cannot confer ownership of that clone's independent .git/relay-driver.lock.
+
+  Falsifier: dispatch must omit the bypass and the existing target driver's live lock must refuse the second run. An absent/stale target lock must still permit ordinary acquisition. Record that control in the disposable full clone with existing machinery; no new suite. Evidence that the primary and target genuinely share the same lock would disprove this finding, but _execution_root explicitly requires separate full clones.
+
+  Root cause: the old same-clone nesting assumption survived the execution-root split; Fix site: run_single_phase_drive's child environment; Why not downstream: relay-drive's nested-driver bypass is valid when a caller actually owns that same root's lock.
+
+Probe command: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY' (body below). Exit **0**. This compiles only the two seeded function definitions; filesystem mutations, process execution, tick and merge helpers are replaced in memory.
+
+```python
+import ast, pathlib, types, os, datetime, tempfile, re
+p = pathlib.Path('utils/py/jog_run.py')
+tree = ast.parse(p.read_text())
+names = {'run_single_phase_drive', 'handle_landing_boundary'}
+nodes = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in names]
+events = []
+def run(argv, **kw):
+    if '--agent-cmd' in argv:
+        events.append(('dispatch', kw['cwd'], kw['env'].get('RELAY_DRIVER_LOCKED')))
+    return types.SimpleNamespace(returncode=0, stdout='123', stderr='')
+ns = dict(os=types.SimpleNamespace(
+    path=types.SimpleNamespace(join=os.path.join, isfile=lambda p: True),
+    access=lambda *a: True, X_OK=os.X_OK, makedirs=lambda *a, **kw: None,
+    environ={'RELAY_DRIVER_LOCKED': '1'}, getpid=lambda: 42),
+    _dt=datetime, tempfile=tempfile, re=re, subprocess=types.SimpleNamespace(run=run),
+    find_issue_doc=lambda *a: None,
+    sys=types.SimpleNamespace(stdin=types.SimpleNamespace(isatty=lambda: True)),
+    input=lambda *a: 'Y',
+    _legacy_attestation=lambda *a: ({'task':'probe'}, None),
+    _verify_legacy_pr_before_merge=lambda *a: [],
+    _merge_reviewed_pr=lambda *a: (events.append(('merge-helper-reached',)) or (True, None)))
+exec(compile(ast.Module(body=nodes, type_ignores=[]),str(p),'exec'),ns)
+ns['run_single_phase_drive']('/validated/disposable',999901,builder='codex',reviewer='agy')
+print('legacy dispatch observed:',events[-1])
+print('receiver lock condition:',next(l.strip() for l in pathlib.Path('utils/py/relay_drive.py').read_text().splitlines() if 'if get_env("RELAY_DRIVER_LOCKED"' in l))
+events.clear()
+print('interactive landing result:', ns['handle_landing_boundary']('/validated/disposable',999901,auto_merge=False,reviewer='agy',simulate=False))
+print('interactive landing observed:',events)
+```
+
+Decisive output:
+```text
+legacy dispatch observed: ('dispatch', '/validated/disposable', '1')
+receiver lock condition: if get_env("RELAY_DRIVER_LOCKED", "0") != "1":
+interactive landing result: (True, 'completed', None)
+interactive landing observed: [('merge-helper-reached',)]
+```
+
+- [Unverified — needs clone run] Full push qualification remains pending. No suites or gate were run in this worktree, and no merge-readiness claim is made.
+
+Handing off to codex-producer — address the interactive checkpoint route and target lock ownership, retain simulation and exact-head helpers, record focused controls in the disposable full clone, then return for Round 3 and the outstanding whole-artifact sweep.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
