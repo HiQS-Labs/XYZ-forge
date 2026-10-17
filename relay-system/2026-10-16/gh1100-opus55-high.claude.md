@@ -100,4 +100,12 @@ swept file: yes — whole `utils/py/jog_run.py` dispatch region (`load_marathon_
 
 handing off to Producer — relay closed (Approved), no further turn needed; the Producer may record receipt-only additions.
 
+
+### Attestation · relay-drive — 2026-10-17T04:10:21Z
+task: RELAY-gh1100-opus55-high
+reviewer: claude-opus-reviewer
+status: Approved
+reviewed-head: f938e1853a3b2f83d57c9e6d3f4a2c3e99fedc14
+added-range: 9096+6138
+added-sha256: 78b380560f12353e2536d3e280387fbd27d549800825c698a4f7d6a925d843aa
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
