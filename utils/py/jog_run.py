@@ -541,6 +541,8 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     home = harness_home()
     preflight_py = os.path.join(target, "utils", "py", "swarm_preflight.py")
     if not os.path.isfile(preflight_py):
+        preflight_py = os.path.join(target, ".xyz", "utils", "py", "swarm_preflight.py")
+    if not os.path.isfile(preflight_py):
         preflight_py = os.path.join(home, "utils", "py", "swarm_preflight.py")
     if not os.path.isfile(preflight_py):
         return "parked", f"marathon executor: swarm_preflight not found at {preflight_py} " \
@@ -586,6 +588,10 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
     invocation_path = os.path.join(packet_dir, "marathon-invocation.json")
     try:
         invocation = load_marathon_invocation(invocation_path)
+        if (os.path.realpath(invocation["target_root"]) != target or
+                os.path.realpath(invocation["harness_root"]) not in
+                (target, os.path.realpath(os.path.join(target, ".xyz")))):
+            raise ContractError("preflight invocation did not pin both roots to the execution clone")
     except ContractError as exc:
         record["status"] = "invalid-invocation"
         jog_save_state(root, gid, state)
@@ -638,6 +644,7 @@ def run_marathon_phase(root, gh_num, gid, builder, reviewer, auto_merge=False, m
         try:
             record["committed_receipt"] = publish_jog_receipt(
                 target, receipt, invocation["result_path"], base_ref=invocation["base_ref"])
+            record["published_head"] = _git(target, "rev-parse", "HEAD").decode().strip()
         except (ContractError, OSError, subprocess.CalledProcessError) as exc:
             record["status"] = "receipt-publication-failed"
             jog_save_state(root, gid, state)
@@ -696,7 +703,6 @@ def jog_resume(root, gh_num, args=None):
     no token); a dispatched execution without a receipt parks the row (the operator chooses
     retry-build); anything else is reported. Resume never fires Marathon on its own — a new
     fire is always the explicit retry-build decision."""
-    _require_jog_primary(root)
     _require_jog_primary(root)
     gid = jog_resolve_ledger_gid(root, gh_num)
     if not gid:
@@ -792,7 +798,9 @@ def _jog_retry_gate_locked(root, gh_num, args):
         print(f"jog: GH-{gh_num} has no terminal Marathon execution to gate-retry", file=sys.stderr)
         sys.exit(2)
 
-    prior_head = receipt.get("head_sha")
+    published = ((record.get("gate_retries") or [{}])[-1].get("published_head")
+                 or record.get("published_head"))
+    prior_head = published or receipt.get("head_sha")
     invocation_path = os.path.join(
         _ledger_abs_path(root, gid, record.get("packet_dir")), "marathon-invocation.json")
     try:
@@ -816,6 +824,10 @@ def _jog_retry_gate_locked(root, gh_num, args):
               f"but the execution ran on {str(prior_head or '')[:8]}; the head moved between "
               f"runs (use jog retry-build)", file=sys.stderr)
         sys.exit(2)
+
+    if published and receipt.get("outcome") == "approved":
+        print("jog: approved gate receipt is already published; no gate retry needed")
+        return 0
 
     state = jog_load_state(root, gid)
     entry = next((e for e in state.get("executions") or []
@@ -855,8 +867,10 @@ def _jog_retry_gate_locked(root, gh_num, args):
     if _ledger_bytes(invocation["target_root"]) != ledger_before:
         raise ContractError("gate retry changed execution clone ledger")
     if new_receipt.get("outcome") == "approved":
-        publish_jog_receipt(invocation["target_root"], new_receipt, result_path,
-                            base_ref=invocation["base_ref"])
+        gate_retries[-1]["committed_receipt"] = publish_jog_receipt(
+            invocation["target_root"], new_receipt, result_path, base_ref=invocation["base_ref"])
+        gate_retries[-1]["published_head"] = _git(invocation["target_root"], "rev-parse", "HEAD").decode().strip()
+        jog_save_state(root, gid, state)
     action, reason = jog_project_marathon_outcome(
         root, gh_num, new_receipt,
         auto_merge=getattr(args, "auto_merge", False),
@@ -1107,20 +1121,30 @@ def jog_land(root, gh_num, pr_arg=None):
         if pr is None:
             raise ContractError(f"could not verify PR #{pr_number}: {error}")
         base, head, merged = pr.get("baseRefName"), pr.get("headRefOid"), (pr.get("mergeCommit") or {}).get("oid")
-        if (pr.get("state") != "MERGED" or base != manifest.get("base_branch")
-                or pr.get("headRefName") != manifest.get("head_branch") or not head or not merged
-                or receipt.get("base_branch") not in (None, base)
-                or (receipt.get("pr") or {}).get("number") not in (None, int(pr_number))):
-            raise ContractError("merged PR state/base/head/identity does not match committed receipt")
+        checks = [("state MERGED", pr.get("state") == "MERGED"),
+                  (f"base {manifest.get('base_branch')}", base == manifest.get("base_branch")),
+                  (f"head {manifest.get('head_branch')}", pr.get("headRefName") == manifest.get("head_branch")),
+                  ("head/merge SHA present", bool(head and merged)),
+                  ("receipt base", receipt.get("base_branch") in (None, base)),
+                  ("receipt PR", (receipt.get("pr") or {}).get("number") in (None, int(pr_number)))]
+        failed = [name for name, ok in checks if not ok]
+        if failed:
+            raise ContractError("failed verification: " + ", ".join(failed))
         _git(root, "check-ref-format", f"refs/heads/{base}")
         integration = f"refs/remotes/origin/{base}"
         _git(root, "fetch", "--no-tags", "origin", f"+refs/heads/{base}:{integration}")
-        _git(root, "merge-base", "--is-ancestor", merged, integration)
+        try:
+            _git(root, "merge-base", "--is-ancestor", merged, integration)
+        except ContractError as exc:
+            raise ContractError(f"merge commit {merged[:8]} not reachable from {integration}") from exc
         _git(root, "merge-base", "--is-ancestor", merged, "HEAD")
         if receipt.get("head_sha") != head:
             _git(root, "fetch", "--no-tags", "origin",
                  f"+refs/pull/{int(pr_number)}/head:refs/remotes/origin/jog-pr-{int(pr_number)}")
-        proof = _landing_tail_proof(root, receipt.get("head_sha"), head, integration, bundle)
+        try:
+            proof = _landing_tail_proof(root, receipt.get("head_sha"), head, integration, bundle)
+        except ContractError as exc:
+            raise ContractError(f"head SHA {receipt.get('head_sha')} not preserved: {exc}") from exc
         # A gate receipt on the approved candidate does not qualify a repaired ledger.
         checked = subprocess.run([sys.executable, resolve_tool(root, "utils/py/releases_app.py"),
                                   "--root", root, "check"], cwd=root, capture_output=True, text=True)
@@ -1131,6 +1155,8 @@ def jog_land(root, gh_num, pr_arg=None):
                                  "databaseId,headSha,status,conclusion,url"],
                                 cwd=root, capture_output=True, text=True)
         runs = json.loads(hosted.stdout) if hosted.returncode == 0 else []
+        if not isinstance(runs, list) or any(not isinstance(run, dict) for run in runs):
+            raise ContractError("invalid hosted reconciliation evidence")
         matching = [run for run in runs if run.get("headSha") in (head, merged)]
         if not matching or matching[0].get("status") != "completed" or matching[0].get("conclusion") != "success":
             raise ContractError("hosted wave-reconcile is not green for the landed PR head")
