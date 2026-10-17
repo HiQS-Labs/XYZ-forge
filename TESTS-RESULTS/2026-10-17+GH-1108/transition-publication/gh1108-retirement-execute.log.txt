@@ -1,0 +1,10 @@
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge-gh1108-jog-land-receipts-2026-10-17` | standalone_clone | `fix/XYZ-forge-gh1108-jog-land-receipts-2026-10-17` | ✅ | 🔥 Active (7 in 10m) | 0 | 0 | **SAFE_REMOVE_CLONE** | 100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees) |
+merge-cleanup: Removing verified clean standalone clone: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17...
+merge-cleanup: ✅ Moved clone XYZ-forge-gh1108-jog-land-receipts-2026-10-17 to Trash (/Users/noelsaw/.Trash/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-97831)
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate` | standalone_clone | `fix/XYZ-forge-gh1108-jog-land-receipts-2026-10-17` | ✅ | ⏳ Idle (92 in 60m) | 0 | 0 | **SAFE_REMOVE_CLONE** | 100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees) |
+merge-cleanup: Removing verified clean standalone clone: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate...
+merge-cleanup: ✅ Moved clone XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate to Trash (/Users/noelsaw/.Trash/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate-97831)

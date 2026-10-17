@@ -309,8 +309,8 @@ class StatusLabelTests(unittest.TestCase):
         # The parent's conservative failure path must not acknowledge even partial success.
         connectors._persist(self.fx.db, {"github_labels": (None, "fixture outage")}, app.now_iso())
         self.assertEqual(connectors.cursor_for(self.fx.conn, "github_labels"), active_cursor)
-        self.assertIn("fixture outage", self.fx.conn.execute(
-            "SELECT last_error FROM connector_cursors WHERE connector='github_labels'").fetchone()[0])
+        self.assertIn("fixture outage", next(row["last_error"] for row in connectors.read_cursor_rows(self.fx.db,self.fx.conn)
+                 if row["connector"] == 'github_labels'))
         self.native.fail_edit = False
         self.native.issue()["state"] = "open"  # reopen before failed cleanup gets replayed
         self.project(batch)

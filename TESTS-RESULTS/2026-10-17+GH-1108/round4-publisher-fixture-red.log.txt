@@ -1,0 +1,28 @@
+merge-cleanup: ERROR — PR #42: could not push post-merge writes: error: src refspec HEAD does not match any
+error: failed to push some refs to 'origin'
+F
+======================================================================
+FAIL: test_reconcile_pr_proceeds_on_a_ready_primary (__main__.TestMergeCleanupOrchestration.test_reconcile_pr_proceeds_on_a_ready_primary)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh436-before-publisher-fixture.py", line 378, in test_reconcile_pr_proceeds_on_a_ready_primary
+    self.assertEqual(rc, 0)
+    ~~~~~~~~~~~~~~~~^^^^^^^
+AssertionError: 2 != 0
+
+----------------------------------------------------------------------
+Ran 1 test in 0.076s
+
+FAILED (failures=1)
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpvxmow2mf/primary
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tmpvxmow2mf/primary
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+

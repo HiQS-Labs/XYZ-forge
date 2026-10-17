@@ -16,11 +16,14 @@ Two boundaries this module must never cross:
    the lock across network time. perform_write calls dispatch_for_txn() from one common
    post-lock section — one seam, not 29 call sites.
 2. A child owns NO database handle. It receives its event batch as JSON on stdin and reports
-   on stdout; this parent is the sole writer of connector_cursors, in one short transaction
-   taken after the join.
+   on stdout; this parent persists device-local cursor state in the Git-common-dir sidecar,
+   in one short transaction after the join. The legacy ledger table is only an initialization seed.
 """
 
 import errno
+import hashlib
+import pathlib
+import urllib.parse
 import fcntl
 import json
 import os
@@ -119,10 +122,97 @@ def load_connectors(warn=True):
     return out
 
 
+def _connector_connection(path, readonly=False):
+    from releases_app import connect
+    return connect(path,must_exist=readonly,readonly=readonly)
+
+
+def _cursor_path(db_path):
+    from releases_app import git_common_dir
+    db_path = os.path.realpath(db_path)
+    common = git_common_dir(os.path.dirname(db_path))
+    if common:
+        return os.path.join(common,'work-connectors-'+hashlib.sha256(db_path.encode()).hexdigest()[:16]+'.sqlite3')
+    return db_path+'-connectors.sqlite3'  # isolated non-Git fixture/legacy ledger root
+
+
+def _event_identity(conn, number):
+    if not number:
+        return None
+    row = conn.execute('SELECT id,repo_id,gh_number,event,payload,at,txn_id FROM work_events WHERE id=?',(number,)).fetchone()
+    return hashlib.sha256(json.dumps(list(row),sort_keys=True).encode()).hexdigest() if row else None
+
+
+def _cursor_store(db_path):
+    """Initialize once under the existing connector lock; never update the tracked ledger."""
+    path = _cursor_path(db_path)
+    conn = _connector_connection(path)
+    conn.execute('CREATE TABLE IF NOT EXISTS connector_cursors(connector TEXT PRIMARY KEY,last_event_id INTEGER NOT NULL,last_attempt_at TEXT,last_error TEXT,updated_at TEXT)')
+    conn.execute('CREATE TABLE IF NOT EXISTS event_identities(connector TEXT PRIMARY KEY,fingerprint TEXT)')
+    conn.execute('CREATE TABLE IF NOT EXISTS cursor_settings(key TEXT PRIMARY KEY,value TEXT)')
+    if not conn.execute("SELECT 1 FROM cursor_settings WHERE key='initialized'").fetchone():
+        ledger = _connector_connection(db_path,readonly=True)
+        try:
+            for row in ledger.execute('SELECT connector,last_event_id,last_attempt_at,last_error,updated_at FROM connector_cursors'):
+                conn.execute('INSERT OR REPLACE INTO connector_cursors VALUES (?,?,?,?,?)',tuple(row))
+                conn.execute('INSERT OR REPLACE INTO event_identities VALUES (?,?)',(row[0],_event_identity(ledger,row[1])))
+        finally:
+            ledger.close()
+        conn.execute("INSERT INTO cursor_settings VALUES ('initialized','1')")
+    conn.commit()
+    return conn
+
+
+def read_cursor_rows(db_path, ledger):
+    """Diagnostics only: no creation, migration, configuration or network."""
+    path = _cursor_path(db_path)
+    if not os.path.exists(path):
+        return ledger.execute('SELECT connector,last_event_id,last_attempt_at,last_error,updated_at FROM connector_cursors ORDER BY connector').fetchall()
+    conn = _connector_connection(path,readonly=True)
+    conn.row_factory = sqlite3.Row
+    try:
+        return conn.execute('SELECT connector,last_event_id,last_attempt_at,last_error,updated_at FROM connector_cursors ORDER BY connector').fetchall()
+    finally:
+        conn.close()
+
+
 def cursor_for(conn, name):
-    row = conn.execute("SELECT last_event_id FROM connector_cursors WHERE connector = ?",
-                       (name,)).fetchone()
-    return int(row[0]) if row else 0
+    db_path = conn.execute('PRAGMA database_list').fetchone()[2]
+    path = _cursor_path(db_path)
+    if not os.path.exists(path):
+        row = conn.execute('SELECT last_event_id FROM connector_cursors WHERE connector=?',(name,)).fetchone()
+        return int(row[0]) if row else 0
+    sidecar = _connector_connection(path,readonly=True)
+    try:
+        row = sidecar.execute('SELECT c.last_event_id,e.fingerprint FROM connector_cursors c LEFT JOIN event_identities e USING(connector) WHERE connector=?',(name,)).fetchone()
+        if not row or (row[0] and not row[1]) or _event_identity(conn,row[0]) != row[1]:
+            return 0
+        return int(row[0])
+    finally:
+        sidecar.close()
+
+
+def _accepted_read_lock(db_path):
+    """All dispatch paths snapshot only published primary state; network runs after release."""
+    from releases_app import WriterLock, _publication_git
+    from harness_paths import primary_root
+    root = os.path.realpath(os.path.dirname(db_path))
+    try:
+        primary = primary_root(root)
+    except (ValueError,subprocess.CalledProcessError):
+        return None
+    if root != primary:
+        return None
+    lock = WriterLock(root).acquire()
+    try:
+        committed = _publication_git(root,'show','HEAD:releases.db').stdout
+        accepted = _publication_git(root,'merge-base','--is-ancestor','HEAD','origin/development',check=False)
+        if (os.path.exists(lock.journal_path) or committed != pathlib.Path(db_path).read_bytes() or accepted.returncode):
+            raise RuntimeError('primary database is not accepted published state; connector deferred')
+    except BaseException:
+        lock.release()
+        raise
+    return lock
 
 
 def events_after(conn, last_id, limit=500):
@@ -307,7 +397,7 @@ def _collect(launched, deadline, bounds):
 def _persist(db_path, results, at):
     """One short transaction on a SEPARATE connection, taken AFTER the join. The parent is the
     only writer of connector_cursors; no child ever holds a database handle."""
-    conn = sqlite3.connect(db_path, timeout=30)
+    conn = _cursor_store(db_path)
     try:
         conn.execute("BEGIN IMMEDIATE")
         for name, (advanced, error) in sorted(results.items()):
@@ -337,6 +427,14 @@ def _persist(db_path, results, at):
                                   last_error = excluded.last_error,
                                   updated_at = excluded.updated_at""",
                              (name, at, str(error)[:500], at))
+        ledger = _connector_connection(db_path,readonly=True)
+        try:
+            for name,(advanced,error) in results.items():
+                if advanced is not None:
+                    retained = conn.execute('SELECT last_event_id FROM connector_cursors WHERE connector=?',(name,)).fetchone()[0]
+                    conn.execute('INSERT OR REPLACE INTO event_identities VALUES (?,?)',(name,_event_identity(ledger,retained)))
+        finally:
+            ledger.close()
         conn.commit()
     finally:
         conn.close()
@@ -428,13 +526,22 @@ def dispatch(db_path, at, connectors=None, window_s=None, reset=False):
         return {}                       # zero connectors == zero added latency
     if not os.path.exists(db_path):
         return {}
+    try:
+        read_lock = _accepted_read_lock(db_path)
+    except (Exception,SystemExit) as exc:
+        _warn(str(exc))
+        return {}
     lock = _ConnectorLock(db_path)
     if not lock.acquire():
+        if read_lock:
+            read_lock.release()
         _warn("another dispatch holds the connector lock — leaving this batch for the next run")
         return {}
     try:
-        return _dispatch_locked(db_path, at, conns, window_s, reset)
+        return _dispatch_locked(db_path, at, conns, window_s, reset, read_lock)
     finally:
+        if read_lock:
+            read_lock.release()
         lock.release()
 
 
@@ -445,18 +552,21 @@ def _reset_cursors(db_path, names):
     in-flight dispatch could re-persist its advance afterwards and the reset would find nothing
     to replay. Deleting inside the same critical section makes "replay from zero" mean it.
     """
-    conn = sqlite3.connect(db_path, timeout=30)
+    conn = _cursor_store(db_path)
     try:
         conn.execute("BEGIN IMMEDIATE")
         for name in names:
             conn.execute("DELETE FROM connector_cursors WHERE connector = ?", (name,))
+            conn.execute("DELETE FROM event_identities WHERE connector = ?", (name,))
         conn.commit()
     finally:
         conn.close()
 
 
-def _dispatch_locked(db_path, at, conns, window_s, reset=False):
+def _dispatch_locked(db_path, at, conns, window_s, reset=False, read_lock=None):
     """The read-cursor / project / write-cursor section, run under _ConnectorLock."""
+    initialized = _cursor_store(db_path)
+    initialized.close()
     if reset:
         _reset_cursors(db_path, list(conns))
     read = sqlite3.connect(db_path, timeout=30)
@@ -464,6 +574,8 @@ def _dispatch_locked(db_path, at, conns, window_s, reset=False):
         batches, bounds, safe = {}, {}, {}
         for name, cfg in conns.items():
             last = cursor_for(read, name)
+            if last == 0:
+                _reset_cursors(db_path,[name])
             evs = (label_events_after(read, last, db_path) if name == "github_labels"
                    else events_after(read, last))
             if evs:
@@ -478,6 +590,8 @@ def _dispatch_locked(db_path, at, conns, window_s, reset=False):
                     safe[name] = (bounds[name][1], None)
     finally:
         read.close()
+    if read_lock:
+        read_lock.release()
     if not batches:
         if safe:
             _persist(db_path, safe, at)

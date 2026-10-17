@@ -1,0 +1,19 @@
+{
+  "added_len": 4120,
+  "added_sha256": "30fa3f1811d3839dafd9b7553f98623757c319981196d5b791d0e6ca3e8c51a3",
+  "added_start": 15270,
+  "artifact_sha256": "de89b84490ba90c8a3b51641137f5b1078daf9e26e74cd7757ac7ce39a153701",
+  "attested_at": "2026-10-17T15:18:30Z",
+  "driver_pid": 89541,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-transition-push-2026-10-17/relay-system/2026-10-17/gh1108-transition-push-plan.codex.md",
+  "relay_file_rel": "relay-system/2026-10-17/gh1108-transition-push-plan.codex.md",
+  "reviewed_head": "0fb71ca91a2a25dea70c2fb808e0846662b17ad3",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-transition-push-2026-10-17",
+  "task": "RELAY-gh1108-transition-push-plan",
+  "trailer_sha256": "124a4601e6c11f497474be8db5eb1399283b1e0c971436569530eb86a15caacb",
+  "transcript_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-transition-push-2026-10-17"
+}

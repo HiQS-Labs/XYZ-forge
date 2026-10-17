@@ -1,0 +1,51 @@
+"""Manual acceptance controls, not a registered test or runner."""
+import contextlib,hashlib,json,os,sqlite3,subprocess,sys,tempfile
+from pathlib import Path
+from types import SimpleNamespace
+root=Path.cwd();assert root.name.endswith('-gate')
+sys.path.insert(0,str(root/'utils/py'))
+import releases_app as app
+from harness_paths import primary_config_key
+work=Path(tempfile.mkdtemp(prefix='publication-',dir=root/'temp'));remote=work/'remote.git';primary=work/'primary'
+def cmd(*args):return subprocess.check_output(list(args),stderr=subprocess.STDOUT,text=True).strip()
+def git(*args):return cmd('git','-C',str(primary),*args)
+cmd('git','clone','--quiet','--bare','--no-local',str(root),str(remote))
+cmd('git','--git-dir',str(remote),'update-ref','refs/heads/development',cmd('git','-C',str(root),'rev-parse','HEAD'))
+cmd('git','clone','--quiet','--no-local','--branch','development',str(remote),str(primary))
+git('remote','set-url','origin','https://github.com/HiQS-Labs/XYZ-forge.git');git('config','url.'+str(remote)+'.insteadOf','https://github.com/HiQS-Labs/XYZ-forge.git')
+git('config',primary_config_key(str(primary)),str(primary));git('config','user.name','Publication manual');git('config','user.email','manual@example.invalid')
+args=SimpleNamespace(root=str(primary),target='999990',pos=None,dry_run=False)
+before=git('rev-parse','HEAD');app.cmd_jog_add(args)
+assert not git('status','--porcelain','--untracked-files=all')
+assert git('rev-parse','HEAD')==git('rev-parse','origin/development')!=before
+assert set(git('diff','--name-only',before,'HEAD').splitlines()) <= {'releases.db','releases.sql','RELEASES-PREVIEW.html','LEADERBOARD.html','LEADERBOARD.md','CHANGELOG.md'}
+print('PASS add remotely durable, exact ledger-only commit, clean primary')
+app.jog_set_status(str(primary),999990,'running');app.jog_set_status(str(primary),999990,'failed',failure_reason='multiline\nreason')
+assert not git('status','--porcelain');print('PASS low-level running/failed transitions publish')
+# A genuine second writer races from an independent clone of the bare integration.
+racer=work/'racer';cmd('git','clone','--quiet','--no-local','--branch','development',str(remote),str(racer));cmd('git','-C',str(racer),'config','user.name','upstream');cmd('git','-C',str(racer),'config','user.email','upstream@example.invalid')
+real=app._publication_git;attempts=[];inject=True
+
+def raced(where,*a,**kw):
+ global inject
+ if where==str(primary) and a[:2]==('push','origin'):
+  attempts.append(a[2])
+  if inject:
+   inject=False
+   cmd(sys.executable,str(root/'utils/py/releases_app.py'),'--root',str(racer),'roadmap','add','--issue-num','999991','--issue-url','https://github.com/HiQS-Labs/XYZ-forge/issues/999991','--title','preserved upstream row','--created','2026-10-17','--doc-path','PROJECT/2-WORKING/GH-1108-JOG-LAND-RECEIPTS.md')
+   cmd('git','-C',str(racer),'add','--','releases.db','releases.sql');cmd('git','-C',str(racer),'commit','-qm','upstream canonical writer change');cmd('git','-C',str(racer),'push','--quiet','origin','HEAD:development')
+ return real(where,*a,**kw)
+app._publication_git=raced
+try:app.jog_set_status(str(primary),999990,'parked',failure_reason='fresh NFF intent')
+finally:app._publication_git=real
+assert len(attempts)==2,attempts
+c=sqlite3.connect(primary/'releases.db');assert c.execute("select title from roadmap_items where gh_number=999991").fetchone()==('preserved upstream row',);assert c.execute('select status from jog_queue where gh_number=999990').fetchone()==('parked',);assert c.execute("select count(*) from work_events where gh_number=999990 and event='jog_parked'").fetchone()[0]==1;c.close()
+assert not git('status','--porcelain');print('PASS confirmed NFF reruns fresh intent, preserves upstream row and emits one accepted event')
+# Unrelated dirt must refuse before any ledger write.
+p=(primary/'temp-unrelated.txt');p.write_text('unrelated');dbhash=hashlib.sha256((primary/'releases.db').read_bytes()).hexdigest()
+try:app.jog_set_status(str(primary),999990,'pending')
+except RuntimeError:pass
+else:raise AssertionError('dirty primary accepted')
+assert hashlib.sha256((primary/'releases.db').read_bytes()).hexdigest()==dbhash;p.unlink();print('PASS unrelated dirt refuses without DB mutation')
+print('fixture',primary)
+print('ALL RECORDED CONTROLS PASSED')

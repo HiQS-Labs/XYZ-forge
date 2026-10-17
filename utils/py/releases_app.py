@@ -55,6 +55,12 @@ Exit codes: 0 ok; 1 check failure; 2 usage; 3 rule refusal (rule named on stderr
 """
 
 import argparse
+import contextlib
+import contextvars
+import functools
+import io
+import pathlib
+import tempfile
 import datetime as _dt
 import fcntl
 import hashlib
@@ -429,12 +435,14 @@ class WriterLock:
 
 # ── DB connection (PRAGMA foreign_keys asserted per connection) ─────────────────────────────────
 
-def connect(db_path, must_exist=True):
+def connect(db_path, must_exist=True, readonly=False):
     if must_exist and not os.path.exists(db_path):
         refuse("not-initialized", "no %s here; run `releases init` first" % DB_NAME)
     # isolation_level=None: transactions are BEGIN/COMMIT'd explicitly by perform_write, so the
     # intent journal -> COMMIT -> stage -> rename ordering is the ONLY ordering that exists.
-    conn = sqlite3.connect(db_path, isolation_level=None)
+    location = ("file:%s?mode=ro" % urllib.parse.quote(os.path.abspath(db_path), safe="/")
+                if readonly else db_path)
+    conn = sqlite3.connect(location, isolation_level=None, uri=readonly)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     if conn.execute("PRAGMA foreign_keys").fetchone()[0] != 1:
@@ -1654,6 +1662,234 @@ def _sync_status_labels(conn, before, op, target_gid, accepted_start=False):
                          (label, row["global_id"]))
 
 
+# GH-1108: one primary publication boundary; business writes stay in perform_write.
+_JOG_INTENT = contextvars.ContextVar('jog_publication_intent', default=None)
+
+
+def _jog_context(root):
+    active = _JOG_INTENT.get()
+    if active and active['root'] == os.path.realpath(root):
+        return active
+    return None
+
+
+class _BorrowedWriterLock:
+    def __init__(self, owner):
+        self.owner = owner
+        self.journal_path = owner.journal_path
+    def acquire(self):
+        if self.owner.fh is None:
+            raise RuntimeError('publication writer lock is no longer held')
+        return self
+    def release(self):
+        pass
+
+
+def _write_lock(root):
+    active = _jog_context(root)
+    return _BorrowedWriterLock(active['lock']) if active else WriterLock(root)
+
+
+def _publication_git(root, *args, env=None, check=True, data=None, timeout=180):
+    result = subprocess.run(['git', '-C', root, *args], input=data, capture_output=True,
+                            env=env, timeout=timeout)
+    if check and result.returncode:
+        raise RuntimeError(result.stderr.decode(errors='replace').strip() or 'git publication failed')
+    return result
+
+
+def _publication_dirty(root):
+    raw = _publication_git(root, 'status', '--porcelain', '-z', '--untracked-files=all').stdout
+    entries = [part for part in raw.split(b'\0') if part]
+    if any(part[:2] != b'??' and (b'R' in part[:2] or b'C' in part[:2]) for part in entries):
+        raise RuntimeError('publication refuses renamed/copied paths')
+    return {part[3:].decode() for part in entries}
+
+
+def _publication_identity(root):
+    return (_publication_git(root, 'rev-parse', 'HEAD').stdout.strip(),
+            _publication_git(root, 'symbolic-ref', 'HEAD').stdout.strip(),
+            _publication_git(root, 'write-tree').stdout.strip())
+
+
+def declare_jog_landing(root, relative):
+    """Add one already validated committed execution's proof to the owned intent."""
+    active = _jog_context(root)
+    if not active:
+        raise RuntimeError('landing proof requires a publication intent')
+    path = pathlib.PurePosixPath(relative)
+    if (path.is_absolute() or '..' in path.parts or len(path.parts) != 5 or
+            path.parts[0] != 'TESTS-RESULTS' or path.parts[2] != 'jog' or
+            path.parts[-1] != 'landing.json'):
+        raise RuntimeError('invalid owned landing proof path')
+    _publication_snapshot(active, relative)
+
+
+def _publication_snapshot(active, relative):
+    if relative in active['before']:
+        return
+    path = pathlib.Path(active['root'], relative)
+    if path.is_symlink() or (path.exists() and not path.is_file()):
+        raise RuntimeError('publication refuses nonregular owned artifact: '+relative)
+    active['before'][relative] = path.read_bytes() if path.exists() else None
+    value = active['before'][relative]
+    saved = 'before-'+hashlib.sha256(relative.encode()).hexdigest()
+    if value is not None:
+        pathlib.Path(active['evidence'],saved).write_bytes(value)
+    _atomic_write(os.path.join(active['evidence'],'before.json'),json.dumps({
+        p:{'present':v is not None,'saved':'before-'+hashlib.sha256(p.encode()).hexdigest()}
+        for p,v in active['before'].items()},indent=2)+'\n')
+
+
+def publish_jog_candidate(root):
+    """Existing final publisher and ordinary Jog intents call this SAME Git boundary."""
+    active = _jog_context(root)
+    if not active or active['published']:
+        raise RuntimeError('missing or already published Jog intent')
+    if _publication_identity(root) != active['identity']:
+        raise RuntimeError('HEAD/ref/index changed during Jog intent; preserved')
+    dirty = _publication_dirty(root)
+    if not dirty <= active['before'].keys():
+        raise RuntimeError('unrelated changes during publication; preserved: '+str(sorted(dirty)))
+    if not dirty:
+        active['published'] = True
+        return
+    from harness_paths import resolve_tool
+    route = subprocess.run(['bash', resolve_tool(root, 'utils/ci-route.sh'), 'pull_request'],
+                           input='\n'.join(sorted(dirty))+'\n', text=True, capture_output=True)
+    if route.returncode or 'route=docs\n' not in route.stdout or 'tier=1\n' not in route.stdout:
+        raise RuntimeError('owned publication must use existing docs gate; refusing suites in primary')
+    env = dict(os.environ)
+    env.pop('XYZ_SKIP_PREPUSH', None)
+    with tempfile.TemporaryDirectory(prefix='candidate-', dir=active['evidence']) as scratch:
+        index_env = dict(env, GIT_INDEX_FILE=os.path.join(scratch, 'index'))
+        _publication_git(root, 'read-tree', active['identity'][0].decode(), env=index_env)
+        _publication_git(root, 'add', '--', *sorted(dirty), env=index_env)
+        tree = _publication_git(root, 'write-tree', env=index_env).stdout.strip().decode()
+        candidate = _publication_git(root, 'commit-tree', tree, '-p', active['identity'][0].decode(),
+                                     data=('jog: '+active['label']+'\n').encode()).stdout.strip().decode()
+    ref = 'refs/jog-recovery/'+active['token']+'/'+str(active['attempt'])
+    _publication_git(root, 'update-ref', ref, candidate)
+    after = {p: pathlib.Path(root,p).read_bytes() if pathlib.Path(root,p).exists() else None
+             for p in active['before']}
+    for number, (relative, value) in enumerate(sorted(after.items())):
+        if value is not None:
+            pathlib.Path(active['evidence'], 'candidate-'+str(number)).write_bytes(value)
+    pathlib.Path(active['evidence'], 'intent.json').write_text(json.dumps({
+        'intent':active['label'],'candidate':candidate,'recovery_ref':ref,
+        'paths':sorted(dirty),'attempt':active['attempt']},indent=2)+'\n')
+    try:
+        pushed = _publication_git(root, 'push', 'origin', candidate+':refs/heads/development',
+                                  env=env, check=False, timeout=3600)
+    except subprocess.TimeoutExpired:
+        pushed = None  # determine acceptance from the fetched remote, never blindly retry
+    _publication_git(root, 'fetch', '--no-tags', 'origin',
+                     '+refs/heads/development:refs/remotes/origin/development')
+    accepted = _publication_git(root, 'merge-base', '--is-ancestor', candidate,
+                                'origin/development', check=False).returncode == 0
+    if _publication_identity(root) != active['identity'] or _publication_dirty(root) != dirty:
+        raise RuntimeError('publication identity/path drift; all candidate state preserved')
+    current = {p:pathlib.Path(root,p).read_bytes() if pathlib.Path(root,p).exists() else None for p in after}
+    if current != after:
+        raise RuntimeError('owned bytes changed during push; preserved')
+    if accepted:
+        _publication_git(root, 'update-ref', 'refs/heads/development', candidate,
+                         active['identity'][0].decode())
+        _publication_git(root, 'read-tree', candidate)  # index only; never overwrites working files
+        if _publication_dirty(root):
+            raise RuntimeError('accepted candidate adoption is not clean; preserved')
+        _publication_git(root, 'merge', '--ff-only', 'origin/development')
+        if _publication_dirty(root):
+            raise RuntimeError('accepted primary fast-forward is not clean')
+        active['published'] = True
+        return
+    stderr = pushed.stderr.decode(errors='replace') if pushed is not None else ''
+    if pushed is None or pushed.returncode == 0 or not re.search(r'\[rejected\].*(?:non-fast-forward|fetch first)',stderr):
+        raise RuntimeError('publication not accepted; candidate preserved; no automatic retry: '+stderr[-500:])
+    # Only a proven rejected NFF may restore this intent's own snapshots.
+    for relative, value in active['before'].items():
+        path = pathlib.Path(root,relative)
+        if value is None:
+            if path.exists():
+                path.unlink()  # exact validated intent-created artifact; rejected bytes retained above
+        else:
+            path.write_bytes(value)
+    if _publication_dirty(root):
+        raise RuntimeError('snapshot restoration not clean; refusing upstream adoption')
+    _publication_git(root, 'merge', '--ff-only', 'origin/development')
+    raise _JogPublicationRace('confirmed NFF; rebuild fresh high-level intent')
+
+
+class _JogPublicationRace(RuntimeError):
+    pass
+
+
+def publish_jog_intent(root, label, fresh_intent):
+    """Replay the high-level callable, never a captured SQL mutation, at most three times."""
+    root = os.path.realpath(root)
+    if _jog_context(root):
+        return fresh_intent()
+    _require_jog_primary(root)
+    if not os.path.isdir(os.path.join(root,'.git')):
+        raise RuntimeError('Jog publication requires the primary full clone')
+    token = uuid.uuid4().hex
+    accepted = None
+    with WriterLock(root) as lock:
+        for attempt in range(1,4):
+            if _publication_dirty(root):
+                raise RuntimeError('primary must be clean before Jog publication; preserve and reconcile')
+            for marker in ('MERGE_HEAD','CHERRY_PICK_HEAD','REVERT_HEAD','rebase-merge','rebase-apply'):
+                path = _publication_git(root,'rev-parse','--git-path',marker).stdout.decode().strip()
+                if os.path.exists(os.path.join(root,path)):
+                    raise RuntimeError('unfinished Git operation; refusing Jog publication')
+            if os.path.exists(lock.journal_path):
+                raise RuntimeError('live releases journal; run releases check first')
+            _publication_git(root,'fetch','--no-tags','origin',
+                             '+refs/heads/development:refs/remotes/origin/development')
+            _publication_git(root,'merge','--ff-only','origin/development')
+            if _publication_git(root,'rev-parse','HEAD').stdout != _publication_git(root,'rev-parse','origin/development').stdout:
+                raise RuntimeError('primary has unpublished integration commits')
+            directory = os.path.join(git_common_dir(root),'jog-publication',token,str(attempt))
+            os.makedirs(directory,exist_ok=False)
+            active = {'root':root,'lock':lock,'label':label,'token':token,'attempt':attempt,
+                      'before':{},'identity':_publication_identity(root),'evidence':directory,
+                      'published':False,'dispatch_at':None}
+            from harness_paths import LEDGER_REPAIR_PATHS
+            for path in LEDGER_REPAIR_PATHS:
+                _publication_snapshot(active,path)
+            handle = _JOG_INTENT.set(active)
+            output = io.StringIO()
+            try:
+                with contextlib.redirect_stdout(output):
+                    result = fresh_intent()
+                    if result is False or (type(result) is int and result != 0):
+                        raise RuntimeError('Jog intent refused; no publication')
+                    if not active['published']:
+                        publish_jog_candidate(root)
+                accepted = active
+                break
+            except _JogPublicationRace:
+                if attempt == 3:
+                    raise RuntimeError('three publication attempts exhausted; recovery refs retained')
+            finally:
+                _JOG_INTENT.reset(handle)
+    if accepted is not None:
+        if accepted['dispatch_at']:
+            _dispatch_work_connectors(artifact_paths(root)['db'],accepted['dispatch_at'])
+        print(output.getvalue(),end='')
+        return result
+
+
+def _jog_fresh_call(function, command=False):
+    @functools.wraps(function)
+    def wrapped(*args,**kwargs):
+        if command and getattr(args[0],'dry_run',False):
+            return function(*args,**kwargs)
+        root = resolve_root(args[0].root) if command else args[0]
+        return publish_jog_intent(root,function.__name__,lambda:function(*args,**kwargs))
+    return wrapped
+
+
 def perform_write(root, conn, op, target_gid, mutate, work_event=None, work_events=None,
                   accepted_start=False):
     """Run one CLI transaction under the full multi-artifact protocol:
@@ -1666,11 +1902,16 @@ def perform_write(root, conn, op, target_gid, mutate, work_event=None, work_even
     `mutate(conn)` does the business writes; the op_receipt (before/after business-state digests)
     is appended HERE so no writer can forget it. Recovery per boundary is `check`'s job
     (recover_from_journal); RELEASES_APP_CRASH_AT lands on the five named boundaries. The caller
-    must NOT hold the writer lock (this function takes it)."""
+    must not hold the writer lock outside a declared Jog publication intent. An active
+    root-owned intent borrows its verified lock and defers connector dispatch until Git acceptance."""
+    if op.startswith("jog-"):
+        _require_jog_primary(root)
+        if not _jog_context(root):
+            raise RuntimeError("Jog write requires a fresh high-level publication intent")
     if work_event is not None and work_events is not None:
         raise ValueError("work_event and work_events are mutually exclusive")
     paths = artifact_paths(root)
-    lock = WriterLock(root)
+    lock = _write_lock(root)
     lock.acquire()
     try:
         if os.path.exists(lock.journal_path):
@@ -1765,7 +2006,11 @@ def perform_write(root, conn, op, target_gid, mutate, work_event=None, work_even
         # to the callers would trade one audited seam for 29 independently correct call sites,
         # and nothing would catch a caller that simply never dispatched.
         lock.release()
-        _dispatch_work_connectors(paths["db"], now)
+        active = _jog_context(root)
+        if active:
+            active["dispatch_at"] = now
+        else:
+            _dispatch_work_connectors(paths["db"], now)
         return txn_id
     finally:
         lock.release()
@@ -4487,8 +4732,18 @@ def resolve_issue_number(target):
     refuse("invalid-issue-target", "cannot resolve GitHub issue number from %r" % target)
 
 
+def _require_jog_primary(root):
+    from harness_paths import require_primary
+    try:
+        require_primary(root)
+    except (ValueError, subprocess.CalledProcessError, OSError) as exc:
+        refuse("jog-primary", str(exc))
+
+
 def cmd_jog_add(args):
     root = resolve_root(args.root)
+    if not args.dry_run:
+        _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4618,6 +4873,8 @@ def cmd_jog_list(args):
 
 def cmd_jog_bump(args):
     root = resolve_root(args.root)
+    if not args.dry_run:
+        _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4653,6 +4910,8 @@ def cmd_jog_bump(args):
 
 def cmd_jog_drop(args):
     root = resolve_root(args.root)
+    if not args.dry_run:
+        _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4695,6 +4954,8 @@ def cmd_jog_drop(args):
 
 def cmd_jog_retry(args):
     root = resolve_root(args.root)
+    if not args.dry_run:
+        _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4735,6 +4996,8 @@ def cmd_jog_retry(args):
 
 def cmd_jog_skip(args):
     root = resolve_root(args.root)
+    if not args.dry_run:
+        _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4775,6 +5038,8 @@ def cmd_jog_skip(args):
 
 def cmd_jog_clear(args):
     root = resolve_root(args.root)
+    if not args.dry_run:
+        _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4824,6 +5089,7 @@ def cmd_jog_to_marathon(args):
 
 def jog_acquire_lease(root, gh_num, pid):
     """Acquire a lease on an enqueued item via perform_write (receipt-backed)."""
+    _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4852,6 +5118,7 @@ def jog_acquire_lease(root, gh_num, pid):
 
 def jog_set_status(root, gh_num, status, failure_reason=None, clear_lease=True):
     """Transition a jog queue item to a new status via perform_write (receipt-backed)."""
+    _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4888,6 +5155,7 @@ def jog_set_status(root, gh_num, status, failure_reason=None, clear_lease=True):
 
 def jog_reconcile_orphan_leases(root):
     """Inspect and reconcile orphan running rows whose lease_pid is dead via perform_write."""
+    _require_jog_primary(root)
     paths = artifact_paths(root)
     conn = connect(paths["db"])
     try:
@@ -4962,7 +5230,12 @@ def _jog_verb_dispatch(fn_name):
         import jog_run
         root = resolve_root(getattr(args, "root", None))
         gh_num = resolve_issue_number(args.target)
-        sys.exit(getattr(jog_run, fn_name)(root, gh_num, args))
+        try:
+            result = getattr(jog_run, fn_name)(root, gh_num, args)
+        except jog_run.ContractError as exc:
+            print(f"jog: {exc}", file=sys.stderr)
+            sys.exit(2)
+        sys.exit(result)
     return handler
 
 
@@ -5590,8 +5863,8 @@ def load_work_evidence(db_path, stale_days=3, as_of=None):
             })
         max_event_id = conn.execute("SELECT COALESCE(MAX(id),0) FROM work_events").fetchone()[0]
         result["cursors"] = []
-        for row in conn.execute("SELECT connector,last_event_id,last_attempt_at,last_error,updated_at "
-                                "FROM connector_cursors ORDER BY connector"):
+        from work_connectors import read_cursor_rows
+        for row in read_cursor_rows(db_path,conn):
             cursor = dict(row)
             cursor["lag"] = max(0, int(max_event_id) - int(cursor["last_event_id"]))
             result["cursors"].append(cursor)
@@ -5679,7 +5952,7 @@ def cmd_work_reconcile(args):
 def cmd_check(args):
     root = resolve_root(args.root)
     paths = artifact_paths(root)
-    lock = WriterLock(root)
+    lock = _write_lock(root)
     lock.acquire()
     failures, warnings = [], []
 
@@ -6804,33 +7077,35 @@ def build_parser():
 
     sp_jres = jsub.add_parser("resume", help="reconcile durable Marathon state for an item (spends no token)")
     sp_jres.add_argument("target", help="issue number (e.g. 123 or GH-123)")
-    sp_jres.add_argument("--root", default=None, help="repository root path")
+    sp_jres.add_argument("--root", default=argparse.SUPPRESS, help="repository root path")
 
     sp_jrg = jsub.add_parser("retry-gate", help="re-run ONLY the gate against the same head SHA (no builder turn)")
     sp_jrg.add_argument("target", help="issue number (e.g. 123 or GH-123)")
     sp_jrg.add_argument("--builder", default="agy", help="builder identity recorded for the retry")
     sp_jrg.add_argument("--reviewer", default=None, help="reviewer agent (required; must differ from --builder)")
     sp_jrg.add_argument("--auto-merge", action="store_true", help="merge the PR if the gate retry approves")
-    sp_jrg.add_argument("--root", default=None, help="repository root path")
+    sp_jrg.add_argument("--root", default=argparse.SUPPRESS, help="repository root path")
 
     sp_jrb = jsub.add_parser("retry-build", help="fresh Marathon attempt on a fresh execution id (history preserved)")
     sp_jrb.add_argument("target", help="issue number (e.g. 123 or GH-123)")
+    sp_jrb.add_argument("--target-root", help="disposable full execution clone")
     sp_jrb.add_argument("--builder", default="agy", help="builder turn-taker (default: agy; or codex, aider)")
     sp_jrb.add_argument("--reviewer", default=None, help="reviewer agent (required; must differ from --builder)")
     sp_jrb.add_argument("--auto-merge", action="store_true", help="opt-in to auto-merge an approved PR")
-    sp_jrb.add_argument("--root", default=None, help="repository root path")
+    sp_jrb.add_argument("--root", default=argparse.SUPPRESS, help="repository root path")
 
-    sp_jl = jsub.add_parser("land", help="verify merged delivery, complete the row, delegate lifecycle to wave_reconcile")
+    sp_jl = jsub.add_parser("land", help="verify committed delivery after hosted reconciliation, complete the primary queue row")
     sp_jl.add_argument("target", help="issue number (e.g. 123 or GH-123)")
     sp_jl.add_argument("--pr", default=None, help="PR number or URL (required when the receipt has no PR identity)")
-    sp_jl.add_argument("--root", default=None, help="repository root path")
+    sp_jl.add_argument("--root", default=argparse.SUPPRESS, help="repository root path")
 
     sp_jrec = jsub.add_parser("reconcile", help="idempotent replay entry for jog land (same verification and steps)")
     sp_jrec.add_argument("target", help="issue number (e.g. 123 or GH-123)")
     sp_jrec.add_argument("--pr", default=None, help="PR number or URL (required when the receipt has no PR identity)")
-    sp_jrec.add_argument("--root", default=None, help="repository root path")
+    sp_jrec.add_argument("--root", default=argparse.SUPPRESS, help="repository root path")
 
     sp_jrun = jsub.add_parser("run", help="execute the serial jog queue loop")
+    sp_jrun.add_argument("--target-root", required=False, help="disposable full execution clone (required for dispatch)")
     sp_jrun.add_argument("--auto-merge", action="store_true", help="opt-in to auto-merge passing PRs on same-seam tasks")
     sp_jrun.add_argument("--builder", default="agy", help="builder turn-taker (default: agy; or codex, aider)")
     sp_jrun.add_argument("--reviewer", default=None,
@@ -6890,5 +7165,14 @@ def main(argv=None):
 
 
 
+# Recreate each high-level connection, identity lookup and event list on a raced retry.
+for _name in ('cmd_jog_add','cmd_jog_bump','cmd_jog_drop','cmd_jog_retry',
+              'cmd_jog_skip','cmd_jog_clear'):
+    globals()[_name] = _jog_fresh_call(globals()[_name], command=True)
+for _name in ('jog_acquire_lease','jog_set_status','jog_reconcile_orphan_leases'):
+    globals()[_name] = _jog_fresh_call(globals()[_name])
+
 if __name__ == "__main__":
+    # Jog and connector imports must share the CLI's canonical lock/intent context.
+    sys.modules['releases_app'] = sys.modules[__name__]
     main()

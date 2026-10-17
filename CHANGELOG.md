@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-10-17 — GH-1108 transition publication (delivery 2)
+
+Primary Jog transitions publish through the canonical writer with ff-only candidate commits and at most three fresh-intent retries; failed/unknown candidates remain recoverable. Connector cursor persistence moves to ignored device state so accepted queue publication remains clean, and rejected queue state cannot project. Mapped landing completion/proof reuses the existing merge-cleanup final publisher. Costly shared writer/Git/connector change: revert this delivery independently to restore the first delivery's manual checkpoint; preserve accepted ledger commits and receipts. Draft depends on PR1116 and awaits rebase/final QA before landing.
+
+## 2026-10-17 — Jog primary writer, portable receipts and landing hook (GH-1108, delivery 1)
+
+Jog queue/cache mutations now require an explicit origin-specific primary pin on development.
+Primary-supervised runs execute in a separate full clone through the existing preflight and
+Marathon root plumbing; execution-contract commits exclude ledger files. Approved results,
+copied gate evidence and provenance travel in committed lane bundles. Primary landing reads
+those bundles without `.tick`, verifies fetched integration/hosted reconciliation and reproduces
+upstream merge trees outside B1's six ledger paths. Merge-cleanup invokes mapped Jog landing
+before its existing post-merge publication step.
+
+Containment boundary: Costly across writer identity, execution routing and approval preservation.
+Revert this delivery's code/docs together; preserve committed receipts. Immediate per-transition
+push and bounded non-ff replay are deliberately a separate PR, independently revertible. Until
+then, publish owned primary transitions at the documented manual checkpoint before merge-cleanup.
+Verification and review evidence: `TESTS-RESULTS/2026-10-17+GH-1108/` and
+`relay-system/2026-10-17/gh1108-one-writer-*.codex.md`. No new suite, registry entry or scheduler.
+
 ## 2026-10-17 — task-sync grooms Claude Code session titles (GH-1105)
 
 task-sync gains two Claude Code adapters. `--ide claude` stamps local session titles (CLI, desktop app, VS Code extension) with each session's own last-activity mm-dd by appending the same `custom-title` record `/rename` writes; it compares against the label the session list actually resolves (tail, sidecar, head), skips running sessions via `~/.claude/sessions`, and restores the transcript mtime. `--ide claude-cloud` is a read-only planner for claude.ai/code sessions; `set_session_title` owns cloud writes. The Codex-only plan-only guard became a shared `PLAN_ONLY` set. The install SOP now enables Skills Army HQ's existing `claude` target (`~/.claude/skills`) through `intake.py`/`sync.py`; nothing is hand-copied.

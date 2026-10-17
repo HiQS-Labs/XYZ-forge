@@ -1,0 +1,7 @@
+jog: enqueued GH-999990
+PASS add remotely durable, exact ledger-only commit, clean primary
+PASS low-level running/failed transitions publish
+PASS confirmed NFF reruns fresh intent, preserves upstream row and emits one accepted event
+PASS unrelated dirt refuses without DB mutation
+fixture /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-transition-push-2026-10-17-gate/temp/publication-5k_dtf24/primary
+ALL RECORDED CONTROLS PASSED

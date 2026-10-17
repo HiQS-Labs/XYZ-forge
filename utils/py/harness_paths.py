@@ -21,6 +21,7 @@ same-named utils/… file would win silently under repo-first. New consumers pas
 prefer_repo=False; the docstring names the risk and the flag.
 """
 
+import hashlib
 import os
 import re
 import subprocess
@@ -145,3 +146,40 @@ def github_slug_from_origin(root):
     m = re.search(r"github\.com[/:]([\w.\-]+/[\w.\-]+?)(?:\.git)?$", out)
     return m.group(1) if m else None
 
+
+
+# One policy shared by Jog landing proof and merge-cleanup B1 repair.
+LEDGER_REPAIR_PATHS = frozenset({"releases.db", "releases.sql", "LEADERBOARD.md",
+                               "RELEASES-PREVIEW.html", "LEADERBOARD.html", "CHANGELOG.md"})
+
+
+def primary_config_key(root):
+    """Device-local, origin-specific primary pin; never infer it from the harness or CWD."""
+    origin = subprocess.check_output(["git", "-C", root, "remote", "get-url", "origin"],
+                                     stderr=subprocess.DEVNULL, text=True).strip()
+    slug = github_slug_from_origin(root)
+    identity = "github.com/" + slug.lower() if slug else origin.rstrip("/").removesuffix(".git")
+    return "xyz.primary.repo-" + hashlib.sha256(identity.encode()).hexdigest()[:24]
+
+
+def primary_root(root):
+    key = primary_config_key(root)
+    value = subprocess.run(["git", "-C", root, "config", "--get", key],
+                           capture_output=True, text=True)
+    if value.returncode or not value.stdout.strip():
+        raise ValueError(f"primary is not pinned; explicitly set `git config --global {key} <primary-path>`")
+    path = os.path.expanduser(value.stdout.strip())
+    if not os.path.isabs(path) or not os.path.isdir(path):
+        raise ValueError(f"pinned primary does not exist: {path}")
+    return os.path.realpath(path)
+
+
+def require_primary(root):
+    primary = primary_root(root)
+    if os.path.realpath(root) != primary:
+        raise ValueError(f"Jog ledger writes require the primary: {primary}; task clone refused: {root}")
+    branch = subprocess.check_output(["git", "-C", root, "symbolic-ref", "--short", "HEAD"],
+                                     stderr=subprocess.DEVNULL, text=True).strip()
+    if branch != "development":
+        raise ValueError(f"Jog primary {primary} must be on development (currently {branch})")
+    return primary

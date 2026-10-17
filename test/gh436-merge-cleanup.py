@@ -361,6 +361,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
                  "number": 42, "state": "MERGED", "headRefOid": "h" * 40, "mergeCommit": {"oid": "m" * 40}}), \
              mock.patch.object(merge_cleanup, "scan_directories", return_value=[]), \
              mock.patch.object(merge_cleanup, "fetch_open_prs", return_value=[]):
+            reconcile.side_effect = lambda *a, **kw: True if kw.get("dry_run",True) else kw["finish"](None)
             rc = merge_cleanup.main()
         return rc, insp, reconcile
 
@@ -373,8 +374,10 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         reconcile.assert_not_called()
 
     def test_reconcile_pr_proceeds_on_a_ready_primary(self):
-        rc, insp, reconcile = self._run_main(
-            ["--primary", str(self.primary), "--reconcile-pr", "42", "--execute"], landing_ready=True)
+        with mock.patch.object(merge_cleanup, "commit_and_push_phase5_writes", return_value=True) as publish:
+            rc, insp, reconcile = self._run_main(
+                ["--primary", str(self.primary), "--reconcile-pr", "42", "--execute"], landing_ready=True)
+        publish.assert_called_once_with(42, self.primary.resolve(), "development", publication_runtime=None)
         self.assertEqual(rc, 0)
         self.assertTrue(insp.called)
         reconcile.assert_called_once()

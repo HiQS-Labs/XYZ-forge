@@ -1,0 +1,4 @@
+red-9ec177d5 inventory_ratchet: ERROR: NEW SQLite connect file added (skills/2-daily/merge-cleanup/scripts/merge_cleanup.py) — must use canonical gateway (GH-777).
+green-bea9d480 inventory_ratchet: clean (matches baseline, 0 new scripts/connects)
+PASS canonical readonly gateway handles URI-special paths and refuses writes
+ALL GATEWAY AND INVENTORY CONTROLS PASSED

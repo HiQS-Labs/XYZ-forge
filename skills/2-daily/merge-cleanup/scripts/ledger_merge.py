@@ -35,7 +35,6 @@ from scan_clones import run_git
 LEDGER_DUMP = "releases.sql"
 LEDGER_DB = "releases.db"
 LEDGER_VIEWS = ("LEADERBOARD.md", "RELEASES-PREVIEW.html", "LEADERBOARD.html")
-B1_SET = {LEDGER_DUMP, LEDGER_DB, *LEDGER_VIEWS}
 # Excluded until they have their own resolver: a conflict here is a handoff (plan B1).
 B1_EXCLUDED = {"harnesses.db", "harnesses.sql"}
 
@@ -474,6 +473,20 @@ def read_changelog_union(clone: Path) -> str:
     return union_changelog(*texts)
 
 
+def harness_paths_module(root: Path, source: Optional[Path] = None):
+    """Use this installation's shared path policy, including a deployed skill's target copy."""
+    import importlib.util
+    if source is None:
+        bundled = Path(__file__).resolve().parents[4] / "utils" / "py" / "harness_paths.py"
+        source = bundled if bundled.is_file() else tool_path(root, "harness_paths.py")
+    if not source.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("merge_cleanup_harness_paths", source)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def resolve_ledger_conflict(clone: Path, execute: bool) -> Dict[str, Any]:
     """B1 inside a clone with a conflicted merge in progress.
 
@@ -493,7 +506,10 @@ def resolve_ledger_conflict(clone: Path, execute: bool) -> Dict[str, Any]:
     if excluded:
         res.update(handoff=True, reason=f"conflict in {', '.join(sorted(excluded))} — no resolver for harness telemetry yet")
         return res
-    non_ledger = paths - B1_SET - {"CHANGELOG.md"}
+    policy = harness_paths_module(clone)
+    # Older consumer runtimes retain B1's existing set until their harness is upgraded.
+    allowed = getattr(policy, "LEDGER_REPAIR_PATHS", {LEDGER_DUMP, LEDGER_DB, *LEDGER_VIEWS, "CHANGELOG.md"})
+    non_ledger = paths - allowed
     if non_ledger:
         res.update(handoff=True, reason=f"code/doc conflict outside the ledger set: {', '.join(sorted(non_ledger))}")
         return res

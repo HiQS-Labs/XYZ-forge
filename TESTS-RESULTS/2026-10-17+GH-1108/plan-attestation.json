@@ -1,0 +1,19 @@
+{
+  "added_len": 3949,
+  "added_sha256": "8215c60f380f370371442638b4e1237a67e9eece40609065e1720a9ef759aff4",
+  "added_start": 12062,
+  "artifact_sha256": null,
+  "attested_at": "2026-10-17T07:21:13Z",
+  "driver_pid": 47325,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17/relay-system/2026-10-17/gh1108-one-writer-plan.codex.md",
+  "relay_file_rel": "relay-system/2026-10-17/gh1108-one-writer-plan.codex.md",
+  "reviewed_head": "524f725952899d2ad6864fc9d31ea7347091697c",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17",
+  "task": "RELAY-gh1108-one-writer-plan",
+  "trailer_sha256": "d631d7146d54ea54fddded181e1d078eea0fa8e2577346adc8b47d6ccb1de6b6",
+  "transcript_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17"
+}

@@ -1,0 +1,13 @@
+{
+  "reason": "automatic B1 keeps higher-generation task side and cannot replay primary Jog changes; preserve canonical primary and replay only proved branch-owned roadmap addition with existing replay_ops/perform_write",
+  "old_gid": "rmi-01M54B6DYYH7J2VXKTVPF01BZA",
+  "new_gid": "rmi-01M557FZJD688H467QVVSBWJ3Y",
+  "original_accepted_start_retained": "2026-10-17T07:12:54Z",
+  "writer_log": [
+    "roadmap add GH-1108: rc=0 ",
+    "roadmap rate GH-1108 90/85/50/35: rc=0 ",
+    "roadmap update GH-1108 (section/marker): rc=0 "
+  ],
+  "primary_head": "26eaaf546259cd169bbdff3d10690ac6c71b173a",
+  "releases_check": "OK: foreign_keys pragma asserted per connection\nOK: generation trio consistent at 1753 (DB <-> dump)\nOK: receipt chain intact (1950 receipt(s), business-state digest matches, 199 merge fork(s) tolerated under the merge-rebuild receipt)\nwarn: rule=mig-ref-stale: MIG-F1CCB6 is 60 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D7D2C4 is 60 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D248B2 is 60 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-79F036 is 60 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-A993B3 is 60 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-751A4C is 60 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-7AFFE1 is 60 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-AC68FA is 60 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 21 day(s) past its target of 2026-09-26 \u2014 the plan has drifted from the calendar\ninfo: 24 grandfather_entries pending disposition (the strict flip requires none pending)\ncheck: clean (0 failures, 9 warning(s))\n"
+}

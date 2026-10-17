@@ -1,0 +1,8 @@
+PASS ledger-conflicted/source-clean merge: [{"commit": "a6845fe1fd789f05a782e8c70a709d871c57a5e9", "kind": "ledger-only"}, {"commit": "933e69774126ce294313ef2806247539db7a57b1", "kind": "upstream-merge", "parents": ["a6845fe1fd789f05a782e8c70a709d871c57a5e9", "f3a14fb8a8dd5d76ca5ed79db410ab166757a5b1"], "stripped_input_trees": ["5258998e5124cfd3e449c8bb26f975d24d1f82a6", "4789a05f44df413fb9ad8c3997768fc99f7179df"], "recomputed_tree": "4d970d222d4a43ef8dbaa1e82d64e4a0c7419c40", "recorded_stripped_tree": "4d970d222d4a43ef8dbaa1e82d64e4a0c7419c40", "excluded_paths": ["CHANGELOG.md", "LEADERBOARD.html", "LEADERBOARD.md", "RELEASES-PREVIEW.html", "releases.db", "releases.sql"]}]
+PASS refusal: altered merge tree ; upstream merge tree differs outside ledger paths: e15cc410ee1093dffc5f7c1c837a0458e05b9d1e
+PASS refusal: unreachable integration parent ; git merge-base --is-ancestor f3a14fb8a8dd5d76ca5ed79db410ab166757a5b1 failed: 
+PASS refusal: nonledger merge conflict ; git merge-tree --write-tree 8282fcf5b0779def8f5e2cbe128f1cd980a9f55b failed: 
+PASS refusal: source edit/revert despite equal endpoint trees ; unapproved nonledger tail commit: f82ceeb13dfd21d55fa097573a9a22b5a4f5e4d8
+PASS refusal: missing approved object ; git merge-base --is-ancestor 0000000000000000000000000000000000000000 failed: fatal: Not a valid commit name 0000000000000000000000000000000000000000
+PASS refusal: nonancestor approval ; git merge-base --is-ancestor 9796f3a3e1f53d9a426a5e48e9517740f2333dfd failed: 
+ALL TAIL PROOF CONTROLS PASSED; fixture preserved at /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-proof-rjbmvkuo

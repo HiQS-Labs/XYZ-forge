@@ -1,0 +1,3 @@
+RED witnessed in-process refusal escaping the established nonfatal emitter
+  (work event not recorded for #942: 3)
+PASS canonical in-process emission refusal remains nonfatal; no false event count

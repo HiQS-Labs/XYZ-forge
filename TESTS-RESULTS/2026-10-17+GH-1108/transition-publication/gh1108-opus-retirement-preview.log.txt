@@ -1,0 +1,4 @@
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge-gh1108-jog-land-receipts-2026-10-17-opus-qa` | standalone_clone | `fix/XYZ-forge-gh1108-jog-land-receipts-2026-10-17` | ✅ | ⏳ Idle (42 in 60m) | 0 | ⚠️ 1 | **PRESERVE_UNPUSHED** | Unlanded local refs: refs/heads/fix/XYZ-forge-gh1108-jog-land-receipts-2026-10-17 @ c5f7b96ed4: not reachable from origin/development; no merged PR has this head |
+merge-cleanup: Skipping XYZ-forge-gh1108-jog-land-receipts-2026-10-17-opus-qa: disposition is PRESERVE_UNPUSHED (Unlanded local refs: refs/heads/fix/XYZ-forge-gh1108-jog-land-receipts-2026-10-17 @ c5f7b96ed4: not reachable from origin/development; no merged PR has this head)

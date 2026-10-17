@@ -1,0 +1,59 @@
+"""Manual negative/unknown-outcome and existing mapped-publisher controls."""
+exec((Path('temp/transition-publication-manual.py') if 'Path' in globals() else __import__('pathlib').Path('temp/transition-publication-manual.py')).read_text().split('args=SimpleNamespace')[0])
+# Route only fetch/push to the disposable bare; keep canonical identity visible to GitHub/bundles.
+import shutil,shlex
+real_git=shutil.which('git');bindir=work/'bin';bindir.mkdir();shim=bindir/'git'
+shim.write_text('#!/bin/sh\nfor arg in "$@"; do case "$arg" in fetch|push) exec '+shlex.quote(real_git)+' -c '+shlex.quote('url.'+str(remote)+'.insteadOf=https://github.com/HiQS-Labs/XYZ-forge.git')+' "$@";; esac; done\nexec '+shlex.quote(real_git)+' "$@"\n');shim.chmod(0o755)
+git('config','--unset-all','url.'+str(remote)+'.insteadOf');os.environ['PATH']=str(bindir)+os.pathsep+os.environ['PATH']
+git('config',primary_config_key(str(primary)),str(primary))
+# Witness delivery1's local-only transition using saved owned bytes, then restore those exact bytes.
+original=root.parent/'XYZ-forge-gh1108-jog-land-receipts-2026-10-17'
+saved={n:(primary/n).read_bytes() for n in ['releases.db','releases.sql']};before=git('rev-parse','HEAD')
+code='import sys;sys.path.insert(0,'+repr(str(original/'utils/py'))+');import releases_app as a;a.jog_set_status('+repr(str(primary))+",1087,'parked')"
+cmd(sys.executable,'-c',code)
+assert git('status','--porcelain') and git('rev-parse','HEAD')==before
+for n,data in saved.items():(primary/n).write_bytes(data)
+assert not git('status','--porcelain');print('RED observed delivery1 local-only queue mutation; owned snapshot restored')
+# A push can be accepted even though its caller receives a timeout. Fetch must resolve it once.
+real=app._publication_git;pushes=[]
+def timedout(where,*a,**kw):
+ if where==str(primary) and a[:2]==('push','origin'):
+  pushes.append(a[2]);real(where,*a,**kw);raise subprocess.TimeoutExpired(['git','push'],1)
+ return real(where,*a,**kw)
+app._publication_git=timedout
+try:app.jog_set_status(str(primary),1087,'parked',failure_reason='accepted despite lost push result')
+finally:app._publication_git=real
+assert len(pushes)==1 and not git('status','--porcelain') and git('rev-parse','HEAD')==git('rev-parse','origin/development')
+print('PASS accepted-but-timeout push proven by fetch, no duplicate replay')
+# Exercise actual mapped recovery channel with real GH proof and normal Git to the fixture remote.
+cmd('git','--git-dir',str(remote),'update-ref','refs/pull/1102/head','974d98dbd9c958975ef3b4797f93b212618b0f96')
+program="""import sys
+from pathlib import Path
+root=Path(sys.argv[1]);sys.path[:0]=[str(root/'utils/py'),str(root/'skills/2-daily/merge-cleanup/scripts')]
+import merge_cleanup as m
+assert m.run_jog_post_merge_land(1102,root,finish=lambda runtime:m.finish_post_merge_writes(1102,root,'development',publication_runtime=runtime))
+"""
+cmd(sys.executable,'-c',program,str(primary))
+assert not git('status','--porcelain')
+c=sqlite3.connect(primary/'releases.db');assert c.execute('select status from jog_queue where gh_number=942').fetchone()[0]=='completed';c.close()
+proof=next((primary/'TESTS-RESULTS').glob('*+GH-942/jog/*/landing.json'));assert json.loads(proof.read_text())['tail_proof']
+paths=set(git('diff','--name-only','HEAD^','HEAD').splitlines());assert str(proof.relative_to(primary)) in paths and paths <= {'releases.db','releases.sql','LEADERBOARD.md','LEADERBOARD.html','RELEASES-PREVIEW.html','CHANGELOG.md',str(proof.relative_to(primary))}
+print('PASS mapped primary landing and exact proof published through existing final step in one clean commit')
+# Preserve an accepted-but-unverified candidate; do not retry or move local HEAD.
+old=git('rev-parse','HEAD');pushed=False;calls=0
+def fetch_fails(where,*a,**kw):
+ global pushed,calls
+ if where==str(primary) and a[:2]==('push','origin'):
+  pushed=True;calls+=1
+ if where==str(primary) and a[0]=='fetch' and pushed:raise RuntimeError('injected verification fetch failure')
+ return real(where,*a,**kw)
+app._publication_git=fetch_fails
+try:
+ try:app.jog_set_status(str(primary),1087,'pending')
+ except RuntimeError:pass
+ else:raise AssertionError('unknown outcome reported success')
+finally:app._publication_git=real
+assert calls==1 and git('rev-parse','HEAD')==old and git('status','--porcelain')
+assert git('for-each-ref','--format=%(refname)','refs/jog-recovery/')
+print('PASS verification-fetch failure preserves candidate/dirty artifacts and stops without blind retry')
+print('ALL EXTRA CONTROLS PASSED; unknown-outcome fixture deliberately preserved',primary)

@@ -283,6 +283,9 @@ grep -q 'N4-scalar-gate: REFUSED' <<<"$(cat "$WORK/load-results2.txt")" \
 Q="$WORK/qroot"; mkdir -p "$Q"
 git -C "$Q" init -q -b development; git -C "$Q" config user.email q@i.invalid; git -C "$Q" config user.name q
 python3 "$RLIB/releases_app.py" --root "$Q" init >/dev/null 2>&1
+git -C "$Q" remote add origin https://github.com/example/example.git
+Q_PRIMARY_KEY="$(PYTHONPATH="$RLIB" python3 -c 'from harness_paths import primary_config_key; import sys; print(primary_config_key(sys.argv[1]))' "$Q")"
+git -C "$Q" config "$Q_PRIMARY_KEY" "$Q"
 python3 "$RLIB/releases_app.py" --root "$Q" jog add 901 >/dev/null 2>&1
 QGID="$(python3 - "$Q/releases.db" <<'PY'
 import sqlite3, sys
