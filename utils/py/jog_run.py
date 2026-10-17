@@ -517,6 +517,11 @@ def _execution_root(root, target):
         raise ContractError("execution target must be a separate full clone, not the primary or a worktree")
     if primary_config_key(root) != primary_config_key(target):
         raise ContractError("execution target origin differs from the primary")
+    dirty_ledger = _git(target, "diff", "--name-only", "HEAD", "--", "releases.db", "releases.sql")
+    lane_ledger = _git(target, "diff", "--name-only", "origin/development...HEAD", "--",
+                       "releases.db", "releases.sql")
+    if dirty_ledger.strip() or lane_ledger.strip():
+        raise ContractError("execution clone already has ledger changes; preserve and reconcile before dispatch")
     return target
 
 
@@ -719,6 +724,16 @@ def jog_resume(root, gh_num, args=None):
     latest = executions[-1]
     record, receipt = _jog_latest_receipt(root, gid)
     if record is not None and record.get("execution_id") == latest.get("execution_id"):
+        publication = next((entry for entry in reversed(latest.get("gate_retries") or [])
+                            if entry.get("execution_id") == receipt.get("execution_id")), latest)
+        invocation_path = os.path.join(_ledger_abs_path(root, gid, latest.get("packet_dir")) or "", "marathon-invocation.json")
+        if receipt.get("outcome") == "approved" and not publication.get("committed_receipt") and os.path.isfile(invocation_path):
+            invocation = load_marathon_invocation(invocation_path)
+            target = _execution_root(root, invocation["target_root"])
+            publication["committed_receipt"] = publish_jog_receipt(
+                target, receipt, _ledger_abs_path(root, gid, publication.get("result_path")),
+                base_ref=invocation["base_ref"])
+            publication["published_head"] = _git(target, "rev-parse", "HEAD").decode().strip()
         action, reason = jog_project_marathon_outcome(
             root, gh_num, receipt,
             execution_id=latest.get("execution_id"), result_path=latest.get("result_path"))
@@ -853,7 +868,7 @@ def _jog_retry_gate_locked(root, gh_num, args):
         print(f"jog: gate retry exited {proc.returncode} without a valid receipt: {exc}",
               file=sys.stderr)
         sys.exit(2)
-    gate_retries.append({"execution_id": record["execution_id"], "attempt": attempt_no,
+    gate_retries.append({"execution_id": new_receipt["execution_id"], "attempt": attempt_no,
                          "status": new_receipt.get("outcome"),
                          "result_path": result_path})
     jog_save_state(root, gid, state)
@@ -958,8 +973,6 @@ def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, pu
     branch = _git(target, "symbolic-ref", "--short", "HEAD").decode().strip()
     if push and (branch != receipt.get("head_branch") or branch == "development"):
         raise ContractError("receipt publication requires its existing lane branch")
-    if push and _git(target, "rev-parse", "HEAD").decode().strip() != receipt.get("head_sha"):
-        raise ContractError("lane head moved before receipt publication")
     original = open(result_path, "rb").read()
     result = _validate_marathon_result(json.loads(original))
     if result != receipt:
@@ -996,6 +1009,10 @@ def publish_jog_receipt(target, receipt, result_path, base_ref=None, pr=None, pu
             stream.write(data)
     paths = [f"{rel}/{name}" for name in files]
     if push:
+        live_head = _git(target, "rev-parse", "HEAD").decode().strip()
+        if live_head != receipt["head_sha"]:
+            _landing_tail_proof(target, receipt["head_sha"], live_head,
+                                f"refs/remotes/origin/{manifest['base_branch']}", rel)
         _git(target, "add", "--", *paths)
         if subprocess.run(["git", "-C", target, "diff", "--cached", "--quiet"], capture_output=True).returncode:
             # Refuse to sweep a pre-existing staged path into the evidence commit.

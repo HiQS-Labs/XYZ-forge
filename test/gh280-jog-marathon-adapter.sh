@@ -436,7 +436,7 @@ PFV_OUT="$(cd "$FV" && python3 "$FV/.xyz/utils/py/swarm_preflight.py" --gh-issue
 [ "$rc" -eq 0 ] && pass "E1 vendored preflight exits 0" || fail "E1 vendored preflight exit=$rc: $PFV_OUT"
 INVV="$PKV/marathon-invocation.json"
 jassert "$INVV" 'd["harness_home"]=="'"$FV"'/.xyz" and d["argv"][0]=="'"$FV"'/.xyz/relay-automation/marathon-drive.sh"' "E2 vendored artifact points inside .xyz"
-jassert "$INVV" 'os.path.realpath(d["target_root"])==os.path.realpath("'"$FVT"'")' "E3 vendored target_root is the consumer repo"
+jassert "$INVV" 'os.path.realpath(d["target_root"])==os.path.realpath("'"$FV"'")' "E3 vendored target_root is the consumer repo"
 
 RESV="$WORK/md-result-vendored.json"; rm -f "$RESV"
 ( cd "$FV" && RELAY_DRIVE_EXIT=0 MARATHON_RELAY_DRIVE="$STUB_RD" \
@@ -446,7 +446,7 @@ RESV="$WORK/md-result-vendored.json"; rm -f "$RESV"
       --reviewer agy --builder codex --pre-advance-cmd "bash $GATE_PASS" \
       --result-file "$RESV" ) >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "E4 vendored drive exits 0 with receipt" || fail "E4 vendored drive exit=$rc"
-jassert "$RESV" 'd["outcome"]=="approved" and os.path.realpath(d["target_repo"]["path"])==os.path.realpath("'"$FVT"'")' "E5 vendored receipt target_repo is the consumer repo"
+jassert "$RESV" 'd["outcome"]=="approved" and os.path.realpath(d["target_repo"]["path"])==os.path.realpath("'"$FV"'")' "E5 vendored receipt target_repo is the consumer repo"
 
 # E6 vendored pre-dispatch refusal receipt
 rm -f "$RESV"
