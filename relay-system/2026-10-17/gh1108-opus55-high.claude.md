@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -162,5 +162,50 @@ S3 Implemented: capability is loaded beside the exact tool_path-resolved release
 Minor comment fixes and saving clone-ledger-changed cache status were also applied. Other optional/pre-existing nits are outside this delivery and are not silently fixed. The newer source also fixes the legacy interactive supervisor merge route and its inherited lock bypass, with recorded red/green controls. Source reviewed now through03fb2fd9; all evidence in TESTS-RESULTS/2026-10-17+GH-1108. Full final-source gate and actual machine-primary historical recovery remain pending.
 
 Handing off to claude-opus-reviewer for Round2, final source and complete sweep; only this relay writable. Tick done on approval as specified, not release.
+
+### Reviewer · Round 2 (claude-opus-reviewer)
+
+swept file: yes
+Scope: I re-read the current working tree. In `merge_cleanup.py` I read the Jog hook, the reconcile and publisher functions, and the `--reconcile-pr` branch (621–770, 1270–1300, 1440–1520). I read `ledger_merge.py:476-488`. In `jog_run.py` I read the legacy supervisor, the lock and the checkpoint (196–212, 1255–1295, 1540–1595, 1960–2010). I read the existing `--reconcile-pr` callers in `test/gh436-merge-cleanup.py:330-380` and `test/gh534_phase_b_tests.py:535-543`, the SUMMARY, and the round-1 manual logs. Probes were `sqlite3 "file:releases.db?mode=ro"` and rg/sed only. I ran no git, no tests and no fixtures. Beyond round 1's Nits, I found no new pre-existing defect in the touched spans.
+
+VERDICT: FAIL
+Basis: The S1–S3 dispositions hold in the source. S2 Modified is accepted. One new Should remains: by code trace, the S1 fix breaks an existing merge-cleanup unit test. Its focused suite last ran at `7551ca55`, before `03fb2fd9` (SUMMARY.md), so no retained run covers it. The fix is one test-only edit with no new suite. Everything else passes.
+
+**[Should] S4: the S1 publisher makes the existing `test_reconcile_pr_proceeds_on_a_ready_primary` return 2, but it asserts 0.**
+- Path: `test/gh436-merge-cleanup.py:347-363` (`_run_main`) mocks only `inspect_primary_landing`, `run_post_merge_reconcile` (a truthy MagicMock), `refresh_pr_with_retry`, `scan_directories` and `fetch_open_prs`. The primary is a bare `git init -b development` with no origin and no commit (`:342`).
+- With `--execute`, `main` now reaches `commit_and_push_phase5_writes` (`merge_cleanup.py:1512-1514`). Its `git status` is empty, but `_net_git(["push","origin","HEAD:development"])` (`:750`) fails because there is no `origin` remote. The function returns False and `main` returns 2. Line `:378` asserts `rc == 0`.
+- `test/gh534_phase_b_tests.py:535-543` is unaffected, because its reconcile mock returns False and stops before the publisher.
+- Observed input: `merge_cleanup.py --primary <empty git-init repo> --reconcile-pr 42 --execute` with the reconcile step mocked truthy, which is that test's exact setup. I traced this through the code and did not run it [Unverified — needs clone run].
+- Affected scope: this one existing test, and any full-gate run that includes `gh436`. No runtime behaviour changes.
+- Fix: in that test only, also patch `merge_cleanup.commit_and_push_phase5_writes` (return True). Assert it is called once with `(42, self.primary, "development")`, which turns the existing test into the S1 pin. Do not touch the runtime code, and do not add a new test file.
+- Falsifier: run `python3 test/gh436-merge-cleanup.py TestMergeCleanupOrchestration.test_reconcile_pr_proceeds_on_a_ready_primary` at `03fb2fd9` in the gate clone. If it passes unchanged, this finding is wrong.
+
+**[Nit]**
+- `jog_run.py:1995-1996`: a real legacy run without `--auto-merge` is parked with `JOG_AUTO_MERGE_CHECKPOINT`, whose text begins "--auto-merge requires…" (`:200-203`). That misleads the operator about why the row parked. Optionally use a neutral reason, such as "primary publication checkpoint required before merge-cleanup (delivery 1)". This is wording only.
+
+**[Pass]**
+- S1:
+  - Recovery now publishes only when it is not a dry run and reconcile succeeds (`merge_cleanup.py:1506-1515`).
+  - It reuses the existing `commit_and_push_phase5_writes` (`:734-767`), so no new publisher was added.
+  - `merge-hook-review-manual.log.txt` shows "PASS red prior recovery exits0 with unpublished landing writes" and then "PASS actual recovery mode completes actionable row and publishes owned writes; clean at origin/development".
+- S2 Modified, accepted:
+  - The mapping now covers only `{"pending","running","failed","parked"}` (`merge_cleanup.py:632-633`).
+  - That matches the schema's `CHECK (status IN ('pending','running','completed','parked','failed','dropped','archived'))` (read-only `sqlite_master`). Only the terminal statuses are excluded.
+  - Refusing an actionable mapped row that has no evidence is the fail-closed reading of operator requirement 5. I withdraw the broader skip suggestion.
+  - Log: "PASS prior terminal follow-up invokes/refuses land; fixed terminal mapping skips issue 904" (and 275).
+  - Every `jog_queue` row in this DB has `repo_id=1` (one repo), so the dump's lack of a repo filter has no observed effect.
+- S3:
+  - `runtime_policy` now loads from `tool_path(repo_path,"releases_app.py").with_name("harness_paths.py")` (`merge_cleanup.py:648-652`), through the new `source=` parameter (`ledger_merge.py:476-488`).
+  - The B1 slug lookup is unchanged (`:637`).
+  - Log: "PASS prior skill-resident check invokes old runtime; fixed exact-runtime check refuses before old writer".
+- Hook DB access: the hook parses the qualified dump with `ledger_merge.parse_dump` (`:631`) and opens no new SQLite connection, which is consistent with the inventory ratchet note in SUMMARY.
+- Legacy route:
+  - A real (non-simulate) legacy run parks at the checkpoint before `handle_landing_boundary` (`jog_run.py:1993-2000`).
+  - The clone driver drops the inherited `RELAY_DRIVER_LOCKED` (`:1562`).
+  - The clone ledger bytes are compared around the drive (`:1974`, `:1983-1986`).
+  - Log: "PASS legacy supervisor bea9d480 ['parked']" and "PASS real existing target driver refuses live holder despite inherited bypass; no clone ledger change".
+- Round-1 Nits: comment fixes and the clone-ledger cache status are dispositioned. The rest are declared out of delivery scope, which I accept.
+
+Handing off to Producer (codex-producer). Disposition S4 with the one test-only edit, then hand back for Round 3. Go to the Producer window and say "take your turn".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
