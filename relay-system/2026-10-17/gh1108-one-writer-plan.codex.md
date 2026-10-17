@@ -107,4 +107,12 @@ Basis: Delivery 1 is sufficiently specified for implementation. Round 1's public
 
 Relay closed (Approved), no further turn needed. Producer may proceed with delivery-1 implementation and its specified clone controls; final implementation QA remains required.
 
+
+### Attestation · relay-drive — 2026-10-17T07:21:13Z
+task: RELAY-gh1108-one-writer-plan
+reviewer: codex
+status: Approved
+reviewed-head: 524f725952899d2ad6864fc9d31ea7347091697c
+added-range: 12062+3949
+added-sha256: 8215c60f380f370371442638b4e1237a67e9eece40609065e1720a9ef759aff4
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
