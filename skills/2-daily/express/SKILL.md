@@ -132,8 +132,8 @@ set +e; bash "$SUITE" >>"$LOG" 2>&1; RC=$?; set -e; echo "rc=$RC" >>"$LOG"      
 AFTER=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "$AFTER" >>"$LOG"
 [ "$BEFORE" = "$AFTER" ] || { echo "VOID: identity drifted during the suite — no receipt"; exit 1; }  # 4.
 git checkout "$BASE" && git diff-index --quiet HEAD --                                           # 5. same helper, actual rc
-python3 -c "import sys; sys.path.insert(0,'utils/py'); import express; print(express.write_receipt('.', '$SHA', $N, '$SUITE', $RC, base='$BASE'))"
-cp "$LOG" TESTS-RESULTS/*+GH-"$N"-express/recovery-run.log                                       # 6. retain the run
+REC=$(python3 -c "import sys; sys.path.insert(0,'utils/py'); import express; print(express.write_receipt('.', '$SHA', $N, '$SUITE', $RC, base='$BASE'))")
+cp "$LOG" "$(dirname "$REC")/recovery-run.log"                                                   # 6. retain the run beside the receipt
 git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (commit $SHA)" && git push origin "$BASE"
 python3 utils/py/express.py resume --issue "$N" --suite "$SUITE" --sha "$SHA" --base "$BASE"                 # 7.
 ```
