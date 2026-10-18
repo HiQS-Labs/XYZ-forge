@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -113,7 +113,7 @@ Keep one contract in the existing task/results record, with:
   per-command timeout, batch/corpus and no-new-signal limits, reserving replay/minimization and
   cleanup time inside the total budget. Never inherit a multi-hour default without approval.
 - Disposable standalone full clones (not primary or linked worktrees), host/sandbox identity
-  baselines, owned process groups and verified descendant cleanup. Reuse existing process-group
+  baselines, owned process groups and verified descendant cleanup. Reuse existing process-group  [Unverified — no citation]
   facilities such as [proc_group.py](https://github.com/HiQS-Labs/XYZ-forge/blob/development/utils/py/proc_group.py).
   Check actual nested process behavior: an outer process group alone does not contain a child
   that starts its own session. If existing controls cannot meet the contract, hold; build no adapter.
@@ -145,7 +145,7 @@ Inspect the exact target allowlist; do not blindly accept defaults or include `v
 mutated arguments can launch a full gate. The campaign's duration is checked between batches
 and replay/cleanup can extend it; host violations are recorded, not necessarily immediate
 abort conditions. Do not present telemetry as enforcement. Use existing supervision and
-verified timeouts/cleanup that satisfy the approved stops, or hold execution as unsupported.
+verified timeouts/cleanup that satisfy the approved stops, or hold execution as unsupported.  [Unverified — no citation]
 Recheck live/local ownership immediately before launch. No campaign is authorized by this doc.
 
 ## Replay, classify and hand off
@@ -189,7 +189,7 @@ Proposed hypothesis: refresh of an unlanded PR updates overlap inputs without re
 history; a fresh execution cannot hide matching pending QA. Oracle compares refreshed planned
 file sets to the observed PR snapshot, preserves landed order/merge identity and requires QA
 coverage for all landed identities before continuation. A failed post-merge refresh must
-retain verified merge identity; repeated equivalent reads/recomputations preserve semantics.
+retain verified merge identity; repeated equivalent reads/recomputations preserve semantics.  [Unverified — no citation]
 
 Controls specified, **not run**: reuse #1073's stale-overlap counterexample (changed unlanded
 file set) and #1084's QA-bypass/merge-identity-loss evidence as known-failing historical controls,
@@ -284,7 +284,7 @@ A report match needs a specific target, falsifiable invariant, safe fixture and 
 Candidate hypotheses, after ownership clearance:
 - Refreshing an unlanded PR must update overlap inputs without rewriting landed history
 - A fresh execution cannot hide matching pending QA
-- A failed post-merge refresh cannot discard a verified merge identity
+- A failed post-merge refresh cannot discard a verified merge identity  [Unverified — no citation]
 - Repeated equivalent read/recompute operations preserve semantics
 
 Existing gh436/gh534 checks are assets to reuse, not permission to add cases. This pilot likely needs a small structured-state adapter/oracle: name and review that gap instead of claiming argv mutation already covers it.
@@ -321,5 +321,21 @@ The main cost is trustworthy domain predicates, not launching a fuzzer. This is 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Ship the non-executable documentation artifact within the authorized DRAFT-to-development scope. The full skill and supplied issue snapshot have equivalent requirements; no blocking omission or additional pre-existing defect was found in the artifact sweep. Referenced implementation seams and consumer pointers support the stated limitations. Reversibility: Easy (remove/revert these instructions and pointers). This approval is not campaign authorization, runtime-safety proof, merge readiness or promotion qualification.
+swept file: yes
+
+- [Pass] Suitability and ownership precede execution: `skills/4-occasional/defect-campaign/SKILL.md:16` pins source/report/prior evidence separately from tracker observation time, checks active ownership and holds unknown/overlapping work. Lines 24–37 select tools by problem class and explicitly reject generic containment/argv mutation as stateful business-semantic coverage. No new engine, adapter, scheduler, registry, workflow, test or fixture is introduced; the committed path delta contains only 15 documentation/evidence/ledger paths. Read-only probe: `python3 .relay-scratch/tmp/read_diff.py` → exit 0, decisive output includes only ARCHITECTURE/CHANGELOG, GH1143 PROJECT/results/relay documents, releases.db/sql and the three skill documents; `diff lines 1299`. This scratch-only object reader inspected base e93214fe through seeded HEAD fa215ee3 without invoking git.
+- [Pass] Execution contract and disablement are explicit at skill lines 47–89: hypotheses/oracles, failing/clean controls, declared mutations, sanitized fixtures, finite budgets, replay/cleanup reserve, standalone clones, descendant cleanup, stop conditions and fresh approval. `utils/py/gen4_campaign.py:365` defaults to suite; `:376` and `:399` implement no-synth/inversion; `:229` gates healing on its optional command. ATE filing is conditional on `args.gh_repo` at `utils/ate/scripts/run_variations.py:588`. Skill lines 76–88 require explicit run/no-synth, omitted model/healing/filing commands and holding unsupported supervision. Its warning that duration is batch-checked and host violations are recorded matches `gen4_campaign.py:152` and `:188`; its nested-session warning matches `proc_group.py:124` and `fuzz_engine.py:245`. These are static source checks, not exercised safety guarantees.
+- [Pass] Replay/results preserve the source requirements at skill lines 93–113: same semantic predicate, retained complete inputs/corpus/environment/state/timing, root-cause/ownership dedupe, accountable evidence-linked dispositions, severity triage, authorized backlink, honest bounded null results and separately approved remediation. `utils/py/repro_builder.py:120` and `:123` check return code and optional substring; skill lines 34–37 and 95–96 accurately decline to treat that as arbitrary semantic minimization. Per-individual CI-case approval and prohibition on inherited older permissions are explicit at lines 64–72; no ledger transport redesign is proposed.
+- [Pass] The held pilot is concrete without implying execution: skill lines 119–147 name the pinned source, batch_record/selection seams, hypotheses, unrun historical and clean controls, 12 sequences/30 seconds each/10 minutes total with four minutes reserved, ownership exclusions and missing predicate integration. `batch_record.py:79`, `:95`, `:105`, `:110` and `merge_cleanup.py:1746` are the actual existing seams. Lines 123–126 retain #1140/#1136 exclusions and #1133's pause; line 147 keeps the pilot held even after ownership clears. Historical control revisions/artifacts still need resolution, as line 136 explicitly states.
+- [Pass] Consumer handoff stays recommendation-only: `skills/3-weekly/radar/SKILL.md:802` retains "Radar recommends and never executes" and the no-reciprocal-pointer rule; its addition at :808 recommends optional specification. `skills/4-occasional/ate/SKILL.md:20` points to defect-campaign and overrides its older filing flow for this mode, without redirecting the asset into a Radar rerun. `ARCHITECTURE.md:132` indexes the new skill. A separate read-only Python equality assertion exited 0: the embedded skill exactly equals the on-disk skill. A read-only SQLite query (`select gh_number,section,doc_path,rating_pri,rating_sev,rating_appeal,rating_effort from roadmap_items where gh_number=1143`) returned one In progress row, the correct working-doc pointer and 55/40/50/85; integrity_check returned ok. Base/candidate database comparison showed only generation, one GH1143 roadmap row, five operation receipts and four work events changed.
+- [Pass] Retained verification is appropriately scoped: `TESTS-RESULTS/2026-10-18+GH-1143/manual-review.md:5` records the existing validator and textual consumer/negative-completeness walkthrough; its closing paragraphs distinguish docs consistency from campaign safety. `pdda.txt` ends "PDDA run complete: no errors, 57 warning(s)" and records the LLM readiness skip; `route.txt` records docs_only=true, route=docs, tier=1, full_required=false, consistent with `utils/ci-route.sh:65`. `provenance.jsonl` retains the procedural review rejection and f135518a documentation checks. `PROJECT/2-WORKING/GH-1143-DEFECT-CAMPAIGN.md`, sections "Blocked handoff" and "Operator override", preserve the failed plan attestation and explicit override rather than relabeling that failure as successful QA.
+- [Unverified — needs clone run] No validate.sh, test/*.sh, pytest, executable fixture or campaign ran during this review. Recorded producer docs checks were inspected, not rerun here; no full-suite, behavioral campaign, hosted exact-head or publication result is claimed. Future campaign ownership/control evidence must be refreshed before any separately approved execution. The harness owns final post-turn attestation and the file-scoped commit.
+
+Relay closed (Approved), no further review turn needed. Returning the completed token to operator; proceed only within the authorized documentation/DRAFT publication scope.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
