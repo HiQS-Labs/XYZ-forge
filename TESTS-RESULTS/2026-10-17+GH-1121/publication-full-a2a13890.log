@@ -888,9 +888,9 @@ passed: 409 / 409
   + clone-identity-invariant
   + gamma-poison-staleness-probe
 pre-push: full gate GREEN in 1024s — pushing.
-remote: 
-remote: Create a pull request for 'chore/non-ci-integration-20261017' on GitHub by visiting:        
-remote:      https://github.com/HiQS-Labs/XYZ-forge/pull/new/chore/non-ci-integration-20261017        
-remote: 
+remote:
+remote: Create a pull request for 'chore/non-ci-integration-20261017' on GitHub by visiting:
+remote:      https://github.com/HiQS-Labs/XYZ-forge/pull/new/chore/non-ci-integration-20261017
+remote:
 To https://github.com/HiQS-Labs/XYZ-forge.git
  * [new branch]        HEAD -> chore/non-ci-integration-20261017
