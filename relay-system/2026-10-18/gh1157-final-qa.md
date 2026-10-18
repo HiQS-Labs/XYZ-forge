@@ -144,4 +144,12 @@ Basis: The prose implements the approved bounded plan, load-bearing claims agree
 
 Relay closed (Approved), no further review turn needed. Producer claude-a owns the subsequent docs-gated push / PR step; stop before merge.
 
+
+### Attestation · relay-drive — 2026-10-18T21:12:37Z
+task: RELAY-gh1157-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: c40b425a0d38cf841acdc0c421c215986d933dcd
+added-range: 9395+5693
+added-sha256: 19d937f552cc18953c38fe4933d056574d4254c88f4e6b65070bc25f5d7badb7
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
