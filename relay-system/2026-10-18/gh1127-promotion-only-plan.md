@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -181,5 +181,24 @@ Dispositions (canonical plan revised; final round):
 - **F2 — Implemented.** Procedure step 1: the quiet window now runs from dispatch until the promotion PR is **merged**, and the exit-8 claim is corrected (it refuses reconciliation, not the merge). Step 2: select the run id. Step 3: fetch first; pick the receipt by `run_url` = dispatch id; require ancestry of `tested_commit`; each later commit must be bot-authored **and** pass `hosted_lane_publish.declared_paths` (the publisher's own allowlist, `hosted_lane_publish.py:49-86`); no `deferred` log line. Step 4: re-run step 3 against the PR head immediately before merging. A5 now has controls (i)–(iv): a source commit after the tested commit, a non-allowlisted bot commit, a stale tracking ref, and selection by recency.
 
 Request: confirm F1/F2 closed, or name any remaining gap with Observed input / Affected scope / Falsifier. VERDICT + `swept file:` line.
+
+### Reviewer · Round 3
+
+**VERDICT: PASS**
+**Basis:** Approve the plan for implementation. F1's remaining acceptance gap and F2's candidate-window gap are closed in the revised specification. This is plan approval, not runtime qualification or merge readiness. Reviewed the entire canonical `PROJECT/2-WORKING/GH-1127-PROMOTION-ONLY-FULL-SUITE.md` (120 lines), including the unchanged sections; no additional blocking pre-existing plan defect was identified. The Setup artifact remains absent, so this turn follows the Producer's explicit canonical-path instruction as in rounds 1–2.
+
+swept file: yes
+
+- **[Pass] F1 closed at plan level.** `plan:50-59,109` specifies the full-gate override, both entry/early-return changes, and p4's actual zero-pending promotion route in a disposable full clone. Its required outputs are full-registry telemetry plus the tested-HEAD commit receipt replaying True, with command, exit status and decisive output retained under the stated evidence destination. This now exercises the caller rather than accepting only a helper value. The two current predicates remain observable at `utils/py/wave_reconcile.py:650-651,2235`; implementation must replace them as planned. Establish the stated zero-pending precondition during execution rather than treating the sentence about today's development receipts as measured live evidence.
+- **[Pass] F2 closed at plan level.** `plan:78-86` holds the quiet window until the promotion merge, fetches before checking, selects evidence by dispatch id, requires ancestry, restricts later commits by bot author and the existing publisher allowlist, and repeats the check against the PR head immediately before merge. `plan:114` supplies the source-advance, non-allowlisted bot, stale-ref and wrong-receipt controls. The named reusable allowlist actually rejects unexpected paths (`utils/py/hosted_lane_publish.py:80-86`), and the receipt producer writes the dispatch run id into `run_url` (`utils/py/wave_reconcile.py:738-740`). The exit-8 explanation now correctly describes refusal of reconciliation (`plan:78`). This remains the operator's chosen procedural boundary.
+- **[Pass] F3/F4 remain addressed.** `plan:64` distinguishes merge-cleanup polling from the local writer's retained safety query; `plan:65-70,88-89` includes deferred full-sweep wording, the renderer/CLI consumers, and the skill/report documentation edits. No additional behavior or gate machinery is requested.
+- **[Unverified — needs clone run]** A0–A6 execution remains outstanding (`plan:109-115`), including the actual empty-pending full run, receipt replay/tampering, existing covering suites, doc hygiene, and promotion procedure controls. Retain committed provenance for evidence cited by the implementation. No implementation result, live pending count, hosted run, or branch-protection state is attested by this review.
+- **[Nit]** Setup still contains the literal Definition of Done placeholder. As in prior rounds, this verdict grades the canonical Acceptance table and the Producer's F1/F2 closure request.
+
+**Evidence ledger and limits:** Read commands `cat PROJECT/2-WORKING/GH-1127-PROMOTION-ONLY-FULL-SUITE.md` and `nl -ba ... | sed -n '55,103p'` exited 0. Decisive spans: line 58 requires the “actual route”; line 78 says “until the promotion PR is merged”; lines 80 and 86 require fetching and the final PR-head recheck. Direct source reads of the cited qualifier, caller, receipt writer and publisher allowlist exited 0. `cat .relay-artifacts/GH-1127-PROMOTION-ONLY-FULL-SUITE.md` reported “No such file or directory” (within a combined read whose final command exited 0). Verify-tier graph lookup used project `XYZ-forge`, rooted in the main checkout; symbol lookup returned zero matches, and coverage generation `2026-09-01T15:54:30Z` reported the plan missing, qualifier metadata changed and publisher untracked. Current local source supplied the evidence; graph results do not establish worktree freshness. No git command, validator, test suite, pytest, executable fixture, or live GitHub operation was run.
+
+Root cause: promotion qualification can otherwise skip the full registry or become disconnected from the eventual candidate; Fix site: the existing qualifier plus the candidate-bound promotion procedure; Why not upstream/downstream: reuse the existing dispatch/receipt machinery and preserve the operator's procedural enforcement decision.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may implement the approved plan and obtain the specified execution evidence and final independent QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
