@@ -68,30 +68,37 @@ Branch `feat/XYZ-forge-gh1144-express-default-branch-2026-10-18` off `developmen
 
 - Outcome sought: `/express` works in a repo whose integration branch is `main` (or any named branch), with
   every existing express invariant intact and XYZ Forge's behaviour and receipts unchanged.
-- Smallest viable bet: resolve one base branch per run in `express.py` (`--base` flag, else `origin/HEAD`,
-  else `development` when `origin/development` exists, else refuse `base-unresolved`); keep it in one module
-  value used at every site above; pass it to `wave_reconcile.py` through a new `--base` (default
-  `development`) used only on the direct-commit path's four sites.
-- Not built: no `gh repo view` fallback (a network call the offline fixture cannot answer, and `origin/HEAD`
-  plus `git remote set-head origin --auto` already cover it); no change to wave_reconcile's PR, catch-up or
-  hosted modes; no new suite; no change to the vendored-host blockers (`validate.sh`, `test/pdda-repo-contract.sh`,
-  `githooks/install.sh`), which the issue scopes out.
+- Smallest viable bet: resolve one base branch per run in `express.py`: `--base` flag, else `origin/HEAD`, else
+  GitHub's recorded default (`gh repo view <repo> --json defaultBranchRef`), else refuse `base-unresolved`
+  (plan QA S5: the issue's "never guess"; ref existence is not evidence). Every candidate must also exist as
+  `origin/<base>`. Keep it in one module value used at every site above; pass it to `wave_reconcile.py`
+  through a new `--base` (default `development`) used only on the direct-commit path's four sites.
+- Not built: no fallback that infers the branch from which refs exist; no change to wave_reconcile's PR,
+  catch-up or hosted modes; no new suite; no change to the vendored-host blockers (`validate.sh`,
+  `test/pdda-repo-contract.sh`, `githooks/install.sh`), which the issue scopes out.
 - Alternatives rejected: (a) a repo config file naming the branch — a new state surface for what git already
   records in `origin/HEAD`; (b) threading `base` through every function signature — touches ~15 signatures for
-  one value that is constant per run; a module value set once in `main()` keeps library callers (the recovery
-  recipe imports `express.write_receipt`) on today's default; (c) refusing whenever `origin/HEAD` is missing —
-  breaks the existing fixture and every clone made with `git init` + `remote add`.
+  one value that is constant per run (express dispatches one command per process, `express.py:1246-1312`);
+  the one library entry point used outside `main()`, `write_receipt` (imported by the recovery recipe), gets
+  an explicit optional `base` argument instead; (c) an `origin/development` existence fallback — picks a
+  direct-push target with no evidence the operator authorized it (plan QA S5).
 - Rollback: revert the commit; default behaviour is today's.
-- Reversibility: **Easy** to revert; the change sits on express's direct-push authority, so it is reviewed as
-  at least Costly-adjacent (AGENTS: landing behaviour) even though Forge's resolved branch is unchanged.
+- Reversibility: **Easy** to revert the code, but reverting cannot undo a misdirected remote landing. Stop
+  signal: any disagreement between the resolved base and a push, pull, reachability or reconcile destination.
+  Last safe checkpoint: before the first push. Fast-forward-only authority is unchanged.
 
 ## Changes (ordered, verification inline)
 
-1. `express.py`: `BASE = "development"` module default; `resolve_base(root, explicit)` returns `explicit`, else
-   the branch named by `git symbolic-ref --short refs/remotes/origin/HEAD` (minus `origin/`), else
-   `development` when `git rev-parse --verify origin/development` succeeds, else `None`. `main()` resolves once
-   after parsing; `None` → `refuse(root, "base-unresolved", …)` before any phase writes. `--base` is added to the
-   shared subcommand arguments and to `resume`.
+1. `express.py`: `BASE = "development"` module default; `resolve_base(root, repo, explicit)` returns
+   `explicit`, else the branch named by `git symbolic-ref --short refs/remotes/origin/HEAD` (minus `origin/`),
+   else `gh repo view <repo> --json defaultBranchRef --jq .defaultBranchRef.name`; the candidate is accepted only
+   when it is a plain branch name and `origin/<candidate>` verifies; otherwise `None`. `main()` resolves once
+   after parsing; `None` → `refuse(root, "base-unresolved", …)` before any phase writes docs, ledger or git
+   state. Like every other express refusal it records `express-refused` telemetry (the skill: "all refusals …
+   write `.tick/express/*`"); plan QA B1 asked to suppress it — kept consistent with the other refusals instead,
+   and the acceptance wording now says no doc/ledger/git writes. `--base` is added to the shared subcommand
+   arguments and to `resume`. `write_receipt(root, sha, issue, suite, rc, base=None)` uses `base or BASE` in its
+   `environment` text.
 2. Replace every load-bearing literal above with `BASE` / `"origin/" + BASE`. The task-branch refusal keeps
    `development`, `main` and detached, and adds `BASE` (never run express from the integration branch itself).
    Messages, receipt `environment`, help text name the resolved branch (in Forge they read exactly as today).
@@ -99,20 +106,38 @@ Branch `feat/XYZ-forge-gh1144-express-default-branch-2026-10-18` off `developmen
 4. `wave_reconcile.py`: `--base` argument (default `development`); used by `check_current_branch` and
    `pull_upstream` calls at `:2220`/`:2229`, `fetch_commit_metadata` reachability and synthesized
    `baseRefName`, and the base guard at `:2319-2321`. Default keeps every existing caller byte-identical.
-5. `skills/2-daily/express/SKILL.md`: one short paragraph — express lands on the resolved base
-   (`--base`, else `origin/HEAD`, else `development`); no other wording change.
-6. Verification (no new suite, GH-831):
-   - `bash test/gh267-express-skill.sh` and the wave-reconcile suites green, unchanged (their fixtures resolve
-     `development` through the fallback).
-   - Manual checks under `TESTS-RESULTS/2026-10-18+GH-1144/` with `provenance.jsonl`, in a disposable clone,
-     on a scratch fixture built like gh267's but with `main` as the only branch and `origin/HEAD → origin/main`:
-     `express.py run --docs-only --dry-run` previews `push to origin/main`; the same with `--base main` and no
-     `origin/HEAD`; a fixture with neither `origin/HEAD` nor `origin/development` refuses `base-unresolved`
-     and writes nothing (red control: the old code on the `main` fixture refuses `task-clone`
-     "origin/development not found").
-   - Smoke (GH-1088): one real `--dry-run` from this Forge clone (main path: resolves `development`, output
-     unchanged versus `origin/development`'s express on the same input) and one adjacent path (`resume
-     --dry-run` on the `main` fixture resolves `main`).
+5. `skills/2-daily/express/SKILL.md`: a short paragraph on base resolution (`--base`, else `origin/HEAD`, else
+   GitHub's default branch, else refuse), "development" in the procedure and phase text reworded to "the
+   resolved base (development in XYZ Forge)", and the recovery recipe made executable on any base: one
+   `BASE=<branch>` variable, `git checkout "$BASE"`, `git push origin "$BASE"`, `write_receipt(..., base='$BASE')`
+   and `resume --base "$BASE"` (plan QA S4). Forge's default wording and receipts are unchanged.
+6. Existing suite kept truthful (GH-831 permits editing a suite whose pinned behaviour changes; no new suite or
+   registry entry): `test/gh267-express-skill.sh` — (a) the source audit at `:753` asserts the landing pushes
+   `"HEAD:" + BASE` (direct fast-forward push to the resolved base) instead of the literal `HEAD:development`;
+   (b) the fixture declares its integration branch with `git remote set-head origin development` once its
+   remote has `development` (its `gh` stub returns no `defaultBranchRef`, so without this the new resolver
+   correctly refuses). No other assertion changes.
+7. Verification:
+   - `bash test/gh267-express-skill.sh` and the wave-reconcile suites green (in a disposable full clone).
+   - Red control for (6a): mutate `cmd_land` to push a hardcoded `HEAD:development` while bounds use `BASE`;
+     the adjusted assertion fails; restore → passes.
+   - Main-only end-to-end manual check (plan QA S3), recorded under `TESTS-RESULTS/2026-10-18+GH-1144/` with
+     `provenance.jsonl`, in a disposable full clone: a scratch copy of `gh267-express-skill.sh` with its
+     fixture's integration branch renamed `development` → `main` (`origin/HEAD → origin/main`) runs the full
+     non-preview `run` and `resume`; inspect the bare remote's refs (`main` advanced, no `development` created),
+     the fixture's final branch and cleanliness, the committed receipt naming `main`, and a passing
+     `wave_reconcile --commit … --base main --gate`. Red control: the same scratch run against a build whose
+     push destination alone is hardcoded to `development` must fail (remote `main` unchanged or refusal);
+     restore → passes.
+   - Resolution checks (same clone, recorded): `--base main` with no `origin/HEAD` resolves `main`; no
+     `origin/HEAD`, no `--base`, `gh` without a default branch → exit 3 `base-unresolved` with no doc, ledger or
+     git changes (refusal telemetry only, as for every refusal); a clone with both `main` and `development`,
+     `gh` reporting `main` and no `origin/HEAD` resolves `main`, never `development`.
+   - Recovery recipe: run the edited SKILL.md recipe once on the main-only fixture; the receipt names `main`
+     and `resume --base main` reconciles.
+   - Smoke (GH-1088): main path — `run --dry-run` from this Forge clone resolves `development` and prints the
+     same preview as `origin/development`'s express on the same input; adjacent — `resume --dry-run` in the
+     main-only fixture resolves `main`.
    - Final gate per `utils/ci-route.sh` on the changed paths (code → full route), once, on the final commit.
 
 ## Non-goals
@@ -126,17 +151,21 @@ reconcile ordering.
 - A clone with a stale `origin/HEAD` (set at clone time) could resolve an outdated branch. Mitigation: explicit
   `--base` wins; the refusal and dry-run name the resolved branch so the operator sees it before landing.
 - Missing a literal leaves a split-brain run (bounds on `main`, push to `development`). Mitigation: after the
-  edit, `grep -n development utils/py/express.py` must show only the default, the task-branch refusal, and the
-  `origin/development` fallback; the `main` fixture dry-run exercises push, closeout and reconcile previews.
+  edit, `grep -n development utils/py/express.py` shows only the module default and the task-branch refusal;
+  the main-only non-preview run inspects real remote refs, closeout branch, receipt and reconcile, with a red
+  control that hardcodes one wrong destination.
 
 ## Acceptance
 
-- `main`-only fixture with `origin/HEAD`: `run --docs-only --dry-run` resolves `main` and previews pushing to
-  `origin/main`; bounds and ancestry use `origin/main`.
-- Same fixture, no `origin/HEAD`, `--base main`: same result.
-- No `origin/HEAD`, no `origin/development`, no `--base`: exits with `base-unresolved`, no tick/doc/ledger writes.
-- XYZ Forge clone: dry-run output and receipt wording unchanged; `test/gh267-express-skill.sh` and the
-  wave-reconcile suites pass unmodified.
+- Main-only fixture with `origin/HEAD`: a full non-preview `run` advances remote `main` (no `development`
+  created), leaves the fixture clean on `main`, commits a receipt naming `main`, and reconciles with
+  `--base main --gate`; `resume` on the same fixture completes against `main`.
+- Same fixture, no `origin/HEAD`, `--base main`: same resolution.
+- Both `main` and `development` present, no `origin/HEAD`, GitHub default `main`: resolves `main`.
+- No `origin/HEAD`, no `--base`, no GitHub default: exit 3 `base-unresolved`; no doc, ledger or git writes;
+  refusal telemetry as for every refusal.
+- XYZ Forge clone: dry-run output and receipt wording unchanged; `test/gh267-express-skill.sh` (with the two
+  truthful edits) and the wave-reconcile suites pass.
 - `wave_reconcile.py --commit <sha> --base main` accepts a commit reachable from local `main` and reports base
   `main`; without `--base` behaviour is unchanged.
 
@@ -144,7 +173,7 @@ reconcile ordering.
 
 | Issue | Requirement | Clone / branch | State |
 |---|---|---|---|
-| [#1144](https://github.com/HiQS-Labs/XYZ-forge/issues/1144) | Changes 1–6 | `XYZ-forge-gh1144-express-default-branch-2026-10-18` / `feat/…` | Plan drafted |
+| [#1144](https://github.com/HiQS-Labs/XYZ-forge/issues/1144) | Changes 1–7 | `XYZ-forge-gh1144-express-default-branch-2026-10-18` / `feat/…` | Plan drafted |
 
 ## Rating rationale (2026-10-18)
 

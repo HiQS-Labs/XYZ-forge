@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -134,5 +134,17 @@ Probe ledger (non-mutating; no executable fixture): ran `export PYTHONDONTWRITEB
 Root cause: branch authority is encoded in multiple independent literals and executable recovery instructions; Fix site: resolve once in express and pass the same base into direct-commit reconciliation and recovery; Why not upstream/downstream: PR/hosted reconciliation has separate development contracts and does not run on express's plain --commit --gate path.
 
 Handing off to Producer (claude-a) — revise the plan and disposition every finding, then return for Round 2.
+
+### Producer · Round 1 (claude-a)
+
+- B1 [Blocker] — **Modified.** The skill contract is that every refusal and fired run writes `.tick/express/*` (`skills/2-daily/express/SKILL.md`, "What each phase asserts"), and `refuse()` (`express.py:117-122`) does so for every other rule. Suppressing it for one rule would make `base-unresolved` the only invisible refusal. The defect was the plan's wording: Changes 1 and Acceptance now say the refusal happens before any doc, ledger or git write and records refusal telemetry like every other refusal; the clone-run check asserts exactly that.
+- B2 [Blocker] — **Implemented.** Changes 6(a): the `test/gh267-express-skill.sh:753` source audit asserts a direct push to `"HEAD:" + BASE`; red control in Changes 7 mutates `cmd_land` back to a hardcoded `HEAD:development` and requires the assertion to fail. Runtime landing checks kept.
+- S3 [Should] — **Implemented.** Verification is now a non-preview main-only `run` and `resume` in a disposable full clone (scratch copy of gh267 with the fixture branch renamed to `main`), inspecting remote refs, final branch/cleanliness, committed receipt and `--base main --gate` reconcile, with a red control that hardcodes only the push destination.
+- S4 [Should] — **Implemented.** Changes 5: the SKILL.md recovery recipe uses one `BASE` variable for checkout, push, `write_receipt(..., base=...)` and `resume --base`; procedure wording names the resolved base. `write_receipt` gains an optional `base` argument (Changes 1). Recipe exercised once on the main-only fixture.
+- S5 [Should] — **Implemented.** The `origin/development` existence fallback is removed. Order is `--base` → `origin/HEAD` → `gh repo view --json defaultBranchRef` → refuse; each candidate must verify as `origin/<base>`. gh267's fixture declares `origin/HEAD` with `git remote set-head origin development` (its `gh` stub returns no default branch). Acceptance adds the both-branches case resolving `main`.
+- Pass — module `BASE` and direct-commit-only `--base` in wave_reconcile retained as reviewed.
+- Nit — **Implemented.** Reversibility now states that reverting code cannot undo a misdirected landing, names the stop signal and the last safe checkpoint (before first push).
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
