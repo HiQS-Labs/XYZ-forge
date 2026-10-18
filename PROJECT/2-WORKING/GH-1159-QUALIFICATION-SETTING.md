@@ -2,7 +2,7 @@
 gh_issue: 1159
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1159
 title: "merge-cleanup: per-repo qualification setting in .merge-cleanup.json — Forge keeps #1131 promotion-only cadence; vendored repos stop getting Forge-only sweep commands"
-status: Proposed (1-INBOX — plan QA pending)
+status: Active (2-WORKING)
 created: 2026-10-18
 updated: 2026-10-18
 owner: noelsaw1
@@ -25,7 +25,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Intake, recon and plan written at base `9a61625f`; rated 50/45/50/75. | Plan QA. Codex is not installed in this cloud session, so the operator decides how review runs. |
+| Plan QA Approved round 2 (Claude subagent reviewer; Codex unavailable, operator-directed). Promoted; accepted-start. | Implement steps 1–4, verify (step 5 + manual checks), then final QA. |
 
 ## Intake notes
 
@@ -78,9 +78,10 @@ Sweep behavior (`finalize_sweep_inputs(rec, primary, origin, qualification=None)
 | Setting | Classifier | Command | Rendered |
 |---|---|---|---|
 | `promotion` | runs (today's path) | Small: throwaway-clone `bash <gate>` (today). Otherwise `deferred`, `<sweep_command>  # full registry, hosted, once before promotion (#1131); no local full rerun` | Today's lines |
-| `per_batch` | not run | throwaway clone `&& <sweep_command>` | "Run it in a throwaway clone" |
-| `none` | not run | none | "This repo declares no full suite (`qualification.full_suite: none`)…" |
-| absent, or no `sweep_command` | not run (absent) | none | "No sweep command declared for this repo…" |
+| `per_batch` | not run, `gate=""` | throwaway clone `&& <sweep_command>` | "Run it in a throwaway clone" |
+| `none` | not run, `gate=""` | `""` | "This repo declares no full suite (`qualification.full_suite: none`)…" |
+| `promotion` without `sweep_command` | runs | Small: as above. Otherwise `deferred`, `""` | Gate line + "No sweep command declared for this repo…" |
+| absent (`full_suite: undeclared`) | not run, `gate=""` | `""` | "No sweep command declared for this repo…" (no Gate line) |
 
 Forge commits `{"full_suite": "promotion", "sweep_command": "gh workflow run wave-reconcile.yml --ref development"}`.
 This reproduces today's deferred command byte for byte, because Forge's integration branch is
@@ -101,8 +102,8 @@ records a verdict. No `MERGE_CLEANUP_USE_HOSTED` change.
 3. `.merge-cleanup.json`: add Forge's key.
 4. `skills/2-daily/merge-cleanup/SKILL.md` "Project merge policy": one short paragraph.
    `xyz-vendor.sh`: one `note` line.
-5. Verify: `bash test/gh436-merge-cleanup.sh` (existing; `test_emitted_sweep_command_parses` still
-   passes with the absent-key path). Then the routed gate for the changed paths.
+5. Verify: `bash test/gh436-merge-cleanup.sh` (existing; `test_emitted_sweep_command_parses` passes
+   Forge's `qualification`, per disposition 2). Then the routed gate for the changed paths.
 
 **Plan QA round 1 (Claude subagent reviewer, at the operator's direction; Codex unavailable): Changes requested. Dispositions:**
 
@@ -134,7 +135,7 @@ records a verdict. No `MERGE_CLEANUP_USE_HOSTED` change.
 for approval: (a) a foreign-shaped repo with no key never emits `wave-reconcile.yml`; (b) Forge's
 key reproduces today's command byte for byte; (c) an unknown `full_suite` fails closed. Until
 then these are recorded as manual checks under `TESTS-RESULTS/2026-10-18+GH-1159/`.
-**Red control:** with Forge's key removed, the deferred command disappears from the sweep inputs.
+**Red control:** with Forge's key removed, the deferred command disappears from the sweep inputs, and a no-key repo's rendered `script_block` contains none of `wave-reconcile`, `validate.sh`, `development`.
 
 ## Rating (2026-10-18)
 
