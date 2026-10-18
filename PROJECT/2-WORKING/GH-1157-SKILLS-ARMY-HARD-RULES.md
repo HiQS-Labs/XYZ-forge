@@ -2,8 +2,11 @@
 gh_issue: 1157
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1157
 title: "skills-army-hq: hard rules first in SKILL.md — refusals are findings, status first/last, per-device root and canonical, rename propagation"
-status: Proposed (1-INBOX — not yet active)
+status: Active — plan QA Approved (round 2); implementing the prose change
 created: 2026-10-18
+updated: 2026-10-18
+owner: ZCode orchestrator (start-task lane, Mac mini)
+goal: Put the Skills Army HQ hard rules and definition of done at the top of its SKILL.md so agents stop hand-editing the deployment collection, report refusals instead of forcing them, run status first/last, resolve the per-device root and canonical before acting, and apply renames/retirements per device.
 doc_type: feedback
 effort: 1
 complexity: 1
@@ -19,6 +22,12 @@ context_tags: [skills-army-hq, docs, deployment-drift]
 ---
 
 # GH-1157 — Skills Army HQ: hard rules first
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Plan QA Approved by Codex in round 2 (`relay-system/2026-10-18/gh1157-plan-qa.md`, attested against `28245962`); capture promoted to 2-WORKING and admitted with `--accepted-start`. | Edit `skills/3-weekly/skills-army-hq/SKILL.md` per the asks, record evidence under `TESTS-RESULTS/2026-10-18+GH-1157/`, run the docs gate, then final Codex QA and the PR against `development`. |
 
 ## Observed problem (issue #1157, verified 2026-10-18 on the Mac mini)
 
