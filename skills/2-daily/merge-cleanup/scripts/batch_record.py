@@ -209,6 +209,18 @@ def save(rec: Dict[str, Any]) -> None:
         attempt_record.save(path, rec)
 
 
+def refresh_row(rec: Dict[str, Any], pr: int, files: List[str]) -> None:
+    """GH-1140/#1073 (in-run shape): a repair changed this PR's file set — refresh the captured
+    row (marked as an intentional write for save()'s merge rule). Order/outcomes untouched."""
+    if not files:
+        return
+    for row in rec["planned"]:
+        if row["pr"] == pr:
+            row["files"] = sorted(files)
+            row["_refreshed"] = True
+    save(rec)
+
+
 def landed(rec: Dict[str, Any]) -> List[int]:
     """Landing order, plus any outcome that records a merge but is missing from it (GH-1074: a record
     saved without `landed_order` must never read as "nothing landed" and skip QA)."""

@@ -8,4 +8,9 @@
 {"check": "plan-qa", "cmd": "relay-system/2026-10-18/gh1140-plan-qa-r1.md (codex, 3 rounds)", "result": "r3 VERDICT PASS; r1 added 2 new shapes + widened #444; r2 fixed save/recovery mapping; driver exit-4 on r3 close verified append-only via committed diff 46ed4ce5"}
 {"check": "final-qa-r1-fixes", "result": "Blocker (touched-field intent in _merge_outcome via set_outcome _touched) + same-second verdict/sweep intent markers + disk-order landed_order union + dep-removal refresh \u2014 all 4 codex falsifiers PASS"}
 {"check": "red-control-blocker", "cmd": "mutation: _merge_outcome applies carried fields (r1 shape)", "result": "RED: FAILED (failures=1); restored -> OK"}
-{"check": "unit-suite-final", "cmd": "python3 test/gh436-merge-cleanup.py", "result": "see next row"}
+{"check": "final-qa-r2-fixes", "result": "in-run repair refresh (refresh_row + _pr_files_live after pushed-head confirm); recovery finalizes sweep inputs before publishing; _final_eligibility_veto/_record_merge_outcome/_note_external_state extracted and pinned"}
+{"check": "main-masking-pins", "cmd": "python3 test/gh436-merge-cleanup.py TestMergeCleanupOrchestration", "result": "26 OK incl. plain-rerun-one-PR exit 4, teardown-only exit 4, scan-only rc 0 negative"}
+{"check": "red-control-main-fallback", "cmd": "mutation: `if False and args.execute...` disables the final-status fallback", "result": "RED: FAILED (failures=2); restored -> OK"}
+{"check": "red-control-late-veto", "cmd": "mutation: _final_eligibility_veto returns None after draft check", "result": "RED: FAILED (failures=1); restored -> OK"}
+{"check": "two-writer-race-v2", "cmd": "TESTS-RESULTS/2026-10-18+GH-1140/two-writer-race.py (load barrier added per final-QA r2)", "result": "PASS \u2014 both writers survive with synchronized reads"}
+{"check": "oid-and-external-state-pins", "result": "test_verified_oid_survives_confirmation_failure + test_external_merged_state_retains_the_landing PASS (confirm-failure keeps verified OID; CLOSED invents no landing)"}

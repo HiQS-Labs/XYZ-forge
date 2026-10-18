@@ -18,17 +18,28 @@ base = {"schema": 1, "repo": "ex/ample", "integration": "development", "created"
 batch_record.save(base)
 
 child = '''
-import sys, json
+import sys, json, time
+from pathlib import Path
 sys.path.insert(0, "skills/2-daily/merge-cleanup/scripts")
 import batch_record
-n, oid = int(sys.argv[1]), sys.argv[2]
-rec = json.loads(open(sys.argv[3]).read())
+n, oid, gate = int(sys.argv[1]), sys.argv[2], sys.argv[3]
+rec = json.loads(open(sys.argv[4]).read())
+Path(gate + str(n)).touch()              # each reader reports its load
+while not Path(gate + ".both").exists(): # ...before either writes (barrier)
+    time.sleep(0.01)
 batch_record.set_outcome(rec, n, status="merged", merge_oid=oid)
 '''
+gate = str(Path(tmp) / "loaded")
 script = Path(tmp) / "child.py"; script.write_text(child)
-procs = [subprocess.Popen([sys.executable, str(script), str(n), oid, str(path)],
+procs = [subprocess.Popen([sys.executable, str(script), str(n), oid, gate, str(path)],
                           cwd=os.getcwd(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
          for n, oid in ((1, "a" * 40), (2, "b" * 40))]
+import time as _t
+deadline = _t.time() + 15
+while not (Path(gate + "1").exists() and Path(gate + "2").exists()) and _t.time() < deadline:
+    # wait until BOTH children report their load (gate for each; second writes gate+"2")
+    _t.sleep(0.05)
+Path(gate + ".both").touch()
 for p in procs: p.wait()
 
 disk = json.loads(path.read_text())

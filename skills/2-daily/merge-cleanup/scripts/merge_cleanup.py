@@ -1005,6 +1005,48 @@ def _await_mergeable(p_num: int, info: Dict[str, Any], primary_repo: Path) -> Di
     return info
 
 
+def _pr_files_live(pr_num: int, repo_path: Path) -> List[str]:
+    """The PR's current remote file list — the authoritative answer once a repair has pushed a
+    new head (GH-1140/#1073 in-run shape)."""
+    res = _gh(["pr", "view", str(pr_num), "--json", "files"], repo_path)
+    try:
+        return sorted(f["path"] for f in json.loads(res.stdout).get("files") or [] if f.get("path"))
+    except (ValueError, AttributeError, TypeError):
+        return []
+
+
+def _final_eligibility_veto(live: Dict[str, Any]) -> Optional[str]:
+    """GH-1140/#444: the last gate before the merge mutates anything re-checks the veto markers —
+    draft state, hold labels and title-carried markers can all arrive after the first check."""
+    if live.get("isDraft"):
+        return "draft"
+    return hold_label(live)
+
+
+def _record_merge_outcome(batch, pr_num: int, merged_oid: str, primary_repo: Path) -> None:
+    """GH-1064: record the remote merge before anything else can stop. GH-1140: the OID verified
+    by execute_pr_merge wins; the confirmation re-fetch only fills a gap, never overrides."""
+    if batch is None:
+        return
+    confirm = refresh_pr_with_retry(pr_num, primary_repo)
+    batch_record.set_outcome(batch, pr_num, status="merged",
+                             merge_oid=merged_oid or (confirm.get("mergeCommit") or {}).get("oid") or "")
+
+
+def _note_external_state(p_num: int, info: Dict[str, Any], batch, track) -> None:
+    """A planned PR whose live state is not OPEN. GH-1140: positive MERGED + OID evidence is
+    retained as a landing (QA owed), never discarded into an OID-less closed status."""
+    oid = (info.get("mergeCommit") or {}).get("oid") or ""
+    if info.get("state") == "MERGED" and oid:
+        log(f"PR #{p_num}: MERGED outside this run as {oid[:10]} — retaining the landing (GH-1140)")
+        if batch is not None:
+            batch_record.set_outcome(batch, p_num, status="merged", merge_oid=oid)
+    if track is not None:  # GH-1064: positively observed closed/merged is terminal
+        track["skips"][p_num] = ("merged outside this run" if info.get("state") == "MERGED"
+                                 else "closed" if info.get("state") == "CLOSED"
+                                 else f"closed: {str(info.get('state')).lower()} outside this run")
+
+
 def land_prs(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, dry_run: bool,
              batch: Optional[Dict[str, Any]] = None) -> int:
     """Phase 5. With a batch record (GH-1064), every PR's outcome is written to it and to the
@@ -1130,17 +1172,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     track["skips"][p_num] = f"skipped: hold-label '{label}'"
                 continue
             if info.get("state") != "OPEN":
-                oid = (info.get("mergeCommit") or {}).get("oid") or ""
-                if info.get("state") == "MERGED" and oid:
-                    # GH-1140: positive merge evidence observed in-loop is retained as a landing
-                    # (QA owed), never discarded into an OID-less "closed" status.
-                    log(f"PR #{p_num}: MERGED outside this run as {oid[:10]} — retaining the landing (GH-1140)")
-                    if batch is not None:
-                        batch_record.set_outcome(batch, p_num, status="merged", merge_oid=oid)
-                if track is not None:  # GH-1064: positively observed closed/merged is terminal
-                    track["skips"][p_num] = ("merged outside this run" if info.get("state") == "MERGED"
-                                             else "closed" if info.get("state") == "CLOSED"
-                                             else f"closed: {str(info.get('state')).lower()} outside this run")
+                _note_external_state(p_num, info, batch, track)
                 continue
             if (info.get("baseRefName") or "") != branch:
                 log_err(f"PR #{p_num} targets '{info.get('baseRefName')}', not '{branch}' — stopping")
@@ -1280,6 +1312,10 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     log_err(f"PR #{p_num}: head moved to {str(info.get('headRefOid'))[:10]} after the pushed "
                             f"{b1['commit'][:10]} — stopping")
                     return 2
+                if batch is not None:
+                    # GH-1140/#1073 (in-run shape): the repair changed this PR's file set — the
+                    # captured row must reflect it before sweep inputs are computed.
+                    batch_record.refresh_row(batch, p_num, _pr_files_live(p_num, primary_repo))
                 if info.get("isDraft"):
                     log(f"PR #{p_num}: SKIPPED (draft after repair)")
                     failed[p_num] = "draft"
@@ -1314,16 +1350,12 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
             if live.get("error"):
                 log_err(f"PR #{p_num}: final eligibility refresh failed — {live['error']}")
                 return 2
-            if live.get("isDraft"):
-                log(f"PR #{p_num}: SKIPPED (draft before merge)")
-                failed[p_num] = "draft"
-                continue
-            live_hold = hold_label(live)
-            if live_hold:
+            veto = _final_eligibility_veto(live)
+            if veto:
                 # GH-1140/#444: the marker may have arrived after the first eligibility check —
-                # the final gate re-checks labels and title, not just draft state.
-                log(f"PR #{p_num}: hold marker '{live_hold}' at final eligibility — skipped (#444)")
-                failed[p_num] = f"hold: {live_hold}"
+                # the final gate re-checks draft, labels and title.
+                log(f"PR #{p_num}: '{veto}' at final eligibility — skipped (#444)")
+                failed[p_num] = f"veto: {veto}"
                 continue
             if live.get("headRefOid") != info.get("headRefOid"):
                 log_err(f"PR #{p_num}: head changed after validation — not merging")
@@ -1334,10 +1366,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
             merged_ok, merged_oid = execute_pr_merge(p_num, primary_repo, strategy=args.strategy, dry_run=False)
             if not merged_ok:
                 return 2
-            if batch is not None:  # GH-1064: record the remote merge before anything else can stop
-                confirm = refresh_pr_with_retry(p_num, primary_repo)  # GH-1140: confirmation only —
-                batch_record.set_outcome(batch, p_num, status="merged",          # the verified OID wins
-                                         merge_oid=merged_oid or (confirm.get("mergeCommit") or {}).get("oid") or "")
+            _record_merge_outcome(batch, p_num, merged_oid, primary_repo)
             # Land it locally before anything writes into the primary. In particular, emitting
             # pr_merged before this fast-forward dirties releases.sql and can block the landing
             # (GH-624). GH-623: the fetch is bounded and retried on transient network failures.
@@ -1780,6 +1809,7 @@ def _recover_unrecorded_merges(primary_repo: Path, origin: str, integration: str
     scanning beyond the planned PRs of unfinished batches."""
     open_now = {pr["number"] for pr in ordered_prs}
     for rec in batch_record.unfinished_batches(primary_repo, origin, integration):
+        recovered = False
         for row in rec.get("planned", []):
             n = row.get("pr")
             if n in open_now:
@@ -1795,7 +1825,12 @@ def _recover_unrecorded_merges(primary_repo: Path, origin: str, integration: str
                 oid = info["mergeCommit"]["oid"]
                 log(f"recovery: PR #{n} merged outside the record as {oid[:10]} — retaining the landing (GH-1140)")
                 batch_record.set_outcome(rec, n, status="merged", merge_oid=oid)
-                batch_record.update(rec, _gh, primary_repo)
+                recovered = True
+        if recovered:
+            # GH-1140 r2: a recovered landing set owes complete sweep inputs (range, shared files,
+            # runnable command) even when no landing loop runs to finalize them.
+            batch_record.finalize_sweep_inputs(rec, primary_repo, origin)
+            batch_record.update(rec, _gh, primary_repo)
 
 
 def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:

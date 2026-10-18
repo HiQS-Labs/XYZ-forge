@@ -678,6 +678,45 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         self.pruner.assert_not_called()
 
 
+    def _seed_qa_pending_batch(self):
+        import batch_record
+        rec_dir = batch_record._dir(Path(self.primary), "")
+        rec_dir.mkdir(parents=True, exist_ok=True)
+        rec = {"schema": 1, "repo": "", "integration": "development", "created": "t",
+               "issue": 41, "issue_url": "u", "issue_error": "",
+               "planned": [{"pos": 1, "pr": 41, "title": "old", "files": ["z"], "hard": [], "soft": {}}],
+               "outcomes": {"41": {"status": "merged", "merge_oid": "c" * 40}},
+               "landed_order": [41], "sweep_inputs": {}, "verdict": None,
+               "path": str(rec_dir / "batch-20261017T000000Z-41.json")}
+        batch_record.save(rec)
+        return rec
+
+    def test_plain_rerun_one_pr_queue_surfaces_owed_qa_as_exit_4(self):
+        # GH-1140/#1084 Major: a QA-pending batch this run never adopted must surface at final
+        # status — here a one-PR queue (select_batch returns None at <2) after a prior landing.
+        self._seed_qa_pending_batch()
+        rc, _, _, _, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+            prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}])
+        self.assertEqual(rc, 4)
+
+    def test_teardown_only_execute_surfaces_owed_qa_as_exit_4(self):
+        # GH-1140 r1: --execute --teardown-only previously returned None from select_batch
+        # unconditionally, hiding pending QA even with --resume.
+        self._seed_qa_pending_batch()
+        rc, _, _, _, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--integration-branch", "development",
+             "--execute", "--teardown-only"])
+        self.assertEqual(rc, 4)
+
+    def test_scan_only_does_not_claim_qa_debt(self):
+        self._seed_qa_pending_batch()
+        rc, _, _ = self._run_main(
+            ["--primary", str(self.primary), "--integration-branch", "development", "--scan-only"],
+            landing_ready=True)
+        self.assertEqual(rc, 0)
+
+
 class TestDanglingSymlinkPrune(unittest.TestCase):
     """Phase 6 prune missed two whole classes of dangling link (fixed 2026-09-05).
 
@@ -878,6 +917,11 @@ class TestBatchRecordStaleState(unittest.TestCase):
     """GH-1140: the batch record must not trust captured-once state — pins the resume refresh,
     the save-time merge, QA-debt reachability, the title veto, and the executable sweep command."""
 
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp(prefix="gh1140-helper-")
+        self.primary = Path(self.temp_dir) / "primary"
+        self.primary.mkdir(parents=True)
+
     def _rec(self, tmpdir, planned=None, outcomes=None, landed=None, verdict=None, sweep=None):
         import batch_record
         # the real layout: batch files live in the coordinator dir attempt_record derives from
@@ -1046,6 +1090,47 @@ class TestBatchRecordStaleState(unittest.TestCase):
             batch_record.save(stale)
             disk = json.loads(open(rec["path"]).read())
             self.assertEqual(disk["landed_order"], [1, 2])       # sweep range reads first/last
+
+    def test_final_eligibility_veto_catches_late_arrivals(self):
+        # GH-1140/#444: markers that arrive between the first eligibility check and the merge.
+        self.assertEqual(merge_cleanup._final_eligibility_veto({"isDraft": True}), "draft")
+        self.assertEqual(merge_cleanup._final_eligibility_veto(
+            {"isDraft": False, "labels": [{"name": "do-not-merge"}], "title": "x"}),
+            "do-not-merge")                                   # label added during gating
+        self.assertEqual(merge_cleanup._final_eligibility_veto(
+            {"isDraft": False, "labels": [], "title": "feat: x (do not merge: soak owed)"}),
+            "title: feat: x (do not merge: soak owed)")       # title marker
+        self.assertIsNone(merge_cleanup._final_eligibility_veto(
+            {"isDraft": False, "labels": [], "title": "wipe the fixtures"}))
+
+    def test_verified_oid_survives_confirmation_failure(self):
+        calls = {}
+        import batch_record
+        with mock.patch.object(merge_cleanup, "refresh_pr_with_retry",
+                               return_value={"error": "network gone"}), \
+             mock.patch.object(batch_record, "set_outcome",
+                               side_effect=lambda rec, n, **kw: calls.update(kw)):
+            merge_cleanup._record_merge_outcome({"planned": []}, 7, "f" * 40, self.primary)
+        self.assertEqual(calls.get("status"), "merged")
+        self.assertEqual(calls.get("merge_oid"), "f" * 40)     # the verified OID, not the re-query
+
+    def test_external_merged_state_retains_the_landing(self):
+        calls = {}
+        track = {"skips": {}}
+        import batch_record
+        with mock.patch.object(batch_record, "set_outcome",
+                               side_effect=lambda rec, n, **kw: calls.update(kw)):
+            merge_cleanup._note_external_state(
+                9, {"state": "MERGED", "mergeCommit": {"oid": "a" * 40}}, {"planned": []}, track)
+        self.assertEqual(calls.get("status"), "merged")
+        self.assertEqual(calls.get("merge_oid"), "a" * 40)
+        self.assertEqual(track["skips"][9], "merged outside this run")
+        calls.clear()
+        with mock.patch.object(batch_record, "set_outcome",
+                               side_effect=lambda rec, n, **kw: calls.update(kw)):
+            merge_cleanup._note_external_state(9, {"state": "CLOSED"}, {"planned": []}, track)
+        self.assertEqual(calls, {})                            # no invented landing
+        self.assertEqual(track["skips"][9], "closed")
 
     def test_refresh_removes_stale_dependencies(self):
         import batch_record

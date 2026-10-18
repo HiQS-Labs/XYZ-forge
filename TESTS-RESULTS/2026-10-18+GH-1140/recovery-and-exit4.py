@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """GH-1140 manual checks: (a) _recover_unrecorded_merges records positive MERGED evidence only,
-(b) the main() final-status fallback surfaces exit 4 for an unadopted QA-pending batch (the
-#1084 Major shape: plain rerun, empty queue)."""
+(b) the recovered batch becomes QA-pending and reachable via the same find_unfinished call
+main()'s final-status fallback uses (the literal exit-4 rc is pinned by the suite:
+TestMergeCleanupOrchestration.test_plain_rerun_one_pr_queue_surfaces_owed_qa_as_exit_4 and
+.test_teardown_only_execute_surfaces_owed_qa_as_exit_4, red-controlled)."""
 import json, sys, tempfile, types
 from pathlib import Path
 from unittest import mock
@@ -35,7 +37,7 @@ print("(a) recovery:", a.get("status"), (a.get("merge_oid") or "")[:6], "/", b.g
       "->", "PASS" if rec_ok else "FAIL")
 
 # (b) final-status: the recovered batch is now QA-pending and must be surfaced even though this
-# run's own batch is None (plain rerun shape). Exercise the exact main()-tail logic.
+# run's own batch is None (plain rerun shape).
 pending = batch_record.find_unfinished(Path(tmp), "ex/ample", "development", [], need_qa=True)
 b_ok = pending is not None and batch_record.qa_pending(pending)
 print("(b) exit-4 reachability after plain-rerun shape:", "->", "PASS" if b_ok else "FAIL")
