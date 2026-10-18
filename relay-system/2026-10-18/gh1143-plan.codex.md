@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -166,7 +166,6 @@ swept file: yes
 
 Handing off to Producer (operator): seed #1143’s source requirements and the review criteria, then take the next turn. No artifact/source change is requested by this review.
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 ## Producer round 2 — evidence supplied
 
@@ -216,7 +215,7 @@ A report match needs a specific target, falsifiable invariant, safe fixture and 
 Candidate hypotheses, after ownership clearance:
 - Refreshing an unlanded PR must update overlap inputs without rewriting landed history
 - A fresh execution cannot hide matching pending QA
-- A failed post-merge refresh cannot discard a verified merge identity
+- A failed post-merge refresh cannot discard a verified merge identity  [Unverified — no citation]
 - Repeated equivalent read/recompute operations preserve semantics
 
 Existing gh436/gh534 checks are assets to reuse, not permission to add cases. This pilot likely needs a small structured-state adapter/oracle: name and review that gap instead of claiming argv mutation already covers it.
@@ -242,3 +241,21 @@ Existing gh436/gh534 checks are assets to reuse, not permission to add cases. Th
 The main cost is trustworthy domain predicates, not launching a fuzzer. This is worthwhile if it reduces repeated manual triage and preserves findings; it is not worthwhile if it adds another orchestration layer without better evidence.
 
 — dot
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: Block approval on one bounded documentation acceptance omission. The supplied issue snapshot resolves Round 1's evidence request; its result-report requirements still have no explicit equivalent in the embedded plan. The fix belongs in the existing skill-writing and manual-review steps, with no new machinery. Reversibility: Easy (documentation revert).
+swept file: yes
+
+- [Should] Add the campaign result-report contract to step 3 and its omission check to step 5. Require an accountable disposition and retained evidence link for each counterexample, a link back to the Radar context or existing results issue, and an honest null report stating exercised/excluded/unresolved coverage without claiming class eradication. Also name the retained replay record: exact inputs/corpus, source/tool versions, environment, and relevant outputs/timing; a seed alone is insufficient for the HELD stateful pilot. These are instructions for future approved work, not authorization to execute or publish campaign results now.
+  Observed input: The source snapshot's contract item 5 requires `Retain exact inputs, corpus snapshot, code/tool versions, environment, outputs and timing where relevant`; item 8 requires `link the disposition back to the Radar tracking context or existing results issue`. Initial design acceptance explicitly requires `Every counterexample has an accountable disposition and evidence link` and `Honest null result accepted; exercised/excluded/unresolved coverage stated`. In contrast, the full embedded plan's steps 3–5 (this file:120–129) stop at `reproducible replay using the same predicate, duplicate classes, severity and separately authorized remediation` and implementation-check evidence under TESTS-RESULTS. Neither that phrase nor `accountable counterexample dispositions` at lines 94–95 specifies the missing report fields or return link. Read-only probe: `nl -ba relay-system/2026-10-18/gh1143-plan.codex.md | sed -n '90,145p;245,335p'` → exit 0; decisive output at lines 120–129 is the complete existing skill-writing, pilot and verification steps quoted above. No runtime failure is alleged.
+  Affected scope: The documentation skill's future campaign replay/result/disposition instructions and the current implementation's manual completeness review, including zero-counterexample runs.
+  Falsifier: Point to an equivalent explicit requirement in the embedded plan, or revise steps 3/5 so a manual review rejects (a) a seed-only stateful replay record, (b) a counterexample disposition without evidence/backlink, and (c) a clean report that omits coverage limits or claims eradication. A report preserving the required evidence, dispositions/backlink and bounded null conclusion should satisfy that review. Use the existing manual evidence location; add no tests or fixtures.
+- [Pass] Source-to-plan mapping otherwise fits the authorized scope: source `One source-grounded pilot specification with ownership/duplicate check` maps to step 4's `source-grounded HELD pilot` and lines 105–106's live ownership recheck; source `Known-failing and clean controls specified before execution` maps to step 3; `Tool fit and missing domain oracle/adapter identified` maps to the recon's existing assets and step 4's `structured adapter missing, future separately approved work`. HELD is appropriate; this review does not clear #1140/#1136 ownership or authorize an adapter.
+- [Pass] Existing entry-seam and safety claims remain grounded by static reads: `skills/3-weekly/radar/SKILL.md`, section `Sibling: recommend the repo's own verification assets`, says `Radar recommends and never executes` and prohibits a reciprocal pointer; `skills/4-occasional/ate/SKILL.md`, Quick start, says `--gh-repo is what turns on the automatic issue filing at the end — omit it`; `utils/py/gen4_campaign.py:365` defaults to suite, lines 376–378 expose no-synth/model/healing options and line 399 passes `not a.no_synth`. Preserve these boundaries in the minimal pointers. No additional pre-existing blocker found in the full embedded-plan sweep.
+- [Unverified — needs clone run] No validate.sh, test/*.sh, pytest, executable fixture or campaign was run. Steps 5–6 remain future implementation verification. Live historical checkout/issue-state assertions were not independently refreshed and are not ownership clearance; the plan itself requires that recheck before any future campaign.
+
+Handing off to Producer (operator): add the missing result-report acceptance contract and return for Round 3 review. Do not execute a campaign or add machinery.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
