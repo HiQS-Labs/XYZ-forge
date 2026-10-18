@@ -180,21 +180,21 @@ the examples below are templates, not a hardcoded source inventory.
 ```bash
 python3 /path/to/skills-army-hq/scripts/intake.py init
 python3 /path/to/skills-army-hq/scripts/intake.py --apply init
-python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" list
-python3 "$ROOT/intake.py" --root "$ROOT" list        # $ROOT = this device's resolved collection (hard rule 4)
-python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" add /path/to/local-repo/skills/example
-python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply add /path/to/local-repo/skills/example
-python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply update example
-python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply update example --source /new/repo/skills/example
-python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply remove example
-python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply catalog
-python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" targets
-python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply targets --id chosen-app --path /verified/app/skills --consumer "Chosen app"
-python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply targets --id chosen-app --disable
-python3 "$HOME/git-pulse-sync/Deployed Skills/sync.py" --status
-python3 "$HOME/git-pulse-sync/Deployed Skills/sync.py" --apply
-python3 "$HOME/git-pulse-sync/Deployed Skills/sync.py" --status --canonical /path/to/XYZ-forge   # drift report vs canonical
-python3 "$HOME/git-pulse-sync/Deployed Skills/sync.py" --apply --allow-drift                    # loud, disclosed exception
+ROOT="${XYZ_SKILLS_ROOT:-$HOME/git-pulse-sync/Deployed Skills}"   # this device's resolved collection (hard rule 4); stop if it does not exist
+python3 "$ROOT/intake.py" --root "$ROOT" list
+python3 "$ROOT/intake.py" --root "$ROOT" add /path/to/local-repo/skills/example
+python3 "$ROOT/intake.py" --root "$ROOT" --apply add /path/to/local-repo/skills/example
+python3 "$ROOT/intake.py" --root "$ROOT" --apply update example
+python3 "$ROOT/intake.py" --root "$ROOT" --apply update example --source /new/repo/skills/example
+python3 "$ROOT/intake.py" --root "$ROOT" --apply remove example
+python3 "$ROOT/intake.py" --root "$ROOT" --apply catalog
+python3 "$ROOT/intake.py" --root "$ROOT" targets
+python3 "$ROOT/intake.py" --root "$ROOT" --apply targets --id chosen-app --path /verified/app/skills --consumer "Chosen app"
+python3 "$ROOT/intake.py" --root "$ROOT" --apply targets --id chosen-app --disable
+python3 "$ROOT/sync.py" --root "$ROOT" --status
+python3 "$ROOT/sync.py" --root "$ROOT" --apply
+python3 "$ROOT/sync.py" --root "$ROOT" --status --canonical /path/to/XYZ-forge   # drift report vs canonical
+python3 "$ROOT/sync.py" --root "$ROOT" --apply --allow-drift                    # loud, disclosed exception
 ```
 
 Both scripts accept `--root /chosen/collection` for redirected Documents or another
