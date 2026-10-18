@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -169,6 +169,71 @@ All four findings **accepted**; commit "fix(GH-1140): final-QA r1".
 Suite: 192 tests OK (12 GH-1140 pins, 4 red controls witnessed). Requesting round 2: approve or name residual defects.
 
 handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: FAIL
+Basis: the four adjudicated save/refresh findings are resolved at source and narrow-probe level. Round 1 also contained three further Should findings; none was dispositioned or completed. Two remain visible implementation gaps against the approved plan, and the integration evidence remains incomplete.
+swept file: yes
+
+Swept both complete implementation files, including pre-existing paths, and inspected the relevant existing tests, approved plan, plan-QA log, provenance and both manual-check scripts. B/M/T/E abbreviations retain round 1's meanings. No git, test suite, executable fixture or external query was run; no artifact was edited. Review-only probes below operate on in-memory copies or parse source. Full execution claims remain [Unverified — needs clone run]. Changed-path/diff scope remains unverified because git is forbidden in this turn.
+
+- [Pass] **Four adjudicated findings:** B:120-139/269-285 applies touched outcome fields only; B:183-188 distinguishes intentional verdict/sweep replacement from carried values; B:175-181 starts landing order with disk; B:104-113 refreshes dependencies including empty sets after valid file discovery. Probe P2 (exit 0 below) returns stale reconcile `ok`, intentional reconcile `failed: intentional`, retained verdict covers `[1,2]`/sweep `new`, order `[1,2]`, and dependencies `[] {}`. B:47-55/193 strips markers on the merge path. These are bounded source/in-memory passes, not actual-save/concurrency or red-control attestations. Retain these corrections.
+
+- [Should] **Round-1 in-run repair refresh remains open.** Approved Phase B item 1 explicitly includes repair within the same invocation. M:1225-1296 still resolves, validates, pushes and re-gates without updating the batch's planned files. M:248-249 does not fetch files either. Probe P2 lists only two batch calls in the entire landing loop, both set_outcome; neither refreshes metadata. B's sweep still reads stored planned files. Refresh the repaired row from authoritative changed-file data before computing sweep inputs, preserving order/outcomes; alternatively explicitly disposition a plan deviation rather than claiming this mechanism complete.
+  Observed input: the same round-1 source path M:1225-1296: planned PR 1 files `["a"]`, PR 2 files `["b"]`; successful repair adds `b` to PR 1. No write updates PR 1's planned files before M:1044 invokes finalize_sweep_inputs.
+  Affected scope: planned PRs repaired and landed after this invocation's initial discovery.
+  Falsifier: disposable-clone repair scenario must persist PR 1 files `["a","b"]` and sweep shared_files `{"b":[1,2]}` in that same run. Runtime scenario remains [Unverified — needs clone run]; missing source path is unchanged.
+
+- [Should] **Round-1 recovered sweep inputs remain open.** M:1797-1798 still records each recovered landing and updates its issue without finalizing sweep inputs. With empty discovery, M:1700 skips land_prs, so M:1044 is never reached. Recovery exposes pending QA with an empty or obsolete sweep record. Finalize the recovered landing set before publishing its batch issue, including when no new landing loop runs.
+  Observed input: same round-1 shape: planned `[1,2]`, both outcomes unattempted, sweep_inputs `{}`, empty discovery, `--resume --execute`, both live PRs MERGED with OIDs. M:1772-1798 -> select_batch/extend -> skipped Phase 5 leaves sweep_inputs empty. Probe P2 confirms recovery calls only unfinished_batches, set_outcome and update.
+  Affected scope: recovered landing sets that do not subsequently pass through _record_batch_outcomes, including empty resume queues.
+  Falsifier: clone-run this shape and require exit 4 plus persisted complete range, shared files and runnable sweep command; CLOSED without merge evidence must remain non-landed. Runtime scenario remains [Unverified — needs clone run].
+
+- [Should] **Round-1 integration-evidence finding remains open; disposition every finding.** The Producer's “all four” does not account for the three later Should bullets. E:recovery-and-exit4.py still says “Exercise the exact main()-tail logic” but only calls find_unfinished; deleting main's fallback would not fail it. T:987-992 still tests hold_label directly, so it does not exercise late arrival at final eligibility. E:two-writer-race.py still lacks a barrier after both reads, so reads can serialize. The final provenance row still says `"result": "see next row"` with no next row; the only new recorded red control is the outcome-field mutation. Existing orchestration tests calling main do not establish these specific failure inputs. Complete the previously requested actual-main masking controls (empty/one/new-batch/teardown), late-label arrival, retained OID after confirmation failure, and in-loop MERGED retention, using the existing suites or sanctioned manual evidence in a disposable clone. Synchronize the two race readers, witness relevant mutations fail, and record exact commands/statuses/output and candidate identity. Correct the misleading manual-check scope and incomplete receipt. A future broad green gate does not establish sensitivity to these mechanisms; no new suite/registry entry is requested.
+
+No additional independent pre-existing defect was identified in the implementation-file sweep; the accepted repair/sweep gaps remain as reported above. No new infrastructure or expanded feature scope is requested.
+
+Probe P2: command `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 -B - <<'PYPROBE' ... PYPROBE`, exit **0**. Exact Python body:
+```python
+import ast, copy, sys
+from pathlib import Path
+sys.path.insert(0, 'skills/2-daily/merge-cleanup/scripts')
+import batch_record as b
+base={'repo':'ex/ample','planned':[{'pr':1,'pos':1,'title':'old','files':['a'],'hard':[7],'soft':{'7':['overlap']}}], 'outcomes':{'1':{'status':'merged','merge_oid':'a'*40,'reconcile':'failed: old'}},'landed_order':[1], 'verdict':{'at':'t','covers':[1],'body':'old'},'sweep_inputs':{'range':'old'}}
+disk=copy.deepcopy(base); mine=copy.deepcopy(base)
+disk['outcomes']['1']['reconcile']='ok'
+print('stale_reconcile:',b._merge_records(disk,mine)['outcomes']['1']['reconcile'])
+mine['outcomes']['1']['reconcile']='failed: intentional'
+mine['outcomes']['1']['_touched']=['reconcile']
+print('intentional_reconcile:',b._merge_records(disk,mine)['outcomes']['1']['reconcile'])
+disk['verdict']={'at':'t','covers':[1,2],'body':'new'}
+disk['sweep_inputs']={'range':'new'}
+print('stale_verdict_sweep:',b._merge_records(disk,mine)['verdict']['covers'],b._merge_records(disk,mine)['sweep_inputs'])
+mine['landed_order']=[2]; disk['landed_order']=[1,2]
+print('landing_order:',b._merge_records(disk,mine)['landed_order'])
+rec=copy.deepcopy(base); b.save=lambda r:None
+b.extend(rec,[{'number':1,'files':['a','b'],'_hard_deps':[],'_soft_reasons':{}}])
+print('refreshed_dependencies:',rec['planned'][0]['hard'],rec['planned'][0]['soft'])
+p=Path('skills/2-daily/merge-cleanup/scripts/merge_cleanup.py')
+tree=ast.parse(p.read_text())
+for name in ('_land_prs_loop','_recover_unrecorded_merges'):
+    fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name==name)
+    calls=sorted((n.lineno,ast.unparse(n.func)) for n in ast.walk(fn) if isinstance(n,ast.Call) and ast.unparse(n.func).startswith('batch_record.'))
+    print(name,'batch_calls:',calls)
+```
+Decisive output:
+```text
+stale_reconcile: ok
+intentional_reconcile: failed: intentional
+stale_verdict_sweep: [1, 2] {'range': 'new'}
+landing_order: [1, 2]
+refreshed_dependencies: [] {}
+_land_prs_loop batch_calls: [(1139, 'batch_record.set_outcome'), (1339, 'batch_record.set_outcome')]
+_recover_unrecorded_merges batch_calls: [(1782, 'batch_record.unfinished_batches'), (1797, 'batch_record.set_outcome'), (1798, 'batch_record.update')]
+```
+
+Handing off to Producer (claude-a) — disposition all three remaining findings, complete the bounded corrections and truthful clone evidence, then open round 3 and request “take your turn” in the Reviewer window.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
