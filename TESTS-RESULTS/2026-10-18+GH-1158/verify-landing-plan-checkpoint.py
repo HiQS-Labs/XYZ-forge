@@ -64,10 +64,17 @@ class TestGH1158LandingPlanCheckpoint(LedgerFixture):
         fetch_head = self.primary / ".git" / "FETCH_HEAD"
         fetch_head_before = fetch_head.read_bytes() if fetch_head.exists() else None
 
-        # Run merge-cleanup with --execute but NO landing plan
-        rc = self.run_main(execute=True)
-        self.assertEqual(rc, 5, "Expected Exit 5 when landing-plan is missing for 3 PRs")
-        self.assertIn("REFUSING to execute: 3 PRs ready to merge", self.err)
+        # Override the empty scan_directories fixture to supply a candidate carrying a canonical issue,
+        # and enable --marker so that if scan or marker dispatch executed, issue markers would be posted.
+        candidate_checkout = [{"directory": self.primary, "canonical_issue": 999, "disposition": "SAFE_REMOVE_WORKTREE"}]
+        with mock.patch.object(merge_cleanup, "scan_directories", return_value=candidate_checkout) as mock_scan:
+            # Run merge-cleanup with --execute and --marker but NO landing plan
+            rc = self.run_main(execute=True, extra=("--marker",))
+            self.assertEqual(rc, 5, "Expected Exit 5 when landing-plan is missing for 3 PRs")
+            self.assertIn("REFUSING to execute: 3 PRs ready to merge", self.err)
+
+            # Assert checkout scan was never entered (preventing checkout FETCH_HEAD writes)
+            self.assertEqual(mock_scan.call_count, 0, "Zero-mutation violated: scan_directories was called on Exit 5")
 
         # Verify zero mutations:
         # a. REBASE_HEAD was NOT pruned
@@ -299,6 +306,39 @@ class TestGH1158LandingPlanCheckpoint(LedgerFixture):
         st = self.load()
         self.assertEqual(st["prs"]["1"]["state"], "MERGED")
         self.assertEqual(st["prs"]["2"]["state"], "MERGED")
+        self.assertEqual(st["prs"]["3"]["state"], "OPEN")
+
+    def test_12_deferred_prerequisites_block_retained_dependents(self):
+        """12. Deferred prerequisites transitively block their retained dependents (F4 fix)."""
+        self.branch("feat/a", 1, lambda r: park(r, 201, "pr1"))
+        self.branch("feat/b", 2, lambda r: park(r, 202, "pr2"))
+        self.branch("feat/c", 3, lambda r: park(r, 203, "pr3"))
+
+        # Early checkpoint sees PR 1 and 2. Phase 4 sees PR 1 (depends on #3), PR 2, and PR 3.
+        orig_fetch = merge_cleanup.fetch_open_prs_with_retry
+        calls = [0]
+        def widening_fetch_with_deps(repo_path):
+            all_prs = orig_fetch(repo_path)
+            calls[0] += 1
+            if calls[0] == 1:
+                return [p for p in all_prs if p["number"] in (1, 2)]
+            res = []
+            for p in all_prs:
+                p_copy = dict(p)
+                if p_copy["number"] == 1:
+                    p_copy["body"] = "depends on #3"
+                res.append(p_copy)
+            return res
+
+        with mock.patch.object(merge_cleanup, "fetch_open_prs_with_retry", side_effect=widening_fetch_with_deps):
+            rc = self.run_main(execute=True)
+
+        self.assertEqual(rc, 0, "Single landing PR exits 0 (no batch QA pending)")
+        self.assertIn("PR #3: opened after landing checkpoint; deferred to next run", self.out)
+        self.assertIn("PR #1: depends on deferred prerequisite (#3); deferred to next run", self.out)
+        st = self.load()
+        self.assertEqual(st["prs"]["2"]["state"], "MERGED")
+        self.assertEqual(st["prs"]["1"]["state"], "OPEN")
         self.assertEqual(st["prs"]["3"]["state"], "OPEN")
 
 

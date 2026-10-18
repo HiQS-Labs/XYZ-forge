@@ -1759,14 +1759,36 @@ def main():
         prs = [p for p in prs if int(p.get("number", 0)) not in excluded_prs]
         for p in skipped:
             log(f"PR #{p['number']}: excluded by --exclude; not sequenced this run")
-    if checkpoint_eligible_prs is not None:
-        deferred = [p for p in prs if int(p.get("number", 0)) not in checkpoint_eligible_prs]
-        if deferred:
-            prs = [p for p in prs if int(p.get("number", 0)) in checkpoint_eligible_prs]
-            for p in deferred:
-                log(f"PR #{p['number']}: opened after landing checkpoint; deferred to next run")
     if prs:
-        ordered_prs, _, warnings = toposort_prs(prs)
+        all_ordered, _, warnings = toposort_prs(prs)
+        if checkpoint_eligible_prs is not None:
+            deferred_set = {int(p["number"]) for p in all_ordered if int(p["number"]) not in checkpoint_eligible_prs}
+            # Transitive propagation: any retained PR depending on a deferred PR must also be deferred
+            changed = True
+            while changed:
+                changed = False
+                for p in all_ordered:
+                    p_num = int(p["number"])
+                    if p_num not in deferred_set:
+                        hard_deps = {int(d) for d in (p.get("_hard_deps") or [])}
+                        if hard_deps & deferred_set:
+                            deferred_set.add(p_num)
+                            changed = True
+
+            for p in all_ordered:
+                p_num = int(p["number"])
+                if p_num in deferred_set:
+                    if p_num not in checkpoint_eligible_prs:
+                        log(f"PR #{p_num}: opened after landing checkpoint; deferred to next run")
+                    else:
+                        hard_deps = [d for d in (p.get("_hard_deps") or []) if d in deferred_set]
+                        deps_str = ", ".join(f"#{d}" for d in hard_deps)
+                        log(f"PR #{p_num}: depends on deferred prerequisite ({deps_str}); deferred to next run")
+
+            ordered_prs = [p for p in all_ordered if int(p["number"]) not in deferred_set]
+        else:
+            ordered_prs = all_ordered
+
         print("=" * 80)
         print(f"PHASE 4: TOPOLOGICAL PR SEQUENCE ({len(ordered_prs)} open PRs)")
         print("=" * 80 + "\n")

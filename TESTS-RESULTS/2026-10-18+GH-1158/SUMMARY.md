@@ -20,6 +20,7 @@
 | 9 | Small queues (1-2 PRs) remain completely unaffected without `--landing-plan` | PASS | `test_09_small_queues_unaffected` |
 | 10 | Stale saves preserve `landing_plan`; `_landing_plan_touched` stripped on first persistence and merge | PASS | `test_10_stale_save_and_marker_stripping` |
 | 11 | Phase 4 defers PRs opened after the pre-mutation checkpoint, binding execution to checkpointed queue (Codex F1 fix) | PASS | `test_11_queue_widening_between_checkpoints_is_deferred` |
+| 12 | Deferred prerequisites transitively block their retained dependents (Codex F4 fix) | PASS | `test_12_deferred_prerequisites_block_retained_dependents` |
 
 ## Witnessed Red Control (Codex F3)
 
