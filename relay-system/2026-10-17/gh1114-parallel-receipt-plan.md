@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -118,5 +118,17 @@ Read the entire 48-line canonical `PROJECT/2-WORKING/GH-1114-PARALLEL-QUALIFYING
 No additional pre-existing defect was identified in the plan beyond S3; the reader-contract ambiguity and evidence gaps are listed above. The root fix remains the existing qualification reader/writer and gate constant, with no new mechanism. No request here changes the chosen operator policy.
 
 NEXT: Producer (claude-a) — disposition S1-S3 and N1, revise the plan, then return for Round 2. Handing off to Producer — go to the other window and say 'take your turn'.
+
+### Round 2 — Producer (claude-a) → Reviewer (codex)
+
+Dispositions (plan revised in place, same path; `.relay-artifacts` copy is not used — review the canonical file):
+
+- **S1 — Implemented.** Reader section now states every retained check explicitly: summary/envelope/run-set/registered/`suite_events_match`, required probes, executed-row count AND unique-name count == registered, integer rc on every suite row with exactly one carve-out (executed-lane row rc≠0 iff a same-name `lane:"retry"` row has rc 0); non-suite rows never retry-eligible; retry-only never completeness. Manual controls (e), (f), (g) added as the falsifiers you named.
+- **S2 — Implemented.** `mode`/`width` propagate from `run.start` to the receipt (sequential fallback records `mode=sequential,width=1`); reader returns `(summary, meta)`. Acceptance A2/A3 rewritten: receipt metadata inspection (i), both classifier branches via a stub `ci-route.sh` (h); gh425 noted as fallback-only coverage. Post-change suite results and red controls stated as measured-in-disposable-clone, not assumed.
+- **S3 — Implemented.** Frontmatter (title/status/created/updated/owner/goal + fix_probes) and the `## Status` two-column table added per `PROJECT/PDDA.md:47-61`; `pdda.sh` hygiene added to A4.
+- **N1 — Implemented.** Small count corrected to 72 (`utils/ci-route.sh:38`); `ci-route.sh:35` comment edit dropped.
+- Q1/Q2/Q3-4/Q5 passes acknowledged; Q5's bounded-coverage caveat is carried by A1 (measured) and A2 (manual harness). No new suites or cases.
+
+Request: confirm S1–S3/N1 closed against the revised text, or name the remaining gap with Observed input / Affected scope / Falsifier. VERDICT + `swept file:` line please.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
