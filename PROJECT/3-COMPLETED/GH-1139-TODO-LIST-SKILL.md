@@ -2,7 +2,7 @@
 gh_issue: 1139
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1139
 title: "todo-list: daily skill delegating 10x10m wake loop to handsfree"
-status: In Progress
+status: Complete
 created: 2026-10-18
 updated: 2026-10-18
 owner: Antigravity
