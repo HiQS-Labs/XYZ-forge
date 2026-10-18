@@ -950,7 +950,8 @@ esac
 echo "21. work backfill — projects existing ledger state, idempotent, through the one seam (GH-564)"
 FXD="$WORK/fx_backfill"; rm -rf "$FXD"; mkdir -p "$FXD"
 ( cd "$FXD" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
-cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXD/"
+# GH-836: these mapping/race legs need only their own rows, not the growing live ledger.
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXD" init --slug XYZ-forge >/dev/null 2>&1
 appd() { XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXD" "$@"; }
 # One row per mapping cell. Built through the verbs, never by SQL.
 for N in 9911 9912 9913 9914 9915; do
@@ -1149,7 +1150,8 @@ N405B="$(sqlite3 "$FXR/releases.db" "SELECT count(*) FROM work_events WHERE gh_n
 # 21f — interleave, both directions, on a fresh fixture.
 FXI="$WORK/fx_interleave"; rm -rf "$FXI"; mkdir -p "$FXI"
 ( cd "$FXI" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
-cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXI/"; seed_cursor_tail "$FXI/releases.db"   # GH-695
+# GH-836: independent empty ledger; its cursor must not inherit the live ledger tail.
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXI" init --slug XYZ-forge >/dev/null 2>&1
 python3 "$MOCK" --reset --state "$WORK/mock21f.json" >/dev/null 2>&1; python3 "$MOCK" --seed --state "$WORK/mock21f.json" >/dev/null 2>&1
 prs21f() { cat > "$WORK/prs.json" <<'PYJ'
 [{"number": 710, "isDraft": false, "title": "feat: y", "body": "Closes #9920"}]
@@ -1204,7 +1206,8 @@ PYMUT
 [ $? -eq 0 ] || bad "21f red(iii) mutation failed"
 FXR7="$WORK/fx_rr_noexc"; rm -rf "$FXR7"; mkdir -p "$FXR7"
 ( cd "$FXR7" && git init -q . && git -c user.email=t@t -c user.name=t commit -q --allow-empty -m init ) >/dev/null 2>&1
-cp "$PRISTINE/releases.db" "$PRISTINE/releases.sql" "$FXR7/"; seed_cursor_tail "$FXR7/releases.db"   # GH-695
+# GH-836: independent empty ledger; its cursor must not inherit the live ledger tail.
+XYZ_DEVICE_CONFIG_PATH=/dev/null XYZ_WORK_CONNECTORS=0 python3 "$APP" --root "$FXR7" init --slug XYZ-forge >/dev/null 2>&1
 rr python3 "$APP" --root "$FXR7" roadmap add --issue-num 9920 --issue-url "https://example.invalid/9920" --title "interleave" --created 2026-09-10 --doc-path "PROJECT/1-INBOX/x.md" >/dev/null 2>&1
 prs21f
 MOCKSTATE="$WORK/mock21f.json" rr python3 "$APP" --root "$FXR7" work reconcile >/dev/null 2>&1   # review_ready
