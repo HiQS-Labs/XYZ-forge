@@ -35,7 +35,7 @@ goal: "For queues of 3 or more PRs, make choosing direct versus grouped landing 
 
 | What was just completed | What's next |
 |---|---|
-| Provisioned fresh task clone off `origin/development`, registered intake in RELEASES (rated 75/55/50/80), promoted doc to `2-WORKING`, sharpened GitHub issue #1158, and adjudicated Codex Plan QA R1 findings (R1, R2, R3). | Run Codex Plan QA Round 2 for approval, admit accepted-start in RELEASES, and implement Phase 1. |
+| Plan QA completed and Approved by Codex in Round 3 (R1–R4 resolved); accepted-start admitted in RELEASES DB. | Phase 1 implementation in `merge_cleanup.py`, `batch_record.py`, and `SKILL.md`, followed by verification and red controls. |
 
 ## Preflight Solution-Fit Bet Check
 
