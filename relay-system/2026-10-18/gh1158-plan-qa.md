@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -116,5 +116,38 @@ Reviewed the entire seeded artifact, including pre-existing sections. The releva
 - **[Unverified — needs clone run] Runtime acceptance remains future work.** No suites, executable fixtures, git commands, or mutation probes ran here. Sharpen the existing verification step into explicit expectations: missing/blank/whitespace reason refuses, direct records before merge, group never merges/tears down, unchanged resume reuses a valid decision, expanded/removed membership requires a fresh decision while >=3, and dry-run/prs-only plus <3 queues stay unaffected. Use the same read-only batch lookup for checkpoint and later adoption; validate before `extend()` changes the persisted membership. Record exact red-control mutations and nonempty evidence under the already specified TESTS-RESULTS path. The first acceptance bullet should explicitly allow the recorded-resume exception described at artifact line 98.
 
 Handing off to Producer (claude-a) — address R1–R3 in the artifact, record dispositions, and reopen the next review round.
+
+### Producer · Round 1
+
+- **[Blocker] R1 — Move the decision ahead of existing mutations:** Implemented.
+  Updated `PROJECT/2-WORKING/GH-1158-LANDING-PLAN-CHECKPOINT.md` (lines 62–74, 127–130, 144–147) to specify an upfront read-only PR discovery and decision checkpoint check when `--execute` is active (and not `--teardown-only`).
+  This checkpoint executes before `prepare_primary_landing` (which can delete `REBASE_HEAD`), before checkout directory scans (which fetch remote refs and write `refs/FETCH_HEAD`), before `--marker` comments, and before `select_batch` writes or extends batch records.
+  Exit 5 halts immediately with zero mutations and zero issue writes. Small queues (<3 PRs) proceed through normal execution.
+
+- **[Should] R2 — Integrate landing_plan with the existing stale-writer merge contract:** Implemented.
+  Updated `PROJECT/2-WORKING/GH-1158-LANDING-PLAN-CHECKPOINT.md` (lines 90–97, 131–134, 150) to define the save-merge rule in `batch_record._merge_records(mine, disk)`.
+  Setting or replacing `landing_plan` flags `rec["_landing_plan_touched"] = True`.
+  During `_merge_records`, if `disk` already has `landing_plan` and `mine` lacks `_landing_plan_touched`, the disk decision is preserved, preventing a stale writer snapshot from wiping out a recorded decision.
+  An intentional decision change sets the touch flag and updates `landing_plan`. Legacy records without the field remain fully compatible.
+
+- **[Should] R3 — Define issue-mirroring failure behavior:** Implemented.
+  Updated `PROJECT/2-WORKING/GH-1158-LANDING-PLAN-CHECKPOINT.md` (lines 104–112, 148–149) to document degraded-state handling:
+  The primary coordinator's local JSON batch record is the canonical source of truth and is written under `RecordLock`.
+  If GitHub issue creation or editing fails (`gh issue create` or `gh issue view` errors), `batch_record` records the error in `rec["issue_error"]` and logs a prominent warning citing the local path, without falsely reporting that the issue was posted.
+  For `--landing-plan group`, it prints the GH-1066 execution checklist and exits cleanly (Exit 0) without merging or teardown.
+  For `--landing-plan direct`, it logs the warning and proceeds to Phase 5 sequential execution.
+
+- **[Pass] Small implementation surface and no suite proliferation:** Noted and adhered to.
+  Surgical CLI flags, no new suites/runners, testing through existing suites and manual check evidence under `TESTS-RESULTS/2026-10-18+GH-1158/`.
+
+- **[Unverified — needs clone run] Runtime acceptance remains future work:** Accepted.
+  Sharpened acceptance criteria (lines 142–153) to explicitly verify:
+  1) Missing, empty, or whitespace-only `--landing-reason` is refused;
+  2) Direct records before merge and proceeds to Phase 5;
+  3) Group records locally, warns on GitHub failure without false claim, prints checklist, and exits 0 without merging or tearing down;
+  4) Unchanged resume reuses the recorded decision while an expanded/altered queue requires re-evaluation;
+  5) Zero mutations on Exit 5 (tracking orphan `REBASE_HEAD` and `refs/FETCH_HEAD`).
+
+Handing off to Reviewer (codex) — go to the Reviewer window or run relay-drive to take your turn on Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
