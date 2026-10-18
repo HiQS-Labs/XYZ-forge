@@ -35,12 +35,12 @@ goal: "For queues of 3 or more PRs, make choosing direct versus grouped landing 
 
 | What was just completed | What's next |
 |---|---|
-| Provisioned fresh task clone off `origin/development`, registered intake in RELEASES (rated 75/55/50/80), promoted doc to `2-WORKING`, and sharpened GitHub issue #1158. | Complete pre-implementation plan QA with Codex via relay-xyz, obtain approval, and admit accepted-start in RELEASES. |
+| Provisioned fresh task clone off `origin/development`, registered intake in RELEASES (rated 75/55/50/80), promoted doc to `2-WORKING`, sharpened GitHub issue #1158, and adjudicated Codex Plan QA R1 findings (R1, R2, R3). | Run Codex Plan QA Round 2 for approval, admit accepted-start in RELEASES, and implement Phase 1. |
 
 ## Preflight Solution-Fit Bet Check
 
 - **Outcome sought:** In `merge-cleanup`, landing queues of 3 or more PRs must not proceed under `--execute` without an explicit, recorded decision between direct sequential landing and GH-1066 grouped candidate landing.
-- **Smallest viable bet:** Add CLI options `--landing-plan {direct,group}` and `--landing-reason "<text>"` to `merge_cleanup.py`. If 3+ PRs are queued for execution and no landing plan is provided (and none recorded in the resumed batch), refuse to execute with **Exit 5** before any remote or local mutation. If `group` is passed, record it and exit 0 with GH-1066 guidance. If `direct` is passed, record it and proceed to Phase 5.
+- **Smallest viable bet:** Add CLI options `--landing-plan {direct,group}` and `--landing-reason "<text>"` to `merge_cleanup.py`. When 3+ PRs are discovered for execution, validate the decision *before* any mutation occurs (before `prepare_primary_landing` prunes `REBASE_HEAD`, before checkout scan fetches, before `--marker` comments, and before `select_batch` writes). If missing or invalid, refuse execution with **Exit 5**. If `group`, record locally and in `merge-batch` issue, print GH-1066 guidance, and exit 0. If `direct`, record and proceed to Phase 5.
 - **Alternatives rejected:**
   1. *Automatic heuristic grouping:* Inferring whether to group based on file overlap or conflict count was rejected because grouping involves trade-offs that require operator judgment.
   2. *Interactive prompt during execution:* Interactive prompts hang headless agents and automated runners; CLI flags ensure deterministic, scripted invocation.
@@ -57,18 +57,20 @@ Even with GH-1127 removing per-merge hosted CI waits, landing queues of 3+ PRs s
 
 ## Detailed Specification
 
-### 1. Programmatic Checkpoint & Distinct Exit Code (Exit 5)
-In `merge_cleanup.py`:
-- When Phase 4 topological sort yields 3 or more executable PRs and `--execute` is enabled (and not `--teardown-only`):
-  - Check whether `--landing-plan` is specified with an acceptable choice (`direct` or `group`) and non-empty `--landing-reason`.
-  - On `--resume`, check if the matched unfinished batch record already holds an identical PR set with an existing `landing_plan`. If so, adopt that plan.
-  - If no valid landing plan is present, print the decision input block and refuse execution with **Exit 5**:
-    ```
-    REFUSING to execute: 3 PRs ready to merge.
-    GH-1066 merge-group policy requires a recorded landing decision for queues of 3+ PRs.
-    Pass --landing-plan direct|group --landing-reason "<reason>" to proceed.
-    ```
-- **Zero-Mutation Invariant:** On Exit 5 refusal, make NO git commits, NO remote merges, NO worktree removals, and create NO GitHub issues.
+### 1. Pre-Execution Refusal & Zero-Mutation Invariant (Exit 5, Plan QA R1)
+To ensure the strict zero-mutation invariant:
+- In `merge_cleanup.py`, when `--execute` is passed (and not `--teardown-only`):
+  - Perform read-only PR discovery (`fetch_open_prs_with_retry`) and toposort filtering before mutating state.
+  - When the executable queue holds 3 or more PRs:
+    - Check whether `--landing-plan` is specified with an acceptable choice (`direct` or `group`) and non-empty, non-whitespace `--landing-reason`.
+    - If `--resume` is active, check if the matched unfinished batch record already holds an identical PR set with an existing `landing_plan`. If so, adopt that plan.
+    - If no valid landing plan is present, print the decision input block and refuse execution with **Exit 5**:
+      ```
+      REFUSING to execute: 3 PRs ready to merge.
+      GH-1066 merge-group policy requires a recorded landing decision for queues of 3+ PRs.
+      Pass --landing-plan direct|group --landing-reason "<reason>" to proceed.
+      ```
+- **Zero-Mutation Guarantee (R1):** On Exit 5 refusal, the process halts immediately before calling `prepare_primary_landing` (preventing `update-ref -d REBASE_HEAD`), before checkout scans fetch remote refs (`refs/FETCH_HEAD`), before `--marker` comments are posted to GitHub, before `batch_record` creates a new issue or extends an existing one, and before any git commits or merges.
 
 ### 2. Decision Inputs in Phase 4 Display
 During dry runs, `--prs-only`, and on Exit 5 refusal, print a concise `LANDING PLAN DECISION REQUIRED (GH-1066)` advisory block:
@@ -78,7 +80,7 @@ During dry runs, `--prs-only`, and on Exit 5 refusal, print a concise `LANDING P
 - Direct pointer to `skills/2-daily/merge-cleanup/SKILL.md` (GH-1066 guidance).
 - Instructions on the required flags: `--landing-plan direct|group --landing-reason "<reason>"`.
 
-### 3. Record in `batch_record` and GitHub `merge-batch` Issue
+### 3. Record in `batch_record` with Stale-Writer Safe Merge Rule (Plan QA R2)
 - In `batch_record.py`, persist `landing_plan` in the batch record:
   ```json
   "landing_plan": {
@@ -88,7 +90,10 @@ During dry runs, `--prs-only`, and on Exit 5 refusal, print a concise `LANDING P
     "prs": [1062, 1089, 1097]
   }
   ```
-- In `batch_record.py` `script_block()`, render a dedicated section:
+- **Intentional-Update Merge Rule (R2):** In `batch_record._merge_records(mine, disk)`:
+  - Mutating `landing_plan` marks `rec["_landing_plan_touched"] = True`.
+  - In `_merge_records`, if `disk` already has `landing_plan` and `mine` lacks `_landing_plan_touched`, preserve `disk["landing_plan"]`. A stale writer snapshot without the field cannot erase an existing recorded landing decision.
+- In `batch_record.py` `script_block()`, render a dedicated section inside the script-owned markdown:
   ```markdown
   ## Landing decision (GH-1066)
   - Plan: `<decision>`
@@ -97,15 +102,16 @@ During dry runs, `--prs-only`, and on Exit 5 refusal, print a concise `LANDING P
   ```
 - **Resume Protocol:** When `--resume` is passed, if the batch record contains `landing_plan` and the PR set matches, reuse the decision without prompting. If new PRs joined that change the queue or no plan was recorded, enforce the checkpoint.
 
-### 4. Group Path Behavior (`--landing-plan group`)
-When `--landing-plan group` is selected:
-- Record the decision and reason in the local batch record and post the `merge-batch` issue.
-- Print the GH-1066 execution checklist (candidate freeze, adversarial review, single landing).
-- Exit cleanly (**Exit 0**) without executing remote merges or checkout teardown. Building the combined branch remains caller-owned.
+### 4. Issue Mirroring & Degraded-State Behavior (Plan QA R3)
+- Local JSON record in primary coordinator directory (`.tick/` or equivalent) is the canonical source of truth and written under `RecordLock`.
+- GitHub issue mirroring is attempted via `batch_record.create` / `batch_record.update`:
+  - If GitHub issue creation/update fails (network error, rate limit, unreadable body), capture the error in `rec["issue_error"]` and log a warning: `merge-batch issue not created/updated: <error> — landing decision recorded locally at <path>`.
+  - For `--landing-plan group`: write local record; if GitHub issue creation fails, log the warning (does not claim GitHub issue was posted), print the GH-1066 execution checklist (candidate freeze, adversarial review, single landing), and exit **Exit 0** cleanly without remote merges or checkout teardown. Building the combined branch remains caller-owned.
+  - For `--landing-plan direct`: write local record; if GitHub issue creation fails, log the warning and proceed to Phase 5.
 
 ### 5. Direct Path Behavior (`--landing-plan direct`)
-When `--landing-plan direct` is selected with `--landing-reason`:
-- Record the decision and reason, then proceed directly to Phase 5 sequential execution.
+When `--landing-plan direct` is selected with non-empty `--landing-reason`:
+- Record the decision and reason, then proceed through Phase 0, 1-3, 4, and 5 sequential execution.
 
 ### 6. Small Queues (<3 PRs)
 Queues of 1 or 2 PRs are completely unaffected and run without requiring `--landing-plan`.
@@ -119,12 +125,14 @@ Update `skills/2-daily/merge-cleanup/SKILL.md` GH-1066 section and CLI argument 
    - Add `--landing-plan` (`choices=["direct", "group"]`, `default=None`).
    - Add `--landing-reason` (`type=str`, `default=""`).
    - Define exit code constant `EXIT_LANDING_PLAN_REQUIRED = 5`.
-2. **Phase 4 Advisory & Checkpoint (`merge_cleanup.py`):**
+2. **Pre-Execution Checkpoint & Phase 4 Advisory (`merge_cleanup.py`):**
+   - Perform read-only PR discovery upfront when `--execute` is set without `--teardown-only`.
    - Format and print the decision input block during dry run / prs-only / checkpoint check.
-   - Refuse with exit code 5 when `len(ordered_prs) >= 3` without a valid plan and reason.
+   - Refuse with Exit 5 before `prepare_primary_landing`, scan ref fetches, or `--marker` writes when `len(ordered_prs) >= 3` without a valid plan and reason.
    - Handle `--landing-plan group` by recording and exiting 0 with instructions.
-3. **Batch Record Storage & Rendering (`batch_record.py`):**
-   - Add `set_landing_plan(rec, decision, reason, prs)` and serialize to JSON.
+3. **Batch Record Storage, Save Merge & Rendering (`batch_record.py`):**
+   - Add `set_landing_plan(rec, decision, reason, prs)` marking `_landing_plan_touched = True`.
+   - Update `_merge_records` to protect `landing_plan` against stale snapshots.
    - Render `## Landing decision (GH-1066)` in `script_block()`.
    - Update `extend()` / `find_unfinished()` handling for resume.
 4. **Skill Documentation (`skills/2-daily/merge-cleanup/SKILL.md`):**
@@ -136,10 +144,12 @@ Update `skills/2-daily/merge-cleanup/SKILL.md` GH-1066 section and CLI argument 
 
 ## Acceptance Criteria
 
-- [ ] An `--execute` run on 3 or more PRs cannot merge anything without an explicit `--landing-plan direct|group` and `--landing-reason`.
-- [ ] Omission of `--landing-plan` on 3+ PRs exits 5 before any git mutation or issue creation.
-- [ ] `--landing-plan group` records the decision in the batch issue and exits 0 with the GH-1066 checklist, without merging.
+- [ ] An `--execute` run on 3 or more PRs cannot merge anything without an explicit `--landing-plan direct|group` and non-empty `--landing-reason` (or a valid matching plan preserved on `--resume`).
+- [ ] Omission of `--landing-plan` on 3+ PRs exits 5 before any git mutation (no `REBASE_HEAD` deletion, no `FETCH_HEAD` fetch writes), no issue markers, and no batch issue creation.
+- [ ] Blank or whitespace-only `--landing-reason` is refused.
+- [ ] `--landing-plan group` records the decision in the local batch record and batch issue (or warns on GitHub failure without false claim) and exits 0 with the GH-1066 checklist, without merging.
 - [ ] `--landing-plan direct` records the decision and proceeds to Phase 5.
-- [ ] The landing decision survives `--resume` on unchanged PR sets.
+- [ ] Stale batch record saves under `RecordLock` preserve the recorded `landing_plan`.
+- [ ] The landing decision survives `--resume` on unchanged PR sets; changed PR sets require re-evaluation.
 - [ ] Queues of 1 or 2 PRs remain completely unaffected.
 - [ ] `skills/2-daily/merge-cleanup/SKILL.md` documents the flags, checkpoint, and Exit 5.
