@@ -564,7 +564,7 @@ class TestA5FreshInspection(unittest.TestCase):
         def fake_merge(pr_num, repo_path, strategy="squash", dry_run=True):
             if on_merge:
                 on_merge()
-            return True
+            return True, "f" * 40  # GH-1140: execute_pr_merge returns (landed, verified_oid)
 
         def fake_teardown(c, dry_run=True):
             removed.append((c["name"], c["disposition"], "scan_disposition" in c))
