@@ -338,4 +338,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Returning the completed token to operator; proceed only within the authorized documentation/DRAFT publication scope.
 
+
+### Attestation · relay-drive — 2026-10-18T17:17:38Z
+task: RELAY-gh1143-final
+reviewer: codex
+status: Approved
+reviewed-head: fa215ee304769c4da46161bf9c861c1c94ab1e09
+added-range: 27747+6057
+added-sha256: f88bff62ece46012ddb7cfe637685b617ad9e7c616920144b0cd92ac35535c3a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
