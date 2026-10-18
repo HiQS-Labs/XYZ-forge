@@ -26,7 +26,7 @@ Branch `feat/XYZ-forge-gh1127-promotion-only-full-suite-2026-10-18` off `develop
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA r1 FAIL (F1 blocker: dispatch could run Small or nothing; F2–F4) dispositioned below | Codex plan QA r2 → implement → covering suites → final Codex QA → PR → merge on green CI (operator-authorized) |
+| Plan QA r2 FAIL (F1 acceptance needs a real no-pending clone run; F2 window must hold through the promotion merge) dispositioned below | Codex plan QA r3 (final round) → implement → covering suites → final Codex QA → PR → merge on green CI (operator-authorized) |
 
 ## Observed today (4fd5dca8)
 
@@ -55,6 +55,7 @@ Branch `feat/XYZ-forge-gh1127-promotion-only-full-suite-2026-10-18` off `develop
    Verify: manual `TESTS-RESULTS/2026-10-18+GH-1127/promotion-controls.log.txt`:
    - (p1) docs-only pending input (`AGENTS.md`, tier=1) with promotion → `validate.sh --parallel 4`; without promotion → Small. This is the red control: Codex's own probe input.
    - (p2) empty pending with promotion → one commit meta for the tested sha; without promotion → no run.
+   - **(p4) actual route, F1 acceptance.** In a disposable full clone of the branch tip (identity bracketed), with every landing already receipted, run `python3 utils/py/wave_reconcile.py --catch-up --gate --qualify --promotion` unsandboxed, with no push. The current development tip has receipts for every landing, so this is naturally the zero-pending case. Retain the command, rc and decisive output, the one full-registry telemetry file (`mode=parallel`, `registered`=registry size, one top-level run), and the written `artifact_kind: commit` receipt for HEAD, replayed True through `qualification_receipt_matches`. Red control: re-run the same helper inputs with the old predicates (`if not pending: return` before the substitution, and `if args.qualify and landing_items`) and show that no run would be launched. This is one real full run of the *new* path (operator: "willing to re-test the new approach 2–3x"); it is not a baseline rerun.
    - (p3) `--promotion` without `--qualify`, and `--promotion` without `--catch-up` → parser error.
    - Then gh421, gh425, gh740.
 1. `.github/workflows/wave-reconcile.yml`: delete the `pull_request` and `schedule` triggers and keep `workflow_dispatch`. Dispatch args become `--catch-up --gate --qualify --promotion`. The PR branch of the args step stays as dead code for rollback. Replace the header comment with the #1131 contract: dispatch on `development` before every promotion; the run qualifies all landings since the last receipt in one snapshot and publishes their receipts. Leave the dead PR branch of `if:` and the args step (`:24-26`, `:65-66`) in place. Re-enabling is then a two-line trigger restore.
@@ -73,11 +74,17 @@ Branch `feat/XYZ-forge-gh1127-promotion-only-full-suite-2026-10-18` off `develop
    - development merge = local reconcile + pre-push gate
    - promotion = dispatched hosted `wave-reconcile` full run on the development tip (parallel per #1134), then the post-push `boundary-macos` sequential witness on main (unchanged, operator's call under #1131 to flip)
    - `ci-local.sh` stays sequential
-   Add the promotion procedure to `AGENTS.md` (F2: evidence bound to the candidate, not "wait green"):
-   1. Quiet window: no merges to development until step 4. A landing attempted meanwhile is refused with exit 8 by the local writer's guard.
-   2. `gh workflow run wave-reconcile.yml --ref development`, then wait for success.
-   3. Read the newest published `TESTS-RESULTS/*+GH-591/wave-<sha>/provenance.jsonl`. Check `gate=validate.sh --parallel 4` and `result=pass`. The run log must have no `deferred` line. `git log --format='%ae %s' <tested_commit>..origin/development` may list only the bot's reconcile/receipt commits (`BOT_AUTHOR_EMAIL`, `:1356`). Anything else means redispatch.
-   4. Open the development → main PR from that tip. After the merge, `boundary-macos` witnesses main sequentially (unchanged).
+   Add the promotion procedure to `AGENTS.md`. Evidence is bound to the candidate that is actually merged (F2):
+   1. **Quiet window from dispatch until the promotion PR is merged.** No PR merges or direct pushes to development during the window. The local writer's in-flight guard (exit 8) only refuses the *reconciliation* after a landing, never the merge itself (`merge_cleanup.py:713-716,749`), so the window is procedural and the operator holds it.
+   2. `gh workflow run wave-reconcile.yml --ref development`, then take the run id from `gh run list --workflow wave-reconcile.yml --limit 1` and `gh run watch <id>` until it succeeds.
+   3. `git fetch origin development`. Choose the receipt whose `run_url` ends in `/<id>` (`wave_reconcile.py:738-740`), not just the newest one. Then require all of:
+      - `gate == "validate.sh --parallel 4"` and `result == "pass"`;
+      - no `deferred` line in that run's log (`gh run view <id> --log`);
+      - `git merge-base --is-ancestor <tested_commit> origin/development`;
+      - every commit in `<tested_commit>..origin/development` is authored by `BOT_AUTHOR_EMAIL` (`wave_reconcile.py:1356`), and its changed paths pass the publisher's own allowlist `hosted_lane_publish.declared_paths` (`hosted_lane_publish.py:49-86`).
+      Any failure means redispatch.
+   4. Open the development → main PR. **Immediately before merging it**, fetch again and re-run step 3 against the PR's head SHA (`gh pr view <n> --json headRefOid`). If anything changed, redispatch.
+   5. After the merge, `boundary-macos` witnesses main sequentially (unchanged).
    - Also update the merge-cleanup `SKILL.md` sweep text (`:22`, `:416-421`, `:435-437`). Full sweeps are deferred to the promotion dispatch; Small sweeps still run locally.
    - Also update the `hosted_lane_report.py:104-107` wording "next run" to "next dispatch" (F4/Nit).
    Verify: `utils/pdda/pdda.sh run` clean; `test/gh544-parallel-default.sh`, which pins the ci.yml literal, still green.
@@ -99,12 +106,12 @@ Branch `feat/XYZ-forge-gh1127-promotion-only-full-suite-2026-10-18` off `develop
 
 | # | Check | Red control |
 |---|---|---|
-| A0 | `--promotion` forces the full gate and qualifies HEAD when nothing is pending | promotion-controls p1 (docs-only → full; Small without the flag), p2 (empty → HEAD commit; none without the flag), p3 parser refusals |
+| A0 | `--promotion` forces the full gate and qualifies HEAD when nothing is pending, end to end | p1 (docs-only → full; Small without the flag), p2 (empty → HEAD commit; none without the flag), p3 parser refusals, **p4 real zero-pending run in a disposable clone: full telemetry + replayable HEAD commit receipt**; old predicates launch nothing |
 | A1 | wave-reconcile.yml has only `workflow_dispatch` as a trigger, with `--promotion` in its args; ci-workflow, gh421, gh684, gh740 green | fix_probe 1 fails on the base commit |
 | A2 | Without the env var, merge-cleanup skips `wait_for_hosted_reconcile` (no hosted polling or grace lookup) and calls the local writer, which keeps its one in-flight safety query. With `MERGE_CLEANUP_USE_HOSTED=1` it takes the hosted path. gh549, gh674, gh436 green | manual: monkeypatched wait raising → not reached when the env is unset, reached when set; local-writer argv recorded |
 | A3 | batch sweep command and label: tier 3 → dispatch line with the deferred label; tier 1 → unchanged local command | manual: `finalize_sweep_inputs` + render on a stub record for each tier |
 | A4 | receipt-meta controls as in step 4 | each tampered field → False; legacy receipt → True |
-| A5 | docs name the new boundaries; the AGENTS.md promotion procedure binds evidence to the tested SHA; `pdda.sh run` clean; gh544 green | manual: procedure step 3's `git log` check on a fixture repo flags a non-bot commit after tested_commit, and passes on bot-only commits |
+| A5 | docs name the new boundaries; the AGENTS.md procedure binds evidence to the dispatch run id and the merged head; `pdda.sh run` clean; gh544 green | manual (fixture repo + the real `declared_paths`): passes on bot-authored allowlisted commits after tested_commit; fails on (i) a source commit after tested_commit, (ii) a bot commit touching a non-allowlisted path, (iii) a remote advance absent from the stale tracking ref until fetched, (iv) a receipt chosen by recency whose `run_url` is not the dispatch id |
 | A6 | Pre-push gate for the changed paths (routes full: workflow + core skill code) | — |
 
 ## Carry-overs (operator)
