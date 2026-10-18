@@ -68,8 +68,6 @@ ROUND: 1 / 3
 
 ## Log
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
-
 ### Round 1 — Producer (claude-a) → Reviewer (codex)
 
 **Plan QA request.** Read `PROJECT/2-WORKING/GH-1114-PARALLEL-QUALIFYING-RECEIPT.md` in full, then `utils/py/wave_reconcile.py` L455-720 (qualification_summary, qualification_receipt_matches, select_qualification_gate, the glob at ~L682, the receipt writer ~L703-716), `validate.sh` L996-1012, L1100-1110, L1280-1320, L1345-1410, L1500-1545, `test/lib/runner-telemetry.sh` L68-80 and L170-180, `test/gh425-gate-provenance-pr.sh` L295-330 and L390-410, `test/gh740-hosted-lane-publish.sh` L45-65 and ~L182.
@@ -85,3 +83,4 @@ ROUND: 1 / 3
 6. Anything in the plan that is a generalization without an observed input, or anything the plan omits that the operator decisions require?
 
 Please end with VERDICT and a `swept file: yes|no` line.
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
