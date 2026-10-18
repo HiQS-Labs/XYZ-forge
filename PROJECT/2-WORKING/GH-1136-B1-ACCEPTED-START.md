@@ -24,7 +24,7 @@ Branch `fix/XYZ-forge-gh1136-b1-accepted-start-2026-10-18` off `development@e932
 
 | What was just completed | What's next |
 |---|---|
-| Recon + plan | Codex plan QA → implement → focused suites + manual control → final QA → PR → merge on green |
+| Plan Approved (Codex r1). Implemented (07ca6bd4) + GH-1112 repaired (d1d9cc46); replay controls (a)–(d) pass, gh436 180 OK in a disposable clone | Final Codex QA → push → PR → merge on green |
 
 ## Observed
 
