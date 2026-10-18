@@ -65,11 +65,18 @@ No new modules, no queue/locking subsystem, no rewrite.
    for known PRs from the current discovery it already receives (order/outcomes untouched); a repair
    that lands within a run updates that PR's planned row from the repair's own changed-file record.
    Retires #1075, #1073 (both the resume and in-run shapes).
-2. **Transactional-enough saves** — `save()` becomes a per-key merge under the existing
-   `RecordLock`: `planned` keyed by PR (union; on-disk wins per key), `outcomes` keyed by PR (union;
-   merged status/merge_oid/reconcile never downgraded per GH-1074 semantics), `landed_order` union;
-   `verdict`/`sweep_inputs`/`issue` metadata from on-disk unless absent. One choke point; callers
-   unchanged. Retires #1072's field/row-loss shapes.
+2. **Transactional-enough saves with intentional-update provenance** (r2 amendment) — `save()`
+   merges under the existing `RecordLock` with rules that distinguish *intentional fresh writes*
+   from *stale carried fields*: (a) `outcomes` merges per PR at field level with GH-1074 monotonicity
+   (concrete status/merge_oid/reconcile win over `unattempted`/empty; `merged` never downgraded);
+   (b) `planned` merges per PR — a row the current writer **refreshed this turn carries a refresh
+   marker and wins**; unmarked rows preserve the on-disk copy (a stale snapshot cannot resurrect old
+   metadata, and a refresh cannot be clobbered by a stale writer); (c) `verdict` and `sweep_inputs`
+   carry write timestamps and the newer intentional replacement wins (B:308-314/B:332-333 are
+   replacements by design); (d) `landed_order` unions; `issue` metadata on-disk unless absent.
+   Acceptance = the three r2 falsifiers: refreshed row reloads as `["a","b"]`; a replacement
+   verdict covering `[1,2]` reloads with the new covers/body; the two-writer preservation control
+   from Phase A still holds.
 3. **QA-debt discovery on every executing run** — a final-status step in `main()` independent of
    batch adoption: after Phase 6, look up `find_unfinished(..., [], need_qa=True)` whenever the
    run's own batch is `None` or not QA-pending, including `--teardown-only` executes; exit 4 when
@@ -81,10 +88,18 @@ No new modules, no queue/locking subsystem, no rewrite.
 5. **Veto inputs complete and live** — `refresh_pr` fetches `title`; `hold_label()` scans the title
    against the existing `HOLD_LABEL_TOKENS`; the final eligibility re-check (:1297-1311) re-checks
    hold labels, not just draft. Retires the widened #444.
-6. **Recover unrecorded merges on resume** — for planned PRs absent from OPEN-only discovery,
-   one live refresh each: positive `MERGED` + OID records `status=merged, merge_oid=<oid>` (QA
-   pending owed); `CLOSED` without merge evidence stays terminal (`closed`, no invented landing);
-   refresh failure defers (no guess). Retires the r1 recovery shape.
+6. **Recover unrecorded merges** (r2 amendment, three coverage points) —
+   (a) *in-run retention:* when a discovered PR refreshes as `MERGED` mid-run (M:1123-1127), record
+   the merge OID and count it in `landed()` instead of the OID-less `closed: merged outside this run`;
+   (b) *resume recovery:* for planned PRs absent from OPEN-only discovery, one live refresh each —
+   positive `MERGED`+OID records `status=merged, merge_oid` (QA owed); `CLOSED` without merge
+   evidence stays terminal (no invented landing); refresh failure defers;
+   (c) *reachability:* a resume whose discovery does not overlap an old unfinished batch reaches it
+   for recovery — `find_unfinished` gains a recovery mode matching repo+integration over batches
+   with unlanded planned PRs (before overlap/qa_pending filtering excludes them), performs (b), and
+   lets the ordinary flow continue. Bounded to planned PRs of unfinished batches for this
+   repo+integration — no arbitrary historical scanning. Retires the r1 recovery shape including the
+   r2 selection boundary.
 7. **Executable sweep command** — emit the mktemp form at batch_record.py:312. Retires #1084-2.
 8. **#944 disposition** — close as delivered by #1069 (threshold 2+ was the operator's recorded
    decision), from the PR description.
@@ -120,9 +135,10 @@ owed, no threshold change for batch-issue creation (2+ stands; #944 closes on it
 ## Ordered implementation list
 
 1. `extend()` refresh + unit coverage (gh436 .py) -> expect: resume-with-changed-branch fixture keeps new file list; red control by reverting the refresh.
-2. `save()` per-key merge + two-process manual check under TESTS-RESULTS -> expect: both writers' outcomes survive.
+2. `save()` provenance merge (refresh marker, monotonic outcome fields, timestamped verdict/sweep) + two-process manual check under TESTS-RESULTS -> expect: both writers' outcomes survive; refreshed row reloads fresh; replacement verdict reloads with new covers (r2 falsifiers).
 3. `execute_pr_merge` OID return + caller demote-refetch -> expect: recorded OID non-empty when refresh later fails (unit with mocked refresh).
-4. Final-status `need_qa` lookup in main() -> expect: plain rerun with QA-pending fixture exits 4; red control by removing the lookup.
+4. Final-status `need_qa` lookup in main() (covers plain rerun, one-PR queue, teardown-only, new-batch masking) -> expect: plain rerun with QA-pending fixture exits 4; red control by removing the lookup.
+4b. Recovery: in-loop MERGED OID retention (M:1123-1127) + resume absent-PR recovery + find_unfinished recovery mode -> expect: (a) in-loop MERGED observation records OID and lands in `landed()`; (b) resume with both PRs remotely MERGED reaches the old non-overlapping batch and owes QA; CLOSED-without-merge stays non-landed; unrelated OPEN PRs are never invented as landings.
 5. `hold_label()` title scan -> expect: title-marked PR skipped in unit fixture.
 6. Sweep-command mktemp form -> expect: emitted string shell-safe (`bash -n` clean when substituted).
 7. Focused suites green (`bash test/gh436-merge-cleanup.sh`, gh534 phase-b focused run) -> expect: 0 failures.
