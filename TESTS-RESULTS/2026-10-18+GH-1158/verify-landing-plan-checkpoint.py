@@ -60,6 +60,10 @@ class TestGH1158LandingPlanCheckpoint(LedgerFixture):
         self.assertTrue((self.primary / ".git" / "REBASE_HEAD").exists() or
                         merge_cleanup.run_git(self.primary, ["rev-parse", "--verify", "REBASE_HEAD"]).returncode == 0)
 
+        # Snapshot FETCH_HEAD before run
+        fetch_head = self.primary / ".git" / "FETCH_HEAD"
+        fetch_head_before = fetch_head.read_bytes() if fetch_head.exists() else None
+
         # Run merge-cleanup with --execute but NO landing plan
         rc = self.run_main(execute=True)
         self.assertEqual(rc, 5, "Expected Exit 5 when landing-plan is missing for 3 PRs")
@@ -70,13 +74,29 @@ class TestGH1158LandingPlanCheckpoint(LedgerFixture):
         res = merge_cleanup.run_git(self.primary, ["rev-parse", "--verify", "REBASE_HEAD"])
         self.assertEqual(res.returncode, 0, "Zero-mutation violated: REBASE_HEAD was pruned on Exit 5")
 
-        # b. No batch record was created on disk
+        # b. FETCH_HEAD was not modified or written
+        fetch_head_after = fetch_head.read_bytes() if fetch_head.exists() else None
+        self.assertEqual(fetch_head_before, fetch_head_after, "Zero-mutation violated: FETCH_HEAD modified on Exit 5")
+
+        # c. No batch record was created on disk (searching recursively across all subdirectories)
         batch_dir = self.primary / ".tick" / "merge-cleanup"
-        batches = list(batch_dir.glob("batch-*.json")) if batch_dir.exists() else []
+        batches = list(batch_dir.rglob("batch-*.json")) if batch_dir.exists() else []
         self.assertEqual(len(batches), 0, "Zero-mutation violated: batch record was created on Exit 5")
 
-        # c. No git merges happened
+        # Guard recursive search with a seeded positive control
+        probe = batch_dir / "test-owner-repo" / "batch-probe.json"
+        probe.parent.mkdir(parents=True, exist_ok=True)
+        probe.write_text("{}")
+        self.assertEqual(len(list(batch_dir.rglob("batch-*.json"))), 1, "Recursive glob positive control failed")
+        probe.unlink()
+        probe.parent.rmdir()
+
+        # d. No issue markers were posted to GitHub
         st = self.load()
+        marker_calls = [c for c in st["calls"] if c[:2] == ["issue", "comment"]]
+        self.assertEqual(len(marker_calls), 0, "Zero-mutation violated: issue markers posted on Exit 5")
+
+        # e. No git merges happened
         self.assertEqual([p["state"] for p in st["prs"].values()], ["OPEN", "OPEN", "OPEN"])
         self.assertFalse(any(c[:2] == ["pr", "merge"] for c in st["calls"]))
 
@@ -92,8 +112,8 @@ class TestGH1158LandingPlanCheckpoint(LedgerFixture):
         rc2 = self.run_main(execute=True, extra=("--landing-plan", "group", "--landing-reason", "   "))
         self.assertEqual(rc2, 5, "Whitespace reason should exit 5")
 
-    def test_03_red_control_bypassing_checkpoint(self):
-        """3. Red control: mutating the checkpoint boundary demonstrates it is load-bearing."""
+    def test_03_valid_direct_plan_executes_successfully(self):
+        """3. Happy path: providing a valid direct plan proceeds without Exit 5."""
         self.branch("feat/a", 1, lambda r: park(r, 201, "pr1"))
         self.branch("feat/b", 2, lambda r: park(r, 202, "pr2"))
         self.branch("feat/c", 3, lambda r: park(r, 203, "pr3"))
@@ -250,6 +270,36 @@ class TestGH1158LandingPlanCheckpoint(LedgerFixture):
             final = json.loads(p.read_text())
             self.assertEqual(final["landing_plan"]["decision"], "group",
                              "Stale save after reload must preserve disk group decision")
+
+    def test_11_queue_widening_between_checkpoints_is_deferred(self):
+        """11. Phase 4 defers PRs opened after the pre-mutation checkpoint (F1 fix)."""
+        self.branch("feat/a", 1, lambda r: park(r, 201, "pr1"))
+        self.branch("feat/b", 2, lambda r: park(r, 202, "pr2"))
+        self.branch("feat/c", 3, lambda r: park(r, 203, "pr3"))
+
+        # Simulate race: upfront checkpoint discovers only PR 1 & 2 (queue size 2, no plan required).
+        # Later Phase 4 discovery discovers PR 1, 2, and 3.
+        orig_fetch = merge_cleanup.fetch_open_prs_with_retry
+        calls = [0]
+        def widening_fetch(repo_path):
+            all_prs = orig_fetch(repo_path)
+            calls[0] += 1
+            if calls[0] == 1:
+                # Early checkpoint sees only PR 1 and PR 2
+                return [p for p in all_prs if p["number"] in (1, 2)]
+            # Phase 4 sees PR 1, 2, and 3
+            return all_prs
+
+        with mock.patch.object(merge_cleanup, "fetch_open_prs_with_retry", side_effect=widening_fetch):
+            rc = self.run_main(execute=True)
+
+        # PR 1 and 2 land (exit 4: landed, QA pending); PR 3 is deferred
+        self.assertEqual(rc, 4)
+        self.assertIn("PR #3: opened after landing checkpoint; deferred to next run", self.out)
+        st = self.load()
+        self.assertEqual(st["prs"]["1"]["state"], "MERGED")
+        self.assertEqual(st["prs"]["2"]["state"], "MERGED")
+        self.assertEqual(st["prs"]["3"]["state"], "OPEN")
 
 
 if __name__ == "__main__":

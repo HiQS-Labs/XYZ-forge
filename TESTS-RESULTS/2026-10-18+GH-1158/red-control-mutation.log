@@ -1,0 +1,26 @@
+Witnessed Red Control for GH-1158 Checkpoint Boundary
+=====================================================
+Date: 2026-10-18
+Mutation: In skills/2-daily/merge-cleanup/scripts/merge_cleanup.py, bypass upfront checkpoint by setting threshold from >= 3 to >= 99.
+
+Command executed:
+PYTHONPATH=".:test:skills/2-daily/merge-cleanup/scripts" python3 TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py TestGH1158LandingPlanCheckpoint.test_01_missing_landing_plan_exits_5_and_zero_mutations
+
+Result (exit code 1):
+F
+======================================================================
+FAIL: test_01_missing_landing_plan_exits_5_and_zero_mutations (__main__.TestGH1158LandingPlanCheckpoint.test_01_missing_landing_plan_exits_5_and_zero_mutations)
+1. Missing --landing-plan on 3+ PRs exits 5 before any mutation.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1158-landing-plan-checkpoint-2026-10-18/TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py", line 70, in test_01_missing_landing_plan_exits_5_and_zero_mutations
+    self.assertIn("REFUSING to execute: 3 PRs ready to merge", self.err)
+AssertionError: 'REFUSING to execute: 3 PRs ready to merge' not found in 'merge-cleanup: WARNING — pruned orphaned REBASE_HEAD 59fd5d83c969beaf475e65c442c84dc22da86e39; rechecking primary readiness\nmerge-cleanup: ERROR — REFUSING to execute: queue holds 3 PRs without a valid landing plan.\n'
+
+----------------------------------------------------------------------
+Ran 1 test in 3.135s
+
+FAILED (failures=1)
+
+Diagnostic:
+Without the upfront pre-mutation checkpoint, execution proceeded directly into Phase 0, pruning orphaned REBASE_HEAD and violating the zero-mutation invariant. When the checkpoint is restored, REBASE_HEAD is preserved and the upfront refusal fires with Exit 5 before any mutation.

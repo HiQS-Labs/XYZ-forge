@@ -1592,6 +1592,7 @@ def main():
     # Upfront landing plan checkpoint for queues of 3+ PRs (GH-1066 / GH-1158 / Plan QA R1).
     # Refuse execution before ANY mutation (before prepare_primary_landing prunes REBASE_HEAD,
     # before scan_directories fetches refs/FETCH_HEAD, and before --marker comments or batch issue writes).
+    checkpoint_eligible_prs: Optional[Set[int]] = None
     if args.execute and not args.teardown_only and not args.scan_only and not args.prs_only and args.reconcile_pr == 0:
         try:
             early_prs = fetch_open_prs_with_retry(str(primary_repo))
@@ -1605,6 +1606,8 @@ def main():
         early_ordered: List[Dict[str, Any]] = []
         if active_early:
             early_ordered, _, _ = toposort_prs(active_early)
+
+        checkpoint_eligible_prs = {int(p["number"]) for p in early_ordered}
 
         if len(early_ordered) >= 3:
             origin = origin_url(primary_repo) or ""
@@ -1756,6 +1759,12 @@ def main():
         prs = [p for p in prs if int(p.get("number", 0)) not in excluded_prs]
         for p in skipped:
             log(f"PR #{p['number']}: excluded by --exclude; not sequenced this run")
+    if checkpoint_eligible_prs is not None:
+        deferred = [p for p in prs if int(p.get("number", 0)) not in checkpoint_eligible_prs]
+        if deferred:
+            prs = [p for p in prs if int(p.get("number", 0)) in checkpoint_eligible_prs]
+            for p in deferred:
+                log(f"PR #{p['number']}: opened after landing checkpoint; deferred to next run")
     if prs:
         ordered_prs, _, warnings = toposort_prs(prs)
         print("=" * 80)
@@ -1835,6 +1844,12 @@ def main():
     # unready. Refuse before the first Phase 5/6 mutation unless that deferral is explicit.
     if _primary_blocks("execute cleanup"):
         return 2
+
+    if not args.teardown_only and ordered_prs and args.execute and len(ordered_prs) >= 3:
+        valid_plan = bool(args.landing_plan in ("direct", "group") and args.landing_reason and args.landing_reason.strip())
+        if not valid_plan:
+            log_err(f"REFUSING to execute: queue holds {len(ordered_prs)} PRs without a valid landing plan.")
+            return EXIT_LANDING_PLAN_REQUIRED
 
     batch = select_batch(primary_repo, args, ordered_prs)
     if not args.teardown_only and ordered_prs:
