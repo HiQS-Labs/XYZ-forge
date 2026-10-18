@@ -27,7 +27,7 @@ context_tags: [skills-army-hq, docs, deployment-drift]
 
 | What was just completed | What's next |
 |---|---|
-| Implemented in `4bf3361b` (one file, `skills/3-weekly/skills-army-hq/SKILL.md`, +62/−7): hard rules, definition of done, frontmatter description, unrelated-changes correction, `--root` example. Evidence under `TESTS-RESULTS/2026-10-18+GH-1157/` (positive parse exit 0, red control exit 1, docs gate 0 errors, ledger clean) with `provenance.jsonl`. | Final Codex relay QA on the committed diff and evidence; on Approved, push through the pre-push gate and open the PR against `development`; stop at the PR (operator checkpoint). |
+| Final Codex QA **Approved** in round 1 (`relay-system/2026-10-18/gh1157-final-qa.md`, attested against `c40b425a`; 7/7 `[Pass]`). Implementation `4bf3361b` (one file, +62/−7) with evidence under `TESTS-RESULTS/2026-10-18+GH-1157/`. | PR open against `development`, awaiting operator review and merge (operator checkpoint). After merge: devices re-vendor `skills-army-hq` through intake (publish-from-source); downstream child publication via push-downstream. |
 
 ## Observed problem (issue #1157, verified 2026-10-18 on the Mac mini)
 
@@ -211,4 +211,7 @@ device-agnostic) — 2. Steady, not rising. Coverage limit: incidents tracked ou
 - **Implementation:** `4bf3361b`. Evidence: `TESTS-RESULTS/2026-10-18+GH-1157/` (`SUMMARY.md`,
   `parse-positive.log` exit 0, `parse-red-control.log` exit 1, `pdda-run.log` 0 errors,
   `releases-check.log` clean, `provenance.jsonl`).
-- Final QA: pending (`relay-system/2026-10-18/gh1157-final-qa.md`).
+- **Final QA (Codex, `relay-system/2026-10-18/gh1157-final-qa.md`): PASS / Approved** in round 1,
+  attested against `c40b425a`; 7/7 `[Pass]` (asks→diff, prose truth, identity, evidence integrity,
+  GH-831 scope, whole-file sweep, PR readiness); runtime suites `[Unverified — needs clone run]`
+  by design (docs route).
