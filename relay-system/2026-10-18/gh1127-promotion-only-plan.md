@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -84,4 +84,54 @@ ROUND: 1 / 3
 7. Anything in the plan that is a generalization without an observed input, or a required part of #1131/#1127 that is missing?
 
 End with VERDICT and a `swept file: yes|no` line.
+### Reviewer · Round 1
+
+**VERDICT: FAIL**
+**Basis:** The local-default change is sound in principle, but the unchanged tier-selected qualifier does not deliver the plan's promised full pre-promotion run. The promotion procedure also needs to bind evidence to the candidate rather than treating any green dispatch as sufficient. Review scope: the entire canonical `PROJECT/2-WORKING/GH-1127-PROMOTION-ONLY-FULL-SUITE.md` (92 lines), including its pre-existing assumptions and acceptance table. The Setup's `.relay-artifacts/` copy is absent (`cat .relay-artifacts/GH-1127-PROMOTION-ONLY-FULL-SUITE.md`, exit 1, “No such file or directory”); used the canonical artifact explicitly requested by the Producer.
+
+swept file: yes
+
+- **[Blocker] F1 — Dispatch does not guarantee a full run.** Plan lines 43–44, 50, 60 and 75 equate the existing catch-up with a full-registry promotion gate, while line 69 excludes qualifier behavior from scope. `wave_reconcile.py:629–637` returns Small for tier 1; `:647–651` returns without running anything when all discovered landings already have receipts; `:2235` also conditions qualification on nonempty landings. A docs-only promotion can therefore get a green dispatch without a full run. Change the plan to specify an explicit promotion qualification path that forces the full registry on the candidate, including the no-pending case, while preserving historical receipt replay and bounded publish retries. Reuse the existing qualification machinery; no new workflow/test suite is requested. Add manual acceptance/red controls and a durable provenance destination for docs-only and no-pending inputs.
+  Observed input: one pending landing whose diff is `AGENTS.md` and classifier output is `tier=1`; the current selector returned Small in the non-mutating probe below.
+  Affected scope: every pre-promotion dispatch, including docs-only backlogs and an already-receipted candidate.
+  Falsifier: the same selector input returning `validate.sh --parallel 4` in promotion mode, and a disposable-clone run showing one complete full-registry telemetry record when the pending set is empty; legacy ordinary tier selection may remain Small.
+  Probe command (exit **0**, no subprocess executed by the selector):
+  ```sh
+  python3 - <<'PYPROBE'
+  import ast,re,subprocess
+  from pathlib import Path
+  from types import SimpleNamespace as S
+  p=Path('utils/py/wave_reconcile.py')
+  f=next(n for n in ast.parse(p.read_text()).body if isinstance(n,ast.FunctionDef) and n.name=='select_qualification_gate')
+  ns=dict(re=re,subprocess=S(run=lambda a,**k:S(returncode=0,stdout='AGENTS.md\n' if a[0]=='git' else 'tier=1\n'),SubprocessError=subprocess.SubprocessError),QUALIFICATION_GATE='validate.sh --parallel 4',SMALL_GATE='validate.sh --sequential --subsystem small',small_suites_at=lambda *a:['existing-small-suite'])
+  exec(compile(ast.Module(body=[f],type_ignores=[]),str(p),'exec'),ns)
+  print(ns['select_qualification_gate']('.', [{'mergeCommit':{'oid':'a'*40}}], {}))
+  PYPROBE
+  ```
+  Decisive output: `('validate.sh --sequential --subsystem small', ['existing-small-suite'], 'tier 1')`.
+
+- **[Should] F2 — Replace “wait green” with candidate/evidence checks in the promotion procedure.** Plan line 62 omits the tested SHA and backlog/deferred check. The publish race branch deliberately lifts old receipts onto a newer development head (`hosted_lane_publish.py:203–228`); recompute drops newly discovered unreceipted landings without failing (`wave_reconcile.py:2247–2256`). Its message promises “its own run qualifies it,” but this plan removes both automatic triggers. This is a concrete path to a green job whose newest development landing was never tested. Document a quiet promotion window, inspect retained `tested_commit`, full-gate telemetry and pending/deferred output, and require redispatch if new product changes land before promotion. Account explicitly for generated reconciliation/receipt commits added after the tested snapshot, rather than equating workflow event SHA, tested SHA and published tip. Add the manual red control to Acceptance; branch-protection changes are unnecessary.
+  Observed input: the existing rejected-push recovery branch at `hosted_lane_publish.py:203–228`, followed by an unreceipted catch-up item at `wave_reconcile.py:2253–2255`; the latter is deferred while the publisher can return 0.
+  Affected scope: development advancing during dispatch, publication recovery, or the interval between green qualification and promotion.
+  Falsifier: a quiet candidate covered by full telemetry and only declared generated publication changes can proceed; a newly landed source change absent from that snapshot must require another dispatch even if the previous job is green.
+
+- **[Should] F3 — A2 contradicts the retained safety guard.** Acceptance line 83 requires the default path to “never `gh run list`”, but step 2 explicitly keeps `check_hosted_reconciler_in_flight`; its command is `gh run list` (`wave_reconcile.py:81–89`), invoked for live local runs at `:2192–2195`. Fix A2 to say “no hosted polling/grace lookup in merge-cleanup; retain the local writer's one safety query.” The monkeypatched wait control alone does not establish absence of all lookups. Keep exit-8 behavior; `merge_cleanup.py:614–618` already prints the code and tail of the refusal message.
+  Observed input: a normal live local `wave_reconcile.py --pr N` with a GitHub origin and the retained workflow file.
+  Affected scope: A2's acceptance wording and verification boundary, not removal of the single-writer guard.
+  Falsifier: default merge-cleanup skips `wait_for_hosted_reconcile`, while its local child still makes the safety query and refuses an active run with exit 8.
+
+- **[Should] F4 — Include the batch consumer guidance in the doc edits.** Step 3 changes the full sweep command to a hosted dispatch but leaves its renderer saying “Run it in a throwaway clone” (`batch_record.py:185–186`). Step 5 misses current skill instructions requiring the printed local sweep (`merge-cleanup/SKILL.md:22,416–421,435–437`). Update these texts to distinguish a pending full sweep deferred to promotion from a completed sweep, and explain recording `verdict: deferred` with its reason until evidence exists (`batch_record.py:317–334`). The CLI also displays the command (`merge_cleanup.py:1733`), so the plan's “Only batch_record.py:186 reads it” claim at line 55 is inaccurate. No machine parser dependency was identified in the bounded searches of merge-cleanup and the named test wrapper; do not label that a repository-wide exhaustive result.
+
+- **[Pass] Q1, bounded source answer:** PR discovery uses `gh api --paginate --slurp` with `per_page=100`, compares merge dates to the workflow's introduction, and checks every returned merged PR against receipts (`wave_reconcile.py:1298–1345`). Direct recovery traverses first-parent history after `DIRECT_COMMIT_CUTOVER`, excluding PR merge SHAs, express receipts and bot-authored commits (`:1387–1419`); it is not literally every direct push. Qualification runs one selected gate for the pending union (`:693–707`), not N runs. Publisher `retry_argv` preserves all targets without a fixed list cap (`hosted_lane_publish.py:139–166`); an AST-only probe with targets 1–25 printed `25 receipt targets retained: True` and `retry flags: ['--only-receipted', '--skip-pull']`, exit 0 (`python3 -` extracting that function, calling `retry_argv('--catch-up --gate --qualify', [str(x) for x in range(1,26)], [])`). This is not a live 25-landing run. The important drop is the deliberate racer deferral in F2, not a 20-item pagination limit.
+
+- **[Pass] Q2–3, source answer:** the local writer pulls upstream before reconciliation (`wave_reconcile.py:2197–2198`), and its changes flow into the existing commit/push durability step (`merge_cleanup.py:775–809`). The hosted in-flight refusal is appropriate for the proposed single-writer contract. Keeping both calls syntactically in `run_post_merge_reconcile` satisfies the named AST condition (`test/gh549-work-events.sh:649`); gh674 calls `wait_for_hosted_reconcile` directly (`test/gh674-merge-cleanup-hosted-lookup.sh:52–53,80–81,99–100`) and needs no opt-in env merely to keep those cases active. Preserve its helper semantics.
+
+- **[Pass] Q5, source answer:** comparing metadata only when present preserves absent-key historical behavior. `qualification_summary` returns the same mode/width/failure metadata for both Small and full paths (`wave_reconcile.py:524,537,549`), and the retained receipt writer uses that metadata and its failure-list length (`:707,731–735`). No different producer of these qualification keys was found in the examined writer/reader path. Actual legacy and tampered receipt replay remains **[Unverified — needs clone run]** as planned; do not claim those controls passed here.
+
+- **[Nit] Q6–7:** the reviewed HOW-TO-USE / WORKTREE-SAFETY text search found no additional cadence statements; `hosted_lane_report.py:104–107` says “next run,” which remains accurate but can be clarified as the next dispatch. Keep the historical ci.yml cost rationale unless explicitly updating it for the new procedural pre-promotion witness. The relay's Definition of Done is still a placeholder; this review used the canonical plan's Acceptance plus the Producer's seven questions.
+
+**Evidence limits:** graph project `XYZ-forge` points to the main checkout, generation `2026-09-01T15:54:30Z`, not this worktree. Graph search returned no candidate symbols; coverage marked the relevant paths changed/not tracked/missing, so all material claims above use current local source fallback. No git command, suite, pytest or executable fixture was run. No live GitHub/branch-protection assertions are made. All whole-file-plan findings are above; clone-run and hosted-runtime verification remain outstanding. Reversibility is Costly for the qualification boundary; the existing trigger rollback is useful, but does not repair an unqualified promotion after the fact.
+
+Handing off to Producer (claude-a) — address F1–F4 in the canonical plan, disposition each finding here, then request Round 2 review.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
