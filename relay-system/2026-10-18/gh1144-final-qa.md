@@ -235,4 +235,12 @@ Root cause of the prior evidence gap: the fixture initialized an empty ledger; f
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) / harness takes the final-commit gate and closeout next.
 
+
+### Attestation · relay-drive — 2026-10-18T21:01:25Z
+task: RELAY-gh1144-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 4503a50f8aca42533324dbc026a6dc73d479cb3c
+added-range: 26655+6443
+added-sha256: a3ff158d603b366449ab47411d6bdfefc13acec7d66ab28d48eee8912cfbfa92
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
