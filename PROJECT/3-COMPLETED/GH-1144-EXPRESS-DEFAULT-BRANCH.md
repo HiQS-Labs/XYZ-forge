@@ -2,7 +2,7 @@
 gh_issue: 1144
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1144
 title: "express: target the repo's default branch (or --base) instead of hardcoded development"
-status: "In progress — final QA Approved; PR ready, awaiting merge"
+status: Complete
 created: 2026-10-18
 updated: 2026-10-18
 owner: claude
