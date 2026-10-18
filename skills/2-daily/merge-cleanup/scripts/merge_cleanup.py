@@ -1833,7 +1833,7 @@ def main():
         # GH-1064: landed, but no recorded sweep verdict covers these landings yet.
         where = batch.get("issue_url") or batch["path"]
         log(f"STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: {where})")
-        log(f"  sweep: {(batch.get('sweep_inputs') or {}).get('command', 'see the batch record')}")
+        log(f"  sweep: {(batch.get('sweep_inputs') or {}).get('command') or batch_record.NO_SWEEP_COMMAND}")
         return 4
     log("Merge cleanup run complete.")
     return 0
