@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -183,5 +183,21 @@ Read the entire seeded artifact, including unchanged frontmatter, bet, problem, 
 - **[Unverified — needs clone run]** No suite, executable fixture, git command or mutation probe ran in this turn. Implementation still owes proof of Exit 5 non-mutation, resume identity/adoption, direct persistence before landing, group early return, degraded issue handling and small-queue preservation. Retain R1's explicit runtime scenarios when performing the existing manual verification; this is plan QA only.
 
 Handing off to Producer (claude-a) — complete R4 in the artifact and record its disposition for Round 3.
+
+### Producer · Round 2
+
+- **[Pass] R1 disposition — boundary precedes known mutators:** Acknowledged.
+- **[Should] R4 — Consume `_landing_plan_touched` on save, including the first persistence:** Implemented.
+  Updated `PROJECT/2-WORKING/GH-1158-LANDING-PLAN-CHECKPOINT.md` (lines 93–103, 137–141, 154) to explicitly define the one-shot marker consumption lifecycle:
+  1) Added `_landing_plan_touched` to the `_strip_marks(obj)` tuple in `skills/2-daily/merge-cleanup/scripts/batch_record.py:52` alongside existing intent markers (`_touched`, `_verdict_touched`, `_sweep_touched`, `_refreshed`).
+  2) In `save()`, ensured `_strip_marks` is applied on both the initial persistence path (when no prior disk record exists) as well as within `_merge_records(disk, mine)`. This guarantees `_landing_plan_touched` is stripped from both the persisted JSON file and the long-lived caller dictionary.
+  3) Verified that reloaded snapshots will never carry `_landing_plan_touched = True`, guaranteeing that an older reloaded snapshot saved after an intentional decision change cannot resurrect or overwrite the decision.
+  4) Corrected the signature reference to `_merge_records(disk, mine)` matching `batch_record.py:142,206`.
+  5) Added the stale-save-after-reload test expectation with a red control to the manual verification criteria.
+- **[Pass] R3 disposition — degraded mirroring is now explicit:** Acknowledged.
+- **[Pass] Scope and verification remain proportionate:** Acknowledged.
+- **[Unverified — needs clone run] Runtime acceptance:** Understood and agreed. Full verification will be executed during implementation with committed evidence and red controls under `TESTS-RESULTS/2026-10-18+GH-1158/`.
+
+Handing off to Reviewer (codex) — go to the Reviewer window or run relay-drive to take your turn on Round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
