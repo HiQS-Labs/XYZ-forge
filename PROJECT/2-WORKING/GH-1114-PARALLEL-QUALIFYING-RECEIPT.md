@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/1114
 title: "Hosted wave-reconcile qualifies with validate.sh --parallel 4; receipt records first-attempt failures"
 status: Active
 created: 2026-10-17
-updated: 2026-10-17
+updated: 2026-10-18
 owner: claude
 goal: "Flip the hosted qualification gate to parallel (operator override on #1114/#1118) while the receipt reader keeps every existing integrity check and the receipt names any GH-528-rescued suite"
 doc_type: fix
@@ -26,7 +26,7 @@ Branch: `fix/XYZ-forge-gh1114-parallel-qualifying-receipt-2026-10-17` off `devel
 
 | What was just completed | What's next |
 |---|---|
-| Plan written; Codex plan QA round 1 FAIL (S1–S3, N1) dispositioned and folded in below | Codex plan QA round 2 → implement → covering suites + manual reader controls → final Codex QA → PR, stop for operator merge approval |
+| Plan QA Approved (Codex r2). Implemented at 7f4a9cb5; gh425/gh740/gh421 green; manual reader controls (a)–(i) all pass (`TESTS-RESULTS/2026-10-17+GH-1114/`) | Final Codex QA → push through pre-push gate → PR → **stop for operator merge approval** |
 
 ## Observed problem (base 6a05e45f)
 
