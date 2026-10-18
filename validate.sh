@@ -705,9 +705,10 @@ FAILED=()
 #
 # WHAT DID NOT CHANGE, and must not: `ci-local.sh` does NOT call this script. It parses the TESTS
 # array and runs each suite in its own sequential loop, and it is the path that writes the gate
-# record. So "sequential is the only form that qualifies a claim" (GH-528 Phase 2, GH-509) is still
-# true and is still what the record attests. Likewise the macOS promotion boundary in ci.yml pins
-# `--sequential` explicitly, so a re-armed boundary cannot silently promote on parallel evidence.
+# record. So "sequential is the only form that qualifies a *local* claim" (GH-528 Phase 2, GH-509) is
+# still what the record attests. The post-push macOS boundary on main in ci.yml pins `--sequential`.
+# The hosted pre-promotion qualification (wave-reconcile.yml --promotion, GH-1127) runs `--parallel 4`
+# by operator override (#1114/#1118) and records mode, width and first-attempt failures in its receipt.
 # Tiers 1 and 2 are pre-push speed, NEVER promotion evidence (GH-35 / GH-509).
 #
 # THE FALLBACK IS ANNOUNCED, NEVER SILENT. A gate that quietly downgrades itself teaches you to trust

@@ -113,9 +113,14 @@ test edits, kernel surfaces — runs the full suite. `--auto` classifies a local
 Tiers 1 and 2 are pre-push speed and are labelled NOT promotion evidence; only `ci-local.sh`'s
 sequential full run qualifies (GH-509).
 
+**GH-1127 (2026-10-18, decision #1131): no hosted run per merge.** Development merges reconcile locally
+(merge-cleanup → `wave_reconcile.py --pr N`). `wave-reconcile.yml` is dispatch-only; before each promotion
+it runs `--promotion`, which always uses the full registry (`validate.sh --parallel 4`, #1134) on the
+development tip and qualifies every landing since the last receipt together (procedure: AGENTS.md
+**Promotion**). The GH-831 tiers below remain the classifier for a non-promotion `--qualify` run.
+
 **GH-831 (2026-09-25) made these three tiers for what qualifies a landing.** The push hook is unchanged.
-After a merge, the hosted reconcile (`wave-reconcile.yml`) qualifies each landing with **one** run,
-picked by classifying the landing's changes at the tested commit:
+A non-promotion `--qualify` run picks **one** gate by classifying the landings' changes at the tested commit:
 
 - **Small** — docs, the ledger dumps (`releases.*`, `harnesses.*`) and non-core skill files (tier 1):
   `validate.sh --sequential --subsystem small`, the PDDA, PRS and canary suites plus the PDDA gate
@@ -137,8 +142,9 @@ Run one gate at a time on a host: a concurrent relay turn, second gate or poller
 
 **What still qualifies a claim is unchanged.** `./validate.sh` in either mode is a self-check;
 `ci-local.sh` is the run that writes the evidence record, it does **not** call `validate.sh`, and it
-stays sequential. The macOS promotion boundary in `ci.yml` pins `--sequential` explicitly for the same
-reason. GH-528 Phase 2 (multi-width stress evidence) is still **owed** — the flip was an operator
+stays sequential. The post-push macOS boundary on main in `ci.yml` pins `--sequential` explicitly for the
+same reason. The hosted pre-promotion qualification is the parallel exception (#1134 operator override;
+its receipt records `mode`, `width` and any first-attempt failures). GH-528 Phase 2 (multi-width stress evidence) is still **owed** — the flip was an operator
 decision taken with that evidence outstanding, mitigated by the announced fallback rather than
 discharged. See `PROJECT/2-WORKING/GH-528-TEST-SUITE-RECALIBRATION.md`, #509 and #544.
 

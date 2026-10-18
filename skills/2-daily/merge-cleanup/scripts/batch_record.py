@@ -183,7 +183,12 @@ def script_block(rec: Dict[str, Any]) -> str:
         lines.append("- Repaired conflict sites: " + (
             "; ".join(f"#{n}: {', '.join(fs)}" for n, fs in conflicts.items()) or "none"))
         lines.append(f"- Gate: `bash {s['gate']}` ({s['gate_reason']})")
-        lines.append(f"- Run it in a throwaway clone: `{s['command']}`")
+        if s.get("deferred"):
+            lines.append(f"- Full sweep deferred to the promotion dispatch (#1131): `{s['command']}` — record "
+                         "`verdict: deferred` with that reason until the dispatch's receipt exists, or `clean` "
+                         "naming the hosted run")
+        else:
+            lines.append(f"- Run it in a throwaway clone: `{s['command']}`")
     v = rec.get("verdict")
     lines += ["", "## Sweep verdict"]
     if not landed(rec):
@@ -305,11 +310,17 @@ def finalize_sweep_inputs(rec: Dict[str, Any], primary: Path, origin: str) -> No
         if files:
             conflicts[str(n)] = files
     gate, reason = _gate(primary, [x for x in oids if x[1]]) if not missing else (FULL_GATE, "merge commit missing")
+    # GH-1127 / #1131: the full registry runs hosted, once, at the pre-promotion dispatch, never as
+    # a local rerun per batch. The Small list stays a cheap local sweep.
+    deferred = "--subsystem small" not in gate
     rec["sweep_inputs"] = {
         "range": rng,
         "shared_files": {f: sorted(prs) for f, prs in sorted(owners.items()) if len(prs) > 1},
-        "conflict_sites": conflicts, "gate": gate, "gate_reason": reason,
-        "command": f"git clone --no-local {shlex.quote(str(primary))} <tmp> && cd <tmp> && bash {gate}",
+        "conflict_sites": conflicts, "gate": gate, "gate_reason": reason, "deferred": deferred,
+        "command": (f"gh workflow run wave-reconcile.yml --ref {rec.get('integration') or 'development'}"
+                    "  # full registry, hosted, once before promotion (#1131); no local full rerun"
+                    if deferred else
+                    f"git clone --no-local {shlex.quote(str(primary))} <tmp> && cd <tmp> && bash {gate}"),
     }
     save(rec)
 

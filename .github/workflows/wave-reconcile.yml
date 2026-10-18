@@ -1,13 +1,13 @@
 name: Wave reconciliation
 
+# GH-1127 / decision #1131: ON DEMAND ONLY. Development merges reconcile LOCALLY (merge-cleanup runs
+# wave_reconcile.py --pr N); this hosted lane no longer fires per merge or on a schedule. Dispatch it
+# on `development` once before every development -> main promotion: `--promotion` qualifies every
+# receipt-less landing since the last receipt together, with the FULL registry on HEAD, and HEAD
+# itself when nothing is pending. Procedure: AGENTS.md "Promotion". Rollback: restore the
+# `pull_request: closed` (development) and `schedule` triggers; the PR branches below are kept for it.
 on:
-  pull_request:
-    types: [closed]
-    branches: [development]
   workflow_dispatch:
-  # Recover missed close events from committed lifecycle state, including queue overflow.
-  schedule:
-    - cron: '23 */6 * * *'
 
 concurrency:
   group: wave-reconcile
@@ -65,7 +65,7 @@ jobs:
           if [ "$EVENT_NAME" = pull_request ]; then
             ARGS=(--pr "$PR_NUMBER" --catch-up --gate --qualify)
           else
-            ARGS=(--catch-up --gate --qualify)
+            ARGS=(--catch-up --gate --qualify --promotion)
           fi
           echo "RECONCILE_ARGS=${ARGS[*]}" >> "$GITHUB_ENV"
           python3 utils/py/wave_reconcile.py "${ARGS[@]}" 2>&1 | tee "$RUNNER_TEMP/reconcile.log"

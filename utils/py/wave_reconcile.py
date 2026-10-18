@@ -582,7 +582,14 @@ def qualification_receipt_matches(repo_root, entry, meta):
             expected = entry.get("suites")
             if entry.get("tier") != 2 or expected != small_suites_at(repo_root, tested):
                 return False
-        qualification_summary(raw, tested, expected)
+        _, meta_seen = qualification_summary(raw, tested, expected)
+        # GH-1127 (Codex #1124 review): metadata a receipt claims must be what its telemetry shows.
+        # Keys a receipt lacks keep their historical meaning (pre-#1134 receipts carry none).
+        for key in ("mode", "width", "first_attempt_failures"):
+            if key in entry and entry[key] != meta_seen[key]:
+                return False
+        if "retries" in entry and entry["retries"] != len(meta_seen["first_attempt_failures"]):
+            return False
         for older, newer in ((landing, tested), (tested, "HEAD")):
             if subprocess.run(["git", "merge-base", "--is-ancestor", older, newer],
                               cwd=repo_root, capture_output=True, check=False).returncode:
@@ -639,7 +646,22 @@ def select_qualification_gate(clone, metas, env):
         return QUALIFICATION_GATE, None, f"classification failed: {exc}"
 
 
-def qualify_landings(repo_root, metas, journal):
+def promotion_gate(pending, promotion, head_meta, select):
+    """GH-1127: what a qualification run covers and which gate it runs.
+
+    Ordinary qualification (promotion=False) is unchanged: nothing pending → no run; otherwise the
+    tier selector picks Small or full. A promotion run always tests HEAD with the full registry: an
+    empty pending set qualifies HEAD itself as a direct-commit landing, and the tier selector is not
+    consulted. `head_meta` and `select` are callables so neither runs unless needed.
+    Returns (pending, (gate, expected, reason) | None).
+    """
+    if not promotion:
+        return pending, (select() if pending else None)
+    pending = pending or [head_meta()]
+    return pending, (QUALIFICATION_GATE, None, "promotion (#1127): full registry")
+
+
+def qualify_landings(repo_root, metas, journal, promotion=False):
     """Produce retained provenance in the existing closeout transaction, after a real gate run."""
     from gate_env import gate_env
     from proc_group import run_bounded
@@ -647,10 +669,12 @@ def qualify_landings(repo_root, metas, journal):
     previous = committed_qualifications(repo_root)
     pending = [meta for meta in metas if not any(
         qualification_receipt_matches(repo_root, entry, meta) for entry in previous)]
-    if not pending:
-        return
+    if not pending and not promotion:
+        return  # ordinary --qualify: unchanged early return, before any further git or cleanliness work
     check_porcelain_cleanliness(repo_root)
     tested = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip()
+    pending, _ = promotion_gate(pending, promotion, lambda: fetch_commit_metadata(repo_root, tested),
+                                lambda: None)
     for meta in pending:
         landing = (meta.get("mergeCommit") or {}).get("oid", "")
         if (meta.get("state") != "MERGED" or meta.get("baseRefName") != "development"
@@ -690,7 +714,8 @@ def qualify_landings(repo_root, metas, journal):
             before_config = command(["git", "config", "--local", "--list"], True).stdout
             command(["python3", "-c", "import pytest"])
             command(["npm", "ci"])
-            gate, expected, reason = select_qualification_gate(clone, pending, env)
+            _, (gate, expected, reason) = promotion_gate(
+                pending, promotion, lambda: None, lambda: select_qualification_gate(clone, pending, env))
             log(f"Qualifying {len(pending)} landing(s) in integrated snapshot {tested} with "
                 f"`{gate}` ({reason})")
             validation = command(["bash", *gate.split()])
@@ -2154,6 +2179,10 @@ def main():
     parser.add_argument("--qualify", action="store_true",
                         help="Run the tier-selected qualification gate (full --parallel 4, or the Small list) and retain integration evidence before gated closeout")
     parser.add_argument("--catch-up", action="store_true", help="Recover closed-issue drift from committed docs and manifest")
+    parser.add_argument("--promotion", action="store_true",
+                        help="GH-1127 pre-promotion qualification: always run the FULL registry on HEAD "
+                             "(never the Small list); with nothing pending, qualify HEAD itself as a commit "
+                             "landing. Requires --catch-up --gate --qualify.")
     parser.add_argument("--only-receipted", action="store_true",
                         help="GH-740 publish retry: never run the suite — process only landings that already have a "
                              "committed, matching qualification receipt; defer recovered ones that do not (their own "
@@ -2163,6 +2192,8 @@ def main():
     args = parser.parse_args()
     if args.qualify and (not args.require_receipts or args.dry_run or args.offline or args.allow_dirty or args.pre_merge):
         parser.error("--qualify requires --gate and a live, clean, non-preview post-merge checkout")
+    if args.promotion and not (args.catch_up and args.qualify):
+        parser.error("--promotion requires --catch-up --gate --qualify (it is the pre-promotion dispatch, #1127)")
     if args.only_receipted and not (args.catch_up and args.qualify):
         parser.error("--only-receipted requires --catch-up --qualify (it is the hosted publish step's bounded retry)")
 
@@ -2232,7 +2263,7 @@ def main():
                 # GH-842: catch-up records pending direct commits in `metadata` alongside the PRs.
                 landing_items.extend(key for key, meta in metadata.items() if key[0] == "commit" and meta.get("catchUp"))
             landing_items = list(dict.fromkeys((kind, str(value)) for kind, value in landing_items))
-            if args.qualify and landing_items:
+            if args.qualify and (landing_items or args.promotion):
                 for kind, value in landing_items:
                     if (kind, value) not in metadata:
                         metadata[(kind, value)] = (fetch_commit_metadata(repo_root, value) if kind == "commit"
@@ -2255,7 +2286,8 @@ def main():
                                 "its own run qualifies it")
                     landing_items = kept
                 else:
-                    qualify_landings(repo_root, [metadata[item] for item in landing_items], journal)
+                    qualify_landings(repo_root, [metadata[item] for item in landing_items], journal,
+                                     promotion=args.promotion)
             # A recovered batch can contain several closing PRs for one issue.
             # Qualify every landing, but let its newest known closer own all lifecycle
             # writes, including when that closer already has a committed receipt.
