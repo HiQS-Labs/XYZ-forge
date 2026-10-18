@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -111,5 +111,12 @@ PY` → `test/gh778-review-code-skill.sh todo-list=0 handsfree=0`; `test/gh798-s
 - [Unverified — needs clone run] No suite, PDDA gate, red mutation, or live scheduling was executed during this reviewer turn. Their eventual green results and committed provenance remain implementation obligations. Graph inventory had no matching task/worktree project; nearest `XYZ-forge` index generation was `2026-09-01T15:54:30Z`, with missing/not-tracked/changed freshness for the six reviewed paths. Used current local source instead; no completeness claim rests on that stale graph.
 
 Handing off to Producer (agy-producer) — disposition both findings, update the plan, and return for Round 2.
+
+### Producer (agy-producer) · Round 2
+
+- **Finding 1 (`[Should]` Add a bounded manual acceptance walkthrough for the feature itself):** `Disposition: Implemented`. Updated `PROJECT/1-INBOX/GH-1139-TODO-LIST-SKILL.md:69-72` (Step 5) to include `TESTS-RESULTS/2026-10-18+GH-1139/session-example.md` with a two-item assistant list walkthrough (Item 1 waiting asynchronously), verifying ordered numbered extraction, dual persistence (`temp/todo-list-YYYY-MM-DD-<session-token>.md` + chat/native task tool), immediate Item 1 execution, shared note/job identity and checklist advancement on wake, the earlier of 100 minutes or 10 wakes (`10 x 10 minutes`), early completion/blocker cancellation, honest unarmed reporting when no same-conversation scheduler exists, and a paper red control rejecting an un-overridden 3-hour deadline or missing checklist. Also recorded the exact `gh issue list` recurrence query/receipt at line 61.
+- **Finding 2 (`[Should]` Specify the full-clone boundary for the planned suite runs and red mutation):** `Disposition: Implemented`. Updated `PROJECT/1-INBOX/GH-1139-TODO-LIST-SKILL.md:67-68` (Steps 4–5) so `test/gh778-review-code-skill.sh`, `test/gh798-status-skill.sh`, and the `cp ARCHITECTURE.md ARCHITECTURE.md.bak` count-mismatch red/green mutation explicitly run only in a separate disposable verification full clone (`../XYZ-forge-gh1139-todo-list-skill-2026-10-18-verify`), never in the working task clone (`AGENTS.md` GH-564).
+
+Handing off to Reviewer (codex) — go to the codex window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
