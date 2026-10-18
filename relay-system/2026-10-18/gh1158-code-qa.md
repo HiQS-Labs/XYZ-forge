@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -256,6 +256,29 @@ swept file: yes
   - Truthful source equivalence establishes that production modules have zero diff between tested runs and candidate commit `d81665f7`.
 
 Handing off to Reviewer (codex) — take your turn and review candidate commit 36736518.
+
+### Reviewer · Round 4 · codex
+
+VERDICT: PASS
+Basis: Ship — F2 and F5 are resolved by the active wrapper, retained mutation failures, and matching source hashes. No outstanding Blocker/Should findings. Approval is code QA; the harness's subsequent disposable-clone gate remains required.
+swept file: yes
+
+- Scope: read all seven Setup artifacts in full, including surrounding pre-existing production code and documentation. No additional pre-existing production defects identified. Graph tools (including project/generation and coverage tools) are unavailable in this session; direct source reads support this review, with no graph-completeness claim. No git commands, fixture execution, suites, or artifact/source edits were performed.
+- [Pass] **F2 resolved.** `verify-landing-plan-checkpoint.py:45-61` now invokes `merge_cleanup.main()` directly inside its own scan patch, retaining pruning/teardown stubs and exposing that active mock as `self.scan_mock`; there is no call to the inherited wrapper. `:81-102` supplies the candidate and enables `--marker`; `:105,132` assert zero scan entry and zero issue comments. `red-control-mutation.log:5-25,28-48` retains separate exit-1 failures at those precise assertions for early scan and marker dispatch. This closes the shadowed-mock and vacuous-marker gaps. Non-executing AST probe command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` (parse the verification file, enumerate calls in `run_main`, and parse both production modules); exit 0. Decisive output included `merge_cleanup.main` and no `super().run_main`/`LedgerFixture.run_main`; both production AST parses succeeded. These are static observations; mutation executions are producer receipts.
+- [Pass] **F5 resolved by content attribution.** `SUMMARY.md:6-12` records production/documentation/verification hashes; `provenance.jsonl:1,3-4` records verification and regression input hashes. Read-only probe command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` with `hashlib.sha256(Path(n).read_bytes()).hexdigest()` over all six named inputs; exit 0. Decisive output, all equal to the Producer's recorded values:
+  ```text
+  merge_cleanup.py 1341de26bb1108ef645fa66d82344b657db85f91b784f1beb0dcd3c92db088e7
+  batch_record.py 478c5939d248e24eded15ab57133181c6009f3b0f6cdc4f43bc89de1679a0486
+  SKILL.md a1f981b3e6eb22748eacd5ab7e0190eba168203d679a263d7aadfc8e1cddcc00
+  gh436-merge-cleanup.py 6b4f201ddc17ec1f31526ef5784564182fd4f89ae6361aa350e8cafb4223a926
+  gh534_phase_c_tests.py f6e8e65a15d7eef53629554f04b851b073300822a9b16db2430010590369a72f
+  verify-landing-plan-checkpoint.py 0ce73bf972ab40f51b97010e18ff17c9f8265f77560ebe895c80bfca4375f7a8
+  ```
+  Content hashes tie the recorded runs to these reviewed inputs without requiring the receipt-containing commit to name itself. This checks the recorded mapping, not independent execution of those runs.
+- [Pass] **Core contracts remain intact on whole-file review.** Early refusal and group exit precede Phase 0/scanning (`merge_cleanup.py:1593-1672`); resume checks identical recorded membership (`:1615-1624`); full-discovery dependency extraction and transitive deferral preserve the checkpoint queue (`:1763-1789`); direct decisions persist through `select_batch` (`:1958-1975`). Intent marking, stale-plan preservation and stripping on both persistence paths remain at `batch_record.py:49-57,189-215,310-320`. Flags, Exit 5, resume and examples remain documented at `SKILL.md:229-243,595-600`. F1/F3/F4 remain resolved as established in earlier rounds.
+- [Unverified — needs clone run] No runtime checks were run here, per the explicit reviewer boundary. `provenance.jsonl:1-4` reports 12/188/111 green checks and three witnessed red controls; the harness must run its gate after this turn. The retained test 12 exercises one-hop prerequisite deferral (`verify-landing-plan-checkpoint.py:342-370`); multi-hop propagation was measured by Round 3's pure probe, not by that integration case.
+
+Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and subsequent gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
