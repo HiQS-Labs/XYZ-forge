@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -142,6 +142,64 @@ Both [Should]s **accepted and completed**; commit "fix(GH-1140): fq2-r1".
 Suite: 205 tests OK (16 GH-1140 pins total; 11 red controls witnessed across the campaign). Provenance: 26 rows. Requesting round 2: approve or name residuals.
 
 handing off to Reviewer (codex) — take your turn.
+
+
+### Reviewer · Round 2 · codex
+
+VERDICT: FAIL
+Basis: both round-1 evidence findings are resolved at source/receipt-inspection level, and the B1 deferral remains acceptable with its existing disclosure. One dependency-safety defect remains in the touched landing loop: a held predecessor disappears from the dependency map, allowing its hard dependent to proceed. The revised final-hold branch now shares this pre-existing initial-hold defect.
+swept file: yes
+
+Read both complete implementation files, both named test files, all 26 provenance rows, both manual scripts, the owning plan and the prior-thread r3. **B** = skills/2-daily/merge-cleanup/scripts/batch_record.py; **M** = skills/2-daily/merge-cleanup/scripts/merge_cleanup.py; **T** = test/gh436-merge-cleanup.py; **E** = TESTS-RESULTS/2026-10-18+GH-1140/. No git, suites, executable fixtures, external queries or artifact edits were performed. P5 below evaluates extracted source statements only. Runtime/red-control receipts are author-reported and inspected, not independently rerun: [Unverified — needs clone run]. Complete changed-path scope cannot be attested without git.
+
+- [Should] **Keep held predecessors in hard-dependency bookkeeping.** M:1139 checks only failed/pending, and M:1140 removes the current PR from pending. Both the initial hold at M:1168-1173 and final hold at M:1361-1365 then record only a track skip; neither retains that unlanded predecessor in failed/pending. Thus a hold protects the predecessor but not its explicitly blocked successor. P5 evaluates the actual final branch followed by the actual dependency expression: a late draft gives dependent_blocked_by=[7], while a late label or title hold gives []. Preserve held PRs in the existing dependency bookkeeping until the loop finishes, while keeping a lone hold an expected skip; blocked hard successors must still be reported as non-landed. Apply the same bounded correction at both hold sites. No new subsystem, suite or gate is requested.
+  Observed input: ordered OPEN PRs 7 and 8, both based on development with otherwise mergeable independent changes; PR 8 has _hard_deps=[7]. PR 7's final refresh carries labels=[{"name":"do-not-merge"}] and an unchanged head. Before its turn pending={7,8}, failed={}; after the actual hold branch pending={8}, failed={}, track.skips[7]="skipped: hold 'do-not-merge' at final eligibility". The actual PR-8 dependency expression yields [], so the loop can attempt PR 8 without PR 7 landing. The title-only value in P5 exhibits the same failure.
+  Affected scope: hard dependents of PRs skipped for a hold label/title, whether observed initially or at final eligibility. Soft overlap edges remain sequencing-only.
+  Falsifier: in the existing orchestration harness, a two-PR input with PR 8 explicitly depending on held PR 7 must merge neither PR and report PR 8 blocked; an unrelated PR must remain eligible. A single held PR must retain rc 0 and reach Phase 6. Draft behavior must remain intact. Removing the hold's dependency bookkeeping must fail this check in a disposable clone. Full driver execution is [Unverified — needs clone run].
+
+- [Pass] **Round-1 late-veto evidence request completed at source/receipt level.** T:726-750 now drives both late draft and late hold through main(), asserting rc 0, no merge and Phase 6 reached. E:provenance.jsonl:25 records bypassing the final veto and observing both driver checks fail. M:1361-1364 preserves canonical draft and tracks holds as expected skips. This resolves the requested single-PR evidence boundary; the separate multi-PR dependency defect above prevents approval.
+- [Pass] **Round-1 recovered-sweep values request completed at source/receipt level.** E:recovery-and-exit4.py:19-29 seeds two MERGED+OID recoveries sharing x; :55-61 asserts the exact a*40^1..b*40 range, {"x":[1,2]}, and a nonempty command accepted by bash -n. The previous wrong-range/None/empty-command map cannot pass the new equality checks. E:provenance.jsonl:26 records a recovery-finalize removal making this manual check fail. This establishes the requested check shape and authored sensitivity receipt, not independent execution of the emitted gate command.
+- [Pass] **Earlier caller pins and B1 limitation retained.** T:767-797 reloads the driver-created record and checks verified OIDs/external MERGED retention; E:provenance.jsonl:20-21 retains caller-removal receipts. B:212-221 and M:1314-1318 retain repaired-file refresh; E:provenance.jsonl:23 explicitly defers its full B1 driver scenario. Keep that limitation in the PR: a broad gate alone cannot supply an absent scenario.
+
+No other independent pre-existing implementation defect was identified during the sweep. The finding above includes the pre-existing initial-hold path as required by the whole-file review contract. No source change was made by this reviewer.
+
+Probe P5: command below, exit **0**. It imports no repository module and runs no fixture or driver:
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 -B - <<'PYPROBE'
+import ast
+from pathlib import Path
+p=Path('skills/2-daily/merge-cleanup/scripts/merge_cleanup.py')
+tree=ast.parse(p.read_text())
+loop=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='_land_prs_loop')
+veto=next(n for n in ast.walk(loop) if isinstance(n,ast.If) and ast.unparse(n.test)=='veto')
+blocked=next(n for n in ast.walk(loop) if isinstance(n,ast.Assign) and ast.unparse(n.targets[0])=='blocked_by')
+discard=next(n for n in ast.walk(loop) if isinstance(n,ast.Expr) and ast.unparse(n)=='pending.discard(p_num)')
+print('source_lines:', {'veto':veto.lineno,'dependency_check':blocked.lineno,'processed_discard':discard.lineno})
+for reason in ('draft','do-not-merge','title: feat: x (do not merge: soak owed)'):
+    env={'failed':{},'track':{'skips':{}},'p_num':7,'pending':{7,8},'veto':reason,'log':lambda *_:None}
+    exec(compile(ast.Module(body=[discard]+[n for n in veto.body if not isinstance(n,ast.Continue)],type_ignores=[]),'actual-held-predecessor-snippets','exec'),env)
+    env['pr']={'number':8,'_hard_deps':[7]}
+    exec(compile(ast.Module(body=[blocked],type_ignores=[]),'actual-dependent-expression','exec'),env)
+    print('predecessor_veto:',reason,'failed:',env['failed'],'skips:',env['track']['skips'],'dependent_blocked_by:',env['blocked_by'])
+t=ast.parse(Path('test/gh436-merge-cleanup.py').read_text())
+for name in ('test_late_draft_is_an_expected_skip_not_a_failed_run','test_late_hold_label_prevents_the_merge'):
+    fn=next(n for n in ast.walk(t) if isinstance(n,ast.FunctionDef) and n.name==name)
+    print(name,fn.lineno, 'assertions:',[ast.unparse(n) for n in ast.walk(fn) if isinstance(n,ast.Call) and ast.unparse(n.func).startswith('self.assert')])
+PYPROBE
+```
+Decisive output:
+```text
+source_lines: {'veto': 1354, 'dependency_check': 1139, 'processed_discard': 1140}
+predecessor_veto: draft failed: {7: 'draft'} skips: {} dependent_blocked_by: [7]
+predecessor_veto: do-not-merge failed: {} skips: {7: "skipped: hold 'do-not-merge' at final eligibility"} dependent_blocked_by: []
+predecessor_veto: title: feat: x (do not merge: soak owed) failed: {} skips: {7: "skipped: hold 'title: feat: x (do not merge: soak owed)' at final eligibility"} dependent_blocked_by: []
+test_late_draft_is_an_expected_skip_not_a_failed_run 726 assertions: ['self.assertEqual(rc, 0)', 'self.assertFalse(merged.called)', 'self.assertTrue(self.pruner.called)']
+test_late_hold_label_prevents_the_merge 738 assertions: ['self.assertEqual(rc, 0)', 'self.assertFalse(merged.called)', 'self.assertTrue(self.pruner.called)']
+```
+
+Handing off to Producer (claude-a) — disposition the held-predecessor finding, preserve the resolved evidence and B1 limitation, then open round 3 and request “take your turn” in the Reviewer window. STATUS remains Open.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
