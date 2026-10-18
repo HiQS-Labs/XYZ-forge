@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -259,3 +259,7 @@ swept file: yes
 Handing off to Producer (operator): add the missing result-report acceptance contract and return for Round 3 review. Do not execute a campaign or add machinery.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+## Producer round 3 — result contract explicit
+
+Disposition: Accepted round-2 Should. Canonical plan steps 3/5 now explicitly name complete replay metadata, per-counterexample owner/disposition/evidence and backlink, bounded null conclusions and negative manual completeness controls. Read the current committed plan in full; its embedded earlier copy is historical. Grade all supplied issue requirements against the current plan; no campaign execution or new machinery.

@@ -60,12 +60,19 @@ count for Oct 4–18 versus Sep 20–Oct 4; do not claim growth or zero incident
 3. Write the skill and three pointers. Explicit suitability, hypotheses/oracles, known-failing
    and clean controls, concrete budgets/stops, isolated effects, reproducible replay using the
    same predicate, duplicate classes, severity and separately authorized remediation.
+   Retain exact inputs/corpus snapshots, source/tool versions, sanitized environment, outputs
+   and relevant timing; a seed alone cannot replay stateful/concurrent behavior. Require an
+   accountable owner, disposition and retained evidence link for every counterexample, plus a
+   return link to Radar tracking context or an existing results issue. Accept honest null runs:
+   state exercised/excluded/unresolved coverage and never infer class eradication.
    Require individual approval for every new CI test/case/assertion/parametrization.
    Preserve #1131 and prohibit automatic fixes/push/merge/deploy/schedules.
 4. Include a source-grounded HELD pilot for #1138 stale batch state: #1140/#1136 excluded;
    structured adapter missing, future separately approved work. No invented argv semantics.
 5. Existing skill quick_validate, manual source/link and consumer-path review, deterministic
-   PDDA gate, final independent Codex QA (three-round cap). Record evidence under
+   PDDA gate, final independent Codex QA (three-round cap). Manual omission review must reject
+   seed-only stateful replay, dispositions without evidence/backlinks, and clean reports missing
+   coverage limits or claiming eradication; accept complete bounded reports. Record evidence under
    TESTS-RESULTS; no new tests, cases, fixtures, scripts, registries or runtime changes.
 6. Push through installed docs hook; open DRAFT PR to development and verify remote SHA and
    exact-head hosted statuses. Distinguish smoke/skipped/full qualification. No full suite,
