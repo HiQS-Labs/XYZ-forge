@@ -1,0 +1,17 @@
+PASS  [base] probe entered on sample 3
+PASS  [base] classify() finished while the probe was still held
+PASS  [base] label is timeout-unclassified with the reported detail  [('timeout-unclassified', 'live sampling never established a safe idle window for the network probe [cpu=0.00s/s, samples=3, worktree-progress=no]')]
+PASS  [base] sampler thread finished
+PASS  [base] no in-flight sample: classify() returns  [('timeout-idle-unknown', 'no CPU or file growth was observed and no established connection was visible; without a positive in-flight signal the cause remains unknown [cpu=0.00s/s, samples=3, worktree-progress=no]')]
+NOTE  [base] exception-before-probe still yields timeout-unclassified (attempted=False) — honest label for missing evidence; not covered by GH-1126
+ALL [base] RACE CONTROLS PASS
+rc=0
+PASS  [candidate] probe entered on sample 3
+PASS  [candidate] classify() is blocked while the probe is held
+PASS  [candidate] classify() completes after release
+PASS  [candidate] label is timeout-idle-unknown  [('timeout-idle-unknown', 'no CPU or file growth was observed and no established connection was visible; without a positive in-flight signal the cause remains unknown [cpu=0.00s/s, samples=3, worktree-progress=no]')]
+PASS  [candidate] sampler thread finished
+PASS  [candidate] no in-flight sample: classify() returns  [('timeout-idle-unknown', 'no CPU or file growth was observed and no established connection was visible; without a positive in-flight signal the cause remains unknown [cpu=0.00s/s, samples=3, worktree-progress=no]')]
+NOTE  [candidate] exception-before-probe still yields timeout-unclassified (attempted=False) — honest label for missing evidence; not covered by GH-1126
+ALL [candidate] RACE CONTROLS PASS
+rc=0
