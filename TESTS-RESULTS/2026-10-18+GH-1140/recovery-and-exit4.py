@@ -41,4 +41,11 @@ print("(a) recovery:", a.get("status"), (a.get("merge_oid") or "")[:6], "/", b.g
 pending = batch_record.find_unfinished(Path(tmp), "ex/ample", "development", [], need_qa=True)
 b_ok = pending is not None and batch_record.qa_pending(pending)
 print("(b) exit-4 reachability after plain-rerun shape:", "->", "PASS" if b_ok else "FAIL")
-sys.exit(0 if (rec_ok and b_ok) else 1)
+# (c) GH-1140 r3: the recovered landing set must carry complete, runnable sweep inputs —
+# finalized by the recovery pass itself, not only by a landing loop that never ran here.
+disk2 = json.loads(path.read_text())
+s = disk2.get("sweep_inputs") or {}
+c_ok = bool(s.get("range")) and "shared_files" in s and "command" in s and "<tmp>" not in s.get("command", "<tmp>")
+print("(c) recovered sweep inputs:", {k: s.get(k) for k in ("range", "shared_files")}, "cmd-safe:", "<tmp>" not in s.get("command", "<tmp>"),
+      "->", "PASS" if c_ok else "FAIL")
+sys.exit(0 if (rec_ok and b_ok and c_ok) else 1)

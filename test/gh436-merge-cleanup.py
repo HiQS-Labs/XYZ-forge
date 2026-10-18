@@ -717,6 +717,72 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         self.assertEqual(rc, 0)
 
 
+    def _open(self, n, base="development", **over):
+        d = {"number": n, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40,
+             "headRefName": "feat/x", "baseRefName": base, "labels": [], "mergeCommit": None}
+        d.update(over)
+        return d
+
+    def test_late_draft_is_an_expected_skip_not_a_failed_run(self):
+        # GH-1140 final-QA r3: a PR that turns draft between initial and final eligibility keeps
+        # the canonical "draft" reason, so the loop's expected-skip filter (GH-789 F2) still
+        # applies: no merge, rc 0, Phase 6 reached — not exit 3 with teardown skipped.
+        rc, _, _, _, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+            prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}],
+            refresh_values=[self._open(7), self._open(7, isDraft=True)])
+        self.assertEqual(rc, 0)
+
+    def test_empty_queue_plain_rerun_surfaces_owed_qa_as_exit_4(self):
+        self._seed_qa_pending_batch()
+        rc, _, _, _, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+            prs=[])
+        self.assertEqual(rc, 4)
+
+    def test_new_batch_with_no_landings_cannot_mask_older_qa_debt(self):
+        # GH-1140 r1 extension: a freshly created 2+ batch that lands nothing must not hide an
+        # older QA-pending batch at final status.
+        self._seed_qa_pending_batch()
+        rc, _, _, _, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+            prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""},
+                 {"number": 8, "baseRefName": "development", "title": "t", "files": [], "body": ""}],
+            refresh_values=[self._open(7, isDraft=True), self._open(8, isDraft=True)])
+        self.assertEqual(rc, 4)
+
+    def test_landed_batch_records_the_verified_merge_oid(self):
+        # GH-1140/#1084 wiring: the driver records the OID execute_pr_merge verified (the
+        # confirmation re-fetch only fills a gap — its mock here returns no mergeCommit).
+        import batch_record
+        rc, _, _, _, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+            prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""},
+                 {"number": 8, "baseRefName": "development", "title": "t", "files": [], "body": ""}])
+        self.assertEqual(rc, 4)  # landed, QA pending — the GH-1064 contract
+        recs = sorted(batch_record._dir(Path(self.primary), "").glob("batch-*.json"))
+        self.assertEqual(len(recs), 1)
+        disk = json.loads(recs[0].read_text())
+        for n in (7, 8):
+            self.assertEqual(disk["outcomes"][str(n)]["status"], "merged")
+            self.assertEqual(disk["outcomes"][str(n)]["merge_oid"], "f" * 40)
+
+    def test_external_merged_pr_is_recorded_as_a_landing(self):
+        # GH-1140 wiring: a planned PR observed MERGED outside the run keeps its landing + OID.
+        import batch_record
+        rc, _, _, _, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+            prs=[{"number": 1, "baseRefName": "development", "title": "a", "files": [], "body": ""},
+                 {"number": 2, "baseRefName": "development", "title": "b", "files": [], "body": ""}],
+            refresh_values=[self._open(1, state="MERGED", mergeCommit={"oid": "a" * 40}),
+                            self._open(2), self._open(2), self._open(2)])
+        self.assertEqual(rc, 4)
+        recs = sorted(batch_record._dir(Path(self.primary), "").glob("batch-*.json"))
+        disk = json.loads(recs[0].read_text())
+        self.assertEqual(disk["outcomes"]["1"]["status"], "merged")
+        self.assertEqual(disk["outcomes"]["1"]["merge_oid"], "a" * 40)
+        self.assertEqual(disk["outcomes"]["2"]["merge_oid"], "f" * 40)
+
 class TestDanglingSymlinkPrune(unittest.TestCase):
     """Phase 6 prune missed two whole classes of dangling link (fixed 2026-09-05).
 
@@ -1142,6 +1208,20 @@ class TestBatchRecordStaleState(unittest.TestCase):
             disk = json.loads(open(rec["path"]).read())
             self.assertEqual(disk["planned"][0]["hard"], [])
             self.assertEqual(disk["planned"][0]["soft"], {})
+            self.assertEqual(disk["planned"][0]["files"], ["a", "b"])
+
+    def test_refresh_row_updates_repaired_files_with_intent(self):
+        # GH-1140/#1073 in-run shape: after a repair pushes a new head, the captured row is
+        # refreshed from the live file list and marked as an intentional write.
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = self._rec(tmp)
+            batch_record.refresh_row(rec, 1, ["a", "b"])
+            disk = json.loads(open(rec["path"]).read())
+            self.assertEqual(disk["planned"][0]["files"], ["a", "b"])
+            self.assertNotIn("_refreshed", disk["planned"][0])
+            batch_record.refresh_row(rec, 1, [])  # a failed lookup never blanks the row
+            disk = json.loads(open(rec["path"]).read())
             self.assertEqual(disk["planned"][0]["files"], ["a", "b"])
 
 
