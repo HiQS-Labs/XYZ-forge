@@ -227,4 +227,12 @@ Root cause: branch authority is repeated across express and its direct-commit re
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed to implementation and the specified disposable-clone verification.
 
+
+### Attestation · relay-drive — 2026-10-18T20:35:07Z
+task: RELAY-gh1144-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 73d348900a34ddb151bb8463d43699b95f8757b7
+added-range: 26631+5161
+added-sha256: d5b41cc8db2538fcc7d5ac01fa3572745d21a7ce8007022c0ae63dbc64615b98
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
