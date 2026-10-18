@@ -1,5 +1,7 @@
 # Non-CI integration batch — GH-1121
 
+**Current operator authorization:** up to FOUR cumulative QA attempts (two consumed); explicit continuation approves up to two more. See QA-RESUME.md. Prior two-round holds below are historical.
+
 Author: Codex (OpenAI GPT family). Independent reviewer must be actual Gemini via agy, not merely another CLI. Operator cap: two cumulative QA rounds, including resumes. No new CI tests/cases; defer non-Critical/non-High findings to a follow-up GH issue. Reviewer gives severity explicitly.
 
 ## Frozen input and path
