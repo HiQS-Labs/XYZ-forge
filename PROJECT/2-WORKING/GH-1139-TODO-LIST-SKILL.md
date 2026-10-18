@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Issue #1139 created, fresh task clone provisioned off `origin/development` (`4fd5dca809`), recon and rating completed. | Plan QA via Codex relay, admit accepted-start, implement `skills/2-daily/todo-list/SKILL.md` + `handsfree/SKILL.md` override clause + `ARCHITECTURE.md` index, run PDDA/skill gates, and run final Codex relay QA. |
+| Plan QA approved by Codex (`0d49a633af0f`), promoted to `2-WORKING`, admitted `--accepted-start` (`rmi-01M57TAW0AA2BSWT4BKPYND10X`), implemented `skills/2-daily/todo-list/SKILL.md`, `handsfree/SKILL.md` override clause, `ARCHITECTURE.md` index (`21`), and `session-example.md`. | Run disposable `-verify` full-clone red/green controls (`gh778`/`gh798`), PDDA docs gate (`pdda.sh run`), and `releases check`, commit `provenance.jsonl`, and run final Codex relay QA. |
 
 ## Observed Problem & Recon
 
