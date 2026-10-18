@@ -25,7 +25,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved round 2 (Claude subagent reviewer; Codex unavailable, operator-directed). Promoted; accepted-start. | Implement steps 1–4, verify (step 5 + manual checks), then final QA. |
+| Implemented and verified (manual checks 17/17; gh436 green except one root-only env failure). Final QA: two Opus subagent reviews, both Approved round 1; advisories adjudicated below. | Full `ci-local.sh` gate in a disposable clone, then the PR against `development`; the operator runs a manual Codex relay QA on the PR. |
 
 ## Intake notes
 
@@ -149,3 +149,22 @@ then these are recorded as manual checks under `TESTS-RESULTS/2026-10-18+GH-1159
 - **effort 75:** about 60 lines across 2 scripts, 1 config file and 2 docs.
 - **Recurrence (2026-10-04..18 vs 2026-09-20..10-04):** no separate incident reports. The defect
   was found by recon, not by a field report, so the trend is unknown.
+
+## Final QA (round 1): two Claude Opus subagent reviewers, operator-directed; both Approved
+
+Codex relay QA follows manually on the PR, per the operator.
+
+- Acceptance review: Approved; all 4 acceptance items met. Advisory: the exit-4 terminal hint was
+  blank when no command was declared → **fixed** (`b6e33e1`). An old-record/`none` cosmetic case
+  → no change. `--ref development` is fixed → already accepted (disposition 6); stated in the PR.
+  `releases.*` bookkeeping → expected.
+- Edge-case review: Approved, no blocking defects. Advisories:
+  (1) Blank hint → fixed (same change).
+  (2) The `per_batch` command was ungrouped, so `;` could run outside the clone → **fixed**
+  (`( cmd )`), with a manual check that it parses under `bash -n`.
+  (3) `promotion` without a command printed a contradictory "declare `qualification`" → **fixed**
+  with a dedicated deferred-without-command line.
+  (4) The ref is fixed → accepted (disposition 6).
+  (5) An older harness refuses the key → **fixed**: one SKILL.md line names the old error.
+  (6) Add unit tests → Disposition: Rejected (out of scope: GH-831, and the operator chose manual
+  checks only).

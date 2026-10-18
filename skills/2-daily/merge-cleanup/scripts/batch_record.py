@@ -333,6 +333,9 @@ def script_block(rec: Dict[str, Any]) -> str:
         if s.get("full_suite") == "none":
             lines.append("- This repo declares no full suite (`qualification.full_suite: none` in "
                          "`.merge-cleanup.json`); the verdict records that and what did run")
+        elif not s.get("command") and s.get("deferred"):
+            lines.append("- Full sweep deferred to promotion, but this repo's `qualification` declares no "
+                         "`sweep_command`; record the verdict from the promotion run")
         elif not s.get("command"):
             lines.append(f"- {NO_SWEEP_COMMAND}")
         elif s.get("deferred"):
@@ -479,7 +482,7 @@ def finalize_sweep_inputs(rec: Dict[str, Any], primary: Path, origin: str,
         elif declared:
             command = f"{declared}  # full registry, hosted, once before promotion (#1131); no local full rerun"
     elif mode == "per_batch" and declared:
-        command = f"{clone} && {declared}"
+        command = f"{clone} && ( {declared} )"  # grouped: a `;` inside never escapes the clone
     rec["_sweep_touched"] = True  # GH-1140: an intentional replacement, not a carried value
     rec["sweep_inputs"] = {
         "range": rng,

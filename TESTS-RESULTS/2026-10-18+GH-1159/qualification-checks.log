@@ -9,9 +9,10 @@ PASS (c) fails closed: {'full_suite': 'none', 'sweep_command': 'x'} — qualific
 PASS (c) fails closed: {'full_suite': 'per_batch', 'extra': 1} — qualification must be an object with full_suite promotion|per_batch|no
 PASS (c) fails closed: {'full_suite': 'per_batch', 'sweep_command': ''} — qualification.sweep_command must be a non-empty string, and is not all
 PASS (c) fails closed: promotion — qualification must be an object with full_suite promotion|per_batch|no
-PASS per_batch: throwaway clone + declared command
+PASS per_batch: throwaway clone + grouped declared command
+PASS per_batch: `;` command stays grouped and parses
 PASS none: plain statement, no command, no gate
-PASS promotion w/o command: deferred, no command printed
+PASS promotion w/o command: deferred, says no sweep_command declared
 PASS red control: key dropped → no wave-reconcile command
 PASS old record renders unchanged
 ALL PASS

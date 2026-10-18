@@ -3,7 +3,7 @@
 Provenance: branch `claude/peaceful-gates-1b06pd`, working tree on top of `29270781f07e2fae9179e9d8f6a6cc9f58810b41`, base `9a61625f`,
 2026-10-18, cloud container (root, Python 3.13.16).
 
-## Manual checks — `qualification-checks.py` → `qualification-checks.log` (ALL PASS, 16/16)
+## Manual checks — `qualification-checks.py` → `qualification-checks.log` (ALL PASS, 17/17)
 
 `python3 TESTS-RESULTS/2026-10-18+GH-1159/qualification-checks.py skills/2-daily/merge-cleanup/scripts <base-copy> .`
 where `<base-copy>` holds the four merge-cleanup scripts from `git show 9a61625f:...`.
@@ -11,7 +11,7 @@ where `<base-copy>` holds the four merge-cleanup scripts from `git show 9a61625f
 - (a) Repo with no key: `qualification` is null; the rendered batch block contains none of `wave-reconcile`, `validate.sh` or `development`, and says no sweep command is declared.
 - (b) Forge's committed key: `sweep_inputs` (minus the new `full_suite` field) and the rendered block are byte-identical to base.
 - (c) Invalid values fail closed: an unknown `full_suite`, `none` with a command, an extra key, an empty command, or a non-object.
-- `per_batch`, `none`, and `promotion` without a command each render as planned.
+- `per_batch` (grouped in a subshell, `;` stays inside and parses), `none`, and `promotion` without a command each render as planned.
 - Red control: Forge's file with the key removed prints no `wave-reconcile` command.
 
 ## Smoke (GH-1088)

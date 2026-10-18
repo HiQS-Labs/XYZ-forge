@@ -77,9 +77,10 @@ The same file declares the repo's batch-sweep cadence (GH-1159) as an optional k
 With `promotion`, Forge's classifier picks the gate and a full sweep is deferred to
 `sweep_command`. With `per_batch`, `sweep_command` runs in a throwaway clone. With `none`, the
 batch issue says the repo has no full suite. `sweep_command` is printed verbatim. Without the key,
-or without a command, the issue says no sweep command is declared and shows no Forge gate or
-workflow. An invalid value fails closed, and `--show-merge-policy` prints the key. Forge declares
-`promotion` with its `wave-reconcile.yml` dispatch (#1131).
+the issue says no sweep command is declared and shows no Forge gate or workflow. An invalid value
+fails closed, and `--show-merge-policy` prints the key. A merge-cleanup older than this key refuses
+the file ("expected an object with only preserve_commit_history"): update the harness. Forge
+declares `promotion` with its `wave-reconcile.yml` dispatch (#1131).
 
 ## 7-Phase Ladder Logic
 

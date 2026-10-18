@@ -60,11 +60,14 @@ with tempfile.TemporaryDirectory() as t:
             check(f"(c) fails closed: {bad}", True, str(e).split(": ", 1)[1][:70])
     # per_batch / none render
     ps, pblk = sweep(nb, Path(t), {"full_suite": "per_batch", "sweep_command": "make test"})
-    check("per_batch: throwaway clone + declared command", ps["command"].endswith('cd "$T" && make test') and "Gate:" not in pblk)
+    check("per_batch: throwaway clone + grouped declared command", ps["command"].endswith('cd "$T" && ( make test )') and "Gate:" not in pblk)
+    gs, _ = sweep(nb, Path(t), {"full_suite": "per_batch", "sweep_command": "make lint; make test"})
+    syn = subprocess.run(["bash", "-n", "-c", gs["command"]], capture_output=True, text=True)
+    check("per_batch: `;` command stays grouped and parses", gs["command"].endswith("( make lint; make test )") and syn.returncode == 0, syn.stderr)
     xs, xblk = sweep(nb, Path(t), {"full_suite": "none"})
     check("none: plain statement, no command, no gate", "declares no full suite" in xblk and not xs["command"] and "Gate:" not in xblk)
     os_, oblk = sweep(nb, Path(t), {"full_suite": "promotion"})
-    check("promotion w/o command: deferred, no command printed", os_["deferred"] and nb.NO_SWEEP_COMMAND in oblk and "wave-reconcile" not in oblk)
+    check("promotion w/o command: deferred, says no sweep_command declared", os_["deferred"] and "declares no `sweep_command`" in oblk and "wave-reconcile" not in oblk)
 
 # Red control: Forge's file without the key → deferred command disappears
 with tempfile.TemporaryDirectory() as t:
