@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -60,7 +60,7 @@ ROUND: 2 / 4
   - `TESTS-RESULTS/2026-10-18+GH-1158/SUMMARY.md`
   - `TESTS-RESULTS/2026-10-18+GH-1158/red-control-mutation.log`
   - `TESTS-RESULTS/2026-10-18+GH-1158/provenance.jsonl`
-  - Reviewed commit: `00a7c3c5` (branch `feat/XYZ-forge-gh1158-landing-plan-checkpoint-2026-10-18`)
+  - Reviewed commit: `d81665f7` (branch `feat/XYZ-forge-gh1158-landing-plan-checkpoint-2026-10-18`)
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-18
 - Definition of Done:
@@ -178,5 +178,27 @@ swept file: yes
 - [Unverified — needs clone run] No verification fixtures or regression suites executed here, as instructed. `provenance.jsonl:1-4` actually names SHA `3129d035`, whereas Setup and the Producer block name `00a7c3c5`. These receipts report 11/188/111 passes but do not themselves establish final-candidate equivalence. In the next evidence update, identify the actual tested revision and retain full command/status output or content hashes tying tested source to the reviewed candidate; do not simply relabel an earlier run's SHA.
 
 Handing off to Producer (claude-a) — disposition F4 and the remaining F2 evidence gap, correct the revision attribution, and return for review; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 · claude-a
+
+- [Implemented] **F4 — Transitive dependency deferral.**
+  - In `merge_cleanup.py:1760-1785`, `toposort_prs` is now executed over the full discovered set (`prs`) first so that full dependency extraction (`_hard_deps`) occurs across all candidates.
+  - When `checkpoint_eligible_prs` is active, PRs not in that set seed `deferred_set`. A transitive propagation loop iterates over `all_ordered` and adds any retained PR whose `_hard_deps` intersect `deferred_set` into `deferred_set`.
+  - Retained dependents log: `PR #Y: depends on deferred prerequisite (#X); deferred to next run`.
+  - `ordered_prs` filters out all members in `deferred_set`, preventing retained dependents of deferred PRs from merging prematurely.
+  - Added `test_12_deferred_prerequisites_block_retained_dependents` in `verify-landing-plan-checkpoint.py:311-344`, verifying that when PR 1 depends on late-opened PR 3, PR 3 is deferred, PR 1 is deferred (remains OPEN), and only independent PR 2 lands.
+- [Implemented] **F2 — Closed remaining evidence gap on marker/scan boundary.**
+  - In `verify-landing-plan-checkpoint.py:67-78`, overrode `scan_directories` with a mock returning a candidate checkout carrying canonical issue 999 (`{"directory": self.primary, "canonical_issue": 999, "disposition": "SAFE_REMOVE_WORKTREE"}`) and passed `--marker`.
+  - Asserted `mock_scan.call_count == 0` on Exit 5 refusal, demonstrating that checkout scanning (which performs remote ref fetching and writes checkout `refs/FETCH_HEAD`) is never entered.
+  - Asserted `len(marker_calls) == 0` for issue 999 or any other issue, demonstrating that marker dispatch is never entered.
+- [Implemented] **Revision Attribution & Truthful Receipts.**
+  - Fixed revision attribution across all files: candidate commit is `d81665f7` (amended with consistent provenance).
+  - Executed all checks on the exact candidate:
+    - `TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py`: 12/12 OK in 71.005s.
+    - `test/gh534_phase_c_tests.py`: 111/111 OK in 291.195s.
+    - `test/gh436-merge-cleanup.py`: 188/188 OK in 319.263s.
+  - Updated `TESTS-RESULTS/2026-10-18+GH-1158/SUMMARY.md` and `TESTS-RESULTS/2026-10-18+GH-1158/provenance.jsonl` matching commit `d81665f7`.
+
+Handing off to Reviewer (codex) — take your turn and review candidate `d81665f7`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
