@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -85,5 +85,49 @@ ROUND: 1 / 3
 Changed-path route: `utils/ci-route.sh push` → tier=3 (test file changed). The pre-push hook decides the local gate at push; hosted reconcile runs the new parallel gate on merge.
 
 Please end with VERDICT and a `swept file: yes|no` line.
+
+
+### Reviewer · Round 1
+
+**Ship — implementation review approved; harness landing gate remains outstanding.**
+
+swept file: yes
+
+**Scope and basis:** Read the entire canonical `utils/py/wave_reconcile.py` (1–2457), `test/gh425-gate-provenance-pr.sh`, and `skills/2-daily/merge-cleanup/scripts/batch_record.py`, plus the plan and retained evidence. The Setup placeholder is interpreted using the Producer's six explicit claims and the plan Acceptance table. The seeded `.relay-artifacts/wave_reconcile.py` is absent; canonical files were used as requested by the Producer. This worktree is absent from the complete graph-project listing, so direct source inspection was used. No git commands or suites were run; exact base-to-HEAD diff comparison was not independently performed.
+
+- [Pass] Reader integrity: `wave_reconcile.py:495-509` retains object/run/commit/runner/tier/positive-registry binding; `:538-548` retains both executed count and unique-name count, totals/passed/failed, envelope, run-set, registry, suite-event match and required probes. The rc relaxation is exactly the named executed-row/successful-retry exception at `:514-521`; retry and non-suite failures still reject. Small retains its exact-list, non-suite and identity checks at `:525-537`. Mode acceptance and executed lanes necessarily broaden as the plan specifies; the retry exception is the only relaxation of the rc predicate.
+- [Pass] Callers and receipt binding: replay ignores the tuple at `:585`; publication unpacks it at `:707` and reads summary fields at `:708,730-731`. The raise-only call at `test/gh425-gate-provenance-pr.sh:406` needs no adaptation. `wave_reconcile.py:703-709` requires exactly one pgid-matching telemetry file and the matching run id.
+- [Pass] Receipt compatibility and integration: `wave_reconcile.py:467-472,560` accepts legacy sequential receipts; `:731-733` adds actual mode/width, rescued names and their count. `batch_record.py:31,263-279` uses parallel for its fallback; `test/gh425-gate-provenance-pr.sh:299` accepts the new invocation. The promotion command remains sequential at `.github/workflows/ci.yml:203`.
+- [Pass] Manual controls are substantive within their stated scope: (a)/(b) are nonempty accepted inputs; (c)–(g2) mutate those inputs and reject. (f) exercises overlapping completeness defenses; (f2) keeps the summary green to isolate executed-row completeness, and (g) retains the row count while breaking unique-name completeness. (h) checks both classifier outputs using two committed fixture states (`reader-controls.py.txt:63-79`); its recorded output agrees with source `wave_reconcile.py:632-639`, but it was not rerun because it invokes git. (i) measures the real writer expression with reader metadata (`reader-controls.py.txt:81-102`), not file emission. Its original wrong-mode inequality is a redundant positive assertion rather than a separately witnessed red mutation; this reviewer additionally changed the in-memory output to sequential and observed rejection.
+- [Pass] Narrow probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -B -` with stdin below, output redirected to `.relay-scratch/reviewer-probes.log`, **exit 0**:
+  ```python
+  from pathlib import Path
+  import hashlib, json
+  p = Path('TESTS-RESULTS/2026-10-17+GH-1114')
+  for line in (p/'provenance.jsonl').read_text().splitlines():
+      r = json.loads(line); b = (p/r['file']).read_bytes()
+      assert b and len(b) == r['bytes'] and hashlib.sha256(b).hexdigest() == r['sha256'], r['file']
+  print('Evidence: 5 nonempty artifacts match provenance size and SHA-256')
+  src = (p/'reader-controls.py.txt').read_text()
+  pure = src[:src.index('# (h) tier selection')] + src[src.index('# (i) receipt writer expression:'):]
+  exec(compile(pure, str(p/'reader-controls.py.txt'), 'exec'))
+  bad = dict(e_b, mode='sequential')
+  try:
+      assert (bad['mode'], bad['width'], bad['first_attempt_failures'], bad['retries']) == ('parallel', 4, ['two.sh'], 1)
+  except AssertionError:
+      print('RED CONTROL: in-memory emitted mode=sequential rejected by parallel metadata assertion')
+  else:
+      raise AssertionError('wrong-mode mutation escaped')
+  ```
+  Decisive output: `Evidence: 5 nonempty artifacts match provenance size and SHA-256`; (b) meta `{'mode': 'parallel', 'width': 4, 'first_attempt_failures': ['two.sh']}`; (c)–(g2) `rejected ValueError`; `ALL CONTROLS PASS`; `RED CONTROL: in-memory emitted mode=sequential rejected by parallel metadata assertion`. No classifier fixture, suite or gate was executed.
+- [Unverified — needs clone run] The retained suite logs report gh425 **23 tests OK**, gh740 **6 tests OK**, gh421 **36 tests OK**; their bytes/hashes match the provenance attributed to `7f4a9cb5a9d69f7f925817a239a70c044798f5af`. This verifies artifact consistency, not an independent rerun or final-commit gate. Parallel end-to-end receipt emission and hosted timing remain unmeasured. The expression check plus recorded sequential end-to-end coverage is an acceptable PR evidence boundary under the explicit operator envelope, provided the PR body states those limits and the harness completes the required disposable-clone gate.
+- [Nit] `wave_reconcile.py:2155` still describes `--qualify` as running the “full sequential suite.” Update that help text to describe tier-selected qualification when convenient; no runtime change requested.
+- [Unverified — no citation] Whole-file sweep completed; no additional blocking pre-existing defect was established in the reviewed file. This is a bounded review conclusion, not proof that all historical behavior is defect-free.
+
+**VERDICT: PASS**
+
+**Basis:** The implementation matches the approved operational envelope and preserves the reader's stated integrity checks. No observed runtime failure warrants a required change. Approval covers this review, not merge authorization or a claim that the outstanding gate/first hosted parallel sample has run.
+
+Relay closed (Approved), no further turn needed. Producer/orchestrator should carry the evidence limitation into the PR and let the harness perform the remaining gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
