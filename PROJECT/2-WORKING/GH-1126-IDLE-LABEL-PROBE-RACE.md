@@ -24,7 +24,7 @@ Branch `fix/XYZ-forge-gh1126-gh610-idle-label-2026-10-18` off `development@e9321
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA r1 FAIL (R1 causal certainty, R2 caller scope/delay bound, R3 synchronized control) dispositioned in place | Codex plan QA r2 → implement → focused suites + manual race control → final QA → PR → merge on green CI |
+| Plan QA Approved (Codex r3). Lock implemented (01e6f228); race control red on base, green on candidate; covering suites green in a disposable full clone — `TESTS-RESULTS/2026-10-18+GH-1126/` | Final Codex QA → push (pre-push gate) → PR → merge on green CI |
 
 ## Observed failure (confirmed, not hypothesis)
 
