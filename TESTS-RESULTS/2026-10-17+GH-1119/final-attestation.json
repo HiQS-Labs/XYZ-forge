@@ -1,0 +1,19 @@
+{
+  "added_len": 4564,
+  "added_sha256": "776dfafb1d270b437b2341ed17a8c53343a22368dc889db0c9340a47666c2279",
+  "added_start": 7928,
+  "artifact_sha256": null,
+  "attested_at": "2026-10-17T23:18:19Z",
+  "driver_pid": 63854,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1119-worth-it-2026-10-17/relay-system/2026-10-17/gh1119-final.codex.md",
+  "relay_file_rel": "relay-system/2026-10-17/gh1119-final.codex.md",
+  "reviewed_head": "bc12452087118d8d37dcd76f5c2e625bdcac426e",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1119-worth-it-2026-10-17",
+  "task": "RELAY-gh1119-final",
+  "trailer_sha256": "d5918202d23ebbf9b41a77028747a4a164f7e756dfe09d29a89ea635ac1665e9",
+  "transcript_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1119-worth-it-2026-10-17"
+}

@@ -1,0 +1,33 @@
+Now append the block with the existing helper and flip only the first NEXT/STATUS header lines.
+I approved the final round (4 of 4) with **VERDICT: PASS**: there are no Critical or High findings in the pinned target tree. This approval covers the source and strategy review only. It does not qualify any gate.
+
+I wrote a `### Reviewer — Round 4 (agy)` block into [gh1121-batch-r4.agy.md](file:///private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.MztXAb/relay-system/2026-10-18/gh1121-batch-r4.agy.md) using the existing `append_before_marker` helper. Earlier bytes and the marker are untouched. The only other change is the header, now `NEXT: —` / `STATUS: Approved`. The token is closed (`tick done` returned rc=0). I ran no git, no tests and no source edits.
+
+**What I checked, all read-only:**
+- **Hashes:** all 18 files listed in `qa-resume-input.json` match at the current HEAD. The worth-it NOTICE's own SHA-256 lines also match the files on disk.
+- **The rename to review-code-xyz:** no live link or skill reference to the old path remains. The mini manifest, the three edited suites and the ARCHITECTURE 2-daily count (20 rows, 20 on disk) all agree.
+- **Pulse checks in `sync.py`:** they only emit warnings and add fields to the result. Every git call is read-only, and the checks run before anything is written.
+- **Ledger:** there is exactly one roadmap row each for GH-1060, 1088, 960 and 1119, every linked doc exists, and there is no GH-960 jog row.
+- **worth-it licence:** the bundle keeps its GPL-2 terms and attribution, and the commercial licence already excludes third-party components.
+
+**Deferred to GH-1121, none blocking:**
+- **New exit-2 failure (Low):** an unreadable git-pulse `config.sh` now makes `sync.py` exit with code 2. A probe on a mode-000 file raised `PermissionError`. It fails before any write, so nothing is lost.
+- **Case-sensitive repo-URL match (Low):** the duplicate-clone check compares remote URLs case-sensitively apart from the host, so `Org/Repo` and `org/repo` are not recognised as the same remote.
+- **Stale counts and a dead link (Low, already known):**
+  - The ARCHITECTURE headings for 1-hourly and 3-weekly are off by one, and `weekly-planner` is missing from the index.
+  - `mini/README.md` still says "eleven" skills.
+  - The link at `ARCHITECTURE.md:351` is dead.
+- **Nits:**
+  - review-code-xyz's step list goes from Rung 3 to Rung 5.
+  - start-task says "step 6" where it means step 8.
+  - Relative links won't resolve in mini's flat layout.
+  - The README licence lines are in an awkward order.
+  - A symlinked `config.sh` produces a misleading warning.
+
+**Still to do before landing:**
+- An independent check that the four member heads are ancestors of HEAD. I couldn't confirm this without git, so it needs a disposable clone.
+- The exact-head hosted smoke.
+- The post-merge hosted tier-3 full run.
+- issue-doc-sync and PRS reconciliation.
+
+The relay is closed and no further reviewer turn is needed. Go back to the codex-producer/caller window to run `candidate_ok` and the landing checks.

@@ -1,0 +1,19 @@
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/Codex/2026-10-17/task-3/forge-non-ci) changed-files=0
+agy-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.6jCAbn)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.6jCAbn) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.6jCAbn) changed-files=1
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.6jCAbn) changed-files=1
+rtl: GH-654 off-lane candidate: .relay-artifacts/QA-RESUME.md
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/Codex/2026-10-17/task-3/forge-non-ci/relay-system/2026-10-18/gh1121-batch-r3.agy.md
+agy-turn: committed agy turn (file-scoped, no push)
+relay-drive: attested Approved by agy — reviewed 20b3d6d100ab, 9736 bytes of review text, record /Users/noelsaw/Documents/Codex/2026-10-17/task-3/forge-non-ci/.git/relay-attest/RELAY-GH1121-BATCH-20261018-R3.json
+relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/3 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 1h 6m
+per done-task: ≥0 tokens, 22m 9s wall-clock
+  turn peak RSS: agy: 180MB peak RSS

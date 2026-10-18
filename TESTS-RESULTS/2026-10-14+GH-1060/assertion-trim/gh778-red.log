@@ -1,0 +1,7 @@
+== test: gh778-review-code-skill ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh778-review-code-skill.XXXXXX.hYt8c9i2eL
+== test: gh778-review-code-skill ==
+  PASS: skills/2-daily/review-code-xyz/SKILL.md exists
+  PASS: skills/2-daily/review-code-xyz/install.sh exists
+  PASS: install.sh is executable
+  FAIL: old review-code folder still present

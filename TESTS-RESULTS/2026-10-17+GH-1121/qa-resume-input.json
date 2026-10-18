@@ -1,0 +1,33 @@
+{
+  "candidate_before_review_setup": "4b3eb3344b6616a377baad797f7c59860737568c",
+  "base": "7f19d57db884588bc7f59dac0e2f24659f5a5ea6",
+  "member_heads": {
+    "1062": "fad5f37acb1644f20b3ad798fc23940fb2b0d363",
+    "1089": "e635fcf60f4e9a3e3b816e280c18f2b88a3fe8ef",
+    "1097": "eb349646c618073f644ad959c43029e1e84fefaf",
+    "1120": "8c010b3eb34e3cbaced1e51d0904e84387058bc7"
+  },
+  "production_sha256": {
+    "ARCHITECTURE.md": "37d0a5f9a2b4bdbe011af89fb7021d79ca7725ce14f78afc1e6461244e2f8190",
+    "README.md": "da10ee7a2e64992fb5a3e82105b79ade6de3e389e0d34489bf2539b538df37dd",
+    "mini/README.md": "2abf06519850f9c018d21fbdb09640ad7b3d28f4406fab63e36f132da5523823",
+    "skills/2-daily/review-code-xyz/SKILL.md": "07776bc35a525540a37b972bbf943528323e5354c3544de2334a281059144992",
+    "skills/2-daily/review-code-xyz/install.sh": "3fbfdfed471da7c1bab05be759358855e23282bb5b4fd5b5ccc8f3fb26ea28a7",
+    "skills/2-daily/review-pr-xyz/SKILL.md": "86b0d2911a1d436a476a14765b1204dced7678dd71aad4576a6756083f96835b",
+    "skills/2-daily/review-pr-xyz/install.sh": "ad865dac6524214114f5e7f9e71c98200e3182ecb93727f8cd86f6d536f427f5",
+    "skills/2-daily/review-xyz/SKILL.md": "c0ac0f9eea6c97d6482715418c709971658a1c7f5bf01508e5330db196764421",
+    "skills/1-hourly/start-task/SKILL.md": "9df0b946d25b261848f831126c1f2201ba301324fa0339b5f87702b68625b3ca",
+    "skills/3-weekly/skills-army-hq/scripts/sync.py": "00a9861f790c4075c619f2f191433b3f0bae83b0da5990a089c5925e7a86297b",
+    "skills/3-weekly/skills-army-hq/references/recovery.md": "464d6a02da75570b73b0f65d4c5a09e7c986f8d905cbecc9a4b4383802e0ecf5",
+    "skills/3-weekly/worth-it/SKILL.md": "01d5711d5de7529b8aad6ade83a6ab38e348d40fd2ba0e718c762865f4c8c93d",
+    "skills/3-weekly/worth-it/LICENSE": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+    "skills/3-weekly/worth-it/NOTICE": "8ef99b76eae26db0a327af9226825ad13058b9b28f0f207f430add21e2cac4b4",
+    "utils/py/xyz_mini_sync.py": "2e3cb157663cb91e2973c88aa12d124067522735fb77733bc3339f9586bf7cc8",
+    "test/gh589-xyz-mini-sync.sh": "37c240f33125495c4a548bba611e82faaba046b27c53e269899fd072091ae2f2",
+    "test/gh778-review-code-skill.sh": "840ff73411d1406ee080b2364b0f9d2fa839fcecc617b86f5614b23f301b75ee",
+    "test/gh798-status-skill.sh": "11af632945f17fd10815ef1a565fae92f99945be485e202546d95c83e059250e"
+  },
+  "prior_full_gate_head": "a2a1389094c96a8ef249e3286973540098bac5b2",
+  "prior_full_gate": "409/409;1024s;MacOS;identity intact",
+  "scope": "same four source PRs; no CI lane or source upstream changes"
+}

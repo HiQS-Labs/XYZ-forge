@@ -81,6 +81,37 @@ outside app discovery roots; do not rewrite receipts, merge collection identitie
 remove a copy containing unique work. Existing foreign links follow the explicit link
 migration procedure below; never replace them silently.
 
+### Reconciling a duplicate or stale Git Pulse clone (GH-960)
+
+Every normal `sync.py` run (preview, `--status`, and `--apply`) performs a read-only check
+against `${GIT_PULSE_CONFIG_DIR:-~/.config/git-pulse}/config.sh` (defaulting `sync_repo_dir`
+to `$CONFIG_DIR/repo` as `git-pulse` does) without making network calls or writing files:
+
+- When `config.sh` is absent, `sync.py` warns `duplicate-clone check skipped: no git-pulse config`
+  rather than passing silently.
+- When `sync_repo_dir` and the collection root's git top-level resolve to different checkouts
+  of the same remote, `sync.py` warns `DUPLICATE_PULSE_CLONE`, naming the checkout `git-pulse`
+  maintains, the checkout the skill links read, and each checkout's ahead/behind count against
+  its last-fetched `origin`.
+- When the collection checkout is behind its last-fetched upstream or its `FETCH_HEAD` is at
+  least 24 hours old, `sync.py` warns `STALE_PULSE_COLLECTION`.
+
+`sync.py` prints the recovery steps and never modifies `config.sh` or retires a clone automatically.
+To remediate:
+
+1. **Point `sync_repo_dir` at the collection root's checkout.** Back up `config.sh`, then set
+   `sync_repo_dir` in `${GIT_PULSE_CONFIG_DIR:-~/.config/git-pulse}/config.sh` to the git top-level
+   holding `Deployed Skills` (the checkout that carries `.deploy-skills.json`, `targets.json`,
+   `backups/`, `catalog.md`, and `changelog.md`).
+2. **Fast-forward the collection.** Verify the collection checkout's tracked tree is clean and
+   that local ignored files are not tracked on `origin`, then run `git -C <collection-repo> pull --ff-only`.
+3. **Check the other clone, then retire it.** Inspect the duplicate checkout for local changes
+   (`git status --porcelain`), stashes (`git stash list`), unpushed commits (`git rev-list @{u}..HEAD`),
+   and ignored/untracked files (`git status --ignored -s`). Preserve any unique work first, then
+   move the duplicate checkout out of active paths.
+4. **Run `catalog` and `sync`.** Run `intake.py --apply catalog` and `sync.py --apply`, then
+   verify with `sync.py --status` that `DUPLICATE_PULSE_CLONE` and `STALE_PULSE_COLLECTION` are clear.
+
 Previews deliberately take no write lock. Do not run them during an apply: they
 can observe intermediate state and report transient conflicts. Wait for the writer
 to finish, then preview again; never delete its lock file.

@@ -1,0 +1,19 @@
+{
+  "added_len": 9736,
+  "added_sha256": "2601376417379d4e71788329f20aa2e07a914a33edbcd3f15d8c38245207967f",
+  "added_start": 5830,
+  "artifact_sha256": "cc09d246370db7cf127c2efc946671cd882c2a4d4dc797dcf2806a715e347684",
+  "attested_at": "2026-10-18T00:45:26Z",
+  "driver_pid": 29836,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/Codex/2026-10-17/task-3/forge-non-ci/relay-system/2026-10-18/gh1121-batch-r3.agy.md",
+  "relay_file_rel": "relay-system/2026-10-18/gh1121-batch-r3.agy.md",
+  "reviewed_head": "20b3d6d100ab3478758ac2bc30a220e02fed0553",
+  "reviewer": "agy",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/Codex/2026-10-17/task-3/forge-non-ci",
+  "task": "RELAY-GH1121-BATCH-20261018-R3",
+  "trailer_sha256": "9a65c0e20764043c381202d415f5b6897b042240ed23c0a5230f41806b437708",
+  "transcript_repo": "/Users/noelsaw/Documents/Codex/2026-10-17/task-3/forge-non-ci"
+}

@@ -1,0 +1,32 @@
+Let me read the diff — the non-new-file portions first, then the larger new files.
+Now writing the review block via the existing helper (in scratch), then header-only edits.
+I approved the packet: **VERDICT: PASS**, and the relay is closed with `STATUS: Approved` and `NEXT: —`. This approves the review only, not the landing; the gate and hosted checks below still have to run.
+
+**What I checked (read-only)**
+- **File bytes:** I hashed all 18 production files myself and every one matches `qa-resume-input.json` (`mismatches 0 of 18`). I couldn't confirm that the source PR heads are ancestors of the batch without running git, so that part of `manual-preservation.txt` is still the author's own measurement.
+- **Grouping:** the four source PRs each change their own set of files. The only overlap is the index/README docs and the ledger, and the ledger was merged through the canonical writer.
+- **review-code → review-code-xyz rename:** the old folder is gone. `xyz_mini_sync.py`, the mini README, the three existing test suites and the ARCHITECTURE 2-daily count (20, matching disk) all use the new names.
+- **sync.py additions:** they only run read-only git calls through existing helpers and only add warnings. Nothing writes files or touches the network.
+- **worth-it:** the GPL-2 license, the attribution and the hashes listed in its NOTICE all check out.
+- **Gate disclosure:** QA-RESUME and BATCH-PLAN say plainly that no full qualification has run after the merge yet.
+
+**Findings — none Critical or High; all deferred to GH1121**
+- **[Should]** BATCH-PLAN.md:5 still says the reviewer "must be actual Gemini via agy", but this round's request asked for Claude through agy. The requirement of a reviewer from a different model family is met; the batch record should note the switch.
+- **[Low] sync.py, symlinked config:** if `config.sh` is a symlink, the warning wrongly says there is no config.
+- **[Low] sync.py, missing upstream:** on a branch with no upstream, the ahead/behind check can compare against the wrong branch and warn that the collection is stale when it isn't.
+- **[Low] Already-known doc drift, confirmed:**
+  - The mini README says "eleven" skills but lists 12.
+  - ARCHITECTURE's 1-hourly and 3-weekly headings are off by one.
+  - The 3-weekly miscount is because `weekly-planner` has no row at all; that predates this batch.
+  - ARCHITECTURE.md:351 has a broken link that also predates the batch.
+- **[Nit]** Two small wording issues in `review-code-xyz/SKILL.md`: the rung list skips Rung 4, and one line still talks about "the PR".
+
+**Still pending — needs a disposable full clone or the hosted runs**
+- The full gate on the reviewed head.
+- The hosted smoke run on the exact final head.
+- The wave-reconcile qualification after landing.
+- The worktree is at `20b3d6d1`, not `4b3eb334`. That looks like the setup commit the driver is meant to attest, but I couldn't check its parent without git.
+
+I wrote the review block with the existing `append_before_marker` helper. Every earlier line is byte-for-byte unchanged except the `NEXT:` and `STATUS:` headers. I claimed the token at the start and closed it with `tick done`, and both exited 0. I ran no git commands and changed no other tracked files; my scratch files are only under `.relay-scratch/`.
+
+Relay closed (Approved), no further turn needed. Go back to the Producer/caller window for the driver attestation and the landing steps.
