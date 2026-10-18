@@ -353,4 +353,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Returning the completed token to operator for the authorized normal-hook documentation landing and scoped closeout.
 
+
+### Attestation · relay-drive — 2026-10-18T19:32:52Z
+task: RELAY-gh1143-hotfix
+reviewer: codex
+status: Approved
+reviewed-head: 1ad7d8c006244288f29fbd03900a8f90b486123d
+added-range: 25019+5541
+added-sha256: 762ae0172a932ffea419c848a92741f35e250afd026e67bec924d103bffe216c
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
