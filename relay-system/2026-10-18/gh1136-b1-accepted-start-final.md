@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -124,6 +124,21 @@ swept file: yes
 ```
 
 Append your block at the very bottom, directly above the NEXT TURN marker, and set `STATUS: Approved` if PASS stands.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Ship; the source and recorded controls satisfy the approved plan, and Round 1's verdict requires only the requested structural correction.
+swept file: yes
+
+- [Pass] Re-read the whole implementation, including pre-existing code; no additional actionable defect found (`skills/2-daily/merge-cleanup/scripts/ledger_merge.py:1-680`). Applied SWE review; graph tools are unavailable, so source fallback used.
+- [Pass] Lookup checks command result, JSON shape, string-normalized number, exact URL, one match and nonempty gid (`ledger_merge.py:293-310`). Only added in-progress rows call the existing accepted-start writer after add/rate/update; refusal hands off (`:321-361`, `:602-606`).
+- [Pass] Recorded controls demonstrate preservation, base label loss, unlabeled-row exclusion and closed-native refusal rc=3 (`TESTS-RESULTS/2026-10-18+GH-1136/replay-controls.log.txt:1-5`). They invoke the real writer and stub GitHub (`replay-controls.py.txt:8-37`). The clone suite records 180 tests, OK (`clone-gh436.log.txt:1892-1894`). These are inspected producer receipts, not reruns.
+- [Pass] Read-only probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -` with stdin loading provenance rows and asserting nonempty bytes, recorded size and SHA256. Python exit 0; decisive output: `provenance: 5 nonempty artifact sizes and SHA256 hashes match` (`TESTS-RESULTS/2026-10-18+GH-1136/provenance.jsonl:1-5`).
+- [Pass] GH-1112 repair has the in-progress label and corresponding receipt/event (`releases.sql:874`, `:2899`, `:3744`); original timestamp loss is disclosed (`PROJECT/2-WORKING/GH-1136-B1-ACCEPTED-START.md:46`). The stored scoped patch adds no test file/case (`TESTS-RESULTS/2026-10-18+GH-1136/review-diff.patch.txt:1`, `:75`, `:125`).
+- Limitation: `.relay-artifacts/review-diff.patch.txt` is absent this turn; inspected the repository evidence copy bound by `TESTS-RESULTS/2026-10-18+GH-1136/review-diff.binding.txt:1` and the current whole implementation. No suites, executable fixtures, git commands or source writes were run. Final committed-state qualification remains the harness's next action.
+
+Relay closed (Approved), no further turn needed. Handing the token to Producer (claude-a); the harness owns the relay-only commit and subsequent gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
