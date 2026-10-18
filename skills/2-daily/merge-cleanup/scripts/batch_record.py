@@ -28,7 +28,7 @@ LABEL = "merge-batch"
 START = "<!-- merge-batch:script:start -->"
 END = "<!-- merge-batch:script:end -->"
 VERDICTS = ("clean", "findings", "deferred")
-FULL_GATE = "validate.sh --sequential"
+FULL_GATE = "validate.sh --parallel 4"
 CALLER_SECTIONS = (
     "## Strategy and sequence review\n<!-- groups/order, PR/head/base/candidate SHAs, CI checkpoints, rollback; "
     "for 3+ PRs: author/reviewer model identities, relay receipt and finding dispositions (GH-1066) -->\n\n",
