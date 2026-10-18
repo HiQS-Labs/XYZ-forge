@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -149,5 +149,39 @@ Handing off to Producer (claude-a) — address R1–R3 in the artifact, record d
   5) Zero mutations on Exit 5 (tracking orphan `REBASE_HEAD` and `refs/FETCH_HEAD`).
 
 Handing off to Reviewer (codex) — go to the Reviewer window or run relay-drive to take your turn on Round 2.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: Block approval pending one small completion of R2: the new intent marker must be consumed after its save. R1 and R3 are adequately resolved at plan level; runtime proof remains implementation work.
+swept file: yes
+
+Read the entire seeded artifact, including unchanged frontmatter, bet, problem, specification, implementation sequence and acceptance criteria. No additional pre-existing artifact defects found beyond the save-contract gap below. Verify-tier discovery again found no graph project for this isolated checkout; nearest `XYZ-forge` generation `2026-09-01T15:54:30Z` returned zero matching symbols, and coverage for the three target paths reports freshness `not_tracked`. Material findings use current local source reads instead.
+
+- **[Pass] R1 disposition — the planned boundary now precedes known mutators.** Artifact `.relay-artifacts/GH-1158-LANDING-PLAN-CHECKPOINT.md:62–73,128–132` requires read-only discovery and decision validation before `prepare_primary_landing`, scanning/fetching, markers and batch creation/extension. This resolves the earlier Phase 4 placement error as a design requirement; it does not establish runtime zero-mutation evidence.
+
+- **[Should] R4 — Consume `_landing_plan_touched` on save, including the first persistence.** Artifact lines 93–95 and 133–135 add a one-shot marker but never extend `_strip_marks`. Current `skills/2-daily/merge-cleanup/scripts/batch_record.py:47–55` strips only four named markers, so the proposed fifth survives; `_merge_records` returns `_strip_marks(out)` at line 193, and `save` replaces the caller's dictionary with that result at lines 205–209. A persisted marker makes every later loaded snapshot look intentional, defeating the new stale-writer protection. Concrete fix: explicitly add `_landing_plan_touched` to the stripping/consumption contract, ensure the no-existing-record save path also clears it in both persisted and caller state, and include the stale-save-after-reload case in existing manual evidence. Use the actual `_merge_records(disk, mine)` argument order (`batch_record.py:142,206`); the plan currently spells it backwards. This extends the existing mechanism only.
+  Observed input: `{'landing_plan': {'decision': 'direct', 'reason': 'separate changes', 'prs': [1,2,3]}, '_landing_plan_touched': True}` passed to the current `_strip_marks` retains the marker. Reload that snapshot, replace the disk decision intentionally with `group`, then save the older reloaded snapshot: under the proposed rule its surviving marker incorrectly authorizes `direct` to win.
+  Affected scope: records saved with the proposed new marker, then carried or loaded into subsequent saves; includes first-save persistence without an existing disk record.
+  Falsifier: after setting/saving a decision, neither JSON nor the caller dictionary contains the marker; an older reloaded snapshot saved after an intentional direct→group replacement retains `group`; a new intentional replacement still wins. Expected results belong in the existing manual check, with a red control omitting marker stripping.
+  Probe command (pure in-memory; no records written): `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY'` followed by:
+  ```python
+  import sys
+  sys.path.insert(0, 'skills/2-daily/merge-cleanup/scripts')
+  import batch_record
+  value = {'landing_plan': {'decision': 'direct', 'reason': 'separate changes', 'prs': [1, 2, 3]}, '_landing_plan_touched': True}
+  print('new intent marker survives persistence stripping:', '_landing_plan_touched' in batch_record._strip_marks(value))
+  print('existing intent marker survives persistence stripping:', '_verdict_touched' in batch_record._strip_marks({'_verdict_touched': True}))
+  ```
+  End heredoc with `PY`. Exit 0; decisive output: `new intent marker survives persistence stripping: True` and `existing intent marker survives persistence stripping: False`.
+  Root cause: the planned marker is not included in the existing one-shot intent-consumption mechanism; Fix site: the plan's batch storage/save step and manual verification; Why not upstream/downstream: this is the existing owner of intent lifetime, so no new state machinery is needed.
+
+- **[Pass] R3 disposition — degraded mirroring is now explicit.** Artifact lines 105–110 and 150 specify canonical local persistence, a warning with the local path on GitHub failure, group Exit 0 without merges/teardown, and direct continuation. This is an intentional documented degraded state rather than an unqualified remote-receipt claim.
+
+- **[Pass] Scope and verification remain proportionate.** Artifact lines 116–120 preserve small queues and extend the existing skill; lines 140–143 reuse existing suites and the committed `TESTS-RESULTS/2026-10-18+GH-1158/` evidence path with red controls. The status table records the requested 75/55/50/80 ratings (sum 260). No new suite or runner is proposed.
+
+- **[Unverified — needs clone run]** No suite, executable fixture, git command or mutation probe ran in this turn. Implementation still owes proof of Exit 5 non-mutation, resume identity/adoption, direct persistence before landing, group early return, degraded issue handling and small-queue preservation. Retain R1's explicit runtime scenarios when performing the existing manual verification; this is plan QA only.
+
+Handing off to Producer (claude-a) — complete R4 in the artifact and record its disposition for Round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
