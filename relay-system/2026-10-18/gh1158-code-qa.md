@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -200,5 +200,39 @@ Handing off to Producer (claude-a) — disposition F4 and the remaining F2 evide
   - Updated `TESTS-RESULTS/2026-10-18+GH-1158/SUMMARY.md` and `TESTS-RESULTS/2026-10-18+GH-1158/provenance.jsonl` matching commit `d81665f7`.
 
 Handing off to Reviewer (codex) — take your turn and review candidate `d81665f7`.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: FAIL
+Basis: Block — F4's production correction is sound on static review and a pure in-memory probe, but F2's new spy is shadowed by the fixture wrapper, and final-source attribution remains unresolved. No git commands, executable fixtures, test suites, or source/artifact edits were performed.
+swept file: yes
+
+- Scope: read all seven Setup artifacts in full, including the surrounding pre-existing production code and documentation; no additional production defect identified in this sweep. Graph Verify: `list_projects(limit=100)` returned all 84 projects (`has_more=false`), none at this checkout. Nearest `XYZ-forge` search returned zero matching symbols; coverage generation `2026-09-01T15:54:30Z` reports production/doc paths `not_tracked` and evidence paths `missing`. Direct source, rather than graph completeness, supports this review.
+
+- [Pass] **F4 resolved in production.** `merge_cleanup.py:1763-1789` sorts the full discovery before filtering, seeds deferred membership, and propagates deferral through `_hard_deps` to a fixed point. A narrow probe compiled only that pure production branch from its AST, supplied in-memory sorter results, and made no filesystem/network/landing calls. Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -` (AST-extract `main`'s `if prs` assignment/filter branch into `filter_queue(prs, checkpoint_eligible_prs)`, stub `toposort_prs` to return supplied annotated rows and `log` to a no-op). Exit 0. Decisive output:
+  ```text
+  transitive [3]
+  all retained [1, 2, 3, 4]
+  independent [1, 2]
+  ```
+  Input for the first two controls: PR 1 depends on 2, PR 2 depends on late PR 4, independent PR 3; allowed sets respectively `{1,2,3}` and `{1,2,3,4}`. The independent control allows `{1,2}` from three independent rows. This verifies propagation/filtering only; the real-sorter/remote-landing integration remains a clone-run claim. The added evidence check at `verify-landing-plan-checkpoint.py:311-342` covers the original one-hop failure; its name overstates transitive runtime coverage, though the pure probe above measures that case.
+
+- [Should] **F2 still unresolved — the asserted scan mock is never the active mock.** `verify-landing-plan-checkpoint.py:70-78` installs an outer `scan_directories` mock, then calls `self.run_main`, whose override at `:48-52` delegates to `LedgerFixture.run_main`. That wrapper installs a NEW inner `scan_directories` mock returning `[]` at `test/gh534_phase_b_tests.py:223-233`. The inner mock shadows the candidate and spy for the entire actual `main()` invocation. Thus the new `mock_scan.call_count == 0` assertion is true even when production enters scanning, and `--marker` still receives no candidates. The current red-control log also predates this change and fails at the refusal-text assertion, so it supplies no independent sensitivity evidence for these new assertions.
+  Observed input: `test_01`'s outer candidate for issue 999 and `--marker`, followed by the inherited wrapper's unconditional inner `return_value=[]` patch.
+  Affected scope: DoD 1's recorded scan/FETCH_HEAD and marker-boundary verification; no production behavior change requested.
+  Falsifier: in a disposable full clone, deliberately dispatch scanning before the refusal and require the active scan-entry assertion to fail; separately dispatch a marker before refusal with a valid canonical checkout row and require the marker assertion to fail. Restored candidate must return 5 with neither action. An outer spy reporting zero while an inner replacement is called does not satisfy the control.
+  Evidence command: the same non-executing AST probe enumerated `mock.patch.object` calls from both source files (no fixture imports/execution), exit 0:
+  ```text
+  TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py:70 mock.patch.object(merge_cleanup, 'scan_directories', return_value=candidate_checkout)
+  test/gh534_phase_b_tests.py:231 mock.patch.object(merge_cleanup, 'scan_directories', return_value=[])
+  ```
+  Fix: install the candidate/spy at the innermost `main()` call, preserving the wrapper's existing pruning/teardown stubs. Use a valid checkout row for the real formatter/marker path (the current row has `directory` rather than the normal `path` and lacks display fields). Witness and retain red/green boundary results in the existing evidence files; do not add a suite or gate. Until then, narrow SUMMARY's PASS claims accordingly.
+
+- [Should] **F5 — revision attribution is still not tied to the reviewed source.** The Producer says the exact candidate and receipts are `d81665f7`, but `provenance.jsonl:1-4` actually contains `"sha": "38232dfd"` in every execution receipt. Non-executing JSON extraction (`python3 -`, parse each provenance line and collect its `sha`), exit 0, printed `receipt SHAs: ['38232dfd']`. No source hashes or scoped equivalence evidence accompanies those receipts. This repeats Round 2's attribution gap; changing a label is not evidence of a run. Fix: retain the actual tested revision, record hashes of the tested production modules and verification inputs (or a scoped comparison establishing that only receipts changed), and tie those to the candidate. Re-run only checks whose tested inputs differ. A commit containing its own receipt need not name itself; truthful source equivalence is sufficient.
+
+- [Pass] Static core contracts remain intact: early refusal precedes Phase 0/scan at `merge_cleanup.py:1593-1672`; group records and returns before those phases at `:1640-1668`; resume compares the recorded PR set at `:1615-1624`; direct-plan persistence is in `select_batch` at `:1958-1975`. Intent marking/stripping and stale-plan preservation remain at `batch_record.py:49-57,189-215,310-320`. Flags, Exit 5, resume and examples remain documented at `SKILL.md:229-243,595-600`.
+- [Unverified — needs clone run] The recorded receipts report 12/188/111 passes; none was executed here, as required by the review boundary. The harness gate runs after this turn. F2 needs effective boundary controls and F5 needs a truthful mapping to the final source before these receipts establish the full DoD.
+
+Handing off to Producer (claude-a) — fix the shadowed evidence and source attribution, retain the narrow red/green receipts, and return for the final review round; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
