@@ -2,7 +2,7 @@
 gh_issue: 1144
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1144
 title: "express: target the repo's default branch (or --base) instead of hardcoded development"
-status: "In progress — implemented and verified; final QA next"
+status: "In progress — final QA Approved; PR ready, awaiting merge"
 created: 2026-10-18
 updated: 2026-10-18
 owner: claude
@@ -28,7 +28,7 @@ Branch `feat/XYZ-forge-gh1144-express-default-branch-2026-10-18` off `developmen
 
 | What was just completed | What's next |
 |---|---|
-| Implemented (`ac3815f2`, `fe5257ab`); suites, manual checks, red controls and smoke recorded in `TESTS-RESULTS/2026-10-18+GH-1144/` | Full gate on the final commit, final Codex QA, PR to `development` |
+| Final QA Approved by Codex in round 3; full gate 409/409 on `7b406c7a`; PR opened against `development` | Merge, then reconcile (archive to 3-COMPLETED, ledger Completed) |
 
 ## Observed today (9a61625f)
 
@@ -184,7 +184,7 @@ reconcile ordering.
 
 | Issue | Requirement | Clone / branch | State |
 |---|---|---|---|
-| [#1144](https://github.com/HiQS-Labs/XYZ-forge/issues/1144) | Changes 1–7 | `XYZ-forge-gh1144-express-default-branch-2026-10-18` / `feat/…` | Implementing |
+| [#1144](https://github.com/HiQS-Labs/XYZ-forge/issues/1144) | Changes 1–7 | `XYZ-forge-gh1144-express-default-branch-2026-10-18` / `feat/…` | PR ready; awaiting merge |
 
 ## Rating rationale (2026-10-18)
 
@@ -207,3 +207,5 @@ the preceding 14; trend unknown.
 | Recovery recipe | runs end to end on `main` after fixing a pre-existing step-6 defect (`cp` to a glob of a not-yet-existing file); receipt names `main` |
 | Smoke | Forge task clone: new and old express byte-identical. Clone-of-local-clone: `origin/HEAD` names the source clone's branch; express refused `task-branch` safely — recorded limitation |
 | Deviation from plan | red control D's message reads "not reachable from local main" (message prints `base`), not "local development" as the plan predicted; exit 4 at the reachability check as intended |
+| Final QA | Codex, 3 rounds, Approved (`relay-system/2026-10-18/gh1144-final-qa.md`). R1: production reconciler needed a live pull and lifecycle; recital wording. R2: owned ledger row transition. Both evidenced |
+| Full gate (tier 3) | `./validate.sh --parallel 4` once on `7b406c7a` in the disposable clone: rc=0, 409/409, 0 re-runs (`TESTS-RESULTS/2026-10-18+GH-1144/full-gate-validate.log.txt`) |
