@@ -19,7 +19,7 @@ Strictly adheres to [`WORKTREE-SAFETY.md`](https://github.com/HiQS-Labs/XYZ-forg
 > 3. **Sequence PRs & pre-gate conflicts (Phases 4–5).** Fetch open PRs into a topological DAG to prevent file collisions; pre-simulate landings and resolve disjoint ledger/doc conflicts.
 > 4. **Merge & reconcile governance (Phase 5).** Merge using the project policy in dependency order, fast-forward primary checkout (`git merge --ff-only`), and execute post-merge reconciliation (`wave_reconcile`, `releases_app check`, `pdda.sh`).
 > 5. **Safe teardown & status confirmation (Phase 6).** Deregister worktrees via canonical git protocol, move clean disposable clones to Trash, prune dangling skill symlinks, and confirm all PRs are landed.
-> 6. **Document and sweep qualifying batches (GH-944, GH-1064).** When the sequenced queue holds **two or more PRs**, the script opens the `merge-batch` GitHub issue **before the first merge** with the planned order, keeps its outcomes and sweep inputs current, and exits **4** (landed, QA pending) until a sweep verdict is recorded. You fill the caller sections (problems, ad-hoc fixes/pivots, findings), run the `/debug-mantra` regression sweep with the printed suite command in a throwaway clone, record the verdict with `--record-sweep <file>`, and transcribe each merged PR/issue's **post-deployment carry-over items** into the issue **and** the end-of-run chat summary, verbatim and unchecked.
+> 6. **Document and sweep qualifying batches (GH-944, GH-1064).** When the sequenced queue holds **two or more PRs**, the script opens the `merge-batch` GitHub issue **before the first merge** with the planned order, keeps its outcomes and sweep inputs current, and exits **4** (landed, QA pending) until a sweep verdict is recorded. You fill the caller sections (problems, ad-hoc fixes/pivots, findings), run the `/debug-mantra` regression sweep with the printed command (a Small suite in a throwaway clone, or the full sweep deferred to the pre-promotion dispatch, GH-1127), record the verdict with `--record-sweep <file>`, and transcribe each merged PR/issue's **post-deployment carry-over items** into the issue **and** the end-of-run chat summary, verbatim and unchecked.
 >
 > **Overall Goal:** All ready-to-merge PRs processed, qualifying batches documented and swept for regressions, and local disk clones and git worktree folders safely torn down when appropriate.
 
@@ -298,7 +298,8 @@ recovery window when warranted. Never skip qualification or claim unmeasured sav
 - Executes remote merges in topological sequence through `execute_pr_merge`, using the method selected by the project policy resolver (never a hardcoded direct `gh pr merge --squash`) — and a zero exit is not a landing: the PR is re-queried until it reads `MERGED` with a merge commit (#510 class), else the run fails. A non-zero or killed `gh pr merge` is re-queried once too, and a PR that reads `MERGED` with a merge commit continues to the post-merge sequence (GH-852). After a B1 push, the re-gate first waits (up to 6 × 15s) until GitHub reports the pushed head, because the old head's `CONFLICTING` is still showing (GH-851). `--reconcile-pr` refuses (exit 2) unless the PR reads `MERGED`, and looks up the hosted run by that PR's head and merge commit (GH-852).
 - After each verified remote merge, performs one ordered durability sequence before looking at the next PR: **fast-forward primary → reconcile → emit `pr_merged` → commit all resulting primary-side ledger/governance writes → push `origin/<integration-branch>` → assert the primary is clean and `HEAD == origin/<integration-branch>`**. The emitter therefore runs only after both the landing fast-forward and any fast-forward performed by reconciliation; a failure at any step stops the run.
 - Executes post-merge reconciliation, **gating** (a failure stops the run before emission, commit, push, the next PR, teardown, and symlink pruning; `--reconcile-pr` propagates the same exit):
-  - Query the hosted `wave-reconcile.yml` runs (`gh run list --workflow wave-reconcile.yml`) and match the PR head or the merge commit. If the run is queued or in progress, poll until completion for at most `MERGE_CLEANUP_HOSTED_WAIT_S` seconds (default 5400, #854 D5: full-registry reconciles take 53–66 min); timing out while it remains active stops the landing rather than racing it locally.
+  - **Default (GH-1127, #1131): reconcile locally** with `python3 utils/py/wave_reconcile.py --pr <PR_NUM>`. The hosted lane is dispatch-only (pre-promotion), so there is nothing to wait for after a merge. The local writer keeps its one safety query and refuses with exit 8 while a hosted run is queued or in progress (a promotion dispatch); land after it finishes.
+  - **Opt-in hosted wait:** with `MERGE_CLEANUP_USE_HOSTED=1`, query the hosted `wave-reconcile.yml` runs (`gh run list --workflow wave-reconcile.yml`) and match the PR head or the merge commit. If the run is queued or in progress, poll until completion for at most `MERGE_CLEANUP_HOSTED_WAIT_S` seconds (default 5400, #854 D5: full-registry reconciles take 53–66 min); timing out while it remains active stops the landing rather than racing it locally.
   - On hosted success, fetch and fast-forward the primary onto `origin/<integration>`'s reconciliation commit.
   - An empty answer inside the first `MERGE_CLEANUP_HOSTED_GRACE_S` seconds (default 60) is "not listed yet", not "no workflow" — the run for a just-pushed head can lag `gh run list` by a few seconds, and reconciling locally in that gap would race the hosted writer. After the grace window, if no hosted run/workflow/`gh` exists, or the hosted run completed unsuccessfully, fall back to `python3 utils/py/wave_reconcile.py --pr <PR_NUM>`. Never invoke that local writer while the observed hosted run is queued or in progress (`--force-local-reconcile` remains a manual recovery tool only).
   - `python3 utils/py/releases_app.py check`
@@ -418,7 +419,10 @@ any test suite (GH-831): the caller still runs the sweep and writes the verdict.
   - files touched by two or more landed PRs (from the stored per-PR file lists);
   - repaired conflict sites from the attempt records;
   - the gate from `wave_reconcile.select_qualification_gate`, or the full gate when it cannot classify;
-  - the exact `git clone --no-local … && bash <gate>` command to run.
+  - the command: for the Small gate, the exact `git clone --no-local … && bash <gate>` to run locally;
+    for the full gate, the pre-promotion `gh workflow run wave-reconcile.yml` dispatch (GH-1127, #1131).
+    A full sweep is never rerun locally: record `verdict: deferred` naming the promotion dispatch, or
+    `clean` naming the hosted run that covered the batch tip.
 - **Exit 4 = landed, QA pending.** After a normal Phase 6, a batch with landings that no recorded
   verdict covers ends with exit 4. Held or handed-off PRs elsewhere in the batch do not change
   that, and a new landing makes an earlier verdict partial again. Exit 2 and 3 take precedence.
@@ -433,8 +437,9 @@ any test suite (GH-831): the caller still runs the sweep and writes the verdict.
   read, or the markers are gone, it does not edit and records why. Everything outside the markers is
   the caller's.
 - **Caller-owned:** Strategy and sequence review (GH-1066), Problems, Ad-hoc fixes & pivots, Findings, the `/debug-mantra` sweep analysis
-  (cross-PR interactions, repaired conflict sites as regression suspects, the suite run in a
-  disposable full clone, never the primary, GH-564), and the carry-overs below.
+  (cross-PR interactions, repaired conflict sites as regression suspects, the Small suite run in a
+  disposable full clone, never the primary, GH-564, or the full sweep deferred to the promotion
+  dispatch per GH-1127), and the carry-overs below.
 - **Non-blocking.** Issue create, read or edit failures are recorded in the batch record and
   printed as warnings; the landing proceeds. The record is the source of truth either way.
 - **Post-deployment carry-overs (dual sink).** Scan each merged PR body and its closing-linked
