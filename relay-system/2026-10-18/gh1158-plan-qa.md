@@ -216,4 +216,12 @@ Read the entire seeded artifact, including frontmatter, status, bet, problem, al
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) may proceed to implementation and disposable-clone verification under the existing task workflow.
 
+
+### Attestation · relay-drive — 2026-10-18T20:39:11Z
+task: RELAY-gh1158-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: de0a06451aef702ed0a6a176d05f5cc78ac6c22f
+added-range: 24664+3286
+added-sha256: c1ac0809dbe0b4d786e429b75d9ab115b7522fd652af47e635c7c1bcda524f26
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
