@@ -2,7 +2,7 @@
 gh_issue: 1143
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1143
 title: Radar-to-campaign documentation skill
-status: Hotfix reviewed — awaiting direct publication
+status: Completed — direct documentation hotfix landed
 updated: 2026-10-18
 owner: Codex
 goal: Connect Radar recommendations to bounded approved discovery using existing assets
@@ -19,7 +19,7 @@ ATE, fuzz, oracle and minimization assets. Documentation only; no execution or r
 
 | What was just completed | What's next |
 |---|---|
-| Focused review Approved at round 2/3; docs/ledger checks pass | Normal-hook fast-forward direct publication and exact-head hosted verification |
+| Direct hotfix landed; exact-head CI complete; PR1147 and issue1143 closed | Broader release review tracked separately in GH1155; no main promotion authorized here |
 
 ## Recon and smallest viable bet
 
@@ -186,3 +186,40 @@ reviewed `1ad7d8c00624`. No Critical/High or material correctness findings; inde
 comparison confirmed preservation of every prior ledger row/receipt. Receipt:
 `relay-system/2026-10-18/gh1143-hotfix.codex.md`. Only factual status/provenance closeout
 follows that review; skill/policy/source bytes stay unchanged before direct publication.
+
+## Direct landing and closeout evidence
+
+Landing: `b93b73417dbc610b29ef47009987e2f8c396b775` on remote development, exact remote
+SHA/content/identity reverified. Normal documentation hook GREEN in 48s; no skip variable,
+no-verify or force push. Exact-head CI run:
+https://github.com/HiQS-Labs/XYZ-forge/actions/runs/39159380313
+Vendored smoke SUCCESS (22s); Ubuntu canary SUCCESS with PDDA gate and full validate step
+SKIPPED; macOS promotion SKIPPED. These are smoke/docs results, not full qualification.
+
+Existing Pages automation triggered by the development push also completed successfully before
+cancellation was possible: https://github.com/HiQS-Labs/XYZ-forge/actions/runs/39159380211
+No manual deployment command or workflow edit was performed. This automatic side effect is
+reported explicitly rather than claiming no deployment occurred. No main promotion.
+
+PR1147 closed (not merged, mergedAt null), with landing/evidence comment:
+https://github.com/HiQS-Labs/XYZ-forge/pull/1147#issuecomment-6254250544
+Issue1143 closed completed at 2026-10-18T19:37:24Z. Owned plan moved to 3-COMPLETED and
+roadmap repointed/completed through supported CLI. No other issue row/accepted-start state
+changed. The later combined release review belongs to GH1155 and is outside this task.
+
+## Acceptance
+
+The requested thin skill, minimal pointers and risk-based Express policy are landed with
+independent bounded review and existing documentation/ledger checks. Runtime remains unchanged.
+The held stateful pilot, missing semantic adapters and per-individual-CI-case approval remain
+limitations; no campaign or remediation executed. Scope excludes #1133 and separate #1136 work.
+
+## Lessons Learned (For Future Agents)
+
+- Classifier docs eligibility does not imply express.py admission; state the current mismatch
+  and scoped manual authority honestly, never relabel a driver refusal as success.
+- Rebuild owned ledger intake with canonical commands against the live ledger; never import a
+  stale PR database. Keep earlier review failures and cap history for auditability.
+- Development pushes trigger Pages automatically. An operator forbidding all such side effects
+  needs to address that workflow separately; this task changes no executable workflow policy.
+- Close a directly landed PR as closed, not merged; record exact landing/check links.
