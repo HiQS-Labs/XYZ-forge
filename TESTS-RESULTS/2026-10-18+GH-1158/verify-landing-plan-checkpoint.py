@@ -42,11 +42,22 @@ from gh534_phase_b_tests import LedgerFixture, park
 class TestGH1158LandingPlanCheckpoint(LedgerFixture):
     """End-to-end integration tests using LedgerFixture for git & mock GitHub isolation."""
 
-    def run_main(self, execute=True, extra=()):
+    def run_main(self, execute=True, extra=(), scan_return=None):
+        argv = ["merge_cleanup.py", "--primary", str(self.primary), "--root", str(self.tmp / "no-roots")] + list(extra)
+        if execute:
+            argv.append("--execute")
+        err = io.StringIO()
         out = io.StringIO()
-        with contextlib.redirect_stdout(out):
-            rc = super().run_main(execute=execute, extra=extra)
-        self.out = out.getvalue()
+        scan_val = [] if scan_return is None else scan_return
+        with mock.patch.object(sys, "argv", argv), \
+             mock.patch.object(merge_cleanup, "prune_dangling_skill_symlinks") as pruner, \
+             mock.patch.object(merge_cleanup, "teardown_checkout") as teardown, \
+             mock.patch.object(merge_cleanup, "scan_directories", return_value=scan_val) as scan_mock, \
+             contextlib.redirect_stderr(err), \
+             contextlib.redirect_stdout(out):
+            rc = merge_cleanup.main()
+        self.pruner, self.teardown, self.err, self.out = pruner, teardown, err.getvalue(), out.getvalue()
+        self.scan_mock = scan_mock
         return rc
 
     def test_01_missing_landing_plan_exits_5_and_zero_mutations(self):
@@ -64,17 +75,34 @@ class TestGH1158LandingPlanCheckpoint(LedgerFixture):
         fetch_head = self.primary / ".git" / "FETCH_HEAD"
         fetch_head_before = fetch_head.read_bytes() if fetch_head.exists() else None
 
-        # Override the empty scan_directories fixture to supply a candidate carrying a canonical issue,
+        # Supply a candidate carrying a canonical issue and valid display fields,
         # and enable --marker so that if scan or marker dispatch executed, issue markers would be posted.
-        candidate_checkout = [{"directory": self.primary, "canonical_issue": 999, "disposition": "SAFE_REMOVE_WORKTREE"}]
-        with mock.patch.object(merge_cleanup, "scan_directories", return_value=candidate_checkout) as mock_scan:
-            # Run merge-cleanup with --execute and --marker but NO landing plan
-            rc = self.run_main(execute=True, extra=("--marker",))
-            self.assertEqual(rc, 5, "Expected Exit 5 when landing-plan is missing for 3 PRs")
-            self.assertIn("REFUSING to execute: 3 PRs ready to merge", self.err)
+        candidate_checkout = [{
+            "path": str(self.tmp / "candidate-clone"),
+            "name": "candidate-clone",
+            "is_git": True,
+            "checkout_type": "worktree",
+            "current_branch": "feat/other",
+            "head_sha": "abcdef12",
+            "is_clean": True,
+            "dirty_count": 0,
+            "stash_count": 0,
+            "has_unpushed": False,
+            "unpushed_branches": [],
+            "canonical_issue": 999,
+            "disposition": "SAFE_REMOVE_WORKTREE",
+            "disposition_reason": "clean worktree",
+            "activity": {"activity_tier": "DORMANT", "modified_10m_count": 0, "modified_60m_count": 0},
+            "completion": {"summary": "Completed successfully"},
+            "reason": "clean worktree",
+        }]
+        # Run merge-cleanup with --execute and --marker but NO landing plan
+        rc = self.run_main(execute=True, extra=("--marker",), scan_return=candidate_checkout)
+        self.assertEqual(rc, 5, "Expected Exit 5 when landing-plan is missing for 3 PRs")
+        self.assertIn("REFUSING to execute: 3 PRs ready to merge", self.err)
 
-            # Assert checkout scan was never entered (preventing checkout FETCH_HEAD writes)
-            self.assertEqual(mock_scan.call_count, 0, "Zero-mutation violated: scan_directories was called on Exit 5")
+        # Assert checkout scan was never entered (preventing checkout FETCH_HEAD writes)
+        self.assertEqual(self.scan_mock.call_count, 0, "Zero-mutation violated: scan_directories was called on Exit 5")
 
         # Verify zero mutations:
         # a. REBASE_HEAD was NOT pruned

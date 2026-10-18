@@ -1,9 +1,11 @@
-Witnessed Red Control for GH-1158 Checkpoint Boundary
-=====================================================
+Witnessed Red Controls for GH-1158 Checkpoint Boundary
+======================================================
 Date: 2026-10-18
-Mutation: In skills/2-daily/merge-cleanup/scripts/merge_cleanup.py, bypass upfront checkpoint by setting threshold from >= 3 to >= 99.
 
-Command executed:
+Control 1: Active Scan Boundary Falsifier
+-----------------------------------------
+Mutation: In skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1640, deliberately dispatch `scan_directories(...)` immediately before `return EXIT_LANDING_PLAN_REQUIRED`.
+Command:
 PYTHONPATH=".:test:skills/2-daily/merge-cleanup/scripts" python3 TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py TestGH1158LandingPlanCheckpoint.test_01_missing_landing_plan_exits_5_and_zero_mutations
 
 Result (exit code 1):
@@ -13,13 +15,59 @@ FAIL: test_01_missing_landing_plan_exits_5_and_zero_mutations (__main__.TestGH11
 1. Missing --landing-plan on 3+ PRs exits 5 before any mutation.
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1158-landing-plan-checkpoint-2026-10-18/TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py", line 70, in test_01_missing_landing_plan_exits_5_and_zero_mutations
+  File "TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py", line 105, in test_01_missing_landing_plan_exits_5_and_zero_mutations
+    self.assertEqual(self.scan_mock.call_count, 0, "Zero-mutation violated: scan_directories was called on Exit 5")
+AssertionError: 1 != 0 : Zero-mutation violated: scan_directories was called on Exit 5
+
+Ran 1 test in 2.828s
+FAILED (failures=1)
+
+Diagnostic:
+The innermost active mock on `scan_directories` wraps `merge_cleanup.main()` and immediately fails if execution touches directory scanning on Exit 5. When restored, `call_count == 0` passes cleanly.
+
+
+Control 2: Marker Dispatch Boundary Falsifier
+---------------------------------------------
+Mutation: In skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1640, deliberately dispatch `post_issue_marker(primary_repo, 999, "status marker", dry_run=False)` before refusal.
+Command:
+PYTHONPATH=".:test:skills/2-daily/merge-cleanup/scripts" python3 TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py TestGH1158LandingPlanCheckpoint.test_01_missing_landing_plan_exits_5_and_zero_mutations
+
+Result (exit code 1):
+F
+======================================================================
+FAIL: test_01_missing_landing_plan_exits_5_and_zero_mutations (__main__.TestGH1158LandingPlanCheckpoint.test_01_missing_landing_plan_exits_5_and_zero_mutations)
+1. Missing --landing-plan on 3+ PRs exits 5 before any mutation.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py", line 132, in test_01_missing_landing_plan_exits_5_and_zero_mutations
+    self.assertEqual(len(marker_calls), 0, "Zero-mutation violated: issue markers posted on Exit 5")
+AssertionError: 1 != 0 : Zero-mutation violated: issue markers posted on Exit 5
+
+Ran 1 test in 2.674s
+FAILED (failures=1)
+
+Diagnostic:
+With a valid candidate carrying canonical issue 999 and `--marker` enabled, any dispatch of issue markers immediately records an `issue comment` call in mock GitHub state and trips the zero-marker assertion. When restored, zero markers are posted.
+
+
+Control 3: Checkpoint Bypass & Ref-Mutation Falsifier
+-----------------------------------------------------
+Mutation: In skills/2-daily/merge-cleanup/scripts/merge_cleanup.py, mutate threshold from `>= 3` to `>= 99` to bypass checkpoint.
+Command:
+PYTHONPATH=".:test:skills/2-daily/merge-cleanup/scripts" python3 TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py TestGH1158LandingPlanCheckpoint.test_01_missing_landing_plan_exits_5_and_zero_mutations
+
+Result (exit code 1):
+F
+======================================================================
+FAIL: test_01_missing_landing_plan_exits_5_and_zero_mutations (__main__.TestGH1158LandingPlanCheckpoint.test_01_missing_landing_plan_exits_5_and_zero_mutations)
+1. Missing --landing-plan on 3+ PRs exits 5 before any mutation.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py", line 70, in test_01_missing_landing_plan_exits_5_and_zero_mutations
     self.assertIn("REFUSING to execute: 3 PRs ready to merge", self.err)
 AssertionError: 'REFUSING to execute: 3 PRs ready to merge' not found in 'merge-cleanup: WARNING — pruned orphaned REBASE_HEAD 59fd5d83c969beaf475e65c442c84dc22da86e39; rechecking primary readiness\nmerge-cleanup: ERROR — REFUSING to execute: queue holds 3 PRs without a valid landing plan.\n'
 
-----------------------------------------------------------------------
 Ran 1 test in 3.135s
-
 FAILED (failures=1)
 
 Diagnostic:
