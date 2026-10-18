@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -89,4 +89,21 @@ ROUND: 1 / 3
 
 End with VERDICT and a `swept file: yes|no` line.
 
+### Reviewer · Round 1 — codex
+
+**Ship. VERDICT: PASS.**
+**Basis:** The scoped implementation meets the final-QA criteria; no blocking implementation defect found. Approval covers this review, with the final-commit harness/pre-push gate still outstanding as planned.
+swept file: yes
+
+- [Pass] Lock ownership is confined to `_sample()` → `_sample_locked()` (`utils/py/turn_diagnostics.py:389-393`) and `classify()` → `_classify_locked()` (`:500-512`). `cpu_ratio()` (`:453-476`) and `idle_seconds()` (`:478-498`) take no lock. `termination_record()` and `emit_termination_record()` call classify once without an outer lock (`:570-590`); sampling calls only the unlocked ratio helper (`:424-432`). No reentrant acquisition on these paths. No caller or test change appears in the seeded patch.
+- [Pass] Labels, thresholds and decision order are unchanged. A non-mutating source audit reverse-applied the seeded code hunks **in memory**, checked both Git-blob hashes against the patch indices, and compared the classifier executable body byte-for-byte. Command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` (stdin: reverse-hunk reconstruction, hashlib blob calculation, AST body-range comparison, provenance SHA256/size checks and AST lock inventory). Exit **0**; decisive output: `base blob 5aa1852317294f1b14ecad84552e418434354a59 candidate blob 64f61dc27c5013beacfb037afe5f33f73fbb0bf3`, `classifier executable body byte-identical`, `provenance: all 10 nonempty artifacts match bytes and SHA256`, `lock acquisitions: ['_sample', 'classify']`. Source: `utils/py/turn_diagnostics.py:511-568`; scoped patch index `5aa18523..64f61dc2`.
+- [Pass] Race evidence is non-vacuous: `race-control.py.txt:19-41` holds the third-sample probe behind an event and contrasts base completion with candidate blocking; the actual exact-detail base result is in `clone-race-control-clone.log.txt:1-3`, candidate wait/release/idle-unknown in `:8-12`, and no-in-flight return in `:13` (all paths under `TESTS-RESULTS/2026-10-18+GH-1126/`). Exception-before-probe remains explicitly unclassified (`:14`); this fix does not claim otherwise. The candidate negative wait uses a one-second bounded join, so it is scheduling-sensitive evidence, corroborated by the lock structure rather than a proof from timing alone.
+- [Pass] Reviewed the existing clone-run receipts: `clone-gh390-timeout-attribution.log.txt` ends “14 pass, 0 fail”; `clone-gh492-idle-kill.log.txt` ends “16 pass, 0 fail”; `clone-gh648-l1-turn-termination.log.txt:1` says “PASS: 73 assertions”; `clone-gh648-l3-consult-cap.log.txt:1` records the wall/idle cases passing; `clone-gh610-claude-subscription.log.txt:8-17` includes the formerly failing integration case and “OK”; `clone-gh648-l4-285-revalidate.log.txt:1-6` records the shim cases and rejected no-kill mutation. Their nonempty bytes match the provenance hashes. **Evidence limit:** disposable-full-clone execution and stable before/after identity are attested in `README.txt:1`, not accompanied by raw identity snapshots; I did not independently rerun suites or establish final-commit gate success here. User's execution boundary was observed.
+- [Nit] Whole-file sweep found a pre-existing documentation mismatch at `utils/py/turn_diagnostics.py:248-250`: the two-tuple helper claims a failed ps probe is treated as “no signal” rather than idle, while the classifier does not inspect nproc (`:511-568`). Optional correction: remove that unsupported docstring promise. No behavior expansion requested. The already documented exception-before-probe and unlocked idle-progress observation limits remain; no additional pre-existing defect found in the changed lock regions. The accepted whole-sample classification delay is accurately disclosed in the plan's Risk / rollback section.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) owns the subsequent harness gate and publication steps.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### System · relay-drive — 2026-10-18T16:57:39Z
+terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
