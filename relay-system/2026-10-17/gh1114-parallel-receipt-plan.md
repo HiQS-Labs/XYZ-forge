@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -130,5 +130,27 @@ Dispositions (plan revised in place, same path; `.relay-artifacts` copy is not u
 - Q1/Q2/Q3-4/Q5 passes acknowledged; Q5's bounded-coverage caveat is carried by A1 (measured) and A2 (manual harness). No new suites or cases.
 
 Request: confirm S1–S3/N1 closed against the revised text, or name the remaining gap with Observed input / Affected scope / Falsifier. VERDICT + `swept file:` line please.
+
+### Reviewer · Round 2
+
+**VERDICT: PASS**
+
+**Basis:** Approve the revised plan for implementation within the stated operator envelope. S1–S3 and N1 are closed. This is plan approval, not implementation qualification or merge approval.
+
+swept file: yes
+
+Read the entire canonical 73-line `PROJECT/2-WORKING/GH-1114-PARALLEL-QUALIFYING-RECEIPT.md`, including frontmatter, status, risks, non-goals and acceptance, as requested by the latest Producer turn. No additional pre-existing defect was identified in the plan. Current source was read for the reader, callers, writer, telemetry, retry/completeness paths and existing negative assertions. Graph lookup used project `XYZ-forge` at a different checkout; it did not locate the current qualification functions, and coverage reported metadata_changed/not_tracked evidence paths. Local source therefore supports the citations below; no graph completeness claim is made.
+
+- **[Pass] S1 closed — the retry exception preserves the other reader checks.** Plan:47 explicitly retains integer rc validation for every suite row, limits the exception to executed rows with a successful same-name retry, excludes non-suite probes, and preserves executed-row and unique-name counts plus summary/envelope/identity/completeness checks. These match the load-bearing checks in `utils/py/wave_reconcile.py:493-527`. Plan:50 and :71 specify failing-retry, missing-row, bad non-suite, retry-only and duplicate-name controls. The runner emits both retry event and retry suite rows (`validate.sh:1365-1366`); the plan correctly selects the suite row. Retry-only evidence remains incomplete under the executed-lane denominator (`validate.sh:1538-1543`).
+
+- **[Pass] S2 closed — actual metadata and both classifier outcomes are observable.** Plan:47-50 assigns mode/width to `run.start`, updates both callers for `(summary, meta)`, and requires inspecting emitted receipts for parallel and sequential evidence. This follows the start record (`test/lib/runner-telemetry.sh:76-77`), rather than the metadata-free summary (`:174-175`). Plan:50(h-i), :71-72 supply both tier branches and a deliberately wrong-mode control; gh425 is explicitly described as fallback-only coverage. The current classifier branches are `utils/py/wave_reconcile.py:608-615`. Historical width-less fixtures remain compatible under the retained sequential path, not a new mandatory-width admission rule.
+
+- **[Pass] S3 and N1 closed — document contract and bounded scope restored.** Plan:1-18 supplies the required frontmatter, :25-29 the exact status-table columns, and :73 doc hygiene in the later clone run, matching `PROJECT/PDDA.md:47-61`. Plan:46 corrects the Small count; :52 drops the unnecessary ci-route comment edit. Plan:41 and :51 retain the no-new-test-cases limit; :57-59 preserve the agreed non-goals.
+
+- **[Pass] Whole-plan design remains consistent with the accepted decisions.** Plan:46-49 changes the existing gate/reader/writer, keeps old sequential receipts accepted, retains pgid/run binding, and records rescued names and count. Plan:63 supplies fallback and rollback. This addresses the origin—the sequential-only qualification consumer (`utils/py/wave_reconcile.py:463,496,517-519,682`)—using existing runner evidence. The existing negative assertions remain present (`test/gh425-gate-provenance-pr.sh:396-406`; `test/gh740-hosted-lane-publish.sh:182-185`).
+
+- **[Unverified — needs clone run] Implementation behavior, emitted receipts, suite results, red controls and hygiene remain future acceptance work.** Nothing here claims they ran. Execute plan:50 and :70-73 in the prescribed disposable full clone, retain command/status/decisive output, and commit manual evidence with its `provenance.jsonl` under the repository evidence contract before citing success. No suites, fixtures, Git commands, or source/artifact mutations were performed in this turn.
+
+Relay closed (Approved), no further turn needed. Producer may proceed to implementation and the planned independent final QA; operator merge approval remains outstanding.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
