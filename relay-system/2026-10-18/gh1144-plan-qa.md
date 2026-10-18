@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -91,5 +91,48 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The branch inventory is substantially grounded, but the plan has two demonstrable acceptance contradictions, misses executable recovery instructions, and cannot detect split-brain landing with its proposed dry-runs. Resolve the findings before implementation.
+swept file: yes
+
+Reviewed the entire seeded plan, including acceptance, risks and non-goals; the findings below include existing source/skill assumptions rather than only proposed changes. No other defects found in the swept plan beyond those listed. Evidence tier: Verify intent, source fallback used: graph project `XYZ-forge` is ready but rooted in a different checkout; its express graph ends at line 792 whereas this seeded file ends at 1316. Project listing fully paginated (84 entries); this worktree has no matching project. Coverage queried for express, reconciler, skill and plan, but that foreign index is not evidence of seeded-source freshness. No suites, executable fixtures or git commands run.
+
+- [Blocker] **The specified unresolved-base refusal writes telemetry, contradicting “writes nothing.”** Plan Changes 1 (`PROJECT/1-INBOX/GH-1144-EXPRESS-DEFAULT-BRANCH.md:93`) calls `refuse(root, "base-unresolved", …)` without suppressing telemetry. `utils/py/express.py:119` defaults `dry_run=False`; lines 120–121 call `write_tick`, whose lines 140–181 write both local and central telemetry. Fix the new refusal to suppress telemetry unconditionally, including a real non-preview invocation, and assert no local or central artifacts in its clone-run check.
+  Observed input: the exact three-argument refusal specified in Changes 1, evaluated with a recording `write_tick` stub, produces exit 3 and one telemetry call.
+  Affected scope: unresolved base before any express phase, with or without `--dry-run`.
+  Falsifier: a no-base fixture executed without `--dry-run` exits 3 with `base-unresolved`, leaving local/central telemetry, docs and ledger unchanged.
+
+- [Blocker] **“Existing suites unchanged” is incompatible with the planned push replacement.** Plan lines 105–106 and 138–139 require unmodified suites, but `test/gh267-express-skill.sh:753` explicitly requires the source substring `"push", "origin", "HEAD:development"` inside `cmd_land`. Changes 2 removes it. An in-memory source probe reports `existing source assertion before= True after planned BASE replacement= False`. Fix the plan to allow the smallest truthful edit of this existing assertion; preserve its direct, fast-forward landing contract. GH-831 explicitly permits keeping an existing suite truthful when its pinned behavior changes; no new suite or registry entry is needed.
+  Observed input: the literal required by gh267 line 753, against `cmd_land` after replacing `"HEAD:development"` with `"HEAD:" + BASE`.
+  Affected scope: existing express source-audit assertion after branch parameterization.
+  Falsifier: the adjusted existing assertion passes the actual implementation and fails an isolated mutation that restores a hardcoded wrong destination; retain the runtime landing checks.
+
+- [Should] **Dry-run does not exercise the dangerous half of the path or supply the promised red control.** Plan line 130 says its main-fixture dry-run exercises push, closeout and reconcile previews; `utils/py/express.py:839–842` only prints a summary and returns before the actual push at 853, checkout/pull at 859–860, closeout at 869, and reconciler call at 943. Resume likewise returns at 1175 before its checkout at 1179 and reconciliation at 1216. Old code refusing at admission proves resolution changed, not that every later destination agrees. The grep audit helps literal inventory but does not prove command wiring. Add a recorded manual non-preview main-only run and resume in the disposable full clone, using the existing fixture approach, and inspect remote refs, final branch/cleanliness, committed receipt, and successful `--gate` reconciliation. Witness the same check fail with one actual push/closeout destination transposed to `development`; save its evidence in the already proposed TESTS-RESULTS directory. This is a manual check, not new gate machinery.
+  Observed input: plan lines 108–115/130 choose `--dry-run` for the main run and adjacent resume; AST inspection shows `cmd_land returns= [842]`, actual push at 853, and resume's preview return at 1175.
+  Affected scope: branch consistency across actual land, ship persistence, reconciliation and resume.
+  Falsifier: restore a single wrong branch destination while keeping the preview correct; the proposed observable-state check must fail and the corrected implementation must pass.
+
+- [Should] **Recovery remains hardcoded despite the all-path requirement.** Changes 5 (plan lines 102–103) permits only one new paragraph and “no other wording change,” leaving executable `git checkout development` at `skills/2-daily/express/SKILL.md:129`, `git push origin development` at 132, and a resume command without the explicit selection at 133. For a main-only host the documented recovery cannot complete. Its imported `express.write_receipt` at 130 also bypasses `main()` resolution, retaining the proposed module default and falsely describing a development push (`express.py:313`). Update executable recovery commands to use one explicit base, pass it into resume and receipt generation through the smallest supported mechanism, and make the normal procedure's branch wording consistent. Keep Forge's default receipts unchanged.
+  Observed input: the existing recovery block's checkout/push commands above, applied to the plan's main-only fixture; plan line 81 explicitly preserves the imported helper's development default.
+  Affected scope: recovery after a main/custom-base landing without a valid committed receipt, including explicit `--base` overrides.
+  Falsifier: in a disposable main-only clone, the documented recovery procedure completes with a receipt naming main and resume reconciles that same base; Forge's default recovery still names development.
+
+- [Should] **Existence of `origin/development` does not establish the default/integration branch.** The fetched issue #1144 says “If neither resolves, refuse … Never guess.” Plan lines 90–92 instead choose development merely because its ref exists. A clone can have no origin/HEAD while retaining both main and development; ref existence provides no evidence which one the operator authorized. Fixture convenience is insufficient justification for choosing a direct-push target. Prefer the issue's `gh ... defaultBranchRef` fallback and fail closed when unavailable, or drop that network fallback but require `--base` when origin/HEAD is absent. Make the existing fixture declare its intended base (explicit flag or origin/HEAD) rather than deriving production policy from its missing symbolic ref.
+  Observed input: resolver input explicitly admitted by plan line 92: `explicit=None`, missing origin/HEAD, existing origin/development; the algorithm returns development without any default-branch evidence. Issue read: `gh issue view 1144 -R HiQS-Labs/XYZ-forge --json title,body`, exit 0, proposal states “Never guess.”
+  Affected scope: implicit base selection when origin/HEAD is unavailable; explicit `--base development` remains supported.
+  Falsifier: a clone with main as its declared GitHub default, development also present, and no local origin/HEAD must resolve main via authoritative fallback or refuse; it must not silently select development.
+
+- [Pass] **A per-process module base and narrowly scoped direct-commit reconciliation are reasonable mechanisms.** `express.py:1246–1312` dispatches one command per process; the imported recovery helper is the concrete exception addressed above. Express invokes only `--commit … --gate` (`express.py:943`), not `--qualify` or `--catch-up`; reconciler qualification and recovered-owner paths are conditional on those separate flags (`wave_reconcile.py:2266`, `:2295`). Keep default arguments for other metadata callers (`:676`, `:1436`); apply the new base only to the direct-commit path and preserve development semantics for PR/hosted modes. No additional framework is needed.
+
+- [Nit] Plan line 85's “Costly-adjacent” is not a shared reversibility grade. Easy source rollback is defensible, but explicitly state that reverting code cannot undo a misdirected remote landing. Name the stop signal (any disagreement in branch destinations) and last safe checkpoint (before first push); preserve the current fast-forward-only authority.
+
+Probe ledger (non-mutating; no executable fixture): ran `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 - <<'PY' ... PY`, exit 0. Python parsed express with `ast.parse`, inspected Return line numbers, compiled only the existing `refuse` function with a recording `write_tick` and throwing `sys.exit` stub, and compared gh267's literal against the cmd_land source before/after an in-memory `.replace('"HEAD:development"', '"HEAD:" + BASE')`. Decisive output: `cmd_land returns= [842]`; `cmd_resume returns= [1225, 1175]`; `cmd_land actual push line: 853`; `planned refuse call: exit= 3 telemetry_calls= 1`; `existing source assertion before= True after planned BASE replacement= False`. These are source-level controls, not executed landing evidence. [Unverified — needs clone run]: all runtime suites, real branch resolution, landing, receipt/reconciliation and recovery behavior remain for the disposable clone gate.
+
+Root cause: branch authority is encoded in multiple independent literals and executable recovery instructions; Fix site: resolve once in express and pass the same base into direct-commit reconciliation and recovery; Why not upstream/downstream: PR/hosted reconciliation has separate development contracts and does not run on express's plain --commit --gate path.
+
+Handing off to Producer (claude-a) — revise the plan and disposition every finding, then return for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
