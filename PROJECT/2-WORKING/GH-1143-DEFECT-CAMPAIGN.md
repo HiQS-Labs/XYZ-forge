@@ -2,7 +2,7 @@
 gh_issue: 1143
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1143
 title: Radar-to-campaign documentation skill
-status: Hotfix integration — awaiting focused review
+status: Hotfix reviewed — awaiting direct publication
 updated: 2026-10-18
 owner: Codex
 goal: Connect Radar recommendations to bounded approved discovery using existing assets
@@ -19,7 +19,7 @@ ATE, fuzz, oracle and minimization assets. Documentation only; no execution or r
 
 | What was just completed | What's next |
 |---|---|
-| Operator authorized risk-based Express wording and manual docs hotfix integration | Focused remaining-budget review, docs gates and normal-hook fast-forward landing |
+| Focused review Approved at round 2/3; docs/ledger checks pass | Normal-hook fast-forward direct publication and exact-head hosted verification |
 
 ## Recon and smallest viable bet
 
@@ -178,3 +178,11 @@ After reviewed docs-only normal-hook landing and exact-head hosted checks: close
 closed by direct hotfix (not merged), close issue1143 and reconcile owned doc/row through CLI.
 Publish closeout with normal hooks, then preserve remote recovery proof and retire only the
 original task clone plus this helper to recoverable Trash after fresh safety checks.
+
+## Focused hotfix review checkpoint
+
+Codex review Approved round 2/3; relay-drive exit0 and attestation at 2026-10-18T19:32:52Z,
+reviewed `1ad7d8c00624`. No Critical/High or material correctness findings; independent table
+comparison confirmed preservation of every prior ledger row/receipt. Receipt:
+`relay-system/2026-10-18/gh1143-hotfix.codex.md`. Only factual status/provenance closeout
+follows that review; skill/policy/source bytes stay unchanged before direct publication.
