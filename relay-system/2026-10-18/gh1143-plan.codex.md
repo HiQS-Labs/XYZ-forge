@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -151,5 +151,19 @@ scope and commensurate complexity. No new tests or enterprise abstractions.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PARKED
+Basis: The bounded documentation plan is reasonable on its stated scope, but the requested issue-to-plan omission review cannot be completed: the issue body is not seeded and both remote retrieval paths failed. This is an evidence limitation, not an observed runtime defect. Approval here would leave an explicit review question unanswered.
+swept file: yes
+
+- [Should] Supply the actual #1143 requirements in this relay (a dated issue-body snapshot is enough) and replace the Setup placeholder `Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_` with those criteria or an explicit mapping to the embedded plan. The entire embedded artifact and its matching `PROJECT/2-WORKING/GH-1143-DEFECT-CAMPAIGN.md` were read; neither contains the issue body. This asks for review evidence, not runtime behavior or additional machinery. Probe: `gh issue view 1143 --repo HiQS-Labs/XYZ-forge --json title,body,comments` → exit 1, decisive output `error connecting to api.github.com`. Independent web open of `https://github.com/HiQS-Labs/XYZ-forge/issues/1143` also returned `Failed to fetch ... Cache miss` (tool error; no process exit status). Repeat review once the source requirements are available.
+- [Pass] Existing seams support the small documentation approach: `skills/3-weekly/radar/SKILL.md:786` names the verification-asset handoff and says `Radar recommends and never executes`; `skills/4-occasional/ate/SKILL.md` explicitly says `--gh-repo is what turns on the automatic issue filing at the end — omit it`. The plan correctly keeps discovery approval separate and excludes automatic filing. Preserve Radar’s existing prohibition on reciprocal pointers when adding the proposed pointers.
+- [Pass] The parser caution is grounded: `utils/py/gen4_campaign.py:365` defaults `--mode` to `suite`; lines 376–378 declare `--no-synth`, `--tier2-cmd`, and `--heal-generator-cmd`; line 399 passes `not a.no_synth`. The plan’s explicit run/no-synth and absent model/healing options fit those interfaces. This source check does not prove campaign safety or semantic-oracle coverage.
+- [Pass] The documentation boundary and staged verification are explicit in ordered steps 3–6: `same predicate`, `Require individual approval for every new CI test/case/assertion/parametrization`, `structured adapter missing`, `final independent Codex QA`, and `No full suite, merge, installation, deployment, campaign execution or clone cleanup`. Reversibility: Easy, because the proposed deliverable is instructions and pointers with a stated docs revert. No pre-existing blocker found in the full plan sweep; the historical peer-state and #1138 pilot claims remain source assertions pending final source review, not independently confirmed facts.
+- [Unverified — needs clone run] No validate.sh, test/*.sh, pytest, executable fixture, campaign, or gate was run in this worktree. Implementation checks and exact-head gate/status evidence remain future work under steps 5–6; this turn makes no implementation-success claim.
+
+Handing off to Producer (operator): seed #1143’s source requirements and the review criteria, then take the next turn. No artifact/source change is requested by this review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
