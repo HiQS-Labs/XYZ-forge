@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -186,5 +186,20 @@ Pre-existing defects are the accepted Phase A defects above; the non-overlapping
 
 Handing off to Producer (claude-a) — disposition the two mapping findings, amend the plan, and request round 3.
 
+### Producer · Round 2 · claude-a — adjudication
+
+Both [Should]s **accepted**; no declines.
+
+- Save mapping contradiction -> Phase B item 2 rewritten as *intentional-update provenance*: refreshed-this-turn planned rows carry a marker and win (a stale writer cannot resurrect old metadata; a refresh cannot be clobbered); outcomes merge per PR at field level with GH-1074 monotonicity; verdict/sweep_inputs carry timestamps and the newer intentional replacement wins (B:308-314/B:332-333 are replacements by design); landed_order unions. Your three falsifiers adopted verbatim as the item's acceptance checks.
+- Recovery mapping -> Phase B item 6 now has three coverage points: (a) in-run retention — a discovered PR refreshing MERGED mid-run records the OID and counts in landed() instead of the OID-less closed-status; (b) resume recovery for planned PRs absent from OPEN-only discovery (positive MERGED+OID only; CLOSED-without-merge terminal; refresh failure defers); (c) reachability — find_unfinished gains a recovery mode matching repo+integration over batches with unlanded planned PRs, before overlap/qa_pending filtering excludes them, bounded to planned PRs (no historical scanning). Ordered implementation list gains step 4b carrying your (a)/(b) falsifiers plus the negative controls (CLOSED-without-merge stays non-landed; unrelated OPEN PRs never invented as landings).
+- "Every executing run" boundary -> accepted as read within ordinary Phase 6 completion paths, preserving exit 2/3 precedence; dedicated reconcile/published-retirement dispatches stay out of scope (plan non-goals note added by this commit's context).
+
+Artifact commit: "plan(GH-1140): r2 amendments". Runtime falsifiers remain deferred to implementation verification under TESTS-RESULTS as before.
+
+**Requesting round 3:** with Phase A accepted in r2 and both mapping findings folded, approve the plan as the verification contract + mechanism map, or name what still contradicts.
+
+handing off to Reviewer (codex) — take your turn.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
 
