@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -182,5 +182,37 @@ Dispositions (canonical plan revised; re-seeded):
 - **Nit — Implemented.** Atomicity is now stated "with respect to `classify()`". `cpu_ratio()` stays lock-free (reentrancy). The append/`_last_progress_t` gap is named as a limitation.
 
 Request: confirm R1–R3 closed, or name the gap with Observed input / Affected scope / Falsifier. VERDICT + `swept file:` line.
+
+
+### Reviewer · Round 2
+
+**Block — R1 closed; R2 and R3 are only partially dispositioned. The lock design remains acceptable in principle.**
+
+swept file: yes
+
+Read the entire seeded artifact (:1-92), the entire current `utils/py/turn_diagnostics.py`, and the requested consult/review_xyz/test seams. Verify-tier attempt: paginated all 84 graph projects; this worktree has no indexed project. Nearest `XYZ-forge` is a different checkout with generation `2026-09-01T15:54:30Z`; targeted symbol search is stale (e.g. classify indexed at :361 versus current :490). Coverage reports metadata_changed for the three Python files and not_tracked for gh610/gh648-l1. Consequently the material evidence below is direct current source, not a graph completeness claim. No new pre-existing defect requiring expansion of this fix was found in the whole-file sweep. No suites, executable fixtures, git commands, or artifact/source edits were performed.
+
+- **[Pass] R1 closed.** Artifact :39-41 now distinguishes the reproduced race from unproven hosted attribution and explicitly retains the exception-before-probe limitation. This agrees with the swallowed exception at `utils/py/turn_diagnostics.py:425-429` and missing-observation branch at :531-535.
+- **[Pass] Core design and revised control remain appropriately narrow.** Artifact :49-53 limits atomicity to classify, leaves cpu_ratio lock-free, and names the idle_seconds limitation. Current `turn_diagnostics.py:417-418,496` shows why internally locking cpu_ratio with the same Lock would deadlock. Artifact :62-71 now specifies probe entry/release events, bounded joins, base/candidate outcomes, no-in-flight behavior and provenance. These are plan-level passes, not executed candidate evidence.
+
+- **[Should] R2 remains open in Risk / rollback.** Artifact :91 still says "**Worst case:** ... up to about 5 s ... already terminating", contradicting corrected :43 and :51. Replace that stale bullet with the accepted whole-sample wait and explicitly say consult/review_xyz delay killing a still-live process until classification returns. Also remove :57's claim that the lock keeps kill timing independent: `consult.py:308` classifies before `_kill_advisor_group` at :325; `review_xyz.py:429` classifies before killing at :433. No probe redesign or caller change requested.
+  - Observed input: artifact :91's literal five-second ceiling and "already terminating" statement persist; current source performs multiple sequential probes before completing a sample (`turn_diagnostics.py:383-422`).
+  - Affected scope: risk and alternative descriptions for classification overlapping a sample, including callers that kill after classification.
+  - Falsifier: a whole-sample wall-time bound of five seconds, or source showing those callers kill before classify, would invalidate this correction; current source shows neither.
+
+- **[Should] R3 still lacks the requested full-clone execution boundary.** Artifact :60-80 specifies suites as "run unsandboxed" (:74) but nowhere requires a separate disposable **full clone**, including the final pre-push gate. Add that sentence explicitly before the suite list, and require the manual evidence/provenance to be committed with the implementation. Unsandboxed execution alone does not isolate shared git state; the relay worktree is forbidden for these runs by the task instructions and AGENTS.md's GH-564 rail.
+  - Observed input: the complete Verification section (:60-80) has no disposable full-clone instruction; :74 only says "run unsandboxed".
+  - Affected scope: the listed suite/gate execution procedure and durable manual evidence, without adding tests or machinery.
+  - Falsifier: an explicit separate disposable full-clone requirement and committed manual evidence requirement in the seeded procedure would close this request; neither is presently stated there.
+
+- **[Unverified — needs clone run]** Implementation behavior, the actual red/green race control, all suite results and the final committed-state gate remain future work. No execution success is claimed here. Setup's Definition of Done remains a placeholder; grading continues against artifact Acceptance :76-80 and the Producer's stated issue constraints.
+
+Root cause: classifier can read a partially published sample; Fix site: shared sample/classify lock; Why not upstream/downstream: synchronizing the existing publisher and consumer preserves classifier semantics without weakening the integration assertion. Hosted incident attribution remains unproven.
+
+**VERDICT: FAIL**
+
+**Basis:** The substantive design and revised evidence strategy are sound enough for implementation after two small plan corrections. R2's stale risk claims and R3's missing execution-isolation instruction remain despite their Implemented dispositions; correct those in the seeded artifact and return for Round 3.
+
+Handing off to Producer (claude-a) — complete R2/R3, re-seed the plan, and request the final plan review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
