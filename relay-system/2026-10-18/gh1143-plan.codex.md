@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -140,7 +140,7 @@ and per-case approval plus ownership boundaries explicit? Are the docs-only gate
 writers reused without bypass or speculative machinery? Grade only this local documentation
 scope and commensurate complexity. No new tests or enterprise abstractions.
 ```
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: All issue requirements below have an equivalent in the embedded documentation-only plan, within the operator-authorized exclusions.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -158,7 +158,7 @@ VERDICT: PARKED
 Basis: The bounded documentation plan is reasonable on its stated scope, but the requested issue-to-plan omission review cannot be completed: the issue body is not seeded and both remote retrieval paths failed. This is an evidence limitation, not an observed runtime defect. Approval here would leave an explicit review question unanswered.
 swept file: yes
 
-- [Should] Supply the actual #1143 requirements in this relay (a dated issue-body snapshot is enough) and replace the Setup placeholder `Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_` with those criteria or an explicit mapping to the embedded plan. The entire embedded artifact and its matching `PROJECT/2-WORKING/GH-1143-DEFECT-CAMPAIGN.md` were read; neither contains the issue body. This asks for review evidence, not runtime behavior or additional machinery. Probe: `gh issue view 1143 --repo HiQS-Labs/XYZ-forge --json title,body,comments` → exit 1, decisive output `error connecting to api.github.com`. Independent web open of `https://github.com/HiQS-Labs/XYZ-forge/issues/1143` also returned `Failed to fetch ... Cache miss` (tool error; no process exit status). Repeat review once the source requirements are available.
+- [Should] Supply the actual #1143 requirements in this relay (a dated issue-body snapshot is enough) and replace the Setup placeholder `Definition of Done: All issue requirements below have an equivalent in the embedded documentation-only plan, within the operator-authorized exclusions.` with those criteria or an explicit mapping to the embedded plan. The entire embedded artifact and its matching `PROJECT/2-WORKING/GH-1143-DEFECT-CAMPAIGN.md` were read; neither contains the issue body. This asks for review evidence, not runtime behavior or additional machinery. Probe: `gh issue view 1143 --repo HiQS-Labs/XYZ-forge --json title,body,comments` → exit 1, decisive output `error connecting to api.github.com`. Independent web open of `https://github.com/HiQS-Labs/XYZ-forge/issues/1143` also returned `Failed to fetch ... Cache miss` (tool error; no process exit status). Repeat review once the source requirements are available.
 - [Pass] Existing seams support the small documentation approach: `skills/3-weekly/radar/SKILL.md:786` names the verification-asset handoff and says `Radar recommends and never executes`; `skills/4-occasional/ate/SKILL.md` explicitly says `--gh-repo is what turns on the automatic issue filing at the end — omit it`. The plan correctly keeps discovery approval separate and excludes automatic filing. Preserve Radar’s existing prohibition on reciprocal pointers when adding the proposed pointers.
 - [Pass] The parser caution is grounded: `utils/py/gen4_campaign.py:365` defaults `--mode` to `suite`; lines 376–378 declare `--no-synth`, `--tier2-cmd`, and `--heal-generator-cmd`; line 399 passes `not a.no_synth`. The plan’s explicit run/no-synth and absent model/healing options fit those interfaces. This source check does not prove campaign safety or semantic-oracle coverage.
 - [Pass] The documentation boundary and staged verification are explicit in ordered steps 3–6: `same predicate`, `Require individual approval for every new CI test/case/assertion/parametrization`, `structured adapter missing`, `final independent Codex QA`, and `No full suite, merge, installation, deployment, campaign execution or clone cleanup`. Reversibility: Easy, because the proposed deliverable is instructions and pointers with a stated docs revert. No pre-existing blocker found in the full plan sweep; the historical peer-state and #1138 pilot claims remain source assertions pending final source review, not independently confirmed facts.
@@ -167,3 +167,78 @@ swept file: yes
 Handing off to Producer (operator): seed #1143’s source requirements and the review criteria, then take the next turn. No artifact/source change is requested by this review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+## Producer round 2 — evidence supplied
+
+Disposition: Accepted. Round 1 could not read the private/current GitHub source over its network. Below is the issue body fetched by the supervisor with gh on 2026-10-18; the current operator authorizes documentation implementation through DRAFT PR only, without campaign execution, new code/tests, merge, installation or cleanup. Compare the source requirements against the plan; no new machinery.
+
+## Issue 1143 source snapshot
+
+## Status: proposal only
+User requested thoughts, light–medium reconnaissance and an issue. This does **not** authorize implementation, campaign execution, test additions, remediation or activation.
+
+## Recommendation
+A thin skill (working name: **defect-campaign**) could turn a selected Radar finding into a bounded, approved experiment and then a remediation handoff. Reuse the existing engines and workflow. Do not build another scheduler or autonomous repair system.
+
+The valuable connection is: **Radar cluster → suitability check → explicit hypothesis/oracle → bounded discovery → reproducible counterexample → severity/ownership decision → separately authorized fix**. Radar alone cannot establish a bug or permission to fix it.
+
+## Recon / prior art
+- [#945](https://github.com/HiQS-Labs/XYZ-forge/issues/945) already proposes the verification-asset handoff; [PR #946](https://github.com/HiQS-Labs/XYZ-forge/pull/946) merged that into development as e888594fd3e3670a6be2eecdaecc4b20af549c1b. Extend this recommendation-only seam, do not duplicate it. The issue remaining open does not mean its PR never landed.
+- [ATE](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/4-occasional/ate/SKILL.md) means Automated Testing Environment. Existing [adaptive_ate.py](https://github.com/HiQS-Labs/XYZ-forge/blob/development/utils/py/adaptive_ate.py) supplies constraint-aware pairwise grids; [fuzz_engine.py](https://github.com/HiQS-Labs/XYZ-forge/blob/development/utils/py/fuzz_engine.py) supplies seeded argv mutation/replay.
+- [domain_oracles.py](https://github.com/HiQS-Labs/XYZ-forge/blob/development/utils/py/domain_oracles.py) covers containment/state/idempotence/crash-recovery predicates; [repro_builder.py](https://github.com/HiQS-Labs/XYZ-forge/blob/development/utils/py/repro_builder.py) supplies argv/environment minimization.
+- [gen4_campaign.py](https://github.com/HiQS-Labs/XYZ-forge/blob/development/utils/py/gen4_campaign.py) already orchestrates disposable clones, targets, seeds, bounds, telemetry, clustering and optional healing. **Synthesis defaults on.** Discovery must explicitly disable synthesis and healing/model-command options; omit automatic filing options. Inspect exact current CLI safety before any future execution. Its default targets exclude validate.sh because mutated arguments previously launched a full gate.
+- [#435](https://github.com/HiQS-Labs/XYZ-forge/issues/435) provides a campaign precedent using offline stubs and independent clones. [#460](https://github.com/HiQS-Labs/XYZ-forge/issues/460) already describes counterexample-to-disposition flow.
+- Older SOP/campaign instructions for automatic new regression tests, full preflight or fixes must not override the current per-case approval moratorium or #1131.
+
+## Matching rule: select the tool by problem class
+- CLI grammar/input boundaries: bounded seeded argv fuzzing
+- Configuration/environment interactions: constrained ATE/pairwise scenarios
+- State transitions, resume and concurrency: structured operation sequences with explicit semantic predicates
+- Documentary drift, prioritization or strategy: analysis; do not force these into fuzzing
+
+A report match needs a specific target, falsifiable invariant, safe fixture and useful oracle. Generic containment checks cannot prove correct business behavior. Pairwise coverage does not prove higher-order sequence coverage.
+
+## Proposed campaign contract
+1. Capture Radar report/cluster, exact code SHA, live issue/PR ownership, prior results and known counterexamples. Distinguish source revision from tracker timestamps.
+2. Specify hypotheses, allowed mutations, expected refusals, semantic oracle/falsifier, known-failing and clean controls, fixture, seed/corpus, commands, dependencies and wall-time/case limits.
+3. Obtain approval for that bounded execution and its permitted effects. Use disposable standalone full clones, sanitized environment, offline stubs and owned process-group cleanup. A discovery phase may mutate disposable fixture state only where declared; no production/shared checkout effects.
+4. Reuse existing campaign facilities with synthesis/healing and automatic issue filing off. Stop on containment/identity violations, surviving processes, invalid observations, missing dependencies, exhausted budgets or repeated no-new-signal results. Reserve time for replay/minimization/cleanup.
+5. Replay and minimize using the **same semantic predicate**. Retain exact inputs, corpus snapshot, code/tool versions, environment, outputs and timing where relevant. A seed alone is insufficient for stateful/concurrent behavior.
+6. Dedupe by target + invariant + root cause against issues, PRs and active local owners, not only error-text hashes. Separate new defects, known rediscoveries, expected refusals, flaky/inconclusive observations and faulty oracles.
+7. Report severity and real-world impact before remediation. Critical/high findings get prompt review; lower-severity findings remain deferred unless selected. Use existing start-task/review ownership for an explicitly authorized fix.
+8. Preserve before/after reproduction evidence and link the disposition back to the Radar tracking context or existing results issue. A clean bounded run does not prove an entire bug class eradicated.
+
+## Pilot candidate and current overlap
+[Radars #1138](https://github.com/HiQS-Labs/XYZ-forge/issues/1138) identify merge-batch stale captured state. Relevant seams are batch_record.py extend/landed/qa_pending/continuable and driver selection/sweep-input construction. Known controls include [#1073](https://github.com/HiQS-Labs/XYZ-forge/issues/1073) stale file overlap and [#1084](https://github.com/HiQS-Labs/XYZ-forge/issues/1084) QA bypass/merge-identity loss.
+
+**Do not launch a competing pilot now:** active [#1140](https://github.com/HiQS-Labs/XYZ-forge/issues/1140) work on Mac mini is changing batch persistence/orchestration. First reuse its eventual counterexamples and final implementation, or select another unowned class. [#1136](https://github.com/HiQS-Labs/XYZ-forge/issues/1136) accepted-start repair is also active and excluded.
+
+Candidate hypotheses, after ownership clearance:
+- Refreshing an unlanded PR must update overlap inputs without rewriting landed history
+- A fresh execution cannot hide matching pending QA
+- A failed post-merge refresh cannot discard a verified merge identity
+- Repeated equivalent read/recompute operations preserve semantics
+
+Existing gh436/gh534 checks are assets to reuse, not permission to add cases. This pilot likely needs a small structured-state adapter/oracle: name and review that gap instead of claiming argv mutation already covers it.
+
+## Guardrails / anti-goals
+- No automatic new CI suites, cases, assertions or parametrizations; each requires explicit operator approval
+- No repeated full development suite under #1131; preserve current promotion policy
+- No automatic fix, push, merge, deployment, issue closure or schedule activation
+- No ledger transport redesign: [#923 results](https://github.com/HiQS-Labs/XYZ-forge/issues/923#issuecomment-6252388515) rejected the proposed ordering change on measured benefit/safety
+- No new general engine, registry, gate, daemon or model dependency
+- No silent adoption of stale SOP permissions
+- This issue does not change any existing holds or authorize work on #1133
+
+## Initial design acceptance
+- [ ] One source-grounded pilot specification with ownership/duplicate check
+- [ ] Tool fit and missing domain oracle/adapter identified
+- [ ] Known-failing and clean controls specified before execution
+- [ ] Explicit budgets, stop conditions, isolation and reproducibility contract
+- [ ] Every counterexample has an accountable disposition and evidence link
+- [ ] Honest null result accepted; exercised/excluded/unresolved coverage stated
+- [ ] Existing machinery reused with no new CI policy or automatic remediation
+
+The main cost is trustworthy domain predicates, not launching a fuzzer. This is worthwhile if it reduces repeated manual triage and preserves findings; it is not worthwhile if it adds another orchestration layer without better evidence.
+
+— dot
