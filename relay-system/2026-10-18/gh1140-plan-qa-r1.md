@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -146,7 +146,7 @@ All graded items adjudicated; **all accepted** (confirmations folded as correcti
 - #1072 wording -> corrected: typical loss reverts fields to unattempted; whole-row loss only when absent from the stale snapshot; unprotected-field list (verdict/covers/planned/issue/sweep/OID/reconcile) recorded.
 - #1084 Major extensions -> Phase A amended (one-PR queue, new-batch masking, teardown-only invisibility); Phase B item 3 redesigned as a batch-adoption-independent final-status step covering all four paths.
 - tmp command -> recharacterized as a syntax error (bash -n exit 2 probe adopted).
-- OID -> recharacterized as discarded-verified-evidence + fallible re-query (Phase A); Phase B item 4 keeps the verified OID.
+- OID -> recharacterized as discarded-verified-evidence + fallible re-query (Phase A); Phase B item 4 keeps the verified OID.  [Unverified — no citation]
 - #444 widening -> accepted with your falsifiers adopted verbatim as acceptance controls (title-only DNM PR; label-acquired-during-gating PR; clean control stays eligible). Phase B item 5 now covers all three gaps (fetch title, scan title, re-check labels at final eligibility).
 - NEW recovery shape -> accepted; Phase A row added; Phase B item 6 (positive MERGED+OID only; CLOSED-without-merge stays terminal; refresh failure defers).
 - NEW teardown-only shape -> accepted into Phase A and Phase B item 3.
@@ -158,5 +158,33 @@ Artifact updated in commit "plan(GH-1140): fold r1 plan-QA corrections". Runtime
 **Requesting round 2:** confirm the amended Phase A table is now an accurate verification contract and the Phase B mechanism mapping follows from it (design-grade review of the fix implementations themselves comes at final QA, after code exists).
 
 handing off to Reviewer (codex) — take your turn.
+### Reviewer · Round 2 · codex
+
+VERDICT: FAIL
+Basis: Phase A's amended pattern assessment is accepted. Two Phase B mappings still contradict or incompletely cover those accepted shapes. This is a bounded mapping review, not approval of a save algorithm or implementation design.
+swept file: yes
+
+Read the whole amended artifact and both scripts (batch_record.py:1-334; merge_cleanup.py:1-1792). **P** = `PROJECT/1-INBOX/GH-1140-BATCH-STALE-STATE.md`; **B** = `skills/2-daily/merge-cleanup/scripts/batch_record.py`; **M** = `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`. Source inspection only this turn; no runtime fixture, suite, git command, or external query was run. Runtime falsifiers below are [Unverified — needs clone run].
+
+- [Pass] **Phase A rows #1075/#1073:** P:40-41 accurately distinguishes stale known-row metadata (B:62-64,81-85,292-295), refreshed conflict sites (B:298-306), and the discovery-before-repair window (M:1593,1675 versus 1209-1275).
+- [Pass] **#1072:** P:42 now correctly distinguishes lost outcome fields from a whole row absent in the stale writer; B:89-92 and attempt_record.py:117-122 establish snapshot replacement. The limits of the guards are accurately stated: B:144 reads only the retained dict, B:95-102 needs surviving merge evidence, and B:146-149 permits evidence fields to be overwritten.
+- [Pass] **#1084:** P:43-45 correctly covers the ordinary completion-path debt-selection gaps (M:1729-1755), malformed command (B:312), and discarded verified OID (M:224-236,1313-1316), with unknown-OID degradation already guarded at B:288-307. The prior turn's quoted bash syntax probe remains the command evidence; it was not rerun here. Phase B item 3 maps to the ordinary Phase 6 completion paths, retaining exit 2/3 precedence (M:1681-1683,1725-1727); dedicated reconcile/published-retirement modes remain separate dispatches (M:1495-1505,1540-1564), so “every executing run” should be read within that stated boundary.
+- [Pass] **#444 and #944:** P:46/48 accurately reflects the absent title field/scan and missing final label check (M:244-245,315-321,1117-1122,1297-1307), plus the delivered batch protocol (B:32-39,161-200; M:1675,1754-1757). The 2+ threshold is the recorded operator decision (PROJECT/3-COMPLETED/GH-1064-MERGE-BATCH-ISSUE-QA.md:23-31); carry-overs remain caller-owned (skills/2-daily/merge-cleanup/SKILL.md:435-442). No historical remote delivery claim was independently re-queried.
+- [Pass] **Recovery row and decomposition:** P:47/50-57 now names the unrecorded-merge seam (M:1123-1127,1311-1316; B:100,114; toposort_prs.py:33-35) and separates metadata staleness, lost updates, debt discovery, evidence loss, veto inputs, and command generation. This classification is sufficient; no new subsystem is indicated.
+
+- [Should] **Reconcile the save mapping with the refresh and verdict requirements.** P:69 says on-disk planned rows win per PR, while P:64-67 requires replacing those same rows with fresh discovery/repair metadata. P:71 likewise keeps on-disk sweep/verdict metadata, while B:308-314 and B:332-333 intentionally replace those fields. As written, the proposed choke point can preserve the very stale state item 1 is meant to remove. Amend item 2 to distinguish intentional fresh updates from stale carried fields; preserve normal metadata refresh, sweep recomputation, and new verdict recording as explicit acceptance requirements. No particular implementation algorithm is requested here.
+  Observed input: disk contains planned PR 1 with files `["a"]`; current discovery supplies PR 1 with `["a","b"]`; item 1 updates that PR's row, but item 2's stated on-disk-wins rule retains `["a"]`. Similarly, disk has a nonempty earlier verdict covering `[1]`, while B:332 constructs a new verdict covering `[1,2]`.
+  Affected scope: ordinary updates of existing batch keys through the proposed save choke point, even with one writer.
+  Falsifier: in later clone verification, refresh a known row and reload it; expect `["a","b"]`. Record a replacement verdict for the current landing set and reload it; expect the new covers/body. Also retain the two-writer preservation control. A save rule satisfying all three disproves this mapping conflict.
+
+- [Should] **Complete the recovery mapping before calling the r1 shape retired.** P:84-87 covers only planned PRs absent from discovery on resume; P:47 also accepts a queued PR observed MERGED during the same invocation. That PR was present in discovery, so the proposed absent-only recovery does not cover M:1123-1127. There is also a selection boundary: an old batch with no surviving merge evidence is not QA-pending (B:105-107); an unrelated nonempty queue rejects it by overlap (B:134-136), and M:1748's QA-only fallback cannot select it. State how the recovery candidate is reached in that case and how positive in-loop MERGED evidence is retained. Carry these requirements into the ordered implementation list (P:120-129 currently has no recovery step). This refines the accepted seam, not a request for arbitrary historical scanning.
+  Observed input: (a) a PR discovered OPEN later refreshes as `state="MERGED", mergeCommit={"oid":"abc"}` at M:1123; its outcome becomes `closed: merged outside this run` without OID. (b) existing batch planned `[1,2]`, both outcomes `unattempted`, no landed_order/verdict, both remotely MERGED, while `--resume --execute` discovers only unrelated OPEN PR 3: overlap lookup rejects the old batch and QA-only fallback rejects it too, before absent-PR recovery could run.
+  Affected scope: known planned batch PRs with positive remote merge evidence missing from persisted outcomes, including the accepted in-run shape and resume selection before recovery.
+  Falsifier: later clone checks should retain the OID and QA obligation for (a), and reach the old batch's recovery for (b); CLOSED without merge evidence must remain non-landed, and unrelated OPEN PRs must not be invented as recovered landings. If these cases are deliberately deferred, narrow the retirement/outcome claims explicitly instead.
+
+Pre-existing defects are the accepted Phase A defects above; the non-overlapping-resume selection case is an additional boundary of the already accepted recovery seam. No further captured-state or ordinary Phase 6 exit-4 bypass shape found in this sweep. No new suites, guards, runners, or runtime execution requested in this worktree. Implementation design, witnessed red controls, and final code QA remain outstanding.
+
+Handing off to Producer (claude-a) — disposition the two mapping findings, amend the plan, and request round 3.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
