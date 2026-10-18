@@ -38,39 +38,56 @@ Every claim was traced to current HEAD, not the October review heads. Line numbe
 | Issue | Claimed shape | Verdict at HEAD | Evidence |
 |---|---|---|---|
 | #1075 | resume keeps stale `files`/`soft` for known PRs → sweep misses new shared files | **Reproduced (code)** | `batch_record.extend()` (batch_record.py:79-87) appends only unknown PRs; `finalize_sweep_inputs()` (282-295) computes `shared_files` from the stored `row["files"]` |
-| #1073 | resume discards refreshed discovery for a known repaired PR → repair interactions omitted from sweep | **Reproduced (code), same seam as #1075** | same `extend()`; note conflict sites DO refresh via per-PR attempt records (298-306) — only file lists/soft reasons go stale |
-| #1072 | read→modify→write not transactional under the per-file lock → stale snapshot can overwrite newer state and clear QA-pending | **Mechanism verified** | `save()` (89-93) locks the write only; whole-dict last-writer-wins. GH-1074's guards (merge-never-downgrade :144; `landed()` backstop :95-102) protect two specific consequences, but a writer whose snapshot predates another writer's `set_outcome` still drops that PR's outcome row entirely |
-| #1084 (1, Major) | plain rerun (no `--resume`) exits 0 while a batch has QA pending | **Reproduced (code)** | `select_batch()` (merge_cleanup.py:1739-1763): the `need_qa=True` lookup exists only inside the `args.resume` branch (:1748); empty queue + no resume → `None` → :1729 guard skipped → exit 0 |
-| #1084 (2, Minor) | printed sweep command is not executable | **Reproduced** | batch_record.py:312 emits literal `<tmp>`; the shell parses it as a redirection |
-| #1084 (3, Minor) | merge OID lost when the post-merge refresh fails | **Verified** | `execute_pr_merge()` (:200-239) returns bool and discards the OID it already verified; the caller (:1313-1316) re-fetches and records `""` on error. Degrades safely (full gate) but the record loses the commit |
-| #444 | no merge veto for "do not merge" markers | **Partially fixed** | labels+draft veto landed citing #444 (`HOLD_LABEL_TOKENS` :59; skip at :1113-1122, re-check :1301-1304) — but `hold_label()` (:315-321) never scans the **title**, and the original #441 near-miss carried its marker in the title |
-| #944 | batch-issue protocol | **Delivered by #1069** | threshold `len(ordered_prs) < 2 → None` (:1754) — 2+, ask was ≥3; content sections, sweep inputs, `--record-sweep` all present |
+| #1073 | resume discards refreshed discovery for a known repaired PR → repair interactions omitted from sweep | **Reproduced (code), same seam as #1075 — widened per r1 QA** | same `extend()`; `_row` (B:62-64) captures title/hard deps too, so those go stale as well; conflict sites DO refresh via attempt records (298-306); **in-run shape too**: discovery (M:1593/1675) precedes repair (M:1209-1275), and `finalize_sweep_inputs` still consumes the pre-repair planned files |
+| #1072 | read→modify→write not transactional under the per-file lock → stale snapshot overwrites newer state | **Mechanism verified (r1 wording correction)** | `save()` (B:89-92) locks the write only; `attempt_record.save` atomically replaces the whole file (attempt_record.py:117-122). The typical loss reverts another writer's new outcome **fields** to `unattempted`; whole-row loss occurs when the row is absent from the stale snapshot. Unprotected: erased outcomes, verdict/covers, planned rows, issue metadata, sweep inputs, OID/reconcile (B:146-149 can overwrite even a merged row). QA can clear if the overwrite erases the only landing evidence |
+| #1084 (1, Major) | plain rerun (no `--resume`) exits 0 while a batch has QA pending | **Reproduced (code) + two r1 extensions** | `select_batch()` (M:1739-1763): `need_qa=True` lookup only inside the `args.resume` branch (:1748); empty queue + no resume → `None` → :1729 guard skipped → exit 0 (:1736). **Also:** a one-PR queue never adopts an old batch (M:1754); and a NEW 2+ batch with no landings masks an older QA-pending batch (`qa_pending(new)=False` → exit 0). Additionally `--execute --teardown-only` returns None unconditionally (M:1742-1743) — QA debt invisible even with `--resume` (new shape) |
+| #1084 (2, Minor) | printed sweep command is not executable | **Reproduced — syntax error, not just a redirection** | batch_record.py:312 emits literal `<tmp>`; `bash -n` on the emitted form exits 2 (`syntax error near unexpected token '&&'`) — r1 QA probe |
+| #1084 (3, Minor) | merge OID lost when the post-merge refresh fails | **Verified — recharacterized r1: discarded verified evidence + fallible re-query, not retained stale state** | `execute_pr_merge()` verifies the OID (M:224-228, M:233-236) then returns bool only; the caller (M:1313-1316) re-fetches and records `""` on error. Degradation is guarded (B:288-307 unknown range/full gate) but the record loses the commit |
+| #444 | no merge veto for "do not merge" markers | **Partially fixed — widened r1** | labels+draft veto landed citing #444 (`HOLD_LABEL_TOKENS` M:59; skip at M:1113-1122). Three residual gaps: `hold_label()` (M:315-321) never scans the title **and `refresh_pr` doesn't fetch `title` at all** (M:244-245 JSON field list); the final eligibility re-check (M:1301-1304) is **draft-only** — a hold label added between the first check (M:1117) and final merge is missed. r1 falsifiers: a title-only "DO NOT MERGE" PR and a PR acquiring the label during gating must both stay unmerged |
+| **NEW (r1)** | crash between remote merge and record-save leaves persisted `unattempted`; resume never recovers it — and `closed: merged outside this run` (M:1123-1127) records no OID, is excluded from `landed()` (B:100), and is terminal (B:114) → QA debt can silently clear | **Verified (code, r1)** | discovery is OPEN-only (toposort_prs.py:33-35); resume only extends (M:1746-1752); no live recovery of absent planned PRs. Recovery must key on positive MERGED+OID evidence; CLOSED without merge must not invent a landing |
+| #944 | batch-issue protocol | **Delivered by #1069** | threshold 2+ (M:1754) — an explicit subsequent operator decision (PROJECT/3-COMPLETED/GH-1064-MERGE-BATCH-ISSUE-QA.md:23-31), not an unexplained deviation; carry-over dual sink is caller-owned and present (SKILL.md:435-442) |
 
-**Pattern verdict (the hypothesis plan-QA round 1 must confirm or reject):** the class is real but
-is **three mechanisms, not one**: (A) *captured-once state never refreshed* (#1075, #1073, #1084-3 —
-file lists, discovery, verified OID); (B) *QA-pending state invisible outside `--resume`* (#1084-1)
-plus *non-transactional saves* (#1072); and one pre-existing *veto gap* (#444 title). #944 is done.
+**Pattern verdict (amended after r1 QA — codex FAIL round):** the class is real and is **five
+mechanisms plus one command defect**, not three: (1) stale planned metadata never refreshed (#1075,
+#1073 — including the in-run post-repair window); (2) lost durable updates via non-transactional
+saves (#1072); (3) incomplete QA-debt discovery (#1084-1, one-PR queues, new-batch masking,
+teardown-only); (4) discarded verified merge OID re-queried fallibly (#1084-3 — evidence loss, not
+retained state); (5) incomplete/live-stale veto inputs (#444: title unfetched, title unscanned,
+late labels unchecked); plus the unrecorded-merge recovery seam (NEW r1) and the `<tmp>` command
+defect. #944 is done.
 
 ## Phase B — the fix (only the verified shapes; extends the existing subsystem)
 
-One mechanism per family, all inside the two existing files. No new modules, no queue/locking
-subsystem, no rewrite.
+One mechanism per family, all inside the two existing files (plus `refresh_pr`'s field list).
+No new modules, no queue/locking subsystem, no rewrite.
 
-1. **Refresh captured state at the point of reuse** — `extend()` updates `files`/`soft`/`hard`/`title`
-   for known PRs from the current discovery it already receives (order/outcomes untouched);
-   `execute_pr_merge()` returns `(bool, oid)` and the caller records the OID it verified, demoting
-   the post-merge re-fetch to reconciliation. Retires #1075, #1073, #1084-3.
-2. **Make QA-pending visible on every executing run** — after Phase 6, if the run's batch is `None`
-   or not QA-pending, look up `find_unfinished(..., [], need_qa=True)` for the final status so a
-   plain rerun exits 4 (status-only; adoption of an old batch still requires `--resume`). Retires #1084-1.
-3. **Transactional-enough saves** — `save()` becomes a per-key merge under the existing
-   `RecordLock`: `planned`/`outcomes`/`landed_order` union with on-disk winning per-PR except
-   merged-never-downgrade; `verdict`/`sweep_inputs`/`issue` metadata from on-disk unless absent.
-   One choke point; callers unchanged. Retires #1072's whole-row-loss shape.
-4. **Veto reads titles too** — `hold_label()` also scans `info["title"]` against the existing
-   `HOLD_LABEL_TOKENS`. Retires the residual #444 shape.
-5. **Executable sweep command** — emit the mktemp form at batch_record.py:312. Retires #1084-2.
-6. **#944 disposition** — close as delivered by #1069 (threshold 2+ noted), from the PR description.
+1. **Refresh captured metadata at the point of reuse** — `extend()` updates `files`/`soft`/`hard`/`title`
+   for known PRs from the current discovery it already receives (order/outcomes untouched); a repair
+   that lands within a run updates that PR's planned row from the repair's own changed-file record.
+   Retires #1075, #1073 (both the resume and in-run shapes).
+2. **Transactional-enough saves** — `save()` becomes a per-key merge under the existing
+   `RecordLock`: `planned` keyed by PR (union; on-disk wins per key), `outcomes` keyed by PR (union;
+   merged status/merge_oid/reconcile never downgraded per GH-1074 semantics), `landed_order` union;
+   `verdict`/`sweep_inputs`/`issue` metadata from on-disk unless absent. One choke point; callers
+   unchanged. Retires #1072's field/row-loss shapes.
+3. **QA-debt discovery on every executing run** — a final-status step in `main()` independent of
+   batch adoption: after Phase 6, look up `find_unfinished(..., [], need_qa=True)` whenever the
+   run's own batch is `None` or not QA-pending, including `--teardown-only` executes; exit 4 when
+   owed. Adoption of an old batch still requires `--resume`. Retires #1084-1 and both r1 extensions
+   (one-PR queue masking, teardown-only invisibility, new-batch masking).
+4. **Keep verified evidence** — `execute_pr_merge()` returns `(bool, oid)` carrying the OID it
+   verified; the caller records it directly; the post-merge re-fetch becomes reconciliation-only.
+   Retires #1084-3.
+5. **Veto inputs complete and live** — `refresh_pr` fetches `title`; `hold_label()` scans the title
+   against the existing `HOLD_LABEL_TOKENS`; the final eligibility re-check (:1297-1311) re-checks
+   hold labels, not just draft. Retires the widened #444.
+6. **Recover unrecorded merges on resume** — for planned PRs absent from OPEN-only discovery,
+   one live refresh each: positive `MERGED` + OID records `status=merged, merge_oid=<oid>` (QA
+   pending owed); `CLOSED` without merge evidence stays terminal (`closed`, no invented landing);
+   refresh failure defers (no guess). Retires the r1 recovery shape.
+7. **Executable sweep command** — emit the mktemp form at batch_record.py:312. Retires #1084-2.
+8. **#944 disposition** — close as delivered by #1069 (threshold 2+ was the operator's recorded
+   decision), from the PR description.
 
 ### Acceptance checks (falsifiable; existing suites only — AGENTS.md GH-831)
 
