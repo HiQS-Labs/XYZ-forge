@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -123,5 +123,25 @@ Basis, and set `STATUS: Approved` if the implementation passes.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+Ship for the docs-gated push and PR against development; no implementation blocker.
+
+swept file: yes
+
+- [Pass] **1 — Asks → implementation.** All eight approved items are present in `skills/3-weekly/skills-army-hq/SKILL.md`: item 1 at :14–44 (five rules); item 2 at :46–58 (four separate facets); item 3 at :60–62 (bytecode suppression); item 4 at :3–9 (routing-first description); item 5 at :16–20 and :96–103 (moved prohibition and pointer); item 6 at :184 (root example); item 7 at :245–249 (preserved read-through boundary); item 8 at :81–85 (apply first, commit warning afterward). Base-to-HEAD object comparison shows precisely those hunks, no other skill edits.
+- [Pass] **2 — Truth of prose, by source inspection.** Intake stages/replaces payloads without invoking the sync drift gate (`scripts/intake.py:785–807,845–858`, `:481–507`); links target the stable collection path (`scripts/sync.py:250–252`), exposing replacement bytes immediately. Status inventories current digests but never compares them with skill receipt digests (`scripts/intake.py:289–302`; `scripts/sync.py:365–387`); warnings are independent of the errors-only return code (`scripts/sync.py:69–72,387`). Root/ancestor symlinks are refused (`scripts/intake.py:54–61`). Catalog uses `setdefault`, identical updates return `Unchanged`, and the parser exposes no selective receipt refresh (`scripts/intake.py:687–707,797–798,839–842`). Transaction precedes `commit_skill`; unrelated paths decline only the commit, print `WARN not committed`, and return 0 (`scripts/intake.py:466–471,845–858`). These are static findings, not claims of a fresh runtime suite run. Script paths here are relative to `skills/3-weekly/skills-army-hq/`.
+- [Pass] **3 — Identity/reader compatibility.** Literal `name: skills-army-hq` remains at `SKILL.md:2`; folded description syntax is supported by `scripts/intake.py:98–144`. Read-only probe: `PYTHONDONTWRITEBYTECODE=1 python3 -B -` importing the current intake module and calling `package_info(Path("skills/3-weekly/skills-army-hq"))`; exit 0, decisive output: `PARSE: name=skills-army-hq; routing description accepted`. Existing existence/identity/copy checks require no changed expectations.
+- [Pass] **4 — Evidence honesty and integrity.** `TESTS-RESULTS/2026-10-18+GH-1157/parse-positive.log:2–5` records name, description, exit 0 and zero bytecode directories; `parse-red-control.log:2–3` records the missing-name refusal and exit 1. `pdda-run.log:174–175` reports no errors, 34 warnings, exit 0; `releases-check.log:15–16` reports clean, 10 warnings, exit 0, as disclosed in `SUMMARY.md:9–12`. Hash probe: `PYTHONDONTWRITEBYTECODE=1 python3 -B -` loading each JSONL row, asserting the non-provenance artifact set is exactly covered once and `hashlib.sha256((folder / row["artifact"]).read_bytes()).hexdigest() == row["sha256"]`, plus exact base/candidate equality; exit 0, decisive output: `PROVENANCE: 5/5 artifacts covered; all sha256/base/candidate values match`. Revisions match `SUMMARY.md:14–17` and `provenance.jsonl:1–5`: base `9a61625fa7af15e7dd2b12c06a89242ed689b088`, candidate `4bf3361b7c07b6c846432c809de243110840ccfb`. The recorded logs do not independently prove warnings predated this branch, but their other-document locations and the measured change scope support that characterization.
+- [Pass] **5 — GH-831 / scope.** Read-only `python3 -B -` probe decoded existing commit/tree objects and compared base to HEAD without invoking git; exit 0, decisive output: `HEAD c40b425a0d38cf841acdc0c421c215986d933dcd`, `CHANGED PATHS 12`, `WORKTREE SKILL equals HEAD blob`. Paths are the one skill markdown, plan, two relay files, six evidence files, and two ledger files. No new test, registry entry, executable, runner, guard or gate machinery. This agrees with the bounded surface in `PROJECT/2-WORKING/GH-1157-SKILLS-ARMY-HARD-RULES.md` under “Smallest affected surface, restated.”
+- [Pass] **6 — Whole-file sweep.** Read all 263 lines of `SKILL.md`, including GH-672 SOP (:111–151), conversational authorization (:153–173), commands/configuration (:175–217), drift guard (:219–249) and dependencies (:251–263). No additional pre-existing defect or material contradiction found. “Editable configuration” (:212,228) describes configuration rather than authorizing hand edits against rule 1; dirty-source support (:205–206) describes script capability while rule 4 requires verified clean release inputs for this workflow. Warning exceptions at :197,243–244 remain subject to rule 2's explicit approval. The preserved read-through paragraph agrees with the elevated warning.
+- [Pass] **7 — PR readiness.** Ready for the planned docs-route push gate and opening a PR against `development`, then stopping; no review blocker. This is review approval, not gate or merge attestation (`PROJECT/2-WORKING/GH-1157-SKILLS-ARMY-HARD-RULES.md`, Status / ordered implementation steps 6–7; `SUMMARY.md:26–28`).
+- [Unverified — needs clone run] No `validate.sh`, `test/*.sh`, pytest or executable fixture was run here. Existing recorded docs/ledger outputs were inspected; any subsequent harness gate must attest its own final committed state.
+
+VERDICT: PASS
+Basis: The prose implements the approved bounded plan, load-bearing claims agree with inspected code, and retained evidence supports the stated documentation-level qualification. No artifact/source edits or git commands were performed during this review.
+
+Relay closed (Approved), no further review turn needed. Producer claude-a owns the subsequent docs-gated push / PR step; stop before merge.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
