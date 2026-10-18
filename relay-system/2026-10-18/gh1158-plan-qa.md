@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -86,5 +86,35 @@ Operational envelope: `/merge-cleanup` developer workflow skill. Commensurate co
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The CLI approach is appropriately small, but the proposed Phase 4 insertion does not satisfy the stated zero-mutation contract, and the new durable field needs an explicit save-merge rule before implementation.
+swept file: yes
+
+Reviewed the entire seeded artifact, including pre-existing sections. The relevant pre-existing execution/save mechanisms below are in scope. Verify-tier graph discovery was attempted: no project matches this isolated checkout; nearest XYZ-forge index generation is 2026-09-01T15:54:30Z, search returned zero symbols and coverage reports target paths as freshness `not_tracked`. Findings therefore use current local source reads, not stale graph completeness claims.
+
+- **[Blocker] R1 — Move the decision ahead of existing mutations, not merely ahead of Phase 5.** Artifact lines 60–71 and 122–125 place the checkpoint after Phase 4 while promising refusal before any git mutation. Current `merge_cleanup.py:1592` calls `prepare_primary_landing`; its lines 1447–1451 execute `update-ref -d REBASE_HEAD` for an orphan marker before PR discovery. Phase 1–3 scanning also reaches `scan_clones.py:984–986` → `classify_local_refs` → `git fetch` at line 525, which writes refs/FETCH_HEAD. A Phase 4 guard cannot undo these writes. Concrete fix: specify read-only discovery/decision validation before these mutators on checkpoint-eligible execution, then run existing readiness/scan/landing logic only after acceptance. Preserve small-queue behavior; also defer `--marker` writes until acceptance if retaining the broader “before any remote or local mutation” goal. Do not weaken the acceptance criterion silently.
+  Observed input: `--execute`, no landing flags, three discovered PRs, with `ready_except_stale_rebase=True` and a nonempty `stale_rebase_head`; the current pre-Phase-4 path deletes that ref. A normal scanned checkout also reaches the fetch writer before the proposed guard.
+  Affected scope: execution paths that will return Exit 5; include resume lookup before `select_batch`, whose `extend/new/create` calls already write records/issues (`merge_cleanup.py:1829–1841`).
+  Falsifier: in the disposable clone, seed that orphan ref and a three-PR queue, omit the decision, and expect Exit 5 with identical refs/FETCH_HEAD/record bytes and no mutation calls. A two-PR control must retain existing cleanup behavior. Quote results in the committed manual evidence.
+
+- **[Should] R2 — Integrate landing_plan with the existing stale-writer merge contract.** Artifact lines 126–129 name a setter, rendering, extend and lookup, but omit `batch_record._merge_records`. That function starts with `out = dict(mine)` (line 151) and only explicitly preserves selected durable fields. A writer holding an older snapshot can erase a newly recorded landing decision. Concrete fix: add an intentional-update rule for `landing_plan` using the existing save/lock mechanism, so stale saves preserve the disk decision and an explicit fresh decision can replace it; include old records without the field.
+  Observed input: disk `{'repo':'example','landing_plan':{'decision':'group','reason':'combine','prs':[1,2,3]}}`, stale writer `{'repo':'example'}`.
+  Affected scope: saves of batch records after a decision was persisted, including overlapping/stale snapshots and explicit decision replacements.
+  Falsifier: a stale save retains the disk decision; an intentional direct→group replacement wins; a legacy record remains readable.
+  Probe: `PYTHONDONTWRITEBYTECODE=1 python3` with `sys.path.insert(0, 'skills/2-daily/merge-cleanup/scripts'); import batch_record; out = batch_record._merge_records(disk, stale); print('durable landing_plan retained:', 'landing_plan' in out)`. Exit 0; decisive output: `durable landing_plan retained: False`. Pure in-memory probe; no record was written.
+
+- **[Should] R3 — Define issue-mirroring failure behavior before claiming the decision is recorded in the batch issue.** Artifact lines 102–104 require posting the issue then returning success; lines 107–108 require recording before direct landing. Existing `batch_record.create` records an error instead of raising (lines 359–376), `update` also records failures (379–407), and `select_batch` explicitly warns “landing continues” (`merge_cleanup.py:1842–1844`). Merely reusing these helpers does not establish the requested remote receipt. Concrete fix: state whether a durable local decision with a failed GitHub mirror is a supported degraded state or a stop; give the resulting exit/status and recovery path, and make the acceptance wording match. For group, do not silently report the batch issue as posted when it was not.
+  Observed input: `gh issue create` returns nonzero/no URL, or `gh issue view` returns an unreadable body for an existing batch; current helpers set `issue_error` and return.
+  Affected scope: a valid direct/group decision whose issue creation/update fails; leave ordinary <3-PR error policy unchanged.
+  Falsifier: inject each failure in the disposable clone and expect the explicitly documented status, retained local decision, and safe retry without duplicate issues or silent success claims.
+
+- **[Pass] Small implementation surface and no suite proliferation.** Artifact “Alternatives rejected” keeps judgment caller-owned; lines 119–120 use two ordinary CLI arguments, and lines 133–135 reuse existing suites plus committed manual evidence/red controls. This fits GH-831. The record section is correctly placed inside `script_block()`, whose markers bound script ownership (`batch_record.py:305–349`).
+
+- **[Unverified — needs clone run] Runtime acceptance remains future work.** No suites, executable fixtures, git commands, or mutation probes ran here. Sharpen the existing verification step into explicit expectations: missing/blank/whitespace reason refuses, direct records before merge, group never merges/tears down, unchanged resume reuses a valid decision, expanded/removed membership requires a fresh decision while >=3, and dry-run/prs-only plus <3 queues stay unaffected. Use the same read-only batch lookup for checkpoint and later adoption; validate before `extend()` changes the persisted membership. Record exact red-control mutations and nonempty evidence under the already specified TESTS-RESULTS path. The first acceptance bullet should explicitly allow the recorded-resume exception described at artifact line 98.
+
+Handing off to Producer (claude-a) — address R1–R3 in the artifact, record dispositions, and reopen the next review round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
