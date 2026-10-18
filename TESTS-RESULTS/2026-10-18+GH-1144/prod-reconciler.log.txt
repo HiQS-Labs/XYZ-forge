@@ -1,0 +1,33 @@
+### A: main-only repo, --base main
+repo branch: main | branches: ['main']
+receipt: TESTS-RESULTS/2026-10-18+GH-1144-express/provenance.jsonl express driver, direct main push
+argv: --root <tmp-repo> --commit 8138b46792308da11416afd9bc86f9d90641cbfc --gate --skip-pull --base main
+exit: 0
+wave-reconcile: Processing commit 8138b4679230...
+wave-reconcile:   Provenance receipt matched for PR #8138b4679230: TESTS-RESULTS/2026-10-18+GH-1144-express/provenance.jsonl:1 (commit=8138b46792308da11416afd9bc86f9d90641cbfc)
+### B: main-only repo, no --base (pre-GH-1144 default)
+repo branch: main | branches: ['main']
+receipt: TESTS-RESULTS/2026-10-18+GH-1144-express/provenance.jsonl express driver, direct main push
+argv: --root <tmp-repo> --commit 8138b46792308da11416afd9bc86f9d90641cbfc --gate --skip-pull
+exit: 3
+wave-reconcile: ERROR — Active branch is 'main', but post-merge reconciliation requires 'development'.
+### C: development repo, no --base (XYZ Forge shape)
+repo branch: development | branches: ['development']
+receipt: TESTS-RESULTS/2026-10-18+GH-1144-express/provenance.jsonl express driver, direct development push
+argv: --root <tmp-repo> --commit 74353dec0efd9ebf0524093225f43fc58508ad33 --gate --skip-pull
+exit: 0
+wave-reconcile: Processing commit 74353dec0efd...
+wave-reconcile:   Provenance receipt matched for PR #74353dec0efd: TESTS-RESULTS/2026-10-18+GH-1144-express/provenance.jsonl:1 (commit=74353dec0efd9ebf0524093225f43fc58508ad33)
+### D RED CONTROL: fetch_commit_metadata reachability reverted to local development; main-only repo, --base main
+repo branch: main | branches: ['main']
+receipt: TESTS-RESULTS/2026-10-18+GH-1144-express/provenance.jsonl express driver, direct main push
+argv: --root <tmp-repo> --commit 74353dec0efd9ebf0524093225f43fc58508ad33 --gate --skip-pull --base main
+exit: 4
+wave-reconcile: ERROR — Commit 74353dec0efd9ebf0524093225f43fc58508ad33 is not reachable from local main
+### E restored: main-only repo, --base main
+repo branch: main | branches: ['main']
+receipt: TESTS-RESULTS/2026-10-18+GH-1144-express/provenance.jsonl express driver, direct main push
+argv: --root <tmp-repo> --commit 74353dec0efd9ebf0524093225f43fc58508ad33 --gate --skip-pull --base main
+exit: 0
+wave-reconcile: Processing commit 74353dec0efd...
+wave-reconcile:   Provenance receipt matched for PR #74353dec0efd: TESTS-RESULTS/2026-10-18+GH-1144-express/provenance.jsonl:1 (commit=74353dec0efd9ebf0524093225f43fc58508ad33)

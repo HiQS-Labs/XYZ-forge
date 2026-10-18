@@ -405,7 +405,7 @@ def fetch_pr_metadata(repo_root, pr_id, offline_manifest=None, dry_run=False):
         die(f"Failed parsing gh pr view JSON for PR #{pr_id}: {e}", code=4)
 
 
-def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
+def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None, base="development"):
     """Return direct-commit landing metadata in the reconciler's internal shape."""
     if offline_manifest:
         for entry in offline_manifest.get("commits", []):
@@ -415,7 +415,7 @@ def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
                     "number": str(entry.get("sha", commit_id))[:12],
                     "title": message.splitlines()[0] if message else f"commit {commit_id}",
                     "state": "MERGED", "mergedAt": entry.get("committedAt"),
-                    "baseRefName": "development", "body": message,
+                    "baseRefName": base, "body": message,
                     "url": entry.get("url", ""), "artifactKind": "commit",
                     "sha": entry.get("sha", commit_id),
                     "mergeCommit": {"oid": entry.get("sha", commit_id)},
@@ -430,11 +430,11 @@ def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
         die(f"Commit {commit_id} cannot be resolved locally", code=4)
     sha = resolved.stdout.strip()
     reachable = subprocess.run(
-        ["git", "-C", repo_root, "merge-base", "--is-ancestor", sha, "development"],
+        ["git", "-C", repo_root, "merge-base", "--is-ancestor", sha, base],
         capture_output=True, text=True, check=False,
     )
     if reachable.returncode != 0:
-        die(f"Commit {sha} is not reachable from local development", code=4)
+        die(f"Commit {sha} is not reachable from local {base}", code=4)
     shown = subprocess.run(
         ["git", "-C", repo_root, "show", "-s", "--format=%cI%x00%B", sha],
         capture_output=True, text=True, check=False,
@@ -446,7 +446,7 @@ def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
     slug = github_slug_from_origin(repo_root)
     return {
         "number": sha[:12], "title": message.splitlines()[0], "state": "MERGED",
-        "mergedAt": committed_at, "baseRefName": "development", "body": message,
+        "mergedAt": committed_at, "baseRefName": base, "body": message,
         "url": f"https://github.com/{slug}/commit/{sha}" if slug else "",
         "artifactKind": "commit", "sha": sha, "mergeCommit": {"oid": sha},
     }
@@ -2141,7 +2141,13 @@ def main():
     parser.add_argument(
         "--skip-pull",
         action="store_true",
-        help="Skip git pull --ff-only origin development (for testing/isolated clones)",
+        help="Skip git pull --ff-only origin <base> (for testing/isolated clones)",
+    )
+    parser.add_argument(
+        "--base",
+        default="development",
+        help="Integration branch for direct --commit landings (GH-1144; express passes its resolved base). "
+             "PR, catch-up and qualification flows are development-only and keep this default.",
     )
     parser.add_argument(
         "--skip-branch-check",
@@ -2217,7 +2223,7 @@ def main():
         # Preflight phase
         log(f"Starting wave reconciliation (dry_run={args.dry_run}, root={repo_root})")
         baseline = check_porcelain_cleanliness(repo_root, allow_dirty=(args.allow_dirty or args.dry_run))
-        check_current_branch(repo_root, skip_branch_check=args.skip_branch_check)
+        check_current_branch(repo_root, expected_branch=args.base, skip_branch_check=args.skip_branch_check)
 
         repo_slug = github_slug_from_origin(repo_root)
         has_workflow = os.path.isfile(os.path.join(repo_root, ".github", "workflows", "wave-reconcile.yml"))
@@ -2226,7 +2232,7 @@ def main():
                 check_hosted_reconciler_in_flight(repo_root, repo_slug=repo_slug, force=args.force_local_reconcile)
 
         if not args.skip_pull and not args.dry_run and not args.offline:
-            pull_upstream(repo_root)
+            pull_upstream(repo_root, branch=args.base)
 
         offline_manifest = None
         if args.offline:
@@ -2304,7 +2310,7 @@ def main():
                 if (landing_kind, landing_id) in metadata:
                     pr_meta = metadata[(landing_kind, landing_id)]
                 elif landing_kind == "commit":
-                    pr_meta = fetch_commit_metadata(repo_root, landing_id, offline_manifest)
+                    pr_meta = fetch_commit_metadata(repo_root, landing_id, offline_manifest, base=args.base)
                 else:
                     pr_meta = fetch_pr_metadata(repo_root, landing_id, offline_manifest, dry_run=args.dry_run)
                 landing = landing_label(pr_meta)
@@ -2316,9 +2322,9 @@ def main():
                     log(f"  {landing} state is '{state}' (unmerged/declined) -> routing to 4-MISC/")
 
                 base_ref = pr_meta.get("baseRefName", "")
-                if base_ref and base_ref != "development":
+                if base_ref and base_ref != args.base:
                     die(
-                        f"{landing} target base is '{base_ref}', not 'development'.",
+                        f"{landing} target base is '{base_ref}', not '{args.base}'.",
                         code=4,
                     )
 
