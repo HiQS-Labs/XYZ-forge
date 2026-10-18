@@ -669,12 +669,12 @@ def qualify_landings(repo_root, metas, journal, promotion=False):
     previous = committed_qualifications(repo_root)
     pending = [meta for meta in metas if not any(
         qualification_receipt_matches(repo_root, entry, meta) for entry in previous)]
+    if not pending and not promotion:
+        return  # ordinary --qualify: unchanged early return, before any further git or cleanliness work
+    check_porcelain_cleanliness(repo_root)
     tested = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip()
     pending, _ = promotion_gate(pending, promotion, lambda: fetch_commit_metadata(repo_root, tested),
                                 lambda: None)
-    if not pending:
-        return
-    check_porcelain_cleanliness(repo_root)
     for meta in pending:
         landing = (meta.get("mergeCommit") or {}).get("oid", "")
         if (meta.get("state") != "MERGED" or meta.get("baseRefName") != "development"

@@ -714,7 +714,7 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
                              dry_run: bool = True,
                              pr_head: Optional[str] = None,
                              merged_head: Optional[str] = None) -> bool:
-    """Wait for hosted reconciliation (or fall back locally), then run governance checks.
+    """Reconcile locally (GH-1127 default; MERGE_CLEANUP_USE_HOSTED=1 waits for a hosted run first), then run governance checks.
 
     `merged_head`, when given, is the PR's merge commit as GitHub reports it (--reconcile-pr);
     otherwise the primary's HEAD, which the Phase-5 fast-forward has just moved to the merge."""

@@ -336,8 +336,10 @@ never attempted:
    summary; they are not PR failures — re-run once the network is healthy.
 5. **On exit 2**: diagnose before anything else; the diagnostic names the gate. A re-run is only
    valid once the cause is fixed.
-6. **On exit 4** (landed, QA pending — GH-1064): run the printed sweep command in a throwaway clone
-   and the `/debug-mantra` cross-PR review over the recorded inputs, write the verdict file, and
+6. **On exit 4** (landed, QA pending — GH-1064): for a Small gate, run the printed sweep command in a
+   throwaway clone; for the full gate, the printed command is the pre-promotion dispatch (GH-1127) —
+   record `verdict: deferred` naming it until its receipt exists. Then run the `/debug-mantra` cross-PR
+   review over the recorded inputs, write the verdict file, and
    record it with `merge_cleanup.py --primary "$PRIMARY" --record-sweep <file>`. If it reports that
    planned PRs remain, continue with `--resume --execute`; a `--resume` run with nothing left to land
    still reports 4 until a verdict covers every landing.
