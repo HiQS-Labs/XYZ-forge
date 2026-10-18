@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -71,5 +71,19 @@ ROUND: 1 / 3
 Review the appended Residual fixture spike section in PROJECT/2-WORKING/GH-836-GATE-HOTSPOTS.md, test/gh549-work-events.sh, and releases_app.py cmd_init, cmd_work_backfill, _scan_review_ready. Prior #838/#848 work is delivered; do not rebuild it. Operational envelope: local test fixture spike, no product/live workflow/routing changes. Commensurate complexity: three existing fixture lines, no new helper, CI case/assertion/parameter, framework or test. Grade whether using independent initialized FXD/FXI/FXR7 preserves every existing assertion, actual race and board-reconcile semantic; check slug/cursor/receipts implications and minimal fixture data. No suites in relay worktree; read-only probes allowed. Identify any concrete unmet requirement with file:line and falsifier. This new authorized residual review has cap 3; never reset or extend caps or continue old stopped batches. Only relay file writes.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Approve the residual local-spike plan against the concrete Review packet criteria. This approves the three fixture replacements and their bounded measurement procedure, not implementation results or release readiness.
+swept file: yes
+
+- [Pass] The full 397-line artifact was reviewed, including delivered #838/#848 work; no additional pre-existing defect requiring work in this residual spike was found. The residual section explicitly excludes rebuilding that work and limits the change to existing setup lines (`.relay-artifacts/GH-836-GATE-HOTSPOTS.md:383-391`). Replace the backfill FXD copy at `test/gh549-work-events.sh:953`, FXI at `:1152`, and FXR7 at `:1207`; the earlier, unrelated FXD host-return-code fixture at `:435` remains unchanged. No helper, parameter, assertion, routing or product change is needed.
+- [Pass] Initialization supplies all migrations, a repo row, lenient enforcement and a canonical dump (`utils/py/releases_app.py:2175-2211`). Explicit `--slug XYZ-forge` preserves the current fixture slug. The stated live counts were independently measured. Read-only probe: `python3 -c 'import sqlite3; c=sqlite3.connect("file:releases.db?mode=ro",uri=True); print([(t,c.execute("SELECT count(*) FROM "+t).fetchone()[0]) for t in ("roadmap_items","work_events","op_receipts")]); print(c.execute("SELECT slug FROM repos ORDER BY id").fetchall())'`; rc 0; decisive output: `[('roadmap_items', 377), ('work_events', 835), ('op_receipts', 1987)]` and `[('XYZ-forge',)]`. This was observation only; no application verb or fixture was executed.
+- [Pass] FXD already creates all five mapping rows through verbs (`test/gh549-work-events.sh:954-968`); four are eligible after Deferred is excluded. Independent FXE2/FXE3 copies, the positive exact-count assertion, transactional-guard mutation, bounded rendezvous, racer exit checks and duplicate-count red assertion remain operative (`:1050-1108`). Receipt joins and nonempty guards in legs 21d and 24 remain meaningful on fresh data (`:1042-1048`, `:1380-1408`); initialization does not require copying or pruning a receipt history. FXP/FXP2 inherit the smaller FXD and add their own receipt cases.
+- [Pass] Removing the two PRISTINE_TAIL seeds is necessary when replacing their copy lines: new connector cursors start empty, while `backfill_nodispatch` advances to each fixture's actual event tail (`test/gh549-work-events.sh:163-172`). FXI and FXR7 retain connector-enabled reconcile calls and their existing interleave/terminal red controls (`:1158-1229`). Review-ready scanning resolves the configured repository independently of the ledger slug, and source-specific suppression remains in the transaction (`utils/py/releases_app.py:5272-5296`, `:5316-5378`, `:5110-5123`). The raw board adapter uses configured `repos[0]` (`utils/py/work_connectors/github_board.py:94-102`). No board-state assertion is removed or replaced by cursor arithmetic.
+- [Unverified — needs clone run] Timing payoff, positive/negative race outcomes, and all existing assertion outcomes on initialized fixtures remain unmeasured this turn. The plan assigns them paired A1/B1/A2/B2 runs with fresh state, retained output, existing negative controls, committed provenance and independent final QA (`.relay-artifacts/GH-836-GATE-HOTSPOTS.md:393-397`). Execute that procedure before claiming equivalence or savings; if a preserved assertion or red control fails, stop and report it rather than weakening it. No suite, pytest, executable fixture, or git command was run here. Graph tools were unavailable; evidence is direct source inspection plus the read-only query above.
+
+Relay closed (Approved), no further plan-review turn needed. Producer acts next to execute the authorized local spike and obtain final QA under its separate cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
