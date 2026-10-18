@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-10-17 — Weekly worth-it continuation checkpoint (GH-1119)
+
+Vendor worth-it at upstream PR 15 head `2e6e1b4a0336fb1badf64d47ae770acd291d2d8d` under `skills/3-weekly/`, with its GPL v2 license, source notice and manual update recipe. Initial and continuation modes stay together; weekly-planner is unchanged. Verification uses the documentation gate, byte comparison and manual instruction walkthroughs recorded in `TESTS-RESULTS/2026-10-17+GH-1119/`; these are not live model behavior evaluations. Independent plan/final review receipts live in `relay-system/2026-10-17/gh1119-*.codex.md`. No installation, schedule, new test or CI optimization.
+
+## 2026-10-15 — start-task: the orchestrator smoke-runs the change before final QA (GH-1088)
+
+Step 7 now ends with a smoke check. The orchestrator runs the changed entry point once on its main
+path and once on one adjacent real-world path (resume, rerun, second invocation, empty input), and
+records it as a manual check under `TESTS-RESULTS/`. The receipt goes to the final reviewer as
+evidence and never replaces the independent review. Documentation-only work reads the changed
+instruction from its consumer's entry point, or skips with a reason. Motivated by GH-1064, whose
+resume and rerun defects (#1074, #1084) passed suites and an approved review. Instruction-only; no
+new tests (GH-831). Revert the one-file edit to undo.
+
+## 2026-10-14 — PR review checks the PR's claims first: review-pr-xyz; review-code is now review-code-xyz (GH-1060)
+
+New `review-pr-xyz` owns GitHub PR review. Before reading the code it lists what the PR and its
+linked issue claim and checks each one: the bug reproduces on the base branch, the issue asks for
+this, the change has not already landed, and claimed test runs actually pass. If the core claim
+fails, the review stops early with `Changes Requested`. Otherwise it runs the recon and
+debug-mantra phases and posts graded findings. It only reports: it never pushes, approves or merges.
+
+`review-code` is renamed `review-code-xyz` to match `relay-xyz`, and its `--pr` mode moves to the
+new skill. It now reviews local diffs and branches only, and keeps its reversible-fix loop. Clean
+rename with no alias. XYZ-mini picks up both skills and drops `review-code` on the next
+`/push-downstream`, and deployed copies need a Skills Army HQ refresh. No new suites (GH-831);
+existing suites were repointed. Revert the GH-1060 commit to undo.
+
 ## 2026-10-17 — Jog primary writer, portable receipts and landing hook (GH-1108, delivery 1)
 
 Jog queue/cache mutations now require an explicit origin-specific primary pin on development.

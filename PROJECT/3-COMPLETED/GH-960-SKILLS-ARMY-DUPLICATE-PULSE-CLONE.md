@@ -2,13 +2,21 @@
 gh_issue: 960
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/960
 title: "skills-army-hq: normal sync run should flag a duplicate Git Pulse Sync clone (git-pulse writes one, skill links read another)"
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-10-03
+updated: 2026-10-18
+owner: noelsaw1
+goal: "sync.py's normal run and --status flag a duplicate Git Pulse Sync clone and a stale collection as named warnings, read-only, with remediation steps mirrored in references/recovery.md."
 fix_probes:
   - test -f skills/3-weekly/skills-army-hq/scripts/sync.py
   - bash test/gh620-skills-army-mini-sync.sh --help
 doc_type: bugfix
 ---
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Promoted to active working contract via jog | Execute implementation and verify probes |
 
 # GH-960: flag a duplicate Git Pulse Sync clone (returned from XYZ-skills-army-mini#6)
 

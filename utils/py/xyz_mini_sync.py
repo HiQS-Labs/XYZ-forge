@@ -65,7 +65,8 @@ MANIFEST = (
     ("skills/3-weekly/honest", "skills/honest", "managed"),
     ("skills/1-hourly/debug-mantra", "skills/debug-mantra", "managed"),
     ("skills/1-hourly/unstuck", "skills/unstuck", "managed"),
-    ("skills/2-daily/review-code", "skills/review-code", "managed"),
+    ("skills/2-daily/review-code-xyz", "skills/review-code-xyz", "managed"),
+    ("skills/2-daily/review-pr-xyz", "skills/review-pr-xyz", "managed"),
     # adapted: mini-flat layout + child-side hardening (GH-889 QA); upstream of record stays here
     ("skills/3-weekly/weekly-planner", "skills/weekly-planner", "adapted"),
     ("skills/2-daily/daily-planner", "skills/daily-planner", "adapted"),

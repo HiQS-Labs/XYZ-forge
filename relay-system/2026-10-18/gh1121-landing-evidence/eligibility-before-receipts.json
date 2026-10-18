@@ -1,0 +1,9 @@
+{
+  "load": "PASS",
+  "candidate_ok": true,
+  "reviewed_head": "e083d24c419a994d84e1ab0dfbe9c9a04d1c14f7",
+  "candidate": "af5043a504a6db5f1cf19f67eddf3f847bbb89a6",
+  "artifact_sha256": null,
+  "member_ancestry": true,
+  "production_hashes": true
+}

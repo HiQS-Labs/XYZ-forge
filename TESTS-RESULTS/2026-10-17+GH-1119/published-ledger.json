@@ -1,0 +1,23 @@
+[
+  {
+    "global_id": "rmi-01M5623SAF5A8V37SPW9VGDKXX",
+    "gh_number": 1119,
+    "repo_slug": "XYZ-forge",
+    "is_selected_repo": true,
+    "title": "Weekly worth-it continuation skill",
+    "section": "In progress",
+    "position": 126,
+    "status_marker": "\ud83d\udea7",
+    "doc_path": "PROJECT/2-WORKING/GH-1119-WORTH-IT.md",
+    "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1119",
+    "raw_text": "- **GH-1119 \u00b7 Weekly worth-it continuation skill** \u2014 ready PR 1120; plan QA approved/attested round 2, final QA approved/attested round 1; rated 65/25/75/80 \u2192 [plan](PROJECT/2-WORKING/GH-1119-WORTH-IT.md) \u00b7 [PR](https://github.com/HiQS-Labs/XYZ-forge/pull/1120) \u00b7 [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/1119)",
+    "status_label_supported": true,
+    "status_label": "in-progress",
+    "rating_pri": 65,
+    "rating_sev": 25,
+    "rating_appeal": 75,
+    "rating_effort": 80,
+    "rating_ovr": null,
+    "risk": null
+  }
+]

@@ -1,0 +1,38 @@
+# worth-it — source and maintenance notice
+
+This standalone skill is vendored from Giant Brains Claude Skills:
+https://github.com/Claude-AI-Tools-Ventura-County/giant-brains-claude-skills
+
+- Source path: `03-improve/worth-it/SKILL.md`
+- Source revision: `2e6e1b4a0336fb1badf64d47ae770acd291d2d8d`
+- Source permalink: https://github.com/Claude-AI-Tools-Ventura-County/giant-brains-claude-skills/blob/2e6e1b4a0336fb1badf64d47ae770acd291d2d8d/03-improve/worth-it/SKILL.md
+- Continuation change: https://github.com/Claude-AI-Tools-Ventura-County/giant-brains-claude-skills/pull/15
+- Checked 2026-10-17: PR open, not merged; this is an explicit PR-head pin, not a released-main claim.
+- Attribution: Giant Brains Claude Skills contributors; continuation commit authored by Noel Saw (noelsaw1). See the pinned repository history for full authorship.
+- License: GPL v2, as declared by the pinned upstream README; full upstream license retained in `LICENSE`. This separately licensed bundle retains those terms; Forge's root license does not relicense it.
+- SKILL.md SHA-256: `01d5711d5de7529b8aad6ade83a6ab38e348d40fd2ba0e718c762865f4c8c93d`
+- LICENSE SHA-256: `8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643`
+- Local modifications to SKILL.md: none; byte-identical import. Only packaging, this notice and Forge's index are local.
+
+## Use and boundaries
+
+`/worth-it` evaluates initial value; `/worth-it continue` reassesses remaining value.
+This is a weekly review lens, distinct from `/weekly-planner` and its shared daily engine.
+It does not run that planner, install anything, schedule reviews or authorize a proof or post.
+Helpers are optional: upstream's `ponytail-refined` folder declares callable `ponytail`;
+Forge uses `ponytail` and `sanity-check`. Resolve by installed frontmatter name, disclose
+missing helpers, and apply the source's standalone fallback instead of importing duplicates.
+
+The target project's existing leaderboard/results issue is discovered at use time.
+Forge issue 1118 is one contextual CI-experiment example, never a default destination:
+https://github.com/HiQS-Labs/XYZ-forge/issues/1118
+Preserve the source's exact-action authorization, decline and pending-capture rules.
+
+## Update without drift
+
+1. Inspect the upstream PR's live state and choose an explicit full source revision. If the PR merged, inspect the merged tree; do not assume it equals the old head. Review the skill diff, upstream README/license and relevant history before copying.
+2. Fetch `03-improve/worth-it/SKILL.md` and `LICENSE` at that exact revision (for example with `gh api repos/Claude-AI-Tools-Ventura-County/giant-brains-claude-skills/contents/<path>?ref=<full-sha>`, decoding the returned content). Compare with this bundle. Fetch to scratch first and reject empty/failed downloads.
+3. Prefer upstream changes for shared behavior; update this one bundle in a normal Forge task/PR, never a deployed copy. Preserve initial and continuation behavior together; record any deliberate local differences here rather than adding a second implementation.
+4. Refresh the revision, live-state/date note, attribution if changed, license and both SHA-256 values here. Re-run applicable existing gates and honestly labeled manual walkthroughs, including results approval/decline/unknown lookup and pending closure. Obtain normal bounded review. Installation and publishing to downstream consumers are separate operator requests.
+
+No auto-sync tooling or new vendoring framework is introduced.

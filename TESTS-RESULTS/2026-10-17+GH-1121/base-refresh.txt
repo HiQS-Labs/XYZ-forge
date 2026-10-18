@@ -1,0 +1,8 @@
+Current development base: 7f19d57db884588bc7f59dac0e2f24659f5a5ea6
+Clean merge; no ledger change/replay; production bytes identical to full-tested a2a13890.
+Inherited changed paths:
+LEADERBOARD.md
+PROJECT/2-WORKING/GH-1087-GH1051-RECORD-SPACING.md
+PROJECT/2-WORKING/MARATHON-PLAN-2026-10-18.md
+TESTS-RESULTS/2026-10-18+GH-591/wave-a984865eab17456dc8240f68b3206e414e255179/provenance.jsonl
+TESTS-RESULTS/2026-10-18+GH-591/wave-a984865eab17456dc8240f68b3206e414e255179/validation.jsonl
