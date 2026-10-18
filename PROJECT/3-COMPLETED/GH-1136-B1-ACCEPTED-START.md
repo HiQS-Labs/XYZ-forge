@@ -2,7 +2,7 @@
 gh_issue: 1136
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1136
 title: "merge-cleanup B1 replay drops accepted-start on replayed (added) roadmap rows"
-status: Active
+status: Complete
 created: 2026-10-18
 updated: 2026-10-18
 owner: claude
