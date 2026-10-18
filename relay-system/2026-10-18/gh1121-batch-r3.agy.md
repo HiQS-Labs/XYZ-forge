@@ -144,4 +144,12 @@ Cumulative attempt 3 of 4.
 
 Handing off: relay closed (Approved), no further turn needed. Return to the Producer/caller window for driver attestation and the landing steps.
 
+
+### Attestation · relay-drive — 2026-10-18T00:45:26Z
+task: RELAY-GH1121-BATCH-20261018-R3
+reviewer: agy
+status: Approved
+reviewed-head: 20b3d6d100ab3478758ac2bc30a220e02fed0553
+added-range: 5830+9736
+added-sha256: 2601376417379d4e71788329f20aa2e07a914a33edbcd3f15d8c38245207967f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
