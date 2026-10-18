@@ -52,7 +52,7 @@ ROUND: 4 / 4
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: _<fill in the repo-relative path(s) the turn reviews>_
+- Target under review: the actual isolated repository tree at the driver-pinned HEAD; full production files listed in TESTS-RESULTS/2026-10-17+GH-1121/qa-resume-input.json. No seeded artifact.
 - Reviewer: agy   ·   Producer: codex-producer
 - Started: 2026-10-17
 - Definition of Done: Unseeded pinned-target whole-source and sequence review. Actual independent Claude-family reviewer; no Critical/High blockers; strict append-only helper; current exact-head input; all applicable gates preserved.
