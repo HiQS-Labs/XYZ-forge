@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -81,5 +81,35 @@ Please evaluate:
 4. Are blast radius, rollback, falsifiable verification checks (including a witnessed red control on `test/gh778-review-code-skill.sh` and the `pdda.sh run` docs gate), and the `65/20/50/85` RELEASES rating + recurrence check sufficient?
 
 Do not run `validate.sh`, `pytest`, or mutating git commands. Append one reviewer block with `swept file: yes`, cited findings, `VERDICT: PASS|FAIL|PARKED`, and `Basis:`. If approved, set header `STATUS: Approved` and `NEXT: —`.
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: The Markdown-only design and reuse boundary are sound; revise the verification plan in two small places before implementation. Reviewed the entire capture, entire handsfree skill, and architecture document, with direct source inspection of both named index suites and routing rules. No additional pre-existing defect found in the reviewed artifact/supporting Markdown beyond the verification gaps below. This is plan QA, not implementation approval.
+
+- [Should] **Add a bounded manual acceptance walkthrough for the feature itself.** `PROJECT/1-INBOX/GH-1139-TODO-LIST-SKILL.md:68-69` verifies index hygiene and PDDA, but neither named suite reads the new skill or handsfree; their relevant assertions only compare the daily count (`test/gh778-review-code-skill.sh:43-46`, `test/gh798-status-skill.sh:39-42`). The count red control is useful but cannot detect a missing checklist contract or a caller that accidentally retains the 3-hour default. Fix: extend the existing verification step with a short, recorded manual walkthrough using a preceding two-item assistant list (first item waits asynchronously), checking ordered numbered persistence, immediate first action, checklist advancement on wake, the shared note/job identity, the earlier of 100 minutes or ten wakes, and early completion/blocker cancellation. Inspect the unsupported-scheduler branch for honest unarmed reporting. Keep this a manual check in the already-planned evidence receipt; no new suite, scheduler implementation, or actual 100-minute soak is requested. Include a paper red control: substituting the inherited 3-hour deadline must fail this acceptance review.
+  Observed input: The existing suites bind `SKILL_FILE` to `review-code-xyz` / `where-are-we-at`, not todo-list (`gh778:7-8`, `gh798:6-9`); the complete plan's steps 4–5 name only these suites, PDDA and releases checks.
+  Affected scope: Verification of GH-1139's new prose contract and its two caller overrides only.
+  Falsifier: Existing planned coverage that reads todo-list/handsfree and rejects a missing checklist or unchanged 3-hour caller deadline would make the extra manual walkthrough unnecessary; the inspected suites do neither.
+  Probe (exit 0): `python3 - <<'PY'
+from pathlib import Path
+for f in ('test/gh778-review-code-skill.sh', 'test/gh798-status-skill.sh'):
+ t=Path(f).read_text()
+ print(f, 'todo-list='+str(t.count('todo-list')), 'handsfree='+str(t.count('handsfree')))
+PY` → `test/gh778-review-code-skill.sh todo-list=0 handsfree=0`; `test/gh798-status-skill.sh todo-list=0 handsfree=0`. This literal probe supplements the source trace, rather than proving coverage absence by itself.
+
+- [Should] **Specify the full-clone boundary for the planned suite runs and red mutation.** `PROJECT/1-INBOX/GH-1139-TODO-LIST-SKILL.md:68-69` currently gives direct suite commands and an architecture mutation without naming their execution location. Fix: explicitly run both suites and their count-mismatch red/green control in a separate disposable full clone containing the candidate state, with restoration from a pre-mutation file copy. Retain the resulting provenance in the task PR. Do not use the working task clone or a linked worktree for these runs (AGENTS.md GH-564).
+  Observed input: Step 4 says `bash test/gh778-review-code-skill.sh` / `bash test/gh798-status-skill.sh`; step 5 mutates the architecture count; neither step establishes isolation.
+  Affected scope: These existing suite invocations and their red control, not ordinary read-only Markdown inspection.
+  Falsifier: An explicit disposable-full-clone instruction covering steps 4–5 would resolve this finding; the current 70-line capture has none.
+
+- [Pass] **Surgical reuse and scope:** capture lines 40–52 specify ordered extraction, dual persistence, immediate execution, 100-minute/ten-wake delegation, no scripts/new CI/deployment, and an Easy rollback. Handsfree already supplies scheduler receipt/readback, failed-creation cleanup and no duplicate-job handling (`skills/1-hourly/handsfree/SKILL.md:33-64,97-107`). Preserve those protections and the standalone default when adding the override.
+- [Pass] **Index recon and ratings:** `ARCHITECTURE.md:72` declares 20 daily skills; a read-only `Path('skills/2-daily').glob('*/SKILL.md')` count returned `20` (exit 0), supporting the planned 21. The score `65/20/50/85` sums to 220 and each axis has a rationale (capture lines 56–60). The recurrence claim at line 61 lacks a query/receipt here and remains unverified, rather than independently confirmed.
+- [Unverified — needs clone run] No suite, PDDA gate, red mutation, or live scheduling was executed during this reviewer turn. Their eventual green results and committed provenance remain implementation obligations. Graph inventory had no matching task/worktree project; nearest `XYZ-forge` index generation was `2026-09-01T15:54:30Z`, with missing/not-tracked/changed freshness for the six reviewed paths. Used current local source instead; no completeness claim rests on that stale graph.
+
+Handing off to Producer (agy-producer) — disposition both findings, update the plan, and return for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
