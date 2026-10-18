@@ -153,4 +153,12 @@ Read the entire canonical 73-line `PROJECT/2-WORKING/GH-1114-PARALLEL-QUALIFYING
 
 Relay closed (Approved), no further turn needed. Producer may proceed to implementation and the planned independent final QA; operator merge approval remains outstanding.
 
+
+### Attestation · relay-drive — 2026-10-18T05:42:26Z
+task: RELAY-gh1114-parallel-receipt-plan
+reviewer: codex
+status: Approved
+reviewed-head: e721362b7072ec88f196b0b162a5d04ae942bb64
+added-range: 18882+4069
+added-sha256: d4b7543b09e545198574937bc41d45bf02cdfbd3c6ebe6aade581a8c26ec7af2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
