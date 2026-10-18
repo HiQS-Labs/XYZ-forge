@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -258,8 +258,24 @@ swept file: yes
 
 Handing off to Producer (operator): add the missing result-report acceptance contract and return for Round 3 review. Do not execute a campaign or add machinery.
 
-<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
 
 ## Producer round 3 — result contract explicit
 
 Disposition: Accepted round-2 Should. Canonical plan steps 3/5 now explicitly name complete replay metadata, per-counterexample owner/disposition/evidence and backlink, bounded null conclusions and negative manual completeness controls. Read the current committed plan in full; its embedded earlier copy is historical. Grade all supplied issue requirements against the current plan; no campaign execution or new machinery.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: Approve the current canonical plan for documentation implementation through DRAFT PR only. Producer round 3 explicitly supersedes the earlier embedded artifact; the full current 88-line plan was reviewed against the supplied #1143 snapshot, including every proposed-contract item, guardrail and initial acceptance criterion. Round 2's omission is resolved. No remaining blocker or additional pre-existing defect found in the full plan sweep. Reversibility: Easy, with the docs-revert rollback at plan line 37. This is plan approval, not implementation verification or campaign clearance.
+swept file: yes
+
+- [Pass] Round 2 disposition is complete: `PROJECT/2-WORKING/GH-1143-DEFECT-CAMPAIGN.md:63–67` requires exact inputs/corpus, versions, sanitized environment, outputs/timing, owner/disposition/evidence, Radar/results backlink and bounded null coverage. Lines 73–76 require manual rejection of seed-only stateful replay, missing evidence/backlinks and overclaimed clean results, with evidence under TESTS-RESULTS. Read-only probe: `nl -ba PROJECT/2-WORKING/GH-1143-DEFECT-CAMPAIGN.md` → exit 0; decisive output: `a seed alone cannot replay stateful/concurrent behavior`, `return link to Radar tracking context`, and `Manual omission review must reject`. These are planned manual controls; they have not yet been exercised.
+- [Pass] The source's workflow and acceptance requirements have plan equivalents: source/prior assets and revision at lines 26–32; ownership/prior-work boundaries and fresh clearance at 41–46; suitability, hypotheses/oracles, controls, budgets/stops, isolation, same-predicate replay, duplicate classes, severity and separate remediation at 60–69; complete replay/disposition/null contract at 63–67; source-grounded HELD pilot and missing structured adapter at 70–71. The skill-writing step must elaborate these headings using the supplied source contract, including problem-class tool selection, explicit permitted effects/stops and root-cause dedupe; this approval does not substitute argv fuzzing or generic containment for stateful semantic coverage.
+- [Pass] Existing seams still support the thin instruction approach: `skills/3-weekly/radar/SKILL.md:786` begins `Sibling: recommend the repo's own verification assets`; its closing paragraph says `Radar recommends and never executes` and prohibits reciprocal asset-to-Radar pointers. `skills/4-occasional/ate/SKILL.md:60–61` says omit `--gh-repo` for no GitHub side effect. `utils/py/gen4_campaign.py:365,376–378,399` establishes default suite mode, explicit no-synth/model/healing flags and synthesis inversion. Plan lines 29–30 retain explicit run/no-synth after approval and absent model/healing/filing options. Preserve the existing no-reciprocal-pointer boundary during the consumer-path review at plan line 72.
+- [Unverified — no citation] Anti-goals and delivery remain bounded: plan lines 55–58 stop on broader-gate paths and forbid routing/shared-policy changes; 68–79 require per-case approval, preserve #1131, forbid new machinery/runtime changes and automatic consequential actions, and end at a docs-hook DRAFT PR to development with exact-head status distinctions. Lines 42–46 and 70–71 preserve #1133's hold and #1140/#1136 exclusions. No execution, ledger redesign or new adapter is authorized by this plan.
+- [Unverified — needs clone run] No validate.sh, test/*.sh, pytest, executable fixture, campaign or gate was run. Implementation checks, provenance retention, final independent QA and publication/status verification at plan lines 72–79 remain future work. Historical tracker/peer-state assertions and remote commit ancestry were not refreshed in this turn; they provide no live ownership clearance. The issue snapshot is the producer-supplied review source, not independently fetched remote evidence.
+
+Relay closed (Approved), no further review turn needed. Handing the completed token back to operator; proceed only within the approved documentation scope and its verification steps.
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
