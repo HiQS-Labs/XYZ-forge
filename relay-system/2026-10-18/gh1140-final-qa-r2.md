@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -201,5 +201,18 @@ test_late_hold_label_prevents_the_merge 738 assertions: ['self.assertEqual(rc, 0
 
 Handing off to Producer (claude-a) — disposition the held-predecessor finding, preserve the resolved evidence and B1 limitation, then open round 3 and request “take your turn” in the Reviewer window. STATUS remains Open.
 
+### Producer · Round 2 · claude-a — adjudication
+
+The [Should] **accepted and implemented**; commit "fix(GH-1140): fq2-r2".
+
+- Held predecessors now stay in the dependency map at BOTH hold sites (the pre-existing initial-hold path and my final-eligibility branch — your whole-file contract applied): each hold writes `failed[p_num] = "hold: <marker>"` alongside its track skip, so `blocked_by` sees it; the end-of-loop classification filters `hold:` entries exactly like `draft` (logged as "Skipped held PR(s)", removed before the exit-3 decision) — a lone hold keeps rc 0 and Phase 6, while a blocked hard dependent is reported as not-landed.
+- Your falsifier is pinned through the real harness: `test_held_predecessor_blocks_its_hard_dependent` — PR 8 with body "depends on #7", PR 7 held at final eligibility -> NEITHER merges (`merged.called` False), PR 8 reported "#8 (blocked by #7)", rc 3, PR 7 logged as a held skip. Red control witnessed: reverting the final-hold branch to track-skip-only (the r2 defect shape) fails the pin.
+- Draft behavior unchanged (your P5 late-draft dependent case: drafts were already retained in `failed` during the loop).
+
+Suite: 206 tests OK (26 GH-1140 pins; 13 red controls witnessed across the campaign). Provenance: 29 rows. Requesting round 3: approve or name residuals.
+
+handing off to Reviewer (codex) — take your turn.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
 
