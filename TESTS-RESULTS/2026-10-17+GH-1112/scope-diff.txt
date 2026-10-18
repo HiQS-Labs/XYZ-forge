@@ -1,0 +1,41 @@
+== base a984865e (origin/development at task start) .. HEAD 9c36c7b46
+== name-status
+A	PROJECT/2-WORKING/GH-1112-CI-QUICK-WINS.md
+A	TESTS-RESULTS/2026-10-17+GH-1112/audit-after.stderr
+A	TESTS-RESULTS/2026-10-17+GH-1112/audit-after.stdout
+A	TESTS-RESULTS/2026-10-17+GH-1112/audit-after.time
+A	TESTS-RESULTS/2026-10-17+GH-1112/audit-before.stderr
+A	TESTS-RESULTS/2026-10-17+GH-1112/audit-before.stdout
+A	TESTS-RESULTS/2026-10-17+GH-1112/audit-before.time
+A	TESTS-RESULTS/2026-10-17+GH-1112/audit-red-parity.log.txt
+A	TESTS-RESULTS/2026-10-17+GH-1112/gh648-cleanup-eperm-control.log.txt
+A	TESTS-RESULTS/2026-10-17+GH-1112/gh648-controls-and-rescued-suites.log.txt
+A	TESTS-RESULTS/2026-10-17+GH-1112/parallel-4wide-gate-receipt.json
+A	TESTS-RESULTS/2026-10-17+GH-1112/parallel-4wide-summary.txt
+A	TESTS-RESULTS/2026-10-17+GH-1112/parallel-4wide-validate.log.gz
+A	TESTS-RESULTS/2026-10-17+GH-1112/provenance.jsonl
+A	TESTS-RESULTS/2026-10-17+GH-1112/registry-after.txt
+A	TESTS-RESULTS/2026-10-17+GH-1112/registry-before.txt
+A	TESTS-RESULTS/2026-10-17+GH-1112/registry-order-controls.log.txt
+A	TESTS-RESULTS/2026-10-17+GH-1112/registry-order-controls.py.txt
+A	relay-system/2026-10-17/gh1112-ci-quick-wins-final.md
+A	relay-system/2026-10-17/gh1112-ci-quick-wins-plan.md
+A	relay-system/2026-10-17/gh1118-ci-leaderboard-recs.md
+M	releases.db
+M	releases.sql
+M	test/gh648-l4-285-revalidate.sh
+M	test/marathon-root-audit.sh
+M	validate.sh
+
+== stat (code/test/runner surfaces only)
+ test/gh648-l4-285-revalidate.sh | 13 +++++++--
+ test/marathon-root-audit.sh     | 63 +++++++++++++++++++++++++++++++++--------
+ validate.sh                     | 16 +++++++----
+ 3 files changed, 71 insertions(+), 21 deletions(-)
+
+== routing/scheduler surfaces untouched:
+utils/ci-route.sh: unchanged
+ci-local.sh: unchanged
+relay-automation: unchanged
+== new files under test/: 0 (expected 0)
+== TESTS registry count:      406 entries, multiset-identical to base (registry-order-controls.log.txt)

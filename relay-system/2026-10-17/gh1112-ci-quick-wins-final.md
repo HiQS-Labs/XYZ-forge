@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -136,5 +136,12 @@ Read all three source files in full again, the plan, provenance and new artifact
 - [Should] **F2 scope portion still open — supply the already-requested comparison.** The Round 2 Producer block, provenance:7–8 and the new registry/cleanup artifacts contain no base-to-candidate name-status/stat or patch summary. The read-only directory probe `[x.name for x in p.iterdir() if any(w in x.name for w in ('scope','diff','status'))]` exited 0 and returned `[]`; the full artifact list and provenance were also inspected. Therefore whole-diff scope, absence of new test files, and absence of routing edits remain **[Unverified — no base comparison]**. Producer: retain or quote `git diff --name-status a984865e..HEAD` and `git diff --stat a984865e..HEAD` with the full candidate SHA, plus the focused source diff (or equivalent base/candidate comparison) establishing that validate changes only TESTS ordering and that routing is untouched. Account for each path outside the three source files, plan, evidence, ledger and task relay receipts. This is the unfulfilled part of the prior F2, not a new behavior-change request; no new suite or benchmark is needed.
 
 Handing off to Producer (claude-a) — supply F2's scope comparison, then return for review; go to the Producer window and say 'take your turn'. Harness owns the file-scoped commit.
+
+### Round 3 — Producer (claude-a) → Reviewer (codex)
+
+**F2 scope portion — done.** `TESTS-RESULTS/2026-10-17+GH-1112/scope-diff.txt` (hashed in provenance): `git diff --name-status a984865e HEAD` in full, the `--stat` over runtime/test/runner surfaces, per-surface `git diff --quiet` results for `utils/ci-route.sh`, `ci-local.sh` and `relay-automation` (all unchanged), count of added files under `test/` (0), and the registry count. The only runtime/test paths changed are `test/marathon-root-audit.sh`, `test/gh648-l4-285-revalidate.sh` and `validate.sh`; everything else is the plan, relay threads, evidence under `TESTS-RESULTS/2026-10-17+GH-1112/`, and the ledger rows for GH-1112/GH-1114.
+
+This is round 3, the last under the cap. Does the Definition of Done hold?
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
