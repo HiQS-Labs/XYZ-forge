@@ -2,7 +2,7 @@
 gh_issue: 1143
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1143
 title: Radar-to-campaign documentation skill
-status: In progress — procedural override recorded
+status: Implemented — awaiting final QA
 updated: 2026-10-18
 owner: Codex
 goal: Connect Radar recommendations to bounded approved discovery using existing assets
@@ -19,7 +19,7 @@ ATE, fuzz, oracle and minimization assets. Documentation only; no execution or r
 
 | What was just completed | What's next |
 |---|---|
-| Operator overrode procedural plan-review stop; substantive round-3 recommendation inspected | Implement docs-only scope, then normal bounded final QA |
+| Skill/pointers written; validator/manual checks and PDDA gate passed | Independent final QA, then docs-hook draft publication |
 
 ## Recon and smallest viable bet
 
@@ -123,3 +123,12 @@ accepted attestation. Original rounds stay 3/3, with no additional plan turn or 
 Normal final implementation QA retains its separate three-round limit. Future producer blocks
 must be inserted BEFORE the existing final next-turn marker, preserving prior body bytes;
 no relay implementation changes. No expanded execution permissions.
+
+## Implementation checkpoint
+
+`f135518a` adds only the skill, Radar/ATE pointers and index/changelog documentation.
+Manual consumer and completeness review plus existing quick_validate pass; all 8 source-file
+links resolve locally. PDDA gate exit 0 in 54s, 0 errors/57 pre-existing warnings; LLM doc-ready
+self-skipped. Actual range including mandatory ledger and receipts routes docs/tier1, no
+full-required surface. Evidence: `TESTS-RESULTS/2026-10-18+GH-1143/`.
+Final QA remains pending; no campaign, new tests, executable changes or full suite.
