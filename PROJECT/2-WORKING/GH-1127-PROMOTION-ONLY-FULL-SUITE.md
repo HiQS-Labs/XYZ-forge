@@ -26,7 +26,7 @@ Branch `feat/XYZ-forge-gh1127-promotion-only-full-suite-2026-10-18` off `develop
 
 | What was just completed | What's next |
 |---|---|
-| Recon at 4fd5dca8 and plan written | Codex plan QA → implement → covering suites → final Codex QA → PR → merge on green CI (operator-authorized) |
+| Plan QA r1 FAIL (F1 blocker: dispatch could run Small or nothing; F2–F4) dispositioned below | Codex plan QA r2 → implement → covering suites → final Codex QA → PR → merge on green CI (operator-authorized) |
 
 ## Observed today (4fd5dca8)
 
@@ -41,25 +41,45 @@ Branch `feat/XYZ-forge-gh1127-promotion-only-full-suite-2026-10-18` off `develop
 ## Preflight bet
 
 - **Outcome:** a development merge costs the local reconcile only (minutes, not a 27–70 min hosted queue). The full registry still runs hosted on macOS, once, on the combined development tip, before it is promoted.
-- **Smallest bet:** turn the hosted lane from automatic to on-demand, and make the already-shipped local writer the default. Promotion qualification is the same `wave-reconcile.yml` dispatched once on development. Its catch-up already gathers every receipt-less landing since cutover and qualifies them together in **one** integrated-snapshot run (`qualify_landings`, `:642-743`). That run is exactly the "combined candidate" #1127 asks for. No new workflow, job, scheduler, receipt schema or test file.
+- **Smallest bet:** turn the hosted lane from automatic to on-demand, and make the already-shipped local writer the default. Promotion qualification is the same `wave-reconcile.yml` dispatched once on development with one new flag, `--promotion`. Catch-up already gathers every receipt-less landing since cutover and qualifies them in **one** integrated-snapshot run at HEAD (`qualify_landings`, `:642-743`). `--promotion` closes the two gaps Codex found (F1): it forces the full registry instead of the tier selector, and when nothing is pending it qualifies HEAD itself as a commit landing. HEAD is always tested. No new workflow, job, scheduler, receipt schema or test file.
 - **Rejected:** (a) adding `pull_request` → main to `boundary-macos`. That inverts a pinned cost guard (`ci-workflow.sh:254-259`), and the job still could not block without branch protection, which this agent cannot read or write (403 per #1127). (b) Deleting `wave-reconcile.yml`. `unreconciled_prs` dates its cutover from the file's add commit (`:1298-1302`), and five suites require the file. (c) Deleting `wait_for_hosted_reconcile`. `test/gh549-work-events.sh:628-654` and `test/gh674-merge-cleanup-hosted-lookup.sh` pin it, and it stays useful for an operator who dispatches the hosted lane deliberately.
 - **Rollback:** restore the two triggers and flip the env default. Every receipt keeps its original meaning. Receipt-less landings from the interim are picked up by the next dispatched catch-up and qualified then, never retroactively marked passed.
 
 ## Changes (ordered, verification inline)
 
-1. `.github/workflows/wave-reconcile.yml`: delete the `pull_request` and `schedule` triggers and keep `workflow_dispatch`. Replace the header comment with the #1131 contract: dispatch on `development` before every promotion; the run qualifies all landings since the last receipt in one snapshot and publishes their receipts. Leave the dead PR branch of `if:` and the args step (`:24-26`, `:65-66`) in place. Re-enabling is then a two-line trigger restore.
+0. `utils/py/wave_reconcile.py`, F1: add `--promotion` (store_true). It requires `--catch-up --gate --qualify`, and the parser refuses it otherwise.
+   - `qualify_landings(..., promotion=False)`: when `promotion` is set, (a) the gate is `QUALIFICATION_GATE` with reason `promotion (#1127): full registry`, and `select_qualification_gate` is not called; (b) if `pending` is empty, `pending = [fetch_commit_metadata(repo_root, tested)]`. That is the existing direct-commit landing shape (`:408-440`), so the receipt is an ordinary `artifact_kind: commit` entry for the tested tip, and `qualification_receipt_matches` already replays it.
+   - The pending/gate decision lives in one small pure helper, `promotion_gate(pending, promotion, head_meta, select)`, so it is checkable without a suite run.
+   - Call site `:2235`: `if args.qualify and (landing_items or args.promotion)`. The publish retry (`--only-receipted`) never calls `qualify_landings` (`:2240-2256`), so it still never runs the suite.
+   - Ordinary `--qualify` without `--promotion` is unchanged: the tier selector and early return still apply, and historical receipts replay as before.
+   Verify: manual `TESTS-RESULTS/2026-10-18+GH-1127/promotion-controls.log.txt`:
+   - (p1) docs-only pending input (`AGENTS.md`, tier=1) with promotion → `validate.sh --parallel 4`; without promotion → Small. This is the red control: Codex's own probe input.
+   - (p2) empty pending with promotion → one commit meta for the tested sha; without promotion → no run.
+   - (p3) `--promotion` without `--qualify`, and `--promotion` without `--catch-up` → parser error.
+   - Then gh421, gh425, gh740.
+1. `.github/workflows/wave-reconcile.yml`: delete the `pull_request` and `schedule` triggers and keep `workflow_dispatch`. Dispatch args become `--catch-up --gate --qualify --promotion`. The PR branch of the args step stays as dead code for rollback. Replace the header comment with the #1131 contract: dispatch on `development` before every promotion; the run qualifies all landings since the last receipt in one snapshot and publishes their receipts. Leave the dead PR branch of `if:` and the args step (`:24-26`, `:65-66`) in place. Re-enabling is then a two-line trigger restore.
    Verify: existing `test/ci-workflow.sh` (it parses this file's timeout at `:288-299`), `test/gh421-auto-wave-reconcile.sh`, `test/gh684-hosted-lane-report.sh`, `test/gh740-hosted-lane-publish.sh`.
 2. `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:run_post_merge_reconcile`: local by default. Wait for the hosted run only when `MERGE_CLEANUP_USE_HOSTED=1`. Otherwise call `run_local_wave_reconcile` straight away, with no 60 s grace and no hosted lookup. Both call sites stay in the function, so the gh549 AST pin `{wait_for_hosted_reconcile, run_local_wave_reconcile} <= post_calls` still holds unchanged. The dry-run log line names the chosen path. The local writer's own single-writer guard (`check_hosted_reconciler_in_flight`, `wave_reconcile.py:2192-2195`, exit 8 while any hosted run is active) is kept. That means a landing during a promotion dispatch stops instead of racing it, which is the existing contract.
-   Verify: existing `test/gh549-work-events.sh`, `test/gh674-merge-cleanup-hosted-lookup.sh` (exercises the opt-in path; unchanged), `test/gh436-merge-cleanup.sh` (mocks the function).
+   Verify: existing `test/gh549-work-events.sh`, `test/gh674-merge-cleanup-hosted-lookup.sh` (calls `wait_for_hosted_reconcile` directly; unchanged), `test/gh436-merge-cleanup.sh` (mocks the function). Default merge-cleanup does no hosted polling or grace lookup. The local child `wave_reconcile.py --pr N` keeps its **one** safety query (`check_hosted_reconciler_in_flight`, `gh run list`, `:81-89`, `:2192-2195`) and still refuses with exit 8 while a promotion dispatch is active. `merge_cleanup.py:614-618` already prints that code and message (F3).
 3. `skills/2-daily/merge-cleanup/scripts/batch_record.py:finalize_sweep_inputs`: when the classifier selects the full gate, `command` becomes `gh workflow run wave-reconcile.yml --ref <integration>  # full registry, hosted, once before promotion (#1131); no local full rerun`. The Small (tier 1) command is unchanged, because a local Small run is cheap. The `gate` and `gate_reason` fields are unchanged.
-   Verify: existing `test/gh436-merge-cleanup.sh` batch cases and any `sweep_inputs` assertion. Sweep the test tree for `"command"` against batch records first. Only `batch_record.py:186` reads it today.
+   The renderer (`batch_record.py:184-186`) labels it by kind:
+   - Small: "Run it in a throwaway clone"
+   - Full: "Full sweep deferred to the promotion dispatch (#1131); record `verdict: deferred` with that reason until the dispatch's receipt exists, or `clean` naming the hosted run"
+   The CLI echo at `merge_cleanup.py:1733` shows the same command string. No machine parser of `command` was found in the bounded searches of merge-cleanup and its test wrapper (Codex F4).
+   Verify: existing `test/gh436-merge-cleanup.sh` batch cases.
 4. `utils/py/wave_reconcile.py:qualification_receipt_matches` (`:585`): keep the returned `meta`. For each of `mode`, `width` and `first_attempt_failures` **present** in the entry, require equality with the recomputed meta. If `retries` is present, require `len(first_attempt_failures)`. Absent keys keep historical semantics, so every pre-#1134 receipt still matches.
    Verify: `gh740` (replays a receipt), `gh425`, and the committed `TESTS-RESULTS/2026-10-17+GH-1114/reader-controls.py.txt`, re-run. Manual check `TESTS-RESULTS/2026-10-18+GH-1127/receipt-meta-controls.log.txt`: the committed 65f70cc5 receipt plus telemetry replays True; the same receipt with `mode: sequential`, `width: 1`, `retries: 1` or `first_attempt_failures: ["x"]` each replays False; the committed 61e27ed8 receipt, which lacks the keys, replays True.
 5. Docs, text only: `AGENTS.md:216-219,432-434`, `ROUTER.md:117-126,140-143`, `skills/2-daily/merge-cleanup/SKILL.md:298-303` (and its Phase 5 summary line if it names the hosted wait as default), `ci.yml:154-158` comment, and `validate.sh:706-711,1309` comments. Each names its evidence boundary:
    - development merge = local reconcile + pre-push gate
    - promotion = dispatched hosted `wave-reconcile` full run on the development tip (parallel per #1134), then the post-push `boundary-macos` sequential witness on main (unchanged, operator's call under #1131 to flip)
    - `ci-local.sh` stays sequential
-   Add a 4-line promotion procedure to `AGENTS.md`: dispatch, wait green, open the development → main PR, `boundary-macos` witnesses main.
+   Add the promotion procedure to `AGENTS.md` (F2: evidence bound to the candidate, not "wait green"):
+   1. Quiet window: no merges to development until step 4. A landing attempted meanwhile is refused with exit 8 by the local writer's guard.
+   2. `gh workflow run wave-reconcile.yml --ref development`, then wait for success.
+   3. Read the newest published `TESTS-RESULTS/*+GH-591/wave-<sha>/provenance.jsonl`. Check `gate=validate.sh --parallel 4` and `result=pass`. The run log must have no `deferred` line. `git log --format='%ae %s' <tested_commit>..origin/development` may list only the bot's reconcile/receipt commits (`BOT_AUTHOR_EMAIL`, `:1356`). Anything else means redispatch.
+   4. Open the development → main PR from that tip. After the merge, `boundary-macos` witnesses main sequentially (unchanged).
+   - Also update the merge-cleanup `SKILL.md` sweep text (`:22`, `:416-421`, `:435-437`). Full sweeps are deferred to the promotion dispatch; Small sweeps still run locally.
+   - Also update the `hosted_lane_report.py:104-107` wording "next run" to "next dispatch" (F4/Nit).
    Verify: `utils/pdda/pdda.sh run` clean; `test/gh544-parallel-default.sh`, which pins the ci.yml literal, still green.
 
 ## Non-goals
@@ -79,11 +99,12 @@ Branch `feat/XYZ-forge-gh1127-promotion-only-full-suite-2026-10-18` off `develop
 
 | # | Check | Red control |
 |---|---|---|
-| A1 | wave-reconcile.yml has only `workflow_dispatch` as a trigger; ci-workflow, gh421, gh684, gh740 green | fix_probe 1 fails on the base commit |
-| A2 | `run_post_merge_reconcile` without the env var calls the local writer and never `gh run list`; with `MERGE_CLEANUP_USE_HOSTED=1` it takes the hosted path; gh549, gh674, gh436 green | manual: monkeypatched `wait_for_hosted_reconcile` raising when the env is unset → not reached; reached when set |
-| A3 | batch sweep command for a tier-3 batch is the dispatch line; tier-1 unchanged | manual: `finalize_sweep_inputs` on a stub record for each tier |
+| A0 | `--promotion` forces the full gate and qualifies HEAD when nothing is pending | promotion-controls p1 (docs-only → full; Small without the flag), p2 (empty → HEAD commit; none without the flag), p3 parser refusals |
+| A1 | wave-reconcile.yml has only `workflow_dispatch` as a trigger, with `--promotion` in its args; ci-workflow, gh421, gh684, gh740 green | fix_probe 1 fails on the base commit |
+| A2 | Without the env var, merge-cleanup skips `wait_for_hosted_reconcile` (no hosted polling or grace lookup) and calls the local writer, which keeps its one in-flight safety query. With `MERGE_CLEANUP_USE_HOSTED=1` it takes the hosted path. gh549, gh674, gh436 green | manual: monkeypatched wait raising → not reached when the env is unset, reached when set; local-writer argv recorded |
+| A3 | batch sweep command and label: tier 3 → dispatch line with the deferred label; tier 1 → unchanged local command | manual: `finalize_sweep_inputs` + render on a stub record for each tier |
 | A4 | receipt-meta controls as in step 4 | each tampered field → False; legacy receipt → True |
-| A5 | docs name the new boundaries; `pdda.sh run` clean; gh544 green | — |
+| A5 | docs name the new boundaries; the AGENTS.md promotion procedure binds evidence to the tested SHA; `pdda.sh run` clean; gh544 green | manual: procedure step 3's `git log` check on a fixture repo flags a non-bot commit after tested_commit, and passes on bot-only commits |
 | A6 | Pre-push gate for the changed paths (routes full: workflow + core skill code) | — |
 
 ## Carry-overs (operator)

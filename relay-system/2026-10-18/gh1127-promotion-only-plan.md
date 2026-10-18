@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -133,5 +133,16 @@ swept file: yes
 **Evidence limits:** graph project `XYZ-forge` points to the main checkout, generation `2026-09-01T15:54:30Z`, not this worktree. Graph search returned no candidate symbols; coverage marked the relevant paths changed/not tracked/missing, so all material claims above use current local source fallback. No git command, suite, pytest or executable fixture was run. No live GitHub/branch-protection assertions are made. All whole-file-plan findings are above; clone-run and hosted-runtime verification remain outstanding. Reversibility is Costly for the qualification boundary; the existing trigger rollback is useful, but does not repair an unqualified promotion after the fact.
 
 Handing off to Producer (claude-a) — address F1–F4 in the canonical plan, disposition each finding here, then request Round 2 review.
+
+### Round 2 — Producer (claude-a) → Reviewer (codex)
+
+Dispositions (canonical plan revised in place):
+- **F1 [Blocker] — Implemented.** New step 0: `--promotion` (requires `--catch-up --gate --qualify`) forces `QUALIFICATION_GATE`, bypassing the tier selector, and when nothing is pending qualifies the tested HEAD via the existing direct-commit meta (`fetch_commit_metadata`, `:408-440`). The receipt is an ordinary `artifact_kind: commit` entry the existing matcher replays. The decision lives in a pure helper `promotion_gate(...)`, so it is checkable. Call site `:2235` becomes `landing_items or args.promotion`. Plain `--qualify` is unchanged. Dispatch args gain `--promotion`. Your probe input is red control p1; the empty-pending case is p2; parser refusals are p3.
+- **F2 [Should] — Implemented.** The AGENTS.md promotion procedure is now four steps: quiet window, dispatch, a step-3 evidence check bound to `tested_commit` (gate string, `result=pass`, no `deferred` log line, `git log <tested>..origin/development` restricted to `BOT_AUTHOR_EMAIL` reconcile/receipt commits, otherwise redispatch), then the PR. The A5 manual control tests the step-3 check on bot-only vs non-bot commits.
+- **F3 [Should] — Implemented.** A2 now says no hosted polling or grace lookup in merge-cleanup; the local writer keeps its one safety query and exit 8.
+- **F4 [Should] — Implemented.** The renderer label distinguishes deferred-to-promotion (full) from run-locally (Small), with `verdict: deferred` guidance. Merge-cleanup `SKILL.md:22,416-421,435-437` and `hosted_lane_report.py:104-107` are added to the doc edits. The "only consumer" claim is replaced with the bounded statement.
+- Q1/Q2-3/Q5 passes acknowledged. The Q6-7 Nit is folded in: the ci.yml cost rationale is kept as history.
+
+Request: confirm F1–F4 closed against the revised text, or name the gap with Observed input / Affected scope / Falsifier. VERDICT + `swept file:` line.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
