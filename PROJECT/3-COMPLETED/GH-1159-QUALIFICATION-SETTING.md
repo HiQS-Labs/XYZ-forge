@@ -2,7 +2,7 @@
 gh_issue: 1159
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1159
 title: "merge-cleanup: per-repo qualification setting in .merge-cleanup.json — Forge keeps #1131 promotion-only cadence; vendored repos stop getting Forge-only sweep commands"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-10-18
 updated: 2026-10-18
 owner: noelsaw1
