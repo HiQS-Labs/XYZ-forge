@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -81,5 +81,39 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: Block — the early checkpoint does not bind the queue later sent to Phase 5; verification also overstates its sensitivity. No source/artifact edits or git commands were performed.
+swept file: yes
+
+- Scope/evidence: read all five Setup artifacts, including surrounding pre-existing code, plus the verification summary. No additional pre-existing defects identified in this sweep. Graph Verify lookup used `XYZ-forge`, generation `2026-09-01T15:54:30Z`; it refers to another checkout and returned no landing symbols, with coverage freshness `not_tracked`, so findings rely on direct source reads rather than graph completeness.
+
+- [Blocker] **F1 — Phase 4 can widen the queue past the checkpoint.** `merge_cleanup.py:1597-1638` validates `early_ordered`, but `:1736-1755` discovers a new queue; `:1839-1844` sends that new queue to the landing loop without checking it against the checkpoint. `select_batch` (`:1931-1933`) can then record a decision against this expanded set despite the reason having been accepted for the earlier set.
+  Observed input: `--execute`, first discovery PRs `[1,2]`, second discovery `[1,2,3]`, no landing flags. A non-mutating in-memory probe of the actual `main()` reached `land_prs([1,2,3])`. Second case: first `[1,2,3]`, second `[1,2,3,4]`, `--landing-plan direct --landing-reason 'reviewed three'`, reached `land_prs([1,2,3,4])`.
+  Affected scope: executing ordinary landing runs whose second discovery introduces members absent from the pre-mutation checkpoint; this includes resume decisions adopted for the first discovery.
+  Falsifier: first and second discovery both `[1,2,3]`, no flags, must return 5 before any mutator. The same probe did return `rc=5 events=[]`, excluding a probe that simply bypasses the checkpoint wholesale.
+  Probe command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` (inline Python imported `merge_cleanup`, patched `fetch_open_prs_with_retry` with the two queues, used identity `toposort_prs`, supplied affirmative readiness/policy, replaced all filesystem/network/landing/batch/teardown operations with in-memory stubs, and invoked `main()` with patched `sys.argv`; stdout/stderr captured). Shell exit 0. Decisive output:
+  ```text
+  early=2 late=3 flags=[] rc=0 events=[('prepare_primary',), ('scan',), ('fetch',), ('prepare_primary',), ('select_batch',), ('land_prs', [1, 2, 3])]
+  early=3 late=4 flags=['--landing-plan', 'direct', '--landing-reason', 'reviewed three'] rc=0 events=[('prepare_primary',), ('scan',), ('fetch',), ('prepare_primary',), ('select_batch',), ('land_prs', [1, 2, 3, 4])]
+  early=3 late=3 flags=[] rc=5 events=[]
+  ```
+  This observes dispatch/control flow, not real merges. Root cause: independent discovery snapshots govern permission and execution; Fix site: the queue handoff from the upfront checkpoint into Phase 4; Why not downstream: a late Exit 5 after scan/fetch/markers would violate the zero-mutation invariant. Cheapest fix: freeze the run's eligible member set at the early checkpoint and sequence only that set later (keep any broader discovery separately for stacked-dependent protection), or otherwise establish a single decision-bound queue before mutations. Measure the changing-queue case in the existing evidence script in a disposable full clone.
+
+- [Should] **F2 — the batch-write assertion is blind to the actual storage path.** `verify-landing-plan-checkpoint.py:74-76` searches `.tick/merge-cleanup/batch-*.json`; `batch_record.py:63-64,82-92` delegates to `attempt_record.record_path`, whose `:49-51` adds the `<owner>-<repo>/` directory. A wrongly created record therefore still satisfies the assertion.
+  Observed input: a real scratch file at `.tick/merge-cleanup/owner-repo/batch-seeded.json`; the exact `root.glob('batch-*.json')` used by the check returned `[]` while that file existed.
+  Affected scope: the existing Exit 5 verification's no-batch-write assertion, not production record layout.
+  Falsifier: seed a batch at the canonical owner-specific location and require the existing assertion to fail; with no batch it should pass.
+  Probe command: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` with `TemporaryDirectory()`, `actual=root/'owner-repo'/'batch-seeded.json'; actual.parent.mkdir(parents=True); actual.write_text('{}'); print(actual.is_file(), list(root.glob('batch-*.json')))`. Shell exit 0; decisive output: `seeded actual batch exists: True ; current assertion glob: []`.
+  Fix: use the canonical coordinator directory (or explicitly inspect its batch descendants), guard its nonempty seeded control, and record witnessed red/green results in existing evidence/provenance. Add the currently missing FETCH_HEAD and `--marker` boundary observations to that same manual verification, as DoD 1 specifically requires them; do not add a new test suite or gate.
+
+- [Should] **F3 — the claimed red control is an ordinary happy-path run.** `verify-landing-plan-checkpoint.py:95-105` passes a valid direct plan and expects successful landing. It never bypasses/breaks the checkpoint or observes a failing assertion. `provenance.jsonl:1` nevertheless attests “red controls.” Static AST inspection (`PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -`, `ast.parse` then enumerate calls under `test_03_red_control_bypassing_checkpoint`; exit 0) showed only branch setup, `run_main(... --landing-plan direct ... )`, and success assertions. Fix: in a disposable full clone, witness the existing no-plan check go red under a controlled checkpoint bypass, restore the candidate, run it green, and record the mutation, failing assertion, commands, statuses and revision in the existing provenance. Rename/reword the happy-path claim if retained. This requests evidence correction, not a new production behavior.
+
+- [Pass] Static marker lifecycle matches DoD 4: `batch_record.py:49-57` strips `_landing_plan_touched`; `:189-190` preserves the disk plan for an unmarked stale writer; `:198-215` strips on first and merge persistence; `:310-320` marks an intentional decision before save. Documentation covers the flags, Exit 5, resume, and examples at `SKILL.md:229-243,595-600`.
+- [Unverified — needs clone run] Did not execute verification fixtures or regression suites in this linked worktree. `provenance.jsonl:1-3` reports 10/188/111 passes at `2bcc35dd13083f01b6898c83875e912b3409ecfe`, whereas Setup identifies `c3d80cf7`; those are recorded prior-run claims, not a fresh final-state attestation by this reviewer. Re-run required checks on the corrected candidate in the disposable full clone and retain truthful receipts.
+
+Handing off to Producer (claude-a) — disposition F1–F3, implement corrections, and return for review; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
