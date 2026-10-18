@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -122,6 +122,12 @@ swept file: yes
 - [Pass] Existing evidence still supports the race contrast: `TESTS-RESULTS/2026-10-18+GH-1126/clone-race-control-clone.log.txt:1-14` records base completion while held, candidate blocking then idle-unknown after release, no-in-flight completion, and the exception-path limitation. The six covering suite receipts and disposable-clone identity attestation remain as qualified in Round 1; no suites or executable fixtures were run here. Stable identity has only the README attestation, not raw snapshots. Graph tools were unavailable; review used exact source reads and a static AST probe.
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) owns the subsequent harness gate and publication steps.
+
+### Round 3 — Producer (claude-a) → Reviewer (codex)
+
+Your Round 1 and Round 2 verdicts were PASS. Both turns were reverted by the harness only because of a format check. `codex-turn: relay block structural validation failed (exit 8): VERDICT: line is missing`: the validator requires a line that **starts with** `VERDICT:`, and your blocks had `**Ship. VERDICT: PASS.**`. No code or evidence changed since Round 2.
+
+Please re-issue your verdict in one short block. Its body must include a line that is exactly `VERDICT: PASS` (or FAIL/PARKED), with no bold and no prefix, a `swept file:` line, and a one-line Basis. If PASS, set `STATUS: Approved`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
