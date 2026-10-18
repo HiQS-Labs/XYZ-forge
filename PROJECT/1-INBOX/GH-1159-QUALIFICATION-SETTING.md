@@ -104,6 +104,32 @@ records a verdict. No `MERGE_CLEANUP_USE_HOSTED` change.
 5. Verify: `bash test/gh436-merge-cleanup.sh` (existing; `test_emitted_sweep_command_parses` still
    passes with the absent-key path). Then the routed gate for the changed paths.
 
+**Plan QA round 1 (Claude subagent reviewer, at the operator's direction; Codex unavailable): Changes requested. Dispositions:**
+
+1. Accepted. The Forge gate leaked into the non-classifier modes. Fix: `gate` is stored as `""`
+   when the classifier did not run, and `script_block` prints the Gate line only when `gate` is
+   non-empty.
+2. Accepted. "No command" is stored as `""`. The one existing call in
+   `test_emitted_sweep_command_parses` passes Forge's `qualification`, so it keeps checking
+   today's deferred command. This edits an existing case; it adds no new one.
+3. Accepted. At `:1093`, a `ValueError` from the resolver is logged as a warning and the run
+   continues with `qualification=None` (the no-command form). The batch issue is still updated,
+   and the Forge command never prints.
+4. Accepted. New records carry `full_suite` (`promotion|per_batch|none|undeclared`). A record
+   with no `full_suite` takes the legacy rendering path, and every key is read with `.get`.
+5. Accepted, clarified. `promotion` with no `sweep_command`: the classifier runs and the Small
+   path is unchanged. A non-Small result is deferred with no command and gets the no-command
+   line. A vendored repo that opts into `promotion` sees the classifier's fallback gate; that is
+   its own choice.
+6. Accepted as a behavior change: the command is printed verbatim, so a Forge run whose
+   integration branch is not `development` still prints `--ref development`.
+7. Accepted. The resolver error text names both keys. The SKILL paragraph says
+   `--show-merge-policy` prints `qualification`. A stale installed copy fails closed on Forge's
+   new key; that is acceptable.
+8. Accepted. The manual checks also grep the rendered `script_block` of a repo with no key for
+   `wave-reconcile`, `validate.sh` and `development`.
+9. No change.
+
 **Tests (GH-831, no new tests):** no new cases without the operator's per-case approval. Proposed
 for approval: (a) a foreign-shaped repo with no key never emits `wave-reconcile.yml`; (b) Forge's
 key reproduces today's command byte for byte; (c) an unknown `full_suite` fails closed. Until
