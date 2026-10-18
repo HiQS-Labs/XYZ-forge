@@ -86,4 +86,12 @@ swept file: yes
 
 Relay closed (Approved), no further plan-review turn needed. Producer acts next to execute the authorized local spike and obtain final QA under its separate cap.
 
+
+### Attestation · relay-drive — 2026-10-18T04:14:37Z
+task: RELAY-gh836-residual-plan
+reviewer: codex
+status: Approved
+reviewed-head: 54e5a63cf0c8617dea63c6711e3cf32e1b47cfd2
+added-range: 6333+3825
+added-sha256: 906caf651aab39594e9c90a4d440ec15de7c59b4cb8de3a0e4e0080f3e52eace
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
