@@ -1,0 +1,18 @@
+PASS  (a) sequential: accepted  
+    meta {'mode': 'sequential', 'width': 1, 'first_attempt_failures': []}
+PASS  (b) parallel + rescued two.sh: accepted  
+    meta {'mode': 'parallel', 'width': 4, 'first_attempt_failures': ['two.sh']}
+PASS  (c) retry rc=1: rejected  ValueError: validation telemetry is failed, incomplete or quarantined
+PASS  (d) dropped suite: rejected  ValueError: validation telemetry is failed, incomplete or quarantined
+PASS  (e) non-suite python rc=1: rejected  ValueError: validation telemetry is failed, incomplete or quarantined
+PASS  (f) retry-only (no pool row, suite_events_match=no): rejected  ValueError: validation telemetry is failed, incomplete or quarantined
+PASS  (f2) retry-only with forged suite_events_match=yes: rejected  ValueError: validation telemetry is failed, incomplete or quarantined
+PASS  (g) duplicate executed name: rejected  ValueError: validation telemetry is failed, incomplete or quarantined
+PASS  (g2) mode=turbo: rejected  ValueError: validation run identity, mode or registry does not match
+(h) tier=1 -> ('validate.sh --sequential --subsystem small', ['alpha.sh', 'beta.sh'], 'tier 1')
+(h) tier=3 -> ('validate.sh --parallel 4', None, 'tier 3')
+PASS  (h) classifier branches
+(i) parallel receipt: {'mode': 'parallel', 'width': 4, 'first_attempt_failures': ['two.sh'], 'retries': 1, 'gate': 'validate.sh --parallel 4'}
+(i) sequential receipt: {'mode': 'sequential', 'width': 1, 'first_attempt_failures': [], 'retries': 0, 'gate': 'validate.sh --sequential'}
+PASS  (i) receipt metadata (writer expression evaluated with reader meta; end-to-end emission is exercised by gh425 and the first hosted run)
+ALL CONTROLS PASS

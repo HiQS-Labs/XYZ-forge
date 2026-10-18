@@ -1,0 +1,38 @@
+"""GH-1136 manual replay controls (a)-(d). Run from the root of a DISPOSABLE full clone (it writes the ledger
+and resets it with git between cases). The GitHub boundary is stubbed via RELEASES_GH_BIN. Not a test suite (GH-831)."""
+import importlib.util, json, os, pathlib, subprocess, sys, tempfile
+ROOT = pathlib.Path.cwd(); SCRIPTS = ROOT / "skills/2-daily/merge-cleanup/scripts"
+sys.path.insert(0, str(SCRIPTS))
+def load(path, name):
+    spec = importlib.util.spec_from_file_location(name, path); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); return m
+cand = load(SCRIPTS / "ledger_merge.py", "lm_candidate")
+base_src = pathlib.Path(tempfile.mkdtemp(prefix="gh1136-base-")) / "ledger_merge.py"
+base_src.write_text(subprocess.check_output(["git", "show", "e93214fe:skills/2-daily/merge-cleanup/scripts/ledger_merge.py"], text=True))
+base = load(base_src, "lm_base")
+N, URL = 99136, "https://github.com/HiQS-Labs/XYZ-forge/issues/99136"
+stub = pathlib.Path(tempfile.mkdtemp(prefix="gh1136-gh-")) / "gh"
+def gh_state(state):
+    stub.write_text("#!/bin/sh\ncat <<'J'\n" + json.dumps({"number": N, "html_url": URL, "state": state, "labels": []}) + "\nJ\n")
+    stub.chmod(0o755); os.environ["RELEASES_GH_BIN"] = str(stub); os.environ.pop("XYZ_LABELS_GH_BIN", None)
+def reset():
+    subprocess.run(["git", "checkout", "-q", "--", "releases.db", "releases.sql"], check=True)
+def label():
+    rows = json.loads(subprocess.check_output([sys.executable, "utils/py/releases_app.py", "roadmap", "list", "--json"], text=True))
+    hit = [r for r in rows if r["gh_number"] == N]; assert len(hit) == 1, hit; return hit[0].get("status_label")
+def op(lbl):
+    row = {"gh_number": str(N), "issue_url": URL, "title": "GH-1136 control row", "first_seen": "2026-10-18T00:00:00Z",
+           "doc_path": "PROJECT/2-WORKING/GH-1136-B1-ACCEPTED-START.md", "section": "In progress",
+           "rating_pri": "40", "rating_sev": "35", "rating_appeal": "50", "rating_effort": "85", "status_label": lbl}
+    return [{"op": "add", "row": row}]
+def check(name, cond, detail=""):
+    print(("PASS  " if cond else "FAIL  ") + name + (f"  [{detail}]" if detail else "")); assert cond, name
+gh_state("open")
+reset(); ok, log = cand.replay_ops(ROOT, op("in-progress"))
+check("(a) candidate: in-progress add keeps its accepted start", ok and label() == "in-progress", log[-1][:120])
+reset(); ok, log = base.replay_ops(ROOT, op("in-progress"))
+check("(b) red control, base replay_ops: label silently dropped", ok and label() is None, log[-1][:120])
+reset(); ok, log = cand.replay_ops(ROOT, op(None))
+check("(c) candidate: unlabeled add unchanged, no accepted-start call", ok and label() is None and not any("accepted-start" in l for l in log))
+gh_state("closed"); reset(); ok, log = cand.replay_ops(ROOT, op("in-progress"))
+check("(d) candidate: closed native issue -> replay fails closed (handoff)", not ok and "accepted-start" in log[-1] and "rc=0" not in log[-1], log[-1][:160])
+reset(); print("ALL GH-1136 REPLAY CONTROLS PASS")

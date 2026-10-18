@@ -253,8 +253,10 @@ class TestCScript(LedgerFixture):
         backend.chmod(0o755)
         self.gh.write_text(GH_RUN_WRAPPER)
         self.gh.chmod(0o755)
+        # GH-1127: hosted-first is opt-in now; this class pins the hosted path, so it opts in.
         env = mock.patch.dict(os.environ, {merge_cleanup.HOSTED_POLL_ENV: "0",
-                                            merge_cleanup.HOSTED_GRACE_ENV: "0"})
+                                            merge_cleanup.HOSTED_GRACE_ENV: "0",
+                                            merge_cleanup.USE_HOSTED_ENV: "1"})
         env.start()
         self.addCleanup(env.stop)
 

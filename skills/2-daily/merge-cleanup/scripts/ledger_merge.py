@@ -290,6 +290,26 @@ def _rated(row: Dict[str, Optional[str]]) -> Optional[str]:
     return None
 
 
+def _replayed_gid(root: Path, gh: str, issue_url: str) -> Tuple[Optional[str], str]:
+    """The re-minted gid of a just-added row: exactly one `roadmap list --json` match on number + URL.
+
+    Dump numbers are SQL text and JSON numbers are ints, so compare as strings (GH-1136)."""
+    r = _run(_app(root) + ["roadmap", "list", "--json"], root)
+    if r.returncode != 0:
+        return None, f"roadmap list failed rc={r.returncode} {r.stderr.strip()[:200]}"
+    try:
+        rows = json.loads(r.stdout)
+    except ValueError as exc:
+        return None, f"roadmap list returned unparseable JSON: {exc}"
+    if not isinstance(rows, list):
+        return None, "roadmap list returned non-list JSON"
+    hits = [x for x in rows if isinstance(x, dict) and str(x.get("gh_number")) == str(gh)
+            and (x.get("issue_url") or "") == issue_url]
+    if len(hits) != 1 or not hits[0].get("global_id"):
+        return None, f"expected exactly one row for GH-{gh} {issue_url!r}, found {len(hits)}"
+    return hits[0]["global_id"], ""
+
+
 def replay_ops(root: Path, ops: List[Dict[str, Any]]) -> Tuple[bool, List[str]]:
     """Apply roadmap changes through `releases_app.py roadmap ...`. Stops at the first refusal."""
     log: List[str] = []
@@ -326,6 +346,17 @@ def replay_ops(root: Path, ops: List[Dict[str, Any]]) -> Tuple[bool, List[str]]:
                     cmd += ["--status-marker", marker]
                 r = _run(cmd, root)
                 log.append(f"roadmap update GH-{gh} (section/marker): rc={r.returncode} {r.stderr.strip()[:200]}")
+                if r.returncode != 0:
+                    return False, log
+            # GH-1136: an accepted start (status_label 'in-progress') is admission metadata `add` cannot
+            # carry. Re-apply it through its only writer, which re-checks identity and the open native
+            # issue; any refusal stops the replay (handoff) rather than dropping the label silently.
+            if row.get("status_label") == "in-progress":
+                gid, why = _replayed_gid(root, gh, row.get("issue_url") or "")
+                if not gid:
+                    return False, log + [f"roadmap accepted-start GH-{gh}: {why}"]
+                r = _run(_app(root) + ["roadmap", "update", "--gid", gid, "--accepted-start"], root)
+                log.append(f"roadmap accepted-start GH-{gh} ({gid}): rc={r.returncode} {r.stderr.strip()[:200]}")
                 if r.returncode != 0:
                     return False, log
         else:

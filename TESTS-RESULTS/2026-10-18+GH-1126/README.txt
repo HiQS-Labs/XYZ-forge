@@ -1,0 +1,1 @@
+Disposable full clone XYZ-forge-gh1126-gh610-idle-label-2026-10-18-verify at 465ae87f0cdf461efb2c54bada78ff1254434983 (identity stable before/after), unsandboxed: race-control base+candidate rc 0; gh390 14/0, gh492 16/0, gh648-l1 73 assertions, gh648-l3, gh610, gh648-l4 all rc 0.
