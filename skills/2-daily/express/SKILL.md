@@ -4,7 +4,7 @@ description: >-
   Fast lane for explicit /express requests: critical, risk-bounded code hotfixes
   with an existing covering suite, or small documentation text/image updates
   with --docs-only and the existing PDDA docs suite. Uses a fresh gated task
-  clone off origin/development, bounded changes, an open issue, the releases
+  clone off origin/<base>, bounded changes, an open issue, the releases
   ledger, born-complete docs, commit-bound verification, fast-forward direct
   landing and reconciliation. Uses risk-based review for skill
   documentation and changes to execution authority; current driver admission stays narrower. No new suites or gate runners.
@@ -24,13 +24,13 @@ skill; the speed is a side effect.
 ## Recite this — verbatim, as the first thing in your first response
 
 > **Express Discipline:**
-> 1. **Verify clone & pre-flight bounds (Phases 0–2).** Require a task clone off `origin/development` ($\le 2$ local commits, canonical pre-push gate installed via `githooks/install.sh --check`); enforce strict subsystem bounds ($\le 4$ files / $\le 150$ insertions) and hard refusals on kernel, coordination, or shared Bash surfaces.
+> 1. **Verify clone & pre-flight bounds (Phases 0–2).** Require a task clone off `origin/<base>` (the resolved integration branch; `development` in XYZ Forge) ($\le 2$ local commits, canonical pre-push gate installed via `githooks/install.sh --check`); enforce strict subsystem bounds ($\le 4$ files / $\le 150$ insertions) and hard refusals on kernel, coordination, or shared Bash surfaces.
 > 2. **Validate issue & verification lane (Phases 3–4).** Confirm the tracking issue is OPEN. Code hotfixes require an existing registered covering suite. Ordinary documentation text/images use `--docs-only`, which selects the existing registered PDDA docs suite; no critical-hotfix rationale or runtime behavior suite is required. Do not add a suite (GH-831).
 > 3. **Generate born-complete docs & append changelog (Phase 5).** Scaffold capture doc in `PROJECT/2-WORKING/` with Status, Acceptance, Merge evidence, and Lessons Learned present from birth; append the entry to `CHANGELOG.md` in the same motion.
 > 4. **Execute qualified gate & dial-in releases ledger (Phases 6–7).** Register roadmap issue in `releases.db` and dial into active release (`releases next`); execute the selected existing suite green, prove tree identity, and re-snapshot tree to prevent drift.
-> 5. **Direct fast-forward landing & 3-push reconciliation (Phases 8–11).** Commit qualified paths (`Closes #N`), direct push fast-forward to `origin/development` (`XYZ_SKIP_PREPUSH=1`), verify remote issue closure, ship release evidence, and execute clean-tree `wave_reconcile --commit`.
+> 5. **Direct fast-forward landing & 3-push reconciliation (Phases 8–11).** Commit qualified paths (`Closes #N`), direct push fast-forward to `origin/<base>` (`XYZ_SKIP_PREPUSH=1`), verify remote issue closure, ship release evidence, and execute clean-tree `wave_reconcile --commit`.
 >
-> **Overall Goal:** Bounded hotfix or documentation update verified, ledger-tracked, landed directly to development, and reconciled with a complete paper trail in one single, unpaused motion with zero bypassed safety invariants.
+> **Overall Goal:** Bounded hotfix or documentation update verified, ledger-tracked, landed directly to the integration branch, and reconciled with a complete paper trail in one single, unpaused motion with zero bypassed safety invariants.
 
 Then begin work.
 
@@ -90,7 +90,7 @@ Normally run the driver; it enforces the order. Do not hand-perform its steps wi
 explicit, scoped operator override. For a separately authorized manual documentation hotfix,
 record the precise scope and driver mismatch, independently review the diff, retain canonical
 ledger writers and current-head documentation evidence, and publish through the installed normal
-pre-push hook. Recheck repository identity, ownership and the exact remote development tip at
+pre-push hook. Recheck repository identity, ownership and the exact remote base-branch tip at
 publication; a concurrent update means fetch/reconcile/revalidate, never force push. This exception
 is not standing bypass authority and does not change express.py or its default push behavior.
 
