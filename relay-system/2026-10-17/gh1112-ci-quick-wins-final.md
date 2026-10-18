@@ -159,4 +159,12 @@ Swept all three source files, including the existing audit rules and runner path
 
 Relay closed (Approved), no further review turn needed. Harness owns the file-scoped commit and subsequent gate.
 
+
+### Attestation · relay-drive — 2026-10-18T00:25:44Z
+task: RELAY-gh1112-ci-quick-wins-final
+reviewer: codex
+status: Approved
+reviewed-head: f364e058cfea5cc28b25a4ac8123533b5e493ca6
+added-range: 21673+3668
+added-sha256: d91fb19497ba83a17eb91151ff38b034ca02e7bd05ce3649f89625dc4c3433f3
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
