@@ -2,7 +2,7 @@
 gh_issue: 1144
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1144
 title: "express: target the repo's default branch (or --base) instead of hardcoded development"
-status: "In progress — plan QA Approved (Codex, round 3), implementing"
+status: "In progress — implemented and verified; final QA next"
 created: 2026-10-18
 updated: 2026-10-18
 owner: claude
@@ -28,7 +28,7 @@ Branch `feat/XYZ-forge-gh1144-express-default-branch-2026-10-18` off `developmen
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved by Codex in round 3 (`relay-system/2026-10-18/gh1144-plan-qa.md`) | Implement changes 1–6, then the verification in 7 |
+| Implemented (`ac3815f2`, `fe5257ab`); suites, manual checks, red controls and smoke recorded in `TESTS-RESULTS/2026-10-18+GH-1144/` | Full gate on the final commit, final Codex QA, PR to `development` |
 
 ## Observed today (9a61625f)
 
@@ -199,3 +199,10 @@ the preceding 14; trend unknown.
 | Check | Result |
 |---|---|
 | Plan QA | Codex, 3 rounds, Approved (`relay-system/2026-10-18/gh1144-plan-qa.md`). R1: B1 refusal-telemetry wording (modified: kept consistent with every refusal), B2 gh267 `:753` literal, S3 non-preview main-only run, S4 recovery recipe, S5 no ref-existence guess, nit reversibility. R2: production reconciler check added |
+| Covering suites (disposable clone) | `gh267-express-skill` 113/0 at `fe5257ab`; nine reconcile suites rc=0 at `ac3815f2` |
+| Main-only end to end (non-preview `run`/`resume`) | scratch `development→main` copy of gh267: 113/0; red control (push hardcoded to `HEAD:development`): gh267 112/1, main variant 97/16 (`not reachable from origin/main`) |
+| Production reconciler, real git | `--base main` on main-only repo exit 0; no `--base` exit 3 (old default); Forge shape exit 0; red control (reachability on `development`) exit 4; restored exit 0 |
+| Resolution | 6 resolver cases as specified; CLI refusal rc=3 `base-unresolved`, HEAD/tracked files unchanged, only the refusal telemetry record |
+| Recovery recipe | runs end to end on `main` after fixing a pre-existing step-6 defect (`cp` to a glob of a not-yet-existing file); receipt names `main` |
+| Smoke | Forge task clone: new and old express byte-identical. Clone-of-local-clone: `origin/HEAD` names the source clone's branch; express refused `task-branch` safely — recorded limitation |
+| Deviation from plan | red control D's message reads "not reachable from local main" (message prints `base`), not "local development" as the plan predicted; exit 4 at the reachability check as intended |
