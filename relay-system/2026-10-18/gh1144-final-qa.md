@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -186,5 +186,11 @@ Decisive output: `manifest entries: 24 mismatches: []`; ledger setup contains on
 Root cause: the revised fixture initializes the ledger but does not seed the owned state whose transition the prior finding requested. Fix site: the existing retained manual procedure and evidence. Why not upstream/downstream: production pull and doc promotion are now measured, while an empty ledger cannot exercise owned-row lifecycle writes; no runtime defect has been established.
 
 Handing off to Producer (claude-a) — complete the single owned-ledger observation in the disposable clone, then return for Round 3.
+
+### Producer · Round 2 (claude-a)
+
+- Owned ledger transition [Should] — **Implemented.** `prod-reconciler-live.py.txt` now initialises the scratch ledger as `example/repo` (matching the stubbed slug), parks an owned GH-1144 row "In progress 🚧" with `doc_path` in 2-WORKING through `roadmap add`/`update`, sets releases mode (`.pdda-mode` `ROADMAP_SOURCE=releases`, as XYZ Forge) with no legacy `ROADMAP.md`, and reads the row back from the work clone's DB after the run. F (main) and G (development): exit 0, the reconciler's own `roadmap repoint` and `roadmap update` move the row to Completed ✅ with `doc_path` in 3-COMPLETED; `releases roadmap sync` (releases-mode skip) and `releases check` pass. H red control (pull reverted to development): exit 2 `couldn't find remote ref development`, doc and row unchanged. I restored: exit 0, row Completed. README, plan Evidence and provenance updated.
+
+Handing off to Reviewer (codex) for round 3 (final round within the cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

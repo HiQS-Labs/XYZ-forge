@@ -1,7 +1,7 @@
 """GH-1144 manual check (final-QA round 1): canonical wave_reconcile --commit <sha> --base <b> --gate,
 LIVE: real pull from a bare origin whose only branch is <b> (the working clone starts one commit
 behind), real cleanliness, branch, reachability, base guard, receipt attribution, doc lifecycle,
-releases sync/check and marathon replan. Stubbed: GitHub (slug, issue state, hosted
+releases sync/check against an owned ledger row (read back after the run), and marathon replan. Stubbed: GitHub (slug, issue state, hosted
 in-flight check) and the PDDA doc-hygiene gate (base-agnostic; no PDDA install in the scratch repo)."""
 import contextlib, io, json, os, subprocess, sys, tempfile, shutil
 from pathlib import Path
@@ -25,8 +25,15 @@ for d in ("PROJECT/1-INBOX", "PROJECT/2-WORKING", "PROJECT/3-COMPLETED", "PROJEC
     "---\ngh_issue: 1144\ntitle: \"demo\"\nstatus: active\ncreated: 2026-10-18\nupdated: 2026-10-18\nowner: t\n"
     "goal: demo\ndoc_type: feature\neffort: 1\ncomplexity: 1\nrisk: 1\n---\n\n# GH-1144 demo\n\n## Status\n\n"
     "| What was just completed | What's next |\n|---|---|\n| built | reconcile |\n")
-(seed / "ROADMAP.md").write_text("# Roadmap\n\n### In progress\n- **GH-1144 · demo** 🚧 **active 2026-10-18** — demo. → [GH-1144-DEMO.md](PROJECT/2-WORKING/GH-1144-DEMO.md) · [#1144](https://github.com/example/repo/issues/1144)\n\n### Completed\n")
-subprocess.run([sys.executable, str(forge / "utils/py/releases_app.py"), "--root", str(seed), "init"], check=True, capture_output=True, text=True)
+(seed / ".pdda-mode").write_text("ROADMAP_SOURCE=releases\n")   # releases mode, as XYZ Forge: the DB is canonical
+RA = lambda root, *a: subprocess.run([sys.executable, str(forge / "utils/py/releases_app.py"), "--root", str(root), *a], check=True, capture_output=True, text=True).stdout
+RA(seed, "init", "--slug", "example/repo")
+RA(seed, "roadmap", "add", "--issue-num", "1144", "--issue-url", "https://github.com/example/repo/issues/1144", "--title", "demo",
+   "--created", "2026-10-18", "--doc-path", "PROJECT/2-WORKING/GH-1144-DEMO.md", "--raw-text",
+   "- **GH-1144 · demo** 🚧 **active 2026-10-18** — [GH-1144-DEMO.md](PROJECT/2-WORKING/GH-1144-DEMO.md) · [#1144](https://github.com/example/repo/issues/1144)")
+RA(seed, "roadmap", "update", "--issue-num", "1144", "--section", "In progress", "--status-marker", "🚧")
+row = lambda root: next(({k: r[k] for k in ("section", "status_marker", "doc_path")} for r in json.loads(RA(root, "roadmap", "list", "--json")) if r.get("gh_number") == 1144), None)
+print("ledger row before (seed):", row(seed))
 (seed / "README.md").write_text("x\n"); run(seed, "add", "-A"); run(seed, "commit", "-qm", "init")
 run(seed, "remote", "add", "origin", str(origin)); run(seed, "push", "-q", "origin", base)
 subprocess.run(["git", "clone", "-q", str(origin), str(work)], check=True)      # work starts at init
@@ -55,4 +62,5 @@ print("\n".join(l.replace(str(W), "<tmp>") for l in out.getvalue().splitlines()[
 print("work HEAD contains landing:", subprocess.run(["git", "-C", str(work), "merge-base", "--is-ancestor", sha, "HEAD"]).returncode == 0)
 print("doc in 2-WORKING:", sorted(p.name for p in (work / "PROJECT/2-WORKING").glob("GH-*")),
       "| 3-COMPLETED:", sorted(p.name for p in (work / "PROJECT/3-COMPLETED").glob("GH-*")))
+print("ledger row after (work DB):", row(work))
 print("work status:", run(work, "status", "--porcelain=v1").replace("\n", "; ") or "(clean)")
