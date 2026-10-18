@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -182,5 +182,33 @@ Changed for round 2: `PROJECT/1-INBOX/GH-1157-SKILLS-ARMY-HARD-RULES.md` (asks i
 paragraph, verification scope, plan QA log). Please re-grade Q3, Q4 and Q7 against the revised plan.
 
 Handing off to Reviewer (codex) — take your turn on this file.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+VERDICT: PASS
+
+Basis: Re-read the whole revised plan and the whole target SKILL.md, and re-traced the relevant script paths and coverage. Both Should findings and the Nit from round 1 are addressed. The plan remains an Easy, prose-only instruction change with supporting governance/evidence artifacts. No additional pre-existing defect requiring a change was found in the target SKILL.md beyond the unrelated-changes correction now explicitly included in item 8. This approves the plan, not an implemented change or a passing runtime gate. No suites, executable fixtures or git commands were run.
+
+All script and SKILL.md citations below are relative to `skills/3-weekly/skills-army-hq/`; plan citations refer to `PROJECT/1-INBOX/GH-1157-SKILLS-ARMY-HARD-RULES.md`.
+
+- [Pass] **Q1 — all four script claims remain supported.** Intake replaces payloads before attempting the commit (`scripts/intake.py:500–504`, `:845–851`), with no drift gate in its add/update path (`:787–808`). Identical updates return `Unchanged` before receipt replacement (`:797–808`); catalog uses `setdefault` (`:840–842`), with no refresh verb (`:687–707`). Status inventories current bytes and prints recorded receipts without digest comparison (`scripts/sync.py:364–386`, `scripts/intake.py:289–300`, `:384–395`). Root/ancestor symlinks are refused (`scripts/intake.py:54–61`, `:713`). App links retain the same collection destination while payload bytes change (`scripts/sync.py:252`, `scripts/intake.py:500–504`); sync refusal cannot undo intake (`scripts/sync.py:218–239`).
+
+- [Pass] **Q2 — docs routing.** `utils/ci-route.sh:63–65` matches markdown; `:382–383` excludes docs from subsystem classification. Plan lines 94–97 correctly classify this SKILL.md as tier 1; it has no full-gate exception.
+
+- [Pass] **Q3 — prior Nit resolved.** Plan lines 98–104 now distinguish prose from existence, identity and copy-parity checks. The literal name mutation is at `test/test_deploy_skills.py:205`; whole-tree parity and identical-update behavior are at `test/gh620-skills-army-mini-sync.sh:190–194`. Source inspection found no assertion pinning the prose that the plan proposes to change. Runtime suite outcome remains [Unverified — needs clone run].
+
+- [Pass] **Q4 — prior Should resolved; remaining sections fit.** Plan lines 77–84 expressly permit correcting the misleading “refuses over unrelated changes” sentence at `SKILL.md:29–30`. The proposed replacement matches transaction-before-commit ordering and the warning/zero exit (`scripts/intake.py:845–858`, `:466–471`). The remaining rules agree with the immediate read-through boundary (`SKILL.md:190–194`), device SOP (`:61–93`), root precedence (`:145–149`) and copy provenance (`:14–24`). No further contradictory sentence pair was identified.
+
+- [Pass] **Q5 — no enforcement overclaim or fabricated completion requirement.** Plan lines 52–68 specify agent instructions, distinguish status from provenance, and explicitly allow stale/source-unverified receipts as a reported partial result. That matches the missing refresh path (`scripts/intake.py:797–808`, `:840–842`) rather than promising a capability the scripts lack.
+
+- [Pass] **Q6 — smallest surface and dedupe.** Plan lines 73–78 fold the existing ownership sentence into rule (a), preserve the read-through warning, and add one root example. Lines 114–127 name the existing instruction owner, non-goals and Easy rollback; lines 144–145 include the supporting evidence/relay scope. No parallel subsystem is proposed.
+
+- [Pass] **Q7 — prior Should resolved; verification remains proportionate.** Plan lines 131–142 now require the positive parse, missing-name red control and gate results under `TESTS-RESULTS/2026-10-18+GH-1157/`, with committed `provenance.jsonl` and revision/hash fields. The reader rejects a missing name (`scripts/intake.py:126–130`); `package_info` calls that reader (`:134–138`). This is a planned manual check plus existing gates, with no new suite, fixture or runner. Actual outcomes and sensitivity remain for implementation evidence and final QA.
+
+- [Pass] **Q8 — rating remains proportionate.** Plan lines 177–187 ground 60/55 in recurring recoverable deployment disruption, keep appeal neutral at 50, and assign cheapness 90 to the bounded prose change. The immediate-byte-exposure consequence is supported by `scripts/intake.py:500–504`. Historical incident counts remain attributed to the issue evidence cited by the plan; this local review does not independently attest those live records.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with the authorized implementation and its planned final QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
