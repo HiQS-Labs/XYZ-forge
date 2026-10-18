@@ -119,7 +119,7 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | [whack-a-mole](skills/3-weekly/whack-a-mole/SKILL.md) | Cluster 14 days of recurring bugs by churn and file one approved root-cause umbrella issue. |
 | [worth-it](skills/3-weekly/worth-it/SKILL.md) | Price initial or remaining value; `/worth-it continue` returns Continue / Pivot / Park / Stop, one bounded proof and approval-aware results capture. Pinned upstream source and update recipe: [NOTICE](skills/3-weekly/worth-it/NOTICE). |
 
-### `4-occasional` — Least frequently (19)
+### `4-occasional` — Least frequently (20)
 
 _setup, audits, one-off tooling and specialist lenses._
 
@@ -130,6 +130,7 @@ _setup, audits, one-off tooling and specialist lenses._
 | [ci-doctor](skills/4-occasional/ci-doctor/SKILL.md) | Diagnose CI health and benchmark `runs-on`/config variants side by side. |
 | [ci-optimize](skills/4-occasional/ci-optimize/SKILL.md) | Audit, harden and optimize CI/CD pipelines using zero-cost, production-tested principles. |
 | [ci-suite-audit](skills/4-occasional/ci-suite-audit/SKILL.md) | Audit registered CI test suites and recommend retention, split, nightly, quarantine or turn-off verdicts. |
+| [defect-campaign](skills/4-occasional/defect-campaign/SKILL.md) | Specify bounded Radar-to-ATE/fuzz discovery and evidence dispositions; execution and remediation require separate approval. |
 | [feynman](skills/4-occasional/feynman/SKILL.md) | Translate dense technical material into accurate, layered plain language. |
 | [front-door](skills/4-occasional/front-door/SKILL.md) | Audit whether a newcomer can actually go from clone to working install. |
 | [github-auth-debug](skills/4-occasional/github-auth-debug/SKILL.md) | Diagnose the macOS split where git authentication works but `gh` fails. |

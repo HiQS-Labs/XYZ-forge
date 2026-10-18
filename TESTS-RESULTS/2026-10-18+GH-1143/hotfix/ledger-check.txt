@@ -1,0 +1,15 @@
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 1814 (DB <-> dump)
+OK: receipt chain intact (2011 receipt(s), business-state digest matches, 204 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 61 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 61 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 61 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 61 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 61 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 61 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 61 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 61 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 22 day(s) past its target of 2026-09-26 — the plan has drifted from the calendar
+warn: rule=release-target-passed: 0.8.0 Sundown is still a draft and 1 day(s) past its target of 2026-10-17 — the plan has drifted from the calendar
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 10 warning(s))

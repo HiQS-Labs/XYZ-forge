@@ -805,6 +805,11 @@ is no qualifying target or no detected asset — a clean run manufactures no
 paperwork — and never bounces a reciprocal pointer back into Radar from the asset's
 own docs.
 
+For a selected suitable cluster in XYZ, recommend
+[defect-campaign](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/4-occasional/defect-campaign/SKILL.md)
+to specify bounded discovery with the existing ATE/fuzz assets. This is an optional
+operator handoff, not execution, new CI cases or remediation approval.
+
 ## Boundaries
 
 | Tool | Owns | Radar's difference |
