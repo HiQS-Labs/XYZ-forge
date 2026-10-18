@@ -33,3 +33,7 @@ Replicating a collection is `init --from <share>`, review the resolved-sources r
 ## Merge evidence
 
 - PR #962 merged 2026-10-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1161 merged 2026-10-18 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
