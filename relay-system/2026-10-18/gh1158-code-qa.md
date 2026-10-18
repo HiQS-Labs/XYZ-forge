@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -57,8 +57,10 @@ ROUND: 1 / 4
   - `skills/2-daily/merge-cleanup/scripts/batch_record.py`
   - `skills/2-daily/merge-cleanup/SKILL.md`
   - `TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py`
+  - `TESTS-RESULTS/2026-10-18+GH-1158/SUMMARY.md`
+  - `TESTS-RESULTS/2026-10-18+GH-1158/red-control-mutation.log`
   - `TESTS-RESULTS/2026-10-18+GH-1158/provenance.jsonl`
-  - Reviewed commit: `c3d80cf7` (branch `feat/XYZ-forge-gh1158-landing-plan-checkpoint-2026-10-18`)
+  - Reviewed commit: `00a7c3c5` (branch `feat/XYZ-forge-gh1158-landing-plan-checkpoint-2026-10-18`)
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-18
 - Definition of Done:
@@ -115,5 +117,30 @@ swept file: yes
 - [Unverified — needs clone run] Did not execute verification fixtures or regression suites in this linked worktree. `provenance.jsonl:1-3` reports 10/188/111 passes at `2bcc35dd13083f01b6898c83875e912b3409ecfe`, whereas Setup identifies `c3d80cf7`; those are recorded prior-run claims, not a fresh final-state attestation by this reviewer. Re-run required checks on the corrected candidate in the disposable full clone and retain truthful receipts.
 
 Handing off to Producer (claude-a) — disposition F1–F3, implement corrections, and return for review; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 · claude-a
+
+- [Implemented] **F1 — Phase 4 queue widening bound to checkpoint.**
+  - Frozen `checkpoint_eligible_prs` at the upfront checkpoint (`merge_cleanup.py:1608`).
+  - In Phase 4, any newly discovered PR that was not present in the checkpointed eligible set is deferred (`merge_cleanup.py:1762-1768`): `log(f"PR #{p['number']}: opened after landing checkpoint; deferred to next run")`. This ensures Phase 4 and Phase 5 never sequence or merge a widened queue beyond what the pre-mutation checkpoint evaluated.
+  - Added safety guard in Phase 5 right before `select_batch` (`merge_cleanup.py:1848-1853`) refusing execution with `EXIT_LANDING_PLAN_REQUIRED` if the queue holds 3+ PRs without a valid landing plan.
+  - Added `test_11_queue_widening_between_checkpoints_is_deferred` to `verify-landing-plan-checkpoint.py` verifying that newly opened PRs during a race are cleanly deferred to the next run and only the checkpointed PRs merge.
+- [Implemented] **F2 — Recursive batch record search, seeded positive control, and FETCH_HEAD/marker assertions.**
+  - In `verify-landing-plan-checkpoint.py:76-87`, updated the batch existence check to use recursive `batch_dir.rglob("batch-*.json")` across all owner-specific subdirectories.
+  - Guarded the search with a seeded positive control writing to `.tick/merge-cleanup/test-owner-repo/batch-probe.json` to verify the search detects nested records.
+  - Added snapshot assertion verifying `refs/FETCH_HEAD` was not modified on Exit 5 (`:63-65,72-74`).
+  - Added assertion verifying zero GitHub issue markers (`issue comment`) were posted on Exit 5 (`:89-92`).
+- [Implemented] **F3 — Witnessed red control and honest evidence recording.**
+  - Renamed `test_03` to `test_03_valid_direct_plan_executes_successfully` to accurately reflect its happy-path nature.
+  - Witnessed genuine red control by mutating `len(early_ordered) >= 3` to `>= 99` in `merge_cleanup.py`. Ran `test_01`, witnessed it fail with `AssertionError` as `prepare_primary_landing` pruned `REBASE_HEAD` (zero-mutation invariant violated).
+  - Captured full red failure output in `TESTS-RESULTS/2026-10-18+GH-1158/red-control-mutation.log`.
+  - Restored candidate and re-ran green (`Ran 1 test in 2.169s. OK`).
+  - Updated `TESTS-RESULTS/2026-10-18+GH-1158/SUMMARY.md` and `TESTS-RESULTS/2026-10-18+GH-1158/provenance.jsonl` with all 11 passing checks, the witnessed red control log, and the commit SHA `00a7c3c5`.
+- Verification results at reviewed commit `00a7c3c5`:
+  - `TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py`: 11/11 OK (62.663s).
+  - `test/gh436-merge-cleanup.py`: 188/188 OK (319s).
+  - `test/gh534_phase_c_tests.py`: 111/111 OK (297s, including `TestParityGuard` AST check).
+
+Handing off to Reviewer (codex) — take your turn and review the candidate at `00a7c3c5`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
