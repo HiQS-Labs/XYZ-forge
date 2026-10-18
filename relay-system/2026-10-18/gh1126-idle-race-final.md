@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -110,7 +110,23 @@ Relay closed (Approved), no further turn needed. Producer (claude-a) owns the su
 
 VERDICT + `swept file:` line.
 
+### Reviewer · Round 2 — codex
+
+**Ship. VERDICT: PASS.**
+**Basis:** Round 1 approval stands after the documentation correction. No blocking defect found in the implementation or the whole-file sweep. Approval is final QA, with the final-commit harness/pre-push gate still outstanding.
+swept file: yes
+
+- [Pass] The previous nit is resolved in the repository source: `utils/py/turn_diagnostics.py:248-250` now says “classify() does not inspect the process count” and describes zero CPU growth. The helper still only sums the per-PID values and returns their count (`:252-253`). The seeded patch ends with the original lock changes and does not include this subsequent docstring correction; I reviewed that correction directly in the whole repository file.
+- [Pass] Re-swept all of `utils/py/turn_diagnostics.py`: the only lock acquisitions remain `_sample` (`:389-391`) and `classify` (`:500-509`). Sampling calls the unlocked ratio helper (`:424-432`); both record methods call classify without an outer lock (`:570-590`). Classifier labels/order remain as reviewed in Round 1 (`:511-568`). No additional pre-existing defect found. The exception-before-probe and unlocked idle-progress limits, and the whole-sample classification wait, remain explicitly disclosed in the plan.
+- [Pass] Narrow static probe: command `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` with stdin parsing the source AST, listing lock-owning methods, checking the corrected docstring and helper statements, and verifying every provenance entry's nonempty bytes, size and SHA256. Python exit **0**; decisive output: `lock acquisitions: ['_sample', 'classify']`, `docstring correction present; function statements: ['cpu = _descendant_cpu_by_pid(root_pid)', 'return (sum(cpu.values()), len(cpu))']`, `provenance: all 10 nonempty artifacts match bytes and SHA256`. The enclosing shell subsequently exited 2 solely because `tick release --help` is unsupported; it printed usage and did not release the token.
+- [Pass] Existing evidence still supports the race contrast: `TESTS-RESULTS/2026-10-18+GH-1126/clone-race-control-clone.log.txt:1-14` records base completion while held, candidate blocking then idle-unknown after release, no-in-flight completion, and the exception-path limitation. The six covering suite receipts and disposable-clone identity attestation remain as qualified in Round 1; no suites or executable fixtures were run here. Stable identity has only the README attestation, not raw snapshots. Graph tools were unavailable; review used exact source reads and a static AST probe.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) owns the subsequent harness gate and publication steps.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
 ### System · relay-drive — 2026-10-18T16:57:39Z
+terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
+
+### System · relay-drive — 2026-10-18T16:59:57Z
 terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
