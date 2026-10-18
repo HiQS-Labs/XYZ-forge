@@ -24,7 +24,7 @@ Branch `fix/XYZ-forge-gh1126-gh610-idle-label-2026-10-18` off `development@e9321
 
 | What was just completed | What's next |
 |---|---|
-| Root cause traced from the failed hosted run's own transcript; plan written | Codex plan QA → implement → focused suites + manual race control → final QA → PR → merge on green CI |
+| Plan QA r1 FAIL (R1 causal certainty, R2 caller scope/delay bound, R3 synchronized control) dispositioned in place | Codex plan QA r2 → implement → focused suites + manual race control → final QA → PR → merge on green CI |
 
 ## Observed failure (confirmed, not hypothesis)
 
@@ -36,18 +36,19 @@ Hosted run 39085003007 at 4a042b9f: `test/gh610-claude-subscription.sh::test_rea
 
 - `TurnDiagnostics._sample()` (`utils/py/turn_diagnostics.py:383-422`) runs on the sampler thread. It appends the sample **first** (`:393`). It then runs `pgrep` (`_security_dialog_present`) and `_newest_mtime`. Only then, on the sample where `len(samples) >= IDLE_MIN_SAMPLES (3)`, `cpu_ratio < 0.15` and there is no progress, does it set `_network_probe_attempted = True` and call `_network_state` (`lsof`, up to a 5 s timeout, `:146-167`). The result lands in `_network_state_observed` only when `lsof` returns.
 - `consult.wait_with_idle_bound` (`utils/py/consult.py:296-321`) polls every 2 s on the **main** thread. Once `idle_seconds()` answers, which needs 3 samples (`:468-488`), and the answer is ≥ the threshold, it calls `diag.classify()` immediately. `classify()` (`:490-551`) reads `_network_state_observed`, and `None` maps to "never established a safe idle window".
-- The failing transcript matches the window between those two threads exactly:
-  - `samples=3` (the probe-triggering sample has been appended);
-  - `cpu=0.00` and `worktree-progress=no` (every probe precondition is true);
-  - yet the observation is `None`, so the probe had not finished.
-- A loaded hosted runner makes `pgrep`/`lsof` slower, which widens the window. That is why only the hosted run failed. One alternative is an exception swallowed by `_loop` (`:425-428`) on that sample. It also yields "probe not completed for sample 3", and the fix below covers that timing too, except the exception itself.
-- **Scope:** every consult idle kill is affected, not just the test. A live idle advisor can be labelled `timeout-unclassified` when the evidence for `idle-unknown` or `idle-in-flight` was a few seconds from landing. The turn shims (`agy/claude/codex/commandcode/deepseek-turn.py`, `review_xyz.py`) call `classify()` only after `diag.stop()`. If `stop()` joins the thread, they are not affected; verify that during implementation.
+- **Reproduced (confirmed):** with the probe held in flight on the third sample, `classify()` returns exactly the reported detail, `[cpu=0.00s/s, samples=3, worktree-progress=no]` with "never established a safe idle window". It returns `timeout-idle-unknown` once the probe completes (Codex plan-QA r1 probe, on the real module).
+- **Hosted attribution is plausible, not proven.** The same signature also follows an exception swallowed by `_loop()` (`:425-428`) before the probe on sample 3 (`attempted=False`; same r1 probe). The hosted log does not say which path ran. A loaded runner slowing `pgrep`/`lsof` makes the race more likely, but nothing here measures that.
+- **What this fix covers:** only the in-flight race. An exception before the probe still leaves the observation absent and the label `timeout-unclassified`. That is the honest label for missing evidence, so the fix does not mask it, and a gh610 failure from that path remains possible and would be real signal.
+- **Callers affected** (`classify()` reached while the sampler may still be inside a sample):
+  - `consult.wait_with_idle_bound` (`consult.py:308`) and `review_xyz.py:429` classify **before** `stop()`, while the process can still be live.
+  - The shims `agy-turn.py:601`, `claude-turn.py:251`, `codex-turn.py:128`, `commandcode-turn.py:114`, `deepseek-turn.py:323` and `muse-turn.py:312` classify after `stop()`. But `stop()` joins with only `timeout=2.0` (`turn_diagnostics.py:440-441`), so a sample still running its probe can race them as well.
+  - A lock in `classify()` covers all of these without editing any caller.
 
 ## Fix (smallest)
 
 - `TurnDiagnostics` gains `self._sample_lock = threading.Lock()`.
-- `_sample()` holds the lock for its whole body, so a sample, including its one-shot probe, is atomic with respect to readers.
-- `classify()` acquires the same lock before reading state. A classifier called mid-sample waits for that sample to finish, at most the `lsof` 5 s timeout plus `ps`/`pgrep`. A call between samples does not wait.
+- `_sample()` holds the lock for its whole body, so a sample, including its one-shot probe, is atomic **with respect to `classify()`**. `idle_seconds()`, `cpu_ratio()` and direct `samples` reads stay unlocked. `cpu_ratio()` must stay lock-free because `_sample()` calls it under the lock and a plain `Lock` is not reentrant. The pre-existing gap between appending a sample and updating `_last_progress_t` (`:393-412`) stays visible to `idle_seconds()`. That is a stated limitation, not part of #1126.
+- `classify()` acquires the same lock before reading state. A classifier called mid-sample waits for that sample to finish; a call between samples does not wait. The wait is **not** bounded by 5 s. One sample can include `ps` CPU sampling, the dialog `pgrep` checks, `_newest_mtime` (bounded by entry count, not wall time, `:288-327`), and, on the probe sample, `_network_state`'s own `ps` tree walk plus `lsof` (5 s timeout). The accepted cost is "one sample's duration", paid only on the kill or classify path.
 - The classifier's decisions, thresholds and labels are unchanged (#1126: do not weaken it). `idle_seconds()` is unchanged.
 - No change to `consult.py`, to the gh610 assertion, or to any test file.
 
@@ -58,14 +59,16 @@ Rejected alternatives:
 
 ## Verification
 
-- Manual race control, `TESTS-RESULTS/2026-10-18+GH-1126/race-control.py.txt` with `.log.txt`, using the real module:
-  - Stub `_network_state` with a seam that sleeps 1.5 s and returns `"none"`.
+- Manual race control, event-synchronized with no timing sleeps: `TESTS-RESULTS/2026-10-18+GH-1126/race-control.py.txt`, its `.log.txt`, and `provenance.jsonl` hashing both. It uses the real module and is run against both the **base** module (`git show e93214fe:utils/py/turn_diagnostics.py` into a temp dir) and the **candidate**.
   - Stub the CPU, dialog and mtime seams to idle values.
-  - Run `_sample()` three times, the third in a thread.
-  - Call `classify()` 0.2 s into the third sample.
-  - **Red control:** on the base commit's module, the label is `timeout-unclassified` with "never established".
-  - **Fixed:** the label is `timeout-idle-unknown`, and `classify()` waited at least about 1.2 s.
-  - A second case calls `classify()` with no sample in flight and checks it returns without waiting.
+  - Stub `_network_state` to set `entered`, then block on `release` (bounded wait).
+  - Run two samples, then run the third on thread S. Assert `entered` within a bound.
+  - Start `classify()` on thread C.
+  - **Base (red):** C finishes while the probe is still held, with label `timeout-unclassified` and the quoted "never established" detail.
+  - **Candidate:** C has **not** finished while `release` is unset (bounded `join` returns with C alive). After `release.set()`, C finishes with `timeout-idle-unknown`.
+  - All waits and joins are bounded, and every thread is asserted finished.
+  - Case 2: no sample in flight, so `classify()` returns immediately (C finishes within a short bound).
+  - Case 3 records, without asserting a fix, that the exception-before-probe path still yields `timeout-unclassified`. This is the honest-label limitation (R1).
 - Existing suites:
   - The classifier-label suites `test/gh390-timeout-attribution.sh`, `test/gh492-idle-kill.sh`, `test/gh648-l1-turn-termination.sh` and `test/gh648-l3-consult-cap.sh`.
   - `test/gh610-claude-subscription.sh`, run unsandboxed (real process tree, real `lsof`).

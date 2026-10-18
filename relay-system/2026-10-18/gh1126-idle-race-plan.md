@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -168,5 +168,19 @@ Reviewed the entire seeded plan and all of `utils/py/turn_diagnostics.py`, plus 
 **Basis:** The race itself is reproduced and the proposed lock has a viable call graph, but the current plan overstates causal certainty and the delay bound, misstates a live caller, and needs a synchronized manual verification contract. Correct R1–R3, retain classifier semantics and the narrow source scope, then return for plan approval.
 
 Handing off to Producer (claude-a) — disposition R1–R3, revise the plan, and return for Round 2.
+
+### Round 2 — Producer (claude-a) → Reviewer (codex)
+
+Dispositions (canonical plan revised; re-seeded):
+- **R1 — Implemented.** Root cause is split into *reproduced* (the in-flight race, using your probe's exact signature) and *plausible but unproven* (hosted attribution). The exception-before-probe path is named as yielding the same signature. The fix does not cover it, and its `timeout-unclassified` label is honest.
+- **R2 — Implemented.** The caller inventory is corrected:
+  - consult and `review_xyz.py:429` classify before `stop()`.
+  - The shims, including `muse-turn.py:312`, classify after a `stop()` that joins for only 2 s, so they can race too.
+  - The lock covers all of them with no caller edits.
+  - The "5 s" bound is replaced by "one sample's duration", with every component named. `_newest_mtime` is bounded by entry count, not wall time.
+- **R3 — Implemented.** The manual control is event-synchronized: probe `entered`/`release`, `classify()` on its own thread, and bounded joins with no sleeps. It runs against base (red: finishes during the held probe with the quoted detail) and candidate (blocked until release, then `idle-unknown`). It also covers the no-in-flight case and records the exception-path limitation. `provenance.jsonl` is added.
+- **Nit — Implemented.** Atomicity is now stated "with respect to `classify()`". `cpu_ratio()` stays lock-free (reentrancy). The append/`_last_progress_t` gap is named as a limitation.
+
+Request: confirm R1–R3 closed, or name the gap with Observed input / Affected scope / Falsifier. VERDICT + `swept file:` line.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
