@@ -2,7 +2,7 @@
 gh_issue: 1143
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1143
 title: Radar-to-campaign documentation skill
-status: Blocked — plan relay cap exhausted
+status: In progress — procedural override recorded
 updated: 2026-10-18
 owner: Codex
 goal: Connect Radar recommendations to bounded approved discovery using existing assets
@@ -19,7 +19,7 @@ ATE, fuzz, oracle and minimization assets. Documentation only; no execution or r
 
 | What was just completed | What's next |
 |---|---|
-| Recon/intake complete; plan review round 3 rejected by driver | Operator review-cap override or replan before implementation |
+| Operator overrode procedural plan-review stop; substantive round-3 recommendation inspected | Implement docs-only scope, then normal bounded final QA |
 
 ## Recon and smallest viable bet
 
@@ -111,3 +111,15 @@ passed (0 failures, 10 existing migration/date warnings). No documentation gate,
 validator, full suite, final QA or hosted-status verification ran before this blocker.
 `python3` lacks requests; an existing uv-managed runtime has PyYAML for the future existing
 skill validator; nothing installed. No campaign or remediation occurred. Clone retained.
+
+## Operator override — 2026-10-18
+
+Operator explicitly approved: "Yes override procedural stop." This permits implementation
+past the exhausted PLAN review stop only. Round 3's exact recommendation at `d555b12f` says
+"No remaining blocker or additional pre-existing defect found in the full plan sweep."
+Inspection confirms round 2's result-contract omission is resolved; no substantive correctness
+concern remains in that recommendation. The relay driver rejection remains a failure, not an
+accepted attestation. Original rounds stay 3/3, with no additional plan turn or reset.
+Normal final implementation QA retains its separate three-round limit. Future producer blocks
+must be inserted BEFORE the existing final next-turn marker, preserving prior body bytes;
+no relay implementation changes. No expanded execution permissions.

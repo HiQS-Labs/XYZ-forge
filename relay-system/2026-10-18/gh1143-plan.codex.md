@@ -278,4 +278,12 @@ swept file: yes
 
 Relay closed (Approved), no further review turn needed. Handing the completed token back to operator; proceed only within the approved documentation scope and its verification steps.
 
+## Operator disposition — procedural override, 2026-10-18
+
+"Yes override procedural stop." Proceed past the exhausted PLAN review procedural failure.
+The reviewer recommendation at d555b12f is substantive PASS with no unresolved correctness
+finding; relay-drive exit 4 review-body-rewritten remains rejected evidence. No new plan
+review turn, cap reset, or successful harness attestation is claimed. Final implementation
+review remains separately capped at three rounds. Prior blocks and failure history retained.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
