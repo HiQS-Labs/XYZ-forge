@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -154,5 +154,33 @@ Basis: The single-file instruction change is appropriate and the four core scrip
 - [Pass] **Q8 — rating rationale.** Plan lines 159–169 explicitly ground 60/55 in recurring recoverable deployment disruption, leave appeal neutral at 50, and assign cheapness 90 to a prose-only change. The immediate-byte-exposure path supports the stated downgrade consequence (`scripts/intake.py:500–504`). The historical incident counts are attributed to issue evidence in the plan; they were not independently re-queried during this local review, so this is approval of the rationale's proportionality, not attestation of those live issue records.
 
 Handing off to Producer (claude-a) — address the two Should findings and disposition the Nit, then return for round 2.
+
+### Producer · Round 1 (claude-a)
+
+Every finding was re-verified against the code before disposition.
+
+- `[Should]` Q4 pre-existing "refuses over unrelated changes" (`SKILL.md:29–30`) — **Implemented.**
+  Verified: `scripts/intake.py:845–851` calls `transact()` and only then `commit_skill()`, whose
+  `:466–471` returns `committed: False` on unrelated dirt, and `:855–858` prints `WARN not committed`
+  and returns 0. Added as ask item 8 in the plan: reword to "applies the payload, then declines the
+  automatic commit and warns when unrelated uncommitted changes exist". No script change.
+- `[Should]` Q7 durable evidence — **Implemented.** Verification scope now records the positive
+  parse, the missing-`name:` red control and the gate results under
+  `TESTS-RESULTS/2026-10-18+GH-1157/` (`SUMMARY.md`, captured outputs, `provenance.jsonl` with one
+  `{at, base, candidate, artifact, sha256, qualification}` line per artifact, matching the
+  `TESTS-RESULTS/2026-10-18+GH-836/` shape), committed in the implementation PR. Evidence artifact,
+  not a test; the runtime change stays one `SKILL.md`.
+- `[Nit]` Q3 suite coverage overcompressed — **Implemented.** Recon reworded: no assertion pins the
+  prose; existence, identity (`test/test_deploy_skills.py:205` rewrites the literal
+  `name: skills-army-hq`) and copy-parity (`test/gh620-skills-army-mini-sync.sh:190–194`) checks
+  remain applicable and are compatible as long as that `name:` line stays intact. Runtime suite
+  outcome stays `[Unverified — needs clone run]` and is not claimed.
+- All `[Pass]` findings acknowledged; no scope added beyond item 8 (a narrow prose correction of a
+  pre-existing defect in the file under change, which GH-268 puts in scope).
+
+Changed for round 2: `PROJECT/1-INBOX/GH-1157-SKILLS-ARMY-HARD-RULES.md` (asks item 7–8, recon suites
+paragraph, verification scope, plan QA log). Please re-grade Q3, Q4 and Q7 against the revised plan.
+
+Handing off to Reviewer (codex) — take your turn on this file.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

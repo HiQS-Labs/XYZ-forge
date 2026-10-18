@@ -74,8 +74,14 @@ Prose-only change to `skills/3-weekly/skills-army-hq/SKILL.md`:
    imitate their filesystem operations" is folded into rule (a), not duplicated.
 6. One `--root` example line in the Commands block, since the prose says `--root` exists but no
    example shows it.
-7. Everything else in the file is left intact; the existing "Immediate symlink read-through
-   boundary" bullet is preserved (rule (d) elevates it, it does not contradict it).
+7. Everything else in the file is left intact except item 8; the existing "Immediate symlink
+   read-through boundary" bullet is preserved (rule (d) elevates it, it does not contradict it).
+8. **Narrow correction of a pre-existing error (found in plan QA round 1).** Lines 29–30 say intake
+   "refuses over unrelated changes". The code applies the transaction first and only then has
+   `commit_skill` decline the automatic commit (`scripts/intake.py:845–851`, `:466–471`), printing
+   `WARN not committed` and returning 0 (`:855–858`) — the payload is already replaced and readable
+   through app links. Reword to: applies the payload, then declines the automatic commit and warns
+   when unrelated uncommitted changes exist. No script change.
 
 ## Recon (Step 4 — documentation-only; instruction/consumer path traced, no runtime recon manufactured)
 
@@ -89,9 +95,13 @@ Prose-only change to `skills/3-weekly/skills-army-hq/SKILL.md`:
   check, so this path is a **docs surface, tier 1** (the registry comment names `skills/**/SKILL.md`
   explicitly; `test/ci-route.sh:173` pins the same for agent-chorus's SKILL.md). The local gate is
   `utils/pdda/pdda.sh run`; the push hook routes it as docs.
-- **Suites touching the file.** `test/gh620-skills-army-mini-sync.sh:66` and
-  `test/test_deploy_skills.py:174,198,551` assert the file *exists*; none pins its text.
-  `test/gh660-skill-drift.sh` uses fixtures. No suite needs editing (GH-831: none added).
+- **Suites touching the file.** No assertion pins the prose. Existence, identity and copy-parity
+  checks remain applicable and are compatible with this change as long as the literal
+  `name: skills-army-hq` line stays intact: `test/test_deploy_skills.py:174,198,551` (exists),
+  `:205` (rewrites that literal to test identity), `test/gh620-skills-army-mini-sync.sh:190–194`
+  (installed manager tree byte-identical to the canonical tree from the same source; an identical
+  update prints `Unchanged`). `test/gh660-skill-drift.sh` uses fixtures. No suite needs editing
+  (GH-831: none added).
 - **Prior art (`prior_art_recon.py --query skills-army-hq`).** Open PRs: 0. Merged: #1047
   (GH-1046, 2026-10-13: copies-not-links prose) and #1097 (GH-960, 2026-10-18: duplicate Pulse
   clone / stale collection warnings) — adjacent, neither adds the rules above; adjudicated as not
@@ -120,11 +130,19 @@ change only when a device re-vendors through intake, so no live deployment chang
 
 - Docs gate: `utils/pdda/pdda.sh run` → zero errors.
 - Ledger: `python3 utils/py/releases_app.py check` → clean after the roadmap writes.
-- Manual read-only check, recorded in this doc and the PR: parse the edited folder with the
-  deployment tooling's own reader (`intake.py`'s `package_info`, run with `python3 -B` from a
-  scratch copy outside the repo) → prints `name: skills-army-hq` and the new description.
+- Manual read-only check: parse the edited folder with the deployment tooling's own reader
+  (`intake.py`'s `package_info`, run with `python3 -B` from a scratch copy outside the repo) →
+  prints `name: skills-army-hq` and the new description.
   **Red control:** the same parse on a scratch copy with the `name:` line removed → refused.
-  Explicit test non-scope: no suite, no fixture, no runner.
+- **Evidence is durable, per AGENTS.md (GH-430):** the parse output, the red-control output and the
+  gate results are recorded under `TESTS-RESULTS/2026-10-18+GH-1157/` (`SUMMARY.md`, the captured
+  outputs, and `provenance.jsonl` with one `{at, base, candidate, artifact, sha256, qualification}`
+  line per artifact, `base` = the `origin/development` SHA the branch was cut from, `candidate` = the
+  implementation commit) and committed in the implementation PR, which links it. This is an evidence
+  artifact, not a test or runner. Explicit test non-scope: no suite, no fixture, no runner.
+
+**Smallest affected surface, restated:** `skills/3-weekly/skills-army-hq/SKILL.md` (the only
+runtime change), this capture doc, the ledger row, the relay receipts, and the evidence folder.
 
 ### Ordered implementation
 
@@ -170,4 +188,13 @@ device-agnostic) — 2. Steady, not rising. Coverage limit: incidents tracked ou
 
 ## Plan QA log
 
-- Pending: Codex relay plan review (step 2 above).
+- **Round 1 (Codex, `relay-system/2026-10-18/gh1157-plan-qa.md`): FAIL** — Q1 script facts, Q2
+  routing, Q4–Q6 fit/scope/DRY, Q7 check design and Q8 rating all `[Pass]` with citations.
+  Dispositions: `[Should]` pre-existing "refuses over unrelated changes" error at `SKILL.md:29–30` →
+  **Implemented** as ask item 8 (verified: `scripts/intake.py:845–851` transacts before
+  `commit_skill`, `:466–471` declines, `:855–858` warns and returns 0). `[Should]` durable evidence →
+  **Implemented**: verification recorded under `TESTS-RESULTS/2026-10-18+GH-1157/` with
+  `provenance.jsonl`, committed in the PR. `[Nit]` suite coverage overcompressed → **Implemented**
+  (recon reworded; verified `test/gh620-skills-army-mini-sync.sh:190–194`,
+  `test/test_deploy_skills.py:205`).
+- Round 2: pending.
