@@ -211,4 +211,12 @@ All script and SKILL.md citations below are relative to `skills/3-weekly/skills-
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with the authorized implementation and its planned final QA.
 
+
+### Attestation · relay-drive — 2026-10-18T21:01:03Z
+task: RELAY-gh1157-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 28245962820d28a09e6e2a181f73594abbfaefc5
+added-range: 18437+4796
+added-sha256: cf9acd79a8c080ef4ccad7d8ee8d9fdae488c035c69d7ff459b54144d408cdf1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
