@@ -104,3 +104,7 @@ the no-op-observation red control above proves that branch is still reachable af
 
 `TESTS-RESULTS/2026-10-17+GH-1112/` with `provenance.jsonl`: audit before/after timing and
 output diff; concurrent rescued-suite run; one 4-wide parallel `validate.sh` run with telemetry.
+
+## Merge evidence
+
+- PR #1123 merged 2026-10-18 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
