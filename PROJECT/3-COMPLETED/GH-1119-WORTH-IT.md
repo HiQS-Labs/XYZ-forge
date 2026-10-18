@@ -1,8 +1,8 @@
 ---
 title: "GH-1119: weekly worth-it continuation skill"
-status: active
+status: Complete
 created: 2026-10-17
-updated: 2026-10-17
+updated: 2026-10-18
 owner: Codex
 goal: Vendor a reusable, pinned worth-it checkpoint without replacing weekly planning.
 gh_issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1119

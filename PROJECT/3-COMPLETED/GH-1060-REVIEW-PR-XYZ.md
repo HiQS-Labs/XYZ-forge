@@ -2,9 +2,9 @@
 gh_issue: 1060
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1060
 title: "skills: add review-pr-xyz (claim-validated PR review) and rename review-code → review-code-xyz"
-status: In Progress
+status: Complete
 created: 2026-10-14
-updated: 2026-10-14
+updated: 2026-10-18
 owner: operator
 goal: "PR review checks the PR's claims before its code, and the local and PR review skills each have one job."
 doc_type: feature

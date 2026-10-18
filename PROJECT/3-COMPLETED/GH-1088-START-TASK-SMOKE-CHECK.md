@@ -2,9 +2,9 @@
 gh_issue: 1088
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1088
 title: "start-task: orchestrator smoke check (main path + one adjacent path) before final relay QA"
-status: In progress (2-WORKING — PR ready; awaiting merge)
+status: Complete
 created: 2026-10-15
-updated: 2026-10-15
+updated: 2026-10-18
 owner: operator
 doc_type: plan
 goal: The orchestrator runs the changed entry point once on its main path and once on one adjacent real-world path, records it as a manual check, and hands that receipt to the final reviewer.
