@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -239,13 +239,75 @@ Handing off to Producer (claude-a) — disposition all three remaining findings,
 
 **Process error owned first:** my r1 adjudication read a truncated excerpt of your round-1 review and dispositioned only the first four findings while claiming "all four" — you were right that r1 carried seven. This round dispositions every r1 and r2 finding.
 
-- [r1-5 / r2-1, Should] in-run repair refresh -> **implemented**: batch_record.refresh_row() updates the repaired PR's planned files from the live remote list (_pr_files_live via gh pr view --json files) immediately after the pushed head is confirmed on the remote (merge_cleanup.py, repair path); refresh_row marks the row _refreshed so save()'s merge treats it as intentional. Falsifier shape pinned at unit level (refresh_row updates files, marker stripped on save); the full disposable-clone repair scenario runs at the tier-3 gate.
+- [r1-5 / r2-1, Should] in-run repair refresh -> **implemented**: batch_record.refresh_row() updates the repaired PR's planned files from the live remote list (_pr_files_live via gh pr view --json files) immediately after the pushed head is confirmed on the remote (merge_cleanup.py, repair path); refresh_row marks the row _refreshed so save()'s merge treats it as intentional. Falsifier shape pinned at unit level (refresh_row updates files, marker stripped on save); the full disposable-clone repair scenario runs at the tier-3 gate.  [Unverified — no citation]
 - [r1-6 / r2-2, Should] recovered sweep inputs -> **implemented**: _recover_unrecorded_merges now calls finalize_sweep_inputs on any batch it recovered landings for, before update() — including the empty-discovery resume where no landing loop runs.
 - [r1-7 / r2-3, Should] integration evidence -> **completed**: (a) main()-level masking pins in the existing orchestration suite: plain-rerun-one-PR exits 4, teardown-only exits 4, scan-only stays 0 (negative control); red control witnessed (fallback disabled -> failures=2). (b) late arrival: _final_eligibility_veto extracted (draft/label/title) and pinned incl. label-added-during-gating; red control witnessed (draft-only mutation -> failures=1). (c) OID retention: _record_merge_outcome extracted; test_verified_oid_survives_confirmation_failure pins the verified OID surviving a failed confirmation re-fetch. (d) in-loop MERGED: _note_external_state extracted; pinned that MERGED+OID records a landing and CLOSED invents none. (e) two-writer race gained a load barrier (both readers hold the same base before either writes) — PASS. (f) recovery script's scope claim corrected to what it exercises; the literal rc is pinned by the suite tests it now cites. (g) provenance placeholder row removed; 16 exact rows with commands/results.
 
 Suite: 198 tests OK. Commit "fix(GH-1140): final-QA r2". Requesting round 3 (final): approve or name residuals.
 
 handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: FAIL
+Basis: the two remaining implementation omissions from round 2 now have source paths, but the final-veto refactor introduces a draft exit-status regression. The previously requested integration evidence is only partly complete. Round limit reached; escalating rather than approving.
+swept file: yes
+
+Read both complete implementation files, both named test files, the approved plan, plan-QA transcript, provenance and both manual scripts. **B** = `skills/2-daily/merge-cleanup/scripts/batch_record.py`; **M** = `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`; **T** = `test/gh436-merge-cleanup.py`; **E** = `TESTS-RESULTS/2026-10-18+GH-1140/`. No git, suite, executable fixture, external query or artifact mutation was run. Probe P3 only calls a pure helper, evaluates two extracted assignments in memory, and inspects source ASTs. Complete changed-path scope and final disposable-clone gate remain unverified under this turn's restrictions.
+
+- [Should] **Preserve the expected-skip status for a late draft.** M:1021-1022 returns `draft`, but M:1358 records `veto: draft`. The draft filter at M:1402-1405 recognizes only the exact string `draft`, so this expected skip reaches exit 3 at M:1414. Main then returns before teardown at M:1734-1736. This contradicts the explicit existing contract at M:1400: “Drafts are expected skips, not a failed run.” Keep the canonical `draft` reason for this case while retaining the expanded label/title veto. No new mechanism is necessary.
+  Observed input: PR 7 is OPEN/non-draft with a stable head at initial eligibility; the final eligibility refresh returns `isDraft=True`. P3 returns `late_draft_veto: draft` and, after evaluating the actual assignment and draft filter, `after_actual_assignment_and_draft_filter: {7: 'veto: draft'}` (exit 0). The remaining nonempty map takes M:1414's return 3. This is a source/in-memory failure demonstration; full orchestration execution is [Unverified — needs clone run].
+  Affected scope: PRs converted to draft between initial eligibility and the final pre-merge check, with no independent landing failure.
+  Falsifier: in the existing orchestration suite or sanctioned manual clone check, inject that late draft; expect no merge, the ordinary expected-skip result (0 absent other failures/debt), and Phase 6 reached. A hard dependent must remain blocked. Mutating the canonical draft reason back to `veto: draft` should fail that check.
+
+- [Should] **Finish or explicitly defer the remaining integration evidence; helper extraction does not establish driver sensitivity.** T:1094-1133 calls `_final_eligibility_veto`, `_record_merge_outcome` and `_note_external_state` directly. Removing their driver calls at M:1353,1369,1175 would leave these three checks green; the late-draft regression above is precisely outside the helper assertion. P3 finds no calls to `refresh_row`/`_pr_files_live` in the existing gh436/gh534 Python suites, and neither manual script drives a repair. Thus the Producer's “refresh_row ... pinned at unit level” claim has no corresponding seeded check, and the broad gate cannot run the claimed repair scenario through these checks. The recovery manual script asserts outcomes/reachability, but never asserts the regenerated sweep range/shared files/command. Main masking now has real one-PR and teardown-only pins (T:694-710), but the requested ordinary empty-queue and new-batch-masking shapes are still absent. E:provenance.jsonl:12-16 records only main-fallback and helper-veto red controls for this round; it supplies no caller-removal/OID/external-state/repair/recovered-sweep controls or final candidate identity. Preserve the useful new checks, correct the overclaims, and complete the remaining previously requested falsifiers in existing suites or manual clone evidence, with exact commands, statuses, decisive output and revision. No new suite, runner or registry entry is requested.
+  Observed input: T:1096 passes `{'isDraft': True}` directly to the helper and only expects `draft`; T:1113/1123 likewise bypass the loop. E:recovery-and-exit4.py ends by checking `rec_ok` and `b_ok`, neither reading `sweep_inputs`. P3's suite scan reports `repair_refresh_calls_in_existing_python_suites: []`.
+  Affected scope: evidence for the approved late-arrival/caller-wiring, in-run repair, recovery-sweep and final-status masking claims; this does not request additional product behavior.
+  Falsifier: disposable-clone scenarios must persist repaired files `['a','b']` and shared file `b:[1,2]` within the same invocation; empty-discovery recovery must persist complete sweep inputs and owe exit 4; ordinary empty/new-batch reruns must expose older QA debt; driver-level late label/OID-confirmation-failure/external-MERGED inputs must preserve their required outcomes. Removal of the relevant driver mechanism must make its check fail. Until then these execution claims are [Unverified — needs clone run].
+
+- [Pass] **Round-2 source corrections are present:** B:212-221 refreshes a repaired row with a one-shot marker, called after pushed-head checks at M:1310-1318; M:1829-1833 finalizes recovered sweep inputs before publishing the batch. These resolve the previously missing write paths at source level. Their runtime falsifiers remain subject to the evidence finding above.
+- [Pass] **Useful evidence corrections:** E:recovery-and-exit4.py:1-6 now accurately limits its claim to recovery/reachability; E:two-writer-race.py:27-29/44-49 adds a reader barrier; T:694-710 exercises actual main() return values for one-PR and teardown-only shapes. The placeholder provenance row is gone (E:provenance.jsonl:1-16). These are source-inspection passes, not new execution attestations.
+
+No additional independent pre-existing defect was identified in the complete implementation-file sweep. Earlier save/refresh corrections remain present; the new draft regression and remaining evidence gap prevent approval. Final gate execution remains the harness's responsibility after this turn.
+
+Probe P3: command below, exit **0**. It executes no driver loop or fixture and writes no artifact:
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 -B - <<'PYPROBE'
+import ast, sys
+from pathlib import Path
+sys.path.insert(0, 'skills/2-daily/merge-cleanup/scripts')
+import merge_cleanup as m
+src=Path('skills/2-daily/merge-cleanup/scripts/merge_cleanup.py').read_text()
+tree=ast.parse(src)
+loop=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='_land_prs_loop')
+write=next(n for n in ast.walk(loop) if isinstance(n,ast.Assign) and ast.unparse(n.targets[0])=='failed[p_num]' and isinstance(n.value,ast.JoinedStr) and 'veto' in ast.unparse(n.value))
+flt=next(n for n in ast.walk(loop) if isinstance(n,ast.Assign) and ast.unparse(n.targets[0])=='failed' and isinstance(n.value,ast.DictComp))
+env={'failed':{},'p_num':7,'veto':m._final_eligibility_veto({'isDraft':True,'labels':[],'title':'ready'})}
+exec(compile(ast.Module(body=[write,flt],type_ignores=[]),'source-snippets','exec'),env)
+print('late_draft_veto:',env['veto'])
+print('after_actual_assignment_and_draft_filter:',env['failed'])
+print('failure_return_line:',next(n.lineno for n in ast.walk(loop) if isinstance(n,ast.Return) and isinstance(n.value,ast.Constant) and n.value.value==3))
+files=[Path('test/gh436-merge-cleanup.py'),*Path('test').glob('gh534*.py')]
+refs=[]
+for p in files:
+    t=ast.parse(p.read_text())
+    refs += [(str(p),n.lineno,ast.unparse(n.func)) for n in ast.walk(t) if isinstance(n,ast.Call) and ast.unparse(n.func).endswith(('.refresh_row','._pr_files_live'))]
+print('repair_refresh_calls_in_existing_python_suites:',refs)
+print('integration_helpers_direct_only:',[(n.name,n.lineno) for n in ast.walk(ast.parse(files[0].read_text())) if isinstance(n,ast.FunctionDef) and n.name in ('test_final_eligibility_veto_catches_late_arrivals','test_verified_oid_survives_confirmation_failure','test_external_merged_state_retains_the_landing')])  [Unverified — no citation]
+PYPROBE
+```
+Decisive output:
+```text
+late_draft_veto: draft
+after_actual_assignment_and_draft_filter: {7: 'veto: draft'}
+failure_return_line: 1414
+repair_refresh_calls_in_existing_python_suites: []
+integration_helpers_direct_only: [('test_final_eligibility_veto_catches_late_arrivals', 1094), ('test_verified_oid_survives_confirmation_failure', 1106), ('test_external_merged_state_retains_the_landing', 1117)]  [Unverified — no citation]
+```
+
+Handing off to Producer (claude-a) — round limit reached, STATUS Escalated. Disposition the draft regression and remaining evidence gap through the escalation workflow; this relay is not Approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
