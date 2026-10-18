@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -192,5 +192,47 @@ Handing off to Producer (claude-a) — complete the single owned-ledger observat
 - Owned ledger transition [Should] — **Implemented.** `prod-reconciler-live.py.txt` now initialises the scratch ledger as `example/repo` (matching the stubbed slug), parks an owned GH-1144 row "In progress 🚧" with `doc_path` in 2-WORKING through `roadmap add`/`update`, sets releases mode (`.pdda-mode` `ROADMAP_SOURCE=releases`, as XYZ Forge) with no legacy `ROADMAP.md`, and reads the row back from the work clone's DB after the run. F (main) and G (development): exit 0, the reconciler's own `roadmap repoint` and `roadmap update` move the row to Completed ✅ with `doc_path` in 3-COMPLETED; `releases roadmap sync` (releases-mode skip) and `releases check` pass. H red control (pull reverted to development): exit 2 `couldn't find remote ref development`, doc and row unchanged. I restored: exit 0, row Completed. README, plan Evidence and provenance updated.
 
 Handing off to Reviewer (codex) for round 3 (final round within the cap).
+
+### Reviewer · Round 3 (codex)
+
+VERDICT: PASS
+Basis: Approve the implementation for the harness's final-commit gate. The populated owned-ledger observation resolves the remaining Should; no open Blocker, Should or Nit remains from this relay.
+swept file: yes
+
+Swept the full express driver, reconciler, express skill and gh267 suite, including pre-existing code, plus the working plan, evidence README, retained procedures, decisive raw-log results and previous findings. No additional pre-existing runtime defect found in these swept files. Applied SWE and debug-mantra evidence criteria. Evidence tier: Verify with direct-source fallback: all 84 projects listed, none rooted in this worktree; nearest XYZ-forge index belongs to the primary checkout, generation 2026-09-01T15:54:30Z. Targeted symbol search returned zero results and no further page; coverage for all eight reviewed artifact/evidence paths reported changed, untracked or missing freshness, so current source was read directly. No git commands, suites or executable fixtures run; only this relay file edited. Exact committed diff membership/ancestry was not independently queried under the no-git constraint.
+
+- [Pass] **Owned-ledger evidence request resolved.** `TESTS-RESULTS/2026-10-18+GH-1144/prod-reconciler-live.py.txt:28–36` now enables releases mode, initializes `example/repo`, adds the exact owned GH-1144 row and sets its active pre-state using canonical verbs. The procedure reads the resulting work-clone ledger through `roadmap list --json` at `:35`/`:65`; it leaves pull and lifecycle writers live (`:47–54`). `prod-reconciler-live.log.txt:2–16` records the initial In progress row, main-only origin, landing absent before pull, exit 0 and real roadmap repoint/update. Its post-state at `:34` is Completed with the promoted doc path. G records the corresponding development result (`:37–50`, `:69`). H exits 2 at the reverted development pull and preserves the active row/doc and clean tree (`:71–85`); restored I exits 0 and reports Completed (`:86–119`). This is retained clone-run evidence inspected here, not a fresh run. The disclosed GitHub and unchanged final PDDA gate substitutions remain acceptable for the bounded branch check. Reconciler outputs are intentionally uncommitted at this measurement boundary; express's separate persistence boundary is covered by gh267.
+- [Pass] **Branch propagation remains coherent.** Resolver precedence, branch validation and remote-ref existence checks remain at `utils/py/express.py:114–134`; early resolution/refusal precedes dispatch (`:1343–1353`). Bounds and admission use BASE (`:108`, `:389–391`, `:458`, `:491–504`); landing/closeout, persistence, landing lookup and resume use the same value (`:882–896`, `:1023`, `:1071–1115`, `:1207–1209`), and reconciliation receives it (`:973`). The only exact executable `development` string constants are the intended default and task-branch exclusion (`:90`, `:486`). Production direct-commit metadata, shared preflight and base guard use the supplied base (`utils/py/wave_reconcile.py:408–450`, `:2226`, `:2235`, `:2313`, `:2325`); other callers keep development defaults. No additional branch-selection mechanism is needed.
+- [Pass] **Compatibility and retained controls remain adequate.** `suite-gh267-express-skill.log.txt` and `main-variant-run.log.txt` end `pass=113 fail=0`; the wrong-push controls end `112/1` and `97/16` and name the source-audit failure. The nine retained reconciliation suite logs end with zero failures/OK. `write_receipt` retains the exact Forge environment text through the default (`express.py:342`); `skills/2-daily/express/SKILL.md:123–139` carries one BASE through recovery and copies the log beside the actual receipt. `recovery-recipe-run.log.txt` records both evidence files committed and `main -> main`. The earlier wording nit is resolved at skill `:7`, `:27`, `:31`, `:33`, `:93`. The README accurately discloses recipe step-7 coverage via the stub fixture, the reachability red-control message deviation and the safe clone-of-local-clone smoke refusal; none establishes a need for another production guard.
+- [Pass] **Evidence integrity.** All 24 nonempty files named in `TESTS-RESULTS/2026-10-18+GH-1144/provenance.jsonl` match their recorded bytes and SHA-256 hashes. Both production modules parse. The evidence directory contains no `/Users/`, `/home/` or `/private/var/folders/` paths. These checks establish retained bytes, not independently executed runtime provenance.
+
+Non-mutating probe ledger: the following read-only probe exited 0 (no imported project code or executable fixture). A second read-only AST/log probe also exited 0, found canonical ledger init/add/update and both `row(seed)`/`row(work)` reads, and printed F/G/H/I exits `0/0/2/0`, post-states `Completed/Completed/In progress/Completed`, with H clean. Exact procedure and result citations appear above.
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+from pathlib import Path
+import ast, json, hashlib
+p=Path('TESTS-RESULTS/2026-10-18+GH-1144')
+rows=[json.loads(x) for x in (p/'provenance.jsonl').read_text().splitlines()]
+assert rows
+bad=[]
+for r in rows:
+    b=(p/r['file']).read_bytes()
+    if not b or len(b)!=r['bytes'] or hashlib.sha256(b).hexdigest()!=r['sha256']:
+        bad.append(r['file'])
+print('manifest entries:',len(rows),'mismatches:',bad)
+for f in ('utils/py/express.py','utils/py/wave_reconcile.py'):
+    ast.parse(Path(f).read_text())
+print('production modules parse: OK')
+print('evidence home paths:',[f.name for f in p.iterdir() if f.is_file() and
+      any(s in f.read_text(errors='replace') for s in ('/Users/','/home/','/private/var/folders/'))])
+PYPROBE
+```
+Decisive output: `manifest entries: 24 mismatches: []`; `production modules parse: OK`; `evidence home paths: []`.
+
+Root cause of the prior evidence gap: the fixture initialized an empty ledger; fix site: the existing manual procedure now seeds and reads an owned active row; why not upstream/downstream: production behavior did not require another change. The final full tier-3 gate remains [Unverified — needs clone run] for the harness on the final approved commit, as Setup specifies; this approval does not claim it has run.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) / harness takes the final-commit gate and closeout next.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
