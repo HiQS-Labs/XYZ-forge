@@ -1,0 +1,8 @@
+GH1143 plan review blocked, 2026-10-18T17:08Z
+Canonical relay-drive round 3: exit 4.
+review body was REWRITTEN above the reviewer's own block (first divergence at byte 26727)
+Before: ...round 3 review. Do not execute a campaign or add machinery.\n\n\n## Producer round 3...
+After:  ...round 3 review. Do not execute a campaign or add machinery.\n\n\n\n## Producer round 3...
+terminal STATUS Approved by reviewer codex REFUSED — review-body-rewritten
+Cumulative driver run-window summary: 4m 26s; three reviewer turns, no accepted plan approval.
+Review cap 3/3 exhausted. No implementation, push, PR or accepted-start admission.

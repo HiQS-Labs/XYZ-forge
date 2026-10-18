@@ -6,8 +6,8 @@ description: >-
   with --docs-only and the existing PDDA docs suite. Uses a fresh gated task
   clone off origin/development, bounded changes, an open issue, the releases
   ledger, born-complete docs, commit-bound verification, fast-forward direct
-  landing and reconciliation. Keeps runtime/configuration and consequential
-  policy changes outside documentation mode. No new suites or gate runners.
+  landing and reconciliation. Uses risk-based review for skill
+  documentation and changes to execution authority; current driver admission stays narrower. No new suites or gate runners.
   Refuses unsafe surfaces, diverged branches and unqualified evidence; do not
   use for Costly or one-way-door changes.
 ---
@@ -62,21 +62,37 @@ runtime coverage. The full runtime suite is not required merely because text or 
 Before running, check content accuracy, relative links and image rendering as applicable, and put
 the concrete results in `--summary`. Do not claim a render or visual check that did not run.
 
-Eligible payloads are `README.md`, `CHANGELOG.md`, ordinary `.md`/`.txt`/`.rst` documentation under
-`docs/` or the four PROJECT lifecycle folders, and PNG/JPEG/GIF/WebP/SVG assets under those folders
-or `assets/`. A README plus a diagram is one documentation change across folders. The existing
-4-file/150-text-insertion defaults still apply; images count as files, not binary newlines.
+Judge documentation by the effect of the proposed change, not merely its filename or whether
+an agent reads it. Editorial wording, links, images and bounded documentation-only skill changes
+may use the lightweight hotfix path when explicitly requested and appropriately reviewed. Inspect
+the actual diff and its consumers; a Markdown extension alone does not establish low risk.
 
-This mode does not admit runtime/configuration changes, executable or symlinked files, skill
-instructions, or shared governance such as AGENTS/SOP/PDDA policy. Inspect what the text actually
-controls; an allowed extension is not permission to change safety, review or landing behavior.
-Generated artifacts still require their canonical generator/verbs. Consequential policy changes
-and mixed code/docs changes use the normal PR lane (or the unchanged code-hotfix lane when eligible).
-All existing clone, identity, issue, bounds, provenance, fast-forward and reconciliation rules remain.
+Changes to executable code, runtime configuration, permissions, safety gates, destructive behavior
+or material execution authority require proportionate, explicit review and operator approval for
+that change. Approval to edit documentation is not standing permission to weaken a gate or expand
+execution authority. Mixed code/docs work must meet the applicable code-hotfix or normal PR rules.
+
+Keep the existing operator-tunable file/insertion bounds, issue traceability, current-head evidence,
+repository identity checks, concurrency protection and safe fast-forward publication. Generated
+artifacts still use their canonical writers. No filename-based exemption bypasses those controls.
+
+**Current driver compatibility:** `express.py --docs-only` currently has a narrower path allowlist
+and rejects `SKILL.md`; its landing pushes also set `XYZ_SKIP_PREPUSH=1`. This policy wording does
+not change those executable checks or authorize ignoring them. When a requested docs hotfix cannot
+meet the driver's admission or the operator's required normal-hook publication, report the exact
+mismatch before executable changes. Until the driver supports these paths, manual hotfix
+handling requires explicit operator authorization for that exact change and procedure. Do not relabel
+a skill as a code hotfix merely to evade documentation admission, or silently skip a gate.
 
 ## Procedure
 
-Run the driver; it enforces the order. Do not hand-perform steps the driver owns.
+Normally run the driver; it enforces the order. Do not hand-perform its steps without an
+explicit, scoped operator override. For a separately authorized manual documentation hotfix,
+record the precise scope and driver mismatch, independently review the diff, retain canonical
+ledger writers and current-head documentation evidence, and publish through the installed normal
+pre-push hook. Recheck repository identity, ownership and the exact remote development tip at
+publication; a concurrent update means fetch/reconcile/revalidate, never force push. This exception
+is not standing bypass authority and does not change express.py or its default push behavior.
 
 ```bash
 # 0. From the task clone carrying the fix (SOP §4 clone, <= 2 commits ahead, hooks installed):
@@ -202,7 +218,8 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
 
 ## Non-goals
 
-- No override flag: a refused run routes to the normal fresh-clone PR lane,
-  full stop. An `--force` would make every guardrail negotiable.
+- No automatic override flag: a refused driver run defaults to the normal fresh-clone PR lane.
+  The explicitly authorized manual documentation exception above is scoped to its named change
+  and procedure; it grants no standing `--force`, gate bypass or automatic admission authority.
 - No Costly/one-way-door work, ever (see step 2 refusals).
 - No force push (direct landing pushes fast-forward with Step 7 qualifying suite receipt and `XYZ_SKIP_PREPUSH=1`).

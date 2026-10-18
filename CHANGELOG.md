@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-18 — Radar-to-campaign instructions (GH-1143)
+
+Add the occasional defect-campaign skill and minimal Radar/ATE/index pointers. It specifies
+bounded approved discovery with existing assets, explicit synthesis/healing/autofiling disablement,
+semantic replay and accountable dispositions. The stateful batch pilot stays held for ownership
+and missing adapter work. Documentation only; no campaign, CI additions or runtime changes.
+Plan-review procedural rejection and operator override are retained in the task plan and relay.
+The operator subsequently authorized direct-development documentation hotfix integration and
+risk-based Express wording. Existing driver exclusions/bypass behavior remain disclosed; this
+one-off manual route uses normal hooks, identity checks and fast-forward publication.
+
+
 ## 2026-10-18 — GH-836 residual fixture spike
 
 Three independent gh549 fixture initializations replace live-ledger copies while retaining existing assertions and actual races. Paired focused runs: 236.80/233.10 s baseline, 75.58/74.42 s candidate, all 125/125; median saving 159.95 s. gh436 parity de-duplication was already delivered and is unchanged. Plan/final Codex QA Approved round 1/3 each. Evidence: `TESTS-RESULTS/2026-10-18+GH-836/`. The original spike was local-only. Publication later authorized: PR #1132, full normal pre-push gate 409/409 in 752s at `08f9c7dc`, zero re-run-ladder suites. No merge, policy or rollout change; local publication evidence is not hosted promotion qualification.

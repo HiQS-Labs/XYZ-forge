@@ -1,0 +1,31 @@
+[
+  {
+    "table": "settings",
+    "old_count": 3,
+    "new_count": 3,
+    "deleted": 1,
+    "added": 1
+  },
+  {
+    "table": "op_receipts",
+    "old_count": 2012,
+    "new_count": 2015,
+    "deleted": 0,
+    "added": 3
+  },
+  {
+    "table": "roadmap_items",
+    "old_count": 380,
+    "new_count": 381,
+    "deleted": 0,
+    "added": 1
+  },
+  {
+    "table": "work_events",
+    "old_count": 874,
+    "new_count": 877,
+    "deleted": 0,
+    "added": 3
+  }
+]
+Existing rows/receipts preserved; only generation and GH1143 intake/admission plus append-only operation/work receipts changed.
