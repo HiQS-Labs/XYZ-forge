@@ -29,3 +29,7 @@ describes publishing as a device-agnostic pull / commit / push operation.
 ## Merge evidence
 
 - PR #962 merged 2026-10-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1161 merged 2026-10-18 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -215,3 +215,7 @@ device-agnostic) — 2. Steady, not rising. Coverage limit: incidents tracked ou
   attested against `c40b425a`; 7/7 `[Pass]` (asks→diff, prose truth, identity, evidence integrity,
   GH-831 scope, whole-file sweep, PR readiness); runtime suites `[Unverified — needs clone run]`
   by design (docs route).
+
+## Merge evidence
+
+- PR #1161 merged 2026-10-18 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
