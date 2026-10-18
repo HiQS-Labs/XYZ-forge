@@ -26,7 +26,7 @@ Branch `feat/XYZ-forge-gh1127-promotion-only-full-suite-2026-10-18` off `develop
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA r2 FAIL (F1 acceptance needs a real no-pending clone run; F2 window must hold through the promotion merge) dispositioned below | Codex plan QA r3 (final round) → implement → covering suites → final Codex QA → PR → merge on green CI (operator-authorized) |
+| Plan QA Approved (Codex r3). Implemented; covering suites green (2 pinned assertions adapted, no new cases); manual controls pass; real zero-pending promotion run green (409/409, HEAD commit receipt, 1 rescue recorded) — `TESTS-RESULTS/2026-10-18+GH-1127/` | Final Codex QA → push (pre-push gate) → PR → merge on green CI |
 
 ## Observed today (4fd5dca8)
 

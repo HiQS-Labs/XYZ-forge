@@ -1,0 +1,55 @@
+test_catch_up_applies_missed_event (__main__.ReconcileTests.test_catch_up_applies_missed_event) ... ok
+test_catch_up_finds_roadmap_only_drift (__main__.ReconcileTests.test_catch_up_finds_roadmap_only_drift) ... ok
+test_catch_up_promotes_a_lessons_less_backlog_doc_with_a_warning (__main__.ReconcileTests.test_catch_up_promotes_a_lessons_less_backlog_doc_with_a_warning) ... ok
+test_corrupt_ledger_fails_closed (__main__.ReconcileTests.test_corrupt_ledger_fails_closed) ... ok
+test_declined_marker_uses_existing_enum (__main__.ReconcileTests.test_declined_marker_uses_existing_enum) ... ok
+test_direct_commit_with_catch_up (__main__.ReconcileTests.test_direct_commit_with_catch_up) ... ok
+test_doc_write_failure_and_legacy (__main__.ReconcileTests.test_doc_write_failure_and_legacy) ... ok
+test_dry_run_transitions (__main__.ReconcileTests.test_dry_run_transitions) ... ok
+test_explicit_landing_with_a_lessons_less_doc_warns_and_lands (__main__.ReconcileTests.test_explicit_landing_with_a_lessons_less_doc_warns_and_lands) ... ok
+test_legacy_row_does_not_block_attributable_pr (__main__.ReconcileTests.test_legacy_row_does_not_block_attributable_pr) ... ok
+test_lifecycle_and_second_apply (__main__.ReconcileTests.test_lifecycle_and_second_apply) ... ok
+test_live_catch_up_pagination_and_foreign_reference (__main__.ReconcileTests.test_live_catch_up_pagination_and_foreign_reference) ... ok
+test_missing_merge_sha_rolls_back (__main__.ReconcileTests.test_missing_merge_sha_rolls_back) ... ok
+test_no_manifest_and_missing_evidence (__main__.ReconcileTests.test_no_manifest_and_missing_evidence) ... ok
+test_only_receipted_defers_the_unreceipted_older_closer_and_keeps_newest_owner (__main__.ReconcileTests.test_only_receipted_defers_the_unreceipted_older_closer_and_keeps_newest_owner) ... ok
+test_only_receipted_explicit_target_keeps_open_issue_merge_evidence (__main__.ReconcileTests.test_only_receipted_explicit_target_keeps_open_issue_merge_evidence) ... ok
+test_only_receipted_refuses_an_explicit_unreceipted_target (__main__.ReconcileTests.test_only_receipted_refuses_an_explicit_unreceipted_target) ... ok
+test_only_receipted_requires_catch_up_and_qualify (__main__.ReconcileTests.test_only_receipted_requires_catch_up_and_qualify) ... ok
+test_only_receipted_with_both_receipted_still_lets_the_newest_closer_own (__main__.ReconcileTests.test_only_receipted_with_both_receipted_still_lets_the_newest_closer_own) ... ok
+test_open_issue_and_empty_closers (__main__.ReconcileTests.test_open_issue_and_empty_closers) ... ok
+test_planner_drift_for_a_lessons_less_issue_is_owned (__main__.ReconcileTests.test_planner_drift_for_a_lessons_less_issue_is_owned) ... ok
+test_planner_drift_for_a_reconciled_issue_stays_fatal (__main__.ReconcileTests.test_planner_drift_for_a_reconciled_issue_stays_fatal) ... ok
+test_pre_merge_ignores_supporting_notes_in_active_and_completed_dirs (__main__.ReconcileTests.test_pre_merge_ignores_supporting_notes_in_active_and_completed_dirs) ... ok
+test_qualified_empty_sweep_writes_nothing (__main__.ReconcileTests.test_qualified_empty_sweep_writes_nothing) ... ok
+test_recovered_closers_have_one_newest_lifecycle_owner (__main__.ReconcileTests.test_recovered_closers_have_one_newest_lifecycle_owner) ... ok
+test_recovery_covers_no_issue_and_open_reference_prs (__main__.ReconcileTests.test_recovery_covers_no_issue_and_open_reference_prs) ... wave-reconcile: Receipt recovery found 3 pending PR(s) since workflow activation 2026-09-10T00:00:00+00:00
+ok
+test_recovery_fails_closed_on_missing_history_or_api_error (__main__.ReconcileTests.test_recovery_fails_closed_on_missing_history_or_api_error) ... wave-reconcile: ERROR — Merged-PR recovery requires a full, non-shallow clone
+wave-reconcile: ERROR — Merged-PR recovery failed: API unavailable
+ok
+test_recovery_rejects_shallow_and_malformed_metadata (__main__.ReconcileTests.test_recovery_rejects_shallow_and_malformed_metadata) ... wave-reconcile: ERROR — Merged-PR recovery requires a full, non-shallow clone
+wave-reconcile: ERROR — Malformed merged-PR recovery response: pull request lacks merged_at or base.ref
+wave-reconcile: ERROR — Malformed merged-PR recovery response: pull request lacks merged_at or base.ref
+wave-reconcile: ERROR — Malformed merged-PR recovery response: invalid merged_at timestamp
+ok
+test_roadmap_catch_up_preserves_repository_identity (__main__.ReconcileTests.test_roadmap_catch_up_preserves_repository_identity) ... ok
+test_rollback_each_boundary (__main__.ReconcileTests.test_rollback_each_boundary) ... ok
+test_supporting_note_cannot_steal_canonical_closeout (__main__.ReconcileTests.test_supporting_note_cannot_steal_canonical_closeout) ... ok
+test_three_close_events_and_catch_up (__main__.ReconcileTests.test_three_close_events_and_catch_up) ... ok
+test_publish_allowlist_and_plan_lands (__main__.WorkflowTests.test_publish_allowlist_and_plan_lands) ... ok
+test_publish_recovers_from_a_raced_push_with_receipts_first_and_one_recompute (__main__.WorkflowTests.test_publish_recovers_from_a_raced_push_with_receipts_first_and_one_recompute) ... ok
+test_report_step_and_permissions (__main__.WorkflowTests.test_report_step_and_permissions) ... ok
+test_trigger_permissions_and_queue (__main__.WorkflowTests.test_trigger_permissions_and_queue) ... FAIL
+
+======================================================================
+FAIL: test_trigger_permissions_and_queue (__main__.WorkflowTests.test_trigger_permissions_and_queue)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "<stdin>", line 602, in test_trigger_permissions_and_queue
+AssertionError: 'types: [closed]' not found in 'name: Wave reconciliation\n\n# GH-1127 / decision #1131: ON DEMAND ONLY. Development merges reconcile LOCALLY (merge-cleanup runs\n# wave_reconcile.py --pr N); this hosted lane no longer fires per merge or on a schedule. Dispatch it\n# on `development` once before every development -> main promotion: `--promotion` qualifies every\n# receipt-less landing since the last receipt together, with the FULL registry on HEAD, and HEAD\n# itself when nothing is pending. Procedure: AGENTS.md "Promotion". Rollback: restore the\n# `pull_request: closed` (development) and `schedule` triggers; the PR branches below are kept for it.\non:\n  workflow_dispatch:\n\nconcurrency:\n  group: wave-reconcile\n  cancel-in-progress: false\n  # Supported since 2026-05-07; retain up to 100 pending runs instead of replacing one.\n  # https://github.blog/changelog/2026-05-07-github-actions-concurrency-groups-now-allow-larger-queues/\n  queue: max\n\npermissions:\n  contents: read\n\njobs:\n  reconcile:\n    if: >-\n      github.event_name != \'pull_request\' ||\n      (github.event.pull_request.merged == true && github.event.pull_request.base.ref == \'development\')\n    runs-on: macos-latest\n    timeout-minutes: 120\n    permissions:\n      contents: write\n      issues: write   # GH-684: the final step opens/closes the one hosted-reconcile-attention issue\n      pull-requests: read\n    env:\n      GH_TOKEN: ${{ github.token }}\n      PYTHONDONTWRITEBYTECODE: \'1\'\n    steps:\n      - uses: actions/checkout@v7\n        with:\n          ref: development\n          fetch-depth: 0\n      - name: Check direct-push prerequisite\n        env:\n          REPO: ${{ github.repository }}\n        run: |\n          set -euo pipefail\n          # development was unprotected when implemented. Fail before writes if that changes;\n          # a protected branch needs a reviewed bot-bypass policy, never an implicit bypass.\n          test "$(gh api "repos/$REPO/branches/development" --jq .protected)" = false\n      - name: Install runtime dependencies\n        run: npm ci\n      - name: Install Python dependencies for complete qualification\n        run: python3 -m pip install --quiet --break-system-packages pytest requests PyYAML\n      - name: Reconcile merged PR or catch up\n        id: reconcile\n        env:\n          EVENT_NAME: ${{ github.event_name }}\n          PR_NUMBER: ${{ github.event.pull_request.number }}\n        # GH-684: the log is tee\'d OUTSIDE the tree ($RUNNER_TEMP) — the commit step below refuses\n        # undeclared in-tree files — and stderr is folded in because the terminal\n        # `wave-reconcile: ERROR — …` line is written there. pipefail keeps the reconciler\'s exit.\n        # GH-740: the argv is built once and exported as RECONCILE_ARGS so the publish step\'s one\n        # bounded recompute re-runs exactly this command (plus --only-receipted --skip-pull).\n        run: |\n          set -euo pipefail\n          if [ "$EVENT_NAME" = pull_request ]; then\n            ARGS=(--pr "$PR_NUMBER" --catch-up --gate --qualify)\n          else\n            ARGS=(--catch-up --gate --qualify --promotion)\n          fi\n          echo "RECONCILE_ARGS=${ARGS[*]}" >> "$GITHUB_ENV"\n          python3 utils/py/wave_reconcile.py "${ARGS[@]}" 2>&1 | tee "$RUNNER_TEMP/reconcile.log"\n      - name: Commit declared artifacts and push\n        id: publish\n        # GH-740: utils/py/hosted_lane_publish.py — the former inline step, moved so it can be tested\n        # and retried. Same allowlist, explicit `git add`, bot identity, one fast-forward push; on a\n        # rejected push it discards the stale commit, lifts only the receipt files onto the fresh\n        # head, publishes them, and recomputes the transitions once with --only-receipted (which can\n        # never run the suite). Never rebases a generated SQLite DB, never force-pushes. Its log is\n        # tee\'d for the report step (GH-741).\n        run: |\n          set -euo pipefail\n          python3 utils/py/hosted_lane_publish.py --reconcile-args "$RECONCILE_ARGS" 2>&1 | tee "$RUNNER_TEMP/publish.log"\n      - name: Report hosted lane\n        # GH-684: always runs, after the job\'s status is known. `job.status` reflects every preceding\n        # step — a successful reconcile followed by a rejected fast-forward push is still red here.\n        # One labelled issue is opened/commented on red or on any skipped backlog item, and closed\n        # on the next green run with no skips. See utils/py/hosted_lane_report.py.\n        # GH-741: the step outcomes decide WHICH log\'s error is the cause — a green reconcile step\'s\n        # log is full of the test suite\'s own expected ERROR lines and must never be blamed.\n        if: always()\n        env:\n          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n        run: >-\n          python3 utils/py/hosted_lane_report.py --status "${{ job.status }}" --log "$RUNNER_TEMP/reconcile.log"\n          --run-url "$RUN_URL" --reconcile-outcome "${{ steps.reconcile.outcome }}"\n          --publish-outcome "${{ steps.publish.outcome }}" --publish-log "$RUNNER_TEMP/publish.log"\n'
+
+----------------------------------------------------------------------
+Ran 36 tests in 3.900s
+
+FAILED (failures=1)
