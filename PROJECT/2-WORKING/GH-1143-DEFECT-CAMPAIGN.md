@@ -2,7 +2,7 @@
 gh_issue: 1143
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1143
 title: Radar-to-campaign documentation skill
-status: Reviewed — awaiting draft publication
+status: Draft PR 1147 — awaiting operator review
 updated: 2026-10-18
 owner: Codex
 goal: Connect Radar recommendations to bounded approved discovery using existing assets
@@ -19,7 +19,7 @@ ATE, fuzz, oracle and minimization assets. Documentation only; no execution or r
 
 | What was just completed | What's next |
 |---|---|
-| Final Codex QA Approved round 1/3 and attested; documentation checks pass | Publish DRAFT through docs hook, verify remote head/statuses; await operator review |
+| Draft PR 1147 published; final QA Approved and docs hook passed | Operator review; no merge or campaign authorized |
 
 ## Recon and smallest viable bet
 
@@ -140,3 +140,15 @@ against `fa215ee30476`. Receipt: `relay-system/2026-10-18/gh1143-final.codex.md`
 No substantive finding or implementation revision followed approval. This status/evidence
 closeout is factual bookkeeping; the publication hook will check the final committed docs.
 Draft publication remains distinct from landing/full/promotion qualification. No merge authorized.
+
+## Draft publication
+
+Draft PR: https://github.com/HiQS-Labs/XYZ-forge/pull/1147, base `development`.
+First published head `72fb443bc84e81e17d07f2254c9efa09fb13ab83` matched remote and PR.
+Normal installed hook selected docs and passed in 61s, no bypass/full suite.
+Exact-head hosted vendored smoke succeeded; macOS promotion and Ubuntu canary skipped.
+Those are smoke/skipped statuses, not full/promotion qualification. This factual closeout
+adds no implementation changes; its final committed state goes through the same docs hook.
+Current PR head/statuses are verified in the PR description and handoff after that push.
+Task remains in progress awaiting review/landing; no shipped/completed ledger claim.
+No installation, merge, deployment, campaign or clone cleanup. Clone intentionally retained.
