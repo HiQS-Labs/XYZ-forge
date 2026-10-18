@@ -63,6 +63,10 @@ HOSTED_POLL_ENV = "MERGE_CLEANUP_HOSTED_POLL_S"
 # empty answer inside this window is "not yet", not "no hosted workflow". Only after it elapses
 # does an empty list select the local writer.
 HOSTED_GRACE_ENV = "MERGE_CLEANUP_HOSTED_GRACE_S"
+# GH-1127 / #1131: reconcile locally by default. The hosted lane is on-demand (pre-promotion
+# dispatch), so waiting for it after a merge only burns the grace window. Set this to 1 to wait for
+# a hosted run you dispatched deliberately; the old hosted-first behavior is otherwise unchanged.
+USE_HOSTED_ENV = "MERGE_CLEANUP_USE_HOSTED"
 
 
 def _gh_bin() -> str:
@@ -714,8 +718,10 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
 
     `merged_head`, when given, is the PR's merge commit as GitHub reports it (--reconcile-pr);
     otherwise the primary's HEAD, which the Phase-5 fast-forward has just moved to the merge."""
+    use_hosted = os.environ.get(USE_HOSTED_ENV) == "1"
     if dry_run:
-        log(f"[DRY RUN] Would wait for hosted reconciliation or run wave_reconcile.py --pr {pr_num}")
+        log(f"[DRY RUN] Would {'wait for hosted reconciliation or ' if use_hosted else ''}"
+            f"run wave_reconcile.py --pr {pr_num} locally")
         return True
 
     log(f"Running post-merge reconciliation for PR #{pr_num} in {repo_path}...")
@@ -733,8 +739,9 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
             log_err(f"Cannot identify the merged head before reconciliation: {head.stderr.strip()}")
             return False
         merged_head = head.stdout.strip()
-    hosted = wait_for_hosted_reconcile(
-        merged_head, repo_path, integration_branch, pr_head=pr_head)
+    # GH-1127: local by default; the child keeps its one hosted in-flight safety query (exit 8).
+    hosted = (wait_for_hosted_reconcile(merged_head, repo_path, integration_branch, pr_head=pr_head)
+              if use_hosted else "local")
     if hosted == "active_timeout":
         return False
     if hosted == "success":
