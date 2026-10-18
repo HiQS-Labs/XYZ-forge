@@ -2,105 +2,49 @@ diff --git a/ARCHITECTURE.md b/ARCHITECTURE.md
 index 74f810fe5..03cc692fb 100644
 --- a/ARCHITECTURE.md
 +++ b/ARCHITECTURE.md
-@@ -69,7 +69,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
- | [triangulate](skills/1-hourly/triangulate/SKILL.md) | Reconcile three independent probes into an evidence-ranked verdict. |
- | [unstuck](skills/1-hourly/unstuck/SKILL.md) | Interrupt a stalled AI session and restore movement toward the original outcome. |
- 
+@@ -72 +72 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 -### `2-daily` — A few times a day (19)
 +### `2-daily` — A few times a day (20)
- 
- _landing, queueing and driving work; multi-session and multi-repo coordination._
- 
-@@ -87,7 +87,8 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
- | [phase-qa](skills/2-daily/phase-qa/SKILL.md) | Add phase-appropriate QA checks to plans and review completed phases. |
- | [relay-to-issue](skills/2-daily/relay-to-issue/SKILL.md) | Turn a finished relay thread into a checklist-style GitHub issue. |
- | [releases](skills/2-daily/releases/SKILL.md) | Read/author/publish the releases.db planning ledger. |
+@@ -90 +90,2 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 -| [review-code](skills/2-daily/review-code/SKILL.md) | Meticulous ground-truth code and PR review using recon, debug-mantra, and workhorse/unstuck ladders. |
 +| [review-code-xyz](skills/2-daily/review-code-xyz/SKILL.md) | Meticulous ground-truth review of a local diff or branch using recon, debug-mantra, and workhorse/unstuck ladders (fixes reversible issues). |
 +| [review-pr-xyz](skills/2-daily/review-pr-xyz/SKILL.md) | Report-only GitHub PR review: validate the PR's claims first, then recon + debug-mantra, post graded findings. |
- | [review-xyz](skills/2-daily/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
- | [start-marathon](skills/2-daily/start-marathon/SKILL.md) | Review intake and plans, prepare collision-safe lanes, and dry-run the marathon. |
- | [where-are-we-at](skills/2-daily/where-are-we-at/SKILL.md) | Deep ground-truth status assessment of a topic/subsystem using recon, debug-mantra, and merge-cleanup. |
-@@ -95,7 +96,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
- | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
- | [xyz-mod](skills/2-daily/xyz-mod/SKILL.md) | Read-only Claude Code mod: `/xyz-status` prints hosted runs, tick claims and marathon/relay drivers with no model turn. |
- 
+@@ -98 +99 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 -### `3-weekly` — Weekly (14)
 +### `3-weekly` — Weekly (15)
- 
- _cadence reviews, cleanup sweeps, collection and publishing maintenance._
- 
-@@ -115,6 +116,7 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
- | [task-sync](skills/3-weekly/task-sync/SKILL.md) | Unified IDE task-list grooming (GH-896): one core + per-IDE adapters (ZCode, Antigravity, native Codex planner) date-stamp titles with last-activity mm-dd, write last-action descriptions, manage pins; dry-run default, doctor, one 15-minute heartbeat, Skills Army HQ-deployable. |
- | [weekly-shipped](skills/3-weekly/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |
- | [whack-a-mole](skills/3-weekly/whack-a-mole/SKILL.md) | Cluster 14 days of recurring bugs by churn and file one approved root-cause umbrella issue. |
+@@ -117,0 +119 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 +| [worth-it](skills/3-weekly/worth-it/SKILL.md) | Price initial or remaining value; `/worth-it continue` returns Continue / Pivot / Park / Stop, one bounded proof and approval-aware results capture. Pinned upstream source and update recipe: [NOTICE](skills/3-weekly/worth-it/NOTICE). |
- 
- ### `4-occasional` — Least frequently (19)
- 
 diff --git a/README.md b/README.md
 index 2f7648497..61cbb466c 100644
 --- a/README.md
 +++ b/README.md
-@@ -318,5 +318,7 @@ Project site: <https://hiqs-labs.github.io/XYZ-forge/>
- 
- ## License
- 
+@@ -320,0 +321,2 @@ Project site: <https://hiqs-labs.github.io/XYZ-forge/>
 +Separately licensed third-party skill bundles retain their own terms; see [worth-it NOTICE](skills/3-weekly/worth-it/NOTICE) and its accompanying license.
 +
- AGPL-3.0-only. A commercial license is available — see
- [`LICENSE-COMMERCIAL.md`](LICENSE-COMMERCIAL.md).
 diff --git a/mini/README.md b/mini/README.md
 index 6a1282784..97706af53 100644
 --- a/mini/README.md
 +++ b/mini/README.md
-@@ -25,7 +25,8 @@ yours.
- | `honest` | A read-only maturity check that says what a repo actually does versus what it claims. |
- | `weekly-planner` | Dual-horizon weekly planning and team orchestration with topological merge sequencing and adversarial conflict audits. |
- | `daily-planner` | Adaptive daily planning skill that pivots the active weekly plan based on yesterday's landed PRs and closures. |
+@@ -28 +28,2 @@ yours.
 -| `review-code` | A meticulous code and PR review ladder: maps blast radius, tests fixes against live ground truth, then posts the graded report to the GitHub PR or issue and renders it on-screen — both, every run. |
 +| `review-code-xyz` | A meticulous review ladder for a local diff or branch: maps blast radius, tests fixes against live ground truth, fixes reversible issues, then posts the graded report to the branch's PR or an issue and renders it on-screen — both, every run. |
 +| `review-pr-xyz` | Report-only GitHub PR review: first checks the PR's claims are true (the bug reproduces, the issue asks for this, it has not already landed), then maps blast radius and tests against ground truth, and posts graded findings to the PR. Never pushes. |
- | `skill-viewer` | Lists the skills in this repo from their frontmatter. |
- 
- Run `python3 skills/skill-viewer/scripts/list_skills.py` from the repo root to see the live list.
-@@ -41,7 +42,7 @@ mkdir -p ~/.claude/skills
- ln -s "$PWD/skills/relay" ~/.claude/skills/relay        # repeat per skill you want
- ```
- 
+@@ -44 +45 @@ ln -s "$PWD/skills/relay" ~/.claude/skills/relay        # repeat per skill you w
 -`ponytail`, `agent-chorus`, `consult`, `weekly-planner`, `daily-planner` and `review-code` ship an `install.sh` that creates those links:
 +`ponytail`, `agent-chorus`, `consult`, `weekly-planner`, `daily-planner`, `review-code-xyz` and `review-pr-xyz` ship an `install.sh` that creates those links:
- 
- ```bash
- bash "$(git rev-parse --show-toplevel)/skills/consult/install.sh"
-@@ -52,8 +53,8 @@ bash "$(git rev-parse --show-toplevel)/skills/consult/install.sh"
- - `git`, `bash`, `python3` (3.8+)
- - For `consult`: the `codex` and/or `agy` CLIs on your `PATH`. If one advisor is unavailable consult
-   degrades to a single-model answer and says so; if none can answer it exits 5.
+@@ -55,2 +56,2 @@ bash "$(git rev-parse --show-toplevel)/skills/consult/install.sh"
 -- For `review-code`: the `gh` CLI, authenticated, so the final verdict can be posted to the GitHub
 -  PR or issue; with no GitHub target the review is reported on-screen only.
 +- For `review-code-xyz` and `review-pr-xyz`: the `gh` CLI, authenticated, so the final verdict can
 +  be posted to the GitHub PR or issue; with no GitHub target the review is reported on-screen only.
- - Nothing else. There is no `tick` binary, no database, no project lifecycle here.
- 
- ## Try it
 diff --git a/skills/1-hourly/start-task/SKILL.md b/skills/1-hourly/start-task/SKILL.md
 index c99843857..1004432dc 100644
 --- a/skills/1-hourly/start-task/SKILL.md
 +++ b/skills/1-hourly/start-task/SKILL.md
-@@ -49,7 +49,7 @@ repository gates separately.
- > 1. **Resolve intake & isolate in a fresh clone (Steps 1–3).** Verify the canonical remote/issue, provision a fresh full clone with a task branch off `origin/development`, register the PDDA capture doc in `1-INBOX`, and record 4-axis RELEASES task ratings.
- > 2. **Ground in recon & draft a surgical plan (Steps 4–5).** Trace live entry points, state writes, and blast radius before proposing changes; design the leanest DRY plan that extends existing subsystems with falsifiable acceptance checks.
- > 3. **Pre-implementation plan QA (Step 6).** Run a Codex relay review on the plan, adjudicate findings against ground-truth evidence, and iterate until approved before writing production code.
+@@ -52 +52 @@ repository gates separately.
 -> 4. **Execute & deterministically verify (Step 7).** Build the reviewed scope, commit structured checkpoints, and execute all required test suites and repo gates in safe isolation.
 +> 4. **Execute & deterministically verify (Step 7).** Build the reviewed scope, commit structured checkpoints, and execute all required test suites and repo gates in safe isolation, then smoke-run the change on its main path and one adjacent path.
- > 5. **Final relay QA, ready PR & retire published checkouts (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, push through the pre-push gate, open the PR against `development`, and retire safe, fully published task checkouts through merge-cleanup without waiting for merge.
- >
- > **Overall Goal:** Issue implemented to spec, validated through double-relay QA (plan + final), and submitted as a verified, conflict-free PR ready for merge.
-@@ -249,9 +249,23 @@ Then begin work.
-    before and after the run; drift invalidates its evidence. Retain required
-    provenance with the PR. Failed/skipped checks remain failed/skipped; fix within
-    scope or mark the group blocked. Do not pass dependents on a failing prerequisite.
+@@ -251,0 +252,13 @@ Then begin work.
 +   **Smoke the change before final QA (GH-1088).** Suites prove nothing regressed;
 +   they rarely drive the new behaviour the way an operator will. Run the changed
 +   entry point once on its **main path** and once on **one adjacent real-world path**:
@@ -114,14 +58,10 @@ index c99843857..1004432dc 100644
 +   never replaces or counts as the independent review (step 6). GH-1064's resume and
 +   rerun defects (#1074, #1084) passed suites and an approved review; one run past the
 +   happy path would have shown them.
- 
- 8. **Run final Codex relay QA and resolve findings.** Use `relay-xyz` on the
+@@ -254 +267,2 @@ Then begin work.
 -   committed implementation, plan, per-issue acceptance map, and test evidence.
 +   committed implementation, plan, per-issue acceptance map, and test evidence,
 +   including the step 7 smoke receipt.
-    Frame the final review packet with the same commensurate operational envelope
-    so verification checks actual acceptance criteria rather than demanding
-    speculative layers of complexity. Ask whether each issue is satisfied, its
 diff --git a/skills/2-daily/review-code-xyz/SKILL.md b/skills/2-daily/review-code-xyz/SKILL.md
 new file mode 100644
 index 000000000..2b7f8426d
@@ -903,22 +843,13 @@ diff --git a/skills/2-daily/review-xyz/SKILL.md b/skills/2-daily/review-xyz/SKIL
 index c7b66a496..9b20e3312 100644
 --- a/skills/2-daily/review-xyz/SKILL.md
 +++ b/skills/2-daily/review-xyz/SKILL.md
-@@ -8,6 +8,7 @@ description: >-
-   review critiques and follow-up checklists to GitHub PRs (`--post-pr`) and linked issues
-   (`--post-issues`). Use when the operator wants to "review this PR with Qwen", "run a code
-   review on this diff", "audit PR with GLM", or post structured review feedback to GitHub.
+@@ -10,0 +11 @@ description: >-
 +  Single-agent ground-truth review instead? Local diff: review-code-xyz. GitHub PR: review-pr-xyz.
- ---
- 
- # review-xyz — Deterministic Multi-Model Code Review
 diff --git a/skills/3-weekly/skills-army-hq/references/recovery.md b/skills/3-weekly/skills-army-hq/references/recovery.md
 index 6134fa4e5..1f0fc36bc 100644
 --- a/skills/3-weekly/skills-army-hq/references/recovery.md
 +++ b/skills/3-weekly/skills-army-hq/references/recovery.md
-@@ -81,6 +81,37 @@ outside app discovery roots; do not rewrite receipts, merge collection identitie
- remove a copy containing unique work. Existing foreign links follow the explicit link
- migration procedure below; never replace them silently.
- 
+@@ -83,0 +84,31 @@ migration procedure below; never replace them silently.
 +### Reconciling a duplicate or stale Git Pulse clone (GH-960)
 +
 +Every normal `sync.py` run (preview, `--status`, and `--apply`) performs a read-only check
@@ -950,33 +881,15 @@ index 6134fa4e5..1f0fc36bc 100644
 +4. **Run `catalog` and `sync`.** Run `intake.py --apply catalog` and `sync.py --apply`, then
 +   verify with `sync.py --status` that `DUPLICATE_PULSE_CLONE` and `STALE_PULSE_COLLECTION` are clear.
 +
- Previews deliberately take no write lock. Do not run them during an apply: they
- can observe intermediate state and report transient conflicts. Wait for the writer
- to finish, then preview again; never delete its lock file.
 diff --git a/skills/3-weekly/skills-army-hq/scripts/sync.py b/skills/3-weekly/skills-army-hq/scripts/sync.py
 index 292e1e2b0..58c605cc5 100644
 --- a/skills/3-weekly/skills-army-hq/scripts/sync.py
 +++ b/skills/3-weekly/skills-army-hq/scripts/sync.py
-@@ -10,6 +10,7 @@ from pathlib import Path
- import shlex
- import subprocess
- import sys
+@@ -12,0 +13 @@ import sys
 +import time
- import uuid
- 
- sys.dont_write_bytecode = True
-@@ -28,6 +29,7 @@ def owned_record(root, state, target, name, previous=None):
- # refuses --apply while any forge-owned skill is drifted. Only names present in the forge's
- # skills/ are judged; collection-only skills stay informational ("unrecognized").
- CHECKER = Path("utils") / "py" / "skill_drift_check.py"
+@@ -30,0 +32 @@ CHECKER = Path("utils") / "py" / "skill_drift_check.py"
 +PULSE_STALE_HOURS = 24
- 
- 
- def canonical_root(explicit, config, state):
-@@ -68,24 +70,149 @@ def warn(warnings, message):
-     print(f"skills-army-hq sync: WARN {message}", file=sys.stderr)
- 
- 
+@@ -70,0 +73,93 @@ def warn(warnings, message):
 +def pulse_config_dir():
 +    raw = os.environ.get("GIT_PULSE_CONFIG_DIR") or os.environ.get("GIT_HISTORY_CONFIG_DIR")
 +    home = Path(os.environ.get("HOME") or Path.home()).expanduser()
@@ -1070,7 +983,7 @@ index 292e1e2b0..58c605cc5 100644
 +    return f"{ahead} ahead, {behind} behind origin" if ahead is not None and behind is not None else "ahead/behind origin unknown"
 +
 +
- def repo_health(root, warnings):
+@@ -72 +167,6 @@ def repo_health(root, warnings):
 -    """GH-993: a dirty, diverged or detached collection repo silently stalls the hourly pulse."""
 +    """GH-993 / GH-960: detect dirty, detached, stale or duplicate-clone Pulse collections."""
 +    config_dir = pulse_config_dir()
@@ -1078,23 +991,14 @@ index 292e1e2b0..58c605cc5 100644
 +    writer_raw = pulse_sync_repo(config_dir)
 +    if writer_raw is None:
 +        warn(warnings, f"duplicate-clone check skipped: no git-pulse config at {cfg}")
-     top = shared.collection_repo(root)
-     if top is None:
-         return None
-     dirty = shared.dirty_paths(top)
-     head = shared.git_at(top, "symbolic-ref", "-q", "--short", "HEAD")
-     branch = head.stdout.strip() if head.returncode == 0 else "HEAD"
+@@ -79,2 +179,2 @@ def repo_health(root, warnings):
 -    counts = shared.git_at(top, "rev-list", "--left-right", "--count", "HEAD...@{upstream}").stdout.split()
 -    ahead, behind = (int(counts[0]), int(counts[1])) if len(counts) == 2 else (None, None)
 +    ahead, behind = ahead_behind(top)
 +    fetch_age_h = fetch_age_hours(top)
-     if dirty:
-         warn(warnings, f"collection repo {top} has {len(dirty)} uncommitted path(s) (git-pulse refuses to sync "
-                        f"over them): {', '.join(dirty[:5])}{' …' if len(dirty) > 5 else ''}")
-     if branch == "HEAD":
-         warn(warnings, f"collection repo {top} is on a detached HEAD (stuck rebase?)")
+@@ -85,0 +186 @@ def repo_health(root, warnings):
 +    stale = bool(behind or (fetch_age_h is not None and fetch_age_h >= PULSE_STALE_HOURS))
-     if behind:
+@@ -87,2 +188,28 @@ def repo_health(root, warnings):
 -        warn(warnings, f"collection repo {top} is {behind} commit(s) behind its upstream (as of the last fetch)")
 -    return {"path": str(top), "dirty": dirty, "branch": branch, "ahead": ahead, "behind": behind}
 +        warn(warnings, f"STALE_PULSE_COLLECTION: collection repo {top} is {behind} commit(s) behind its upstream "
@@ -1125,9 +1029,6 @@ index 292e1e2b0..58c605cc5 100644
 +            "pulse_config": str(cfg) if writer_raw is not None else None,
 +            "pulse_sync_repo": str(writer_top) if writer_top is not None else None,
 +            "duplicate_pulse_clone": duplicate, "stale_pulse_collection": stale}
- 
- 
- def drift_gate(root, state, config, found, explicit, apply, allow_drift, warnings):
 diff --git a/skills/3-weekly/worth-it/LICENSE b/skills/3-weekly/worth-it/LICENSE
 new file mode 100644
 index 000000000..d159169d1
@@ -1719,152 +1620,82 @@ diff --git a/test/gh589-xyz-mini-sync.sh b/test/gh589-xyz-mini-sync.sh
 index 18073a3c6..f4d33aa9d 100755
 --- a/test/gh589-xyz-mini-sync.sh
 +++ b/test/gh589-xyz-mini-sync.sh
-@@ -59,7 +59,7 @@ reset_src()
- r = run("--push"); ok("first publication --push exits 0", r.returncode == 0, r.stderr[-300:])
- h = git(DEST, "rev-parse", "HEAD").stdout.strip(); ok("remote main == local HEAD", bool(h) and remote() == h)
- names = sorted(os.listdir(os.path.join(DEST, "skills")))
+@@ -62 +62 @@ names = sorted(os.listdir(os.path.join(DEST, "skills")))
 -ok("skill set is exactly the eleven expected", names == ["agent-chorus", "consult", "daily-planner", "debug-mantra", "honest", "ponytail", "relay", "review-code", "skill-viewer", "unstuck", "weekly-planner"], str(names))
 +ok("skill set is exactly the twelve expected", names == ["agent-chorus", "consult", "daily-planner", "debug-mantra", "honest", "ponytail", "relay", "review-code-xyz", "review-pr-xyz", "skill-viewer", "unstuck", "weekly-planner"], str(names))
- v = sh(sys.executable, os.path.join(DEST, "skills/skill-viewer/scripts/list_skills.py"), "--json")
- vn = sorted(x["name"] for x in json.loads(v.stdout)["skills"]) if v.returncode == 0 else []
- ok("6. viewer names == skills on disk", vn == names, str(vn))
 diff --git a/test/gh778-review-code-skill.sh b/test/gh778-review-code-skill.sh
 index 1b114f269..082d3d7dd 100755
 --- a/test/gh778-review-code-skill.sh
 +++ b/test/gh778-review-code-skill.sh
-@@ -1,9 +1,10 @@
- #!/usr/bin/env bash
+@@ -2 +2,2 @@
 -# test/gh778-review-code-skill.sh — GH-778: review-code and review-PR ground-truth review skill
 +# test/gh778-review-code-skill.sh — GH-778: review-code-xyz ground-truth review skill, plus the
 +# GH-1060 split: PR review moved to review-pr-xyz (claim validation first, report-only).
- source "$(dirname "$0")/_setup.sh" gh778-review-code-skill
- 
- REPO="$(cd "$(dirname "$0")/.." && pwd)"
+@@ -6 +7 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 -SKILL_DIR="$REPO/skills/2-daily/review-code"
 +SKILL_DIR="$REPO/skills/2-daily/review-code-xyz"
- SKILL_FILE="$SKILL_DIR/SKILL.md"
- INSTALLER="$SKILL_DIR/install.sh"
- ARCH_FILE="$REPO/ARCHITECTURE.md"
-@@ -11,12 +12,13 @@ ARCH_FILE="$REPO/ARCHITECTURE.md"
- echo "== test: gh778-review-code-skill =="
- 
- # --- 1. File existence & basic structure ---
+@@ -14,2 +15,2 @@ echo "== test: gh778-review-code-skill =="
 -[ -f "$SKILL_FILE" ] && pass "skills/2-daily/review-code/SKILL.md exists" || fail "missing SKILL.md"
 -[ -f "$INSTALLER" ] && pass "skills/2-daily/review-code/install.sh exists" || fail "missing install.sh"
 +[ -f "$SKILL_FILE" ] && pass "skills/2-daily/review-code-xyz/SKILL.md exists" || fail "missing SKILL.md"
 +[ -f "$INSTALLER" ] && pass "skills/2-daily/review-code-xyz/install.sh exists" || fail "missing install.sh"
- [ -x "$INSTALLER" ] && pass "install.sh is executable" || fail "install.sh is not executable"
+@@ -16,0 +18 @@ echo "== test: gh778-review-code-skill =="
 +[ ! -e "$REPO/skills/2-daily/review-code" ] && pass "old review-code folder is gone (GH-1060)" || fail "old review-code folder still present"
- 
- # --- 2. YAML frontmatter validation ---
+@@ -19 +21 @@ echo "== test: gh778-review-code-skill =="
 -grep -q "^name: review-code$" "$SKILL_FILE" && pass "frontmatter has name: review-code" || fail "missing name in frontmatter"
 +grep -q "^name: review-code-xyz$" "$SKILL_FILE" && pass "frontmatter has name: review-code-xyz" || fail "missing name in frontmatter"
- grep -q "description:" "$SKILL_FILE" && pass "frontmatter has description" || fail "missing description in frontmatter"
- 
- # --- 3. Recital and Core Discipline Presence ---
-@@ -25,7 +27,7 @@ grep -q "/recon" "$SKILL_FILE" && pass "/recon integrated" || fail "missing /rec
- grep -q "/debug-mantra" "$SKILL_FILE" && pass "/debug-mantra integrated" || fail "missing /debug-mantra reference"
- grep -q "/workhorse" "$SKILL_FILE" && pass "/workhorse integrated" || fail "missing /workhorse reference"
- grep -q "/unstuck" "$SKILL_FILE" && pass "/unstuck integrated" || fail "missing /unstuck reference"
+@@ -28 +30 @@ grep -q "/unstuck" "$SKILL_FILE" && pass "/unstuck integrated" || fail "missing
 -grep -q "review-PR" "$SKILL_FILE" && pass "review-PR target mode present" || fail "missing review-PR reference"
 +grep -q "hand off to \[\`review-pr-xyz\`\]" "$SKILL_FILE" && pass "PR targets hand off to review-pr-xyz" || fail "missing review-pr-xyz handoff"
- 
- # --- 4. Quality gates & anti-patterns ---
- grep -q "A check that cannot fail is not a check" "$SKILL_FILE" && pass "mutation check rule present" || fail "missing mutation check rule"
-@@ -39,8 +41,9 @@ for cat in "\[Blocker\]" "\[Should\]" "\[Nit\]" "\[Pass\]"; do
- done
- 
- # --- 6. ARCHITECTURE.md registration ---
+@@ -42,2 +44,3 @@ done
 -grep -q "\[review-code\](skills/2-daily/review-code/SKILL.md)" "$ARCH_FILE" && pass "ARCHITECTURE.md has review-code link" || fail "missing ARCHITECTURE.md link"
 -grep -E "### \`2-daily\` — A few times a day \((15|16)\)" "$ARCH_FILE" && pass "ARCHITECTURE.md has updated 2-daily count (>= 15)" || fail "missing updated 2-daily count"
 +grep -q "\[review-code-xyz\](skills/2-daily/review-code-xyz/SKILL.md)" "$ARCH_FILE" && pass "ARCHITECTURE.md has review-code-xyz link" || fail "missing ARCHITECTURE.md link"
 +n_daily="$(find "$REPO/skills/2-daily" -mindepth 2 -maxdepth 2 -name SKILL.md | wc -l | tr -d ' ')"
 +grep -q "### \`2-daily\` — A few times a day ($n_daily)" "$ARCH_FILE" && pass "ARCHITECTURE.md 2-daily count matches disk ($n_daily)" || fail "2-daily count does not match disk ($n_daily)"
- 
- # --- 7. Installer gh678 compliance (in sandbox) ---
- H="$WORK/home"; A="$H/apps"
-@@ -53,18 +56,18 @@ run_installer() {
- }
- 
- FOREIGN="$WORK/foreign"; mkdir -p "$FOREIGN"; echo "foreign" > "$FOREIGN/SKILL.md"
+@@ -56 +59 @@ FOREIGN="$WORK/foreign"; mkdir -p "$FOREIGN"; echo "foreign" > "$FOREIGN/SKILL.m
 -ln -s "$FOREIGN" "$A/claude/review-code"
 +ln -s "$FOREIGN" "$A/claude/review-code-xyz"
- set +e
- run_installer >"$WORK/out-foreign" 2>&1
- rc_for=$?
- set -e
+@@ -61 +64 @@ set -e
 -[ "$rc_for" -ne 0 ] && [ "$(readlink "$A/claude/review-code")" = "$FOREIGN" ] && pass "installer refuses live foreign link" || fail "installer replaced live foreign link"
 +[ "$rc_for" -ne 0 ] && [ "$(readlink "$A/claude/review-code-xyz")" = "$FOREIGN" ] && pass "installer refuses live foreign link" || fail "installer replaced live foreign link"
- 
+@@ -63,2 +66,2 @@ set -e
 -rm -f "$A/claude/review-code"
 -ln -s "$WORK/nowhere/review-code" "$A/claude/review-code"
 +rm -f "$A/claude/review-code-xyz"
 +ln -s "$WORK/nowhere/review-code-xyz" "$A/claude/review-code-xyz"
- run_installer >"$WORK/out-dangling" 2>&1
- rc_dan=$?
+@@ -67 +70 @@ rc_dan=$?
 -[ "$rc_dan" -eq 0 ] && [ "$(readlink "$A/claude/review-code")" -ef "$SKILL_DIR" ] && pass "installer replaces dangling link" || fail "installer failed to replace dangling link"
 +[ "$rc_dan" -eq 0 ] && [ "$(readlink "$A/claude/review-code-xyz")" -ef "$SKILL_DIR" ] && pass "installer replaces dangling link" || fail "installer failed to replace dangling link"
- 
- # --- 8. Negative control mutation (falsification) ---
- TMP_COPY="$WORK/skill_mutated.md"
 diff --git a/test/gh798-status-skill.sh b/test/gh798-status-skill.sh
 index 790ec0c23..6e7451a8b 100755
 --- a/test/gh798-status-skill.sh
 +++ b/test/gh798-status-skill.sh
-@@ -1,12 +1,12 @@
- #!/usr/bin/env bash
+@@ -2 +2 @@
 -# test/gh798-status-skill.sh — GH-798: status skill and review-code DRY / helper audit
 +# test/gh798-status-skill.sh — GH-798: status skill and review-code-xyz DRY / helper audit
- source "$(dirname "$0")/_setup.sh" gh798-status-skill
- 
- REPO="$(cd "$(dirname "$0")/.." && pwd)"
- SKILL_DIR="$REPO/skills/2-daily/where-are-we-at"
- SKILL_FILE="$SKILL_DIR/SKILL.md"
- INSTALLER="$SKILL_DIR/install.sh"
+@@ -9 +9 @@ INSTALLER="$SKILL_DIR/install.sh"
 -REVIEW_CODE_FILE="$REPO/skills/2-daily/review-code/SKILL.md"
 +REVIEW_CODE_FILE="$REPO/skills/2-daily/review-code-xyz/SKILL.md"
- ARCH_FILE="$REPO/ARCHITECTURE.md"
- 
- echo "== test: gh798-status-skill =="
-@@ -32,13 +32,14 @@ grep -q "The local checkout is not the only checkout" "$SKILL_FILE" && pass "mul
- grep -q "Ground Truth vs. Documentation Gap Matrix" "$SKILL_FILE" && pass "gap matrix schema present" || fail "missing gap matrix schema"
- 
- # --- 5. Review-code DRY and centralized helper audit ---
+@@ -35,3 +35,3 @@ grep -q "Ground Truth vs. Documentation Gap Matrix" "$SKILL_FILE" && pass "gap m
 -grep -q "Lane E. Centralized Helpers & DRY" "$REVIEW_CODE_FILE" && pass "review-code has Lane E DRY" || fail "missing Lane E in review-code"
 -grep -q "Centralized Helper Adherence" "$REVIEW_CODE_FILE" && pass "review-code has helper adherence check" || fail "missing helper adherence check"
 -grep -q "Parallel Subsystem / Reinvention Trap" "$REVIEW_CODE_FILE" && pass "review-code has parallel subsystem trap" || fail "missing parallel subsystem trap"
 +grep -q "Lane E. Centralized Helpers & DRY" "$REVIEW_CODE_FILE" && pass "review-code-xyz has Lane E DRY" || fail "missing Lane E in review-code-xyz"
 +grep -q "Centralized Helper Adherence" "$REVIEW_CODE_FILE" && pass "review-code-xyz has helper adherence check" || fail "missing helper adherence check"
 +grep -q "Parallel Subsystem / Reinvention Trap" "$REVIEW_CODE_FILE" && pass "review-code-xyz has parallel subsystem trap" || fail "missing parallel subsystem trap"
- 
- # --- 6. ARCHITECTURE.md registration ---
- grep -q "\[where-are-we-at\](skills/2-daily/where-are-we-at/SKILL.md)" "$ARCH_FILE" && pass "ARCHITECTURE.md has where-are-we-at link" || fail "missing ARCHITECTURE.md link"
+@@ -41 +41,2 @@ grep -q "\[where-are-we-at\](skills/2-daily/where-are-we-at/SKILL.md)" "$ARCH_FI
 -grep -q "### \`2-daily\` — A few times a day (16)" "$ARCH_FILE" && pass "ARCHITECTURE.md has updated 2-daily count (16)" || fail "missing updated 2-daily count"
 +n_daily="$(find "$REPO/skills/2-daily" -mindepth 2 -maxdepth 2 -name SKILL.md | wc -l | tr -d ' ')"
 +grep -q "### \`2-daily\` — A few times a day ($n_daily)" "$ARCH_FILE" && pass "ARCHITECTURE.md 2-daily count matches disk ($n_daily)" || fail "2-daily count does not match disk ($n_daily)"
- 
- # --- 7. Installer gh678 compliance (in sandbox) ---
- H="$WORK/home"; A="$H/apps"
-@@ -72,7 +73,7 @@ grep -q "Status Discipline:" "$TMP_COPY" || fail "negative control 8a preconditi
- sed -i.bak '/Status Discipline:/d' "$TMP_COPY"
- grep -q "Status Discipline:" "$TMP_COPY" && fail "negative control 8a: mutation failed to delete recital" || pass "negative control 8a: mutation successfully detected missing recital"
- 
+@@ -75 +76 @@ grep -q "Status Discipline:" "$TMP_COPY" && fail "negative control 8a: mutation
 -# 8b: Lane E deletion on review-code/SKILL.md must fail Lane E check
 +# 8b: Lane E deletion on review-code-xyz/SKILL.md must fail Lane E check
- TMP_REV="$WORK/review_code_mutated.md"
- cp "$REVIEW_CODE_FILE" "$TMP_REV"
- grep -q "Lane E. Centralized Helpers & DRY" "$TMP_REV" || fail "negative control 8b precondition: missing Lane E in source"
 diff --git a/utils/py/xyz_mini_sync.py b/utils/py/xyz_mini_sync.py
 index ad256cc6b..b8c9a48ae 100755
 --- a/utils/py/xyz_mini_sync.py
 +++ b/utils/py/xyz_mini_sync.py
-@@ -65,7 +65,8 @@ MANIFEST = (
-     ("skills/3-weekly/honest", "skills/honest", "managed"),
-     ("skills/1-hourly/debug-mantra", "skills/debug-mantra", "managed"),
-     ("skills/1-hourly/unstuck", "skills/unstuck", "managed"),
+@@ -68 +68,2 @@ MANIFEST = (
 -    ("skills/2-daily/review-code", "skills/review-code", "managed"),
 +    ("skills/2-daily/review-code-xyz", "skills/review-code-xyz", "managed"),
 +    ("skills/2-daily/review-pr-xyz", "skills/review-pr-xyz", "managed"),
-     # adapted: mini-flat layout + child-side hardening (GH-889 QA); upstream of record stays here
-     ("skills/3-weekly/weekly-planner", "skills/weekly-planner", "adapted"),
-     ("skills/2-daily/daily-planner", "skills/daily-planner", "adapted"),
