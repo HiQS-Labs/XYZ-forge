@@ -69,7 +69,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [triangulate](skills/1-hourly/triangulate/SKILL.md) | Reconcile three independent probes into an evidence-ranked verdict. |
 | [unstuck](skills/1-hourly/unstuck/SKILL.md) | Interrupt a stalled AI session and restore movement toward the original outcome. |
 
-### `2-daily` — A few times a day (20)
+### `2-daily` — A few times a day (21)
 
 _landing, queueing and driving work; multi-session and multi-repo coordination._
 
@@ -91,6 +91,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [review-pr-xyz](skills/2-daily/review-pr-xyz/SKILL.md) | Report-only GitHub PR review: validate the PR's claims first, then recon + debug-mantra, post graded findings. |
 | [review-xyz](skills/2-daily/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
 | [start-marathon](skills/2-daily/start-marathon/SKILL.md) | Review intake and plans, prepare collision-safe lanes, and dry-run the marathon. |
+| [todo-list](skills/2-daily/todo-list/SKILL.md) | Turn the preceding assistant list into a numbered todo list, execute it in recommended order, and arm a 10x10m watchdog wake via handsfree. |
 | [where-are-we-at](skills/2-daily/where-are-we-at/SKILL.md) | Deep ground-truth status assessment of a topic/subsystem using recon, debug-mantra, and merge-cleanup. |
 | [workhorse](skills/2-daily/workhorse/SKILL.md) | Disciplined end-to-end resolution ladder: triage intake, ground truth, plan, build, verify. |
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
@@ -118,7 +119,7 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | [whack-a-mole](skills/3-weekly/whack-a-mole/SKILL.md) | Cluster 14 days of recurring bugs by churn and file one approved root-cause umbrella issue. |
 | [worth-it](skills/3-weekly/worth-it/SKILL.md) | Price initial or remaining value; `/worth-it continue` returns Continue / Pivot / Park / Stop, one bounded proof and approval-aware results capture. Pinned upstream source and update recipe: [NOTICE](skills/3-weekly/worth-it/NOTICE). |
 
-### `4-occasional` — Least frequently (19)
+### `4-occasional` — Least frequently (20)
 
 _setup, audits, one-off tooling and specialist lenses._
 
@@ -129,6 +130,7 @@ _setup, audits, one-off tooling and specialist lenses._
 | [ci-doctor](skills/4-occasional/ci-doctor/SKILL.md) | Diagnose CI health and benchmark `runs-on`/config variants side by side. |
 | [ci-optimize](skills/4-occasional/ci-optimize/SKILL.md) | Audit, harden and optimize CI/CD pipelines using zero-cost, production-tested principles. |
 | [ci-suite-audit](skills/4-occasional/ci-suite-audit/SKILL.md) | Audit registered CI test suites and recommend retention, split, nightly, quarantine or turn-off verdicts. |
+| [defect-campaign](skills/4-occasional/defect-campaign/SKILL.md) | Specify bounded Radar-to-ATE/fuzz discovery and evidence dispositions; execution and remediation require separate approval. |
 | [feynman](skills/4-occasional/feynman/SKILL.md) | Translate dense technical material into accurate, layered plain language. |
 | [front-door](skills/4-occasional/front-door/SKILL.md) | Audit whether a newcomer can actually go from clone to working install. |
 | [github-auth-debug](skills/4-occasional/github-auth-debug/SKILL.md) | Diagnose the macOS split where git authentication works but `gh` fails. |

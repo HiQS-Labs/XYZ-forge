@@ -72,3 +72,7 @@ Keep order and outcomes unchanged. Verify with a manual check (GH-831).
 ## Merge evidence
 
 - PR #1097 merged 2026-10-18 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1151 merged 2026-10-18 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

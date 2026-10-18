@@ -1,0 +1,29 @@
+[
+  {
+    "name": "promotion boundary (macOS \u2014 the platform we ship to)",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "72fb443bc84e81e17d07f2254c9efa09fb13ab83",
+    "started_at": "2026-10-18T17:19:40Z",
+    "completed_at": "2026-10-18T17:19:39Z",
+    "html_url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/39149060051/job/117738783546"
+  },
+  {
+    "name": "portability canary (ubuntu \u2014 advisory, never breakage)",
+    "status": "completed",
+    "conclusion": "skipped",
+    "head_sha": "72fb443bc84e81e17d07f2254c9efa09fb13ab83",
+    "started_at": "2026-10-18T17:19:40Z",
+    "completed_at": "2026-10-18T17:19:39Z",
+    "html_url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/39149060051/job/117738783475"
+  },
+  {
+    "name": "vendored smoke gate (blocking on development + main)",
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "72fb443bc84e81e17d07f2254c9efa09fb13ab83",
+    "started_at": "2026-10-18T17:19:42Z",
+    "completed_at": "2026-10-18T17:20:03Z",
+    "html_url": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/39149060051/job/117738782922"
+  }
+]

@@ -2,9 +2,9 @@
 gh_issue: 944
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/944
 title: "merge-cleanup: batch-issue protocol for multi-PR landings (>=3)"
-status: Proposed
+status: Complete
 created: 2026-10-02
-updated: 2026-10-02
+updated: 2026-10-18
 owner: operator
 goal: "Landing batches of three or more PRs leave a durable GitHub record — sequence, problems, fixes, regression sweep, post-deployment carry-overs — instead of living only in the run transcript."
 complexity: 2
