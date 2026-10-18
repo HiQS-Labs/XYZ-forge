@@ -2,7 +2,7 @@
 gh_issue: 1143
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1143
 title: Radar-to-campaign documentation skill
-status: Planning — awaiting plan QA
+status: Blocked — plan relay cap exhausted
 updated: 2026-10-18
 owner: Codex
 goal: Connect Radar recommendations to bounded approved discovery using existing assets
@@ -19,7 +19,7 @@ ATE, fuzz, oracle and minimization assets. Documentation only; no execution or r
 
 | What was just completed | What's next |
 |---|---|
-| Source recon and docs-route inspection; intake rated 55/40/50/85 | Independent plan QA before implementation |
+| Recon/intake complete; plan review round 3 rejected by driver | Operator review-cap override or replan before implementation |
 
 ## Recon and smallest viable bet
 
@@ -86,3 +86,28 @@ semantic adapters honest? Are synthesis/healing/autofiling disabled, effects/bud
 and per-case approval plus ownership boundaries explicit? Are the docs-only gate and existing
 writers reused without bypass or speculative machinery? Grade only this local documentation
 scope and commensurate complexity. No new tests or enterprise abstractions.
+
+## Blocked handoff — 2026-10-18
+
+Plan review history is retained in `relay-system/2026-10-18/gh1143-plan.codex.md`:
+round 1 PARKED (missing local issue snapshot), round 2 FAIL (missing explicit replay/result
+acceptance), round 3 reviewer PASS/Approved but driver exit 4 `review-body-rewritten`.
+The final review commit is `d555b12fec6e3821368de7e5ef09047cde34aad3`. The reviewer
+moved the next-turn marker and inserted a blank line above its own block. The supervisor had
+appended the round-3 producer update after that marker, rather than before it. The driver
+rejected the changed earlier body; its terminal approval is not accepted evidence.
+
+The original three-round plan-review budget is exhausted. No retry/new token/cap reset,
+accepted-start admission, skill implementation, push or PR followed. Do not treat the raw
+Approved header as qualification. Resume requires an explicit operator review-cap override
+or replan; preserve these rounds and repair thread placement before another review.
+No broader gate, executable change or machinery repair is proposed in this task.
+
+Recon evidence: existing prior_art_recon returned PASS, no query-matching open PR, no network
+errors; #946 is landed prior handoff, not completion of this skill. Current CLI --help read
+only confirmed no-synth and absent healing/model defaults. Final preparation paths classify
+route=docs/tier=1/full_required=false, including mandatory releases.db/sql. RELEASES check
+passed (0 failures, 10 existing migration/date warnings). No documentation gate, skill
+validator, full suite, final QA or hosted-status verification ran before this blocker.
+`python3` lacks requests; an existing uv-managed runtime has PyYAML for the future existing
+skill validator; nothing installed. No campaign or remediation occurred. Clone retained.
