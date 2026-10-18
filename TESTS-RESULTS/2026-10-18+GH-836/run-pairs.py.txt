@@ -1,0 +1,21 @@
+"""Manual local measurement receipt; not CI machinery. Run only after plan QA."""
+import datetime, hashlib, json, pathlib, subprocess, time
+HERE=pathlib.Path(__file__).resolve().parent
+GATE=pathlib.Path('/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh836-gate-hotspots-2026-10-18-gate')
+TASK=pathlib.Path('/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh836-gate-hotspots-2026-10-18')
+REL='test/gh549-work-events.sh'
+BASE='655bc340b9e64056645a75f340e842c79371df3f'
+a=subprocess.check_output(['git','show',BASE+':'+REL],cwd=GATE)
+b=(TASK/REL).read_bytes()
+if a==b: raise SystemExit('candidate identical; no measurement')
+for label,script in [('candidate-gh549-1',b),('baseline-gh549-2',a),('candidate-gh549-2',b)]:
+    (GATE/REL).write_bytes(script)
+    before=subprocess.check_output(['git','status','--porcelain'],cwd=GATE,text=True)
+    identity={'label':label,'utc':datetime.datetime.now(datetime.UTC).isoformat(),'head':subprocess.check_output(['git','rev-parse','HEAD'],cwd=GATE,text=True).strip(),'status_before':before,'test_sha256':hashlib.sha256(script).hexdigest(),'ledger_sha256':hashlib.sha256((GATE/'releases.db').read_bytes()).hexdigest(),'command':['/usr/bin/time','-p','bash',REL]}
+    start=time.monotonic()
+    with (HERE/(label+'.log')).open('w') as log:
+        rc=subprocess.run(identity['command'],cwd=GATE,stdout=log,stderr=subprocess.STDOUT).returncode
+    identity.update(rc=rc,wall_monotonic=time.monotonic()-start,status_after=subprocess.check_output(['git','status','--porcelain'],cwd=GATE,text=True))
+    with (HERE/'paired-runs.jsonl').open('a') as f: f.write(json.dumps(identity)+'\n')
+    print(json.dumps(identity),flush=True)
+    if rc: raise SystemExit(rc)

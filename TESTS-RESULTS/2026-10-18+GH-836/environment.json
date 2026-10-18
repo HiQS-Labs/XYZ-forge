@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-18T04:10:21.873288+00:00",
+  "platform": "macOS-15.6.1-arm64-arm-64bit-Mach-O",
+  "python": "/opt/homebrew/bin/python3",
+  "versions": {
+    "python3 --version": "Python 3.14.7",
+    "git --version": "git version 2.50.1 (Apple Git-155)",
+    "sqlite3 --version": "3.43.2 2023-10-10 13:08:14 1b37c146ee9ebb7acd0160c0ab1fd11017a419fa8a3187386ed8cb32b709aapl (64-bit)",
+    "sw_vers": "ProductName:\t\tmacOS\nProductVersion:\t\t15.6.1\nBuildVersion:\t\t24G90",
+    "sysctl -n hw.model hw.memsize hw.ncpu machdep.cpu.brand_string": "sysctl: sysctl fmt -1 1024 1: Operation not permitted"
+  },
+  "base": "655bc340b9e64056645a75f340e842c79371df3f",
+  "runner": "Mac Studio",
+  "commands": [
+    "/usr/bin/time -p bash test/gh549-work-events.sh"
+  ],
+  "baseline_fixture": {
+    "roadmap_items": 377,
+    "work_events": 835,
+    "op_receipts": 1987
+  },
+  "branch": "fix/XYZ-forge-gh836-gate-hotspots-2026-10-18",
+  "hardware": {
+    "model": "Mac13,1",
+    "chip": "Apple M1 Max",
+    "cores": 10,
+    "memory_bytes": 68719476736
+  }
+}
