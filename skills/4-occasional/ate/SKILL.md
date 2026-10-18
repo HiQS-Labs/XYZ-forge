@@ -17,6 +17,12 @@ run ends (time limit, abort, or safety cap), `run_variations.py` automatically h
 checklist, ranked by severity (critical first). No manual second step required
 as long as `--gh-repo` was passed.
 
+For Radar-selected defect discovery, use
+[defect-campaign](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/4-occasional/defect-campaign/SKILL.md)
+for suitability, bounded approval and replay/disposition requirements. In that mode,
+synthesis/healing and automatic filing stay off; this skill's older filing flow does
+not authorize new CI cases or remediation.
+
 ## Architecture (linear)
 
 1. **Gemma (LM Studio, local)** — worker. Cycles through the variation grid
