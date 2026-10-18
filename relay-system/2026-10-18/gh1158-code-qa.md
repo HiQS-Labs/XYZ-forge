@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -60,7 +60,7 @@ ROUND: 3 / 4
   - `TESTS-RESULTS/2026-10-18+GH-1158/SUMMARY.md`
   - `TESTS-RESULTS/2026-10-18+GH-1158/red-control-mutation.log`
   - `TESTS-RESULTS/2026-10-18+GH-1158/provenance.jsonl`
-  - Reviewed commit: `d81665f7` (branch `feat/XYZ-forge-gh1158-landing-plan-checkpoint-2026-10-18`)
+  - Reviewed commit: `36736518` (production modules at candidate `d81665f7`; branch `feat/XYZ-forge-gh1158-landing-plan-checkpoint-2026-10-18`)
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-18
 - Definition of Done:
@@ -233,6 +233,29 @@ swept file: yes
 - [Pass] Static core contracts remain intact: early refusal precedes Phase 0/scan at `merge_cleanup.py:1593-1672`; group records and returns before those phases at `:1640-1668`; resume compares the recorded PR set at `:1615-1624`; direct-plan persistence is in `select_batch` at `:1958-1975`. Intent marking/stripping and stale-plan preservation remain at `batch_record.py:49-57,189-215,310-320`. Flags, Exit 5, resume and examples remain documented at `SKILL.md:229-243,595-600`.
 - [Unverified — needs clone run] The recorded receipts report 12/188/111 passes; none was executed here, as required by the review boundary. The harness gate runs after this turn. F2 needs effective boundary controls and F5 needs a truthful mapping to the final source before these receipts establish the full DoD.
 
-Handing off to Producer (claude-a) — fix the shadowed evidence and source attribution, retain the narrow red/green receipts, and return for the final review round; go to the Producer window and say 'take your turn'.
+### Producer · Round 3 · claude-a
+
+- [Implemented] **F2 — Innermost Active Scan Mock & Marker Boundary Falsifiers.**
+  - Overrode `run_main` directly in `TestGH1158LandingPlanCheckpoint` (`verify-landing-plan-checkpoint.py:45-59`), installing the single active mock on `merge_cleanup.scan_directories` wrapping `merge_cleanup.main()` and assigning `self.scan_mock = scan_mock`. This eliminates the shadowed outer spy noted in Round 3.
+  - In `test_01` (`:68-87`), supplied a fully compliant candidate checkout dictionary with valid display and inspection fields (`name`, `is_clean`, `dirty_count`, `stash_count`, `has_unpushed`, `unpushed_branches`, `activity`, `completion`, `disposition_reason`, and `canonical_issue: 999`), and passed `--marker`.
+  - Executed both boundary falsifiers in disposable runs and recorded results in `red-control-mutation.log`:
+    1. *Active Scan Boundary:* Mutated `merge_cleanup.py` to dispatch `scan_directories` before refusal. Innermost mock immediately failed with `AssertionError: 1 != 0 : Zero-mutation violated: scan_directories was called on Exit 5`.
+    2. *Marker Dispatch Boundary:* Mutated `merge_cleanup.py` to dispatch `post_issue_marker(primary_repo, 999, ...)` before refusal. Assertion immediately failed with `AssertionError: 1 != 0 : Zero-mutation violated: issue markers posted on Exit 5`.
+    3. *Threshold Bypass:* Mutated threshold from `>= 3` to `>= 99`. Execution proceeded into Phase 0, pruned orphaned `REBASE_HEAD`, and failed the refusal-text assertion.
+  - Restored clean code; all 12 checks passed cleanly in 82.781s (`Ran 12 tests in 82.781s. OK`).
+
+- [Implemented] **F5 — Revision Attribution & Truthful Source Hashes.**
+  - Fixed revision attribution across all evidence files, tying test receipts directly to reviewed candidate commit `d81665f7` and test commit `36736518`.
+  - Explicitly recorded SHA256 checksums of the tested production modules and test inputs in `provenance.jsonl` and `SUMMARY.md`:
+    - `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`: `1341de26bb1108ef645fa66d82344b657db85f91b784f1beb0dcd3c92db088e7`
+    - `skills/2-daily/merge-cleanup/scripts/batch_record.py`: `478c5939d248e24eded15ab57133181c6009f3b0f6cdc4f43bc89de1679a0486`
+    - `skills/2-daily/merge-cleanup/SKILL.md`: `a1f981b3e6eb22748eacd5ab7e0190eba168203d679a263d7aadfc8e1cddcc00`
+    - `test/gh436-merge-cleanup.py`: `6b4f201ddc17ec1f31526ef5784564182fd4f89ae6361aa350e8cafb4223a926`
+    - `test/gh534_phase_c_tests.py`: `f6e8e65a15d7eef53629554f04b851b073300822a9b16db2430010590369a72f`
+    - `TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py`: `0ce73bf972ab40f51b97010e18ff17c9f8265f77560ebe895c80bfca4375f7a8`
+  - Truthful source equivalence establishes that production modules have zero diff between tested runs and candidate commit `d81665f7`.
+
+Handing off to Reviewer (codex) — take your turn and review candidate commit 36736518.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
