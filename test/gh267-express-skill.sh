@@ -240,6 +240,9 @@ printf '# Changelog\n\nAll notable changes.\n\n## [Unreleased] - 2026-01-01\n\n#
 git -C "$FX" add -A && git -C "$FX" commit -qm base
 git -C "$FX" branch -m development
 git -C "$FX" push -q origin development
+# GH-1144: express resolves its integration branch from origin/HEAD (else GitHub's default);
+# a git-init fixture has no origin/HEAD and the gh stub reports no default, so declare it.
+git -C "$FX" remote set-head origin development
 git -C "$FX" fetch -q origin
 (cd "$FX" && bash githooks/install.sh) >/dev/null
 require_fixture "$FX"
@@ -750,7 +753,7 @@ CENTRAL_TICK="$(ls -t "$HOME/.config/xyz/events/"*express*.jsonl 2>/dev/null | h
 
 echo "== source audit (direct landing) =="
 LAND_BODY="$(sed -n '/^def cmd_land/,/^def active_release/p' "$DRIVER")"
-grep -q '"push", "origin", "HEAD:development"' <<<"$LAND_BODY" && ok "landing is a direct fast-forward push" || bad "direct development push missing"
+grep -q '"push", "origin", "HEAD:" + BASE' <<<"$LAND_BODY" && ok "landing is a direct fast-forward push to the resolved base" || bad "direct base-branch push missing"
 [ -z "$(printf '%s' "$LAND_BODY" | grep -n 'pr.*create\|pr.*merge')" ] && ok "landing creates no ghost PR" || bad "ghost PR call remains"
 grep -q "def cmd_resume" "$DRIVER" && ok "cmd_resume implemented" || bad "cmd_resume missing"
 ! grep -q 'ROADMAP-DASHBOARD\.md' "$DRIVER" && ok "retired roadmap dashboard is absent from express staging surfaces" || bad "express still references the retired roadmap dashboard"
