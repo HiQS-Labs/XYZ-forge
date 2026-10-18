@@ -2,7 +2,7 @@
 gh_issue: 1143
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1143
 title: Radar-to-campaign documentation skill
-status: Implemented — awaiting final QA
+status: Reviewed — awaiting draft publication
 updated: 2026-10-18
 owner: Codex
 goal: Connect Radar recommendations to bounded approved discovery using existing assets
@@ -19,7 +19,7 @@ ATE, fuzz, oracle and minimization assets. Documentation only; no execution or r
 
 | What was just completed | What's next |
 |---|---|
-| Skill/pointers written; validator/manual checks and PDDA gate passed | Independent final QA, then docs-hook draft publication |
+| Final Codex QA Approved round 1/3 and attested; documentation checks pass | Publish DRAFT through docs hook, verify remote head/statuses; await operator review |
 
 ## Recon and smallest viable bet
 
@@ -132,3 +132,11 @@ links resolve locally. PDDA gate exit 0 in 54s, 0 errors/57 pre-existing warning
 self-skipped. Actual range including mandatory ledger and receipts routes docs/tier1, no
 full-required surface. Evidence: `TESTS-RESULTS/2026-10-18+GH-1143/`.
 Final QA remains pending; no campaign, new tests, executable changes or full suite.
+
+## Final review checkpoint
+
+Final Codex QA Approved round 1/3; relay-drive exit 0, attested at 2026-10-18T17:17:38Z
+against `fa215ee30476`. Receipt: `relay-system/2026-10-18/gh1143-final.codex.md`.
+No substantive finding or implementation revision followed approval. This status/evidence
+closeout is factual bookkeeping; the publication hook will check the final committed docs.
+Draft publication remains distinct from landing/full/promotion qualification. No merge authorized.

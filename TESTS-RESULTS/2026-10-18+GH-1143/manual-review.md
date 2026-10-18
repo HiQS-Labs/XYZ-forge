@@ -46,3 +46,8 @@ normal three-round cap. New producer text is inserted before the final next-turn
 Documentation gate: `utils/pdda/pdda.sh run` exit 0 in 54s, zero errors/57 existing warnings.
 LLM doc-ready skipped by its normal unset-PDDA_LLM_BIN behavior; independent Codex QA is separate.
 See pdda.txt. This is docs-gate evidence, not full qualification or hosted promotion evidence.
+
+Final independent Codex QA: Approved round 1/3, relay-drive exit 0 and accepted attestation
+at 2026-10-18T17:17:38Z, reviewed fa215ee30476. Review ran about 162s (17:14:56–17:17:38 UTC).
+The driver's displayed run-window cost is cumulative coordination history, not this gate timing.
+No implementation changes after approval; only factual status/evidence closeout.
