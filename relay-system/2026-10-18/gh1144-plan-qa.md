@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -146,5 +146,40 @@ Handing off to Producer (claude-a) — revise the plan and disposition every fin
 - Nit — **Implemented.** Reversibility now states that reverting code cannot undo a misdirected landing, names the stop signal and the last safe checkpoint (before first push).
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: The revised design resolves the previous findings. One material verification gap remains: the main-only fixture substitutes a reconciler that cannot exercise the changed production reconciliation path.
+swept file: yes
+
+Read the entire revised plan (lines 1–190), not just the changed paragraphs; no additional plan defects found beyond the finding below. Evidence tier: Verify with direct-source fallback. `list_projects(limit=100)` returned all 84 projects, no matching worktree. The nearest graph is `XYZ-forge`, rooted in the primary checkout, generation `2026-09-01T15:54:30Z`; targeted express search returned two symbols with no further page and obsolete line ranges. Coverage checked for plan, express, reconciler, skill and both named suites: changed/untracked/missing metadata, so seeded source was read directly rather than treating the foreign index as fresh evidence. No git commands, suites or executable fixtures run.
+
+- [Should] **Name a main-only check of the actual reconciler, independent of gh267's stub.** Plan `PROJECT/1-INBOX/GH-1144-EXPRESS-DEFAULT-BRANCH.md:124–131` specifies a renamed scratch copy of gh267, then counts a passing `wave_reconcile --commit … --base main --gate` among its observations. But `test/gh267-express-skill.sh:173–213` writes its own `$FX/utils/py/wave_reconcile.py`: it checks the current branch and a receipt, never parses `--base`, and never imports the production module. Renaming its development strings to main leaves that substitution intact. Existing wave-reconcile suite fixtures still use development (`test/wave-reconcile.sh:43`, `:140–167`). Thus these named runs can pass with the production metadata reachability check still hardcoded (`utils/py/wave_reconcile.py:433`). Explicitly add a recorded manual invocation of the changed canonical reconciler against a main-only disposable fixture (real branch check, pull, commit metadata and `--gate` receipt matching; stub only external services as needed), checking its reported base and actual lifecycle outputs. Witness this check fail when one production direct-commit branch literal is restored to development, then pass after restoration. Keep this a manual check under the already named evidence directory; no new suite or gate machinery.
+  Observed input: the plan's scratch copy of gh267 after its fixture branch rename still installs the inline reconciler stub; source-only probe reports `stub reads --base: False`, `stub imports wave_reconcile: False`, and `sha = sys.argv[sys.argv.index("--commit") + 1]`.
+  Affected scope: evidence for main-only production `wave_reconcile.py --commit … --base main --gate`, including an accidentally missed reachability/base literal or missing express-to-reconciler option wiring.
+  Falsifier: keep production `fetch_commit_metadata` reaching local development while the renamed stub accepts main. The proposed production-module manual check must fail; fixing the production destination must make it pass. A retained real-module run already specified separately from the stub would also resolve this finding.
+
+- [Pass] **Previous B1/B2/S3/S4/S5 and reversibility nit are dispositioned adequately at plan level.** Refusal telemetry is now explicitly permitted before doc/ledger/git writes (plan `:95–99`, `:132–135`, `:165–166`), matching the existing `refuse` default (`express.py:117–122`); changing the contradictory acceptance wording is sound. The existing source assertion and fixture declaration are expressly updated (plan `:114–119`), actual landing/ref inspection and a wrong-push red control replace preview-only evidence (`:124–131`), recovery passes one base through checkout/push/helper/resume (`:100–113`, `:136–137`), and resolution now uses authoritative defaults or refuses (`:71–84`, `:92–95`). Reversibility names the remote limitation and pre-push checkpoint (`:85–88`). These are approved plan requirements, not executed implementation results.
+
+- [Pass] **The intended mechanism remains appropriately small.** One process dispatches one express command (`express.py:1246–1312`); the recovery helper gets the explicit argument needed outside that dispatch (plan `:81–83`, `:100–101`). Express supplies only `--commit … --gate` (`express.py:943`), so keeping PR/catch-up/qualification behavior on development is appropriate (plan `:75–78`, `:145–147`; reconciler branches at `:2266`, `:2295`). Implement step 4 under that stated direct-commit scope: its branch/pull preflight calls are shared with PR modes (`wave_reconcile.py:2220`, `:2229`), not exclusive call sites.
+
+Probe ledger: source-only command, exit 0 (no fixture execution):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PYPROBE'
+from pathlib import Path
+s = Path('test/gh267-express-skill.sh').read_text()
+stub = s.split('cat > "$FX/utils/py/wave_reconcile.py" <<\'WR\'\n', 1)[1].split('\nWR\n', 1)[0]
+print('stub reads --base:', '--base' in stub)
+print('stub imports wave_reconcile:', 'import wave_reconcile' in stub)
+print('stub identifies landing:', next(l for l in stub.splitlines() if 'sys.argv.index' in l))
+PYPROBE
+```
+Decisive output: `stub reads --base: False`; `stub imports wave_reconcile: False`; `stub identifies landing: sha = sys.argv[sys.argv.index("--commit") + 1]`.
+
+[Unverified — needs clone run]: resolution, real landing/resume/recovery and production reconciliation remain implementation-time evidence. Root cause: the selected express fixture replaces the second changed production module; Fix site: plan verification step 7; Why not upstream/downstream: keep the useful express stub fixture, but independently measure the production reconciler rather than inferring its behavior from that stub.
+
+Handing off to Producer (claude-a) — specify the actual-reconciler manual check and red control, then return for Round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
