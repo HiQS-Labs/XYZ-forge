@@ -460,11 +460,17 @@ def landing_label(meta):
 
 QUALIFICATION_SCHEMA = "wave-qualification@1"
 QUALIFICATION_PATH = r"TESTS-RESULTS/[0-9]{4}-[0-9]{2}-[0-9]{2}\+GH-591/wave-[0-9a-f]{40}/validation\.jsonl"
-QUALIFICATION_GATE = "validate.sh --sequential"
+QUALIFICATION_GATE = "validate.sh --parallel 4"
+# GH-1114 (operator override on #1118): the hosted full run is parallel; width is explicit because
+# validate.sh drops to sequential below 4 cores. Receipts written under the old sequential gate stay
+# valid, and a runner that falls back to sequential still produces an accepted receipt.
+LEGACY_FULL_GATE = "validate.sh --sequential"
 # GH-831 D5: a landing whose changes classify tier 1 (docs, ledger, non-core skill files) qualifies
 # through the Small run. Its receipt records the list it ran, replayed against the tested commit.
 SMALL_GATE = "validate.sh --sequential --subsystem small"
 SMALL_NON_SUITE = ("tier2:pdda", "python:test_python_layer.py")
+ACCEPTED_GATES = (QUALIFICATION_GATE, LEGACY_FULL_GATE, SMALL_GATE)
+EXECUTED_LANES = ("sequential", "pool", "driver-lock")
 
 
 def small_suites_at(repo_root, commit):
@@ -479,10 +485,12 @@ def small_suites_at(repo_root, commit):
 
 
 def qualification_summary(raw, tested_sha, expected=None):
-    """Require the existing runner's complete, unquarantined sequential evidence.
+    """Require the existing runner's complete, unquarantined evidence; return (summary, meta).
 
     expected=None is the full registry (tier 3). A list is the Small run (GH-831 D5): tier 2, its
     shell suites exactly that list, plus the PDDA gate, the Python layer and the identity check.
+    meta carries the run's own mode/width (from run.start, never from the requested gate) and the
+    names of registered suites whose first attempt failed and whose GH-528 serialized retry passed.
     """
     rows = [json.loads(line) for line in raw.splitlines() if line.strip()]
     if not rows or any(not isinstance(row, dict) for row in rows):
@@ -493,29 +501,42 @@ def qualification_summary(raw, tested_sha, expected=None):
         raise ValueError("validation telemetry has no unique completed run")
     start, summary = starts[0], summaries[0]
     registered = start.get("registered")
-    if (start.get("commit") != tested_sha or start.get("mode") != "sequential"
+    if (start.get("commit") != tested_sha or start.get("mode") not in ("sequential", "parallel")
             or start.get("tier") != (3 if expected is None else 2)
             or type(registered) is not int or registered <= 0
             or not start.get("run") or any(row.get("run") != start["run"]
                 or row.get("runner") != "validate" for row in rows)):
         raise ValueError("validation run identity, mode or registry does not match")
     suites = [row for row in rows if row.get("event") == "suite"]
-    sequential = [row for row in suites if row.get("lane") == "sequential"]
+    executed = [row for row in suites if row.get("lane") in EXECUTED_LANES]
+    # GH-1114: the one carve-out from "every suite rc is 0". An executed-lane row may be red only
+    # when a retry suite row of the same name is green; non-suite rows and retry rows get no carve-out.
+    retried_ok = {row.get("name") for row in suites
+                  if row.get("lane") == "retry" and type(row.get("rc")) is int and row["rc"] == 0}
+    def red(row):
+        if type(row.get("rc")) is not int:
+            return True
+        if row["rc"] == 0:
+            return False
+        return not (row.get("lane") in EXECUTED_LANES and row.get("name") in retried_ok)
+    first_attempt_failures = sorted({row.get("name") for row in executed
+                                     if type(row.get("rc")) is int and row["rc"] != 0 and row.get("name") in retried_ok})
+    meta = dict(mode=start["mode"], width=start.get("width"), first_attempt_failures=first_attempt_failures)
     if expected is not None:
-        names = [row.get("name") for row in sequential]
+        names = [row.get("name") for row in executed]
         extra = {row.get("name") for row in suites if row.get("lane") == "non-suite"}
         identity = [row for row in rows if row.get("event") == "stage" and row.get("name") == "envelope-assert"]
         if (len(set(expected)) != len(expected) or len(set(names)) != len(names)
                 or sorted(names) != sorted(expected) or not set(SMALL_NON_SUITE) <= extra
-                or any(type(row.get("rc")) is not int or row["rc"] != 0 for row in suites + identity)
+                or any(red(row) for row in suites + identity)
                 or len(identity) != 1 or summary.get("failed") != 0
                 or summary.get("total") != len(expected) + 3 or summary.get("passed") != summary["total"]
                 or summary.get("envelope_rc") != "0" or summary.get("suite_events_match") != "yes"
                 or str(summary.get("run_set")) != str(len(expected))):
             raise ValueError("Small-run telemetry is failed, incomplete or not the expected list")
-        return summary
-    if (len(sequential) != registered or len({row.get("name") for row in sequential}) != registered
-            or any(type(row.get("rc")) is not int or row["rc"] != 0 for row in suites)
+        return summary, meta
+    if (len(executed) != registered or len({row.get("name") for row in executed}) != registered
+            or any(red(row) for row in suites)
             or summary.get("failed") != 0 or summary.get("total") != registered + 3
             or summary.get("passed") != summary["total"]
             or summary.get("envelope_rc") != "0" or summary.get("suite_events_match") != "yes"
@@ -525,7 +546,7 @@ def qualification_summary(raw, tested_sha, expected=None):
     names = {row.get("name") for row in suites}
     if not {"python:test_python_layer.py", "gamma-poison-staleness-probe"} <= names:
         raise ValueError("validation is missing required full-suite probes")
-    return summary
+    return summary, meta
 
 
 def qualification_receipt_matches(repo_root, entry, meta):
@@ -536,7 +557,7 @@ def qualification_receipt_matches(repo_root, entry, meta):
             or not isinstance(landing, str) or not re.fullmatch(r"[0-9a-f]{40}", landing)
             or entry.get("landing_commit") != landing
             or entry.get("result") != "pass" or type(entry.get("rc")) is not int or entry["rc"] != 0
-            or entry.get("gate") not in (QUALIFICATION_GATE, SMALL_GATE)
+            or entry.get("gate") not in ACCEPTED_GATES
             or entry.get("artifact_kind") != meta.get("artifactKind", "pr")):
         return False
     if meta.get("artifactKind") != "commit" and (
@@ -679,11 +700,11 @@ def qualify_landings(repo_root, metas, journal):
                 die("Qualification clone identity/content changed under the suite", code=6)
             # Suites may launch nested validator probes. Bind proof to the exact
             # process we launched, not another passing run in the telemetry directory.
-            files = list(telemetry.glob(f"validate-sequential-*-{validation.pgid}.jsonl"))
+            files = list(telemetry.glob(f"validate-*-{validation.pgid}.jsonl"))
             if len(files) != 1:
                 die("Qualification requires exactly one retained validation run", code=6)
             raw = files[0].read_bytes()
-            summary = qualification_summary(raw, tested, expected)
+            summary, run_meta = qualification_summary(raw, tested, expected)
             if summary['run'] != f"{tested[:9]}-{validation.pgid}":
                 die("Qualification telemetry does not identify the launched validation process", code=6)
         except (subprocess.SubprocessError, OSError, ValueError) as exc:
@@ -707,7 +728,9 @@ def qualify_landings(repo_root, metas, journal):
                      gate=gate, timestamp=now.isoformat(),
                      telemetry=str(telemetry_path.relative_to(repo_root)),
                      telemetry_sha256=hashlib.sha256(raw).hexdigest(), passed=summary["passed"],
-                     total=summary["total"])
+                     total=summary["total"], mode=run_meta["mode"], width=run_meta["width"],
+                     first_attempt_failures=run_meta["first_attempt_failures"],
+                     retries=len(run_meta["first_attempt_failures"]))
         if expected is not None:
             entry.update(tier=2, suites=expected)
         if meta.get("artifactKind") != "commit":
@@ -2129,7 +2152,7 @@ def main():
     )
 
     parser.add_argument("--qualify", action="store_true",
-                        help="Run the full sequential suite and retain integration evidence before gated closeout")
+                        help="Run the tier-selected qualification gate (full --parallel 4, or the Small list) and retain integration evidence before gated closeout")
     parser.add_argument("--catch-up", action="store_true", help="Recover closed-issue drift from committed docs and manifest")
     parser.add_argument("--only-receipted", action="store_true",
                         help="GH-740 publish retry: never run the suite — process only landings that already have a "

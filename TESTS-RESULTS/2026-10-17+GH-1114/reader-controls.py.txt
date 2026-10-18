@@ -1,0 +1,103 @@
+"""GH-1114 manual reader controls (a)-(i). Calls the real functions in utils/py/wave_reconcile.py.
+Not a test suite (GH-831); recorded under TESTS-RESULTS with provenance. Run from the repo root."""
+import ast, copy, json, os, subprocess, sys, tempfile, pathlib
+sys.path.insert(0, "utils/py")
+import wave_reconcile as W
+
+SHA = "a" * 40
+RUN = SHA[:9] + "-4242"
+def rows_of(start, suites, summary):
+    out = [dict(event="run.start", **start)] + [dict(event="suite", **s) for s in suites] + [dict(event="run.summary", **summary)]
+    for r in out: r.update(run=RUN, runner="validate")
+    return out
+def raw(rows): return "".join(json.dumps(r) + "\n" for r in rows)
+def expect(label, fn, ok):
+    try:
+        res = fn(); got = True
+    except ValueError as e:
+        res = f"ValueError: {e}"; got = False
+    verdict = "PASS" if got == ok else "UNEXPECTED"
+    print(f"{verdict}  {label}: {'accepted' if got else 'rejected'}  {res if not got else ''}")
+    assert got == ok, label
+    return res
+
+# (a) gh425-shaped sequential telemetry
+seq = rows_of(dict(commit=SHA, mode="sequential", width=1, tier=3, registered=1),
+              [dict(lane="sequential", name="fixture.sh", rc=0),
+               dict(lane="non-suite", name="python:test_python_layer.py", rc=0),
+               dict(lane="non-suite", name="gamma-poison-staleness-probe", rc=0)],
+              dict(passed=4, failed=0, total=4, envelope_rc="0", suite_events_match="yes", run_set="1", registered="1"))
+s, m = expect("(a) sequential", lambda: W.qualification_summary(raw(seq), SHA), True)
+print("    meta", m); assert m == dict(mode="sequential", width=1, first_attempt_failures=[])
+
+# (b) parallel, 3 registered, one pool failure rescued by retry (field set per validate.sh:1103,1288,1365-1366,1541-1543)
+par_suites = [dict(lane="pool", name="one.sh", rc=0), dict(lane="pool", name="two.sh", rc=1),
+              dict(lane="driver-lock", name="three.sh", rc=0),
+              dict(lane="retry", name="two.sh", rc=0),
+              dict(lane="non-suite", name="python:test_python_layer.py", rc=0),
+              dict(lane="non-suite", name="gamma-poison-staleness-probe", rc=0)]
+par_sum = dict(passed=6, failed=0, total=6, envelope_rc="0", suite_events_match="yes", run_set="3", registered="3")
+par = rows_of(dict(commit=SHA, mode="parallel", width=4, tier=3, registered=3), par_suites, par_sum)
+s, m = expect("(b) parallel + rescued two.sh", lambda: W.qualification_summary(raw(par), SHA), True)
+print("    meta", m); assert m == dict(mode="parallel", width=4, first_attempt_failures=["two.sh"])
+
+def mutate(f):
+    r = copy.deepcopy(par); f(r); return r
+# (c) retry row red
+expect("(c) retry rc=1", lambda: W.qualification_summary(raw(mutate(lambda r: r[4].update(rc=1))), SHA), False)
+# (d) dropped suite (registered 3, executed 2)
+expect("(d) dropped suite", lambda: W.qualification_summary(raw(mutate(lambda r: r.pop(3))), SHA), False)
+# (e) non-suite red while everything else green
+expect("(e) non-suite python rc=1", lambda: W.qualification_summary(raw(mutate(lambda r: r[5].update(rc=1))), SHA), False)
+# (f) retry-only: pool row removed, runner would set suite_events_match=no
+def f_mut(r):
+    del r[2]; r[-1]["suite_events_match"] = "no"
+expect("(f) retry-only (no pool row, suite_events_match=no)", lambda: W.qualification_summary(raw(mutate(f_mut)), SHA), False)
+# (f2) retry-only but with a forged suite_events_match=yes: executed count 2 != registered 3 must still reject
+expect("(f2) retry-only with forged suite_events_match=yes", lambda: W.qualification_summary(raw(mutate(lambda r: r.pop(2))), SHA), False)
+# (g) duplicate executed names standing in for two registry entries
+expect("(g) duplicate executed name", lambda: W.qualification_summary(raw(mutate(lambda r: r[3].update(name="one.sh"))), SHA), False)
+# (g2) mode outside the accepted set
+expect("(g2) mode=turbo", lambda: W.qualification_summary(raw(mutate(lambda r: r[0].update(mode="turbo"))), SHA), False)
+
+# (h) tier selection with a stubbed classifier
+def tier_probe(tier):
+    d = pathlib.Path(tempfile.mkdtemp(prefix="gh1114-tier-"))
+    (d / "utils").mkdir()
+    (d / "utils/ci-route.sh").write_text(f'#!/bin/sh\nSUBSYSTEM_TESTS_small="alpha.sh beta.sh"\necho tier={tier}\n')
+    env = dict(os.environ, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t", GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t")
+    for c in (["git", "init", "-q"], ["git", "add", "."], ["git", "commit", "-q", "-m", "base"]):
+        subprocess.run(c, cwd=d, env=env, check=True)
+    (d / "x.txt").write_text("x\n"); subprocess.run(["git", "add", "."], cwd=d, env=env, check=True)
+    subprocess.run(["git", "commit", "-q", "-m", "landing"], cwd=d, env=env, check=True)
+    oid = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=d, text=True).strip()
+    return W.select_qualification_gate(str(d), [dict(mergeCommit=dict(oid=oid), number=1)], env)
+g1 = tier_probe(1); g3 = tier_probe(3)
+print("(h) tier=1 ->", g1); print("(h) tier=3 ->", g3)
+assert g1[0] == W.SMALL_GATE and g1[1] == ["alpha.sh", "beta.sh"], g1
+assert g3[0] == "validate.sh --parallel 4" and g3[1] is None, g3
+print("PASS  (h) classifier branches")
+
+# (i) receipt writer expression: the `entry = dict(...)` statement from qualify_landings, evaluated with the reader's output
+src = open("utils/py/wave_reconcile.py").read(); tree = ast.parse(src)
+stmt = next(n for n in ast.walk(tree) if isinstance(n, ast.Assign) and getattr(n.targets[0], "id", "") == "entry"
+            and any(isinstance(k, ast.keyword) and k.arg == "first_attempt_failures" for k in n.value.keywords))
+code = ast.get_source_segment(src, stmt.value)
+import hashlib
+from datetime import datetime, timezone
+def build(summary, run_meta, gate):
+    now = datetime.now(timezone.utc); meta = dict(artifactKind="pr", mergeCommit=dict(oid="b" * 40), number=1)
+    tested = SHA; telemetry_path = pathlib.Path("/repo/TESTS-RESULTS/x/validation.jsonl"); repo_root = "/repo"
+    class P(pathlib.PurePosixPath): pass
+    ns = dict(W.__dict__); ns.update(locals()); ns["telemetry_path"] = pathlib.PurePosixPath("TESTS-RESULTS/x/validation.jsonl")
+    ns["repo_root"] = pathlib.PurePosixPath("."); ns["raw"] = b""
+    return eval(code, ns)
+s_b, m_b = W.qualification_summary(raw(par), SHA); e_b = build(s_b, m_b, W.QUALIFICATION_GATE)
+s_a, m_a = W.qualification_summary(raw(seq), SHA); e_a = build(s_a, m_a, W.LEGACY_FULL_GATE)
+print("(i) parallel receipt:", {k: e_b[k] for k in ("mode", "width", "first_attempt_failures", "retries", "gate")})
+print("(i) sequential receipt:", {k: e_a[k] for k in ("mode", "width", "first_attempt_failures", "retries", "gate")})
+assert (e_b["mode"], e_b["width"], e_b["first_attempt_failures"], e_b["retries"]) == ("parallel", 4, ["two.sh"], 1)
+assert (e_a["mode"], e_a["width"], e_a["first_attempt_failures"], e_a["retries"]) == ("sequential", 1, [], 0)
+assert e_b["mode"] != "sequential", "wrong-mode control: a parallel run must not be recorded as sequential"
+print("PASS  (i) receipt metadata (writer expression evaluated with reader meta; end-to-end emission is exercised by gh425 and the first hosted run)")
+print("ALL CONTROLS PASS")
