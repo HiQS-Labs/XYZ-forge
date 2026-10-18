@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -144,5 +144,34 @@ Dispositions (canonical plan revised in place):
 - Q1/Q2-3/Q5 passes acknowledged. The Q6-7 Nit is folded in: the ci.yml cost rationale is kept as history.
 
 Request: confirm F1–F4 closed against the revised text, or name the gap with Observed input / Affected scope / Falsifier. VERDICT + `swept file:` line.
+
+### Reviewer · Round 2
+
+**VERDICT: FAIL**
+**Basis:** F3 and F4 are closed at plan level. F1 has a suitable design but an incomplete acceptance witness; F2 still leaves the interval between opening and merging the promotion PR outside its quiet window. Reviewed the entire canonical `PROJECT/2-WORKING/GH-1127-PROMOTION-ONLY-FULL-SUITE.md` (113 lines), including unchanged sections. The Setup artifact remains absent; used the canonical plan requested by the Producer. No additional pre-existing plan defect was identified beyond the findings below.
+
+swept file: yes
+
+- **[Pass] F1 design addressed, execution pending.** Plan `:50-54` forces `QUALIFICATION_GATE`, substitutes tested-HEAD commit metadata for empty pending, enters qualification with no landing items, and preserves the receipt-only retry. The existing commit shape supports this (`wave_reconcile.py:447-451`); the publisher recognizes commit receipts and retains extra flags (`hosted_lane_publish.py:119-166`). This closes the design objection, not execution verification.
+
+- **[Should] F1 acceptance follow-through — exercise the empty-pending caller.** Plan `:52,55-59,102` specifies p2 as “one commit meta,” but the existing early returns are in its caller (`wave_reconcile.py:650-653`) and the outer dispatch condition (`:2235`). A helper returning HEAD metadata cannot detect those defects. Add a manual disposable-full-clone acceptance run of the actual promotion route with zero pending landings, retaining one complete full-registry telemetry record and a matching HEAD commit receipt. Reuse the planned qualifying run where possible; no new suite or test case. Retain command, exit status, decisive output and provenance under the existing `TESTS-RESULTS/2026-10-18+GH-1127/` destination. This is **[Unverified — needs clone run]**, not a request to run it here.
+  Observed input: empty `landing_items` and `pending` at `wave_reconcile.py:2235,650`; p2 asserts only a metadata value (`plan:57`).
+  Affected scope: A0 verification of the new no-pending promotion route.
+  Falsifier: actual no-pending promotion produces full-registry telemetry and a replayable commit receipt; restoring either old early-return predicate prevents that result and fails the manual assertion.
+
+- **[Should] F2 remains open — hold and verify the candidate through the promotion merge.** Plan `:77` ends the quiet window at step 4, but step 4 (`:80`) only opens the PR. Development can advance before that PR merges. Also, `:79` compares a local `origin/development` without a fetch and selects the “newest” receipt without associating it with the successful dispatch. Extend the quiet window through the actual promotion merge; fetch development before the final check, require `tested_commit` to be its ancestor, select the receipt by the dispatch run URL/ID, and recheck the PR head before merging. Existing receipts contain `run_url` (`wave_reconcile.py:738-740`). Keep the generated-commit allowance, checking those commits contain generated reconciliation/receipt changes rather than relying on bot email alone. Correct the exit-8 claim: it refuses reconciliation after a landing, not the merge itself (`merge_cleanup.py:713-716,727-729,749,609-610`). Extend A5 with post-PR-opening advance and stale-local-ref controls. This needs procedural wording and manual evidence, not branch protection or new gates.
+  Observed input: proposed `plan:77-80` releases the quiet window when opening the PR and checks only an unfetched tracking ref; the existing reconciliation path explicitly runs after the merge (`merge_cleanup.py:713-716`).
+  Affected scope: evidence selection and development changes between dispatch, PR creation and promotion merge.
+  Falsifier: a fetched quiet candidate with evidence from the named dispatch and only inspected generated publication changes proceeds; a source commit after PR creation, or present remotely but absent from the tracking ref, requires redispatch before promotion.
+
+- **[Pass] F3 closed:** A2 distinguishes skipped merge-cleanup polling from the child’s retained safety query (`plan:63,104`); exit-8 reporting remains in `merge_cleanup.py:614-618`.
+- **[Pass] F4 closed:** labels, deferred-verdict guidance, bounded consumer statement and additional skill/report edits are explicit (`plan:64-68,81-82,105`).
+- **[Nit]** Setup Definition of Done remains a placeholder; this turn grades the canonical Acceptance and Producer’s F1–F4 request.
+
+**Evidence limits:** Graph project `XYZ-forge` points to the main checkout, generation `2026-09-01T15:54:30Z`; symbol search returned no matches, and coverage reported changed/not-tracked/missing freshness for the examined paths. Used current local source fallback. Read-only command `nl -ba PROJECT/2-WORKING/GH-1127-PROMOTION-ONLY-FULL-SUITE.md | sed -n '45,150p'` exited 0; decisive output: `77: Quiet window: no merges to development until step 4` and `80: Open the development → main PR from that tip`. Command `nl -ba skills/2-daily/merge-cleanup/scripts/merge_cleanup.py | sed -n '600,620p;700,815p'` exited 0; decisive output at `715-716`: the Phase-5 fast-forward “has just moved to the merge.” No git command, validator, test suite, pytest, executable fixture or live GitHub mutation was run. Runtime proof remains outstanding.
+
+Root cause: promotion proof can become disconnected from the eventual merge candidate; Fix site: promotion procedure and A0/A5 acceptance; Why not upstream/downstream: the operator chose a procedural boundary, so preserve it and require an observable witness there.
+
+Handing off to Producer (claude-a) — complete F1’s clone-run acceptance specification and tighten F2’s candidate window/evidence selection, disposition these findings, then request Round 3 review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
