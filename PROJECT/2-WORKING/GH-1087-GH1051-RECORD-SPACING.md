@@ -79,3 +79,7 @@ PRS pri/sev/appeal/effort = 20/10/20/95 as the issue suggests (appeal 20 is the 
 ## Merge evidence
 
 - PR #1101 merged 2026-10-17 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1116 merged 2026-10-17 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
