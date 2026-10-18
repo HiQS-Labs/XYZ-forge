@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -212,6 +212,83 @@ The [Should] **accepted and implemented**; commit "fix(GH-1140): fq2-r2".
 Suite: 206 tests OK (26 GH-1140 pins; 13 red controls witnessed across the campaign). Provenance: 29 rows. Requesting round 3: approve or name residuals.
 
 handing off to Reviewer (codex) — take your turn.
+
+
+### Reviewer · Round 3 · codex
+
+VERDICT: PASS
+Basis: the round-2 held-predecessor failure is resolved at both hold sites using the existing dependency map, with a driver pin and authored red-control receipt. Earlier source/evidence resolutions remain present. The disclosed B1 end-to-end deferral remains accepted. Approval closes this review; it does not attest the pending disposable-clone gate.
+swept file: yes
+
+Read both complete implementation files, both named test files, all 29 provenance rows, both manual scripts, the owning plan and the prior-thread r3 findings. **B** = skills/2-daily/merge-cleanup/scripts/batch_record.py; **M** = skills/2-daily/merge-cleanup/scripts/merge_cleanup.py; **T** = test/gh436-merge-cleanup.py; **E** = TESTS-RESULTS/2026-10-18+GH-1140/. No git, suite, executable fixture, external query or artifact edit was performed. P6 evaluates extracted statements only. Runtime/red-control receipts were inspected, not independently rerun: [Unverified — needs clone run]. Complete changed-path scope cannot be attested without git.
+
+- [Pass] **Held predecessors now block hard dependents without making a lone hold fail.** M:1175 and M:1369 write the same canonical `hold: ` reason into the map read at M:1139. M:1416-1420 removes expected holds only after the queue finishes; a successor's `blocked by #7` survives and reaches M:1429's return 3. P6 below evaluates both actual hold branches for label/title inputs: dependent=[7], unrelated=[], lone_after_filter={}, with_blocked_successor_after_filter={8:'blocked by #7'}. The final draft path still gives dependent=[7]. This resolves the observed P5 defect at source/in-memory level.
+- [Pass] **Driver-sensitive evidence for that correction is present.** T:738-751 drives main() with PR 8's body `depends on #7`, a late-held PR 7 and a stable head; it asserts no merge and rc 3. E:provenance.jsonl:28 records reverting final-hold bookkeeping and observing that pin fail; :29 reports 206 tests OK. These are source/receipt-inspection passes, not independently reproduced runs. The pin does not assert the precise logged report text; the reporting path is visible at M:1148-1150 and M:1425-1428.
+- [Pass] **Earlier resolutions and limitations remain intact.** T:726-736 and T:753-766 retain late-draft/late-label no-merge, rc 0 and Phase-6 pins; T:784-814 retains driver-created OID/external-MERGED persistence assertions. E:recovery-and-exit4.py:55-61 retains exact range/shared-files and nonempty shell-parse checks. E:provenance.jsonl:23 retains the B1 driver-scenario deferral; B:212-221 and M:1317-1321 retain its source wiring. Preserve the PR limitation: a broad tier-3 run alone cannot prove the absent same-invocation repair scenario. No new suite, runner or gate was introduced in the named artifacts.
+
+No additional independent pre-existing implementation defect was identified during the complete sweep. No further source change is requested.
+
+Probe P6: command `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 -B - <<'PYPROBE' ... PYPROBE`, exit **0**. Exact Python body:
+```python
+import ast
+from pathlib import Path
+p=Path('skills/2-daily/merge-cleanup/scripts/merge_cleanup.py')
+tree=ast.parse(p.read_text())
+loop=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='_land_prs_loop')
+nodes=list(ast.walk(loop))
+initial=next(n for n in nodes if isinstance(n,ast.If) and ast.unparse(n.test)=='label')
+final=next(n for n in nodes if isinstance(n,ast.If) and ast.unparse(n.test)=='veto')
+blocked=next(n for n in nodes if isinstance(n,ast.Assign) and ast.unparse(n.targets[0])=='blocked_by')
+discard=next(n for n in nodes if isinstance(n,ast.Expr) and ast.unparse(n)=='pending.discard(p_num)')
+flt=next(n for n in nodes if isinstance(n,ast.Assign) and ast.unparse(n.targets[0])=='failed' and isinstance(n.value,ast.DictComp))
+def run(stmts,env):
+    exec(compile(ast.Module(body=stmts,type_ignores=[]),'source-snippets','exec'),env)
+print('lines:',{'initial':initial.lineno,'final':final.lineno,'blocked':blocked.lineno,'filter':flt.lineno})
+for site,branch in [('initial',initial),('final',final)]:
+    for reason in ['do-not-merge','title: feat: x (do not merge: soak owed)']:
+        e={'failed':{},'track':{'skips':{}},'pending':{7,8,9},'p_num':7,'label':reason,'veto':reason,'log':lambda *_:None}
+        run([discard]+[n for n in branch.body if not isinstance(n,ast.Continue)],e)
+        e['pr']={'number':8,'_hard_deps':[7]}
+        run([blocked],e)
+        deps=e['blocked_by']
+        before=dict(e['failed'])
+        e['pr']={'number':9,'_hard_deps':[]}
+        run([blocked],e)
+        independent=e['blocked_by']
+        run([flt],e)
+        print(site,reason,'held_map=',before,'dependent=',deps,'unrelated=',independent,'lone_after_filter=',e['failed'])
+        assert deps==[7] and independent==[] and e['failed']=={}
+        e['failed']=dict(before,**{})
+        e['failed'][8]='blocked by #7'
+        run([flt],e)
+        assert e['failed']=={8:'blocked by #7'}
+        print('with_blocked_successor_after_filter=',e['failed'])
+e={'failed':{},'track':{'skips':{}},'pending':{7,8},'p_num':7,'veto':'draft','log':lambda *_:None}
+run([discard]+[n for n in final.body if not isinstance(n,ast.Continue)],e)
+e['pr']={'number':8,'_hard_deps':[7]}
+run([blocked],e)
+print('draft_dependent=',e['blocked_by'])
+assert e['blocked_by']==[7]
+t=ast.parse(Path('test/gh436-merge-cleanup.py').read_text())
+fn=next(n for n in ast.walk(t) if isinstance(n,ast.FunctionDef) and n.name=='test_held_predecessor_blocks_its_hard_dependent')
+print('driver_pin_line=',fn.lineno,'assertions=',[ast.unparse(n) for n in ast.walk(fn) if isinstance(n,ast.Call) and ast.unparse(n.func).startswith('self.assert')])
+```
+Decisive output:
+```text
+lines: {'initial': 1169, 'final': 1357, 'blocked': 1139, 'filter': 1419}
+initial do-not-merge held_map= {7: 'hold: do-not-merge'} dependent= [7] unrelated= [] lone_after_filter= {}
+with_blocked_successor_after_filter= {8: 'blocked by #7'}
+initial title: feat: x (do not merge: soak owed) held_map= {7: 'hold: title: feat: x (do not merge: soak owed)'} dependent= [7] unrelated= [] lone_after_filter= {}
+with_blocked_successor_after_filter= {8: 'blocked by #7'}
+final do-not-merge held_map= {7: 'hold: do-not-merge'} dependent= [7] unrelated= [] lone_after_filter= {}
+with_blocked_successor_after_filter= {8: 'blocked by #7'}
+final title: feat: x (do not merge: soak owed) held_map= {7: 'hold: title: feat: x (do not merge: soak owed)'} dependent= [7] unrelated= [] lone_after_filter= {}
+with_blocked_successor_after_filter= {8: 'blocked by #7'}
+draft_dependent= [7]
+driver_pin_line= 738 assertions= ['self.assertFalse(merged.called)', 'self.assertEqual(rc, 3)']
+```
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) receives the review outcome; the harness owns the file-scoped commit and pending clone gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
