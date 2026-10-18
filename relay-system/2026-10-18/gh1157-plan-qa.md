@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -122,5 +122,37 @@ if the plan passes.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: The single-file instruction change is appropriate and the four core script claims are supported by source inspection. Two small documentation corrections remain: record verification with the required provenance, and correct an existing safety-relevant claim about unrelated changes. Reviewed the entire plan and entire target SKILL.md; the pre-existing defect is called out below. No suites or executable fixtures were run in this worktree.
+
+- [Pass] **Q1 — script facts.** (a) Intake's add/update path has no canonical drift gate: `scripts/intake.py:787–808` stages/replaces payloads, `:845–851` transacts then attempts a commit; `:500–504` replaces the directory at the same path app links target. Sync's refusal is later and only gates reconciliation (`scripts/sync.py:218–239`, `:375–385`), with no rollback of intake. (b) Identical updates return before receipt replacement (`scripts/intake.py:797–808`); catalog only `setdefault`s (`:840–842`), and the parser offers no refresh verb (`:687–707`). (c) Status inventories current digests then reconciles links and reports recorded sources; it never compares those digests to receipt digests (`scripts/sync.py:364–386`, `scripts/intake.py:289–300`, `:384–395`). (d) Root and ancestor symlinks are refused by `scripts/intake.py:54–61`, invoked at `:713`; payload symlinks are separately refused at `:295`. All script citations here and below are relative to `skills/3-weekly/skills-army-hq/`.
+
+- [Pass] **Q2 — routing.** `utils/ci-route.sh:63–65` matches `*.md`; `:382–383` excludes docs from subsystem classification. The targeted skill has no full-gate exception. The tier-1 claim in plan lines 88–91 is supported by source inspection.
+
+- [Nit] **Q3 — narrow the existence-only claim.** No inspected assertion pins the instruction text, so no suite edit is indicated. However, plan lines 92–94 overcompress the coverage: `test/gh620-skills-army-mini-sync.sh:190–194` also compares the installed whole tree to the canonical tree and expects an identical update to return `Unchanged`; `test/test_deploy_skills.py:205` mutates the literal `name: skills-army-hq`. Say “no assertion pins the prose; existence, identity and copy-parity checks remain applicable.” These checks are compatible with the planned description/body edit provided the name stays intact. Runtime suite outcome is **[Unverified — needs clone run]**.
+
+- [Should] **Q4 — correct the pre-existing unrelated-changes claim within the same SKILL.md.** `SKILL.md:29–30` says intake “refuses over unrelated changes.” In fact `scripts/intake.py:845–851` applies the transaction before `commit_skill` checks unrelated changes (`:466–471`); it then emits `WARN not committed` and returns 0 (`:855–858`). Payloads can already have changed and be readable through app links. Plan criterion 7 (`PROJECT/1-INBOX/GH-1157-SKILLS-ARMY-HARD-RULES.md:77–78`) would preserve this misleading statement. Permit a narrow correction to “applies the payload, then declines the automatic commit and warns if unrelated changes exist”; do not change the scripts.
+  Observed input: the existing sentence “refuses over unrelated changes” (`SKILL.md:30`) against the explicit transact-before-commit call order (`scripts/intake.py:846–851`).
+  Affected scope: the description of automatic commit behavior for add/update/remove in a Git-backed collection with unrelated uncommitted paths.
+  Falsifier: an existing pre-transaction unrelated-change rejection on that command path would make the correction unnecessary; the inspected `main` path has none. A future disposable-clone check with unrelated dirt should show changed payload bytes plus `WARN not committed`, rather than an unchanged payload.
+
+- [Pass] **Q4–Q6 — remaining fit, scope and DRY.** The elevated read-through warning agrees with `SKILL.md:190–194`; per-device root resolution agrees with `:145–149`, and rename/retirement acknowledgment extends `:85–89`. The distinction between local parity and upstream freshness agrees with `:180–183`. The proposed stale/source-unverified receipt outcome (plan lines 64–68) avoids manufacturing clean provenance. Folding the sentence at `SKILL.md:45–46` into rule (a) is the right dedupe. Plan lines 104–117 identify the existing owner, explicit non-goals and an Easy one-file rollback; no parallel subsystem is proposed. Apart from the unrelated-changes sentence above, no additional pre-existing defect requiring a change was identified in the target instruction file.
+
+- [Should] **Q7 — specify the required durable verification evidence.** Plan lines 123–127 record the reader check and red control only “in this doc and the PR.” `AGENTS.md:112–114` requires committed `provenance.jsonl` for cited runs, and `:159–161` places manual checks under `TESTS-RESULTS/<date>+GH-<n>/` with that provenance. Amend the plan to record the positive parse, missing-name red control and cited gate results there, commit the provenance in the implementation PR, and link it from the plan/PR. This is an evidence artifact, not a new test or runner. Keep the runtime change restricted to the one SKILL.md; update the stated supporting-document scope accordingly.
+  Observed input: plan lines 123–127 name only the doc/PR as the manual-check record and provide no provenance destination.
+  Affected scope: verification runs cited as implementation evidence for GH-1157.
+  Falsifier: an existing explicit plan instruction committing these runs' provenance under the required evidence directory would satisfy the requirement; none appears in the reviewed plan.
+
+- [Pass] **Q7 — check design otherwise proportionate.** The reader validates nonempty name and description (`scripts/intake.py:126–130`); `package_info` delegates to it (`:134–138`). Parsing a scratch folder named `skills-army-hq`, then removing `name:` in another scratch copy, gives a meaningful positive/red pair without adding a test. Docs and ledger checks in plan lines 121–126 are commensurate. They are planned checks, not claimed passing runs in this review.
+
+- [Pass] **Q8 — rating rationale.** Plan lines 159–169 explicitly ground 60/55 in recurring recoverable deployment disruption, leave appeal neutral at 50, and assign cheapness 90 to a prose-only change. The immediate-byte-exposure path supports the stated downgrade consequence (`scripts/intake.py:500–504`). The historical incident counts are attributed to issue evidence in the plan; they were not independently re-queried during this local review, so this is approval of the rationale's proportionality, not attestation of those live issue records.
+
+Handing off to Producer (claude-a) — address the two Should findings and disposition the Nit, then return for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
