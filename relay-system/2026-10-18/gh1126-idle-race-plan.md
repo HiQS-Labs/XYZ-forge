@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -226,5 +226,27 @@ Dispositions (canonical plan revised and re-seeded; this is the final round):
   - The script, log and `provenance.jsonl` are committed with the implementation.
 
 Request: confirm R2/R3 closed. VERDICT + `swept file:` line.
+
+### Reviewer · Round 3
+
+**Ship — plan approved; R2 and R3 closed.**
+
+swept file: yes
+
+Read the whole seeded artifact (:1-93), all of current `utils/py/turn_diagnostics.py`, and the consult/review_xyz and gh610/gh648-l1 seams cited in the earlier rounds. No additional pre-existing defect requiring expansion of this narrow fix was found. Verify-tier graph freshness check: `XYZ-forge` resolves to a different checkout, generation `2026-09-01T15:54:30Z`; coverage reports metadata_changed for the three Python paths and not_tracked for the two suite paths. Current direct source is the evidence here, not graph completeness. No suites, executable fixtures, git commands, or artifact/source edits were performed.
+
+- **[Pass] R2 closed.** Artifact :57 and :92 now explicitly accept waiting for a whole sample and delaying the subsequent kill of a still-live advisor. The false five-second ceiling is removed. Current `utils/py/consult.py:308,325` and `utils/py/review_xyz.py:429,433` show classify preceding kill; `turn_diagnostics.py:108-117,261-286,289-330,383-422` supports treating the whole sample as the wait rather than the lsof timeout alone.
+- **[Pass] R3 closed.** Artifact :72 explicitly requires a separate disposable full clone for every listed suite, candidate race-control run and final pre-push gate, brackets clone identity, and commits the script, log and `provenance.jsonl` with implementation. Artifact :64-70 retains event-held probe entry, bounded waits/joins, opposite base/candidate outcomes and the no-in-flight control. These are adequate planned falsifiers, pending execution.
+- **[Pass] Narrow design and honest limits retained.** Artifact :39-41 separates the reproduced race from unproven hosted attribution and the exception path. Artifact :49-53 preserves classifier semantics and limits synchronization to sample/classify, leaving `cpu_ratio()` lock-free. Current `turn_diagnostics.py:417-418,496` confirms the nested helper call that makes that restraint necessary; :559 and :570 reach the classifier without an outer sample lock. Artifact :78-81 retains red/green evidence, existing suites, no new tests and final-commit gate requirements.
+- **[Nit] Resume text is stale.** Artifact :27 still points to plan QA r2. When the Producer next updates the canonical plan, replace that status row with this Round 3 approval and implementation as the next action. This does not block plan approval.
+- **[Unverified — needs clone run]** Candidate synchronization, the actual manual red/green control, all suite results and final committed-state gate remain implementation work. Hosted root-cause attribution remains unproven. Approval here is of the plan only, using artifact Acceptance :77-81; Setup's Definition of Done remains a placeholder.
+
+Root cause: classify can observe a partially published sample; Fix site: shared sample/classify lock; Why not upstream/downstream: synchronizing the existing publisher and consumer preserves classifier semantics and the integration assertion without changing callers.
+
+**VERDICT: PASS**
+
+**Basis:** Both remaining required corrections are present in the seeded artifact. The plan now states its latency tradeoff and safe execution/evidence boundary, while retaining a falsifiable verification procedure and the narrow source scope. Implementation must still deliver the specified evidence.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) proceeds with implementation and clone-based verification outside this plan-review relay.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
