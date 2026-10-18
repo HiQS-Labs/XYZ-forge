@@ -80,7 +80,7 @@ During dry runs, `--prs-only`, and on Exit 5 refusal, print a concise `LANDING P
 - Direct pointer to `skills/2-daily/merge-cleanup/SKILL.md` (GH-1066 guidance).
 - Instructions on the required flags: `--landing-plan direct|group --landing-reason "<reason>"`.
 
-### 3. Record in `batch_record` with Stale-Writer Safe Merge Rule (Plan QA R2)
+### 3. Record in `batch_record` with Stale-Writer Safe Merge & Marker Stripping (Plan QA R2, R4)
 - In `batch_record.py`, persist `landing_plan` in the batch record:
   ```json
   "landing_plan": {
@@ -90,9 +90,13 @@ During dry runs, `--prs-only`, and on Exit 5 refusal, print a concise `LANDING P
     "prs": [1062, 1089, 1097]
   }
   ```
-- **Intentional-Update Merge Rule (R2):** In `batch_record._merge_records(mine, disk)`:
-  - Mutating `landing_plan` marks `rec["_landing_plan_touched"] = True`.
-  - In `_merge_records`, if `disk` already has `landing_plan` and `mine` lacks `_landing_plan_touched`, preserve `disk["landing_plan"]`. A stale writer snapshot without the field cannot erase an existing recorded landing decision.
+- **Intentional-Update Merge Rule (R2, R4):** In `batch_record._merge_records(disk, mine)`:
+  - Mutating `landing_plan` via `set_landing_plan()` marks `rec["_landing_plan_touched"] = True`.
+  - In `_merge_records(disk, mine)`, if `disk` already has `landing_plan` and `mine` lacks `_landing_plan_touched`, preserve `disk["landing_plan"]`. A stale writer snapshot without the field cannot erase an existing recorded landing decision.
+- **One-Shot Marker Consumption & Stripping Contract (R4):**
+  - Add `_landing_plan_touched` to `_strip_marks(obj)` tuple: `("_touched", "_verdict_touched", "_sweep_touched", "_refreshed", "_landing_plan_touched")`.
+  - In `save()`, ensure `_strip_marks` is applied on the initial save path (when no prior disk record exists) as well as within `_merge_records`, stripping the marker from both the persisted JSON and the caller dictionary.
+  - This ensures reloaded snapshots never carry `_landing_plan_touched = True`, so an older reloaded snapshot saved after an intentional decision change cannot overwrite the new decision.
 - In `batch_record.py` `script_block()`, render a dedicated section inside the script-owned markdown:
   ```markdown
   ## Landing decision (GH-1066)
@@ -132,14 +136,16 @@ Update `skills/2-daily/merge-cleanup/SKILL.md` GH-1066 section and CLI argument 
    - Handle `--landing-plan group` by recording and exiting 0 with instructions.
 3. **Batch Record Storage, Save Merge & Rendering (`batch_record.py`):**
    - Add `set_landing_plan(rec, decision, reason, prs)` marking `_landing_plan_touched = True`.
-   - Update `_merge_records` to protect `landing_plan` against stale snapshots.
+   - Add `_landing_plan_touched` to `_strip_marks` tuple in `batch_record.py:52`.
+   - Update `_merge_records(disk, mine)` to preserve `disk["landing_plan"]` when `mine` lacks `_landing_plan_touched`.
+   - Update `save()` to strip marks on first persistence so `_landing_plan_touched` is consumed immediately and never persisted to JSON or retained in caller state.
    - Render `## Landing decision (GH-1066)` in `script_block()`.
    - Update `extend()` / `find_unfinished()` handling for resume.
 4. **Skill Documentation (`skills/2-daily/merge-cleanup/SKILL.md`):**
    - Document `--landing-plan`, `--landing-reason`, and Exit 5 in GH-1066 section and CLI reference.
 5. **Verification & Red Controls:**
    - Adapt existing tests in `test/gh436-merge-cleanup.py` and `test/gh534_phase_a_tests.py` (Repo rail: No new tests, GH-831).
-   - Author manual verification check with committed provenance under `TESTS-RESULTS/2026-10-18+GH-1158/`.
+   - Author manual verification check with committed provenance under `TESTS-RESULTS/2026-10-18+GH-1158/`, including the stale-save-after-reload case.
    - Witness red controls for the checkpoint enforcement.
 
 ## Acceptance Criteria
@@ -150,6 +156,7 @@ Update `skills/2-daily/merge-cleanup/SKILL.md` GH-1066 section and CLI argument 
 - [ ] `--landing-plan group` records the decision in the local batch record and batch issue (or warns on GitHub failure without false claim) and exits 0 with the GH-1066 checklist, without merging.
 - [ ] `--landing-plan direct` records the decision and proceeds to Phase 5.
 - [ ] Stale batch record saves under `RecordLock` preserve the recorded `landing_plan`.
+- [ ] `_landing_plan_touched` is stripped and consumed on save (both first persistence and merge save); neither persisted JSON nor reloaded dict retain the marker; an older reloaded snapshot cannot overwrite a newer decision.
 - [ ] The landing decision survives `--resume` on unchanged PR sets; changed PR sets require re-evaluation.
 - [ ] Queues of 1 or 2 PRs remain completely unaffected.
 - [ ] `skills/2-daily/merge-cleanup/SKILL.md` documents the flags, checkpoint, and Exit 5.
