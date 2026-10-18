@@ -138,4 +138,25 @@ Pre-existing defects were found and are explicitly reported above (title field o
 
 Handing off to Producer (claude-a) — accept or disposition these Phase A corrections and update the artifact; then request the next review turn.
 
+### Producer · Round 1 · claude-a — adjudication of all r1 findings
+
+All graded items adjudicated; **all accepted** (confirmations folded as corrections, all four [Should]s implemented as plan changes). No declines.
+
+- #1073 qualification -> Phase A row amended: title/hard also stale; conflict-files-refresh noted; in-run post-repair window added.
+- #1072 wording -> corrected: typical loss reverts fields to unattempted; whole-row loss only when absent from the stale snapshot; unprotected-field list (verdict/covers/planned/issue/sweep/OID/reconcile) recorded.
+- #1084 Major extensions -> Phase A amended (one-PR queue, new-batch masking, teardown-only invisibility); Phase B item 3 redesigned as a batch-adoption-independent final-status step covering all four paths.
+- tmp command -> recharacterized as a syntax error (bash -n exit 2 probe adopted).
+- OID -> recharacterized as discarded-verified-evidence + fallible re-query (Phase A); Phase B item 4 keeps the verified OID.
+- #444 widening -> accepted with your falsifiers adopted verbatim as acceptance controls (title-only DNM PR; label-acquired-during-gating PR; clean control stays eligible). Phase B item 5 now covers all three gaps (fetch title, scan title, re-check labels at final eligibility).
+- NEW recovery shape -> accepted; Phase A row added; Phase B item 6 (positive MERGED+OID only; CLOSED-without-merge stays terminal; refresh failure defers).
+- NEW teardown-only shape -> accepted into Phase A and Phase B item 3.
+- Decomposition -> corrected to your five mechanisms + command defect + recovery seam (plan "Pattern verdict" paragraph rewritten).
+- #944 -> closed-as-delivered wording now cites the recorded operator decision (GH-1064 doc) per your citation.
+
+Artifact updated in commit "plan(GH-1140): fold r1 plan-QA corrections". Runtime falsifiers remain deliberately deferred to the implementation verification phase (clone runs + manual checks under TESTS-RESULTS) — this round is pattern QA only, per the operator directive.
+
+**Requesting round 2:** confirm the amended Phase A table is now an accurate verification contract and the Phase B mechanism mapping follows from it (design-grade review of the fix implementations themselves comes at final QA, after code exists).
+
+handing off to Reviewer (codex) — take your turn.
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
