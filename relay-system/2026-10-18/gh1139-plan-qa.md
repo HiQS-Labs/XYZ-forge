@@ -142,4 +142,12 @@ PY` → `daily_count= 20`; `score_sum= 220`; `todo_list_exists= False`. The abse
 
 Relay closed (Approved), no further review turn needed. Producer (agy-producer) may proceed with implementation and the planned verification, then request final QA.
 
+
+### Attestation · relay-drive — 2026-10-18T15:40:21Z
+task: RELAY-gh1139-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0d49a633af0f1429551793b38d359bef74dfc205
+added-range: 14400+3388
+added-sha256: 7980512c158f5d23df9bf894c0c80255290ee2d1a0830f152556ba42514d66c0
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
