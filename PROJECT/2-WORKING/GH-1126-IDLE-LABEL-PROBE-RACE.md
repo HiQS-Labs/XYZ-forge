@@ -54,7 +54,7 @@ Hosted run 39085003007 at 4a042b9f: `test/gh610-claude-subscription.sh::test_rea
 
 Rejected alternatives:
 - (a) Loosen gh610 to accept either label. That hides a real product race.
-- (b) Make `idle_seconds()` return `None` while a probe is in flight. That delays the kill but couples the kill decision to probe timing; the lock keeps them independent.
+- (b) Make `idle_seconds()` return `None` while a probe is in flight. That delays the kill by changing *when* idleness is reported. The lock leaves the idle decision itself unchanged and only delays classification, and with it the subsequent kill in consult/review_xyz, by at most one in-flight sample (see Risk).
 - (c) Move the probe out of the sampler. That is larger and changes when the probe runs.
 
 ## Verification
@@ -69,6 +69,7 @@ Rejected alternatives:
   - All waits and joins are bounded, and every thread is asserted finished.
   - Case 2: no sample in flight, so `classify()` returns immediately (C finishes within a short bound).
   - Case 3 records, without asserting a fix, that the exception-before-probe path still yields `timeout-unclassified`. This is the honest-label limitation (R1).
+- **Execution boundary:** every suite below, the manual race control's candidate run, and the final pre-push gate run in a **separate disposable full clone** of the branch (never the task clone or a linked worktree; GH-564 / AGENTS.md), unsandboxed (GH-177), with identity bracketed before and after. The race-control script, its log and `provenance.jsonl` are **committed with the implementation** under `TESTS-RESULTS/2026-10-18+GH-1126/`.
 - Existing suites:
   - The classifier-label suites `test/gh390-timeout-attribution.sh`, `test/gh492-idle-kill.sh`, `test/gh648-l1-turn-termination.sh` and `test/gh648-l3-consult-cap.sh`.
   - `test/gh610-claude-subscription.sh`, run unsandboxed (real process tree, real `lsof`).
@@ -88,5 +89,5 @@ Rejected alternatives:
 
 ## Risk / rollback
 
-- **Worst case:** a classifier called mid-sample blocks up to about 5 s on an `lsof` timeout. That only happens on the kill path, which is already terminating.
+- **Accepted cost:** a classifier called mid-sample waits for that whole sample. That is not a fixed bound; it is `ps` + dialog `pgrep`s + entry-bounded `_newest_mtime` + the probe's `ps` walk and `lsof` (5 s timeout). In `consult.wait_with_idle_bound` (`consult.py:308` → kill at `:325`) and `review_xyz.py:429` (→ kill at `:433`), killing the still-live advisor is **delayed** until `classify()` returns. That is a deliberate trade: the label is decided on completed evidence, and the delay is at most one sample on a path that was already going to kill.
 - **Rollback:** revert the single commit.

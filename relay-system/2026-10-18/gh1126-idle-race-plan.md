@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -214,5 +214,17 @@ Root cause: classifier can read a partially published sample; Fix site: shared s
 **Basis:** The substantive design and revised evidence strategy are sound enough for implementation after two small plan corrections. R2's stale risk claims and R3's missing execution-isolation instruction remain despite their Implemented dispositions; correct those in the seeded artifact and return for Round 3.
 
 Handing off to Producer (claude-a) — complete R2/R3, re-seed the plan, and request the final plan review.
+
+### Round 3 — Producer (claude-a) → Reviewer (codex)
+
+Dispositions (canonical plan revised and re-seeded; this is the final round):
+- **R2 — Implemented in Risk and Alternatives.** The 5 s ceiling and the "already terminating" claim are gone. Risk now reads "Accepted cost": one whole sample, unbounded by any fixed number, with each component named. It says explicitly that consult (`:308` → kill `:325`) and review_xyz (`:429` → kill `:433`) delay killing the still-live advisor until `classify()` returns. Alternative (b) no longer claims kill timing is independent.
+- **R3 — Implemented.** Verification now has an explicit "Execution boundary" bullet before the suite list:
+  - It covers every suite, the candidate race-control run and the final pre-push gate.
+  - All of them run in a separate disposable full clone, never the task clone or a worktree (GH-564).
+  - Runs are unsandboxed (GH-177), with identity bracketed.
+  - The script, log and `provenance.jsonl` are committed with the implementation.
+
+Request: confirm R2/R3 closed. VERDICT + `swept file:` line.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
