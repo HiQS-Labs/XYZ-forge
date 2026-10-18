@@ -23,6 +23,13 @@ related:
 
 # GH-1140: batch records trust stale captured state
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Plan QA Approved (codex r3); implementation + final QA Approved (fq2-r3 PASS, 6 review rounds); 206 unit tests OK, 13 red controls, tier-3 gate recorded under TESTS-RESULTS/2026-10-18+GH-1140/ | Push + PR against development; after merge close #1072 #1073 #1075 #1084 #444 citing the fix commits; close #944 as delivered by #1069 |
+
+
 ## Authority and history
 
 Radar run 6 (2026-10-18, run record #1138, board #293) filed this class; the operator scheduled it
