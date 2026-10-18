@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -90,7 +90,25 @@ ROUND: 1 / 4
 5. Is the evidence sufficient and honestly stated, in particular the parallel-gate wall-time caveat and the "not promotion evidence" status of the parallel run?
 6. Anything over-built or mis-scoped versus the plan?
 
-Grade each [Blocker]/[Should]/[Nit]/[Pass] with Observed input / Affected scope / Falsifier on any requested change. Do not request new tests. End with STATUS: Approved if the Definition of Done holds.
+Grade each [Blocker]/[Should]/[Nit]/[Unverified — no citation] with Observed input / Affected scope / Falsifier on any requested change. Do not request new tests. End with STATUS: Approved if the Definition of Done holds.
 
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The implementation matches the approved design on source inspection, but required acceptance evidence is incomplete. Finish the bounded manual controls and provide the base/candidate scope comparison; no new suite or production change is requested.
+swept file: yes
+
+Swept all three source files in full and the plan/provenance/artifacts. No additional demonstrated pre-existing defect requiring expansion of this slice was found; the audit's documented lexical limits and the runner's existing retry/receipt limitations remain. Verify tier with direct-source fallback: list_projects has no project for this worktree; nearest XYZ-forge is the main checkout, generation 2026-09-01T15:54:30Z. check_index_coverage reports metadata_changed/not_tracked/missing for the five material source/plan/provenance paths, so that graph cannot establish this candidate's state. No git commands, suites, pytest, or executable fixtures ran.
+
+- [Pass] **Q1/Q2 — conservative pre-gates and cleared outputs.** Audit direct branches at `test/marathon-root-audit.sh:158–185` require marathon or relay; alias branches at :192–205 require `$` plus sh/python. Metadata patterns at :123–138 all imply the weaker case pre-gate at :119–122. File-level filtering at :440–446 is safe because aliases reset per audited file (:113–114) and registration itself requires a driver literal (:138). Both outputs clear before lookup (:88, :156); callers retain `|| true` (:193, :201, :425), and uppercase output names avoid the local `target` variables. No counterexample to these three pre-gates was found. Keep this bounded implementation.
+- [Pass] **Audit receipt consistency.** Read-only Python probe (exit 0): `hashlib.sha256((p/name).read_bytes()).hexdigest()` for each artifact/hash pair in provenance, byte comparison of audit streams, regex extraction of the nonempty TESTS block, and `gzip.decompress` of the retained gate log. Decisive output: `all retained hashes match=True count=7`; `audit stdout identical=True bytes=17028 lines=169`; `audit stderr identical=True bytes=0`; `registry count=406 unique=406`, with the intended heavy first three; raw log `passed409=True not_promotion=True`. Provenance:1–3 records 79.845 s to 8.801 s, gh273 20/20 and red parity; `audit-red-parity.log.txt:2–7` records both rc=1 and the exact gh115:220 diagnostic. This checks supplied receipts, not fresh execution or commit provenance.
+- [Pass] **Q3 — policy implementation and existing controls.** `test/gh648-l4-285-revalidate.sh:148–162` preserves True for ESRCH, records the distinct EPERM string and retains the signalable-group deadline; :166–167 catches both cleanup exceptions. `gh648-controls-and-rescued-suites.log.txt:4–22` records the no-op observation failing specifically with `process group remains`, the two observation injections, and all four concurrent suites green. These support the chosen policy, subject to F1 below.
+- [Should] **F1 — supply the promised cleanup EPERM control** (plan:62; `gh648-controls-and-rescued-suites.log.txt:7–10`; provenance:5). C and D explicitly inject only at observation; there is no recorded cleanup injection. In the disposable full clone, inject PermissionError specifically at cleanup, witness that handler being reached, and show it preserves both the ordinary success and the already-failing no-op-observation verdict. Retain exact commands/mutation, exit codes and decisive output with provenance. This remains [Unverified — needs clone run]; source inspection of the catch is insufficient to discharge the approved separate control. No source behavior change or new test file requested.
+- [Should] **F2 — complete ordering/membership and scope evidence** (plan:61; provenance:4,6; `parallel-4wide-summary.txt:9,24`). The registry result is a prose summary without retained before/after manifests or the multiset assertion; the gate artifact contains completion order, not per-suite start telemetry. Supply the existing base/candidate registry comparison, a dropped/duplicated-entry red witness, and the approved old-order first-wave red witness using retained PR #1116 telemetry (or explicitly disposition a narrower structural check). Retain the actual assertion/inputs/results; a new full-gate benchmark is unnecessary. Also provide the base a984865e to candidate diff/name-status summary (including any new test paths) so Q4's no-unrelated-files/no-routing-change claim can be reviewed without violating this reviewer's no-git rule. Whole-file source inspection establishes current behavior, not which files changed. Until supplied, exact multiset equality to base and whole-diff scope are [Unverified — no base comparison]. No behavior change requested.
+- [Pass] **Q5/Q6 — bounded design, ratings and honest performance limits.** `releases.sql:871–872` persists 70/40/50/85 and 65/55/50/90; plan:66–68 excludes routing/scheduler/receipt work and keeps #1114's own work separate. `parallel-4wide-summary.txt:24` explicitly declines a wall-time improvement claim; the raw retained log says `NOT promotion evidence`. 409/409 is a supplied self-check for 52296349, not promotion attestation. The source changes use existing owners and remain Easy to reverse individually; no extra mechanism is needed.
+- [Nit] Update the stale plan status/measurement prose when completing F1/F2: plan:17,83 and the Producer block say 78.9/78.93 s, while the actual baseline receipt is 79.845 s (`audit-before.time:1`, provenance:1). The plan's status table still lists the completed clone verification as next work.
+
+Handing off to Producer (claude-a) — record/disposition F1 and F2, then return for review; go to the Producer window and say 'take your turn'. Harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
