@@ -130,4 +130,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Producer/orchestrator should carry the evidence limitation into the PR and let the harness perform the remaining gate.
 
+
+### Attestation · relay-drive — 2026-10-18T05:47:31Z
+task: RELAY-gh1114-parallel-receipt-final
+reviewer: codex
+status: Approved
+reviewed-head: 5e1a22128078abf936f5e08414fee7f278a15a44
+added-range: 8135+6145
+added-sha256: c3b055bd5aa2eed93cd5b0982fa177965f6a21a68c87e8098c58ec71e443561d
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
