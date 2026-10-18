@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -88,5 +88,35 @@ Please verify:
 4. Are `PROJECT/2-WORKING/GH-1139-TODO-LIST-SKILL.md` and the `releases.db` row (`rmi-01M57TAW0AA2BSWT4BKPYND10X`) truthful, with no new test files or `validate.sh` registry entries in the diff?
 
 Do not run `validate.sh`, `test/*.sh`, `pytest`, or mutating git commands during this review turn. Append one reviewer block with `swept file: yes`, cited findings, `VERDICT: PASS|FAIL|PARKED`, and `Basis:`. If approved, set header `STATUS: Approved` and `NEXT: —`.
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: PASS
+
+Basis: Ship this bounded Markdown implementation. Read the entire todo-list skill, handsfree skill, architecture document, working task document, walkthrough, provenance receipt, and approved plan relay. No blocking defect found in the required behavior; the full-file sweep found the nonblocking index discrepancy below. This approves the reviewed prose contract, not live scheduling, final-commit gate qualification, or merge readiness. No artifact edits, git commands, executable fixtures, or suites were run.
+
+- [Pass] **Checklist contract:** `skills/2-daily/todo-list/SKILL.md:22-41` preserves recommended order, honors user filtering, emits numbered statuses, and stores native/chat state plus a unique `temp/todo-list-YYYY-MM-DD-<session-token>.md` note. Lines 73-86 start Item 1 immediately, advance after verified completion, retain asynchronous task identity, and stop/cancel on completion or blockers. No additional defect found in this skill sweep.
+- [Pass] **DRY scheduler delegation:** Todo-list lines 45-69 delegate checks to handsfree with a shared note, 100-minute/ten-wake cap and checklist prompt, plus an honest unarmed fallback. `skills/1-hourly/handsfree/SKILL.md:33-41` permits caller overrides while retaining the standalone 3-hour/18-wake default. Its lines 42-73 and 89-116 retain receipt/readback, failed-creation cleanup, no duplicate job, authorization limits, cancellation readback and manual-stop reporting. No additional pre-existing handsfree defect found by text review.
+- [Pass] **Daily index and ledger:** `ARCHITECTURE.md:72-98` matches all 21 daily skills, including todo-list at line 94. `releases.sql:876` agrees with the SQLite row: `65/20/50/85`, `status_label=in-progress`, and `PROJECT/2-WORKING/GH-1139-TODO-LIST-SKILL.md`; the update receipt is retained at `releases.sql:2894`. This supports the working document's state at lines 5, 23 and 56-60. Read-only probes (exit 0) used the following decisive queries:
+  ```python
+  from pathlib import Path
+  import re, sqlite3
+  text = Path('ARCHITECTURE.md').read_text()
+  section = text.split('### `2-daily`', 1)[1].split('\n### ', 1)[0]
+  rows = re.findall(r'\]\((skills/2-daily/[^)]+/SKILL.md)\)', section)
+  disk = {str(p) for p in Path('skills/2-daily').glob('*/SKILL.md')}
+  # Executed probes guarded nonempty rows/disk and the single ledger result.
+  c = sqlite3.connect('file:releases.db?mode=ro', uri=True)
+  c.execute('select rating_pri,rating_sev,rating_appeal,rating_effort,status_label,doc_path from roadmap_items where global_id=?', ('rmi-01M57TAW0AA2BSWT4BKPYND10X',)).fetchall()
+  ```
+  Decisive output: `daily: disk=21 rows=21 missing=[] extra=[]`; `ledger: (65, 20, 50, 85, 'in-progress', 'PROJECT/2-WORKING/GH-1139-TODO-LIST-SKILL.md')`; receipts include `roadmap-update` at `2026-10-18T15:40:39Z`. Commands ran under `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`.
+- [Pass] **Retained evidence with disclosed limits:** `TESTS-RESULTS/2026-10-18+GH-1139/session-example.md:3-5` labels the scenario fictional; lines 22-47 cover ordered persistence, immediate execution, shared identity, wake advancement, completion cancellation and unsupported scheduling; lines 53-58 reject the inherited deadline and missing checklist on paper. `provenance.jsonl:1` parses as JSON and records tested commit `3201d1b7e5f3eef41503678f589286202efabb07`, the disposable `-verify` clone, reported `gh778=1->0`, `gh798=1->0`, clean releases/PDDA results, and the lack of a live scheduler soak. These are retained producer receipts, not independently replayed results. Its command field is a descriptive sequence with annotations, rather than a directly executable shell transcript.
+- [Nit] **Index drift outside the daily section:** `ARCHITECTURE.md:49` declares 15 hourly skills but lines 55-70 list 16. Lines 100-120 declare/list 15 weekly skills while `skills/3-weekly/weekly-planner/SKILL.md` also exists. Optional fix: set both headers to 16 and add the weekly-planner row. This does not undermine the required daily index. The read-only inventory probe compared `Path('skills',tier).glob('*/SKILL.md')` against links parsed from each section (exit 0): `1-hourly ... disk=16 rows=16 missing=[] extra=[]`; `3-weekly ... disk=16 rows=15 missing=['skills/3-weekly/weekly-planner/SKILL.md'] extra=[]`. No other actionable pre-existing defect found in the reviewed documents.
+- [Unverified — needs clone run] Reported suite/gate results were not rerun here. Final-state gate qualification and a diff-level assertion of no new test files or registry entries remain with the harness/producer; git was explicitly prohibited. The working doc forbids new tests at lines 45-48 and requires isolated verification at lines 69-72. No live scheduler soak is claimed or required by this bounded plan.
+- Evidence boundary: Verify-tier intent with direct current-source fallback. No graph inventory, search or coverage tool is callable in this session; no claim relies on a graph. Filesystem comparison was bounded to the index and SQLite was opened with `mode=ro`.
+
+Relay closed (Approved), no further review turn needed. Producer (agy-producer) may proceed with final committed-state checks and publication under the existing plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
