@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -90,7 +90,7 @@ skill; the speed is a side effect.
 > 4. **Execute qualified gate & dial-in releases ledger (Phases 6–7).** Register roadmap issue in `releases.db` and dial into active release (`releases next`); execute the selected existing suite green, prove tree identity, and re-snapshot tree to prevent drift.
 > 5. **Direct fast-forward landing & 3-push reconciliation (Phases 8–11).** Commit qualified paths (`Closes #N`), direct push fast-forward to `origin/development` (`XYZ_SKIP_PREPUSH=1`), verify remote issue closure, ship release evidence, and execute clean-tree `wave_reconcile --commit`.
 >
-> **Overall Goal:** Bounded hotfix or documentation update verified, ledger-tracked, landed directly to development, and reconciled with a complete paper trail in one single, unpaused motion with zero bypassed safety invariants.
+> **Overall Goal:** Bounded hotfix or documentation update verified, ledger-tracked, landed directly to development, and reconciled with a complete paper trail in one single, unpaused motion with zero bypassed safety invariants.  [Unverified — no citation]
 
 Then begin work.
 
@@ -336,5 +336,21 @@ Do not demand a new issue or PR for this already expressly scoped operator hotfi
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Ship the scoped documentation integration through the authorized manual, normal-hook procedure. The Express policy distinguishes risk from filename while preserving explicit approval and executable admission. No Critical/High correctness issue or additional material pre-existing defect was found in the swept artifacts. Reversibility: Easy (revert the documentation/pointers; use canonical ledger verbs for owned closeout). This review does not attest a future push, cleanup, campaign, or promotion.
+swept file: yes
+
+- [Pass] Risk and authority remain bounded. `skills/2-daily/express/SKILL.md:65–77` permits reviewed editorial/bounded skill changes while requiring explicit approval for permissions, gates, destructive behavior and material authority changes; it retains bounds, identity, concurrency and canonical writers. Lines 79–95 disclose the current driver mismatch and require exact-change/procedure authorization, independent review, current-head evidence, normal hooks and remote-tip revalidation. The Non-goals section still says “No Costly/one-way-door work, ever” and grants no automatic override. No correction required.
+- [Pass] The disclosure matches the unchanged consumer: `utils/py/express.py:89–104` rejects SKILL.md and executable/symlink modes; `:853` and `:994` set `XYZ_SKIP_PREPUSH=1`. The manual procedure at skill lines 89–95 expressly differs from that default and does not instruct bypassing executable checks. Full-file review of the Express artifact found no material contradiction that prevents this explicitly scoped manual hotfix. No driver edit is needed or authorized.
+- [Pass] Intended PR1147 content is preserved without executable expansion. Read-only probe: `PYTHONDONTWRITEBYTECODE=1 python3 .relay-scratch/tmp/read_objects.py` → exit 0; decisive output: `CHANGED PATHS 24`, only ARCHITECTURE/CHANGELOG, GH1143 PROJECT/results/relay documents, releases.db/sql and four skill Markdown paths; `SOURCE IDENTICAL` for defect-campaign, Radar, ATE and ARCHITECTURE against `9004226c96f1277cb584f138116811da3e548bcc`; `DRIVER UNCHANGED`; `SEED MATCHES HEAD for all changed paths except owned relay`. The scratch reader directly decodes repository objects, invokes no git command and runs no repository fixture. The four exact matches and unchanged executable paths exclude changes to held #1133/#1136 implementation work. No correction required.
+- [Pass] The supplied issue snapshot (`gh1143-plan.codex.md`, “Issue 1143 source snapshot”) has equivalents in the full defect-campaign artifact: suitability/ownership and tool limits at lines 16–42; approval, finite budgets, stops and isolation at 44–89; same-predicate replay, retained state/timing, evidence-linked accountable dispositions and bounded null results at 91–113. Lines 115–147 keep the pilot HELD, historical controls unrun, ownership refresh mandatory and missing structured adapter/predicate integration explicit. Radar's “Radar recommends and never executes” and optional handoff (`skills/3-weekly/radar/SKILL.md:802–811`), ATE's mode-specific override (`skills/4-occasional/ate/SKILL.md:20–24`) and ARCHITECTURE's index row retain this boundary. No correction required.
+- [Pass] Current-ledger preservation is supported by an independent baseline comparison, not copying the old PR database. The same probe above compared every baseline SQLite table/row from `3a6dde9e66decfff4be1ee999ac3d59c6ff059b4` with read-only current releases.db. Exit 0; decisive output: only settings generation `1811 → 1814` replaced; `op_receipts old 2012 new 2015 removed 0 added 3`; `roadmap_items old 380 new 381 removed 0 added 1`; `work_events old 874 new 877 removed 0 added 3`. Added receipts are `roadmap-add`, `roadmap-rate`, `roadmap-update` for the same GH1143 GID; the new work event contains `accepted_start: true`. All other tables and prior accepted-start labels/receipts are unchanged. This agrees with `hotfix/ledger-preservation.txt` and `hotfix/manual-review.md:3–7`; source-writer execution is producer evidence, while state preservation was independently measured. No correction required.
+- [Pass] Validation claims remain documentary: `hotfix/pdda.txt` ends “no errors, 37 warning(s)” and records LLM readiness skipped; `hotfix/route.txt` records docs/tier1/full_required=false; `hotfix/ledger-check.txt` reports zero failures/10 warnings. `provenance.jsonl:1–6` retains the failed plan attestation, original docs checks/review/publication and current manual integration with pdda_exit 0, rather than claiming runtime/full/promotion proof. `hotfix/manual-review.md:18–31` separates these results from future publication; the task document's final section retains normal-hook, race and closeout requirements. No false campaign-safety or already-landed claim found.
+- [Unverified — needs clone run] Producer validator/PDDA/ledger results were inspected, not rerun. No validate.sh, test/*.sh, pytest, executable fixture, campaign, hook or network publication ran during this turn. The harness owns final post-turn qualification; the operator must still prove current remote identity/tip, run the installed normal hook and verify exact-head publication/closeout before retiring either clone. Approval is review evidence, not attestation that those pending actions succeeded.
+
+Relay closed (Approved), no further review turn needed. Returning the completed token to operator for the authorized normal-hook documentation landing and scoped closeout.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
