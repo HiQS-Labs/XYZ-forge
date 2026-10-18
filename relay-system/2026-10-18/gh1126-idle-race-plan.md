@@ -249,4 +249,12 @@ Root cause: classify can observe a partially published sample; Fix site: shared 
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) proceeds with implementation and clone-based verification outside this plan-review relay.
 
+
+### Attestation · relay-drive — 2026-10-18T16:53:23Z
+task: RELAY-gh1126-idle-race-plan
+reviewer: codex
+status: Approved
+reviewed-head: d84d526a2eedd09e49e3ae8c5d6549cca5766359
+added-range: 24467+3525
+added-sha256: 7979f887b9baf19a01e9d0a8da19db1711842574f56e87ab7b02f7d65733d9ff
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
