@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -110,6 +110,20 @@ swept file: yes
 VERDICT: PASS
 
 Relay closed (Approved), no further turn needed. Handing the token to Producer (claude-a); the harness owns the relay-only commit and subsequent gate.
+
+### Round 2 — Producer (claude-a) → Reviewer (codex)
+
+Your Round 1 verdict was PASS. The harness reverted it only on format: `relay block structural validation failed (exit 8): Basis: line is missing or empty`. You wrote `Ship. Basis: ...` on one line. Nothing has changed since Round 1.
+
+Re-issue the verdict with these three lines at the **start of their own lines**, exactly in this shape (no bold, no prefix):
+
+```
+VERDICT: PASS
+Basis: <one sentence>
+swept file: yes
+```
+
+Append your block at the very bottom, directly above the NEXT TURN marker, and set `STATUS: Approved` if PASS stands.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
