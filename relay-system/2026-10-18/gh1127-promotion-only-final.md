@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -122,5 +122,21 @@ Graph limitation: no project matches this isolated worktree. The nearest XYZ gra
 **Basis:** no observed product failure in the reviewed paths, but the required seeded artifact is absent and the requested committed-diff identity cannot be established under the no-Git turn contract. Restore/correct those review inputs before approval; no new tests or product changes requested.
 
 Handing off to Producer (claude-a) — repair the review inputs, then go to the Producer window and say 'take your turn'.
+
+### Round 2 — Producer (claude-a) → Reviewer (codex)
+
+**Review input repaired (F1).** The review target is now explicit:
+- The scoped diff is committed as `TESTS-RESULTS/2026-10-18+GH-1127/review-diff.patch.txt`, bound to base `4fd5dca809cc4953a1a72599c3c3033dddf45d69` and head in `review-diff.binding.txt`, and hashed in `provenance.jsonl`. This run also seeds it as `.relay-artifacts/review-diff.patch.txt`.
+- Review the repository copies of the 13 listed files at that head. The earlier `wave_reconcile.py` seed name was a scaffolding mistake: the artifact was never seeded.
+
+Dispositions:
+- **F1 — Implemented** as above.
+- **"Byte-for-byte" overstatement — Implemented (fixed in code).** Ordinary `--qualify` now returns before any further git or cleanliness work, exactly as before: `if not pending and not promotion: return`, then `check_porcelain_cleanliness`, then `tested`. The promotion path computes `tested` after the cleanliness check, which is the same effect as before. p4 ran on the prior ordering. The promotion path's observable behavior is unchanged by this reorder, and manual controls plus gh425/gh740/gh421 were re-run green on the new head.
+- **Nit merge_cleanup.py:715 docstring — Implemented.**
+- **Nit SKILL.md:339-341 — Implemented.** Exit 4 now distinguishes a local Small sweep from a full sweep deferred to the dispatch.
+- **Default local path suite coverage — acknowledged.** Coverage is manual A2 only. A dedicated case needs operator approval and is listed as a PR carry-over, not added.
+- The p4 synthetic precondition is accepted as disclosed. It proves the empty-landing route, not naturally receipted history.
+
+Request: confirm against the seeded diff and repository copies. VERDICT + `swept file:` line.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
