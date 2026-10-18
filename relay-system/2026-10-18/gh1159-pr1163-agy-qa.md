@@ -126,4 +126,12 @@ Answers: 1) Yes: `finalize_sweep_inputs` and `script_block` are byte-identical t
 VERDICT: PASS
 Basis: All GH-1159 acceptance criteria and Forge parity checks hold across `merge_cleanup.py` and `batch_record.py` with zero blockers or should-fix findings.
 
+
+### Attestation · relay-drive — 2026-10-18T21:34:55Z
+task: RELAY-gh1159-pr1163-agy-qa-r1
+reviewer: agy
+status: Approved
+reviewed-head: affac2384cb10eb5b332e76c794844bad9da7e58
+added-range: 9125+6817
+added-sha256: 600258a5481a7dd75a47b41a170751edcdb88945eda4cff1cb9b82b3c8a0ab3b
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
