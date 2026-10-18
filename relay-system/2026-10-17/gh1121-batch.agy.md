@@ -5,7 +5,7 @@
 -->
 
 NEXT: Producer
-STATUS: Open
+STATUS: Escalated
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -126,3 +126,6 @@ relay closed (Approved), no further turn needed
 
 ### System · relay-drive — 2026-10-17T23:50:26Z
 terminal STATUS Approved written by FAILED reviewer turn (agy; shim returned non-zero) — reverted
+
+### Coordinator disposition — cap2/2 exhausted
+Driver rejected attestation. Header marked Escalated to prevent treating the reviewer report as an accepted approval. Historical reviewer block is preserved. Operator extension requested; no additional QA dispatched.

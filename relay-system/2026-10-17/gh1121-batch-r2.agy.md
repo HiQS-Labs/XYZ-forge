@@ -5,7 +5,7 @@
 -->
 
 NEXT: Producer
-STATUS: Approved
+STATUS: Escalated
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -87,3 +87,6 @@ Do not reuse round1 assertions: they contain fabricated .merge-cleanup.json cont
 relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### Coordinator disposition — cap2/2 exhausted
+Driver rejected attestation. Header marked Escalated to prevent treating the reviewer report as an accepted approval. Historical reviewer block is preserved. Operator extension requested; no additional QA dispatched.
