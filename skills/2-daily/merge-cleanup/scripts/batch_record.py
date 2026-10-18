@@ -44,6 +44,17 @@ def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
+def _strip_marks(obj: Any) -> Any:
+    """Drop the one-shot intent markers before persisting (`_touched`, `_verdict_touched`,
+    `_sweep_touched`, `_refreshed`) — they describe THIS save's intentional writes only."""
+    if isinstance(obj, dict):
+        return {k: _strip_marks(v) for k, v in obj.items()
+                if k not in ("_touched", "_verdict_touched", "_sweep_touched", "_refreshed")}
+    if isinstance(obj, list):
+        return [_strip_marks(v) for v in obj]
+    return obj
+
+
 def _dir(primary: Path, origin: str) -> Path:
     return attempt_record.record_path(primary, origin, 0).parent
 
@@ -95,12 +106,10 @@ def extend(rec: Dict[str, Any], ordered: List[Dict[str, Any]]) -> None:
             continue
         row["title"] = pr.get("title") or row.get("title") or ""
         row["files"] = fresh_files
-        hard = list(pr.get("_hard_deps") or [])
-        if hard:
-            row["hard"] = hard
-        soft = {str(k): v for k, v in (pr.get("_soft_reasons") or {}).items()}
-        if soft:
-            row["soft"] = soft
+        # valid discovery carries an authoritative dependency answer, empty included — stale
+        # annotations must not survive a refresh the way a failed (empty) file list must
+        row["hard"] = list(pr.get("_hard_deps") or [])
+        row["soft"] = {str(k): v for k, v in (pr.get("_soft_reasons") or {}).items()}
         row["_refreshed"] = True
     save(rec)
 
@@ -109,13 +118,17 @@ _PLACEHOLDER = "unattempted"
 
 
 def _merge_outcome(disk: Dict[str, Any], mine: Dict[str, Any]) -> Dict[str, Any]:
-    """Per-PR field merge: a concrete value wins over a placeholder, `merged` is never downgraded
-    (GH-1074), and fields the saving writer set intentionally (merge_oid, reconcile) survive."""
-    merged = dict(disk)
-    for k, v in mine.items():
-        d = disk.get(k)
+    """Per-PR field merge. Only fields the saving writer intentionally set this turn (`_touched`,
+    recorded by set_outcome) are applied; every other field keeps the durable on-disk value, so a
+    stale snapshot's carried `reconcile="failed: ..."` cannot overwrite a newer `reconcile="ok"`.
+    Within touched fields, `merged` status is still never downgraded (GH-1074) and a concrete
+    value beats the placeholder."""
+    merged = {k: v for k, v in disk.items() if not k.startswith("_")}
+    touched = set(mine.get("_touched") or [])
+    for k in touched:
+        v = mine.get(k)
         if k == "status":
-            if d == "merged":
+            if disk.get("status") == "merged":
                 continue
             if v and v != _PLACEHOLDER:
                 merged[k] = v
@@ -150,35 +163,34 @@ def _merge_records(disk: Dict[str, Any], mine: Dict[str, Any]) -> Dict[str, Any]
     for r in (mine.get("planned") or []):
         d = disk_rows.get(r.get("pr"))
         if isinstance(d, dict) and not r.get("_refreshed"):
-            planned.append(d)
+            planned.append(_strip_marks(d))
         else:
-            fresh = {k: v for k, v in r.items() if k != "_refreshed"}
-            planned.append(fresh)
+            planned.append(_strip_marks(r))
         seen.add(r.get("pr"))
     for pr, d in disk_rows.items():
         if pr not in seen:
-            planned.append(d)
+            planned.append(_strip_marks(d))
     out["planned"] = planned
 
-    order = list(mine.get("landed_order") or [])
-    for n in (disk.get("landed_order") or []):
+    # durable landing sequence is the base; only genuinely-new entries append — a stale subset
+    # must not move retained landings ahead of it (the sweep range reads first/last, B order)
+    order = [n for n in (disk.get("landed_order") or [])]
+    for n in (mine.get("landed_order") or []):
         if n not in order:
             order.append(n)
     out["landed_order"] = order
 
-    dv, mv = disk.get("verdict"), mine.get("verdict")
-    if isinstance(dv, dict) and (not isinstance(mv, dict)
-                                 or str(dv.get("at") or "") > str(mv.get("at") or "")):
-        out["verdict"] = dv
-    ds, ms = disk.get("sweep_inputs"), mine.get("sweep_inputs")
-    if isinstance(ds, dict) and (not isinstance(ms, dict)
-                                 or str(ds.get("computed_at") or "") > str(ms.get("computed_at") or "")):
-        out["sweep_inputs"] = ds
+    # verdict/sweep_inputs are intentional replacements by their owning mutators — an intent
+    # marker decides, so a same-second stale snapshot cannot resurrect the replaced value
+    if isinstance(disk.get("verdict"), dict) and not mine.get("_verdict_touched"):
+        out["verdict"] = disk["verdict"]      # a carried (unmarked) verdict never beats durable
+    if isinstance(disk.get("sweep_inputs"), dict) and not mine.get("_sweep_touched"):
+        out["sweep_inputs"] = disk["sweep_inputs"]
 
     for k in ("issue", "issue_url"):
         if not out.get(k) and disk.get(k):
             out[k] = disk[k]
-    return out
+    return _strip_marks(out)
 
 
 def save(rec: Dict[str, Any]) -> None:
@@ -257,14 +269,19 @@ def unfinished_batches(primary: Path, origin: str, integration: str) -> List[Dic
 def set_outcome(rec: Dict[str, Any], pr: int, status: Optional[str] = None,
                 merge_oid: Optional[str] = None, reconcile: Optional[str] = None) -> None:
     o = rec["outcomes"].setdefault(str(pr), {"status": "unattempted"})
+    touched = set(o.get("_touched") or [])
     if status is not None and o.get("status") != "merged":  # GH-1074: a merge is never downgraded
         o["status"] = status
+        touched.add("status")
     if merge_oid is not None:
         o["merge_oid"] = merge_oid
+        touched.add("merge_oid")
     if reconcile is not None:
         o["reconcile"] = reconcile
-    if status == "merged" and pr not in rec.setdefault("landed_order", []):
-        rec["landed_order"].append(pr)
+        touched.add("reconcile")
+    o["_touched"] = sorted(touched)  # GH-1140: these fields are intentional THIS turn — the
+    if status == "merged" and pr not in rec.setdefault("landed_order", []):  # save merge applies
+        rec["landed_order"].append(pr)                                       # them, carried values do not
     save(rec)
 
 
@@ -421,6 +438,7 @@ def finalize_sweep_inputs(rec: Dict[str, Any], primary: Path, origin: str) -> No
         if files:
             conflicts[str(n)] = files
     gate, reason = _gate(primary, [x for x in oids if x[1]]) if not missing else (FULL_GATE, "merge commit missing")
+    rec["_sweep_touched"] = True  # GH-1140: an intentional replacement, not a carried value
     rec["sweep_inputs"] = {
         "range": rng,
         "shared_files": {f: sorted(prs) for f, prs in sorted(owners.items()) if len(prs) > 1},
@@ -446,6 +464,7 @@ def record_verdict(rec: Dict[str, Any], text: str) -> Tuple[bool, str]:
         return False, "a findings verdict needs at least one `- [ ]` item with its evidence"
     if value == "deferred" and not body:
         return False, "a deferred verdict needs a reason"
+    rec["_verdict_touched"] = True  # GH-1140: an intentional replacement, not a carried value
     rec["verdict"] = {"value": value, "covers": sorted(landed(rec)), "body": body, "at": _now()}
     save(rec)
     return True, f"verdict {value} recorded for {', '.join('#%d' % n for n in rec['verdict']['covers'])}"

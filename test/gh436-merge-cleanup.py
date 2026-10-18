@@ -962,6 +962,7 @@ class TestBatchRecordStaleState(unittest.TestCase):
             newer_sweep = dict(disk["sweep_inputs"])
             newer_sweep["computed_at"] = "2026-10-18T09:00:00Z"
             later["sweep_inputs"] = newer_sweep
+            later["_sweep_touched"] = True  # what finalize_sweep_inputs sets on a real recompute
             batch_record.save(later)
             disk = json.loads(open(rec["path"]).read())
             self.assertEqual(disk["sweep_inputs"]["computed_at"], "2026-10-18T09:00:00Z")
@@ -1000,6 +1001,63 @@ class TestBatchRecordStaleState(unittest.TestCase):
             substituted = cmd.replace('T=$(mktemp -d)', 'T=/tmp/x')
             check = subprocess.run(["bash", "-n", "-c", substituted], capture_output=True, text=True)
             self.assertEqual(check.returncode, 0, check.stderr)
+
+    def test_stale_writer_cannot_clobber_a_newer_reconcile(self):
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = self._rec(tmp, outcomes={"1": {"status": "merged", "merge_oid": "d" * 40,
+                                                 "reconcile": "failed: old"}}, landed=[1])
+            stale = json.loads(json.dumps(rec))
+            live = json.loads(json.dumps(rec))
+            batch_record.set_outcome(live, 1, reconcile="ok")
+            batch_record.save(stale)                            # stale carries "failed: old"
+            disk = json.loads(open(rec["path"]).read())
+            self.assertEqual(disk["outcomes"]["1"]["reconcile"], "ok")
+            batch_record.set_outcome(live, 1, reconcile="failed: stopped")  # intentional change persists
+            disk = json.loads(open(rec["path"]).read())
+            self.assertEqual(disk["outcomes"]["1"]["reconcile"], "failed: stopped")
+
+    def test_same_second_stale_verdict_and_sweep_do_not_resurrect(self):
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = self._rec(tmp, outcomes={"1": {"status": "merged", "merge_oid": "d" * 40},
+                                           "2": {"status": "merged", "merge_oid": "e" * 40}}, landed=[1])
+            live = json.loads(json.dumps(rec))
+            live["landed_order"] = [1, 2]
+            self.assertTrue(batch_record.record_verdict(live, "verdict: clean\nnew body")[0])
+            at = json.loads(open(rec["path"]).read())["verdict"]["at"]
+            stale = json.loads(json.dumps(live))
+            stale["verdict"] = {"value": "clean", "covers": [1], "body": "old", "at": at}  # same second
+            stale["sweep_inputs"] = {"range": "old", "computed_at": "2026-10-18T09:00:00Z"}
+            batch_record.save(stale)
+            disk = json.loads(open(rec["path"]).read())
+            self.assertEqual(disk["verdict"]["covers"], [1, 2])
+            self.assertEqual(disk["verdict"]["body"], "new body")
+            self.assertNotEqual(disk["sweep_inputs"].get("range"), "old")
+
+    def test_landing_sequence_survives_a_stale_subset(self):
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = self._rec(tmp, outcomes={"1": {"status": "merged", "merge_oid": "d" * 40},
+                                           "2": {"status": "merged", "merge_oid": "e" * 40}},
+                            landed=[1, 2])
+            stale = json.loads(json.dumps(rec))
+            stale["landed_order"] = [2]                          # stale snapshot predates PR 1
+            batch_record.save(stale)
+            disk = json.loads(open(rec["path"]).read())
+            self.assertEqual(disk["landed_order"], [1, 2])       # sweep range reads first/last
+
+    def test_refresh_removes_stale_dependencies(self):
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = self._rec(tmp, planned=[{"pos": 1, "pr": 1, "title": "a", "files": ["a"],
+                                           "hard": [7], "soft": {"7": ["overlap"]}}])
+            batch_record.extend(rec, [{"number": 1, "title": "a", "files": [{"path": "a"}, {"path": "b"}],
+                                       "_hard_deps": [], "_soft_reasons": {}}])  # deps removed upstream
+            disk = json.loads(open(rec["path"]).read())
+            self.assertEqual(disk["planned"][0]["hard"], [])
+            self.assertEqual(disk["planned"][0]["soft"], {})
+            self.assertEqual(disk["planned"][0]["files"], ["a", "b"])
 
 
 if __name__ == "__main__":
