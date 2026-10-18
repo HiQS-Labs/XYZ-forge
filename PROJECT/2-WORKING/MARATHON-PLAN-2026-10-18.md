@@ -86,32 +86,10 @@ the other lane's source), or the split can stall when the consumer waits on the 
 
 ### ✅ Likely done — verify-and-close, not a build lane
 - #141 GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison — `already-landed`
-- #325 GH-325 · Vendor legacy SWE skills and make skills/ canonical — `already-closed`
-- #591 GH-591 · Reconciler provenance lifecycle — `already-closed`
-- #807 GH-807 · test: pre-existing signal-triage quiet-grep pipeline produces false failure under load — `already-closed`
-- #886 GH-886 · Linux portability canary: 3 advisory failures (gh425, gh478, gh153) — `already-closed`
-- #1108 GH-1108 · Jog one-writer execution and landing — `already-closed`
-- #215 GH-215 — wave_reconcile.py and roadmap-dashboard.sh hardcode pre-vendoring path depth — `already-closed`
-- #18 GH-18 · Harness evaluation: Command Code (cmd) and model matrix — `already-closed`
 - #275 GH-275 · medium-level write-ops logging of agent disk-write commands — `already-landed`
-- #396 GH-396 · Harness root resolution: one resolver, two roots, pinned — `already-closed`
 - #416 GH-416 · Four documentation trues-ups — package.json vs §7, dead PROJECT 4-MISC refs, CODEX_FLAGS default and dead escalation rung, uncommitted ROUTER pointer — `already-landed`
-- #421 GH-421 · Wave reconciliation is never invoked automatically — wire it post-merge, but fix its ledger write first — `already-closed`
 - #423 GH-423 · releases roadmap render: emit the DB as ledger markdown — the missing verb GH-418 actually depends on — `already-landed`
-- #424 GH-424 · roadmap_items.status_marker has no CLI writer — in releases-mode a row can never leave 🆕 — `already-closed`
-- #425 GH-425 · --gate provenance check never compares the PR number — it proves TESTS-RESULTS/ is non-empty and reports receipts verified — `already-closed`
-- #454 GH-454 · wave_reconcile dies on an unnamed release, and enforces PDDA full-mode on an observe-mode repo — `already-closed`
-- #491 GH-491 · roadmap move/update --section help advertises section names the renderer drops, and nothing validates the value — `already-closed`
 - #492 GH-492 · Nothing reconciles roadmap_items against issues closed outside a merged PR — `already-landed`
-- #589 GH-589 · Build XYZ mini: beginner-friendly stripped repo (relay, consult, agent-chorus, skill viewer) — `already-closed`
-- #644 GH-644 · xyz-vendor.sh reconcile_ignore_state: part B — stop re-asserting .xyz/ on repos that track the harness (part A landed #685) — `already-closed`
-- #690 GH-690 · Clone/worktree teardown reminders at landing time (express, marathon_drive, start-task, jog) — `already-closed`
-- #770 GH-770 · releases jog resume/land/reconcile/retry-gate/retry-build ignore --root — `already-closed`
-- #771 GH-771 · jog accepts removed 'gemini' reviewer; marathon rejects it after the lease is taken — `already-closed`
-- #904 GH-904 · pdda roadmap-coverage: empty releases.db is reported as 'no ledger present' — every fresh releases-mode repo errors — `already-closed`
-- #907 GH-907 · router_audit.py remediation hint prints bare utils/py path in vendored .xyz/ installs — `already-closed`
-- #906 GH-906 · pdda-install.sh aborts mid-install when .claude/skills is unwritable, skipping buckets, seeds, mode file and registry — `already-closed`
-- #905 GH-905 · PDDA/RELEASES: no supported releases-DB-only install path; MD ledger seeds and projections can only be stopped ad hoc — `already-closed`
 - #1087 GH-1087 · docs: restore spacing in the GH-1051 work record — `already-landed`
 
 ### 🔧 Reconcile — undocumented partial completion
