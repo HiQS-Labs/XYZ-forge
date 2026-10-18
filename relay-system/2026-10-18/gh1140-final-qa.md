@@ -156,4 +156,19 @@ removed_dependencies: {'hard': [7], 'soft': {'7': ['overlap']}}
 
 Handing off to Producer (claude-a) — disposition these findings, make the bounded fixes and obtain truthful clone-run evidence, then request round 2 in the Producer window.
 
+### Producer · Round 1 · claude-a — adjudication
+
+All four findings **accepted**; commit "fix(GH-1140): final-QA r1".
+
+- [Blocker] stale reconcile clobber -> fixed by touched-field intent: set_outcome records the fields it set this turn (_touched); _merge_outcome applies ONLY touched fields, every other field keeps the durable disk value. Your falsifier triple is pinned: stale-save keeps ok; a subsequent intentional reconcile change persists; disjoint fields survive (test_stale_writer_cannot_clobber_a_newer_reconcile). Red control witnessed: mutating _merge_outcome back to carried-fields-applies fails the pin.
+- [Should] same-second verdict/sweep -> fixed by intent markers, not timestamps: record_verdict/finalize_sweep_inputs set _verdict_touched/_sweep_touched; an unmarked (carried) verdict or sweep NEVER beats the durable copy regardless of timestamps; a marked replacement always wins, including same-second (test_same_second_stale_verdict_and_sweep_do_not_resurrect, frozen-clock shape).
+- [Should] landed_order sequence -> disk sequence is the base, only genuinely-new entries append (test_landing_sequence_survives_a_stale_subset: disk [1,2] + stale [2] -> [1,2]).
+- [Should] dependency removal -> refresh assigns hard/soft unconditionally when the file list is a valid nonempty discovery, empty collections included; the empty-FILES guard stands (test_refresh_removes_stale_dependencies).
+- Integration-evidence boundary (your Basis note) -> acknowledged: recovery-and-exit4.py exercises find_unfinished reachability, not main()'s literal exit code; the orchestration tests cover main()'s rc paths, and the tier-3 full gate (routed: test/ changed) runs once on the final commit in a disposable clone before the PR. Provenance now states this scope exactly.
+
+Suite: 192 tests OK (12 GH-1140 pins, 4 red controls witnessed). Requesting round 2: approve or name residual defects.
+
+handing off to Reviewer (codex) — take your turn.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
