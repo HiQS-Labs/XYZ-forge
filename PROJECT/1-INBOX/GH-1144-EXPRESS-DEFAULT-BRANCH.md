@@ -103,8 +103,9 @@ Branch `feat/XYZ-forge-gh1144-express-default-branch-2026-10-18` off `developmen
    `development`, `main` and detached, and adds `BASE` (never run express from the integration branch itself).
    Messages, receipt `environment`, help text name the resolved branch (in Forge they read exactly as today).
 3. `reconcile_gated` passes `--base BASE` to `wave_reconcile.py`.
-4. `wave_reconcile.py`: `--base` argument (default `development`); used by `check_current_branch` and
-   `pull_upstream` calls at `:2220`/`:2229`, `fetch_commit_metadata` reachability and synthesized
+4. `wave_reconcile.py`: `--base` argument (default `development`, so PR/catch-up/qualification runs that
+   never pass it are unchanged even though the branch and pull preflight at `:2220`/`:2229` are shared with
+   those modes); used by the `check_current_branch` and `pull_upstream` calls at `:2220`/`:2229`, `fetch_commit_metadata` reachability and synthesized
    `baseRefName`, and the base guard at `:2319-2321`. Default keeps every existing caller byte-identical.
 5. `skills/2-daily/express/SKILL.md`: a short paragraph on base resolution (`--base`, else `origin/HEAD`, else
    GitHub's default branch, else refuse), "development" in the procedure and phase text reworded to "the
@@ -129,6 +130,16 @@ Branch `feat/XYZ-forge-gh1144-express-default-branch-2026-10-18` off `developmen
      `wave_reconcile --commit … --base main --gate`. Red control: the same scratch run against a build whose
      push destination alone is hardcoded to `development` must fail (remote `main` unchanged or refusal);
      restore → passes.
+   - Production reconciler on a main-only repo (plan QA round 2): gh267's fixture installs its own
+     `wave_reconcile.py` stub (`test/gh267-express-skill.sh:173-213`), so the scratch run above cannot exercise
+     the changed module. Separately, in the disposable clone, run the canonical `utils/py/wave_reconcile.py
+     --commit <sha> --base main --gate` against a scratch repo whose only branch is `main` (commit with
+     `Closes #N`, a committed express receipt for that sha, harness tools resolved from the clone as the
+     existing wave-reconcile suites do). Expect: the commit is accepted as reachable from `main`, the base
+     guard passes, the gate attributes the receipt. Red control: with `fetch_commit_metadata` still checking
+     local `development`, the same invocation exits 4 `not reachable from local development`; fixed → passes.
+     Also record that the same command without `--base` on a Forge-shaped (`development`) scratch repo
+     behaves as before.
    - Resolution checks (same clone, recorded): `--base main` with no `origin/HEAD` resolves `main`; no
      `origin/HEAD`, no `--base`, `gh` without a default branch → exit 3 `base-unresolved` with no doc, ledger or
      git changes (refusal telemetry only, as for every refusal); a clone with both `main` and `development`,

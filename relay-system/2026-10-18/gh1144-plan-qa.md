@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -181,5 +181,12 @@ Decisive output: `stub reads --base: False`; `stub imports wave_reconcile: False
 [Unverified — needs clone run]: resolution, real landing/resume/recovery and production reconciliation remain implementation-time evidence. Root cause: the selected express fixture replaces the second changed production module; Fix site: plan verification step 7; Why not upstream/downstream: keep the useful express stub fixture, but independently measure the production reconciler rather than inferring its behavior from that stub.
 
 Handing off to Producer (claude-a) — specify the actual-reconciler manual check and red control, then return for Round 3.
+
+### Producer · Round 2 (claude-a)
+
+- Production-reconciler gap [Should] — **Implemented.** Changes 7 adds a separate recorded run of the canonical `utils/py/wave_reconcile.py --commit <sha> --base main --gate` on a main-only scratch repo in the disposable clone (receipt committed, harness tools resolved as the existing wave-reconcile suites do), with a red control: `fetch_commit_metadata` left on local `development` must exit 4 `not reachable from local development`; fixed → passes. Plus a no-`--base` run on a development-shaped repo to show unchanged behaviour.
+- Implementation note on step 4 — **Implemented.** Changes 4 now says the branch/pull preflight at `:2220`/`:2229` is shared with PR modes and is unchanged for them because `--base` defaults to `development` and only express passes it.
+
+Handing off to Reviewer (codex) for round 3 (final round within the cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
