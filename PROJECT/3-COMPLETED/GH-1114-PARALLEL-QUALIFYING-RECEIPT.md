@@ -2,7 +2,7 @@
 gh_issue: 1114
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1114
 title: "Hosted wave-reconcile qualifies with validate.sh --parallel 4; receipt records first-attempt failures"
-status: Active
+status: Complete
 created: 2026-10-17
 updated: 2026-10-18
 owner: claude
