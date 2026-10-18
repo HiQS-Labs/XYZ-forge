@@ -1170,6 +1170,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 log(f"PR #{p_num}: carries hold label '{label}' — skipped (#444)")
                 if track is not None:
                     track["skips"][p_num] = f"skipped: hold-label '{label}'"
+                # GH-1140 fq2-r2: a held PR stays in the dependency map so its hard dependents
+                # are blocked; the end-of-loop filter treats `hold:` entries as expected skips.
+                failed[p_num] = f"hold: {label}"
                 continue
             if info.get("state") != "OPEN":
                 _note_external_state(p_num, info, batch, track)
@@ -1360,8 +1363,10 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 # check's holds — recorded as a track skip, never a failed run.
                 if veto == "draft":
                     failed[p_num] = "draft"
-                elif track is not None:
-                    track["skips"][p_num] = f"skipped: hold '{veto}' at final eligibility"
+                else:
+                    if track is not None:
+                        track["skips"][p_num] = f"skipped: hold '{veto}' at final eligibility"
+                    failed[p_num] = f"hold: {veto}"  # blocks hard dependents; expected at exit
                 continue
             if live.get("headRefOid") != info.get("headRefOid"):
                 log_err(f"PR #{p_num}: head changed after validation — not merging")
@@ -1408,7 +1413,11 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
         drafts = [n for n, reason in failed.items() if reason == "draft"]
         if drafts:
             log("Skipped draft PR(s): " + ", ".join(f"#{n}" for n in drafts))
-        failed = {n: reason for n, reason in failed.items() if reason != "draft"}
+        held = [n for n, reason in failed.items() if reason.startswith("hold: ")]
+        if held:
+            log("Skipped held PR(s): " + ", ".join(f"#{n}" for n in held))
+        failed = {n: reason for n, reason in failed.items()
+                  if reason != "draft" and not reason.startswith("hold: ")}
         if failed:
             deferred = [n for n, w in failed.items() if w.startswith("deferred:")]
             resumed_parked = [n for n, w in failed.items() if w == "previously parked (resume)"]

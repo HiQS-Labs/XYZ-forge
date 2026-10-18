@@ -24,3 +24,6 @@
 {"check": "fq2-r1-fixes", "result": "late-draft pin asserts no-merge + Phase-6-reached; late-label driven through the real harness (rc 0, no merge); final-eligibility holds are expected track-skips like initial holds; recovery script validates exact OID range, shared_files {x:[1,2]}, bash -n command"}
 {"check": "red-control-final-veto-bypass", "cmd": "mutation: veto = None at final eligibility", "result": "RED: both late-veto driver pins FAILED (failures=2); restored -> OK"}
 {"check": "red-control-recovery-finalize", "cmd": "mutation: recovery skips finalize_sweep_inputs", "result": "RED: recovery script (c) FAIL (range None, shared_files None, cmd unparsable); restored -> PASS"}
+{"check": "fq2-r2-fix", "result": "held predecessors stay in the dependency map at BOTH hold sites (failed['hold: ...']); end-of-loop filter treats hold: entries as expected skips (lone hold rc 0 preserved); blocked hard dependents reported"}
+{"check": "red-control-hold-bookkeeping", "cmd": "mutation: final hold writes track-skip only (r2 defect shape)", "result": "RED: dependent-blocking pin FAILED; restored -> OK"}
+{"check": "full-suite-final", "cmd": "python3 <task-clone>/test/gh436-merge-cleanup.py", "result": "206 tests OK (180 pre-existing + 26 GH-1140 pins)"}

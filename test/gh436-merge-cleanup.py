@@ -735,6 +735,20 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         self.assertFalse(merged.called)          # the late draft never reaches a merge
         self.assertTrue(self.pruner.called)      # Phase 6 still runs (no early exit 3)
 
+    def test_held_predecessor_blocks_its_hard_dependent(self):
+        # GH-1140 fq2-r2: a hold protects the successor too — PR 8 (hard-depends on held PR 7)
+        # must not merge and must be reported blocked; neither PR lands.
+        rc, _, merged, _, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+            prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": "",
+                  "_hard_deps": [], "_soft_deps": []},
+                 {"number": 8, "baseRefName": "development", "title": "d", "files": [],
+                  "body": "depends on #7", "_hard_deps": [7], "_soft_deps": []}],
+            refresh_values=[self._open(7), self._open(7, labels=[{"name": "do-not-merge"}]),
+                            self._open(8)])
+        self.assertFalse(merged.called)          # neither the held PR nor its dependent merges
+        self.assertEqual(rc, 3)                  # the blocked dependent is a real handoff
+
     def test_late_hold_label_prevents_the_merge(self):
         # GH-1140/#444: a hold label that appears only at the final eligibility refresh must
         # stop the merge; like the initial check's holds it is an expected skip, not rc 3.
