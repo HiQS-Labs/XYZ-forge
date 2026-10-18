@@ -88,4 +88,12 @@ Review limits: source inspection and non-mutating parsing/hash checks only; no g
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-18T04:26:12Z
+task: RELAY-gh836-residual-final
+reviewer: codex
+status: Approved
+reviewed-head: 530d3b307b376a3daf41cd11b8267887ef0da7d1
+added-range: 7293+3879
+added-sha256: 16a1a3d667827d0296846680b48af61b8a7a3a2cdbe6b19c1e32d21b7363a4db
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
