@@ -1,0 +1,23 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh836-gate-hotspots-2026-10-18-gate
+configfile: pytest.ini
+plugins: hypothesis-6.167.1, anyio-4.13.0
+collected 180 items / 173 deselected / 7 selected
+
+test/gh436-merge-cleanup.py .......                                      [100%]
+
+============================= slowest 10 durations =============================
+0.97s call     test/gh436-merge-cleanup.py::TestParityGuard::test_control_deleted_row_is_named
+0.13s call     test/gh436-merge-cleanup.py::TestParityGuard::test_control_call_replaced_by_comment_is_named
+0.07s setup    test/gh436-merge-cleanup.py::TestParityGuard::test_control_call_replaced_by_comment_is_named
+0.05s call     test/gh436-merge-cleanup.py::TestParityGuard::test_control_renamed_test_is_named
+0.04s call     test/gh436-merge-cleanup.py::TestParityGuard::test_control_documented_option_absent_from_argparse_is_named
+0.04s call     test/gh436-merge-cleanup.py::TestParityGuard::test_control_owner_flip_is_named
+0.04s call     test/gh436-merge-cleanup.py::TestParityGuard::test_skill_md_matches_code_and_tests
+
+(3 durations < 0.005s hidden.  Use -vv to show these durations.)
+====================== 7 passed, 173 deselected in 1.53s =======================
+real 1.83
+user 1.64
+sys 0.09

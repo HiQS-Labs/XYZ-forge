@@ -1,0 +1,4 @@
+11253       00:01 /bin/zsh -lc gh pr list --repo HiQS-Labs/XYZ-forge --state open --json number,title,headRefName --limit 100 > '/Users/noelsaw/Documents/Codex/2026-10-17/task-4/evidence/open-prs.json'\012ps -axo pid,etime,command | rg 'marathon-drive|relay-drive|codex-turn|test/gh549|ci-local|validate.sh' > '/Users/noelsaw/Documents/Codex/2026-10-17/task-4/evidence/worker-check.txt'
+11650       00:00 rg marathon-drive|relay-drive|codex-turn|test/gh549|ci-local|validate.sh
+99583       00:24 /usr/bin/time -p bash test/gh549-work-events.sh
+99600       00:23 bash test/gh549-work-events.sh

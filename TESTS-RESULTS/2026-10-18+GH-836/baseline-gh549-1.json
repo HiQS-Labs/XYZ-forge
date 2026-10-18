@@ -1,0 +1,17 @@
+{
+  "label": "baseline-gh549-1",
+  "base": "655bc340b9e64056645a75f340e842c79371df3f",
+  "command": [
+    "/usr/bin/time",
+    "-p",
+    "bash",
+    "test/gh549-work-events.sh"
+  ],
+  "rc": 0,
+  "real": 236.8,
+  "user": 190.93,
+  "sys": 28.82,
+  "result": "125 passed, 0 failed",
+  "test_sha256": "2ba9efbae80683bc4a5635d7edda7688bbb2c13a5bc1b466b8392e2ee5f807b7",
+  "log_sha256": "7bfca69cbae42365ea210700c2162ab10cd12cf892c3028b9ac5b679d3fa6c33"
+}
