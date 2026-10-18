@@ -374,3 +374,24 @@ changing D2's hook default.
 ## Merge evidence
 
 - PR #925 merged 2026-10-02 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+
+## Residual fixture spike — 2026-10-18
+
+
+Base: 655bc340b9e64056645a75f340e842c79371df3f (includes #1123).
+Scope: local spike, no push/PR/merge, policy/routing change, new CI case/assertion/parameter, product rewrite or shared mutable fixture.
+Existing canonical plan: PROJECT/2-WORKING/GH-836-GATE-HOTSPOTS.md. Retain rating 70/45/50/70, no override; this is the same cost-only issue, no new incident/rating claim.
+
+Recon: #838 merged parity de-duplication, bounded race sleep/rendezvous and disabled irrelevant board dispatch. #848 moved gh436 to Large. Do not redo any of those. Current ledger contains 377 roadmap rows, 835 work events, 1987 receipts. gh549 FXD, FXI, FXR7 still copy PRISTINE, so their unfiltered backfills traverse all live rows. Normal gh549 fixture must keep copying live ledger for migration/round-trip coverage.
+
+Outcome sought: constant-sized data only for the backfill and interleave legs, preserving assertions and separate mutable databases. Smallest bet: replace the three live-ledger copy lines with releases init --slug XYZ-forge using existing APP. No helper/framework. FXD builds five mapping rows 9911–9915 through existing verbs, positive/negative races copy this database independently; FXI builds 9920 and 9903; FXR7 builds 9920 independently. Their new connector cursors start empty; do not seed them with PRISTINE_TAIL from the unrelated live database. Existing backfill_nodispatch advances them after the backfill. Keep every assertion, launch, rendezvous, count check, cursor update, red control, output format and final exit logic unchanged. Dynamic counts will naturally change with fixture cardinality.
+
+Alternative: no change preserves ledger growth cost. Pruning a live copied database would invalidate receipts and requires more machinery. In-process rewrite and shared fixture template are out of scope.
+Reversibility: Easy, three local test setup lines and comments, revert patch. No product state migration. Blast radius: existing gh549 fixture setup only; normal migration/connector fixtures retain live coverage.
+
+1. Run existing gh549 untouched in disposable full clone and capture timing/outputs/identity; inspect existing #835/#836 negative-control logs. Confirm no other #836 writer (sibling inventory, active threads/processes, open PRs).
+2. Independent Codex plan QA through existing relay harness; cap 3, no automatic retry/reset/extension. Old completed #838/#848 reviews remain closed. This is the separately authorized residual spike, not a stopped batch continuation. No implementation if plan QA unavailable or blocked.
+3. Change only three fixture initialization lines after approval and accepted-start readback for owned row rmi-01M3F7AP8PS7YB1QV931ZEKRG8. Commit candidate and apply same patch in disposable clone.
+4. Run two paired gh549 measurements A1/B1/A2/B2 sequentially on same base/machine/runtime with fresh per-run state. Retain exact commands, rc, all output and hashes. Compare identical ok/failure labels allowing fixture data counts to differ; inspect existing races/negative controls, no new permanent CI case. Use temporary/manual mutation only if needed. Run gh436 once unchanged with parity controls to confirm prior art rather than inventing an after speedup; verify named behavioral tests remain collected.
+5. Independent final Codex QA (cap 3) of diff and evidence, then record measured spread/payoff, failures, prior-art coverage and recommendation in canonical plan and workspace report. No full suite: focused evidence answers spike question, not release qualification. Any later full gate needs purpose/cost/report first. Preserve evidence in TESTS-RESULTS with committed provenance. Stop at documented result.
