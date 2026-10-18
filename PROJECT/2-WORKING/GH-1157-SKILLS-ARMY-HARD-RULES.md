@@ -27,7 +27,7 @@ context_tags: [skills-army-hq, docs, deployment-drift]
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved by Codex in round 2 (`relay-system/2026-10-18/gh1157-plan-qa.md`, attested against `28245962`); capture promoted to 2-WORKING and admitted with `--accepted-start`. | Edit `skills/3-weekly/skills-army-hq/SKILL.md` per the asks, record evidence under `TESTS-RESULTS/2026-10-18+GH-1157/`, run the docs gate, then final Codex QA and the PR against `development`. |
+| Implemented in `4bf3361b` (one file, `skills/3-weekly/skills-army-hq/SKILL.md`, +62/−7): hard rules, definition of done, frontmatter description, unrelated-changes correction, `--root` example. Evidence under `TESTS-RESULTS/2026-10-18+GH-1157/` (positive parse exit 0, red control exit 1, docs gate 0 errors, ledger clean) with `provenance.jsonl`. | Final Codex relay QA on the committed diff and evidence; on Approved, push through the pre-push gate and open the PR against `development`; stop at the PR (operator checkpoint). |
 
 ## Observed problem (issue #1157, verified 2026-10-18 on the Mac mini)
 
@@ -206,4 +206,9 @@ device-agnostic) — 2. Steady, not rising. Coverage limit: incidents tracked ou
   `provenance.jsonl`, committed in the PR. `[Nit]` suite coverage overcompressed → **Implemented**
   (recon reworded; verified `test/gh620-skills-army-mini-sync.sh:190–194`,
   `test/test_deploy_skills.py:205`).
-- Round 2: pending.
+- **Round 2 (Codex): PASS / Approved**, attested by `relay-drive` against `28245962`
+  (`.git/relay-attest/RELAY-gh1157-plan-qa.json`); all eight questions `[Pass]` with citations.
+- **Implementation:** `4bf3361b`. Evidence: `TESTS-RESULTS/2026-10-18+GH-1157/` (`SUMMARY.md`,
+  `parse-positive.log` exit 0, `parse-red-control.log` exit 1, `pdda-run.log` 0 errors,
+  `releases-check.log` clean, `provenance.jsonl`).
+- Final QA: pending (`relay-system/2026-10-18/gh1157-final-qa.md`).
