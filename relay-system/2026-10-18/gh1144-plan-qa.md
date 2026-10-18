@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -188,5 +188,43 @@ Handing off to Producer (claude-a) — specify the actual-reconciler manual chec
 - Implementation note on step 4 — **Implemented.** Changes 4 now says the branch/pull preflight at `:2220`/`:2229` is shared with PR modes and is unchanged for them because `--base` defaults to `development` and only express passes it.
 
 Handing off to Reviewer (codex) for round 3 (final round within the cap).
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: Approve the plan for implementation. The independent production-reconciler check resolves the remaining Round 2 finding; the full plan retains authoritative resolution, one per-run base, branch-consistent recovery and observable landing controls. No open Blocker or Should findings remain.
+swept file: yes
+
+Read the entire current plan (lines 1–201), including inventory, design, changes, risks, acceptance and evidence; no additional pre-existing defects found in the swept artifact. Evidence tier: Verify with direct-source fallback. Project listing returned all 84 projects with no matching worktree. Nearest graph `XYZ-forge` is rooted in the primary checkout, generation `2026-09-01T15:54:30Z`; targeted search returned two results with no further page, including obsolete express line ranges. Coverage checked for the plan, express, reconciler, skill and both named suites: missing/changed/untracked freshness, so graph results were not treated as evidence of this seeded source. Relevant source and fixture bodies were read directly. Applied swe and debug-mantra plan-review criteria.
+
+- [Pass] **Round 2 reconciliation finding resolved at plan level.** `PROJECT/1-INBOX/GH-1144-EXPRESS-DEFAULT-BRANCH.md:133–142` explicitly distinguishes gh267's stub from the canonical module, requires a separate main-only `--commit <sha> --base main --gate` run with committed attributable evidence, specifies a reachability red control and retains a no-`--base` development control. This targets the actual production failure: `utils/py/wave_reconcile.py:432–437` checks ancestry against local development and exits 4 on failure. The manual run must retain real branch/pull/metadata/receipt checks, as required by the prior finding; it is implementation-time evidence, not a result observed here.
+- [Pass] **Branch selection and inventory remain adequate for the bounded change.** Plan `:35–53`, `:92–109` cover bounds, admission, landing, closeout persistence, resume, receipts, recovery messages and direct-commit reconciliation; `:110–114` covers the imported recovery helper. Express currently invokes the plain direct-commit path with `--gate` (`utils/py/express.py:938–945`); qualification/catch-up are separate conditional paths (`utils/py/wave_reconcile.py:2266–2299`). Preserve the stated direct-commit scope when implementing shared preflight/base-guard calls. Resolution now follows explicit choice, origin/HEAD, GitHub default, then refusal (`plan:92–101`); the earlier ref-existence guess is gone.
+- [Pass] **Verification and risk remain proportionate.** Plan `:115–148` uses existing suites plus recorded manual runs and mutations, including remote-ref inspection for the wrong-push control and a recovery run; it adds no suite or gate. Plan `:85–88` states the remote rollback limit and pre-push stop checkpoint. Acceptance `:171–181` keeps Forge defaults and requires main-only actual land/resume plus production reconciliation.
+
+Source-only probe (exit 0; no executable fixture or git command):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+from pathlib import Path
+import ast
+p = Path('PROJECT/1-INBOX/GH-1144-EXPRESS-DEFAULT-BRANCH.md').read_text()
+t = ast.parse(Path('utils/py/wave_reconcile.py').read_text())
+f = next(n for n in t.body if isinstance(n, ast.FunctionDef) and n.name == 'fetch_commit_metadata')
+print('production function:', f.name, f.lineno, f.end_lineno)
+print('reachability destination:', next(n.value for n in ast.walk(f) if isinstance(n, ast.Constant) and n.value == 'development' and n.lineno == 433))
+print('production failure:', next(n.value for n in ast.walk(f) if isinstance(n, ast.Constant) and isinstance(n.value,str) and 'not reachable from local development' in n.value))
+print('plan independent canonical invocation:', 'run the canonical `utils/py/wave_reconcile.py' in p)
+print('plan reachability red control:', 'local `development`, the same invocation exits 4' in p)
+print('plan default compatibility control:', 'same command without `--base`' in p)
+PYPROBE
+```
+Decisive output: `production function: fetch_commit_metadata 408 452`; `reachability destination: development`; `production failure:  is not reachable from local development`; the three plan checks each printed `True`. This corroborates the planned control's source target, not runtime success.
+
+[Unverified — needs clone run]: implementation, resolution, suites, landing/resume/recovery, real reconciliation, and both runtime red controls. Approval is for the plan only; those checks and committed provenance remain required before implementation sign-off.
+
+Root cause: branch authority is repeated across express and its direct-commit reconciliation/recovery path. Fix site: resolve once in express and propagate that base across these existing owners. Why not upstream/downstream: unrelated PR/catch-up/hosted reconciliation retains its development contract.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed to implementation and the specified disposable-clone verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
