@@ -727,11 +727,25 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         # GH-1140 final-QA r3: a PR that turns draft between initial and final eligibility keeps
         # the canonical "draft" reason, so the loop's expected-skip filter (GH-789 F2) still
         # applies: no merge, rc 0, Phase 6 reached — not exit 3 with teardown skipped.
-        rc, _, _, _, _ = self._drive_phase5(
+        rc, _, merged, _, _ = self._drive_phase5(
             ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
             prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}],
             refresh_values=[self._open(7), self._open(7, isDraft=True)])
         self.assertEqual(rc, 0)
+        self.assertFalse(merged.called)          # the late draft never reaches a merge
+        self.assertTrue(self.pruner.called)      # Phase 6 still runs (no early exit 3)
+
+    def test_late_hold_label_prevents_the_merge(self):
+        # GH-1140/#444: a hold label that appears only at the final eligibility refresh must
+        # stop the merge; like the initial check's holds it is an expected skip, not rc 3.
+        rc, _, merged, _, _ = self._drive_phase5(
+            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+            prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}],
+            refresh_values=[self._open(7),
+                            self._open(7, labels=[{"name": "do-not-merge"}])])
+        self.assertEqual(rc, 0)
+        self.assertFalse(merged.called)
+        self.assertTrue(self.pruner.called)
 
     def test_empty_queue_plain_rerun_surfaces_owed_qa_as_exit_4(self):
         self._seed_qa_pending_batch()

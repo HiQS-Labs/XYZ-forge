@@ -1355,9 +1355,13 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 # GH-1140/#444: the marker may have arrived after the first eligibility check —
                 # the final gate re-checks draft, labels and title.
                 log(f"PR #{p_num}: '{veto}' at final eligibility — skipped (#444)")
-                # A draft keeps its canonical reason so the loop's expected-skip filter
-                # (GH-789 F2) still recognizes it; label/title vetoes report as holds.
-                failed[p_num] = "draft" if veto == "draft" else f"hold: {veto}"
+                # A draft keeps the canonical reason the loop's expected-skip filter (GH-789 F2)
+                # recognizes; a label/title hold is an expected skip exactly like the initial
+                # check's holds — recorded as a track skip, never a failed run.
+                if veto == "draft":
+                    failed[p_num] = "draft"
+                elif track is not None:
+                    track["skips"][p_num] = f"skipped: hold '{veto}' at final eligibility"
                 continue
             if live.get("headRefOid") != info.get("headRefOid"):
                 log_err(f"PR #{p_num}: head changed after validation — not merging")

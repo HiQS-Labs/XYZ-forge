@@ -21,3 +21,6 @@
 {"check": "red-control-external-state", "cmd": "mutation: _note_external_state call removed", "result": "RED: FAILED (failures=1); restored -> OK"}
 {"check": "recovered-sweep-inputs", "cmd": "TESTS-RESULTS/2026-10-18+GH-1140/recovery-and-exit4.py (c)", "result": "PASS \u2014 range/shared_files/command present, no literal placeholder"}
 {"check": "deferred-evidence", "result": "[Deferred to tier-3 gate / PR limitations] full disposable-clone B1 repair scenario end-to-end (refresh_row wiring beyond the unit+source level) \u2014 reviewer-sanctioned deferral, disclosed"}
+{"check": "fq2-r1-fixes", "result": "late-draft pin asserts no-merge + Phase-6-reached; late-label driven through the real harness (rc 0, no merge); final-eligibility holds are expected track-skips like initial holds; recovery script validates exact OID range, shared_files {x:[1,2]}, bash -n command"}
+{"check": "red-control-final-veto-bypass", "cmd": "mutation: veto = None at final eligibility", "result": "RED: both late-veto driver pins FAILED (failures=2); restored -> OK"}
+{"check": "red-control-recovery-finalize", "cmd": "mutation: recovery skips finalize_sweep_inputs", "result": "RED: recovery script (c) FAIL (range None, shared_files None, cmd unparsable); restored -> PASS"}

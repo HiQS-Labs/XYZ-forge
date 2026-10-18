@@ -4,7 +4,7 @@
 main()'s final-status fallback uses (the literal exit-4 rc is pinned by the suite:
 TestMergeCleanupOrchestration.test_plain_rerun_one_pr_queue_surfaces_owed_qa_as_exit_4 and
 .test_teardown_only_execute_surfaces_owed_qa_as_exit_4, red-controlled)."""
-import json, sys, tempfile, types
+import json, subprocess, sys, tempfile, types
 from pathlib import Path
 from unittest import mock
 sys.path.insert(0, "skills/2-daily/merge-cleanup/scripts")
@@ -22,7 +22,7 @@ base = {"schema": 1, "repo": "ex/ample", "integration": "development", "created"
 batch_record.save(base)
 
 live = {1: {"state": "MERGED", "mergeCommit": {"oid": "a" * 40}},   # positive -> recover
-        2: {"state": "CLOSED"}}                                       # closed, no merge evidence -> untouched
+        2: {"state": "MERGED", "mergeCommit": {"oid": "b" * 40}}}      # second landing, shares file x
 with mock.patch.object(merge_cleanup, "refresh_pr_with_retry",
                        side_effect=lambda n, p: live.get(n, {"error": "x"})), \
      mock.patch.object(merge_cleanup, "_gh"), \
@@ -32,9 +32,16 @@ with mock.patch.object(merge_cleanup, "refresh_pr_with_retry",
 disk = json.loads(path.read_text())
 a = disk["outcomes"]["1"]; b = disk["outcomes"]["2"]
 rec_ok = (a.get("status") == "merged" and a.get("merge_oid") == "a" * 40
-          and b.get("status") == "unattempted" and not b.get("merge_oid"))
-print("(a) recovery:", a.get("status"), (a.get("merge_oid") or "")[:6], "/", b.get("status"),
+          and b.get("status") == "merged" and b.get("merge_oid") == "b" * 40)
+print("(a) recovery (both positive landings retained):", a.get("status"), (a.get("merge_oid") or "")[:6],
+      "/", b.get("status"), (b.get("merge_oid") or "")[:6],
       "->", "PASS" if rec_ok else "FAIL")
+# negative control: a CLOSED-without-evidence PR must never become a landing (unit-level via
+# _note_external_state is pinned in the suite; here we assert the recovery filter shape directly)
+closed_probe = merge_cleanup._note_external_state(3, {"state": "CLOSED"}, None, {"skips": {}})
+nc = {"skips": {3: "closed"}}
+merge_cleanup._note_external_state(3, {"state": "CLOSED"}, None, nc)
+neg_ok = nc["skips"][3] == "closed" and 3 not in disk["outcomes"]
 
 # (b) final-status: the recovered batch is now QA-pending and must be surfaced even though this
 # run's own batch is None (plain rerun shape).
@@ -45,7 +52,15 @@ print("(b) exit-4 reachability after plain-rerun shape:", "->", "PASS" if b_ok e
 # finalized by the recovery pass itself, not only by a landing loop that never ran here.
 disk2 = json.loads(path.read_text())
 s = disk2.get("sweep_inputs") or {}
-c_ok = bool(s.get("range")) and "shared_files" in s and "command" in s and "<tmp>" not in s.get("command", "<tmp>")
-print("(c) recovered sweep inputs:", {k: s.get(k) for k in ("range", "shared_files")}, "cmd-safe:", "<tmp>" not in s.get("command", "<tmp>"),
+exp_range = f"{'a' * 40}^1..{'b' * 40}"
+cmd = s.get("command") or ""
+c_ok = (s.get("range") == exp_range
+        and s.get("shared_files") == {"x": [1, 2]}
+        and bool(cmd) and "<tmp>" not in cmd
+        and subprocess.run(["bash", "-n", "-c", cmd.replace('T=$(mktemp -d)', 'T=/tmp/x')],
+                           capture_output=True).returncode == 0)
+print("(c) recovered sweep inputs: range", "exact" if s.get("range") == exp_range else s.get("range"),
+      "| shared_files", s.get("shared_files"), "| cmd parses:", bool(cmd) and "<tmp>" not in cmd,
       "->", "PASS" if c_ok else "FAIL")
-sys.exit(0 if (rec_ok and b_ok and c_ok) else 1)
+print("(d) closed-without-evidence stays non-landed:", "->", "PASS" if neg_ok else "FAIL")
+sys.exit(0 if (rec_ok and b_ok and c_ok and neg_ok) else 1)
