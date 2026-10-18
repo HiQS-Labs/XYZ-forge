@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -73,5 +73,19 @@ Read SUMMARY.md in TESTS-RESULTS/2026-10-18+GH-836, all four gh549 logs, paired-
 Concrete questions: Does every actual concurrent race/assertion/receipt/missing-reference control survive? Are FXD five rows/four eligible, FXI two and FXR7 one independent, with unrelated live-tail seed removed only where necessary? Do results justify 159.95s/68.1% saving versus observed spread without inventing whole-CI payoff? Is prior art correctly separated (#838/#848/#1123) and current 18-method collection described honestly without claiming the full behavioral suite ran? Are invalid manual parser/anchor attempts transparently excluded? #1131 is a DECIDED separate cadence issue; no old-cadence full benchmarks, parallel qualification or broad CI rollout are prerequisites here. Grade local spike completeness, not publication/merge qualification. Only write findings here; cap 3, never reset/extend or resume old batch. Cite evidence/file:line; no scope expansion.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Approve the bounded local fixture spike and its report. The paired focused evidence supports the stated local saving and preservation of the existing controls; this is not integration, promotion or full-pipeline qualification.
+swept file: yes
+
+- [Pass] Swept the entire 36-line summary and complete 1,515-line gh549 file, including pre-existing controls; no additional pre-existing defect requiring correction within this spike was found. The retained patch contains only the three setup substitutions and comments (TESTS-RESULTS/2026-10-18+GH-836/candidate.patch:1). Initialization supplies migrations, a repo row, lenient settings and a canonical dump (utils/py/releases_app.py:2175). FXD creates five real-verb rows, excluding Deferred from the four eligible projections; separate copied descendants preserve dry-run, mapping, idempotence, receipt joins and actual two-process races with the existing bounded rendezvous and exit checks (test/gh549-work-events.sh:951, :1051, :1078, :1383). FXI retains its two own rows and completed suppression; FXR7 independently retains 9920 and the exclude-source mutation (:1152, :1178, :1208). Removing their live-tail seeds avoids overshooting the new empty ledgers. Candidate logs independently retain “4 = 4”, racer exits “0 0”, “7 > 4”, all three interleave red controls and the receipt-bypass red control (candidate-gh549-1.log and candidate-gh549-2.log under the evidence directory:107, :122, :147). No correction requested.
+- [Pass] The four raw logs end with “125 passed, 0 failed” and real times 236.80/75.58/233.10/74.42 (each evidence *gh549*.log:162); timing-summary.json:1 correctly gives medians 234.95/75.00, saving 159.95 s / 68.0783%, ranges 3.70/1.16 and total 619.90 s. Baseline identity and paired-runs retain the frozen base, test hashes and fixed ledger hash (baseline-gh549-1.json:1; paired-runs.jsonl:1); the current test hash matches the measured candidate. Read-only provenance probe: `python3 -c 'from pathlib import Path; import json,hashlib; p=Path("TESTS-RESULTS/2026-10-18+GH-836"); r=[json.loads(s) for s in (p/"provenance.jsonl").read_text().splitlines()]; print("entries",len(r),"mismatches",[x["artifact"] for x in r if hashlib.sha256((p/x["artifact"]).read_bytes()).hexdigest()!=x["sha256"]])'`; exit 0; decisive output: `entries 31 mismatches []`. The summary limits this to n=2 per condition on this host, discloses untimed setup/review costs and makes no hosted or whole-CI payoff claim (.relay-artifacts/SUMMARY.md:11, :36). No correction requested.
+- [Pass] Prior #838/#848/#1123 work is separated from this result, and the historical wrong-anchor control and current invalid inventory parser are explicitly excluded (.relay-artifacts/SUMMARY.md:17, :30, :32). Direct source shows parity checks callable existence and AST calls without nested behavioral execution (test/gh534_phase_c_tests.py:571); gh436 still imports the phase modules (test/gh436-merge-cleanup.py:869). The retained current output says “7 passed, 173 deselected in 1.53s” with 1.83 s wall (current-gh436-parity.log:1), while inventory/collection show 18 distinct required methods once among 180; the report explicitly declines a complete behavioral-run claim. #1131 remains separate as required (.relay-artifacts/SUMMARY.md:36). No correction requested.
+
+Review limits: source inspection and non-mutating parsing/hash checks only; no git, suite, pytest or executable fixture was run in this reviewer worktree. Runtime outcomes above are retained disposable-clone evidence, not a fresh reviewer rerun. Graph generation 2026-09-01 was stale/not-tracked for these files, so current source was read directly rather than treating graph results as current proof. Harness qualification remains outside this approval.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
