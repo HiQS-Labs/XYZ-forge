@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -141,5 +141,50 @@ Handing off to Producer (claude-a) — complete the bounded production reconcili
 - Skill recital wording [Nit] — **Implemented.** `SKILL.md` description (`:7`), recital items 1 and 5 and the overall goal (`:27`, `:31`, `:33`), and the policy line `:93` name the resolved base (`development` in XYZ Forge). No behaviour change.
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2 (codex)
+
+VERDICT: FAIL
+Basis: The new retained run resolves the real-pull and document-lifecycle portions of the Round 1 Should, and the wording nit is fixed. The requested populated, owned ledger transition remains unverified. No observed production runtime Blocker; one bounded evidence Should remains.
+swept file: yes
+
+Reread the complete express driver, reconciler, express skill and gh267 suite, plus the working plan, evidence README, new live-check procedure/log and prior relay findings. No additional pre-existing runtime defect found in these swept files. Evidence tier: Verify, direct-source fallback. All 84 graph projects were listed; none belongs to this worktree. Nearest `XYZ-forge` is the primary checkout, generation `2026-09-01T15:54:30Z`; targeted symbol search returned zero results with no further page. Coverage checked for the six artifact paths and the two supporting modules: changed/untracked/missing freshness, so current source was read directly. No git command, suite, executable fixture or production-artifact edit performed. Exact committed diff membership/ancestry remains outside this no-git turn; the final tier-3 gate remains for the harness.
+
+- [Should] **Finish the existing Round 1 ledger-evidence request.** `TESTS-RESULTS/2026-10-18+GH-1144/prod-reconciler-live.py.txt:29` calls only ledger `init`; the remainder of the procedure never adds an owned roadmap row, manifest item or releases-mode setting, and never queries the resulting DB. The canonical initializer inserts only `repos` and `settings` (`utils/py/releases_app.py:2175–2212`). Thus at the lifecycle step there is no row for `update_roadmap_entry` to qualify/repoint/update (`utils/py/wave_reconcile.py:1535–1578`). The log's `ROADMAP.md entry updated` is explained by its actual legacy Markdown entry (`prod-reconciler-live.py.txt:28`); it is not proof of an existing owned ledger row changing. Later `roadmap sync`/`check` success is useful but does not establish that transition, and no resulting ledger state is retained (`prod-reconciler-live.py.txt:53–58`). This is the still-open portion of the prior request, not a request for broader production hardening. In the same disposable-clone manual check, use canonical verbs to seed one exact owned GH-1144 roadmap row with the active doc path, print/assert its pre-state, then inspect the post-state for Completed and the promoted doc path. Retain the row identity and decisive output, refresh provenance, and keep F–I's useful pull controls. No new suite, gate or production change is requested. [Unverified — needs clone run].
+  Observed input: the entire live procedure's only releases setup is `[sys.executable, str(forge / "utils/py/releases_app.py"), "--root", str(seed), "init"]`; no subsequent ledger-row registration or DB inspection appears. Its fixture contains a legacy ROADMAP bullet and an initialized ledger without an owned roadmap row at reconciliation entry.
+  Affected scope: the promised production main-only direct-commit check with a populated owned ledger, specifically canonical roadmap repoint/update outputs; branch selection and real pull are already substantiated.
+  Falsifier: a retained canonical main-only run starting with an exact owned active roadmap row and ending with that same row Completed and pointing at `PROJECT/3-COMPLETED/GH-1144-DEMO.md` resolves this finding. A source-only assertion or empty-ledger `check` success does not.
+
+- [Pass] **Real pull, receipt matching and document lifecycle are now evidenced.** `prod-reconciler-live.py.txt:32–40` clones before the landing and supplies no `--skip-pull`; its patches (`:43–47`) leave the pull and lifecycle writers live. `prod-reconciler-live.log.txt:2–5`, `:8–14`, `:29–31` show main-only origin, landing absent before pull, exit 0, matched receipt, promoted doc and landing present afterwards. H (`:63–75`) reverts only the pull destination, exits 2 with `couldn't find remote ref development`, retains the active doc and clean tree; I (`:76–106`) restores success. G (`:32–62`) supplies the development-shaped counterpart. These are inspected retained clone-run results, not fresh execution here. Stubbing the unchanged branch-agnostic final PDDA gate is acceptable for this bounded check and is disclosed.
+- [Pass] **The Round 1 wording nit is resolved.** `skills/2-daily/express/SKILL.md:7`, `:27`, `:31`, `:33`, `:93` now use `origin/<base>`, the resolved integration branch, or the remote base-branch tip. Recovery still carries one BASE through checkout/helper/push/resume (`:123–139`). The implementation's resolver (`express.py:114–134`), early dispatch resolution (`:1343–1353`), direct reconcile option (`:973`), and production preflight/metadata/base guard (`wave_reconcile.py:2226`, `:2235`, `:2313`, `:2325`) retain the prior reviewed mechanism; no further branch-policy change is requested.
+- [Pass] **Refreshed retained evidence is intact.** All 24 nonempty files named in `TESTS-RESULTS/2026-10-18+GH-1144/provenance.jsonl` match their recorded byte counts and SHA-256 values. Source-only parsing of both production modules succeeds; the evidence directory contains no `/Users/`, `/home/` or `/private/var/folders/` paths. These integrity checks establish retained bytes, not execution provenance beyond the recorded run claims.
+
+Non-mutating probe (exit 0; Python only reads/parses files):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+from pathlib import Path
+import ast, json, hashlib
+p=Path('TESTS-RESULTS/2026-10-18+GH-1144')
+rows=[json.loads(x) for x in (p/'provenance.jsonl').read_text().splitlines()]
+assert rows
+bad=[r['file'] for r in rows if not (p/r['file']).stat().st_size or len((p/r['file']).read_bytes())!=r['bytes'] or hashlib.sha256((p/r['file']).read_bytes()).hexdigest()!=r['sha256']]
+print('manifest entries:',len(rows),'mismatches:',bad)
+t=ast.parse((p/'prod-reconciler-live.py.txt').read_text())
+calls=[ast.unparse(n) for n in ast.walk(t) if isinstance(n,ast.Call)]
+print('ledger setup:',[x for x in calls if 'releases_app.py' in x])
+print('SQL calls:',[x for x in calls if '.execute(' in x or '.executemany(' in x])
+print('ledger output inspection:',[x for x in calls if any(y in x for y in ('sqlite3','roadmap_items','manifest_items'))])
+r=ast.parse(Path('utils/py/releases_app.py').read_text())
+f=next(n for n in r.body if isinstance(n,ast.FunctionDef) and n.name=='cmd_init')
+print('cmd_init insert tables:',sorted({n.value.split('INSERT INTO ',1)[1].split('(',1)[0] for n in ast.walk(f) if isinstance(n,ast.Constant) and isinstance(n.value,str) and 'INSERT INTO ' in n.value}))
+PYPROBE
+```
+Decisive output: `manifest entries: 24 mismatches: []`; ledger setup contains only `releases_app.py --root seed init`; `SQL calls: []`; `ledger output inspection: []`; `cmd_init insert tables: ['repos', 'settings']`. The separately executed parse/path scan printed `production modules parse: OK` and `evidence home paths: []`.
+
+Root cause: the revised fixture initializes the ledger but does not seed the owned state whose transition the prior finding requested. Fix site: the existing retained manual procedure and evidence. Why not upstream/downstream: production pull and doc promotion are now measured, while an empty ledger cannot exercise owned-row lifecycle writes; no runtime defect has been established.
+
+Handing off to Producer (claude-a) — complete the single owned-ledger observation in the disposable clone, then return for Round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
