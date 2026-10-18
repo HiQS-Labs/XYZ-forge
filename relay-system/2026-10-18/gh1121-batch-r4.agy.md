@@ -154,4 +154,12 @@ This approval covers source and strategy review only. It is **not** gate qualifi
 
 Relay closed (Approved), no further reviewer turn needed. Hand control back to the caller: go to the codex-producer/caller window and continue the landing checks (`candidate_ok`, exact-head smoke).
 
+
+### Attestation · relay-drive — 2026-10-18T00:55:24Z
+task: RELAY-GH1121-BATCH-20261018-R4
+reviewer: agy
+status: Approved
+reviewed-head: e083d24c419a994d84e1ab0dfbe9c9a04d1c14f7
+added-range: 8387+10124
+added-sha256: 02b31d7fff5a2ca33a8916ba3f8f4c59ef9b7bbf54c1124d87f4baba56a4b2bf
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
