@@ -1,13 +1,65 @@
 ---
 name: skills-army-hq
 description: >-
-  Manage a durable local skill collection and global app symlinks through conversation.
-  Use to import, update, list, remove, or deploy skill folders from repositories already
-  on disk, configure deployment targets, or replace skills-sync-trinity. Not for remote
-  downloads, publishing skills, or installing their runtime dependencies.
+  Route every skill install, update, rename or retirement here. Git Pulse Sync's Deployed Skills
+  collection is a generated copy of source repositories, never an editing workspace: only intake.py
+  and sync.py mutate it and the per-app symlinks. Use to import, update, list, remove or deploy
+  skill folders from repositories already on disk, configure deployment targets, or replace
+  skills-sync-trinity. Not for remote downloads, publishing skills, or installing their runtime
+  dependencies.
 ---
 
 # Skills Army HQ
+
+## Hard rules (read first)
+
+1. **Only `intake.py` and `sync.py` mutate the collection and the app links.** Never hand-copy a
+   skill folder, create or remove an app symlink, or edit `.deploy-skills.json`, `targets.json`,
+   `catalog.md` or `changelog.md` by hand, and never imitate the scripts' filesystem operations.
+   `intake.py` refusing a symlinked payload ("Collection payload must be a real folder") is a
+   finding to report, not a bug to route around.
+2. **A refusal or a `WARN` line is a finding, not a to-do.** Report it verbatim. Never silence it
+   with `--adopt`, `--allow-drift`, a migration flag, a deletion or a receipt edit without the
+   operator's explicit approval for that specific action.
+3. **Status first, status last.** Begin and end every task on a device with `sync.py --status`
+   and `intake.py list`, including right after a Git Pulse Sync pull. Status is the starting
+   checklist for links and `SKILL.md` drift, not a provenance report: it never compares a
+   receipt digest with the deployed bytes, exit 0 can carry warnings, and an unexplained missing
+   payload stops it before the JSON. Read the warnings and report the four facets in
+   *Definition of done* separately.
+4. **Root and canonical are per-device; resolve both before any command.** The collection root
+   is `--root`, else `XYZ_SKILLS_ROOT`, else `~/git-pulse-sync/Deployed Skills`. If that default
+   does not exist on this device, stop and report; never improvise against another path, and
+   never place a symlink at the default (a symlinked root is refused). The canonical forge
+   checkout is `--canonical`, else `XYZ_FORGE_ROOT`, else `targets.json`'s `canonical`, else the
+   checkout this manager was vendored from, which may be hundreds of commits stale. A stale
+   canonical makes current skills look `DRIFTED`, and re-vendoring from it **downgrades** them:
+   `intake.py --apply update` copies and commits at once with no drift gate, app links expose the
+   new bytes immediately, and `sync.py`'s later refusal cannot roll that back. Verify the source
+   repository, branch, clean state, intended merged revision and a whole-folder diff **before**
+   any intake apply.
+5. **A published rename or retirement is applied on a device only when it is acknowledged
+   there.** After the pull: `remove OLD` (acknowledging the absent payload), then `catalog` or
+   `add NEW`, then `sync`. Until then the old-name links dangle by design; nothing does this
+   automatically.
+
+### Definition of done
+
+Report these four facets separately and honestly, with the source revision actually verified,
+the root in use, and the targets updated or skipped:
+
+- **Payload ↔ source parity** — a whole-folder diff against the verified source revision (the
+  drift checker compares `SKILL.md` only).
+- **Receipts** — matching, stale, missing, or source-unverified. There is no supported way to
+  refresh a stale receipt today, so a stale receipt is a valid, reported partial result; never
+  clear it by re-vendoring, remove/re-add, bulk adoption or hand edits.
+- **Links** — every enabled target's owned links resolve; foreign entries are preserved and named.
+- **App discovery and runtime readiness** — checked per app and reported separately from the
+  filesystem state.
+
+Run read-only audits with `python3 -B` (or `PYTHONDONTWRITEBYTECODE=1`): importing
+`scripts/intake.py` without it writes `__pycache__` inside the payload and creates the digest
+mismatch the audit then reports.
 
 ## How deployment works
 
@@ -27,7 +79,9 @@ Keep actual skill folders in the user's `~/git-pulse-sync/Deployed Skills` (GH-5
 the collection lives inside the live Git Pulse Sync checkout, and machine-local state is excluded by
 the collection's own `.gitignore`). The hourly pulse stages only its own files and refuses to sync
 while anything else is uncommitted, so `intake.py --apply add|update|remove` commits just that skill's
-folder itself (GH-993; never pushes — the pulse pushes it), refuses over unrelated changes, and
+folder itself (GH-993; never pushes — the pulse pushes it). It applies the payload first and only
+then attempts that commit: with unrelated uncommitted changes present it declines the automatic
+commit and prints `WARN not committed` (exit 0) while the new bytes are already deployed, and
 `sync.py --status` warns when the collection repo is dirty, detached or behind. Apps discover
 directory symlinks to these stable copies, not disposable task clones. **The collection is a
 projection, not a source:** every skill's canonical source is the repository it was vendored
@@ -42,8 +96,8 @@ POSIX devices need local verification. Windows locking is not implemented.
 Resolve this loaded skill's physical folder to locate `scripts/intake.py` and
 `scripts/sync.py`. Invoke with `python3`, quoting paths. Both work from any CWD.
 After initialization, root `intake.py` and `sync.py` are convenience links into the
-copied manager. Exactly these two scripts own mutation; do not hand-edit receipts
-or imitate their filesystem operations. Read [recovery.md](references/recovery.md)
+copied manager (hard rule 1: exactly these two scripts own mutation). Read
+[recovery.md](references/recovery.md)
 for interruptions, backups, legacy migration and narrowly authorized manual recovery
 exceptions, and [targets.md](references/targets.md)
 before choosing app paths or claiming discovery.
@@ -127,6 +181,7 @@ the examples below are templates, not a hardcoded source inventory.
 python3 /path/to/skills-army-hq/scripts/intake.py init
 python3 /path/to/skills-army-hq/scripts/intake.py --apply init
 python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" list
+python3 "$ROOT/intake.py" --root "$ROOT" list        # $ROOT = this device's resolved collection (hard rule 4)
 python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" add /path/to/local-repo/skills/example
 python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply add /path/to/local-repo/skills/example
 python3 "$HOME/git-pulse-sync/Deployed Skills/intake.py" --apply update example
