@@ -2,7 +2,7 @@
 gh_issue: 1144
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1144
 title: "express: target the repo's default branch (or --base) instead of hardcoded development"
-status: "Captured — plan drafted, awaiting plan QA"
+status: "In progress — plan QA Approved (Codex, round 3), implementing"
 created: 2026-10-18
 updated: 2026-10-18
 owner: claude
@@ -28,7 +28,7 @@ Branch `feat/XYZ-forge-gh1144-express-default-branch-2026-10-18` off `developmen
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed, clone provisioned off `origin/development` (`9a61625f`, hooks installed), recon, plan drafted | Codex plan QA, then promote to 2-WORKING |
+| Plan QA Approved by Codex in round 3 (`relay-system/2026-10-18/gh1144-plan-qa.md`) | Implement changes 1–6, then the verification in 7 |
 
 ## Observed today (9a61625f)
 
@@ -184,7 +184,7 @@ reconcile ordering.
 
 | Issue | Requirement | Clone / branch | State |
 |---|---|---|---|
-| [#1144](https://github.com/HiQS-Labs/XYZ-forge/issues/1144) | Changes 1–7 | `XYZ-forge-gh1144-express-default-branch-2026-10-18` / `feat/…` | Plan drafted |
+| [#1144](https://github.com/HiQS-Labs/XYZ-forge/issues/1144) | Changes 1–7 | `XYZ-forge-gh1144-express-default-branch-2026-10-18` / `feat/…` | Implementing |
 
 ## Rating rationale (2026-10-18)
 
@@ -198,4 +198,4 @@ the preceding 14; trend unknown.
 
 | Check | Result |
 |---|---|
-| Plan QA | pending |
+| Plan QA | Codex, 3 rounds, Approved (`relay-system/2026-10-18/gh1144-plan-qa.md`). R1: B1 refusal-telemetry wording (modified: kept consistent with every refusal), B2 gh267 `:753` literal, S3 non-preview main-only run, S4 recovery recipe, S5 no ref-existence guess, nit reversibility. R2: production reconciler check added |
