@@ -168,3 +168,11 @@ Codex relay QA follows manually on the PR, per the operator.
   (5) An older harness refuses the key → **fixed**: one SKILL.md line names the old error.
   (6) Add unit tests → Disposition: Rejected (out of scope: GH-831, and the operator chose manual
   checks only).
+
+### Local takeover (agent-b / Claude, 2026-10-18)
+
+- Agy final QA (non-Claude seat): `relay-system/2026-10-18/gh1159-pr1163-agy-qa.md`. It returned **PASS** and was attested against `affac238`. It confirmed Forge's output is byte-identical on both the Small and the deferred path, that a repo without the key gets no Forge tokens, and that the fail-closed scope is consistent (`--retire-published-pr` and `--record-sweep` return before the resolver). It raised two Nits that need no change:
+  - A `sweep_command` containing a newline or a trailing `#` is trusted config; it fails loudly at run time.
+  - The manual checks skip the Small-gate parity branch; Agy verified that branch inline.
+- Correction to Agy's answer 4: the globally deployed merge-cleanup is a **physical copy** (`~/.claude/skills/merge-cleanup` → `git-pulse-sync/Deployed Skills/merge-cleanup`), not a link to a checkout. Once Forge's `.merge-cleanup.json` carries the key, every global `/merge-cleanup` run on Forge fails closed until that copy is refreshed. **Edit:** SKILL.md now says to refresh it with `intake.py --apply update merge-cleanup`.
+- **Post-merge carry-over (unchecked):** refresh the deployed merge-cleanup through Skills Army HQ (`intake.py --apply update merge-cleanup`, then `sync.py --status`) right after this PR lands, before the next global `/merge-cleanup` run on Forge.

@@ -79,8 +79,10 @@ With `promotion`, Forge's classifier picks the gate and a full sweep is deferred
 batch issue says the repo has no full suite. `sweep_command` is printed verbatim. Without the key,
 the issue says no sweep command is declared and shows no Forge gate or workflow. An invalid value
 fails closed, and `--show-merge-policy` prints the key. A merge-cleanup older than this key refuses
-the file ("expected an object with only preserve_commit_history"): update the harness. Forge
-declares `promotion` with its `wave-reconcile.yml` dispatch (#1131).
+the file ("expected an object with only preserve_commit_history"): update the harness. The globally
+deployed skill is a physical copy (Skills Army HQ), not a link to a checkout, so it does not follow
+`git pull`; refresh it with `intake.py --apply update merge-cleanup` as soon as this key lands in a
+repo it serves. Forge declares `promotion` with its `wave-reconcile.yml` dispatch (#1131).
 
 ## 7-Phase Ladder Logic
 
