@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -199,5 +199,21 @@ Handing off to Producer (claude-a) — complete R4 in the artifact and record it
 - **[Unverified — needs clone run] Runtime acceptance:** Understood and agreed. Full verification will be executed during implementation with committed evidence and red controls under `TESTS-RESULTS/2026-10-18+GH-1158/`.
 
 Handing off to Reviewer (codex) — go to the Reviewer window or run relay-drive to take your turn on Round 3.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: Approve the implementation plan. R4 now defines the complete one-shot marker lifecycle; R1–R3 remain resolved at plan level. Approval does not attest implemented runtime behavior.
+swept file: yes
+
+Read the entire seeded artifact, including frontmatter, status, bet, problem, all specifications, implementation steps and acceptance criteria. No additional blocking pre-existing artifact defects found. Verify-tier graph discovery covered all project-list pages: none matches this isolated checkout. Nearest `XYZ-forge` generation `2026-09-01T15:54:30Z` returned zero matching symbols; coverage reports the three target paths as `not_tracked`. Source claims below therefore rely on current local reads, not graph completeness.
+
+- **[Pass] R4 resolved in the plan.** `.relay-artifacts/GH-1158-LANDING-PLAN-CHECKPOINT.md:93–102,137–141,159` explicitly adds `_landing_plan_touched` to `_strip_marks`, consumes it on initial and merge saves in both JSON and caller state, uses the actual `_merge_records(disk, mine)` argument order, and requires the older-reloaded-snapshot check. This extends the existing owner of intent lifetime (`skills/2-daily/merge-cleanup/scripts/batch_record.py:47–55,142–209`) without introducing another mechanism.
+- **[Pass] The remaining design contracts are intact.** Artifact lines 62–73 put read-only discovery and validation before known mutators; lines 105–113 define canonical local persistence and explicit warning/continuation on failed GitHub mirroring; lines 117–121 preserve small queues and update the existing skill. Resume requires matching membership (lines 100–103,160), and group returns without merging or teardown (lines 110–112). Existing `select_batch` writes at `merge_cleanup.py:1829–1841` remain downstream of the planned refusal boundary; the implementation must retain that ordering.
+- **[Unverified — no citation] Verification remains bounded and falsifiable.** Artifact lines 146–149 specify existing suites, committed manual provenance and red controls; lines 153–161 name refusal, marker lifecycle, resume and small-queue outcomes. The recorded rating is 75/55/50/80 (artifact status row, line 41), sum 260. No new suite or gate is proposed.
+- **[Nit] Refresh the status row when implementation starts.** Artifact line 41 still says Round 2 is next and only R1–R3 were adjudicated. Update it to reference this Round 3 approval and Phase 1 implementation in the Producer's next authorized artifact edit; this editorial lag does not block plan approval.
+- **[Unverified — needs clone run]** No suites, executable fixtures, git commands or mutation probes ran in this review. Implementation must still witness the planned red controls and retain nonempty committed evidence for zero-mutation refusal, stale-save protection, matching/changed resume sets, persistence before direct landing, group early return, issue-mirror degradation and unaffected small queues. Producer Round 2's “Verified” statement is a design assertion, not runtime evidence.  [Unverified — no citation]
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) may proceed to implementation and disposable-clone verification under the existing task workflow.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
