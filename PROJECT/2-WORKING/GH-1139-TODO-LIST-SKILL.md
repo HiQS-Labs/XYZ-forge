@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved by Codex (`0d49a633af0f`), promoted to `2-WORKING`, admitted `--accepted-start` (`rmi-01M57TAW0AA2BSWT4BKPYND10X`), implemented `skills/2-daily/todo-list/SKILL.md`, `handsfree/SKILL.md` override clause, `ARCHITECTURE.md` index (`21`), and `session-example.md`. | Run disposable `-verify` full-clone red/green controls (`gh778`/`gh798`), PDDA docs gate (`pdda.sh run`), and `releases check`, commit `provenance.jsonl`, and run final Codex relay QA. |
+| Implemented `skills/2-daily/todo-list/SKILL.md`, `handsfree/SKILL.md` caller override, `ARCHITECTURE.md` (`21`), and `session-example.md`; ran red/green controls (`gh778=1->0`, `gh798=1->0`), `releases check` (0 failures), and `pdda.sh run` (0 errors) in disposable `-verify` clone (`3201d1b7e5f3`); recorded `provenance.jsonl`. | Run final Codex relay QA (`relay-system/2026-10-18/gh1139-final-qa.md`), push through pre-push hook, open PR against `development`, and retire published task/verify clones. |
 
 ## Observed Problem & Recon
 
