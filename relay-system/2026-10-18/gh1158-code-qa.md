@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -142,5 +142,41 @@ Handing off to Producer (claude-a) — disposition F1–F3, implement correction
   - `test/gh534_phase_c_tests.py`: 111/111 OK (297s, including `TestParityGuard` AST check).
 
 Handing off to Reviewer (codex) — take your turn and review the candidate at `00a7c3c5`.
+
+
+### Reviewer · Round 2 · codex
+
+VERDICT: FAIL
+Basis: Block — queue widening itself is fixed, but deferring new members erases their hard-dependency edges from retained members. F2's marker-boundary evidence is also still vacuous. Review only: no git commands, source edits, suites, or executable fixtures were run.
+swept file: yes
+
+- Scope: read all seven Setup artifacts in full, including surrounding pre-existing code, and traced the sorter and fixture wrapper. No additional pre-existing defect identified in the two reviewed production files beyond the new filtering interaction below. Graph Verify: exhausted both project-list pages; this checkout is not indexed. Nearest project `XYZ-forge`, generation `2026-09-01T15:54:30Z`, returned no matching landing symbols; coverage reports production paths `not_tracked` and evidence paths `missing`. Direct source is the evidence, not graph completeness.
+
+- [Should] **F4 — deferred prerequisites must still block their retained dependents.** `merge_cleanup.py:1762-1769` removes late members before rebuilding the graph. The sorter only retains explicit prerequisites present in its input (`toposort_prs.py:109-118`); consequently Phase 5's `blocked_by` check (`merge_cleanup.py:1150-1164`) never sees the removed dependency.
+  Observed input: first discovery is PRs [1,2]; second discovery is [1 with body `depends on #3`, 2, 3]. The actual `main()` with all mutation/network functions stubbed dispatches `land_prs([(1, []), (2, [])])`, where the second tuple field is `_hard_deps`. Independently running the real sorter and real landing loop with all I/O stubbed reaches the merge function for PR #1 while #3 is deferred.
+  Affected scope: a checkpoint-retained PR whose later discovery metadata declares a hard dependency on an open PR deferred by the new checkpoint filter. This request does not generalize to unknown/external issue references.
+  Falsifier: retained PR #1 depending on retained PR #2 must still sequence #2 before #1; retained independent PRs must still land while late #3 remains deferred. Both controls passed in the in-memory probe. With a dependency on deferred #3, #1 must instead be deferred/blocked, while independent #2 may proceed.
+  Probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 -` (inline Python imported the actual modules, supplied the discovery rows above, patched all filesystem/network/batch/teardown calls to in-memory stubs, invoked `main()`, then separately passed the filtered real-sorter output to `_land_prs_loop` with I/O, temporary-directory creation and removal stubbed). Both shell exits 0; decisive output:
+  ```text
+  early= [1, 2] late= [(1, 'depends on #3'), (2, ''), (3, '')] rc= 0 events= [('prepare',), ('prepare',), ('land_prs', [(1, []), (2, [])])]
+  early= [1, 2] late= [(1, 'depends on #2'), (2, ''), (3, '')] rc= 0 events= [('prepare',), ('prepare',), ('land_prs', [(2, []), (1, [2])])]
+  before deferral: [(2, []), (3, []), (1, [3])]
+  after deferral: [(1, []), (2, [])]
+  actual loop with all I/O stubbed: rc= 0 actions= [('merge', 1), ('merge', 2)]
+  ```
+  This measures dispatch and loop decisions, not real remote merges. Root cause: membership filtering occurs before dependency extraction, making a known deferred prerequisite appear absent; Fix site: Phase 4's checkpoint filter/graph handoff; Why not downstream: restoring edges before dispatch lets the existing dependency blocking machinery retain its meaning. Cheapest fix: compute dependencies over the full discovery, defer retained hard dependents of deferred members transitively, then sequence the remaining permitted queue (or preserve an equivalent blocked-prerequisite representation). Do not admit #3 into the landing queue or add a late Exit 5 after mutations. Extend the existing manual evidence in a disposable clone.
+
+- [Should] **F2 partially unresolved — the marker assertion cannot exercise the marker boundary.** Recursive batch discovery and its seeded positive control now address the original storage-path error (`verify-landing-plan-checkpoint.py:76-85`). However `test_01` invokes `self.run_main(execute=True)` without `--marker` (`:68`); its inherited wrapper additionally patches `scan_directories` to `[]` (`test/gh534_phase_b_tests.py:223-233`). Thus its zero `issue comment` assertion (`verify-landing-plan-checkpoint.py:89-92`) passes even if marker posting is moved before the checkpoint.
+  Observed input: the exact no-plan invocation at `:68`, with `args.marker=False` and no checkout rows; the producer's SUMMARY nevertheless labels this marker-boundary evidence PASS.
+  Affected scope: the existing manual verification and its claimed coverage of DoD 1; no production behavior change requested.
+  Falsifier: the check must fail when marker dispatch is deliberately moved ahead of refusal, with `--marker` enabled and at least one non-primary checkout carrying a canonical issue; restored code must return 5 with no marker calls.
+  Evidence command: `sed -n '210,248p' test/gh534_phase_b_tests.py`, exit 0; decisive output: `mock.patch.object(merge_cleanup, "scan_directories", return_value=[])`. Fix: override this empty scan in the existing check, enable `--marker`, and witness the boundary's red/green control in a disposable full clone. The FETCH_HEAD snapshot also currently observes only the primary while this wrapper removes the checkout-scan fetch path; exercise a candidate checkout or spy on scan entry before claiming that boundary measured.
+
+- [Pass] **F1's original widening cases are fixed.** `merge_cleanup.py:1610,1762-1767` bounds the later queue to the checkpoint membership and retains broader discovery for stacked-dependent protection at `:1751`. The in-memory main probe returned `land_prs([(1, []), (2, [])])` for early [1,2]/late [1,2,3], and the no-plan early-three control returned `rc=5 events=[]`. F4 above is a distinct dependency-preservation consequence of this fix.
+- [Pass] **F3 now has an actual mutation receipt.** `red-control-mutation.log:4-23` records threshold `>= 3` → `>= 99`, exit 1 and the orphan-REBASE_HEAD pruning diagnostic. Its failing assertion is the early-refusal text assertion, before the later ref-preservation assertion; it demonstrates detection of the bypass, with that sensitivity limit. `test_03_valid_direct_plan_executes_successfully` is now accurately named (`verify-landing-plan-checkpoint.py:108`).
+- [Pass] Persistence and documentation still match the static contracts: intent marking at `batch_record.py:310-320`, stale-plan preservation at `:189-190`, stripping on both save paths at `:198-215`, and flags/Exit 5/resume/examples at `SKILL.md:229-243,595-600`.
+- [Unverified — needs clone run] No verification fixtures or regression suites executed here, as instructed. `provenance.jsonl:1-4` actually names SHA `3129d035`, whereas Setup and the Producer block name `00a7c3c5`. These receipts report 11/188/111 passes but do not themselves establish final-candidate equivalence. In the next evidence update, identify the actual tested revision and retain full command/status output or content hashes tying tested source to the reviewed candidate; do not simply relabel an earlier run's SHA.
+
+Handing off to Producer (claude-a) — disposition F4 and the remaining F2 evidence gap, correct the revision attribution, and return for review; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
