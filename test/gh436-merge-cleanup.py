@@ -444,7 +444,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
              mock.patch.object(merge_cleanup, "refresh_pr", refresh), \
              mock.patch.object(merge_cleanup, "prepare_landing_clone", side_effect=lambda pr, primary, branch, wd: {"clone": wd, "merge_rc": 0, "error": ""}), \
              mock.patch.object(merge_cleanup, "pre_merge_ledger_gate", return_value={"green": True, "failures": [], "diagnostics": []}), \
-             mock.patch.object(merge_cleanup, "execute_pr_merge", return_value=True) as merged, \
+             mock.patch.object(merge_cleanup, "execute_pr_merge", return_value=(True, "f" * 40)) as merged, \
              mock.patch.object(merge_cleanup, "run_post_merge_reconcile") as reconcile, \
              mock.patch.object(merge_cleanup, "teardown_checkout") as teardown, \
              mock.patch.object(merge_cleanup, "scan_directories", return_value=scanned), \
@@ -594,7 +594,9 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
                      "state": "MERGED", "mergeCommit": {"oid": "a" * 40}}):
                 self.assertFalse(merge_cleanup._protect_stacked_dependents(
                     info, prs, self.primary, "development"))
-                self.assertTrue(merge_cleanup.execute_pr_merge(7, self.primary, dry_run=False))
+                landed, oid = merge_cleanup.execute_pr_merge(7, self.primary, dry_run=False)
+                self.assertTrue(landed)
+                self.assertEqual(oid, "a" * 40)
             self.assertNotIn("--delete-branch", gh.call_args_list[1].args[0])
         finally:
             merge_cleanup._WITHHOLD_BRANCH_DELETE.discard(7)
@@ -870,6 +872,134 @@ class TestMergeCleanupActivityAndCompletion(unittest.TestCase):
 from gh534_phase_a_tests import *  # noqa: E402,F401,F403
 from gh534_phase_b_tests import *  # noqa: E402,F401,F403
 from gh534_phase_c_tests import *  # noqa: E402,F401,F403
+
+
+class TestBatchRecordStaleState(unittest.TestCase):
+    """GH-1140: the batch record must not trust captured-once state — pins the resume refresh,
+    the save-time merge, QA-debt reachability, the title veto, and the executable sweep command."""
+
+    def _rec(self, tmpdir, planned=None, outcomes=None, landed=None, verdict=None, sweep=None):
+        import batch_record
+        # the real layout: batch files live in the coordinator dir attempt_record derives from
+        # (primary, origin) — not the bare tempdir
+        rec_dir = batch_record._dir(Path(tmpdir), "ex/ample")
+        rec_dir.mkdir(parents=True, exist_ok=True)
+        path = str(rec_dir / "batch-20261018T000000Z-1.json")
+        rec = {"schema": 1, "repo": "ex/ample", "integration": "development", "created": "t",
+               "issue": 55, "issue_url": "u", "issue_error": "",
+               "planned": planned if planned is not None else
+                   [{"pos": 1, "pr": 1, "title": "old", "files": ["a"], "hard": [], "soft": {}}],
+               "outcomes": outcomes if outcomes is not None else {"1": {"status": "unattempted"}},
+               "landed_order": landed or [], "sweep_inputs": sweep or {}, "verdict": verdict,
+               "path": path}
+        batch_record.save(rec)
+        return rec
+
+    def test_resume_refresh_updates_known_row_and_appends_new(self):
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = self._rec(tmp)
+            discovery = [{"number": 1, "title": "new title",
+                          "files": [{"path": "a"}, {"path": "b"}],
+                          "_hard_deps": [7], "_soft_reasons": {7: ["overlap"]}},
+                         {"number": 2, "title": "added", "files": ["c"], "_hard_deps": [], "_soft_reasons": {}}]
+            batch_record.extend(rec, discovery)
+            disk = json.loads(open(rec["path"]).read())
+            row1 = next(r for r in disk["planned"] if r["pr"] == 1)
+            self.assertEqual(row1["files"], ["a", "b"])       # GH-1140/#1075
+            self.assertEqual(row1["hard"], [7])               # GH-1140/#1073
+            self.assertEqual(row1["soft"], {"7": ["overlap"]})
+            self.assertIn(2, [r["pr"] for r in disk["planned"]])
+            self.assertNotIn("_refreshed", row1)              # marker is one-shot, stripped on save
+
+    def test_empty_discovery_does_not_blank_a_known_row(self):
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = self._rec(tmp)
+            batch_record.extend(rec, [{"number": 1, "title": "x", "files": []}])
+            disk = json.loads(open(rec["path"]).read())
+            self.assertEqual(disk["planned"][0]["files"], ["a"])
+
+    def test_stale_writer_cannot_erase_a_recorded_merge(self):
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = self._rec(tmp)
+            stale = json.loads(json.dumps(rec))               # held before the merge was recorded
+            batch_record.set_outcome(rec, 1, status="merged", merge_oid="d" * 40, reconcile="ok")
+            batch_record.save(stale)                           # last-writer-wins must NOT lose the merge
+            disk = json.loads(open(rec["path"]).read())
+            self.assertEqual(disk["outcomes"]["1"]["status"], "merged")
+            self.assertEqual(disk["outcomes"]["1"]["merge_oid"], "d" * 40)
+            self.assertEqual(disk["outcomes"]["1"]["reconcile"], "ok")
+            self.assertEqual(disk["landed_order"], [1])
+            self.assertEqual(disk["issue"], 55)                # issue identity survives
+
+    def test_refreshed_row_survives_a_stale_writer(self):
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = self._rec(tmp)
+            stale = json.loads(json.dumps(rec))
+            batch_record.extend(rec, [{"number": 1, "title": "new",
+                                       "files": [{"path": "a"}, {"path": "b"}],
+                                       "_hard_deps": [], "_soft_reasons": {}}])
+            batch_record.save(stale)                           # stale snapshot lands after the refresh
+            disk = json.loads(open(rec["path"]).read())
+            self.assertEqual(disk["planned"][0]["files"], ["a", "b"])
+
+    def test_replacement_verdict_and_newer_sweep_win(self):
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = self._rec(tmp, outcomes={"1": {"status": "merged", "merge_oid": "d" * 40}},
+                            landed=[1],
+                            verdict={"value": "clean", "covers": [1], "body": "old", "at": "2026-10-18T00:00:00Z"})
+            later = json.loads(json.dumps(rec))
+            batch_record.set_outcome(later, 2, status="merged", merge_oid="e" * 40)
+            later["landed_order"] = [1, 2]
+            self.assertTrue(batch_record.record_verdict(later, "verdict: clean\nnew body")[0])
+            disk = json.loads(open(rec["path"]).read())
+            self.assertEqual(disk["verdict"]["covers"], [1, 2])   # intentional replacement wins
+            self.assertEqual(disk["verdict"]["body"], "new body")
+            newer_sweep = dict(disk["sweep_inputs"])
+            newer_sweep["computed_at"] = "2026-10-18T09:00:00Z"
+            later["sweep_inputs"] = newer_sweep
+            batch_record.save(later)
+            disk = json.loads(open(rec["path"]).read())
+            self.assertEqual(disk["sweep_inputs"]["computed_at"], "2026-10-18T09:00:00Z")
+
+    def test_non_overlapping_unfinished_batch_is_reachable_for_recovery(self):
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            # both planned PRs recorded merged but the save crashed before landed_order/verdict:
+            # not qa_pending (no surviving evidence), not overlapping current discovery — only
+            # unfinished_batches() can reach it (GH-1140 r2 selection boundary).
+            rec = self._rec(tmp, planned=[{"pos": 1, "pr": 1, "title": "a", "files": ["x"], "hard": [], "soft": {}},
+                                          {"pos": 2, "pr": 2, "title": "b", "files": ["x"], "hard": [], "soft": {}}],
+                            outcomes={"1": {"status": "unattempted"}, "2": {"status": "unattempted"}})
+            found = batch_record.find_unfinished(Path(tmp), "ex/ample", "development", [3])
+            self.assertIsNone(found)                            # overlap+qa filters hide it
+            reachable = batch_record.unfinished_batches(Path(tmp), "ex/ample", "development")
+            self.assertEqual([r["path"] for r in reachable], [rec["path"]])
+            # recovery records the merge -> the batch becomes QA-pending and visible
+            batch_record.set_outcome(reachable[0], 1, status="merged", merge_oid="d" * 40)
+            self.assertIsNotNone(batch_record.find_unfinished(Path(tmp), "ex/ample", "development", [], need_qa=True))
+
+    def test_hold_marker_in_title_and_late_label_veto(self):
+        self.assertEqual(merge_cleanup.hold_label({"labels": [], "title": "feat: x (do not merge: soak owed)"}),
+                         "title: feat: x (do not merge: soak owed)")   # GH-441/#444 shape
+        self.assertIsNone(merge_cleanup.hold_label({"labels": [], "title": "wipe the fixtures"}))  # word boundary
+        self.assertEqual(merge_cleanup.hold_label({"labels": [{"name": "hold"}], "title": "clean"}),
+                         "hold")
+
+    def test_emitted_sweep_command_parses(self):
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = self._rec(tmp, outcomes={"1": {"status": "merged", "merge_oid": "d" * 40}}, landed=[1])
+            batch_record.finalize_sweep_inputs(rec, Path("/tmp"), "ex/ample")
+            cmd = rec["sweep_inputs"]["command"]
+            self.assertNotIn("<tmp>", cmd)                     # GH-1140/#1084: no literal placeholder
+            substituted = cmd.replace('T=$(mktemp -d)', 'T=/tmp/x')
+            check = subprocess.run(["bash", "-n", "-c", substituted], capture_output=True, text=True)
+            self.assertEqual(check.returncode, 0, check.stderr)
 
 
 if __name__ == "__main__":

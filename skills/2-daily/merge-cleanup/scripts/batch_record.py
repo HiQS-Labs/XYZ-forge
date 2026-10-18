@@ -77,18 +77,123 @@ def new(primary: Path, origin: str, integration: str, ordered: List[Dict[str, An
 
 
 def extend(rec: Dict[str, Any], ordered: List[Dict[str, Any]]) -> None:
-    """A resumed queue may include a PR opened since the batch began: append it as a new row."""
-    known = {row["pr"] for row in rec["planned"]}
+    """A resumed queue may include a PR opened since the batch began: append it as a new row.
+    GH-1140/#1075/#1073: a known PR whose branch changed between runs (a repair, a rebase, extra
+    commits) must not keep its stale captured metadata — refresh title/files/hard/soft from the
+    discovery data this call already receives. Order and outcomes are untouched. `_refreshed`
+    marks the row as an intentional fresh write for save()'s merge rule. Empty discovery data
+    never blanks a known row."""
+    known = {row["pr"]: row for row in rec["planned"]}
     for pr in ordered:
-        if pr["number"] not in known:
+        row = known.get(pr["number"])
+        if row is None:
             rec["planned"].append(_row(len(rec["planned"]) + 1, pr))
             rec["outcomes"].setdefault(str(pr["number"]), {"status": "unattempted"})
+            continue
+        fresh_files = _files(pr)
+        if not fresh_files:
+            continue
+        row["title"] = pr.get("title") or row.get("title") or ""
+        row["files"] = fresh_files
+        hard = list(pr.get("_hard_deps") or [])
+        if hard:
+            row["hard"] = hard
+        soft = {str(k): v for k, v in (pr.get("_soft_reasons") or {}).items()}
+        if soft:
+            row["soft"] = soft
+        row["_refreshed"] = True
     save(rec)
+
+
+_PLACEHOLDER = "unattempted"
+
+
+def _merge_outcome(disk: Dict[str, Any], mine: Dict[str, Any]) -> Dict[str, Any]:
+    """Per-PR field merge: a concrete value wins over a placeholder, `merged` is never downgraded
+    (GH-1074), and fields the saving writer set intentionally (merge_oid, reconcile) survive."""
+    merged = dict(disk)
+    for k, v in mine.items():
+        d = disk.get(k)
+        if k == "status":
+            if d == "merged":
+                continue
+            if v and v != _PLACEHOLDER:
+                merged[k] = v
+            continue
+        if v or v == 0:
+            merged[k] = v
+    merged.setdefault("status", _PLACEHOLDER)
+    return merged
+
+
+def _merge_records(disk: Dict[str, Any], mine: Dict[str, Any]) -> Dict[str, Any]:
+    """GH-1140/#1072: merge the saving writer's record with the on-disk record so a stale snapshot
+    cannot erase another writer's durable updates, while intentional fresh writes survive:
+    - outcomes merge per PR at field level (concrete beats placeholder; merged never downgraded);
+    - planned rows merge per PR — a row the current writer refreshed this turn (`_refreshed`,
+      stripped before persisting) wins, otherwise the on-disk row wins; another writer's new rows
+      are kept;
+    - landed_order unions; verdict/sweep_inputs are intentional replacements, newest write time
+      wins; issue identity fills from disk when the writer never saw it."""
+    out = dict(mine)
+    out["outcomes"] = dict(mine.get("outcomes") or {})
+    for n, o in (disk.get("outcomes") or {}).items():
+        if n not in out["outcomes"]:
+            out["outcomes"][n] = o
+    for n, o in list(out["outcomes"].items()):
+        d = (disk.get("outcomes") or {}).get(n)
+        if isinstance(d, dict):
+            out["outcomes"][n] = _merge_outcome(d, o)
+
+    disk_rows = {r.get("pr"): r for r in (disk.get("planned") or []) if isinstance(r, dict)}
+    planned, seen = [], set()
+    for r in (mine.get("planned") or []):
+        d = disk_rows.get(r.get("pr"))
+        if isinstance(d, dict) and not r.get("_refreshed"):
+            planned.append(d)
+        else:
+            fresh = {k: v for k, v in r.items() if k != "_refreshed"}
+            planned.append(fresh)
+        seen.add(r.get("pr"))
+    for pr, d in disk_rows.items():
+        if pr not in seen:
+            planned.append(d)
+    out["planned"] = planned
+
+    order = list(mine.get("landed_order") or [])
+    for n in (disk.get("landed_order") or []):
+        if n not in order:
+            order.append(n)
+    out["landed_order"] = order
+
+    dv, mv = disk.get("verdict"), mine.get("verdict")
+    if isinstance(dv, dict) and (not isinstance(mv, dict)
+                                 or str(dv.get("at") or "") > str(mv.get("at") or "")):
+        out["verdict"] = dv
+    ds, ms = disk.get("sweep_inputs"), mine.get("sweep_inputs")
+    if isinstance(ds, dict) and (not isinstance(ms, dict)
+                                 or str(ds.get("computed_at") or "") > str(ms.get("computed_at") or "")):
+        out["sweep_inputs"] = ds
+
+    for k in ("issue", "issue_url"):
+        if not out.get(k) and disk.get(k):
+            out[k] = disk[k]
+    return out
 
 
 def save(rec: Dict[str, Any]) -> None:
     path = Path(rec["path"])
     with attempt_record.RecordLock(path):
+        disk = None
+        if path.exists():
+            try:
+                disk = json.loads(path.read_text())
+            except (OSError, ValueError):
+                disk = None
+        if isinstance(disk, dict) and disk.get("repo") == rec.get("repo"):
+            merged = _merge_records(disk, rec)
+            rec.clear()
+            rec.update(merged)  # long-lived holders (the driver's batch) see the merged state
         attempt_record.save(path, rec)
 
 
@@ -122,7 +227,20 @@ def find_unfinished(primary: Path, origin: str, integration: str, prs: List[int]
     """Newest unfinished batch for this repo + integration branch. A non-empty `prs` must overlap
     its planned PRs; an empty one (OPEN-only discovery after everything landed) matches on repo +
     integration alone. `need_qa` restricts the match to batches whose QA is pending."""
+    for rec in unfinished_batches(primary, origin, integration):
+        if prs and not set(prs) & {row.get("pr") for row in rec.get("planned", [])}:
+            continue
+        if qa_pending(rec) if need_qa else (qa_pending(rec) or continuable(rec)):
+            return rec
+    return None
+
+
+def unfinished_batches(primary: Path, origin: str, integration: str) -> List[Dict[str, Any]]:
+    """All unfinished batches (QA pending or continuable) for this repo + integration, newest
+    first. GH-1140: the recovery pass iterates these directly because overlap and qa_pending
+    filtering in find_unfinished would hide a batch whose planned PRs all landed unrecorded."""
     d = _dir(primary, origin)
+    out = []
     for path in sorted(d.glob("batch-*.json"), reverse=True):
         try:
             rec = json.loads(path.read_text())
@@ -131,11 +249,9 @@ def find_unfinished(primary: Path, origin: str, integration: str, prs: List[int]
         if not isinstance(rec, dict) or rec.get("integration") != integration or rec.get("repo") != origin:
             continue
         rec["path"] = str(path)
-        if prs and not set(prs) & {row.get("pr") for row in rec.get("planned", [])}:
-            continue
-        if qa_pending(rec) if need_qa else (qa_pending(rec) or continuable(rec)):
-            return rec
-    return None
+        if qa_pending(rec) or continuable(rec):
+            out.append(rec)
+    return out
 
 
 def set_outcome(rec: Dict[str, Any], pr: int, status: Optional[str] = None,
@@ -308,8 +424,9 @@ def finalize_sweep_inputs(rec: Dict[str, Any], primary: Path, origin: str) -> No
     rec["sweep_inputs"] = {
         "range": rng,
         "shared_files": {f: sorted(prs) for f, prs in sorted(owners.items()) if len(prs) > 1},
-        "conflict_sites": conflicts, "gate": gate, "gate_reason": reason,
-        "command": f"git clone --no-local {shlex.quote(str(primary))} <tmp> && cd <tmp> && bash {gate}",
+        "conflict_sites": conflicts, "gate": gate, "gate_reason": reason, "computed_at": _now(),
+        "command": (f'T=$(mktemp -d) && git clone --no-local {shlex.quote(str(primary))} "$T" '
+                    f'&& cd "$T" && bash {gate}'),
     }
     save(rec)
 

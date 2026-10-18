@@ -197,21 +197,24 @@ def check_merge_capability(repo_path: Path, policy: Dict[str, Any]) -> None:
                          + (result.stderr.strip() or "Check the repository's merge settings."))
 
 
-def execute_pr_merge(pr_num: int, repo_path: Path, strategy: Optional[str] = None, dry_run: bool = True) -> bool:
-    """Merge through the project policy even when called without the CLI orchestrator."""
+def execute_pr_merge(pr_num: int, repo_path: Path, strategy: Optional[str] = None,
+                     dry_run: bool = True) -> Tuple[bool, str]:
+    """Merge through the project policy even when called without the CLI orchestrator.
+    GH-1140/#1084: returns the merge OID it verified, so the caller records evidence it holds
+    instead of re-querying fallibly after the fact."""
     try:
         policy = resolve_merge_policy(repo_path, strategy)
         check_merge_capability(repo_path, policy)
     except ValueError as exc:
         log_err(f"PR #{pr_num}: {exc}")
-        return False
+        return False, ""
     strategy = policy["strategy"]
     delete_branch = pr_num not in _WITHHOLD_BRANCH_DELETE
     _WITHHOLD_BRANCH_DELETE.discard(pr_num)
     delete_text = " --delete-branch" if delete_branch else ""
     if dry_run:
         log(f"[DRY RUN] Would merge PR #{pr_num} via `gh pr merge {pr_num} --{strategy}{delete_text}`")
-        return True
+        return True, ""
 
     merge_args = ["pr", "merge", str(pr_num), f"--{strategy}"]
     if delete_branch:
@@ -225,24 +228,25 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: Optional[str] = Non
         oid = (info.get("mergeCommit") or {}).get("oid")
         if info.get("state") == "MERGED" and oid:
             log_warn(f"`gh pr merge` exited {res.returncode} but PR #{pr_num} reads MERGED as {oid[:10]} — continuing")
-            return True
+            return True, oid
         log_err(f"Failed to merge PR #{pr_num}: {res.stderr.strip()}")
-        return False
+        return False, ""
     # E: a zero exit is not a landing (#510 class). The remote must say MERGED.
     for _ in range(6):
         info = refresh_pr(pr_num, repo_path)
         if info.get("state") == "MERGED" and (info.get("mergeCommit") or {}).get("oid"):
             log(f"✅ PR #{pr_num} is MERGED as {info['mergeCommit']['oid'][:10]}")
-            return True
+            return True, info["mergeCommit"]["oid"]
         time.sleep(2)
     log_err(f"PR #{pr_num}: `gh pr merge` exited 0 but the PR does not read MERGED on re-query — treating as failed")
-    return False
+    return False, ""
 
 
 def refresh_pr(pr_num: int, repo_path: Path) -> Dict[str, Any]:
-    """Live PR state, re-fetched before every decision (E). Any failure -> {"error": ...}."""
+    """Live PR state, re-fetched before every decision (E). Any failure -> {"error": ...}.
+    GH-1140/#444: `title` is fetched so the hold-marker scan can see title-carried vetoes."""
     res = _gh(["pr", "view", str(pr_num), "--json",
-               "number,state,isDraft,mergeable,headRefOid,headRefName,baseRefName,labels,mergeCommit,url"], repo_path)
+               "number,state,isDraft,title,mergeable,headRefOid,headRefName,baseRefName,labels,mergeCommit,url"], repo_path)
     if res.returncode != 0:
         return {"error": f"gh pr view #{pr_num} failed: {res.stderr.strip() or 'no diagnostic'}"}
     try:
@@ -313,11 +317,16 @@ def _protect_stacked_dependents(info: Dict[str, Any], open_prs: List[Dict[str, A
 
 
 def hold_label(info: Dict[str, Any]) -> Optional[str]:
+    """The merge veto (#444): a hold LABEL by substring (repo convention), or a hold marker in the
+    TITLE by word boundary — prose titles would false-positive on substrings like 'wipe'."""
     for lab in info.get("labels") or []:
         name = (lab.get("name") if isinstance(lab, dict) else str(lab)) or ""
         low = name.lower()
         if any(tok in low for tok in HOLD_LABEL_TOKENS):
             return name
+    title = info.get("title") or ""
+    if re.search(r"\b(do\.?\s?not\.?\s?merge|do-not-merge|dnm|wip|hold|blocked|no\s+merge)\b", title, re.I):
+        return f"title: {title.strip()[:80]}"
     return None
 
 
@@ -1121,9 +1130,16 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     track["skips"][p_num] = f"skipped: hold-label '{label}'"
                 continue
             if info.get("state") != "OPEN":
-                log(f"PR #{p_num}: state is {info.get('state')} — skipped")
+                oid = (info.get("mergeCommit") or {}).get("oid") or ""
+                if info.get("state") == "MERGED" and oid:
+                    # GH-1140: positive merge evidence observed in-loop is retained as a landing
+                    # (QA owed), never discarded into an OID-less "closed" status.
+                    log(f"PR #{p_num}: MERGED outside this run as {oid[:10]} — retaining the landing (GH-1140)")
+                    if batch is not None:
+                        batch_record.set_outcome(batch, p_num, status="merged", merge_oid=oid)
                 if track is not None:  # GH-1064: positively observed closed/merged is terminal
-                    track["skips"][p_num] = ("closed" if info.get("state") == "CLOSED"
+                    track["skips"][p_num] = ("merged outside this run" if info.get("state") == "MERGED"
+                                             else "closed" if info.get("state") == "CLOSED"
                                              else f"closed: {str(info.get('state')).lower()} outside this run")
                 continue
             if (info.get("baseRefName") or "") != branch:
@@ -1302,18 +1318,26 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 log(f"PR #{p_num}: SKIPPED (draft before merge)")
                 failed[p_num] = "draft"
                 continue
+            live_hold = hold_label(live)
+            if live_hold:
+                # GH-1140/#444: the marker may have arrived after the first eligibility check —
+                # the final gate re-checks labels and title, not just draft state.
+                log(f"PR #{p_num}: hold marker '{live_hold}' at final eligibility — skipped (#444)")
+                failed[p_num] = f"hold: {live_hold}"
+                continue
             if live.get("headRefOid") != info.get("headRefOid"):
                 log_err(f"PR #{p_num}: head changed after validation — not merging")
                 return 2
             _WITHHOLD_BRANCH_DELETE.discard(p_num)
             open_prs = getattr(args, "_open_prs_for_stacks", ordered_prs)
             _protect_stacked_dependents(info, open_prs, primary_repo, branch)
-            if not execute_pr_merge(p_num, primary_repo, strategy=args.strategy, dry_run=False):
+            merged_ok, merged_oid = execute_pr_merge(p_num, primary_repo, strategy=args.strategy, dry_run=False)
+            if not merged_ok:
                 return 2
             if batch is not None:  # GH-1064: record the remote merge before anything else can stop
-                merged = refresh_pr_with_retry(p_num, primary_repo)
-                batch_record.set_outcome(batch, p_num, status="merged",
-                                         merge_oid=(merged.get("mergeCommit") or {}).get("oid") or "")
+                confirm = refresh_pr_with_retry(p_num, primary_repo)  # GH-1140: confirmation only —
+                batch_record.set_outcome(batch, p_num, status="merged",          # the verified OID wins
+                                         merge_oid=merged_oid or (confirm.get("mergeCommit") or {}).get("oid") or "")
             # Land it locally before anything writes into the primary. In particular, emitting
             # pr_merged before this fast-forward dirties releases.sql and can block the landing
             # (GH-624). GH-623: the fetch is bounded and retried on transient network failures.
@@ -1726,6 +1750,15 @@ def main():
         log_err(f"Phase 6 completed with {phase6_failures} teardown or backup failure(s).")
         return 2
 
+    if args.execute and (batch is None or not batch_record.qa_pending(batch)):
+        # GH-1140/#1084: QA debt is owed by the newest pending batch for this repo + integration
+        # even when this run did not adopt it — a plain rerun without --resume, a one-PR queue,
+        # a teardown-only execute, or a newer batch with no landings of its own. Surfacing the
+        # status never adopts the batch; continuing it still requires --resume.
+        pending = batch_record.find_unfinished(primary_repo, origin_url(primary_repo) or "",
+                                               args.integration_branch, [], need_qa=True)
+        if pending is not None:
+            batch = pending
     if batch is not None and batch_record.qa_pending(batch):
         # GH-1064: landed, but no recorded sweep verdict covers these landings yet.
         where = batch.get("issue_url") or batch["path"]
@@ -1736,6 +1769,35 @@ def main():
     return 0
 
 
+def _recover_unrecorded_merges(primary_repo: Path, origin: str, integration: str,
+                               ordered_prs: List[Dict[str, Any]]) -> None:
+    """GH-1140: a batch record can miss a merge that happened after its last save — the crash
+    window between the remote merge and the record write, or a mid-run observation recorded
+    OID-less by an older revision. For every unfinished batch on this repo + integration, refresh
+    each planned PR that current OPEN-only discovery no longer lists: positive MERGED + OID
+    evidence is recorded as a landing (QA owed); anything else — CLOSED without merge evidence, an
+    unknown state, a refresh failure — is left untouched. No invented landings, no historical
+    scanning beyond the planned PRs of unfinished batches."""
+    open_now = {pr["number"] for pr in ordered_prs}
+    for rec in batch_record.unfinished_batches(primary_repo, origin, integration):
+        for row in rec.get("planned", []):
+            n = row.get("pr")
+            if n in open_now:
+                continue
+            o = (rec.get("outcomes") or {}).get(str(n)) or {}
+            if o.get("status") == "merged" or o.get("merge_oid"):
+                continue
+            info = refresh_pr_with_retry(n, primary_repo)
+            if info.get("error"):
+                log(f"recovery: PR #{n} state unknown ({info['error'][:80]}) — deferred, no guess")
+                continue
+            if info.get("state") == "MERGED" and (info.get("mergeCommit") or {}).get("oid"):
+                oid = info["mergeCommit"]["oid"]
+                log(f"recovery: PR #{n} merged outside the record as {oid[:10]} — retaining the landing (GH-1140)")
+                batch_record.set_outcome(rec, n, status="merged", merge_oid=oid)
+                batch_record.update(rec, _gh, primary_repo)
+
+
 def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     """GH-1064: continue the unfinished batch on --resume (whatever the queue size, even 0), else
     open a new one when an executing queue holds 2+ PRs. Runs before the first merge."""
@@ -1743,6 +1805,7 @@ def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) ->
         return None
     origin = origin_url(primary_repo) or ""
     if args.resume:
+        _recover_unrecorded_merges(primary_repo, origin, args.integration_branch, ordered_prs)
         batch = batch_record.find_unfinished(primary_repo, origin, args.integration_branch,
                                              [pr["number"] for pr in ordered_prs]) \
             or batch_record.find_unfinished(primary_repo, origin, args.integration_branch, [], need_qa=True)

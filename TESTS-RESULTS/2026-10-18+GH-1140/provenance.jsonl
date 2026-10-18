@@ -1,0 +1,8 @@
+{"run":"2026-10-18","task":"GH-1140","base":"4fd5dca809cc4953a1a72599c3c3033dddf45d69","branch":"fix/XYZ-forge-gh1140-batch-stale-state-2026-10-18"}
+{"check":"unit-suite","cmd":"python3 test/gh436-merge-cleanup.py","result":"PASS 188 tests (180 pre-existing incl. 2 signature-mock updates + 8 new TestBatchRecordStaleState pins)"}
+{"check":"red-control-extend-refresh","cmd":"revert extend() to append-only, run TestBatchRecordStaleState","result":"RED: FAILED (failures=1, errors=5); restored -> OK"}
+{"check":"red-control-save-merge","cmd":"revert save() to whole-file replace, run TestBatchRecordStaleState","result":"RED: FAILED (failures=3); restored -> OK"}
+{"check":"red-control-hold-title","cmd":"remove title scan from hold_label(), run TestBatchRecordStaleState","result":"RED: FAILED (failures=1); restored -> OK"}
+{"check":"two-writer-race","cmd":"python3 TESTS-RESULTS/2026-10-18+GH-1140/two-writer-race.py","result":"PASS — both concurrent writers' merged outcomes + landed_order survive (#1072 falsifier)"}
+{"check":"recovery-and-exit4","cmd":"python3 TESTS-RESULTS/2026-10-18+GH-1140/recovery-and-exit4.py","result":"PASS — positive MERGED+OID recovered, CLOSED-without-merge untouched, QA-pending batch reachable after plain-rerun shape (#1084-1 + r1 recovery falsifiers)"}
+{"check":"plan-qa","cmd":"relay-system/2026-10-18/gh1140-plan-qa-r1.md (codex, 3 rounds)","result":"r3 VERDICT PASS; r1 added 2 new shapes + widened #444; r2 fixed save/recovery mapping; driver exit-4 on r3 close verified append-only via committed diff 46ed4ce5"}
