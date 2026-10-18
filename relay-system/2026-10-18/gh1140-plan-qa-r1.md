@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -199,6 +199,24 @@ Artifact commit: "plan(GH-1140): r2 amendments". Runtime falsifiers remain defer
 **Requesting round 3:** with Phase A accepted in r2 and both mapping findings folded, approve the plan as the verification contract + mechanism map, or name what still contradicts.
 
 handing off to Reviewer (codex) — take your turn.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: PASS
+Basis: Phase A is an accurate source-grounded verification contract, and the amended Phase B covers the accepted shapes. Both round-2 mapping findings are resolved. Approval is for pattern validity and mechanism coverage; it does not attest the proposed save algorithm or an implementation that does not yet exist.
+swept file: yes
+
+Read the whole amended plan and both scripts (batch_record.py:1-334; merge_cleanup.py:1-1792), including their pre-existing paths. **P** = `PROJECT/1-INBOX/GH-1140-BATCH-STALE-STATE.md`; **B** = `skills/2-daily/merge-cleanup/scripts/batch_record.py`; **M** = `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`. Source inspection only: no runtime fixtures, suites, external queries, or git commands were run this turn.
+
+- [Pass] **Phase A remains accurate:** P:40-48 distinguishes stale planned metadata (B:79-92,292-295), lost durable updates (B:89-92,143-152; attempt_record.py:117-122), QA-debt selection gaps (M:1729-1755), discarded OID (M:224-236,1313-1316), incomplete veto inputs (M:244-245,315-321,1117-1127,1297-1307), and unrecorded-merge recovery. P:50-57 keeps these mechanisms separate. The malformed command evidence remains the quoted round-1 syntax probe, not a new execution claim.
+- [Pass] **Save mapping correction accepted:** P:68-79 now explicitly distinguishes intentional fresh updates from stale carried fields, preserves refreshed planned metadata and intentional verdict/sweep replacement, and retains all three round-2 acceptance controls. This removes the previous unconditional on-disk-wins contradiction with P:64-67 and B:308-314,332-333. Marker lifetime, timestamp ordering/ties, same-PR field conflicts, and whether callers receive the merged state must be assessed against actual code at implementation QA; no such correctness is established by this plan approval.
+- [Pass] **Recovery mapping correction accepted:** P:91-102 now covers in-loop MERGED evidence at M:1123-1127, absent planned PRs on resume, and reaching a non-overlapping unfinished batch before B:134-136/qa_pending excludes it. P:141 carries the in-run and non-overlapping-resume falsifiers into execution, with CLOSED-without-merge and unrelated-OPEN negative controls. Recovery remains bounded to known planned PRs.
+- [Pass] **Remaining mechanism coverage follows from the source:** metadata refresh including repair is P:64-67; final QA-debt discovery is P:80-84; verified OID retention is P:85-87; all three veto requirements are P:88-90; command repair is P:103. P:142's abbreviated title-scan step does not supersede P:88-90's title-fetch and final-label requirements. Read final-status coverage within ordinary Phase 6 completion, preserving existing exit 2/3 precedence (M:1681-1683,1725-1727); dedicated mode dispatches remain separate (M:1495-1505,1540-1564).
+- [Pass] **Protocol and verification boundaries:** P:48/104-105 correctly retain the delivered 2+ threshold (PROJECT/3-COMPLETED/GH-1064-MERGE-BATCH-ISSUE-QA.md:23-31) and caller-owned carry-overs (skills/2-daily/merge-cleanup/SKILL.md:435-442). P:107-116/137-145 use existing suites, witnessed red controls, and durable manual evidence rather than a new suite or runner. Runtime acceptance results remain **[Unverified — needs clone run]**.
+
+Pre-existing defects are the accepted Phase A defects above. No additional stale-captured-state or ordinary Phase 6 exit-4 bypass shape found in this sweep. No open Blocker or Should remains at this review scope. Implementation design correctness, runtime falsifiers, and final code QA remain outstanding.
+
+Relay closed (Approved), no further review turn needed. Producer (claude-a) may proceed with the authorized implementation workflow and later independent code QA; this approval does not authorize merge or promotion.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
