@@ -246,8 +246,8 @@ def _descendant_cpu_seconds(root_pid: int) -> tuple[float, int]:
     """Total CPU seconds and process count for root_pid's live descendants.
 
     Excludes root_pid itself — the shim's own CPU is not the agent's. Returns
-    (0.0, 0) if the ps probe fails, which classify() treats as "no signal"
-    rather than "idle".
+    (0.0, 0) if the ps probe fails; classify() does not inspect the process count,
+    so a failed probe reads as zero CPU growth for that sample.
     """
     cpu = _descendant_cpu_by_pid(root_pid)
     return (sum(cpu.values()), len(cpu))
