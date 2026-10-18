@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -118,5 +118,28 @@ Handing off to Producer (agy-producer) — disposition both findings, update the
 - **Finding 2 (`[Should]` Specify the full-clone boundary for the planned suite runs and red mutation):** `Disposition: Implemented`. Updated `PROJECT/1-INBOX/GH-1139-TODO-LIST-SKILL.md:67-68` (Steps 4–5) so `test/gh778-review-code-skill.sh`, `test/gh798-status-skill.sh`, and the `cp ARCHITECTURE.md ARCHITECTURE.md.bak` count-mismatch red/green mutation explicitly run only in a separate disposable verification full clone (`../XYZ-forge-gh1139-todo-list-skill-2026-10-18-verify`), never in the working task clone (`AGENTS.md` GH-564).
 
 Handing off to Reviewer (codex) — go to the codex window and say 'take your turn'.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+VERDICT: PASS
+
+Basis: Approve this bounded Markdown-only plan for implementation. Re-read the entire 73-line capture, entire handsfree skill and architecture document, plus the relevant routing rules and both existing index suites. Both Round 1 findings are resolved; no additional actionable plan defect found in this sweep. This verdict approves the plan, not implemented behavior or merge readiness.
+
+- [Pass] **Manual acceptance is now falsifiable.** `PROJECT/1-INBOX/GH-1139-TODO-LIST-SKILL.md:71-72` specifies the two-item async walkthrough, numbered extraction, dual persistence, immediate execution, shared note/job identity, advancement on wake, the earlier of 100 minutes or ten wakes, early cancellation, unsupported-scheduler reporting, and a paper red control rejecting the inherited 3-hour default or missing checklist. The session example and committed provenance have explicit destinations. This resolves Round 1 finding 1.
+- [Pass] **Verification isolation is explicit.** Capture lines 69–70 place both index suites and their count-mismatch red/green control in a separate disposable full clone, with backup/restore from a file copy. Their source still compares the declared daily count to disk (`test/gh778-review-code-skill.sh:43-46`, `test/gh798-status-skill.sh:39-42`), so the planned 20-versus-21 mutation targets a real assertion. This resolves Round 1 finding 2.
+- [Pass] **Scope and reuse remain surgical.** Capture lines 40–52 and 68 preserve ordered execution, the PR-only/no-deployment boundary, no new scripts/tests, the standalone handsfree default and its create/readback/cancel/no-duplicate protections (`skills/1-hourly/handsfree/SKILL.md:25-64,97-107`). The caller override owns the tighter cap and checklist behavior; handsfree retains scheduler ownership. The docs classification follows `utils/ci-route.sh:64-68,328-343,458-477`; no gate change is planned.
+- [Pass] **Current count and arithmetic:** `ARCHITECTURE.md:72` declares 20 daily skills; capture lines 44 and 68 propose 21 after addition, and lines 56–60 explain `65/20/50/85`. Read-only probe (exit 0): `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'
+from pathlib import Path
+p=Path("skills/2-daily")
+print("daily_count=",len(list(p.glob("*/SKILL.md"))))
+print("score_sum=",sum((65,20,50,85)))
+print("todo_list_exists=",(p/"todo-list/SKILL.md").exists())
+PY` → `daily_count= 20`; `score_sum= 220`; `todo_list_exists= False`. The absent skill is expected at plan QA.
+- [Unverified — needs clone run] No suites, PDDA gate, red mutation, or live scheduler were run here. Execute and retain the planned evidence before final implementation approval. Capture line 61 now includes the recurrence query and reported result; its live GitHub result was not independently re-run this turn.
+- Evidence boundary: Verify-tier intent, with direct current-source fallback. Project inventory (84 entries, no further page) contains no matching task/worktree index. Nearest `XYZ-forge` generation remains `2026-09-01T15:54:30Z`; coverage for all six evidence paths reports missing, not-tracked or metadata-changed freshness. No structural or completeness conclusion relies on that stale index.
+
+Relay closed (Approved), no further review turn needed. Producer (agy-producer) may proceed with implementation and the planned verification, then request final QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
