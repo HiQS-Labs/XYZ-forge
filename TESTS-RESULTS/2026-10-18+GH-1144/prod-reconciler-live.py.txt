@@ -1,0 +1,58 @@
+"""GH-1144 manual check (final-QA round 1): canonical wave_reconcile --commit <sha> --base <b> --gate,
+LIVE: real pull from a bare origin whose only branch is <b> (the working clone starts one commit
+behind), real cleanliness, branch, reachability, base guard, receipt attribution, doc lifecycle,
+releases sync/check and marathon replan. Stubbed: GitHub (slug, issue state, hosted
+in-flight check) and the PDDA doc-hygiene gate (base-agnostic; no PDDA install in the scratch repo)."""
+import contextlib, io, json, os, subprocess, sys, tempfile, shutil
+from pathlib import Path
+from unittest.mock import patch
+forge = Path(sys.argv[1]); base = sys.argv[2]
+sys.path.insert(0, str(forge / "utils/py"))
+import wave_reconcile as wave
+import importlib.util
+spec = importlib.util.spec_from_file_location("express", forge / "utils/py/express.py")
+express = importlib.util.module_from_spec(spec)
+with patch.object(sys, "argv", ["express"]): spec.loader.exec_module(express)
+W = Path(tempfile.mkdtemp(prefix="gh1144-live-")); origin = W / "origin.git"; seed = W / "seed"; work = W / "work"
+run = lambda cwd, *a: subprocess.run(["git", "-C", str(cwd), *a], check=True, capture_output=True, text=True).stdout.strip()
+subprocess.run(["git", "init", "-q", "--bare", "-b", base, str(origin)], check=True)
+subprocess.run(["git", "init", "-q", "-b", base, str(seed)], check=True)
+for r in (seed,): run(r, "config", "user.email", "t@t"); run(r, "config", "user.name", "t")
+for d in ("PROJECT/1-INBOX", "PROJECT/2-WORKING", "PROJECT/3-COMPLETED", "PROJECT/4-MISC", "TESTS-RESULTS"):
+    (seed / d / ".keep").parent.mkdir(parents=True, exist_ok=True); (seed / d / ".keep").write_text("")
+(seed / ".gitignore").write_text(".tick/\n__pycache__/\n")
+(seed / "PROJECT/2-WORKING/GH-1144-DEMO.md").write_text(
+    "---\ngh_issue: 1144\ntitle: \"demo\"\nstatus: active\ncreated: 2026-10-18\nupdated: 2026-10-18\nowner: t\n"
+    "goal: demo\ndoc_type: feature\neffort: 1\ncomplexity: 1\nrisk: 1\n---\n\n# GH-1144 demo\n\n## Status\n\n"
+    "| What was just completed | What's next |\n|---|---|\n| built | reconcile |\n")
+(seed / "ROADMAP.md").write_text("# Roadmap\n\n### In progress\n- **GH-1144 · demo** 🚧 **active 2026-10-18** — demo. → [GH-1144-DEMO.md](PROJECT/2-WORKING/GH-1144-DEMO.md) · [#1144](https://github.com/example/repo/issues/1144)\n\n### Completed\n")
+subprocess.run([sys.executable, str(forge / "utils/py/releases_app.py"), "--root", str(seed), "init"], check=True, capture_output=True, text=True)
+(seed / "README.md").write_text("x\n"); run(seed, "add", "-A"); run(seed, "commit", "-qm", "init")
+run(seed, "remote", "add", "origin", str(origin)); run(seed, "push", "-q", "origin", base)
+subprocess.run(["git", "clone", "-q", str(origin), str(work)], check=True)      # work starts at init
+run(work, "config", "user.email", "t@t"); run(work, "config", "user.name", "t")
+(seed / "README.md").write_text("y\n"); run(seed, "add", "-A"); run(seed, "commit", "-qm", "docs(GH-1144): demo [express]\n\nCloses #1144")
+sha = run(seed, "rev-parse", "HEAD")
+rel = express.write_receipt(str(seed), sha, 1144, "test/pdda-repo-contract.sh", 0, base=base)
+run(seed, "add", "-A"); run(seed, "commit", "-qm", "chore(releases): express ship GH-1144"); run(seed, "push", "-q", "origin", base)
+print("origin branches:", run(origin, "branch", "--format=%(refname:short)").split(), "| work branch:", run(work, "branch", "--show-current"))
+print("work has landing before pull:", subprocess.run(["git", "-C", str(work), "cat-file", "-e", sha], capture_output=True).returncode == 0)
+argv = ["wave-reconcile", "--root", str(work), "--commit", sha, "--base", base, "--gate"]
+print("argv:", " ".join(argv[1:]).replace(str(W), "<tmp>"))
+with contextlib.ExitStack() as st:
+    for name, value in (("github_slug_from_origin", "example/repo"), ("fetch_issue_state", "CLOSED"),
+                        ("check_hosted_reconciler_in_flight", None),
+                        # PDDA doc-hygiene gate: base-agnostic, and the scratch repo has no PDDA install.
+                        ("run_validation_gate", None)):
+        st.enter_context(patch.object(wave, name, return_value=value))
+    st.enter_context(patch.object(sys, "argv", argv))
+    out = st.enter_context(contextlib.redirect_stdout(io.StringIO())); st.enter_context(contextlib.redirect_stderr(out))
+    code = 0
+    try: wave.main()
+    except SystemExit as e: code = e.code
+print("exit:", code)
+print("\n".join(l.replace(str(W), "<tmp>") for l in out.getvalue().splitlines()[-25:]))
+print("work HEAD contains landing:", subprocess.run(["git", "-C", str(work), "merge-base", "--is-ancestor", sha, "HEAD"]).returncode == 0)
+print("doc in 2-WORKING:", sorted(p.name for p in (work / "PROJECT/2-WORKING").glob("GH-*")),
+      "| 3-COMPLETED:", sorted(p.name for p in (work / "PROJECT/3-COMPLETED").glob("GH-*")))
+print("work status:", run(work, "status", "--porcelain=v1").replace("\n", "; ") or "(clean)")

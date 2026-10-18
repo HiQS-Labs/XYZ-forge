@@ -1,0 +1,106 @@
+### F: LIVE main-only, --base main
+origin branches: ['main'] | work branch: main
+work has landing before pull: False
+argv: --root <tmp>/work --commit 7fba4cea4f2ab244f338127a13dfb4637bf7cd68 --base main --gate
+exit: 0
+wave-reconcile: Starting wave reconciliation (dry_run=False, root=<tmp>/work)
+wave-reconcile: Processing commit 7fba4cea4f2a...
+wave-reconcile:   Provenance receipt matched for PR #7fba4cea4f2a: TESTS-RESULTS/2026-10-18+GH-1144-express/provenance.jsonl:1 (commit=7fba4cea4f2ab244f338127a13dfb4637bf7cd68)
+wave-reconcile:   commit 7fba4cea4f2a closes [1144]; references []
+wave-reconcile:   Found active doc: GH-1144-DEMO.md
+wave-reconcile: WARN — Doc GH-1144-DEMO.md has no '## Lessons Learned (For Future Agents)' section. Highly recommended, not required (GH-693) — promotion proceeds.
+TRANSITION ["doc", "move", "GH-1144-DEMO.md", "3-COMPLETED", "2026-10-18"]
+wave-reconcile:   Moved -> GH-1144-DEMO.md (destination: 3-COMPLETED)
+wave-reconcile:   ROADMAP.md entry updated for GH-1144
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> marathon-plan.sh
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-141 (PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md)
+wave-reconcile:     - GH-275 (PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md)
+wave-reconcile:     - GH-416 (PROJECT/1-INBOX/GH-416-DOC-TRUES-UP-BATCH.md)
+wave-reconcile:     - GH-423 (PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md)
+wave-reconcile:     - GH-492 (PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md)
+wave-reconcile:     - GH-1087 (PROJECT/2-WORKING/GH-1087-GH1051-RECORD-SPACING.md)
+wave-reconcile: Wave reconciliation completed successfully! ✅
+work HEAD contains landing: True
+doc in 2-WORKING: [] | 3-COMPLETED: ['GH-1144-DEMO.md']
+work status: D PROJECT/2-WORKING/GH-1144-DEMO.md;  M ROADMAP.md; ?? PROJECT/3-COMPLETED/GH-1144-DEMO.md
+### G: LIVE development (Forge shape), --base development
+origin branches: ['development'] | work branch: development
+work has landing before pull: False
+argv: --root <tmp>/work --commit 70b714e18a806ded1c863eb667e6edbcd3e60832 --base development --gate
+exit: 0
+wave-reconcile: Starting wave reconciliation (dry_run=False, root=<tmp>/work)
+wave-reconcile: Processing commit 70b714e18a80...
+wave-reconcile:   Provenance receipt matched for PR #70b714e18a80: TESTS-RESULTS/2026-10-18+GH-1144-express/provenance.jsonl:1 (commit=70b714e18a806ded1c863eb667e6edbcd3e60832)
+wave-reconcile:   commit 70b714e18a80 closes [1144]; references []
+wave-reconcile:   Found active doc: GH-1144-DEMO.md
+wave-reconcile: WARN — Doc GH-1144-DEMO.md has no '## Lessons Learned (For Future Agents)' section. Highly recommended, not required (GH-693) — promotion proceeds.
+TRANSITION ["doc", "move", "GH-1144-DEMO.md", "3-COMPLETED", "2026-10-18"]
+wave-reconcile:   Moved -> GH-1144-DEMO.md (destination: 3-COMPLETED)
+wave-reconcile:   ROADMAP.md entry updated for GH-1144
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> marathon-plan.sh
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-141 (PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md)
+wave-reconcile:     - GH-275 (PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md)
+wave-reconcile:     - GH-416 (PROJECT/1-INBOX/GH-416-DOC-TRUES-UP-BATCH.md)
+wave-reconcile:     - GH-423 (PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md)
+wave-reconcile:     - GH-492 (PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md)
+wave-reconcile:     - GH-1087 (PROJECT/2-WORKING/GH-1087-GH1051-RECORD-SPACING.md)
+wave-reconcile: Wave reconciliation completed successfully! ✅
+work HEAD contains landing: True
+doc in 2-WORKING: [] | 3-COMPLETED: ['GH-1144-DEMO.md']
+work status: D PROJECT/2-WORKING/GH-1144-DEMO.md;  M ROADMAP.md; ?? PROJECT/3-COMPLETED/GH-1144-DEMO.md
+### H RED CONTROL: pull destination reverted to development (pull_upstream(repo_root)); LIVE main-only, --base main
+fatal: Not a valid commit name cc85ff1e3336ae670bee6d048e726cb68207951b
+origin branches: ['main'] | work branch: main
+work has landing before pull: False
+argv: --root <tmp>/work --commit cc85ff1e3336ae670bee6d048e726cb68207951b --base main --gate
+exit: 2
+wave-reconcile: Starting wave reconciliation (dry_run=False, root=<tmp>/work)
+wave-reconcile: ERROR — git pull --ff-only failed: fatal: couldn't find remote ref development
+
+wave-reconcile: Rolling back all uncommitted mutations...
+work HEAD contains landing: False
+doc in 2-WORKING: ['GH-1144-DEMO.md'] | 3-COMPLETED: []
+work status: (clean)
+### I restored: LIVE main-only, --base main
+origin branches: ['main'] | work branch: main
+work has landing before pull: False
+argv: --root <tmp>/work --commit 0613e505914a3dfc4b0f18ce8386b4ad50c750fb --base main --gate
+exit: 0
+wave-reconcile: Starting wave reconciliation (dry_run=False, root=<tmp>/work)
+wave-reconcile: Processing commit 0613e505914a...
+wave-reconcile:   Provenance receipt matched for PR #0613e505914a: TESTS-RESULTS/2026-10-18+GH-1144-express/provenance.jsonl:1 (commit=0613e505914a3dfc4b0f18ce8386b4ad50c750fb)
+wave-reconcile:   commit 0613e505914a closes [1144]; references []
+wave-reconcile:   Found active doc: GH-1144-DEMO.md
+wave-reconcile: WARN — Doc GH-1144-DEMO.md has no '## Lessons Learned (For Future Agents)' section. Highly recommended, not required (GH-693) — promotion proceeds.
+TRANSITION ["doc", "move", "GH-1144-DEMO.md", "3-COMPLETED", "2026-10-18"]
+wave-reconcile:   Moved -> GH-1144-DEMO.md (destination: 3-COMPLETED)
+wave-reconcile:   ROADMAP.md entry updated for GH-1144
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> marathon-plan.sh
+wave-reconcile:   WARNING — marathon-plan found pre-existing unrelated drift/held items; keeping reconciliation:
+wave-reconcile:     - GH-141 (PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md)
+wave-reconcile:     - GH-275 (PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md)
+wave-reconcile:     - GH-416 (PROJECT/1-INBOX/GH-416-DOC-TRUES-UP-BATCH.md)
+wave-reconcile:     - GH-423 (PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md)
+wave-reconcile:     - GH-492 (PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md)
+wave-reconcile:     - GH-1087 (PROJECT/2-WORKING/GH-1087-GH1051-RECORD-SPACING.md)
+wave-reconcile: Wave reconciliation completed successfully! ✅
+work HEAD contains landing: True
+doc in 2-WORKING: [] | 3-COMPLETED: ['GH-1144-DEMO.md']
+work status: D PROJECT/2-WORKING/GH-1144-DEMO.md;  M ROADMAP.md; ?? PROJECT/3-COMPLETED/GH-1144-DEMO.md

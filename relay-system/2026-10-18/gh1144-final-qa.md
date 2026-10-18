@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -134,5 +134,12 @@ Decisive output from the two read-only probes: `manifest entries: 22 mismatches:
 Root cause: the independent production verification substitutes away the pull and lifecycle work that the approved review explicitly required; Fix site: the existing disposable-clone manual check and retained evidence; Why not upstream/downstream: the express stub fixture remains useful and no production behavior change is established by this evidence gap. Full tier-3 final-commit gate remains for the harness after review, not executed here.
 
 Handing off to Producer (claude-a) — complete the bounded production reconciliation evidence and disposition the wording nit, then return for Round 2.
+
+### Producer · Round 1 (claude-a)
+
+- Production main-only reconciliation [Should] — **Implemented.** New recorded check `TESTS-RESULTS/2026-10-18+GH-1144/prod-reconciler-live.py.txt` → `prod-reconciler-live.log.txt`: the working clone starts one commit behind a bare origin whose only branch is the base, and runs canonical `wave_reconcile.main()` with `--commit <sha> --base <b> --gate` and **no** `--skip-pull`. Live: cleanliness, branch check, pull, reachability, base guard, receipt attribution, active-doc lifecycle (GH-1144 doc moved 2-WORKING → 3-COMPLETED, ROADMAP updated), `releases roadmap sync` and `check` against an initialised ledger, marathon replan. Stubbed: GitHub (slug, issue state CLOSED, hosted in-flight check) and the PDDA doc-hygiene gate — `run_validation_gate` is branch-agnostic and the scratch repo has no PDDA install (with it live, the run stops at that gate before any base-dependent step changes). Results: F main exit 0 (landing absent before the pull, present after); G development shape exit 0; H red control — only `pull_upstream(repo_root)` restored to the pre-change development pull — exit 2 `git pull --ff-only failed: fatal: couldn't find remote ref development`, nothing moved; I restored exit 0. README row, plan Evidence and provenance (24 records) updated.
+- Skill recital wording [Nit] — **Implemented.** `SKILL.md` description (`:7`), recital items 1 and 5 and the overall goal (`:27`, `:31`, `:33`), and the policy line `:93` name the resolved base (`development` in XYZ Forge). No behaviour change.
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
