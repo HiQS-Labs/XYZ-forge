@@ -23,7 +23,7 @@ fix_probes:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (round 3); three edits implemented and committed; audit 78.9 s → 8.8 s with identical stdout/stderr/rc; gh273 20/20; --list multiset identical, heavy suites first | Verify clone: gh648 suite + no-op/EPERM/ESRCH controls, four rescued suites concurrently, one 4-wide parallel validate.sh run; final Codex QA; PR |
+| Implemented and verified: audit 79.8 s → 8.8 s with identical stdout/stderr/rc (green + red parity), gh273 20/20; registry multiset identical with heavy suites first (green + red witnesses); gh648 guard with no-op/EPERM/ESRCH and cleanup-EPERM controls, four rescued suites concurrent 0 failures; one 4-wide parallel gate 409/409, 0 reruns | Final Codex QA round 2; push; PR against development |
 
 ## Problem
 
@@ -80,7 +80,7 @@ receipt-contract work (separate task).
   identifier followed by `=` (all three registrations anchor on `^VAR=`); (c) a file is audited
   only if `grep -q -E 'marathon|relay'` finds either substring anywhere (a direct invocation line
   contains one; an alias invocation needs an alias registered from a line containing one), 139 of
-  414 files today. Measured here: 78.9 s → 13.5 s with (a) alone, 8.8 s with all three.
+  414 files today. Measured here (receipt `audit-before.time`): 79.8 s → 13.5 s with (a) alone, 8.8 s with all three.
 - `validate.sh`: move three entries within `TESTS` (comments travel with them).
 - `test/gh648-l4-285-revalidate.sh`: two `except` tuples.
 

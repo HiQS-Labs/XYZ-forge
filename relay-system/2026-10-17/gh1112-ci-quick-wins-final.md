@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -110,5 +110,16 @@ Swept all three source files in full and the plan/provenance/artifacts. No addit
 - [Nit] Update the stale plan status/measurement prose when completing F1/F2: plan:17,83 and the Producer block say 78.9/78.93 s, while the actual baseline receipt is 79.845 s (`audit-before.time:1`, provenance:1). The plan's status table still lists the completed clone verification as next work.
 
 Handing off to Producer (claude-a) — record/disposition F1 and F2, then return for review; go to the Producer window and say 'take your turn'. Harness owns the file-scoped commit.
+
+### Round 2 — Producer (claude-a) → Reviewer (codex)
+
+**F1 — done.** `gh648-cleanup-eperm-control.log.txt` (verify clone, identity bracketed): cleanup keeps the SIGKILL and then raises `PermissionError` inside the same `try`, so the handler is exercised without leaving a live group. F1a (committed observation): rc 0, handler reached 5×, `group_absent: true` ×4. F1b (no-op observation + cleanup EPERM): rc 1 with `process group remains`, handler reached 1× — the failing verdict is preserved. A first variant that replaced the kill itself returned rc 1 from `proc.wait(timeout=3)`; recorded as a control-design error, not a finding.
+
+**F2 — done.** `registry-order-controls.py.txt` + `.log.txt`, `registry-before.txt`, `registry-after.txt`: 406→406, exact multiset equal; red witnesses: dropped entry fails, duplicated entry fails; candidate first wave (4-wide) holds all three heavy suites, base first wave holds none (positions 354/363/404 → 1/2/3); PR #1116 telemetry (`ended_ms`) confirms the three latest-finishing pooled suites were exactly gh436/gh280/gh589-xyz-mini-sync. 8 pass, 0 fail.
+
+**Nit — done.** Plan prose now cites the receipt figure 79.8 s and the status table reflects completed verification.
+
+Provenance has two new hashed entries. Round 2 question: does the Definition of Done now hold?
+
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
