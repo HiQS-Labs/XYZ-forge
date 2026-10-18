@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Residual local fixture spike measured: 125/125 in all four focused runs; median saving 159.95 s. Earlier #838/#848 work is delivered and retained. | Plan and final independent QA Approved round 1/3 each. Local spike complete; parent publishes results separately. No rollout or additional work in this session. |
+| Residual local fixture spike measured: 125/125 in all four focused runs; median saving 159.95 s. Earlier #838/#848 work is delivered and retained. | PR #1132 ready for review after normal pre-push full gate 409/409 in 752s, zero re-run-ladder suites; plan/final QA remain Approved round 1/3. Await exact-head hosted checks and reviewer/operator decision; no merge or rollout. |
 
 ## Contents
 
@@ -400,3 +400,8 @@ Reversibility: Easy, three local test setup lines and comments, revert patch. No
 ### Residual spike measured result — 2026-10-18
 
 CONTINUE: three independent fixture initializations at candidate `41977438` reduced focused gh549 median 234.95 s to 75.00 s (159.95 s / 68.1%). A1/B1/A2/B2: 236.80/75.58/233.10/74.42 s, each 125 passed, 0 failed, no retry/skip/rescue. Candidate positive races 4=4; broken controls 7>4, racer exits 0/0. All existing assertions remain. Current gh436 duplicate execution was already solved by #838; existing parity controls 7/7 in 1.83 s and 18 required named methods collected once. No new gh436 speedup counted. Full evidence, inventory, limitations and reproduction: [spike report](../../TESTS-RESULTS/2026-10-18+GH-836/SUMMARY.md). #1131 cadence decision is separate; no full-suite campaign or rollout prerequisite. Plan and final QA Approved round 1/3 each (final reviewed `530d3b30`, attested `a6aa2034`). Local-only deliverable, no push/PR/merge.
+
+
+### Publication — 2026-10-18
+
+Operator authorized publication and one required full local gate after the other Mac gate finished. [PR #1132](https://github.com/HiQS-Labs/XYZ-forge/pull/1132) is ready for review against development; broad #836 remains open. Full local pre-push gate: 409/409 in 752s at `08f9c7dc`, zero re-run-ladder suites, clean envelope/identity. [Receipt and telemetry](../../TESTS-RESULTS/2026-10-18+GH-836/publication/SUMMARY.md). Documentation-only receipt follows through its normal gate. Hosted qualification is not inferred from this local result; exact-head checks remain to inspect. No review cap reset or workflow policy change; #1131/#1127 activation remains separate.

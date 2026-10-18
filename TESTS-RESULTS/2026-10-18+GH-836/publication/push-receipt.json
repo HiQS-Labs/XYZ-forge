@@ -1,0 +1,34 @@
+{
+  "utc_start": "2026-10-18T04:42:10.298954+00:00",
+  "expected_head": "08f9c7dca99113679121bfb144f23419fa013726",
+  "command": [
+    "/usr/bin/time",
+    "-p",
+    "git",
+    "push",
+    "-u",
+    "origin",
+    "HEAD:refs/heads/fix/XYZ-forge-gh836-gate-hotspots-2026-10-18"
+  ],
+  "before": {
+    "head": "08f9c7dca99113679121bfb144f23419fa013726",
+    "branch": "fix/XYZ-forge-gh836-gate-hotspots-2026-10-18",
+    "status": "",
+    "origin_fetch": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "origin_push": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false"
+  },
+  "qualification": "normal local pre-push gate; not hosted promotion qualification",
+  "authorized_full_runs": 1,
+  "rc": 0,
+  "wall_seconds": 755.8753106250078,
+  "utc_end": "2026-10-18T04:54:46.170170+00:00",
+  "after": {
+    "head": "08f9c7dca99113679121bfb144f23419fa013726",
+    "branch": "fix/XYZ-forge-gh836-gate-hotspots-2026-10-18",
+    "status": "",
+    "origin_fetch": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "origin_push": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false"
+  }
+}

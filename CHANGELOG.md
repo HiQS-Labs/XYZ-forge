@@ -1,8 +1,8 @@
 # Changelog
 
-## 2026-10-18 — Local GH-836 residual fixture spike (unpublished)
+## 2026-10-18 — GH-836 residual fixture spike
 
-Three independent gh549 fixture initializations replace live-ledger copies while retaining existing assertions and actual races. Paired focused runs: 236.80/233.10 s baseline, 75.58/74.42 s candidate, all 125/125; median saving 159.95 s. gh436 parity de-duplication was already delivered and is unchanged. Plan/final Codex QA Approved round 1/3 each. Evidence: `TESTS-RESULTS/2026-10-18+GH-836/`. Local spike only: no push, PR, merge, full-suite campaign, policy or rollout change.
+Three independent gh549 fixture initializations replace live-ledger copies while retaining existing assertions and actual races. Paired focused runs: 236.80/233.10 s baseline, 75.58/74.42 s candidate, all 125/125; median saving 159.95 s. gh436 parity de-duplication was already delivered and is unchanged. Plan/final Codex QA Approved round 1/3 each. Evidence: `TESTS-RESULTS/2026-10-18+GH-836/`. The original spike was local-only. Publication later authorized: PR #1132, full normal pre-push gate 409/409 in 752s at `08f9c7dc`, zero re-run-ladder suites. No merge, policy or rollout change; local publication evidence is not hosted promotion qualification.
 
 ## 2026-10-17 — Weekly worth-it continuation checkpoint (GH-1119)
 
