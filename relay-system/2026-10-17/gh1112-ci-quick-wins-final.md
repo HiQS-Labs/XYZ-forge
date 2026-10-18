@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -143,5 +143,20 @@ Handing off to Producer (claude-a) — supply F2's scope comparison, then return
 
 This is round 3, the last under the cap. Does the Definition of Done hold?
 
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: Ship. The supplied scope receipt closes the remaining F2 requirement; the implementation and retained acceptance controls satisfy this bounded review's Definition of Done. Approval is source/receipt QA, not promotion attestation.
+swept file: yes
+
+Swept all three source files, including the existing audit rules and runner paths beyond the edits, and reviewed the plan and retained evidence. No additional demonstrated pre-existing defect requiring expansion of this slice was found. Verify tier with direct-source fallback: list_projects returned all 84 projects, none for this worktree. The nearest main-checkout graph generation is 2026-10-18T00:22:20Z; coverage reports metadata_match/no_recorded_issue for the three shell files and missing for plan/provenance/scope receipt. That different checkout does not attest this candidate. No git commands, suites, pytest or executable fixtures ran.
+
+- [Pass] **F2 scope closed.** `TESTS-RESULTS/2026-10-17+GH-1112/scope-diff.txt:3–28` accounts for the plan, task evidence, two GH-1112 relay receipts, the GH-1118 decision receipt, ledger, and exactly three source files. The GH-1118 receipt is relevant decision context (its Round 1 recommendation backs this audit slice), not unrelated implementation. Scope receipt :30–40 reports only those three runtime/test changes, unchanged routing/qualifying-runner/relay-automation surfaces, and zero added test files. Combined with the whole-file source review and retained before/after registry manifests, this is sufficient bounded scope evidence. Accepted as Producer-supplied comparison at abbreviated candidate `9c36c7b46`; I did not independently execute the base comparison.
+- [Pass] **Receipt/source consistency rechecked.** Narrow read-only command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` using `hashlib.sha256((p/name).read_bytes())` for every provenance artifact/hash pair, extracting the nonempty TESTS block with `re.search`/`re.findall`, comparing manifests with `collections.Counter`, and comparing retained audit bytes; exit 0. Decisive output: `retained artifact hashes match: 13`; `reported runtime/test paths: ['test/gh648-l4-285-revalidate.sh', 'test/marathon-root-audit.sh', 'validate.sh']`; `reported added test paths: []`; `registry counts: 406 406 406`; `multiset equal: True`; `manifest matches source: True`; `audit nonempty identical: True`; `audit stderr identical: True`. The new scope artifact matches provenance:9's hash. This checks consistency, not independent commit attestation.
+- [Pass] **Earlier controls remain closed.** `gh648-cleanup-eperm-control.log.txt:1–11` retains both cleanup-handler outcomes (rc 0/handler 5x, rc 1/handler 1x with `process group remains`). `registry-order-controls.log.txt:1–12` retains dropped/duplicated red controls and old/new first-wave structural checks. The first three source entries at `validate.sh:96–101`, outside DRIVER_LOCK_LANE (:1257), flow through the ordered POOL into xargs (:1298–1315). Audit pre-gates/output resets and EPERM policy remain as reviewed in rounds 1–2; no further implementation request.
+- [Pass] **Claims remain bounded.** `parallel-4wide-summary.txt:24` declines a whole-gate wall-time improvement claim; retained parallel output explicitly says `NOT promotion evidence`. The review accepts structural first-wave evidence as dispositioned in round 2 and the supplied disposable-clone controls, not fresh reviewer suite execution. Exact-final-state harness verification remains the next boundary.
+
+Relay closed (Approved), no further review turn needed. Harness owns the file-scoped commit and subsequent gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
