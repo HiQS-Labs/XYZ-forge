@@ -113,4 +113,12 @@ relay closed (Approved), no further turn needed. Producer may implement the appr
 
 VERDICT: PASS
 
+
+### Attestation · relay-drive — 2026-10-18T17:05:13Z
+task: RELAY-gh1136-b1-accepted-start-plan
+reviewer: codex
+status: Approved
+reviewed-head: 976ffad5eb94eaac6ba837c87742051154b4fb43
+added-range: 6862+6198
+added-sha256: f6c5060a9af02bcf006d4e7ddfd0da63cca83397e3f8bca027a1f90868ad8999
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
