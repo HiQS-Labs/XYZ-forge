@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-18 — Local GH-836 residual fixture spike (unpublished)
+
+Three independent gh549 fixture initializations replace live-ledger copies while retaining existing assertions and actual races. Paired focused runs: 236.80/233.10 s baseline, 75.58/74.42 s candidate, all 125/125; median saving 159.95 s. gh436 parity de-duplication was already delivered and is unchanged. Plan/final Codex QA Approved round 1/3 each. Evidence: `TESTS-RESULTS/2026-10-18+GH-836/`. Local spike only: no push, PR, merge, full-suite campaign, policy or rollout change.
+
 ## 2026-10-17 — Weekly worth-it continuation checkpoint (GH-1119)
 
 Vendor worth-it at upstream PR 15 head `2e6e1b4a0336fb1badf64d47ae770acd291d2d8d` under `skills/3-weekly/`, with its GPL v2 license, source notice and manual update recipe. Initial and continuation modes stay together; weekly-planner is unchanged. Verification uses the documentation gate, byte comparison and manual instruction walkthroughs recorded in `TESTS-RESULTS/2026-10-17+GH-1119/`; these are not live model behavior evaluations. Independent plan/final review receipts live in `relay-system/2026-10-17/gh1119-*.codex.md`. No installation, schedule, new test or CI optimization.
