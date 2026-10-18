@@ -2,7 +2,7 @@
 gh_issue: 1127
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1127
 title: "Full-suite qualification at development → main promotion only; ledgers reconcile locally after each development merge"
-status: Active
+status: Complete
 created: 2026-10-18
 updated: 2026-10-18
 owner: claude
