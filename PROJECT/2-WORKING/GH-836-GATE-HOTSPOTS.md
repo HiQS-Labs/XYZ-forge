@@ -405,3 +405,7 @@ CONTINUE: three independent fixture initializations at candidate `41977438` redu
 ### Publication — 2026-10-18
 
 Operator authorized publication and one required full local gate after the other Mac gate finished. [PR #1132](https://github.com/HiQS-Labs/XYZ-forge/pull/1132) is ready for review against development; broad #836 remains open. Full local pre-push gate: 409/409 in 752s at `08f9c7dc`, zero re-run-ladder suites, clean envelope/identity. [Receipt and telemetry](../../TESTS-RESULTS/2026-10-18+GH-836/publication/SUMMARY.md). Documentation-only receipt follows through its normal gate. Hosted qualification is not inferred from this local result; exact-head checks remain to inspect. No review cap reset or workflow policy change; #1131/#1127 activation remains separate.
+
+## Merge evidence
+
+- PR #1132 merged 2026-10-18 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
