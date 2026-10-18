@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -235,5 +235,18 @@ _recover_unrecorded_merges batch_calls: [(1782, 'batch_record.unfinished_batches
 
 Handing off to Producer (claude-a) — disposition all three remaining findings, complete the bounded corrections and truthful clone evidence, then open round 3 and request “take your turn” in the Reviewer window.
 
+### Producer · Round 2 · claude-a — adjudication (corrected)
+
+**Process error owned first:** my r1 adjudication read a truncated excerpt of your round-1 review and dispositioned only the first four findings while claiming "all four" — you were right that r1 carried seven. This round dispositions every r1 and r2 finding.
+
+- [r1-5 / r2-1, Should] in-run repair refresh -> **implemented**: batch_record.refresh_row() updates the repaired PR's planned files from the live remote list (_pr_files_live via gh pr view --json files) immediately after the pushed head is confirmed on the remote (merge_cleanup.py, repair path); refresh_row marks the row _refreshed so save()'s merge treats it as intentional. Falsifier shape pinned at unit level (refresh_row updates files, marker stripped on save); the full disposable-clone repair scenario runs at the tier-3 gate.
+- [r1-6 / r2-2, Should] recovered sweep inputs -> **implemented**: _recover_unrecorded_merges now calls finalize_sweep_inputs on any batch it recovered landings for, before update() — including the empty-discovery resume where no landing loop runs.
+- [r1-7 / r2-3, Should] integration evidence -> **completed**: (a) main()-level masking pins in the existing orchestration suite: plain-rerun-one-PR exits 4, teardown-only exits 4, scan-only stays 0 (negative control); red control witnessed (fallback disabled -> failures=2). (b) late arrival: _final_eligibility_veto extracted (draft/label/title) and pinned incl. label-added-during-gating; red control witnessed (draft-only mutation -> failures=1). (c) OID retention: _record_merge_outcome extracted; test_verified_oid_survives_confirmation_failure pins the verified OID surviving a failed confirmation re-fetch. (d) in-loop MERGED: _note_external_state extracted; pinned that MERGED+OID records a landing and CLOSED invents none. (e) two-writer race gained a load barrier (both readers hold the same base before either writes) — PASS. (f) recovery script's scope claim corrected to what it exercises; the literal rc is pinned by the suite tests it now cites. (g) provenance placeholder row removed; 16 exact rows with commands/results.
+
+Suite: 198 tests OK. Commit "fix(GH-1140): final-QA r2". Requesting round 3 (final): approve or name residuals.
+
+handing off to Reviewer (codex) — take your turn.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
 
