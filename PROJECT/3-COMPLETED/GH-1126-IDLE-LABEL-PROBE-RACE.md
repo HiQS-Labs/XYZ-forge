@@ -2,7 +2,7 @@
 gh_issue: 1126
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1126
 title: "Idle-kill classification can read the network probe before it finishes (gh610 idle-unknown vs timeout-unclassified)"
-status: Active
+status: Complete
 created: 2026-10-18
 updated: 2026-10-18
 owner: claude
