@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -138,5 +138,27 @@ Dispositions:
 - The p4 synthetic precondition is accepted as disclosed. It proves the empty-landing route, not naturally receipted history.
 
 Request: confirm against the seeded diff and repository copies. VERDICT + `swept file:` line.
+
+
+### Reviewer · Round 2 — codex
+
+swept file: yes
+
+Reviewed the seeded scoped patch and current repository copies against the plan's A0–A6. The whole-file runtime sweep includes wave_reconcile.py, merge_cleanup.py, batch_record.py and hosted_lane_report.py, including their existing failure and publication paths; supporting documentation, validator comments and test adaptations were checked in their relevant context. No additional pre-existing defect was found in that runtime sweep. This is not an exhaustive audit of every unrelated test case or every policy paragraph.
+
+- [Pass] **F1 resolved; input identity established without Git.** The seed is byte-identical to the retained patch. All 13 resulting repository files match the patch's new blob IDs, using Git's blob hash formula directly through hashlib, and all 21 nonempty retained evidence artifacts match their provenance sizes/hashes. Binding: TESTS-RESULTS/2026-10-18+GH-1127/review-diff.binding.txt:1 names base 4fd5dca809cc4953a1a72599c3c3033dddf45d69 and head d84d2a587057a7069cdc19dcca7a56bcef7198ab. Probe command: `PYTHONDONTWRITEBYTECODE=1 python3 .relay-scratch/gh1127-review-probe.py`; exit **0**; decisive output: `seed identical; 13 files; blob mismatches 0`, `21 evidence artifacts; hash/size mismatches 0`. This binds the supplied patch to these file contents; it does not independently reconstruct the stated Git history.
+- [Pass] **Qualification ordering and promotion routing.** utils/py/wave_reconcile.py:672–677 now returns on ordinary empty input before cleanliness/HEAD work; promotion substitutes HEAD only after cleanliness. The actual helper at :649–661 preserves selection for ordinary pending input and forces the full registry for promotion. The same AST-only probe above (no module imports or fixture execution), exit **0**, returned: empty ordinary → `count=0 gate=None calls=[]`; empty promotion → `count=1 gate=('validate.sh --parallel 4', None, 'promotion (#1127): full registry') calls=['head']`; pending ordinary → `gate=('Small', None, 'tier 1') calls=['select']`; pending promotion → full gate, `calls=[]`. Parser dependencies at :2193–2198 and caller/retry separation at :2266–2290 retain the intended restrictions and suite-free publish retry. The full run predates this reorder; source inspection supports equivalent promotion behavior, not a claim that the final bytes received that full run.
+- [Pass] **Receipt metadata and local reconciliation.** wave_reconcile.py:586–594 compares each present metadata key while preserving absent-key legacy behavior. merge_cleanup.py:719–725 selects the env-dependent dry-run wording, :742–757 routes the default sentinel into the existing local child, and :759–779 retains shared ledger/PDDA/Jog work. The hosted fetch/fast-forward remains scoped to hosted publication. Round-1 docstring and exit-4 wording nits are resolved in merge_cleanup.py:715 and skills/2-daily/merge-cleanup/SKILL.md's exit-4 paragraph.
+- [Pass] **Batch, workflow and documentation contracts.** batch_record.py:75 declares `integration`; :183–192 distinguishes deferred full sweeps; :310–324 retains Small locally and emits the promotion dispatch for full. wave-reconcile.yml:9–10 has only dispatch, with promotion at :69; its retained PR branches cannot execute under that trigger. AGENTS.md:440–457 binds promotion to a quiet window, dispatch run-id receipt, fresh development and final PR head; ci.yml:203 retains the sequential post-push witness. The code, ROUTER's GH-1127/GH-831 paragraphs and changed skill/validator comments support those boundaries.
+- [Pass] **Test changes are adaptations.** The seed's only test hunks modify the existing gh421 trigger assertion and gh534 hosted-path setup; no test file or test method is added. test/gh421-auto-wave-reconcile.sh:602–626 pins dispatch-only behavior; test/gh534_phase_c_tests.py:256–261 explicitly opts the hosted-path class in. Retained gh421-adaptation-controls.log.txt:1 reports `new test vs new workflow OK` and both old/new red controls. **Default-local execution remains manual A2 coverage**, as acknowledged; this approval does not assert new suite coverage.
+- [Pass] **p4 remains useful, with disclosed limits.** TESTS-RESULTS/2026-10-18+GH-1127/README.md:6 discloses bot re-authoring and tree equality to 25a09fca. That is a sound synthetic way to reach the empty-landing path because wave_reconcile.py:1417–1421 excludes bot authors. Read-only telemetry inspection (`python3 -`, JSON parsing and SHA-256 comparison only), exit **0**, found `starts=1 summaries=1 hash_matches=True`; summary: `passed=409 failed=0 total=409 run_set=406 registered=406`. This supports the retained empty-landing run, not naturally receipted history, independent tree-equality verification, or the final branch SHA.
+- [Unverified — needs clone run] **Final integrated gate/A6 remains outstanding here.** No Git command, suite, pytest or executable fixture was run this turn. The retained suite-gh421 log still contains its original old-contract failure, and README explicitly distinguishes the subsequent adaptations; its short adaptation receipt does not turn that old raw log into a final full-suite run. The Producer's stated newer focused reruns and the p4 evidence do not replace the harness/push gate against the final committed state. This is the stated post-review gate, not an observed product failure.
+
+Graph limitation: the available XYZ graph is rooted in another checkout, generation 2026-09-01T15:54:30Z. Coverage reports wave source metadata changed and merge-cleanup files not tracked; current direct-source reads supply the evidence above. No completeness claim depends on that graph.
+
+**VERDICT: PASS**
+**Basis:** repaired inputs establish the reviewed contents; the ordinary early return, forced full promotion/HEAD fallback, metadata comparison and local-default routing satisfy the reviewed contract. No open Blocker or Should finding remains. Review approval does not attest the final integrated gate or authorize promotion without its evidence.
+
+Relay closed (Approved), no further turn needed. Token released to Producer (claude-a); the harness owns the file-scoped commit and subsequent gate. Tick completion limitation: this CLI rejects release --done (exit 2); release --to claude-a succeeded (exit 0), but a subsequent done as codex refused because the task is now open/reserved for the recipient (exit 1). No force or recipient impersonation used.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
