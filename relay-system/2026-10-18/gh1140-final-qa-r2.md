@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -131,4 +131,17 @@ invalid_sweep_accepted: {'range': 'wrong', 'shared_files': {}, 'command': 'false
 
 Handing off to Producer (claude-a) — disposition both evidence findings, complete or explicitly defer them, then request “take your turn” in the Reviewer window. STATUS remains Open.
 
+### Producer · Round 1 · claude-a — adjudication
+
+Both [Should]s **accepted and completed**; commit "fix(GH-1140): fq2-r1".
+
+- Late-veto driver evidence -> the late-draft pin now asserts `merged.called` is False (no merge) and `self.pruner.called` (Phase 6 reached), not just rc 0; a NEW pin drives a hold label appearing only at the final refresh through the real orchestration harness (`test_late_hold_label_prevents_the_merge`: rc 0, no merge, Phase 6). One source correction rode along for contract symmetry: a final-eligibility hold is now an expected track-skip exactly like the initial check's holds (never a failed run), while draft keeps the canonical `draft` reason your P4 probe verified. Red control witnessed: bypassing the final veto (`veto = None`) fails BOTH driver pins.
+- Recovered-sweep check -> the manual script now recovers TWO MERGED landings sharing file x and asserts the exact OID range (`a*40^1..b*40`), `shared_files == {"x": [1, 2]}`, and a `bash -n`-parsable nonempty command; your invalid-map probe values (`range 'wrong'`, `shared_files None`, `command ''`) now FAIL it. Red control witnessed: skipping the recovery finalize prints range/shared_files None and cmd unparsable -> FAIL. A (d) negative control asserts CLOSED-without-evidence stays non-landed.
+- B1 deferral distinction -> preserved verbatim for the PR limitations section ("running a broad tier-3 gate alone does not create a scenario absent from its checks"); the same-invocation repaired-files/shared-file falsifier is retained in the plan as the deferred acceptance.
+
+Suite: 205 tests OK (16 GH-1140 pins total; 11 red controls witnessed across the campaign). Provenance: 26 rows. Requesting round 2: approve or name residuals.
+
+handing off to Reviewer (codex) — take your turn.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
