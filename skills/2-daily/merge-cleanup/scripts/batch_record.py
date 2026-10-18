@@ -46,10 +46,10 @@ def _now() -> str:
 
 def _strip_marks(obj: Any) -> Any:
     """Drop the one-shot intent markers before persisting (`_touched`, `_verdict_touched`,
-    `_sweep_touched`, `_refreshed`) — they describe THIS save's intentional writes only."""
+    `_sweep_touched`, `_refreshed`, `_landing_plan_touched`) — they describe THIS save's intentional writes only."""
     if isinstance(obj, dict):
         return {k: _strip_marks(v) for k, v in obj.items()
-                if k not in ("_touched", "_verdict_touched", "_sweep_touched", "_refreshed")}
+                if k not in ("_touched", "_verdict_touched", "_sweep_touched", "_refreshed", "_landing_plan_touched")}
     if isinstance(obj, list):
         return [_strip_marks(v) for v in obj]
     return obj
@@ -79,6 +79,7 @@ def new(primary: Path, origin: str, integration: str, ordered: List[Dict[str, An
     key = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime()) + f"-{ordered[0]['number']}"
     rec = {"schema": 1, "repo": origin, "integration": integration, "created": _now(),
            "issue": None, "issue_url": "", "issue_error": "",
+           "landing_plan": None,
            "planned": [_row(i + 1, pr) for i, pr in enumerate(ordered)],
            "outcomes": {str(pr["number"]): {"status": "unattempted"} for pr in ordered},
            "landed_order": [], "sweep_inputs": {}, "verdict": None,
@@ -180,12 +181,14 @@ def _merge_records(disk: Dict[str, Any], mine: Dict[str, Any]) -> Dict[str, Any]
             order.append(n)
     out["landed_order"] = order
 
-    # verdict/sweep_inputs are intentional replacements by their owning mutators — an intent
+    # verdict/sweep_inputs/landing_plan are intentional replacements by their owning mutators — an intent
     # marker decides, so a same-second stale snapshot cannot resurrect the replaced value
     if isinstance(disk.get("verdict"), dict) and not mine.get("_verdict_touched"):
         out["verdict"] = disk["verdict"]      # a carried (unmarked) verdict never beats durable
     if isinstance(disk.get("sweep_inputs"), dict) and not mine.get("_sweep_touched"):
         out["sweep_inputs"] = disk["sweep_inputs"]
+    if isinstance(disk.get("landing_plan"), dict) and not mine.get("_landing_plan_touched"):
+        out["landing_plan"] = disk["landing_plan"]
 
     for k in ("issue", "issue_url"):
         if not out.get(k) and disk.get(k):
@@ -206,6 +209,10 @@ def save(rec: Dict[str, Any]) -> None:
             merged = _merge_records(disk, rec)
             rec.clear()
             rec.update(merged)  # long-lived holders (the driver's batch) see the merged state
+        else:
+            stripped = _strip_marks(rec)
+            rec.clear()
+            rec.update(stripped)
         attempt_record.save(path, rec)
 
 
@@ -296,6 +303,18 @@ def set_outcome(rec: Dict[str, Any], pr: int, status: Optional[str] = None,
     save(rec)
 
 
+def set_landing_plan(rec: Dict[str, Any], decision: str, reason: str, prs: List[int]) -> None:
+    """Record an intentional landing plan decision (GH-1066) for queues of 3+ PRs."""
+    rec["landing_plan"] = {
+        "decision": str(decision).strip(),
+        "reason": str(reason).strip(),
+        "decided_at": _now(),
+        "prs": sorted(int(p) for p in prs),
+    }
+    rec["_landing_plan_touched"] = True
+    save(rec)
+
+
 # --- the issue -----------------------------------------------------------------------------------
 
 def _cell(text: str) -> str:
@@ -303,10 +322,23 @@ def _cell(text: str) -> str:
 
 
 def script_block(rec: Dict[str, Any]) -> str:
-    lines = [START, "## Merge sequence",
-             "_Planned order from Phase 4. This block is maintained by merge-cleanup; edits inside it are replaced._", "",
-             "| # | PR | depends on | file overlap with | status | merge commit | reconcile |",
-             "|---|----|------------|-------------------|--------|--------------|-----------|"]
+    lines = [START]
+    lp = rec.get("landing_plan")
+    if lp and isinstance(lp, dict):
+        prs_str = ", ".join(f"#{n}" for n in (lp.get("prs") or [])) or "none"
+        lines += [
+            "## Landing decision (GH-1066)",
+            f"- Plan: `{lp.get('decision', '—')}`",
+            f"- Reason: {_cell(lp.get('reason') or '—')}",
+            f"- Decided: `{lp.get('decided_at') or '—'}` for PRs {prs_str}",
+            "",
+        ]
+    lines += [
+        "## Merge sequence",
+        "_Planned order from Phase 4. This block is maintained by merge-cleanup; edits inside it are replaced._", "",
+        "| # | PR | depends on | file overlap with | status | merge commit | reconcile |",
+        "|---|----|------------|-------------------|--------|--------------|-----------|",
+    ]
     for row in rec["planned"]:
         o = rec["outcomes"].get(str(row["pr"]), {})
         hard = ", ".join(f"#{d}" for d in row["hard"]) or "—"

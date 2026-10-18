@@ -227,6 +227,20 @@ Prefer a few coherent landing groups over repeatedly repairing, pushing and full
 one PR at a time. This is caller-owned planning, not a new driver mode or a gate bypass.
 Use the existing batch issue for qualifying queues; smaller queues use the run summary.
 
+#### Required Landing Decision Checkpoint (GH-1158)
+
+For queues of 3 or more PRs, `--execute` strictly requires an explicit landing decision before any mutation occurs:
+- `--landing-plan direct|group`: choose direct sequential landing or grouped candidate landing.
+- `--landing-reason "<justification>"`: non-empty, non-whitespace explanation for the choice.
+
+**Refusal (Exit 5):** If `--execute` is run on 3+ PRs without `--landing-plan` and `--landing-reason`, `merge_cleanup.py` halts immediately with **Exit 5** before modifying any git refs (no deletion of `REBASE_HEAD`), before fetching remote refs (`refs/FETCH_HEAD`), before posting `--marker` comments, and before creating batch records or issues.
+
+**Behavior by Plan:**
+- `--landing-plan direct`: Records the decision and reason in the local batch record and proceeds through sequential landing and reconciliation (Phase 5).
+- `--landing-plan group`: Records the decision and reason in the local batch record and `merge-batch` issue, outputs the GH-1066 candidate execution checklist (freeze, sequential fold, adversarial preflight, single landing PR), and exits cleanly (**Exit 0**) without executing remote merges or checkout teardowns.
+- `--resume`: Reuses a previously recorded landing decision without prompting if the batch record holds a plan for the identical PR set. If the queue membership changes or no plan was recorded, the checkpoint is re-enforced.
+- **Small queues (<3 PRs):** Unaffected; proceed without requiring `--landing-plan`.
+
 1. **Map the cost and constraints.** Read the repo's required checks, push hooks, hosted
    triggers and reconciliation policy. Identify which pushes actually start broad CI and
    which existing path supports batching (merge queue, staging or aggregate landing PR).
@@ -522,7 +536,7 @@ Each row names who does the work; `script` rows name the test that pins them, an
 | batch-regression-sweep | 5 | caller | — |
 | post-deploy-carryover-dual-sink | 5 | caller | — |
 
-CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`, `--record-sweep`.
+CLI options this document describes and the guard asserts exist: `--primary`, `--root`, `--prefix`, `--exclude`, `--strategy`, `--show-merge-policy`, `--scan-only`, `--prs-only`, `--teardown-only`, `--reconcile-pr`, `--integration-branch`, `--allow-unready-primary`, `--execute`, `--backup-first`, `--resume`, `--record-sweep`, `--landing-plan`, `--landing-reason`.
 
 ## CLI Usage
 
@@ -588,6 +602,12 @@ python3 skills/2-daily/merge-cleanup/scripts/attempt_record.py finish --index 0 
 
 # 8. Continue a previous run after repairs or a network outage (GH-623)
 python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents/GH Repos/XYZ-forge" --prefix XYZ-forge --resume --execute
+
+# 9. Execute with explicit direct landing plan for 3+ PR queues (GH-1066)
+python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents/GH Repos/XYZ-forge" --prefix XYZ-forge --landing-plan direct --landing-reason "Independent fixes with disjoint file sets" --execute
+
+# 10. Execute with group candidate landing plan (GH-1066 checklist, exits 0 without merging)
+python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary "$HOME/Documents/GH Repos/XYZ-forge" --prefix XYZ-forge --landing-plan group --landing-reason "Combine tightly coupled changes into staging branch" --execute
 ```
 
 ---

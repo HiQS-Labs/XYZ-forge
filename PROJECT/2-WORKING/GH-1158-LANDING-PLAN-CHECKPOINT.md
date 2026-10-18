@@ -35,7 +35,7 @@ goal: "For queues of 3 or more PRs, make choosing direct versus grouped landing 
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA completed and Approved by Codex in Round 3 (R1–R4 resolved); accepted-start admitted in RELEASES DB. | Phase 1 implementation in `merge_cleanup.py`, `batch_record.py`, and `SKILL.md`, followed by verification and red controls. |
+| Phase 1 implementation in `merge_cleanup.py`, `batch_record.py`, and `SKILL.md` complete; verified 10/10 checks green in `TESTS-RESULTS/2026-10-18+GH-1158/verify-landing-plan-checkpoint.py`; existing regression suites `gh436-merge-cleanup.py` and `gh534_phase_c_tests.py` passing cleanly. | Post-build Codex Code QA Relay, pre-push gate in disposable clone, push & PR creation. |
 
 ## Preflight Solution-Fit Bet Check
 
@@ -150,13 +150,13 @@ Update `skills/2-daily/merge-cleanup/SKILL.md` GH-1066 section and CLI argument 
 
 ## Acceptance Criteria
 
-- [ ] An `--execute` run on 3 or more PRs cannot merge anything without an explicit `--landing-plan direct|group` and non-empty `--landing-reason` (or a valid matching plan preserved on `--resume`).
-- [ ] Omission of `--landing-plan` on 3+ PRs exits 5 before any git mutation (no `REBASE_HEAD` deletion, no `FETCH_HEAD` fetch writes), no issue markers, and no batch issue creation.
-- [ ] Blank or whitespace-only `--landing-reason` is refused.
-- [ ] `--landing-plan group` records the decision in the local batch record and batch issue (or warns on GitHub failure without false claim) and exits 0 with the GH-1066 checklist, without merging.
-- [ ] `--landing-plan direct` records the decision and proceeds to Phase 5.
-- [ ] Stale batch record saves under `RecordLock` preserve the recorded `landing_plan`.
-- [ ] `_landing_plan_touched` is stripped and consumed on save (both first persistence and merge save); neither persisted JSON nor reloaded dict retain the marker; an older reloaded snapshot cannot overwrite a newer decision.
-- [ ] The landing decision survives `--resume` on unchanged PR sets; changed PR sets require re-evaluation.
-- [ ] Queues of 1 or 2 PRs remain completely unaffected.
-- [ ] `skills/2-daily/merge-cleanup/SKILL.md` documents the flags, checkpoint, and Exit 5.
+- [x] An `--execute` run on 3 or more PRs cannot merge anything without an explicit `--landing-plan direct|group` and non-empty `--landing-reason` (or a valid matching plan preserved on `--resume`).
+- [x] Omission of `--landing-plan` on 3+ PRs exits 5 before any git mutation (no `REBASE_HEAD` deletion, no `FETCH_HEAD` fetch writes), no issue markers, and no batch issue creation.
+- [x] Blank or whitespace-only `--landing-reason` is refused.
+- [x] `--landing-plan group` records the decision in the local batch record and batch issue (or warns on GitHub failure without false claim) and exits 0 with the GH-1066 checklist, without merging.
+- [x] `--landing-plan direct` records the decision and proceeds to Phase 5.
+- [x] Stale batch record saves under `RecordLock` preserve the recorded `landing_plan`.
+- [x] `_landing_plan_touched` is stripped and consumed on save (both first persistence and merge save); neither persisted JSON nor reloaded dict retain the marker; an older reloaded snapshot cannot overwrite a newer decision.
+- [x] The landing decision survives `--resume` on unchanged PR sets; changed PR sets require re-evaluation.
+- [x] Queues of 1 or 2 PRs remain completely unaffected.
+- [x] `skills/2-daily/merge-cleanup/SKILL.md` documents the flags, checkpoint, and Exit 5.
