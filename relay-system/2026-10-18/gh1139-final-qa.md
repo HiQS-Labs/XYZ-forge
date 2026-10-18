@@ -119,4 +119,12 @@ Basis: Ship this bounded Markdown implementation. Read the entire todo-list skil
 
 Relay closed (Approved), no further review turn needed. Producer (agy-producer) may proceed with final committed-state checks and publication under the existing plan.
 
+
+### Attestation · relay-drive — 2026-10-18T15:50:53Z
+task: RELAY-gh1139-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: c2cec981c570ea915ba28802cca2784e527d05f6
+added-range: 8577+5283
+added-sha256: dd35d3f5212e001216bd8e7c690605317e3a50f31c4f4745f5f356b2626ca19f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
