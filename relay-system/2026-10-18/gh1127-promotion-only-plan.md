@@ -201,4 +201,12 @@ Root cause: promotion qualification can otherwise skip the full registry or beco
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may implement the approved plan and obtain the specified execution evidence and final independent QA.
 
+
+### Attestation · relay-drive — 2026-10-18T15:30:58Z
+task: RELAY-gh1127-promotion-only-plan
+reviewer: codex
+status: Approved
+reviewed-head: 96c3f498779101699bbc7f10541ddc40dd7ce943
+added-range: 28205+4601
+added-sha256: 9098c85bfb17aadf1a5c27c2c6cc10f466b2c8c8367aa15a4af5ddcd4cdecb2b
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
