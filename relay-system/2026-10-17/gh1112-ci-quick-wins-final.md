@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-17.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -121,5 +121,20 @@ Handing off to Producer (claude-a) — record/disposition F1 and F2, then return
 
 Provenance has two new hashed entries. Round 2 question: does the Definition of Done now hold?
 
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: F1 and the registry/order portion of F2 are satisfied by the supplied receipts and direct source checks. F2's explicit whole-diff scope request remains unanswered, so the no-unrelated-files/no-routing-change part of the Definition of Done is still unverified. No implementation change or further gate run is requested.
+swept file: yes
+
+Read all three source files in full again, the plan, provenance and new artifacts. No additional demonstrated pre-existing defect requiring expansion of this slice was found. Verify tier, direct-source evidence: paginated list_projects (84 total) has no project for this worktree. Coverage for the main-checkout project `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-10-18T00:22:20Z`, reports metadata_match/no_recorded_issue for the three shell files and missing for this plan/provenance. That other checkout does not establish this candidate; exact local files were read. No git commands, suites, pytest or executable fixtures ran.
+
+- [Pass] **F1 closed — cleanup control.** `TESTS-RESULTS/2026-10-17+GH-1112/gh648-cleanup-eperm-control.log.txt:1–11` records the mutation (keep SIGKILL, raise PermissionError inside its try), ordinary rc=0 with handler reached 5 times, and no-op-observation rc=1 specifically with `process group remains`, handler reached once. This exercises the catch at `test/gh648-l4-285-revalidate.sh:166–170` while preserving both verdicts. The abandoned control's wait timeout is disclosed. Accepted as retained disposable-clone evidence, not a fresh reviewer execution.
+- [Pass] **F2 membership/order portion closed, with a narrower structural basis.** `registry-order-controls.py.txt:26–33` and `registry-order-controls.log.txt:1–12` retain the multiset checks, dropped/duplicated red witnesses, old positions 354/363/404 and new positions 1/2/3. Independent read-only probe reproduced equality and both red witnesses; candidate manifest exactly matches the current TESTS block. `validate.sh:1298–1315` preserves registry order in POOL and feeds it to xargs; all three heavy entries at :96–101 are outside DRIVER_LOCK_LANE. This is sufficient structural evidence of first-wave dispatch; the supplied telemetry result at log:9 measures old-run completion times, not a fresh candidate start trace. No wall-time improvement is inferred.
+- [Pass] **Receipt integrity and plan correction.** Read-only `python3 - <<'PY'` probe using `hashlib.sha256((p/name).read_bytes())` for each provenance artifact pair, `Counter(before)==Counter(after)`, regex extraction of TESTS, byte stream comparison and `gzip.decompress` of the gate log exited 0. Decisive output: `retained artifact hashes match: 12`; `registry lengths: 406 406 406`; `multiset equal: True candidate manifest matches source: True`; `drop detected: True duplicate detected: True`; `audit stdout: True 17028`; `audit stderr: True`; `retained gate: True not promotion: True`. These are receipt/source consistency checks, not commit attestation. Plan:26,83 now uses 79.8 s and records completed verification; `parallel-4wide-summary.txt:24` still explicitly declines a wall-time claim. Ratings remain at `releases.sql:871–872`.
+- [Should] **F2 scope portion still open — supply the already-requested comparison.** The Round 2 Producer block, provenance:7–8 and the new registry/cleanup artifacts contain no base-to-candidate name-status/stat or patch summary. The read-only directory probe `[x.name for x in p.iterdir() if any(w in x.name for w in ('scope','diff','status'))]` exited 0 and returned `[]`; the full artifact list and provenance were also inspected. Therefore whole-diff scope, absence of new test files, and absence of routing edits remain **[Unverified — no base comparison]**. Producer: retain or quote `git diff --name-status a984865e..HEAD` and `git diff --stat a984865e..HEAD` with the full candidate SHA, plus the focused source diff (or equivalent base/candidate comparison) establishing that validate changes only TESTS ordering and that routing is untouched. Account for each path outside the three source files, plan, evidence, ledger and task relay receipts. This is the unfulfilled part of the prior F2, not a new behavior-change request; no new suite or benchmark is needed.
+
+Handing off to Producer (claude-a) — supply F2's scope comparison, then return for review; go to the Producer window and say 'take your turn'. Harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
