@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -98,5 +98,29 @@ ROUND: 1 / 3
 9. Pre-existing defects in the touched regions.
 
 Changed paths route full; the pre-push full gate runs at push. End with VERDICT and a `swept file: yes|no` line.
+
+### Reviewer · Round 1 — codex
+
+**PARKED — named review input is missing.** Used the plan's A0–A6 as acceptance criteria; Setup still contains its DoD placeholder.
+
+swept file: no
+
+The named seeded artifact cannot be swept: `.relay-artifacts/wave_reconcile.py` does not exist. I read the full repository copy `utils/py/wave_reconcile.py` (1–2489), plus the related qualification, local reconciliation, batch renderer, workflow, documentation and test-adaptation regions. That source review is useful but cannot establish identity with the absent seed. No additional pre-existing defect was found in the reviewed regions; this is not an exhaustive review of the other 1,799-line merge-cleanup module.
+
+- [Should] **F1 — restore the intended review input before sign-off.** Setup names `.relay-artifacts/wave_reconcile.py`, but the only seed is `gh182-claim-guards.md`. Re-seed the intended artifact through the harness and provide the scoped diff as a read-only artifact (the current turn explicitly forbids Git), or explicitly correct the review target to the repository copy and supply its revision/diff binding. Do not treat the unrelated seed as GH-1127 evidence. Probe command: `python3 -c 'from pathlib import Path; p=Path(".relay-artifacts/wave_reconcile.py"); print("seed_exists:", p.exists()); print("seeds:", sorted(x.name for x in p.parent.iterdir()))'`; exit **0**; decisive output: `seed_exists: False`, `seeds: ['gh182-claim-guards.md']`. This requests input repair, not a product behavior change.
+- [Pass] **Promotion selection in the repository copy:** `utils/py/wave_reconcile.py:649–676` preserves no-pending/no-selector behavior, uses the full gate for promotion and substitutes HEAD metadata when empty. An AST-only probe of the actual `promotion_gate` function (no imports, subprocesses or fixtures), exit **0**, returned: empty ordinary → `count=0 gate=None calls=[]`; empty promotion → `count=1 gate=('validate.sh --parallel 4', None, 'promotion (#1127): full registry') calls=['head']`; pending ordinary → selector called; pending promotion → selector not called. The actual caller at `:2235–2263` admits empty promotion and keeps the `--only-receipted` retry out of the suite path. Parser restrictions are at `:2181–2188`. The ordinary path now reads HEAD even with no pending work, so “byte-for-byte equivalent” overstates the claim; the gate-selection behavior is preserved. Reading HEAD before cleanliness causes no write; later ancestry, clone identity and final HEAD/cleanliness checks (`:678–683`, `:721–744`) protect publication.
+- [Pass] **Receipt metadata:** `utils/py/wave_reconcile.py:586–594` compares only present metadata keys and compares retries to rescued first-attempt failures. Historical omitted keys keep their prior semantics. Retained controls are `TESTS-RESULTS/2026-10-18+GH-1127/manual-controls.log.txt:7–12`; I did not rerun replay because it invokes Git.
+- [Pass] **Local path and batch record:** `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:721–757` makes hosted wait opt-in and routes the `local` sentinel to the existing child; `:759–779` retains the shared governance/Jog tail. The hosted-success fetch/fast-forward applies to hosted writes and is not needed before the local child; normal Phase-5 publication remains at `:782` onward. `batch_record.py:75` establishes `integration`; `:183–192` labels deferred/local sweeps; `:310–324` emits the dispatch command for full and preserves Small. Default-local execution evidence is the manual A2 control, not the hosted-path class.
+- [Pass] **Workflow and promotion procedure:** `.github/workflows/wave-reconcile.yml:9–10` is dispatch-only, `:69` passes promotion; the retained PR branches are unreachable under these triggers and harmless. `AGENTS.md:440–457` binds the quiet window, run-id receipt, fetched development and final PR head. `ROUTER.md` GH-1127/GH-831 paragraphs distinguish promotion from ordinary qualification; merge-cleanup SKILL's lines 300–306 and 421–425 describe local reconciliation and deferred full sweeps. The unchanged sequential main witness remains `.github/workflows/ci.yml:152–153,203`.
+- [Unverified — needs diff / clone run] **Test adaptation and final gate:** current `test/gh421-auto-wave-reconcile.sh:600–627` pins the new trigger contract; `test/gh534_phase_c_tests.py:256–261` opts the hosted-path class into the env flag. The retained `gh421-adaptation-controls.log.txt:1` reports both old/new red controls. These are consistent with adaptations; without the requested base diff I cannot independently attest there are no additional cases or changed paths. The default local branch lacks dedicated suite coverage in that opted-in class; A2 is manual evidence. No suite, pytest, executable fixture or Git command was run this turn. A6 remains the harness/push gate's responsibility.
+- [Pass] **Retained p4 evidence is internally consistent:** `TESTS-RESULTS/2026-10-18+GH-1127/README.md:6` explicitly discloses re-authoring as bot and the tree-equality claim; `wave_reconcile.py:1417–1421` explains why that creates the zero-pending precondition. This is a reasonable synthetic precondition for the empty-landing route, not proof that naturally receipted history was exercised or that the original branch SHA was tested. Read-only Python hash/JSON inspection, exit **0**, found `evidence artifacts=19 hash_or_size_mismatches=[]`, `p4 starts=1 summaries=1 telemetry_hash_matches=True`. Telemetry reports commit `4030781b2423accd59782ca08b648e1912e2c3d3`, parallel width 4, tier 3, registered 406, summary passed/total 409, failed 0; the receipt records `first_attempt_failures=['gh75-dashboard.sh']`, retries 1. `p4-run.log.txt:2–3` records zero pending PRs/direct commits, and its final lines record the HEAD commit receipt. Tree equality, exit status and identity stability remain the Producer's retained assertions; I did not independently reconstruct history.
+- [Nit] **Stale wording:** `merge_cleanup.py:715` still describes hosted-first as the function's default; `SKILL.md:339–341` says to run the printed sweep in a throwaway clone even when it is now a hosted dispatch. Update those descriptions when repairing the input; neither changes the reviewed routing.
+
+Graph limitation: no project matches this isolated worktree. The nearest XYZ graph is generation `2026-09-01T15:54:30Z`; `check_index_coverage` reports wave source `metadata_changed` and merge-cleanup/batch files `not_tracked`. Claims above use direct current-source reads, not that stale graph.
+
+**VERDICT: PARKED**
+**Basis:** no observed product failure in the reviewed paths, but the required seeded artifact is absent and the requested committed-diff identity cannot be established under the no-Git turn contract. Restore/correct those review inputs before approval; no new tests or product changes requested.
+
+Handing off to Producer (claude-a) — repair the review inputs, then go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
