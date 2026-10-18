@@ -1,0 +1,36 @@
+"""Manual, finite red controls for GH-1108's required merge proof."""
+import json,subprocess,sys,tempfile
+from pathlib import Path
+sys.path.insert(0,str(Path.cwd()/'utils/py'))
+import jog_run as j
+root=Path(tempfile.mkdtemp(prefix='gh1108-proof-',dir=Path.cwd()/'temp'))
+def git(*args,input=None,check=True):
+ p=subprocess.run(['git','-C',str(root),*args],input=input,capture_output=True,text=True)
+ if check:assert p.returncode==0,(args,p.stdout,p.stderr)
+ return p.stdout.strip() if check else p
+
+def edit(path,value):
+ p=root/path;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(value);git('add',path)
+def commit(message):git('commit','-qm',message);return git('rev-parse','HEAD')
+def refused(approved,head,label,needle=None):
+ try:j._landing_tail_proof(str(root),approved,head,'refs/remotes/origin/development','unused')
+ except j.ContractError as e:
+  if needle:assert needle in str(e),(needle,str(e))
+  print('PASS refusal:',label,';',str(e).splitlines()[0])
+ else:raise AssertionError(label+' accepted')
+git('init','-q','-b','development');git('config','user.name','Manual Proof');git('config','user.email','proof@example.invalid')
+edit('src/shared.txt','base');edit('releases.db','base ledger');base=commit('base')
+git('branch','upstream',base);git('switch','-c','lane');edit('src/feature.js','approved');approved=commit('approved code');edit('releases.db','lane ledger');lane_parent=commit('ledger repair')
+git('switch','upstream');edit('docs.md','upstream doc');edit('releases.db','upstream ledger');upstream=commit('upstream changes');git('update-ref','refs/remotes/origin/development',upstream)
+git('switch','lane');merge=git('merge','--no-ff','--no-commit','upstream',check=False);assert merge.returncode==1 and 'releases.db' in merge.stdout
+edit('releases.db','resolved ledger');head=commit('upstream merge with B1 repair')
+proof=j._landing_tail_proof(str(root),approved,head,'refs/remotes/origin/development','unused')
+assert proof[-1]['recomputed_tree']==proof[-1]['recorded_stripped_tree'];print('PASS ledger-conflicted/source-clean merge:',json.dumps(proof))
+saved=(root/'docs.md').read_bytes();edit('docs.md','injected resolution');tree=git('write-tree');forged=git('commit-tree',tree,'-p',lane_parent,'-p',upstream,input='forged resolution\n');refused(approved,forged,'altered merge tree','differs outside ledger')
+(root/'docs.md').write_bytes(saved);git('add','docs.md')
+git('update-ref','refs/remotes/origin/development',base);refused(approved,head,'unreachable integration parent','merge-base');git('update-ref','refs/remotes/origin/development',upstream)
+git('switch','-c','conflict-upstream',base);edit('src/shared.txt','upstream');up2=commit('upstream conflicting source')
+git('switch','-c','conflict-lane',base);edit('src/shared.txt','approved lane');approved2=commit('approved conflicting source');tree=git('write-tree');forged2=git('commit-tree',tree,'-p',approved2,'-p',up2,input='manual conflicting merge\n');git('update-ref','refs/remotes/origin/development',up2);refused(approved2,forged2,'nonledger merge conflict','merge-tree')
+git('switch','-c','source-revert',approved2);edit('src/shared.txt','unreviewed');commit('unreviewed edit');edit('src/shared.txt','approved lane');reverted=commit('unreviewed revert');assert not git('diff','--name-only',approved2,reverted);refused(approved2,reverted,'source edit/revert despite equal endpoint trees','unapproved nonledger')
+refused('0'*40,head,'missing approved object');refused(up2,reverted,'nonancestor approval')
+print('ALL TAIL PROOF CONTROLS PASSED; fixture preserved at',root)

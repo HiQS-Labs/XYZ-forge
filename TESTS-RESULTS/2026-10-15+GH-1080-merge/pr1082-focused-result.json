@@ -1,0 +1,39 @@
+{
+  "rc": 0,
+  "timestamp": "2026-10-15T23:40:33.164730+00:00",
+  "commit": "7a526d4312266ab00ef2ea557623e305381b2fcd",
+  "clone": "/Users/noelsaw/Documents/Codex/2026-10-15/task/pr1082-B1-second-clone/verify-9d5fa5a4",
+  "results": [
+    {
+      "case": "express",
+      "command": [
+        "bash",
+        "test/gh267-express-skill.sh"
+      ],
+      "rc": 0,
+      "log": "pr1082-current-express.log"
+    },
+    {
+      "case": "codex-prerequisite",
+      "command": [
+        "bash",
+        "test/codex-turn.sh"
+      ],
+      "rc": 0,
+      "log": "pr1082-current-codex-prerequisite.log"
+    },
+    {
+      "case": "exact original16 manual controls repeated",
+      "command": [
+        "python3",
+        "temp/gh1080-merge/original-manual-docs.py"
+      ],
+      "rc": 0,
+      "log": "pr1082-current-manual-docs.log",
+      "probe_sha256": "097dd8b0a157702348a7773342530239d46164b0d92cd2bca5d33df24c5fd676",
+      "original_log_sha256": "6166ca6a76301480ddec91422dde66dfe0b52d5a8b885ca492b23242204baee6"
+    }
+  ],
+  "identity_unchanged": true,
+  "scope": "Existing suites and exact original16 manual controls only; no new tests or cases. Full normal publication remains pending."
+}

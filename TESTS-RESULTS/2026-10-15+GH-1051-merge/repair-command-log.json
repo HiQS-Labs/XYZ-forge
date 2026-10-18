@@ -1,0 +1,82 @@
+[
+  {
+    "argv": [
+      "git",
+      "add",
+      "releases.sql"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "python3",
+      "utils/py/releases_app.py",
+      "check",
+      "--rebuild"
+    ],
+    "rc": 0,
+    "stdout": "OK: foreign_keys pragma asserted per connection\nOK: generation trio consistent at 1666 (DB <-> dump)\nOK: receipt chain intact (1860 receipt(s), business-state digest matches, 189 merge fork(s) tolerated under the merge-rebuild receipt)\nwarn: rule=mig-ref-stale: MIG-F1CCB6 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D7D2C4 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D248B2 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-79F036 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-A993B3 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-751A4C is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-7AFFE1 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-AC68FA is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 19 day(s) past its target of 2026-09-26 \u2014 the plan has drifted from the calendar\ninfo: 24 grandfather_entries pending disposition (the strict flip requires none pending)\nrebuilt releases.db from releases.sql (generation 1666 -> 1667); displaced DB backed up at /Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1053-prep/releases.db.bak\nOK: post-rebuild verification \u2014 DB rebuilt from releases.sql, displaced DB at releases.db.bak\ncheck: clean (0 failures, 9 warning(s))\n",
+    "stderr": ""
+  },
+  {
+    "canonical_replay": [
+      "roadmap add GH-1051: rc=0 ",
+      "roadmap rate GH-1051 70/45/50/95: rc=0 ",
+      "roadmap update GH-1051 (section/marker): rc=0 "
+    ]
+  },
+  {
+    "argv": [
+      "git",
+      "add",
+      "CHANGELOG.md",
+      "releases.sql"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "bash",
+      "utils/releases-merge-resolve.sh",
+      "--root",
+      "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1053-prep"
+    ],
+    "rc": 0,
+    "stdout": "releases-merge-resolve: took either side of releases.db in the working tree (it is regenerated below, so the choice cannot matter)\nreleases-merge-resolve: rebuilding releases.db from the merged releases.sql\nOK: foreign_keys pragma asserted per connection\nFAIL: rule=generation-mismatch: settings.generation=1666 but releases.sql says 1670 \u2014 write in progress, crashed, or a torn trio\nOK: receipt chain intact (1854 receipt(s), business-state digest matches, 188 merge fork(s) tolerated under the merge-rebuild receipt)\nwarn: rule=mig-ref-stale: MIG-F1CCB6 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D7D2C4 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D248B2 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-79F036 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-A993B3 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-751A4C is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-7AFFE1 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-AC68FA is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 19 day(s) past its target of 2026-09-26 \u2014 the plan has drifted from the calendar\ninfo: 24 grandfather_entries pending disposition (the strict flip requires none pending)\nrebuilt releases.db from releases.sql (generation 1666 -> 1671); displaced DB backed up at /Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1053-prep/releases.db.bak\nOK: post-rebuild verification \u2014 DB rebuilt from releases.sql, displaced DB at releases.db.bak\ncheck: clean (0 failures, 9 warning(s))\nreleases-merge-resolve: verifying\nOK: foreign_keys pragma asserted per connection\nOK: generation trio consistent at 1671 (DB <-> dump)\nOK: receipt chain intact (1865 receipt(s), business-state digest matches, 190 merge fork(s) tolerated under the merge-rebuild receipt)\nwarn: rule=mig-ref-stale: MIG-F1CCB6 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D7D2C4 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D248B2 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-79F036 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-A993B3 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-751A4C is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-7AFFE1 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-AC68FA is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 19 day(s) past its target of 2026-09-26 \u2014 the plan has drifted from the calendar\ninfo: 24 grandfather_entries pending disposition (the strict flip requires none pending)\ncheck: clean (0 failures, 9 warning(s))\nreleases-merge-resolve: took either side of LEADERBOARD.md in the working tree (it is regenerated below, so the choice cannot matter)\nreleases-merge-resolve: regenerating adopted views: LEADERBOARD.md\nreleases-merge-resolve:   -> leaderboard.sh\nleaderboard: wrote /Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1053-prep/LEADERBOARD.md\nreleases-merge-resolve: resolving releases.db in the index now that the rebuild verified clean\nreleases-merge-resolve: artifacts are consistent and staged. Review, then commit the merge yourself \u2014\nreleases-merge-resolve: this script deliberately does not commit.\nreleases-merge-resolve: note: releases.db.bak holds the DB that was displaced; it is untracked and safe to delete.\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "python3",
+      "utils/py/releases_app.py",
+      "check"
+    ],
+    "rc": 0,
+    "stdout": "OK: foreign_keys pragma asserted per connection\nOK: generation trio consistent at 1671 (DB <-> dump)\nOK: receipt chain intact (1865 receipt(s), business-state digest matches, 190 merge fork(s) tolerated under the merge-rebuild receipt)\nwarn: rule=mig-ref-stale: MIG-F1CCB6 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D7D2C4 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D248B2 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-79F036 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-A993B3 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-751A4C is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-7AFFE1 is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-AC68FA is 58 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 19 day(s) past its target of 2026-09-26 \u2014 the plan has drifted from the calendar\ninfo: 24 grandfather_entries pending disposition (the strict flip requires none pending)\ncheck: clean (0 failures, 9 warning(s))\n",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "add",
+      "PROJECT/2-WORKING/GH-1051-PAGES-DEVELOPMENT.md"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "argv": [
+      "git",
+      "commit",
+      "--no-edit"
+    ],
+    "rc": 0,
+    "stdout": "[chore/pr1053-current-base-preparation a5a22ae7] Merge remote-tracking branch 'origin/development' into chore/pr1053-current-base-preparation\n",
+    "stderr": ""
+  }
+]

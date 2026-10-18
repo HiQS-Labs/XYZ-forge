@@ -1,0 +1,9 @@
+{
+  "pr": 1053,
+  "merge": "d48aa774dc1e22fbab393a9324057b8acff47d4b",
+  "head": "4bdd14f2e151f6c0d48375da671d4a2e4d9375dd",
+  "result": "success",
+  "finished": "2026-10-15T23:24:25.424786+00:00",
+  "original_deadline": "2026-10-15T23:41:41+00:00",
+  "recovery": "Local exec transport recovery; existing hosted run and original deadline retained"
+}

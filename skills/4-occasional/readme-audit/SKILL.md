@@ -1,21 +1,17 @@
 ---
 name: readme-audit
-description: >
-  Audit a repo's root README as both the artifact under review and the map to
-  everything else — checking accuracy, legibility, understandability, and operator
-  UX, then following every pointer it makes to other docs as a litmus test for the
-  whole repo's doc hygiene. Use when the user asks to "review/audit/check the
-  README," "is the README accurate," "does the README still match the code," "find
-  gaps in the README," "are our docs drifting," "do the README's links still work,"
-  "is the README clear enough," or wants the README graded for an operator
-  who has to actually use the repo. Fires before you sign off on a README as "good"
-  or "up to date" — verify the document content and traverse the links first. Covers stale
-  commands/flags/paths/counts, dead relative links and missing anchors, README ↔
-  linked-doc contradictions, orphaned and unreachable docs, missing-but-needed
-  sections, and overall scannability — then offers to apply the low-risk, mechanical
-  fixes (dead links, stale counts, wrong commands) on confirmation. NOT the
-  clone→working onboarding walk, secret-scanning, or install-script audit — that is
-  front-door; this skill cross-references it instead of repeating it.
+description: >-
+  Audit a repo's root README as both the document under review and the map to the
+  rest of the docs. Use when the user asks to "review/audit/check the README,"
+  "is the README accurate," "does the README still match the code," "find gaps in
+  the README," "are our docs drifting," "do the README's links still work," "is
+  the README clear enough," or wants the README graded for an operator. Also fires
+  before signing off on a README as "good" or "up to date." Checks accuracy,
+  legibility, understandability, operator UX, and every outbound link — covering
+  stale commands/flags/paths/counts, dead links or anchors, README ↔ linked-doc
+  contradictions, orphaned docs, and missing sections — then offers to apply
+  mechanical fixes on confirmation. NOT the clone→working onboarding walk,
+  secret scan, or install-script audit (that is front-door).
 ---
 
 # README Audit

@@ -1,0 +1,24 @@
+{
+  "head": "8c847c4f59fc58be45094f256a859f51215ccee1",
+  "branch": "docs/gh1066-merge-cleanup-ci-groups",
+  "rc": 0,
+  "before": {
+    "head": "8c847c4f59fc58be45094f256a859f51215ccee1",
+    "tree": "d3e098f03a90c5baeaa9273adc6ba230e9552fe9",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "config": "a36192a02776861bf8832f370a55c5bd9c17f08d4f0137081f16aebc648ac620"
+  },
+  "after": {
+    "head": "8c847c4f59fc58be45094f256a859f51215ccee1",
+    "tree": "d3e098f03a90c5baeaa9273adc6ba230e9552fe9",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "config": "a36192a02776861bf8832f370a55c5bd9c17f08d4f0137081f16aebc648ac620"
+  },
+  "identityUnchanged": true,
+  "at": "2026-10-15T05:02:53.296640+00:00",
+  "durationSeconds": 71.52,
+  "remoteRef": "8c847c4f59fc58be45094f256a859f51215ccee1\trefs/heads/docs/gh1066-merge-cleanup-ci-groups",
+  "remoteQueryRc": 0
+}

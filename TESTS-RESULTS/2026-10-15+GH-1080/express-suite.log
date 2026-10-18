@@ -1,0 +1,143 @@
+initialized /tmp/gh267-express.8juv6V/repo/releases.db (slug 'H/H', enforcement=lenient, generation 1); canonical dump at /tmp/gh267-express.8juv6V/repo/releases.sql
+added roadmap entry rmi-01M50BKQN9SVABGFFDK0M7GRZB for GH-999
+added roadmap entry rmi-01M50BKQNE3AQ9VW0N1DNK5Y9M for GH-998
+added roadmap entry rmi-01M50BKQNKM4VK25N5BAG8DZMN for GH-997
+fixture ready
+== refusals ==
+  pass: task-branch refusal
+  pass: express-refused telemetry written under .tick/express/
+  pass: express-refused record carries the tick 0.2.0 envelope (GH-694/#702)
+  pass: GH-694: nothing express-shaped in .tick/events/
+  pass: GH-694: tick still projects after an express refusal
+  pass: GH-694: tick project folded cleanly after an express refusal
+  pass: GH-694: no phantom task from an express refusal
+  pass: GH-694 control: the fold survives an express record leaked into .tick/events/
+  pass: GH-694 control: the leaked record is ignored — no phantom task
+  pass: GH-694 control: tick next offers no phantom task
+  pass: GH-694 control: a genuine task.* claim still projects beside the leaked record
+  pass: too-many-commits refusal (> 2 commits, GH-516)
+  pass: task-clone refusal on diverged branch (GH-516)
+  pass: frozen-twin refusal (GH-308)
+  pass: shared-runtime refusal (QA F4: not mislabeled frozen-twin)
+  pass: scratch refusal for .orig (QA F2)
+  pass: no-new-bash refusal (GH-551)
+  pass: kernel-surface refusal
+  pass: gate source is a refused safety surface
+  pass: too-many-files refusal
+  pass: suite-unregistered refusal
+  pass: issue-closed refusal (already-landed guard)
+  pass: gate-unwired refusal (finding 3: hooks do not travel)
+  pass: gate-unwired rejects an executable no-op impostor
+  pass: ledger-hand-edit refusal (verbs only)
+  pass: driver-output-hand-edit refusal (generated views are verb-owned)
+== happy path ==
+  pass: legal fix passes
+  pass: 1 local commit passes check (GH-516)
+  pass: 2 local commits pass check (GH-516)
+  pass: micro-diff multi-subsystem auto-allowed (GH-516)
+  pass: multi-subsystem refusal without flag (GH-516)
+  pass: --allow-multi-subsystem permits multi-subsystem changes (GH-516)
+  pass: operator .md edits COUNT against the bound (finding 5)
+test/gh267-express-skill.sh: line 381: /tmp/gh267-express.8juv6V/repo/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md: No such file or directory
+  pass: the lane's own capture doc + CHANGELOG stay exempt
+  pass: unrelated PROJECT doc counts against file bound
+  pass: unrelated PROJECT doc counts against insertion bound
+== docs born complete ==
+  pass: docs refuses a missing --suite with an actionable message
+  pass: docs without --suite wrote nothing
+  pass: capture doc created
+  pass: Lessons Learned present from birth (GH-232 gate)
+  pass: Status + Acceptance present
+  pass: CHANGELOG dated section inserted
+  pass: CHANGELOG entry present
+  pass: CHANGELOG entry survives a Fixed-less today-section (QA F3)
+== run: end-to-end happy path (hermetic — stubbed gh/releases/reconcile) ==
+  pass: run accepts the full production projection set
+  pass: closeout left the clone on development
+  pass: ship transaction persisted before reconciliation
+  pass: reconcile persisted as a separate clean-tree transaction
+  pass: run closed GitHub issue #999 before reconciling
+  pass: successful closeout leaves development clean
+  pass: express-fired telemetry written on full success
+  pass: tick project folded cleanly after express-fired telemetry (GH-694)
+  pass: no phantom task from express-fired telemetry (GH-694)
+  pass: schema009 owned admission has exactly one real writer start and matching digest receipt
+== GH-592: the landing writes its provenance receipt and reconciles under --gate ==
+  pass: receipt file exists at TESTS-RESULTS/<date>+GH-999-express/provenance.jsonl
+  pass: exactly one record for the landing sha: command/rc/gate/result/issue as specified
+  pass: ship transaction commits exactly the receipt
+  pass: gated reconcile outcome is printed in the landing output
+  pass: control (i): unrelated TESTS-RESULTS file refused by name; exact-path grant did not widen
+  pass: control (i): remote development == post-fix-push sha (no closeout commit landed)
+  pass: control (ii): driver without a real receipt write fails the gate (missing-receipt oracle reached)
+== four-step standalone flow (check / docs / ledger / land, each its own process) ==
+  pass: standalone land accepts what standalone docs/ledger already wrote (GH-278 review fix)
+== run: TOCTOU — suite-generated drift never rides the commit (finding 4) ==
+  pass: tree-drift refusal (finding 4: stage exactly what was qualified)
+  pass: tree-drift detects changed bytes on an existing path
+  pass: post-suite gate identity is re-proven before push
+== closeout failure receipt ==
+  pass: SystemExit closeout failure is reported
+  pass: every closeout failure writes its receipt
+== dry-run mode (GH-516) ==
+  pass: run --dry-run reports check pass
+  pass: run --dry-run reports land pass
+  pass: dry-run created no capture doc
+  pass: dry-run left task branch intact
+  pass: dry-run preserved uncommitted working tree
+  pass: dry-run accepted admission preserves exact DB/dump bytes
+== resume subcommand & central telemetry (GH-516) ==
+  pass: resume rejects dirty working tree on task branch
+  pass: dirty task tree error reported
+  pass: resume rejects dirty working tree on development
+  pass: dirty development tree error reported
+  pass: resume rejects unpushed/unreachable SHA
+  pass: unreachable SHA error reported
+  pass: resume rejects unrelated commit SHA
+  pass: unrelated SHA error reported
+  pass: auto-resolution for GH-99 does not match GH-999
+  pass: neighboring issue 99 reported unresolved
+express-resume: resolved landing commit 0bfc356df5cd for GH-999
+  pass: control (iii): resume refuses a landing with no valid receipt
+  pass: control (iii): refusal carries the recovery recipe incl. identity snapshot
+  pass: control (iii): issue #999 still OPEN — refused before close
+express-resume: resolved landing commit 0bfc356df5cd for GH-999
+  pass: control (iv): rc=1 / wrong-suite / wrong-issue / malformed records are not evidence
+  pass: control (vi): ignored receipt leaves porcelain clean (the guard alone would not catch it)
+express-resume: resolved landing commit 0bfc356df5cd for GH-999
+  pass: control (vi): uncommitted (ignored-path) valid receipt is refused — evidence is read from HEAD
+express-resume: resolved landing commit 0bfc356df5cd for GH-999
+  pass: control (vii): a record carrying an explicit pr field is not express evidence (matches the real matcher's conflict rule)
+express-resume: resolved landing commit 0bfc356df5cd for GH-999
+  pass: control (viii): a committed symlinked provenance.jsonl is not evidence for resume
+TESTS-RESULTS/2026-10-15+GH-999-express/provenance.jsonl
+  pass: express resume exits 0 on valid landing
+  pass: control (v): resume reconciled under --gate against the committed receipt
+  pass: resume switched to development
+  pass: development working tree is clean after resume
+  pass: resume closed GitHub issue #999
+  pass: resume shipped manifest item in releases.db
+  pass: resume reconciled active doc to 3-COMPLETED
+  pass: resume persisted and pushed closeout to origin/development
+  pass: express-resumed event receipt written
+  pass: tick project folded cleanly after express-resumed telemetry (GH-694)
+  pass: no phantom task from express-resumed telemetry (GH-694)
+  pass: second resume invocation succeeds idempotently
+  pass: control (v): second resume wrote no new receipt record
+  pass: idempotent resume created no spurious commits
+TESTS-RESULTS/2026-10-15+GH-998-express/provenance.jsonl
+  pass: resume after ship commit succeeds without --sha
+  pass: post-ship resume reconciled doc to 3-COMPLETED
+TESTS-RESULTS/2026-10-15+GH-997-express/provenance.jsonl
+express-resume: committed receipt TESTS-RESULTS/2026-10-15+GH-997-express/provenance.jsonl attributes commit 48886082899d
+express-resume: closed issue #997
+express-resume: manifest item already shipped for issue #997 against rel-01M50BKQN70P13CQ9ZV7T1GV3A
+  pass: resume fails when reconciliation fails (falsifiable)
+  pass: central telemetry mirrored to ~/.config/xyz/events
+== source audit (direct landing) ==
+  pass: landing is a direct fast-forward push
+  pass: landing creates no ghost PR
+  pass: cmd_resume implemented
+  pass: retired roadmap dashboard is absent from express staging surfaces
+
+gh267-express-skill: pass=113 fail=0

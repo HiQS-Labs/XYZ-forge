@@ -1,0 +1,176 @@
+{
+  "captured_utc": "2026-10-13T01:19:45.016767+00:00",
+  "mode": "read-only official APIs and public homepage GET; local evidence writes only",
+  "files": [
+    {
+      "path": "DIAGNOSIS.md",
+      "bytes": 3052,
+      "sha256": "da9d080ae0c03a180b440bc822c703ddf5b26a72b9e64dffab205a02ae432fdc"
+    },
+    {
+      "path": "artifacts.json",
+      "bytes": 709,
+      "sha256": "b2a57f26fd4ac668a2236e57af47f3939571251e684e30297f1534d1326e10e8"
+    },
+    {
+      "path": "artifacts.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "branch-policies.json",
+      "bytes": 143,
+      "sha256": "807aa2228375bf13d5262c453553dcdfffb07270ec3571d1fe637b27f6d7dce6"
+    },
+    {
+      "path": "branch-policies.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "build-annotations.json",
+      "bytes": 423,
+      "sha256": "d49f14cb7ca65d6ae148f0001e450c30845372caacca46c761da9417b69988f9"
+    },
+    {
+      "path": "build-annotations.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "deploy-annotations.json",
+      "bytes": 699,
+      "sha256": "f2223ea613dff0ae0d93620cb5b5da00b4e511bb8b7954601520225c66eee397"
+    },
+    {
+      "path": "deploy-annotations.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "environment.json",
+      "bytes": 546,
+      "sha256": "2184efb941eebbe20d8aef7ee1dfdba98ab15f497b6ba5ff35601ee4d17e4e16"
+    },
+    {
+      "path": "environment.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "existing-site-response.html",
+      "bytes": 13129,
+      "sha256": "3935607f63c4973f1081c822ed94ec5268ea1773ce3c7a6f4f188d410be42040"
+    },
+    {
+      "path": "existing-site-response.json",
+      "bytes": 997,
+      "sha256": "b9f233d5c152f5c56d528eee060820a905b0f5a77bb865b09f9f473858602b4f"
+    },
+    {
+      "path": "jobs.json",
+      "bytes": 3085,
+      "sha256": "1da6e58020867ca9a2214e7aa058bb26d1c29f459c2fecd93a25e30416753c29"
+    },
+    {
+      "path": "jobs.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "log-1_build.txt",
+      "bytes": 22232,
+      "sha256": "0e13330646a354df85e0e4491d0513f14a84154e9292c08318786f3d55b9211b"
+    },
+    {
+      "path": "log-build__10_Post Run actions_checkout@v7.txt",
+      "bytes": 4152,
+      "sha256": "b55f004e3f730c52467b19114cd80b5374b4e8fac74ac1875e6723c7b3d38304"
+    },
+    {
+      "path": "log-build__11_Complete job.txt",
+      "bytes": 61,
+      "sha256": "9325a4af28c059dd61c29136b48962416d59fa4796817c3b97969975d5027112"
+    },
+    {
+      "path": "log-build__1_Set up job.txt",
+      "bytes": 2428,
+      "sha256": "7475ce3814fb7a299c3980c0a4694f1476b53fa256105db0969fbddf2a11f6db"
+    },
+    {
+      "path": "log-build__2_Run actions_checkout@v7.txt",
+      "bytes": 7299,
+      "sha256": "881dc317344e35de56a5bbee95fe76bd3fdd6ec7c540d22d835f3422c211192a"
+    },
+    {
+      "path": "log-build__3_Run actions_setup-python@v7.txt",
+      "bytes": 618,
+      "sha256": "25d3dae54ad398e3f4114df4189f40bd64e8cf0f95aaab961368c96ced0ed139"
+    },
+    {
+      "path": "log-build__4_Regenerate data-driven pages from the committed ledgers.txt",
+      "bytes": 1175,
+      "sha256": "a5d8e25590fda278075398a090cdfb7d0f30d2a4c39ca6e2ec678d33754ecee1"
+    },
+    {
+      "path": "log-build__5_Run actions_upload-pages-artifact@v5.txt",
+      "bytes": 6470,
+      "sha256": "5e35b79644a3210e2edbb73b4c885116f348ee0a86ccc2be403bb37e757a1d24"
+    },
+    {
+      "path": "log-build__9_Post Run actions_setup-python@v7.txt",
+      "bytes": 50,
+      "sha256": "ebb6aa1f6bcc330e6ad702ffbb72b1c815c7e578c481cdfed7f85c7112f6d327"
+    },
+    {
+      "path": "log-build__system.txt",
+      "bytes": 571,
+      "sha256": "68c60f921ece89beff4d8f2642cc971b3fe5dc330603de0d56386b1f0cedf7d7"
+    },
+    {
+      "path": "pages.json",
+      "bytes": 333,
+      "sha256": "f75dfd21f3ba3ee91ff55c4c7bb4c325f5649afeb3ab1ce443f6f091509833eb"
+    },
+    {
+      "path": "pages.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "pages.yml",
+      "bytes": 1557,
+      "sha256": "f33d2e1d8dd9de39fcd830cbb62e16510f5e3c3f20c05315d802f387520054aa"
+    },
+    {
+      "path": "run-logs.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "run-logs.zip",
+      "bytes": 13404,
+      "sha256": "d64752fbf7335ad8ea3b52ba110ef4fe642c86b2fc237f22e03c71580fb98958"
+    },
+    {
+      "path": "run.json",
+      "bytes": 12806,
+      "sha256": "998a5c3c27cd6a828482ee25edfa09a1be5af57ad5a9825147d7c237ec4e197d"
+    },
+    {
+      "path": "run.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "workflow.json",
+      "bytes": 3209,
+      "sha256": "cfac1ce6a2167761b0da7399d9dea337983f9b71f707eced02e664905c813db4"
+    },
+    {
+      "path": "workflow.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ]
+}

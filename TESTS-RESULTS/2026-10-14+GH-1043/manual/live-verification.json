@@ -1,0 +1,15 @@
+{
+  "exit_code": 0,
+  "intake_mode": "native_prs",
+  "active_candidates": 81,
+  "deferred_candidates": 3,
+  "release": "0.6.0",
+  "manifest_counts": {
+    "dialed_in": 8,
+    "shipped": 12
+  },
+  "ledger_sha256_unchanged": {
+    "releases.db": "13beb45f7e1bca3bc4dd85ee775fd63397351ee358b4d39ceda2aceda9f0043d",
+    "releases.sql": "853d7a6cf3d9208a5892ff240f971790418726e4babf5ec1ae005fb2e375d8c6"
+  }
+}

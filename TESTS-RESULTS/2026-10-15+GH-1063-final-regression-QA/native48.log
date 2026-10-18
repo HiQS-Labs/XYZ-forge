@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/gh1059-postmerge-replay.py", line 85, in <module>
+    with patch.object(sc,'run_git',side_effect=fail_ignored):record('failed ignored enumeration preserves',inspect(wt)['disposition']=='PRESERVE_UNVERIFIED_QUERY')
+                                                             ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/gh1059-postmerge-replay.py", line 39, in record
+    assert condition,(name,detail);results.append({'case':name,'result':'PASS','detail':detail})
+           ^^^^^^^^^
+AssertionError: ('failed ignored enumeration preserves', '')

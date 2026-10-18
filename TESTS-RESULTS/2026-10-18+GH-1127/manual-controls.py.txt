@@ -1,0 +1,103 @@
+"""GH-1127 manual controls (plan A0 p1-p3, A2, A3, A4, A5). Calls the real code. Not a test suite (GH-831).
+Run from the repo root of the commit under test: python3 TESTS-RESULTS/2026-10-18+GH-1127/manual-controls.py.txt"""
+import importlib.util, json, os, pathlib, subprocess, sys, tempfile, types
+ROOT = pathlib.Path.cwd()
+sys.path.insert(0, str(ROOT / "utils/py")); sys.path.insert(0, str(ROOT / "skills/2-daily/merge-cleanup/scripts"))
+import wave_reconcile as W
+def check(label, cond, detail=""):
+    print(("PASS  " if cond else "FAIL  ") + label + (f"  [{detail}]" if detail else "")); assert cond, label
+
+# ---- A0 p1/p2: promotion_gate ------------------------------------------------------------------
+small = lambda: (W.SMALL_GATE, ["a.sh"], "tier 1")       # what the selector returned for Codex's AGENTS.md probe
+head = lambda: {"artifactKind": "commit", "sha": "h" * 40, "mergeCommit": {"oid": "h" * 40}}
+docs_pending = [{"number": 1, "mergeCommit": {"oid": "a" * 40}}]
+p, g = W.promotion_gate(docs_pending, False, head, small)
+check("p1 red control: docs-only pending WITHOUT --promotion -> Small", g[0] == W.SMALL_GATE, g[0])
+p, g = W.promotion_gate(docs_pending, True, head, small)
+check("p1: docs-only pending WITH --promotion -> full registry", g[0] == "validate.sh --parallel 4" and p == docs_pending, g[2])
+p, g = W.promotion_gate([], False, head, small)
+check("p2 red control: empty pending WITHOUT --promotion -> no run", p == [] and g is None)
+p, g = W.promotion_gate([], True, head, small)
+check("p2: empty pending WITH --promotion -> HEAD commit landing, full gate",
+      len(p) == 1 and p[0]["artifactKind"] == "commit" and g[0] == W.QUALIFICATION_GATE)
+
+# ---- A0 p3: parser refusals --------------------------------------------------------------------
+for argv, label in ((["--promotion", "--catch-up"], "without --qualify"), (["--promotion", "--gate", "--qualify"], "without --catch-up")):
+    r = subprocess.run([sys.executable, "utils/py/wave_reconcile.py", *argv], capture_output=True, text=True)
+    check(f"p3: --promotion {label} -> parser error", r.returncode == 2 and "--promotion requires" in r.stderr, r.stderr.strip()[-80:])
+
+# ---- A4: receipt metadata replay against the committed 65f70cc5 receipt --------------------------
+rcpt = next(ROOT.glob("TESTS-RESULTS/*+GH-591/wave-65f70cc5*/provenance.jsonl"))
+entry = json.loads(rcpt.read_text().splitlines()[0])
+meta = {"number": entry["pr"], "artifactKind": "pr", "mergeCommit": {"oid": entry["landing_commit"]}}
+check("A4: committed parallel receipt (65f70cc5) replays True", W.qualification_receipt_matches(str(ROOT), entry, meta))
+for k, v in (("mode", "sequential"), ("width", 1), ("retries", 1), ("first_attempt_failures", ["x.sh"])):
+    bad = dict(entry, **{k: v})
+    check(f"A4: tampered {k}={v!r} replays False", not W.qualification_receipt_matches(str(ROOT), bad, meta))
+legacy = next(ROOT.glob("TESTS-RESULTS/*+GH-591/wave-61e27ed8*/provenance.jsonl"))
+le = json.loads(legacy.read_text().splitlines()[0])
+check("A4: legacy receipt without the keys (61e27ed8, #1122) replays True",
+      "mode" not in le and W.qualification_receipt_matches(str(ROOT), le, {"number": le["pr"], "artifactKind": "pr", "mergeCommit": {"oid": le["landing_commit"]}}))
+
+# ---- A2: merge-cleanup local default vs opt-in hosted wait ---------------------------------------
+spec = importlib.util.spec_from_file_location("mc1127", ROOT / "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py")
+MC = importlib.util.module_from_spec(spec); spec.loader.exec_module(MC)
+calls = []
+def boom(*a, **k): calls.append("wait"); return "fallback"
+MC.wait_for_hosted_reconcile = boom
+MC.run_local_wave_reconcile = lambda n, p: calls.append(("local", n)) or True
+MC.tool_path = lambda repo, name: pathlib.Path("/nonexistent") / name   # skip releases check / pdda
+MC.run_jog_post_merge_land = lambda n, p: True
+tmp = pathlib.Path(tempfile.mkdtemp(prefix="gh1127-a2-"))
+os.environ.pop("MERGE_CLEANUP_USE_HOSTED", None)
+ok = MC.run_post_merge_reconcile(7, tmp, dry_run=False, merged_head="m" * 40)
+check("A2: default -> local writer, hosted wait NOT reached", ok and calls == [("local", 7)], calls)
+calls.clear(); os.environ["MERGE_CLEANUP_USE_HOSTED"] = "1"
+MC.run_post_merge_reconcile(7, tmp, dry_run=False, merged_head="m" * 40)
+check("A2: MERGE_CLEANUP_USE_HOSTED=1 -> hosted wait reached, then fallback local", calls == ["wait", ("local", 7)], calls)
+os.environ.pop("MERGE_CLEANUP_USE_HOSTED")
+src = (ROOT / "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py").read_text()
+check("A2: local child argv unchanged (`--pr N`, no --force-local-reconcile)", '"--pr", str(pr_num)]' in src and "--force-local-reconcile" not in src.split("def run_local_wave_reconcile")[1].split("def ")[0])
+
+# ---- A3: sweep command + label per tier ----------------------------------------------------------
+import batch_record as B
+def sweep(gate):
+    rec = {"integration": "development", "planned": [{"pr": 1, "files": ["x"]}], "outcomes": {"1": {"status": "merged", "merge_oid": "a" * 40}},
+           "landed_order": [1], "path": str(tmp / "b.json"), "repo": "o/r", "verdict": None}
+    B._gate = lambda primary, landings: (gate, "stub")
+    B.landed = lambda r: [1]; B.save = lambda r: None
+    B.finalize_sweep_inputs(rec, tmp, "o/r"); return rec["sweep_inputs"]
+full, sm = sweep("validate.sh --parallel 4"), sweep(W.SMALL_GATE)
+check("A3: tier-3 batch -> deferred dispatch command", full["deferred"] and full["command"].startswith("gh workflow run wave-reconcile.yml --ref development"), full["command"][:60])
+check("A3: tier-1 batch -> unchanged local clone command", not sm["deferred"] and sm["command"].startswith("git clone --no-local"), sm["command"][:40])
+
+# ---- A5: promotion procedure step 3 on a fixture repo, using the real declared_paths -------------
+import hosted_lane_publish as H
+BOT = W.BOT_AUTHOR_EMAIL
+def git(d, *a, env=None): return subprocess.run(["git", *a], cwd=d, capture_output=True, text=True, check=True, env=env).stdout.strip()
+def step3(d, tested, ref):
+    if subprocess.run(["git", "merge-base", "--is-ancestor", tested, ref], cwd=d).returncode: return False, "tested not ancestor"
+    for c in git(d, "rev-list", f"{tested}..{ref}").split():
+        if git(d, "show", "-s", "--format=%ae", c) != BOT: return False, f"non-bot {c[:8]}"
+        paths = git(d, "diff-tree", "--no-commit-id", "--name-only", "-r", c).split()
+        try: H.declared_paths(paths)
+        except SystemExit as e: return False, str(e)[:60]
+    return True, "ok"
+base = pathlib.Path(tempfile.mkdtemp(prefix="gh1127-a5-")); up = base / "up"; up.mkdir(); git(up, "init", "-q", "-b", "development")
+e = dict(os.environ, GIT_AUTHOR_NAME="n", GIT_AUTHOR_EMAIL="n@x", GIT_COMMITTER_NAME="n", GIT_COMMITTER_EMAIL="n@x")
+eb = dict(e, GIT_AUTHOR_EMAIL=BOT, GIT_COMMITTER_EMAIL=BOT)
+(up / "a.py").write_text("1\n"); git(up, "add", "."); git(up, "commit", "-qm", "src", env=e); tested = git(up, "rev-parse", "HEAD")
+(up / "releases.sql").write_text("x\n"); rd = up / "TESTS-RESULTS/2026-10-18+GH-591" / f"wave-{tested}"; rd.mkdir(parents=True); (rd / "provenance.jsonl").write_text("{}\n")
+git(up, "add", "."); git(up, "commit", "-qm", "chore: reconcile merged development work", env=eb)
+ok, why = step3(up, tested, "HEAD"); check("A5: bot commit with allowlisted paths after tested -> proceed", ok, why)
+dn = base / "down"; subprocess.run(["git", "clone", "-q", str(up), str(dn)], check=True)
+(up / "b.py").write_text("2\n"); git(up, "add", "."); git(up, "commit", "-qm", "feat: sneaks in", env=e)
+ok, why = step3(dn, tested, "origin/development"); check("A5 (iii) red control: stale tracking ref hides the advance before fetch", ok, why)
+git(dn, "fetch", "-q", "origin", "development")
+ok, why = step3(dn, tested, "origin/development"); check("A5 (i)+(iii): after fetch, a source commit after tested -> redispatch", not ok and "non-bot" in why, why)
+git(up, "reset", "-q", "--hard", "HEAD~1"); (up / "evil.sh").write_text("x\n"); git(up, "add", "."); git(up, "commit", "-qm", "chore: reconcile", env=eb)
+ok, why = step3(up, tested, "HEAD"); check("A5 (ii): bot commit touching a non-allowlisted path -> redispatch", not ok and "undeclared" in why, why)
+recs = [{"run_url": "https://github.com/o/r/actions/runs/111", "tested_commit": "old"}, {"run_url": "https://github.com/o/r/actions/runs/222", "tested_commit": "new"}]
+pick = lambda rid: [r for r in recs if r["run_url"].endswith(f"/{rid}")]
+check("A5 (iv): selection by dispatch run id, not recency", pick(111)[0]["tested_commit"] == "old" and recs[-1]["tested_commit"] != "old")
+print("ALL GH-1127 MANUAL CONTROLS PASS")

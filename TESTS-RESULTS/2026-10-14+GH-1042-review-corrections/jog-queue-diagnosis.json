@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-15T00:06:16.071824+00:00",
+  "source_revision": "2fe59019bc331f290ea8b6cfb04c481291e9ed23",
+  "parallel_observation": "jog-queue33 pass/1 fail at live fixture driver-lock refusal assertion",
+  "isolated_observation": "unchanged existing suite34 pass/0 fail",
+  "attribution": "unresolved timing/context delta; not a proven product regression or harmless flake",
+  "next": "require the normal validator native sequential retry; do not waive the assertion or rerun blindly",
+  "artifacts": {
+    "jog-queue-parallel-failure.log": "7270a1260fcbf51c52c7e6a82d90d234d3d7d177ab6483d0098e8d29ef70d979",
+    "jog-queue-isolated-serial.log": "c5064fc090de1901fddf136a10c7533d4e1d3599bbf13d97e03e5661ec47ca4f"
+  }
+}

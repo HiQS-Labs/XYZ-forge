@@ -1,0 +1,122 @@
+[
+  {
+    "case": "live_failure",
+    "head": "original",
+    "verdict": "EXPECTED_FAIL",
+    "detail": "GitHub failure was converted to empty success"
+  },
+  {
+    "case": "live_failure",
+    "head": "candidate",
+    "verdict": "PASS"
+  },
+  {
+    "case": "zero_open",
+    "head": "original",
+    "verdict": "EXPECTED_FAIL",
+    "detail": "{'intake_mode': 'native_prs', 'roadmap_items': [{'gh_number': 101, 'title': 'Repair work', 'section': 'Immediate next-up', 'position': 0, 'status_marker': None, 'rating_pri': 80, '"
+  },
+  {
+    "case": "zero_open",
+    "head": "candidate",
+    "verdict": "PASS"
+  },
+  {
+    "case": "filtered_empty",
+    "head": "original",
+    "verdict": "EXPECTED_FAIL",
+    "detail": "{'intake_mode': 'fallback_scratch', 'roadmap_items': [{'gh_number': 101, 'title': 'Repair work', 'labels': [], 'assignees': ['noelsaw1'], 'live_assignees': ['noelsaw1'], 'section':"
+  },
+  {
+    "case": "filtered_empty",
+    "head": "candidate",
+    "verdict": "PASS"
+  },
+  {
+    "case": "ordinary_receipts",
+    "head": "original",
+    "verdict": "EXPECTED_FAIL",
+    "detail": "{'status_phases': {'ready_to_land': [], 'ready_pending_undraft': [], 'blockers_to_fix': [], 'needs_rebase': [], 'evidence_carriers_or_held': [{'number': 1, 'title': 'Implementation"
+  },
+  {
+    "case": "ordinary_receipts",
+    "head": "candidate",
+    "verdict": "PASS"
+  },
+  {
+    "case": "held_dependencies",
+    "head": "original",
+    "verdict": "EXPECTED_FAIL",
+    "detail": "{'status_phases': {'ready_to_land': [{'number': 2, 'title': 'Implementation', 'body': 'Depends on #1', 'isDraft': False, 'reviewDecision': 'APPROVED', 'mergeable': 'MERGEABLE', 'he"
+  },
+  {
+    "case": "held_dependencies",
+    "head": "candidate",
+    "verdict": "PASS"
+  },
+  {
+    "case": "authoritative_empty_ledger",
+    "verdict": "PASS"
+  },
+  {
+    "case": "native_scoring_risk_build_owner",
+    "verdict": "PASS"
+  },
+  {
+    "case": "cli_scoring_risk_build",
+    "verdict": "PASS"
+  },
+  {
+    "case": "visible_deferred_vision",
+    "verdict": "PASS"
+  },
+  {
+    "case": "non_native_fallback",
+    "verdict": "PASS"
+  },
+  {
+    "case": "explicit_fallback",
+    "verdict": "PASS"
+  },
+  {
+    "case": "invalid_or_truncated_github",
+    "verdict": "PASS"
+  },
+  {
+    "case": "cycle_not_landable",
+    "verdict": "PASS"
+  },
+  {
+    "case": "ready_dependency_order",
+    "verdict": "PASS"
+  },
+  {
+    "case": "draft_still_needs_review",
+    "verdict": "PASS"
+  },
+  {
+    "case": "rating_bounds",
+    "verdict": "PASS"
+  },
+  {
+    "case": "cut_release_not_target",
+    "verdict": "PASS"
+  },
+  {
+    "case": "repo_scoped_roadmap",
+    "verdict": "PASS"
+  },
+  {
+    "case": "unavailable_native_sources",
+    "verdict": "PASS"
+  },
+  {
+    "case": "in_memory_truthiness_red_control",
+    "verdict": "EXPECTED_FAIL",
+    "detail": "KeyError"
+  },
+  {
+    "case": "original_five_fixtures_replayed_in_memory",
+    "verdict": "PASS"
+  }
+]

@@ -1,0 +1,6 @@
+Command: bash test/gh308-frozen-twin-guard.sh --check --base a984865eab17456dc8240f68b3206e414e255179
+Disposable gate clone HEAD before/after: 8a9fcfe962aae6ffce806b643fbaca5c9a2166d6
+Origin before/after: local task-source clone (unchanged)
+Exit: 0
+gh308 guard: no frozen Bash twin changed
+gh308 guard: no new Bash under utils/ or relay-automation/

@@ -1,0 +1,30 @@
+{
+  "status": 200,
+  "url": "https://hiqs-labs.github.io/XYZ-forge/",
+  "headers": {
+    "Connection": "close",
+    "Content-Length": "13129",
+    "Server": "GitHub.com",
+    "Content-Type": "text/html; charset=utf-8",
+    "Last-Modified": "Mon, 12 Oct 2026 21:55:30 GMT",
+    "Access-Control-Allow-Origin": "*",
+    "Strict-Transport-Security": "max-age=31556952",
+    "ETag": "\"6acd5752-3349\"",
+    "expires": "Tue, 13 Oct 2026 01:29:12 GMT",
+    "Cache-Control": "max-age=600",
+    "x-proxy-cache": "MISS",
+    "X-GitHub-Request-Id": "3458:34E9C:E0B31:FEE70:6ACD8710",
+    "x-github-edge-region": "westus3",
+    "Accept-Ranges": "bytes",
+    "Age": "0",
+    "Date": "Tue, 13 Oct 2026 01:19:12 GMT",
+    "Via": "1.1 varnish",
+    "X-Served-By": "cache-bur-kbur8200168-BUR",
+    "X-Cache": "MISS",
+    "X-Cache-Hits": "0",
+    "X-Timer": "S1791854352.394899,VS0,VE103",
+    "Vary": "Accept-Encoding",
+    "X-Fastly-Request-ID": "3b0d028930f6f43e675b5ffa8fed6655067267f1"
+  },
+  "bytes": 13129
+}

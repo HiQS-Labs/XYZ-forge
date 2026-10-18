@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-10-15T23:37:00.837879+00:00",
+  "original_head": "906b8fcfdf29703e017eb3d640c8abb753c0af6e",
+  "integration_base": "ded6208053d5a714fb6aac8a98744a6237d4dd95",
+  "canonical_merge": "9d5fa5a4cf9316f77dd7b14f2b1d7849582c653e",
+  "incoming_generation": 1674,
+  "resolved_generation": 1679,
+  "all_incoming_non_generation_rows_preserved": true,
+  "incoming_rows_checked": 3470,
+  "canonical_changelog_union_sha256": "c16dc380b4b389afeef6735ca3780c9a0a0afcae9aa15e3fcf15f5e23e3bc483",
+  "product_blobs_unchanged": {
+    "utils/py/express.py": {
+      "original": "f76641573e29f708b43d9ebedc2dde54815f081a",
+      "resolved": "f76641573e29f708b43d9ebedc2dde54815f081a"
+    },
+    "SOP.md": {
+      "original": "428847f41918560131544431c7f6ffb92f2d3300",
+      "resolved": "428847f41918560131544431c7f6ffb92f2d3300"
+    },
+    "ARCHITECTURE.md": {
+      "original": "74f810fe5f287d40a5db6a0cc8278e723279bb35",
+      "resolved": "74f810fe5f287d40a5db6a0cc8278e723279bb35"
+    },
+    "skills/2-daily/express/SKILL.md": {
+      "original": "24aaa609233769098b787d6133ffe82e1c15ddf4",
+      "resolved": "24aaa609233769098b787d6133ffe82e1c15ddf4"
+    }
+  },
+  "pages_incoming_blob_preserved": true,
+  "second_clone_validation": {
+    "pass": true,
+    "detail": "clean in a second clone"
+  },
+  "repair_record": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-merge-20261015/.tick/merge-cleanup/HiQS-Labs-XYZ-forge/pr-1082.json",
+  "repair_slot": 1
+}

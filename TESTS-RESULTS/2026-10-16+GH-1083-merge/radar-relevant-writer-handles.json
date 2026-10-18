@@ -1,0 +1,101 @@
+{
+  "rc": 0,
+  "stderr": "",
+  "relevant_handles": [
+    {
+      "pid": "11201",
+      "command": "claude",
+      "path": "/Users/noelsaw/.claude/.cc-writes"
+    },
+    {
+      "pid": "11201",
+      "command": "claude",
+      "path": "/Users/noelsaw/Documents/GH Repos/.claude/.cc-writes"
+    },
+    {
+      "pid": "11201",
+      "command": "claude",
+      "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/.claude/.cc-writes"
+    },
+    {
+      "pid": "11201",
+      "command": "claude",
+      "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-LTVera-Pandas/9d27e541-40fd-4510-8571-4c9c0fc03356/scratchpad/.claude/.cc-writes"
+    },
+    {
+      "pid": "11201",
+      "command": "claude",
+      "path": "/Users/noelsaw/Documents/GH Repos/LTVera-Pandas-gh782-query-budget-lane-2026-10-15/.claude/.cc-writes"
+    },
+    {
+      "pid": "11201",
+      "command": "claude",
+      "path": "/Users/noelsaw/Documents/GH Repos/LTVera-Pandas/.claude/.cc-writes"
+    },
+    {
+      "pid": "22618",
+      "command": "claude",
+      "path": "/Users/noelsaw/.claude/.cc-writes"
+    },
+    {
+      "pid": "22618",
+      "command": "claude",
+      "path": "/Users/noelsaw/Documents/GH Repos/LTVera-Pandas/.claude/.cc-writes"
+    },
+    {
+      "pid": "35624",
+      "command": "claude",
+      "path": "/Users/noelsaw/.claude/.cc-writes"
+    },
+    {
+      "pid": "35624",
+      "command": "claude",
+      "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/.claude/.cc-writes"
+    },
+    {
+      "pid": "72556",
+      "command": "claude",
+      "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1066-merge-cleanup-ci-groups-2026-10-15/.claude/.cc-writes"
+    },
+    {
+      "pid": "72556",
+      "command": "claude",
+      "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/.claude/.cc-writes"
+    },
+    {
+      "pid": "72556",
+      "command": "claude",
+      "path": "/Users/noelsaw/marathon-clones/gh1060-review-pr-xyz/.claude/.cc-writes"
+    },
+    {
+      "pid": "72556",
+      "command": "claude",
+      "path": "/Users/noelsaw/.claude/.cc-writes"
+    },
+    {
+      "pid": "72556",
+      "command": "claude",
+      "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1064-merge-batch-issue-qa-2026-10-14/.claude/.cc-writes"
+    },
+    {
+      "pid": "72556",
+      "command": "claude",
+      "path": "/Users/noelsaw/Documents/GH Repos/.claude/.cc-writes"
+    },
+    {
+      "pid": "72556",
+      "command": "claude",
+      "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1064-merge-batch-issue-qa-2026-10-14/.tick/events/.claude/.cc-writes"
+    },
+    {
+      "pid": "72556",
+      "command": "claude",
+      "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1088-start-task-smoke-check-2026-10-15/.claude/.cc-writes"
+    },
+    {
+      "pid": "72556",
+      "command": "claude",
+      "path": "/Users/noelsaw/.cache/codebase-memory-mcp/.claude/.cc-writes"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "label": "candidate",
+    "push_exit": 3,
+    "retry_exit": 0,
+    "local_head_retained": true,
+    "removed_marker_absent": true,
+    "ignored_bytes_preserved": true,
+    "source_sha": "b180dae1eadf766bbabb456d5e961ec6de0e95b9",
+    "stderr": "xyz-mini-sync: note: publishing from 'docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: source b180dae1eadf (docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12) \u2192 /private/tmp/xyz1012-final-marker-retry-af50c205/candidate-child\nxyz-mini-sync: plan: copy 36 files, delete 0\nxyz-mini-sync: no changes \u2014 no commit created\n"
+  },
+  {
+    "label": "guard-removed-red",
+    "push_exit": 3,
+    "retry_exit": 2,
+    "local_head_retained": true,
+    "removed_marker_absent": true,
+    "ignored_bytes_preserved": true,
+    "source_sha": "96d31f9838c533a312362a56b48e85942310ad35",
+    "stderr": "xyz-mini-sync: note: publishing from 'docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: refused: destination main is ahead, behind, or divergent from origin/main\n"
+  }
+]

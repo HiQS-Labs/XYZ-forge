@@ -373,8 +373,10 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         reconcile.assert_not_called()
 
     def test_reconcile_pr_proceeds_on_a_ready_primary(self):
-        rc, insp, reconcile = self._run_main(
-            ["--primary", str(self.primary), "--reconcile-pr", "42", "--execute"], landing_ready=True)
+        with mock.patch.object(merge_cleanup, "commit_and_push_phase5_writes", return_value=True) as publish:
+            rc, insp, reconcile = self._run_main(
+                ["--primary", str(self.primary), "--reconcile-pr", "42", "--execute"], landing_ready=True)
+        publish.assert_called_once_with(42, self.primary.resolve(), "development")
         self.assertEqual(rc, 0)
         self.assertTrue(insp.called)
         reconcile.assert_called_once()

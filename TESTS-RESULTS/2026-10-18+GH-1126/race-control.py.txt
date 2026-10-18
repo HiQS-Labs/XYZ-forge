@@ -1,0 +1,59 @@
+"""GH-1126 manual race control (plan Verification). Event-synchronized, no timing sleeps.
+Usage: python3 race-control.py.txt <path/to/turn_diagnostics.py> <base|candidate>
+Not a test suite (GH-831); recorded evidence only."""
+import importlib.util, sys, threading
+path, role = sys.argv[1], sys.argv[2]
+spec = importlib.util.spec_from_file_location("td_under_test", path)
+td = importlib.util.module_from_spec(spec); spec.loader.exec_module(td)
+BOUND = 5.0
+def idle_seams(net):
+    td._descendant_cpu_seconds = lambda pid: (0.0, 1)   # existing two-tuple test seam
+    td._security_dialog_present = lambda: False
+    td._newest_mtime = lambda root: 0.0
+    td._network_state = net
+def check(label, cond, detail=""):
+    print(("PASS  " if cond else "FAIL  ") + f"[{role}] {label}" + (f"  [{detail}]" if detail else "")); assert cond, label
+
+# Case 1: classify() while the sample-3 probe is held in flight.
+entered, release = threading.Event(), threading.Event()
+def held(pid):
+    entered.set(); assert release.wait(BOUND), "release timeout"; return "none"
+idle_seams(held)
+d = td.TurnDiagnostics(worktree="unused")
+d._sample(); d._sample()
+S = threading.Thread(target=d._sample); S.start()
+check("probe entered on sample 3", entered.wait(BOUND))
+result = {}
+C = threading.Thread(target=lambda: result.setdefault("r", d.classify())); C.start()
+C.join(1.0)   # bounded: long enough for an unsynchronized classify() to finish
+if role == "base":
+    check("classify() finished while the probe was still held", not C.is_alive() and not release.is_set())
+    check("label is timeout-unclassified with the reported detail",
+          result["r"][0] == "timeout-unclassified" and "never established a safe idle window" in result["r"][1]
+          and "samples=3" in result["r"][1], result["r"])
+    release.set()
+else:
+    check("classify() is blocked while the probe is held", C.is_alive())
+    release.set()
+    C.join(BOUND)
+    check("classify() completes after release", not C.is_alive())
+    check("label is timeout-idle-unknown", result["r"][0] == "timeout-idle-unknown", result["r"])
+S.join(BOUND); check("sampler thread finished", not S.is_alive())
+
+# Case 2: no sample in flight -> classify() does not wait.
+idle_seams(lambda pid: "none")
+d = td.TurnDiagnostics(worktree="unused"); d._sample(); d._sample(); d._sample()
+out = {}
+C = threading.Thread(target=lambda: out.setdefault("r", d.classify())); C.start(); C.join(BOUND)
+check("no in-flight sample: classify() returns", not C.is_alive() and out["r"][0] == "timeout-idle-unknown", out.get("r"))
+
+# Case 3 (recorded limitation, not a fix): exception before the probe on sample 3.
+idle_seams(lambda pid: "none")
+d = td.TurnDiagnostics(worktree="unused"); d._sample(); d._sample()
+def boom():
+    d._stop.set(); raise RuntimeError("controlled pre-probe exception")
+td._security_dialog_present = boom
+d._loop()
+r = d.classify()
+print(f"NOTE  [{role}] exception-before-probe still yields {r[0]} (attempted={d._network_probe_attempted}) — honest label for missing evidence; not covered by GH-1126")
+print(f"ALL [{role}] RACE CONTROLS PASS")

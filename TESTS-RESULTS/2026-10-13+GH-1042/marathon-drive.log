@@ -1,0 +1,51 @@
+== test: marathon-drive ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-marathon-drive.XXXXXX.9oTz8yfrgD
+  PASS: dry-run exits 0
+  PASS: dry-run emits the rendered relay on stdout
+  PASS: the emitted render is the real relay body, not just a banner
+  PASS: dry-run writes nothing to disk (GH-401)
+  PASS: dry-run makes no staged changes
+  PASS: dry-run makes no commits
+  PASS: relay file has builder TAKE YOUR TURN section
+  PASS: relay file has reviewer TAKE YOUR TURN section
+  PASS: relay file has STATUS: Open
+  PASS: phase brief text baked into relay file
+  PASS: MARATHON-P1-TURN tick task created (event file present)
+  PASS: seeded the leaked open handoff fixture
+  PASS: driver reconciles leaked handoff and re-seeds cleanly
+  PASS: driver avoids the old 'task ... is open' collision
+  PASS: driver re-seeds the token back to the builder handoff (builder claimed it, reviewer completed it)
+  PASS: live claim blocks re-seed instead of being reaped
+  PASS: live-claim refusal is explicit
+  PASS: live claude claim survives the failed re-seed
+  PASS: relay-drive called with --relay-file
+  PASS: relay-drive called with --relay-task
+  PASS: relay-drive called with --round-cap
+  PASS: relay-drive called with --agent-cmd
+  PASS: happy path exits 0 (relay approved + gate passed)
+  PASS: transcript saved under relay-system/<date>/
+  PASS: marathon.phase.approved event emitted
+  PASS: GH-307: gate cannot see XYZ_HARNESS_CONTEXT
+  PASS: GH-307: gate cannot see XYZ_SESSION_ID
+  PASS: GH-307: gate cannot see MARATHON_LANE_NS
+  PASS: GH-307: scrub is narrow — MARATHON_ROOT preserved
+  PASS: GH-307: scrub is narrow — TICK_REPO_ROOT preserved
+  PASS: pre-advance failure exits 5
+  PASS: ESCALATION.md written on gate failure
+  PASS: ESCALATION.md records pre-advance-failed reason
+  PASS: H4: post-approve source commit → exit 4 (approval not bound to the final candidate)
+  PASS: H4: escalation names candidate-drifted-from-reviewed-head
+  PASS: H4: control — the hook really committed source (the SECOND bind is what refused)
+  PASS: H4: the refusal came from the post-approve bind, after the approved event
+  PASS: H4: receipt is not approved and carries no validated candidate
+  PASS: H4: no green completion was emitted
+  PASS: GH-273: XYZ_PYTHON=0 help documents --post-approve-cmd
+  PASS: GH-273: XYZ_PYTHON=0 omitted hook preserves the existing happy path
+  PASS: GH-273: XYZ_PYTHON=0 passing hook runs exactly once after approval
+  PASS: GH-273: XYZ_PYTHON=0 failing hook exits 9
+  PASS: GH-273: XYZ_PYTHON=0 failing hook still runs exactly once after approval
+  PASS: GH-273: XYZ_PYTHON=0 failing hook records post-approve-failed
+  PASS: GH-273: XYZ_PYTHON=0 approval remains logged when closeout fails
+  PASS: GH-273: XYZ_PYTHON=1 help documents --post-approve-cmd
+  PASS: GH-273: XYZ_PYTHON=1 omitted hook preserves the existing happy path
+  FAIL: GH-273: XYZ_PYTHON=1 passing hook exit=9 or did not run exactly once

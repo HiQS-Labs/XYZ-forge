@@ -1,0 +1,15 @@
+merge-cleanup: ERROR — Jog landing GH-942 / PR #1102 refused: missing committed approval in this mapped fixture
+merge-cleanup: ERROR — Jog landing GH-942 / PR #1102 refused: missing committed approval in this mapped fixture
+merge-cleanup: ERROR — Jog landing GH-942 / PR #1102 refused: missing committed approval in this mapped fixture
+merge-cleanup: ERROR — Cannot read canonical Jog rows: Expecting value: line 1 column 1 (char 0)
+merge-cleanup: ERROR — Cannot read canonical Jog rows: Jog JSON reader did not return a row list
+merge-cleanup: ERROR — Cannot read canonical Jog rows: reader failed
+PASS 'gate failed' prior routing= False 1 canonical routing= False 1 reader leaves DB unchanged
+PASS 'gate failed\nretry required' prior routing= True 0 canonical routing= False 1 reader leaves DB unchanged
+PASS terminal/unrelated PR skips land 904
+PASS terminal/unrelated PR skips land 275
+PASS terminal/unrelated PR skips land 999980
+PASS malformed/failed canonical extraction refuses 'not JSON' 0
+PASS malformed/failed canonical extraction refuses '{}' 0
+PASS malformed/failed canonical extraction refuses '' 1
+ALL ROUND4 CANONICAL READER CONTROLS PASSED

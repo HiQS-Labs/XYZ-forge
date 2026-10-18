@@ -457,7 +457,52 @@ def _raw_diff(repo_path: Path, a: str, b: str) -> Optional[List[Tuple[str, str, 
     return sorted(out)
 
 
-def classify_local_refs(repo_path: Path, integration_branch: str = "development") -> Dict[str, Any]:
+def published_pr_head(repo_path: Path, number: int, integration_branch: str) -> Dict[str, Any]:
+    """Prove an exact, same-origin PR head is recoverable before pre-merge retirement."""
+    result = {"ok": False, "head": "", "reason": ""}
+    origin = run_git(repo_path, ["remote", "get-url", "origin"])
+    if origin.returncode or not re.fullmatch(
+        r"(?:https://github\.com/|git@github\.com:|ssh://git@github\.com/)[\w.-]+/[\w.-]+/?",
+        origin.stdout.strip(),
+    ):
+        result["reason"] = "canonical GitHub origin is unavailable or unsupported"
+        return result
+    repo = _normalize_remote(origin.stdout)
+    try:
+        view = subprocess.run(
+            [_gh_bin(), "pr", "view", str(number), "--repo", repo, "--json",
+             "number,url,state,isDraft,isCrossRepository,baseRefName,headRefName,headRefOid"],
+            cwd=str(repo_path), capture_output=True, text=True, check=False, timeout=120,
+        )
+        if view.returncode:
+            raise ValueError(view.stderr.strip() or "gh pr view failed")
+        pr = json.loads(view.stdout)
+        if (pr.get("number") != number
+                or str(pr.get("url", "")).lower() != f"https://github.com/{repo}/pull/{number}"
+                or pr.get("state") not in ("OPEN", "MERGED")
+                or pr.get("isDraft") is not False or pr.get("isCrossRepository") is not False
+                or pr.get("baseRefName") != integration_branch):
+            raise ValueError("PR must be a non-draft OPEN/MERGED same-origin PR targeting the integration branch")
+        head = pr.get("headRefOid", "")
+        branch = pr.get("headRefName", "")
+        if not isinstance(head, str) or not re.fullmatch(r"[0-9a-f]{40,64}", head):
+            raise ValueError("PR head SHA is missing or malformed")
+        if not isinstance(branch, str) or not branch or run_git(
+            repo_path, ["check-ref-format", f"refs/heads/{branch}"]
+        ).returncode:
+            raise ValueError("PR head branch is missing or malformed")
+        fetched = run_git(repo_path, ["fetch", "--quiet", "origin", f"refs/heads/{branch}"], timeout=180)
+        actual = run_git(repo_path, ["rev-parse", "FETCH_HEAD"]) if not fetched.returncode else None
+        if actual is None or actual.returncode or actual.stdout.strip() != head:
+            raise ValueError("origin branch cannot be fetched at the exact live PR head")
+        result.update(ok=True, head=head)
+    except (OSError, subprocess.TimeoutExpired, ValueError, TypeError, AttributeError) as exc:
+        result["reason"] = str(exc)
+    return result
+
+
+def classify_local_refs(repo_path: Path, integration_branch: str = "development",
+                        published_pr: int = 0) -> Dict[str, Any]:
     """Every local ref tip is LANDED or UNLANDED, by provenance — or the query failed.
 
     Rule 1: reachable from origin/<integration_branch> -> landed.
@@ -469,6 +514,13 @@ def classify_local_refs(repo_path: Path, integration_branch: str = "development"
     Returns {"ok": bool, "failed_query": str, "unlanded": [str], "landed": [str]}.
     """
     out: Dict[str, Any] = {"ok": False, "failed_query": "", "unlanded": [], "landed": []}
+    published = None
+    if published_pr:
+        published = published_pr_head(repo_path, published_pr, integration_branch)
+        if not published["ok"]:
+            out["failed_query"] = f"published PR #{published_pr}: {published['reason']}"
+            return out
+        out["published"] = []
     remote_ref = f"origin/{integration_branch}"
     fetched = run_git(repo_path, ["fetch", "--quiet", "origin", integration_branch], timeout=180)  # GH-852
     if fetched.returncode != 0:
@@ -508,6 +560,14 @@ def classify_local_refs(repo_path: Path, integration_branch: str = "development"
         if anc.returncode != 1:
             out["failed_query"] = f"git merge-base --is-ancestor {sha[:10]} {remote_ref}: {anc.stderr.strip() or 'failed'}"
             return out
+        if published is not None:
+            remote_ancestor = run_git(repo_path, ["merge-base", "--is-ancestor", sha, published["head"]])
+            if remote_ancestor.returncode == 0:
+                out["published"].append(f"{name} @ {sha[:10]} (published in PR #{published_pr}, not necessarily merged)")
+                continue
+            if remote_ancestor.returncode != 1:
+                out["failed_query"] = f"published-ref ancestry query failed for {name} @ {sha[:10]}"
+                return out
         if index is None:
             index = merged_pr_index(repo_path, integration_branch)
         if not index["ok"]:
@@ -812,7 +872,7 @@ def format_issue_marker_body(checkout_info: Dict[str, Any]) -> str:
 
 def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
                      exclude_patterns: Optional[List[str]] = None,
-                     integration_branch: str = "development") -> Dict[str, Any]:
+                     integration_branch: str = "development", published_pr: int = 0) -> Dict[str, Any]:
     """Inspects a single git checkout for status, locks, stashes, and disposition.
 
     GH-534: every safety query FAILS CLOSED. A git/tick/lsof command that exits non-zero or
@@ -903,6 +963,16 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
         res["dirty_count"] = -1
         res["query_failures"].append(f"git status: {st_res.stderr.strip() or 'failed'}")
 
+    # Native worktree removal deletes ignored files, unlike whole-clone Trash relocation.
+    # Neither landed nor published refs establish recovery for those files.
+    if res["checkout_type"] == "linked_worktree":
+        ignored = run_git(path, ["ls-files", "--others", "--ignored", "--exclude-standard", "-z"])
+        # Git can warn about an unreadable directory yet exit 0 with an empty list.
+        if ignored.returncode or ignored.stderr.strip():
+            res["query_failures"].append(f"ignored worktree files: {ignored.stderr.strip() or 'enumeration failed'}")
+        else:
+            res["ignored_files"] = [name for name in ignored.stdout.split("\0") if name]
+
     # Stash check — a failed enumeration is NOT zero stashes.
     stash_res = run_git(path, ["stash", "list"])
     if stash_res.returncode == 0:
@@ -912,7 +982,10 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
         res["query_failures"].append(f"git stash list: {stash_res.stderr.strip() or 'failed'}")
 
     # Landed-vs-unlanded by provenance, after a verified fetch (A.2).
-    prov = classify_local_refs(path, integration_branch=integration_branch)
+    prov = classify_local_refs(path, integration_branch=integration_branch,
+                               **({"published_pr": published_pr} if published_pr else {}))
+    if published_pr:
+        res["published_refs"] = prov.get("published", [])
     if prov["ok"]:
         res["unpushed_branches"] = prov["unlanded"]
         res["landed_refs"] = prov["landed"]
@@ -1007,6 +1080,12 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
     if res["query_failures"]:
         res["disposition"] = "PRESERVE_UNVERIFIED_QUERY"
         res["disposition_reason"] = "Safety query failed: " + "; ".join(res["query_failures"])
+        return res
+
+    if res.get("ignored_files"):
+        res["disposition"] = "PRESERVE_IGNORED"
+        res["disposition_reason"] = (f"Linked worktree has {len(res['ignored_files'])} ignored file(s) "
+                                     "not proven recoverable from published Git history")
         return res
 
     if res["stash_count"] > 0:

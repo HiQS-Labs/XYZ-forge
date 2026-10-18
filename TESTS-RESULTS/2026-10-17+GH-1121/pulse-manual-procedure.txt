@@ -1,0 +1,21 @@
+import os,sys,subprocess,importlib.util,json,hashlib
+from pathlib import Path
+root=Path.cwd(); scratch=root/'temp'/'gh1121-pulse-fixtures';scratch.mkdir(exist_ok=False)
+def git(*args,cwd=scratch):return subprocess.check_output(['git',*map(str,args)],cwd=cwd,stderr=subprocess.DEVNULL,text=True).strip()
+origin=scratch/'origin.git';git('init','--bare',origin);seed=scratch/'seed';git('clone',origin,seed)
+git('config','user.name','Fixture',cwd=seed);git('config','user.email','fixture@example.invalid',cwd=seed)
+(seed/'skill.txt').write_text('one\n');git('add','skill.txt',cwd=seed);git('commit','-m','one',cwd=seed);git('branch','-M','main',cwd=seed);git('push','origin','main',cwd=seed);git('symbolic-ref','HEAD','refs/heads/main',cwd=origin)
+a=scratch/'reader';b=scratch/'writer';git('clone',origin,a);git('clone',origin,b)
+cfg=scratch/'config';cfg.mkdir();os.environ['GIT_PULSE_CONFIG_DIR']=str(cfg)
+source=root/'skills/3-weekly/skills-army-hq/scripts';sys.path.insert(0,str(source))
+spec=importlib.util.spec_from_file_location('pulse_candidate',source/'sync.py');mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
+def snapshot():
+ return {str(p.relative_to(scratch)):hashlib.sha256(p.read_bytes()).hexdigest() for p in scratch.rglob('*') if p.is_file()}
+def health(expect_duplicate,expect_stale,label):
+ before=snapshot();warnings=[];r=mod.repo_health(a,warnings);after=snapshot();assert before==after,'health wrote fixture content';assert r['duplicate_pulse_clone']==expect_duplicate,(label,r);assert r['stale_pulse_collection']==expect_stale,(label,r);print(label,'PASS','duplicate=',r['duplicate_pulse_clone'],'stale=',r['stale_pulse_collection'],'fixture-bytes-unchanged');return warnings,r
+(cfg/'config.sh').write_text(f'sync_repo_dir="{b}"\n');health(True,False,'different clones/same remote')
+(cfg/'config.sh').write_text(f'sync_repo_dir="{a}"\n');health(False,False,'same checkout/no duplicate')
+(seed/'skill.txt').write_text('two\n');git('add','skill.txt',cwd=seed);git('commit','-m','two',cwd=seed);git('push','origin','main',cwd=seed);git('fetch','origin',cwd=a);health(False,True,'behind last fetched upstream')
+(cfg/'config.sh').unlink();w,r=health(False,True,'missing config');assert any('check skipped: no git-pulse config' in x for x in w);print('missing config explicit skip PASS')
+(cfg/'config.sh').write_text(f'sync_repo_dir="{b}"\n');old=root/'temp'/'pulse-prechange.py';old.write_bytes(subprocess.check_output(['git','show','origin/development:skills/3-weekly/skills-army-hq/scripts/sync.py']));spec=importlib.util.spec_from_file_location('pulse_base',old);base=importlib.util.module_from_spec(spec);spec.loader.exec_module(base);r=base.repo_health(a,[]);assert r.get('duplicate_pulse_clone') is not True;print('RED CONTROL: duplicate assertion rejects unchanged development implementation')
+print('Manual fixture operations use local Git only; no live configuration, deployment, fetch/pull during repo_health, or persistent CI case added.')

@@ -1,0 +1,15 @@
+{
+  "resolved": false,
+  "handoff": false,
+  "reason": "[DRY RUN] B1 would keep the theirs side and replay 1 roadmap change(s) through the writer, then run the resolver",
+  "log": [
+    "CHANGELOG: proven prefix-additive sections; existing history preserved",
+    "classification: keep=theirs generation ours/theirs=(1664, 1674) replay=1 op(s)"
+  ],
+  "commit": null,
+  "conflict_set": [
+    "CHANGELOG.md",
+    "releases.db",
+    "releases.sql"
+  ]
+}

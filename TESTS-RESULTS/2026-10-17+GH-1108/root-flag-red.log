@@ -1,0 +1,4 @@
+candidate=a17ce626
+command=python3 utils/py/releases_app.py --root <disposable-primary> jog land 999901 --pr 4242 (cwd gate clone)
+exit=3
+refused: rule=jog-primary: primary is not pinned; explicitly set `git config --global xyz.primary.repo-7640ec7706729605e696547d <primary-path>`

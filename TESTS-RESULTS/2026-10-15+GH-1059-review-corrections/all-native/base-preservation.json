@@ -1,0 +1,68 @@
+{
+  "allIncomingBusinessRowsPreserved": true,
+  "addedRoadmapIssue": 1059,
+  "newGid": "rmi-01M4YMK2D867C48NM23KNASW77",
+  "runtimePolicyIdenticalTo": "0494f1ba1016f8eae0f667138c14ad50e7d7f20c",
+  "comparedPaths": [
+    "skills/2-daily/merge-cleanup/scripts/scan_clones.py",
+    "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
+    "skills/2-daily/merge-cleanup/SKILL.md",
+    "skills/1-hourly/start-task/SKILL.md",
+    "WORKTREE-SAFETY.md",
+    "SOP.md"
+  ],
+  "tables": [
+    {
+      "table": "schema_migrations",
+      "incomingRowsPreserved": 9
+    },
+    {
+      "table": "settings",
+      "incomingRowsPreserved": 3
+    },
+    {
+      "table": "repos",
+      "incomingRowsPreserved": 1
+    },
+    {
+      "table": "issue_refs",
+      "incomingRowsPreserved": 102
+    },
+    {
+      "table": "marathons",
+      "incomingRowsPreserved": 6
+    },
+    {
+      "table": "releases",
+      "incomingRowsPreserved": 13
+    },
+    {
+      "table": "manifest_items",
+      "incomingRowsPreserved": 99
+    },
+    {
+      "table": "manifest_state_events",
+      "incomingRowsPreserved": 88
+    },
+    {
+      "table": "doc_lines",
+      "incomingRowsPreserved": 86
+    },
+    {
+      "table": "legacy_lines",
+      "incomingRowsPreserved": 28
+    },
+    {
+      "table": "grandfather_entries",
+      "incomingRowsPreserved": 24
+    },
+    {
+      "table": "roadmap_items",
+      "incomingRowsPreserved": 357
+    },
+    {
+      "table": "jog_queue",
+      "incomingRowsPreserved": 18
+    }
+  ]
+}

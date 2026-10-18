@@ -1,0 +1,1 @@
+gh421 adaptation (GH-1127): new test vs new workflow OK; old test vs new workflow rc=1 (red); new test vs 4fd5dca8 workflow rc=1 (red).

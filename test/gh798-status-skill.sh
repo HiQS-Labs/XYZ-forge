@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# test/gh798-status-skill.sh — GH-798: status skill and review-code DRY / helper audit
+# test/gh798-status-skill.sh — GH-798: status skill and review-code-xyz DRY / helper audit
 source "$(dirname "$0")/_setup.sh" gh798-status-skill
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 SKILL_DIR="$REPO/skills/2-daily/where-are-we-at"
 SKILL_FILE="$SKILL_DIR/SKILL.md"
 INSTALLER="$SKILL_DIR/install.sh"
-REVIEW_CODE_FILE="$REPO/skills/2-daily/review-code/SKILL.md"
+REVIEW_CODE_FILE="$REPO/skills/2-daily/review-code-xyz/SKILL.md"
 ARCH_FILE="$REPO/ARCHITECTURE.md"
 
 echo "== test: gh798-status-skill =="
@@ -32,13 +32,14 @@ grep -q "The local checkout is not the only checkout" "$SKILL_FILE" && pass "mul
 grep -q "Ground Truth vs. Documentation Gap Matrix" "$SKILL_FILE" && pass "gap matrix schema present" || fail "missing gap matrix schema"
 
 # --- 5. Review-code DRY and centralized helper audit ---
-grep -q "Lane E. Centralized Helpers & DRY" "$REVIEW_CODE_FILE" && pass "review-code has Lane E DRY" || fail "missing Lane E in review-code"
-grep -q "Centralized Helper Adherence" "$REVIEW_CODE_FILE" && pass "review-code has helper adherence check" || fail "missing helper adherence check"
-grep -q "Parallel Subsystem / Reinvention Trap" "$REVIEW_CODE_FILE" && pass "review-code has parallel subsystem trap" || fail "missing parallel subsystem trap"
+grep -q "Lane E. Centralized Helpers & DRY" "$REVIEW_CODE_FILE" && pass "review-code-xyz has Lane E DRY" || fail "missing Lane E in review-code-xyz"
+grep -q "Centralized Helper Adherence" "$REVIEW_CODE_FILE" && pass "review-code-xyz has helper adherence check" || fail "missing helper adherence check"
+grep -q "Parallel Subsystem / Reinvention Trap" "$REVIEW_CODE_FILE" && pass "review-code-xyz has parallel subsystem trap" || fail "missing parallel subsystem trap"
 
 # --- 6. ARCHITECTURE.md registration ---
 grep -q "\[where-are-we-at\](skills/2-daily/where-are-we-at/SKILL.md)" "$ARCH_FILE" && pass "ARCHITECTURE.md has where-are-we-at link" || fail "missing ARCHITECTURE.md link"
-grep -q "### \`2-daily\` — A few times a day (16)" "$ARCH_FILE" && pass "ARCHITECTURE.md has updated 2-daily count (16)" || fail "missing updated 2-daily count"
+n_daily="$(find "$REPO/skills/2-daily" -mindepth 2 -maxdepth 2 -name SKILL.md | wc -l | tr -d ' ')"
+grep -q "### \`2-daily\` — A few times a day ($n_daily)" "$ARCH_FILE" && pass "ARCHITECTURE.md 2-daily count matches disk ($n_daily)" || fail "2-daily count does not match disk ($n_daily)"
 
 # --- 7. Installer gh678 compliance (in sandbox) ---
 H="$WORK/home"; A="$H/apps"
@@ -72,7 +73,7 @@ grep -q "Status Discipline:" "$TMP_COPY" || fail "negative control 8a preconditi
 sed -i.bak '/Status Discipline:/d' "$TMP_COPY"
 grep -q "Status Discipline:" "$TMP_COPY" && fail "negative control 8a: mutation failed to delete recital" || pass "negative control 8a: mutation successfully detected missing recital"
 
-# 8b: Lane E deletion on review-code/SKILL.md must fail Lane E check
+# 8b: Lane E deletion on review-code-xyz/SKILL.md must fail Lane E check
 TMP_REV="$WORK/review_code_mutated.md"
 cp "$REVIEW_CODE_FILE" "$TMP_REV"
 grep -q "Lane E. Centralized Helpers & DRY" "$TMP_REV" || fail "negative control 8b precondition: missing Lane E in source"

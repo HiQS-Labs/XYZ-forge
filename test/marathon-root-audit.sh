@@ -79,12 +79,16 @@ set_alias() {
   alias_targets+=("$target")
 }
 
+# GH-1112: answers through ALIAS_TARGET instead of printf so the per-line caller needs no
+# `$(…)` subshell. Cleared on every call; a miss leaves it empty and returns 1.
+ALIAS_TARGET=""
 get_alias_target() {
   local name="$1"
   local i
+  ALIAS_TARGET=""
   for ((i = 0; i < ${#alias_names[@]}; i++)); do
     if [ "${alias_names[$i]}" = "$name" ]; then
-      printf '%s\n' "${alias_targets[$i]}"
+      ALIAS_TARGET="${alias_targets[$i]}"
       return 0
     fi
   done
@@ -110,6 +114,12 @@ discover_file_metadata() {
   reset_aliases
 
   while IFS= read -r line || [ -n "$line" ]; do
+    # GH-1112 pre-gate: all three registrations below anchor on `^VAR=`; a line that does not
+    # start with an uppercase identifier followed by `=` cannot match any of them.
+    case "$line" in
+      [A-Z]*=*) ;;
+      *) continue ;;
+    esac
     if [[ "$line" =~ ^([A-Z][A-Z0-9_]*)=\"\$WORK/ ]]; then
       add_safe_var "${BASH_REMATCH[1]}"
     fi
@@ -133,17 +143,25 @@ discover_file_metadata() {
   done < "$file"
 }
 
+# GH-1112: the audit used to run this through `$(…)` for every non-comment line of every
+# test script (~60k forks per run, ~110 s). It now answers through INVOCATION_TARGET and
+# returns 0/1; the rules below are unchanged. The caller applies a cheap substring pre-gate
+# first (see audit_file): every branch here needs `marathon` (the two vendored literals),
+# `python` (direct or alias Python runs) or `sh` (bash/zsh/sh/dash, direct or alias) in the
+# line, so a line without all three can never match and is skipped before any regex work.
+INVOCATION_TARGET=""
 find_invocation_target() {
   local line="$1"
   local rest var target
+  INVOCATION_TARGET=""
 
   if [[ "$line" == *'./.xyz/relay-automation/marathon-drive.sh'* ]]; then
-    printf '%s\n' "marathon-drive"
+    INVOCATION_TARGET="marathon-drive"
     return 0
   fi
 
   if [[ "$line" == *'./.xyz/relay-automation/marathon.sh'* ]]; then
-    printf '%s\n' "marathon"
+    INVOCATION_TARGET="marathon"
     return 0
   fi
 
@@ -157,14 +175,14 @@ find_invocation_target() {
   # inside the word "Bash" (relay-xyz-skill-guard's `run ... Bash "$DRIVE"` was audited as
   # an invocation). `(^|[^A-Za-z0-9_])` is the portable ERE word boundary.
   if [[ "$line" =~ (^|[^A-Za-z0-9_])python3?(\.[0-9]+)?([[:space:]]+-[A-Za-z0-9]+)*[[:space:]]+[^[:space:]]*/(marathon_drive|relay_drive)\.py ]]; then
-    printf '%s\n' "${BASH_REMATCH[4]}"
+    INVOCATION_TARGET="${BASH_REMATCH[4]}"
     return 0
   fi
 
   # GH-273: same for a direct `bash/sh/zsh/dash <path>/relay-automation/<driver>.sh`
   # beyond the vendored ./.xyz literals above (gh376 drives "$WT/relay-automation/relay-drive.sh").
   if [[ "$line" =~ (^|[^A-Za-z0-9_])(bash|zsh|sh|dash)[[:space:]]+[^[:space:]]*relay-automation/(marathon-drive|relay-drive|marathon)\.sh ]]; then
-    printf '%s\n' "${BASH_REMATCH[3]}"
+    INVOCATION_TARGET="${BASH_REMATCH[3]}"
     return 0
   fi
 
@@ -172,17 +190,17 @@ find_invocation_target() {
   # version suffix and short flags tolerated — pattern-based so `python3 -u "$DRIVER"`
   # resolves the alias the same way `python3 "$DRIVER"` does.
   if [[ "$line" =~ (^|[^A-Za-z0-9_])(bash|zsh|sh|dash)[[:space:]]+\"?\$([A-Z][A-Z0-9_]*) ]]; then
-    target="$(get_alias_target "${BASH_REMATCH[3]}" || true)"
-    if [ -n "$target" ]; then
-      printf '%s\n' "$target"
+    get_alias_target "${BASH_REMATCH[3]}" || true
+    if [ -n "$ALIAS_TARGET" ]; then
+      INVOCATION_TARGET="$ALIAS_TARGET"
       return 0
     fi
   fi
 
   if [[ "$line" =~ (^|[^A-Za-z0-9_])python3?(\.[0-9]+)?([[:space:]]+-[A-Za-z0-9]+)*[[:space:]]+\"?\$([A-Z][A-Z0-9_]*) ]]; then
-    target="$(get_alias_target "${BASH_REMATCH[4]}" || true)"
-    if [ -n "$target" ]; then
-      printf '%s\n' "$target"
+    get_alias_target "${BASH_REMATCH[4]}" || true
+    if [ -n "$ALIAS_TARGET" ]; then
+      INVOCATION_TARGET="$ALIAS_TARGET"
       return 0
     fi
   fi
@@ -389,7 +407,23 @@ audit_file() {
         continue
       fi
     fi
-    target="$(find_invocation_target "$line" || true)"
+    # GH-1112 pre-gate (substring tests only; the regexes still decide; metadata discovery
+    # above is NOT gated). Every direct branch of find_invocation_target needs `marathon`
+    # (vendored literals, marathon_drive.py, marathon-drive.sh, marathon.sh) or `relay`
+    # (relay_drive.py, relay-drive.sh, relay-automation/…); every alias branch needs a `$`
+    # (the alias variable) plus an interpreter token containing `python` or `sh`
+    # (bash/zsh/sh/dash). A line failing both tests can never match.
+    case "$line" in
+      *marathon*|*relay*) ;;
+      *'$'*)
+        case "$line" in
+          *python*|*sh*) ;;
+          *) continue ;;
+        esac ;;
+      *) continue ;;
+    esac
+    find_invocation_target "$line" || true
+    target="$INVOCATION_TARGET"
     [ -z "$target" ] && continue
     checked=$((checked + 1))
     if check_invocation_safety "$idx" "${lines[@]}"; then
@@ -404,6 +438,11 @@ audit_file() {
 }
 
 for file in "${FILES[@]}"; do
+  # GH-1112 file-level pre-gate: a direct invocation line contains `marathon` or `relay`, and an
+  # alias invocation needs an alias registered from a line containing one of those literals, so
+  # a file with neither substring anywhere can produce no invocation and no output. grep -q is
+  # one process per file (≈400), against the ≈60k bash loop iterations it saves.
+  grep -q -E 'marathon|relay' "$file" || continue
   audit_file "$file"
 done
 

@@ -1,0 +1,10 @@
+== test: gh491-gate-only-refire ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh491-gate-only-refire.XXXXXX.bncmfA6vMU
+  PASS: marathon.sh --help explains that satisfied phases should re-fire plainly without --retry
+  PASS: GH-491: advisory fires when --retry is passed on a terminal/Approved/done phase
+  PASS: advisory explicitly cites GH-491
+  PASS: advisory preserves --retry's rebuild behavior
+  PASS: control 4a: no advisory when recorded token is not done
+  PASS: control 4b: no advisory when relay status is non-terminal
+  PASS: plain refire without --retry correctly hits the gate-only already-satisfied short-circuit
+  PASS: plain refire did not dispatch builder or reviewer turns

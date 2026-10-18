@@ -296,7 +296,7 @@ class Qualification(unittest.TestCase):
         (self.bin / 'npm').write_text('#!/bin/sh\nexit 0\n')
         (self.bin / 'npm').chmod(0o755)
         (self.root / 'validate.sh').write_text('''#!/bin/sh
-test "$1" = --sequential || exit 7
+case "$*" in "--parallel 4"|--sequential|"--sequential --subsystem small") ;; *) exit 7 ;; esac
 test -z "${XYZ_VALIDATE_SKIP:-}" || exit 8
 test -z "${RT_SHARD:-}" || exit 9
 test -z "${XYZ_HARNESS_DB:-}" || exit 10

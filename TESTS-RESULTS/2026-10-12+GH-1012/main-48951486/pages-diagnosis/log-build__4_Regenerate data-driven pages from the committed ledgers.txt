@@ -1,0 +1,14 @@
+﻿2026-10-13T00:23:10.8136896Z ##[group]Run python3 utils/py/site_build.py
+2026-10-13T00:23:10.8137523Z [36;1mpython3 utils/py/site_build.py[0m
+2026-10-13T00:23:10.8455277Z shell: /usr/bin/bash -e {0}
+2026-10-13T00:23:10.8455838Z env:
+2026-10-13T00:23:10.8456135Z   pythonLocation: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:10.8456596Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib/pkgconfig
+2026-10-13T00:23:10.8457025Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:10.8457406Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:10.8457790Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.14.8/x64
+2026-10-13T00:23:10.8458185Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.14.8/x64/lib
+2026-10-13T00:23:10.8458518Z ##[endgroup]
+2026-10-13T00:23:11.1984301Z site_build: wrote /home/runner/work/XYZ-forge/XYZ-forge/PAGES/models-harnesses.html (7021 bytes)
+2026-10-13T00:23:11.1985327Z site_build: wrote /home/runner/work/XYZ-forge/XYZ-forge/PAGES/roadmap.html (111042 bytes)
+2026-10-13T00:23:11.1986197Z site_build: roadmap items=351 sections=4 | harnesses=8 models=20 graded-pairs=2

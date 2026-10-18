@@ -253,8 +253,10 @@ class TestCScript(LedgerFixture):
         backend.chmod(0o755)
         self.gh.write_text(GH_RUN_WRAPPER)
         self.gh.chmod(0o755)
+        # GH-1127: hosted-first is opt-in now; this class pins the hosted path, so it opts in.
         env = mock.patch.dict(os.environ, {merge_cleanup.HOSTED_POLL_ENV: "0",
-                                            merge_cleanup.HOSTED_GRACE_ENV: "0"})
+                                            merge_cleanup.HOSTED_GRACE_ENV: "0",
+                                            merge_cleanup.USE_HOSTED_ENV: "1"})
         env.start()
         self.addCleanup(env.stop)
 
@@ -279,7 +281,7 @@ class TestCScript(LedgerFixture):
 
         rc = self.run_main()
 
-        self.assertEqual(rc, 0, self.err)
+        self.assertEqual(rc, 4, self.err)  # GH-1064: landed, QA pending
         self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"MERGED"})
         self.assertEqual(_git(self.primary, "status", "--porcelain").stdout, "")
         self.assertEqual(_git(self.primary, "rev-parse", "HEAD").stdout.strip(), self.origin_dev())
@@ -448,7 +450,7 @@ class TestCScript(LedgerFixture):
         self.branch("feat/a", 1, pr1)
         self.branch("feat/b", 2, pr2)
         rc = self.run_main()
-        self.assertEqual(rc, 0, self.err)
+        self.assertEqual(rc, 4, self.err)  # GH-1064: landed, QA pending
         self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"MERGED"})
         self.assertEqual(self.dev_rows(), [100, 101, 200, 201])
         c = self.clone("verify-view")
@@ -540,14 +542,17 @@ REQUIRED_CAPABILITIES = {
     # GH-944: the batch-issue rows are REQUIRED for the same reason, and two pre-existing
     # same-class gaps (both tests already run in this suite via gh534_phase_b_tests.py's
     # TestPhase5EndToEnd) close in the same edit.
-    "batch-issue-threshold": "caller", "batch-issue-resume-append": "caller",
+    "batch-issue-threshold": "script", "batch-issue-resume-append": "script",
     "batch-regression-sweep": "caller", "post-deploy-carryover-dual-sink": "caller",
+    # GH-1064: the script now owns the batch issue; the sweep record is script-owned too but has no
+    # existing suite test (GH-831), so its SKILL.md row points at the manual checks instead.
     "mergeable-unknown-poll": "script", "exclude-drops-pr": "script",
 }
 AST_CALLS = {  # (module source, enclosing function, callee that must be invoked — a comment is not a call)
     "D": (SC_SRC, "inspect_checkout", "inspect_tick_claims"),
-    "B1": (MC_SRC, "land_prs", "resolve_ledger_conflict"),
-    "C": (MC_SRC, "land_prs", "reserve"),
+    # GH-1064: land_prs became a thin batch-recording wrapper; the loop body is _land_prs_loop.
+    "B1": (MC_SRC, "_land_prs_loop", "resolve_ledger_conflict"),
+    "C": (MC_SRC, "_land_prs_loop", "reserve"),
 }
 
 
@@ -800,10 +805,15 @@ class TestGh623Resilience(LedgerFixture):
         self.branch("feat/b", 2, lambda r: (r / "README.md").write_text("repaired docs\n"))
         self.exhausted_record(2, outcomes=("handoff", "resolved"))
         rc = self.run_main(extra=["--resume"])
-        self.assertEqual(rc, 0, self.err)
+        self.assertEqual(rc, 4, self.err)  # GH-1064: landed, QA pending
         st = self.load()
         self.assertEqual((st["prs"]["1"]["state"], st["prs"]["2"]["state"]), ("MERGED", "MERGED"))
         self.assertNotIn("previously parked", self.err)
+        # GH-1064 R2: --resume with per-PR records but no batch record still opens ONE batch issue,
+        # before the first merge.
+        names = [c[:2] for c in st["calls"]]
+        self.assertEqual(names.count(["issue", "create"]), 1)
+        self.assertLess(names.index(["issue", "create"]), names.index(["pr", "merge"]))
 
     def test_without_resume_the_park_path_is_unchanged(self):
         """Without --resume an exhausted record still reaches reserve() and parks — the ceiling
@@ -959,7 +969,7 @@ class TestParityGuard(unittest.TestCase):
         self.assertIn("test missing: landing-refetch-and-gate names TestE6Gate.test_gone", self._fails(skill=mutated))
 
     def test_control_documented_option_absent_from_argparse_is_named(self):
-        mutated = self.skill.replace("`--resume`.", "`--resume`, `--bogus-flag`.")
+        mutated = self.skill.replace("`--record-sweep`.", "`--record-sweep`, `--bogus-flag`.")
         self.assertNotEqual(mutated, self.skill, "the options line moved — repoint this control")
         self.assertIn("documented option not in argparse: --bogus-flag", self._fails(skill=mutated))
 
@@ -970,11 +980,11 @@ class TestParityGuard(unittest.TestCase):
         self.assertIn("AST: inspect_checkout() does not call inspect_tick_claims() (D)", self._fails(sources=dict(srcs, D=d)))
         b1 = srcs["B1"].replace("b1 = resolve_ledger_conflict(clone, execute=not dry_run)", "b1 = {'handoff': True, 'reason': 'x', 'conflict_set': [], 'log': []}  # resolve_ledger_conflict")
         self.assertNotEqual(b1, srcs["B1"])
-        self.assertIn("AST: land_prs() does not call resolve_ledger_conflict() (B1)", self._fails(sources=dict(srcs, B1=b1)))
+        self.assertIn("AST: _land_prs_loop() does not call resolve_ledger_conflict() (B1)", self._fails(sources=dict(srcs, B1=b1)))
         c = srcs["C"].replace("idx, why = attempt_record.reserve(", "idx, why = (0, 'nope')  # attempt_record.reserve(").replace(
             "                                                          clone_path=str(clone), create=fresh)", "                        # clone_path=str(clone), create=fresh)")
         self.assertNotEqual(c, srcs["C"])
-        self.assertIn("AST: land_prs() does not call reserve() (C)", self._fails(sources=dict(srcs, C=c)))
+        self.assertIn("AST: _land_prs_loop() does not call reserve() (C)", self._fails(sources=dict(srcs, C=c)))
 
 
 if __name__ == "__main__":

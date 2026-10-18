@@ -8,6 +8,7 @@ description: >-
   review critiques and follow-up checklists to GitHub PRs (`--post-pr`) and linked issues
   (`--post-issues`). Use when the operator wants to "review this PR with Qwen", "run a code
   review on this diff", "audit PR with GLM", or post structured review feedback to GitHub.
+  Single-agent ground-truth review instead? Local diff: review-code-xyz. GitHub PR: review-pr-xyz.
 ---
 
 # review-xyz — Deterministic Multi-Model Code Review

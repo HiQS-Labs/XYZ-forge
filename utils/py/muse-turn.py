@@ -257,12 +257,17 @@ def main():
         # RelayTurnLib already enforces. --trust-workspace loads the repo's own AGENTS.md rules for
         # the run. Containment does not depend on muse's trust model -- the path allowlist,
         # commit-bypass guard and worktree isolation are what bound the turn.
+        #
+        # --approval-mode never (GH-521): the default `on-request` makes headless muse wait for a
+        # tool approval nobody can give — cpu=0 until the wall cap, no relay block. Muse's own
+        # sandbox stays on; only the unanswerable prompt is removed.
         cmd = [
             muse_bin, "exec",
             "--model", muse_model,
             "--reasoning-effort", reasoning_effort,
             "--workspace", run_cwd,
             "--trust-workspace",
+            "--approval-mode", "never",
             "--prompt-file", prompt_path,
         ]
 

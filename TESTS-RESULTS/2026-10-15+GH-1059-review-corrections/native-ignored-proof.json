@@ -1,0 +1,12 @@
+{
+  "fixtureRoot": "isolated own temporary fixture",
+  "cleanStatus": "",
+  "ignoredFiles": [
+    "operator-notes.txt"
+  ],
+  "head": "93c1848ea675ac2049adddaebd82c84484e24a82",
+  "nativeRemoveRc": 0,
+  "candidateStillExists": false,
+  "syntheticNotesPreservedOutsideCandidate": true,
+  "scope": "isolated own synthetic Git fixture; no existing checkout/data removed"
+}

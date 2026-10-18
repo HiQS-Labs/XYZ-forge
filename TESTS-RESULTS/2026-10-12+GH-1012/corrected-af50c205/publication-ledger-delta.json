@@ -1,0 +1,222 @@
+{
+  "base": "489ba1b45b6924dbb57f70ba1bed98645db54644",
+  "candidate": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+  "no_baseline_keys_removed": true,
+  "tables": {
+    "doc_lines": {
+      "before": 86,
+      "after": 86,
+      "added": 0,
+      "changed": 0,
+      "changes": []
+    },
+    "grandfather_entries": {
+      "before": 24,
+      "after": 24,
+      "added": 0,
+      "changed": 0,
+      "changes": []
+    },
+    "issue_refs": {
+      "before": 101,
+      "after": 101,
+      "added": 0,
+      "changed": 0,
+      "changes": []
+    },
+    "jog_queue": {
+      "before": 18,
+      "after": 18,
+      "added": 0,
+      "changed": 0,
+      "changes": []
+    },
+    "legacy_lines": {
+      "before": 28,
+      "after": 28,
+      "added": 0,
+      "changed": 0,
+      "changes": []
+    },
+    "manifest_items": {
+      "before": 98,
+      "after": 98,
+      "added": 0,
+      "changed": 0,
+      "changes": []
+    },
+    "manifest_state_events": {
+      "before": 87,
+      "after": 87,
+      "added": 0,
+      "changed": 0,
+      "changes": []
+    },
+    "marathons": {
+      "before": 6,
+      "after": 6,
+      "added": 0,
+      "changed": 0,
+      "changes": []
+    },
+    "op_receipts": {
+      "before": 1785,
+      "after": 1789,
+      "added": 4,
+      "changed": 0,
+      "changes": []
+    },
+    "releases": {
+      "before": 13,
+      "after": 13,
+      "added": 0,
+      "changed": 0,
+      "changes": []
+    },
+    "repos": {
+      "before": 1,
+      "after": 1,
+      "added": 0,
+      "changed": 0,
+      "changes": []
+    },
+    "roadmap_items": {
+      "before": 351,
+      "after": 351,
+      "added": 0,
+      "changed": 2,
+      "changes": [
+        {
+          "before": {
+            "global_id": "rmi-01M4RMXPXP669P8V2Q3TQKSPJJ",
+            "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+            "gh_number": "1010",
+            "title": "Per-project merge history policy",
+            "section": "Completed",
+            "position": "124",
+            "status_marker": "\u2705",
+            "complexity": "NULL",
+            "risk": "NULL",
+            "effort": "NULL",
+            "doc_path": "PROJECT/3-COMPLETED/GH-1010-MERGE-HISTORY-POLICY.md",
+            "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1010",
+            "raw_text": "- **GH-1010 \u00b7 Per-project merge history policy** \u2705 **SHIPPED 2026-10-12 (PR #1019)** \u2014 Active: recon complete; plan QA next. . \u2192 [plan](PROJECT/3-COMPLETED/GH-1010-MERGE-HISTORY-POLICY.md) (rated 65/55/50/75)",
+            "first_seen": "2026-10-12T18:10:14Z",
+            "updated_at": "2026-10-12T19:58:35Z",
+            "rating_pri": "65",
+            "rating_sev": "55",
+            "rating_appeal": "50",
+            "rating_effort": "75",
+            "rating_ovr": "NULL",
+            "status_label": "NULL"
+          },
+          "after": {
+            "global_id": "rmi-01M4RMXPXP669P8V2Q3TQKSPJJ",
+            "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+            "gh_number": "1010",
+            "title": "Per-project merge history policy",
+            "section": "Completed",
+            "position": "124",
+            "status_marker": "\u2705",
+            "complexity": "NULL",
+            "risk": "NULL",
+            "effort": "NULL",
+            "doc_path": "PROJECT/3-COMPLETED/GH-1010-MERGE-HISTORY-RECON.md",
+            "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1010",
+            "raw_text": "- **GH-1010 \u00b7 Per-project merge history policy** \u2705 **SHIPPED 2026-10-12 (PR #1019)** \u2014 Active: recon complete; plan QA next. . \u2192 [plan](PROJECT/3-COMPLETED/GH-1010-MERGE-HISTORY-RECON.md) (rated 65/55/50/75)",
+            "first_seen": "2026-10-12T18:10:14Z",
+            "updated_at": "2026-10-12T23:12:07Z",
+            "rating_pri": "65",
+            "rating_sev": "55",
+            "rating_appeal": "50",
+            "rating_effort": "75",
+            "rating_ovr": "NULL",
+            "status_label": "NULL"
+          }
+        },
+        {
+          "before": {
+            "global_id": "rmi-01M4S0WTFCMQSCMS8BWF6XS76H",
+            "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+            "gh_number": "1037",
+            "title": "Release-review sync ownership fixes",
+            "section": "In progress",
+            "position": "124",
+            "status_marker": "\ud83d\udea7",
+            "complexity": "NULL",
+            "risk": "NULL",
+            "effort": "NULL",
+            "doc_path": "PROJECT/2-WORKING/GH-1037-SYNC-FIXES.md",
+            "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1037",
+            "raw_text": "- **GH-1037 \u00b7 Release-review sync ownership fixes** \u2014 \ud83d\udea7 [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/1037) \u00b7 rated 70/65/50/85 \u00b7 [doc](PROJECT/2-WORKING/GH-1037-SYNC-FIXES.md)",
+            "first_seen": "2026-10-12T21:39:27Z",
+            "updated_at": "2026-10-12T21:41:00Z",
+            "rating_pri": "70",
+            "rating_sev": "65",
+            "rating_appeal": "50",
+            "rating_effort": "85",
+            "rating_ovr": "NULL",
+            "status_label": "in-progress"
+          },
+          "after": {
+            "global_id": "rmi-01M4S0WTFCMQSCMS8BWF6XS76H",
+            "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+            "gh_number": "1037",
+            "title": "Release-review sync ownership fixes",
+            "section": "Completed",
+            "position": "124",
+            "status_marker": "\u2705",
+            "complexity": "NULL",
+            "risk": "NULL",
+            "effort": "NULL",
+            "doc_path": "PROJECT/3-COMPLETED/GH-1037-SYNC-FIXES.md",
+            "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1037",
+            "raw_text": "- **GH-1037 \u00b7 Release-review sync ownership fixes** \u2705 **SHIPPED 2026-10-12 (PR #1035)** \u2014 \ud83d\udea7 [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/1037) \u00b7 rated 70/65/50/85 \u00b7 [doc](PROJECT/3-COMPLETED/GH-1037-SYNC-FIXES.md)",
+            "first_seen": "2026-10-12T21:39:27Z",
+            "updated_at": "2026-10-12T23:12:06Z",
+            "rating_pri": "70",
+            "rating_sev": "65",
+            "rating_appeal": "50",
+            "rating_effort": "85",
+            "rating_ovr": "NULL",
+            "status_label": "NULL"
+          }
+        }
+      ]
+    },
+    "schema_migrations": {
+      "before": 9,
+      "after": 9,
+      "added": 0,
+      "changed": 0,
+      "changes": []
+    },
+    "settings": {
+      "before": 3,
+      "after": 3,
+      "added": 0,
+      "changed": 1,
+      "changes": [
+        {
+          "before": {
+            "key": "generation",
+            "value": "1599",
+            "updated_at": "2026-10-12T21:41:00Z"
+          },
+          "after": {
+            "key": "generation",
+            "value": "1603",
+            "updated_at": "2026-10-12T23:12:07Z"
+          }
+        }
+      ]
+    },
+    "work_events": {
+      "before": 709,
+      "after": 711,
+      "added": 2,
+      "changed": 0,
+      "changes": []
+    }
+  }
+}

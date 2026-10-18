@@ -109,6 +109,19 @@ st = load()
 st.setdefault("calls", []).append(a); save(st)
 if a[:2] == ["repo", "view"]:
     print(json.dumps({"url": st["origin"]})); sys.exit(0)
+# GH-1064: the batch issue. Bodies live in st["issues"].
+if a[:2] == ["label", "create"]:
+    sys.exit(0)
+if a[:2] == ["issue", "create"]:
+    n = str(900 + len(st.setdefault("issues", {})))
+    st["issues"][n] = open(a[a.index("--body-file") + 1]).read(); save(st)
+    print(f"https://example.invalid/issues/{n}"); sys.exit(0)
+if a[:2] == ["issue", "edit"]:
+    st.setdefault("issues", {})[a[2]] = open(a[a.index("--body-file") + 1]).read(); save(st); sys.exit(0)
+if a[:2] == ["issue", "view"] and "body" in a:
+    if a[2] not in st.get("issues", {}):
+        print("stub: no such issue", file=sys.stderr); sys.exit(1)
+    print(json.dumps({"body": st["issues"][a[2]]})); sys.exit(0)
 if a[:2] == ["issue", "view"]:
     print(json.dumps({"state": "OPEN", "stateReason": None})); sys.exit(0)
 if a[:2] == ["pr", "list"]:
@@ -376,7 +389,7 @@ class TestPhase5EndToEnd(LedgerFixture):
         self.branch("feat/a", 1, lambda r: park(r, 200, "from PR 1"))
         self.branch("feat/b", 2, lambda r: park(r, 201, "from PR 2", rated="60/40/50/70"))
         rc = self.run_main()
-        self.assertEqual(rc, 0)
+        self.assertEqual(rc, 4)  # GH-1064: landed, QA pending (no sweep verdict yet); Phase 6 still ran
         st = self.load()
         self.assertEqual({p["state"] for p in st["prs"].values()}, {"MERGED"})
         self.assertEqual(self.dev_rows(), [100, 101, 200, 201])
@@ -492,7 +505,7 @@ class TestPhase5EndToEnd(LedgerFixture):
         self.branch("feat/held", 1, lambda r: park(r, 200, "held"), labels=["do-not-merge"])
         self.branch("feat/b", 2, lambda r: park(r, 201, "free"))
         rc = self.run_main()
-        self.assertEqual(rc, 0)
+        self.assertEqual(rc, 4)  # GH-1064: PR 2 landed with no sweep verdict, whatever PR 1's hold
         st = self.load()
         self.assertEqual(st["prs"]["1"]["state"], "OPEN")
         self.assertEqual(st["prs"]["2"]["state"], "MERGED")
@@ -677,6 +690,7 @@ class TestE6Gate(LedgerFixture):
         st = self.load()
         self.assertEqual(st["prs"]["1"]["state"], "OPEN")
         self.assertFalse(any(c[:2] == ["pr", "merge"] for c in st["calls"]))
+        self.assertFalse(any(c[:2] == ["issue", "create"] for c in st["calls"]), "a 1-PR run opened a batch issue")
 
     def test_gate_runs_against_the_current_integration_head(self):
         """PR 2's gate must see PR 1's landing: assert the clone the gate ran in contains PR 1's row."""
@@ -690,10 +704,9 @@ class TestE6Gate(LedgerFixture):
             return real(clone, gh_bin, **kw)
         with mock.patch.object(merge_cleanup, "pre_merge_ledger_gate", side_effect=spy):
             rc = self.run_main()
-        self.assertEqual(rc, 0)
+        self.assertEqual(rc, 4)  # GH-1064: landed, QA pending
         self.assertEqual(len(seen), 2)
         self.assertIn("'200'", seen[1], "PR 2's gate did not run against a tree containing PR 1's landing")
-
 
 
 class TestGh736AwaitMergeable(unittest.TestCase):

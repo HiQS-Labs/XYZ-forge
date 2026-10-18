@@ -1,0 +1,6 @@
+marathon-drive: phase p1 startup: attested approval found but candidate f8fe8c552412 is not the reviewed revision — candidate f8fe8c552412 changes non-transcript content after reviewed head 3227d3231bbd — not accepting it (GH-505)
+marathon-drive: phase p1: terminal relay is NOT attested — refusing to treat it as satisfied; its token 'MARATHON-P1-TURN' is done and cannot be reopened, so this run halts (see GH-505)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/drift-i2sm5l8r/relay-system/drift-i2sm5l8r/2026-10-15/marathon-p1-025114.md
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7155MB, swap_free=1523MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/drift-i2sm5l8r/phases/p1/ESCALATION.md (reason: unattested-terminal)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/drift-i2sm5l8r/result.json (outcome: escalated, exit 4)

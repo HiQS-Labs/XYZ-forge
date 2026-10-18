@@ -1,0 +1,192 @@
+{
+  "tested_candidate": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+  "base": "a076b1b117a68252dc3d9d1c4901b0c31fcb4db3",
+  "carrier": "separate descendant evidence-only commit, identified by promotion PR",
+  "files": [
+    {
+      "path": "INDEPENDENT-QA.md",
+      "bytes": 2297,
+      "sha256": "8aebb46b0844a3c77a5cfd220a5fb41a1ed639df22f6c99398c650a4a5c1fe77"
+    },
+    {
+      "path": "REVIEW.md",
+      "bytes": 6020,
+      "sha256": "820dbe76cacfb4fcb1e6828d460bb4818b364ef6d614852c4f5c40e9d5952119"
+    },
+    {
+      "path": "SUMMARY.md",
+      "bytes": 1254,
+      "sha256": "3e471710007db200abf896e722d6659de5e0f6b75e298b64395030c8db1569c4"
+    },
+    {
+      "path": "ci-local.log",
+      "bytes": 954242,
+      "sha256": "66021f7b4333a831c9ae0fca43c0bf41ab7c583156e05706b4e9c5e16b42cf5f"
+    },
+    {
+      "path": "ci-local.telemetry.jsonl",
+      "bytes": 134179,
+      "sha256": "514535f7231cae348e3e2e88c5a2082a40b487182e0c2cce494d19199fb62e44"
+    },
+    {
+      "path": "ci-run-approval.json",
+      "bytes": 387,
+      "sha256": "5d37dfef97e3feeb636d8c62dbf14c8afb74b514b0fa8c51712691ada9636888"
+    },
+    {
+      "path": "diagnosis.json",
+      "bytes": 691,
+      "sha256": "95a08c118450af2ebc0b528eb7b03266ffd2bfbfdcee8f7c436233e65e23ffca"
+    },
+    {
+      "path": "distribution-falsifiers.json",
+      "bytes": 12772,
+      "sha256": "30ee0645a0af1abf4861478f6cf7affb72f09be2bebb65e6ba1e34b23eba2cd5"
+    },
+    {
+      "path": "distribution-final.log",
+      "bytes": 875,
+      "sha256": "ce39499eddf432428e77b1ecbf770035c95a697b5f533654f8727ec8dc993426"
+    },
+    {
+      "path": "distribution-final.py",
+      "bytes": 4567,
+      "sha256": "b6b4ac5073f8f0970519ccff8c92d70f7c3d0c68824c397840d11f7c7bf89b6b"
+    },
+    {
+      "path": "finish-ci-local.py",
+      "bytes": 3470,
+      "sha256": "b993ef66958a21ce47bbd1fe725f64c46a5b0c3bd247e6dc007ff6ca5b4ea163"
+    },
+    {
+      "path": "gate-record.txt",
+      "bytes": 12867,
+      "sha256": "d9b1631fb0624505cbf08607f41a5d11541e617478a5aa4a8f5e7cdb79376b61"
+    },
+    {
+      "path": "hosted-reconcile-final.json",
+      "bytes": 2030,
+      "sha256": "ede335905d7d7023f166ae60b4541a9e1e24fffd01c043810d8939a586635fd0"
+    },
+    {
+      "path": "hosted-reconcile.log",
+      "bytes": 2153959,
+      "sha256": "c7ee18a7e71b203cda057eb12f7ca3ce78181f63246b275b059054799fa6c2b4"
+    },
+    {
+      "path": "identity-after.json",
+      "bytes": 1344,
+      "sha256": "ca0e8e56cf234bbddd8242f34dc329d3ff03e46d09aae9770468048c845d9438"
+    },
+    {
+      "path": "identity-before.json",
+      "bytes": 1344,
+      "sha256": "ca0e8e56cf234bbddd8242f34dc329d3ff03e46d09aae9770468048c845d9438"
+    },
+    {
+      "path": "landing-qualification.json",
+      "bytes": 649,
+      "sha256": "04a8e01552dcf791ead1b532492ce1b939571d8143985c561e7f7a2b0ae76a9d"
+    },
+    {
+      "path": "landing-validation.jsonl",
+      "bytes": 126848,
+      "sha256": "c41ae3751e74ad0c143099bfaa14328f66b93b0171524729bd841057e6082983"
+    },
+    {
+      "path": "local-full-summary.json",
+      "bytes": 1238,
+      "sha256": "a456e7113242d7cc1cf5a43b831bf48d987bded175b7cfaf8cbd7adfda9bada0"
+    },
+    {
+      "path": "marker-retry-control.json",
+      "bytes": 12175,
+      "sha256": "365f9d2c2abab9ffc0326d304f8c9c881931005e71f6e9430879f7f5efca9230"
+    },
+    {
+      "path": "marker-retry-final.log",
+      "bytes": 1229,
+      "sha256": "73a962df67572edfcac23a296fedf549e45d7762f819d8d86484e7e3b01c2117"
+    },
+    {
+      "path": "marker-retry-final.py",
+      "bytes": 3162,
+      "sha256": "be37b837746a73fb97287e05aba623977308bbef1bdefda46da476a2aaf986b9"
+    },
+    {
+      "path": "ownership-final.log",
+      "bytes": 988,
+      "sha256": "44c2578915aec1816ad7016608de09471c4a11a3c504eaa9a27203186faa47b0"
+    },
+    {
+      "path": "ownership-final.py",
+      "bytes": 3068,
+      "sha256": "7cc90846dd4f0cd14ad5ddcba5d08aa1cb2f35b8f570d993c94d5b0c23cd9260"
+    },
+    {
+      "path": "ownership-refusal-controls.json",
+      "bytes": 10747,
+      "sha256": "cc77e1d4867f05a5ca0e9574959083c3741a5f14c439f2d33ffc37a70777974b"
+    },
+    {
+      "path": "package-parity.json",
+      "bytes": 3904,
+      "sha256": "f057704cc2c3c8fcadd8cca393af9db354f04584fc24fa54e25308bf9c0b7999"
+    },
+    {
+      "path": "promotion-ci.json",
+      "bytes": 2355,
+      "sha256": "f4c6e9f53c7e92fc0cbc4cbb9ebd334cb61eaca3b250fb9dcc637e56412dc673"
+    },
+    {
+      "path": "promotion-range.json",
+      "bytes": 168720,
+      "sha256": "c2f61360a446be88364c641a7a67c8a0f4a75cc9cb3f5dcb93359806265fdee9"
+    },
+    {
+      "path": "provenance.jsonl",
+      "bytes": 681,
+      "sha256": "16c5e8dd33d7b32fa28c9b90b35d32e53b575835c0e022623c92de896de2a19a"
+    },
+    {
+      "path": "publication-commit.json",
+      "bytes": 127186,
+      "sha256": "f81b478070c21940b11d284da2ad1a7b8475bc19a7cbc47ffd42ff16cb18671b"
+    },
+    {
+      "path": "publication-delta.json",
+      "bytes": 796,
+      "sha256": "0019e867c6f0dd58d58ef8bc8d92428a4b4b1a58eab2341a0a63cde775bab828"
+    },
+    {
+      "path": "publication-ledger-delta.json",
+      "bytes": 7065,
+      "sha256": "c65919c999fa7a81f194dc1301be248d55d49717045c1b065a8401e651195a31"
+    },
+    {
+      "path": "recovery-final.log",
+      "bytes": 1124,
+      "sha256": "b9642dfb27bd3ee947800c812586b788f1b1e3733796a1df2ff445c5723670f8"
+    },
+    {
+      "path": "recovery-final.py",
+      "bytes": 3641,
+      "sha256": "cc410d6b9a034fee73fd2208d5b6e3b71bba6f5afd775cb426e39467c86be4a5"
+    },
+    {
+      "path": "recovery-rehearsal.json",
+      "bytes": 222001,
+      "sha256": "5e1ed23c10bc5893de09a63f1e6106be644b84b34c774a593db49bc48aee13f6"
+    },
+    {
+      "path": "suite-transcript.log",
+      "bytes": 916525,
+      "sha256": "0b16ebea7fe76cd28c7a28d9e6fac24b008ca6b2e1d8ec0d3f17831e47e97ea0"
+    },
+    {
+      "path": "target.json",
+      "bytes": 889,
+      "sha256": "9af042a9c82ec2503c115661e92b7a164efa146d3fb3cd14f051c03c8f406abf"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+== F1 (corrected control): cleanup still sends SIGKILL, then raises PermissionError inside the same try, so the handler is exercised without leaving the group alive (verify clone 52296349)
+-- F1a: committed observation + cleanup EPERM (expect rc 0, handler reached)
+rc=0
+handler reached: 5x
+   4 "group_absent": true
+-- F1b: no-op observation + cleanup EPERM (expect rc 1 'process group remains' preserved)
+rc=1
+process group remains', 'agy-pty0'
+handler reached: 1x
+restored; clean=0 head=52296349
+note: a first attempt that replaced the SIGKILL itself with the raise returned rc 1 because proc.wait(timeout=3) then timed out on a live child — a control-design error, not a product finding; corrected above.

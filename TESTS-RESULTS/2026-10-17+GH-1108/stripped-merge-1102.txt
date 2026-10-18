@@ -1,0 +1,23 @@
+{
+  "merge": "974d98dbd9c958975ef3b4797f93b212618b0f96",
+  "parents": [
+    "b3811f0a013598af8cab7c4c398d96b2497f8d52",
+    "0a4f8f0729433fe1ed01367c989662cbea436f5a"
+  ],
+  "stripped_input_trees": [
+    "d1ed14db33b0c92361ac3232dc8f26eaeac1d6ed",
+    "8a92a3b1ad7877e38f8b93ed40a94de4f56e1d3f"
+  ],
+  "recomputed_tree": "121a33348db69fdd2bb30ff164c83c007c6206dc",
+  "recorded_stripped_tree": "121a33348db69fdd2bb30ff164c83c007c6206dc",
+  "excluded_paths": [
+    "releases.db",
+    "releases.sql",
+    "LEADERBOARD.md",
+    "RELEASES-PREVIEW.html",
+    "LEADERBOARD.html",
+    "CHANGELOG.md"
+  ],
+  "merge_exit": 0,
+  "identical": true
+}

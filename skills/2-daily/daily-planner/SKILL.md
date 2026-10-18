@@ -11,7 +11,7 @@ description: >-
 
 Adapts the active weekly plan based on yesterday's progress, landed PRs, and newly emerged blockers.
 
-**Drift Prevention Contract:** This skill does NOT duplicate planning heuristics or merge algorithms. It directly executes the shared core engine at `${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}/weekly-planner/scripts/planner_core.py` (or `skills/3-weekly/weekly-planner/scripts/planner_core.py` when in this repository) to ensure that daily tactical decisions remain 100% coherent with the weekly trajectory.
+**Drift Prevention Contract:** This skill reuses the installed `weekly-planner` bundle's `scripts/planner_core.py`. Resolve that skill's physical folder through the local skill catalog and set `PLANNER_ENGINE` to its absolute engine path; set `PLANNER_REPO` to the absolute target checkout. Do not assume a particular IDE's skill root. When using repository source directly, resolve `skills/3-weekly/weekly-planner/scripts/planner_core.py` from the Forge checkout. Weekly planner must be installed alongside this skill; follow its runtime and native CLI compatibility requirements.
 
 ---
 
@@ -27,9 +27,7 @@ Adapts the active weekly plan based on yesterday's progress, landed PRs, and new
 Run the shared engine in daily mode:
 
 ```bash
-python3 "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}/weekly-planner/scripts/planner_core.py" --repo-root . --mode daily
-# Or when running directly inside XYZ-forge:
-python3 skills/3-weekly/weekly-planner/scripts/planner_core.py --repo-root . --mode daily
+python3 "$PLANNER_ENGINE" --repo-root "$PLANNER_REPO" --mode daily
 ```
 
 The engine automatically:
@@ -41,7 +39,8 @@ Before presenting a status change, recheck current sources and the latest explic
 
 ### Step 3: Re-Sequence & Promote Unblocked Work
 
-- Open PRs are re-sorted topologically into the 4 phases (Ready to Land, Blockers to Fix, Needs Rebase, In Review) with CI status check validation (`statusCheckRollup`).
+- Open PRs are re-sorted topologically into the 5 phases (Ready to Land, Ready Pending Undraft, Needs Rebase, In Review, and Held Drafts & Evidence Carriers) with CI status check validation (`statusCheckRollup`).
+- Held drafts and evidence carriers (e.g. test qualification receipts, held spikes) are cleanly isolated in Phase 5 with reason annotations so the daily runner does not mistake them for actionable blockers or merges.
 - Newly unblocked dependent tasks are promoted to the top of today's operator queue.
 - If a task is waiting on a business decision, the **Provisional Decision Protocol** is applied (fallback default + record on canonical tracking issue).
 

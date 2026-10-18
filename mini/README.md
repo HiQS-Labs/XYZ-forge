@@ -25,7 +25,8 @@ yours.
 | `honest` | A read-only maturity check that says what a repo actually does versus what it claims. |
 | `weekly-planner` | Dual-horizon weekly planning and team orchestration with topological merge sequencing and adversarial conflict audits. |
 | `daily-planner` | Adaptive daily planning skill that pivots the active weekly plan based on yesterday's landed PRs and closures. |
-| `review-code` | A meticulous code and PR review ladder: maps blast radius, tests fixes against live ground truth, then posts the graded report to the GitHub PR or issue and renders it on-screen — both, every run. |
+| `review-code-xyz` | A meticulous review ladder for a local diff or branch: maps blast radius, tests fixes against live ground truth, fixes reversible issues, then posts the graded report to the branch's PR or an issue and renders it on-screen — both, every run. |
+| `review-pr-xyz` | Report-only GitHub PR review: first checks the PR's claims are true (the bug reproduces, the issue asks for this, it has not already landed), then maps blast radius and tests against ground truth, and posts graded findings to the PR. Never pushes. |
 | `skill-viewer` | Lists the skills in this repo from their frontmatter. |
 
 Run `python3 skills/skill-viewer/scripts/list_skills.py` from the repo root to see the live list.
@@ -41,7 +42,7 @@ mkdir -p ~/.claude/skills
 ln -s "$PWD/skills/relay" ~/.claude/skills/relay        # repeat per skill you want
 ```
 
-`ponytail`, `agent-chorus`, `consult`, `weekly-planner`, `daily-planner` and `review-code` ship an `install.sh` that creates those links:
+`ponytail`, `agent-chorus`, `consult`, `weekly-planner`, `daily-planner`, `review-code-xyz` and `review-pr-xyz` ship an `install.sh` that creates those links:
 
 ```bash
 bash "$(git rev-parse --show-toplevel)/skills/consult/install.sh"
@@ -52,8 +53,8 @@ bash "$(git rev-parse --show-toplevel)/skills/consult/install.sh"
 - `git`, `bash`, `python3` (3.8+)
 - For `consult`: the `codex` and/or `agy` CLIs on your `PATH`. If one advisor is unavailable consult
   degrades to a single-model answer and says so; if none can answer it exits 5.
-- For `review-code`: the `gh` CLI, authenticated, so the final verdict can be posted to the GitHub
-  PR or issue; with no GitHub target the review is reported on-screen only.
+- For `review-code-xyz` and `review-pr-xyz`: the `gh` CLI, authenticated, so the final verdict can
+  be posted to the GitHub PR or issue; with no GitHub target the review is reported on-screen only.
 - Nothing else. There is no `tick` binary, no database, no project lifecycle here.
 
 ## Try it

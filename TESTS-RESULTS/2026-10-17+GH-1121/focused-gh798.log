@@ -1,0 +1,25 @@
+== test: gh798-status-skill ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh798-status-skill.XXXXXX.QBaSHl5gnN
+== test: gh798-status-skill ==
+  PASS: skills/2-daily/where-are-we-at/SKILL.md exists
+  PASS: skills/2-daily/where-are-we-at/install.sh exists
+  PASS: install.sh is executable
+  PASS: frontmatter has name: where-are-we-at
+  PASS: frontmatter has description
+  PASS: recital block present
+  PASS: /recon integrated
+  PASS: /debug-mantra integrated
+  PASS: /merge-cleanup integrated
+  PASS: hypothesis-zero doc rule present
+  PASS: multi-checkout discovery rule present
+  PASS: gap matrix schema present
+  PASS: review-code-xyz has Lane E DRY
+  PASS: review-code-xyz has helper adherence check
+  PASS: review-code-xyz has parallel subsystem trap
+  PASS: ARCHITECTURE.md has where-are-we-at link
+  PASS: ARCHITECTURE.md 2-daily count matches disk (20)
+  PASS: installer refuses live foreign link
+  PASS: installer replaces dangling link
+  PASS: negative control 8a: mutation successfully detected missing recital
+  PASS: negative control 8b: mutation successfully detected missing Lane E
+  gh798-status-skill: 21 pass, 0 fail

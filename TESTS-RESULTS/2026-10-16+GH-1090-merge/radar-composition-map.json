@@ -1,0 +1,17 @@
+{
+  "three_way_conflicts": 5,
+  "choices": [
+    "1091Harness with1085RGTrows",
+    "GitHub timeline authority + created/closed timestamps +1091recurrence timing",
+    "1085adoptedSOP with1091boundedquery",
+    "1085membershipauthority with1091limit",
+    "1091placeholder detection +1085planned-intent-only fallback"
+  ],
+  "semantic_clarifications": [
+    "window SHA distinct fromcurrenttip/live trackerobservations",
+    "historicalclosedincidents distinctfromliveopenclass; verifiedchronology and>24h timelines",
+    "candidate IDmatches requiremechanism/scope; ambiguousIDs preserved"
+  ],
+  "coverage_note": "Apply existing1085coverage/degradation guard to1091boundedSinkBsearch; no new paginator/testcase",
+  "scope": "Original16calibration safeguards and GitHub-first changes retained; independent full-file final review pending"
+}

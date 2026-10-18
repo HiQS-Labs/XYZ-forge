@@ -1,0 +1,173 @@
+diff --git a/PROJECT/2-WORKING/GH-1136-B1-ACCEPTED-START.md b/PROJECT/2-WORKING/GH-1136-B1-ACCEPTED-START.md
+new file mode 100644
+index 00000000..6037b599
+--- /dev/null
++++ b/PROJECT/2-WORKING/GH-1136-B1-ACCEPTED-START.md
+@@ -0,0 +1,68 @@
++---
++gh_issue: 1136
++source: https://github.com/HiQS-Labs/XYZ-forge/issues/1136
++title: "merge-cleanup B1 replay drops accepted-start on replayed (added) roadmap rows"
++status: Active
++created: 2026-10-18
++updated: 2026-10-18
++owner: claude
++goal: "A roadmap row added on the replayed side keeps its accepted-start (status_label in-progress) through B1, via the existing writer; repair GH-1112's lost label"
++doc_type: fix
++effort: 1
++complexity: 2
++risk: 2
++phases: 1
++fix_probes:
++  - "grep -q 'accepted-start' skills/2-daily/merge-cleanup/scripts/ledger_merge.py"
++---
++
++# GH-1136 — B1 replay drops accepted-start on added rows
++
++Branch `fix/XYZ-forge-gh1136-b1-accepted-start-2026-10-18` off `development@e93214fe`. Found by the Codex post-merge review on #1124.
++
++## Status
++
++| What was just completed | What's next |
++|---|---|
++| Plan Approved (Codex r1). Implemented (07ca6bd4) + GH-1112 repaired (d1d9cc46); replay controls (a)–(d) pass, gh436 180 OK in a disposable clone | Final Codex QA → push → PR → merge on green |
++
++## Observed
++
++- At #1123's B1 repair (keep=theirs, generation 1761→1778), the PR side's GH-1112 and GH-1114 rows carried `status_label='in-progress'` (`releases.sql:871-872` at 2528c264). After replay both were NULL. GH-1112 is still NULL at e93214fe; #1112 is open.
++- `ledger_merge.classify` (`skills/2-daily/merge-cleanup/scripts/ledger_merge.py:228-250`) turns an **added** row into `{"op": "add", "row": row}` without checking its columns.
++- `replay_ops` (`:293-328`) then runs `roadmap add`, then `rate`, then `update --section/--status-marker`. It never re-applies `status_label`, so the label is dropped silently.
++- An **updated** row whose `status_label` changed already hands off honestly: `status_label` is not in `REPLAYABLE_COLUMNS` (`:52-54`, `:240-244`). No change is needed there.
++- The only writer for this field is `roadmap update --gid <gid> --accepted-start` (`utils/py/releases_app.py:3900-3960`). It requires `--gid` alone, qualified owned identity, and an **open** native issue. It reads that state from GitHub and refuses otherwise. `add` re-mints the gid, so the replay must look the new gid up.
++
++## Fix (smallest, existing writer only)
++
++In `replay_ops`, add branch, after the existing add/rate/update steps:
++- If `row.get("status_label") == "in-progress"`, resolve the new row's gid from `roadmap list --json`. Match on `gh_number` and `issue_url`, and require exactly one match.
++- Then run `roadmap update --gid <gid> --accepted-start`, and log it like the other verbs.
++- Any non-zero result or an ambiguous lookup **fails the replay**. That is the existing "stops at the first refusal" contract, so B1 hands off and the operator decides; nothing is dropped silently.
++- A closed native issue is therefore a handoff, not a skip. Development merges do not close issues (only default-branch merges do), so this should be rare. If you think a skip-with-log is the better rule for a closed issue, say so.
++- **No change** to `classify`, `REPLAYABLE_COLUMNS`, `releases_app.py` or the add, rate and update verbs.
++- **Data repair** (operator-authorized as part of #1136): `roadmap update --gid rmi-01M56GEJJR4PXDB80R4JG60NG1 --accepted-start` for GH-1112, through the CLI, committed with the PR. #1112 is open. The start time becomes the repair time; the original 2026-10-17 start is lost and recorded as such in the PR.
++
++## Verification (disposable full clone for suites; no new test file or case)
++
++- Existing suites:
++  - `test/gh436-merge-cleanup.sh`, which includes the gh534 phase B/C B1 tests.
++  - Any suite that exercises `replay_ops` (bounded `git grep` at implementation).
++- Manual control `TESTS-RESULTS/2026-10-18+GH-1136/replay-controls.py.txt` with `.log.txt` and `provenance.jsonl`. It runs in a temp copy of the repo's ledger, with `read_native_issue` stubbed at the subprocess boundary, because the real call goes to GitHub:
++  - (a) An add op whose row has `status_label='in-progress'` ends with the label `in-progress` on the new gid.
++  - (b) **Red control**, the same op on the base `replay_ops`: the label is NULL.
++  - (c) An add op without the label is unchanged; no accepted-start call is made.
++  - (d) A stubbed closed native issue makes the replay return False with the refusal logged.
++- Pre-push gate on the final commit.
++
++## Non-goals
++
++- Replaying a **change** of `status_label` on an existing row (it already hands off honestly).
++- Preserving the original start timestamp. The writer stamps its own time, and changing that is a writer-contract change.
++- Other replay columns.
++
++## Risk / rollback
++
++- **Risk:** a B1 repair that previously "succeeded" (with silent label loss) may now hand off when accepted-start is refused. That is the intended fail-closed behavior.
++- **Rollback:** revert the commit. The GH-1112 repair is a normal ledger write.
+diff --git a/releases.sql b/releases.sql
+index 496537b6..343e6b64 100644
+--- a/releases.sql
++++ b/releases.sql
+@@ -1,6 +1,6 @@
+ -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
+ -- no integer PKs/FKs as values; rebuild renumbers deterministically)
+--- generation: 1795
++-- generation: 1798
+ -- table: schema_migrations
+ INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
+ INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
+@@ -13,7 +13,7 @@ INSERT INTO schema_migrations(version, applied_at) VALUES('8', '2026-09-12T16:07
+ INSERT INTO schema_migrations(version, applied_at) VALUES('9', '2026-09-23T01:01:18Z');
+ -- table: settings
+ INSERT INTO settings(key, value, updated_at) VALUES('enforcement', 'lenient', '2026-09-08T05:45:05Z');
+-INSERT INTO settings(key, value, updated_at) VALUES('generation', '1795', '2026-10-18T16:42:18Z');
++INSERT INTO settings(key, value, updated_at) VALUES('generation', '1798', '2026-10-18T17:05:44Z');
+ INSERT INTO settings(key, value, updated_at) VALUES('repo_slug', 'XYZ-forge', '2026-09-08T05:45:05Z');
+ -- table: repos
+ INSERT INTO repos(global_id, slug, updated_at) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge', '2026-09-08T05:45:05Z');
+@@ -871,9 +871,10 @@ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, positi
+ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M563HYF3J05JZVF0BP8DSX78', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1060', 'skills: add review-pr-xyz (claim-validated PR review) and rename review-code → review-code-xyz', 'Completed', '126', '✅', NULL, NULL, NULL, 'PROJECT/3-COMPLETED/GH-1060-REVIEW-PR-XYZ.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1060', '- **GH-1060 · skills: add review-pr-xyz (claim-validated PR review) and rename review-code → review-code-xyz** ✅ **SHIPPED 2026-10-18 (PR #1062)** — [GH-1060-REVIEW-PR-XYZ.md](PROJECT/3-COMPLETED/GH-1060-REVIEW-PR-XYZ.md) · [#1060](https://github.com/HiQS-Labs/XYZ-forge/issues/1060)', '2026-10-17T23:36:04Z', '2026-10-18T03:01:20Z', NULL, NULL, NULL, NULL, NULL, NULL);
+ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M563JSEA0KDCJTMDVTAXSC25', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1088', 'start-task: orchestrator smoke check (main path + one adjacent path) before final relay QA', 'Completed', '127', '✅', NULL, NULL, NULL, 'PROJECT/3-COMPLETED/GH-1088-START-TASK-SMOKE-CHECK.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1088', '- **GH-1088 · start-task: orchestrator smoke check (main path + one adjacent path) before final relay QA** ✅ **SHIPPED 2026-10-18 (PR #1089)** — [GH-1088-START-TASK-SMOKE-CHECK.md](PROJECT/3-COMPLETED/GH-1088-START-TASK-SMOKE-CHECK.md) · [#1088](https://github.com/HiQS-Labs/XYZ-forge/issues/1088) (rated 55/45/50/85)', '2026-10-17T23:36:32Z', '2026-10-18T03:01:19Z', '55', '45', '50', '85', NULL, NULL);
+ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M563M0A579W7K077VXD95JQ4', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1119', 'Weekly worth-it continuation skill', 'Completed', '127', '✅', NULL, NULL, NULL, 'PROJECT/3-COMPLETED/GH-1119-WORTH-IT.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1119', '- **GH-1119 · Weekly worth-it continuation skill** ✅ **SHIPPED 2026-10-18 (PR #1120)** — ready PR 1120; plan QA approved/attested round 2, final QA approved/attested round 1; → [plan](PROJECT/3-COMPLETED/GH-1119-WORTH-IT.md) · [PR](https://github.com/HiQS-Labs/XYZ-forge/pull/1120) · [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/1119) (rated 65/25/75/80)', '2026-10-17T23:37:12Z', '2026-10-18T03:01:18Z', '65', '25', '75', '80', NULL, NULL);
+-INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M56GEJJR4PXDB80R4JG60NG1', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1112', 'CI quick wins: marathon-root-audit single pass, heavy-suite ordering, gh648 guard', 'In progress', '126', '🚧', NULL, NULL, NULL, 'PROJECT/2-WORKING/GH-1112-CI-QUICK-WINS.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1112', '- **GH-1112 · CI quick wins: marathon-root-audit single pass, heavy-suite ordering, gh648 guard** 🆕 **captured 2026-10-17 via HQ** — [GH-1112-CI-QUICK-WINS.md](PROJECT/2-WORKING/GH-1112-CI-QUICK-WINS.md) · [#1112](https://github.com/HiQS-Labs/XYZ-forge/issues/1112) (rated 70/40/50/85)', '2026-10-18T03:21:25Z', '2026-10-18T03:21:26Z', '70', '40', '50', '85', NULL, NULL);
++INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M56GEJJR4PXDB80R4JG60NG1', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1112', 'CI quick wins: marathon-root-audit single pass, heavy-suite ordering, gh648 guard', 'In progress', '126', '🚧', NULL, NULL, NULL, 'PROJECT/2-WORKING/GH-1112-CI-QUICK-WINS.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1112', '- **GH-1112 · CI quick wins: marathon-root-audit single pass, heavy-suite ordering, gh648 guard** 🆕 **captured 2026-10-17 via HQ** — [GH-1112-CI-QUICK-WINS.md](PROJECT/2-WORKING/GH-1112-CI-QUICK-WINS.md) · [#1112](https://github.com/HiQS-Labs/XYZ-forge/issues/1112) (rated 70/40/50/85)', '2026-10-18T03:21:25Z', '2026-10-18T17:05:44Z', '70', '40', '50', '85', NULL, 'in-progress');
+ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M56GEK14SBSGPWRXPJ4A9B7E', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1114', 'CI quick win: stop bookkeeping commits from re-triggering wave-reconcile (gh648 guard lands with GH-1112)', 'Completed', '126', '✅', NULL, NULL, NULL, 'PROJECT/3-COMPLETED/GH-1114-PARALLEL-QUALIFYING-RECEIPT.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1114', '- **GH-1114 · CI quick win: stop bookkeeping commits from re-triggering wave-reconcile (gh648 guard lands with GH-1112)** ✅ **SHIPPED 2026-10-18 (PR #1134)** — [GH-1112-CI-QUICK-WINS.md](PROJECT/3-COMPLETED/GH-1114-PARALLEL-QUALIFYING-RECEIPT.md) · [#1114](https://github.com/HiQS-Labs/XYZ-forge/issues/1114) (rated 65/55/50/90)', '2026-10-18T03:21:26Z', '2026-10-18T07:59:57Z', '65', '55', '50', '90', NULL, NULL);
+ INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M57SKMD6CFSKT45D9GVPAA9Q', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1127', 'Full-suite qualification at development → main promotion only; local ledger reconcile', 'Completed', '126', '✅', NULL, NULL, NULL, 'PROJECT/3-COMPLETED/GH-1127-PROMOTION-ONLY-FULL-SUITE.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1127', '- **GH-1127 · Full-suite qualification at promotion only; local ledger reconcile** ✅ **SHIPPED 2026-10-18 (PR #1142)** — [GH-1127-PROMOTION-ONLY-FULL-SUITE.md](PROJECT/3-COMPLETED/GH-1127-PROMOTION-ONLY-FULL-SUITE.md) · [#1127](https://github.com/HiQS-Labs/XYZ-forge/issues/1127) (rated 80/50/50/60)', '2026-10-18T15:20:43Z', '2026-10-18T16:39:22Z', '80', '50', '50', '60', NULL, NULL);
++INSERT INTO roadmap_items(global_id, repo_gid, gh_number, title, section, position, status_marker, complexity, risk, effort, doc_path, issue_url, raw_text, first_seen, updated_at, rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr, status_label) VALUES('rmi-01M57ZEMK666VS4Q378R6Q39RV', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1136', 'merge-cleanup B1 replay drops accepted-start on replayed roadmap rows', 'In progress', '126', '🚧', NULL, NULL, NULL, 'PROJECT/2-WORKING/GH-1136-B1-ACCEPTED-START.md', 'https://github.com/HiQS-Labs/XYZ-forge/issues/1136', '- **GH-1136 · B1 replay drops accepted-start on replayed rows** — [GH-1136-B1-ACCEPTED-START.md](PROJECT/2-WORKING/GH-1136-B1-ACCEPTED-START.md) · [#1136](https://github.com/HiQS-Labs/XYZ-forge/issues/1136) (rated 40/35/50/85)', '2026-10-18T17:02:50Z', '2026-10-18T17:05:32Z', '40', '35', '50', '85', NULL, 'in-progress');
+ -- table: jog_queue
+ INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M122D1G6F8AWEKQHKFPCFD37', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '275', '1', 'completed', '2026-08-27T16:56:10Z', '2026-08-27T18:11:04Z', '5', NULL, 'preflight: already-landed');
+ INSERT INTO jog_queue(global_id, repo_gid, gh_number, position, status, created_at, updated_at, attempt_count, lease_pid, failure_reason) VALUES('jog-01M122D1WM4Z659A8N591AR0H8', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '269', '1', 'failed', '2026-08-27T16:56:10Z', '2026-08-27T18:39:22Z', '3', NULL, 'drive failed (exit 7)');
+@@ -2893,6 +2894,9 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
+ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-repoint', 'rmi-01M57SKMD6CFSKT45D9GVPAA9Q', '2026-10-18T16:39:22Z', 'e003bddf32c14a889524bc35981ab55a', 'default', '0835761cd791bbafcb1753f1614c407d2a36b3d2551896931b4c0be5ad7b778f', '7eb47ecc507d2604d4ea7f6a1f2548bbc50251405626d4e72136d081bd14328c');
+ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M57SKMD6CFSKT45D9GVPAA9Q', '2026-10-18T16:39:22Z', '30bf387242e7430bae93266abba127f3', 'default', '7eb47ecc507d2604d4ea7f6a1f2548bbc50251405626d4e72136d081bd14328c', 'f8f5fcc63f324b28125790916ad005c339e6f04b112733542764fb5ec0e99f41');
+ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('work-emit', NULL, '2026-10-18T16:42:18Z', '5474cbb6a0904d10abe5776e5ab0287e', 'default', 'f8f5fcc63f324b28125790916ad005c339e6f04b112733542764fb5ec0e99f41', 'f8f5fcc63f324b28125790916ad005c339e6f04b112733542764fb5ec0e99f41');
++INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-add', 'rmi-01M57ZEMK666VS4Q378R6Q39RV', '2026-10-18T17:02:51Z', '2b0511c112b94744822940460a830f91', 'default', 'f8f5fcc63f324b28125790916ad005c339e6f04b112733542764fb5ec0e99f41', 'ec9ad5f776c489b61d053aede5b2416fdaae973bfea7ad6e1f2c845a79e2920e');
++INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M57ZEMK666VS4Q378R6Q39RV', '2026-10-18T17:05:32Z', '43827efd6f7748a99e3494d0783ae4f8', 'default', 'ec9ad5f776c489b61d053aede5b2416fdaae973bfea7ad6e1f2c845a79e2920e', '25f23912d2a01197f45eec13edbf2406a077f126a6a35808c5521245be1d25c3');
++INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-update', 'rmi-01M56GEJJR4PXDB80R4JG60NG1', '2026-10-18T17:05:44Z', '78b05e3113ef403089cf920c54dc6071', 'default', '25f23912d2a01197f45eec13edbf2406a077f126a6a35808c5521245be1d25c3', 'c0d84d3148d704e5d9755fba0b15f37cdd506a88672d2557bb857eecdec098ea');
+ -- table: work_events
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2CBC3C2HSWRSBY81TAZHYY0', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '568', 'df2ee890077d486dbe23311c5dd74d82', 'updated', '{"marker": "\u2705", "section": "Completed"}', '2026-09-13T03:01:02Z');
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M2CGH1A7Z979TG5DQJHN8DX6', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '591', '6d3d7a7619c247b5a85a039ea98756bd', 'parked', '{"section": "Queue / parked intake"}', '2026-09-13T04:31:07Z');
+@@ -3735,3 +3739,6 @@ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload,
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M57T6RBQM0GXW6R4HB1P8PG7', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1127', '7e3cfd0b99e64919a0ea5c35d1ef55cc', 'in_flight', '{"accepted_start": true, "marker": "\ud83d\udea7", "section": "In progress", "source": "roadmap-update", "transition": true}', '2026-10-18T15:31:09Z');
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M57Y3NFEXTYN7H8G0Q7HQV1G', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1127', '30bf387242e7430bae93266abba127f3', 'completed', '{"marker": "\u2705", "section": "Completed", "source": "roadmap-update", "transition": true}', '2026-10-18T16:39:22Z');
+ INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M57Y91D47T97W95SX8KC9BDJ', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1127', '5474cbb6a0904d10abe5776e5ab0287e', 'pr_merged', '{"base": "development", "pr": 1142}', '2026-10-18T16:42:18Z');
++INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M57ZEMM1MN7Q61SV2SJ6PJF9', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1136', '2b0511c112b94744822940460a830f91', 'parked', '{"section": "Queue / parked intake"}', '2026-10-18T17:02:51Z');
++INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M57ZKHYPG0F9VFPB4SS19TZY', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1136', '43827efd6f7748a99e3494d0783ae4f8', 'in_flight', '{"accepted_start": true, "marker": "\ud83d\udea7", "section": "In progress", "source": "roadmap-update", "transition": true}', '2026-10-18T17:05:32Z');
++INSERT INTO work_events(global_id, repo_gid, gh_number, txn_id, event, payload, at) VALUES('wev-01M57ZKY3N149G8Z0GBWSBE0T1', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1112', '78b05e3113ef403089cf920c54dc6071', 'in_flight', '{"accepted_start": true, "marker": "\ud83d\udea7", "section": "In progress", "source": "roadmap-update", "transition": true}', '2026-10-18T17:05:44Z');
+diff --git a/skills/2-daily/merge-cleanup/scripts/ledger_merge.py b/skills/2-daily/merge-cleanup/scripts/ledger_merge.py
+index bdfa6205..0614af3f 100644
+--- a/skills/2-daily/merge-cleanup/scripts/ledger_merge.py
++++ b/skills/2-daily/merge-cleanup/scripts/ledger_merge.py
+@@ -290,6 +290,26 @@ def _rated(row: Dict[str, Optional[str]]) -> Optional[str]:
+     return None
+ 
+ 
++def _replayed_gid(root: Path, gh: str, issue_url: str) -> Tuple[Optional[str], str]:
++    """The re-minted gid of a just-added row: exactly one `roadmap list --json` match on number + URL.
++
++    Dump numbers are SQL text and JSON numbers are ints, so compare as strings (GH-1136)."""
++    r = _run(_app(root) + ["roadmap", "list", "--json"], root)
++    if r.returncode != 0:
++        return None, f"roadmap list failed rc={r.returncode} {r.stderr.strip()[:200]}"
++    try:
++        rows = json.loads(r.stdout)
++    except ValueError as exc:
++        return None, f"roadmap list returned unparseable JSON: {exc}"
++    if not isinstance(rows, list):
++        return None, "roadmap list returned non-list JSON"
++    hits = [x for x in rows if isinstance(x, dict) and str(x.get("gh_number")) == str(gh)
++            and (x.get("issue_url") or "") == issue_url]
++    if len(hits) != 1 or not hits[0].get("global_id"):
++        return None, f"expected exactly one row for GH-{gh} {issue_url!r}, found {len(hits)}"
++    return hits[0]["global_id"], ""
++
++
+ def replay_ops(root: Path, ops: List[Dict[str, Any]]) -> Tuple[bool, List[str]]:
+     """Apply roadmap changes through `releases_app.py roadmap ...`. Stops at the first refusal."""
+     log: List[str] = []
+@@ -328,6 +348,17 @@ def replay_ops(root: Path, ops: List[Dict[str, Any]]) -> Tuple[bool, List[str]]:
+                 log.append(f"roadmap update GH-{gh} (section/marker): rc={r.returncode} {r.stderr.strip()[:200]}")
+                 if r.returncode != 0:
+                     return False, log
++            # GH-1136: an accepted start (status_label 'in-progress') is admission metadata `add` cannot
++            # carry. Re-apply it through its only writer, which re-checks identity and the open native
++            # issue; any refusal stops the replay (handoff) rather than dropping the label silently.
++            if row.get("status_label") == "in-progress":
++                gid, why = _replayed_gid(root, gh, row.get("issue_url") or "")
++                if not gid:
++                    return False, log + [f"roadmap accepted-start GH-{gh}: {why}"]
++                r = _run(_app(root) + ["roadmap", "update", "--gid", gid, "--accepted-start"], root)
++                log.append(f"roadmap accepted-start GH-{gh} ({gid}): rc={r.returncode} {r.stderr.strip()[:200]}")
++                if r.returncode != 0:
++                    return False, log
+         else:
+             cols = set(op["cols"])
+             if "doc_path" in cols:

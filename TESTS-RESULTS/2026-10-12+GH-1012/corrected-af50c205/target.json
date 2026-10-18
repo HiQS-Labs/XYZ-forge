@@ -1,0 +1,29 @@
+{
+  "base": "a076b1b117a68252dc3d9d1c4901b0c31fcb4db3",
+  "candidate": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+  "landing": "489ba1b45b6924dbb57f70ba1bed98645db54644",
+  "full_gate": "ci-local.sh --base a076b1b117a68252dc3d9d1c4901b0c31fcb4db3",
+  "excluded": {
+    "954": {
+      "head": "738fde98d718014f6cc6f9ad5cb3e5f3762ed449",
+      "ancestor_of_candidate": false
+    },
+    "1024": {
+      "head": "5633c3a2d020cba7e031060ddacab53e45298a5e",
+      "ancestor_of_candidate": false
+    },
+    "930": {
+      "head": "84a2717fb3b5be447d4f58845e4217cdea1ca82e",
+      "ancestor_of_candidate": false
+    },
+    "1033": {
+      "head": "9cca63fc3b3e51724d969b17a0c12e00b1ac6f0b",
+      "ancestor_of_candidate": false
+    },
+    "1034": {
+      "head": "11234fc610fa0dc0045659028ec50ed16ceab9ec",
+      "ancestor_of_candidate": false
+    }
+  },
+  "canonical_issue_plan_update": false
+}

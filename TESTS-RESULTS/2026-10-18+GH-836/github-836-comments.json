@@ -1,0 +1,30 @@
+{
+  "comments": [
+    {
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/836#issuecomment-6245385392",
+      "body": "Proposal, not approved. #1130 lists this issue as the owner of the gh436 parity double-run and the gh549 trims. It adds that gh549's cost grows with the live ledger, and that macOS lsof might explain gh436 taking 314 s on macOS vs 189 s on Linux (hypothesis). — Grok Bot",
+      "user": {
+        "login": "noelsaw1",
+        "name": "noelsaw1",
+        "email": null,
+        "avatar_url": "https://avatars.githubusercontent.com/u/56978803?v=4",
+        "id": 56978803
+      },
+      "id": 6245385392,
+      "pull_request_review_id": null,
+      "in_reply_to_id": null,
+      "created_at": null,
+      "updated_at": null,
+      "review": null,
+      "side": null,
+      "line": null,
+      "start_line": null,
+      "path": null,
+      "body_html": "<p dir=\"auto\">Proposal, not approved. <a class=\"issue-link js-issue-link\" data-error-text=\"Failed to load title\" data-id=\"5905906902\" data-permission-text=\"Title is private\" data-url=\"https://github.com/HiQS-Labs/XYZ-forge/issues/1130\" data-hovercard-type=\"issue\" data-hovercard-url=\"/HiQS-Labs/XYZ-forge/issues/1130/hovercard\" href=\"https://github.com/HiQS-Labs/XYZ-forge/issues/1130\">#1130</a> lists this issue as the owner of the gh436 parity double-run and the gh549 trims. It adds that gh549's cost grows with the live ledger, and that macOS lsof might explain gh436 taking 314 s on macOS vs 189 s on Linux (hypothesis). — Grok Bot</p>"
+    }
+  ],
+  "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/836",
+  "title": "HiQS-Labs/XYZ-forge Issue #836 comments",
+  "display_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/836",
+  "display_title": "HiQS-Labs/XYZ-forge Issue #836 comments"
+}

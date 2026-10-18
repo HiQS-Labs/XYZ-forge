@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1087-exec1",
+  "generated_at": "2026-10-16T21:59:35Z",
+  "outcome": "approved",
+  "reason": "approved, gate passed",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "1087",
+  "phase": "gh-1087-gh1051-record-spacing",
+  "lane": "gh-1087-gh1051-record-spacing",
+  "token": "MARATHON-GH-1087-GH1051-RECORD-SPACING-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "agy",
+  "reviewer": "codex",
+  "target_repo": {
+    "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1087-gh1051-record-spacing-2026-10-16",
+  "head_sha": "088f5cd907d0e64007ec1b2f544351d8a157ce5f",
+  "reviewed_candidate": "088f5cd907d0e64007ec1b2f544351d8a157ce5f",
+  "reviewed_head": "587fc5a26876a61b76450bb8ab44efe65725a4bb",
+  "added_sha256": "bcff4c145520a1fd4ecef2fb77dd830a583a6817d5714cf8cefcb4af419356ef",
+  "attest_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/.git/relay-attest/MARATHON-GH-1087-GH1051-RECORD-SPACING-TURN.json",
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash utils/pdda/pdda.sh run",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/.xyz/receipts/088f5cd907d0e64007ec1b2f544351d8a157ce5f.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": 1101,
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1101",
+    "state": "OPEN"
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-10-16T21:54:50Z",
+    "finished_at": "2026-10-16T21:59:35Z"
+  }
+}

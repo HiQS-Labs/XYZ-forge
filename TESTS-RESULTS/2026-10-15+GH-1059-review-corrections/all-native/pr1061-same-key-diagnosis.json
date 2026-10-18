@@ -1,0 +1,180 @@
+{
+  "refs": {
+    "base": "69666c474c4b27ddacd7c865d32ebee7713d1541",
+    "ours": "HEAD",
+    "theirs": "MERGE_HEAD"
+  },
+  "classification": {
+    "disjoint": false,
+    "reasons": [
+      "roadmap_items[rmi-01M4Y0MTMP772GW91MTM0E3JAN]: updated on the PR side and updated on the integration side \u2014 same-key change on both sides"
+    ],
+    "ours": {
+      "roadmap_items": {
+        "rmi-01M4Y0MTMP772GW91MTM0E3JAN": "updated",
+        "rmi-01M4YBF6YKJ8MJP63B15FB6PZS": "added"
+      }
+    },
+    "theirs": {
+      "roadmap_items": {
+        "rmi-01M4Y0MTMP772GW91MTM0E3JAN": "updated",
+        "rmi-01M4YC6KT1EZS8H2ATMCP5X8MN": "added",
+        "rmi-01M4YC6M9BZZNQ58GYZ7ER8T8D": "added"
+      }
+    },
+    "keep": "theirs",
+    "replay": [
+      {
+        "op": "update",
+        "row": {
+          "global_id": "rmi-01M4Y0MTMP772GW91MTM0E3JAN",
+          "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+          "gh_number": "1043",
+          "title": "feat(recon, review-code): Step N+1 bounded downstream verification in default and exhaustive simulation in deep mode",
+          "section": "Completed",
+          "position": "125",
+          "status_marker": "\u2705",
+          "complexity": null,
+          "risk": null,
+          "effort": null,
+          "doc_path": "PROJECT/3-COMPLETED/GH-1043-RECON-STEP-N-PLUS-1.md",
+          "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1043",
+          "raw_text": "- **GH-1043 \u00b7 Step N+1 downstream verification for recon and review-code** \u2705 **SHIPPED 2026-10-14 (PR #1044)** \u2014 (rated 85/80/90/85)",
+          "first_seen": "2026-10-14T20:11:18Z",
+          "updated_at": "2026-10-14T23:54:21Z",
+          "rating_pri": "85",
+          "rating_sev": "80",
+          "rating_appeal": "90",
+          "rating_effort": "85",
+          "rating_ovr": null,
+          "status_label": null
+        },
+        "base": {
+          "global_id": "rmi-01M4Y0MTMP772GW91MTM0E3JAN",
+          "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+          "gh_number": "1043",
+          "title": "feat(recon, review-code): Step N+1 bounded downstream verification in default and exhaustive simulation in deep mode",
+          "section": "Completed",
+          "position": "125",
+          "status_marker": "\u2705",
+          "complexity": null,
+          "risk": null,
+          "effort": null,
+          "doc_path": "PROJECT/3-COMPLETED/GH-1043-RECON-STEP-N-PLUS-1.md",
+          "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1043",
+          "raw_text": "- **GH-1043 \u00b7 Step N+1 downstream verification for recon and review-code** \u2705 **SHIPPED 2026-10-14 (PR #1044)** \u2014 (rated 85/80/90/85)",
+          "first_seen": "2026-10-14T20:11:18Z",
+          "updated_at": "2026-10-14T23:47:51Z",
+          "rating_pri": "85",
+          "rating_sev": "80",
+          "rating_appeal": "90",
+          "rating_effort": "85",
+          "rating_ovr": null,
+          "status_label": null
+        },
+        "cols": []
+      },
+      {
+        "op": "add",
+        "row": {
+          "global_id": "rmi-01M4YBF6YKJ8MJP63B15FB6PZS",
+          "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+          "gh_number": "1059",
+          "title": "start-task: retire fully published PR checkouts automatically before merge",
+          "section": "In progress",
+          "position": "126",
+          "status_marker": "\ud83d\udea7",
+          "complexity": null,
+          "risk": null,
+          "effort": null,
+          "doc_path": "PROJECT/2-WORKING/GH-1059-PUBLISHED-CLONE-RETIREMENT.md",
+          "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1059",
+          "raw_text": "- **GH-1059 \u00b7 Published task checkout retirement** \u2014 [GH-1059-PUBLISHED-CLONE-RETIREMENT.md](PROJECT/2-WORKING/GH-1059-PUBLISHED-CLONE-RETIREMENT.md) \u00b7 [#1059](https://github.com/HiQS-Labs/XYZ-forge/issues/1059) (rated 65/35/50/65)",
+          "first_seen": "2026-10-14T23:20:28Z",
+          "updated_at": "2026-10-14T23:25:47Z",
+          "rating_pri": "65",
+          "rating_sev": "35",
+          "rating_appeal": "50",
+          "rating_effort": "65",
+          "rating_ovr": null,
+          "status_label": "in-progress"
+        }
+      }
+    ],
+    "gen": [
+      1637,
+      1646
+    ]
+  },
+  "rows": {
+    "base": {
+      "global_id": "rmi-01M4Y0MTMP772GW91MTM0E3JAN",
+      "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+      "gh_number": "1043",
+      "title": "feat(recon, review-code): Step N+1 bounded downstream verification in default and exhaustive simulation in deep mode",
+      "section": "Completed",
+      "position": "125",
+      "status_marker": "\u2705",
+      "complexity": null,
+      "risk": null,
+      "effort": null,
+      "doc_path": "PROJECT/3-COMPLETED/GH-1043-RECON-STEP-N-PLUS-1.md",
+      "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1043",
+      "raw_text": "- **GH-1043 \u00b7 Step N+1 downstream verification for recon and review-code** \u2705 **SHIPPED 2026-10-14 (PR #1044)** \u2014 (rated 85/80/90/85)",
+      "first_seen": "2026-10-14T20:11:18Z",
+      "updated_at": "2026-10-14T23:47:51Z",
+      "rating_pri": "85",
+      "rating_sev": "80",
+      "rating_appeal": "90",
+      "rating_effort": "85",
+      "rating_ovr": null,
+      "status_label": null
+    },
+    "ours": {
+      "global_id": "rmi-01M4Y0MTMP772GW91MTM0E3JAN",
+      "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+      "gh_number": "1043",
+      "title": "feat(recon, review-code): Step N+1 bounded downstream verification in default and exhaustive simulation in deep mode",
+      "section": "Completed",
+      "position": "125",
+      "status_marker": "\u2705",
+      "complexity": null,
+      "risk": null,
+      "effort": null,
+      "doc_path": "PROJECT/3-COMPLETED/GH-1043-RECON-STEP-N-PLUS-1.md",
+      "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1043",
+      "raw_text": "- **GH-1043 \u00b7 Step N+1 downstream verification for recon and review-code** \u2705 **SHIPPED 2026-10-14 (PR #1044)** \u2014 (rated 85/80/90/85)",
+      "first_seen": "2026-10-14T20:11:18Z",
+      "updated_at": "2026-10-14T23:54:21Z",
+      "rating_pri": "85",
+      "rating_sev": "80",
+      "rating_appeal": "90",
+      "rating_effort": "85",
+      "rating_ovr": null,
+      "status_label": null
+    },
+    "theirs": {
+      "global_id": "rmi-01M4Y0MTMP772GW91MTM0E3JAN",
+      "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+      "gh_number": "1043",
+      "title": "feat(recon, review-code): Step N+1 bounded downstream verification in default and exhaustive simulation in deep mode",
+      "section": "Completed",
+      "position": "125",
+      "status_marker": "\u2705",
+      "complexity": null,
+      "risk": null,
+      "effort": null,
+      "doc_path": "PROJECT/3-COMPLETED/GH-1043-RECON-STEP-N-PLUS-1.md",
+      "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1043",
+      "raw_text": "- **GH-1043 \u00b7 Step N+1 downstream verification for recon and review-code** \u2705 **SHIPPED 2026-10-14 (PR #1044)** \u2014 (rated 85/80/90/85)",
+      "first_seen": "2026-10-14T20:11:18Z",
+      "updated_at": "2026-10-14T23:54:07Z",
+      "rating_pri": "85",
+      "rating_sev": "80",
+      "rating_appeal": "90",
+      "rating_effort": "85",
+      "rating_ovr": null,
+      "status_label": null
+    }
+  }
+}

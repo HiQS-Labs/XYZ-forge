@@ -60,16 +60,16 @@ releases jog resume <GH-NUM>
 releases jog retry-gate <GH-NUM>
     Re-run ONLY the gate against the same head SHA (no builder turn).
 
-releases jog retry-build <GH-NUM>
+releases jog retry-build <GH-NUM> --target-root <disposable-full-clone>
     Fresh Marathon attempt on a fresh execution id (history preserved).
 
 releases jog land <GH-NUM> [--pr N]
-    Verify merged delivery against GitHub truth, complete the row, delegate lifecycle to wave_reconcile.
+    Verify committed delivery after hosted reconciliation and complete the primary queue row.
 
 releases jog reconcile <GH-NUM>
     Idempotent replay entry for jog land (same verification and steps).
 
-releases jog run [--executor relay|marathon] [--reviewer <agent>] [--builder agy|codex|aider] [--auto-merge] [--max-tasks N] [--simulate] [--dry-run]
+releases jog run --target-root <disposable-full-clone> [--executor relay|marathon] [--reviewer <agent>] [--builder agy|codex|aider] [--auto-merge] [--max-tasks N] [--simulate] [--dry-run]
     Execute the serial jog runner loop. Default executor is marathon (GH-280); --reviewer is
     required (builder and reviewer must differ). --executor relay selects the legacy rollback
     path during its compatibility window.
@@ -114,8 +114,8 @@ releases jog run [--executor relay|marathon] [--reviewer <agent>] [--builder agy
 7. **Receipt-Backed Landing & `--auto-merge`:**
    A row is never marked `completed` on a self-report. `jog land` verifies GitHub truth first —
    merged state, merge-SHA reachability, PR identity (repo, base, head, head SHA), and qualifying
-   gate evidence — then completes the row and delegates issue closure, doc promotion, and
-   dashboard refresh to `wave_reconcile`.
+   gate evidence after hosted `wave_reconcile` has completed issue/doc lifecycle — then completes
+   the primary row and records its landing proof.
    - **Default (Interactive):** Pauses at each landing boundary for human confirmation. On confirm: merges PR into `development` and re-anchors the checkout. On decline: marks row `parked` (`awaiting-landing`) so unmerged tasks are never misrepresented as `completed`.
    - **Unattended without `--auto-merge`:** Parks row as `parked` (`awaiting-landing (unattended run without --auto-merge)`) and halts advance.
    - **`--auto-merge` (verified, GH-300):** Verifies GitHub truth against the receipt BEFORE merging — the PR must still be OPEN on the receipt's base/head/head SHA in this repo with the gate green on that head — and refuses (parking the row) instead of merging blind; on pass, merges into `development` and re-anchors the checkout before advancing.
@@ -123,6 +123,57 @@ releases jog run [--executor relay|marathon] [--reviewer <agent>] [--builder agy
 8. **Teardown Cleanliness:**
    Verifies clean worktree disposal, clean working tree status, and gate receipts between serial items.
    At campaign end, point the operator at `/merge-cleanup` to retire the task clone (GH-690).
+
+## Primary writer and committed evidence (GH-1108, delivery 1)
+
+Invoke mutating Jog commands in the canonical primary on `development`. Bind that primary
+explicitly once for its origin; task clones do not configure themselves as primaries:
+
+```bash
+# Run in the checkout the operator selected as the primary.
+key="$(PYTHONPATH=utils/py python3 -c 'from harness_paths import primary_config_key; print(primary_config_key("."))')"
+git config --global "$key" "$PWD"
+```
+
+The origin-specific pin is shared with merge-cleanup's explicit `--primary`: a mismatched
+path refuses. Jog also refuses unconfigured writers and non-development primaries before
+queue/cache writes. Read-only list/export/dry-run do not need a primary pin.
+
+Pass a separate full clone with the same origin to `jog run --target-root <clone>` or
+`jog retry-build --target-root <clone>`. It must have no pre-existing ledger delta. Preflight,
+Marathon, Tick and builder/reviewer work run in that clone. The primary retains the queue,
+lease and restart cache. Execution must leave the clone's `releases.db`/`releases.sql` unchanged;
+contract promotion commits only its doc pair there. The primary roadmap is repointed by
+normal reconciliation after that document movement lands.
+
+After approval, Jog commits and pushes exactly one portable evidence bundle on the lane:
+`TESTS-RESULTS/<date>+GH-<n>/jog/<execution-id>/`. It contains the original Marathon result,
+copied gate receipt, provenance and `receipt.json` with relative pointers and content hashes.
+The original result's historical absolute paths are retained as source data; landing reads
+the committed bundle pointers instead. Publication failure parks the item; resume can retry
+publication without another builder turn. `.tick/jog` remains a local restart cache, never a
+landing prerequisite.
+
+**Interim publication checkpoint:** delivery 1 does not automatically push queue transitions.
+Before merge-cleanup, inspect the primary's status, index and local supervisor commits. Commit
+only owned Jog ledger/view paths explicitly, then normally push development. Confirm a clean,
+published, fast-forward-ready primary. Unrelated changes, divergence or rejected push stop and
+preserve state for reconciliation; do not bypass Phase 0. The automatic direct-push/rebuild
+path is a separate PR so it can be reverted independently. `--auto-merge` on native Jog dispatch/retry refuses before leasing during this interim;
+it cannot skip the publication checkpoint. Use merge-cleanup for actual landing;
+its mapped Jog hook runs after hosted reconciliation and before the existing final post-merge
+commit/push. A direct `jog land` call likewise needs that final publication checkpoint.
+
+Landing requires merged GitHub truth, a green gate on the original approved SHA, clean
+`releases check`, green hosted reconciliation and merge reachability from freshly fetched
+`origin/<integration>`. A moved head may contain the exact validated receipt publication,
+ledger-only changes in B1's six-path set, or mechanically proven upstream merges. For each
+upstream merge, both parent trees and the recorded tree have those six paths stripped; a
+conflict-free `git merge-tree --write-tree` must reproduce exactly the recorded stripped tree.
+Any remaining conflict or extra/missing blob refuses. The committed `landing.json` records
+both approved/delivery heads, tree IDs, exclusions and hosted run. No manual override or broad
+document-directory exception exists. Replay uses canonical queue truth and emits no duplicate
+completion transition.
 
 ## Recovery Verbs
 

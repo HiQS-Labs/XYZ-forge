@@ -9,7 +9,7 @@ name: Pages
 
 on:
   push:
-    branches: [development, main]
+    branches: [development]
     paths:
       - "PAGES/**"
       - "utils/py/site_build.py"
@@ -27,11 +27,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
+    if: github.ref == 'refs/heads/development'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -46,6 +47,7 @@ jobs:
           path: PAGES
 
   deploy:
+    if: github.ref == 'refs/heads/development'
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10

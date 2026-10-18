@@ -1,0 +1,32 @@
+{
+  "mode": "doctor",
+  "heartbeat": {
+    "receipt": "/root/.cache/task-sync/last-run.json",
+    "state": "2026-10-17T05:21:55",
+    "note": "2026-10-17T05:21:55"
+  },
+  "ides": {
+    "claude": {
+      "store": "/root/.claude",
+      "ok": false,
+      "reds": [
+        "claude: no recent transcript has a custom-title/ai-title/summary record"
+      ],
+      "transcripts": 1
+    }
+  }
+}
+{
+  "mode": "dry-run",
+  "ides": {
+    "claude": {
+      "swept": 0,
+      "renamed": [],
+      "pinned": [],
+      "unpinned": [],
+      "needs_summary": [],
+      "skipped": 1,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "preambleIdentical": true,
+  "commonSectionsByteIdentical": true,
+  "allIncomingSectionsRetained": true,
+  "allOwnSectionsRetained": true,
+  "uniqueOwnSections": [
+    "## 2026-10-15 \u2014 Preserve ignored content during published worktree closeout (GH-1059)",
+    "## 2026-10-14 \u2014 Retire fully published task checkouts before merge (GH-1059)"
+  ]
+}

@@ -35,7 +35,6 @@ from scan_clones import run_git
 LEDGER_DUMP = "releases.sql"
 LEDGER_DB = "releases.db"
 LEDGER_VIEWS = ("LEADERBOARD.md", "RELEASES-PREVIEW.html", "LEADERBOARD.html")
-B1_SET = {LEDGER_DUMP, LEDGER_DB, *LEDGER_VIEWS}
 # Excluded until they have their own resolver: a conflict here is a handoff (plan B1).
 B1_EXCLUDED = {"harnesses.db", "harnesses.sql"}
 
@@ -291,6 +290,26 @@ def _rated(row: Dict[str, Optional[str]]) -> Optional[str]:
     return None
 
 
+def _replayed_gid(root: Path, gh: str, issue_url: str) -> Tuple[Optional[str], str]:
+    """The re-minted gid of a just-added row: exactly one `roadmap list --json` match on number + URL.
+
+    Dump numbers are SQL text and JSON numbers are ints, so compare as strings (GH-1136)."""
+    r = _run(_app(root) + ["roadmap", "list", "--json"], root)
+    if r.returncode != 0:
+        return None, f"roadmap list failed rc={r.returncode} {r.stderr.strip()[:200]}"
+    try:
+        rows = json.loads(r.stdout)
+    except ValueError as exc:
+        return None, f"roadmap list returned unparseable JSON: {exc}"
+    if not isinstance(rows, list):
+        return None, "roadmap list returned non-list JSON"
+    hits = [x for x in rows if isinstance(x, dict) and str(x.get("gh_number")) == str(gh)
+            and (x.get("issue_url") or "") == issue_url]
+    if len(hits) != 1 or not hits[0].get("global_id"):
+        return None, f"expected exactly one row for GH-{gh} {issue_url!r}, found {len(hits)}"
+    return hits[0]["global_id"], ""
+
+
 def replay_ops(root: Path, ops: List[Dict[str, Any]]) -> Tuple[bool, List[str]]:
     """Apply roadmap changes through `releases_app.py roadmap ...`. Stops at the first refusal."""
     log: List[str] = []
@@ -327,6 +346,17 @@ def replay_ops(root: Path, ops: List[Dict[str, Any]]) -> Tuple[bool, List[str]]:
                     cmd += ["--status-marker", marker]
                 r = _run(cmd, root)
                 log.append(f"roadmap update GH-{gh} (section/marker): rc={r.returncode} {r.stderr.strip()[:200]}")
+                if r.returncode != 0:
+                    return False, log
+            # GH-1136: an accepted start (status_label 'in-progress') is admission metadata `add` cannot
+            # carry. Re-apply it through its only writer, which re-checks identity and the open native
+            # issue; any refusal stops the replay (handoff) rather than dropping the label silently.
+            if row.get("status_label") == "in-progress":
+                gid, why = _replayed_gid(root, gh, row.get("issue_url") or "")
+                if not gid:
+                    return False, log + [f"roadmap accepted-start GH-{gh}: {why}"]
+                r = _run(_app(root) + ["roadmap", "update", "--gid", gid, "--accepted-start"], root)
+                log.append(f"roadmap accepted-start GH-{gh} ({gid}): rc={r.returncode} {r.stderr.strip()[:200]}")
                 if r.returncode != 0:
                     return False, log
         else:
@@ -474,6 +504,20 @@ def read_changelog_union(clone: Path) -> str:
     return union_changelog(*texts)
 
 
+def harness_paths_module(root: Path, source: Optional[Path] = None):
+    """Use this installation's shared path policy, including a deployed skill's target copy."""
+    import importlib.util
+    if source is None:
+        bundled = Path(__file__).resolve().parents[4] / "utils" / "py" / "harness_paths.py"
+        source = bundled if bundled.is_file() else tool_path(root, "harness_paths.py")
+    if not source.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("merge_cleanup_harness_paths", source)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def resolve_ledger_conflict(clone: Path, execute: bool) -> Dict[str, Any]:
     """B1 inside a clone with a conflicted merge in progress.
 
@@ -493,7 +537,10 @@ def resolve_ledger_conflict(clone: Path, execute: bool) -> Dict[str, Any]:
     if excluded:
         res.update(handoff=True, reason=f"conflict in {', '.join(sorted(excluded))} — no resolver for harness telemetry yet")
         return res
-    non_ledger = paths - B1_SET - {"CHANGELOG.md"}
+    policy = harness_paths_module(clone)
+    # Older consumer runtimes retain B1's existing set until their harness is upgraded.
+    allowed = getattr(policy, "LEDGER_REPAIR_PATHS", {LEDGER_DUMP, LEDGER_DB, *LEDGER_VIEWS, "CHANGELOG.md"})
+    non_ledger = paths - allowed
     if non_ledger:
         res.update(handoff=True, reason=f"code/doc conflict outside the ledger set: {', '.join(sorted(non_ledger))}")
         return res

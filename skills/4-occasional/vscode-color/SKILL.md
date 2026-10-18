@@ -1,23 +1,19 @@
 ---
 name: vscode-color
-description: |
+description: >-
   Give a git repo a stable, distinct VS Code background tint so windows are
-  tellable apart at a glance. The color is scoped to the workspace
-  (.vscode/settings.json under workbench.colorCustomizations), so it applies every
-  session with no per-session step. Two modes: deterministic (SHA-256 of the repo's
-  GitHub slug -> a hue, same repo always same color) and manual override (the user
-  names a color or feel). Tints seven surfaces — editor, sidebar, activity bar,
-  panel, active tab, title bar, status bar — tuned subtle for dark themes, with a
-  --light variant.
-
-  Trigger when the user says "tint this repo", "give this workspace a background
-  color", "make this window a different color", "set the editor background for this
-  repo", "color-code my repos", or "/vscode-repo-tint". Also offer it unprompted
-  when a user complains they can't tell two VS Code windows apart.
-
-  Not for global/user-level VS Code theming (this writes per-repo workspace settings
-  only) and not for non-git folders (the deterministic color is keyed off the git
-  remote slug).
+  tellable apart at a glance. Trigger when the user says "tint this repo", "give
+  this workspace a background color", "make this window a different color", "set
+  the editor background for this repo", "color-code my repos", or
+  "/vscode-repo-tint", or offer it unprompted when they can't tell two VS Code
+  windows apart. Writes per-workspace .vscode/settings.json
+  (workbench.colorCustomizations) so the tint applies every session with no
+  per-session step. Two modes: deterministic (SHA-256 of the repo's GitHub slug
+  -> a hue, same repo always same color) and manual override (the user names a
+  color or feel). Tints seven surfaces — editor, sidebar, activity bar, panel,
+  active tab, title bar, status bar — tuned subtle for dark themes, with a
+  --light variant. Not for global/user-level VS Code theming or non-git folders
+  (keyed off the git remote slug).
 ---
 
 # VS Code Repo Tint

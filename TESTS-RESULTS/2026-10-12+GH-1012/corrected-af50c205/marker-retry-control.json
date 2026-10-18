@@ -1,0 +1,351 @@
+{
+  "tested_candidate": "af50c205e3f04f3fc6a02ac6c402f2013123b127",
+  "rows": [
+    {
+      "label": "candidate",
+      "push_exit": 3,
+      "retry_exit": 0,
+      "local_head_retained": true,
+      "removed_marker_absent": true,
+      "ignored_bytes_preserved": true,
+      "source_sha": "b180dae1eadf766bbabb456d5e961ec6de0e95b9",
+      "stderr": "xyz-mini-sync: note: publishing from 'docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: source b180dae1eadf (docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12) \u2192 /private/tmp/xyz1012-final-marker-retry-af50c205/candidate-child\nxyz-mini-sync: plan: copy 36 files, delete 0\nxyz-mini-sync: no changes \u2014 no commit created\n"
+    },
+    {
+      "label": "guard-removed-red",
+      "push_exit": 3,
+      "retry_exit": 2,
+      "local_head_retained": true,
+      "removed_marker_absent": true,
+      "ignored_bytes_preserved": true,
+      "source_sha": "96d31f9838c533a312362a56b48e85942310ad35",
+      "stderr": "xyz-mini-sync: note: publishing from 'docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: refused: destination main is ahead, behind, or divergent from origin/main\n"
+    }
+  ],
+  "commands": [
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--quiet",
+        "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/XYZ-forge-gh1012-corrected-evidence-2026-10-12",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-source"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-source",
+      "argv": [
+        "git",
+        "config",
+        "user.name",
+        "Retry Fixture"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-source",
+      "argv": [
+        "git",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--quiet",
+        "--bare",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-remote.git"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--quiet",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-remote.git",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-child"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-source",
+      "argv": [
+        "git",
+        "add",
+        "utils/py/xyz_mini_sync.py"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-source",
+      "argv": [
+        "git",
+        "commit",
+        "-qm",
+        "fixture drop entry"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-child",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-source",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-source/utils/py/xyz_mini_sync.py",
+        "--dest",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-child",
+        "--push"
+      ],
+      "rc": 3,
+      "stdout": "",
+      "stderr": "xyz-mini-sync: note: publishing from 'docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: source b180dae1eadf (docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12) \u2192 /private/tmp/xyz1012-final-marker-retry-af50c205/candidate-child\nxyz-mini-sync: plan: copy 36 files, delete 0\nxyz-mini-sync: committed 02f69a3: sync: XYZ-forge@b180dae1eadf (docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12)\nxyz-mini-sync: push failed (commit retained, rerun to retry): To /private/tmp/xyz1012-final-marker-retry-af50c205/candidate-remote.git\n ! [remote rejected] HEAD -> main (pre-receive hook declined)\nerror: failed to push some refs to '/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-remote.git'\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-child",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "02f69a378947d83b0d03ad1549d2ce7ac403a0f7\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-source",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-source/utils/py/xyz_mini_sync.py",
+        "--dest",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-child",
+        "--apply"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "xyz-mini-sync: note: publishing from 'docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: source b180dae1eadf (docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12) \u2192 /private/tmp/xyz1012-final-marker-retry-af50c205/candidate-child\nxyz-mini-sync: plan: copy 36 files, delete 0\nxyz-mini-sync: no changes \u2014 no commit created\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-child",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "02f69a378947d83b0d03ad1549d2ce7ac403a0f7\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/candidate-source",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "b180dae1eadf766bbabb456d5e961ec6de0e95b9\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--quiet",
+        "/Users/noelsaw/Documents/Codex/2026-10-12/task-2/XYZ-forge-gh1012-corrected-evidence-2026-10-12",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-source"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-source",
+      "argv": [
+        "git",
+        "config",
+        "user.name",
+        "Retry Fixture"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-source",
+      "argv": [
+        "git",
+        "config",
+        "user.email",
+        "fixture@example.invalid"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--quiet",
+        "--bare",
+        "/private/tmp/xyz1012-final-controls-af50c205/mini-child",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-remote.git"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205",
+      "argv": [
+        "git",
+        "clone",
+        "--no-local",
+        "--quiet",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-remote.git",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-child"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-source",
+      "argv": [
+        "git",
+        "add",
+        "utils/py/xyz_mini_sync.py"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-source",
+      "argv": [
+        "git",
+        "commit",
+        "-qm",
+        "fixture drop entry and remove marker retry guard"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-child",
+      "argv": [
+        "git",
+        "status",
+        "--porcelain=v1"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-source",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-source/utils/py/xyz_mini_sync.py",
+        "--dest",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-child",
+        "--push"
+      ],
+      "rc": 3,
+      "stdout": "",
+      "stderr": "xyz-mini-sync: note: publishing from 'docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: source 96d31f9838c5 (docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12) \u2192 /private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-child\nxyz-mini-sync: plan: copy 36 files, delete 0\nxyz-mini-sync: committed a9eb94e: sync: XYZ-forge@96d31f9838c5 (docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12)\nxyz-mini-sync: push failed (commit retained, rerun to retry): To /private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-remote.git\n ! [remote rejected] HEAD -> main (pre-receive hook declined)\nerror: failed to push some refs to '/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-remote.git'\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-child",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "a9eb94e6156b0e8035832b61aae5d570c977412d\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-source",
+      "argv": [
+        "/opt/homebrew/opt/python@3.14/bin/python3.14",
+        "-B",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-source/utils/py/xyz_mini_sync.py",
+        "--dest",
+        "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-child",
+        "--apply"
+      ],
+      "rc": 2,
+      "stdout": "",
+      "stderr": "xyz-mini-sync: note: publishing from 'docs/XYZ-forge-gh1012-corrected-evidence-2026-10-12', not development \u2014 the branch is recorded in the child's .xyz-forge-revision\nxyz-mini-sync: refused: destination main is ahead, behind, or divergent from origin/main\n"
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-child",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "a9eb94e6156b0e8035832b61aae5d570c977412d\n",
+      "stderr": ""
+    },
+    {
+      "cwd": "/private/tmp/xyz1012-final-marker-retry-af50c205/guard-removed-red-source",
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD"
+      ],
+      "rc": 0,
+      "stdout": "96d31f9838c533a312362a56b48e85942310ad35\n",
+      "stderr": ""
+    }
+  ]
+}

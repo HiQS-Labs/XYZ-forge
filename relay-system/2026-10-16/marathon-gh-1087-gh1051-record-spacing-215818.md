@@ -1,0 +1,136 @@
+# Marathon Phase gh-1087-gh1051-record-spacing
+STATUS: Approved
+NEXT: codex (Reviewer)
+
+<!-- marathon-drive: task=MARATHON-GH-1087-GH1051-RECORD-SPACING-TURN builder=agy reviewer=codex round-cap=5 -->
+
+## Phase Brief
+
+# Marathon preflight packet — gh-1087-gh1051-record-spacing
+
+- Generated: 2026-10-16T21:54:47Z
+- Mode: gh-bundle
+- Sources: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/PROJECT/2-WORKING/GH-1087-GH1051-RECORD-SPACING.md 
+- Target root: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify (development @ f7710e25b)
+- Suggested branch: `marathon/gh-1087-gh1051-record-spacing-2026-10-16` (branch_ready=false — carve-out: risk=1/independent zone, proceed on the current branch without asking)
+- Verdict: ready
+- Source issue state: OPEN.
+- Gate: `bash utils/pdda/pdda.sh run`
+
+- Artifacts: PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md
+- Suggested turn budget: none needed — ≈ 58 LOC across 1 artifact(s) fits the 900s default. Set `turn_timeout_s:` in this phase's MARATHON.yaml entry only to raise it; marathon.sh reads that field, and nothing reads a bare RELAY_TURN_TIMEOUT_S written into a packet.
+
+
+This packet is the producer's output. The orchestrator launches the run; the planner does not
+(GUIDING-PRINCIPLES.md §8).
+
+## Acceptance criteria — the build is DONE when these hold
+*Inlined verbatim from `/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/PROJECT/2-WORKING/GH-1087-GH1051-RECORD-SPACING.md` (its `## Acceptance` section, 3 criterion(a)). Continuation lines included; if a
+criterion here reads as a fragment, that is the source text, not a truncation.*
+*NOT verified, and NOT verifiable as things stand — issue #1087 has no '## Acceptance' section — nothing to copy from. This list exists only in the capture doc; reading the issue will not confirm it, because the issue states no criteria. Establish the criteria on the issue before treating anything below as the definition of done.*
+- [ ] The three named joined tokens are gone and read as separated words / formatted identifiers.
+- [ ] No other line of the file changed in meaning; `git diff --stat` touches only that file.
+- [ ] `bash utils/pdda/pdda.sh run` has zero errors (GH-831: no new suite).
+
+## Scope lock — builder, do exactly this and nothing else
+- Edit ONLY: `PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md` (plus the relay file). Any other edit is reverted and FAILS the turn.
+- Do NOT run the full gate (`bash utils/pdda/pdda.sh run`) yourself — it can create files that trip containment and discard your turn. Verify with ONLY the specific test for the file(s) you changed; the harness runs the gate after your turn.
+- Do NOT analyze the roadmap, file issues, or refactor adjacent code. Implement the acceptance criteria above — nothing more.
+
+## Suggested marathon-drive.sh invocation
+
+```bash
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-1087-gh1051-record-spacing RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md \
+  --pre-advance-cmd 'bash utils/pdda/pdda.sh run' \
+  --require-clean
+```
+
+## Files in this packet
+- `run-candidate.json` — normalized run candidate (provenance + contract + checks)
+- `freshness.json` — branch state + fix-still-required probes
+- `readiness.json` — remediation readiness verdict
+- `lane-plan.json` — Codex / agy / orchestrator lane assignment
+- `marathon-invocation.txt` — the invocation hint above
+- `marathon-invocation.json` — the same invocation as structured data (`swarm-preflight/marathon-invocation@1`, GH-280); supervisors consume this, never the shell text
+
+
+---
+
+▶ TAKE YOUR TURN (agy — BUILDER role)
+
+You are the BUILDER for this phase. Read the phase brief above and implement it.
+APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
+1. Implement the brief by creating/editing the artifact file(s): PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md
+2. Append a build block to this relay file: `### Round N · Builder · agy` summarizing what you did (files touched, key decisions).
+3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/bin/tick
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/bin/tick claim MARATHON-GH-1087-GH1051-RECORD-SPACING-TURN --agent agy --paths "marathon-system/gh-1087-gh1051-record-spacing/RELAY.md,PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md"
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/bin/tick ping MARATHON-GH-1087-GH1051-RECORD-SPACING-TURN --agent agy
+   - /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/bin/tick release MARATHON-GH-1087-GH1051-RECORD-SPACING-TURN --agent agy --to codex
+4. Edit ONLY these paths: marathon-system/gh-1087-gh1051-record-spacing/RELAY.md and PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md. Do NOT run git. Do NOT touch any other file — the harness commits for you.
+5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
+   "handing off to codex — codex, take your turn." A turn that ends without that line
+   leaves a human guessing whether the relay is waiting on them or has stalled. Do this EVERY round,
+   not just the first. ALSO, you MUST update the `NEXT:` line at the top of this file to exactly: `NEXT: codex (Reviewer)`
+
+---
+
+▶ TAKE YOUR TURN (codex — REVIEWER role)
+
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
+APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
+1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/bin/tick release MARATHON-GH-1087-GH1051-RECORD-SPACING-TURN --agent codex --to agy
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/bin/tick done MARATHON-GH-1087-GH1051-RECORD-SPACING-TURN --agent codex
+4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1098-shift-phase3-2026-10-16-verify/bin/tick
+   Edit ONLY marathon-system/gh-1087-gh1051-record-spacing/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
+   working tree. Creating even one scratch file in the repo is an off-lane write: containment
+   reverts it and FAILS YOUR WHOLE TURN, discarding the review you just did (GH-441). Observed
+   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate
+   it, and lost the turn for doing so — the finding survived only because RELAY.md happens to be
+   on your allowlist. `cp` what you need to "$TMPDIR/probe.$$/" and work there instead. Verifying
+   is wanted; verifying in-tree is what costs you the turn.
+4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete
+   input — a row, a value, a `file:line` — that fails under the current code (GH-681). Every
+   `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,
+   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder
+   may disposition a request lacking these as `Declined — unproven generalization`.
+5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to agy —
+   agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
+   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
+   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+- **Files touched:** `PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md`, `marathon-system/gh-1087-gh1051-record-spacing/RELAY.md`
+- **Summary of changes:** Restored word separators and wrapped branch names, SHAs, paths, and workflow identifiers in backticks across `PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md` (including `onlydevelopment` -> `only \`development\``, `pushdevelopment/main` -> `\`push\` \`development\`/\`main\``, `registeredci-workflow` -> `registered \`ci-workflow\``, and all sibling joined tokens in the status table, body paragraphs, numbered steps, acceptance bullets, draft verification checkpoint, and merge continuation section). Preserved all facts, dates, SHAs, and links unchanged.
+- **Verification:** Confirmed `rg -n 'onlydevelopment|pushdevelopment/main|registeredci-workflow' PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md` exits 1 (no matches remain).
+
+
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Approved
+
+Read the entire 58-line `PROJECT/3-COMPLETED/GH-1051-PAGES-DEVELOPMENT.md`, including frontmatter, status table, historical authorization, acceptance, evidence checkpoint and later authorization continuation. The three named tokens now have separators/code formatting, and sibling identifiers read cleanly. No additional pre-existing editorial defects found. Historical statements remain historical; this review does not re-attest the underlying Pages deployment or old CI results.
+
+Manual probe (exit 0): `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` read the artifact with `Path.read_text()`, asserted nonempty text, asserted each of `only ` + backtick-wrapped `development`, backtick-wrapped `push` followed by backtick-wrapped `development`/`main`, and `registered ` + backtick-wrapped `ci-workflow`, and asserted `not re.search(r"onlydevelopment|pushdevelopment/main|registeredci-workflow", s)`. Decisive output: `PASS: nonempty artifact; all three corrected phrases present; all three joined tokens absent`. In-memory red control replaced the first corrected phrase with `onlydevelopment` and asserted the same regex detected it; output: `RED CONTROL: in-memory reintroduction of onlydevelopment detected`. No artifact was written.
+
+Read-only comparison probe (exit 0): `python3 -` used `difflib.unified_diff` against the same artifact under the env-pinned parent root. Output: `parent snapshot bytes: 5918 candidate bytes: 5918`, empty diff, `text equal after removing whitespace/backticks: True`, `remaining named joined tokens: []`. The parent already contains the candidate, so this is not independent before/after or changed-path evidence; edit-scope attribution remains with the harness.
+
+[Unverified — needs clone run] `bash utils/pdda/pdda.sh run` was not run in this reviewer worktree. The required documentation gate remains for the harness; this approval is the editorial review, not a claim that the gate passed. No git command, suite, executable fixture, source/artifact write or other tracked-file edit was performed.
+
+relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-16T21:57:20Z
+task: MARATHON-GH-1087-GH1051-RECORD-SPACING-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 587fc5a26876a61b76450bb8ab44efe65725a4bb
+added-range: 10245+2179
+added-sha256: bcff4c145520a1fd4ecef2fb77dd830a583a6817d5714cf8cefcb4af419356ef

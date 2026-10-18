@@ -26,10 +26,22 @@ issue creation, task branches, commits, pushes, Codex QA, and opening PRs. Prese
 explicit limits such as "plan only", "hold after QA", or a different reviewer.
 Discovering this skill during discussion does not authorize external writes.
 Ask only for missing scope, a consequential unresolved decision, or a real blocker;
-do not repeat permission questions already answered. Merge, deployment, and clone
-teardown are separate actions unless the operator explicitly includes them.
+do not repeat permission questions already answered. Merge and deployment remain
+separate actions unless the operator includes them. Successful PR-ready publication
+authorizes automatic retirement of this workflow's task checkout and disposable helpers
+through merge-cleanup's published-PR mode (Step 9), without waiting for merge. Preserve
+anything local-only, active, depended on, or unverifiable; this is not a broad clone sweep.
 
 ---
+
+## Skipped independent review
+
+Use a short, neutral note in PRs, issues, receipts and handoffs: **Independent review did not run.**
+Add one brief factual reason only when needed for the next action or required by the platform.
+Missing review alone is not a code finding: do not assign defect severity, infer operator/setup
+failure, or create/escalate a blocking issue from it. Downstream agents must not upgrade this
+note into a defect. Keep approval status truthful; report actual code findings and explicit
+repository gates separately.
 
 ## Recite this — verbatim, as the first thing in your first response
 
@@ -37,8 +49,8 @@ teardown are separate actions unless the operator explicitly includes them.
 > 1. **Resolve intake & isolate in a fresh clone (Steps 1–3).** Verify the canonical remote/issue, provision a fresh full clone with a task branch off `origin/development`, register the PDDA capture doc in `1-INBOX`, and record 4-axis RELEASES task ratings.
 > 2. **Ground in recon & draft a surgical plan (Steps 4–5).** Trace live entry points, state writes, and blast radius before proposing changes; design the leanest DRY plan that extends existing subsystems with falsifiable acceptance checks.
 > 3. **Pre-implementation plan QA (Step 6).** Run a Codex relay review on the plan, adjudicate findings against ground-truth evidence, and iterate until approved before writing production code.
-> 4. **Execute & deterministically verify (Step 7).** Build the reviewed scope, commit structured checkpoints, and execute all required test suites and repo gates in safe isolation.
-> 5. **Final relay QA & open ready PR (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, push through the pre-push gate, open the PR against `development`, and retain the task clone for merge handoff.
+> 4. **Execute & deterministically verify (Step 7).** Build the reviewed scope, commit structured checkpoints, and execute all required test suites and repo gates in safe isolation, then smoke-run the change on its main path and one adjacent path.
+> 5. **Final relay QA, ready PR & retire published checkouts (Steps 8–9).** Run final Codex relay QA on the completed diff and test evidence; upon approval, push through the pre-push gate, open the PR against `development`, and retire safe, fully published task checkouts through merge-cleanup without waiting for merge.
 >
 > **Overall Goal:** Issue implemented to spec, validated through double-relay QA (plan + final), and submitted as a verified, conflict-free PR ready for merge.
 
@@ -237,9 +249,23 @@ Then begin work.
    before and after the run; drift invalidates its evidence. Retain required
    provenance with the PR. Failed/skipped checks remain failed/skipped; fix within
    scope or mark the group blocked. Do not pass dependents on a failing prerequisite.
+   **Smoke the change before final QA (GH-1088).** Suites prove nothing regressed;
+   they rarely drive the new behaviour the way an operator will. Run the changed
+   entry point once on its **main path** and once on **one adjacent real-world path**:
+   the nearest variation an operator will actually hit (a resume, a rerun, a second
+   invocation, empty or already-done input). Record the commands, observed output and
+   verdict as a manual check under `TESTS-RESULTS/<date>+GH-<n>/` with provenance; this
+   adds no suite or test (GH-831). Mutating runs use a disposable full clone, as above.
+   For documentation-only work, read the changed instruction once from its consumer's
+   entry point, or skip with a one-line reason. A smoke failure is a defect to fix (or
+   a blocker to record) before final QA. The receipt is evidence for the reviewer; it
+   never replaces or counts as the independent review (step 6). GH-1064's resume and
+   rerun defects (#1074, #1084) passed suites and an approved review; one run past the
+   happy path would have shown them.
 
 8. **Run final Codex relay QA and resolve findings.** Use `relay-xyz` on the
-   committed implementation, plan, per-issue acceptance map, and test evidence.
+   committed implementation, plan, per-issue acceptance map, and test evidence,
+   including the step 7 smoke receipt.
    Frame the final review packet with the same commensurate operational envelope
    so verification checks actual acceptance criteria rather than demanding
    speculative layers of complexity. Ask whether each issue is satisfied, its
@@ -272,11 +298,39 @@ Then begin work.
    authorized, but cannot be reported ready. Keep issue/doc/ledger state truthful:
    "PR ready; awaiting merge" is not "shipped" or "completed" when governance
    requires landing first. Do not close issues or run post-merge reconciliation
-   prematurely. Report each issue/group's PR or blocker, QA/gate result, and retained
-   clone path. Hand off merging, reconciliation and safe teardown to `merge-cleanup`
-   when requested; preserve the clone and its evidence until then. At PR-ready time,
-   surface the retirement pointer: the retained clone can be retired via
-   `/merge-cleanup` once its landings are verified (GH-690).
+   prematurely. Report each issue/group's PR or blocker and QA/gate result. Then
+   complete automatic published-checkout retirement (GH-1059), rather than ending
+   with a reminder (GH-690):
+   - Retain required plans, code, review receipts and verification evidence in the PR;
+     push every intended local checkpoint and verify the exact live PR/branch head.
+     A published draft, failed/skipped required gate, or unfinished review is not PR-ready.
+   - Identify only the task checkout and gate/verify helpers created by this workflow.
+     Resolve the protected primary separately as an absolute path; never infer it from a disposable clone.
+     Preserve remaining local-only evidence, stashes, unrelated refs, peer claims/processes,
+     dependent worktrees and unknown safety state. Do not sweep other task folders.
+   - Release only this workflow's completed claims and stop its own finished processes.
+     Leave peer sessions untouched. Change the execution directory to the maintained
+     primary or another directory outside every retiring checkout.
+   - Resolve a verified merge-cleanup driver supporting `--retire-published-pr` (the
+     current reviewed task revision or an updated installed/maintained copy). Preview
+     the command below, repeating `--checkout` for exact task-owned helper paths, then
+     add `--execute` for candidates the fresh inspection can retire. The mode proves
+     live canonical origin/PR/head publication and reuses existing safety/removal paths;
+     it neither merges PRs nor writes the primary working tree or governance.
+
+     ```bash
+     python3 "$CLEANUP_DRIVER" --primary "$PRIMARY_REPO" \
+       --retire-published-pr "$PR_NUMBER" --checkout "$TASK_CHECKOUT"
+     # Apply the same exact scope with --execute; the driver re-inspects before removal.
+     ```
+
+   - Full clones go to recoverable Trash; linked worktrees use native Git removal
+     (which updates the parent's worktree metadata). Report the actual retired paths
+     or the exact preservation reason and next action. An older driver, failed query,
+     live session or local-only evidence means preserve; never fall back to a manual
+     recursive remover, force flag or a fabricated safe disposition. Retrying later
+     must repeat live publication and safety checks. Merge/reconciliation remain a
+     separate handoff when requested; a missing local clone does not mean shipped.
 
 ## Task rating policy
 

@@ -602,13 +602,16 @@ class WorkflowTests(unittest.TestCase):
 
     def test_trigger_permissions_and_queue(self):
         import re
-        for marker in ('types: [closed]', 'branches: [development]', 'queue: max',
+        # GH-1127 (#1131): dispatch-only. The PR branch of the job/args is kept for rollback, so its
+        # markers stay pinned; the automatic triggers must be absent.
+        for marker in ('queue: max', '--catch-up --gate --qualify --promotion',
                        'cancel-in-progress: false', 'ref: development', 'fetch-depth: 0',
                        'github.event.pull_request.merged == true', "github.event.pull_request.base.ref == 'development'",
                        '--pr "$PR_NUMBER" --catch-up --gate --qualify', '--catch-up --gate --qualify',
                        'timeout-minutes: 120', 'python3 -m pip install --quiet --break-system-packages pytest'):
             self.assertIn(marker, self.workflow)
-        self.assertIsNone(re.search(r'^  push:', self.workflow, re.M))
+        for trigger in ('push', 'pull_request', 'schedule'):
+            self.assertIsNone(re.search(rf'^  {trigger}:', self.workflow, re.M), trigger)
         self.assertIn('permissions:\n  contents: read', self.workflow)
         self.assertIn('    permissions:\n      contents: write', self.workflow)
         self.assertIn('permissions:\n  contents: read', (source / '.github/workflows/ci.yml').read_text())
@@ -618,7 +621,7 @@ class WorkflowTests(unittest.TestCase):
             return  # Structural checks above stay mandatory on stock Python.
         data = yaml.safe_load(self.workflow)
         triggers = data.get('on', data.get(True))
-        self.assertEqual(set(triggers), {'pull_request', 'workflow_dispatch', 'schedule'})
+        self.assertEqual(set(triggers), {'workflow_dispatch'})
         self.assertEqual(data['concurrency'], dict(group='wave-reconcile', **{'cancel-in-progress': False}, queue='max'))
         self.assertEqual(data['jobs']['reconcile']['permissions']['contents'], 'write')
         self.assertEqual(data['permissions'], {'contents':'read'})

@@ -1,0 +1,14 @@
+{
+  "resolved": false,
+  "handoff": true,
+  "reason": "ledger changes are not disjoint:\n  - roadmap_items[rmi-01M4Y0MTMP772GW91MTM0E3JAN]: updated on the PR side and updated on the integration side \u2014 same-key change on both sides",
+  "log": [
+    "CHANGELOG: proven prefix-additive sections; existing history preserved"
+  ],
+  "commit": null,
+  "conflict_set": [
+    "CHANGELOG.md",
+    "releases.db",
+    "releases.sql"
+  ]
+}
