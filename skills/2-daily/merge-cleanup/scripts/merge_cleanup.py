@@ -1813,41 +1813,6 @@ def main():
     return 0
 
 
-def _recover_unrecorded_merges(primary_repo: Path, origin: str, integration: str,
-                               ordered_prs: List[Dict[str, Any]]) -> None:
-    """GH-1140: a batch record can miss a merge that happened after its last save — the crash
-    window between the remote merge and the record write, or a mid-run observation recorded
-    OID-less by an older revision. For every unfinished batch on this repo + integration, refresh
-    each planned PR that current OPEN-only discovery no longer lists: positive MERGED + OID
-    evidence is recorded as a landing (QA owed); anything else — CLOSED without merge evidence, an
-    unknown state, a refresh failure — is left untouched. No invented landings, no historical
-    scanning beyond the planned PRs of unfinished batches."""
-    open_now = {pr["number"] for pr in ordered_prs}
-    for rec in batch_record.unfinished_batches(primary_repo, origin, integration):
-        recovered = False
-        for row in rec.get("planned", []):
-            n = row.get("pr")
-            if n in open_now:
-                continue
-            o = (rec.get("outcomes") or {}).get(str(n)) or {}
-            if o.get("status") == "merged" or o.get("merge_oid"):
-                continue
-            info = refresh_pr_with_retry(n, primary_repo)
-            if info.get("error"):
-                log(f"recovery: PR #{n} state unknown ({info['error'][:80]}) — deferred, no guess")
-                continue
-            if info.get("state") == "MERGED" and (info.get("mergeCommit") or {}).get("oid"):
-                oid = info["mergeCommit"]["oid"]
-                log(f"recovery: PR #{n} merged outside the record as {oid[:10]} — retaining the landing (GH-1140)")
-                batch_record.set_outcome(rec, n, status="merged", merge_oid=oid)
-                recovered = True
-        if recovered:
-            # GH-1140 r2: a recovered landing set owes complete sweep inputs (range, shared files,
-            # runnable command) even when no landing loop runs to finalize them.
-            batch_record.finalize_sweep_inputs(rec, primary_repo, origin)
-            batch_record.update(rec, _gh, primary_repo)
-
-
 def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     """GH-1064: continue the unfinished batch on --resume (whatever the queue size, even 0), else
     open a new one when an executing queue holds 2+ PRs. Runs before the first merge."""
@@ -1855,7 +1820,6 @@ def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) ->
         return None
     origin = origin_url(primary_repo) or ""
     if args.resume:
-        _recover_unrecorded_merges(primary_repo, origin, args.integration_branch, ordered_prs)
         batch = batch_record.find_unfinished(primary_repo, origin, args.integration_branch,
                                              [pr["number"] for pr in ordered_prs]) \
             or batch_record.find_unfinished(primary_repo, origin, args.integration_branch, [], need_qa=True)

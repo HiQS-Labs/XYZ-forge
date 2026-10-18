@@ -261,8 +261,7 @@ def find_unfinished(primary: Path, origin: str, integration: str, prs: List[int]
 
 def unfinished_batches(primary: Path, origin: str, integration: str) -> List[Dict[str, Any]]:
     """All unfinished batches (QA pending or continuable) for this repo + integration, newest
-    first. GH-1140: the recovery pass iterates these directly because overlap and qa_pending
-    filtering in find_unfinished would hide a batch whose planned PRs all landed unrecorded."""
+    first. (GH-1154 follow-up: a resume-time recovery pass for unrecorded merges would iterate these.)"""
     d = _dir(primary, origin)
     out = []
     for path in sorted(d.glob("batch-*.json"), reverse=True):

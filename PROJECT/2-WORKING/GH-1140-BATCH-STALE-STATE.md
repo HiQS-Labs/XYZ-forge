@@ -159,3 +159,19 @@ recoverable process artifacts, not product data; the machinery gates every multi
 appeal 50 (default, no operator preference stated); effort 62 (six surgical edits, two files,
 existing suites; no design risk beyond the save-merge rules). Recurrence window: issues filed
 2026-09-05 → 2026-10-15, fixes across ≥4 PRs (Sep 27 → Oct 17).
+
+## Operator trim (2026-10-18)
+
+The operator approved 8 new test cases, down from 26: `/ponytail` triage, then a second review pass by agy (`relay-system/2026-10-18/gh1140-test-trim-agy.md` in the review clone), with every claim checked against the source.
+
+**Kept:**
+- `test_plain_rerun_one_pr_queue_surfaces_owed_qa_as_exit_4`
+- `test_held_predecessor_blocks_its_hard_dependent`
+- `test_late_hold_label_prevents_the_merge`: its late hold is now a **title** marker, and its first refresh uses the word-boundary non-hold title "wipe the fixtures".
+- `test_resume_refresh_updates_known_row_and_appends_new`: the empty-discovery guard is folded in.
+- `test_stale_writer_cannot_erase_a_recorded_merge`: the same-second stale verdict/sweep check is folded in.
+- `test_emitted_sweep_command_parses`
+- `test_verified_oid_survives_confirmation_failure`
+- `test_refresh_row_updates_repaired_files_with_intent`
+
+**Removed from this PR:** the resume-time crash-recovery pass, `_recover_unrecorded_merges()` and its `select_batch` call. None of the six member issues asked for it; review added it. It moves to follow-up #1154. `TESTS-RESULTS/2026-10-18+GH-1140/recovery-and-exit4.py` is kept unchanged as historical evidence; its recovery half no longer describes this PR.

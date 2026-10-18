@@ -700,40 +700,12 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}])
         self.assertEqual(rc, 4)
 
-    def test_teardown_only_execute_surfaces_owed_qa_as_exit_4(self):
-        # GH-1140 r1: --execute --teardown-only previously returned None from select_batch
-        # unconditionally, hiding pending QA even with --resume.
-        self._seed_qa_pending_batch()
-        rc, _, _, _, _ = self._drive_phase5(
-            ["--primary", str(self.primary), "--integration-branch", "development",
-             "--execute", "--teardown-only"])
-        self.assertEqual(rc, 4)
-
-    def test_scan_only_does_not_claim_qa_debt(self):
-        self._seed_qa_pending_batch()
-        rc, _, _ = self._run_main(
-            ["--primary", str(self.primary), "--integration-branch", "development", "--scan-only"],
-            landing_ready=True)
-        self.assertEqual(rc, 0)
-
 
     def _open(self, n, base="development", **over):
         d = {"number": n, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40,
              "headRefName": "feat/x", "baseRefName": base, "labels": [], "mergeCommit": None}
         d.update(over)
         return d
-
-    def test_late_draft_is_an_expected_skip_not_a_failed_run(self):
-        # GH-1140 final-QA r3: a PR that turns draft between initial and final eligibility keeps
-        # the canonical "draft" reason, so the loop's expected-skip filter (GH-789 F2) still
-        # applies: no merge, rc 0, Phase 6 reached — not exit 3 with teardown skipped.
-        rc, _, merged, _, _ = self._drive_phase5(
-            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
-            prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}],
-            refresh_values=[self._open(7), self._open(7, isDraft=True)])
-        self.assertEqual(rc, 0)
-        self.assertFalse(merged.called)          # the late draft never reaches a merge
-        self.assertTrue(self.pruner.called)      # Phase 6 still runs (no early exit 3)
 
     def test_held_predecessor_blocks_its_hard_dependent(self):
         # GH-1140 fq2-r2: a hold protects the successor too — PR 8 (hard-depends on held PR 7)
@@ -755,61 +727,13 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         rc, _, merged, _, _ = self._drive_phase5(
             ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
             prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}],
-            refresh_values=[self._open(7),
-                            self._open(7, labels=[{"name": "do-not-merge"}])])
+            # first refresh: a word-boundary non-hold title ("wipe" ≠ "wip"); final refresh: a late
+            # TITLE hold marker (GH-1140 trim: folds the title-regex check into this case)
+            refresh_values=[self._open(7, title="wipe the fixtures"),
+                            self._open(7, title="feat: x (do not merge: soak owed)")])
         self.assertEqual(rc, 0)
         self.assertFalse(merged.called)
         self.assertTrue(self.pruner.called)
-
-    def test_empty_queue_plain_rerun_surfaces_owed_qa_as_exit_4(self):
-        self._seed_qa_pending_batch()
-        rc, _, _, _, _ = self._drive_phase5(
-            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
-            prs=[])
-        self.assertEqual(rc, 4)
-
-    def test_new_batch_with_no_landings_cannot_mask_older_qa_debt(self):
-        # GH-1140 r1 extension: a freshly created 2+ batch that lands nothing must not hide an
-        # older QA-pending batch at final status.
-        self._seed_qa_pending_batch()
-        rc, _, _, _, _ = self._drive_phase5(
-            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
-            prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""},
-                 {"number": 8, "baseRefName": "development", "title": "t", "files": [], "body": ""}],
-            refresh_values=[self._open(7, isDraft=True), self._open(8, isDraft=True)])
-        self.assertEqual(rc, 4)
-
-    def test_landed_batch_records_the_verified_merge_oid(self):
-        # GH-1140/#1084 wiring: the driver records the OID execute_pr_merge verified (the
-        # confirmation re-fetch only fills a gap — its mock here returns no mergeCommit).
-        import batch_record
-        rc, _, _, _, _ = self._drive_phase5(
-            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
-            prs=[{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""},
-                 {"number": 8, "baseRefName": "development", "title": "t", "files": [], "body": ""}])
-        self.assertEqual(rc, 4)  # landed, QA pending — the GH-1064 contract
-        recs = sorted(batch_record._dir(Path(self.primary), "").glob("batch-*.json"))
-        self.assertEqual(len(recs), 1)
-        disk = json.loads(recs[0].read_text())
-        for n in (7, 8):
-            self.assertEqual(disk["outcomes"][str(n)]["status"], "merged")
-            self.assertEqual(disk["outcomes"][str(n)]["merge_oid"], "f" * 40)
-
-    def test_external_merged_pr_is_recorded_as_a_landing(self):
-        # GH-1140 wiring: a planned PR observed MERGED outside the run keeps its landing + OID.
-        import batch_record
-        rc, _, _, _, _ = self._drive_phase5(
-            ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
-            prs=[{"number": 1, "baseRefName": "development", "title": "a", "files": [], "body": ""},
-                 {"number": 2, "baseRefName": "development", "title": "b", "files": [], "body": ""}],
-            refresh_values=[self._open(1, state="MERGED", mergeCommit={"oid": "a" * 40}),
-                            self._open(2), self._open(2), self._open(2)])
-        self.assertEqual(rc, 4)
-        recs = sorted(batch_record._dir(Path(self.primary), "").glob("batch-*.json"))
-        disk = json.loads(recs[0].read_text())
-        self.assertEqual(disk["outcomes"]["1"]["status"], "merged")
-        self.assertEqual(disk["outcomes"]["1"]["merge_oid"], "a" * 40)
-        self.assertEqual(disk["outcomes"]["2"]["merge_oid"], "f" * 40)
 
 class TestDanglingSymlinkPrune(unittest.TestCase):
     """Phase 6 prune missed two whole classes of dangling link (fixed 2026-09-05).
@@ -1049,9 +973,7 @@ class TestBatchRecordStaleState(unittest.TestCase):
             self.assertEqual(row1["soft"], {"7": ["overlap"]})
             self.assertIn(2, [r["pr"] for r in disk["planned"]])
             self.assertNotIn("_refreshed", row1)              # marker is one-shot, stripped on save
-
-    def test_empty_discovery_does_not_blank_a_known_row(self):
-        import batch_record
+        # folded GH-1140 (#1075 data-loss guard): an empty discovery list never blanks a known row
         with tempfile.TemporaryDirectory() as tmp:
             rec = self._rec(tmp)
             batch_record.extend(rec, [{"number": 1, "title": "x", "files": []}])
@@ -1071,92 +993,7 @@ class TestBatchRecordStaleState(unittest.TestCase):
             self.assertEqual(disk["outcomes"]["1"]["reconcile"], "ok")
             self.assertEqual(disk["landed_order"], [1])
             self.assertEqual(disk["issue"], 55)                # issue identity survives
-
-    def test_refreshed_row_survives_a_stale_writer(self):
-        import batch_record
-        with tempfile.TemporaryDirectory() as tmp:
-            rec = self._rec(tmp)
-            stale = json.loads(json.dumps(rec))
-            batch_record.extend(rec, [{"number": 1, "title": "new",
-                                       "files": [{"path": "a"}, {"path": "b"}],
-                                       "_hard_deps": [], "_soft_reasons": {}}])
-            batch_record.save(stale)                           # stale snapshot lands after the refresh
-            disk = json.loads(open(rec["path"]).read())
-            self.assertEqual(disk["planned"][0]["files"], ["a", "b"])
-
-    def test_replacement_verdict_and_newer_sweep_win(self):
-        import batch_record
-        with tempfile.TemporaryDirectory() as tmp:
-            rec = self._rec(tmp, outcomes={"1": {"status": "merged", "merge_oid": "d" * 40}},
-                            landed=[1],
-                            verdict={"value": "clean", "covers": [1], "body": "old", "at": "2026-10-18T00:00:00Z"})
-            later = json.loads(json.dumps(rec))
-            batch_record.set_outcome(later, 2, status="merged", merge_oid="e" * 40)
-            later["landed_order"] = [1, 2]
-            self.assertTrue(batch_record.record_verdict(later, "verdict: clean\nnew body")[0])
-            disk = json.loads(open(rec["path"]).read())
-            self.assertEqual(disk["verdict"]["covers"], [1, 2])   # intentional replacement wins
-            self.assertEqual(disk["verdict"]["body"], "new body")
-            newer_sweep = dict(disk["sweep_inputs"])
-            newer_sweep["computed_at"] = "2026-10-18T09:00:00Z"
-            later["sweep_inputs"] = newer_sweep
-            later["_sweep_touched"] = True  # what finalize_sweep_inputs sets on a real recompute
-            batch_record.save(later)
-            disk = json.loads(open(rec["path"]).read())
-            self.assertEqual(disk["sweep_inputs"]["computed_at"], "2026-10-18T09:00:00Z")
-
-    def test_non_overlapping_unfinished_batch_is_reachable_for_recovery(self):
-        import batch_record
-        with tempfile.TemporaryDirectory() as tmp:
-            # both planned PRs recorded merged but the save crashed before landed_order/verdict:
-            # not qa_pending (no surviving evidence), not overlapping current discovery — only
-            # unfinished_batches() can reach it (GH-1140 r2 selection boundary).
-            rec = self._rec(tmp, planned=[{"pos": 1, "pr": 1, "title": "a", "files": ["x"], "hard": [], "soft": {}},
-                                          {"pos": 2, "pr": 2, "title": "b", "files": ["x"], "hard": [], "soft": {}}],
-                            outcomes={"1": {"status": "unattempted"}, "2": {"status": "unattempted"}})
-            found = batch_record.find_unfinished(Path(tmp), "ex/ample", "development", [3])
-            self.assertIsNone(found)                            # overlap+qa filters hide it
-            reachable = batch_record.unfinished_batches(Path(tmp), "ex/ample", "development")
-            self.assertEqual([r["path"] for r in reachable], [rec["path"]])
-            # recovery records the merge -> the batch becomes QA-pending and visible
-            batch_record.set_outcome(reachable[0], 1, status="merged", merge_oid="d" * 40)
-            self.assertIsNotNone(batch_record.find_unfinished(Path(tmp), "ex/ample", "development", [], need_qa=True))
-
-    def test_hold_marker_in_title_and_late_label_veto(self):
-        self.assertEqual(merge_cleanup.hold_label({"labels": [], "title": "feat: x (do not merge: soak owed)"}),
-                         "title: feat: x (do not merge: soak owed)")   # GH-441/#444 shape
-        self.assertIsNone(merge_cleanup.hold_label({"labels": [], "title": "wipe the fixtures"}))  # word boundary
-        self.assertEqual(merge_cleanup.hold_label({"labels": [{"name": "hold"}], "title": "clean"}),
-                         "hold")
-
-    def test_emitted_sweep_command_parses(self):
-        import batch_record
-        with tempfile.TemporaryDirectory() as tmp:
-            rec = self._rec(tmp, outcomes={"1": {"status": "merged", "merge_oid": "d" * 40}}, landed=[1])
-            batch_record.finalize_sweep_inputs(rec, Path("/tmp"), "ex/ample")
-            cmd = rec["sweep_inputs"]["command"]
-            self.assertNotIn("<tmp>", cmd)                     # GH-1140/#1084: no literal placeholder
-            substituted = cmd.replace('T=$(mktemp -d)', 'T=/tmp/x')
-            check = subprocess.run(["bash", "-n", "-c", substituted], capture_output=True, text=True)
-            self.assertEqual(check.returncode, 0, check.stderr)
-
-    def test_stale_writer_cannot_clobber_a_newer_reconcile(self):
-        import batch_record
-        with tempfile.TemporaryDirectory() as tmp:
-            rec = self._rec(tmp, outcomes={"1": {"status": "merged", "merge_oid": "d" * 40,
-                                                 "reconcile": "failed: old"}}, landed=[1])
-            stale = json.loads(json.dumps(rec))
-            live = json.loads(json.dumps(rec))
-            batch_record.set_outcome(live, 1, reconcile="ok")
-            batch_record.save(stale)                            # stale carries "failed: old"
-            disk = json.loads(open(rec["path"]).read())
-            self.assertEqual(disk["outcomes"]["1"]["reconcile"], "ok")
-            batch_record.set_outcome(live, 1, reconcile="failed: stopped")  # intentional change persists
-            disk = json.loads(open(rec["path"]).read())
-            self.assertEqual(disk["outcomes"]["1"]["reconcile"], "failed: stopped")
-
-    def test_same_second_stale_verdict_and_sweep_do_not_resurrect(self):
-        import batch_record
+        # folded GH-1140 (#1072 QA half): a same-second stale verdict/sweep never resurrects
         with tempfile.TemporaryDirectory() as tmp:
             rec = self._rec(tmp, outcomes={"1": {"status": "merged", "merge_oid": "d" * 40},
                                            "2": {"status": "merged", "merge_oid": "e" * 40}}, landed=[1])
@@ -1173,29 +1010,16 @@ class TestBatchRecordStaleState(unittest.TestCase):
             self.assertEqual(disk["verdict"]["body"], "new body")
             self.assertNotEqual(disk["sweep_inputs"].get("range"), "old")
 
-    def test_landing_sequence_survives_a_stale_subset(self):
+    def test_emitted_sweep_command_parses(self):
         import batch_record
         with tempfile.TemporaryDirectory() as tmp:
-            rec = self._rec(tmp, outcomes={"1": {"status": "merged", "merge_oid": "d" * 40},
-                                           "2": {"status": "merged", "merge_oid": "e" * 40}},
-                            landed=[1, 2])
-            stale = json.loads(json.dumps(rec))
-            stale["landed_order"] = [2]                          # stale snapshot predates PR 1
-            batch_record.save(stale)
-            disk = json.loads(open(rec["path"]).read())
-            self.assertEqual(disk["landed_order"], [1, 2])       # sweep range reads first/last
-
-    def test_final_eligibility_veto_catches_late_arrivals(self):
-        # GH-1140/#444: markers that arrive between the first eligibility check and the merge.
-        self.assertEqual(merge_cleanup._final_eligibility_veto({"isDraft": True}), "draft")
-        self.assertEqual(merge_cleanup._final_eligibility_veto(
-            {"isDraft": False, "labels": [{"name": "do-not-merge"}], "title": "x"}),
-            "do-not-merge")                                   # label added during gating
-        self.assertEqual(merge_cleanup._final_eligibility_veto(
-            {"isDraft": False, "labels": [], "title": "feat: x (do not merge: soak owed)"}),
-            "title: feat: x (do not merge: soak owed)")       # title marker
-        self.assertIsNone(merge_cleanup._final_eligibility_veto(
-            {"isDraft": False, "labels": [], "title": "wipe the fixtures"}))
+            rec = self._rec(tmp, outcomes={"1": {"status": "merged", "merge_oid": "d" * 40}}, landed=[1])
+            batch_record.finalize_sweep_inputs(rec, Path("/tmp"), "ex/ample")
+            cmd = rec["sweep_inputs"]["command"]
+            self.assertNotIn("<tmp>", cmd)                     # GH-1140/#1084: no literal placeholder
+            substituted = cmd.replace('T=$(mktemp -d)', 'T=/tmp/x')
+            check = subprocess.run(["bash", "-n", "-c", substituted], capture_output=True, text=True)
+            self.assertEqual(check.returncode, 0, check.stderr)
 
     def test_verified_oid_survives_confirmation_failure(self):
         calls = {}
@@ -1207,36 +1031,6 @@ class TestBatchRecordStaleState(unittest.TestCase):
             merge_cleanup._record_merge_outcome({"planned": []}, 7, "f" * 40, self.primary)
         self.assertEqual(calls.get("status"), "merged")
         self.assertEqual(calls.get("merge_oid"), "f" * 40)     # the verified OID, not the re-query
-
-    def test_external_merged_state_retains_the_landing(self):
-        calls = {}
-        track = {"skips": {}}
-        import batch_record
-        with mock.patch.object(batch_record, "set_outcome",
-                               side_effect=lambda rec, n, **kw: calls.update(kw)):
-            merge_cleanup._note_external_state(
-                9, {"state": "MERGED", "mergeCommit": {"oid": "a" * 40}}, {"planned": []}, track)
-        self.assertEqual(calls.get("status"), "merged")
-        self.assertEqual(calls.get("merge_oid"), "a" * 40)
-        self.assertEqual(track["skips"][9], "merged outside this run")
-        calls.clear()
-        with mock.patch.object(batch_record, "set_outcome",
-                               side_effect=lambda rec, n, **kw: calls.update(kw)):
-            merge_cleanup._note_external_state(9, {"state": "CLOSED"}, {"planned": []}, track)
-        self.assertEqual(calls, {})                            # no invented landing
-        self.assertEqual(track["skips"][9], "closed")
-
-    def test_refresh_removes_stale_dependencies(self):
-        import batch_record
-        with tempfile.TemporaryDirectory() as tmp:
-            rec = self._rec(tmp, planned=[{"pos": 1, "pr": 1, "title": "a", "files": ["a"],
-                                           "hard": [7], "soft": {"7": ["overlap"]}}])
-            batch_record.extend(rec, [{"number": 1, "title": "a", "files": [{"path": "a"}, {"path": "b"}],
-                                       "_hard_deps": [], "_soft_reasons": {}}])  # deps removed upstream
-            disk = json.loads(open(rec["path"]).read())
-            self.assertEqual(disk["planned"][0]["hard"], [])
-            self.assertEqual(disk["planned"][0]["soft"], {})
-            self.assertEqual(disk["planned"][0]["files"], ["a", "b"])
 
     def test_refresh_row_updates_repaired_files_with_intent(self):
         # GH-1140/#1073 in-run shape: after a repair pushes a new head, the captured row is
