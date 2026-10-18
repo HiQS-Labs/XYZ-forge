@@ -1,0 +1,17 @@
+Forge policy: {"preserve_commit_history": true, "strategy": "merge", "source": ".merge-cleanup.json", "qualification": {"full_suite": "promotion", "sweep_command": "gh workflow run wave-reconcile.yml --ref development"}}
+PASS (b) Forge key: sweep_inputs identical to base — gh workflow run wave-reconcile.yml --ref development  # full registry, hosted, once before promotion (#1131); no local full rerun
+PASS (b) Forge key: rendered block identical to base
+PASS (a) no key: qualification None
+PASS (a) no key: rendered block free of Forge tokens — hits=[]
+PASS (a) no key: says no sweep command declared
+PASS (c) fails closed: {'full_suite': 'sometimes'} — qualification must be an object with full_suite promotion|per_batch|no
+PASS (c) fails closed: {'full_suite': 'none', 'sweep_command': 'x'} — qualification.sweep_command must be a non-empty string, and is not all
+PASS (c) fails closed: {'full_suite': 'per_batch', 'extra': 1} — qualification must be an object with full_suite promotion|per_batch|no
+PASS (c) fails closed: {'full_suite': 'per_batch', 'sweep_command': ''} — qualification.sweep_command must be a non-empty string, and is not all
+PASS (c) fails closed: promotion — qualification must be an object with full_suite promotion|per_batch|no
+PASS per_batch: throwaway clone + declared command
+PASS none: plain statement, no command, no gate
+PASS promotion w/o command: deferred, no command printed
+PASS red control: key dropped → no wave-reconcile command
+PASS old record renders unchanged
+ALL PASS
