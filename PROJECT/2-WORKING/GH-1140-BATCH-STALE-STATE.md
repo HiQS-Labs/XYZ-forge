@@ -2,7 +2,7 @@
 gh_issue: 1140
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1140
 title: "merge-cleanup batch records trust stale captured state across resume/rerun — verify, then one durable fix"
-status: Proposed (1-INBOX — plan QA pending)
+status: Active (2-WORKING — plan QA Approved r3, codex, 2026-10-18)
 created: 2026-10-18
 updated: 2026-10-18
 owner: noelsaw1
