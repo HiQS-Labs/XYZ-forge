@@ -2152,7 +2152,7 @@ def main():
     )
 
     parser.add_argument("--qualify", action="store_true",
-                        help="Run the full sequential suite and retain integration evidence before gated closeout")
+                        help="Run the tier-selected qualification gate (full --parallel 4, or the Small list) and retain integration evidence before gated closeout")
     parser.add_argument("--catch-up", action="store_true", help="Recover closed-issue drift from committed docs and manifest")
     parser.add_argument("--only-receipted", action="store_true",
                         help="GH-740 publish retry: never run the suite — process only landings that already have a "
