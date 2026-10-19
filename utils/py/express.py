@@ -650,7 +650,9 @@ def cmd_check(args, expect_driver=frozenset()):
     # Step 4 — the fix names the existing suite that covers it, registered in validate.sh (GH-831:
     # no new suites; a fix no existing suite covers goes through /start-task instead).
     suite = normalize_suite(args.suite)
-    if not os.path.isfile(os.path.join(root, suite_file(suite))):
+    # Only the docs lane maps the host PDDA command to its script; outside it the spelling is not
+    # a suite file and refuses suite-missing (GH-1169 plan QA: no docs bypass by spelling).
+    if not os.path.isfile(os.path.join(root, suite_file(suite) if docs_only else suite)):
         refuse(root, "suite-missing", "%s does not exist — name the existing suite that covers the fix (GH-831: no new suites)" % suite, issue=args.issue)
     host_docs = docs_only and VENDORED and suite == HOST_DOCS_SUITE  # bound to the lane, not the spelling
     validate = os.path.join(root, "validate.sh")
