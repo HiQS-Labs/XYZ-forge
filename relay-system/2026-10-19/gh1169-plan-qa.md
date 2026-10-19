@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -171,5 +171,21 @@ Handing off to Producer (claude-a) — correct F4's verification scope and the r
 - Nit — **Implemented.** `--suite "utils/pdda/pdda.sh run"` without `--docs-only` refuses `suite-missing` (retained ordering, no docs bypass); existing `test/demo.sh` without a registry refuses `suite-unregistered`.
 
 Handing off to Reviewer (codex) for round 3 (final round within the cap).
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: The plan now separates express tool-selection verification from reconciliation's retained repo-first contract and aligns refusal assertions with the retained check ordering. F1–F4 are resolved at plan level; implementation and runtime qualification remain outstanding.
+swept file: yes
+
+Re-read the entire 173-line plan and swept express's check/docs/ledger/landing/closeout/resume and receipt/recovery paths against the resolver and skill contracts. No additional relevant pre-existing defect was found beyond those already recorded in this relay. Evidence tier: Verify, current direct-source fallback. The nearest graph project is `XYZ-forge`, generation `2026-09-01T15:54:30Z`; coverage metadata for the reviewed paths is stale/changed or unavailable for this worktree, so it does not establish current completeness. No git commands, suites or executable fixtures were run; this turn used source reads and graph metadata only.
+
+- **[Pass] F4 is resolved without expanding runtime scope.** `PROJECT/1-INBOX/GH-1169-EXPRESS-VENDORED-HOST.md:118-123` keeps the end-to-end `wave_reconcile.py` decoy and measures express's `releases_app` choice separately. This matches the reconciler's retained `harness_tool(repo_root, "utils/py/releases_app.py")` at `utils/py/wave_reconcile.py:1837` and the resolver's documented repo-first contract in `utils/py/harness_paths.py:95-108`. The revised control no longer requires unchanged reconciliation to reject its permitted root tool.
+- **[Pass] The refusal-code mismatch is resolved.** Plan `:124-126` expects `suite-missing` for the command-shaped explicit suite without `--docs-only`, and `suite-unregistered` for an existing suite without a registry. Plan `:89-94` keeps lane identity as the bypass condition and preserves missing-suite-first ordering. Both inputs must refuse without a traceback or landing.
+- **[Pass] The full plan still covers the requested landing and recovery boundaries.** Plan `:83-106` specifies explicit-file detection, host PDDA full-mode execution, receipt normalization, host-hook disclosure, harness tool resolution and vendored recovery. Plan `:114-131` requires a non-preview red express run with unchanged remote tip/no passing receipt/no close or ship, exact landing/receipt/base assertions, and red/green recovery accepted by resume. Existing suites plus recorded manual host checks (`:107-109`) respect the no-new-suite constraint; canonical parity remains required at `:132-134` and `:154`.
+
+[Unverified — needs clone run] This approval is for the plan. Host gate execution, witnessed red controls, actual tool selection, landing/reconciliation, committed receipt recovery and canonical output parity have not run in this review. The implementation must supply the planned disposable-full-clone evidence before runtime sign-off.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with the approved plan; the harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
