@@ -2,7 +2,7 @@
 gh_issue: 1169
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1169
 title: "express: vendored-host mode — docs lane uses the host's PDDA gate; host hook, harness tool resolution"
-status: "In progress — plan QA Approved (Codex, round 3), implementing"
+status: "In progress — implemented and verified; final QA next"
 created: 2026-10-19
 updated: 2026-10-19
 owner: claude
@@ -31,7 +31,7 @@ Branch `feat/XYZ-forge-gh1169-express-vendored-host-2026-10-19` off `development
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved by Codex in round 3 (`relay-system/2026-10-19/gh1169-plan-qa.md`) | Implement changes 1–5, then verification in 6 |
+| Implemented (`a48f56cc`, `944c43c9`); suites, host scenarios S1–S8 and smoke in `TESTS-RESULTS/2026-10-19+GH-1169/` | Final Codex QA, full gate on the final commit, PR to `development` |
 
 ## Observed today (7eeae804)
 
@@ -171,3 +171,7 @@ two related incidents in 14 days (GH-1144 branch, this layout gap) in the same h
 | Check | Result |
 |---|---|
 | Plan QA | Codex, 3 rounds, Approved (`relay-system/2026-10-19/gh1169-plan-qa.md`). R1: F1 refusal order and `--docs-only` binding, F2 vendored recovery, F3 express-level red controls, nit hook path. R2: F4 decoy scoped to express's own tool calls, nit refusal codes |
+| Covering suites (disposable clone, `944c43c9`) | gh267 113/0, gh358 8/0, gh425 OK, gh429 15/0 |
+| Host fixture S1–S8 (`944c43c9`) | clean landing on `main` with receipt `bash utils/pdda/pdda.sh run`; broken doc → `suite-red`, nothing published (host `observe` would have passed it); root reconciler decoy unused; registry-less code runs refuse (`suite-unregistered` / `suite-missing`, no traceback); canonical express on the host still `gate-unwired`; vendored `releases_app` resolution; vendored recovery recipe red/green judged correctly by resume |
+| Smoke | real XYZ-layout-engine GitHub clone: `check --docs-only --dry-run` PASS on `origin/main`; Forge task clone: new vs old express byte-identical |
+| Deviation found and fixed | first implementation mapped `--suite "utils/pdda/pdda.sh run"` to its script outside the docs lane (refused `suite-unregistered`, plan says `suite-missing`); `944c43c9` limits the mapping to `--docs-only` |
