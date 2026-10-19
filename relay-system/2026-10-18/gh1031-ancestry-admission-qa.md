@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -117,5 +117,50 @@ and Basis. Set `STATUS: Approved` only if no `[Blocker]` remains.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+Ship with deferred clone verification; no source change requested.
+swept file: yes
+
+Read all 2,623 lines of `skills/3-weekly/weekly-planner/scripts/planner_core.py` (abbreviated `planner_core.py` below), including pre-existing paths. No additional concrete pre-existing defect found in this static sweep. This is not exhaustive runtime qualification of PR #1024 or a reversal of earlier capped-review history. Graph Verify lookup found no matching symbol in nearest indexed `XYZ-forge`; generation 2026-09-01T15:54:30Z, coverage freshness `not_tracked`. Conclusions use seeded local source. No Git command, suite, pytest, or executable fixture was run.
+
+- [Pass] **Q1 — both admissions:** `planner_core.py:2355–2363` checks the post-commit result before clearing intent. `HEAD^{tree} != state['pending_merge']['tree']` catches committed hook-added README content even when status is clean; `parents != [state['pending_merge']['head'], old_head]` catches three parents even with the intended tree. `dirty(root)` rejects remaining changes. Historical red receipts report `S5_ACTUAL_UNKNOWN_ANCESTRY_ACCEPTED_AND_INTENT_CLEARED hook` (`TESTS-RESULTS/2026-10-11+GH-1022/phase9-s5-hook-red.log:923`) and the corresponding `parent` result (`phase9-s5-parent-red.log:924`). Correction: none.
+- [Pass] **Q2 — parent order:** within the stated single-operator native path, saved current HEAD is first parent and the sole supplied predecessor is second: intent is persisted at `planner_core.py:2346–2347`, then `merge --no-ff --no-commit -s ours old_head` at `:2348`. `--no-ff` prevents a descendant predecessor becoming a fast-forward result. An already-integrated predecessor takes the rc=0 no-merge path (`:2343–2350`), so the two-parent check does not run on that legitimate no-op. No legitimate differing parent list/order identified within this envelope. An adapter/hook replacing the result or an external HEAD change is outside the intended result. Correction: none; confirm ordinary Git behavior in the clone run.
+- [Pass] **Q3 — refusal:** the raise at `planner_core.py:2362` precedes state update/persistence at `:2363`; persisted `pending_merge` remains. Retry checks it again at `:2317–2324` and refuses the same bad result. Operator disposition of an unknown commit is intentional evidence preservation; automatic adoption or rollback is not required. CLI reports complete false, UNKNOWN, dispatch false and exit 2 (`:2501–2504`). Correction: none; do not clear intent merely to make retry progress.
+- [Pass] **Q4 — siblings already check:** `commit(...)` checks sole ordered parent, intended full tree and cleanliness after committing (`planner_core.py:2280–2286`), with equivalent interrupted recovery (`:2253–2263`). Captures (`:2315`) and intake archive (`:2338`) use it. They do not currently share the accept-without-looking shape; no sibling behavior change or separate issue is justified by this source. Correction: none.
+- [Pass] **Q5 — size:** `planner_core.py:2359–2362` matches interrupted recovery at `:2319–2322`. Two short adjacent predicates do not justify a helper, journal, retries or gate. Correction: none.
+- [Pass] **Q6 — verification design:** syntax plus existing gh418/gh698 suites and recorded full-clone manual controls are proportionate to `planner_core.py:2317–2363`. The manual record must show ordinary exact two-parent/intended-tree/clean result advances; interrupted exact result is adopted; both historical bad controls now refuse before preparation, retain bad HEAD and original non-null intent, and refuse again on retry. Preserve predecessor HEAD/bytes and dispatch false. Record final candidate identity/source hash, commands, exits, nonempty decisive output, pre-fix red controls, and committed provenance. No new tests or machinery required.
+- [Unverified — needs clone run] Native Git/hooks, interrupted/retry behavior, and gh418/gh698 results on this final candidate were not executed here. The harness/Producer must record them before claiming runtime closure. This approval covers the bounded code review, not merge readiness or whole-PR qualification.
+
+**Read-only probe receipt:** the following command exited **0**. Decisive output: `line=2320 case=normal refuses=False`, `line=2360 case=normal refuses=False`; both checks returned `refuses=True` for `extra-tree`, `third-parent`, `reversed`, and `dirty`; final output `syntax=OK; checks=2; matrix=10/10; no Git commands or artifact execution`. This measures the exact AST predicates with in-memory inputs, not Git or end-to-end behavior.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+import ast
+from pathlib import Path
+p = Path('skills/3-weekly/weekly-planner/scripts/planner_core.py')
+s = p.read_text()
+compile(s, str(p), 'exec')
+t = ast.parse(s)
+checks = [n for n in ast.walk(t) if isinstance(n, ast.If) and any(isinstance(x, ast.Raise) and isinstance(x.exc, ast.Call) and x.exc.args and isinstance(x.exc.args[0], ast.Constant) and x.exc.args[0].value == 'unknown native ancestry result; preserve evidence' for x in n.body)]
+assert len(checks) == 2
+for node in sorted(checks, key=lambda x:x.lineno):
+    for name, parents, tree, is_dirty, expected in [('normal',['H','O'],'T',False,False), ('extra-tree',['H','O'],'X',False,True), ('third-parent',['H','O','Z'],'T',False,True), ('reversed',['O','H'],'T',False,True), ('dirty',['H','O'],'T',True,True)]:
+        pending = {'head':'H','tree':'T'}
+        env = dict(parents=parents,pending_merge=pending,state={'pending_merge':pending},old_head='O',root=None,git=lambda *a:tree,dirty=lambda *a:is_dirty)
+        result=eval(compile(ast.Expression(node.test),str(p),'eval'),env)
+        assert bool(result) == expected
+        print(f'line={node.lineno} case={name} refuses={bool(result)}')
+print('syntax=OK; checks=2; matrix=10/10; no Git commands or artifact execution')
+PY
+```
+
+VERDICT: PASS
+Basis: Both reported admissions are rejected before intent clears, recovery preserves its hard-stop contract, and siblings already enforce the sole-parent contract. No Blocker or required source fix found. Runtime evidence remains deferred to the authorized disposable-clone gate.
+
+Relay closed (Approved), no further turn needed. claude-a/harness owns deferred clone verification and the file-scoped commit; the reviewer makes no Git commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
