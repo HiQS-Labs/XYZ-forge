@@ -674,7 +674,8 @@ def cmd_check(args, expect_driver=frozenset()):
     print("  files   : %d core, %d insertions (bounds %d/%d)" % (len(core), ins, args.max_files, args.max_insertions))
     print("  suite   : %s (%s)" % (suite, "host PDDA gate, PDDA_MODE=full; no runtime coverage claim" if host_docs
                                     else "registered docs gate; no runtime coverage claim" if docs_only else "registered"))
-    print("  gate    : %s" % gate_detail)
+    if VENDORED:  # canonical output stays exactly as before GH-1169
+        print("  gate    : %s" % gate_detail)
     print("  changes : %s" % ", ".join(paths))
     return dict(issue=args.issue, title=meta.get("title", ""), paths=paths, suite=suite,
                 insertions=ins, branch=branch)
