@@ -62,6 +62,14 @@ runtime coverage. The full runtime suite is not required merely because text or 
 Before running, check content accuracy, relative links and image rendering as applicable, and put
 the concrete results in `--summary`. Do not claim a render or visual check that did not run.
 
+**Vendored hosts (GH-1169).** In a repo that uses the harness from a gitignored `.xyz/`, run
+`python3 .xyz/utils/py/express.py --root . … --repo <owner>/<name>`. The docs lane then runs the host's own
+PDDA install, `utils/pdda/pdda.sh run`, under `PDDA_MODE=full` (as in XYZ Forge; a host's `observe` mode never
+fails), and the receipt records `bash utils/pdda/pdda.sh run`. Gate wiring accepts the host's own pre-push hook,
+or reports that the host has none (the landing push bypasses pre-push by lane design). Harness tools come from
+`.xyz/`. Pass `--release` when the host's `releases next` is stale. Code hotfixes still need a `validate.sh` TESTS
+registry and refuse `suite-unregistered` without one.
+
 Judge documentation by the effect of the proposed change, not merely its filename or whether
 an agent reads it. Editorial wording, links, images and bounded documentation-only skill changes
 may use the lightweight hotfix path when explicitly requested and appropriately reviewed. Inspect
@@ -137,6 +145,12 @@ cp "$LOG" "$(dirname "$REC")/recovery-run.log"                                  
 git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (commit $SHA)" && git push origin "$BASE"
 python3 utils/py/express.py resume --issue "$N" --suite "$SUITE" --sha "$SHA" --base "$BASE"                 # 7.
 ```
+
+In a vendored host (GH-1169) the recipe differs in four places: set `REPO=<owner>/<name>` (the host's slug; express's
+default is XYZ Forge's), run the suite as `PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run`
+instead of `bash "$SUITE"` (with `SUITE='utils/pdda/pdda.sh run'`, the receipt spelling), import express from
+`.xyz/utils/py` in step 5, and resume with
+`python3 .xyz/utils/py/express.py --root . resume --issue "$N" --docs-only --sha "$SHA" --base "$BASE" --repo "$REPO"`.
 
 Before landing, `cmd_land` qualifies the change, resolves the exact owned full issue
 URL, and invokes `roadmap update --gid OWNED_ROW --accepted-start` (schema009 must

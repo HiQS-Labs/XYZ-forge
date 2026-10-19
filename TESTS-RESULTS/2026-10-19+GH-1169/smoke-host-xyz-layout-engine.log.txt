@@ -1,0 +1,8 @@
+### main path: fresh GitHub clone of HiQS-Labs/XYZ-layout-engine, .xyz vendored from 944c43c9, doc-only change on task/smoke-gh1169
+### command: python3 -B .xyz/utils/py/express.py --root . check --issue 38 --docs-only --dry-run --repo HiQS-Labs/XYZ-layout-engine
+express-check [dry-run]: PASS
+  issue   : #38 Post-merge audit: PR #32 MangaJDM promos and PR #37 recursive-process recipe
+  files   : 1 core, 2 insertions (bounds 4/150)
+  suite   : utils/pdda/pdda.sh run (host PDDA gate, PDDA_MODE=full; no runtime coverage claim)
+  gate    : none — this host has no pre-push hook (the landing push bypasses pre-push by lane design)
+  changes : PROJECT/3-COMPLETED/GH-65-XYZ-FORGE-LENSES.md
