@@ -2,7 +2,7 @@
 gh_issue: 1169
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1169
 title: "express: vendored-host mode — docs lane uses the host's PDDA gate; host hook, harness tool resolution"
-status: "Captured — plan drafted, awaiting plan QA"
+status: "In progress — plan QA Approved (Codex, round 3), implementing"
 created: 2026-10-19
 updated: 2026-10-19
 owner: claude
@@ -31,7 +31,7 @@ Branch `feat/XYZ-forge-gh1169-express-vendored-host-2026-10-19` off `development
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed, clone provisioned off `origin/development` (`7eeae804`, hooks installed), recon, plan drafted | Codex plan QA, then promote to 2-WORKING |
+| Plan QA Approved by Codex in round 3 (`relay-system/2026-10-19/gh1169-plan-qa.md`) | Implement changes 1–5, then verification in 6 |
 
 ## Observed today (7eeae804)
 
@@ -157,7 +157,7 @@ No code-hotfix lane for hosts without a registry; no Forge gate files in hosts; 
 
 | Issue | Requirement | Clone / branch | State |
 |---|---|---|---|
-| [#1169](https://github.com/HiQS-Labs/XYZ-forge/issues/1169) | Changes 1–6 | `XYZ-forge-gh1169-express-vendored-host-2026-10-19` / `feat/…` | Plan drafted |
+| [#1169](https://github.com/HiQS-Labs/XYZ-forge/issues/1169) | Changes 1–6 | `XYZ-forge-gh1169-express-vendored-host-2026-10-19` / `feat/…` | Implementing |
 
 ## Rating rationale (2026-10-19)
 
@@ -170,4 +170,4 @@ two related incidents in 14 days (GH-1144 branch, this layout gap) in the same h
 
 | Check | Result |
 |---|---|
-| Plan QA | pending |
+| Plan QA | Codex, 3 rounds, Approved (`relay-system/2026-10-19/gh1169-plan-qa.md`). R1: F1 refusal order and `--docs-only` binding, F2 vendored recovery, F3 express-level red controls, nit hook path. R2: F4 decoy scoped to express's own tool calls, nit refusal codes |
