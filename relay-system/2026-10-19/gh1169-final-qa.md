@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -153,5 +153,25 @@ Handing off to Producer (claude-a) — address F1 and F2, update the evidence, t
 - All suites (gh267 113/0, gh358 8/0, gh425 OK, gh429 15/0) and host scenarios S1–S8 re-run at `dc33ddfd`; provenance regenerated (11 records).
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: F1 and F2 are resolved: the documented host recovery retains repository identity and has red/green replay evidence; canonical parity now reaches a successful check and records unchanged recovery text. The implementation and retained evidence satisfy the approved plan within the local single-operator envelope. The final committed-state harness gate remains outstanding by design.
+swept file: yes
+
+Re-read the whole current express driver, express skill, plan/Evidence table and verification README; inspected the fixture, runner, canonical comparison, provenance, scenario/smoke logs and covering-suite results. Rechecked the resolver contract and prior plan-QA dispositions. No additional material pre-existing defect was found. Evidence tier: Verify, current direct-source fallback. Graph project inventory was fully paginated (84 entries); this worktree is not indexed. Nearest canonical project XYZ-forge is ready but coverage generation is 2026-09-01T15:54:30Z and reviewed paths have changed or unavailable metadata, so that graph does not establish current branch coverage. No git command, suite, pytest or executable fixture was run. Only this relay file was edited.
+
+- **[Pass] F1 resolved.** `skills/2-daily/express/SKILL.md:149-153` now defines the host slug and includes `--repo "$REPO"` in the vendored resume command. `TESTS-RESULTS/2026-10-19+GH-1169/host-fixture.sh.txt:51-68` replays the documented substitutions with clean-baseline checks, before/after identity snapshots, VOID comparison and the actual resume command. `host-checks.log.txt:38-46` records gate rc 1 → resume rc 4 (no valid committed receipt), and gate rc 0 → resume rc 0 with receipt attribution and issue closure. This closes the original command/evidence mismatch.
+
+- **[Pass] F2 resolved.** `TESTS-RESULTS/2026-10-19+GH-1169/canonical-compare.log.txt:1-21` identifies base 7eeae804, the installed hook and candidate driver dc33ddfd; both successful checks return 0 with byte-identical output, followed by identical canonical docs/runtime recovery text. The retained comparison script shows the old/new commands and comparison. `utils/py/express.py:686-687` limits the added gate line to VENDORED, addressing the real canonical output difference discovered by this comparison. These are producer-run disposable-clone observations, not fresh runtime executions by this reviewer.
+
+- **[Pass] Remaining acceptance stays supported.** `express.py:655-670` binds the registry exception to docs-only plus VENDORED and guards absent registries; `:904-908` applies full-mode PDDA and refuses a red suite before publication; `:1396-1404` fixes lane selection. `TESTS-RESULTS/2026-10-19+GH-1169/host-checks.log.txt:9-37` records landing/receipt/base identity, the red express boundary with unchanged remote and no receipt/closure, unused reconciler decoy, both non-docs refusals and releases-tool selection. `smoke-host-xyz-layout-engine.log.txt:1-8` separately records the real-host check smoke at the explicitly disclosed earlier revision 944c43c9. Host-hook and anchored tool scope remain as reviewed in Round 1 (`express.py:150-157,414-430,1033`). The local bare origin, gh stub and temporary HOME support these local integration claims; they do not prove real GitHub closure behavior.
+
+- **[Pass] Evidence integrity and existing-suite results.** Narrow read-only command `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY' … PY` parsed every provenance row, required exactly 11 rows, read each named artifact, asserted nonempty bytes, recorded length and SHA256 equality, and printed each suite log's final three lines. Exit **0**; decisive output: `provenance: all 11 nonempty artifacts match recorded bytes and SHA256`, `gh267-express-skill: pass=113 fail=0`, `gh358: 8 passed, 0 failed`, gh425 `Ran 23 tests … OK`, and `gh429-wave-reconcile-vendored-observe: 15 passed, 0 failed`. Citations: `TESTS-RESULTS/2026-10-19+GH-1169/provenance.jsonl:1-11` and the corresponding named suite logs. No new suite or gate machinery is introduced by the reviewed implementation/evidence.
+
+[Unverified — needs clone run] The final committed-state harness gate has not run in this reviewer turn and must run after this approval, as Setup specifies. This approval closes artifact QA; it does not attest that later gate or authorize promotion.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) receives the completed review; the harness owns the relay-file commit and final gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
