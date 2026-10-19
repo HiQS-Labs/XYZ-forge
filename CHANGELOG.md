@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-18 — merge-cleanup: per-repo qualification setting (GH-1159)
+
+`.merge-cleanup.json` accepts an optional `qualification` key (`full_suite`:
+`promotion|per_batch|none`, plus an optional `sweep_command`), read by the existing resolver from
+`--primary`. Invalid values fail closed. The batch sweep follows that key. Forge commits
+`promotion` with its `wave-reconcile.yml` dispatch, so its batch-issue output is unchanged byte for
+byte. A vendored or foreign repo without the key no longer gets a Forge gate, workflow or branch.
+The command is printed verbatim, so Forge always prints `--ref development`. Verified by
+`gh436-merge-cleanup` (one existing call now passes Forge's key; one environmental failure, a
+`chmod 0` test run as root) and manual checks under `TESTS-RESULTS/2026-10-18+GH-1159/`. No new
+tests.
+
+
 ## 2026-10-18 — Radar-to-campaign instructions (GH-1143)
 
 Add the occasional defect-campaign skill and minimal Radar/ATE/index pointers. It specifies

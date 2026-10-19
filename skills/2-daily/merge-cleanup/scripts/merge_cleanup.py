@@ -175,18 +175,32 @@ def resolve_merge_policy(repo_path: Path, strategy: Optional[str] = None) -> Dic
         data, source = {}, "legacy default (no .merge-cleanup.json)"
     except (OSError, ValueError) as exc:
         raise ValueError(f"cannot read merge policy {policy_path}: {exc}") from exc
-    if not isinstance(data, dict) or set(data) - {"preserve_commit_history"}:
-        raise ValueError(f"{policy_path}: expected an object with only preserve_commit_history")
+    if not isinstance(data, dict) or set(data) - {"preserve_commit_history", "qualification"}:
+        raise ValueError(f"{policy_path}: expected an object with only preserve_commit_history "
+                         "and qualification")
     preserve = data.get("preserve_commit_history", False)
     if type(preserve) is not bool:
         raise ValueError(f"{policy_path}: preserve_commit_history must be a JSON boolean")
+    # GH-1159: the repo's own batch-sweep cadence; absent means no sweep command is printed.
+    qual = data.get("qualification")
+    if qual is not None:
+        if (not isinstance(qual, dict) or set(qual) - {"full_suite", "sweep_command"}
+                or qual.get("full_suite") not in ("promotion", "per_batch", "none")):
+            raise ValueError(f"{policy_path}: qualification must be an object with full_suite "
+                             "promotion|per_batch|none and an optional sweep_command")
+        cmd = qual.get("sweep_command")
+        if cmd is not None and (not isinstance(cmd, str) or not cmd.strip()
+                                or qual["full_suite"] == "none"):
+            raise ValueError(f"{policy_path}: qualification.sweep_command must be a non-empty "
+                             "string, and is not allowed with full_suite none")
     if strategy not in (None, "merge", "squash", "rebase"):
         raise ValueError(f"unsupported merge strategy: {strategy!r}")
     if preserve and strategy not in (None, "merge"):
         raise ValueError(f"{policy_path}: preserve_commit_history=true requires --strategy merge; "
                          f"--strategy {strategy} is not permitted")
     return {"preserve_commit_history": preserve,
-            "strategy": strategy or ("merge" if preserve else "squash"), "source": source}
+            "strategy": strategy or ("merge" if preserve else "squash"), "source": source,
+            "qualification": qual}
 
 
 def check_merge_capability(repo_path: Path, policy: Dict[str, Any]) -> None:
@@ -1093,7 +1107,12 @@ def _record_batch_outcomes(batch, ordered_prs, track, rc, primary_repo) -> None:
         elif n == track["current"] and rc == 2:
             batch_record.set_outcome(batch, n, status=f"stopped: {stopped}")
     origin = origin_url(primary_repo) or ""
-    batch_record.finalize_sweep_inputs(batch, primary_repo, origin)
+    try:  # GH-1159: a policy that broke mid-run still gets its batch issue, minus any command
+        qualification = resolve_merge_policy(primary_repo)["qualification"]
+    except ValueError as exc:
+        log_warn(f"merge-batch sweep: {exc}; no sweep command recorded")
+        qualification = None
+    batch_record.finalize_sweep_inputs(batch, primary_repo, origin, qualification)
     batch_record.update(batch, _gh, primary_repo)
     if batch.get("issue_error"):
         log_warn(f"merge-batch issue: {batch['issue_error']} (the landing itself is unaffected)")
@@ -1940,7 +1959,7 @@ def main():
         # GH-1064: landed, but no recorded sweep verdict covers these landings yet.
         where = batch.get("issue_url") or batch["path"]
         log(f"STATUS: landed, QA pending — record a verdict with --record-sweep <file> (batch: {where})")
-        log(f"  sweep: {(batch.get('sweep_inputs') or {}).get('command', 'see the batch record')}")
+        log(f"  sweep: {(batch.get('sweep_inputs') or {}).get('command') or batch_record.NO_SWEEP_COMMAND}")
         return 4
     log("Merge cleanup run complete.")
     return 0

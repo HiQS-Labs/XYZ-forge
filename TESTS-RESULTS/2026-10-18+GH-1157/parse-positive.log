@@ -1,0 +1,5 @@
+$ python3 -B parse.py skills-army-hq/scripts/intake.py skills-army-hq
+PARSED name=skills-army-hq
+description=Route every skill install, update, rename or retirement here. Git Pulse Sync's Deployed Skills collection is a generated copy of source repositories, never an e...
+exit=0
+pycache dirs written inside scratch payloads: 0

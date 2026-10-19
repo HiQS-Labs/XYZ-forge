@@ -28,6 +28,8 @@ LABEL = "merge-batch"
 START = "<!-- merge-batch:script:start -->"
 END = "<!-- merge-batch:script:end -->"
 VERDICTS = ("clean", "findings", "deferred")
+NO_SWEEP_COMMAND = ("No sweep command declared for this repo; declare `qualification` in its "
+                    "`.merge-cleanup.json` (merge-cleanup SKILL.md, Project merge policy)")
 FULL_GATE = "validate.sh --parallel 4"
 CALLER_SECTIONS = (
     "## Strategy and sequence review\n<!-- groups/order, PR/head/base/candidate SHAs, CI checkpoints, rollback; "
@@ -358,8 +360,17 @@ def script_block(rec: Dict[str, Any]) -> str:
         conflicts = s.get("conflict_sites") or {}
         lines.append("- Repaired conflict sites: " + (
             "; ".join(f"#{n}: {', '.join(fs)}" for n, fs in conflicts.items()) or "none"))
-        lines.append(f"- Gate: `bash {s['gate']}` ({s['gate_reason']})")
-        if s.get("deferred"):
+        if s.get("gate"):  # GH-1159: only when the classifier ran; never for an undeclared repo
+            lines.append(f"- Gate: `bash {s['gate']}` ({s.get('gate_reason', '')})")
+        if s.get("full_suite") == "none":
+            lines.append("- This repo declares no full suite (`qualification.full_suite: none` in "
+                         "`.merge-cleanup.json`); the verdict records that and what did run")
+        elif not s.get("command") and s.get("deferred"):
+            lines.append("- Full sweep deferred to promotion, but this repo's `qualification` declares no "
+                         "`sweep_command`; record the verdict from the promotion run")
+        elif not s.get("command"):
+            lines.append(f"- {NO_SWEEP_COMMAND}")
+        elif s.get("deferred"):
             lines.append(f"- Full sweep deferred to the promotion dispatch (#1131): `{s['command']}` — record "
                          "`verdict: deferred` with that reason until the dispatch's receipt exists, or `clean` "
                          "naming the hosted run")
@@ -460,7 +471,8 @@ def _gate(primary: Path, landings: List[Tuple[int, str]]) -> Tuple[str, str]:
         return FULL_GATE, f"classifier unavailable: {str(exc)[:160]}"
 
 
-def finalize_sweep_inputs(rec: Dict[str, Any], primary: Path, origin: str) -> None:
+def finalize_sweep_inputs(rec: Dict[str, Any], primary: Path, origin: str,
+                          qualification: Optional[Dict[str, Any]] = None) -> None:
     order = landed(rec)
     if not order:
         rec["sweep_inputs"] = {}
@@ -485,21 +497,30 @@ def finalize_sweep_inputs(rec: Dict[str, Any], primary: Path, origin: str) -> No
                 files = []
         if files:
             conflicts[str(n)] = files
-    gate, reason = _gate(primary, [x for x in oids if x[1]]) if not missing else (FULL_GATE, "merge commit missing")
-    # GH-1127 / #1131: the full registry runs hosted, once, at the pre-promotion dispatch, never as
-    # a local rerun per batch. The Small list stays a cheap local sweep.
-    deferred = "--subsystem small" not in gate
+    # GH-1159: the repo's own `qualification` decides; without it no command (and no Forge gate)
+    # is printed. Only `promotion` consults Forge's classifier.
+    mode = (qualification or {}).get("full_suite") or "undeclared"
+    declared = (qualification or {}).get("sweep_command") or ""
+    clone = f'T=$(mktemp -d) && git clone --no-local {shlex.quote(str(primary))} "$T" && cd "$T"'
+    gate, reason, deferred, command = "", "", False, ""
+    if mode == "promotion":
+        gate, reason = _gate(primary, [x for x in oids if x[1]]) if not missing \
+            else (FULL_GATE, "merge commit missing")
+        # GH-1127 / #1131: the full registry runs hosted, once, at the pre-promotion dispatch,
+        # never as a local rerun per batch. The Small list stays a cheap local sweep.
+        deferred = "--subsystem small" not in gate
+        if not deferred:
+            command = f"{clone} && bash {gate}"
+        elif declared:
+            command = f"{declared}  # full registry, hosted, once before promotion (#1131); no local full rerun"
+    elif mode == "per_batch" and declared:
+        command = f"{clone} && ( {declared} )"  # grouped: a `;` inside never escapes the clone
     rec["_sweep_touched"] = True  # GH-1140: an intentional replacement, not a carried value
     rec["sweep_inputs"] = {
         "range": rng,
         "shared_files": {f: sorted(prs) for f, prs in sorted(owners.items()) if len(prs) > 1},
         "conflict_sites": conflicts, "gate": gate, "gate_reason": reason, "deferred": deferred,
-        "computed_at": _now(),
-        "command": (f"gh workflow run wave-reconcile.yml --ref {rec.get('integration') or 'development'}"
-                    "  # full registry, hosted, once before promotion (#1131); no local full rerun"
-                    if deferred else
-                    f'T=$(mktemp -d) && git clone --no-local {shlex.quote(str(primary))} "$T" '
-                    f'&& cd "$T" && bash {gate}'),
+        "full_suite": mode, "computed_at": _now(), "command": command,
     }
     save(rec)
 

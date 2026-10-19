@@ -1014,7 +1014,9 @@ class TestBatchRecordStaleState(unittest.TestCase):
         import batch_record
         with tempfile.TemporaryDirectory() as tmp:
             rec = self._rec(tmp, outcomes={"1": {"status": "merged", "merge_oid": "d" * 40}}, landed=[1])
-            batch_record.finalize_sweep_inputs(rec, Path("/tmp"), "ex/ample")
+            batch_record.finalize_sweep_inputs(rec, Path("/tmp"), "ex/ample", {
+                "full_suite": "promotion",  # GH-1159: Forge's committed setting
+                "sweep_command": "gh workflow run wave-reconcile.yml --ref development"})
             cmd = rec["sweep_inputs"]["command"]
             self.assertNotIn("<tmp>", cmd)                     # GH-1140/#1084: no literal placeholder
             substituted = cmd.replace('T=$(mktemp -d)', 'T=/tmp/x')

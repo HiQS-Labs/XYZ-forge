@@ -1,3 +1,7 @@
 {
-  "preserve_commit_history": true
+  "preserve_commit_history": true,
+  "qualification": {
+    "full_suite": "promotion",
+    "sweep_command": "gh workflow run wave-reconcile.yml --ref development"
+  }
 }

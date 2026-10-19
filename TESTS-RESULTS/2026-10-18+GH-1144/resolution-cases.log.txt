@@ -1,0 +1,11 @@
+git: git version 2.50.1 (Apple Git-155)
+1 main-only, --base main, no origin/HEAD, no gh default      -> main   (expect main)
+2 main+development, no origin/HEAD, gh default=main         -> main   (expect main)
+3 main+development, no origin/HEAD, no gh default           -> None   (expect None)
+4 main-only, gh default names a missing branch              -> None   (expect None)
+5 main-only, --base development (absent on origin)          -> None   (expect None)
+6 main+development, origin/HEAD=development, gh default=main -> development   (expect development: origin/HEAD wins)
+7 trunk-only, no --base, no origin/HEAD, no gh default (CLI)  -> rc=3 (expect 3)
+  express-refused: rule=base-unresolved — cannot resolve the integration branch: pass --base, or set origin/HEAD (git remote set-head origin --auto); no origin/HEAD and no usable GitHub default branch
+  HEAD and tracked state unchanged: NO — only untracked: ?? .tick/ 
+  untracked after refusal (refusal telemetry only): ?? .tick/express/2026-10-18T20-45-46.061Z-express-refused-gh-1.jsonl 
