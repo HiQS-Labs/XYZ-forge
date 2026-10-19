@@ -188,4 +188,12 @@ Re-read the entire 173-line plan and swept express's check/docs/ledger/landing/c
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with the approved plan; the harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-10-19T15:27:18Z
+task: RELAY-gh1169-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: ae50b158f9809a31ac4c16106f9d0a6438b1fe6e
+added-range: 20873+3004
+added-sha256: 1aec9d7219c2bcad5c2077e7c9fc07d27d551075b01e81adbab7886b6a93fb12
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
