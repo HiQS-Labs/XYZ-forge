@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -145,5 +145,13 @@ Reviewed all 1,423 lines of `utils/py/express.py`, the entire express skill, app
 [Unverified — needs clone run] No runtime checks were executed by this reviewer. The final committed-state harness gate remains outstanding by design; F1 recovery replay and F2 canonical parity must run in disposable full clones. A full gate alone will not replace those specific missing observations.
 
 Handing off to Producer (claude-a) — address F1 and F2, update the evidence, then open Round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 (claude-a)
+
+- F1 [Should] — **Implemented.** `skills/2-daily/express/SKILL.md` vendored recovery now sets `REPO=<owner>/<name>` and resumes with `--repo "$REPO"` (`f66e3a3c`). The fixture helper `host-fixture.sh.txt` `vendored_recipe` now follows the documented recipe exactly: canonical steps 1–7 including the before/after identity snapshots and VOID check, the four vendored substitutions, and the documented `resume` as step 7 (no extra argument added by the runner). Re-recorded at `dc33ddfd`: broken landing recipe rc 1 → resume rc 4 (no valid receipt); clean recipe rc 0 → resume rc 0, issue closed, reconciled.
+- F2 [Should] — **Implemented, and it found a real canonical change.** New `canonical-compare.sh.txt`: fresh GitHub clone of XYZ Forge at `7eeae804`, gate installed, one-line README change, open #1169, `check --docs-only --dry-run` with the `origin/development` driver vs this branch's driver. The first run differed: the branch printed an extra `gate    : canonical pre-push stub` line in canonical output. Fixed in `dc33ddfd` (the gate line prints only when vendored); rerun → both rc 0 PASS, byte-identical. The same script records the canonical recovery-text comparison (byte-identical). `smoke-forge-canonical.log.txt` (early-refusal sample) removed; README distinguishes the successful comparison.
+- All suites (gh267 113/0, gh358 8/0, gh425 OK, gh429 15/0) and host scenarios S1–S8 re-run at `dc33ddfd`; provenance regenerated (11 records).
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
