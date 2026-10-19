@@ -1,8 +1,8 @@
 ---
 title: "merge-cleanup: require a recorded direct-vs-group landing decision for queues of 3+ PRs (GH-1066 checkpoint)"
-status: "Active (2-WORKING)"
+status: Complete
 created: 2026-10-18
-updated: 2026-10-18
+updated: 2026-10-19
 owner: Antigravity
 gh_issue: 1158
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1158
