@@ -1,0 +1,4 @@
+PREVIEW True ['Declared observations are not global quiescence, criterion delivery or dispatch approval.', 'No observer contexts declared for canonical; absence does not prove idle.', 'No observer contexts declared for predecessor; absence does not prove idle.']
+REFUSING_NORMAL_HOOK ['git', 'push', '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-j820m5iz/rollover/remote.git']: error: failed to push some refs to '/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-j820m5iz/rollover/remote.git'
+
+RESULT preserved GIDs/current owner override/predecessor HEAD/tree, root /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-j820m5iz/rollover/rolled

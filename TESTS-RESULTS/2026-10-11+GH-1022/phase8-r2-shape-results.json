@@ -1,0 +1,52 @@
+{
+  "source_sha256": "e64c273dabf2697c815e2afc68ab2827b49656d02501d8b12d66c2668b5ea004",
+  "method": "current canonical nonempty source plus ephemeral invalid observations and sanctioned owned fixture writes; no CI tests",
+  "controls": [
+    {
+      "control": "empty-source",
+      "held": true,
+      "error": "nonempty current canonical source required"
+    },
+    {
+      "control": "incomplete-source",
+      "held": true,
+      "error": "3"
+    },
+    {
+      "control": "duplicate-source-gid",
+      "held": true,
+      "error": "3"
+    },
+    {
+      "control": "same-gid-conflict",
+      "held": true,
+      "error": "conflicting owner roadmap GID: rmi-01M0DP23V8F0R5ET8B6T536Z81"
+    },
+    {
+      "control": "deleted-source-row",
+      "held": true,
+      "error": "roadmap deletion requires explicit disposition"
+    },
+    {
+      "control": "null-gh-overrides-start-label-history",
+      "preserved": true,
+      "counts": {
+        "schema_migrations": 9,
+        "settings": 3,
+        "repos": 1,
+        "issue_refs": 101,
+        "marathons": 6,
+        "releases": 13,
+        "manifest_items": 98,
+        "manifest_state_events": 87,
+        "doc_lines": 86,
+        "legacy_lines": 28,
+        "grandfather_entries": 24,
+        "roadmap_items": 349,
+        "jog_queue": 18,
+        "op_receipts": 1776,
+        "work_events": 704
+      }
+    }
+  ]
+}

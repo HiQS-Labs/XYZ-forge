@@ -1,0 +1,228 @@
+{
+  "source_sha256": "d1b64d3056e0d380775b5780a8c11d1ce627d0a3c7984cf57ca4fd67a30f3cf5",
+  "method": "actual existing advisory merge sequencer, in-memory only; no CLI, fixtures, subprocess or source writes",
+  "observations": [
+    {
+      "name": "missing-CI",
+      "input": [
+        {
+          "number": 1,
+          "title": "1",
+          "headRefName": "feat/1",
+          "baseRefName": "development",
+          "reviewDecision": "APPROVED",
+          "mergeable": "MERGEABLE",
+          "body": "",
+          "isDraft": false,
+          "statusCheckRollup": []
+        }
+      ],
+      "ready": [
+        [
+          1,
+          [],
+          []
+        ]
+      ]
+    },
+    {
+      "name": "draft",
+      "input": [
+        {
+          "number": 1,
+          "title": "1",
+          "headRefName": "feat/1",
+          "baseRefName": "development",
+          "reviewDecision": "APPROVED",
+          "mergeable": "MERGEABLE",
+          "body": "",
+          "isDraft": true,
+          "statusCheckRollup": [
+            {
+              "__typename": "CheckRun",
+              "name": "required",
+              "status": "COMPLETED",
+              "conclusion": "SUCCESS"
+            }
+          ]
+        }
+      ],
+      "ready": [
+        [
+          1,
+          [],
+          []
+        ]
+      ]
+    },
+    {
+      "name": "unknown-external-dependency",
+      "input": [
+        {
+          "number": 1,
+          "title": "1",
+          "headRefName": "feat/1",
+          "baseRefName": "development",
+          "reviewDecision": "APPROVED",
+          "mergeable": "MERGEABLE",
+          "body": "Depends on #999",
+          "isDraft": false,
+          "statusCheckRollup": [
+            {
+              "__typename": "CheckRun",
+              "name": "required",
+              "status": "COMPLETED",
+              "conclusion": "SUCCESS"
+            }
+          ]
+        }
+      ],
+      "ready": [
+        [
+          1,
+          [],
+          []
+        ]
+      ]
+    },
+    {
+      "name": "cycle",
+      "input": [
+        {
+          "number": 1,
+          "title": "1",
+          "headRefName": "feat/1",
+          "baseRefName": "development",
+          "reviewDecision": "APPROVED",
+          "mergeable": "MERGEABLE",
+          "body": "Depends on #2",
+          "isDraft": false,
+          "statusCheckRollup": [
+            {
+              "__typename": "CheckRun",
+              "name": "required",
+              "status": "COMPLETED",
+              "conclusion": "SUCCESS"
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "title": "2",
+          "headRefName": "feat/2",
+          "baseRefName": "development",
+          "reviewDecision": "APPROVED",
+          "mergeable": "MERGEABLE",
+          "body": "Depends on #1",
+          "isDraft": false,
+          "statusCheckRollup": [
+            {
+              "__typename": "CheckRun",
+              "name": "required",
+              "status": "COMPLETED",
+              "conclusion": "SUCCESS"
+            }
+          ]
+        }
+      ],
+      "ready": [
+        [
+          2,
+          [
+            1
+          ],
+          []
+        ],
+        [
+          1,
+          [
+            2
+          ],
+          []
+        ]
+      ]
+    },
+    {
+      "name": "quiet-ready",
+      "input": [
+        {
+          "number": 1,
+          "title": "1",
+          "headRefName": "feat/1",
+          "baseRefName": "development",
+          "reviewDecision": "APPROVED",
+          "mergeable": "MERGEABLE",
+          "body": "",
+          "isDraft": false,
+          "statusCheckRollup": [
+            {
+              "__typename": "CheckRun",
+              "name": "required",
+              "status": "COMPLETED",
+              "conclusion": "SUCCESS"
+            }
+          ]
+        }
+      ],
+      "ready": [
+        [
+          1,
+          [],
+          []
+        ]
+      ]
+    },
+    {
+      "name": "known-not-ready-dependency",
+      "input": [
+        {
+          "number": 1,
+          "title": "1",
+          "headRefName": "feat/1",
+          "baseRefName": "development",
+          "reviewDecision": "APPROVED",
+          "mergeable": "MERGEABLE",
+          "body": "Depends on #2",
+          "isDraft": false,
+          "statusCheckRollup": [
+            {
+              "__typename": "CheckRun",
+              "name": "required",
+              "status": "COMPLETED",
+              "conclusion": "SUCCESS"
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "title": "2",
+          "headRefName": "feat/2",
+          "baseRefName": "development",
+          "reviewDecision": "CHANGES_REQUESTED",
+          "mergeable": "MERGEABLE",
+          "body": "",
+          "isDraft": false,
+          "statusCheckRollup": [
+            {
+              "__typename": "CheckRun",
+              "name": "required",
+              "status": "COMPLETED",
+              "conclusion": "SUCCESS"
+            }
+          ]
+        }
+      ],
+      "ready": [
+        [
+          1,
+          [
+            2
+          ],
+          [
+            2
+          ]
+        ]
+      ]
+    }
+  ]
+}

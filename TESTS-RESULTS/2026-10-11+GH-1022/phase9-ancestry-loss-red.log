@@ -1,0 +1,14 @@
+PREVIEW True ['Declared observations are not global quiescence, criterion delivery or dispatch approval.', 'No observer contexts declared for canonical; absence does not prove idle.', 'No observer contexts declared for predecessor; absence does not prove idle.']
+FIRST controlled native ancestry result lost
+RESUME ValueError destination HEAD changed
+ROOT /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-8ajrgz23/rollover/rolled HEAD b062c26bad6a4ff305c35fb259b14add03b30600
+Traceback (most recent call last):
+  File "/tmp/gh1022-phase9-ancestry-loss.py", line 32, in <module>
+    try:result=core.reconcile_weekly(args,src,runner)
+               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/planner_core.py", line 1624, in reconcile_weekly
+    commit([archive], 'weekly: retain exact predecessor intake')
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/planner_core.py", line 1567, in commit
+    raise ValueError('destination HEAD changed')
+ValueError: destination HEAD changed

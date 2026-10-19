@@ -1,0 +1,39 @@
+{
+  "source_sha256": "09384ac95c78fe2f33b2ca4b34f0eb443b5f14f6d752dc55d268486271c750cb",
+  "method": "actual AST canonical jog list;SQLite in-memory legal multi-repo fixture;root/connect stubs only,no fileDB/API/queue execution",
+  "expected": "one Repo A owned queue observation",
+  "observed": [
+    {
+      "id": 1,
+      "global_id": "jog-owned-A",
+      "gh_number": 777,
+      "position": 1,
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null,
+      "created_at": "2026-10-11",
+      "updated_at": "2026-10-11",
+      "title": "Repo A owner",
+      "doc_path": "PROJECT/A.md",
+      "issue_url": "https://github.com/acme/a/issues/777"
+    },
+    {
+      "id": 1,
+      "global_id": "jog-owned-A",
+      "gh_number": 777,
+      "position": 1,
+      "status": "pending",
+      "attempt_count": 0,
+      "lease_pid": null,
+      "failure_reason": null,
+      "created_at": "2026-10-11",
+      "updated_at": "2026-10-11",
+      "title": "Repo B foreign",
+      "doc_path": "PROJECT/B.md",
+      "issue_url": "https://github.com/acme/b/issues/777"
+    }
+  ],
+  "witnessed_failure": true,
+  "affected_scope": "same GH number in multiple roadmap repositories while queue belongs to one repository"
+}

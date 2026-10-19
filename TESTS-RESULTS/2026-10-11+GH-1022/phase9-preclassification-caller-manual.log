@@ -1,0 +1,915 @@
+PREVIEW True ['Declared observations are not global quiescence, criterion delivery or dispatch approval.', 'No observer contexts declared for canonical; absence does not prove idle.', 'No observer contexts declared for predecessor; absence does not prove idle.']
+APPLY {
+  "schema": "weekly/reconciliation@1",
+  "complete": true,
+  "status": "HELD",
+  "dispatch_allowed": false,
+  "operation": {
+    "repository": "fixture/repo",
+    "source_root": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare",
+    "source_head": "0c01b3f9485c95dd397cd55049a98fc530242d02",
+    "source_branch": "auto-2026-10-11",
+    "root": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/rolled",
+    "branch": "auto-2026-10-12",
+    "target": "24039a089a59f64a4b649c0f8f7688b3abb204dc",
+    "target_ref": "development",
+    "runtime": {
+      "harness": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022",
+      "paths": {
+        "planner": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/planner_core.py",
+        "intake": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/issue_intake.py",
+        "writer": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/releases_app.py",
+        "renderer": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/hq/hq-lib.sh",
+        "process_runner": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/proc_group.py",
+        "lock_resolver": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/rtl.py"
+      },
+      "sha256": {
+        "planner": "6755081ca5ae947e2e19dbf84ba23eeb454ae7afec7793c1c85c4975196433a5",
+        "intake": "788561213fe20b29a705f0f284d0649098684fb9aa743d4eac2c72e3bd3f0956",
+        "writer": "06b02c67ad6fc7f3c649ff13c61a0c9af41ed60a67a1167a87415b7fa81ecaf1",
+        "renderer": "3e199303241cf4933ce232ed8f374e6caf6e2236777416414f6711560059706d",
+        "process_runner": "e5dbc41b0e48ded0a9a30ce381f141a27be1322963ce8fd5a44a94adb5ef0130",
+        "lock_resolver": "41b5fabafcc0ef05db91f24518931154ea1b037f36d1cb9daaf24d2196d7895e"
+      },
+      "io_timeout_seconds": 60
+    }
+  },
+  "work": {
+    "complete": true,
+    "status": "HELD",
+    "dispatch_allowed": false,
+    "observations": [
+      {
+        "id": "canonical",
+        "declared_root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/source",
+        "repository": "fixture/repo",
+        "contexts": [],
+        "inventory": {
+          "status": "PASS",
+          "initialized": true,
+          "read_complete": true,
+          "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/source",
+          "include_terminal": true,
+          "generation": 4,
+          "repositories": [
+            {
+              "id": 1,
+              "global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+              "slug": "fixture/repo",
+              "repository": "fixture/repo"
+            }
+          ],
+          "rows": [],
+          "held_reasons": [
+            "execution-not-authorized"
+          ],
+          "dispatch": false,
+          "schema": "releases/work-inventory@1",
+          "schema_version": 9,
+          "marathons": [],
+          "lifecycle": [
+            {
+              "id": 1,
+              "global_id": "wev-01M4QX0BFGS3V33Z1R146HDNHG",
+              "repo_id": 1,
+              "gh_number": 1,
+              "txn_id": "b2d4e4ec555b478caefe2aefe3af3922",
+              "event": "parked",
+              "payload": "{\"section\": \"Queue / parked intake\"}",
+              "at": "2026-10-12T11:12:14Z",
+              "repository": "fixture/repo",
+              "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+              "held_reasons": [
+                "execution-not-authorized"
+              ],
+              "dispatch": false,
+              "issue_identity": "fixture/repo#1",
+              "payload_decoded": {
+                "section": "Queue / parked intake"
+              }
+            },
+            {
+              "id": 2,
+              "global_id": "wev-01M4QX0BJK5MDRPBBAG8R256M6",
+              "repo_id": 1,
+              "gh_number": 1,
+              "txn_id": "8d99879d330d4126bacff89e43ab11e8",
+              "event": "rated",
+              "payload": "{\"rated\": \"70/65/50/25\"}",
+              "at": "2026-10-12T11:12:14Z",
+              "repository": "fixture/repo",
+              "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+              "held_reasons": [
+                "execution-not-authorized"
+              ],
+              "dispatch": false,
+              "issue_identity": "fixture/repo#1",
+              "payload_decoded": {
+                "rated": "70/65/50/25"
+              }
+            },
+            {
+              "id": 3,
+              "global_id": "wev-01M4QX0EGDHN4G98KEJGARGC5Y",
+              "repo_id": 1,
+              "gh_number": 1,
+              "txn_id": "681572c9624f4d10bf0c1fec5ac0953b",
+              "event": "rated",
+              "payload": "{\"rated\": \"70/65/50/25\"}",
+              "at": "2026-10-12T11:12:17Z",
+              "repository": "fixture/repo",
+              "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+              "held_reasons": [
+                "execution-not-authorized"
+              ],
+              "dispatch": false,
+              "issue_identity": "fixture/repo#1",
+              "payload_decoded": {
+                "rated": "70/65/50/25"
+              }
+            }
+          ],
+          "driver_lock": {
+            "path": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/source/.git/relay-driver.lock",
+            "label": ".git/relay-driver.lock",
+            "present": false
+          },
+          "git_head": "24039a089a59f64a4b649c0f8f7688b3abb204dc",
+          "lock_resolver": {
+            "path": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/rtl.py",
+            "sha256": "41b5fabafcc0ef05db91f24518931154ea1b037f36d1cb9daaf24d2196d7895e"
+          }
+        }
+      },
+      {
+        "id": "predecessor",
+        "declared_root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare",
+        "repository": "fixture/repo",
+        "contexts": [],
+        "inventory": {
+          "status": "PASS",
+          "initialized": true,
+          "read_complete": true,
+          "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare",
+          "include_terminal": true,
+          "generation": 5,
+          "repositories": [
+            {
+              "id": 1,
+              "global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+              "slug": "fixture/repo",
+              "repository": "fixture/repo"
+            }
+          ],
+          "rows": [],
+          "held_reasons": [
+            "execution-not-authorized"
+          ],
+          "dispatch": false,
+          "schema": "releases/work-inventory@1",
+          "schema_version": 9,
+          "marathons": [],
+          "lifecycle": [
+            {
+              "id": 1,
+              "global_id": "wev-01M4QX0BFGS3V33Z1R146HDNHG",
+              "repo_id": 1,
+              "gh_number": 1,
+              "txn_id": "b2d4e4ec555b478caefe2aefe3af3922",
+              "event": "parked",
+              "payload": "{\"section\": \"Queue / parked intake\"}",
+              "at": "2026-10-12T11:12:14Z",
+              "repository": "fixture/repo",
+              "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+              "held_reasons": [
+                "execution-not-authorized"
+              ],
+              "dispatch": false,
+              "issue_identity": "fixture/repo#1",
+              "payload_decoded": {
+                "section": "Queue / parked intake"
+              }
+            },
+            {
+              "id": 2,
+              "global_id": "wev-01M4QX0BJK5MDRPBBAG8R256M6",
+              "repo_id": 1,
+              "gh_number": 1,
+              "txn_id": "8d99879d330d4126bacff89e43ab11e8",
+              "event": "rated",
+              "payload": "{\"rated\": \"70/65/50/25\"}",
+              "at": "2026-10-12T11:12:14Z",
+              "repository": "fixture/repo",
+              "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+              "held_reasons": [
+                "execution-not-authorized"
+              ],
+              "dispatch": false,
+              "issue_identity": "fixture/repo#1",
+              "payload_decoded": {
+                "rated": "70/65/50/25"
+              }
+            },
+            {
+              "id": 3,
+              "global_id": "wev-01M4QX0CQ882N0RK2083B29HXQ",
+              "repo_id": 1,
+              "gh_number": 2,
+              "txn_id": "e2e3e12a71434162bfd6c6fccf0eb57b",
+              "event": "parked",
+              "payload": "{\"section\": \"Queue / parked intake\"}",
+              "at": "2026-10-12T11:12:16Z",
+              "repository": "fixture/repo",
+              "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+              "held_reasons": [
+                "execution-not-authorized"
+              ],
+              "dispatch": false,
+              "issue_identity": "fixture/repo#2",
+              "payload_decoded": {
+                "section": "Queue / parked intake"
+              }
+            },
+            {
+              "id": 4,
+              "global_id": "wev-01M4QX0D6HQHMMRZ8HTYJKD2X5",
+              "repo_id": 1,
+              "gh_number": 3,
+              "txn_id": "4f497a559ccc458488361fa3136c3223",
+              "event": "parked",
+              "payload": "{\"section\": \"Queue / parked intake\"}",
+              "at": "2026-10-12T11:12:16Z",
+              "repository": "fixture/repo",
+              "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+              "held_reasons": [
+                "execution-not-authorized"
+              ],
+              "dispatch": false,
+              "issue_identity": "fixture/repo#3",
+              "payload_decoded": {
+                "section": "Queue / parked intake"
+              }
+            }
+          ],
+          "driver_lock": {
+            "path": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare/.git/relay-driver.lock",
+            "label": ".git/relay-driver.lock",
+            "present": false
+          },
+          "git_head": "0c01b3f9485c95dd397cd55049a98fc530242d02",
+          "lock_resolver": {
+            "path": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/rtl.py",
+            "sha256": "41b5fabafcc0ef05db91f24518931154ea1b037f36d1cb9daaf24d2196d7895e"
+          }
+        }
+      }
+    ],
+    "facts": [
+      {
+        "identity": [
+          "lifecycle",
+          "fixture/repo",
+          "wev-01M4QX0BFGS3V33Z1R146HDNHG"
+        ],
+        "fact": {
+          "global_id": "wev-01M4QX0BFGS3V33Z1R146HDNHG",
+          "gh_number": 1,
+          "txn_id": "b2d4e4ec555b478caefe2aefe3af3922",
+          "event": "parked",
+          "payload": "{\"section\": \"Queue / parked intake\"}",
+          "at": "2026-10-12T11:12:14Z",
+          "repository": "fixture/repo",
+          "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+          "held_reasons": [
+            "execution-not-authorized"
+          ],
+          "dispatch": false,
+          "issue_identity": "fixture/repo#1",
+          "payload_decoded": {
+            "section": "Queue / parked intake"
+          }
+        },
+        "sources": [
+          {
+            "root_id": "canonical",
+            "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/source",
+            "git_head": "24039a089a59f64a4b649c0f8f7688b3abb204dc",
+            "generation": 4
+          },
+          {
+            "root_id": "predecessor",
+            "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare",
+            "git_head": "0c01b3f9485c95dd397cd55049a98fc530242d02",
+            "generation": 5
+          }
+        ]
+      },
+      {
+        "identity": [
+          "lifecycle",
+          "fixture/repo",
+          "wev-01M4QX0BJK5MDRPBBAG8R256M6"
+        ],
+        "fact": {
+          "global_id": "wev-01M4QX0BJK5MDRPBBAG8R256M6",
+          "gh_number": 1,
+          "txn_id": "8d99879d330d4126bacff89e43ab11e8",
+          "event": "rated",
+          "payload": "{\"rated\": \"70/65/50/25\"}",
+          "at": "2026-10-12T11:12:14Z",
+          "repository": "fixture/repo",
+          "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+          "held_reasons": [
+            "execution-not-authorized"
+          ],
+          "dispatch": false,
+          "issue_identity": "fixture/repo#1",
+          "payload_decoded": {
+            "rated": "70/65/50/25"
+          }
+        },
+        "sources": [
+          {
+            "root_id": "canonical",
+            "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/source",
+            "git_head": "24039a089a59f64a4b649c0f8f7688b3abb204dc",
+            "generation": 4
+          },
+          {
+            "root_id": "predecessor",
+            "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare",
+            "git_head": "0c01b3f9485c95dd397cd55049a98fc530242d02",
+            "generation": 5
+          }
+        ]
+      },
+      {
+        "identity": [
+          "lifecycle",
+          "fixture/repo",
+          "wev-01M4QX0EGDHN4G98KEJGARGC5Y"
+        ],
+        "fact": {
+          "global_id": "wev-01M4QX0EGDHN4G98KEJGARGC5Y",
+          "gh_number": 1,
+          "txn_id": "681572c9624f4d10bf0c1fec5ac0953b",
+          "event": "rated",
+          "payload": "{\"rated\": \"70/65/50/25\"}",
+          "at": "2026-10-12T11:12:17Z",
+          "repository": "fixture/repo",
+          "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+          "held_reasons": [
+            "execution-not-authorized"
+          ],
+          "dispatch": false,
+          "issue_identity": "fixture/repo#1",
+          "payload_decoded": {
+            "rated": "70/65/50/25"
+          }
+        },
+        "sources": [
+          {
+            "root_id": "canonical",
+            "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/source",
+            "git_head": "24039a089a59f64a4b649c0f8f7688b3abb204dc",
+            "generation": 4
+          }
+        ]
+      },
+      {
+        "identity": [
+          "lifecycle",
+          "fixture/repo",
+          "wev-01M4QX0CQ882N0RK2083B29HXQ"
+        ],
+        "fact": {
+          "global_id": "wev-01M4QX0CQ882N0RK2083B29HXQ",
+          "gh_number": 2,
+          "txn_id": "e2e3e12a71434162bfd6c6fccf0eb57b",
+          "event": "parked",
+          "payload": "{\"section\": \"Queue / parked intake\"}",
+          "at": "2026-10-12T11:12:16Z",
+          "repository": "fixture/repo",
+          "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+          "held_reasons": [
+            "execution-not-authorized"
+          ],
+          "dispatch": false,
+          "issue_identity": "fixture/repo#2",
+          "payload_decoded": {
+            "section": "Queue / parked intake"
+          }
+        },
+        "sources": [
+          {
+            "root_id": "predecessor",
+            "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare",
+            "git_head": "0c01b3f9485c95dd397cd55049a98fc530242d02",
+            "generation": 5
+          }
+        ]
+      },
+      {
+        "identity": [
+          "lifecycle",
+          "fixture/repo",
+          "wev-01M4QX0D6HQHMMRZ8HTYJKD2X5"
+        ],
+        "fact": {
+          "global_id": "wev-01M4QX0D6HQHMMRZ8HTYJKD2X5",
+          "gh_number": 3,
+          "txn_id": "4f497a559ccc458488361fa3136c3223",
+          "event": "parked",
+          "payload": "{\"section\": \"Queue / parked intake\"}",
+          "at": "2026-10-12T11:12:16Z",
+          "repository": "fixture/repo",
+          "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+          "held_reasons": [
+            "execution-not-authorized"
+          ],
+          "dispatch": false,
+          "issue_identity": "fixture/repo#3",
+          "payload_decoded": {
+            "section": "Queue / parked intake"
+          }
+        },
+        "sources": [
+          {
+            "root_id": "predecessor",
+            "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare",
+            "git_head": "0c01b3f9485c95dd397cd55049a98fc530242d02",
+            "generation": 5
+          }
+        ]
+      }
+    ],
+    "holds": [
+      "Declared observations are not global quiescence, criterion delivery or dispatch approval.",
+      "No observer contexts declared for canonical; absence does not prove idle.",
+      "No observer contexts declared for predecessor; absence does not prove idle."
+    ],
+    "runtime": {
+      "harness": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022",
+      "paths": {
+        "planner": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/planner_core.py",
+        "intake": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/issue_intake.py",
+        "writer": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/releases_app.py",
+        "renderer": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/hq/hq-lib.sh",
+        "process_runner": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/proc_group.py",
+        "observer": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/relay-automation/marathon.sh",
+        "lock_resolver": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/rtl.py"
+      },
+      "sha256": {
+        "planner": "6755081ca5ae947e2e19dbf84ba23eeb454ae7afec7793c1c85c4975196433a5",
+        "intake": "788561213fe20b29a705f0f284d0649098684fb9aa743d4eac2c72e3bd3f0956",
+        "writer": "06b02c67ad6fc7f3c649ff13c61a0c9af41ed60a67a1167a87415b7fa81ecaf1",
+        "renderer": "3e199303241cf4933ce232ed8f374e6caf6e2236777416414f6711560059706d",
+        "process_runner": "e5dbc41b0e48ded0a9a30ce381f141a27be1322963ce8fd5a44a94adb5ef0130",
+        "observer": "3686d9a2fbb1a393c6f0bec6822a64386e6d671055d5b1a13e9cfb0e7d4c351f",
+        "lock_resolver": "41b5fabafcc0ef05db91f24518931154ea1b037f36d1cb9daaf24d2196d7895e"
+      },
+      "io_timeout_seconds": 60
+    },
+    "authority": {
+      "schema": "weekly/authorities@1",
+      "roots": [
+        {
+          "id": "canonical",
+          "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/source",
+          "repository": "fixture/repo",
+          "contexts": []
+        },
+        {
+          "id": "predecessor",
+          "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare",
+          "repository": "fixture/repo",
+          "contexts": []
+        }
+      ]
+    },
+    "observedAt": "2026-10-12T11:12:19.575384+00:00"
+  },
+  "holds": [
+    "Declared observations are not global quiescence, criterion delivery or dispatch approval.",
+    "No observer contexts declared for canonical; absence does not prove idle.",
+    "No observer contexts declared for predecessor; absence does not prove idle.",
+    "Criterion/readiness/freeze/dispatch/landing remain unreviewed; source history preserved, not delivered"
+  ],
+  "effects": "preview: Git/owner/declared-work reads only; apply: new full clone, existing owner/receipt handoff, canonical ledger/capture/Git commits; no execution",
+  "ledger": {
+    "schema": "releases/ledger-merge@1",
+    "status": "HELD",
+    "complete": true,
+    "changed": true,
+    "dispatch": false,
+    "holds": [],
+    "delta_parent": "target",
+    "owner_sha256": "06b02c67ad6fc7f3c649ff13c61a0c9af41ed60a67a1167a87415b7fa81ecaf1",
+    "root": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/rolled",
+    "head": "24039a089a59f64a4b649c0f8f7688b3abb204dc",
+    "branch": "auto-2026-10-12",
+    "merge_base": "b730ad575e2b3f34d7db40cc24ea9db754f5d15e",
+    "supplied_target": "0c01b3f9485c95dd397cd55049a98fc530242d02",
+    "target_freshness": "not verified; supplied local commit only",
+    "source_generations": [
+      3,
+      4,
+      5
+    ],
+    "changed_gids": [
+      "rmi-01M4QX0CQ58D1ZSBPCVFM45Y4F",
+      "rmi-01M4QX0D6FPP18VWBCKEKSG8HG"
+    ],
+    "generation_floor": 5,
+    "table_counts": {
+      "schema_migrations": 9,
+      "settings": 3,
+      "repos": 1,
+      "roadmap_items": 3,
+      "op_receipts": 5,
+      "work_events": 5
+    },
+    "selection_sha256": "1a85a0e673c7496f99a2a646a39a098c053941842a1a0d85f7c101a4847eb0fe",
+    "generation": 6,
+    "txn_id": "86764646d8ce4f7bbb7a12d85a0a73be",
+    "effects": "local staged DB/dump/journal/lock audit and adopted views; no Git or connector writes"
+  },
+  "preparation": {
+    "repository": "fixture/repo",
+    "complete": true,
+    "status": "HELD",
+    "dispatch_allowed": false,
+    "issues": [
+      {
+        "identity": "fixture/repo/issues/1",
+        "repository": "fixture/repo",
+        "kind": "issue",
+        "number": 1,
+        "url": "https://github.com/fixture/repo/issues/1",
+        "title": "Issue 1",
+        "state": "OPEN",
+        "body": "Body 1",
+        "updatedAt": "2026-10-10T00:00:00Z",
+        "createdAt": "2026-09-01T00:00:00Z",
+        "closedAt": null,
+        "labels": []
+      },
+      {
+        "identity": "fixture/repo/issues/2",
+        "repository": "fixture/repo",
+        "kind": "issue",
+        "number": 2,
+        "url": "https://github.com/fixture/repo/issues/2",
+        "title": "Issue 2",
+        "state": "CLOSED",
+        "body": "Literal $(touch /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/unwanted) must never execute.",
+        "updatedAt": "2026-10-10T00:00:00Z",
+        "createdAt": "2026-09-01T00:00:00Z",
+        "closedAt": null,
+        "labels": []
+      },
+      {
+        "identity": "fixture/repo/issues/3",
+        "repository": "fixture/repo",
+        "kind": "issue",
+        "number": 3,
+        "url": "https://github.com/fixture/repo/issues/3",
+        "title": "Issue 3",
+        "state": "OPEN",
+        "body": "Body 3",
+        "updatedAt": "2026-09-01T00:00:00Z",
+        "createdAt": "2026-09-01T00:00:00Z",
+        "closedAt": null,
+        "labels": []
+      }
+    ],
+    "prs": [],
+    "relevance": "updated-since plus explicit previous members; dependencies must be supplied",
+    "holds": [
+      "Local canonical accounting only; dependency expansion, authoritative selection, criterion review, freeze and shared dispatch boundaries remain held.",
+      "Owner rank alone grants no execution authority; selection requires separately reviewed readiness and criterion evidence."
+    ],
+    "runtime": {
+      "harness": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022",
+      "paths": {
+        "planner": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/planner_core.py",
+        "intake": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/issue_intake.py",
+        "writer": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/releases_app.py",
+        "renderer": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/hq/hq-lib.sh",
+        "process_runner": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/proc_group.py"
+      },
+      "sha256": {
+        "planner": "6755081ca5ae947e2e19dbf84ba23eeb454ae7afec7793c1c85c4975196433a5",
+        "intake": "788561213fe20b29a705f0f284d0649098684fb9aa743d4eac2c72e3bd3f0956",
+        "writer": "06b02c67ad6fc7f3c649ff13c61a0c9af41ed60a67a1167a87415b7fa81ecaf1",
+        "renderer": "3e199303241cf4933ce232ed8f374e6caf6e2236777416414f6711560059706d",
+        "process_runner": "e5dbc41b0e48ded0a9a30ce381f141a27be1322963ce8fd5a44a94adb5ef0130"
+      },
+      "io_timeout_seconds": 60
+    },
+    "planning_base": "24039a089a59f64a4b649c0f8f7688b3abb204dc",
+    "planning_branch": "auto-2026-10-12",
+    "accounting": [
+      {
+        "identity": "fixture/repo/issues/1",
+        "global_id": "rmi-01M4QX0BFCDPVCRR7RJRMTWH13",
+        "doc_path": "PROJECT/1-INBOX/GH-1-OWNER.md",
+        "doc_sha256": "1bdcd0a0e2a343dea4d4fbb9101b46a8805bc168adef10b6cdaaafe12264de51",
+        "ledger": {
+          "global_id": "rmi-01M4QX0BFCDPVCRR7RJRMTWH13",
+          "gh_number": 1,
+          "title": "Owner",
+          "section": "Queue / parked intake",
+          "position": 1,
+          "status_marker": "\ud83c\udd95",
+          "doc_path": "PROJECT/1-INBOX/GH-1-OWNER.md",
+          "issue_url": "https://github.com/Fixture/Repo/issues/1",
+          "raw_text": "- **GH-1 \u00b7 Owner** \ud83c\udd95 **captured 2026-10-01 via HQ** \u2014 [GH-1-OWNER.md](PROJECT/1-INBOX/GH-1-OWNER.md) \u00b7 [#1](https://github.com/Fixture/Repo/issues/1) (rated 70/65/50/25 ovr 321)",
+          "status_label_supported": true,
+          "status_label": null,
+          "rating_pri": 70,
+          "rating_sev": 65,
+          "rating_appeal": 50,
+          "rating_effort": 25,
+          "rating_ovr": 321,
+          "rating_calc": 210,
+          "rating_rank": 321
+        },
+        "decision": "HELD",
+        "reason": "criterion delivery/readiness not reviewed"
+      },
+      {
+        "identity": "fixture/repo/issues/2",
+        "global_id": "rmi-01M4QX0CQ58D1ZSBPCVFM45Y4F",
+        "doc_path": "PROJECT/1-INBOX/GH-2-WEEKLY-CAPTURE.md",
+        "doc_sha256": "b4b5913c55c1f4caae73508b54226fc3c0cb8acc70ab27b174f603062d35d125",
+        "ledger": {
+          "global_id": "rmi-01M4QX0CQ58D1ZSBPCVFM45Y4F",
+          "gh_number": 2,
+          "title": "Issue 2",
+          "section": "Queue / parked intake",
+          "position": 2,
+          "status_marker": "\ud83c\udd95",
+          "doc_path": "PROJECT/1-INBOX/GH-2-WEEKLY-CAPTURE.md",
+          "issue_url": "https://github.com/fixture/repo/issues/2",
+          "raw_text": "- **GH-2 \u00b7 Issue 2** \ud83c\udd95 **captured 2026-10-11 via HQ** \u2014 [GH-2-WEEKLY-CAPTURE.md](PROJECT/1-INBOX/GH-2-WEEKLY-CAPTURE.md) \u00b7 [#2](https://github.com/fixture/repo/issues/2)",
+          "status_label_supported": true,
+          "status_label": null,
+          "rating_pri": null,
+          "rating_sev": null,
+          "rating_appeal": null,
+          "rating_effort": null,
+          "rating_ovr": null,
+          "rating_calc": null,
+          "rating_rank": null
+        },
+        "decision": "HELD",
+        "reason": "criterion delivery/readiness not reviewed"
+      },
+      {
+        "identity": "fixture/repo/issues/3",
+        "global_id": "rmi-01M4QX0D6FPP18VWBCKEKSG8HG",
+        "doc_path": "PROJECT/1-INBOX/GH-3-WEEKLY-CAPTURE.md",
+        "doc_sha256": "0f35372e2fc6baaba725af0869d654933e35f706d1be79f00e549c6be8b776b0",
+        "ledger": {
+          "global_id": "rmi-01M4QX0D6FPP18VWBCKEKSG8HG",
+          "gh_number": 3,
+          "title": "Issue 3",
+          "section": "Queue / parked intake",
+          "position": 3,
+          "status_marker": "\ud83c\udd95",
+          "doc_path": "PROJECT/1-INBOX/GH-3-WEEKLY-CAPTURE.md",
+          "issue_url": "https://github.com/fixture/repo/issues/3",
+          "raw_text": "- **GH-3 \u00b7 Issue 3** \ud83c\udd95 **captured 2026-10-11 via HQ** \u2014 [GH-3-WEEKLY-CAPTURE.md](PROJECT/1-INBOX/GH-3-WEEKLY-CAPTURE.md) \u00b7 [#3](https://github.com/fixture/repo/issues/3)",
+          "status_label_supported": true,
+          "status_label": null,
+          "rating_pri": null,
+          "rating_sev": null,
+          "rating_appeal": null,
+          "rating_effort": null,
+          "rating_ovr": null,
+          "rating_calc": null,
+          "rating_rank": null
+        },
+        "decision": "HELD",
+        "reason": "criterion delivery/readiness not reviewed"
+      }
+    ],
+    "initial_backfill": "all-open",
+    "overlap_hours": 24.0,
+    "checkpoint_cut": "2026-10-12T11:12:22.095681+00:00",
+    "observedAt": "2026-10-12T11:12:22.174716+00:00",
+    "changed": true,
+    "planning_commit": "18ffa37179b57b8be71977a4fe154959a5746505"
+  },
+  "changed": true,
+  "planning_commit": "18ffa37179b57b8be71977a4fe154959a5746505",
+  "preparation_root": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/rolled",
+  "accounting": [
+    {
+      "identity": "fixture/repo/issues/1",
+      "global_id": "rmi-01M4QX0BFCDPVCRR7RJRMTWH13",
+      "decision": "HELD",
+      "existing_work": [
+        {
+          "identity": [
+            "lifecycle",
+            "fixture/repo",
+            "wev-01M4QX0BFGS3V33Z1R146HDNHG"
+          ],
+          "fact": {
+            "global_id": "wev-01M4QX0BFGS3V33Z1R146HDNHG",
+            "gh_number": 1,
+            "txn_id": "b2d4e4ec555b478caefe2aefe3af3922",
+            "event": "parked",
+            "payload": "{\"section\": \"Queue / parked intake\"}",
+            "at": "2026-10-12T11:12:14Z",
+            "repository": "fixture/repo",
+            "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+            "held_reasons": [
+              "execution-not-authorized"
+            ],
+            "dispatch": false,
+            "issue_identity": "fixture/repo#1",
+            "payload_decoded": {
+              "section": "Queue / parked intake"
+            }
+          },
+          "sources": [
+            {
+              "root_id": "canonical",
+              "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/source",
+              "git_head": "24039a089a59f64a4b649c0f8f7688b3abb204dc",
+              "generation": 4
+            },
+            {
+              "root_id": "predecessor",
+              "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare",
+              "git_head": "0c01b3f9485c95dd397cd55049a98fc530242d02",
+              "generation": 5
+            }
+          ]
+        },
+        {
+          "identity": [
+            "lifecycle",
+            "fixture/repo",
+            "wev-01M4QX0BJK5MDRPBBAG8R256M6"
+          ],
+          "fact": {
+            "global_id": "wev-01M4QX0BJK5MDRPBBAG8R256M6",
+            "gh_number": 1,
+            "txn_id": "8d99879d330d4126bacff89e43ab11e8",
+            "event": "rated",
+            "payload": "{\"rated\": \"70/65/50/25\"}",
+            "at": "2026-10-12T11:12:14Z",
+            "repository": "fixture/repo",
+            "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+            "held_reasons": [
+              "execution-not-authorized"
+            ],
+            "dispatch": false,
+            "issue_identity": "fixture/repo#1",
+            "payload_decoded": {
+              "rated": "70/65/50/25"
+            }
+          },
+          "sources": [
+            {
+              "root_id": "canonical",
+              "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/source",
+              "git_head": "24039a089a59f64a4b649c0f8f7688b3abb204dc",
+              "generation": 4
+            },
+            {
+              "root_id": "predecessor",
+              "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare",
+              "git_head": "0c01b3f9485c95dd397cd55049a98fc530242d02",
+              "generation": 5
+            }
+          ]
+        },
+        {
+          "identity": [
+            "lifecycle",
+            "fixture/repo",
+            "wev-01M4QX0EGDHN4G98KEJGARGC5Y"
+          ],
+          "fact": {
+            "global_id": "wev-01M4QX0EGDHN4G98KEJGARGC5Y",
+            "gh_number": 1,
+            "txn_id": "681572c9624f4d10bf0c1fec5ac0953b",
+            "event": "rated",
+            "payload": "{\"rated\": \"70/65/50/25\"}",
+            "at": "2026-10-12T11:12:17Z",
+            "repository": "fixture/repo",
+            "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+            "held_reasons": [
+              "execution-not-authorized"
+            ],
+            "dispatch": false,
+            "issue_identity": "fixture/repo#1",
+            "payload_decoded": {
+              "rated": "70/65/50/25"
+            }
+          },
+          "sources": [
+            {
+              "root_id": "canonical",
+              "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/source",
+              "git_head": "24039a089a59f64a4b649c0f8f7688b3abb204dc",
+              "generation": 4
+            }
+          ]
+        }
+      ],
+      "pr_leads": [],
+      "reason": "criterion delivery, active overlap and readiness require independent review"
+    },
+    {
+      "identity": "fixture/repo/issues/2",
+      "global_id": "rmi-01M4QX0CQ58D1ZSBPCVFM45Y4F",
+      "decision": "HELD",
+      "existing_work": [
+        {
+          "identity": [
+            "lifecycle",
+            "fixture/repo",
+            "wev-01M4QX0CQ882N0RK2083B29HXQ"
+          ],
+          "fact": {
+            "global_id": "wev-01M4QX0CQ882N0RK2083B29HXQ",
+            "gh_number": 2,
+            "txn_id": "e2e3e12a71434162bfd6c6fccf0eb57b",
+            "event": "parked",
+            "payload": "{\"section\": \"Queue / parked intake\"}",
+            "at": "2026-10-12T11:12:16Z",
+            "repository": "fixture/repo",
+            "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+            "held_reasons": [
+              "execution-not-authorized"
+            ],
+            "dispatch": false,
+            "issue_identity": "fixture/repo#2",
+            "payload_decoded": {
+              "section": "Queue / parked intake"
+            }
+          },
+          "sources": [
+            {
+              "root_id": "predecessor",
+              "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare",
+              "git_head": "0c01b3f9485c95dd397cd55049a98fc530242d02",
+              "generation": 5
+            }
+          ]
+        }
+      ],
+      "pr_leads": [],
+      "reason": "criterion delivery, active overlap and readiness require independent review"
+    },
+    {
+      "identity": "fixture/repo/issues/3",
+      "global_id": "rmi-01M4QX0D6FPP18VWBCKEKSG8HG",
+      "decision": "HELD",
+      "existing_work": [
+        {
+          "identity": [
+            "lifecycle",
+            "fixture/repo",
+            "wev-01M4QX0D6HQHMMRZ8HTYJKD2X5"
+          ],
+          "fact": {
+            "global_id": "wev-01M4QX0D6HQHMMRZ8HTYJKD2X5",
+            "gh_number": 3,
+            "txn_id": "4f497a559ccc458488361fa3136c3223",
+            "event": "parked",
+            "payload": "{\"section\": \"Queue / parked intake\"}",
+            "at": "2026-10-12T11:12:16Z",
+            "repository": "fixture/repo",
+            "repo_global_id": "repo-01M4QX0BC70V2AEW0V36ZGR8Q3",
+            "held_reasons": [
+              "execution-not-authorized"
+            ],
+            "dispatch": false,
+            "issue_identity": "fixture/repo#3",
+            "payload_decoded": {
+              "section": "Queue / parked intake"
+            }
+          },
+          "sources": [
+            {
+              "root_id": "predecessor",
+              "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/prepare",
+              "git_head": "0c01b3f9485c95dd397cd55049a98fc530242d02",
+              "generation": 5
+            }
+          ]
+        }
+      ],
+      "pr_leads": [],
+      "reason": "criterion delivery, active overlap and readiness require independent review"
+    }
+  ]
+}
+RESULT preserved GIDs/current owner override/predecessor HEAD/tree, root /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-eus9k214/rollover/rolled

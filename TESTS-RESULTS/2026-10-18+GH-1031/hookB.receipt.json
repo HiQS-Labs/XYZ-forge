@@ -1,0 +1,13 @@
+{
+ "schema": "weekly/handoff@1",
+ "phase": "ancestry",
+ "root_head": "0a072b62fb05f591ede22edb37de7688bf221a8d",
+ "pending_merge": {
+  "head": "0a072b62fb05f591ede22edb37de7688bf221a8d",
+  "tree": "127d454ab323a1af99b58bc7a42251c2a9808c4e"
+ },
+ "pending_commit": null,
+ "pending_tree": null,
+ "complete_commit": null,
+ "_note": "trimmed from the planner's .git/weekly-2026-10-17.json receipt; omitted keys: operation, original, original_bytes, original_owner, original_owner_bytes, root_identity"
+}

@@ -1,0 +1,10 @@
+{
+ "schema": "weekly/handoff@1",
+ "phase": "complete",
+ "root_head": "db69767941b9b99f53e907557123dc914392846b",
+ "pending_merge": null,
+ "pending_commit": null,
+ "pending_tree": null,
+ "complete_commit": "db69767941b9b99f53e907557123dc914392846b",
+ "_note": "trimmed from the planner's .git/weekly-2026-10-17.json receipt; omitted keys: operation, original, original_bytes, original_owner, original_owner_bytes, root_identity"
+}

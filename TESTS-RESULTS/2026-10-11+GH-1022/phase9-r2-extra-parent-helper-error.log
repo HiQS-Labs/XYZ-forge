@@ -1,0 +1,8 @@
+PREVIEW True ['Declared observations are not global quiescence, criterion delivery or dispatch approval.', 'No observer contexts declared for canonical; absence does not prove idle.', 'No observer contexts declared for predecessor; absence does not prove idle.']
+ACTUAL_PARENTS ee71772b67f5cfc90378c19cd8170dd7d96f3868 9c40ed6f8fe2fd816f25696faba8f67e64156c3f ee6c6742a18b3e05d7acb08f176a8fb775ca766b
+FIRST controlled committed result lost
+Traceback (most recent call last):
+  File "/tmp/gh1022-phase9-extra-parent-hold.py", line 34, in <module>
+    before_receipt=(new/'.git/weekly-reconcile-'+args.planning_date+'.json')
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~
+TypeError: unsupported operand type(s) for +: 'PosixPath' and 'str'

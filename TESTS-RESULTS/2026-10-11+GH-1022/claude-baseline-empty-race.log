@@ -1,0 +1,10 @@
+refused: rule=baseline-empty-manifest: release rel-01M4PN7TKVKYEAQPGB9VY4ZBBF has no dialed-in or shipped members; owner state preserved
+[
+  {
+    "control": "S9-concurrent-empty-manifest",
+    "injected": true,
+    "rc": 3,
+    "baseline_count": null,
+    "safe": true
+  }
+]

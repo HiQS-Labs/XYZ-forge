@@ -1,0 +1,9 @@
+{
+  "method": "complete source bytes after B1/B2 remediation; R2 final QA pending",
+  "sha256": {
+    "utils/py/releases_app.py": "b72df3ea23129102cda3102c1f319ddf047c51d28d9a68361b6061d3fa50ad43",
+    "relay-automation/marathon.sh": "c0e8b573e7e32f3a956bae595afbb786d7da2b37ace8f2c5af4c774a359f42ec",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "cb6d48915adac75d9949cd0f2c3b5347980daf63b67118f80df40d6313089495",
+    "skills/3-weekly/weekly-planner/scripts/issue_intake.py": "788561213fe20b29a705f0f284d0649098684fb9aa743d4eac2c72e3bd3f0956"
+  }
+}

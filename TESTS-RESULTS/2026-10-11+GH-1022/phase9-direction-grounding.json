@@ -1,0 +1,17 @@
+{
+  "source_sha256": "e64c273dabf2697c815e2afc68ab2827b49656d02501d8b12d66c2668b5ea004",
+  "method": "actual existing canonical owner mutation and pure selection in owned temporary Git/DB fixture; connectors0; no production writes/CI additions",
+  "required_caller_orientation": "incoming old planning parent is bounded roadmap/history delta; fresh canonical parent is anchor",
+  "existing_new_root_orientation_hold": "unsupported local table change: releases",
+  "existing_selector_reversed_orientation_preserves": {
+    "canonical_release_gid": "rel-01M0BTBRMJJHRS147J73WWGGEJ",
+    "old_planning_gid": "rmi-01M0DP23V8F0R5ET8B6T536Z81",
+    "owner_description": true,
+    "owner_override": true,
+    "all_history_selected": {
+      "op_receipts": 1776,
+      "work_events": 703
+    }
+  },
+  "minimal_next_seam": "explicit opt-in delta-parent adapter inside canonical owner, preserving original root/parent receipt order and defaults; no broader ledger/schema/identity redesign"
+}

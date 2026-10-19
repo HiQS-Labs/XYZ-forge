@@ -1,0 +1,59 @@
+{
+  "head": "50b4a78e",
+  "source_sha256": {
+    "utils/py/releases_app.py": "06b02c67ad6fc7f3c649ff13c61a0c9af41ed60a67a1167a87415b7fa81ecaf1",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "225e9249dfc887c717b1f475f909fe2ee98c82c09eb65a0e74577ebe81f78c77"
+  },
+  "controls": [
+    {
+      "control": "caller-manual",
+      "rc": 0
+    },
+    {
+      "control": "commit-loss",
+      "rc": 0
+    },
+    {
+      "control": "clone-loss",
+      "rc": 0
+    },
+    {
+      "control": "ancestry-loss",
+      "rc": 0
+    },
+    {
+      "control": "intent-pair-loss",
+      "rc": 0
+    },
+    {
+      "control": "new-writer-race",
+      "rc": 0
+    },
+    {
+      "control": "hook-installed",
+      "rc": 0
+    },
+    {
+      "control": "hook-refusal",
+      "rc": 0
+    },
+    {
+      "control": "hook-timeout",
+      "rc": 0
+    },
+    {
+      "control": "extra-tree-hold",
+      "rc": 0
+    },
+    {
+      "control": "negative-current",
+      "rc": 0
+    },
+    {
+      "control": "same-date",
+      "rc": 0
+    }
+  ],
+  "effects": "owned temporary full/Git/canonical/handoff/capture/localbare/installed fixture hook/limited children; no live publication or CI additions",
+  "limits": "some helpers/routers injected; timeout is actual default leaf, not full caller IO evidence"
+}

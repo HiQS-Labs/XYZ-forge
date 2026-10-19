@@ -1,0 +1,46 @@
+{
+  "head": "5c09a12c",
+  "source_sha256": {
+    "utils/py/releases_app.py": "06b02c67ad6fc7f3c649ff13c61a0c9af41ed60a67a1167a87415b7fa81ecaf1",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "d765a237eb8e675de6022a0ed8db617f21a972c379a424a6c585e6aed312f980"
+  },
+  "controls": [
+    {
+      "control": "caller-manual",
+      "rc": 0
+    },
+    {
+      "control": "commit-loss",
+      "rc": 0
+    },
+    {
+      "control": "clone-loss",
+      "rc": 0
+    },
+    {
+      "control": "ancestry-loss",
+      "rc": 0
+    },
+    {
+      "control": "intent-pair-loss",
+      "rc": 0
+    },
+    {
+      "control": "new-writer-race",
+      "rc": 0
+    },
+    {
+      "control": "adopt-publish",
+      "rc": 0
+    },
+    {
+      "control": "negative-current",
+      "rc": 0
+    },
+    {
+      "control": "same-date",
+      "rc": 0
+    }
+  ],
+  "method": "actual canonical/core/Git flows in ephemeral full fixtures; GH and clone routing injected, localbare publishing; no production connector/push/dispatch/CI additions"
+}

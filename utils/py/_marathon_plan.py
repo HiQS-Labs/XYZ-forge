@@ -31,7 +31,7 @@ from contextlib import closing
 from pathlib import Path
 
 from router_audit import parse_pdda_mode
-from releases_app import roadmap_render
+from releases_app import roadmap_render, roadmap_rating_view, RATING_COLUMNS, _has_column
 
 # Ledger sections we sequence from vs. only reference.
 SECTIONS = ["Queue / parked intake", "In progress", "Completed", "Deferred · vision"]
@@ -773,7 +773,7 @@ class Engine:
                     raise EngineExit(3, "marathon-plan: releases.db has no roadmap_items table")
                 ledger = self._parse_ledger(roadmap_render(conn))
                 # GH-698 F2: carry the canonical four-axis ratings so the planner
-                # ranks by the DB's own rank (the four-axis sum) instead of
+                # ranks by the DB's own effective rank instead of
                 # requiring legacy cx/risk/effort doc frontmatter.
                 # GH-710: gh_number is nullable (doc-only rows are legal), and such a
                 # row can only be rated by `releases roadmap rate --gid`. Index those
@@ -783,12 +783,21 @@ class Engine:
                 # and are reported by gid so neither is rated by the other's score.
                 db_ranks, db_axes = {}, {}
                 by_key, by_doc = {}, {}  # (doc, title) -> [hits]; doc -> [hits]
+                # Older fixture schemas carry the axes but no optional override.
+                # Keep required-column errors and the existing identity projection.
+                ovr_column = ("rating_ovr" if _has_column(conn, "roadmap_items", "rating_ovr")
+                              else "NULL AS rating_ovr")
                 for row in conn.execute(
                     "SELECT gh_number, rating_pri, rating_sev, rating_appeal, rating_effort, "
-                    "global_id, doc_path, title FROM roadmap_items"
+                    "global_id, doc_path, title, " + ovr_column + " FROM roadmap_items"
                 ):
                     axes = [row[1], row[2], row[3], row[4]]
-                    rank = sum(int(a) for a in axes) if all(a is not None for a in axes) else None
+                    # Preserve the historical integer conversion only for fully
+                    # rated rows; the canonical projection owns sum/override policy.
+                    rating_row = ({c: int(row[c]) if row[c] is not None else None
+                                   for c in RATING_COLUMNS}
+                                  if all(a is not None for a in axes) else row)
+                    rank = roadmap_rating_view(rating_row)["rating_rank"]
                     axes_t = tuple(int(a) for a in axes) if rank is not None else None
                     if row[0] is not None:
                         if rank is not None:
@@ -1085,7 +1094,7 @@ class Engine:
         def score_of(r):
             if r.get("dbRank") is not None:
                 # GH-698 F2: the ledger's own rank IS the canonical ordering (the
-                # four-axis sum). Lower planner score = earlier, so negate; the
+                # calculated sum or owner override). Lower score = earlier, so negate; the
                 # deps/zone/gated adjustments below keep their existing meaning.
                 base = -r["dbRank"]
                 zone_penalty = r["zoneRule"]["penalty"] if (r["zoneRule"] and math.isfinite(_js_number(r["zoneRule"]["penalty"]))) else 0

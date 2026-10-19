@@ -1,0 +1,8 @@
+{
+  "skills/3-weekly/10days/intake_adapter.py": "9af8a575965c2a723e4245379165e24aae96e5b0dcc50126f2d138578df53737",
+  "skills/3-weekly/weekly-planner/scripts/planner_core.py": "d1b64d3056e0d380775b5780a8c11d1ce627d0a3c7984cf57ca4fd67a30f3cf5",
+  "skills/3-weekly/weekly-planner/scripts/issue_intake.py": "28b58fcee1cd4e23a6f844bddce4739ddcee3056be2223bdfafd427f3ee16b57",
+  "utils/py/releases_app.py": "74d2f2ed943373af71aec9b8c17e4e5e8aefdca4b76e342ea625ad8cf373491c",
+  "utils/py/proc_group.py": "e5dbc41b0e48ded0a9a30ce381f141a27be1322963ce8fd5a44a94adb5ef0130",
+  "utils/hq/hq-lib.sh": "3e199303241cf4933ce232ed8f374e6caf6e2236777416414f6711560059706d"
+}

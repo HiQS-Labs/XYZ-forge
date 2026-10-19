@@ -1,0 +1,21 @@
+{
+  "reviewer_commit": "301b0e4b771b16b9927f7bdf709d8a99364e8bda",
+  "frozen_handoff": "94513e818f3dddf7237f21246565fab0390ca13d",
+  "source_revision": "1044969dcad23a08e19219e3fb195d58715187d4",
+  "evidence_revision": "142a377ce5ddbfaa9da3aca8715d3fe0d34eb26a",
+  "round": "6/6",
+  "verdict": "FAIL",
+  "status": "Escalated",
+  "driver_rc": 4,
+  "unresolved_critical_high": 0,
+  "actionable": [
+    {
+      "grade": "Should",
+      "severity": "Medium",
+      "scope": "exact canonical Markdown title grammar not included in whole-batch inspection",
+      "issue": "https://github.com/HiQS-Labs/XYZ-forge/issues/1028",
+      "disposition": "tracked;source unchanged under explicitly permitted lower-severity draft publication"
+    }
+  ],
+  "publication_policy": "normal gates required;truthful FAIL retained;no Approved receipt inferred;one review exhausted;no newtests approved"
+}

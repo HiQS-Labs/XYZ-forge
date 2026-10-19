@@ -1,0 +1,2 @@
+{'revision': 'before-fix', 'safe': False, 'held': False, 'injected': True, 'edit_preserved': True, 'complete_commit': '414ca7457c338129edd4d781ff383fc137359353', 'reason': None}
+{'revision': 'candidate', 'safe': True, 'held': True, 'injected': True, 'edit_preserved': True, 'complete_commit': None, 'reason': 'staged canonical accounting differs; preserve partial state'}

@@ -1,0 +1,7 @@
+{
+ "complete": true,
+ "status": "HELD",
+ "dispatch_allowed": false,
+ "error": null,
+ "effects": "preview: Git/owner/declared-work reads only; apply: new full clone, existing owner/receipt handoff, canonical ledger/capture/Git commits; no execution"
+}

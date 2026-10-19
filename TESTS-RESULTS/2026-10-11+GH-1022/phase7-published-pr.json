@@ -1,0 +1,45 @@
+{
+  "headRefOid": "437462a44adba2bcaa662fe123c8ed2dccd76d1f",
+  "isDraft": true,
+  "mergeStateStatus": "CLEAN",
+  "mergeable": "MERGEABLE",
+  "statusCheckRollup": [
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-12T07:42:51Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38219283130/job/114711353348",
+      "name": "promotion boundary (macOS \u2014 the platform we ship to)",
+      "startedAt": "2026-10-12T07:42:51Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-12T07:42:51Z",
+      "conclusion": "SKIPPED",
+      "detailsUrl": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38219283130/job/114711353582",
+      "name": "portability canary (ubuntu \u2014 advisory, never breakage)",
+      "startedAt": "2026-10-12T07:42:51Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "CheckRun",
+      "completedAt": "2026-10-12T07:43:10Z",
+      "conclusion": "SUCCESS",
+      "detailsUrl": "https://github.com/HiQS-Labs/XYZ-forge/actions/runs/38219283130/job/114711352295",
+      "name": "vendored smoke gate (blocking on development + main)",
+      "startedAt": "2026-10-12T07:42:53Z",
+      "status": "COMPLETED",
+      "workflowName": "CI"
+    },
+    {
+      "__typename": "StatusContext",
+      "context": "CodeRabbit",
+      "startedAt": "2026-10-12T07:42:54Z",
+      "state": "SUCCESS",
+      "targetUrl": ""
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "source_sha256": "09384ac95c78fe2f33b2ca4b34f0eb443b5f14f6d752dc55d268486271c750cb",
+  "controls": [
+    {
+      "kind": "accepted-quiet",
+      "rc": 0,
+      "doc_path": "PROJECT/1-INBOX/GH-777-OWNER.md",
+      "section": "In progress",
+      "safe": true
+    },
+    {
+      "kind": "accepted-stale",
+      "rc": 3,
+      "doc_path": "PROJECT/2-WORKING/GH-777-OWNER.md",
+      "section": "Queue / parked intake",
+      "safe": true
+    },
+    {
+      "kind": "reconcile-quiet",
+      "rc": 0,
+      "doc_path": "PROJECT/1-INBOX/GH-777-OWNER.md",
+      "section": "Completed",
+      "safe": true
+    },
+    {
+      "kind": "reconcile-stale",
+      "rc": 3,
+      "doc_path": "PROJECT/2-WORKING/GH-777-OWNER.md",
+      "section": "Queue / parked intake",
+      "safe": true
+    }
+  ],
+  "local_effects": "independent temporary Git fixture repos and canonical CLI init/add/repoint/check; actual sanctioned second-process owner writes; native issue/gh state reads stubbed, no actual GH reads,writes,push,dispatch; local DB/dump/receipts/lock/audit"
+}

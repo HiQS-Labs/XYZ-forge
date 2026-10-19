@@ -236,6 +236,155 @@ The two defects were reproduced in the GH-1012 release review. Verification uses
 and retained isolated manual controls only; no CI cases or registration are added. Revert the
 GH-1037 implementation commit to undo these localized ownership changes.
 
+## 2026-10-12 — Preserved held weekly rollover (GH-1022, Phase9)
+
+The existing weekly core can explicitly reconcile an owned or exactly published
+predecessor into a new auto-date full clone, preserve canonical GIDs/owner ratings/
+history and captures, retain predecessor ancestry, and refresh broad intake. Existing
+private ownership/locks govern handoff and stopped recovery. Unknown edits or histories
+hold; unchanged input makes no new commit. Optional publication checks/installs the
+existing normal hooks and uses explicit bounded ordinary fast-forward push.
+
+Preparation now records its intended full tree, sole parent and owned objects in
+the existing receipt before committing. Completion and partial/no-change recovery
+inspect the exact captured commit; unknown results retain incomplete evidence.
+Failed reviews and actual extra-file/parent red controls remain retained. The single
+operator-authorized corrective review passed S4 source checks but returned FAIL for
+a separate Medium ancestry-completion gap tracked at GH-1031, with fresh full-scope
+sweep incomplete. This entry does not claim caller approval.
+No new CI test/case/registration, live run, schedule or installation occurred. Strict
+selection/artifacts, freeze/exact approval and shared fire/resume/landing remain
+unimplemented; observations and local commits confer no dispatch authority.
+
+## 2026-10-12 — Canonical local-parent preservation (GH-1022, Phase8)
+
+The RELEASES owner now offers an opt-in local-parent `check` preview/apply API for
+held weekly reconciliation. Pure preview validates exact local Git parents and
+current canonical schema; apply reuses the staged rebuild constructor with a new
+journal binding root/HEAD, selection, runtime and exact before/after DB/dump bytes.
+Disjoint roadmap changes and append-only histories preserve owner GIDs, ratings,
+overrides, start labels and nullable issue references. Unknown/conflicting/deleted
+history, edited owner files, cursor/lease/driver state and recovery drift hold.
+Repeated already integrated state adds no generation or receipt. Backups, immutable
+triggers and legacy check/rebuild defaults remain unchanged; connectors0 is required.
+Actual local fixture crash/refusal controls and independent sourceQA retain failed
+R1 and repaired R2 evidence. No CI test/case/registration was added. This is a
+canonical prerequisite; weekly coordination/rollover, freeze and shared dispatch/
+landing safeguards remain required, with no execution or full-issue authority.
+
+## 2026-10-12 — Held declared-work census (GH-1022, Phase7)
+
+Weekly can now observe explicitly declared roots through the existing RELEASES and
+Marathon observer owners. One guarded ledger read retains Marathon/Jog/raw lifecycle
+facts; one-shot bounded context reads retain UNKNOWN evidence. Shared normalization
+preserves every source, deduplicates qualified stable identities and holds conflicts.
+The core adapter measures runtime bytes and target heads, with no ledger, context,
+connector or dispatch writes. Existing preparation uses the extracted bounded-runtime
+helpers with its defaults preserved. Read completeness never grants global-idle,
+criterion-delivery or execution authority. Full weekly reconciliation, freeze and
+shared fire/resume/landing remain required. No CI test/case/registration was added.
+
+## 2026-10-12 — Escape canonical dashboard text (GH-1022 owner review)
+
+The existing dashboard now escapes ledger text with Python's html.escape when
+rendering releases, roadmap headings and issue rows. Stored data and other readers
+are unchanged. Whole-owner Phase6 review reproduced active HTML from a legal title;
+manual rendering controls witness the repair. A missing dump generation now
+keeps an explicit unavailable/stale warning visible instead of crashing the dashboard;
+canonical parsing/recovery remain unchanged. No CI test or case was added.
+
+## 2026-10-12 — Qualified held Jog observations (GH-1022, Phase6)
+
+Canonical Jog list now joins roadmap metadata by repository and issue number,
+preventing another repository's same-number issue from enriching the owned queue.
+The opt-in `jog list --inventory-json` observes one declared root read-only,
+with qualified repository/GIDs, explicit terminal scope and no dispatch authority.
+Missing schema/ownership, invalid generation, journals or observed drift return
+UNKNOWN/nonzero without creating, migrating or recovering a ledger. Default
+JSON/human fields, ordering, filter and missing-table behavior stay compatible.
+Weekly global reconciliation, executable freeze and shared dispatch remain required.
+
+The existing lock-progress fixture now opens its owned fresh token file without
+O_APPEND, so Linux positional writes can replace tokens before truncation. The
+production lock policy, existing cases/assertions and CI registration are unchanged.
+Untouched-development Ubuntu reproduces the baseline failure; corrected Linux
+qualification remains pending. No individual CI test was added.
+
+## 2026-10-12 — Claude review corrections (GH-1022, local/unqualified)
+
+Weekly batch inspection rejects deterministic member errors before captures or
+canonical registration. Qualified identities retain validated GitHub URL casing.
+The private 10days adapter reports missing modes as usage errors. Explicit RELEASES
+baseline capture rechecks live owner state inside its existing transaction and
+refuses a concurrent baseline cleanly; the SQL write-once safeguard remains.
+Manual before/after evidence retained; corrective review and publication pending.
+Complete source/vendor bundles now retain their own runtime; separately copied
+skills retain central discovery, with clear refusal for invalid explicit hints.
+Preparation records/rechecks actual runtime paths/hashes and uses the existing
+process-group runner with60s IO containment. Held accounting ignores only check
+URL/time noise while retaining material readiness/scope changes and returning
+fresh PR metadata on no-op. Producer controls andexisting focused suites pass at1044969d;consolidated
+R6 final review isFAIL withoneMedium title-grammar preflight gap trackedGH1028
+andno unresolvedCritical/High. Normalgated draftpublished3b5fb32e;weeklyHELD.
+
+
+## 2026-10-11 — Canonical planner owner overrides (GH-1022, phase 5)
+
+The authoritative Python Marathon reader now uses the existing RELEASES rating
+projection for fully-rated effective rank, including owner overrides. Ordinary,
+partial/unrated and doc-only identity behavior is preserved; historical schemas
+without the optional override retain their fallback. No second scorer or ledger
+writer, and the frozen Bash fallback is unchanged. Existing report axis formatting
+above five remains a disclosed limitation. Weekly selection stays HELD for required
+readiness, criterion evidence, freeze/approval and shared execution safeguards.
+Phase5 plan/final QA Approved; existing full gate409/409 and hosted smoke passed.
+Promotion jobs skipped by existing policy; no new CI tests or live execution.
+
+## 2026-10-11 — Local canonical weekly accumulation (GH-1022, phase 4)
+
+- GH-1022 review: canonical release updates now refuse a stale validated row inside
+  the existing writer transaction, preserving a concurrent owner's unrelated
+  fields. Actual second-process red/control evidence retained; review cap is
+  escalated and this late repair is awaiting final independent approval.
+
+- The single operator-approved fourth review confirmed the release guard, then
+  found a preexisting roadmap rating/repoint race. Canonical rating now refuses
+  a changed owner row before replacing its text inside the existing transaction.
+  Actual second-process red/quiet/force controls preserve the newer document link.
+  Same-class diagnosis also protects repoint from erasing a newer owner rating;
+  partial-field update/move and unique add controls preserve existing owner data.
+  Review remains Escalated4/4; this repair is unreviewed, not operational approval.
+
+Existing planner_core gains opt-in weekly-prepare: explicit date/ref/backfill/overlap,
+read-only write preview or authorized local application in a separate owned full
+clone. It preserves existing captures/GIDs/ratings/overrides/status, uses HQ capture
+and RELEASES CLI writers for missing rows, commits complete accounting before the
+checkpoint, and holds drift/concurrency/unknown partial state. Unchanged runs retain
+the prior cut/commit/receipt; known committed additions or refused commits can resume
+without duplicates. All results remain HELD, with no push or dispatch.
+
+Canonical roadmap reader JSON now exposes existing rating axes, override, calc and
+effective rank through the same projection as its human view. Shared URL comparison
+preserves legitimate repository casing without rewriting stored owner URLs. The
+authoritative planner still ignores overrides: selection remains held for separate
+canonical-owner correction. Remote planning-branch/rollover/global-run reconciliation,
+dependency expansion, executable artifacts, freeze/exact approval and shared boundary
+safety remain required and unimplemented. No new CI tests/cases/gates or live actions.
+
+## 2026-10-11 — Shared discovery and held weekly intake preview (GH-1022, staged)
+
+The existing 10days scan and capture lookup now use harness-owned `issue_intake.py`
+through thin compatibility adapters, preserving scan defaults/limit and lookup roots.
+Python3 and a current selected harness are explicit prerequisites for copied skills.
+The existing weekly/daily planner core gains an opt-in complete issue/PR read preview;
+`/weekly` names this held preparation entry point while existing planner names remain.
+
+At the foundation milestone, #1022 remained incomplete: branch ledger accumulation/checkpoints,
+authoritative plan construction, readiness fixes, immutable freeze and exact approval,
+criterion-level pre-fire/phase/resume and pre-landing redundancy safeguards remain
+unimplemented. Preview always holds dispatch. No new tests, schedules, installations,
+connector writes or live execution. Revert shared module/adapters/core mode together.
+Existing/manual evidence is retained under `TESTS-RESULTS/2026-10-11+GH-1022/`.
 ## 2026-10-11 — start-task: prior-art scan finds merged PRs and issues (GH-1025)
 
 `/start-task` checked only open PRs in the current repo, so a fix merged yesterday, a closed issue,

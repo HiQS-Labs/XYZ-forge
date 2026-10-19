@@ -1,0 +1,96 @@
+{
+  "controls": [
+    {
+      "control": "bundle-core-prefers-own-source-intake",
+      "pass_": true
+    },
+    {
+      "control": "bundle-adapter-with-stale-hint",
+      "pass_": true,
+      "rc": 0
+    },
+    {
+      "control": "invalid-explicit-hint-held",
+      "pass_": true
+    },
+    {
+      "control": "standalone-copy-uses-central-harness",
+      "pass_": true
+    },
+    {
+      "control": "old-selected-copy-fails-missing-helper",
+      "pass_": true
+    },
+    {
+      "control": "default-command-normal-canonical-preparation",
+      "pass_": true
+    },
+    {
+      "control": "runtime-paths-and-five-hashes",
+      "pass_": true
+    },
+    {
+      "control": "receipt-binds-runtime",
+      "pass_": true
+    },
+    {
+      "control": "slow-real-hook-times-out-held",
+      "pass_": true,
+      "wall_seconds": 5.874506457999814
+    },
+    {
+      "control": "owned-hook-group-not-running",
+      "pass_": true,
+      "process_states": [
+        "",
+        ""
+      ]
+    },
+    {
+      "control": "weekly-lock-released-on-timeout",
+      "pass_": true
+    },
+    {
+      "control": "canonical-lock-released-on-timeout",
+      "pass_": true
+    },
+    {
+      "control": "timeout-retains-incomplete-receipt",
+      "pass_": true
+    },
+    {
+      "control": "same-input-retry-completes-once",
+      "pass_": true
+    },
+    {
+      "control": "remote-timeout-preserves-complete-state",
+      "pass_": true,
+      "wall_seconds": 3.2285127919749357,
+      "process_states": [
+        "",
+        ""
+      ]
+    },
+    {
+      "control": "renderer-drift-before-intent-refused",
+      "pass_": true
+    },
+    {
+      "control": "restored-exact-runtime-retry-safe",
+      "pass_": true
+    },
+    {
+      "control": "writer-drift-leaves-uncompleted-intent",
+      "pass_": true
+    },
+    {
+      "control": "exact-writer-restoration-adopts-once",
+      "pass_": true
+    }
+  ],
+  "source_sha256": {
+    "skills/3-weekly/10days/intake_adapter.py": "9af8a575965c2a723e4245379165e24aae96e5b0dcc50126f2d138578df53737",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "d1b64d3056e0d380775b5780a8c11d1ce627d0a3c7984cf57ca4fd67a30f3cf5"
+  },
+  "local_effects": "temporary fixture full clones/canonical DB-dump-captures-receipts-commits;fixture PATH gh/git stubs;actual default run_bounded,clock shortened in loaded namespace only;owned TERM-resistant child groups timed out/killed;temporary runtime copy modified/restored;no live connector/schedule/dispatch/push"
+}

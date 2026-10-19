@@ -1,0 +1,39 @@
+nested-preparation-refused-source-clean PASS
+dry-preview-no-clone PASS
+dry-enumerates-preserve-and-canonical-writes PASS
+full-clone-auto-branch PASS
+all-updated-closed-backfill-accounted PASS
+owner-row-gid-rating-override-preserved PASS
+owner-capture-bytes-preserved PASS
+new-rows-unrated-and-closed-not-delivered PASS
+renderer-does-not-evaluate-body PASS
+unchanged-does-not-rewrite-receipt PASS
+unchanged-no-commit-retains-checkpoint PASS
+reopened-member-updated-no-duplicate PASS
+lock-contention-held PASS
+target-drift-preserves-head PASS
+source-checkout-preserved PASS
+malformed-receipt-held-15 PASS
+malformed-receipt-held-16 PASS
+malformed-receipt-held-17 PASS
+malformed-observation-held PASS
+symlink-capture-held PASS
+CONCURRENT_OBSERVED concurrent ledger change; preserve owner state
+CONCURRENT_STATE True [2] [{'global_id': 'rmi-01M4P1H2VWHW3WEMECRHDJ1846', 'gh_number': 1, 'rating_ovr': 321}] rmi-01M4P1H2VWHW3WEMECRHDJ1846
+concurrent-owner-rating-change-held-preserved PASS
+concurrent-change-no-complete-checkpoint PASS
+incomplete-failure-held PASS
+incomplete-no-clone-no-checkpoint PASS
+post-add-failure-held PASS
+post-add-no-complete-checkpoint PASS
+post-add-retry-no-duplicate PASS
+post-add-recovered-cut-preserved PASS
+commit-failure-held PASS
+commit-no-complete-checkpoint PASS
+commit-retry-no-duplicate PASS
+commit-recovered-cut-preserved PASS
+post-commit-result-loss-held PASS
+post-commit-result-loss-incomplete-receipt PASS
+post-commit-retry-no-second-commit PASS
+post-commit-retry-completes-receipt PASS
+RESULT 36 manual controls passed; fixtures: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-dlqk0dpk

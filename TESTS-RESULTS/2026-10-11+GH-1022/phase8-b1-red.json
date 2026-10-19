@@ -1,0 +1,32 @@
+{
+  "source_sha256": "d7efd6d5e620c9518adf91ff78929c79bab2df9cb9d4f9a645dae3d5faf56694",
+  "method": "current nonempty canonical SQL and actual selector under Python debugger line trace; memory only; no DB/Git/connector writes",
+  "sanity": "FIX NOW: witnessed loss of durable work history violates explicit1022/Phase8 preservation; necessary API blocker, not incidental suite machinery",
+  "base_events": 713,
+  "both_deleted_accepted": true,
+  "selected_events": 0,
+  "visited_tables": [
+    "schema_migrations",
+    "settings",
+    "repos",
+    "issue_refs",
+    "marathons",
+    "releases",
+    "manifest_items",
+    "manifest_state_events",
+    "doc_lines",
+    "legacy_lines",
+    "grandfather_entries",
+    "roadmap_items",
+    "jog_queue",
+    "op_receipts"
+  ],
+  "one_deleted_hold": "historical source is not append-only: work_events",
+  "unchanged_events": 713,
+  "alternatives_disproved": [
+    "source-chain cannot detect work_events deletion (excluded from business digest)",
+    "roundtrip admits empty current-schema table",
+    "one-side deletion already held; failure is domain omission, not the per-table guard"
+  ],
+  "root_cause": "selector domain omits ancestor-only tables; fixsite selector union; upstream parser/loader correctly admit empty tables and downstream guards are sound when visited"
+}

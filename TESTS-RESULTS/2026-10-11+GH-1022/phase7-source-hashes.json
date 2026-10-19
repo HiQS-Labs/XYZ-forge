@@ -1,0 +1,9 @@
+{
+  "method": "measured complete owner bytes of local census candidate; final review pending",
+  "sha256": {
+    "utils/py/releases_app.py": "b72df3ea23129102cda3102c1f319ddf047c51d28d9a68361b6061d3fa50ad43",
+    "relay-automation/marathon.sh": "f1886529423f067b5e69ee84cdffa5554742001bb557ae1ac4e5c5a8d2d0f239",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "cb6d48915adac75d9949cd0f2c3b5347980daf63b67118f80df40d6313089495",
+    "skills/3-weekly/weekly-planner/scripts/issue_intake.py": "b2142a3cc5b878fb96e1a0c6c0a678a3ac7e07d3997d77c469dc22f129c9c6b8"
+  }
+}
