@@ -146,10 +146,11 @@ git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (
 python3 utils/py/express.py resume --issue "$N" --suite "$SUITE" --sha "$SHA" --base "$BASE"                 # 7.
 ```
 
-In a vendored host (GH-1169) the recipe differs in three places: run the suite as
-`PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run` instead of `bash "$SUITE"` (with
-`SUITE='utils/pdda/pdda.sh run'`, the receipt spelling), import express from `.xyz/utils/py` in step 5, and
-resume with `python3 .xyz/utils/py/express.py --root . resume --issue "$N" --docs-only --sha "$SHA" --base "$BASE"`.
+In a vendored host (GH-1169) the recipe differs in four places: set `REPO=<owner>/<name>` (the host's slug; express's
+default is XYZ Forge's), run the suite as `PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run`
+instead of `bash "$SUITE"` (with `SUITE='utils/pdda/pdda.sh run'`, the receipt spelling), import express from
+`.xyz/utils/py` in step 5, and resume with
+`python3 .xyz/utils/py/express.py --root . resume --issue "$N" --docs-only --sha "$SHA" --base "$BASE" --repo "$REPO"`.
 
 Before landing, `cmd_land` qualifies the change, resolves the exact owned full issue
 URL, and invokes `roadmap update --gid OWNED_ROW --accepted-start` (schema009 must
