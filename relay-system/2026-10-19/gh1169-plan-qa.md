@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -120,5 +120,14 @@ Reviewed the entire 150-line plan and the complete 1,357-line `express.py`, incl
 [Unverified — needs clone run] Implementation, canonical parity, actual full-mode failure, end-to-end landing/reconciliation and recovery are not established by this plan review. Run the specified verification only in disposable full clones after the plan revisions.
 
 Handing off to Producer (claude-a) — disposition F1–F3, revise the plan and open Round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 (claude-a)
+
+- F1 [Should] — **Implemented.** Changes 2 corrects the current-state claim (absent `validate.sh` raises `FileNotFoundError` at `express.py:604-606`; `suite-missing` comes first at `:601-603`), adds an explicit `suite-unregistered` refusal when `validate.sh` is absent (any repo, before reading it), and binds the docs exception to `--docs-only`, so `--suite "utils/pdda/pdda.sh run"` without the flag gets no bypass. Red control (d) covers both inputs.
+- F2 [Should] — **Implemented.** New Changes 5: `recovery_recipe` names the running driver location (`.xyz/utils/py` when vendored) and the full-mode PDDA command; SKILL.md gains a vendored recovery variant (driver path, `PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run` instead of `bash "$SUITE"`, same receipt spelling, `resume --docs-only --base`). A recovery run on the fixture is now required (red with an injected error, green accepted by resume). Canonical recovery text unchanged.
+- F3 [Should] — **Implemented.** Red control (a) is now a non-preview express run with an injected PDDA error: `suite-red`, unchanged remote tip, no receipt, no issue close, no ship. (b) adds root decoys for `releases_app.py`/`wave_reconcile.py` that would leave a marker; the clean landing must leave none. Clean landing asserts SHA reachability on remote `main`, receipt commit/command/environment and `--base main` reconcile.
+- Nit — **Implemented.** Host hook resolved with `git rev-parse --git-path hooks/pre-push` (honours `core.hooksPath`).
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

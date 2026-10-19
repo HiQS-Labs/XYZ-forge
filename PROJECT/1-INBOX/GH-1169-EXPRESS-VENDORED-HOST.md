@@ -86,16 +86,24 @@ Branch `feat/XYZ-forge-gh1169-express-vendored-host-2026-10-19` off `development
    `normalize_suite` returns `HOST_DOCS_SUITE` unchanged (no `test/` prefix); Step 4 checks `utils/pdda/pdda.sh` exists
    and skips the `validate.sh` registry only for this suite; Step 7 runs `["bash", "utils/pdda/pdda.sh", "run"]` with
    `PDDA_MODE=full` and `PDDA_ACTIVITY_LOG=/dev/null`; the receipt `command` is `bash utils/pdda/pdda.sh run` and resume
-   validates against the same spelling. A non-docs run in a vendored host without `validate.sh` refuses
-   `suite-unregistered` as today.
-3. Gate wiring in a vendored host: if `githooks/install.sh` exists, use it as today; else if `.git/hooks/pre-push` is an
-   executable file, accept it and print `gate: host pre-push hook`; else print `gate: none — this host has no pre-push
+   validates against the same spelling. The exception is bound to the `--docs-only` flag, not the suite spelling:
+   `--suite "utils/pdda/pdda.sh run"` without `--docs-only` gets no registry bypass (plan QA F1). Missing registry: today
+   a host without `validate.sh` reaches `open(<root>/validate.sh)` and raises `FileNotFoundError` (plan QA F1 probe;
+   `express.py:604-606`), and a missing suite file refuses `suite-missing` first (`:601-603`). New behaviour, any repo:
+   a non-docs run where `validate.sh` is absent refuses `suite-unregistered` ("no validate.sh TESTS registry in this
+   repo — code hotfixes need a registered suite") before reading it; the existing `suite-missing` check stays first.
+3. Gate wiring in a vendored host: if `githooks/install.sh` exists, use it as today; else if the effective pre-push hook
+   (`git rev-parse --git-path hooks/pre-push`, which honours `core.hooksPath` — plan QA nit) is an executable file, accept it and print `gate: host pre-push hook`; else print `gate: none — this host has no pre-push
    hook (the landing push bypasses pre-push by lane design)` and continue. Canonical repos keep `gate-unwired`.
 4. Tools: `releases_app(root)` and `reconcile_gated` use `harness_paths.resolve_tool(root, rel, prefer_repo=False)`
    when vendored; canonical keeps the root paths (byte-identical behaviour).
-5. `skills/2-daily/express/SKILL.md`: a short "Vendored hosts" paragraph (docs lane = host PDDA gate in full mode;
-   host hook or none; pass `--release` if the host's next release is stale; code hotfixes need a `validate.sh`
-   registry).
+5. Recovery in a vendored host (plan QA F2): `recovery_recipe` (`express.py:358-366`) names the driver it is running from
+   (`.xyz/utils/py` when vendored, `utils/py` otherwise) and, for `HOST_DOCS_SUITE`, the command
+   `PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run`. `skills/2-daily/express/SKILL.md`: a short
+   "Vendored hosts" paragraph (docs lane = host PDDA gate in full mode; host hook or none; pass `--release` if the host's
+   next release is stale; code hotfixes need a `validate.sh` registry) and a vendored variant of the recovery recipe
+   (`PY=.xyz/utils/py`; the suite run as `PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run`, not
+   `bash "$SUITE"`; same receipt spelling; `resume --docs-only --base "$BASE"`). Canonical recovery text unchanged.
 6. Verification (no new suite, GH-831):
    - `test/gh267-express-skill.sh` and `test/gh358-wave-reconcile-vendored-paths.sh` green (disposable clone).
    - Manual host checks under `TESTS-RESULTS/2026-10-19+GH-1169/`: on a disposable copy of XYZ-layout-engine's shape
@@ -103,9 +111,19 @@ Branch `feat/XYZ-forge-gh1169-express-vendored-host-2026-10-19` off `development
      origin, gh stub for issue/repo identity): `check`/`run --docs-only --dry-run` pass pre-flight and preview
      `origin/main`; a non-preview `run --docs-only` lands on `main`, the receipt says `bash utils/pdda/pdda.sh run`,
      closeout and reconcile complete; a code change refuses `suite-unregistered`.
-   - Red controls: (a) a doc in `PROJECT/2-WORKING/` without frontmatter makes the host docs gate fail under
-     `PDDA_MODE=full` (and the same file passes under the host's `observe` mode, showing why full is forced);
-     (b) with the vendored branch disabled, the same host run refuses `gate-unwired` as today.
+   - Red controls (plan QA F3), all on the same host-shaped fixture, no new suite: (a) a non-preview
+     `run --docs-only` with a doc in `PROJECT/2-WORKING/` lacking frontmatter refuses `suite-red`; the bare remote's
+     `main` tip is unchanged, no receipt is written, the gh stub logs no `issue close` and the ledger records no ship;
+     the same doc passes standalone under the host's `observe` mode (why full is forced). (b) A decoy
+     `<host>/utils/py/releases_app.py` and `<host>/utils/py/wave_reconcile.py` that exit 99 and write a marker file:
+     the clean landing must succeed with no marker (the vendored copies ran). (c) With the vendored branch disabled, the
+     same host run refuses `gate-unwired`. (d) A non-docs run with `--suite "utils/pdda/pdda.sh run"` and a non-docs run
+     with an existing `test/demo.sh` both refuse `suite-unregistered` with no traceback and no landing.
+   - Clean landing assertions: the landed SHA is reachable from the bare remote's `main`; the receipt's `commit` equals
+     that SHA, `command` is `bash utils/pdda/pdda.sh run`, `environment` names `main`; reconcile ran with `--base main`.
+   - Recovery: follow the vendored SKILL.md recipe on the fixture after a landing with no receipt; with the injected
+     PDDA error the recipe records rc≠0 (no passing receipt); clean, it commits a receipt that
+     `resume --docs-only --base main` accepts.
    - Smoke (GH-1088): main path — the real XYZ-layout-engine `check --docs-only --dry-run` on a throwaway doc-only branch
      passes pre-flight; adjacent — the same in XYZ Forge prints output identical to `origin/development`'s express.
    - Final gate per `utils/ci-route.sh` on the changed paths, once, on the final commit.
