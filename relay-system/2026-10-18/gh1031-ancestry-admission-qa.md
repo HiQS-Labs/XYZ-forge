@@ -163,4 +163,12 @@ Basis: Both reported admissions are rejected before intent clears, recovery pres
 
 Relay closed (Approved), no further turn needed. claude-a/harness owns deferred clone verification and the file-scoped commit; the reviewer makes no Git commit.
 
+
+### Attestation · relay-drive — 2026-10-19T02:37:01Z
+task: RELAY-gh1031-ancestry-admission-qa
+reviewer: codex
+status: Approved
+reviewed-head: cae680789473f7d0f220d17d42ab28b2b29409bf
+added-range: 9119+6412
+added-sha256: 9b660078ef4534f19a208e0803af50a00c88dcebf6ca625597b0794a3e284d54
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
