@@ -115,10 +115,15 @@ Branch `feat/XYZ-forge-gh1169-express-vendored-host-2026-10-19` off `development
      `run --docs-only` with a doc in `PROJECT/2-WORKING/` lacking frontmatter refuses `suite-red`; the bare remote's
      `main` tip is unchanged, no receipt is written, the gh stub logs no `issue close` and the ledger records no ship;
      the same doc passes standalone under the host's `observe` mode (why full is forced). (b) A decoy
-     `<host>/utils/py/releases_app.py` and `<host>/utils/py/wave_reconcile.py` that exit 99 and write a marker file:
-     the clean landing must succeed with no marker (the vendored copies ran). (c) With the vendored branch disabled, the
-     same host run refuses `gate-unwired`. (d) A non-docs run with `--suite "utils/pdda/pdda.sh run"` and a non-docs run
-     with an existing `test/demo.sh` both refuse `suite-unregistered` with no traceback and no landing.
+     `<host>/utils/py/wave_reconcile.py` that exits 99 and writes a marker file: the clean end-to-end landing must succeed
+     with no marker (express ran the vendored reconciler). express's own `releases_app` choice is checked with a narrow
+     resolution probe (`express.releases_app(<host>)` returns `<host>/.xyz/utils/py/releases_app.py` even when a
+     `<host>/utils/py/releases_app.py` exists), not with an end-to-end decoy: `wave_reconcile` deliberately resolves
+     `releases_app` repo-first (`wave_reconcile.py:1834-1850`, `harness_paths.py:111-113,129-130`) and stays unchanged
+     (plan QA F4). (c) With the vendored branch disabled, the
+     same host run refuses `gate-unwired`. (d) A non-docs run with `--suite "utils/pdda/pdda.sh run"` refuses `suite-missing`
+     (not an existing suite file; no docs bypass), and a non-docs run with an existing `test/demo.sh` refuses
+     `suite-unregistered`; both with no traceback and no landing (plan QA nit).
    - Clean landing assertions: the landed SHA is reachable from the bare remote's `main`; the receipt's `commit` equals
      that SHA, `command` is `bash utils/pdda/pdda.sh run`, `environment` names `main`; reconcile ran with `--base main`.
    - Recovery: follow the vendored SKILL.md recipe on the fixture after a landing with no receipt; with the injected

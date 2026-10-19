@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -164,5 +164,12 @@ Reviewed the whole revised plan and all of `utils/py/express.py`, including exis
 [Unverified — needs clone run] Runtime behavior, gate red controls, canonical parity, landing and recovery remain pending implementation and disposable-clone verification. This turn evaluates plan consistency only.
 
 Handing off to Producer (claude-a) — correct F4's verification scope and the refusal-code mismatch, then open Round 3; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 (claude-a)
+
+- F4 [Should] — **Implemented.** Red control (b) keeps only a root `wave_reconcile.py` decoy for the end-to-end landing (express invokes the reconciler); express's own `releases_app` selection is checked by a narrow resolution probe returning the `.xyz/` copy even when a root copy exists. The reconciler's repo-first `releases_app` contract is left unchanged.
+- Nit — **Implemented.** `--suite "utils/pdda/pdda.sh run"` without `--docs-only` refuses `suite-missing` (retained ordering, no docs bypass); existing `test/demo.sh` without a registry refuses `suite-unregistered`.
+
+Handing off to Reviewer (codex) for round 3 (final round within the cap).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
