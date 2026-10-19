@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -89,5 +89,36 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: Revise the plan before implementation: the required non-docs refusal is not today's behavior, recovery retains root-layout assumptions, and the proposed red control does not establish that express invokes the gate. The operator's host-mode choice is otherwise coherent.
+swept file: yes
+
+Reviewed the entire 150-line plan and the complete 1,357-line `express.py`, including existing check/docs/ledger/land/closeout/resume paths, plus the resolver, skill and relevant vendoring/PDDA/reconcile contracts. Pre-existing defects relevant to this change are called out below. Evidence tier: Verify with direct-source fallback. No index exists for this relay worktree; nearest `XYZ-forge` graph generation is `2026-09-01T15:54:30Z`, and coverage reports changed/untracked metadata for the principal code files. Current local source, rather than that graph's stale symbols, grounds findings. No git commands, suites or executable fixtures were run.
+
+- **[Should] F1 — Specify the missing-registry refusal and bind the docs exception to lane identity.** Plan Changes 2 (`PROJECT/1-INBOX/GH-1169-EXPRESS-VENDORED-HOST.md:85-90`) says non-docs refuses `suite-unregistered` “as today.” Current `express.py:601-605` first refuses a missing suite as `suite-missing`, or opens absent `validate.sh` without a guard. A narrow import probe with mocked command results (no git execution), a scratch host containing `.git/` and `test/demo.sh` but no registry, and `args.suite="test/demo.sh", docs_only=False` reached `FileNotFoundError ... '<scratch-host>/validate.sh'` (rc 0 for the probe, exception caught and printed). Correct the current-state claim and explicitly add a vendored non-docs missing-registry refusal before file access. State that **VENDORED and docs_only**, not merely `suite == HOST_DOCS_SUITE`, controls registry exemption and host-gate execution; `--suite 'utils/pdda/pdda.sh run'` without `--docs-only` must not grant a code landing via PDDA.
+  Observed input: existing host suite `test/demo.sh`, absent `validate.sh`; proposed normalization also admits the literal host-suite spelling (plan :86-87).
+  Affected scope: vendored non-docs runs without a registry, including explicit selection of the host docs command.
+  Falsifier: disposable host checks of both inputs return the documented refusal with no traceback or landing; ordinary `--docs-only` still reaches the host gate, and canonical suite admission remains unchanged.
+
+- **[Should] F2 — Include vendored receipt recovery, not just receipt matching.** `express.py:358-366` and the skill's recovery recipe (`skills/2-daily/express/SKILL.md:125-138`) still import/run express from root `utils/py`. The skill executes `bash "$SUITE"`, treating `utils/pdda/pdda.sh run` as one filename, and neither recipe forces full PDDA mode. Plan Changes 5's short paragraph does not address these operations. Extend the existing recovery recipe and generated diagnostic for vendored hosts: correct module/driver location, separate script/argument handling, full-mode/activity-log environment, and the same receipt spelling. Keep canonical recovery unchanged; add a disposable recovery/resume check.
+  Observed input: `PYTHONDONTWRITEBYTECODE=1 python3 -c 'import sys; sys.path.insert(0,"utils/py"); import express; print(express.recovery_recipe("a"*40,65,"utils/pdda/pdda.sh run"))'` → rc 0; decisive output: `sys.path.insert(0,"utils/py"); import express` and `runs `bash utils/pdda/pdda.sh run`` (without the required PDDA environment). In the target host express exists under `.xyz/utils/py/`, and the recorded host mode is observe.
+  Affected scope: missing committed receipts after an interrupted vendored docs landing.
+  Falsifier: follow the revised recipe in the host-shaped disposable clone; an injected PDDA error cannot yield a passing receipt, and a genuine successful recovery produces a committed receipt accepted by `resume --docs-only` on `main`.
+
+- **[Should] F3 — Make the negative control exercise express's landing boundary.** Plan :106-108 proves the host PDDA command can fail, but does not explicitly require the **express run** to fail before publication. A driver that skips Step 7 can pass the proposed clean landing plus separate PDDA red check. Extend that same manual fixture, with no new suite: call non-preview express with the injected invalid doc; assert `suite-red`, unchanged bare-remote tip, no success receipt and no issue-close/ship calls. Also specify a wrong-copy control (root tool decoy versus vendored harness tool), and record/assert the actual landing SHA, base and receipt identity rather than just the command text. Retain nonempty outputs and `provenance.jsonl` under the already named TESTS-RESULTS directory.
+  Observed input: plan :104-108 pairs a clean express landing with a red check described only as “makes the host docs gate fail.” Its acceptance at :128-129 repeats that separation.
+  Affected scope: manual verification of the newly introduced host docs lane and tool resolution.
+  Falsifier: deliberately skipping the host-gate invocation must make this manual verification fail even though standalone PDDA remains red; selecting a root decoy must likewise fail the tool-copy assertion.
+
+- **[Pass] Detection and policy choices are grounded.** Explicit-file `is_vendored` checks the basename two directories above the script and ignores environment overrides (`harness_paths.py:62-77`); the current canonical express path returned `False` in an import-only probe (rc 0). For normal `.xyz/utils/py/express.py` layout this is the intended distinction. Full mode is necessary for nonzero PDDA failures (`utils/pdda/pdda-lib.sh:56-57`); rejecting the vendored contract wrapper is correct because it execs its adjacent PDDA copy (`test/pdda-repo-contract.sh:11`). The host-hook-or-none exception is explicitly authorized by issue #1169, fetched read-only with `gh issue view 1169 -R HiQS-Labs/XYZ-forge --json title,body` (rc 0); retain the visible disclosure.
+
+- **[Nit] Hook reporting should respect the effective hook path.** Plan :91-93 checks `.git/hooks/pre-push`, which can misreport hosts using `core.hooksPath`. When implementing the host-hook message, resolve the effective hook location rather than assuming the default directory. This is a reporting correction, not a request to require a host hook.
+
+[Unverified — needs clone run] Implementation, canonical parity, actual full-mode failure, end-to-end landing/reconciliation and recovery are not established by this plan review. Run the specified verification only in disposable full clones after the plan revisions.
+
+Handing off to Producer (claude-a) — disposition F1–F3, revise the plan and open Round 2; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
