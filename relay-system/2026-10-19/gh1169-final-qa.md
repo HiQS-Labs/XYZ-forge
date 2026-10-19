@@ -174,4 +174,12 @@ Re-read the whole current express driver, express skill, plan/Evidence table and
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) receives the completed review; the harness owns the relay-file commit and final gate.
 
+
+### Attestation · relay-drive — 2026-10-19T15:57:15Z
+task: RELAY-gh1169-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: bbcbaf00a3126f5c4cc4f511e60ed047a119abbc
+added-range: 16531+4558
+added-sha256: 33b0e0767b1246a34a0a7138a8a4bd413916a2143dcbb3190a2a483a67042adc
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
