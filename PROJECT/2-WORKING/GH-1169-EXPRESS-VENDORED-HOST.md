@@ -2,7 +2,7 @@
 gh_issue: 1169
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1169
 title: "express: vendored-host mode — docs lane uses the host's PDDA gate; host hook, harness tool resolution"
-status: "In progress — implemented and verified; final QA next"
+status: "In progress — final QA Approved; PR ready, awaiting merge"
 created: 2026-10-19
 updated: 2026-10-19
 owner: claude
@@ -31,7 +31,7 @@ Branch `feat/XYZ-forge-gh1169-express-vendored-host-2026-10-19` off `development
 
 | What was just completed | What's next |
 |---|---|
-| Implemented (`a48f56cc`, `944c43c9`, `f66e3a3c`, `dc33ddfd`); suites, host scenarios S1–S8, smoke and canonical parity in `TESTS-RESULTS/2026-10-19+GH-1169/` | Final Codex QA round 2, full gate on the final commit, PR to `development` |
+| Final QA Approved by Codex in round 2; full gate 409/409 on `26e233fe`; PR opened against `development` | Merge, then reconcile (archive, ledger Completed) |
 
 ## Observed today (7eeae804)
 
@@ -157,7 +157,7 @@ No code-hotfix lane for hosts without a registry; no Forge gate files in hosts; 
 
 | Issue | Requirement | Clone / branch | State |
 |---|---|---|---|
-| [#1169](https://github.com/HiQS-Labs/XYZ-forge/issues/1169) | Changes 1–6 | `XYZ-forge-gh1169-express-vendored-host-2026-10-19` / `feat/…` | Implementing |
+| [#1169](https://github.com/HiQS-Labs/XYZ-forge/issues/1169) | Changes 1–6 | `XYZ-forge-gh1169-express-vendored-host-2026-10-19` / `feat/…` | PR ready; awaiting merge |
 
 ## Rating rationale (2026-10-19)
 
@@ -177,3 +177,5 @@ two related incidents in 14 days (GH-1144 branch, this layout gap) in the same h
 | Canonical parity (final QA r1 F2) | successful `check --docs-only --dry-run` in a fresh Forge clone: old vs new byte-identical (after `dc33ddfd` removed an extra canonical `gate :` line the comparison caught); recovery text byte-identical |
 | Vendored recovery (final QA r1 F1) | SKILL.md vendored `resume` now passes `--repo`; S8 re-run with the documented command exactly: broken rc 4, clean rc 0 |
 | Deviation found and fixed | first implementation mapped `--suite "utils/pdda/pdda.sh run"` to its script outside the docs lane (refused `suite-unregistered`, plan says `suite-missing`); `944c43c9` limits the mapping to `--docs-only` |
+| Final QA | Codex, 2 rounds, Approved (`relay-system/2026-10-19/gh1169-final-qa.md`). R1: F1 vendored recovery `--repo`, F2 canonical parity on a successful check (found and fixed an extra canonical `gate :` line) |
+| Full gate (tier 3) | `./validate.sh --parallel 4` once on `26e233fe`: rc 0, 409/409, 0 re-runs (`TESTS-RESULTS/2026-10-19+GH-1169/full-gate-validate.log.txt`) |

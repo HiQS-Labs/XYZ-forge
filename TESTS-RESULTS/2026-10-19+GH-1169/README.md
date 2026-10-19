@@ -32,3 +32,7 @@ Observed during the run: overriding `HOME` hides `gh`'s login, so the first host
 rerun with the real `HOME` (the fixture scenarios use the `gh` stub, so they keep a temp `HOME`). The dry-run `run`
 in S1's first draft stopped at `roadmap-identity` because a dry-run ledger phase parks nothing; S1 therefore records
 `check`, and S2 exercises the full motion.
+
+## Full gate
+
+`utils/ci-route.sh` tier 3 (kernel/gate surface): `./validate.sh --parallel 4` once on the final approved commit `26e233fe` in the disposable clone (HEAD unchanged after): rc 0 in 912 s, `passed: 409 / 409`, re-run ladder 0 suites → `full-gate-validate.log.txt`. The commit carrying this receipt changes only `TESTS-RESULTS/` and the plan doc.
