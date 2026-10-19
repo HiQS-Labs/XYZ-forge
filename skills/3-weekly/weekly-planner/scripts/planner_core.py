@@ -2353,6 +2353,13 @@ def reconcile_weekly(args, source_root, command=None):
                             or git(['rev-parse', 'HEAD^{tree}'], root) != state['pending_merge']['tree']):
                         raise ValueError('native merge state/owner content unknown')
                     guard(); git(['commit', '-m', 'weekly: retain fully preserved predecessor ancestry'], root)
+                    # GH-1031: admit the commit Git actually produced, not the one we intended. Same check
+                    # as the interrupted-recovery path above; a hook-staged file or an extra parent refuses
+                    # here and leaves pending_merge set so recovery owns it.
+                    parents = git(['rev-list', '--parents', '-n', '1', 'HEAD'], root).split()[1:]
+                    if (parents != [state['pending_merge']['head'], old_head]
+                            or git(['rev-parse', 'HEAD^{tree}'], root) != state['pending_merge']['tree'] or dirty(root)):
+                        raise ValueError('unknown native ancestry result; preserve evidence')
                 state.update(root_head=git(['rev-parse', 'HEAD'], root), phase='prepare', pending_merge=None); durable(receipt_path, state)
             if state['phase'] in ('prepare', 'complete'):
                 guard()
