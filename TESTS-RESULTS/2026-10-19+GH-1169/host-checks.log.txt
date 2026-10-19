@@ -1,4 +1,4 @@
-forge HEAD: 944c43c925a112c879e610170c9b76f0f09602ab
+forge HEAD: dc33ddfdad332b8b14a3a522882d0e031c0204b4
 ### S1 dry-run, origin=<W>/github.com/HiQS-Labs/XYZ-layout-engine.git, origin/HEAD=origin/main
 express-check [dry-run]: PASS
   issue   : #9001 Demo doc fix
@@ -8,11 +8,11 @@ express-check [dry-run]: PASS
   changes : PROJECT/3-COMPLETED/GH-63-VIBE-CODING-LOOP.md
 ### S2 clean non-preview run --docs-only
 rc=0
-express-land: commit 98248729ae17 pushed to main, issue #9001 closed, mfi shipped against rel-01M3XFJBJBF1B4ARDV7M6WSVC9, reconcile persisted
-landing 98248729ae17f31aca1e7280d6e2b6cdb73301cf reachable from bare main: yes
+express-land: commit 64f1f2112989 pushed to main, issue #9001 closed, mfi shipped against rel-01M3XFJBJBF1B4ARDV7M6WSVC9, reconcile persisted
+landing 64f1f21129893936a7688d1f800e38bf03cac64e reachable from bare main: yes
 bare branches: design/gh38-taste-rerender main park/gh5-intake-2026-10-08 park/primary-2026-10-08 
 host: branch main, clean [], HEAD==bare main yes
-receipt {'commit': '98248729ae17f31aca1e7280d6e2b6cdb73301cf', 'command': 'bash utils/pdda/pdda.sh run', 'rc': 0, 'gate': 'express-suite', 'environment': 'express driver, direct main push'}
+receipt {'commit': '64f1f21129893936a7688d1f800e38bf03cac64e', 'command': 'bash utils/pdda/pdda.sh run', 'rc': 0, 'gate': 'express-suite', 'environment': 'express driver, direct main push'}
 receipt commit == landing: 1
 gh issue close calls: 1
 ### S3a standalone host PDDA with a broken doc: observe vs full
@@ -24,7 +24,7 @@ ERROR [pdda-check-status-table] PROJECT/2-WORKING/GH-9001-BROKEN.md:1 missing us
 rc=3 express-refused: rule=suite-red — utils/pdda/pdda.sh run exited 1 — no red suite rides the express lane
 bare main unchanged: yes; receipts on disk: 0; issue close calls: 0; issue state: OPEN
 ### S4 root utils/py/wave_reconcile.py decoy (exit 99 + marker), clean docs landing
-rc=0 express-land: commit c4da99a65e90 pushed to main, issue #9001 closed, mfi shipped against 
+rc=0 express-land: commit 5473ef1dd56c pushed to main, issue #9001 closed, mfi shipped against 
 decoy marker present: no
 ### S5a non-docs, --suite test/demo.sh, no validate.sh
 rc=3 express-refused: rule=suite-unregistered — no validate.sh TESTS registry in this repo — code hotfixes need a registered suite (GH-1169) | tracebacks: 0
@@ -35,12 +35,12 @@ rc=3 express-refused: rule=gate-unwired — `bash githooks/install.sh --check` d
 ### S7 express.releases_app(host) with a root releases_app.py present
 VENDORED True -> <W>/host/.xyz/utils/py/releases_app.py
 VENDORED False -> <W>/host/utils/py/releases_app.py
-### S8 broken landing: vendored recovery recipe (SKILL.md), then resume --docs-only --base main
+### S8 broken landing: SKILL.md recovery recipe, documented vendored variant, steps 1-7 (incl. resume --repo)
 recipe RC=1 receipt=TESTS-RESULTS/2026-10-19+GH-9001-express/provenance.jsonl
 resume rc=4
-express-resume: no COMMITTED valid express receipt bound to commit 3a7531f22dec for issue #9001 and suite utils/pdda/pdda.sh run. Resume writes no evidence. Recover in a 
-### S8 clean landing: vendored recovery recipe (SKILL.md), then resume --docs-only --base main
+express-resume: no COMMITTED valid express receipt bound to commit fdc7105f18a5 for issue #9001 and suite utils/pdda/pdda.sh run. Resume writes no evidence. Recover in a 
+### S8 clean landing: SKILL.md recovery recipe, documented vendored variant, steps 1-7 (incl. resume --repo)
 recipe RC=0 receipt=TESTS-RESULTS/2026-10-19+GH-9001-express/provenance.jsonl
 resume rc=0
-express-resume: committed receipt TESTS-RESULTS/2026-10-19+GH-9001-express/provenance.jsonl attributes commit 5f3a4fdc8af3
+express-resume: committed receipt TESTS-RESULTS/2026-10-19+GH-9001-express/provenance.jsonl attributes commit f7b008cbefac
 express-resume: closed issue #9001

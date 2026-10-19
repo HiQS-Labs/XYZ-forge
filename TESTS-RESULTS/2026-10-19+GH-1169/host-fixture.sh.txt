@@ -48,13 +48,22 @@ land_without_receipt(){ # $1 = "broken" to include a PDDA error in the landed tr
 
 Closes #$N"; git -C "$H" push -q origin main; LANDED=$(git -C "$H" rev-parse HEAD)
 }
-vendored_recipe(){ # runs the SKILL.md vendored recovery variant; prints RC and receipt path
-  ( cd "$H" && set -euo pipefail; SHA=$LANDED; BASE=main; SUITE='utils/pdda/pdda.sh run'
-    git checkout -q "$SHA"; git diff-index --quiet HEAD -- && [ "$(git ls-files --others --exclude-standard | wc -c)" -eq 0 ]
-    LOG=$(mktemp); set +e; PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run >>"$LOG" 2>&1; RC=$?; set -e; echo "rc=$RC" >>"$LOG"
-    git checkout -q "$BASE" && git diff-index --quiet HEAD --
+vendored_recipe(){ # the SKILL.md recovery recipe with its documented vendored-host substitutions, steps 1-7
+  ( cd "$H" && set -euo pipefail
+    SHA=$LANDED; N=$N; SUITE='utils/pdda/pdda.sh run'; BASE=main; REPO=$SLUG
+    git checkout "$SHA" -q
+    git diff-index --quiet HEAD -- && [ "$(git ls-files --others --exclude-standard | wc -c)" -eq 0 ]   # 1. clean baseline
+    LOG=$(mktemp -t express-recovery)                                                                 # 2. log OUTSIDE the tree
+    snap(){ git rev-parse HEAD && git status --porcelain && git remote -v && git config --list --local | shasum -a 256; }
+    BEFORE=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "$BEFORE" >"$LOG"
+    set +e; PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run >>"$LOG" 2>&1; RC=$?; set -e; echo "rc=$RC" >>"$LOG"   # 3. vendored suite command
+    AFTER=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "$AFTER" >>"$LOG"
+    [ "$BEFORE" = "$AFTER" ] || { echo "VOID: identity drifted during the suite — no receipt"; exit 1; }  # 4.
+    git checkout "$BASE" -q && git diff-index --quiet HEAD --                                        # 5. vendored driver path
     REC=$(python3 -c "import sys; sys.path.insert(0,'.xyz/utils/py'); import express; print(express.write_receipt('.', '$SHA', $N, '$SUITE', $RC, base='$BASE'))")
-    cp "$LOG" "$(dirname "$REC")/recovery-run.log"
+    cp "$LOG" "$(dirname "$REC")/recovery-run.log"                                                   # 6.
     git add TESTS-RESULTS && git commit -qm "chore(express): recovery receipt GH-$N (commit $SHA)" && git push -q origin "$BASE"
-    echo "recipe RC=$RC receipt=$REC" )
+    echo "recipe RC=$RC receipt=$REC"
+    set +e; python3 .xyz/utils/py/express.py --root . resume --issue "$N" --docs-only --sha "$SHA" --base "$BASE" --repo "$REPO" > "$W/resume.txt" 2>&1   # 7. documented resume
+    echo "resume rc=$?"; grep -E "^express-resume|express-refused" "$W/resume.txt" | head -2 | cut -c1-170 )
 }

@@ -1,6 +1,6 @@
 # GH-1169 verification — express vendored-host mode
 
-Manual checks and existing-suite runs for [#1169](https://github.com/HiQS-Labs/XYZ-forge/issues/1169) at `944c43c9`.
+Manual checks and existing-suite runs for [#1169](https://github.com/HiQS-Labs/XYZ-forge/issues/1169) at `dc33ddfd`.
 No suite or registry entry was added (GH-831). Suites and host scenarios ran in a disposable `--no-local` clone of the
 task branch. Machine paths are replaced with `~`, `<tmp>`, `<W>` and `<scratch>`.
 
@@ -22,11 +22,11 @@ vendored from this branch with `xyz-vendor.sh --no-register`, the host's own PDD
 | S5b non-docs, `--suite "utils/pdda/pdda.sh run"` | rc 3 `suite-missing`; no traceback; no docs bypass by spelling |
 | S6 red control: vendored branch disabled (canonical express from the Forge clone on the same host) | rc 3 `gate-unwired` — today's behaviour, which the vendored branch replaces |
 | S7 `express.releases_app(host)` with a root `utils/py/releases_app.py` | vendored → `<host>/.xyz/utils/py/releases_app.py`; canonical → `<host>/utils/py/releases_app.py` |
-| S8 vendored recovery recipe (SKILL.md variant), broken landing | recipe rc 1; `resume --docs-only --base main` rc 4 `no COMMITTED valid express receipt…`, writes nothing |
-| S8 vendored recovery recipe, clean landing | recipe rc 0, receipt committed with `recovery-run.log`; `resume --docs-only --base main` rc 0, closes the issue and reconciles |
+| S8 recovery recipe exactly as documented for vendored hosts (canonical steps 1–7 incl. identity snapshots; `REPO`, full-mode PDDA command, `.xyz/utils/py` driver, `resume … --repo "$REPO"`), broken landing | recipe rc 1; documented `resume` rc 4 `no COMMITTED valid express receipt…`, writes nothing |
+| S8 same, clean landing | recipe rc 0, receipt committed with `recovery-run.log`; documented `resume` rc 0, closes the issue and reconciles |
 | Smoke, main path (GH-1088) | fresh GitHub clone of XYZ-layout-engine with `.xyz/` from `944c43c9`: `check --issue 38 --docs-only --dry-run` → PASS (`origin/main`, host PDDA gate, no pre-push hook) → `smoke-host-xyz-layout-engine.log.txt` |
-| Smoke, adjacent (canonical Forge) | task clone (`origin/HEAD → origin/development`): new and `origin/development` express print byte-identical output → `smoke-forge-canonical.log.txt` |
-| Canonical recovery text | `recovery_recipe` for `test/pdda-repo-contract.sh` and `test/gh267-express-skill.sh` byte-identical to `origin/development` (import-only comparison) |
+| Canonical parity, successful path (final QA F2) | fresh GitHub clone of XYZ Forge at `7eeae804`, gate installed, one-line README change, open issue #1169: `check --docs-only --dry-run` with the `origin/development` driver and with this branch's driver → both rc 0 `PASS`, output byte-identical (`canonical-compare.sh.txt` → `canonical-compare.log.txt`). The first run of this comparison found an extra `gate :` line in canonical output; fixed in `dc33ddfd` (printed only when vendored) |
+| Canonical recovery text | same script: `recovery_recipe` for `test/pdda-repo-contract.sh` and `test/gh267-express-skill.sh` byte-identical to `origin/development` |
 
 Observed during the run: overriding `HOME` hides `gh`'s login, so the first host smoke failed `issue-missing`; it was
 rerun with the real `HOME` (the fixture scenarios use the `gh` stub, so they keep a temp `HOME`). The dry-run `run`

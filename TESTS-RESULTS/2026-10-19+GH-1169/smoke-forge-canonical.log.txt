@@ -1,5 +1,0 @@
-### adjacent: XYZ Forge task clone (GitHub origin, origin/HEAD -> origin/development): new express vs origin/development express, check --issue 1169 --docs-only --dry-run
-## new
-express-refused: rule=too-many-commits — the task branch carries 11 commits ahead of origin/development (> 2 allowed); express lands small hotfixes with <= 2 local commits — route to normal PR lane
-## old
-express-refused: rule=too-many-commits — the task branch carries 11 commits ahead of origin/development (> 2 allowed); express lands small hotfixes with <= 2 local commits — route to normal PR lane

@@ -1,27 +1,27 @@
 # Re-record GH-1169 manual checks on the current verify-clone HEAD.
-export FORGE="$1" PRIMARY="$2"; OUT="$3"; source <scratch>/host-fixture.sh
+export FORGE="$1" PRIMARY="$2"; OUT="$3"; source <W>-fixture.sh
 san(){ sed -E "s#<scratch>/[A-Za-z0-9.]+#<W>#g; s#$HOME#~#g"; }
 {
 echo "forge HEAD: $(git -C "$FORGE" rev-parse HEAD)"
-W=$(mktemp -d <scratch>/r1.XXXX); mkhost "$W"; doc_change
+W=$(mktemp -d <W>); mkhost "$W"; doc_change
 echo "### S1 dry-run, origin=$(git -C $H remote get-url origin | san), origin/HEAD=$(git -C $H symbolic-ref --short refs/remotes/origin/HEAD)"; X check --issue $N --docs-only --dry-run 2>&1 | san
-W=$(mktemp -d <scratch>/r2.XXXX); mkhost "$W"; doc_change; echo "### S2 clean non-preview run --docs-only"; X run --issue $N --docs-only --summary demo > $W/o 2>&1; echo "rc=$?"; grep -E "^express-land:" $W/o | san
+W=$(mktemp -d <W>); mkhost "$W"; doc_change; echo "### S2 clean non-preview run --docs-only"; X run --issue $N --docs-only --summary demo > $W/o 2>&1; echo "rc=$?"; grep -E "^express-land:" $W/o | san
 S=$(git -C $H log --format=%H -1 --grep "Closes #$N" origin/main); echo "landing $S reachable from bare main: $(git -C "$BARE" merge-base --is-ancestor $S main && echo yes)"; echo "bare branches: $(git -C "$BARE" branch --format='%(refname:short)' | tr '\n' ' ')"; echo "host: branch $(git -C $H branch --show-current), clean [$(git -C $H status --porcelain | head -1)], HEAD==bare main $([ $(git -C $H rev-parse HEAD) = $(git -C "$BARE" rev-parse main) ] && echo yes)"
 R=$(git -C $H ls-files "TESTS-RESULTS/*GH-$N-express/provenance.jsonl"); git -C $H show HEAD:$R | python3 -c "import json,sys;r=json.loads(sys.stdin.readline());print('receipt', {k:r[k] for k in ('commit','command','rc','gate','environment')})"; echo "receipt commit == landing: $(git -C $H show HEAD:$R | grep -c "$S")"; echo "gh issue close calls: $(grep -c 'issue close' $W/gh/calls.log)"
-W=$(mktemp -d <scratch>/r3.XXXX); mkhost "$W"; doc_change; printf '# no frontmatter\n\nbody\n' > "$H/PROJECT/2-WORKING/GH-$N-BROKEN.md"
+W=$(mktemp -d <W>); mkhost "$W"; doc_change; printf '# no frontmatter\n\nbody\n' > "$H/PROJECT/2-WORKING/GH-$N-BROKEN.md"
 echo "### S3a standalone host PDDA with a broken doc: observe vs full"; (cd $H && PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run >/dev/null 2>&1; echo "observe rc=$?"; PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run > $W/f 2>&1; echo "full rc=$?"; grep -m2 ERROR $W/f)
 M0=$(git -C "$BARE" rev-parse main); echo "### S3b non-preview express run with the broken doc"; X run --issue $N --docs-only --summary demo > $W/o 2>&1; echo "rc=$? $(grep -m1 express-refused $W/o)"; echo "bare main unchanged: $([ "$(git -C "$BARE" rev-parse main)" = "$M0" ] && echo yes || echo NO); receipts on disk: $(find $H/TESTS-RESULTS -path "*GH-$N*" 2>/dev/null | wc -l | xargs); issue close calls: $(grep -c 'issue close' $W/gh/calls.log); issue state: $(python3 -c "import json;print(json.load(open('$W/gh/issue-$N.json'))['state'])")"
-W=$(mktemp -d <scratch>/r4.XXXX); mkhost "$W"; MK=$W/DECOY-RAN; git -C $H checkout -q main; mkdir -p $H/utils/py; printf 'import sys\nopen("%s","w").write("ran")\nsys.exit(99)\n' "$MK" > $H/utils/py/wave_reconcile.py; git -C $H add -A; git -C $H commit -qm "fixture: root wave_reconcile decoy"; git -C $H push -q origin main; git -C $H checkout -q -b task/gh-$N-b; doc_change
+W=$(mktemp -d <W>); mkhost "$W"; MK=$W/DECOY-RAN; git -C $H checkout -q main; mkdir -p $H/utils/py; printf 'import sys\nopen("%s","w").write("ran")\nsys.exit(99)\n' "$MK" > $H/utils/py/wave_reconcile.py; git -C $H add -A; git -C $H commit -qm "fixture: root wave_reconcile decoy"; git -C $H push -q origin main; git -C $H checkout -q -b task/gh-$N-b; doc_change
 echo "### S4 root utils/py/wave_reconcile.py decoy (exit 99 + marker), clean docs landing"; X run --issue $N --docs-only --summary demo > $W/o 2>&1; echo "rc=$? $(grep -E '^express-land:' $W/o | san | cut -c1-90)"; echo "decoy marker present: $([ -e $MK ] && echo YES || echo no)"
-W=$(mktemp -d <scratch>/r5.XXXX); mkhost "$W"; mkdir -p $H/test; printf 'echo demo\n' > $H/test/demo.sh; git -C $H add test/demo.sh; git -C $H commit -qm "fixture: test/demo.sh"; printf 'x=1\n' > $H/utils/demo_code.py
+W=$(mktemp -d <W>); mkhost "$W"; mkdir -p $H/test; printf 'echo demo\n' > $H/test/demo.sh; git -C $H add test/demo.sh; git -C $H commit -qm "fixture: test/demo.sh"; printf 'x=1\n' > $H/utils/demo_code.py
 echo "### S5a non-docs, --suite test/demo.sh, no validate.sh"; X check --issue $N --suite test/demo.sh > $W/a 2>&1; echo "rc=$? $(grep -m1 express-refused $W/a) | tracebacks: $(grep -c Traceback $W/a)"
 echo "### S5b non-docs, --suite 'utils/pdda/pdda.sh run'"; X check --issue $N --suite "utils/pdda/pdda.sh run" > $W/b 2>&1; echo "rc=$? $(grep -m1 express-refused $W/b) | tracebacks: $(grep -c Traceback $W/b)"
-W=$(mktemp -d <scratch>/r6.XXXX); mkhost "$W"; doc_change; echo "### S6 vendored branch disabled: canonical express (VENDORED=False) on the same host"; python3 -B "$FORGE/utils/py/express.py" --root "$H" check --issue $N --docs-only --repo "$SLUG" > $W/o 2>&1; echo "rc=$? $(grep -m1 express-refused $W/o | cut -c1-120)"
+W=$(mktemp -d <W>); mkhost "$W"; doc_change; echo "### S6 vendored branch disabled: canonical express (VENDORED=False) on the same host"; python3 -B "$FORGE/utils/py/express.py" --root "$H" check --issue $N --docs-only --repo "$SLUG" > $W/o 2>&1; echo "rc=$? $(grep -m1 express-refused $W/o | cut -c1-120)"
 mkdir -p $H/utils/py; printf 'decoy\n' > $H/utils/py/releases_app.py; echo "### S7 express.releases_app(host) with a root releases_app.py present"
 python3 -B -c "
 import importlib.util
 spec=importlib.util.spec_from_file_location('ex','$H/.xyz/utils/py/express.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 m.VENDORED=m._harness_paths().is_vendored('$H/.xyz/utils/py/express.py');print('VENDORED',m.VENDORED,'->',m.releases_app('$H'))
 m.VENDORED=False;print('VENDORED False ->',m.releases_app('$H'))" | san
-for v in broken clean; do W=$(mktemp -d <scratch>/r8$v.XXXX); mkhost "$W"; land_without_receipt $v; echo "### S8 $v landing: vendored recovery recipe (SKILL.md), then resume --docs-only --base main"; vendored_recipe 2>&1 | tail -1; python3 -B "$H/.xyz/utils/py/express.py" --root "$H" resume --issue $N --docs-only --sha $LANDED --base main --repo $SLUG > $W/r 2>&1; echo "resume rc=$?"; grep -E "^express-resume|express-refused" $W/r | head -2 | cut -c1-170 | san; done
+for v in broken clean; do W=$(mktemp -d <W>$v.XXXX); mkhost "$W"; land_without_receipt $v; echo "### S8 $v landing: SKILL.md recovery recipe, documented vendored variant, steps 1-7 (incl. resume --repo)"; vendored_recipe 2>&1 | tail -4 | san; done
 } > "$OUT" 2>&1
