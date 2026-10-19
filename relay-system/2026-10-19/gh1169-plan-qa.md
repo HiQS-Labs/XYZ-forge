@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -129,5 +129,40 @@ Handing off to Producer (claude-a) — disposition F1–F3, revise the plan and 
 - Nit — **Implemented.** Host hook resolved with `git rev-parse --git-path hooks/pre-push` (honours `core.hooksPath`).
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: F1–F3 are substantively addressed, but the new wrong-copy control conflicts with the explicitly unchanged reconciler. Correct the verification scope before implementation; no expansion of runtime policy is requested.
+swept file: yes
+
+Reviewed the whole revised plan and all of `utils/py/express.py`, including existing docs, ledger, landing, receipt, closeout and resume paths; rechecked the resolver and recovery instructions. No additional relevant pre-existing defect found beyond the earlier findings and the interaction below. Evidence tier: Verify, direct-source fallback. Nearest graph project `XYZ-forge` remains generation `2026-09-01T15:54:30Z`; coverage reports changed/untracked/missing metadata for the reviewed paths, so current local source grounds this review. No git commands, suites or executable fixtures were run.
+
+- **[Pass] F1–F3 revisions cover the requested safety boundaries.** Plan `PROJECT/1-INBOX/GH-1169-EXPRESS-VENDORED-HOST.md:89-94` binds the registry exception to `--docs-only` and guards absent registries; `:100-106` specifies the vendored recovery driver, separated arguments and full-mode environment; `:114-126` now requires express itself to refuse a red gate before publication and asserts landing/receipt identity plus recovery. These are plan requirements, not implementation results.
+
+- **[Should] F4 — Scope the wrong-copy control to express's own tool invocations.** Plan `:118-119` leaves a root `releases_app.py` decoy that exits 99 throughout a clean landing, while `:133-134` explicitly leaves `wave_reconcile` unchanged. The reconciler deliberately selects that root tool (`utils/py/wave_reconcile.py:1834-1850`; `utils/py/harness_paths.py:111-113,129-130`). Therefore an otherwise correct express implementation can fail this control during reconciliation. Keep the end-to-end clean landing with the root `wave_reconcile.py` decoy, and check express's own `releases_app` selection with a narrow argv/resolution probe (or a stage-aware decoy that permits the reconciler's existing calls). Preserve reconciliation's existing repo-first contract; do not widen this task into changing it.
+  Observed input: both `/host/utils/py/releases_app.py` and `/host/.xyz/utils/py/releases_app.py` exist, precisely the proposed decoy shape. Import-only command below exited **0** and printed `express proposed prefer_repo=False: /host/.xyz/utils/py/releases_app.py` followed by `reconcile existing harness_tool: utils/py/releases_app.py`; no tool was executed.
+  Affected scope: the new wrong-copy verification at plan `:118-119`, not production resolution policy.
+  Falsifier: a direct express call selecting the root decoy must fail the selection check, while unchanged reconciliation selecting its permitted root copy must not invalidate express's selection check; the separate host landing must still complete reconciliation.
+
+  Probe command (with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`):
+  ```python
+  # python3 - <<'PY' ... PY
+  import sys
+  from unittest.mock import patch
+  sys.path.insert(0, 'utils/py')
+  import harness_paths as hp
+  root = '/host'
+  rel = 'utils/py/releases_app.py'
+  with patch.object(hp, 'harness_home', return_value='/host/.xyz'), patch.object(hp.os.path, 'exists', side_effect=lambda p: p in ('/host/'+rel, '/host/.xyz/'+rel)):
+      print('express proposed prefer_repo=False:', hp.resolve_tool(root, rel, prefer_repo=False))
+      print('reconcile existing harness_tool:', hp.harness_tool(root, rel))
+  ```
+
+- **[Nit] Align the explicit-suite refusal assertion with the retained check ordering.** Plan `:94` retains `suite-missing` first, but `:120-121` demands `suite-unregistered` for `--suite "utils/pdda/pdda.sh run"` without `--docs-only`. That string is not an existing suite filename. Either accept `suite-missing` for this misuse while retaining `suite-unregistered` for existing `test/demo.sh`, or explicitly define a narrow earlier refusal. Both must refuse before any landing; the important F1 property is no docs bypass.
+
+[Unverified — needs clone run] Runtime behavior, gate red controls, canonical parity, landing and recovery remain pending implementation and disposable-clone verification. This turn evaluates plan consistency only.
+
+Handing off to Producer (claude-a) — correct F4's verification scope and the refusal-code mismatch, then open Round 3; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
