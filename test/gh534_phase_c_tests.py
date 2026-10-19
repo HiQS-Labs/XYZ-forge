@@ -383,7 +383,7 @@ class TestCScript(LedgerFixture):
         self.branch("feat/d", 4, lambda r: park(r, 301, "independent"))
         self.st["prs"]["3"]["body"] = "Depends on #2"
         self.save()
-        rc = self.run_main()
+        rc = self.run_main(extra=("--landing-plan", "direct", "--landing-reason", "direct landing for dependent test"))
         self.assertEqual(rc, 3)
         st = self.load()
         self.assertEqual({n: p["state"] for n, p in st["prs"].items()},
@@ -652,7 +652,7 @@ class TestGh623Resilience(LedgerFixture):
         st["prs"]["3"]["files"] = [{"path": "shared.txt"}]
         st["prs"]["4"]["body"] = "Depends on #2"
         self.save()
-        rc = self.run_main()
+        rc = self.run_main(extra=("--landing-plan", "direct", "--landing-reason", "direct landing for soft edge test"))
         self.assertEqual(rc, 3, self.err)
         st = self.load()
         self.assertEqual({n: p["state"] for n, p in st["prs"].items()},
@@ -969,7 +969,7 @@ class TestParityGuard(unittest.TestCase):
         self.assertIn("test missing: landing-refetch-and-gate names TestE6Gate.test_gone", self._fails(skill=mutated))
 
     def test_control_documented_option_absent_from_argparse_is_named(self):
-        mutated = self.skill.replace("`--record-sweep`.", "`--record-sweep`, `--bogus-flag`.")
+        mutated = self.skill.replace("`--landing-reason`.", "`--landing-reason`, `--bogus-flag`.")
         self.assertNotEqual(mutated, self.skill, "the options line moved — repoint this control")
         self.assertIn("documented option not in argparse: --bogus-flag", self._fails(skill=mutated))
 

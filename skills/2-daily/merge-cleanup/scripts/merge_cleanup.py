@@ -68,6 +68,9 @@ HOSTED_GRACE_ENV = "MERGE_CLEANUP_HOSTED_GRACE_S"
 # a hosted run you dispatched deliberately; the old hosted-first behavior is otherwise unchanged.
 USE_HOSTED_ENV = "MERGE_CLEANUP_USE_HOSTED"
 
+# GH-1066 / GH-1158: landing plan required for queues of 3+ PRs before any mutation
+EXIT_LANDING_PLAN_REQUIRED = 5
+
 
 def _gh_bin() -> str:
     return os.environ.get(GH_BIN_ENV) or "gh"
@@ -1552,6 +1555,8 @@ def main():
     parser.add_argument("--backup-first", action="store_true", help="Back up and verify candidate clone folders before tearing them down")
     parser.add_argument("--backup-root", help="Directory where standardized clone backups are stored (defaults to <top_level_folder>/_backups)")
     parser.add_argument("--record-sweep", metavar="FILE", help="Record the post-merge regression-sweep verdict for the newest batch with QA pending (first line `verdict: clean|findings|deferred`), update its issue, and exit; nothing is scanned, merged or torn down (GH-1064)")
+    parser.add_argument("--landing-plan", choices=["direct", "group"], default=None, help="Landing plan decision for queues of 3+ PRs: 'direct' sequential landing or 'group' candidate (GH-1066)")
+    parser.add_argument("--landing-reason", default="", help="Non-empty justification for the chosen --landing-plan (GH-1066)")
 
     args = parser.parse_args()
 
@@ -1602,6 +1607,79 @@ def main():
     log(f"Operating on primary repo: {primary_repo}")
     if dry_run:
         log("Running in SAFE DRY-RUN mode. Pass --execute to apply changes.")
+
+    # Upfront landing plan checkpoint for queues of 3+ PRs (GH-1066 / GH-1158 / Plan QA R1).
+    # Refuse execution before ANY mutation (before prepare_primary_landing prunes REBASE_HEAD,
+    # before scan_directories fetches refs/FETCH_HEAD, and before --marker comments or batch issue writes).
+    checkpoint_eligible_prs: Optional[Set[int]] = None
+    if args.execute and not args.teardown_only and not args.scan_only and not args.prs_only and args.reconcile_pr == 0:
+        try:
+            early_prs = fetch_open_prs_with_retry(str(primary_repo))
+        except FetchError as exc:
+            log_err(f"PR discovery failed after {RETRY_ATTEMPTS} attempts: {exc} — refusing to continue; "
+                    f"the queue cannot be verified empty")
+            return 2
+        excluded_prs = {int(str(x).lstrip("#")) for x in (args.exclude or [])
+                        if str(x).lstrip("#").isdigit()}
+        active_early = [p for p in early_prs if int(p.get("number", 0)) not in excluded_prs] if excluded_prs else early_prs
+        early_ordered: List[Dict[str, Any]] = []
+        if active_early:
+            early_ordered, _, _ = toposort_prs(active_early)
+
+        checkpoint_eligible_prs = {int(p["number"]) for p in early_ordered}
+
+        if len(early_ordered) >= 3:
+            origin = origin_url(primary_repo) or ""
+            current_pr_nums = sorted(p["number"] for p in early_ordered)
+            if args.resume and not args.landing_plan:
+                existing_batch = batch_record.find_unfinished(primary_repo, origin, args.integration_branch, current_pr_nums)
+                if existing_batch and isinstance(existing_batch.get("landing_plan"), dict):
+                    lp = existing_batch["landing_plan"]
+                    if sorted(lp.get("prs") or []) == current_pr_nums:
+                        args.landing_plan = lp.get("decision")
+                        args.landing_reason = lp.get("reason") or ""
+                        log(f"Resumed merge batch has recorded landing plan: {args.landing_plan} ({args.landing_reason})")
+
+            pr_list_str = ", ".join("#%s" % p["number"] for p in early_ordered)
+            valid_plan = bool(args.landing_plan in ("direct", "group") and args.landing_reason and args.landing_reason.strip())
+            if not valid_plan:
+                print("\n" + "=" * 80)
+                print("REFUSAL: LANDING PLAN DECISION REQUIRED (GH-1066)")
+                print("=" * 80 + "\n")
+                log_err(f"REFUSING to execute: {len(early_ordered)} PRs ready to merge ({pr_list_str}).")
+                log_err("GH-1066 merge-group policy requires an explicit landing decision for queues of 3+ PRs.\n")
+                print("Trade-offs to evaluate:")
+                print("  • direct: Sequential landing on development. Best when PRs are small, independent,")
+                print("            and have zero or low conflict risk. Each PR exercises the gate independently.")
+                print("  • group:  Combine candidates into a single integration branch (staging/<topic> or group/<topic>),")
+                print("            run preflight gates once on the combined tip, and land as a single merge.")
+                print("            Best when PRs are cross-dependent, touch shared subsystems, or to minimize gate churn.\n")
+                print("Guidance: See skills/2-daily/merge-cleanup/SKILL.md (GH-1066 section).\n")
+                print("To proceed, re-run with:")
+                print('  --landing-plan direct|group --landing-reason "<justification>"\n')
+                return EXIT_LANDING_PLAN_REQUIRED
+
+            if args.landing_plan == "group":
+                print("\n" + "=" * 80)
+                print("GH-1066 GROUP LANDING CHECKLIST")
+                print("=" * 80 + "\n")
+                log(f"Landing decision recorded: GROUP ({args.landing_reason.strip()})")
+                log(f"Target PRs ({len(early_ordered)}): {pr_list_str}")
+                batch = batch_record.new(primary_repo, origin, args.integration_branch, early_ordered)
+                batch_record.set_landing_plan(batch, "group", args.landing_reason.strip(), current_pr_nums)
+                batch_record.create(batch, _gh, primary_repo, attempt_record.repo_slug(origin))
+                if batch.get("issue_error"):
+                    log_warn(f"merge-batch issue not created: {batch['issue_error']} — landing decision recorded locally at {batch['path']}")
+                else:
+                    log(f"Merge batch issue: {batch.get('issue_url') or batch['path']}")
+                print("\nNext steps for GH-1066 group landing:")
+                print(f"  1. Candidate Freeze: Create branch off origin/{args.integration_branch} (e.g. staging/<topic> or group/<topic>).")
+                print("  2. Sequential Fold: Cherry-pick or merge candidate PRs into the group branch, preserving commit history.")
+                print("  3. Adversarial Verification: Run gate suite and inspect diffs on the combined tip.")
+                print(f"  4. Single Landing: Open a single integration PR against {args.integration_branch} or merge directly.")
+                print("  5. Closeout: Merge the integration PR and retire individual task worktrees with merge-cleanup.\n")
+                log("Merge cleanup exiting cleanly (Exit 0) without remote merges or checkout teardown.")
+                return 0
 
     # Phase 0: the primary on-disk checkout, before ANY other mode dispatches. It receives every
     # merge and runs every reconciliation, so its readiness is a precondition of the run, not a
@@ -1701,7 +1779,35 @@ def main():
         for p in skipped:
             log(f"PR #{p['number']}: excluded by --exclude; not sequenced this run")
     if prs:
-        ordered_prs, _, warnings = toposort_prs(prs)
+        all_ordered, _, warnings = toposort_prs(prs)
+        if checkpoint_eligible_prs is not None:
+            deferred_set = {int(p["number"]) for p in all_ordered if int(p["number"]) not in checkpoint_eligible_prs}
+            # Transitive propagation: any retained PR depending on a deferred PR must also be deferred
+            changed = True
+            while changed:
+                changed = False
+                for p in all_ordered:
+                    p_num = int(p["number"])
+                    if p_num not in deferred_set:
+                        hard_deps = {int(d) for d in (p.get("_hard_deps") or [])}
+                        if hard_deps & deferred_set:
+                            deferred_set.add(p_num)
+                            changed = True
+
+            for p in all_ordered:
+                p_num = int(p["number"])
+                if p_num in deferred_set:
+                    if p_num not in checkpoint_eligible_prs:
+                        log(f"PR #{p_num}: opened after landing checkpoint; deferred to next run")
+                    else:
+                        hard_deps = [d for d in (p.get("_hard_deps") or []) if d in deferred_set]
+                        deps_str = ", ".join(f"#{d}" for d in hard_deps)
+                        log(f"PR #{p_num}: depends on deferred prerequisite ({deps_str}); deferred to next run")
+
+            ordered_prs = [p for p in all_ordered if int(p["number"]) not in deferred_set]
+        else:
+            ordered_prs = all_ordered
+
         print("=" * 80)
         print(f"PHASE 4: TOPOLOGICAL PR SEQUENCE ({len(ordered_prs)} open PRs)")
         print("=" * 80 + "\n")
@@ -1715,6 +1821,20 @@ def main():
             print("Ordering Notes:")
             for w in warnings:
                 print(f"  - {w}")
+            print()
+        if len(ordered_prs) >= 3:
+            print("=" * 80)
+            print("LANDING PLAN DECISION (GH-1066)")
+            print("=" * 80 + "\n")
+            if args.landing_plan:
+                print(f"Plan: {args.landing_plan.upper()}")
+                print(f"Reason: {args.landing_reason.strip() or '—'}")
+            else:
+                print(f"Queue holds {len(ordered_prs)} PRs. GH-1066 requires an explicit decision under --execute:")
+                print("  --landing-plan direct|group --landing-reason \"<justification>\"")
+                print("  • direct: Sequential landing on development (best for small/independent PRs).")
+                print("  • group:  Combine candidates into a single integration branch to minimize gate churn.")
+                print("See skills/2-daily/merge-cleanup/SKILL.md for guidance.")
             print()
     else:
         log("No open PRs found for this repository.")
@@ -1765,6 +1885,12 @@ def main():
     # unready. Refuse before the first Phase 5/6 mutation unless that deferral is explicit.
     if _primary_blocks("execute cleanup"):
         return 2
+
+    if not args.teardown_only and ordered_prs and args.execute and len(ordered_prs) >= 3:
+        valid_plan = bool(args.landing_plan in ("direct", "group") and args.landing_reason and args.landing_reason.strip())
+        if not valid_plan:
+            log_err(f"REFUSING to execute: queue holds {len(ordered_prs)} PRs without a valid landing plan.")
+            return EXIT_LANDING_PLAN_REQUIRED
 
     batch = select_batch(primary_repo, args, ordered_prs)
     if not args.teardown_only and ordered_prs:
@@ -1852,11 +1978,17 @@ def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) ->
         # GH-1074: a queue of only new PRs must not orphan a batch whose QA is still pending.
         if batch is not None:
             batch_record.extend(batch, ordered_prs)
+            if args.landing_plan:
+                batch_record.set_landing_plan(batch, args.landing_plan, args.landing_reason,
+                                              [pr["number"] for pr in ordered_prs])
             log(f"Resuming merge batch {batch.get('issue_url') or batch['path']}")
             return batch
     if len(ordered_prs) < 2:
         return None
     batch = batch_record.new(primary_repo, origin, args.integration_branch, ordered_prs)
+    if args.landing_plan:
+        batch_record.set_landing_plan(batch, args.landing_plan, args.landing_reason,
+                                      [pr["number"] for pr in ordered_prs])
     batch_record.create(batch, _gh, primary_repo, attempt_record.repo_slug(origin))
     if batch.get("issue_error"):
         log_warn(f"merge-batch issue not created: {batch['issue_error']} — landing continues; "
