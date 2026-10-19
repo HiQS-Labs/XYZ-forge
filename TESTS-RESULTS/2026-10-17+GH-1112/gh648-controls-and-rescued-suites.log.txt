@@ -1,0 +1,22 @@
+== identity before: 52296349 https://github.com/HiQS-Labs/XYZ-forge.git bare=false
+== A. gh648 suite as committed
+rc=0 {"cases": [{"case": "codex-pty0", "child_dead": true, "elapsed_s": 1.008, "exit_code": 7, "natural_completion": false, "source_sha256": "85a4ac243e2c38296db59d5d8fe5ac3ea347cef7efc2845e81aa1fc1a2
+== B. red control: observation killpg replaced by no-op (must fail with 'process group remains')
+rc=1
+process group remains', 'agy-pty0'
+== C. injected PermissionError at observation (must record eperm-unsignalable, rc 0)
+rc=0
+== D. injected ProcessLookupError at observation (must record True, rc 0)
+rc=0
+       0
+== E. four previously rescued suites concurrently
+gh484-phase-dir-default.sh rc=0
+gh360-scoped-receipt-chain-rebuild.sh rc=0
+jog-queue.sh rc=0
+gh648-l4-285-revalidate.sh rc=0
+gh360-scoped-receipt-chain-rebuild.sh: gh360: 27 passed, 0 failed
+gh484-phase-dir-default.sh:   PASS: (bash) a nested --phases-dir is excluded from the dirty-tree check
+gh648-l4-285-revalidate.sh: {"cases": [{"case": "codex-pty0", "child_dead": true, "elapsed_s": 1.008, "exit_code": 7, "natural_c
+jog-queue.sh: 34 passed, 0 failed
+== identity after: 52296349 https://github.com/HiQS-Labs/XYZ-forge.git clean=0
+== group_absent values recorded: A(as committed)    4 "group_absent": true; | C(injected PermissionError)    4 "group_absent": "eperm-unsignalable"; | D(injected ProcessLookupError)    4 "group_absent": true;

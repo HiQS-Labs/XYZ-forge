@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+"""GH-1112 registry-order controls (manual record, GH-831: no new suites).
+
+Usage: python3 registry-order-controls.py.txt <base-validate.sh> <candidate-validate.sh> <pr1116-telemetry.jsonl.gz>
+1. Extract the TESTS registry from both files; write registry-before.txt / registry-after.txt.
+2. Assert exact multiset equality (green), and that a dropped entry and a duplicated entry each
+   FAIL the same assertion (red witnesses).
+3. First-wave check: under xargs -P 4 the first four pooled entries are dispatched at t=0.
+   Assert the three heavy suites are all in the first wave of the candidate order (green) and
+   NOT in the first wave of the base order (red witness). The retained PR #1116 telemetry is
+   read to confirm those three suites were the latest-finishing pooled suites in that run.
+"""
+import collections, gzip, json, re, sys
+from pathlib import Path
+HEAVY = ["gh436-merge-cleanup.sh", "gh280-jog-marathon-adapter.sh", "gh589-xyz-mini-sync.sh"]
+def registry(path):
+    s = Path(path).read_text(); start = s.index("TESTS=(\n") + len("TESTS=(\n"); end = s.index("\n)\n", start)
+    return [m.group(1) for m in re.finditer(r'^\s*"([^"]+)"', s[start:end], re.M)]
+def same_multiset(a, b): return collections.Counter(a) == collections.Counter(b)
+res = []
+def check(name, ok): res.append(ok); print(("PASS" if ok else "FAIL") + ": " + name)
+base, cand, tel = sys.argv[1:4]
+before, after = registry(base), registry(cand)
+out = Path(__file__).resolve().parent
+(out / "registry-before.txt").write_text("\n".join(before) + "\n"); (out / "registry-after.txt").write_text("\n".join(after) + "\n")
+check(f"registry count unchanged ({len(before)} -> {len(after)})", len(before) == len(after) == 406)
+check("registry multiset identical", same_multiset(before, after))
+check("red: dropped entry fails multiset check", not same_multiset(before, after[1:]))
+check("red: duplicated entry fails multiset check", not same_multiset(before, after + [after[0]]))
+check("candidate: three heavy suites are the first three entries", after[:3] == HEAVY)
+first_wave_new = set(after[:4]); first_wave_old = set(before[:4])
+check("candidate first wave (4-wide) contains all three heavy suites", set(HEAVY) <= first_wave_new)
+check("red: base first wave contains none of the heavy suites", not (set(HEAVY) & first_wave_old))
+print("base positions:", [before.index(h) + 1 for h in HEAVY], "candidate positions:", [after.index(h) + 1 for h in HEAVY])
+rows = [json.loads(l) for l in gzip.open(tel, "rt") if l.strip()]
+pool = [r for r in rows if r.get("event") == "suite" and r.get("lane") == "pool"]
+s0 = min(int(r["started_ms"]) for r in pool)
+tail = sorted(pool, key=lambda r: int(r["ended_ms"]))[-3:]
+tail_names = [r["name"] for r in tail]
+print("PR #1116 telemetry: latest-finishing pooled suites (start→end, s):",
+      [(n, round((int(r["started_ms"]) - s0) / 1000, 1), round((int(r["ended_ms"]) - s0) / 1000, 1)) for n, r in zip(tail_names, tail)])
+check("PR #1116 telemetry: the three latest-finishing pooled suites are exactly the heavy set", set(tail_names) == set(HEAVY))
+print(f"{sum(res)} pass, {len(res) - sum(res)} fail"); sys.exit(0 if all(res) else 1)

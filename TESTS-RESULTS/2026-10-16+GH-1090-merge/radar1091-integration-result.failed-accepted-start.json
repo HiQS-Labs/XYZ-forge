@@ -1,0 +1,5 @@
+{
+  "rc": 1,
+  "error": "{'args': ['/opt/homebrew/opt/python@3.14/bin/python3.14', 'utils/py/releases_app.py', 'roadmap', 'update', '--issue-num', '1090', '--accepted-start', '--section', 'In progress', '--status-marker', '\ud83d\udea7'], 'rc': 3, 'stdout': '', 'stderr': 'refused: rule=accepted-start-fields: --accepted-start requires only --gid (and optional --dry-run)\\n'}",
+  "scope": "STOP; retain all state/counters; no blind replay"
+}

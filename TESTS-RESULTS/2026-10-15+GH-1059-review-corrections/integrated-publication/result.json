@@ -1,0 +1,24 @@
+{
+  "head": "2a62965cb99a03a13d82492ae7681027dd9f979c",
+  "branch": "fix/XYZ-forge-gh1059-published-clone-retirement-2026-10-14",
+  "rc": 0,
+  "before": {
+    "head": "2a62965cb99a03a13d82492ae7681027dd9f979c",
+    "tree": "7de21b9d4d3071f383d3fcc785c48f46fdea7ac4",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "config": "a4f5e6881fbe61246b314ec0a7bf29464a6900de2f79a2f87e8dbb91d0e18436"
+  },
+  "after": {
+    "head": "2a62965cb99a03a13d82492ae7681027dd9f979c",
+    "tree": "7de21b9d4d3071f383d3fcc785c48f46fdea7ac4",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "config": "a4f5e6881fbe61246b314ec0a7bf29464a6900de2f79a2f87e8dbb91d0e18436"
+  },
+  "identityUnchanged": true,
+  "at": "2026-10-15T03:12:55.131705+00:00",
+  "durationSeconds": 944.53,
+  "remoteRef": "2a62965cb99a03a13d82492ae7681027dd9f979c\trefs/heads/fix/XYZ-forge-gh1059-published-clone-retirement-2026-10-14",
+  "remoteQueryRc": 0
+}

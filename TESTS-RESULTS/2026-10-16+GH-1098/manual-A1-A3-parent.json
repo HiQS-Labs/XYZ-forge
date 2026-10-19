@@ -1,0 +1,24 @@
+{
+ "label": "parent",
+ "head": "05bd9303",
+ "XYZ_HARNESS": "/Users/noelsaw/Documents/GH Repos/XYZ-forge",
+ "harness_home": "/Users/noelsaw/Documents/GH Repos/XYZ-forge",
+ "jog_resolves_root_first": false,
+ "jog_pins_env": false,
+ "A1": {
+  "preflight_script": "/Users/noelsaw/Documents/GH Repos/XYZ-forge/utils/py/swarm_preflight.py",
+  "rc": 6,
+  "packet_target_root": null,
+  "target_root_is_clone": false,
+  "tail": [
+   "  Per GUIDING-PRINCIPLES.md \u00a711 the planner reads the capture doc, not the issue thread.",
+   "  Remediation: promote issue #99906 to a GH-99906 capture doc with a preflight contract first."
+  ]
+ },
+ "A3": {
+  "jog_sets_idle_bound": false,
+  "agy_turn_reads_env": true,
+  "emulated_env_no_export": null,
+  "emulated_env_operator_export_0": "0"
+ }
+}

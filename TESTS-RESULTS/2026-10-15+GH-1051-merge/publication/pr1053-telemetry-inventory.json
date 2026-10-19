@@ -1,0 +1,194 @@
+[
+  {
+    "path": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1053-current-gate/.tick/telemetry/validate-parallel-1792101556204-66293.jsonl",
+    "start": {
+      "v": 1,
+      "ts_ms": 1792101556204,
+      "run": "b85b52ab2-66293",
+      "runner": "validate",
+      "event": "run.start",
+      "commit": "b85b52ab283b49c357945adfdd862d9859de3730",
+      "host": "noels-Mac-Studio",
+      "mode": "parallel",
+      "width": 2,
+      "tier": 3,
+      "registered": 1
+    },
+    "summary": {
+      "v": 1,
+      "ts_ms": 1792101575886,
+      "run": "b85b52ab2-66293",
+      "runner": "validate",
+      "event": "run.summary",
+      "passed": 4,
+      "failed": 0,
+      "total": 4,
+      "envelope_rc": "0",
+      "envelope_drift": "none",
+      "suite_events": "3",
+      "run_set": "1",
+      "registered": "1",
+      "suite_events_match": "no"
+    }
+  },
+  {
+    "path": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1053-current-gate/.tick/telemetry/validate-parallel-1792101533734-36596.jsonl",
+    "start": {
+      "v": 1,
+      "ts_ms": 1792101533734,
+      "run": "b85b52ab2-36596",
+      "runner": "validate",
+      "event": "run.start",
+      "commit": "b85b52ab283b49c357945adfdd862d9859de3730",
+      "host": "noels-Mac-Studio",
+      "mode": "parallel",
+      "width": 2,
+      "tier": 3,
+      "registered": 2
+    },
+    "summary": {
+      "v": 1,
+      "ts_ms": 1792101555883,
+      "run": "b85b52ab2-36596",
+      "runner": "validate",
+      "event": "run.summary",
+      "passed": 4,
+      "failed": 1,
+      "total": 5,
+      "envelope_rc": "0",
+      "envelope_drift": "none",
+      "suite_events": "6",
+      "run_set": "2",
+      "registered": "2",
+      "suite_events_match": "yes"
+    }
+  },
+  {
+    "path": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1053-current-gate/.tick/telemetry/validate-parallel-1792100893451-82357.jsonl",
+    "start": {
+      "v": 1,
+      "ts_ms": 1792100893451,
+      "run": "b85b52ab2-82357",
+      "runner": "validate",
+      "event": "run.start",
+      "commit": "b85b52ab283b49c357945adfdd862d9859de3730",
+      "host": "noels-Mac-Studio",
+      "mode": "parallel",
+      "width": 4,
+      "tier": 3,
+      "registered": 406
+    },
+    "summary": {
+      "v": 1,
+      "ts_ms": 1792101863955,
+      "run": "b85b52ab2-82357",
+      "runner": "validate",
+      "event": "run.summary",
+      "passed": 409,
+      "failed": 0,
+      "total": 409,
+      "envelope_rc": "0",
+      "envelope_drift": "none",
+      "suite_events": "408",
+      "run_set": "406",
+      "registered": "406",
+      "suite_events_match": "yes"
+    }
+  },
+  {
+    "path": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1053-current-gate/.tick/telemetry/validate-parallel-1792100971169-38800.jsonl",
+    "start": {
+      "v": 1,
+      "ts_ms": 1792100971169,
+      "run": "b85b52ab2-38800",
+      "runner": "validate",
+      "event": "run.start",
+      "commit": "b85b52ab283b49c357945adfdd862d9859de3730",
+      "host": "noels-Mac-Studio",
+      "mode": "parallel",
+      "width": 2,
+      "tier": 2,
+      "registered": 406
+    },
+    "summary": {
+      "v": 1,
+      "ts_ms": 1792101000301,
+      "run": "b85b52ab2-38800",
+      "runner": "validate",
+      "event": "run.summary",
+      "passed": 7,
+      "failed": 0,
+      "total": 7,
+      "envelope_rc": "0",
+      "envelope_drift": "none",
+      "suite_events": "7",
+      "run_set": "5",
+      "registered": "406",
+      "suite_events_match": "yes"
+    }
+  },
+  {
+    "path": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1053-current-gate/.tick/telemetry/validate-parallel-1792101513470-19631.jsonl",
+    "start": {
+      "v": 1,
+      "ts_ms": 1792101513470,
+      "run": "b85b52ab2-19631",
+      "runner": "validate",
+      "event": "run.start",
+      "commit": "b85b52ab283b49c357945adfdd862d9859de3730",
+      "host": "noels-Mac-Studio",
+      "mode": "parallel",
+      "width": 4,
+      "tier": 3,
+      "registered": 1
+    },
+    "summary": {
+      "v": 1,
+      "ts_ms": 1792101533444,
+      "run": "b85b52ab2-19631",
+      "runner": "validate",
+      "event": "run.summary",
+      "passed": 4,
+      "failed": 0,
+      "total": 4,
+      "envelope_rc": "0",
+      "envelope_drift": "none",
+      "suite_events": "4",
+      "run_set": "1",
+      "registered": "1",
+      "suite_events_match": "yes"
+    }
+  },
+  {
+    "path": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1053-current-gate/.tick/telemetry/validate-parallel-1792100896668-84078.jsonl",
+    "start": {
+      "v": 1,
+      "ts_ms": 1792100896668,
+      "run": "b85b52ab2-84078",
+      "runner": "validate",
+      "event": "run.start",
+      "commit": "b85b52ab283b49c357945adfdd862d9859de3730",
+      "host": "noels-Mac-Studio",
+      "mode": "parallel",
+      "width": 2,
+      "tier": 2,
+      "registered": 406
+    },
+    "summary": {
+      "v": 1,
+      "ts_ms": 1792100970691,
+      "run": "b85b52ab2-84078",
+      "runner": "validate",
+      "event": "run.summary",
+      "passed": 8,
+      "failed": 0,
+      "total": 8,
+      "envelope_rc": "0",
+      "envelope_drift": "none",
+      "suite_events": "7",
+      "run_set": "5",
+      "registered": "406",
+      "suite_events_match": "yes"
+    }
+  }
+]

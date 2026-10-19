@@ -1,0 +1,26 @@
+# GH-1144 manual check: express base resolution and the base-unresolved refusal.
+# Usage: bash resolution-cases.sh <forge-clone>
+set -u
+F="$1"; W=$(mktemp -d)
+mk(){ local n=$1; shift; git init -q --bare "$W/$n.git"; git init -q "$W/$n"; git -C "$W/$n" remote add origin "$W/$n.git"
+  git -C "$W/$n" config user.email t@t; git -C "$W/$n" config user.name t; echo x > "$W/$n/f"; git -C "$W/$n" add -A; git -C "$W/$n" commit -qm init
+  for b in "$@"; do git -C "$W/$n" push -q origin HEAD:refs/heads/$b; done; git -C "$W/$n" fetch -q origin
+  git -C "$W/$n" remote set-head origin -d 2>/dev/null; git -C "$W/$n" config remote.origin.followRemoteHEAD never; git -C "$W/$n" checkout -q -b task/x; }
+mkdir -p "$W/bin"; printf '#!/bin/sh\n[ "$1 $2" = "repo view" ] && { [ -n "$GH_DEFAULT" ] && echo "$GH_DEFAULT" || exit 1; exit 0; }\nexit 1\n' > "$W/bin/gh"; chmod +x "$W/bin/gh"; export PATH="$W/bin:$PATH"
+mk mainonly main; mk both main development; mk none trunk
+R(){ (cd "$F" && python3 -B -c "import sys;sys.path.insert(0,'utils/py');import express;print(express.resolve_base(sys.argv[1],'o/r',sys.argv[2] or None))" "$@"); }
+echo "git: $(git --version)"
+echo "1 main-only, --base main, no origin/HEAD, no gh default      -> $(R "$W/mainonly" main)   (expect main)"
+echo "2 main+development, no origin/HEAD, gh default=main         -> $(GH_DEFAULT=main R "$W/both" '')   (expect main)"
+echo "3 main+development, no origin/HEAD, no gh default           -> $(R "$W/both" '')   (expect None)"
+echo "4 main-only, gh default names a missing branch              -> $(GH_DEFAULT=ghost R "$W/mainonly" '')   (expect None)"
+echo "5 main-only, --base development (absent on origin)          -> $(R "$W/mainonly" development)   (expect None)"
+git -C "$W/both" remote set-head origin development
+echo "6 main+development, origin/HEAD=development, gh default=main -> $(GH_DEFAULT=main R "$W/both" '')   (expect development: origin/HEAD wins)"
+cd "$W/none"; S0=$(git status --porcelain=v1; git rev-parse HEAD)
+python3 -B "$F/utils/py/express.py" --root "$W/none" check --issue 1 --docs-only --repo o/r > "$W/out" 2>&1; rc=$?
+S1=$(git status --porcelain=v1; git rev-parse HEAD)
+echo "7 trunk-only, no --base, no origin/HEAD, no gh default (CLI)  -> rc=$rc (expect 3)"
+echo "  $(head -1 "$W/out")"
+echo "  HEAD and tracked state unchanged: $([ "$S0" = "$S1" ] && echo yes || echo "NO — only untracked: $(git status --porcelain=v1 | tr '\n' ' ')")"
+echo "  untracked after refusal (refusal telemetry only): $(git status --porcelain=v1 --untracked-files=all | tr '\n' ' ')"

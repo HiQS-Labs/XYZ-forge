@@ -1,0 +1,9 @@
+{
+  "head": "b85b52ab283b49c357945adfdd862d9859de3730",
+  "tree": "9d02862208a7c4430fe7bdc73a263b86151dab20",
+  "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+  "bare": "false",
+  "config_sha256": "659f1de951f05711752c7ed47bcb00c256030e20e827e8b0959dccb23ba226be",
+  "status": "",
+  "refs": "refs/heads/chore/pr1053-current-base-preparation b85b52ab283b49c357945adfdd862d9859de3730\nrefs/remotes/origin/HEAD a5a22ae74ea154f67d98706e823de0e01a1fa823\nrefs/remotes/origin/chore/pr1053-current-base-preparation a5a22ae74ea154f67d98706e823de0e01a1fa823\nrefs/remotes/origin/development 14081d61d3c42e662479a53637c9399eb772e8e2\nrefs/remotes/origin/fix/XYZ-forge-gh1051-pages-development-2026-10-12 b85b52ab283b49c357945adfdd862d9859de3730\nrefs/tags/0.9.0 a076b1b117a68252dc3d9d1c4901b0c31fcb4db3\nrefs/tags/archive/gh353-356-local-merge bb0d5d6a4774cd663f327b742618617454e235a8\nrefs/tags/archive/gh360-364-local-merge 2a41968d33ab08e2f80129da2055300b74a563ae\nrefs/tags/bash-final-2026-07-28 3bf4e487eadb38b7fd1f20cb93e0441edddbb8c4\nrefs/tags/prereset/development-2026-09-02 bb0d5d6a4774cd663f327b742618617454e235a8"
+}

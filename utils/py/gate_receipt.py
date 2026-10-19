@@ -51,6 +51,11 @@ def write_receipt(repo_root, sha, gate, mode, exit_code, passed=None, total=None
     return receipt_data
 
 
+def valid_pass_receipt(data, sha):
+    """The shared on-disk/committed-bundle pass predicate."""
+    return isinstance(data, dict) and bool(sha) and data.get("sha") == sha and data.get("exit_code") == 0
+
+
 def check_receipt(repo_root, sha, max_age_s=None):
     """Check whether a valid pass receipt exists on-disk for the given SHA."""
     json_path = get_receipt_path(repo_root, sha)
@@ -58,7 +63,7 @@ def check_receipt(repo_root, sha, max_age_s=None):
         try:
             with open(json_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            if data.get("sha") == sha and data.get("exit_code") == 0:
+            if valid_pass_receipt(data, sha):
                 if max_age_s is not None and "timestamp" in data:
                     ts = datetime.datetime.fromisoformat(data["timestamp"])
                     age = (datetime.datetime.now(datetime.timezone.utc) - ts).total_seconds()

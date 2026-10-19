@@ -1,10 +1,11 @@
 """relay-drive/attest@1 — the one record that says a relay reviewer approved (GH-505 / GH-509).
 
 The driver (relay_drive.py) is the only process in a relay the party under review does not run.
-It is the ONLY writer of this record, and it writes it only after watching a reviewer-role turn
+It is the ONLY writer of the approval fields, and it writes it only after watching a reviewer-role turn
 append review text to a relay file whose reviewed revision the driver pinned before dispatch.
 
-Everything else — marathon recovery, jog's merge — READS the record, and reads it only against
+Marathon extends a validated approval with optional phase-completion metadata after its
+success checks. Consumers, including jog's merge, read the approval only against
 trusted expectations (task, expected reviewer, relay file, target repo). Existence proves nothing:
 `load()` validates the reviewer, the terminal status (record == file == trailer), and the exact
 byte range the reviewer added; `candidate_ok()` validates that a merge candidate is the reviewed
@@ -353,6 +354,58 @@ def _candidate_ok(record, candidate_sha, target_repo):
     if diff.returncode != 0:
         return False, f"git diff failed: {diff.stderr.strip()}"
     return True, None
+
+
+def record_phase_completion(record, *, phase, lane, candidate, target_repo):
+    """Marathon's success writer: extend this approval with its validated completion.
+
+    Kept under the existing protected attestation boundary, not a workspace receipt.
+    Fresh relay approval replaces this record and therefore discards any older completion.
+    """
+    ok, why = candidate_ok(record, candidate, target_repo)
+    if not ok:
+        raise ValueError(f"cannot record phase completion: {why}")
+    updated = dict(record)
+    updated["phase_completion"] = {
+        "phase": phase, "lane": lane, "candidate": candidate,
+        "reviewed_head": record["reviewed_head"], "added_sha256": record["added_sha256"],
+    }
+    write(updated)
+
+
+def phase_completion_candidate(record, *, phase, lane, head, target_repo):
+    """Validate optional historical completion -> (candidate or None, refusal or None).
+
+    Missing metadata is a legacy record: callers retain strict current-HEAD validation.
+    Malformed or mismatched metadata refuses; it never falls back to an older approval.
+    This is historical satisfaction only, never current-head merge authorization.
+    """
+    if "phase_completion" not in record:
+        return None, None
+    try:
+        completion = record["phase_completion"]
+        if not isinstance(completion, dict):
+            return None, "phase completion is not an object"
+        expected = {"phase": phase, "lane": lane, "reviewed_head": record["reviewed_head"],
+                    "added_sha256": record["added_sha256"]}
+        if any(completion.get(k) != v for k, v in expected.items()):
+            return None, "phase completion does not match this phase, lane or approval"
+        candidate = completion.get("candidate")
+        if not isinstance(candidate, str) or not re.fullmatch(r"[0-9a-f]{40,64}", candidate):
+            return None, "phase completion has no full candidate revision"
+        ok, why = candidate_ok(record, candidate, target_repo)
+        if not ok:
+            return None, f"phase completion candidate invalid: {why}"
+        if not head:
+            return None, "no current revision for phase completion"
+        ancestor = subprocess.run(
+            ["git", "-C", target_repo, "merge-base", "--is-ancestor", candidate, head],
+            capture_output=True, text=True)
+        if ancestor.returncode != 0:
+            return None, "phase completion is not an ancestor of current HEAD or ancestry check failed"
+        return candidate, None
+    except Exception as exc:
+        return None, f"phase completion check failed ({exc.__class__.__name__}: {exc})"
 
 
 def rev_parse(repo, ref="HEAD"):

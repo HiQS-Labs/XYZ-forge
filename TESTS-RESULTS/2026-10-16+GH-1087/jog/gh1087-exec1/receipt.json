@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1087,
+  "execution_id": "gh1087-exec1",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1087-gh1051-record-spacing-2026-10-16",
+  "pr_number": 1101,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "c0eaa332e8a2c40e2dd5cb31c53a1bc3e06128db6a91d0b9253630182a12f522",
+    "gate-receipt.json": "eac456cda1f5bdd86d0a1f889e43bf4200530717b7906e8700c98cf1dd1027b2",
+    "provenance.jsonl": "7604725fa04d3c57bdc9b26c1116bcc3b2df509e5a08e24fe740911ad8c17a41"
+  }
+}

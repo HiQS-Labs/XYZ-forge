@@ -1,0 +1,4 @@
+### new express (this branch)
+express-refused: rule=too-many-commits — the task branch carries 10 commits ahead of origin/development (> 2 allowed); express lands small hotfixes with <= 2 local commits — route to normal PR lane
+### old express (origin/development 9a61625f)
+express-refused: rule=too-many-commits — the task branch carries 10 commits ahead of origin/development (> 2 allowed); express lands small hotfixes with <= 2 local commits — route to normal PR lane

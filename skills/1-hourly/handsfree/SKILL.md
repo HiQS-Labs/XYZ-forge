@@ -30,6 +30,15 @@ when an external result leaves nothing actionable in the current turn.
    method, and last wake result. Keep this short. It is a local resume note,
    never a replacement for the issue, project plan, CI result, or user message.
    Do not put credentials in it.
+   - **Caller subroutine overrides:** A delegating skill (such as
+     [`todo-list`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/2-daily/todo-list/SKILL.md))
+     may pass a tighter deadline and iteration cap (for example `10 x 10 minutes`
+     = 100 minutes / 10 wakes max), a caller-named note path
+     (`temp/todo-list-YYYY-MM-DD-<session-token>.md`), and a numbered checklist
+     payload to advance on each wake. When no caller override is supplied, the
+     standalone 3-hour (18-wake) default and `temp/handsfree-...md` path apply.
+     All scheduler capability, readback, no-duplicate, and cancellation checks
+     below remain mandatory under any caller override.
 3. Inspect the **current harness's** native scheduling tools or UI. Arm exactly
    one recurring 10-minute job only if it can return to this conversation,
    read the note in this workspace, cancel or disable the job from this

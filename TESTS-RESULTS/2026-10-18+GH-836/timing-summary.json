@@ -1,0 +1,18 @@
+{
+  "baseline": [
+    233.1,
+    236.8
+  ],
+  "candidate": [
+    74.42,
+    75.58
+  ],
+  "baseline_median": 234.95,
+  "candidate_median": 75.0,
+  "saving_seconds": 159.95,
+  "reduction_percent": 68.07831453500745,
+  "baseline_range": 3.700000000000017,
+  "candidate_range": 1.1599999999999966,
+  "total_focused_seconds": 619.9,
+  "all_labels_identical": true
+}

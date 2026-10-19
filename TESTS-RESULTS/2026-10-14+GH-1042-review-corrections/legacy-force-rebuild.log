@@ -1,0 +1,31 @@
+marathon-drive: phase p1 startup: attested approval found but candidate 773de0f8f9fa is not the reviewed revision — candidate 773de0f8f9fa changes non-transcript content after reviewed head 10f5214abfdb — not accepting it (GH-505)
+marathon-drive: phase p1: --force cannot reuse this terminal approval — rebuilding with a fresh token
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • brief.md
+marathon-drive:   • result.json
+marathon-drive:   • stub
+marathon-drive: relay file committed: <disposable-clone>/temp/recovery-manual/legacy-later-78i5k9p0/phases/p1/RELAY.md
+marathon-drive: tick token seeded: MARATHON-P1-TURN-R2 → claude
+marathon-drive: warn: host free swap is critically low (453MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-start boundary — compressor=7260MB, swap_free=453MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+marathon-drive: relay timed out (exit 7) before any declared artifact landed — treating it as a real hang
+marathon-drive: relay escalated: timeout / hang (relay-drive exit 7)
+marathon-drive: transcript saved: <disposable-clone>/temp/recovery-manual/legacy-later-78i5k9p0/relay-system/legacy-later-78i5k9p0/2026-10-14/marathon-p1-233639.md
+marathon-drive: warn: host free swap is critically low (453MB < 1024MB)
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7260MB, swap_free=453MB
+marathon-drive: escalation written: <disposable-clone>/temp/recovery-manual/legacy-later-78i5k9p0/phases/p1/ESCALATION.md (reason: timeout-no-artifact)
+marathon-drive: result receipt written: <disposable-clone>/temp/recovery-manual/legacy-later-78i5k9p0/result.json (outcome: escalated, exit 7)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: ≥0 tokens, 0s wall-clock
+memory: compressor peak: 7260MB, swap free min: 453MB
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
+marathon-drive: --force: default token MARATHON-P1-TURN is spent (done) — using fresh relay task MARATHON-P1-TURN-R2
+lane-attempt-cap: --force override — lane p1 at 0 attempt(s) (cap 2), proceeding.

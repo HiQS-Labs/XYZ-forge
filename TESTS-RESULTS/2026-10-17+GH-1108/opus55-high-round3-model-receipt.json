@@ -1,0 +1,33 @@
+{
+  "type": "result",
+  "subtype": "success",
+  "is_error": false,
+  "duration_ms": 208998,
+  "num_turns": 23,
+  "modelUsage": {
+    "claude-opus-5-5": {
+      "inputTokens": 42,
+      "outputTokens": 14664,
+      "cacheReadInputTokens": 1405387,
+      "cacheCreationInputTokens": 90549,
+      "webSearchRequests": 0,
+      "costUSD": 1.2989174,
+      "contextWindow": 1000000,
+      "maxOutputTokens": 128000,
+      "thinkingTokens": 5483,
+      "canonicalModel": "claude-opus-5-5",
+      "provider": "firstParty",
+      "costBasis": "list"
+    }
+  },
+  "schema": "xyz/claude-review-config@1",
+  "requested_model": "claude-opus-5-5",
+  "reasoning_effort": "high",
+  "review_target_head": "007a14ad",
+  "verdict": "Escalated",
+  "findings": {
+    "blocker": 1,
+    "should": 0
+  },
+  "relay_exit_code": 4
+}

@@ -1,0 +1,12 @@
+PASS: registry count unchanged (406 -> 406)
+PASS: registry multiset identical
+PASS: red: dropped entry fails multiset check
+PASS: red: duplicated entry fails multiset check
+PASS: candidate: three heavy suites are the first three entries
+PASS: candidate first wave (4-wide) contains all three heavy suites
+PASS: red: base first wave contains none of the heavy suites
+base positions: [354, 363, 404] candidate positions: [1, 2, 3]
+PR #1116 telemetry: latest-finishing pooled suites (start→end, s): [('gh589-xyz-mini-sync.sh', 719.9, 737.7), ('gh280-jog-marathon-adapter.sh', 631.7, 775.7), ('gh436-merge-cleanup.sh', 620.8, 840.9)]
+PASS: PR #1116 telemetry: the three latest-finishing pooled suites are exactly the heavy set
+8 pass, 0 fail
+rc=0

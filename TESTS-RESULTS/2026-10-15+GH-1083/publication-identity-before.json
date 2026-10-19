@@ -1,0 +1,7 @@
+{
+  "['rev-parse', 'HEAD']": "006d3b947fe7f720137a3c385a879f69964df0ea\n",
+  "['remote', '-v']": "origin\thttps://github.com/HiQS-Labs/XYZ-forge.git (fetch)\norigin\thttps://github.com/HiQS-Labs/XYZ-forge.git (push)\n",
+  "['config', '--get', 'core.bare']": "false\n",
+  "['config', '--local', '--get', 'user.email']": "",
+  "['status', '--porcelain']": ""
+}

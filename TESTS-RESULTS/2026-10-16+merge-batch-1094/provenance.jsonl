@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-16T05:28:14.854228+00:00", "pr": 1091, "commit": "5362c0642b3de8830a2435bcca6371ce4d784513", "rc": 0, "result": "pass", "command": "validate.sh --sequential --subsystem small", "scope": "Reuse matching existing integrated qualification as actual two-PR batch sweep; original typed receipt and telemetry are committed", "passed": 75, "total": 75}

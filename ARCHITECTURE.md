@@ -2,7 +2,7 @@
 title: Relay Architecture — headless Claude, Codex, and agy turns over a tick token
 status: Reference
 created: 2026-06-22
-updated: 2026-09-13
+updated: 2026-10-15
 owner: noelsaw
 doc_type: architecture
 summary: Verified map of how `relay-drive.sh`, per-agent turn shims, `relay-turn-lib.sh`, the `RELAY-TURN` tick task, and the relay thread file coordinate one-turn-at-a-time multi-agent work, plus the roadmap query pipeline and the adoption gate for derived views.
@@ -13,6 +13,11 @@ verified_against:
   - relay-automation/codex-turn.sh
   - relay-automation/agy-turn.sh
   - relay-automation/poll.sh
+  - utils/py/relay_drive.py
+  - utils/py/codex-turn.py
+  - utils/py/agy-turn.py
+  - utils/py/claude-turn.py
+  - utils/py/rtl.py
   - bin/tick
   - utils/py/wave_reconcile.py
   - utils/releases-merge-resolve.sh
@@ -64,7 +69,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [triangulate](skills/1-hourly/triangulate/SKILL.md) | Reconcile three independent probes into an evidence-ranked verdict. |
 | [unstuck](skills/1-hourly/unstuck/SKILL.md) | Interrupt a stalled AI session and restore movement toward the original outcome. |
 
-### `2-daily` — A few times a day (17)
+### `2-daily` — A few times a day (21)
 
 _landing, queueing and driving work; multi-session and multi-repo coordination._
 
@@ -72,7 +77,9 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 |---|---|
 | [agent-chorus](skills/2-daily/agent-chorus/SKILL.md) | Start/join a local multi-agent discussion thread over a six-digit ID (AgentChorus, formerly Agent2Agent). |
 | [ci-debug](skills/2-daily/ci-debug/SKILL.md) | Debug failing CI pipelines and pre-push gates in safe full-clone isolation via debug-mantra, recon, and ponytail. |
-| [express](skills/2-daily/express/SKILL.md) | Hotfix fast lane — one motion: fix + its existing covering suite, ledger writes, born-complete docs, gateless development landing, reconcile. |
+| [close-the-loop](skills/2-daily/close-the-loop/SKILL.md) | Report possible forgotten follow-ups from the current conversation, with evidence and next actions. |
+| [daily-planner](skills/2-daily/daily-planner/SKILL.md) | Adapt the weekly plan to daily outcomes using the shared planning engine. |
+| [express](skills/2-daily/express/SKILL.md) | Explicit hotfix or documentation fast lane — existing covering suite or PDDA docs gate, bounded direct development landing, commit-bound receipts and reconciliation. |
 | [file-xyz-bug](skills/2-daily/file-xyz-bug/SKILL.md) | File a bug against the xyz harness from any repo/session. |
 | [hq](skills/2-daily/hq/SKILL.md) | Multi-repo command center — resolve a project name and act across repos. |
 | [jog](skills/2-daily/jog/SKILL.md) | Capture and execute an immediate serial task queue one item at a time. |
@@ -80,9 +87,11 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [phase-qa](skills/2-daily/phase-qa/SKILL.md) | Add phase-appropriate QA checks to plans and review completed phases. |
 | [relay-to-issue](skills/2-daily/relay-to-issue/SKILL.md) | Turn a finished relay thread into a checklist-style GitHub issue. |
 | [releases](skills/2-daily/releases/SKILL.md) | Read/author/publish the releases.db planning ledger. |
-| [review-code](skills/2-daily/review-code/SKILL.md) | Meticulous ground-truth code and PR review using recon, debug-mantra, and workhorse/unstuck ladders. |
+| [review-code-xyz](skills/2-daily/review-code-xyz/SKILL.md) | Meticulous ground-truth review of a local diff or branch using recon, debug-mantra, and workhorse/unstuck ladders (fixes reversible issues). |
+| [review-pr-xyz](skills/2-daily/review-pr-xyz/SKILL.md) | Report-only GitHub PR review: validate the PR's claims first, then recon + debug-mantra, post graded findings. |
 | [review-xyz](skills/2-daily/review-xyz/SKILL.md) | Multi-model, worktree-isolated code review; posts to GitHub PRs. |
 | [start-marathon](skills/2-daily/start-marathon/SKILL.md) | Review intake and plans, prepare collision-safe lanes, and dry-run the marathon. |
+| [todo-list](skills/2-daily/todo-list/SKILL.md) | Turn the preceding assistant list into a numbered todo list, execute it in recommended order, and arm a 10x10m watchdog wake via handsfree. |
 | [where-are-we-at](skills/2-daily/where-are-we-at/SKILL.md) | Deep ground-truth status assessment of a topic/subsystem using recon, debug-mantra, and merge-cleanup. |
 | [workhorse](skills/2-daily/workhorse/SKILL.md) | Disciplined end-to-end resolution ladder: triage intake, ground truth, plan, build, verify. |
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
@@ -109,8 +118,9 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | [weekly-planner](skills/3-weekly/weekly-planner/SKILL.md) | Dual-horizon weekly sprint planning, PR merge sequencing, provisional decisions register, and held branch accumulation. |
 | [weekly-shipped](skills/3-weekly/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |
 | [whack-a-mole](skills/3-weekly/whack-a-mole/SKILL.md) | Cluster 14 days of recurring bugs by churn and file one approved root-cause umbrella issue. |
+| [worth-it](skills/3-weekly/worth-it/SKILL.md) | Price initial or remaining value; `/worth-it continue` returns Continue / Pivot / Park / Stop, one bounded proof and approval-aware results capture. Pinned upstream source and update recipe: [NOTICE](skills/3-weekly/worth-it/NOTICE). |
 
-### `4-occasional` — Least frequently (19)
+### `4-occasional` — Least frequently (20)
 
 _setup, audits, one-off tooling and specialist lenses._
 
@@ -121,6 +131,7 @@ _setup, audits, one-off tooling and specialist lenses._
 | [ci-doctor](skills/4-occasional/ci-doctor/SKILL.md) | Diagnose CI health and benchmark `runs-on`/config variants side by side. |
 | [ci-optimize](skills/4-occasional/ci-optimize/SKILL.md) | Audit, harden and optimize CI/CD pipelines using zero-cost, production-tested principles. |
 | [ci-suite-audit](skills/4-occasional/ci-suite-audit/SKILL.md) | Audit registered CI test suites and recommend retention, split, nightly, quarantine or turn-off verdicts. |
+| [defect-campaign](skills/4-occasional/defect-campaign/SKILL.md) | Specify bounded Radar-to-ATE/fuzz discovery and evidence dispositions; execution and remediation require separate approval. |
 | [feynman](skills/4-occasional/feynman/SKILL.md) | Translate dense technical material into accurate, layered plain language. |
 | [front-door](skills/4-occasional/front-door/SKILL.md) | Audit whether a newcomer can actually go from clone to working install. |
 | [github-auth-debug](skills/4-occasional/github-auth-debug/SKILL.md) | Diagnose the macOS split where git authentication works but `gh` fails. |
@@ -155,14 +166,14 @@ Where a behavior is only described in comments or operator notes, this doc says 
 There are five load-bearing layers:
 
 ```text
-relay-drive.sh
+relay-drive.sh -> utils/py/relay_drive.py (default)
   supervisor loop; reads tick + thread status, picks the active actor, invokes one shim
 
-codex-turn.sh / agy-turn.sh / claude-turn.sh
+codex-turn.sh / agy-turn.sh / claude-turn.sh -> matching utils/py/*-turn.py (default)
   per-agent dispatch shims; "is it my turn?", build prompt, run CLI, enforce containment
 
-relay-turn-lib.sh
-  shared safety core; allowlist, worktree isolation, timeout watchdog, scoped commit
+utils/py/rtl.py -> relay-turn-lib.sh
+  shared containment bridge/core; allowlist, worktree isolation, scoped commit
 
 RELAY-TURN (tick task)
   the turn pointer; claim / ping / release --to / done
@@ -171,8 +182,11 @@ relay-system/<date>/<slug>.md
   the thread file; STATUS and review blocks, but not the source of turn ownership
 ```
 
-Nobody imports anybody. The architecture is shell processes spawning shell processes, with `tick`
-projection and a Markdown thread file as the only shared state.
+The shell entry points default to their Python implementations when `XYZ_PYTHON` is unset or `1`
+and Python3.8+ is available. `XYZ_PYTHON=0` selects the historical inline Bash fallback; a missing
+or too-old Python interpreter also falls back with a warning. Python dispatchers import the shared
+`rtl` bridge and launch each agent CLI as a subprocess. The bridge still delegates containment to
+`relay-turn-lib.sh`; `tick` projection and a Markdown thread remain the shared coordination state.
 
 ## What Decides Turn Order
 
@@ -184,13 +198,17 @@ The driver reads `tick info <task>` and derives the current actor like this:
 - `status: open` with `handoff-to` -> current actor is `handoff-to`
 - anything else -> no live actor
 
-That logic lives in [relay-automation/relay-drive.sh](relay-automation/relay-drive.sh) and matches
+The default logic lives in [utils/py/relay_drive.py](utils/py/relay_drive.py), reached through
+[relay-automation/relay-drive.sh](relay-automation/relay-drive.sh), and matches
 the fields printed by [bin/tick](bin/tick).
 
-The thread file's `STATUS:` header is only the terminal signal:
+The thread file's `STATUS:` header signals terminal intent, not proof of approval:
 
-- `Approved` or `Closed` means "the relay should stop"
-- it does not decide whose turn is next
+- `Approved` or `Closed` plus a done token is necessary but insufficient for successful termination
+- the driver must observe a successful reviewer-role turn, preserve the prior review text, and
+  attest the nonempty added review bytes against the reviewed revision/artifact
+- pre-existing terminal text without an attestation from the current driver run is rejected
+- the header does not decide whose turn is next
 
 `relay-drive.sh` enforces agreement between the two:
 
@@ -215,7 +233,9 @@ Each headless turn follows the same pipeline:
    [agy-turn.sh:97](relay-automation/agy-turn.sh#L97),
    [codex-turn.sh:62](relay-automation/codex-turn.sh#L62),
    [claude-turn.sh:122](relay-automation/claude-turn.sh#L122).)
-5. The shim runs the model CLI under `rtl_run_bounded`, a sleep-then-`kill -9` watchdog.
+5. The executing Python Codex and Claude shims run the model CLI with
+   `subprocess.run(..., timeout=turn_timeout)`; agy uses its bounded process-group/idle loop.
+   The historical Bash shims use the sleep/kill watchdog in `relay-turn-lib.sh`.
 6. The shim calls `rtl_enforce`, which:
    - resets the repo if the agent committed during its turn
    - reverts off-allowlist tracked changes
@@ -227,12 +247,13 @@ Each headless turn follows the same pipeline:
 
 | Agent | Invocation built by the shim |
 |---|---|
-| Codex | `env -u OPENAI_API_KEY codex exec -s workspace-write "<prompt>"` by default |
-| agy | `agy --dangerously-skip-permissions --print-timeout 300s [--model ...] -p "<prompt>"` |
+| Codex | `env -u OPENAI_API_KEY codex exec -s workspace-write -c approval_policy=never --add-dir "<TICK_REPO_ROOT>/.tick" "<prompt>"` by default |
+| agy | `agy --dangerously-skip-permissions --print-timeout 900s [--model ...] -p "<prompt>"` by default |
 | Claude | `claude -p "<prompt>" --model claude-sonnet-4-6 --allowedTools "Bash,Read,Edit,Write" --permission-mode acceptEdits --output-format json --max-turns 12 --max-budget-usd 0.50` |
 
-Those defaults are configurable via environment variables in each shim, but the shape above is what
-the current code assembles.
+These core defaults come from the executing Python dispatchers; environment variables select
+models, flags and the wall-clock cap. Codex strips the API key from its subprocess environment
+unless explicitly allowed. The command text documents existing behavior; it changes no permissions.
 
 ## Containment Model
 
@@ -268,11 +289,17 @@ No shim pushes.
 
 ### 4. Timeout watchdog
 
-`rtl_run_bounded <seconds> <cmd...>` is the wall-clock guard used by every shim.
+Timeout ownership follows the executing lane: Python Codex and Claude use `subprocess.run` with
+a timeout; Python agy uses process-group wall/idle bounds. The shared Python
+`utils/py/rtl.py::rtl_run_bounded` exists, but these three CLI dispatchers do not call it.
+The historical Bash fallback uses `relay-turn-lib.sh::rtl_run_bounded`, its sleep/kill watchdog.
 
-- normal CLI failure -> returns the CLI's exit code
-- watchdog kill -> returns `7`
-- containment violation -> still wins; the turn exits `6`
+- default Python shims map ordinary CLI failures to `5` and timeout results to `7`
+- Python Claude prioritizes containment result `6` over a failed or timed-out CLI
+- Python Codex and agy return bounded timeout/failure results before the enforcement return code;
+  their earlier off-lane worktree checks can separately exit `6`
+- the historical Bash helper itself returns the command status, or `7` after its watchdog kill;
+  individual shim failure handling remains in each dispatcher
 
 ### 5. Worktree isolation
 
@@ -330,11 +357,12 @@ the trusted path. Verified against [bin/tick](bin/tick); detail in
 
 ### Codex shim
 
-Verified behavior from [relay-automation/codex-turn.sh](relay-automation/codex-turn.sh):
+Verified default behavior from [utils/py/codex-turn.py](utils/py/codex-turn.py), reached through
+[relay-automation/codex-turn.sh](relay-automation/codex-turn.sh):
 
 - strips `OPENAI_API_KEY` unless `CODEX_ALLOW_API_KEY=1`
-- defaults to `codex exec -s workspace-write`
-- logs to a temp file
+- defaults to `codex exec -s workspace-write -c approval_policy=never`, adding the shared `.tick` path
+- defaults to a persistent transcript under `relay-system/logs/<date>/` unless `CODEX_LOG` is set
 - does not capture token stats yet
 
 Operational note from code comments, not runtime enforcement:
@@ -343,7 +371,8 @@ Operational note from code comments, not runtime enforcement:
 
 ### agy shim
 
-Verified behavior from [relay-automation/agy-turn.sh](relay-automation/agy-turn.sh):
+Verified default behavior from [utils/py/agy-turn.py](utils/py/agy-turn.py), reached through
+[relay-automation/agy-turn.sh](relay-automation/agy-turn.sh):
 
 - runs `agy -p` headlessly with `--dangerously-skip-permissions`
 - pins `--print-timeout` to the same wall-clock limit used by the watchdog
@@ -357,7 +386,8 @@ Operational consequence:
 
 ### Claude shim
 
-Verified behavior from [relay-automation/claude-turn.sh](relay-automation/claude-turn.sh):
+Verified default behavior from [utils/py/claude-turn.py](utils/py/claude-turn.py), reached through
+[relay-automation/claude-turn.sh](relay-automation/claude-turn.sh):
 
 - pins the model, default `claude-sonnet-4-6`
 - sets `--allowedTools "Bash,Read,Edit,Write"`
@@ -378,14 +408,16 @@ relay-drive.sh reads tick info RELAY-TURN
 codex-turn.sh
   -> confirms RELAY_AGENT matches CODEX_AGENT
   -> builds the shared prompt
-  -> runs codex exec under rtl_run_bounded
+  -> default Python dispatcher runs codex exec under subprocess.run(timeout=...)
   -> codex edits the relay file and uses ./bin/tick to ping/release or done
   -> rtl_enforce reverts off-lane changes, stages only the allowlist, commits, no push
 
 relay-drive.sh
   -> re-reads RELAY-TURN
   -> if actor moved, continue
-  -> if token is done and file STATUS is terminal, stop
+  -> terminal STATUS + done requires this driver's successful reviewer-turn attestation
+  -> attest nonempty appended review bytes against reviewed revision/artifact, then stop
+  -> pre-existing terminal text or unattested approval escalates
 ```
 
 The key invariant is simple: the model writes the review state and moves the token; the harness owns
@@ -419,9 +451,16 @@ In this repo's releases mode, the RELEASES DB is authoritative and that legacy s
 `releases.db` is the source of truth for this repo's roadmap and release ledger. Three human-readable
 views are *derived* from it (`LEADERBOARD.md`, `RELEASES-PREVIEW.html`, `LEADERBOARD.html`), and every one of them is **adopted by presence**: a generator refreshes
 a view only if that file already exists at the repo root. A repo that never baked one — a fixture, a
-fresh clone, a vendored `.xyz/` install — is a silent no-op, not an error.
+fresh clone, a vendored `.xyz/` install — is a silent no-op, not an error. The ledger's `projections`
+setting precedes that check for ordinary ledger writes and hosted reconciliation: `off` disables
+their automatic refreshes, while the default `auto` leaves the decision to presence (set via
+`pdda-install.sh --projections`). The merge resolver explicitly rebuilds adopted views after a
+ledger merge; it checks presence and deletions independently of this setting.
 
-That single rule is what makes a view addable and removable without editing a single consumer.
+Ordinary ledger writes automatically refresh adopted HTML views; hosted reconciliation refreshes
+the adopted preview and Markdown leaderboard. Explicit generators remain available to create a
+view for adoption. Presence and deletion handling make views addable and removable without
+changing consumers.
 
 > For the whole of it on one canvas — truth, generators, the adoption gate, all three views, and every
 > write path together — open the generated pan-and-zoom map at
@@ -443,29 +482,38 @@ flowchart TD
         G4["export_timeline.py --leaderboard"]
     end
 
-    subgraph views["Derived views at the repo root"]
-        V2["LEADERBOARD.md<br/>adopted"]
-        V3["RELEASES-PREVIEW.html<br/>adopted"]
-        V4["LEADERBOARD.html<br/>adopted"]
+    subgraph views["Derived views at the repo root — all opt-in"]
+        V2["LEADERBOARD.md<br/>adopted in this repo"]
+        V3["RELEASES-PREVIEW.html<br/>not adopted here"]
+        V4["LEADERBOARD.html<br/>not adopted here"]
     end
 
-    subgraph consumers["Every write path that refreshes a view"]
+    subgraph consumers["Automatic refresh and view staging paths"]
         C1["releases_app.py<br/>refresh_preview() — after a DB write"]
         C2["releases-merge-resolve.sh<br/>— after a ledger merge"]
+        C2a["merge-cleanup ledger_merge.py<br/>— during a landing batch"]
         C3["wave_reconcile.py<br/>— after a merged PR"]
         C4["express.py / jog_run.py<br/>— stage into a lane commit"]
     end
 
+    SWITCH{{"projections setting<br/>is off?"}}
     GATE{{"does the file already<br/>exist at the repo root?"}}
 
     DB --> gens
-    consumers --> GATE
-    GATE -- "no: NOT adopted" --> SKIP["skip — silent no-op"]
+    C2a --> C2
+    C1 -- "HTML refresh" --> SWITCH
+    C3 -- "preview + Markdown" --> SWITCH
+    C4 -- "via ledger writes" --> SWITCH
+    C2 -- "explicit merge rebuild" --> GATE
+    SWITCH -- "yes: views disabled" --> SKIP["skip — silent no-op"]
+    SWITCH -- "no: auto / on" --> GATE
+    GATE -- "no: NOT adopted" --> SKIP
     GATE -- "yes: adopted" --> gens
     G2 --> V2
     G3 --> V3
     G4 --> V4
 
+    style SWITCH fill:#fff3cd,stroke:#997404
     style GATE fill:#fff3cd,stroke:#997404
 ```
 

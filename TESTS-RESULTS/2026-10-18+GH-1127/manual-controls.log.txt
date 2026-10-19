@@ -1,0 +1,25 @@
+PASS  p1 red control: docs-only pending WITHOUT --promotion -> Small  [validate.sh --sequential --subsystem small]
+PASS  p1: docs-only pending WITH --promotion -> full registry  [promotion (#1127): full registry]
+PASS  p2 red control: empty pending WITHOUT --promotion -> no run
+PASS  p2: empty pending WITH --promotion -> HEAD commit landing, full gate
+PASS  p3: --promotion without --qualify -> parser error  [n requires --catch-up --gate --qualify (it is the pre-promotion dispatch, #1127)]
+PASS  p3: --promotion without --catch-up -> parser error  [n requires --catch-up --gate --qualify (it is the pre-promotion dispatch, #1127)]
+PASS  A4: committed parallel receipt (65f70cc5) replays True
+PASS  A4: tampered mode='sequential' replays False
+PASS  A4: tampered width=1 replays False
+PASS  A4: tampered retries=1 replays False
+PASS  A4: tampered first_attempt_failures=['x.sh'] replays False
+PASS  A4: legacy receipt without the keys (61e27ed8, #1122) replays True
+merge-cleanup: Running post-merge reconciliation for PR #7 in /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1127-a2-whh9_fp_...
+PASS  A2: default -> local writer, hosted wait NOT reached  [[('local', 7)]]
+merge-cleanup: Running post-merge reconciliation for PR #7 in /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1127-a2-whh9_fp_...
+PASS  A2: MERGE_CLEANUP_USE_HOSTED=1 -> hosted wait reached, then fallback local  [['wait', ('local', 7)]]
+PASS  A2: local child argv unchanged (`--pr N`, no --force-local-reconcile)
+PASS  A3: tier-3 batch -> deferred dispatch command  [gh workflow run wave-reconcile.yml --ref development  # full]
+PASS  A3: tier-1 batch -> unchanged local clone command  [git clone --no-local /var/folders/69/3l_]
+PASS  A5: bot commit with allowlisted paths after tested -> proceed  [ok]
+PASS  A5 (iii) red control: stale tracking ref hides the advance before fetch  [ok]
+PASS  A5 (i)+(iii): after fetch, a source commit after tested -> redispatch  [non-bot e72f12cb]
+PASS  A5 (ii): bot commit touching a non-allowlisted path -> redispatch  [Refusing undeclared reconciliation artifacts: ['evil.sh']]
+PASS  A5 (iv): selection by dispatch run id, not recency
+ALL GH-1127 MANUAL CONTROLS PASS

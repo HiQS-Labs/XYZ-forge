@@ -146,8 +146,15 @@ pathlib.Path(os.environ['GH648_FINISHED']).write_text('natural completion')
                 while True:
                     try:
                         os.killpg(proc.pid, 0)
-                    except ProcessLookupError:
-                        receipts[-1]['group_absent'] = True
+                    except (ProcessLookupError, PermissionError) as exc:
+                        # GH-1112 (#1118 hygiene): EPERM means a group with this id exists that
+                        # this uid may not signal. Every descendant this fixture launches shares
+                        # the test's uid, so an unsignalable group is not the fixture's group
+                        # (most likely pgid reuse after reaping — a hypothesis, not proof). It is
+                        # recorded distinctly and treated as absent; a group that stays
+                        # signalable keeps returning normally and still hits the deadline.
+                        receipts[-1]['group_absent'] = (
+                            True if isinstance(exc, ProcessLookupError) else 'eperm-unsignalable')
                         break
                     if time.monotonic() >= deadline:
                         receipts[-1]['group_absent'] = False
@@ -157,7 +164,7 @@ pathlib.Path(os.environ['GH648_FINISHED']).write_text('natural completion')
             for proc in launched:
                 if lane == 'agy':
                     try: os.killpg(proc.pid, signal.SIGKILL)
-                    except ProcessLookupError: pass
+                    except (ProcessLookupError, PermissionError): pass  # GH-1112: cleanup never masks the verdict
                 elif proc.poll() is None:
                     proc.kill()
                 proc.wait(timeout=3)

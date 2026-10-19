@@ -686,6 +686,15 @@ Run the shim test matching the worker you'll drive (both are first-class). Run t
   captures both transcripts, leaves synthesis to you. Advisory-only, read-only, **not** a relay turn —
   reach for it when you want a second opinion without a review loop.
 
+## Skipped independent review
+
+Use a short, neutral note in PRs, issues, receipts and handoffs: **Independent review did not run.**
+Add one brief factual reason only when needed for the next action or required by the platform.
+Missing review alone is not a code finding: do not assign defect severity, infer operator/setup
+failure, or create/escalate a blocking issue from it. Downstream agents must not upgrade this
+note into a defect. Keep approval status truthful; report actual code findings and explicit
+repository gates separately.
+
 ## Framing
 
 Open with a human sentence ("Driving a headless Codex or agy review of `<artifact>` — round cap 4…") and

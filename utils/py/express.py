@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""express.py — /express hotfix fast lane driver (GH-267).
+"""express.py — /express hotfix and documentation fast lane driver (GH-267/GH-1080).
 
 One motion, per the design on #267 (v2): fix -> releases DB -> PDDA docs ->
-land on development -> reconcile. This driver is the mechanized form of SOP.md
+land on the integration branch -> reconcile. This driver is the mechanized form of SOP.md
 §4's express-to-development carve-out: the ONLY sanctioned agent path to a
-direct development landing without a human review loop, because the express
-qualification checks and the fix's registered regression suite are asserted up
-front. It does NOT run the full pre-push gate (validate.sh) — that bypass is the
+direct integration-branch landing without a human review loop, because the express
+qualification checks and an existing registered verifier are asserted up front.
+Code hotfixes require behavior coverage; --docs-only selects the existing PDDA
+docs suite for ordinary documentation text and images. It does NOT run the full pre-push gate (validate.sh) — that bypass is the
 lane's design (GH-267/GH-516) — and every landing leaves a TESTS-RESULTS receipt
 saying exactly that (`gate: express-suite`, GH-592).
 
-Landing shape: the qualified commit is pushed directly to development. The
+Landing shape: the qualified commit is pushed directly to the integration branch
+(GH-1144: --base, else origin/HEAD, else GitHub's default; `development` in XYZ Forge). The
 operator's /express invocation IS the landing authorization; the registered
 suite (Step 7), fast-forward update, commit reachability check, and gated
 commit-based reconciliation replace the former immediately-merged ghost PR. The
@@ -81,6 +83,55 @@ RELEASES_PROJECTIONS = (
 DRIVER_GENERATED = RELEASES_PROJECTIONS
 DEFAULT_MAX_FILES = 4
 DEFAULT_MAX_INSERTIONS = 150
+DOCS_SUITE = "test/pdda-repo-contract.sh"
+# The integration branch express lands on (GH-1144). XYZ Forge's is `development`; main()
+# replaces this once per run with resolve_base(). Library callers (the recovery recipe's
+# write_receipt) keep this default unless they pass a base explicitly.
+BASE = "development"
+BRANCH_NAME = re.compile(r"^[A-Za-z0-9._/-]+$")
+DOCS_IMAGES = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")
+
+
+def is_documentation_update(root, path):
+    """Ordinary prose/assets, not executable policy or text-shaped runtime inputs."""
+    p = Path(path)
+    ordinary = (path in ("README.md", "CHANGELOG.md")
+                or path.startswith(("docs/", "PROJECT/1-INBOX/", "PROJECT/2-WORKING/",
+                                    "PROJECT/3-COMPLETED/", "PROJECT/4-MISC/"))
+                or (path.startswith("assets/") and p.suffix.lower() in DOCS_IMAGES))
+    if not ordinary or p.suffix.lower() not in (".md", ".txt", ".rst") + DOCS_IMAGES:
+        return False
+    if p.name in ("AGENTS.md", "CLAUDE.md", "SKILL.md") or p.name.endswith(".generated.md"):
+        return False
+    full = Path(root, path)
+    # Check the old mode too: deleting/renaming an executable is still a code change.
+    old_mode = git(root, "ls-tree", "origin/" + BASE, "--", path).stdout.split(" ", 1)[0]
+    if old_mode in ("100755", "120000", "160000"):
+        return False
+    return not full.is_symlink() and (not full.exists() or (full.is_file() and not full.stat().st_mode & 0o111))
+
+
+def resolve_base(root, repo, explicit=None):
+    """The run's integration branch: --base, else origin/HEAD, else GitHub's recorded
+    default branch. A candidate counts only if origin/<candidate> exists. None means
+    unresolved — never guess from which refs happen to exist (GH-1144)."""
+    candidates = [explicit] if explicit else []
+    if not explicit:
+        head = git(root, "symbolic-ref", "--short", "refs/remotes/origin/HEAD", check=False)
+        if head.returncode == 0 and head.stdout.strip().startswith("origin/"):
+            candidates.append(head.stdout.strip()[len("origin/"):])
+        else:
+            try:
+                r = gh(["repo", "view", repo, "--json", "defaultBranchRef", "--jq", ".defaultBranchRef.name"], check=False)
+            except OSError:  # no gh on PATH: unresolved, never a traceback
+                r = None
+            if r is not None and r.returncode == 0:
+                candidates.append(r.stdout.strip())
+    for name in candidates:
+        if name and BRANCH_NAME.match(name) and ".." not in name and \
+                git(root, "rev-parse", "--verify", "--quiet", "refs/remotes/origin/" + name, check=False).returncode == 0:
+            return name
+    return None
 
 
 def now_iso():
@@ -274,7 +325,7 @@ def find_committed_receipt(root, sha, issue, suite):
     return None
 
 
-def write_receipt(root, sha, issue, suite, rc):
+def write_receipt(root, sha, issue, suite, rc, base=None):
     """Append the landing's receipt and return its repo-relative path. `rc` is the
     real exit status of the suite run in THIS process — never inferred. Idempotent
     on a valid existing record for the same sha/issue/suite. Write errors raise."""
@@ -288,7 +339,7 @@ def write_receipt(root, sha, issue, suite, rc):
         "timestamp": now_iso(), "commit": sha, "issue": issue, "case": RECEIPT_CASE,
         "gate": RECEIPT_GATE, "command": receipt_command(suite), "rc": rc,
         "result": "pass" if rc == 0 else "fail",
-        "environment": "express driver, direct development push",
+        "environment": "express driver, direct %s push" % (base or BASE),
     }
     os.makedirs(os.path.join(root, rel_dir), exist_ok=True)
     full = os.path.join(root, rel)
@@ -310,14 +361,14 @@ RECOVERY_RECIPE = (
     "(section 'Recovery recipe'): it checks out %s, requires a clean baseline via git diff-index/ls-files "
     "(each inspection fails closed), snapshots HEAD + porcelain + remotes + local-config hash to a log "
     "OUTSIDE the tree, runs `bash %s` recording rc immediately, re-snapshots, and VOIDs on any difference. "
-    "Only then, from clean development: python3 -c 'import sys; sys.path.insert(0,\"utils/py\"); import express; "
-    "print(express.write_receipt(\".\", \"%s\", %d, \"%s\", <rc>))'; commit receipt + recovery-run.log under "
-    "TESTS-RESULTS/*+GH-%d-express/, push, re-run resume."
+    "Only then, from clean %s: python3 -c 'import sys; sys.path.insert(0,\"utils/py\"); import express; "
+    "print(express.write_receipt(\".\", \"%s\", %d, \"%s\", <rc>, base=\"%s\"))'; commit receipt + recovery-run.log under "
+    "TESTS-RESULTS/*+GH-%d-express/, push to %s, re-run resume --base %s."
 )
 
 
 def recovery_recipe(sha, issue, suite):
-    return RECOVERY_RECIPE % (sha[:12], issue, suite, sha, suite, sha, issue, suite, issue)
+    return RECOVERY_RECIPE % (sha[:12], issue, suite, sha, suite, BASE, sha, issue, suite, BASE, issue, BASE, BASE)
 
 
 def gate_check(root):
@@ -332,17 +383,17 @@ def gate_check(root):
 # ── change-set plumbing ──────────────────────────────────────────────────────
 
 def change_paths(root):
-    """Every path the fix touches vs origin/development: pre-committed branch diff
+    """Every path the fix touches vs origin/<base>: pre-committed branch diff
     plus uncommitted tracked changes and untracked files."""
     paths = set()
-    dev_rev = git(root, "rev-parse", "origin/development", check=False)
+    dev_rev = git(root, "rev-parse", "origin/" + BASE, check=False)
     if dev_rev.returncode == 0:
-        d = git(root, "diff", "--name-only", "origin/development..HEAD", check=False).stdout
+        d = git(root, "diff", "--no-renames", "--name-only", "origin/%s..HEAD" % BASE, check=False).stdout
         for line in d.splitlines():
             line = line.strip().strip('"')
             if line:
                 paths.add(line)
-    porcelain = git(root, "status", "--porcelain=v1", "-uall", check=False).stdout
+    porcelain = git(root, "status", "--no-renames", "--porcelain=v1", "-uall", check=False).stdout
     for line in porcelain.splitlines():
         if not line.strip():
             continue
@@ -369,7 +420,7 @@ def path_fingerprint(path):
         with open(path, "rb") as f:
             for chunk in iter(lambda: f.read(1024 * 1024), b""):
                 digest.update(chunk)
-        return "file:" + digest.hexdigest()
+        return "file:%o:%s" % (os.stat(path).st_mode, digest.hexdigest())
     if os.path.isdir(path):
         digest = hashlib.sha256()
         for name in sorted(os.listdir(path)):
@@ -402,9 +453,9 @@ def is_doc_path(root, issue, p):
     return p == "CHANGELOG.md" or p == capture_doc_path(root, issue)
 
 
-def insertions(root, issue, paths, expect_driver=frozenset()):
+def insertions(root, issue, paths, expect_driver=frozenset(), docs_only=False):
     total = 0
-    numstat = git(root, "diff", "origin/development", "--numstat", check=False).stdout
+    numstat = git(root, "diff", "origin/" + BASE, "--numstat", check=False).stdout
     tracked = {}
     for line in numstat.splitlines():
         parts = line.split("\t")
@@ -413,6 +464,8 @@ def insertions(root, issue, paths, expect_driver=frozenset()):
     for p in paths:
         if is_doc_path(root, issue, p) or p in expect_driver:
             continue
+        if docs_only and Path(p).suffix.lower() in DOCS_IMAGES:
+            continue  # image assets count as files, not arbitrary binary newline counts
         if p in tracked:
             total += tracked[p]
         elif os.path.isfile(os.path.join(root, p)):  # untracked new file
@@ -430,25 +483,25 @@ def cmd_check(args, expect_driver=frozenset()):
         die("not a git repo: %s" % root)
 
     branch = git(root, "branch", "--show-current").stdout.strip()
-    if branch in ("development", "main", ""):
+    if branch in ("development", "main", BASE, ""):
         refuse(root, "task-branch",
-               "express runs from a task branch cut off origin/development (SOP §4), "
-               "not from %r" % (branch or "(detached)"), issue=args.issue)
+               "express runs from a task branch cut off origin/%s (SOP §4), "
+               "not from %r" % (BASE, branch or "(detached)"), issue=args.issue)
 
-    origin_dev = git(root, "rev-parse", "origin/development", check=False)
+    origin_dev = git(root, "rev-parse", "origin/" + BASE, check=False)
     if origin_dev.returncode != 0:
-        refuse(root, "task-clone", "origin/development not found — clone from the GitHub remote", issue=args.issue)
-    is_ancestor = git(root, "merge-base", "--is-ancestor", "origin/development", "HEAD", check=False)
+        refuse(root, "task-clone", "origin/%s not found — clone from the GitHub remote" % BASE, issue=args.issue)
+    is_ancestor = git(root, "merge-base", "--is-ancestor", "origin/" + BASE, "HEAD", check=False)
     if is_ancestor.returncode != 0:
         refuse(root, "task-clone",
-               "task branch is not based on origin/development — rebase onto origin/development",
+               "task branch is not based on origin/%s — rebase onto origin/%s" % (BASE, BASE),
                issue=args.issue)
-    commit_count_res = git(root, "rev-list", "--count", "origin/development..HEAD", check=False)
+    commit_count_res = git(root, "rev-list", "--count", "origin/%s..HEAD" % BASE, check=False)
     commit_count = int(commit_count_res.stdout.strip() or "0") if commit_count_res.returncode == 0 else 0
     if commit_count > 2:
         refuse(root, "too-many-commits",
-               "the task branch carries %d commits ahead of origin/development (> 2 allowed); "
-               "express lands small hotfixes with <= 2 local commits — route to normal PR lane" % commit_count,
+               "the task branch carries %d commits ahead of origin/%s (> 2 allowed); "
+               "express lands small hotfixes with <= 2 local commits — route to normal PR lane" % (commit_count, BASE),
                issue=args.issue)
 
     # Gate wiring is proven, not assumed (PR #270 review finding 3): hooks do
@@ -477,6 +530,16 @@ def cmd_check(args, expect_driver=frozenset()):
                    "projection refresh may carry it" % p, issue=args.issue)
 
     core = [p for p in paths if not is_doc_path(root, args.issue, p) and p not in expect_driver]
+    docs_only = getattr(args, "docs_only", False)
+    if docs_only:
+        # Paperwork is exempt from size bounds, not from docs eligibility.
+        generated = set(expect_driver) & driver_projection_paths(root)
+        for p in paths:
+            if p in generated:
+                continue
+            if not is_documentation_update(root, p):
+                refuse(root, "docs-only", "%s is not an ordinary documentation text/image update; "
+                       "use the normal PR or code hotfix lane" % p, issue=args.issue)
 
     # Step 2 — hard refusals. Frozen twins, kernel surfaces, containment.
     for p in core:
@@ -505,7 +568,7 @@ def cmd_check(args, expect_driver=frozenset()):
         refuse(root, "too-many-files",
                "%d core files > bound %d — route to the normal PR lane" % (len(core), args.max_files),
                issue=args.issue)
-    ins = insertions(root, args.issue, paths, expect_driver)
+    ins = insertions(root, args.issue, paths, expect_driver, docs_only=docs_only)
     if ins > args.max_insertions:
         refuse(root, "too-large",
                "%d insertions > bound %d — route to the normal PR lane" % (ins, args.max_insertions),
@@ -514,7 +577,7 @@ def cmd_check(args, expect_driver=frozenset()):
     # subsystem for the independent single-subsystem rule.
     non_test = [p for p in core if not p.startswith(("test/", "PROJECT/"))]
     tops = {p.split("/")[0] for p in non_test}
-    if len(tops) > 1:
+    if len(tops) > 1 and not docs_only:
         allow_multi = getattr(args, "allow_multi_subsystem", False)
         micro_diff = (len(core) <= 2 and ins <= 30)
         if not allow_multi and not micro_diff:
@@ -549,7 +612,7 @@ def cmd_check(args, expect_driver=frozenset()):
     print("express-check%s: PASS" % (" [dry-run]" if getattr(args, "dry_run", False) else ""))
     print("  issue   : #%s %s" % (args.issue, meta.get("title", "")))
     print("  files   : %d core, %d insertions (bounds %d/%d)" % (len(core), ins, args.max_files, args.max_insertions))
-    print("  suite   : %s (registered)" % suite)
+    print("  suite   : %s (%s)" % (suite, "registered docs gate; no runtime coverage claim" if docs_only else "registered"))
     print("  changes : %s" % ", ".join(paths))
     return dict(issue=args.issue, title=meta.get("title", ""), paths=paths, suite=suite,
                 insertions=ins, branch=branch)
@@ -569,6 +632,11 @@ def cmd_docs(args):
     if not (args.suite or "").strip():
         die("express-docs: --suite is required (the existing registered suite that covers the fix, e.g. "
             "test/<existing-suite>.sh) — nothing was written")
+    docs_only = getattr(args, "docs_only", False)
+    qualification = ("Documentation update qualified for /express; docs gate {suite}; no runtime coverage claim"
+                     if docs_only else "Fix qualified for /express; existing suite {suite} covers it")
+    acceptance = ("Documentation gate {suite} verifies doc hygiene, not runtime behavior; manual content/link/rendering evidence belongs in the operator summary"
+                  if docs_only else "Existing suite {suite} covers the fix and is its landing gate; no new suite (GH-831)")
     iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state,title,url"])
     meta = json.loads(iv.stdout)
 
@@ -590,13 +658,13 @@ updated: {d}
 owner: operator (via /express)
 gh_issue: {n}
 source: {src}
-doc_type: bugfix
+doc_type: {doc_type}
 complexity: 2
 risk: 2
 effort: 2
 ratings_provisional: true
 goal: >
-  Express hotfix (GH-267 lane): {t}
+  Express {kind} (GH-267 lane): {t}
 ---
 
 # GH-{n} — {t}
@@ -605,12 +673,12 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Fix qualified for /express; existing suite {suite} covers it (green asserted at landing, Step 7; receipt in TESTS-RESULTS/) | Reconcile promotes this doc when issue #{n} closes |
+| {qualification} (green asserted at landing, Step 7; receipt in TESTS-RESULTS/) | Reconcile promotes this doc when issue #{n} closes |
 
 ## Acceptance Criteria
 
-- [x] Existing suite {suite} covers the fix and is its landing gate; no new suite (GH-831). (Step 7 refuses to land unless it is green; the TESTS-RESULTS receipt records the run — express-suite, not the full pre-push gate).
-- [x] Single-subsystem, risk-bounded diff (express qualification passed).
+- [x] {acceptance}. (Step 7 refuses to land unless it is green; the TESTS-RESULTS receipt records the run — express-suite, not the full pre-push gate).
+- [x] Bounded diff (express qualification passed).
 
 ## Merge evidence
 
@@ -621,14 +689,17 @@ goal: >
 - Landed via the /express fast lane (GH-267): the fix, its suite, this doc, and the
   CHANGELOG entry moved as one motion; consult the .tick express-fired event for the
   run's receipts. Operator-supplied summary: {sm}
-""".format(n=args.issue, t=meta["title"], d=today, src=meta["url"], suite=args.suite, sm=args.summary or "(none)")
+""".format(n=args.issue, t=meta["title"], d=today, src=meta["url"], suite=args.suite, sm=args.summary or "(none)",
+           kind="documentation update" if docs_only else "hotfix", doc_type="documentation" if docs_only else "bugfix",
+           qualification=qualification.format(suite=args.suite), acceptance=acceptance.format(suite=args.suite))
     with open(doc, "w", encoding="utf-8") as f:
         f.write(body)
 
     # CHANGELOG — newest-first under a fresh dated Unreleased section.
     cl = os.path.join(root, "CHANGELOG.md")
-    bullet = ("- **GH-%d: %s.** (express hotfix, GH-267 lane; "
-              "existing suite %s as the landing gate.)\n" % (args.issue, meta["title"], normalize_suite(args.suite)))
+    bullet = ("- **GH-%d: %s.** (express %s, GH-267 lane; "
+              "existing suite %s as the landing gate.)\n" % (args.issue, meta["title"],
+              "documentation update" if docs_only else "hotfix", normalize_suite(args.suite)))
     entry = "## [Unreleased] - %s\n\n### Fixed\n%s\n" % (today, bullet)
     with open(cl, encoding="utf-8", errors="replace") as f:
         cbody = f.read()
@@ -728,7 +799,7 @@ def cmd_ledger(args):
             refuse(root, "no-active-release", "`releases next` names no release gid: %s" % nxt.strip(), issue=args.issue)
         rel = m.group(1)
     run_releases(root, "manifest", "dial-in", meta["url"], "--gid", rel,
-                 "--reason", "express hotfix %s (GH-267 lane)" % datetime.date.today().isoformat())
+                 "--reason", "express %s (GH-267 lane)" % datetime.date.today().isoformat())
     print("express-ledger: dialed into %s" % rel)
     return dict(release=rel)
 
@@ -795,33 +866,34 @@ def cmd_land(args):
                issue=args.issue)
 
     if getattr(args, "dry_run", False):
-        print("express-land [dry-run]: PASS — would commit %s, push to origin/development, close issue #%d, and reconcile"
-              % (", ".join(sorted(after)), args.issue))
+        print("express-land [dry-run]: PASS — would commit %s, push to origin/%s, close issue #%d, and reconcile"
+              % (", ".join(sorted(after)), BASE, args.issue))
         return dict(sha="dry-run", release=args.release or "(active)")
 
     # Step 8 — commit the one-motion change set (explicit pathspecs, never -A).
     git(root, "add", "--", *sorted(after))
-    msg = ("fix(GH-%d): %s [express]\n\nExpress lane (GH-267): fix + suite + born-complete doc + "
-           "CHANGELOG in one motion.\n\nCloses #%d\n" % (args.issue, state["title"], args.issue))
+    msg = ("%s(GH-%d): %s [express]\n\nExpress lane (GH-267): update + suite + born-complete doc + "
+           "CHANGELOG in one motion.\n\nCloses #%d\n" %
+           ("docs" if getattr(args, "docs_only", False) else "fix", args.issue, state["title"], args.issue))
     git(root, "commit", "-m", msg)
     sha = git(root, "rev-parse", "HEAD").stdout.strip()
     # Step 7 ran the registered suite; the FULL pre-push gate is bypassed by lane design
     # (GH-267/GH-516) — not a duplicate. The receipt written in closeout says so.
-    git(root, "push", "origin", "HEAD:development", env={"XYZ_SKIP_PREPUSH": "1"})
+    git(root, "push", "origin", "HEAD:" + BASE, env={"XYZ_SKIP_PREPUSH": "1"})
 
-    # ── post-push closeout — from clean, current development (finding 2) ──
+    # ── post-push closeout — from the clean, current base branch (finding 2) ──
     try:
         # The task branch is done; ship/reconcile state must never ride it, and
-        # wave_reconcile requires a clean development tree.
-        git(root, "checkout", "-q", "development")
-        git(root, "pull", "--ff-only", "origin", "development")
+        # wave_reconcile requires a clean base-branch tree.
+        git(root, "checkout", "-q", BASE)
+        git(root, "pull", "--ff-only", "origin", BASE)
         dirty = git(root, "status", "--porcelain=v1", check=False).stdout.strip()
         if dirty:
-            die("development is not clean after pull — refusing closeout over: %s" %
-                dirty.replace("\n", "; "))
-        reached = git(root, "merge-base", "--is-ancestor", sha, "origin/development", check=False)
+            die("%s is not clean after pull — refusing closeout over: %s" %
+                (BASE, dirty.replace("\n", "; ")))
+        reached = git(root, "merge-base", "--is-ancestor", sha, "origin/" + BASE, check=False)
         if reached.returncode != 0:
-            die("direct-pushed commit %s is not reachable from origin/development" % sha)
+            die("direct-pushed commit %s is not reachable from origin/%s" % (sha, BASE))
         closeout(root, args, sha, suite, state)
     except BaseException as exc:  # every post-push failure leaves a receipt
         if isinstance(exc, SystemExit):
@@ -843,12 +915,12 @@ def active_release(root):
 
 
 def closeout(root, args, sha, suite, state):
-    """Steps 9–11 from development: ship, close, reconcile, PERSIST — fail closed.
+    """Steps 9–11 from the resolved base: ship, close, reconcile, PERSIST — fail closed.
 
     A downgraded failure here would leave a closed issue with an active doc and
     a remote manifest still dialed_in — the GH-205 trap with extra steps — so
     every fault exits non-zero with an express-reconcile-failed tick instead."""
-    # Step 9a (GH-592) — the receipt. Written only now: after the clean-development and
+    # Step 9a (GH-592) — the receipt. Written only now: after the clean-base-branch and
     # reachability checks (so no cleanliness guard ever sees it untracked) and from the
     # same process that ran Step 7, so `rc` is the suite's real exit status.
     receipt = write_receipt(root, sha, args.issue, suite, state.get("suite_rc", 0))
@@ -859,17 +931,17 @@ def closeout(root, args, sha, suite, state):
         url = json.loads(iv.stdout)["url"]
         run_releases(root, "manifest", "ship", url, "--gid", rel,
                      "--evidence", "%s; registered suite %s green (express-suite, not the full gate); "
-                     "receipt %s; direct development push (express)" % (sha, suite, receipt))
+                     "receipt %s; direct %s push (express)" % (sha, suite, receipt, BASE))
 
     # Step 10 — the default-branch commit says "Closes #N"; verify closure and
     # close explicitly if GitHub has not processed it.
     iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state"], check=False)
     if iv.returncode == 0 and json.loads(iv.stdout)["state"] != "CLOSED":
         gh(["issue", "close", str(args.issue), "-R", args.repo,
-            "--comment", "Express hotfix landed directly on development: %s (suite %s green)" % (sha, suite)])
+            "--comment", "Express update landed directly on %s: %s (suite %s green)" % (BASE, sha, suite)])
 
     # wave_reconcile refuses a dirty tree. Persist the ship transaction first,
-    # then reconcile from the clean committed development state.
+    # then reconcile from the clean committed base-branch state.
     persist_closeout(root,
                      "chore(releases): express ship GH-%d (commit %s)" %
                      (args.issue, sha[:12]), extra_paths=(receipt,))
@@ -885,26 +957,26 @@ def closeout(root, args, sha, suite, state):
 
     write_tick(root, "express-fired", issue=args.issue, sha=sha,
                suite=suite, release=rel, files=len(state["paths"]), insertions=state["insertions"])
-    print("express-land: commit %s pushed to development, issue #%d closed, mfi shipped against %s, reconcile persisted"
-          % (sha[:12], args.issue, rel or "(none)"))
+    print("express-land: commit %s pushed to %s, issue #%d closed, mfi shipped against %s, reconcile persisted"
+          % (sha[:12], BASE, args.issue, rel or "(none)"))
     # GH-690: the task clone outlives this run; point at the sanctioned retirement tool
     print("clone retirement: this task clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified")
     return dict(sha=sha, release=rel)
 
 
 def reconcile_gated(root, sha):
-    """wave_reconcile --commit <sha> --gate from clean development; print its
+    """wave_reconcile --commit <sha> --base <base> --gate from the clean base branch; print its
     stdout so the gate outcome is visible in the landing output."""
     wr = os.path.join(root, "utils", "py", "wave_reconcile.py")
     if not os.path.isfile(wr):
         die("wave_reconcile.py missing under %s — cannot reconcile commit %s" % (root, sha))
-    base = [sys.executable, wr, "--commit", sha, "--root", root, "--gate"]
-    r = subprocess.run(base, cwd=root, capture_output=True, text=True)
+    cmd = [sys.executable, wr, "--commit", sha, "--root", root, "--base", BASE, "--gate"]
+    r = subprocess.run(cmd, cwd=root, capture_output=True, text=True)
     if r.returncode != 0:
         err = r.stderr or r.stdout
         die("reconcile FAILED for commit %s after the ship transaction was persisted. "
-            "Fix and run `wave_reconcile.py --commit %s --gate` on development:\n%s" %
-            (sha, sha, err[-500:]))
+            "Fix and run `wave_reconcile.py --commit %s --base %s --gate` on %s:\n%s" %
+            (sha, sha, BASE, BASE, err[-500:]))
     if r.stdout.strip():
         sys.stdout.write(r.stdout if r.stdout.endswith("\n") else r.stdout + "\n")
 
@@ -948,7 +1020,7 @@ def persist_closeout(root, message, extra_paths=()):
         die("refusing closeout persistence over unexpected dirty path(s): %s" % ", ".join(disallowed))
     git(root, "add", "--", *paths)
     git(root, "commit", "-m", message)
-    git(root, "push", "origin", "development", env={"XYZ_SKIP_PREPUSH": "1"})
+    git(root, "push", "origin", BASE, env={"XYZ_SKIP_PREPUSH": "1"})
     return True
 
 
@@ -990,24 +1062,24 @@ def commit_closes_issue(body, issue):
 
 
 def resolve_landing_commit(root, issue, explicit_sha=None):
-    """Resolve and validate the exact landing commit for an issue on origin/development."""
+    """Resolve and validate the exact landing commit for an issue on origin/<base>."""
     if explicit_sha:
         res = git(root, "rev-parse", "--verify", "%s^{commit}" % explicit_sha, check=False)
         if res.returncode != 0:
             die("Commit %s cannot be resolved locally" % explicit_sha)
         sha = res.stdout.strip()
-        reached = git(root, "merge-base", "--is-ancestor", sha, "origin/development", check=False)
+        reached = git(root, "merge-base", "--is-ancestor", sha, "origin/" + BASE, check=False)
         if reached.returncode != 0:
-            die("Commit %s is not reachable from origin/development (unpushed or local-only commit)" % sha[:12])
+            die("Commit %s is not reachable from origin/%s (unpushed or local-only commit)" % (sha[:12], BASE))
         body = git(root, "log", "-1", "--format=%B", sha, check=False).stdout
         if not commit_closes_issue(body, issue):
             die("Commit %s does not close issue #%d (missing closing reference in commit message)" % (sha[:12], issue))
         return sha
 
-    # Auto-resolution from origin/development
-    log_res = git(root, "log", "origin/development", "-n", "50", "--format=%H%x00%B%x00", check=False)
+    # Auto-resolution from origin/<base>
+    log_res = git(root, "log", "origin/" + BASE, "-n", "50", "--format=%H%x00%B%x00", check=False)
     if log_res.returncode != 0 or not log_res.stdout.strip():
-        die("Could not read commit log from origin/development")
+        die("Could not read commit log from origin/%s" % BASE)
 
     entries = log_res.stdout.split("\x00\n")
     candidates = []
@@ -1040,7 +1112,7 @@ def resolve_landing_commit(root, issue, explicit_sha=None):
         res = git(root, "rev-parse", "--verify", "%s^{commit}" % ship_commit_sha_for_issue, check=False)
         if res.returncode == 0:
             s_sha = res.stdout.strip()
-            reached = git(root, "merge-base", "--is-ancestor", s_sha, "origin/development", check=False)
+            reached = git(root, "merge-base", "--is-ancestor", s_sha, "origin/" + BASE, check=False)
             if reached.returncode == 0:
                 s_body = git(root, "log", "-1", "--format=%B", s_sha, check=False).stdout
                 if commit_closes_issue(s_body, issue):
@@ -1131,14 +1203,14 @@ def cmd_resume(args):
         print("express-resume [dry-run]: would ensure issue #%d closed, reconcile commit %s, and persist/push" % (issue, sha[:12]))
         return dict(issue=issue, sha=sha)
 
-    # 3. Switch to clean development checkout if on another branch
-    if cur_branch != "development":
-        git(root, "checkout", "-q", "development")
-        git(root, "pull", "--ff-only", "origin", "development")
+    # 3. Switch to a clean base-branch checkout if on another branch
+    if cur_branch != BASE:
+        git(root, "checkout", "-q", BASE)
+        git(root, "pull", "--ff-only", "origin", BASE)
         dirty_after = git(root, "status", "--porcelain=v1", check=False).stdout.strip()
         if dirty_after:
-            die("development is not clean after pull — refusing resume over: %s" %
-                dirty_after.replace("\n", "; "))
+            die("%s is not clean after pull — refusing resume over: %s" %
+                (BASE, dirty_after.replace("\n", "; ")))
 
     # 4b (GH-592). Evidence gate BEFORE issue close / ship: resume never writes or
     # infers a receipt. A COMMITTED receipt (read from HEAD, never the working
@@ -1154,7 +1226,7 @@ def cmd_resume(args):
     iv = gh(["issue", "view", str(issue), "-R", args.repo, "--json", "state"], check=False)
     if iv.returncode == 0 and json.loads(iv.stdout).get("state") != "CLOSED":
         gh(["issue", "close", str(issue), "-R", args.repo,
-            "--comment", "Express hotfix landed directly on development: %s (resumed closeout)" % sha])
+            "--comment", "Express update landed directly on %s: %s (resumed closeout)" % (BASE, sha)])
         print("express-resume: closed issue #%d" % issue)
 
     # 5. Ship manifest item if still dialed_in
@@ -1163,7 +1235,7 @@ def cmd_resume(args):
         mstate = check_manifest_state(root, owned_row["issue_url"], rel)
         if mstate == "dialed_in":
             run_releases(root, "manifest", "ship", owned_row["issue_url"], "--gid", rel,
-                         "--evidence", "%s; direct development push (express resume)" % sha)
+                         "--evidence", "%s; direct %s push (express resume)" % (sha, BASE))
             persist_closeout(root, "chore(releases): express ship GH-%d (commit %s)" % (issue, sha[:12]))
             print("express-resume: shipped manifest item for issue #%d against %s" % (issue, rel))
         elif mstate == "shipped":
@@ -1209,12 +1281,15 @@ def main():
         p.add_argument("--repo", default=args_repo())
         p.add_argument("--issue", type=int, required=issue_required)
         p.add_argument("--suite")
+        p.add_argument("--docs-only", action="store_true",
+                       help="ordinary documentation text/images; use the existing PDDA docs suite, not runtime coverage")
         p.add_argument("--max-files", type=int, default=DEFAULT_MAX_FILES)
         p.add_argument("--max-insertions", type=int, default=DEFAULT_MAX_INSERTIONS)
         p.add_argument("--allow-multi-subsystem", action="store_true", default=False,
                        help="permit core changes across multiple top-level directories")
         p.add_argument("--dry-run", action="store_true", default=False,
                        help="preview operations without modifying files or git state")
+        p.add_argument("--base", help="integration branch to land on (default: origin/HEAD, else GitHub's default branch)")
 
     p = sub.add_parser("check", help="steps 0-3: tree, bounds, forbidden surfaces, issue, suite")
     common(p)
@@ -1232,20 +1307,22 @@ def main():
     p.add_argument("--doc-path")
     p.set_defaults(fn=cmd_ledger)
 
-    p = sub.add_parser("land", help="steps 7-11: suite, direct development push, ship, close, reconcile")
+    p = sub.add_parser("land", help="steps 7-11: suite, direct push to the base branch, ship, close, reconcile")
     common(p)
     p.add_argument("--release")
     p.set_defaults(fn=cmd_land)
 
     p = sub.add_parser("resume", help="recover/resume an interrupted express landing and complete reconciliation")
     p.add_argument("--issue", type=int, required=True, help="GH issue number")
-    p.add_argument("--sha", help="commit SHA landed on development (resolved from git log if omitted)")
-    p.add_argument("--suite", required=True,
+    p.add_argument("--sha", help="commit SHA landed on the base branch (resolved from git log if omitted)")
+    p.add_argument("--docs-only", action="store_true", help="resume the documentation lane with its fixed docs suite")
+    p.add_argument("--suite",
                    help="the existing registered suite the landing ran (GH-592: resume validates the "
                         "committed receipt against it; it never runs a suite or writes evidence)")
     p.add_argument("--repo", default=args_repo())
     p.add_argument("--release", help="target release GID (defaults to active release)")
     p.add_argument("--dry-run", action="store_true", default=False, help="preview operations without modifying files or git state")
+    p.add_argument("--base", help="integration branch the landing went to (default: origin/HEAD, else GitHub's default branch)")
     p.set_defaults(fn=cmd_resume)
 
     p = sub.add_parser("run", help="the whole motion in order")
@@ -1257,8 +1334,22 @@ def main():
     p.set_defaults(fn=cmd_run)
 
     args = ap.parse_args()
-    if getattr(args, "suite", None) is None and args.cmd in ("check", "land", "run"):
+    if getattr(args, "docs_only", False):
+        if args.suite and normalize_suite(args.suite) != DOCS_SUITE:
+            ap.error("--docs-only uses %s; do not substitute a runtime suite" % DOCS_SUITE)
+        args.suite = DOCS_SUITE
+    if getattr(args, "suite", None) is None and args.cmd in ("check", "land", "run", "resume"):
         ap.error("--suite is required for %s (a hotfix without its regression suite is a claim, not a fix)" % args.cmd)
+    global BASE
+    resolved = resolve_base(args.root, args.repo, args.base)
+    if resolved is None:
+        refuse(args.root, "base-unresolved",
+               "cannot resolve the integration branch: pass --base, or set origin/HEAD "
+               "(git remote set-head origin --auto); %s" % (
+                   "origin/%s does not exist" % args.base if args.base else
+                   "no origin/HEAD and no usable GitHub default branch"),
+               issue=getattr(args, "issue", None))
+    BASE = resolved
     args.fn(args)
 
 

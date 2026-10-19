@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-10-16T04:40:22.017496+00:00",
+  "pr": 1091,
+  "extension_round": 2,
+  "extension_limit": 2,
+  "original_attempts_retained": 2,
+  "old": "3f544cc7da13983d03dc175d55972f321a78bce2",
+  "qualified_base": "e271416c52a290ddf51de15fc36fc46811cf788c",
+  "canonical_merge": "11b15e44d6bb44cf674dec5ceda21a694136e5a5",
+  "incoming_generation": 1690,
+  "resolved_generation": 1695,
+  "incoming_non_generation_rows_preserved": true,
+  "GH1090_business_fields_preserved": true,
+  "product_blob_preserved": "169c8c435197a52783425fcc581289673afe6c00",
+  "second_clone": {
+    "pass": true,
+    "detail": "clean in a second clone"
+  },
+  "conflicts": [
+    "releases.db",
+    "releases.sql"
+  ],
+  "no_extra_repair_remaining": true
+}

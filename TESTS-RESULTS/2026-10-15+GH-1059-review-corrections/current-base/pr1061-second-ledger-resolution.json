@@ -1,0 +1,18 @@
+{
+  "resolved": true,
+  "handoff": false,
+  "reason": "resolved through the writer path; merge commit a386d50442",
+  "log": [
+    "classification: keep=ours generation ours/theirs=(1651, 1650) replay=1 op(s)",
+    "check --rebuild on the kept side: rc=0",
+    "roadmap add GH-1052: rc=0 ",
+    "roadmap update GH-1052 (section/marker): rc=0 ",
+    "releases-merge-resolve.sh: rc=0",
+    "removed verified rebuild backup: releases.db.bak"
+  ],
+  "commit": "a386d504424996b8c655f6eeaead2606aa805d68",
+  "conflict_set": [
+    "releases.db",
+    "releases.sql"
+  ]
+}

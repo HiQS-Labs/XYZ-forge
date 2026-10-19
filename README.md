@@ -318,5 +318,7 @@ Project site: <https://hiqs-labs.github.io/XYZ-forge/>
 
 ## License
 
+Separately licensed third-party skill bundles retain their own terms; see [worth-it NOTICE](skills/3-weekly/worth-it/NOTICE) and its accompanying license.
+
 AGPL-3.0-only. A commercial license is available — see
 [`LICENSE-COMMERCIAL.md`](LICENSE-COMMERCIAL.md).

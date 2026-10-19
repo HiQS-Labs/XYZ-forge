@@ -1,0 +1,58 @@
+== test: swe-diagram ==
+  PASS: git lanes keep commits on fixed branch rows
+  PASS: git lanes advance commit order left-to-right
+  PASS: top-down ranks follow source -> target direction
+  PASS: top-down peers share a row and do not overlap horizontally
+  PASS: empty spec -> no positions
+  PASS: single node -> exactly one position
+  PASS: explicit spec.hub is honored even when another node has higher degree
+  PASS: highest-degree node auto-picked as hub (no spec.hub given)
+  PASS: 10 ring nodes split into two EVEN rings of 5 (not a lopsided 8/2)
+  PASS: 17 ring nodes split into three near-even rings (6/6/5)
+  PASS: trusted-containment-core -> spine tier (0)
+  PASS: trusted-dispatch -> shim tier (1)
+  PASS: untrusted-executor -> periphery tier (2)
+  PASS: shared-state -> state tier (3)
+  PASS: governance-gate -> governance tier (4)
+  PASS: a parenthetical suffix still matches its prefix (e.g. "shared-state (control-channel)")
+  PASS: a node with no trust field falls into the last (governance) band rather than vanishing
+  PASS: every node gets a position (no dangling nodes)
+  PASS: containment core sits in a strictly earlier column than the shims that dispatch to it
+  PASS: shim/periphery/state/governance land in 4 distinct columns after the spine
+  PASS: orchestrator and containment core share the spine column (adjacent, not eye-jumping)
+  PASS: a 10-node tier wraps into more than one sub-column
+  PASS: trustClusteredLayout: empty spec -> no positions
+  PASS: empty query, no exclusions -> matches
+  PASS: query matches label (case-folded at call time, substring)
+  PASS: query matches id
+  PASS: query matches description
+  PASS: query matches tech
+  PASS: query matches nothing -> no match
+  PASS: uppercase query does not match (caller is responsible for lowercasing, matching real call site)
+  PASS: excluded type -> no match even with empty query
+  PASS: excluded type -> no match even when text WOULD have matched
+  PASS: non-excluded type + matching query -> still matches
+  PASS: node with no type falls into the "default" bucket for exclusion
+  PASS: query matches Git lane
+  PASS: query matches Git author
+  PASS: query matches Git refs
+  PASS: Git history generator runs on a branched+merged repository
+  PASS: Git history generator honors the total commit limit
+  PASS: Git history lanes order main, development, then feature branch
+  PASS: Git history generator distinguishes branch cuts and merges
+  PASS: Git history generator emits no dangling edge endpoints
+  PASS: spec validator is present at utils/swe-diagram/scripts/validate-spec.js
+  PASS: every committed ARCHITECTURE/*.json spec passes the validator
+  PASS: validator accepts a clean spec (the control is falsifiable in both directions)
+  PASS: RED CONTROL: a dangling edge target fails the validator
+  PASS: RED CONTROL: a duplicate node id fails the validator
+  PASS: RED CONTROL: a node in an undeclared group fails the validator
+  PASS: RED CONTROL: a JSON root of null is rejected cleanly, not by a crash
+  PASS: RED CONTROL: a JSON root of [] is rejected cleanly, not by a crash
+  PASS: RED CONTROL: a JSON root of "a string" is rejected cleanly, not by a crash
+  PASS: RED CONTROL: a JSON root of 42 is rejected cleanly, not by a crash
+  PASS: a rejected spec does not abort the batch — later files are still validated
+  PASS: RED CONTROL: a duplicate group id fails the validator
+  PASS: RED CONTROL: a duplicate lane id fails the validator
+  PASS: a spec that only trips WARNINGs (node-count band) still exits 0
+  swe-diagram: 56 pass, 0 fail

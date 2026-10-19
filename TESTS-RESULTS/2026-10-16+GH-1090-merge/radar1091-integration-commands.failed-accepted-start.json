@@ -1,0 +1,136 @@
+[
+  {
+    "args": [
+      "gh",
+      "pr",
+      "view",
+      "1091",
+      "--repo",
+      "HiQS-Labs/XYZ-forge",
+      "--json",
+      "state,isDraft,headRefOid,labels"
+    ],
+    "rc": 0,
+    "stdout": "{\"headRefOid\":\"f57b99a50cba0b9ae29de83addefeaa797684b20\",\"isDraft\":false,\"labels\":[],\"state\":\"OPEN\"}\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "git",
+      "rev-parse",
+      "HEAD"
+    ],
+    "rc": 0,
+    "stdout": "f57b99a50cba0b9ae29de83addefeaa797684b20\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "git",
+      "status",
+      "--porcelain"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "git",
+      "fetch",
+      "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1085-radar-prep",
+      "9727476aace064339d4f825c45701d6d4a31a314"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": "From /Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1085-radar-prep\n * branch                9727476aace064339d4f825c45701d6d4a31a314 -> FETCH_HEAD\n"
+  },
+  {
+    "args": [
+      "git",
+      "merge-base",
+      "f57b99a50cba0b9ae29de83addefeaa797684b20",
+      "9727476aace064339d4f825c45701d6d4a31a314"
+    ],
+    "rc": 0,
+    "stdout": "87f132e6a1f532559ba2686d31313b47785875eb\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "git",
+      "merge",
+      "--no-ff",
+      "--no-commit",
+      "9727476aace064339d4f825c45701d6d4a31a314"
+    ],
+    "rc": 1,
+    "stdout": "Auto-merging skills/3-weekly/radar/SKILL.md\nCONFLICT (content): Merge conflict in skills/3-weekly/radar/SKILL.md\nAutomatic merge failed; fix conflicts and then commit the result.\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "git",
+      "diff",
+      "--name-only",
+      "--diff-filter=U"
+    ],
+    "rc": 0,
+    "stdout": "skills/3-weekly/radar/SKILL.md\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "utils/py/releases_app.py",
+      "roadmap",
+      "add",
+      "--issue-num",
+      "1090",
+      "--issue-url",
+      "https://github.com/HiQS-Labs/XYZ-forge/issues/1090",
+      "--title",
+      "Radar GitHub-first calibration integration",
+      "--created",
+      "2026-10-16",
+      "--doc-path",
+      "PROJECT/2-WORKING/GH-1090-RADAR-CALIBRATION.md"
+    ],
+    "rc": 0,
+    "stdout": "added roadmap entry rmi-01M516M45TRHN4VVS7HRXCW5C4 for GH-1090\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "utils/py/releases_app.py",
+      "roadmap",
+      "rate",
+      "--issue-num",
+      "1090",
+      "--rated",
+      "70/45/50/75"
+    ],
+    "rc": 0,
+    "stdout": "rated GH-1090 70/45/50/75\n",
+    "stderr": ""
+  },
+  {
+    "args": [
+      "/opt/homebrew/opt/python@3.14/bin/python3.14",
+      "utils/py/releases_app.py",
+      "roadmap",
+      "update",
+      "--issue-num",
+      "1090",
+      "--accepted-start",
+      "--section",
+      "In progress",
+      "--status-marker",
+      "\ud83d\udea7"
+    ],
+    "rc": 3,
+    "stdout": "",
+    "stderr": "refused: rule=accepted-start-fields: --accepted-start requires only --gid (and optional --dry-run)\n"
+  }
+]

@@ -1,0 +1,35 @@
+{
+  "rc": 0,
+  "head": "4d7235d940c8a0029eea621af29ca13ba7d037a3",
+  "full_tested": "96baa6b6ab62863c04698f46db2595fa55f7926d",
+  "full": {
+    "pr": 1082,
+    "commit": "96baa6b6ab62863c04698f46db2595fa55f7926d",
+    "timestamp": "2026-10-16T00:03:38.557478+00:00",
+    "result": "pass",
+    "rc": 0,
+    "command": "Normal git push / installed mandatory pre-push full parallel gate",
+    "passed": 409,
+    "failed": 0,
+    "total": 409,
+    "elapsed_seconds": 1225.4888769580284,
+    "telemetry": "validate-parallel-1792107796341-42782.jsonl",
+    "telemetry_sha256": "5b7222837c396a4e7d982efbafd984c674f6b7e0ab4ec2b50be964dc51d2ad88",
+    "all_source_telemetry_records_retained": [
+      "validate-parallel-1792107796341-42782.jsonl",
+      "validate-parallel-1792108598142-50744.jsonl",
+      "validate-parallel-1792107919982-10050.jsonl",
+      "validate-parallel-1792108644340-3641.jsonl",
+      "validate-sequential-1792108196463-92171.jsonl",
+      "validate-parallel-1792107801948-44927.jsonl",
+      "validate-parallel-1792108621095-73593.jsonl"
+    ],
+    "identity_unchanged": true,
+    "scope": "Local full publication evidence; hosted sequential qualification pending; no main promotion"
+  },
+  "receipt_continuity": "TESTS-RESULTS-only",
+  "committed_reader": "PASS",
+  "E6": "PASS",
+  "identity_unchanged": true,
+  "timestamp": "2026-10-16T00:07:07.543647+00:00"
+}

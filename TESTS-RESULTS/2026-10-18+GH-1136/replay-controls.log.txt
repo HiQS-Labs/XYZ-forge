@@ -1,0 +1,5 @@
+PASS  (a) candidate: in-progress add keeps its accepted start  [roadmap accepted-start GH-99136 (rmi-01M57ZMRBNJH1H5AC26T8PEMK0): rc=0 ]
+PASS  (b) red control, base replay_ops: label silently dropped  [roadmap update GH-99136 (section/marker): rc=0 ]
+PASS  (c) candidate: unlabeled add unchanged, no accepted-start call
+PASS  (d) candidate: closed native issue -> replay fails closed (handoff)  [roadmap accepted-start GH-99136 (rmi-01M57ZMTKCJDGQFESFW9891NNC): rc=3 refused: rule=accepted-start-native: accepted start requires an open native issue]
+ALL GH-1136 REPLAY CONTROLS PASS

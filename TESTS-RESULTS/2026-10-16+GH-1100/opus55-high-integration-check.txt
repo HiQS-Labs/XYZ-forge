@@ -1,0 +1,9 @@
+3835a58160bebfd602b922ee3f2e1fb97d51303e
+releases.db
+releases.sql
+
+warning: Cannot merge binary files: releases.db (d882a3567bffe300753b0b9eade0a7cd49d13e57 vs. origin/development)
+Auto-merging releases.db
+CONFLICT (content): Merge conflict in releases.db
+Auto-merging releases.sql
+CONFLICT (content): Merge conflict in releases.sql

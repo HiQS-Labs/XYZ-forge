@@ -1,0 +1,21 @@
+"""Manual retained collection inspection; no CI cases are added."""
+from pathlib import Path
+import ast,collections,json,re,sys
+root=Path(sys.argv[1])
+text=(root/'skills/2-daily/merge-cleanup/SKILL.md').read_text()
+section=re.search(r'## Capability table.*?(?=\n## )',text,re.S).group(0)
+tree=ast.parse((root/"test/gh534_phase_c_tests.py").read_text())
+required=next(ast.literal_eval(n.value) for n in tree.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=="REQUIRED_CAPABILITIES" for t in n.targets))
+named=[]
+for line in section.splitlines():
+    cells=[x.strip() for x in line.strip().strip('|').split('|')]
+    if len(cells)==4 and required.get(cells[0])=='script':named.append(cells[3])
+collected=Path(sys.argv[2]).read_text()
+seen=collections.Counter(); cls=None
+for line in collected.splitlines():
+    m=re.search(r'<UnitTestCase (.+)>',line)
+    if m: cls=m.group(1)
+    m=re.search(r'<TestCaseFunction (.+)>',line)
+    if m and cls: seen[cls+'.'+m.group(1)]+=1
+counts={name:seen[name] for name in sorted(set(named))}
+print(json.dumps({'named_distinct':len(counts),'collection_counts':counts,'missing':[k for k,v in counts.items() if not v],'duplicate_collection':[k for k,v in counts.items() if v>1]},indent=2))

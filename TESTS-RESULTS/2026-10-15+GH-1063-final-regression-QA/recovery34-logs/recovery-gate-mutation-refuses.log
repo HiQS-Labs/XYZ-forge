@@ -1,0 +1,10 @@
+marathon-drive: phase p1 already reached a terminal relay (STATUS: Approved, token done) — skipping render/reseed, re-running only the pre-advance gate
+marathon-drive: relay approved — running pre-advance gate: printf unreviewed > src.txt; git add src.txt; git commit -qm post-mutation
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 2MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/recovery-gate-mutation-0gpflv__/relay-system/recovery-gate-mutation-0gpflv__/2026-10-15/marathon-p1-034437.md
+marathon-drive: phase p1 success: recovery changed non-transcript content — candidate ef42fab8d45f changes non-transcript content after reviewed head 69564125046d
+marathon-drive: phase p1: relay exited 0 but its approval is not attested for candidate ef42fab8d45f — refusing to publish success
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/recovery-gate-mutation-0gpflv__/relay-system/recovery-gate-mutation-0gpflv__/2026-10-15/marathon-p1-034438.md
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7699MB, swap_free=1651MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/recovery-gate-mutation-0gpflv__/phases/p1/ESCALATION.md (reason: candidate-drifted-from-reviewed-head)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-post-final-qa/temp/recovery-manual/recovery-gate-mutation-0gpflv__/result.json (outcome: escalated, exit 4)

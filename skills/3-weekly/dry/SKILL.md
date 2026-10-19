@@ -1,18 +1,19 @@
 ---
 name: dry
 description: >-
-  Find the subsystems that should be one subsystem. Traces a codebase resource-first
-  instead of subject-first, then reports every place N independent paths reach the same
-  table, file, env var, endpoint, binary, or config key without ever meeting — or where N
-  places define the same decision with different answers — the
-  "we built four of these and none of them know about each other" failure that stays
-  invisible until the bug count spikes. Produces a ranked Convergence Map naming the
-  single gateway each cluster is missing. Trigger on /dry, and on "do we have duplicate
-  subsystems", "why are there four of these", "these should go through one place",
-  "find the near-duplicates", "is this already implemented somewhere", "we keep
-  reimplementing this", "these paths should share a gateway", "DRY audit". Do NOT fire
-  to grade one diff (that is /code-review), to trace one subject's blast radius (that
-  is /recon), or to cluster recurring defects (that is /radar).
+  Find the subsystems that should be one subsystem. Trigger on /dry, and on "do we
+  have duplicate subsystems", "why are there four of these", "these should go
+  through one place", "find the near-duplicates", "is this already implemented
+  somewhere", "we keep reimplementing this", "these paths should share a gateway",
+  "DRY audit". Traces a codebase resource-first instead of subject-first, then
+  reports every place N independent paths reach the same table, file, env var,
+  endpoint, binary, or config key without ever meeting — or where N places define
+  the same decision with different answers — the "we built four of these and none
+  of them know about each other" failure that stays invisible until the bug count
+  spikes. Produces a ranked Convergence Map naming the single gateway each cluster
+  is missing. Do NOT fire to grade one diff (that is /code-review), to trace one
+  subject's blast radius (that is /recon), or to cluster recurring defects (that
+  is /radar).
 argument-hint: "[path or subsystem] [--depth quick|full]"
 ---
 

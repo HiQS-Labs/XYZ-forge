@@ -1,0 +1,7 @@
+jog: marathon execution gh1100-exec1 for GH-1100 (packet: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16/.tick/jog/probe/gh1100-exec1/preflight)
+jog: dispatching marathon-drive (driver)
+{"argv": ["/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16/relay-automation/marathon-drive.sh", "--phase-brief", "packet", "--reviewer", "agy", "--builder", "codex", "--target-root", "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16", "--phase-id", "gh1100", "--execution-id", "gh1100-exec1"], "cwd": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16", "XYZ_HARNESS": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16", "MARATHON_ROOT": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16", "resolved_root": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16"}
+PASS: explicit target and clone-local harness root
+PASS: root explicit target, selected tooling/coordination roots, legacy packet, immutable input
+PASS: vendored explicit target, selected tooling/coordination roots, legacy packet, immutable input
+PASS: explicit explicit target, selected tooling/coordination roots, legacy packet, immutable input

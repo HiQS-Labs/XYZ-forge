@@ -1,0 +1,6 @@
+{
+  "rc": 0,
+  "stdout": "",
+  "stderr": "warning: could not open directory 'ignored/': Permission denied\n",
+  "scope": "own synthetic fixture; permissions restored; no existing data modified"
+}

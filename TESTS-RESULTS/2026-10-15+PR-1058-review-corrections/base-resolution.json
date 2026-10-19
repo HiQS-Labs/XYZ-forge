@@ -1,0 +1,21 @@
+{
+  "resolved": true,
+  "handoff": false,
+  "reason": "resolved through the writer path; merge commit 41618924d8",
+  "log": [
+    "CHANGELOG: proven prefix-additive sections; existing history preserved",
+    "classification: keep=theirs generation ours/theirs=(1622, 1646) replay=1 op(s)",
+    "check --rebuild on the kept side: rc=0",
+    "roadmap add GH-1052: rc=0 ",
+    "roadmap update GH-1052 (section/marker): rc=0 ",
+    "releases-merge-resolve.sh: rc=0",
+    "removed verified rebuild backup: releases.db.bak"
+  ],
+  "commit": "41618924d8df98feaa7f8d08cbff0cab8e41f1d9",
+  "conflict_set": [
+    "CHANGELOG.md",
+    "LEADERBOARD.md",
+    "releases.db",
+    "releases.sql"
+  ]
+}

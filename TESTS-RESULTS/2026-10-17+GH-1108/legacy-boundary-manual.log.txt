@@ -1,0 +1,27 @@
+legacy notice
+legacy notice
+relay-drive: NOTE — relay file is not committed at HEAD: relay-system/2026-10-17/gh999902-jog-drive.md
+  RELAY_WORKTREE_ISOLATION=1 runs the turn-taker in a worktree at HEAD, but its own
+  worktree-seeding step copies this file's current content in regardless — this is
+  usually fine. Commit it for a clean paper trail, or re-run with
+  RELAY_WORKTREE_ISOLATION=0 if you want to rule out isolation entirely; neither is required.
+relay-drive: another driver is active in this repo (pid 68276, lock: .git/relay-driver.lock).
+relay-drive: Concurrent runs in the same clone are unsafe (GH-42 ROOT HEAD hazard).
+
+============================================================
+jog: processing GH-999902 (attempt 1) at position 1
+============================================================
+jog: reached max-tasks limit (1); pausing queue.
+PASS legacy supervisor 7d4ed1c5 ['interactive-merge-reached', 'completed']
+PASS target dispatch env 7d4ed1c5 1 /primary
+
+============================================================
+jog: processing GH-999902 (attempt 1) at position 1
+============================================================
+jog: advancing halted at landing boundary.
+PASS legacy supervisor bea9d480 ['parked']
+PASS target dispatch env bea9d480 None /validated/disposable
+PASS real existing target driver refuses live holder despite inherited bypass; no clone ledger change
+PASS existing target driver reclaims stale lock and releases it after dry run
+PASS absent target lock permits existing driver dry run and cleanup
+ALL LEGACY BOUNDARY AND LOCK CONTROLS PASSED; fixture /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1108-jog-land-receipts-2026-10-17-gate/temp/gh1108-legacy-lock-nwsluere

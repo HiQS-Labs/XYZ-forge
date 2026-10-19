@@ -1,0 +1,14 @@
+{
+  "args": [
+    "git",
+    "merge-tree",
+    "--write-tree",
+    "--messages",
+    "3f544cc7da13983d03dc175d55972f321a78bce2",
+    "e271416c52a290ddf51de15fc36fc46811cf788c"
+  ],
+  "cwd": "/Users/noelsaw/Documents/Codex/2026-10-15/task/forge-pr1091-radar-prep",
+  "rc": 1,
+  "stdout": "de5a86c7c0c44844f83f0c18ab3f46f4062695aa\n100644 ef5ce92fbbd63838f9b4d920a24dffe9d2fa3e80 1\treleases.db\n100644 e158b5f49f6dbac3796a5dd0807fd07a3cf303bf 2\treleases.db\n100644 9abb6099ec192829ea4733b7de1a2314a432f1d3 3\treleases.db\n100644 f7198fb5caf80a4157db9654fa1871eab8185dfe 1\treleases.sql\n100644 68725e0a321fda3125fa264f8dedcba30c13ef75 2\treleases.sql\n100644 d0d1590e069b5469e24a3ff478434fce6d0987d9 3\treleases.sql\n\nwarning: Cannot merge binary files: releases.db (3f544cc7da13983d03dc175d55972f321a78bce2 vs. e271416c52a290ddf51de15fc36fc46811cf788c)\nAuto-merging releases.db\nCONFLICT (content): Merge conflict in releases.db\nAuto-merging releases.sql\nCONFLICT (content): Merge conflict in releases.sql\nAuto-merging skills/3-weekly/radar/SKILL.md\n",
+  "stderr": ""
+}

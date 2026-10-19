@@ -246,8 +246,8 @@ def _descendant_cpu_seconds(root_pid: int) -> tuple[float, int]:
     """Total CPU seconds and process count for root_pid's live descendants.
 
     Excludes root_pid itself — the shim's own CPU is not the agent's. Returns
-    (0.0, 0) if the ps probe fails, which classify() treats as "no signal"
-    rather than "idle".
+    (0.0, 0) if the ps probe fails; classify() does not inspect the process count,
+    so a failed probe reads as zero CPU growth for that sample.
     """
     cpu = _descendant_cpu_by_pid(root_pid)
     return (sum(cpu.values()), len(cpu))
@@ -358,6 +358,12 @@ class TurnDiagnostics:
         self.root_pid = root_pid if root_pid is not None else os.getpid()
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
+        # GH-1126: one sample (including its one-shot network probe) is atomic with respect to
+        # classify(). Without it a caller that classifies mid-sample (consult/review_xyz before the
+        # kill; shims after a stop() whose join can time out) reads the probe result before it
+        # lands and reports "never established a safe idle window". Plain Lock: cpu_ratio() is
+        # called inside _sample() and must stay lock-free (not reentrant).
+        self._sample_lock = threading.Lock()
         # Sticky once CONFIRMED: a dialog that blocked the turn and was then
         # dismissed still explains the stall, so this is never cleared. It is
         # only set after DIALOG_CONFIRM_SAMPLES consecutive positives, so a
@@ -381,6 +387,10 @@ class TurnDiagnostics:
         self._network_state_observed: str | None = None
 
     def _sample(self) -> None:
+        with self._sample_lock:
+            self._sample_locked()
+
+    def _sample_locked(self) -> None:
         if _descendant_cpu_seconds is _ORIGINAL_DESCENDANT_CPU_SECONDS:
             current_cpu = _descendant_cpu_by_pid(self.root_pid)
             for pid, seconds in current_cpu.items():
@@ -492,7 +502,13 @@ class TurnDiagnostics:
 
         Order matters: a security dialog outranks everything, because no budget
         change fixes it and the operator action is specific.
+
+        GH-1126: waits for an in-flight sample to finish, so the label rests on completed evidence.
         """
+        with self._sample_lock:
+            return self._classify_locked()
+
+    def _classify_locked(self) -> tuple[str, str]:
         ratio = self.cpu_ratio()
         progressed = self.mtime_last > self.mtime_start
         bits = []

@@ -1,0 +1,19 @@
+{
+  "added_len": 5019,
+  "added_sha256": "ded30bed2ffb2cb156b713499ddce59dabf98ea901273246704e8e4da1b979be",
+  "added_start": 6179,
+  "artifact_sha256": null,
+  "attested_at": "2026-10-17T03:15:57Z",
+  "driver_pid": 66471,
+  "isolated": true,
+  "relay_file": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16/relay-system/2026-10-16/gh1100-plan.codex.md",
+  "relay_file_rel": "relay-system/2026-10-16/gh1100-plan.codex.md",
+  "reviewed_head": "de47d0119b8ef0b840198250ea84ece0414ab8c8",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16",
+  "task": "RELAY-gh1100-plan",
+  "trailer_sha256": "96e60da415e9b025855150bb83a92f22f7817a5a46cade79bbf4faa5b870c57b",
+  "transcript_repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1100-jog-target-root-2026-10-16"
+}

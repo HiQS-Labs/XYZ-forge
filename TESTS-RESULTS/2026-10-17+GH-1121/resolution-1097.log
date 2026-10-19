@@ -1,0 +1,38 @@
+releases-merge-resolve: rebuilding releases.db from the merged releases.sql
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 1764 (DB <-> dump)
+OK: receipt chain intact (1961 receipt(s), business-state digest matches, 201 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 21 day(s) past its target of 2026-09-26 — the plan has drifted from the calendar
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+rebuilt releases.db from releases.sql (generation 1764 -> 1765); displaced DB backed up at /Users/noelsaw/Documents/Codex/2026-10-17/task-3/forge-non-ci/releases.db.bak
+OK: post-rebuild verification — DB rebuilt from releases.sql, displaced DB at releases.db.bak
+check: clean (0 failures, 9 warning(s))
+releases-merge-resolve: verifying
+OK: foreign_keys pragma asserted per connection
+OK: generation trio consistent at 1765 (DB <-> dump)
+OK: receipt chain intact (1962 receipt(s), business-state digest matches, 201 merge fork(s) tolerated under the merge-rebuild receipt)
+warn: rule=mig-ref-stale: MIG-F1CCB6 is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D7D2C4 is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-D248B2 is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-79F036 is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-A993B3 is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-751A4C is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-7AFFE1 is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=mig-ref-stale: MIG-AC68FA is 60 days old (> 7) — disposition the migration debt before the strict flip
+warn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 21 day(s) past its target of 2026-09-26 — the plan has drifted from the calendar
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 9 warning(s))
+releases-merge-resolve: regenerating adopted views: LEADERBOARD.md
+releases-merge-resolve:   -> leaderboard.sh
+leaderboard: wrote /Users/noelsaw/Documents/Codex/2026-10-17/task-3/forge-non-ci/LEADERBOARD.md
+releases-merge-resolve: artifacts are consistent and staged. Review, then commit the merge yourself —
+releases-merge-resolve: this script deliberately does not commit.
+releases-merge-resolve: note: releases.db.bak holds the DB that was displaced; it is untracked and safe to delete.

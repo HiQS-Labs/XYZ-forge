@@ -1,0 +1,13 @@
+"""Manual retained collection inspection; no CI cases are added."""
+from pathlib import Path
+import collections,json,re,sys
+root=Path(sys.argv[1])
+text=(root/'skills/2-daily/merge-cleanup/SKILL.md').read_text()
+section=re.search(r'## Capability table.*?(?=\n## )',text,re.S).group(0)
+named=[]
+for line in section.splitlines():
+    cells=[x.strip() for x in line.strip().strip('|').split('|')]
+    if len(cells)==4 and cells[2]=='script':named.append(cells[3])
+collected=Path(sys.argv[2]).read_text()
+counts={name:sum(line.endswith('::'+name.replace('.', '::',1)) for line in collected.splitlines()) for name in sorted(set(named))}
+print(json.dumps({'named_distinct':len(counts),'collection_counts':counts,'missing':[k for k,v in counts.items() if not v],'duplicate_collection':[k for k,v in counts.items() if v>1]},indent=2))

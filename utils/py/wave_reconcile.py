@@ -405,7 +405,7 @@ def fetch_pr_metadata(repo_root, pr_id, offline_manifest=None, dry_run=False):
         die(f"Failed parsing gh pr view JSON for PR #{pr_id}: {e}", code=4)
 
 
-def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
+def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None, base="development"):
     """Return direct-commit landing metadata in the reconciler's internal shape."""
     if offline_manifest:
         for entry in offline_manifest.get("commits", []):
@@ -415,7 +415,7 @@ def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
                     "number": str(entry.get("sha", commit_id))[:12],
                     "title": message.splitlines()[0] if message else f"commit {commit_id}",
                     "state": "MERGED", "mergedAt": entry.get("committedAt"),
-                    "baseRefName": "development", "body": message,
+                    "baseRefName": base, "body": message,
                     "url": entry.get("url", ""), "artifactKind": "commit",
                     "sha": entry.get("sha", commit_id),
                     "mergeCommit": {"oid": entry.get("sha", commit_id)},
@@ -430,11 +430,11 @@ def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
         die(f"Commit {commit_id} cannot be resolved locally", code=4)
     sha = resolved.stdout.strip()
     reachable = subprocess.run(
-        ["git", "-C", repo_root, "merge-base", "--is-ancestor", sha, "development"],
+        ["git", "-C", repo_root, "merge-base", "--is-ancestor", sha, base],
         capture_output=True, text=True, check=False,
     )
     if reachable.returncode != 0:
-        die(f"Commit {sha} is not reachable from local development", code=4)
+        die(f"Commit {sha} is not reachable from local {base}", code=4)
     shown = subprocess.run(
         ["git", "-C", repo_root, "show", "-s", "--format=%cI%x00%B", sha],
         capture_output=True, text=True, check=False,
@@ -446,7 +446,7 @@ def fetch_commit_metadata(repo_root, commit_id, offline_manifest=None):
     slug = github_slug_from_origin(repo_root)
     return {
         "number": sha[:12], "title": message.splitlines()[0], "state": "MERGED",
-        "mergedAt": committed_at, "baseRefName": "development", "body": message,
+        "mergedAt": committed_at, "baseRefName": base, "body": message,
         "url": f"https://github.com/{slug}/commit/{sha}" if slug else "",
         "artifactKind": "commit", "sha": sha, "mergeCommit": {"oid": sha},
     }
@@ -460,11 +460,17 @@ def landing_label(meta):
 
 QUALIFICATION_SCHEMA = "wave-qualification@1"
 QUALIFICATION_PATH = r"TESTS-RESULTS/[0-9]{4}-[0-9]{2}-[0-9]{2}\+GH-591/wave-[0-9a-f]{40}/validation\.jsonl"
-QUALIFICATION_GATE = "validate.sh --sequential"
+QUALIFICATION_GATE = "validate.sh --parallel 4"
+# GH-1114 (operator override on #1118): the hosted full run is parallel; width is explicit because
+# validate.sh drops to sequential below 4 cores. Receipts written under the old sequential gate stay
+# valid, and a runner that falls back to sequential still produces an accepted receipt.
+LEGACY_FULL_GATE = "validate.sh --sequential"
 # GH-831 D5: a landing whose changes classify tier 1 (docs, ledger, non-core skill files) qualifies
 # through the Small run. Its receipt records the list it ran, replayed against the tested commit.
 SMALL_GATE = "validate.sh --sequential --subsystem small"
 SMALL_NON_SUITE = ("tier2:pdda", "python:test_python_layer.py")
+ACCEPTED_GATES = (QUALIFICATION_GATE, LEGACY_FULL_GATE, SMALL_GATE)
+EXECUTED_LANES = ("sequential", "pool", "driver-lock")
 
 
 def small_suites_at(repo_root, commit):
@@ -479,10 +485,12 @@ def small_suites_at(repo_root, commit):
 
 
 def qualification_summary(raw, tested_sha, expected=None):
-    """Require the existing runner's complete, unquarantined sequential evidence.
+    """Require the existing runner's complete, unquarantined evidence; return (summary, meta).
 
     expected=None is the full registry (tier 3). A list is the Small run (GH-831 D5): tier 2, its
     shell suites exactly that list, plus the PDDA gate, the Python layer and the identity check.
+    meta carries the run's own mode/width (from run.start, never from the requested gate) and the
+    names of registered suites whose first attempt failed and whose GH-528 serialized retry passed.
     """
     rows = [json.loads(line) for line in raw.splitlines() if line.strip()]
     if not rows or any(not isinstance(row, dict) for row in rows):
@@ -493,29 +501,42 @@ def qualification_summary(raw, tested_sha, expected=None):
         raise ValueError("validation telemetry has no unique completed run")
     start, summary = starts[0], summaries[0]
     registered = start.get("registered")
-    if (start.get("commit") != tested_sha or start.get("mode") != "sequential"
+    if (start.get("commit") != tested_sha or start.get("mode") not in ("sequential", "parallel")
             or start.get("tier") != (3 if expected is None else 2)
             or type(registered) is not int or registered <= 0
             or not start.get("run") or any(row.get("run") != start["run"]
                 or row.get("runner") != "validate" for row in rows)):
         raise ValueError("validation run identity, mode or registry does not match")
     suites = [row for row in rows if row.get("event") == "suite"]
-    sequential = [row for row in suites if row.get("lane") == "sequential"]
+    executed = [row for row in suites if row.get("lane") in EXECUTED_LANES]
+    # GH-1114: the one carve-out from "every suite rc is 0". An executed-lane row may be red only
+    # when a retry suite row of the same name is green; non-suite rows and retry rows get no carve-out.
+    retried_ok = {row.get("name") for row in suites
+                  if row.get("lane") == "retry" and type(row.get("rc")) is int and row["rc"] == 0}
+    def red(row):
+        if type(row.get("rc")) is not int:
+            return True
+        if row["rc"] == 0:
+            return False
+        return not (row.get("lane") in EXECUTED_LANES and row.get("name") in retried_ok)
+    first_attempt_failures = sorted({row.get("name") for row in executed
+                                     if type(row.get("rc")) is int and row["rc"] != 0 and row.get("name") in retried_ok})
+    meta = dict(mode=start["mode"], width=start.get("width"), first_attempt_failures=first_attempt_failures)
     if expected is not None:
-        names = [row.get("name") for row in sequential]
+        names = [row.get("name") for row in executed]
         extra = {row.get("name") for row in suites if row.get("lane") == "non-suite"}
         identity = [row for row in rows if row.get("event") == "stage" and row.get("name") == "envelope-assert"]
         if (len(set(expected)) != len(expected) or len(set(names)) != len(names)
                 or sorted(names) != sorted(expected) or not set(SMALL_NON_SUITE) <= extra
-                or any(type(row.get("rc")) is not int or row["rc"] != 0 for row in suites + identity)
+                or any(red(row) for row in suites + identity)
                 or len(identity) != 1 or summary.get("failed") != 0
                 or summary.get("total") != len(expected) + 3 or summary.get("passed") != summary["total"]
                 or summary.get("envelope_rc") != "0" or summary.get("suite_events_match") != "yes"
                 or str(summary.get("run_set")) != str(len(expected))):
             raise ValueError("Small-run telemetry is failed, incomplete or not the expected list")
-        return summary
-    if (len(sequential) != registered or len({row.get("name") for row in sequential}) != registered
-            or any(type(row.get("rc")) is not int or row["rc"] != 0 for row in suites)
+        return summary, meta
+    if (len(executed) != registered or len({row.get("name") for row in executed}) != registered
+            or any(red(row) for row in suites)
             or summary.get("failed") != 0 or summary.get("total") != registered + 3
             or summary.get("passed") != summary["total"]
             or summary.get("envelope_rc") != "0" or summary.get("suite_events_match") != "yes"
@@ -525,7 +546,7 @@ def qualification_summary(raw, tested_sha, expected=None):
     names = {row.get("name") for row in suites}
     if not {"python:test_python_layer.py", "gamma-poison-staleness-probe"} <= names:
         raise ValueError("validation is missing required full-suite probes")
-    return summary
+    return summary, meta
 
 
 def qualification_receipt_matches(repo_root, entry, meta):
@@ -536,7 +557,7 @@ def qualification_receipt_matches(repo_root, entry, meta):
             or not isinstance(landing, str) or not re.fullmatch(r"[0-9a-f]{40}", landing)
             or entry.get("landing_commit") != landing
             or entry.get("result") != "pass" or type(entry.get("rc")) is not int or entry["rc"] != 0
-            or entry.get("gate") not in (QUALIFICATION_GATE, SMALL_GATE)
+            or entry.get("gate") not in ACCEPTED_GATES
             or entry.get("artifact_kind") != meta.get("artifactKind", "pr")):
         return False
     if meta.get("artifactKind") != "commit" and (
@@ -561,7 +582,14 @@ def qualification_receipt_matches(repo_root, entry, meta):
             expected = entry.get("suites")
             if entry.get("tier") != 2 or expected != small_suites_at(repo_root, tested):
                 return False
-        qualification_summary(raw, tested, expected)
+        _, meta_seen = qualification_summary(raw, tested, expected)
+        # GH-1127 (Codex #1124 review): metadata a receipt claims must be what its telemetry shows.
+        # Keys a receipt lacks keep their historical meaning (pre-#1134 receipts carry none).
+        for key in ("mode", "width", "first_attempt_failures"):
+            if key in entry and entry[key] != meta_seen[key]:
+                return False
+        if "retries" in entry and entry["retries"] != len(meta_seen["first_attempt_failures"]):
+            return False
         for older, newer in ((landing, tested), (tested, "HEAD")):
             if subprocess.run(["git", "merge-base", "--is-ancestor", older, newer],
                               cwd=repo_root, capture_output=True, check=False).returncode:
@@ -618,7 +646,22 @@ def select_qualification_gate(clone, metas, env):
         return QUALIFICATION_GATE, None, f"classification failed: {exc}"
 
 
-def qualify_landings(repo_root, metas, journal):
+def promotion_gate(pending, promotion, head_meta, select):
+    """GH-1127: what a qualification run covers and which gate it runs.
+
+    Ordinary qualification (promotion=False) is unchanged: nothing pending → no run; otherwise the
+    tier selector picks Small or full. A promotion run always tests HEAD with the full registry: an
+    empty pending set qualifies HEAD itself as a direct-commit landing, and the tier selector is not
+    consulted. `head_meta` and `select` are callables so neither runs unless needed.
+    Returns (pending, (gate, expected, reason) | None).
+    """
+    if not promotion:
+        return pending, (select() if pending else None)
+    pending = pending or [head_meta()]
+    return pending, (QUALIFICATION_GATE, None, "promotion (#1127): full registry")
+
+
+def qualify_landings(repo_root, metas, journal, promotion=False):
     """Produce retained provenance in the existing closeout transaction, after a real gate run."""
     from gate_env import gate_env
     from proc_group import run_bounded
@@ -626,10 +669,12 @@ def qualify_landings(repo_root, metas, journal):
     previous = committed_qualifications(repo_root)
     pending = [meta for meta in metas if not any(
         qualification_receipt_matches(repo_root, entry, meta) for entry in previous)]
-    if not pending:
-        return
+    if not pending and not promotion:
+        return  # ordinary --qualify: unchanged early return, before any further git or cleanliness work
     check_porcelain_cleanliness(repo_root)
     tested = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo_root, text=True).strip()
+    pending, _ = promotion_gate(pending, promotion, lambda: fetch_commit_metadata(repo_root, tested),
+                                lambda: None)
     for meta in pending:
         landing = (meta.get("mergeCommit") or {}).get("oid", "")
         if (meta.get("state") != "MERGED" or meta.get("baseRefName") != "development"
@@ -669,7 +714,8 @@ def qualify_landings(repo_root, metas, journal):
             before_config = command(["git", "config", "--local", "--list"], True).stdout
             command(["python3", "-c", "import pytest"])
             command(["npm", "ci"])
-            gate, expected, reason = select_qualification_gate(clone, pending, env)
+            _, (gate, expected, reason) = promotion_gate(
+                pending, promotion, lambda: None, lambda: select_qualification_gate(clone, pending, env))
             log(f"Qualifying {len(pending)} landing(s) in integrated snapshot {tested} with "
                 f"`{gate}` ({reason})")
             validation = command(["bash", *gate.split()])
@@ -679,11 +725,11 @@ def qualify_landings(repo_root, metas, journal):
                 die("Qualification clone identity/content changed under the suite", code=6)
             # Suites may launch nested validator probes. Bind proof to the exact
             # process we launched, not another passing run in the telemetry directory.
-            files = list(telemetry.glob(f"validate-sequential-*-{validation.pgid}.jsonl"))
+            files = list(telemetry.glob(f"validate-*-{validation.pgid}.jsonl"))
             if len(files) != 1:
                 die("Qualification requires exactly one retained validation run", code=6)
             raw = files[0].read_bytes()
-            summary = qualification_summary(raw, tested, expected)
+            summary, run_meta = qualification_summary(raw, tested, expected)
             if summary['run'] != f"{tested[:9]}-{validation.pgid}":
                 die("Qualification telemetry does not identify the launched validation process", code=6)
         except (subprocess.SubprocessError, OSError, ValueError) as exc:
@@ -707,7 +753,9 @@ def qualify_landings(repo_root, metas, journal):
                      gate=gate, timestamp=now.isoformat(),
                      telemetry=str(telemetry_path.relative_to(repo_root)),
                      telemetry_sha256=hashlib.sha256(raw).hexdigest(), passed=summary["passed"],
-                     total=summary["total"])
+                     total=summary["total"], mode=run_meta["mode"], width=run_meta["width"],
+                     first_attempt_failures=run_meta["first_attempt_failures"],
+                     retries=len(run_meta["first_attempt_failures"]))
         if expected is not None:
             entry.update(tier=2, suites=expected)
         if meta.get("artifactKind") != "commit":
@@ -2093,7 +2141,13 @@ def main():
     parser.add_argument(
         "--skip-pull",
         action="store_true",
-        help="Skip git pull --ff-only origin development (for testing/isolated clones)",
+        help="Skip git pull --ff-only origin <base> (for testing/isolated clones)",
+    )
+    parser.add_argument(
+        "--base",
+        default="development",
+        help="Integration branch for direct --commit landings (GH-1144; express passes its resolved base). "
+             "PR, catch-up and qualification flows are development-only and keep this default.",
     )
     parser.add_argument(
         "--skip-branch-check",
@@ -2129,8 +2183,12 @@ def main():
     )
 
     parser.add_argument("--qualify", action="store_true",
-                        help="Run the full sequential suite and retain integration evidence before gated closeout")
+                        help="Run the tier-selected qualification gate (full --parallel 4, or the Small list) and retain integration evidence before gated closeout")
     parser.add_argument("--catch-up", action="store_true", help="Recover closed-issue drift from committed docs and manifest")
+    parser.add_argument("--promotion", action="store_true",
+                        help="GH-1127 pre-promotion qualification: always run the FULL registry on HEAD "
+                             "(never the Small list); with nothing pending, qualify HEAD itself as a commit "
+                             "landing. Requires --catch-up --gate --qualify.")
     parser.add_argument("--only-receipted", action="store_true",
                         help="GH-740 publish retry: never run the suite — process only landings that already have a "
                              "committed, matching qualification receipt; defer recovered ones that do not (their own "
@@ -2140,6 +2198,8 @@ def main():
     args = parser.parse_args()
     if args.qualify and (not args.require_receipts or args.dry_run or args.offline or args.allow_dirty or args.pre_merge):
         parser.error("--qualify requires --gate and a live, clean, non-preview post-merge checkout")
+    if args.promotion and not (args.catch_up and args.qualify):
+        parser.error("--promotion requires --catch-up --gate --qualify (it is the pre-promotion dispatch, #1127)")
     if args.only_receipted and not (args.catch_up and args.qualify):
         parser.error("--only-receipted requires --catch-up --qualify (it is the hosted publish step's bounded retry)")
 
@@ -2163,7 +2223,7 @@ def main():
         # Preflight phase
         log(f"Starting wave reconciliation (dry_run={args.dry_run}, root={repo_root})")
         baseline = check_porcelain_cleanliness(repo_root, allow_dirty=(args.allow_dirty or args.dry_run))
-        check_current_branch(repo_root, skip_branch_check=args.skip_branch_check)
+        check_current_branch(repo_root, expected_branch=args.base, skip_branch_check=args.skip_branch_check)
 
         repo_slug = github_slug_from_origin(repo_root)
         has_workflow = os.path.isfile(os.path.join(repo_root, ".github", "workflows", "wave-reconcile.yml"))
@@ -2172,7 +2232,7 @@ def main():
                 check_hosted_reconciler_in_flight(repo_root, repo_slug=repo_slug, force=args.force_local_reconcile)
 
         if not args.skip_pull and not args.dry_run and not args.offline:
-            pull_upstream(repo_root)
+            pull_upstream(repo_root, branch=args.base)
 
         offline_manifest = None
         if args.offline:
@@ -2209,7 +2269,7 @@ def main():
                 # GH-842: catch-up records pending direct commits in `metadata` alongside the PRs.
                 landing_items.extend(key for key, meta in metadata.items() if key[0] == "commit" and meta.get("catchUp"))
             landing_items = list(dict.fromkeys((kind, str(value)) for kind, value in landing_items))
-            if args.qualify and landing_items:
+            if args.qualify and (landing_items or args.promotion):
                 for kind, value in landing_items:
                     if (kind, value) not in metadata:
                         metadata[(kind, value)] = (fetch_commit_metadata(repo_root, value) if kind == "commit"
@@ -2232,7 +2292,8 @@ def main():
                                 "its own run qualifies it")
                     landing_items = kept
                 else:
-                    qualify_landings(repo_root, [metadata[item] for item in landing_items], journal)
+                    qualify_landings(repo_root, [metadata[item] for item in landing_items], journal,
+                                     promotion=args.promotion)
             # A recovered batch can contain several closing PRs for one issue.
             # Qualify every landing, but let its newest known closer own all lifecycle
             # writes, including when that closer already has a committed receipt.
@@ -2249,7 +2310,7 @@ def main():
                 if (landing_kind, landing_id) in metadata:
                     pr_meta = metadata[(landing_kind, landing_id)]
                 elif landing_kind == "commit":
-                    pr_meta = fetch_commit_metadata(repo_root, landing_id, offline_manifest)
+                    pr_meta = fetch_commit_metadata(repo_root, landing_id, offline_manifest, base=args.base)
                 else:
                     pr_meta = fetch_pr_metadata(repo_root, landing_id, offline_manifest, dry_run=args.dry_run)
                 landing = landing_label(pr_meta)
@@ -2261,9 +2322,9 @@ def main():
                     log(f"  {landing} state is '{state}' (unmerged/declined) -> routing to 4-MISC/")
 
                 base_ref = pr_meta.get("baseRefName", "")
-                if base_ref and base_ref != "development":
+                if base_ref and base_ref != args.base:
                     die(
-                        f"{landing} target base is '{base_ref}', not 'development'.",
+                        f"{landing} target base is '{base_ref}', not '{args.base}'.",
                         code=4,
                     )
 

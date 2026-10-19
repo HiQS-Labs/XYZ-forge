@@ -1,0 +1,8 @@
+marathon-drive: phase p1 already reached a terminal relay (STATUS: Approved, token done) — skipping render/reseed, re-running only the pre-advance gate
+marathon-drive: relay approved — running pre-advance gate: false
+marathon-drive: gate-guard: gate exit 1 after 1s — peak group RSS 0MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: pre-advance gate FAILED (exit 1) — escalating
+marathon-drive: transcript saved: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/red-gate-mqdi7g6r/relay-system/red-gate-mqdi7g6r/2026-10-15/marathon-p1-025120.md
+marathon-drive: memory-telemetry: phase p1-escalated boundary — compressor=7132MB, swap_free=1523MB
+marathon-drive: escalation written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/red-gate-mqdi7g6r/phases/p1/ESCALATION.md (reason: pre-advance-failed)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/Codex/2026-10-14/task/forge-final-regression-qa/temp/recovery-manual/red-gate-mqdi7g6r/result.json (outcome: escalated, exit 5)

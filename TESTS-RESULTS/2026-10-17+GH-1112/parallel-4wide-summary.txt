@@ -1,0 +1,24 @@
+identity before: 52296349ad6b9f9ba4a37d6452415f04caf9c776 https://github.com/HiQS-Labs/XYZ-forge.git bare=false user=Noel Saw
+2026-10-17T23:58:33Z
+VALIDATE_RC=0
+2026-10-18T00:17:02Z
+identity after: 52296349ad6b9f9ba4a37d6452415f04caf9c776 clean=0
+  + gh712-jev-triage.sh
+passed: passed: 409 / 409
+478:re-run ladder: 0 suite(s), 0.000s total
+completion order of the three heavy suites (log line numbers; lower = earlier): 26:[parallel] gh589-xyz-mini-sync.sh rc=0 65:[parallel] gh280-jog-marathon-adapter.sh rc=0 130:[parallel] gh436-merge-cleanup.sh rc=0  of 390 pooled
+10 slowest:
+10 slowest suites:
+  name  duration_s  rc
+  gh436-merge-cleanup.sh  359.026  0
+  gh549-work-events.sh  268.597  0
+  gh365-tier-fail-closed.sh  246.952  0
+  gh280-jog-marathon-adapter.sh  202.639  0
+  gh251-validate-pytest-skip.sh  144.164  0
+  marathon-drive.sh  131.542  0
+  pdda-install-startup-docs.sh  103.582  0
+  pdda-repo-contract.sh  92.466  0
+  gh365-pdda-gov-scan.sh  91.367  0
+  gh528-parallel-contention-retry.sh  86.793  0
+re-run ladder: 0 suite(s), 0.000s total
+note: wall 23:58:33Z→00:17:02Z = 1109 s on a loaded host (PR #1116's comparable run: 858 s). One sample; ordering effect confirmed structurally (first-wave dispatch, early completion), wall-time change NOT claimed from this run.

@@ -1,0 +1,19 @@
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh836-gate-hotspots-2026-10-18) changed-files=0
+codex-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.5DmeP8)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.5DmeP8) changed-files=1
+rtl: GH-654 off-lane candidate: .relay-artifacts/SUMMARY.md
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh836-gate-hotspots-2026-10-18/relay-system/2026-10-18/gh836-residual-final.md
+codex-turn: committed codex turn (file-scoped, no push)
+relay-drive: attested Approved by codex — reviewed 530d3b307b37, 3879 bytes of review text, record /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh836-gate-hotspots-2026-10-18/.git/relay-attest/RELAY-gh836-residual-final.json
+relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥5036349 total (≥4976743 in / ≥59606 out) — PARTIAL, floor only: 7/108 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 1488h 11m
+per done-task: ≥46633 tokens, 13h 46m wall-clock
+memory: compressor peak: 4624MB, swap free min: 0MB
+  turn peak RSS: agy: 261MB peak RSS, codex: 597MB peak RSS, aider: 299MB peak RSS, Producer: 1MB peak RSS, deepseek: 70MB peak RSS, commandcode: 248MB peak RSS, ox-alpha: 221MB peak RSS, claude-a: 1MB peak RSS, cmd: 221MB peak RSS, Reviewer: 2MB peak RSS, producer: 2MB peak RSS, claude: 450MB peak RSS, claude-opus: 400MB peak RSS
+

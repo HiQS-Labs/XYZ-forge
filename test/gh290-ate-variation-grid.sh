@@ -452,6 +452,10 @@ setup_fixture() {
     printf '.tick/\n%s.tick/\n__pycache__/\n' "$prefix" > "$root/.gitignore"
   fi
   python3 "$REPO/utils/py/releases_app.py" --root "$root" init >/dev/null 2>&1
+  git -C "$root" branch -M development
+  local primary_key
+  primary_key="$(PYTHONPATH="$REPO/utils/py" python3 -c 'from harness_paths import primary_config_key; import sys; print(primary_config_key(sys.argv[1]))' "$root")"
+  git -C "$root" config "$primary_key" "$root"
   python3 "$REPO/utils/py/releases_app.py" --root "$root" jog add 901 >/dev/null 2>&1
   git -C "$root" add -A >/dev/null 2>&1
   git -C "$root" commit -q -m "fixture init" >/dev/null 2>&1
@@ -472,6 +476,8 @@ LANE_TIP="$(git -C "$FR" rev-parse HEAD)"
 git -C "$FR" checkout -q development
 git -C "$FR" merge -q --no-ff marathon/gh290-lane -m "Merge pull request #42 from marathon/gh290-lane" >/dev/null 2>&1
 MERGE_SHA="$(git -C "$FR" rev-parse HEAD)"
+git -C "$FR" push -q origin HEAD:refs/heads/development
+
 
 # Create an unrelated commit on an orphaned branch for unreachable SHA testing
 git -C "$FR" checkout -q -b unrelated-branch
@@ -487,6 +493,32 @@ mkdir -p "$FR/.tick/jog/$GID/gh901-exec1/preflight"
 
 jog_verb() {  # <verb> <extra-args…>
   local verb="$1"; shift
+  if [ "$verb" = "land" ]; then
+    # Hostile cases now travel as committed evidence, rather than trusted local cache.
+    python3 - "$FR" "$RES_FILE" <<'PY_BUNDLE'
+import hashlib,json,sys
+from pathlib import Path
+root=Path(sys.argv[1]);sys.path.insert(0,str(root/'utils/py'))
+from harness_paths import primary_config_key
+raw=Path(sys.argv[2]).read_bytes();receipt=json.loads(raw)
+bundle=root/'TESTS-RESULTS/2026-08-28+GH-901/jog/gh901-exec1';bundle.mkdir(parents=True,exist_ok=True)
+gate=(json.dumps({'sha':receipt['head_sha'],'exit_code':0})+'\n').encode()
+if receipt['gate'].get('receipt_path')=='/nonexistent/receipt.json':gate=b''
+provenance=(json.dumps({'source':'approved Marathon result','execution_id':receipt['execution_id'],
+ 'approved_sha':receipt['head_sha'],'result_sha256':hashlib.sha256(raw).hexdigest(),
+ 'gate_sha256':hashlib.sha256(gate).hexdigest()})+'\n').encode()
+files={'marathon-result.json':raw,'gate-receipt.json':gate,'provenance.jsonl':provenance}
+manifest={'schema':'jog/receipt-bundle@1','issue':901,'execution_id':receipt['execution_id'],
+ 'repository':primary_config_key(str(root)) if receipt['target_repo']['path']==str(root) else 'another-repository',
+ 'base_branch':'development','head_branch':'marathon/gh290-lane','pr_number':receipt['pr']['number'],
+ 'result':'marathon-result.json','gate_receipt':'gate-receipt.json',
+ 'files':{name:hashlib.sha256(data).hexdigest() for name,data in files.items()}}
+for name,data in files.items():(bundle/name).write_bytes(data)
+(bundle/'receipt.json').write_text(json.dumps(manifest)+'\n')
+PY_BUNDLE
+    git -C "$FR" add -- TESTS-RESULTS/2026-08-28+GH-901/jog/gh901-exec1
+    git -C "$FR" commit -q --allow-empty -m 'fixture committed receipt variation'
+  fi
   ( cd "$FR" && python3 "$FR/utils/py/releases_app.py" jog "$verb" "$@" )
 }
 
@@ -568,7 +600,7 @@ queue_status() {
 }
 
 reset_jog_state() {
-  sqlite3 "$FR/releases.db" "UPDATE jog_queue SET status = 'parked', failure_reason = 'awaiting-landing (PR #42)', attempt_count = 0 WHERE gh_number = 901;"
+  PYTHONPATH="$FR/utils/py" python3 -c 'from releases_app import jog_set_status; import sys; jog_set_status(sys.argv[1],901,"parked","awaiting-landing (PR #42)")' "$FR"
   cat > "$FR/.tick/jog/$GID/state.json" <<JSEOF
 {"schema": "jog/execution-state@1", "gid": "$GID", "gh_number": 901,
  "executions": [{"execution_id": "gh901-exec1", "mode": "run", "started_at": "2026-08-28T02:00:00Z",
@@ -601,7 +633,7 @@ has "$(queue_status)" "parked|" && pass "T2.2 queue row status untouched" || fai
 reset_jog_state
 make_pr_view "$VIEW" MERGED "development" "marathon/gh290-lane" "0000000000000000000000000000000000000000" "$MERGE_SHA"
 OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
-[ "$rc" -eq 2 ] && has "$OUT" "head SHA" \
+[ "$rc" -eq 2 ] && has "$OUT" "git fetch" \
   && pass "T2.3 mismatched head SHA refused (exit 2)" || fail "T2.3 exit=$rc: $OUT"
 has "$(queue_status)" "parked|" && pass "T2.3 queue row status untouched" || fail "T2.3 row mutated: $(queue_status)"
 
@@ -626,7 +658,7 @@ reset_jog_state
 make_test_receipt "$RES_FILE" '{"target_repo": {"path": "/definitely/foreign/repo/path"}}'
 make_pr_view "$VIEW" MERGED "development" "marathon/gh290-lane" "$LANE_TIP" "$MERGE_SHA"
 OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
-[ "$rc" -eq 2 ] && has "$OUT" "receipt repo is this repo" \
+[ "$rc" -eq 2 ] && has "$OUT" "another repository" \
   && pass "T2.6 foreign repository in receipt refused (exit 2)" || fail "T2.6 exit=$rc: $OUT"
 has "$(queue_status)" "parked|" && pass "T2.6 queue row status untouched" || fail "T2.6 row mutated: $(queue_status)"
 
@@ -643,7 +675,7 @@ has "$(queue_status)" "parked|" && pass "T2.7 queue row status untouched" || fai
 reset_jog_state
 make_pr_view "$VIEW" MERGED "development" "marathon/gh290-lane" "$LANE_TIP" "null"
 OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
-[ "$rc" -eq 2 ] && has "$OUT" "merge commit present" \
+[ "$rc" -eq 2 ] && has "$OUT" "head/merge SHA present" \
   && pass "T2.8 missing merge commit in PR metadata refused (exit 2)" || fail "T2.8 exit=$rc: $OUT"
 has "$(queue_status)" "parked|" && pass "T2.8 queue row status untouched" || fail "T2.8 row mutated: $(queue_status)"
 
@@ -652,7 +684,7 @@ reset_jog_state
 make_test_receipt "$RES_FILE" '{"gate": {"result": "red", "exit": 1}}'
 make_pr_view "$VIEW" MERGED "development" "marathon/gh290-lane" "$LANE_TIP" "$MERGE_SHA"
 OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
-[ "$rc" -eq 2 ] && has "$OUT" "gate green on the landed head" \
+[ "$rc" -eq 2 ] && has "$OUT" "committed receipt approval/gate/identity verification failed" \
   && pass "T2.9 red gate evidence refused (exit 2)" || fail "T2.9 exit=$rc: $OUT"
 has "$(queue_status)" "parked|" && pass "T2.9 queue row status untouched" || fail "T2.9 row mutated: $(queue_status)"
 
@@ -660,7 +692,7 @@ has "$(queue_status)" "parked|" && pass "T2.9 queue row status untouched" || fai
 reset_jog_state
 make_test_receipt "$RES_FILE" '{"gate": {"result": "not-run", "exit": null}}'
 OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
-[ "$rc" -eq 2 ] && has "$OUT" "gate green on the landed head" \
+[ "$rc" -eq 2 ] && has "$OUT" "committed receipt approval/gate/identity verification failed" \
   && pass "T2.10 not-run gate evidence refused (exit 2)" || fail "T2.10 exit=$rc: $OUT"
 has "$(queue_status)" "parked|" && pass "T2.10 queue row status untouched" || fail "T2.10 row mutated: $(queue_status)"
 
@@ -668,7 +700,7 @@ has "$(queue_status)" "parked|" && pass "T2.10 queue row status untouched" || fa
 reset_jog_state
 make_test_receipt "$RES_FILE" '{"gate": {"result": "green", "exit": 0, "receipt_path": "/nonexistent/receipt.json"}}'
 OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
-[ "$rc" -eq 2 ] && has "$OUT" "gate green on the landed head" \
+[ "$rc" -eq 2 ] && has "$OUT" "missing or changed committed evidence" \
   && pass "T2.11 absent gate receipt path on disk refused (exit 2)" || fail "T2.11 exit=$rc: $OUT"
 has "$(queue_status)" "parked|" && pass "T2.11 queue row status untouched" || fail "T2.11 row mutated: $(queue_status)"
 
@@ -708,7 +740,7 @@ reset_jog_state
 make_test_receipt "$RES_FILE" '{"outcome": "escalated", "reason": "no-progress"}'
 make_pr_view "$VIEW" MERGED "development" "marathon/gh290-lane" "$LANE_TIP" "$MERGE_SHA"
 OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
-[ "$rc" -eq 2 ] && has "$OUT" "no approved Marathon execution to land" \
+[ "$rc" -eq 2 ] && has "$OUT" "committed receipt approval/gate/identity verification failed" \
   && pass "T2.16 non-approved execution outcome refused (exit 2)" || fail "T2.16 exit=$rc: $OUT"
 has "$(queue_status)" "parked|" && pass "T2.16 queue row status untouched" || fail "T2.16 row mutated: $(queue_status)"
 
@@ -722,9 +754,8 @@ reset_jog_state
 make_test_receipt "$RES_FILE" '{"gate": {"result": "red"}, "target_repo": {"path": "/foreign/repo"}}'
 make_pr_view "$VIEW" OPEN "main" "marathon/wrong-lane" "0000000000000000000000000000000000000000" "null"
 OUT="$(GH_STUB_PR_VIEW_JSON="$VIEW" jog_verb land 901 --pr 42 2>&1)"; rc=$?
-[ "$rc" -eq 2 ] && has "$OUT" "state MERGED" && has "$OUT" "base development" && has "$OUT" "head marathon/gh290-lane" \
-  && has "$OUT" "head SHA" && has "$OUT" "receipt repo is this repo" && has "$OUT" "gate green on the landed head" \
-  && pass "T2.18 composite multi-mismatch reported all failed predicates (exit 2)" || fail "T2.18 exit=$rc: $OUT"
+[ "$rc" -eq 2 ] && has "$OUT" "another repository" \
+  && pass "T2.18 composite mismatch refused at committed repository boundary (exit 2)" || fail "T2.18 exit=$rc: $OUT"
 has "$(queue_status)" "parked|" && pass "T2.18 composite failure left queue row untouched" || fail "T2.18 row mutated: $(queue_status)"
 
 

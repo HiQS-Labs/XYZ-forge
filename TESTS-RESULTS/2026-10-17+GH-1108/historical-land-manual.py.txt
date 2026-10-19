@@ -1,0 +1,34 @@
+"""Land real historical PRs using a disposable primary, original receipts and live GitHub truth."""
+import json,os,subprocess,sys,tempfile
+from pathlib import Path
+sys.path.insert(0,str(Path.cwd()/'utils/py'))
+import jog_run as j
+from harness_paths import primary_config_key
+candidate=Path.cwd();work=Path(tempfile.mkdtemp(prefix='gh1108-historic-',dir=candidate/'temp'));remote=work/'remote.git';primary=work/'primary'
+def command(*args):return subprocess.check_output(args,stderr=subprocess.STDOUT,text=True).strip()
+def git(*args):return command('git','-C',str(primary),*args)
+command('git','clone','--bare','--no-local',str(candidate),str(remote));command('git','--git-dir',str(remote),'update-ref','refs/heads/development',command('git','-C',str(candidate),'rev-parse','HEAD'));command('git','clone','--no-local','--branch','development',str(remote),str(primary));git('remote','set-url','origin','https://github.com/HiQS-Labs/XYZ-forge.git');git('config',primary_config_key(str(primary)),str(primary));git('config','user.name','Manual Historical Primary');git('config','user.email','historical@example.invalid')
+command('git','--git-dir',str(remote),'update-ref','refs/pull/1102/head','974d98dbd9c958975ef3b4797f93b212618b0f96')
+real_git=command('which','git');binpath=work/'bin';binpath.mkdir();shim=binpath/'git';shim.write_text('#!/usr/bin/env bash\nfor verb in "$@"; do case "$verb" in fetch|push) exec '+repr(real_git)+' -c '+repr('url.'+str(remote)+'.insteadOf=https://github.com/HiQS-Labs/XYZ-forge.git')+' "$@";; esac; done\nexec '+repr(real_git)+' "$@"\n');shim.chmod(0o755);os.environ['PATH']=str(binpath)+os.pathsep+os.environ['PATH']
+# An ambient foreign GH_REPO must not redirect Jog's primary-origin verification.
+os.environ['GH_REPO']='example/not-the-primary'
+assert not (primary/'.tick/jog').exists()
+for issue,pr in [(1087,1101),(942,1102)]:
+ assert j.jog_land(str(primary),issue,str(pr))==0
+ bundle=next((primary/'TESTS-RESULTS').glob(f'*+GH-{issue}/jog/*/receipt.json')).parent
+ landing=json.loads((bundle/'landing.json').read_text());assert landing['hosted_reconcile']['conclusion']=='success'
+ if issue==942:
+  assert landing['approved_head_sha']=='6f521bc52aa07f1657e5ea6ef624b111bd8ad568'
+  assert landing['landed_head_sha']=='974d98dbd9c958975ef3b4797f93b212618b0f96'
+  assert any(p['kind']=='upstream-merge' and p['recomputed_tree']==p['recorded_stripped_tree'] for p in landing['tail_proof'])
+ (candidate/'temp'/f'historical-{issue}-landing.json').write_text(json.dumps(landing,indent=2)+'\n')
+ print('PASS historical primary landing:',json.dumps(landing))
+ # Existing primary publication step, scoped here to its observed owned changes.
+ changed=git('status','--porcelain','--untracked-files=all');assert changed
+ git('add','--','releases.db','releases.sql',str(bundle/'landing.json'));git('commit','-qm',f'manual primary landing GH-{issue}');git('push','origin','HEAD:development')
+ before=command('shasum',str(primary/'releases.db'))
+ assert j.jog_land(str(primary),issue,str(pr))==0
+ assert command('shasum',str(primary/'releases.db'))==before
+ print(f'PASS GH-{issue} replay emits no new ledger transition')
+assert not git('status','--porcelain','--untracked-files=all')
+print('ALL HISTORICAL CHECKS PASSED; real machine primary was not modified; fixture',primary)

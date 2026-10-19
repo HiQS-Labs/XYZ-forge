@@ -8,7 +8,7 @@ are written once, while each consuming app is verified separately.
 
 | Consumer | Candidate user root | Primary documentation |
 |---|---|---|
-| VS Code Claude Code extension | `~/.claude/skills` | [Skills](https://code.claude.com/docs/en/skills), [VS Code](https://code.claude.com/docs/en/vs-code) |
+| Claude Code (CLI, desktop app, VS Code extension) | `~/.claude/skills` | [Skills](https://code.claude.com/docs/en/skills), [VS Code](https://code.claude.com/docs/en/vs-code) |
 | VS Code Codex extension | `~/.agents/skills` | [Codex skills](https://developers.openai.com/codex/skills/) |
 | Codex desktop app | same `~/.agents/skills` | [Codex skills](https://developers.openai.com/codex/skills/) |
 | Antigravity app | `~/.gemini/config/skills` | [Antigravity skills](https://antigravity.google/docs/skills) |

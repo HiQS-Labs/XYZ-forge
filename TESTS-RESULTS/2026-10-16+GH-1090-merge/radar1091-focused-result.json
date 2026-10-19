@@ -1,0 +1,56 @@
+{
+  "rc": 0,
+  "timestamp": "2026-10-16T01:59:17.046776+00:00",
+  "pr": 1091,
+  "commit": "fb2fcb8e940a3539d8c0a6afc6d0681483391a19",
+  "clone": "/Users/noelsaw/Documents/Codex/2026-10-15/task/radar1091-disposable-gate",
+  "results": [
+    {
+      "command": [
+        "bash",
+        "test/gh779-radar-ci-health.sh"
+      ],
+      "label": "radar-ci-health",
+      "rc": 0,
+      "log": "radar1091-radar-ci-health.log"
+    },
+    {
+      "command": [
+        "bash",
+        "test/gh781-wam-radar-seed.sh"
+      ],
+      "label": "radar-seed",
+      "rc": 0,
+      "log": "radar1091-radar-seed.log"
+    },
+    {
+      "command": [
+        "bash",
+        "test/codex-turn.sh"
+      ],
+      "label": "codex-prerequisite",
+      "rc": 0,
+      "log": "radar1091-codex-prerequisite.log"
+    }
+  ],
+  "before": {
+    "head": "fb2fcb8e940a3539d8c0a6afc6d0681483391a19",
+    "tree": "48d6c8f318561dcccfb48d7002aec4405fc1c535",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "config_sha256": "468e0fb1486b0eea9c63c0dcb866ee252b842c4041badd588ae514f25d367c19",
+    "status": "",
+    "refs": "refs/heads/docs/pr1091-radar-reconcile-20261016 fb2fcb8e940a3539d8c0a6afc6d0681483391a19\nrefs/remotes/origin/HEAD fb2fcb8e940a3539d8c0a6afc6d0681483391a19\nrefs/remotes/origin/development 33adc9b9376cc569877846c53e1a936bea428af2\nrefs/remotes/origin/docs/pr1091-radar-reconcile-20261016 fb2fcb8e940a3539d8c0a6afc6d0681483391a19\nrefs/tags/0.9.0 a076b1b117a68252dc3d9d1c4901b0c31fcb4db3\nrefs/tags/archive/gh353-356-local-merge bb0d5d6a4774cd663f327b742618617454e235a8\nrefs/tags/archive/gh360-364-local-merge 2a41968d33ab08e2f80129da2055300b74a563ae\nrefs/tags/bash-final-2026-07-28 3bf4e487eadb38b7fd1f20cb93e0441edddbb8c4\nrefs/tags/prereset/development-2026-09-02 bb0d5d6a4774cd663f327b742618617454e235a8"
+  },
+  "after": {
+    "head": "fb2fcb8e940a3539d8c0a6afc6d0681483391a19",
+    "tree": "48d6c8f318561dcccfb48d7002aec4405fc1c535",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "config_sha256": "468e0fb1486b0eea9c63c0dcb866ee252b842c4041badd588ae514f25d367c19",
+    "status": "",
+    "refs": "refs/heads/docs/pr1091-radar-reconcile-20261016 fb2fcb8e940a3539d8c0a6afc6d0681483391a19\nrefs/remotes/origin/HEAD fb2fcb8e940a3539d8c0a6afc6d0681483391a19\nrefs/remotes/origin/development 33adc9b9376cc569877846c53e1a936bea428af2\nrefs/remotes/origin/docs/pr1091-radar-reconcile-20261016 fb2fcb8e940a3539d8c0a6afc6d0681483391a19\nrefs/tags/0.9.0 a076b1b117a68252dc3d9d1c4901b0c31fcb4db3\nrefs/tags/archive/gh353-356-local-merge bb0d5d6a4774cd663f327b742618617454e235a8\nrefs/tags/archive/gh360-364-local-merge 2a41968d33ab08e2f80129da2055300b74a563ae\nrefs/tags/bash-final-2026-07-28 3bf4e487eadb38b7fd1f20cb93e0441edddbb8c4\nrefs/tags/prereset/development-2026-09-02 bb0d5d6a4774cd663f327b742618617454e235a8"
+  },
+  "identity_unchanged": true,
+  "scope": "Existing20+17+43checks only, no new cases/full gate/liveRadar claim"
+}

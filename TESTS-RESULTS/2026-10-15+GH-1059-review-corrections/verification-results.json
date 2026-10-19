@@ -1,0 +1,39 @@
+{
+  "before": {
+    "head": "1fb2d9f4b2860af1706d64ab9bf4d4d8734dbabf",
+    "tree": "04ae092eb5b647673ef2fcd5f74a34774acf4eb9",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "config": "a79cf6ffe90ad235341e1ca89e65b50ba1033ae124ee1e841ce15a428f4e5642"
+  },
+  "after": {
+    "head": "1fb2d9f4b2860af1706d64ab9bf4d4d8734dbabf",
+    "tree": "04ae092eb5b647673ef2fcd5f74a34774acf4eb9",
+    "origin": "https://github.com/HiQS-Labs/XYZ-forge.git",
+    "bare": "false",
+    "config": "a79cf6ffe90ad235341e1ca89e65b50ba1033ae124ee1e841ce15a428f4e5642"
+  },
+  "identityUnchanged": true,
+  "results": [
+    {
+      "label": "manual45",
+      "cmd": [
+        "python3",
+        "temp/gh1059-manual.py"
+      ],
+      "rc": 0,
+      "log": "/Users/noelsaw/Documents/Codex/2026-10-14/task/pr1061-manual45.log",
+      "at": "2026-10-15T00:50:07.354396+00:00"
+    },
+    {
+      "label": "existing_cleanup180",
+      "cmd": [
+        "python3",
+        "test/gh436-merge-cleanup.py"
+      ],
+      "rc": 0,
+      "log": "/Users/noelsaw/Documents/Codex/2026-10-14/task/pr1061-existing_cleanup180.log",
+      "at": "2026-10-15T00:56:05.159681+00:00"
+    }
+  ]
+}

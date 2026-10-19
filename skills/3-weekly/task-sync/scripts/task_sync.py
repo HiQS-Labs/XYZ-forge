@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """task_sync — unified IDE task-list grooming (GH-896).
 
-One CLI over per-IDE adapters (zcode, agy). Default is dry-run; pass
+One CLI over per-IDE adapters (zcode, agy, codex, claude, claude-cloud). Default is dry-run; pass
 ``--apply`` to commit. Emits one merged JSON report; per-IDE sections
 stay machine-addressable (the heartbeat consumes ``needs_summary``).
 
@@ -34,14 +34,20 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import core  # noqa: E402
 
-ADAPTERS = ("zcode", "agy", "codex")
+ADAPTERS = ("zcode", "agy", "codex", "claude", "claude-cloud")
+# Read-only planners over a native snapshot; app tools own their mutations.
+PLAN_ONLY = ("codex", "claude-cloud")
 
 SWEEP_KNOBS = ("hours", "all", "pin_hours", "no_pin", "unpin_days", "include_cron", "group")
 
 
 def _build_adapter(name: str, args, apply: bool):
-    module_name = "antigravity" if name == "agy" else name
+    module_name = {"agy": "antigravity", "claude-cloud": "claude"}.get(name, name)
     module = importlib.import_module(f"adapters.{module_name}")
+    if name == "claude-cloud":
+        return module.ClaudeCloudAdapter(args.claude_snapshot, args.exclude_thread, apply=apply)
+    if name == "claude":
+        return module.ClaudeLocalAdapter(root=args.claude_root, apply=apply)
     if name == "codex":
         return module.CodexAdapter(args.codex_snapshot, args.exclude_thread, apply=apply)
     if name == "zcode":
@@ -72,7 +78,8 @@ def run_doctor(args) -> tuple[dict, int]:
     receipt = core.receipt_path()
     receipt_state = "absent"
     receipt_red = None
-    if args.ide != ["codex"] and os.path.exists(receipt):
+    plan_only = all(name in PLAN_ONLY for name in args.ide)
+    if not plan_only and os.path.exists(receipt):
         try:
             with open(receipt, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -110,7 +117,7 @@ def run_doctor(args) -> tuple[dict, int]:
         },
         "ides": ides,
     }
-    if args.ide == ["codex"]:
+    if plan_only:
         report["heartbeat"] = {"state": "native-tools-required",
                                "note": "snapshot readiness only; verify native changes in the app"}
     if receipt_red:
@@ -157,7 +164,8 @@ def run_set_title(args) -> tuple[dict, int]:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
-        description="Unified IDE task-list grooming (zcode, agy). Dry-run by default."
+        description="Unified IDE task-list grooming (zcode, agy, codex, claude, claude-cloud). "
+                    "Dry-run by default."
     )
     parser.add_argument("--ide", default="zcode,agy",
                         help="comma-separated adapters to run (default: zcode,agy)")
@@ -176,7 +184,12 @@ def main(argv=None) -> int:
     parser.add_argument("--codex-snapshot", metavar="PATH",
                         help="fresh native Codex state + actual turn activity snapshot (planning only)")
     parser.add_argument("--exclude-thread", metavar="ID",
-                        help="Codex heartbeat chat ID; required to avoid self-grooming")
+                        help="Codex heartbeat chat / Claude cloud session ID; required to avoid self-grooming")
+    parser.add_argument("--claude-root", metavar="PATH", default=None,
+                        help="override the Claude Code root (default ~/.claude: projects/ transcripts, "
+                             "sessions/ running registry); probes use fixture roots")
+    parser.add_argument("--claude-snapshot", metavar="PATH",
+                        help="fresh native Claude cloud sessions + actual turn activity snapshot (planning only)")
     parser.add_argument("--hours", type=float, default=24.0,
                         help="sweep window in hours of last activity (default 24)")
     parser.add_argument("--all", action="store_true",
@@ -207,15 +220,18 @@ def main(argv=None) -> int:
     if args.group and args.set_title:
         parser.error("--group applies to sweeps only; not valid with --set-title")
 
-    if "codex" in args.ide:
+    snapshots = {"codex": ("Codex", args.codex_snapshot, "--codex-snapshot"),
+                 "claude-cloud": ("Claude cloud", args.claude_snapshot, "--claude-snapshot")}
+    for name in (n for n in args.ide if n in PLAN_ONLY):
+        label, snapshot, flag = snapshots[name]
         if args.apply or args.set_title or args.unpin_days is not None or args.group:
-            parser.error("Codex plans only: apply titles/pins via native tools; "
+            parser.error(f"{label} plans only: apply titles/pins via native tools; "
                          "--apply/--set-title/--unpin-days/--group unsupported")
-        if not args.codex_snapshot or not args.exclude_thread:
-            parser.error("Codex requires --codex-snapshot and --exclude-thread")
+        if not snapshot or not args.exclude_thread:
+            parser.error(f"{label} requires {flag} and --exclude-thread")
         if any(not math.isfinite(v) or v <= 0
                for v in (args.hours, args.pin_hours)):
-            parser.error("Codex hours/pin-hours must be positive finite numbers")
+            parser.error(f"{label} hours/pin-hours must be positive finite numbers")
 
     if args.doctor:
         report, red = run_doctor(args)

@@ -1,5 +1,215 @@
 # Changelog
 
+## 2026-10-18 — merge-cleanup: per-repo qualification setting (GH-1159)
+
+`.merge-cleanup.json` accepts an optional `qualification` key (`full_suite`:
+`promotion|per_batch|none`, plus an optional `sweep_command`), read by the existing resolver from
+`--primary`. Invalid values fail closed. The batch sweep follows that key. Forge commits
+`promotion` with its `wave-reconcile.yml` dispatch, so its batch-issue output is unchanged byte for
+byte. A vendored or foreign repo without the key no longer gets a Forge gate, workflow or branch.
+The command is printed verbatim, so Forge always prints `--ref development`. Verified by
+`gh436-merge-cleanup` (one existing call now passes Forge's key; one environmental failure, a
+`chmod 0` test run as root) and manual checks under `TESTS-RESULTS/2026-10-18+GH-1159/`. No new
+tests.
+
+
+## 2026-10-18 — Radar-to-campaign instructions (GH-1143)
+
+Add the occasional defect-campaign skill and minimal Radar/ATE/index pointers. It specifies
+bounded approved discovery with existing assets, explicit synthesis/healing/autofiling disablement,
+semantic replay and accountable dispositions. The stateful batch pilot stays held for ownership
+and missing adapter work. Documentation only; no campaign, CI additions or runtime changes.
+Plan-review procedural rejection and operator override are retained in the task plan and relay.
+The operator subsequently authorized direct-development documentation hotfix integration and
+risk-based Express wording. Existing driver exclusions/bypass behavior remain disclosed; this
+one-off manual route uses normal hooks, identity checks and fast-forward publication.
+
+
+## 2026-10-18 — GH-836 residual fixture spike
+
+Three independent gh549 fixture initializations replace live-ledger copies while retaining existing assertions and actual races. Paired focused runs: 236.80/233.10 s baseline, 75.58/74.42 s candidate, all 125/125; median saving 159.95 s. gh436 parity de-duplication was already delivered and is unchanged. Plan/final Codex QA Approved round 1/3 each. Evidence: `TESTS-RESULTS/2026-10-18+GH-836/`. The original spike was local-only. Publication later authorized: PR #1132, full normal pre-push gate 409/409 in 752s at `08f9c7dc`, zero re-run-ladder suites. No merge, policy or rollout change; local publication evidence is not hosted promotion qualification.
+
+## 2026-10-17 — Weekly worth-it continuation checkpoint (GH-1119)
+
+Vendor worth-it at upstream PR 15 head `2e6e1b4a0336fb1badf64d47ae770acd291d2d8d` under `skills/3-weekly/`, with its GPL v2 license, source notice and manual update recipe. Initial and continuation modes stay together; weekly-planner is unchanged. Verification uses the documentation gate, byte comparison and manual instruction walkthroughs recorded in `TESTS-RESULTS/2026-10-17+GH-1119/`; these are not live model behavior evaluations. Independent plan/final review receipts live in `relay-system/2026-10-17/gh1119-*.codex.md`. No installation, schedule, new test or CI optimization.
+
+## 2026-10-15 — start-task: the orchestrator smoke-runs the change before final QA (GH-1088)
+
+Step 7 now ends with a smoke check. The orchestrator runs the changed entry point once on its main
+path and once on one adjacent real-world path (resume, rerun, second invocation, empty input), and
+records it as a manual check under `TESTS-RESULTS/`. The receipt goes to the final reviewer as
+evidence and never replaces the independent review. Documentation-only work reads the changed
+instruction from its consumer's entry point, or skips with a reason. Motivated by GH-1064, whose
+resume and rerun defects (#1074, #1084) passed suites and an approved review. Instruction-only; no
+new tests (GH-831). Revert the one-file edit to undo.
+
+## 2026-10-14 — PR review checks the PR's claims first: review-pr-xyz; review-code is now review-code-xyz (GH-1060)
+
+New `review-pr-xyz` owns GitHub PR review. Before reading the code it lists what the PR and its
+linked issue claim and checks each one: the bug reproduces on the base branch, the issue asks for
+this, the change has not already landed, and claimed test runs actually pass. If the core claim
+fails, the review stops early with `Changes Requested`. Otherwise it runs the recon and
+debug-mantra phases and posts graded findings. It only reports: it never pushes, approves or merges.
+
+`review-code` is renamed `review-code-xyz` to match `relay-xyz`, and its `--pr` mode moves to the
+new skill. It now reviews local diffs and branches only, and keeps its reversible-fix loop. Clean
+rename with no alias. XYZ-mini picks up both skills and drops `review-code` on the next
+`/push-downstream`, and deployed copies need a Skills Army HQ refresh. No new suites (GH-831);
+existing suites were repointed. Revert the GH-1060 commit to undo.
+
+## 2026-10-17 — Jog primary writer, portable receipts and landing hook (GH-1108, delivery 1)
+
+Jog queue/cache mutations now require an explicit origin-specific primary pin on development.
+Primary-supervised runs execute in a separate full clone through the existing preflight and
+Marathon root plumbing; execution-contract commits exclude ledger files. Approved results,
+copied gate evidence and provenance travel in committed lane bundles. Primary landing reads
+those bundles without `.tick`, verifies fetched integration/hosted reconciliation and reproduces
+upstream merge trees outside B1's six ledger paths. Merge-cleanup invokes mapped Jog landing
+before its existing post-merge publication step.
+
+Containment boundary: Costly across writer identity, execution routing and approval preservation.
+Revert this delivery's code/docs together; preserve committed receipts. Immediate per-transition
+push and bounded non-ff replay are deliberately a separate PR, independently revertible. Until
+then, publish owned primary transitions at the documented manual checkpoint before merge-cleanup.
+Verification and review evidence: `TESTS-RESULTS/2026-10-17+GH-1108/` and
+`relay-system/2026-10-17/gh1108-one-writer-*.codex.md`. No new suite, registry entry or scheduler.
+
+## 2026-10-17 — task-sync grooms Claude Code session titles (GH-1105)
+
+task-sync gains two Claude Code adapters. `--ide claude` stamps local session titles (CLI, desktop app, VS Code extension) with each session's own last-activity mm-dd by appending the same `custom-title` record `/rename` writes; it compares against the label the session list actually resolves (tail, sidecar, head), skips running sessions via `~/.claude/sessions`, and restores the transcript mtime. `--ide claude-cloud` is a read-only planner for claude.ai/code sessions; `set_session_title` owns cloud writes. The Codex-only plan-only guard became a shared `PLAN_ONLY` set. The install SOP now enables Skills Army HQ's existing `claude` target (`~/.claude/skills`) through `intake.py`/`sync.py`; nothing is hand-copied.
+
+Containment boundary: Easy to reverse; revert the PR. Stamps are appended, never rewritten, so earlier titles stay in each transcript. The one lasting effect: a session's AI title stays frozen at the wording seen when stamped. No new tests or schema. Verification and red controls: `TESTS-RESULTS/2026-10-17+GH-1105/` (24/24 probes); independent plan/final QA by a Claude subagent (this cloud session has no Codex CLI). Enabling the Claude Code target is a per-device operator step after merge.
+
+## 2026-10-16 — Keep Jog Marathon dispatch in its selected clone (GH-1100)
+
+Jog now supplies an explicit Marathon target when preflight omits it and pins tooling and coordination roots from the invocation packet for run, retry-build and gate-retry. This prevents a shell-global XYZ_HARNESS from redirecting phase files and commits into the primary clone after #1099. Existing explicit targets, packet formats and standalone resolver precedence are preserved.
+
+Containment boundary: Costly; rollback is a code revert before dispatch, with no schema migration. Verification and red controls: `TESTS-RESULTS/2026-10-16+GH-1100/`; independent plan/final QA: `relay-system/2026-10-16/gh1100-*.codex.md`.
+
+## 2026-10-16 — GitHub-first Radar calibration integration (GH-1090)
+
+Preserve the GitHub-first authority/RGT/adopted-policy rules alongside existing calibration safeguards. Separate window code SHA from live tracker observation times, verified historical recurrence from live backlog, and candidate seam/member matches from confirmed stable target identity. This instruction-only change retains report confirmation, existing checks and honest degraded coverage; no new test, gate, live Radar run, deployed-skill change or model-efficacy claim.
+
+## 2026-10-15 — GitHub-first radar work evidence (GH-1083)
+
+Radar now verifies doc-derived work facts against live GitHub issues/PRs, reports stale-doc drift, and uses docs as discovery hints or labelled degraded fallback. Explicit GitHub RGT declarations replace doc-only authority. The narrow adopted-SOP policy exception cannot override adoption/status/supersession evidence. Missing or partial GitHub access lowers report confidence; missing PROJECT removes hints only.
+
+Instruction-only, Easy to reverse by reverting the skill change. No new tests, runtime code or data schema. Skills Army deployment follows merge and remains a tracked handoff.
+
+## 2026-10-15 — Express documentation admission checkpoint (GH-1080)
+
+Complete the Costly bet recorded in the original bounded documentation-lane entry; that entry and its evidence remain unchanged. By 2026-10-22, review any independently authorized documentation-mode landings for preserved bounds, exact PDDA receipts and recorded content/link/rendering checks. If none occurs, operational evidence remains unverified; do not launch work to manufacture it.
+
+Revisit on an admitted runtime/governance payload, qualified-byte drift, or a receipt/resume mismatch. Recommendation: iterate until authorized use supplies the signal; graduate the operational claim only with that evidence, and abandon the documentation lane if it cannot remain bounded. Roll back the driver, canonical skill and SOP together to restore the prior hotfix-only rule. This checkpoint schedules no automation or live run.
+
+## 2026-10-15 — Bounded express documentation lane (GH-1080)
+
+Explicit documentation express requests now accept ordinary text and image updates without a critical-hotfix rationale or runtime coverage suite. `--docs-only` reuses the registered PDDA repository documentation gate; its exact command remains in existing commit-bound receipts and resume. Image assets count toward file limits, not binary newlines. Code/configuration, executable policy, symlinks and executable files remain outside documentation admission.
+
+The bet is that structural docs checks plus recorded agent content/link/rendering checks suit these small updates. Direct-landing admission is Costly: revert the driver, skill and SOP changes together to restore the old rule; existing receipts remain readable. No new suites, gate runners or receipt schema.
+
+## 2026-10-15 — Admit and refresh the development-only Pages fix (GH-1051)
+
+Keep the reviewed four-declaration Pages policy unchanged and adopt current development ledger/history through the canonical writer. The operator approved PR1053 review admission and conditional development landing; current review and normal qualification remain required. No workflow dispatch or environment-policy change.
+
+## 2026-10-12 — Pages publishing follows development-only policy (GH-1051)
+
+The Pages workflow admits development pushes and manual development runs. Nondevelopment job guards and per-ref concurrency prevent main/tag dispatches from attempting publication or cancelling development publication. Existing environment protections, action versions and build steps are unchanged. Draft PR only; no merge or deployment authorized.
+
+## 2026-10-15 — Preserve unpublished historical HiQS review receipts
+
+Recover three approved historical review records from the operator’s primary checkout
+through eleven source-traced cherry-picks. Preserve their exact bytes, earlier findings,
+rounds and evidence limits; record file hashes and source identities. The original checkout
+and a verified bundle retain its source history. Do not carry older staged development
+reversions into this documentation PR.
+
+These records document prior HiQS artifact reviews and confer no fresh Forge approval or
+current runtime/deployment qualification. Easy to reverse by reverting the documentation
+addition; no source work is discarded and no runtime, installation or activation occurs.
+
+## 2026-10-15 — PR1058 architecture and historical-evidence corrections
+
+Document the existing projections boundary accurately: ordinary ledger writes and hosted
+reconciliation honour `projections: off`, while the merge resolver explicitly rebuilds
+adopted views and honours deletions independently of that setting. Regenerate the ledger
+diagram from its corrected spec; no resolver or other runtime behaviour changes.
+
+Separate the GH-1052 intake headings from their content. Export the historical HiQS deployment
+review with generic path placeholders and an explicit link/blob identity for the unmodified
+attested original. Qualify its historical PASS: retained catalog rows and add/update/sync/
+prerequisite history do not establish a separate catalog preview/apply operation. That
+procedure remains unverified; this correction performs no catalog apply or installation.
+
+Easy to reverse: revert these documentation changes. Existing diagram validation, normal
+publication checks and independent review qualify the correction; no new CI test or case.
+
+## 2026-10-15 — Preserve ignored content during published worktree closeout (GH-1059)
+
+A clean Git status and a fully published PR do not preserve ignored worktree files.
+Ordinary native worktree removal deletes those files. Both native cleanup paths now
+enumerate ignored files through the existing inspection owner and preserve linked
+worktrees when any remain, or when enumeration fails. Whole-clone Trash relocation and
+the ordinary merged-only history requirement are unchanged. This extends no test registry or CI case.
+
+Easy to reverse by reverting the scoped guard; preserving an uncertain worktree has no
+data-loss effect. A backed-up synthetic native-Git fixture demonstrated the deletion;
+existing cleanup checks and recorded manual evidence must verify the guarded mode before
+publication. No existing checkout was removed for this observation.
+
+## 2026-10-14 — Retire fully published task checkouts before merge (GH-1059)
+
+Start-task now invokes targeted checkout retirement after verified ready-PR publication.
+Merge-cleanup's opt-in published-PR mode verifies live canonical PR/head/ref recovery,
+then reuses existing local-state/session/dependency checks, fresh inspection and removal.
+Full clones go to Trash; linked worktrees use native Git removal. The primary working
+tree and unrelated checkouts are excluded; normal merged-only cleanup is unchanged.
+
+This changes cleanup eligibility, so unknown or local-only state preserves the checkout.
+Rollback by reverting GH-1059 or omitting the new mode; recover full clones from Trash.
+Existing cleanup180 tests, three focused start-task suites and41 isolated manual cases
+passed, with negative controls and committed provenance under `TESTS-RESULTS/2026-10-14+GH-1059/`.
+Independent plan/final QA approved; the full publication gate passed409/409 in a separate full clone.
+
+## 2026-10-14 — merge-cleanup keeps the batch record itself and holds Done until QA is recorded (GH-1064)
+
+The `merge-batch` issue protocol (GH-944) was caller-owned prose for queues of three or more PRs.
+In three weeks it produced six batch issues in six different formats, and its Done rule rested on
+the agent's own reading. The script now owns the record for queues of **two or more**:
+
+- It opens the issue before the first merge, with the planned order and each PR's dependency
+  reasons, and records every outcome where it happens: the remote merge and its commit, the
+  reconcile result, skips, and hard stops against the PR in hand.
+- It only ever edits a marked block of the issue, so the agent's sections survive.
+- After the loop it records the sweep inputs (the inclusive merged range, files shared across
+  landed PRs, repaired conflict sites, the classified gate and the exact command), and ends with a
+  new **exit 4 — landed, QA pending** until `--record-sweep <file>` stores a clean, findings or
+  deferred verdict.
+- `--resume` continues the batch even when nothing is left to land.
+- Resume never loses a recorded merge or skips pending QA (#1074): the landed set also counts any
+  outcome with a merge, a merged status is never downgraded, and a queue of only new PRs joins the
+  batch whose QA is still pending.
+
+Per the operator's scoping under GH-831, the script runs no test suite; the agent still runs the
+sweep. Verified on the existing `gh436` suite (180 tests, with updated 2-PR expectations and a
+repointed parity guard; no new tests) plus recorded manual checks and three red controls under
+`TESTS-RESULTS/2026-10-14+GH-1064/`. Revert the GH-1064 commits to undo; batch records live in the
+gitignored `.tick/`.
+
+## 2026-10-14 — PR1054 review evidence and base refresh (GH-1042, GH-1045)
+
+Correct the two-phase manual replay association by clearing its earlier seed result before shell traversal. Prior raw evidence is retained unchanged; the corrected replay must report a null result for the intentional failed p2 dispatch, rather than an earlier p1 approval. Refresh onto development7bc727cb through the existing ledger writer; preserve ratings, issue identity and original PR history. Update the verified plan state and add [the previously missing durable bet record](decisions/2026-10-14-gh1042-historical-completion.md).
+
+The original Costly bet now has an explicit expected signal by2026-10-28 and an iterate recommendation: use the next independently authorized multi-phase run to confirm historical recovery and strict current-head merge refusal, or retain an unverified operational claim if no run occurs. No live run is activated. The production recovery/attestation behavior is unchanged by these corrections. Updated-head independent final QA and normal publication qualification remain required.
+
+## 2026-10-13 — Completed Marathon phases retain their reviewed recovery revision (GH-1042, GH-1045)
+
+Force recovery resolves a completed lane before allocating another token. Completed phases accept their base, numeric retry or force generation, and retain a validated completion revision in the existing protected approval record. Later phase/operator commits no longer invalidate that recorded historical completion. Current-head merge eligibility remains strict; recovery does not approve successor code or repeat completed post-approve effects.
+
+The bet is that historical completion and current merge approval need separate candidate checks, within the existing attestation owner. Missing legacy metadata retains strict checks; no automatic backfill. Revert the Python repair to roll back; the optional metadata is inert to old readers. Revisit on any false historical satisfaction or receipt that names current unreviewed HEAD as reviewed.
+
+Existing focused suites and retained manual refusal/recovery controls verified the source; Marathon's post-approve suite caught an event-order regression, fixed without changing its expectations. Final independent review and publication gate are recorded in the GH-1042 relay/evidence. No new suites or gate machinery.
+
 ## 2026-10-12 — Muse relay turns no longer stall on an unanswerable approval prompt (GH-521)
 
 Driven Muse relay turns hit the wall cap with `cpu=0.00` and no relay block. The cause was
@@ -1529,6 +1739,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 - **GH-450: this repo consumes HiQS-Labs/Model-catalog v1.0.0 — the OpenRouter alias table is now a generated file with a verified pin.** `relay-automation/model-catalog/catalog.json` is a byte-identical vendored copy of the catalog at tag `v1.0.0` (`75e19139`), with `catalog.pin.json` recording repo, tag, tag commit, version and the sha256 of both the copy and the catalog repo's own renderer (`render_openrouter.py`, vendored at `324b0b34` because the tagged renderer predates `--catalog` and CI has no sibling checkout). `relay-automation/openrouter-model-aliases.yml` is rendered from that copy in the renderer's deterministic order and its first line names the catalog version; the seven rows are unchanged as data. `utils/py/model_catalog.py` (`check` / `render` / `pin` / `version`) verifies the pin sha256s and re-renders the copy, demanding byte equality with the committed YAML — a flipped row in the copy fails both edges by name, a hand-appended YAML line fails drift. `resolve-model-alias.sh` is byte-untouched. `test/model-alias.sh` keeps every hand-written assertion driving the real resolver and gains the tier-4 post-correction guard (the raw resolver's substring capture of an old exact id after a repin is pinned as documented behaviour; the guard lives at `utils/py/model_alias.py:resolve_model_slug`, the one seam every shim uses — an exact `provider/slug` never reaches the fuzzy table) and the named terminal-refusal control (a miss is exit 1 / no output at the resolver and an unchanged pass-through at the seam, never a default). The vendored `version` rides `resolve-profile.sh --env` as `XYZ_MODEL_CATALOG_VERSION` on every tier and `HarnessTurnLogger` stamps it into `harnesses.db` `invocation_logs.model_catalog_version` (additive nullable column; pre-existing databases are migrated on open; the tracked db/sql were migrated through the `dump` verb). The GH-120 hand-append flow is retired: `relay-automation/README.md` → "Adding a new model alias" and the AGENTS.md rail now describe the two-PR flow (row upstream → tag → `pin` / `render` / `check` here). New suite `test/gh450-model-catalog-pin.sh` (26/0) with negative controls on scratch copies; four mutation transcripts (flipped row, guard removed, default-on-miss, hand-appended line) each observed red then reverted — `TESTS-RESULTS/2026-09-05+GH-450/provenance.jsonl`. Reversibility: **Easy** — revert the PR; the column is nullable and the resolver never changed. Verification: affected suites 26/26, 26/26, 11/11, 51/51, 8/8, 8/8, 4/4 and the full `validate.sh` gate in a disposable full clone, un-sandboxed, with clone identity unchanged (candidate SHA and outcome in the PR body).
 - **Launch destination test isolation:** give the artifact builder a committed full-clone source fixture while retaining its current working bytes. Unrelated caller edits no longer trip its correct dirty-source refusal. Targeted positive and negative controls are retained in `TESTS-RESULTS/2026-09-05+GH-447/provenance.jsonl`; the disposable macOS full gate passed 350/350 with two automatic serial retries and unchanged clone identity. PR #440 reconciliation completed, including a canonical repoint of the structured document path after read-back caught it still targeting the old location.
+
+## [Unreleased] - 2026-10-14
+
+### Fixed
+- **GH-1057: docs: record standing authorization for configured AI reviewers.** (express hotfix, GH-267 lane; existing suite test/gh365-pdda-gov-scan.sh as the landing gate.)
 
 ## [Unreleased] - 2026-10-09
 

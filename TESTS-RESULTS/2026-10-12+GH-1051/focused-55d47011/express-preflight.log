@@ -1,0 +1,1 @@
+express-refused: rule=ledger-hand-edit — releases.db is a releases-ledger artifact — never hand-edited (verbs only); only the driver's own ledger phase may carry it

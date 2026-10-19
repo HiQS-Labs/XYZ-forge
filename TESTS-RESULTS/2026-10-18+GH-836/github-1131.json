@@ -1,0 +1,30 @@
+{
+  "issue": {
+    "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1131",
+    "title": "DECISION: reconcile ledgers locally; full suite only at development → main promotion (root node)",
+    "issue_number": 1131,
+    "body": "## Decision (operator, 2026-10-17 PDT): ledgers reconcile locally; the full suite runs only at the development → main promotion boundary\n\n**Status: DECIDED. Implementation and activation are separate approvals. This issue is the root node; link to it, do not re-argue it.**\n\n### The decision\n\n1. **Reconciliation is local by default.** After a PR lands on `development`, the ledger (releases.db, releases.sql, LEADERBOARD.md, RELEASES-PREVIEW.html, LEADERBOARD.html, CHANGELOG.md), receipts and PDDA bookkeeping are written by the landing session on the operator's machine, through the existing merge-cleanup Phase 5 path (`wave_reconcile.py`, `releases_app check`, `pdda.sh`). One writer at a time (same rule as the jog one-writer model, #1108).\n2. **No routine full-suite run on development.** The hosted `wave-reconcile.yml` full qualification per merged PR is retired as a routine step. Development gets fast targeted checks (ci-route tiering, changed-area suites, containment/frozen-twin smoke).\n3. **The full authoritative suite runs once, hosted, on the exact frozen candidate at development → main promotion**, with the macOS lane, sequential qualifying mode, and no blanket skips. Promotion blocks on it.\n4. **No baseline-style benchmarks of the current system.** The old cadence is already measured (hosted ~49–70 min; local ~17 min; #1110). The operator will test the **new** cadence 2–3× once it exists. Nothing is re-run to re-measure what is known.\n5. **Per-case approval for new CI tests stands.** Every new test case, assertion or parameter, even inside an existing suite, needs explicit operator approval.\n\n### Why\n\n- Batch #1124: one load-sensitive failure (gh610, 408/409) on a hosted reconcile cost ~2 h of serialized queue and would have blocked an unrelated merge. The second run was green. Re-qualifying every development merge on a single hosted lane is the bottleneck, not the code.\n- The hosted lane is single-writer and serial by design; local reconcile removes queue time and the bookkeeping-commit retrigger loop (#1114).\n- Cross-feature regressions that targeted checks miss surface at promotion instead, on a bounded batch, where one full run covers the combined result.\n\n### Known costs (accepted)\n\n- A laptop run is not a clean-environment witness (#991: 13 suites red locally from env leaks). Local reconcile writes bookkeeping; it does **not** claim qualification. Qualification is the promotion run.\n- Catch-up discovery and the receipt contract currently expect hosted full receipts; until #1127 lands they will flag deferred qualification as missing. Transition rules live in #1127.\n- Two sessions reconciling concurrently can race the ledger. Keep the one-writer rule; merge-cleanup already serializes through its attempt records under `.tick/merge-cleanup/`.\n\n### Graph (children of this decision)\n\n- #1127 — implementation proposal: promotion-boundary qualification, receipt/scope changes, catch-up, rollout and rollback. **The work item.**\n- #1110 — CI audit that measured the cost.\n- #1114 — stop bookkeeping commits re-triggering wave-reconcile (subsumed by local reconcile; keep for the parallel receipt-contract thread).\n- #1118 — CI leaderboard decisions (parallel gate threshold: 2 of 2 clean back-to-back parallel runs, hosted macOS run, median parallel ≤ 40 % of sequential).\n- #1124 — the batch where the cost was paid; carries the operator override comment.\n- #1126 — gh610 determinism (root cause of the trigger failure; not blocked by, not blocking, this decision).\n- #1130 — CI optimization umbrella (research only).\n- #991 — local env-leak suites (why local ≠ qualification).\n- #1125 / #1128 — hosted-reconcile attention alerts produced during the transition (close with a pointer here).\n\n### Not decided here\n\n- Parallel `validate.sh` as the qualifying form (governed by #1118's threshold and #1114's receipt contract).\n- Any specific ci.yml / wave-reconcile.yml edit; branch protection and required-check wiring (inventory first, per #1127).\n\n### Interim operating rule until #1127 lands\n\n- Land PRs with merge-cleanup; let it reconcile locally. If the hosted wave-reconcile auto-fires, it may be cancelled by the operator; a cancelled hosted run is not a failure of the landing.\n- Record every landing's local reconcile outcome on its merge-batch issue.\n",
+    "state": "open",
+    "user": {
+      "login": "noelsaw1",
+      "name": "noelsaw1",
+      "email": null,
+      "avatar_url": "https://avatars.githubusercontent.com/u/56978803?v=4",
+      "id": 56978803
+    },
+    "assignees": null,
+    "labels": null,
+    "milestone": null,
+    "state_reason": null,
+    "comments": 0,
+    "created_at": "2026-10-18T04:11:10Z",
+    "updated_at": "2026-10-18T04:11:10Z",
+    "closed_at": null,
+    "display_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1131",
+    "display_title": "DECISION: reconcile ledgers locally; full suite only at development → main promotion (root node)"
+  },
+  "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1131",
+  "title": "DECISION: reconcile ledgers locally; full suite only at development → main promotion (root node)",
+  "display_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1131",
+  "display_title": "DECISION: reconcile ledgers locally; full suite only at development → main promotion (root node)"
+}

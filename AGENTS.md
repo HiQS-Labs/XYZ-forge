@@ -37,6 +37,18 @@ Read `HARNESS-MODELS-REGISTRY.md` for evaluated agent harnesses, model compatibi
 Read `TESTS-RESULTS/README.md` for committed test artifacts, telemetry receipts, and benchmark logs.
 Read `SOP.md` → "Arc planning" before starting a large refactor — scheduling the follow-up arcs (review/dogfood/conformance lanes) at plan time is what keeps the arc linear.
 
+## Standing authorization for AI agents
+
+The operator authorizes sharing this repository's relevant source code (including private
+code), diffs and task context with AI agents for implementation and independent review through
+operator-configured accounts and destinations. This includes OpenAI/Codex, Anthropic/Claude,
+GLM, Meta Muse, Agy's configured provider, and other operator-selected AI models/providers.
+Authorization persists across sessions; do not request it again merely because the repository
+is private, a new agent session is started, or another model within this scope is selected.
+Ask only when the proposed destination, account or purpose falls outside this authorization.
+Exclude credentials and unrelated private data. This permission does not override platform or
+organization restrictions, authorize bypassing a denial, or change the builder-role defaults.
+
 ## Runtime default
 
 Entry-point shims run their **Python** implementation by default (`XYZ_PYTHON` unset → Python). To
@@ -202,9 +214,13 @@ local change.
   restores the old full-core width), auto-sized to the host, and announces a
     sequential fallback with its reason. `bash ci-local.sh` is still the qualifying run that writes
     the evidence record — it stays sequential and does not call `validate.sh`.
-  - **Three tiers qualify a landing (GH-831).** After a merge, the hosted reconcile qualifies each
-    landing with one run chosen by its tier, and promotion always runs the full registry. The tiers,
-    their commands and the suites turned off are in `ROUTER.md` (command rails); those suites stay off.
+  - **Development merges reconcile locally; the full registry runs at promotion (GH-1127, decision #1131).**
+    After a merge, merge-cleanup reconciles the ledger locally (`wave_reconcile.py --pr N`); no hosted
+    suite runs per merge. Before every promotion, the hosted `wave-reconcile.yml` is dispatched once with
+    `--promotion`: it runs the full registry (`validate.sh --parallel 4`, #1134) on the development tip
+    and qualifies every landing since the last receipt together. See **Promotion** below. The GH-831
+    tiers and the suites turned off are in `ROUTER.md`; the tier selector now applies only to a
+    non-promotion `--qualify` run.
   - Bypasses are `git push --no-verify` and `XYZ_SKIP_PREPUSH=1`. Both announce themselves. Use them
     deliberately, not reflexively — they skip the local boundary even when hosted CI later runs.
     Draft-review publication (GH-487) is a legitimate bypass use and is NOT merge readiness: an
@@ -417,10 +433,25 @@ local change.
   job is `continue-on-error: true`: its red means *portability drift*, not breakage, and must not be
   reported as a broken commit. Two consequences that bite: **never defer a test run to CI** — CI is
   advisory and tests the wrong OS; and **a green local run is self-reported**, so it does not qualify a
-  promotion. Two hosted **macOS** rules follow (GH-831): a landing on `development` is qualified by the
-  reconcile run its tier selects (the tiers are in `ROUTER.md`), and promotion needs a hosted
-  full-registry run for that exact commit. When a claim really is about
+  promotion. Two hosted **macOS** rules follow (GH-1127, #1131): `development` landings are qualified
+  together by the pre-promotion `wave-reconcile.yml` dispatch (full registry on the tip), and main is
+  then witnessed by `boundary-macos` after the push. When a claim really is about
   Linux, the canary is the right instrument and its red is authoritative.
+- **Promotion (development → main), GH-1127.** Evidence must belong to the commit that is merged:
+  1. **Quiet window** from the dispatch until the promotion PR is merged: no PR merges or direct pushes
+     to `development`. (The local writer's exit 8 only refuses *reconciliation* while a hosted run is
+     active, not the merge, so the operator holds the window.)
+  2. `gh workflow run wave-reconcile.yml --ref development`; take the run id from
+     `gh run list --workflow wave-reconcile.yml --limit 1`; `gh run watch <id>` until it succeeds.
+  3. `git fetch origin development`. Pick the receipt whose `run_url` ends in `/<id>` (not merely the
+     newest). Require `gate == "validate.sh --parallel 4"`, `result == "pass"`, no `deferred` line in
+     `gh run view <id> --log`, `git merge-base --is-ancestor <tested_commit> origin/development`, and
+     every commit in `<tested_commit>..origin/development` authored by the bot
+     (`wave_reconcile.BOT_AUTHOR_EMAIL`) with paths accepted by `hosted_lane_publish.declared_paths`.
+     Any failure: redispatch.
+  4. Open the development → main PR. Immediately before merging, fetch and repeat step 3 against the
+     PR head (`gh pr view <n> --json headRefOid`); anything changed → redispatch.
+  5. After the merge, `boundary-macos` witnesses main (full registry, `--sequential`, unchanged).
 - **Commit to the QUEUE; re-anchor, don't rabbit-hole (GH-45).** A wave's committed lane list *is* the
   active commitment — after each lane attempt, re-read it before acting further. A driven lane that
   fails **parks** after `LANE_MAX_ATTEMPTS` (default 2): the driver (`marathon-drive.sh` /

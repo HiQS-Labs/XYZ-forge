@@ -1,0 +1,288 @@
+usage: merge_cleanup.py [-h] --primary PRIMARY [--root ROOT] [--prefix PREFIX]
+                        [--exclude EXCLUDE] [--strategy {squash,merge,rebase}]
+                        [--show-merge-policy] [--scan-only] [--prs-only]
+                        [--teardown-only]
+                        [--retire-published-pr RETIRE_PUBLISHED_PR]
+                        [--checkout CHECKOUT] [--reconcile-pr RECONCILE_PR]
+                        [--integration-branch INTEGRATION_BRANCH] [--marker]
+                        [--allow-unready-primary] [--execute] [--resume]
+                        [--backup-first] [--backup-root BACKUP_ROOT]
+merge_cleanup.py: error: published retirement requires a positive PR, absolute --primary and --checkout path(s), without other workflow modes/overrides
+usage: merge_cleanup.py [-h] --primary PRIMARY [--root ROOT] [--prefix PREFIX]
+                        [--exclude EXCLUDE] [--strategy {squash,merge,rebase}]
+                        [--show-merge-policy] [--scan-only] [--prs-only]
+                        [--teardown-only]
+                        [--retire-published-pr RETIRE_PUBLISHED_PR]
+                        [--checkout CHECKOUT] [--reconcile-pr RECONCILE_PR]
+                        [--integration-branch INTEGRATION_BRANCH] [--marker]
+                        [--allow-unready-primary] [--execute] [--resume]
+                        [--backup-first] [--backup-root BACKUP_ROOT]
+merge_cleanup.py: error: published retirement requires a positive PR, absolute --primary and --checkout path(s), without other workflow modes/overrides
+usage: merge_cleanup.py [-h] --primary PRIMARY [--root ROOT] [--prefix PREFIX]
+                        [--exclude EXCLUDE] [--strategy {squash,merge,rebase}]
+                        [--show-merge-policy] [--scan-only] [--prs-only]
+                        [--teardown-only]
+                        [--retire-published-pr RETIRE_PUBLISHED_PR]
+                        [--checkout CHECKOUT] [--reconcile-pr RECONCILE_PR]
+                        [--integration-branch INTEGRATION_BRANCH] [--marker]
+                        [--allow-unready-primary] [--execute] [--resume]
+                        [--backup-first] [--backup-root BACKUP_ROOT]
+merge_cleanup.py: error: published retirement requires a positive PR, absolute --primary and --checkout path(s), without other workflow modes/overrides
+usage: merge_cleanup.py [-h] --primary PRIMARY [--root ROOT] [--prefix PREFIX]
+                        [--exclude EXCLUDE] [--strategy {squash,merge,rebase}]
+                        [--show-merge-policy] [--scan-only] [--prs-only]
+                        [--teardown-only]
+                        [--retire-published-pr RETIRE_PUBLISHED_PR]
+                        [--checkout CHECKOUT] [--reconcile-pr RECONCILE_PR]
+                        [--integration-branch INTEGRATION_BRANCH] [--marker]
+                        [--allow-unready-primary] [--execute] [--resume]
+                        [--backup-first] [--backup-root BACKUP_ROOT]
+merge_cleanup.py: error: published retirement requires a positive PR, absolute --primary and --checkout path(s), without other workflow modes/overrides
+usage: merge_cleanup.py [-h] --primary PRIMARY [--root ROOT] [--prefix PREFIX]
+                        [--exclude EXCLUDE] [--strategy {squash,merge,rebase}]
+                        [--show-merge-policy] [--scan-only] [--prs-only]
+                        [--teardown-only]
+                        [--retire-published-pr RETIRE_PUBLISHED_PR]
+                        [--checkout CHECKOUT] [--reconcile-pr RECONCILE_PR]
+                        [--integration-branch INTEGRATION_BRANCH] [--marker]
+                        [--allow-unready-primary] [--execute] [--resume]
+                        [--backup-first] [--backup-root BACKUP_ROOT]
+merge_cleanup.py: error: published retirement requires a positive PR, absolute --primary and --checkout path(s), without other workflow modes/overrides
+[
+  {
+    "case": "default merged-only behavior preserves open PR",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "published open PR eligible before merge",
+    "result": "PASS",
+    "detail": "100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees)"
+  },
+  {
+    "case": "preview does not remove candidate",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "execute uses Trash without primary landing or merges",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "unrelated primary work preserved",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "draft preserved",
+    "result": "PASS",
+    "detail": "published PR #1059: PR must be a non-draft OPEN/MERGED same-origin PR targeting the integration branch"
+  },
+  {
+    "case": "closed unmerged preserved",
+    "result": "PASS",
+    "detail": "published PR #1059: PR must be a non-draft OPEN/MERGED same-origin PR targeting the integration branch"
+  },
+  {
+    "case": "fork preserved",
+    "result": "PASS",
+    "detail": "published PR #1059: PR must be a non-draft OPEN/MERGED same-origin PR targeting the integration branch"
+  },
+  {
+    "case": "wrong base preserved",
+    "result": "PASS",
+    "detail": "published PR #1059: PR must be a non-draft OPEN/MERGED same-origin PR targeting the integration branch"
+  },
+  {
+    "case": "wrong repo preserved",
+    "result": "PASS",
+    "detail": "published PR #1059: PR must be a non-draft OPEN/MERGED same-origin PR targeting the integration branch"
+  },
+  {
+    "case": "stale head preserved",
+    "result": "PASS",
+    "detail": "published PR #1059: origin branch cannot be fetched at the exact live PR head"
+  },
+  {
+    "case": "malformed head preserved",
+    "result": "PASS",
+    "detail": "published PR #1059: PR head SHA is missing or malformed"
+  },
+  {
+    "case": "malformed branch preserved",
+    "result": "PASS",
+    "detail": "published PR #1059: PR head branch is missing or malformed"
+  },
+  {
+    "case": "missing branch preserved",
+    "result": "PASS",
+    "detail": "published PR #1059: origin branch cannot be fetched at the exact live PR head"
+  },
+  {
+    "case": "API outage preserves",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "dirty/untracked preserves",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "stash preserves",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "unpushed successor preserves",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "unpublished other ref still preserves",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "detached local-only HEAD preserves",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "parent with dependent worktree preserves",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "live driver preserves",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "peer claim preserves",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "peer open handle preserves",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "unverifiable session preserves",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "foreign origin rejects whole explicit scope",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "protected primary cannot retire",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "candidate ancestor/executing dir cannot retire",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "mixed workflow modes rejected",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "missing Trash refuses removal",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "ignored linked worktree preserved",
+    "result": "PASS",
+    "detail": "Linked worktree has 1 ignored file(s) not proven recoverable from published Git history"
+  },
+  {
+    "case": "execute preserves ignored worktree content",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "failed ignored enumeration preserves",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "RED omitting ignored guard admits native-removal input",
+    "result": "PASS",
+    "detail": "Clean linked worktree, safe to remove via `git worktree remove`"
+  },
+  {
+    "case": "ordinary native flow preserves ignored data",
+    "result": "PASS",
+    "detail": "Linked worktree has 1 ignored file(s) not proven recoverable from published Git history"
+  },
+  {
+    "case": "RED omitting guard also admits ordinary native input",
+    "result": "PASS",
+    "detail": "Clean linked worktree, safe to remove via `git worktree remove`"
+  },
+  {
+    "case": "linked worktree retires via native Git",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "parent metadata deregistered worktree",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "candidate now safe again",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "non-absolute primary rejects ''",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "non-absolute primary rejects '.'",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "fresh inspection catches changed publication",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "invalid/missing retirement scope rejects ('0', '--execute')",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "invalid/missing retirement scope rejects ('-1', '--execute')",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "invalid/missing retirement scope rejects ('1059', '--execute')",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "RED removing admission breaks published success",
+    "result": "PASS",
+    "detail": ""
+  },
+  {
+    "case": "RED removing draft guard admits draft refs",
+    "result": "PASS",
+    "detail": ""
+  }
+]
+Manual cases: 47

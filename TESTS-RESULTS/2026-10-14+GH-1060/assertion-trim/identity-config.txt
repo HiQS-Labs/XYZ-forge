@@ -1,0 +1,10 @@
+core.repositoryformatversion=0
+core.filemode=true
+core.bare=false
+core.logallrefupdates=true
+core.ignorecase=true
+core.precomposeunicode=true
+remote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git
+remote.origin.fetch=+refs/heads/feat/gh1060-review-pr-xyz:refs/remotes/origin/feat/gh1060-review-pr-xyz
+branch.feat/gh1060-review-pr-xyz.remote=origin
+branch.feat/gh1060-review-pr-xyz.merge=refs/heads/feat/gh1060-review-pr-xyz

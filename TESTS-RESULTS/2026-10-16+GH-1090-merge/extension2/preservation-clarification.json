@@ -1,0 +1,24 @@
+{
+  "original_receipt_retained": true,
+  "selected_fields_preserved": [
+    "title",
+    "section",
+    "marker",
+    "ratings",
+    "path",
+    "text"
+  ],
+  "excluded_fields_regenerated": [
+    "gid",
+    "timestamps"
+  ],
+  "status_label_changed": {
+    "old": "in-progress",
+    "new": null
+  },
+  "whole_row_preservation_claim": false,
+  "severity": "Minor",
+  "disposition": "deferred under standing operator direction",
+  "followup": "https://github.com/HiQS-Labs/XYZ-forge/issues/1096",
+  "product_blob_unchanged": true
+}

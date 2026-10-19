@@ -89,6 +89,16 @@ else
 fi
 
 TESTS=(
+  # GH-1112 (#1118 decision): the three longest pooled suites are listed first so `xargs -P`
+  # dispatches them in the first wave instead of stranding one worker on them at the tail
+  # (PR #1116 telemetry: gh436 621→841 s, gh280 632→776 s, gh589 720→738 s). Suite set is
+  # unchanged; sequential and --list order change accordingly; T2_TESTS is separate.
+  "gh436-merge-cleanup.sh"            # GH-436/GH-534 (/merge-cleanup: safe roots, provenance-based landed/unlanded, full dirt listing, tick-fold + lsof session evidence, fail-closed queries, Phase 6 fresh inspection)
+  "gh280-jog-marathon-adapter.sh"     # GH-280 (Jog↔Marathon machine contracts: invocation/result@1 artifacts, executor
+                                     #   E2E in root + vendored installs with stubbed agents/GitHub, resume/retry/land
+                                     #   semantics; registered per PR #281 review B3 — the one-directional registry
+                                     #   guard had let it ship unregistered, running only when invoked by hand)
+  "gh589-xyz-mini-sync.sh"          # GH-589 (XYZ mini publisher: idempotent, inclusion-only, mirror, ownership guard, secret tripwire, push read-back)
   "gh732-l3-gate-summary.sh"    # GH-732 (existing telemetry timing summary fixtures)
   "projection-idempotent.sh"
   "concurrent-claim.sh"
@@ -603,7 +613,6 @@ TESTS=(
   "gh492-roadmap-state-sweep.sh"      # GH-492 (roadmap reconcile-state sweep: closed-issue rows converge, open rows untouched, gh-unavailable refuses rather than guesses, idempotent)
   "gh605-work-state.sh"               # GH-605 (section-first lifecycle events, honest read-only work evidence, superseding starts)
   "gh605-board-policy.sh"              # GH-605 (deterministic top-N/terminal/review policy and per-request mutation audit)
-  "gh436-merge-cleanup.sh"            # GH-436/GH-534 (/merge-cleanup: safe roots, provenance-based landed/unlanded, full dirt listing, tick-fold + lsof session evidence, fail-closed queries, Phase 6 fresh inspection)
   "gh645-merge-cleanup-xyz-tools.sh"  # GH-645 (/merge-cleanup: PRS tools resolved from .xyz/ and automatic reconcile never forces)
   "gh674-merge-cleanup-hosted-lookup.sh" # GH-674 (/merge-cleanup: unfiltered hosted lookup matches PR/merge SHA; fallback never forces)
   "gh681-reviewer-probe-rules.sh"     # GH-681 (reviewer prompt allows narrow non-mutating probes with one role-consistent verification clause; scaffold + mirrors carry the generalization/falsifier rule; scratch sanctioned, .pytest_cache residue still off-lane)
@@ -615,10 +624,6 @@ TESTS=(
   "gh291-contract-goldens.sh"         # GH-291 Scope 2 (golden @1 conformance: producer fidelity vs
                                      #   committed fixtures, loader accept/refuse matrix, future-schema
                                      #   refusal with zero Tick mutation)
-  "gh280-jog-marathon-adapter.sh"     # GH-280 (Jog↔Marathon machine contracts: invocation/result@1 artifacts, executor
-                                     #   E2E in root + vendored installs with stubbed agents/GitHub, resume/retry/land
-                                     #   semantics; registered per PR #281 review B3 — the one-directional registry
-                                     #   guard had let it ship unregistered, running only when invoked by hand)
   "gh205-gate-idempotency.sh"    # GH-205 (telemetry writes land off-tree; the gate never dirties tracked files)
   "gh204-sed-portability.sh"     # GH-204 (in-place edits portable AND content-asserted; exit code masks the loss)
   "gh153-releases-sidebar-rollup.sh"   # GH-153 (dashboard sidebar spike: releases_cycle module contract,
@@ -672,7 +677,6 @@ TESTS=(
   "gh396-find-harness-roots.sh"     # GH-396 (find-harness two-roots contract: #395 ×5 topologies, #394 warn-under-override + runnable remedy, --quiet)
   "gh393-deepseek-readiness.sh"     # GH-396 / #393 (RELAY_HAS_DEEPSEEK parity with deepseek-turn.py's own binary rule + API key)
   "gh591-prepush-commit-boundary.sh" # GH-591 (hook-created files do not travel in the selected commit)
-  "gh589-xyz-mini-sync.sh"          # GH-589 (XYZ mini publisher: idempotent, inclusion-only, mirror, ownership guard, secret tripwire, push read-back)
   "gh589-consult-no-tick.sh"        # GH-589 (consult runs in the exported mini package without bin/tick; explicit broken TICK_BIN stays fatal; empty answers fail)
   "gh589-skill-viewer.sh"           # GH-589 (mini skill viewer count/name set == disk; frontmatter styles; empty-dir red)
 )
@@ -701,9 +705,10 @@ FAILED=()
 #
 # WHAT DID NOT CHANGE, and must not: `ci-local.sh` does NOT call this script. It parses the TESTS
 # array and runs each suite in its own sequential loop, and it is the path that writes the gate
-# record. So "sequential is the only form that qualifies a claim" (GH-528 Phase 2, GH-509) is still
-# true and is still what the record attests. Likewise the macOS promotion boundary in ci.yml pins
-# `--sequential` explicitly, so a re-armed boundary cannot silently promote on parallel evidence.
+# record. So "sequential is the only form that qualifies a *local* claim" (GH-528 Phase 2, GH-509) is
+# still what the record attests. The post-push macOS boundary on main in ci.yml pins `--sequential`.
+# The hosted pre-promotion qualification (wave-reconcile.yml --promotion, GH-1127) runs `--parallel 4`
+# by operator override (#1114/#1118) and records mode, width and first-attempt failures in its receipt.
 # Tiers 1 and 2 are pre-push speed, NEVER promotion evidence (GH-35 / GH-509).
 #
 # THE FALLBACK IS ANNOUNCED, NEVER SILENT. A gate that quietly downgrades itself teaches you to trust

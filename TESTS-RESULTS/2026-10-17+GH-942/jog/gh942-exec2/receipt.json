@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 942,
+  "execution_id": "gh942-exec2",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-942-skill-desc-1024-limit-2026-10-16",
+  "pr_number": 1102,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "633ba167d16f4ec033efe19a6b42ace3995157426f3e436627f970c66dc2e0c7",
+    "gate-receipt.json": "e5ac40029237705f81e1b3599eaeee8fbe1cd165ad1f26c80909f0f09513e95d",
+    "provenance.jsonl": "0fd6e33d773f4e0dc44cea8d9196fa4cb6479af1b1d8f939ebfc94a8062015fb"
+  }
+}

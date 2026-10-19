@@ -1,0 +1,1 @@
+{"worker":67762,"action":"Stopped while waiting, before gate result or mutations","correction":"Match real normal-hook summary passed: 409 / 409; keep raw log unchanged","full_gate":"unaffected, same source and running session54455","scope":"One-off caller parser; no repository fix, retry, repair-counter reset or test rerun"}

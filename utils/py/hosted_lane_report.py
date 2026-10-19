@@ -101,10 +101,10 @@ def body_for(status, run_url, error, skips, step=None):
     lines.append(f"Terminal error{where}: `{error}`" if error
                  else f"Terminal error{where}: none captured (the run may have failed before or after the reconcile step).")
     if skips:
-        lines += ["", f"Skipped backlog item(s) ({len(skips)}) — fix the doc and the next run retries:"]
+        lines += ["", f"Skipped backlog item(s) ({len(skips)}) — fix the doc and the next dispatch retries:"]
         lines += [f"- `{line[len('wave-reconcile: '):]}`" for line in skips]
     lines += ["", "This issue is opened and closed by `utils/py/hosted_lane_report.py` (GH-684); "
-              "it closes itself on the next green run with no skips."]
+              "it closes itself on the next green dispatch with no skips (GH-1127: the lane runs on demand)."]
     return "\n".join(lines)
 
 
