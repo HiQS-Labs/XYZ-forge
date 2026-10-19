@@ -1,0 +1,10 @@
+f9022ff1 parents=cc548e33 cc3e1f84 weekly: retain fully preserved predecessor ancestry
+cc548e33 parents=d8a26c14 weekly: retain exact predecessor intake
+d8a26c14 parents=c4e42abe weekly: preserve predecessor captures
+c4e42abe parents=7eeae804 weekly: preserve canonical parent ledger
+cc3e1f84 parents=7eeae804 weekly: accumulate hiqs-labs/xyz-forge intake for 2026-10-17
+7eeae804 parents=3607782d chore: reconcile after PR #1165
+3607782d parents=8f87f0bb db4f18d8 Merge pull request #1165 from HiQS-Labs/feat/XYZ-forge-gh1158-landing-plan-checkpoint-2026-10-18
+db4f18d8 parents=17f7ec28 8f87f0bb Merge remote-tracking branch 'origin/development' into HEAD
+8f87f0bb parents=07acdad9 chore: reconcile after PR #1163
+07acdad9 parents=e55f933c 11c1c3b3 Merge pull request #1163 from HiQS-Labs/claude/peaceful-gates-1b06pd

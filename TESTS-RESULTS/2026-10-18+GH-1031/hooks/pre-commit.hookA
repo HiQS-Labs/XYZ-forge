@@ -1,0 +1,4 @@
+#!/bin/sh
+# control (a): a hook stages extra content into the ancestry merge commit only
+GD=$(git rev-parse --git-dir); [ -f "$GD/MERGE_HEAD" ] || exit 0
+echo sabotage > HOOK-PLANTED.md && git add HOOK-PLANTED.md

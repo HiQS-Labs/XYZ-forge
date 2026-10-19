@@ -1,0 +1,27 @@
+[03:06:39] git git version 2.50.1 (Apple Git-155); planner 39a34bcfa on feat/gh1022-weekly-intake
+[03:06:39] weekly-prepare D1=2026-10-17 -> /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wk1031/pred
+[03:08:34] prepare rc=0 complete=True
+[03:08:34] pred branch=auto-2026-10-17 head=cc3e1f847e7a3fbe83ba910f81f3861d8f6c93fc clean=0
+[03:08:43] predecessor copies made
+[03:09:15] weekly-reconcile [baseline] pred=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wk1031/pred-baseline head=cc3e1f847e7a3fbe83ba910f81f3861d8f6c93fc -> /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wk1031/new-baseline
+[03:09:15] weekly-reconcile [hookA] pred=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wk1031/pred-hookA head=cc3e1f847e7a3fbe83ba910f81f3861d8f6c93fc -> /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wk1031/new-hookA
+[03:09:15] weekly-reconcile [hookB] pred=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wk1031/pred-hookB head=cc3e1f847e7a3fbe83ba910f81f3861d8f6c93fc -> /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wk1031/new-hookB
+[03:09:38] weekly-reconcile [baseline] pred=/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wk1031/pred-baseline head=cc3e1f847e7a3fbe83ba910f81f3861d8f6c93fc -> /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/wk1031/new-baseline
+[03:09:46] [hookA] rc=2 status=UNKNOWN False | unknown native ancestry result; preserve evidence
+[03:09:46] [hookA] new HEAD parents: f9022ff13401b81bf051e46c1fef469a427d2826 cc548e3326fed4f72e914634689f412490a9c351 cc3e1f847e7a3fbe83ba910f81f3861d8f6c93fc
+[03:09:46] [hookA] new HEAD subject: weekly: retain fully preserved predecessor ancestry
+[03:09:46] [hookA] HOOK-PLANTED in HEAD tree: 1
+[03:09:46] [hookA] MERGE_HEAD present: no; dirty=0
+[03:09:46] [hookA] receipt phase=ancestry pending_merge= {'head': 'cc548e3326fed4f72e914634689f412490a9c351', 'tree': '8e56ab19cadab586c604db350253358efd0e68cc'}
+[03:09:48] [hookB] rc=2 status=UNKNOWN False | unknown native ancestry result; preserve evidence
+[03:09:48] [hookB] new HEAD parents: 45f545fbcefad6f46e2e4111930c1e11257203c6 0a072b62fb05f591ede22edb37de7688bf221a8d cc3e1f847e7a3fbe83ba910f81f3861d8f6c93fc 0360b8a44dc964045a7a69a67d18767912663990
+[03:09:48] [hookB] new HEAD subject: weekly: retain fully preserved predecessor ancestry
+[03:09:48] [hookB] HOOK-PLANTED in HEAD tree: 0
+[03:09:48] [hookB] MERGE_HEAD present: no; dirty=0
+[03:09:48] [hookB] receipt phase=ancestry pending_merge= {'head': '0a072b62fb05f591ede22edb37de7688bf221a8d', 'tree': '127d454ab323a1af99b58bc7a42251c2a9808c4e'}
+[03:11:32] [baseline] rc=0 status=HELD True | 
+[03:11:32] [baseline] new HEAD parents: db69767941b9b99f53e907557123dc914392846b 4a49b5cc9b791ab9e2ffb57f8543f7e18d3f3301
+[03:11:32] [baseline] new HEAD subject: weekly: accumulate hiqs-labs/xyz-forge intake for 2026-10-18
+[03:11:32] [baseline] HOOK-PLANTED in HEAD tree: 0
+[03:11:32] [baseline] MERGE_HEAD present: no; dirty=0
+[03:11:32] [baseline] receipt phase=complete pending_merge= None
