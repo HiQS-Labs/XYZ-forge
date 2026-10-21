@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-21 — ATE/fuzzing documentation correction (GH-1174)
+
+Replace the ATE installation narrative with a concise entry-point/schema map and current runner,
+replay, synthesis and safety limits. Label GH-299 status/benchmarks as historical and remove its
+duplicated aspirational manual. Existing module headers/grid comments are explicitly superseded
+by the source-checked map; executable files remain unchanged. Manual express docs hotfix approved
+for normal-hook publication to development; independent review and docs-gate evidence accompany
+the landing under TESTS-RESULTS/2026-10-21+GH-1174/. No campaign or runtime benchmark run.
+
 ## 2026-10-18 — merge-cleanup: per-repo qualification setting (GH-1159)
 
 `.merge-cleanup.json` accepts an optional `qualification` key (`full_suite`:
