@@ -19,7 +19,7 @@ goal: Describe current ATE/fuzzing behavior and limits without changing executio
 
 | What was just completed | What's next |
 |---|---|
-| Fresh full clone at development 7eeae804; source audit reconfirmed; manual docs hotfix explicitly approved | Correct docs, independent review, existing docs checks, normal-hook fast-forward publication |
+| Source docs corrected; independent Codex QA Approved at 84ff0d40; deterministic docs suite rc0 (0 errors, 455 warnings) | Refresh origin and publish with normal hooks; verify remote/checks and reconcile |
 
 ## Scope and procedure
 
@@ -33,10 +33,15 @@ capture/changelog and canonical ledger/evidence outputs are separately recorded.
 
 ## Acceptance Criteria
 
-- [ ] Claims checked against current code; copied harness_root templates and classifier/exit contracts reconciled.
-- [ ] Independent review approved; existing deterministic documentation checks pass.
-- [ ] Final diff changes only documentation/comments and required canonical records/evidence.
+- [x] Claims checked against current code; copied harness_root templates and classifier/exit contracts reconciled.
+- [x] Independent review approved; existing deterministic documentation checks pass.
+- [x] Final diff changes only documentation/comments and required canonical records/evidence.
 - [ ] Remote development verified at the landed revision; applicable exact-head checks recorded.
+
+## Review and validation
+
+- Independent QA: [attested receipt](../../relay-system/2026-10-21/gh1174-final.codex.md), reviewed 84ff0d40.
+- Existing docs suite, static checks, witnessed red control and limitations: [evidence](../../TESTS-RESULTS/2026-10-21+GH-1174/SUMMARY.md).
 
 ## Merge evidence
 

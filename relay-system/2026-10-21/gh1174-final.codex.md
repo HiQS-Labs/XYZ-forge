@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-20.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -107,4 +107,40 @@ Commensurate complexity: no new machinery or speculative requirements.
 
 ## Log
 
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Ship the documentation correction. The source contracts and supervision boundaries are accurately described; no material remaining contradiction or lost operational safeguard found in the complete changed-document sweep. No pre-existing documentation defect requiring correction found. This is source review approval, not a campaign, docs-gate, publication or repair qualification receipt.
+swept file: yes
+
+Source revision: isolated review HEAD `84ff0d4040eaa371d34672dec978cd6d796dd484` (read directly from worktree HEAD metadata; no git command). The map identifies its runtime audit baseline as `7eeae804`. Read the complete ATE skill, GH-299 document, GH-1174 task document and seeded artifact, new CHANGELOG entry, and GH-1174 ledger rows; also read the unchanged defect-campaign safeguards and the relevant implementation bodies/templates/calibration. Graph project `XYZ-forge` is another checkout with generation `2026-09-01T15:54:30Z`; graph search returned no campaign nodes, and coverage reported excluded/untracked/changed paths. Local source inspection supplies the review evidence instead.
+
+- [Pass] Q1 — Runner status is separated from child findings, and no-model classification ignores edit expectations: `skills/4-occasional/ate/SKILL.md:55`, `:73`; `utils/ate/scripts/run_variations.py:486`, `:508`, `:570`, `:581`, `:588`, `:601`. The diagnostic prompt treats nonzero exit as error evidence (`run_variations.py:63`); it does not implement the turn-grid comment's exit-2 pass contract. Filing outcomes and bounded gh failure handling match `utils/ate/scripts/compile_issue.py:32`, `:130`, `:164`. No fix requested.
+- [Pass] Q2 — Full-checkout guidance correctly identifies the missing sibling dependency and all three copied-root templates: `utils/ate/scripts/run_variations.py:50`, `:427`; `utils/ate/install.sh:21`; `utils/ate/variations.tool-density.yaml:10`, `utils/ate/variations.tool-calling.yaml:10`, `utils/ate/variations.turn-shims.yaml:26`. The variation example makes disposable scratch ownership and separate check-ins explicit (`skills/4-occasional/ate/SKILL.md:43`, `:63`); reset, clean and startup control behavior match `run_variations.py:213`, `:254`, `:451`. No fix requested.
+- [Pass] Q3 — Nine targets, default-on synthesis, only `--no-synth`, unwired campaign Tier-2, OR replay and targetless clustering match `utils/py/gen4_campaign.py:66`, `:113`, `:216`, `:376`, `:398`; `utils/py/repro_synth.py:67`, `:145`. Adaptive ATE's anomaly-command hook is distinct (`utils/py/adaptive_ate.py:402`). The documentation explicitly withholds semantic/root-cause proof (`skills/4-occasional/ate/SKILL.md:102`). No fix requested.
+- [Pass] Q4 — Planning precedes feedback updates; parity is exit/stderr only: `utils/py/fuzz_engine.py:284`, `:297`, `:306`. The documentation distinguishes corpus feedback, pairwise coverage and semantic execution outcomes (`skills/4-occasional/ate/SKILL.md:90`; `PROJECT/2-WORKING/GH-299-GEN4-FUZZING-ATE.md:63`). No fix requested.
+- [Pass] Q5 — Calibration 50/24/9 matches `utils/ate/tier1-calibration.json` (quoted fields: `"fail": 24`, `"pass": 50`, `"anomalies": 9`). The historical 400-mutation report matches `TESTS-RESULTS/2026-09-04+GH-299/campaign/campaign-summary.md:4`; September 4's pending soak is explicitly time-qualified (`PROJECT/2-WORKING/GH-299-GEN4-FUZZING-ATE.md:40`, `:50`), not a claim that the later retained soak never happened. Observational/skippable lsof, batch checks, recorded host violations and exit-0 findings match `utils/py/domain_oracles.py:154`, `:169`; `utils/py/gen4_campaign.py:152`, `:188`, `:405`. No fix requested.
+- [Pass] Q6 — Atomic-write and full-attestation promises are explicitly rejected while qualification remains required (`skills/4-occasional/ate/SKILL.md:112`; `PROJECT/2-WORKING/GH-299-GEN4-FUZZING-ATE.md:75`). Source uses ordinary writes (`utils/py/self_healer.py:48`, `:253`) and hands off `validate.sh --print-mode` (`utils/py/gen4_campaign.py:231`). The unchanged defect-campaign sections “Specify before requesting execution approval”, “Verify current CLI safety” and “Replay, classify and hand off” still require bounded approval, synthesis/healing/filing disablement, semantic predicates and separately approved remediation. No new authority is supplied by the map (`skills/4-occasional/ate/SKILL.md:11`). No fix requested.
+- [Pass] Q7 — The consolidated map explicitly supersedes module/grid promises (`skills/4-occasional/ate/SKILL.md:8`), and GH-299 preserves historical results while linking current operating guidance (`PROJECT/2-WORKING/GH-299-GEN4-FUZZING-ATE.md:32`, `:42`). The task's scope remains documentation with publication pending (`.relay-artifacts/GH-1174-ATE-FUZZ-DOCS.md:24`, `:43`); GH-1174's ledger pointer is in progress (`releases.sql:888`) and the new CHANGELOG entry describes the same correction (`CHANGELOG.md:3`). No runtime repair, new test, policy or deployment is requested by this review. No fix requested.
+
+Read-only supplemental probe (exit 0):
+
+```bash
+python3 -c 'from pathlib import Path; print("seeded_artifact_matches_task_doc:", Path(".relay-artifacts/GH-1174-ATE-FUZZ-DOCS.md").read_bytes() == Path("PROJECT/2-WORKING/GH-1174-ATE-FUZZ-DOCS.md").read_bytes())'
+```
+
+Decisive output: `seeded_artifact_matches_task_doc: True`. This is byte comparison of two nonempty reviewed documents, not a behavioral test. An additional read-only AST/JSON inspection (`python3 -` parsing `DEFAULT_TARGETS` with `ast.literal_eval` and loading calibration JSON) exited 0 and printed `default_targets: 9`, benchmark `fail: 24, pass: 50, rows: 74`, and score `anomalies: 9, false_negatives: 0, false_positives: 0`; the source citations above are the durable basis for those findings.
+
+Verification limits: no validate.sh, test script, pytest, executable fixture, install, campaign, model call, external write or git command was run. Existing deterministic docs checks, final diff/byte-identity enforcement and exact-head publication evidence remain for the producer/harness in the authorized disposable full clone; this approval does not claim those checks passed here. Live GitHub merge/issue state was not re-queried. Only the relay file was edited.
+
+Relay closed (Approved), no further review turn needed. Producer/harness owns the remaining docs gate and authorized publication.
+
+
+### Attestation · relay-drive — 2026-10-21T04:11:33Z
+task: RELAY-gh1174-final
+reviewer: codex
+status: Approved
+reviewed-head: 84ff0d4040eaa371d34672dec978cd6d796dd484
+added-range: 8511+6403
+added-sha256: 418a3e229bb8b3bf5cf6ab323b9f974d61291e7f03ad6e69c67196f3a70af166
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

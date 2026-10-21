@@ -1,0 +1,14 @@
+YAML frontmatter parsed: skills/4-occasional/ate/SKILL.md
+relative link exists: skills/4-occasional/ate/SKILL.md ../defect-campaign/SKILL.md
+YAML frontmatter parsed: PROJECT/2-WORKING/GH-299-GEN4-FUZZING-ATE.md
+relative link exists: PROJECT/2-WORKING/GH-299-GEN4-FUZZING-ATE.md ../../skills/4-occasional/ate/SKILL.md
+relative link exists: PROJECT/2-WORKING/GH-299-GEN4-FUZZING-ATE.md ../../skills/4-occasional/defect-campaign/SKILL.md
+YAML frontmatter parsed: PROJECT/2-WORKING/GH-1174-ATE-FUZZ-DOCS.md
+full-checkout template: utils/ate/variations.tool-density.yaml ['python3', '{harness_root}/utils/py/script_runner.py']
+full-checkout template: utils/ate/variations.tool-calling.yaml ['python3', '{harness_root}/utils/py/script_runner.py']
+full-checkout template: utils/ate/variations.turn-shims.yaml ['bash', '{harness_root}/relay-automation/{shim}']
+calibration: {'fail': 24, 'pass': 50, 'rows': 74} {'anomalies': 9, 'anomaly_rate_pct': 12.16, 'false_negative_pct': 0.0, 'false_negatives': 0, 'false_positives': 0, 'rows': 74}
+default targets: 9 ['ci-route', 'releases-roadmap', 'releases-check', 'pdda-frontmatter', 'domain-oracles-cli', 'adaptive-ate-cli', 'codex-turn-twins', 'agy-turn-twins', 'marathon-plan']
+changed paths: ['CHANGELOG.md', 'PROJECT/2-WORKING/GH-1174-ATE-FUZZ-DOCS.md', 'PROJECT/2-WORKING/GH-299-GEN4-FUZZING-ATE.md', 'relay-system/2026-10-21/gh1174-final.codex.md', 'releases.db', 'releases.sql', 'skills/4-occasional/ate/SKILL.md']
+Executable source, tests and workflow bytes unchanged against origin/development; no runtime probes run.
+HEAD: 84ff0d4040eaa371d34672dec978cd6d796dd484

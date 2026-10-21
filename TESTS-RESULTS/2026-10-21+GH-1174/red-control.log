@@ -1,0 +1,2 @@
+ERROR [pdda-check-frontmatter] PROJECT/2-WORKING/GH-1174-ATE-FUZZ-DOCS.md:1 missing required frontmatter key 'title'
+SUMMARY [pdda-check-frontmatter] errors=1 warns=0 info=0
