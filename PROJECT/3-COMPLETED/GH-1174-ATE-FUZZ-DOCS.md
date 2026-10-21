@@ -1,8 +1,8 @@
 ---
 title: "GH-1174: Reconcile ATE/fuzzing documentation"
-status: Active
+status: Complete
 created: 2026-10-21
-updated: 2026-10-21
+updated: 2026-10-20
 owner: Codex
 gh_issue: 1174
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1174
@@ -19,7 +19,7 @@ goal: Describe current ATE/fuzzing behavior and limits without changing executio
 
 | What was just completed | What's next |
 |---|---|
-| Source docs corrected; independent Codex QA Approved at 84ff0d40; deterministic docs suite rc0 (0 errors, 455 warnings) | Source published at 6cc68066 with normal docs hook GREEN 63s; verify final hosted checks and canonical closeout |
+| Source docs corrected; independent Codex QA Approved at 84ff0d40; deterministic docs suite rc0 (0 errors, 455 warnings) | Source published and CI green; canonical ledger/document closeout complete; final metadata-head check results in issue #1174 |
 
 ## Scope and procedure
 

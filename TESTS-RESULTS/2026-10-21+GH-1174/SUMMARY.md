@@ -19,7 +19,7 @@ Runtime baseline: development `7eeae80488f7f2a8f3be2c2b97419cf3b8032a8a`.
 - Normal-hook publication and exact-head hosted status are recorded after publication.
 
 The operator explicitly approved manual handling because express.py rejects SKILL.md.
-No gate bypass, new test, install, fuzzer campaign, model benchmark or deployment was used.
+No gate bypass, new test, install, fuzzer campaign, model benchmark or manual deployment was invoked. The existing Pages workflow reacts automatically to normal pushes.
 The authoritative map qualifies stale source-header/example promises; executable files stay unchanged.
 Canonical roadmap add/accepted-start and manifest dial-in writers recorded this task against
 `releases next` draft 0.6.0 Front-Door; overdue-release warnings are retained, not silently repaired.
@@ -36,3 +36,22 @@ Final metadata-head status is reported in the issue/handoff after canonical clos
 Canonical manifest ship and publication records landed at abaa2620 through the normal docs hook
 (GREEN63s). Issue #1174 is confirmed CLOSED. The source documentation remains byte-identical
 to reviewed 84ff0d40; remaining changes are evidence and lifecycle records.
+
+## Canonical closeout
+
+Gated wave reconciliation succeeded, archived the capture into PROJECT/3-COMPLETED, moved only
+GH-1174's ledger row to Completed, and regenerated adopted views/planning through canonical writers.
+The generated leaderboard renumbers following the new row; no peer records were hand-edited.
+Six pre-existing unrelated held/drift items are reported in reconcile.log and remain outside scope.
+The existing deterministic documentation gate also passed within the reconciler.
+
+The first reconciliation was stopped after a read-only resolver check proved inherited XYZ_HARNESS
+redirected planner output to the primary checkout. Automatic review initially rejected termination,
+then approved that single retry after the resolver/output-path evidence addressed its stated reason.
+The canonical journal rolled back (rc6); the redirected output file remained absent. A fresh run
+with all three roots explicitly bound to the isolated task clone succeeded (rc0). No continuing
+approval blocker or code change follows. Both logs are retained rather than concealing the interruption.
+
+CI for shipped-record head abaa2620 completed SUCCESS (39543175875). The repository's existing
+Pages workflow also completed automatically; no manual workflow dispatch/deployment was performed.
+The final metadata-head push/check results are recorded in #1174 and the task handoff.
