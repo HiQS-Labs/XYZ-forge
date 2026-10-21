@@ -36,7 +36,7 @@ capture/changelog and canonical ledger/evidence outputs are separately recorded.
 - [x] Claims checked against current code; copied harness_root templates and classifier/exit contracts reconciled.
 - [x] Independent review approved; existing deterministic documentation checks pass.
 - [x] Final diff changes only documentation/comments and required canonical records/evidence.
-- [ ] Remote development verified at the landed revision; applicable exact-head checks recorded.
+- [x] Remote development verified at the landed revision; applicable exact-head checks recorded.
 
 ## Review and validation
 
@@ -47,7 +47,9 @@ capture/changelog and canonical ledger/evidence outputs are separately recorded.
 
 - Manual hotfix published to origin/development at 6cc6806642409a50ced138e038dca182f1175e05.
 - Installed normal documentation hook passed GREEN 63s. No PR, merge, campaign or manual deployment.
-- Exact-head CI and record reconciliation remain pending until verified.
+- Exact-source-head CI 39542885544 completed SUCCESS: vendored smoke/Ubuntu success; macOS promotion skipped.
+- Canonical manifest shipped at abaa2620; normal docs hook GREEN63s; issue confirmed CLOSED.
+- Final metadata-head CI is reported in the issue/handoff after reconciliation.
 
 ## Lessons Learned (For Future Agents)
 

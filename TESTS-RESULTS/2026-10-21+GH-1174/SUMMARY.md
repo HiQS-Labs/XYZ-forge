@@ -29,6 +29,10 @@ Canonical roadmap add/accepted-start and manifest dial-in writers recorded this 
 `6cc6806642409a50ced138e038dca182f1175e05` fast-forwarded origin/development from
 7eeae804. Normal installed pre-push selected docs and passed GREEN in 63 seconds; no bypass.
 Remote exact tip verified with git ls-remote. Exact-source-head CI 39542885544: blocking vendored
-smoke succeeded, macOS promotion skipped, advisory Ubuntu job still running at this snapshot.
+smoke and advisory Ubuntu succeeded, macOS promotion skipped; run completed SUCCESS.
 Pages workflow is waiting; no deployment was approved or manually dispatched by this task.
 Final metadata-head status is reported in the issue/handoff after canonical closeout.
+
+Canonical manifest ship and publication records landed at abaa2620 through the normal docs hook
+(GREEN63s). Issue #1174 is confirmed CLOSED. The source documentation remains byte-identical
+to reviewed 84ff0d40; remaining changes are evidence and lifecycle records.
