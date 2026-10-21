@@ -23,3 +23,12 @@ No gate bypass, new test, install, fuzzer campaign, model benchmark or deploymen
 The authoritative map qualifies stale source-header/example promises; executable files stay unchanged.
 Canonical roadmap add/accepted-start and manifest dial-in writers recorded this task against
 `releases next` draft 0.6.0 Front-Door; overdue-release warnings are retained, not silently repaired.
+
+## Publication
+
+`6cc6806642409a50ced138e038dca182f1175e05` fast-forwarded origin/development from
+7eeae804. Normal installed pre-push selected docs and passed GREEN in 63 seconds; no bypass.
+Remote exact tip verified with git ls-remote. Exact-source-head CI 39542885544: blocking vendored
+smoke succeeded, macOS promotion skipped, advisory Ubuntu job still running at this snapshot.
+Pages workflow is waiting; no deployment was approved or manually dispatched by this task.
+Final metadata-head status is reported in the issue/handoff after canonical closeout.

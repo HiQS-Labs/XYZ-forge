@@ -19,7 +19,7 @@ goal: Describe current ATE/fuzzing behavior and limits without changing executio
 
 | What was just completed | What's next |
 |---|---|
-| Source docs corrected; independent Codex QA Approved at 84ff0d40; deterministic docs suite rc0 (0 errors, 455 warnings) | Refresh origin and publish with normal hooks; verify remote/checks and reconcile |
+| Source docs corrected; independent Codex QA Approved at 84ff0d40; deterministic docs suite rc0 (0 errors, 455 warnings) | Source published at 6cc68066 with normal docs hook GREEN 63s; verify final hosted checks and canonical closeout |
 
 ## Scope and procedure
 
@@ -45,7 +45,9 @@ capture/changelog and canonical ledger/evidence outputs are separately recorded.
 
 ## Merge evidence
 
-- Pending manual hotfix publication; no PR, merge, deployment or campaign run.
+- Manual hotfix published to origin/development at 6cc6806642409a50ced138e038dca182f1175e05.
+- Installed normal documentation hook passed GREEN 63s. No PR, merge, campaign or manual deployment.
+- Exact-head CI and record reconciliation remain pending until verified.
 
 ## Lessons Learned (For Future Agents)
 
