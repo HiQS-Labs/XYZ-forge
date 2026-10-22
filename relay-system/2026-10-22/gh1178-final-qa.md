@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-22.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -123,5 +123,22 @@ Handing off to Producer (claude-a) — correct the manual evidence in a disposab
   against the disposable gate clone at `a529e33e` (implementation unchanged since `35d965825`; the
   tier-2/gh421/gh454/gh168 receipts stand). `SUMMARY.md` and `provenance.jsonl` refreshed.
 - No production-code change.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Ship. The corrected retained evidence closes Round 1's only required finding. A1–A5 are supported by the source and receipts below; no further artifact change requested. Final committed-state gate and revision binding remain the harness's responsibility.
+swept file: yes
+
+- [Pass] Round 1 A1 finding closed. The fixed closing clauses and two doc names now produce distinct actual traversals (TESTS-RESULTS/2026-10-22+GH-1178/probe.py.txt:27, :93-99; green-35d965825.log:3, :11). Both rows have destination-containing/source-free raw_text and destination doc_path in each traversal (green-35d965825.log:4-7, :12-15); assertions require all four values rather than only old-path absence (probe.py.txt:98-99). No fix remains.
+- [Pass] A2 sensitivity is witnessed in the retained base control: red-control-f243ccfbf.log:6-9 leaves #422 dangling owner-first; :12-17 leaves #421 dangling sibling-first; :19-20 reports FAIL / exit=1. Candidate green-35d965825.log:9, :17, :19-20 reports all A1/A3/A4 checks True and PASS / exit=0. The unmoved #500 path remains active (:8, :16); dry-run shows unchanged ledger and two distinct row previews (:18). These are producer disposable-clone receipts, not reviewer fixture execution.
+- [Pass] A5 and the approved design remain surgical: source/destination/owner recorded only after validate_and_update_doc (utils/py/wave_reconcile.py:2409-2415), one final pass after all landings (:2476), exact source-path selection and owned-identity qualification (:1525-1537). The helper writes only through ledger_write → roadmap repoint (:1536-1537); that verb replaces doc_path and raw_text (utils/py/releases_app.py:3799-3811). No duplicate writer found. Owner skip remains safe: eligible owner repoint (:1577-1579) precedes legacy early returns (:1595, :1616); foreign/invalid owners (:1564-1566) are also ineligible to the helper (:1534-1535). Missing/placeholder legacy ledgers return empty before lazy import (:1256-1263, :1529-1531). Errors use the existing rollback (:2515-2522).
+- [Pass] Receipt integrity probe: command `PYTHONDONTWRITEBYTECODE=1 python3 -` (stdin: load all nonblank provenance.jsonl rows, assert count == 9, assert each named artifact is nonempty, compare hashlib.sha256(bytes).hexdigest() with its recorded sha256). Exit 0; decisive output: “Receipt hashes: 9/9 match; all artifacts nonempty”. Source: TESTS-RESULTS/2026-10-22+GH-1178/provenance.jsonl:1-9. Tier receipt reports “passed: 19 / 19” (tier2-validate-auto-35d965825.log:700), including wave-reconcile/gh202/gh232/gh358 rc=0 (:634-637); neighboring receipts end “Ran 36 tests … OK”, “Ran 4 tests … OK”, and “7 pass, 0 fail”. SUMMARY.md:20-21 explicitly identifies the corrected manual run at a529e33e and unchanged implementation since 35d965825; the historical suite run is separately identified at :28. Rating remains 45/50/50/85 (releases.sql:890) with rationale in the plan:97-100; CHANGELOG.md:3-10 describes the implemented scope.
+- [Pass] Swept the whole utils/py/wave_reconcile.py:1-2526 again, including pre-existing qualification, preflight, lifecycle, legacy, regeneration and rollback paths. No additional concrete pre-existing defect found. The implementation notes (PROJECT/2-WORKING/GH-1178-WAVE-RECONCILE-SHARED-DOC-REPOINT.md:104-109) accurately describe the owner-skip and lazy-import adjustments.
+- [Unverified — needs clone run] No git commands, executable fixtures, pytest or suites ran in this reviewer worktree. Exact committed diff scope, receipt-to-current-commit binding and final committed-state qualification must be checked by the harness after handoff; retained receipt inspection is not a new gate run.
+
+Evidence scope: Verify tier. Graph project XYZ-forge points at the primary checkout, generation 2026-09-01T15:54:30Z. Lookup returned obsolete ranges; coverage reports changed source metadata for wave_reconcile.py and releases_app.py. Findings therefore use current-worktree direct source reads. Only this relay file was edited.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) / harness may complete the final committed-state gate and publication workflow.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
