@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -240,5 +240,51 @@ rater legitimately needs? It matches only the two PRS serializations, case-insen
 
 Handing off to Reviewer codex — re-grade F1–F4 against `a6f2d45e1` and set STATUS: Approved or list
 what remains; go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 2 · codex
+
+**Block — one calibration leak remains.**
+
+swept file: yes
+
+Read the complete current implementation (858 lines), all three skill files, the CHANGELOG entry and ARCHITECTURE row, and canonical writer/rating-policy context. Graph tools remain unavailable; source reads supplied the evidence. No additional pre-existing defect was identified in this bounded sweep. This review covers the seeded revision presented as a6f2d45e1; no git command was run to independently attest that revision.
+
+- **[Pass] F1 capture-doc cases fixed; redaction is appropriately narrow.** utils/py/prs_backfill.py:313 and :340–358 now withhold the observed prose tokens and frontmatter. Read-only packet probes for actual GH-589 and GH-579 returned “leaks [] redactions 1” each. A control retained “effort: 2”, “complexity: 3”, “risk: 1” and consequence prose while withholding frontmatter and both PRS serializations. No over-redaction requiring a change was observed in these controls. This closes the original doc-excerpt examples, subject to the remaining packet-boundary finding below.
+- **[Pass] F2 timeout handling fixed at both boundaries.** utils/py/prs_backfill.py:597–603 converts writer timeout into rc=-1; :618–620 converts comment timeout into False. Wrapper probes returned “writer_timeout (-1, 'roadmap rate timed out after 120s; run `releases check`')” and “comment_timeout False”; rc=0 controls returned success and rc=1 controls returned failure. Source flow at :688–724 routes writer failure to a write-failed receipt and exit 3, and preserves an applied receipt after comment timeout. **[Unverified — needs clone run]** Actual process exit and persisted receipts with a hung subprocess still require the harness disposable-clone run; no such execution was attempted here.
+- **[Pass] F3 freshness-hold suppression fixed.** utils/py/prs_backfill.py:645–647 and :680–685 retain the scan timestamp and record the live timestamp separately. Evaluating the actual scan predicate at :432–434 returned “freshness_hold [589]” for scan 10:00/live 10:01 and “judgment_hold []” for a hold actually judged at 10:01. This preserves re-selection of new evidence and suppression of unchanged judgment holds.
+- **[Pass] F4 normal procedure fixed.** skills/2-daily/prs-backfill/SKILL.md:143–150 now requires the ordinary rationale comment or an explicit canonical-plan alternative, and discloses the earlier 14 ratings still owing that record. utils/py/prs_backfill.py:608–614 includes date, scores and rationale in the comment. This approves the revised procedure, not publication of those earlier rationales.
+
+- **[Should] F1 residual — E0 exposes this tool's own canonical rating comments.** utils/py/prs_backfill.py:327–329 copies comment bodies verbatim; only the capture-doc excerpt is sanitized at :313. The formatter at :608–614 generates an exact answer token, so following the corrected normal procedure creates an answer that a later calibration packet exposes. SKILL.md:115–117 acknowledges a filer's suggested score, but this input is a previously applied canonical score. It still fails DoD 5.
+  Observed input: the real post_rationale formatter generated a dated PRS comment containing “rated 55/25/50/40”; passing that body as a comment to the real build_packet with mode="calibrate" preserved the exact token. The seeded GH-589 ledger row has precisely 55/25/50/40. This was an in-memory composition of the supported producer and consumer, not a claim that GH-589 currently has this live comment.
+  Affected scope: calibration packets containing explicit prior PRS score tokens in comments, including this tool's generated comments; no request to remove arbitrary numbers or useful rationale.
+  Falsifier: the packet containing this generated comment must withhold the score token while keeping “Feature blocked”; an otherwise identical packet without the comment must remain score-free. Current outputs: “calibrate_contains_canonical_score True”, “no_comment_control_contains_score False”, “redacted_comment_control_contains_score False”, “redacted_retains_consequence True”.
+  Root cause: answer filtering is attached only to doc ingestion although the tool publishes the same answer into another packet channel; Fix site: calibration packet comment sanitization; Why not upstream/downstream: canonical comments should retain their scores, while blind evidence must withhold them before judgment. Reuse the existing narrow sanitizer for these explicit score tokens at the E0 evidence boundary and align the skill description. No new subsystem or test is needed.
+  Reproducer (subprocess replaced in memory; no comment process or writer ran):
+
+      import importlib.util, json, subprocess
+      from unittest.mock import patch
+      s=importlib.util.spec_from_file_location("pb","utils/py/prs_backfill.py")
+      p=importlib.util.module_from_spec(s); s.loader.exec_module(p)
+      it={"issue":589,"rated":"55/25/50/40",
+          "rationale":{"consequence":"Feature blocked","recurrence":"unknown trend","uncertainty":"estimate"},
+          "rater":{"agent":"codex","model":"m"},"review":{"agent":"claude","model":"n"}}
+      with patch.object(p,"now_iso",return_value="2026-10-21T10:00:00Z"), patch.object(
+          p.subprocess,"run",return_value=subprocess.CompletedProcess([],0,"","")) as call:
+          p.post_rationale("unused/repo",it,"a"*64)
+          comment=call.call_args.args[0][-1]
+      live={"number":589,"title":"Feature","body":"","comments":[{"body":comment}],"labels":[]}
+      row={"global_id":"probe:589","doc_path":None}
+      pk=p.build_packet("unused/repo",".",row,live,"calibrate")
+      print("calibrate_contains_canonical_score","rated 55/25/50/40" in json.dumps(pk))
+
+  Command: python3 - <<'PY' > "$TMPDIR/round2-comment-boundary.txt" 2>&1, using the reproducer plus the quoted controls; exit **0**. The combined doc/wrapper/predicate/hash probe used the same command form with "$TMPDIR/round2-probes.txt", exit **0**. Both ran with PYTHONDONTWRITEBYTECODE=1 and TMPDIR="$PWD/.relay-scratch/tmp". Decisive output is embedded here because scratch is discarded.
+
+- **[Pass] Remaining reviewed invariants retain their bounded design.** Read-only DB access remains at utils/py/prs_backfill.py:218; the only rating command at :593–596 carries neither force nor override; already-rated rows skip at :669–676. Hash binding remains at :632–637 (controls: key reordering preserves the digest, a changed score does not). Policy checks at :498–534, placeholder exclusion at :375–376, lock ordering at :153–160 and kill-switch calls at :389, :538, :624, :730 remain intact. The wrappers and ARCHITECTURE.md:88 add no blocking finding.
+
+**VERDICT: FAIL**
+
+**Basis:** F2–F4 and the original F1 doc examples are resolved, but the reproduced canonical-comment leak still violates blind calibration. The maximum round is reached, so STATUS is Escalated. All probes were read-only or in-memory; only this relay file was edited. No git command, full gate, test/*.sh, pytest, executable fixture, ledger mutation or public comment was run. The harness retains responsibility for disposable-full-clone verification.
+
+Handing off to Producer claude-a — resolve the bounded E0 comment leak and request a further review round or operator disposition; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
