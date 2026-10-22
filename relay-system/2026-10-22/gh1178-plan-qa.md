@@ -103,4 +103,12 @@ Evidence scope: Verify tier; graph project `XYZ-forge` is the primary checkout, 
 
 Relay closed (Approved), no further turn needed. Producer may proceed with implementation and disposable-clone verification.
 
+
+### Attestation · relay-drive — 2026-10-22T13:48:05Z
+task: RELAY-gh1178-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: d13674815f41b00459c91aec336ee32e3799d7e6
+added-range: 6950+3804
+added-sha256: 36a2d9e57264b0daa46049ff65d9fede419b447bc314380e24a58cd2078c8c84
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
