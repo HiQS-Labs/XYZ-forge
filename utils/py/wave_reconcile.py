@@ -1512,6 +1512,25 @@ def catch_up_prs(repo_root, repo_slug, offline_manifest=None, qualification_meta
     return sorted(found, key=int)
 
 
+def repoint_moved_doc_rows(repo_root, moved_docs, repo_slug, dry_run=False, journal=None):
+    """GH-1178: repoint every owned row still naming a doc this run moved.
+
+    Docs are found by filename, so when several issues share one doc only the issue it is named
+    after gets the destination from update_roadmap_entry. Runs after the landing loop: whichever
+    order the issues came in, every move is known by then."""
+    if not moved_docs or not os.path.isfile(os.path.join(repo_root, "releases.db")):
+        return
+    from releases_app import resolve_roadmap_identity
+    repos = {r["id"]: r["slug"] for r in ledger_rows(repo_root, "SELECT id,slug FROM repos")}
+    marks = ",".join("?" * len(moved_docs))
+    for row in ledger_rows(repo_root, f"SELECT * FROM roadmap_items WHERE doc_path IN ({marks})",
+                           tuple(moved_docs)):
+        identity = resolve_roadmap_identity(row, repos, repo_slug)
+        if identity["identity_valid"] and identity["repo"] == repo_slug:
+            ledger_write(repo_root, ["roadmap", "repoint", "--gid", row["global_id"],
+                         "--doc-path", moved_docs[row["doc_path"]]], dry_run, journal)
+
+
 def update_roadmap_entry(repo_root, issue_num, landing, ship_date, is_merged=True, dry_run=False, journal=None, doc_path=None, repo_slug=None):
     """Move entry in ROADMAP.md and/or releases.db to Completed/Deferred section with shipping badge."""
     roadmap_path = os.path.join(repo_root, "ROADMAP.md")
@@ -2306,6 +2325,7 @@ def main():
                     for issue in extract_linked_issues(meta, repo_slug)[0]:
                         if issue not in issue_owners or rank > issue_owners[issue][0]:
                             issue_owners[issue] = (rank, key)
+            moved_docs = {}  # GH-1178: source relpath -> destination relpath, for shared docs
             for landing_kind, landing_id in landing_items:
                 if (landing_kind, landing_id) in metadata:
                     pr_meta = metadata[(landing_kind, landing_id)]
@@ -2384,6 +2404,8 @@ def main():
                             doc_path, pr_meta, is_merged=is_merged, dry_run=args.dry_run, journal=journal
                         )
                         log(f"  Moved -> {os.path.basename(dest_path)} (destination: {os.path.basename(os.path.dirname(dest_path))})")
+                        if dest_path != doc_path:
+                            moved_docs[os.path.relpath(doc_path, repo_root)] = os.path.relpath(dest_path, repo_root)
                         updated = update_roadmap_entry(
                             repo_root,
                             issue_num,
@@ -2443,6 +2465,8 @@ def main():
                     if is_open and is_merged:
                         log(f"  Issue #{issue_num} referenced without a closing keyword and OPEN — recording merge evidence only")
                         record_merge_evidence(doc_path, pr_meta, dry_run=args.dry_run, journal=journal)
+
+            repoint_moved_doc_rows(repo_root, moved_docs, repo_slug, dry_run=args.dry_run, journal=journal)
 
             # Global roadmap cleanups
             fix_mangled_roadmap_entries(repo_root, dry_run=args.dry_run, journal=journal)
