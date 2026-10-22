@@ -110,11 +110,12 @@ have. `low` confidence is held automatically. Rationale fields together stay und
 characters.
 
 In E0 (calibrate), rate blind: do not read the row's scores from `releases.db`, `releases.sql`,
-ROADMAP views or prior receipts before writing proposals. The packet carries no `rating_*`
-columns and withholds the capture doc's `rating:` frontmatter and any `rated N/N/N/N` /
-`pri/sev/appeal/effort N/N/N/N` token in its prose (`[rating withheld]`); issue body and comments are
-passed as written, so a filer's own "suggested PRS" line can still appear — flag it in `uncertainty`
-and rate independently.
+ROADMAP views or prior receipts before writing proposals. A calibrate packet carries no `rating_*`
+columns and withholds every `rating:` frontmatter line and every `rated N/N/N/N` /
+`pri/sev/appeal/effort N/N/N/N` token in the capture doc, the issue body **and** the comments
+(`[rating withheld]`) — including this tool's own `--post-rationale` comments on already-rated rows.
+Backfill/changed packets sanitize only the capture doc; a filer's suggested score in an unrated issue
+is operator input, so it stays visible — weigh it, flag it in `uncertainty`, rate independently.
 
 ### 3. Independent review
 

@@ -312,6 +312,11 @@ def build_packet(slug, root, row, live, mode):
             with open(full, encoding="utf-8", errors="replace") as fh:
                 doc_excerpt = strip_rating_lines(fh.read(DOC_MAX))
     comments = (live.get("comments") or [])[-COMMENTS_KEPT:]
+    # E0 only: the issue body and comments are the OTHER channel the answer travels in — this
+    # tool's own `--post-rationale` comment carries the exact `rated N/N/N/N` token (Codex QA
+    # round 2). Backfill/changed packets keep them verbatim: the row is unrated, and a filer's
+    # suggested score is operator input the rater should see and weigh, not an answer key.
+    blind = (lambda t: strip_rating_lines(t)) if mode == "calibrate" else (lambda t: t)
     packet = {
         "schema": "prs-backfill/packet@1",
         "mode": mode,
@@ -322,11 +327,11 @@ def build_packet(slug, root, row, live, mode):
         "labels": sorted(l.get("name", "") for l in live.get("labels") or []),
         "created_at": live.get("createdAt"),
         "updated_at": live.get("updatedAt"),
-        "body": (live.get("body") or "")[:BODY_MAX],
+        "body": blind((live.get("body") or "")[:BODY_MAX]),
         "body_truncated": len(live.get("body") or "") > BODY_MAX,
         "comments": [{"author": (c.get("author") or {}).get("login"),
                       "created_at": c.get("createdAt"),
-                      "body": (c.get("body") or "")[:COMMENT_MAX]} for c in comments],
+                      "body": blind((c.get("body") or "")[:COMMENT_MAX])} for c in comments],
         "comments_total": len(live.get("comments") or []),
         "doc_path": doc_path,
         "doc_excerpt": doc_excerpt,
