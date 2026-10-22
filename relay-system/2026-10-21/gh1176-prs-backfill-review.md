@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -204,5 +204,41 @@ Read all 836 implementation lines, all three skill files, the CHANGELOG entry an
 **Basis:** F1–F4 prevent approval against DoD 4–6 and the canonical rationale policy. Probes were narrow/read-only or in-memory; all captured output stayed under `.relay-scratch/tmp`, and the decisive evidence is quoted above because scratch is discarded. No source/artifact edit, direct git command, full gate, `test/*.sh`, pytest, ledger mutation or public comment was run. The harness still owes its disposable-full-clone verification against the final producer revision. No new test or gate is requested.
 
 Handing off to Producer claude-a — disposition F1–F4 and open round 2 after the scoped fixes; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 → 2 · claude-a
+
+All four findings reproduced and accepted; fixes are in commit `a6f2d45e1` (code + SKILL.md), reviewed
+here against the worktree HEAD. No new tests (GH-831); each fix was re-exercised on a disposable clone
+with a stubbed `gh`, results quoted below.
+
+- **F1 — Implemented.** `strip_rating_lines` now also redacts the prose serializations: `rated
+  N/N/N/N [ovr N]` and `pri/sev/appeal/effort N/N/N/N` (`utils/py/prs_backfill.py`, `_RATING_TOKEN`
+  beside `_RATING_LINE`; applied in `build_packet` to the doc excerpt). Falsifier run: GH-589 and
+  GH-579 docs through the function → `leaks: []`, `withheld: 1` each; control doc keeps `effort: 2`
+  (PDDA trio) and withholds both the frontmatter line and `rated 1/2/3/4 ovr 7`. SKILL.md step 2 now
+  states exactly what the packet withholds and that a filer's own "suggested PRS" line in an issue
+  body can still appear (flag in `uncertainty`).
+- **F2 — Implemented.** `run_rate` catches `subprocess.TimeoutExpired` → `(cmd, -1, "roadmap rate
+  timed out…")`, so the existing `write-failed` receipt + exit 3 path handles it; `post_rationale`
+  catches it → `False`, so a verified write keeps its `applied` receipt with `commented: false`.
+  Falsifier run (mocked `subprocess.run` raising TimeoutExpired): `run_rate -> (-1, …)`,
+  `post_rationale -> False`, no exception escapes. End-to-end process exit after a real hung writer
+  remains `[Unverified — needs clone run]` as you noted; the branch now reaches the same code as rc≠0,
+  which the earlier stubbed run showed exiting 3.
+- **F3 — Implemented.** Apply-stage holds keep the scan-time `issue_updated_at` from `base`; the live
+  timestamp is recorded as `live_updated_at` instead of overwriting it. Falsifier run: scan at
+  `10-01`, issue edited to `10-02` before apply → `HELD changed-since-scan`; next default scan at
+  `10-02` → `selected: 1`. Control: a `low-confidence` validate hold at `10-02` → next scan `selected: 0`.
+- **F4 — Implemented (procedure).** SKILL.md step 5 now shows `--post-rationale` on the write
+  command and states the policy: the dated rationale belongs on the canonical issue/plan; omit the
+  flag only when the operator records it on the plan doc and says so in the batch report. The code
+  default stays off so a scheduled pass cannot post without an operator. Disclosed in SKILL.md: the
+  14 ratings applied 2026-10-21 still owe their canonical rationale (receipts only).
+
+Open question for round 2 (not a finding): does the `_RATING_TOKEN` pattern over-redact anything a
+rater legitimately needs? It matches only the two PRS serializations, case-insensitive.
+
+Handing off to Reviewer codex — re-grade F1–F4 against `a6f2d45e1` and set STATUS: Approved or list
+what remains; go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
