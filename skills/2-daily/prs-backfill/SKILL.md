@@ -148,7 +148,7 @@ The start-task policy requires a short dated rationale **with each task's canoni
 not only in this tool's local receipts. `--post-rationale` is how an ordinary batch satisfies it;
 leave it off only when the operator records the rationale on the canonical plan doc instead (say so
 in the batch report). The 14 ratings of 2026-10-21 were applied without it — their rationales are
-in `.tick/prs-backfill/receipts.jsonl` and still owe the canonical record.
+in `.tick/prs-backfill/receipts.jsonl` and can be posted with `comment` (below).
 
 Before each write the script re-fetches the issue and holds it if it closed or its content
 changed since the scan, and re-reads the row (skipped if already rated, held if ambiguous or
@@ -162,6 +162,18 @@ approval is idempotent.
 write; a comment that fails or times out is recorded in the receipt (`commented: false`) and never
 undoes or hides a verified write. The flag is off in the code so a scheduled pass cannot post without
 an operator's say-so; the attended procedure above passes it.
+
+**Post rationale later.** `apply` skips rows it already applied, so it cannot add a comment after
+the fact. For ratings applied without `--post-rationale`, use the same plan approval:
+
+```bash
+$PB comment --run <run_id> --approve <plan sha12> --dry-run            # print each comment, post nothing
+$PB comment --run <run_id> --approve <plan sha12> [--max-comments N]   # post, one `commented` receipt each
+```
+
+It comments only issues whose latest `applied` receipt for that plan is not yet commented, and holds
+(`row-changed`) any whose ledger row no longer equals the planned rating. A failed post stops the
+run with exit `3`; re-running retries only the uncommented issues.
 
 ### 6. Calibrate (E0 only)
 

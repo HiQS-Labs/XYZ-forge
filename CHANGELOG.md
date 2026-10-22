@@ -23,6 +23,11 @@ withhold `rating:` lines and calibration never samples placeholder rows. Registr
 disposable ledger copy against live issues. Reversibility: **Easy** — new files plus one Skills
 Index row; delete them.
 
+`comment --run <id> --approve <sha12> [--dry-run]` posts the dated rationale for ratings already applied
+without `--post-rationale` (the 14 ratings of 2026-10-21), under the same plan-hash approval as `apply`;
+it holds any issue whose ledger row no longer equals the planned rating, records a `commented` receipt per
+attempt so a re-run is idempotent, and exits 3 on a failed post.
+
 ## 2026-10-21 — ATE/fuzzing documentation correction (GH-1174)
 
 Replace the ATE installation narrative with a concise entry-point/schema map and current runner,
