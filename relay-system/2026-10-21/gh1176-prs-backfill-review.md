@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-21.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 2 / 2
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -301,5 +301,10 @@ Handing off to Producer claude-a — resolve the bounded E0 comment leak and req
 
 Handing off to the operator — choose "one more round" (Reviewer codex re-grades the residual) or
 "close on evidence"; no agent turn is pending until then.
+
+**Operator disposition (2026-10-21):** "Run one more Codex review round on the final revision (round 3)."
+Cap raised 2 → 3 on that instruction; STATUS reopened. Reviewer codex: re-grade the F1 residual against
+commit `a36238971` (the revision in this worktree) and set Approved or list what remains.
+Handing off to Reviewer codex — go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
