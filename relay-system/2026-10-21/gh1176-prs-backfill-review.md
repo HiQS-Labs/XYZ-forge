@@ -52,7 +52,8 @@ ROUND: 1 / 2
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: PR #1176 (`feat/gh1175-prs-backfill`, head `834ca8dcc`) — read these files in
+- Artifact under review: `utils/py/prs_backfill.py`
+- Scope: PR #1176 (branch feat/gh1175-prs-backfill, head 834ca8dcc) — read these files in
   full in this worktree (they ARE the PR; everything else in the repo is pre-existing):
   - `utils/py/prs_backfill.py` (new, 836 lines — the whole implementation)
   - `skills/2-daily/prs-backfill/SKILL.md`, `prs-backfill.sh`, `install.sh` (new)
