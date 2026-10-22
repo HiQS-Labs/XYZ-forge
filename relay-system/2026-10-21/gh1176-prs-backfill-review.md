@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -306,5 +306,60 @@ Handing off to the operator — choose "one more round" (Reviewer codex re-grade
 Cap raised 2 → 3 on that instruction; STATUS reopened. Reviewer codex: re-grade the F1 residual against
 commit `a36238971` (the revision in this worktree) and set Approved or list what remains.
 Handing off to Reviewer codex — go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 3 · codex
+
+**Ship — the remaining calibration-comment leak is resolved.**
+
+swept file: yes
+
+Read the complete current implementation (863 lines), all three skill files, the CHANGELOG top entry and ARCHITECTURE row, plus the canonical writer and rating policy as context. This is the seeded revision presented as `a36238971`; no git command was run to attest its identity. Graph tools are unavailable in this session; full source reads and bounded searches supplied the evidence. No additional pre-existing defect was identified in the reviewed scope. The judgment uses the stated attended, single-instance CLI envelope. Reversibility of the residual fix is Easy: it reuses the existing sanitizer at two packet fields and changes no persisted schema or writer.
+
+- **[Pass] F1 residual closed — the canonical comment is now blind in E0.** `utils/py/prs_backfill.py:319`, `:330`, `:334` apply the existing sanitizer to calibration body/comment text; the actual formatter at `:613–619` still publishes the canonical score. The narrow composition probe below returned `calibrate_body_has_score: false`, `calibrate_comment_has_score: false`, `calibrate_keeps_consequence: true`, and `calibrate_has_rating_columns: false`. Controls returned `backfill_keeps_score: true` and `changed_keeps_score: true`. Disabling only the sanitizer in memory caused the same no-leak assertion to fail: `red_control: expected AssertionError; canonical comment score exposed`. The fix removes the observed answer token while retaining useful rationale and preserving the intended other modes. `skills/2-daily/prs-backfill/SKILL.md:112–118` describes this boundary accurately.
+
+  Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 - <<'PY' > "$TMPDIR/round3-e0-boundary.txt" 2>&1` with the following decisive probe (the executed command also checked backfill/changed packets and the real doc controls quoted below); exit **0**:
+
+  ```python
+  import importlib.util, json, subprocess
+  from unittest.mock import patch
+  s=importlib.util.spec_from_file_location('pb','utils/py/prs_backfill.py')
+  p=importlib.util.module_from_spec(s); s.loader.exec_module(p)
+  it={'issue':589,'rated':'55/25/50/40',
+      'rationale':{'consequence':'Feature blocked','recurrence':'unknown trend','uncertainty':'estimate'},
+      'rater':{'agent':'codex','model':'m'},'review':{'agent':'claude','model':'n'}}
+  with patch.object(p,'now_iso',return_value='2026-10-21T10:00:00Z'), patch.object(
+      p.subprocess,'run',return_value=subprocess.CompletedProcess([],0,'','')) as call:
+      assert p.post_rationale('unused/repo',it,'a'*64)
+      comment=call.call_args.args[0][-1]
+  assert 'rated 55/25/50/40' in comment
+  live={'number':589,'title':'Feature','body':'Impact: feature blocked. rated 55/25/50/40',
+        'comments':[{'body':comment}],'labels':[]}
+  row={'global_id':'probe:589','doc_path':None}
+  pk=p.build_packet('unused/repo','.',row,live,'calibrate')
+  assert 'rated 55/25/50/40' not in pk['body']
+  assert 'rated 55/25/50/40' not in pk['comments'][0]['body']
+  assert 'Feature blocked' in pk['comments'][0]['body']
+  assert not any(k.startswith('rating_') for k in pk)
+  with patch.object(p,'strip_rating_lines',side_effect=lambda t:t):
+      broken=p.build_packet('unused/repo','.',row,live,'calibrate')
+      try:
+          assert 'rated 55/25/50/40' not in broken['comments'][0]['body']
+      except AssertionError:
+          print('red_control: expected AssertionError; canonical comment score exposed')
+      else:
+          raise AssertionError('leak detector failed to detect disabled sanitizer')
+  ```
+
+- **[Pass] Original F1 doc cases and F2–F4 remain resolved.** The same packet probe used `open_ledger_ro('.')` and the real GH-589/GH-579 rows; both excerpts were asserted nonempty and produced `leaks=[]`, `redactions=1` through `build_packet` (`utils/py/prs_backfill.py:307–363`). A second narrow command, `python3 - <<'PY' > "$TMPDIR/round3-regression-controls.txt" 2>&1` with the same environment, exited **0**. In-memory `subprocess.run` replacement at the actual wrappers (`:603–608`, `:620–625`) produced `writer_timeout (-1, 'roadmap rate timed out after 120s; run `releases check`')`, `comment_timeout False`, and `wrapper_rc_controls: 0=success, 1=failure`; no subprocess was launched. Evaluation of the actual AST-extracted scan predicate (`:437–439`) produced `freshness_hold [589]` for scan 10:00/live 10:01 and `judgment_hold []` for a hold at 10:01; apply retains the scan timestamp at `:650–652`, `:685–690`. The canonical rationale procedure remains explicit at `skills/2-daily/prs-backfill/SKILL.md:143–164`; its disclosure that the earlier 14 ratings still owe that record remains visible.
+
+- **[Pass] Remaining source invariants retain the reviewed design.** Read-only DB access is `utils/py/prs_backfill.py:218`; the sole rating command at `:598–601` carries neither force nor override, and existing ratings skip at `:674–675`. Approval checks remain at `:637–642`; the second probe returned `hash_controls: key_order_same=True, item_order_same=False, changed_score_same=False`. Policy controls at `:503–539` accepted a complete reviewed proposal and returned `invalid-pri` for boolean True, `appeal-must-be-50` for 49, and `low-confidence` for low. Placeholder exclusion is at `:366–390`; flock-before-truncate at `:153–160`; kill-switch calls at `:394`, `:543`, `:629`, `:735` leave status readable at `:791`. Source flow at `:693–729` retains the write-failed/stop/exit-3 path and preserves an applied receipt after a handled comment timeout. The skill locators and ARCHITECTURE row add no blocking finding; no new subsystem, test or gate is requested.
+
+- **[Unverified — needs clone run]** Actual process exits and persisted receipts with a hung writer/comment process, and the final harness gate, were not exercised here. Wrapper/predicate probes establish the reviewed code paths; they do not attest an end-to-end application or replace the harness's disposable-full-clone verification. The earlier canonical rationale publication is also not attested by this approval.
+
+**VERDICT: PASS**
+
+**Basis:** The reproduced F1 residual is closed with a working red control; F1–F4 remain resolved in the complete source sweep and narrow controls. Approval closes this code-review relay, with the explicitly deferred clone verification remaining the harness's responsibility. Only this relay file was edited; probe output stayed under `.relay-scratch/tmp`. No git command, source edit, validate.sh, test/*.sh, pytest, executable fixture, ledger mutation or public comment was run.
+
+Relay closed (Approved), no further review turn needed. Handing completion to claude-a — retain the clone-verification limitation and run the harness gate before treating the artifact as merge-ready.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
