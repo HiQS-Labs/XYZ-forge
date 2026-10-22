@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-22.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -86,5 +86,27 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: Ship with conditions: no implementation defect found, but the required sibling-first execution is not exercised by the A1 receipt. Correct the manual evidence before final approval; no production-code change or new suite requested.
+swept file: yes
+
+- [Should] A1's “both issue orders” evidence runs the same order twice. TESTS-RESULTS/2026-10-22+GH-1178/probe.py.txt:91-92 reverses the closing clauses, but utils/py/wave_reconcile.py:1060 sorts them before the loop (:2375). Consequently SUMMARY.md:8 and :15 do not establish sibling-before-owner behavior. In the disposable full clone, exercise both actual orders (e.g. a second fixture whose shared doc is named after #422, so sorted #421 is the sibling), retain the base red control, and assert nonempty original and destination embedded paths in both rows' raw_text as well as doc_path. The present assertion (probe.py.txt:95) checks only absence of the old path in #422, not destination presence or #421 raw_text. Refresh logs, summary and provenance through the existing manual-check workflow.
+  Observed input: the two closing-clause permutations at probe.py.txt:91, both with owner doc GH-421-fixture.md.
+  Affected scope: A1 evidence and its “both orders / both raw_text” claims; no requested runtime behavior change.
+  Falsifier: logged actual sibling-first traversal with both nonempty embedded destination paths and both doc_path values correct would close this finding.
+  Probe command: PYTHONDONTWRITEBYTECODE=1 python3 - (stdin script parsed wave_reconcile.py with ast, selected only its regex assignments plus _strip_code_blocks/extract_linked_issues, compiled those pure definitions, and printed extract_linked_issues({'title':'fixture','body':body},'test/repo')[0] for the two bodies at probe.py.txt:91). Exit 0; decisive output: each produced [421, 422]. No fixture, git command, or suite executed.
+- [Pass] Runtime matches the approved post-loop design: record source/destination after the move (utils/py/wave_reconcile.py:2409-2415), then repair exact source-path matches after all landings (:2476, :1525-1537). It reuses resolve_roadmap_identity and ledger_write → roadmap repoint; that verb replaces both fields (utils/py/releases_app.py:3799-3811). No parallel writer is present in the reviewed helper.
+- [Pass] Owner exclusion and lazy import are sound in the reviewed successful apply path. The qualified owner is repointed before any later legacy early return (utils/py/wave_reconcile.py:1577-1579 versus :1595/:1616); missing/foreign/invalid identity (:1564-1566) supplies no eligible owner for this helper either (:1534-1535). Multiple qualified owners abort (:1562-1563) and errors roll back (:2515-2522). A ROADMAP-only repo returns no ledger rows (:1256-1258); placeholder rows return empty before the new import (:1262-1263, :1529-1531). Neither case introduces a newly dangling eligible owner. Dry-run exits before the writer CLI (:1278-1282).
+- [Pass] Reviewed producer receipts substantiate the core regression, unmoved row and quiet rerun, subject to A1 above: TESTS-RESULTS/2026-10-22+GH-1178/red-control-f243ccfbf.log:1-9 reports the sibling dangling and exit=1; green-35d965825.log:1-9 reports both doc_path values moved, #500 retained and no rerun repoint, exit=0. The tier2-validate-auto-35d965825.log ends “passed: 19 / 19”; gh421-auto-wave-reconcile-35d965825.log ends “Ran 36 tests … OK”, gh454-reconciler-defects-35d965825.log “Ran 4 tests … OK”, gh168-wave-reconcile-scope-35d965825.log “7 pass, 0 fail”. These are retained receipts, not reviewer reruns.
+- [Pass] Provenance integrity: command PYTHONDONTWRITEBYTECODE=1 python3 - (stdin script loaded every row of TESTS-RESULTS/2026-10-22+GH-1178/provenance.jsonl:1-9, asserted nonempty input, and compared each named artifact's SHA-256). Exit 0, output “Receipt hashes: 9/9 match”. All rows name candidate 35d965825404319f198a26c8682171504ea17b6b. Rating 45/50/50/85 matches releases.sql:890 and the recoverable pointer-integrity rationale at PROJECT/2-WORKING/GH-1178-WAVE-RECONCILE-SHARED-DOC-REPOINT.md:97-100; CHANGELOG.md:3-10 describes this scoped repair.
+- [Pass] Swept the entire utils/py/wave_reconcile.py:1-2526, including pre-existing preflight, qualification, rollback, legacy handling and regeneration. No additional concrete pre-existing defect found in that sweep.
+- [Unverified — needs clone run] Corrected A1 traversal/embedded-path checks must run in a disposable full clone. No validate.sh, test/*.sh, pytest, or executable fixture ran here. Exact committed-diff/receipt-to-current-HEAD equivalence remains for the harness: this reviewer obeyed the prohibition on git commands.
+
+Evidence scope: Verify tier. Graph project XYZ-forge is the primary checkout, generation 2026-09-01T15:54:30Z, not this relay worktree. Graph search returned obsolete line ranges and coverage reported stale source metadata; material source conclusions use direct current-worktree reads instead. Only this relay file changed.
+
+Handing off to Producer (claude-a) — correct the manual evidence in a disposable clone, then return for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
