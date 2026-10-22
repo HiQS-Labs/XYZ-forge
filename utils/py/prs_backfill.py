@@ -310,7 +310,7 @@ def build_packet(slug, root, row, live, mode):
         full = os.path.join(root, doc_path)
         if os.path.isfile(full):
             with open(full, encoding="utf-8", errors="replace") as fh:
-                doc_excerpt = fh.read(DOC_MAX)
+                doc_excerpt = strip_rating_lines(fh.read(DOC_MAX))
     comments = (live.get("comments") or [])[-COMMENTS_KEPT:]
     packet = {
         "schema": "prs-backfill/packet@1",
@@ -337,11 +337,33 @@ def build_packet(slug, root, row, live, mode):
     return packet
 
 
+_RATING_LINE = re.compile(r"^\s*rating:.*$", re.MULTILINE)
+
+
+def strip_rating_lines(text):
+    """A capture doc's frontmatter carries `rating: "pri/sev/appeal/effort N/N/N/N"`. Left in the
+    packet it anchors the rater (and makes E0 "blind" a fiction — the first E0 pass found it in
+    3 of 15 packets). The PDDA trio (effort/complexity/risk, 1–5) stays: a different vocabulary
+    the policy already forbids copying, and the rater should see what the doc claims."""
+    return _RATING_LINE.sub("rating: [withheld from the rater]", text) if text else text
+
+
+def is_placeholder_rating(row):
+    """A row whose four axes are all <=5 carries the PDDA 1–5 trio mis-stored as PRS 1–100; a
+    row at exactly 50/50/50/50 is an intake default nobody judged. Neither is ground truth for
+    E0 (found 13 + 47 such rows in the 2026-10-21 ledger), so calibration never samples them."""
+    v = [row["rating_pri"], row["rating_sev"], row["rating_appeal"], row["rating_effort"]]
+    return all(x is not None and x <= 5 for x in v) or v == [50, 50, 50, 50]
+
+
 def select_calibration(rated, n, seed):
     """Deterministic stratified sample across sev bands, ovr rows excluded (the ovr replaces the
-    rank, so it says nothing about the axes)."""
+    rank, so it says nothing about the axes) and placeholder rows excluded (they are not
+    judgments to agree with)."""
     bands = {}
     for num, row in rated.items():
+        if is_placeholder_rating(row):
+            continue
         bands.setdefault(sev_band(row["rating_sev"]), []).append(num)
     for b in bands:
         bands[b].sort(key=lambda x: hashlib.sha256(("%s:%d" % (seed, x)).encode()).hexdigest())
