@@ -77,7 +77,8 @@ $PB scan --mode calibrate --limit 15    # E0: stratified blind sample of rated r
 `legacy-vocabulary`), a report-only `stale` list (rows this skill rated whose issue CONTENT —
 title, body, labels, comments — changed since; `updatedAt` alone is only the pre-filter), and
 the run directory. An issue held earlier on the same `updatedAt` is not selected
-again — no repeated model calls on unchanged evidence.
+again — no repeated model calls on unchanged evidence. `--include-held` overrides that for an
+operator-attended re-rate (a reviewer disagreed and the rater re-scores); never on a schedule.
 
 ### 2. Rate (the agent's judgment)
 

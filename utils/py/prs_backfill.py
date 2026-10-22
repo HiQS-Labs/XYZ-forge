@@ -417,8 +417,11 @@ def cmd_scan(a):
             cands = list(by_state.get("unrated", []))
             # Never spend a model call twice on unchanged evidence: skip an issue held on the
             # same updatedAt it still has.
-            cands = [n for n in cands if not (n in held and held[n].get("issue_updated_at")
-                                              == updated[n])]
+            # --include-held is the operator's deliberate re-rate of a judgment hold (a reviewer
+            # disagreed, the rater re-scores); a scheduled pass never passes it.
+            if not a.include_held:
+                cands = [n for n in cands if not (n in held and held[n].get("issue_updated_at")
+                                                  == updated[n])]
             if a.mode == "changed":
                 cands.sort(key=lambda n: updated[n], reverse=True)
             else:
@@ -796,6 +799,8 @@ def main(argv=None):
     s.add_argument("--limit", type=int, default=DEFAULT_LIMIT, help="packets per run (budget)")
     s.add_argument("--max-issues", type=int, default=2000)
     s.add_argument("--seed", default="prs-e0", help="calibration sample seed")
+    s.add_argument("--include-held", action="store_true",
+                   help="operator-attended re-rate: also select issues held on unchanged evidence")
     s.set_defaults(fn=cmd_scan)
 
     v = sub.add_parser("validate", help="check proposals and freeze an approvable plan")
