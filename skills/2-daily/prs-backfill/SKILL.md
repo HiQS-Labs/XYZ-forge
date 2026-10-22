@@ -110,7 +110,11 @@ have. `low` confidence is held automatically. Rationale fields together stay und
 characters.
 
 In E0 (calibrate), rate blind: do not read the row's scores from `releases.db`, `releases.sql`,
-ROADMAP views or prior receipts before writing proposals. The packet never contains them.
+ROADMAP views or prior receipts before writing proposals. The packet carries no `rating_*`
+columns and withholds the capture doc's `rating:` frontmatter and any `rated N/N/N/N` /
+`pri/sev/appeal/effort N/N/N/N` token in its prose (`[rating withheld]`); issue body and comments are
+passed as written, so a filer's own "suggested PRS" line can still appear — flag it in `uncertainty`
+and rate independently.
 
 ### 3. Independent review
 
@@ -135,9 +139,15 @@ plan hash. Holds are recorded as receipts. Show the operator the full plan and h
 ### 5. Apply (operator-approved)
 
 ```bash
-$PB apply --run <run_id> --approve <plan sha12> --dry-run   # preview every write
-$PB apply --run <run_id> --approve <plan sha12>             # write
+$PB apply --run <run_id> --approve <plan sha12> --dry-run              # preview every write
+$PB apply --run <run_id> --approve <plan sha12> --post-rationale       # write + dated rationale on each issue
 ```
+
+The start-task policy requires a short dated rationale **with each task's canonical issue or plan**,
+not only in this tool's local receipts. `--post-rationale` is how an ordinary batch satisfies it;
+leave it off only when the operator records the rationale on the canonical plan doc instead (say so
+in the batch report). The 14 ratings of 2026-10-21 were applied without it — their rationales are
+in `.tick/prs-backfill/receipts.jsonl` and still owe the canonical record.
 
 Before each write the script re-fetches the issue and holds it if it closed or its content
 changed since the scan, and re-reads the row (skipped if already rated, held if ambiguous or
@@ -147,9 +157,10 @@ follow with `releases check`. A `write-failed` issue is selected again by the ne
 evidence did not change, the infrastructure did), unlike a judgment hold. Re-running the same
 approval is idempotent.
 
-`--post-rationale` also comments the dated rationale on each issue (start-task keeps the
-rationale with the canonical issue), only after the read-back verified the write. It is off by default because a backfill would post many
-comments at once; enable it per batch when the operator wants it.
+`--post-rationale` comments the dated rationale on each issue only after the read-back verified the
+write; a comment that fails or times out is recorded in the receipt (`commented: false`) and never
+undoes or hides a verified write. The flag is off in the code so a scheduled pass cannot post without
+an operator's say-so; the attended procedure above passes it.
 
 ### 6. Calibrate (E0 only)
 

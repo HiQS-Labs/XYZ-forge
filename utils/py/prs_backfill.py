@@ -338,14 +338,24 @@ def build_packet(slug, root, row, live, mode):
 
 
 _RATING_LINE = re.compile(r"^\s*rating:.*$", re.MULTILINE)
+# The same answer in prose: the ledger token `rated 55/25/50/40 [ovr N]` and the long form
+# `pri/sev/appeal/effort 55/25/50/40` (both verbatim in real capture docs — GH-589:44, GH-579:66).
+_RATING_TOKEN = re.compile(
+    r"(\brated\s+\d{1,3}/\d{1,3}/\d{1,3}/\d{1,3}(?:\s*\[?\s*ovr\s+\d{1,3}\s*\]?)?"
+    r"|\bpri/sev/appeal/effort\s+\d{1,3}/\d{1,3}/\d{1,3}/\d{1,3})", re.IGNORECASE)
 
 
 def strip_rating_lines(text):
-    """A capture doc's frontmatter carries `rating: "pri/sev/appeal/effort N/N/N/N"`. Left in the
-    packet it anchors the rater (and makes E0 "blind" a fiction — the first E0 pass found it in
-    3 of 15 packets). The PDDA trio (effort/complexity/risk, 1–5) stays: a different vocabulary
-    the policy already forbids copying, and the rater should see what the doc claims."""
-    return _RATING_LINE.sub("rating: [withheld from the rater]", text) if text else text
+    """A capture doc carries its PRS answer in two serializations: the frontmatter line
+    `rating: "pri/sev/appeal/effort N/N/N/N"` and prose tokens `rated N/N/N/N`. Left in the
+    packet either one anchors the rater and makes E0 "blind" a fiction (first E0 pass: 3 of 15
+    packets via frontmatter; Codex QA round 1: GH-589 / GH-579 via prose). Both are withheld. The
+    PDDA trio (effort/complexity/risk, 1–5) stays: a different vocabulary the policy already
+    forbids copying, and the rater should see what the doc claims."""
+    if not text:
+        return text
+    text = _RATING_LINE.sub("rating: [withheld from the rater]", text)
+    return _RATING_TOKEN.sub("[rating withheld]", text)
 
 
 def is_placeholder_rating(row):
@@ -584,7 +594,12 @@ def run_rate(root, issue, rated, dry_run):
            "--issue-num", str(issue), "--rated", rated]
     if dry_run:
         cmd.append("--dry-run")
-    p = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        # A hung writer is a failed write, not a crash: it must reach the `write-failed` receipt
+        # and the exit-3 stop like any other rc != 0 (Codex QA round 1, F2).
+        return cmd, -1, "roadmap rate timed out after 120s; run `releases check`"
     return cmd, p.returncode, (p.stdout + p.stderr).strip()[-600:]
 
 
@@ -597,8 +612,11 @@ def post_rationale(slug, item, plan_sha):
                r["uncertainty"], item["rater"]["agent"], item["rater"]["model"],
                (item.get("review") or {}).get("agent", "-"),
                (item.get("review") or {}).get("model", "-"), plan_sha[:12], POLICY_VERSION))
-    p = subprocess.run(["gh", "issue", "comment", str(item["issue"]), "-R", slug, "--body", body],
-                       capture_output=True, text=True, timeout=120)
+    try:
+        p = subprocess.run(["gh", "issue", "comment", str(item["issue"]), "-R", slug,
+                            "--body", body], capture_output=True, text=True, timeout=120)
+    except subprocess.TimeoutExpired:
+        return False   # the rating is already written and read back; a lost comment is reported, never fatal
     return p.returncode == 0
 
 
@@ -659,8 +677,12 @@ def cmd_apply(a):
                 tally[kind] += 1
                 print("  GH-%-5d %s %s" % (n, kind.upper(), reason))
                 if not a.dry_run:
+                    # The receipt keeps the SCAN-time `issue_updated_at` (in `base`): this hold is
+                    # a judgment about the version the rater saw, not about the live one. Stamping
+                    # the live timestamp here made `scan` treat the edited issue as already judged
+                    # and never re-select it (Codex QA round 1, F3).
                     append_receipt(root, dict(base, type=kind, stage="apply", reason=reason,
-                                              issue_updated_at=live.get("updatedAt")))
+                                              live_updated_at=live.get("updatedAt")))
                 continue
 
             cmd, rc, out = run_rate(root, n, it["rated"], a.dry_run)
