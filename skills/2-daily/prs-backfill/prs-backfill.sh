@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 #
-# prs-backfill.sh — thin locator for utils/py/prs_backfill.py (GH-1175).
+# prs-backfill.sh — thin locator for prs_backfill.py (GH-1175), which lives beside this script.
 #
-# Resolves the implementation three levels up from this script's real directory (the skills/
-# contract), so it works from a harness clone, a vendored .xyz/ copy, or a symlinked install.
+# The implementation is skill-local (the GH-777 inventory ratchet freezes utils/py); it resolves
+# the harness itself three levels up for releases_app.py. Symlink-safe, so a ~/.claude/skills
+# install, a harness clone, or a vendored .xyz/ copy all work.
 # The repo being RATED is resolved by the Python side (--root > $PRS_BACKFILL_ROOT > git
 # toplevel > CWD), never from this script's location (GH-344).
 #
@@ -18,8 +19,7 @@ while [ -h "$_src" ]; do
   case "$_src" in /*) ;; *) _src="$_dir/$_src" ;; esac
 done
 SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"   # …/skills/2-daily/prs-backfill
-HARNESS="$(cd -P "$SELF_DIR/../../.." >/dev/null 2>&1 && pwd)"
-IMPL="$HARNESS/utils/py/prs_backfill.py"
+IMPL="$SELF_DIR/prs_backfill.py"
 
 [ -f "$IMPL" ] || { echo "prs-backfill: implementation not found at $IMPL" >&2; exit 2; }
 command -v python3 >/dev/null 2>&1 || { echo "prs-backfill: python3 not found" >&2; exit 2; }

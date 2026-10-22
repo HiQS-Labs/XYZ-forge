@@ -3,7 +3,10 @@
 ## 2026-10-21 — prs-backfill: reviewed PRS rating backfill (GH-1175)
 
 New skill `skills/2-daily/prs-backfill/` (SKILL.md, locator `prs-backfill.sh`, `install.sh`) with
-implementation `utils/py/prs_backfill.py` (stdlib only). Deterministic `scan` inventories open
+implementation `skills/2-daily/prs-backfill/prs_backfill.py` (stdlib + `releases_app.connect`;
+moved out of `utils/py/` on 2026-10-22 because the GH-777 inventory ratchet — which the PR lane's
+smoke gate does not run — went red on development for a new loose script and a direct
+`sqlite3.connect`). Deterministic `scan` inventories open
 issues against `releases.db` (one list call; comments fetched only for the bounded packet set) and
 writes evidence packets; the agent proposes `pri/sev/appeal/effort` under the start-task rating
 policy; `validate` enforces appeal=50 unless operator-supplied, complete dated rationale, and an

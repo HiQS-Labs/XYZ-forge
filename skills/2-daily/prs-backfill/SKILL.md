@@ -58,7 +58,8 @@ PB="bash .xyz/skills/2-daily/prs-backfill/prs-backfill.sh"   # vendored repo
 $PB status
 ```
 
-The wrapper resolves `utils/py/prs_backfill.py` relative to itself and rates the repo you run
+The wrapper runs `prs_backfill.py` from its own directory (skill-local: `utils/py/` is frozen by
+the GH-777 inventory ratchet; the ledger is opened only via `releases_app.connect`) and rates the repo you run
 it in (`--root` > `$PRS_BACKFILL_ROOT` > git toplevel > CWD). Pass `--repo <org>/<repo>` if
 `origin` is not a github.com remote.
 

@@ -42,13 +42,25 @@ import hashlib
 import json
 import os
 import re
-import sqlite3
 import subprocess
 import sys
 
 POLICY_VERSION = "prs-backfill/1"
+# This file lives beside its SKILL.md (skills/2-daily/prs-backfill/), not in utils/py: the GH-777
+# inventory ratchet freezes the set of loose scripts there, and the ledger is opened only through
+# releases_app.connect() — the one canonical SQLite gateway — never a direct sqlite3.connect.
 SELF_DIR = os.path.dirname(os.path.realpath(__file__))
-RELEASES_APP = os.path.join(SELF_DIR, "releases_app.py")
+HARNESS = os.path.realpath(os.path.join(SELF_DIR, "..", "..", ".."))
+UTILS_PY = os.path.join(HARNESS, "utils", "py")
+RELEASES_APP = os.path.join(UTILS_PY, "releases_app.py")
+
+
+def _releases_app():
+    """Import the canonical ledger module lazily (6,900 lines; only `connect` is used here)."""
+    if UTILS_PY not in sys.path:
+        sys.path.insert(0, UTILS_PY)
+    import releases_app  # noqa: E402
+    return releases_app
 
 EXIT_OK, EXIT_USAGE, EXIT_REFUSED, EXIT_DISABLED, EXIT_BUSY = 0, 2, 3, 4, 5
 
@@ -127,7 +139,8 @@ def resolve_slug(root, arg):
     if arg:
         return arg
     try:
-        sys.path.insert(0, SELF_DIR)
+        if UTILS_PY not in sys.path:
+            sys.path.insert(0, UTILS_PY)
         from harness_paths import github_slug_from_origin  # noqa: E402
         slug = github_slug_from_origin(root)
     except Exception:
@@ -219,9 +232,9 @@ def open_ledger_ro(root):
     p = db_path(root)
     if not os.path.exists(p):
         die(EXIT_REFUSED, "no-ledger", "%s not found (a releases-mode repo is required)" % p)
-    conn = sqlite3.connect("file:%s?mode=ro" % p, uri=True)
-    conn.row_factory = sqlite3.Row
-    return conn
+    # readonly=True opens `file:…?mode=ro`, sets row_factory and the foreign-key pragma exactly as
+    # every other reader of this ledger does.
+    return _releases_app().connect(p, readonly=True)
 
 
 def ledger_rows(conn):
