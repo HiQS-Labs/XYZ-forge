@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-10-21 — prs-backfill: reviewed PRS rating backfill (GH-1175)
+
+New skill `skills/2-daily/prs-backfill/` (SKILL.md, locator `prs-backfill.sh`, `install.sh`) with
+implementation `utils/py/prs_backfill.py` (stdlib only). Deterministic `scan` inventories open
+issues against `releases.db` (one list call; comments fetched only for the bounded packet set) and
+writes evidence packets; the agent proposes `pri/sev/appeal/effort` under the start-task rating
+policy; `validate` enforces appeal=50 unless operator-supplied, complete dated rationale, and an
+independent reviewer that agrees, then freezes a hashed plan; `apply --approve <sha>` writes only
+through `releases roadmap rate` (never `--force`, never `--ovr`), re-checks issue content and row
+state before each write, reads back after it, and stops on the first failure with exit 3 and a
+`write-failed` receipt that the next scan re-selects (a judgment hold is not re-selected; an
+infrastructure failure is). The rationale comment follows only a read-back-verified write; the
+`stale` report confirms on content hash, not `updatedAt`; the kill switch also covers `calibrate`;
+the lock no longer truncates the holder's pid when a contender loses. `calibrate` is the
+E0 blind comparison against already-rated rows; the first E0 pass (2026-10-21, n=15) found the
+packet leaking the capture doc's `rating:` frontmatter in 3 of 15 cases and 5 of 15 "truth" rows
+being placeholders (PDDA 1–5 trio in the 1–100 columns, or 50/50/50/50 — #1177), so packets now
+withhold `rating:` lines and calibration never samples placeholder rows. Registration stays with HQ / weekly-prepare
+(#1022). State and provenance receipts live under gitignored `.tick/prs-backfill/`. Kill switch
+`PRS_BACKFILL_DISABLE=1`; single-instance flock. No new tests (GH-831); exercised end-to-end on a
+disposable ledger copy against live issues. Reversibility: **Easy** — new files plus one Skills
+Index row; delete them.
+
 ## 2026-10-21 — ATE/fuzzing documentation correction (GH-1174)
 
 Replace the ATE installation narrative with a concise entry-point/schema map and current runner,

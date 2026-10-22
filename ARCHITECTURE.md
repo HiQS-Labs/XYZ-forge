@@ -85,6 +85,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [jog](skills/2-daily/jog/SKILL.md) | Capture and execute an immediate serial task queue one item at a time. |
 | [merge-cleanup](skills/2-daily/merge-cleanup/SKILL.md) | Land open PRs in dependency order, reconcile, and tear down clones/worktrees that are proven landed. |
 | [phase-qa](skills/2-daily/phase-qa/SKILL.md) | Add phase-appropriate QA checks to plans and review completed phases. |
+| [prs-backfill](skills/2-daily/prs-backfill/SKILL.md) | Backfill and keep current PRS four-axis ratings on registered unrated rows — scripted packets, agent rating, independent review, hash-approved writes via `roadmap rate`. |
 | [relay-to-issue](skills/2-daily/relay-to-issue/SKILL.md) | Turn a finished relay thread into a checklist-style GitHub issue. |
 | [releases](skills/2-daily/releases/SKILL.md) | Read/author/publish the releases.db planning ledger. |
 | [review-code-xyz](skills/2-daily/review-code-xyz/SKILL.md) | Meticulous ground-truth review of a local diff or branch using recon, debug-mantra, and workhorse/unstuck ladders (fixes reversible issues). |
