@@ -141,4 +141,12 @@ Evidence scope: Verify tier. Graph project XYZ-forge points at the primary check
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) / harness may complete the final committed-state gate and publication workflow.
 
+
+### Attestation · relay-drive — 2026-10-22T14:12:07Z
+task: RELAY-gh1178-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 7bf719cd8f31cff3e030c548ed14297a2dd0d863
+added-range: 13274+4203
+added-sha256: acf76946ff11b7da85bf137ad12320475ceb3c7be8b79058fad65191334aaba3
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
