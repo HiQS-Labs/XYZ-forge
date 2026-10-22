@@ -20,11 +20,11 @@ def load(name, path):
 
 app = load('gh1178_app', source / 'utils/py/releases_app.py')
 wave = load('gh1178_wave', wave_path)
-DOC = 'PROJECT/2-WORKING/GH-421-fixture.md'
 OTHER = 'PROJECT/2-WORKING/GH-500-unmoved.md'
 
 
-def scenario(closes, dry_run=False):
+def scenario(DOC, dry_run=False):
+    closes = 'Closes #421\nCloses #422'  # wave_reconcile sorts closers: #421 is always processed first
     tmp = tempfile.TemporaryDirectory(prefix='gh1178-')
     root = Path(tmp.name)
     (root / '.git').mkdir()
@@ -88,19 +88,28 @@ def scenario(closes, dry_run=False):
 
 
 ok = True
-for closes in ('Closes #421\nCloses #422', 'Closes #422\nCloses #421'):
-    first, r, second = scenario(closes)
+# Owner first: doc named after #421. Sibling first: doc named after #422, so sibling #421 runs
+# before the doc has moved.
+for label, DOC in (('owner-first', 'PROJECT/2-WORKING/GH-421-fixture.md'),
+                   ('sibling-first', 'PROJECT/2-WORKING/GH-422-fixture.md')):
+    first, r, second = scenario(DOC)
     done = DOC.replace('2-WORKING', '3-COMPLETED')
+    order = [l for l in first.splitlines() if 'Found active doc' in l or 'No active doc' in l]
     both = r[421][0] == done and r[422][0] == done
-    text = DOC not in r[422][1]
-    unmoved = r[500][0] == OTHER
+    text = all(done in r[n][1] and DOC not in r[n][1] for n in (421, 422))
+    unmoved = r[500][0] == OTHER and OTHER in r[500][1]
     rerun_quiet = '"repoint"' not in second
-    print(f'[{closes!r}] 421={r[421][0]} 422={r[422][0]} 500={r[500][0]}')
-    print(f'  A1 both rows repointed: {both} · 422 raw_text updated: {text} · A3 unmoved row kept: {unmoved}'
-          f' · A4 rerun has no repoint: {rerun_quiet}')
+    print(f'[{label}] doc={DOC}')
+    print(f'  traversal: {order}')
+    print(f'  421 doc_path={r[421][0]}\n  421 raw_text={r[421][1]}')
+    print(f'  422 doc_path={r[422][0]}\n  422 raw_text={r[422][1]}')
+    print(f'  500 doc_path={r[500][0]}')
+    print(f'  A1 both doc_paths moved: {both} · A1 both raw_text carry destination, not source: {text}'
+          f' · A3 unmoved row kept: {unmoved} · A4 rerun has no repoint: {rerun_quiet}')
     ok &= both and text and unmoved and rerun_quiet
 
-first, r, _ = scenario('Closes #421\nCloses #422', dry_run=True)
+DOC = 'PROJECT/2-WORKING/GH-421-fixture.md'
+first, r, _ = scenario(DOC, dry_run=True)
 dry_ok = r[422][0] == DOC and r[421][0] == DOC
 print(f'[dry-run] ledger unchanged: {dry_ok} · transitions: '
       f'{[l for l in first.splitlines() if l.startswith("TRANSITION") and "repoint" in l]}')

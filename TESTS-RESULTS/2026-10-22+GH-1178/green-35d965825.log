@@ -1,8 +1,20 @@
-$ python3 probe.py <clone> <clone>/utils/py/wave_reconcile.py @ 35d965825
-['Closes #421\nCloses #422'] 421=PROJECT/3-COMPLETED/GH-421-fixture.md 422=PROJECT/3-COMPLETED/GH-421-fixture.md 500=PROJECT/2-WORKING/GH-500-unmoved.md
-  A1 both rows repointed: True · 422 raw_text updated: True · A3 unmoved row kept: True · A4 rerun has no repoint: True
-['Closes #422\nCloses #421'] 421=PROJECT/3-COMPLETED/GH-421-fixture.md 422=PROJECT/3-COMPLETED/GH-421-fixture.md 500=PROJECT/2-WORKING/GH-500-unmoved.md
-  A1 both rows repointed: True · 422 raw_text updated: True · A3 unmoved row kept: True · A4 rerun has no repoint: True
-[dry-run] ledger unchanged: True · transitions: ['TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M5HYMPXD8744K1QE9RD9298V", "--doc-path", "PROJECT/3-COMPLETED/GH-421-fixture.md"]', 'TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M5HYMPXQVRVR091J7F2A8RMZ", "--doc-path", "PROJECT/3-COMPLETED/GH-421-fixture.md"]']
+$ python3 probe.py <gate clone @ a529e33e83cdd8e5bd87f646dd8536d2937aeb81> <gate clone>/utils/py/wave_reconcile.py
+[owner-first] doc=PROJECT/2-WORKING/GH-421-fixture.md
+  traversal: ['wave-reconcile:   Found active doc: GH-421-fixture.md', 'wave-reconcile:   No active doc in 2-WORKING for GH-422']
+  421 doc_path=PROJECT/3-COMPLETED/GH-421-fixture.md
+  421 raw_text=- **GH-421 · fixture 421** ✅ **SHIPPED 2026-09-08 (PR #42)** — [GH-421-fixture.md](PROJECT/3-COMPLETED/GH-421-fixture.md) · [#421](https://github.com/test/repo/issues/421)
+  422 doc_path=PROJECT/3-COMPLETED/GH-421-fixture.md
+  422 raw_text=- **GH-422 · fixture 422** ✅ **SHIPPED 2026-09-08 (PR #42)** — [GH-421-fixture.md](PROJECT/3-COMPLETED/GH-421-fixture.md) · [#422](https://github.com/test/repo/issues/422)
+  500 doc_path=PROJECT/2-WORKING/GH-500-unmoved.md
+  A1 both doc_paths moved: True · A1 both raw_text carry destination, not source: True · A3 unmoved row kept: True · A4 rerun has no repoint: True
+[sibling-first] doc=PROJECT/2-WORKING/GH-422-fixture.md
+  traversal: ['wave-reconcile:   No active doc in 2-WORKING for GH-421', 'wave-reconcile:   Found active doc: GH-422-fixture.md']
+  421 doc_path=PROJECT/3-COMPLETED/GH-422-fixture.md
+  421 raw_text=- **GH-421 · fixture 421** ✅ **SHIPPED 2026-09-08 (PR #42)** — [GH-422-fixture.md](PROJECT/3-COMPLETED/GH-422-fixture.md) · [#421](https://github.com/test/repo/issues/421)
+  422 doc_path=PROJECT/3-COMPLETED/GH-422-fixture.md
+  422 raw_text=- **GH-422 · fixture 422** ✅ **SHIPPED 2026-09-08 (PR #42)** — [GH-422-fixture.md](PROJECT/3-COMPLETED/GH-422-fixture.md) · [#422](https://github.com/test/repo/issues/422)
+  500 doc_path=PROJECT/2-WORKING/GH-500-unmoved.md
+  A1 both doc_paths moved: True · A1 both raw_text carry destination, not source: True · A3 unmoved row kept: True · A4 rerun has no repoint: True
+[dry-run] ledger unchanged: True · transitions: ['TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M5HZ3W4A5VWA2KWBK9KH4F61", "--doc-path", "PROJECT/3-COMPLETED/GH-421-fixture.md"]', 'TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M5HZ3W4K501J70RM1GB3YP5Y", "--doc-path", "PROJECT/3-COMPLETED/GH-421-fixture.md"]']
 VERDICT: PASS
 exit=0

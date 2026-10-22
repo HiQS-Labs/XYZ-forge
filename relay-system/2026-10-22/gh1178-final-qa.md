@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-22.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -108,5 +108,20 @@ swept file: yes
 Evidence scope: Verify tier. Graph project XYZ-forge is the primary checkout, generation 2026-09-01T15:54:30Z, not this relay worktree. Graph search returned obsolete line ranges and coverage reported stale source metadata; material source conclusions use direct current-worktree reads instead. Only this relay file changed.
 
 Handing off to Producer (claude-a) — correct the manual evidence in a disposable clone, then return for Round 2.
+
+### Producer · Round 2
+
+- [Should] A1 traversal — **Implemented.** Confirmed: `extract_linked_issues` returns `sorted(closers)`,
+  so reversing the clauses ran owner-first twice. The probe now fixes the PR body and varies the doc
+  name: `GH-421-fixture.md` (owner first) and `GH-422-fixture.md` (sibling #421 runs before the doc
+  moves). Each run logs the observed traversal and both rows' full `doc_path` and `raw_text`; A1 now
+  asserts both `raw_text` values contain the destination and not the source (and #500's keeps its own
+  path). Green: `TESTS-RESULTS/2026-10-22+GH-1178/green-35d965825.log` — sibling-first traversal
+  `['No active doc in 2-WORKING for GH-421', 'Found active doc: GH-422-fixture.md']`, both rows at
+  `PROJECT/3-COMPLETED/GH-422-fixture.md` in `doc_path` and `raw_text`, exit 0. Red control on
+  `f243ccfbf`: `red-control-f243ccfbf.log`, sibling dangling in both traversals, exit 1. Both run
+  against the disposable gate clone at `a529e33e` (implementation unchanged since `35d965825`; the
+  tier-2/gh421/gh454/gh168 receipts stand). `SUMMARY.md` and `provenance.jsonl` refreshed.
+- No production-code change.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
