@@ -1,8 +1,8 @@
-$ python3 probe.py <clone> <clone>/utils/py/wave_reconcile.py @ fd4b988a8
+$ python3 probe.py <clone> <clone>/utils/py/wave_reconcile.py @ 35d965825
 ['Closes #421\nCloses #422'] 421=PROJECT/3-COMPLETED/GH-421-fixture.md 422=PROJECT/3-COMPLETED/GH-421-fixture.md 500=PROJECT/2-WORKING/GH-500-unmoved.md
   A1 both rows repointed: True · 422 raw_text updated: True · A3 unmoved row kept: True · A4 rerun has no repoint: True
 ['Closes #422\nCloses #421'] 421=PROJECT/3-COMPLETED/GH-421-fixture.md 422=PROJECT/3-COMPLETED/GH-421-fixture.md 500=PROJECT/2-WORKING/GH-500-unmoved.md
   A1 both rows repointed: True · 422 raw_text updated: True · A3 unmoved row kept: True · A4 rerun has no repoint: True
-[dry-run] ledger unchanged: True · transitions: ['TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M5HXZWME1J0Q5RSW4AD9ZDC7", "--doc-path", "PROJECT/3-COMPLETED/GH-421-fixture.md"]', 'TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M5HXZWME1J0Q5RSW4AD9ZDC7", "--doc-path", "PROJECT/3-COMPLETED/GH-421-fixture.md"]', 'TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M5HXZWMQ8DRVGFPJA3DYYZVN", "--doc-path", "PROJECT/3-COMPLETED/GH-421-fixture.md"]']
+[dry-run] ledger unchanged: True · transitions: ['TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M5HYMPXD8744K1QE9RD9298V", "--doc-path", "PROJECT/3-COMPLETED/GH-421-fixture.md"]', 'TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M5HYMPXQVRVR091J7F2A8RMZ", "--doc-path", "PROJECT/3-COMPLETED/GH-421-fixture.md"]']
 VERDICT: PASS
 exit=0

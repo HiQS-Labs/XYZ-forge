@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Captured; recon done at `f243ccfbf`. | Plan QA (Codex relay), then implement. |
+| Plan QA Approved r1 (`relay-system/2026-10-22/gh1178-plan-qa.md`); fix implemented and verified (`TESTS-RESULTS/2026-10-22+GH-1178/SUMMARY.md`). | Final Codex QA, then PR against development. |
 
 ## Why
 
@@ -99,6 +99,18 @@ call, no data loss; trips pdda roadmap coverage. pri 45: one observed incident
 (rebalanceOS, 2026-10-21); prior 14 days 0 same-class issues found — trend unknown. appeal 50
 neutral. effort 85: one-file, ~25-line change on an existing writer.
 
+## Implementation notes
+
+- `repoint_moved_doc_rows` sits beside `update_roadmap_entry` in `utils/py/wave_reconcile.py`;
+  `moved_docs` maps source → (destination, owning issue). The owning row is skipped: it was already
+  repointed, and in `--dry-run` the ledger cannot show that, which previewed it twice (Codex plan-QA
+  nit; `gh421 test_dry_run_transitions` pins the exact preview).
+- `releases_app` is imported only once matching rows exist, as `update_roadmap_entry` does —
+  `test/wave-reconcile.sh`'s fixture has an empty placeholder ledger and no `releases_app`.
+
 ## Lessons Learned
 
-Pending.
+- Plan QA flagged the duplicate dry-run preview as a Nit; an existing suite pinned it exactly. Treat a
+  "cosmetic" preview difference as a contract change when a suite asserts the transition list.
+- A new helper in a shared module must keep the module's lazy-import shape: fixtures copy only part
+  of `utils/py`.
