@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-22.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -86,5 +86,21 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Ship the plan. The exact-source-path post-loop pass addresses the observed failure through the existing writer and ownership contract. Approval is for the plan, not runtime qualification.
+swept file: yes
+
+- [Pass] Swept the entire 104-line plan, including recon, implementation, acceptance, rating and lessons. No pre-existing defect requiring a plan revision found. The filename correction is accurate: `utils/py/wave_reconcile.py:1080` matches `GH-<number>-`/`<number>-`, not frontmatter. The owner supplies `doc_path` at `:2395`; the sharing branch at `:2406-2415` does not. Root cause: per-issue filename discovery cannot give a sharing row the moved destination; fix site: post-loop row repoint; why here: all moves are known and no earlier lifecycle update can overwrite the repaired embedded path.
+- [Pass] Acceptance coverage is complete for #1178: plan A1–A5 (`PROJECT/2-WORKING/GH-1178-WAVE-RECONCILE-SHARED-DOC-REPOINT.md:82-93`) specify both row paths and raw text, both orders, the base red control, unmoved rows, rerun and canonical writer. Read-only requirements query `gh issue view 1178 --repo HiQS-Labs/XYZ-forge --json title,body` exited 0; decisive issue acceptance: “A row whose doc was not moved in this run is not repointed” and “the fix goes through `roadmap repoint`.” The proposed exact-match filter and writer satisfy those contracts.
+- [Pass] Existing mechanics fit: `ledger_write` emits intent and returns before CLI execution on dry-run (`utils/py/wave_reconcile.py:1278-1283`), avoiding the destination-existence refusal (`utils/py/releases_app.py:3796-3798`). Real writes snapshot ledger artifacts (`wave_reconcile.py:1281`, `:1755-1775`); failures roll back (`:2484-2491`). `roadmap repoint` rewrites both path fields (`releases_app.py:3799-3811`). Reusing `identity_valid` AND exact repo equality (`wave_reconcile.py:1533-1536`, `releases_app.py:5440-5455`) excludes foreign/invalid rows. Repointing an owned OPEN sibling changes its file pointer only; the proposed helper contains no lifecycle update (plan `:61-64`, `:77-78`).
+- [Nit] Plan `:65-66` describes real apply correctly, but dry-run leaves the owner row at its old path, so the final pass may print a second owner repoint intent. Clarify that “gets no second write” is an apply guarantee; duplicate preview intent does not justify simulated ledger state or extra machinery. Also `:43` means “after all relevant moves/updates” for this design; an all-row repair immediately after each owner update would also be order-independent, but the proposed final pass is clear and small.
+- [Unverified — needs clone run] No executable fixtures, suites or runtime mutation probes were run in this reviewer worktree. The gh421 fixture supports the proposed manual exercise: `test/gh421-auto-wave-reconcile.sh:30` accepts `GH421_WAVE`, `:129-143` drives offline apply, and `:161-183` checks lifecycle plus second-apply mutation absence. Implementation qualification should retain nonempty row assertions and committed `provenance.jsonl` in the plan's evidence directory. A focused manual dry-run/foreign-row/OPEN-sibling/late-failure check can validate the stated boundaries without adding a suite.
+
+Evidence scope: Verify tier; graph project `XYZ-forge` is the primary checkout, generation `2026-09-01T15:54:30Z`, not this relay worktree. Graph lookup was stale (e.g. old function line ranges); coverage reported changed source metadata and absent fixture/plan. Therefore the findings above rely on direct current-worktree source reads, not graph freshness. No artifact/source edits, git commands, or test execution performed.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with implementation and disposable-clone verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
