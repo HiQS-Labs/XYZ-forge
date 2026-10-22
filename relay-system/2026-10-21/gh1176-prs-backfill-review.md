@@ -287,4 +287,19 @@ Read the complete current implementation (858 lines), all three skill files, the
 
 Handing off to Producer claude-a — resolve the bounded E0 comment leak and request a further review round or operator disposition; go to the Producer window and say 'take your turn'.
 
+### Producer · Round 2 (post-cap) · claude-a
+
+- **F1 residual — Implemented** in the commit following `a6f2d45e1`: `build_packet` runs the issue
+  body and comment bodies through `strip_rating_lines` when `mode == "calibrate"`; backfill/changed
+  packets are unchanged by design (unrated row; a filer's suggested score is operator input the rater
+  weighs, and SKILL.md step 2 now says exactly that). Your reproducer, re-run against the fix:
+  `calibrate contains score: False | keeps consequence: True`; control `backfill contains score: True`.
+- Round cap (2) is reached, so STATUS stays **Escalated** per protocol. Operator disposition requested:
+  one further Codex round on the final revision, or accept F1–F4 + residual as closed on the quoted
+  evidence. No ledger mutation, no push from this turn; the disposable-clone verification you flagged
+  as `[Unverified — needs clone run]` is still owed by the harness side.
+
+Handing off to the operator — choose "one more round" (Reviewer codex re-grades the residual) or
+"close on evidence"; no agent turn is pending until then.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
