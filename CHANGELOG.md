@@ -9,7 +9,11 @@ writes evidence packets; the agent proposes `pri/sev/appeal/effort` under the st
 policy; `validate` enforces appeal=50 unless operator-supplied, complete dated rationale, and an
 independent reviewer that agrees, then freezes a hashed plan; `apply --approve <sha>` writes only
 through `releases roadmap rate` (never `--force`, never `--ovr`), re-checks issue content and row
-state before each write, reads back after it, and stops on the first failure. `calibrate` is the
+state before each write, reads back after it, and stops on the first failure with exit 3 and a
+`write-failed` receipt that the next scan re-selects (a judgment hold is not re-selected; an
+infrastructure failure is). The rationale comment follows only a read-back-verified write; the
+`stale` report confirms on content hash, not `updatedAt`; the kill switch also covers `calibrate`;
+the lock no longer truncates the holder's pid when a contender loses. `calibrate` is the
 E0 blind comparison against already-rated rows. Registration stays with HQ / weekly-prepare
 (#1022). State and provenance receipts live under gitignored `.tick/prs-backfill/`. Kill switch
 `PRS_BACKFILL_DISABLE=1`; single-instance flock. No new tests (GH-831); exercised end-to-end on a

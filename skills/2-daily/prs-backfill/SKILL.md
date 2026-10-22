@@ -43,7 +43,8 @@ skill does not restate or amend it; where the two ever disagree, start-task wins
   template belongs to HQ / weekly-prepare (#1022). Unregistered issues are reported only.
 - **Legacy `cx/risk/eff` rows are held.** The writer refuses mixing vocabularies; conversion
   is deliberate operator work.
-- **Kill switch:** `PRS_BACKFILL_DISABLE=1` stops every mutating subcommand (exit 4).
+- **Kill switch:** `PRS_BACKFILL_DISABLE=1` stops every subcommand that writes anything —
+  `scan`, `validate`, `apply`, `calibrate` (exit 4). `status` stays readable.
 - **Sandbox off for `gh`** (TLS/keychain), as in the other GitHub-reading skills.
 
 ## Locating the script
@@ -73,8 +74,9 @@ $PB scan --mode calibrate --limit 15    # E0: stratified blind sample of rated r
 
 `--limit` is the model budget for the pass. The scan prints counts per state
 (`rated`, `rated-ovr`, `unrated`, `unregistered`, `unregistered-with-doc`, `ambiguous-row`,
-`legacy-vocabulary`), a report-only `stale` list (rows this skill rated whose issue moved
-since), and the run directory. An issue held earlier on the same `updatedAt` is not selected
+`legacy-vocabulary`), a report-only `stale` list (rows this skill rated whose issue CONTENT —
+title, body, labels, comments — changed since; `updatedAt` alone is only the pre-filter), and
+the run directory. An issue held earlier on the same `updatedAt` is not selected
 again — no repeated model calls on unchanged evidence.
 
 ### 2. Rate (the agent's judgment)
@@ -139,11 +141,13 @@ $PB apply --run <run_id> --approve <plan sha12>             # write
 Before each write the script re-fetches the issue and holds it if it closed or its content
 changed since the scan, and re-reads the row (skipped if already rated, held if ambiguous or
 legacy). After each write it reads the row back and requires the exact scores with no `ovr`.
-The first failed write or read-back stops the run; follow with `releases check`. Re-running
-the same approval is idempotent.
+The first failed write or read-back stops the run with exit `3` and a `write-failed` receipt;
+follow with `releases check`. A `write-failed` issue is selected again by the next scan (the
+evidence did not change, the infrastructure did), unlike a judgment hold. Re-running the same
+approval is idempotent.
 
 `--post-rationale` also comments the dated rationale on each issue (start-task keeps the
-rationale with the canonical issue). It is off by default because a backfill would post many
+rationale with the canonical issue), only after the read-back verified the write. It is off by default because a backfill would post many
 comments at once; enable it per batch when the operator wants it.
 
 ### 6. Calibrate (E0 only)
@@ -175,8 +179,8 @@ packets/, proposals.template.json, proposals.json, plan.json, calibration.json}`
 `receipts.jsonl` (append-only provenance: rater, reviewer, rationale, content hash, issue
 `updatedAt`, plan hash, writer output, read-back), and `lock`.
 
-Exit codes: `0` ok · `2` usage · `3` refused (gh failure, approval mismatch, schema) ·
-`4` disabled · `5` busy (another instance holds the lock).
+Exit codes: `0` ok · `2` usage · `3` refused (gh failure, approval mismatch, schema, or
+`apply` stopped on a failed write) · `4` disabled · `5` busy (another instance holds the lock).
 
 ## Known limits
 

@@ -24,10 +24,11 @@ parked.
 
 State lives under `<root>/.tick/prs-backfill/` (gitignored):
   runs/<run_id>/scan.json | packets/GH-N.json | proposals.json | plan.json | calibration.json
-  receipts.jsonl   append-only provenance: applied / held / skipped / calibration
+  receipts.jsonl   append-only provenance: applied / held / skipped / write-failed / calibration
   lock             single-instance flock
 
-Exit codes: 0 ok · 2 usage · 3 refused · 4 disabled (PRS_BACKFILL_DISABLE=1) · 5 busy
+Exit codes: 0 ok · 2 usage · 3 refused (incl. `apply` stopped on a failed write) ·
+            4 disabled (PRS_BACKFILL_DISABLE=1) · 5 busy
 """
 import argparse
 import datetime
@@ -147,11 +148,16 @@ class Lock:
         self.fh = None
 
     def __enter__(self):
-        self.fh = open(self.path, "w")
+        # "a+", and truncate only AFTER the flock is ours: opening with "w" would wipe the
+        # holder's pid before the contender finds out it lost (same shape as WriterLock).
+        self.fh = open(self.path, "a+")
         try:
             fcntl.flock(self.fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
+            self.fh.close()
             die(EXIT_BUSY, "busy", "another prs-backfill holds %s" % self.path)
+        self.fh.seek(0)
+        self.fh.truncate()
         self.fh.write(str(os.getpid()))
         self.fh.flush()
         return self
@@ -359,6 +365,10 @@ def cmd_scan(a):
             conn.close()
         docs = doc_index(root)
         receipts = load_receipts(root)
+        # Only JUDGMENT holds suppress re-selection (low confidence, reviewer disagreed, bad
+        # proposal): the evidence has not changed, so a second model call buys nothing. A
+        # `write-failed` receipt is an infrastructure failure (locked ledger, writer crash) and
+        # must NOT hide the issue from the next scan.
         held = latest_by_issue(receipts, {"held"})
         applied = latest_by_issue(receipts, {"applied"})
 
@@ -369,10 +379,15 @@ def cmd_scan(a):
             inventory.append({"issue": it["number"], "state": st, "updated_at": it["updatedAt"]})
 
         # STALE is report-only: a row this tool rated whose issue moved since. Re-scoring needs
-        # the operator's deliberate --force path, never this script.
+        # the operator's deliberate --force path, never this script. `updatedAt` is only the
+        # cheap pre-filter (it moves on bot label churn, see content_hash); a candidate is
+        # confirmed stale only when the CONTENT hash the rating was judged against differs.
         updated = {i["issue"]: i["updated_at"] for i in inventory}
-        stale = sorted(n for n in by_state.get("rated", []) + by_state.get("rated-ovr", [])
-                       if n in applied and updated[n] > applied[n]["issue_updated_at"])
+        stale = []
+        for n in sorted(by_state.get("rated", []) + by_state.get("rated-ovr", [])):
+            if n in applied and updated[n] > applied[n]["issue_updated_at"]:
+                if content_hash(view_issue(slug, n)) != applied[n].get("content_hash"):
+                    stale.append(n)
         if a.mode == "calibrate":
             rated = {n: rows[n][0] for n in by_state.get("rated", [])}
             selected = select_calibration(rated, a.limit, a.seed)
@@ -580,8 +595,8 @@ def cmd_apply(a):
         slug = resolve_slug(root, a.repo or plan.get("repo"))
         done = {int(r["issue"]) for r in load_receipts(root)
                 if r.get("type") == "applied" and r.get("plan_sha") == real_sha}
-        writes = 0
-        tally = {"applied": 0, "held": 0, "skipped": 0, "dry-run": 0}
+        writes, failed = 0, False
+        tally = {"applied": 0, "held": 0, "skipped": 0, "dry-run": 0, "write-failed": 0}
         for it in plan["items"]:
             n = it["issue"]
             base = {"run_id": a.run, "plan_sha": real_sha, "issue": n, "rated": it["rated"],
@@ -639,27 +654,33 @@ def cmd_apply(a):
                 got = "/".join(str(row[c]) for c in ("rating_pri", "rating_sev",
                                                      "rating_appeal", "rating_effort"))
                 readback_ok = got == it["rated"] and row["rating_ovr"] is None
-            commented = post_rationale(slug, it, real_sha) if (rc == 0 and a.post_rationale) \
-                else False
-            kind = "applied" if (rc == 0 and readback_ok) else "held"
+            ok = rc == 0 and readback_ok
+            # The public comment is the LAST step and only follows a verified write: a comment
+            # on an issue whose row was never written would be a rating that exists nowhere.
+            commented = post_rationale(slug, it, real_sha) if (ok and a.post_rationale) else False
+            kind = "applied" if ok else "write-failed"
             tally[kind] += 1
             append_receipt(root, dict(base, type=kind, stage="apply", writer_rc=rc,
                                       writer_out=out, readback_ok=readback_ok,
                                       commented=commented,
-                                      reason=None if kind == "applied" else "writer-or-readback"))
+                                      reason=None if ok else "writer-or-readback"))
             print("  GH-%-5d %s rated %s rc=%d readback=%s"
                   % (n, kind.upper(), it["rated"], rc, readback_ok))
-            if rc != 0 or not readback_ok:
+            if not ok:
+                failed = True
                 print("prs-backfill: stopping after a failed write; run `releases check`",
                       file=sys.stderr)
                 break
     print("summary: %s" % ", ".join("%s %d" % kv for kv in tally.items()))
-    return EXIT_OK
+    # A caller (a scheduled E2 pass most of all) must be able to tell "stopped on a failed
+    # ledger write" from "done": exit 0 after a failure is a lie.
+    return EXIT_REFUSED if failed else EXIT_OK
 
 
 # ── calibrate (E0) ──────────────────────────────────────────────────────────────────────────────
 
 def cmd_calibrate(a):
+    check_disabled()   # it writes calibration.json and a receipt: the kill switch covers it
     root = resolve_root(a.root)
     with Lock(root):
         run_dir, scan, packets, proposals = load_run(root, a.run)
