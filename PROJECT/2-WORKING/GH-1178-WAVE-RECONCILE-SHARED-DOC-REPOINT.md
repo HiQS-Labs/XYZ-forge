@@ -20,7 +20,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved r1 (`relay-system/2026-10-22/gh1178-plan-qa.md`); fix implemented and verified (`TESTS-RESULTS/2026-10-22+GH-1178/SUMMARY.md`). | Final Codex QA, then PR against development. |
+| Plan QA Approved r1; fix verified (`TESTS-RESULTS/2026-10-22+GH-1178/SUMMARY.md`); final Codex QA Approved r2 (`relay-system/2026-10-22/gh1178-final-qa.md`). | PR open against development; awaiting merge. |
 
 ## Why
 
