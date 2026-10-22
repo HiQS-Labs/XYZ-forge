@@ -1,0 +1,8 @@
+$ python3 probe.py <clone> <f243ccfbf wave_reconcile.py>
+['Closes #421\nCloses #422'] 421=PROJECT/3-COMPLETED/GH-421-fixture.md 422=PROJECT/2-WORKING/GH-421-fixture.md 500=PROJECT/2-WORKING/GH-500-unmoved.md
+  A1 both rows repointed: False · 422 raw_text updated: False · A3 unmoved row kept: True · A4 rerun has no repoint: True
+['Closes #422\nCloses #421'] 421=PROJECT/3-COMPLETED/GH-421-fixture.md 422=PROJECT/2-WORKING/GH-421-fixture.md 500=PROJECT/2-WORKING/GH-500-unmoved.md
+  A1 both rows repointed: False · 422 raw_text updated: False · A3 unmoved row kept: True · A4 rerun has no repoint: True
+[dry-run] ledger unchanged: True · transitions: ['TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M5HXZW15BGSTQZQFCGFX9VW4", "--doc-path", "PROJECT/3-COMPLETED/GH-421-fixture.md"]']
+VERDICT: FAIL
+exit=1
