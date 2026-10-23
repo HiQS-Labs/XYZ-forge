@@ -329,7 +329,9 @@ def get_open_prs(repo_root: Path, gh_repo: str | None = None, limit: int = 300) 
         "gh", "pr", "list",
         "--state", "open",
         "--limit", str(limit),
-        "--json", "number,title,author,headRefName,baseRefName,mergeable,reviewDecision,reviews,updatedAt,statusCheckRollup,files,body,isDraft"
+        # `labels` is read only by the GH-1184 Stalled & stale section (hold/parked); every other
+        # consumer ignores extra keys.
+        "--json", "number,title,author,headRefName,baseRefName,mergeable,reviewDecision,reviews,updatedAt,statusCheckRollup,files,body,isDraft,labels,url"
     ]
     if gh_repo:
         cmd.extend(["-R", gh_repo])
@@ -1185,6 +1187,545 @@ def format_weekly_markdown(date_str: str, plan_data: dict) -> str:
     return "\n".join(lines)
 
 
+# ── Stalled & stale (GH-1184) ──────────────────────────────────────────────────────────────────
+#
+# A read-only report of what the operator started and left hanging: GitHub items idle N days plus
+# THIS device's unpushed/uncommitted/orphaned branches and open session notes. Held work (the engine's
+# Phase 5 holds and evidence carriers, hold/parked labels, an explicit owner-decision line) is listed
+# separately and never called stalled. Every external read is wrapped so a failure or a capped list
+# shows up as a coverage gap, never as "nothing stalled". The only GitHub write is one comment per
+# device per day on the team weekly issue, found again by a hidden marker and edited in place.
+# The ledger is never opened here (GH-777 ratchet, #1182).
+
+STALLED_MARKER_RE = re.compile(r"<!-- planner-stalled:([a-z0-9._-]+):(\d{4}-\d{2}-\d{2}) -->")
+INTEGRATION_BRANCHES = {"development", "main", "master"}
+LOCAL_ROWS_SHOWN = 10          # per checkout in the rendered section; the JSON keeps every row
+HOLD_LABELS = {"hold", "parked"}
+IN_PROGRESS_LABELS = {"in progress", "in-progress", "🚧"}
+OWNER_HOLD_RE = re.compile(r"(?im)^\s*(?:owner decision|decision)\s*:\s*hold\b")
+RESOLVED_NOTE_RE = re.compile(r"(?im)^\s*-?\s*\**\s*(?:resolved|promoted|closed)\b")
+HOLD_DISCLOSURE = (
+    "holds recognised: engine title/body phrases (HOLD, leave unmerged, not an authorized merge, "
+    "prerequisites required/live-pilot, review authority limit, evidence carrier), labels hold/parked, "
+    "body line 'owner decision: hold'; comment-only holds are NOT detected"
+)
+AGE_DISCLOSURE = ("ages are GitHub update age (updatedAt): label/metadata churn and bot comments count "
+                  "as activity, so a human stall after such activity can be missed")
+LOCAL_DISCLOSURE = ("'ahead' counts come from cached tracking refs (as of last fetch; this scan never "
+                    "fetches); merged/closed matches are by branch NAME only and are unverified")
+
+
+def _parse_gh_time(value) -> datetime | None:
+    if not value or not isinstance(value, str):
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _age_days(value, now: datetime) -> float | None:
+    ts = _parse_gh_time(value) if isinstance(value, str) else value
+    if ts is None:
+        return None
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=timezone.utc)
+    return (now - ts).total_seconds() / 86400.0
+
+
+def normalize_device_id(raw: str | None) -> str:
+    """device_config, git-pulse and `hostname -s` disagree on case and `.local`; the comment marker
+    must not (noels-Mac-Studio.local / noels-mac-studio / noels-Mac-Studio -> noels-mac-studio)."""
+    name = (raw or "").strip().lower()
+    name = re.sub(r"\.local$", "", name)
+    name = re.sub(r"[^a-z0-9._-]+", "-", name).strip("-.")
+    return name or "unknown-device"
+
+
+def resolve_device_id(repo_root: Path, explicit: str | None) -> str:
+    if explicit:
+        return normalize_device_id(explicit)
+    for candidate in (repo_root / "utils" / "py", repo_root / ".xyz" / "utils" / "py"):
+        if (candidate / "device_config.py").is_file():
+            sys.path.insert(0, str(candidate))
+            try:
+                from device_config import resolve_device_setting  # noqa: E402
+                return normalize_device_id(str(resolve_device_setting("device_id", "XYZ_DEVICE_ID")))
+            except Exception:
+                break
+    import platform
+    return normalize_device_id(platform.node())
+
+
+def _coverage(source: str, status: str, detail: str = "", count: int | None = None) -> dict:
+    entry = {"source": source, "status": status}
+    if detail:
+        entry["detail"] = detail[:300]
+    if count is not None:
+        entry["count"] = count
+    return entry
+
+
+def _gh_json(cmd: list[str], cwd: Path, source: str, coverage: list, limit: int | None = None):
+    """Run a gh command for the stalled scan; a failure or a capped list is a coverage entry, and the
+    caller keeps going with what it has (never a crash, never a silent empty list)."""
+    try:
+        out = run_cmd(cmd, cwd=cwd, check=True)
+        data = json.loads(out) if out else []
+    except Exception as exc:  # noqa: BLE001 - every failure must become a visible gap
+        coverage.append(_coverage(source, "failed", str(exc).splitlines()[-1] if str(exc) else repr(exc)))
+        return None
+    count = len(data) if isinstance(data, (list, dict)) else None
+    if limit is not None and isinstance(data, list) and len(data) >= limit:
+        coverage.append(_coverage(source, "truncated", f"{len(data)} rows returned at limit {limit}", count))
+    else:
+        coverage.append(_coverage(source, "ok", count=count))
+    return data
+
+
+def resolve_gh_slug(repo_root: Path, gh_repo: str | None) -> str | None:
+    if gh_repo:
+        return gh_repo
+    try:
+        return run_cmd(["gh", "repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"], cwd=repo_root) or None
+    except Exception:
+        return None
+
+
+def _origin_slug(path: Path) -> tuple[str | None, str]:
+    """(slug, how) for a checkout's origin. A local-path origin (a clone of a clone) is followed ONE
+    hop; anything deeper is reported unresolved rather than guessed."""
+    def origin_of(p: Path) -> str:
+        try:
+            return run_cmd(["git", "-C", str(p), "remote", "get-url", "origin"], check=True)
+        except Exception:
+            return ""
+
+    def slug_of(url: str) -> str | None:
+        m = re.search(r"[:/]([^/:]+/[^/]+?)(?:\.git)?/?$", url.strip())
+        return m.group(1).lower() if m and not url.startswith(("/", ".", "~")) else None
+
+    url = origin_of(path)
+    if not url:
+        return None, "no origin"
+    slug = slug_of(url)
+    if slug:
+        return slug, "origin"
+    local = Path(os.path.expanduser(url))
+    if local.is_dir():
+        hop = origin_of(local)
+        slug = slug_of(hop) if hop else None
+        if slug:
+            return slug, "origin via one local hop"
+        return None, f"origin is a local path whose own origin is {hop or 'missing'}"
+    return None, f"unparseable origin {url[:80]}"
+
+
+def discover_local_roots(repo_root: Path, roots: list[str], target_slug: str | None, coverage: list) -> list[Path]:
+    """Expand --local-roots (globs allowed) to checkouts of the target repo. Foreign repos are skipped
+    silently; a checkout whose origin cannot be resolved is a visible gap."""
+    import glob as _glob
+    candidates: list[Path] = []
+    for raw in roots:
+        for hit in sorted(_glob.glob(os.path.expanduser(raw))) or []:
+            p = Path(hit)
+            if (p / ".git").exists():
+                candidates.append(p.resolve())
+    seen, selected = set(), []
+    for p in candidates:
+        if p in seen:
+            continue
+        seen.add(p)
+        if p == repo_root.resolve():
+            selected.append(p)
+            continue
+        slug, how = _origin_slug(p)
+        if slug is None:
+            coverage.append(_coverage(f"local root {p.name}", "skipped", f"origin unresolved: {how}"))
+        elif target_slug and slug == target_slug.lower():
+            selected.append(p)
+    return selected
+
+
+def scan_local_checkout(path: Path, pr_heads: dict[str, list[dict]], now: datetime, device: str,
+                        coverage: list) -> list[dict]:
+    """Read-only: one for-each-ref and one status per checkout. No fetch, prune or write of any kind.
+    `--no-optional-locks` keeps `status` from refreshing the index (git-status(1), BACKGROUND REFRESH)."""
+    rows: list[dict] = []
+    label = path.name
+    try:
+        refs = run_cmd(["git", "-C", str(path), "for-each-ref", "refs/heads",
+                        "--format=%(refname:short)%00%(upstream:short)%00%(upstream:track)%00%(committerdate:iso8601-strict)"])
+    except Exception as exc:
+        coverage.append(_coverage(f"local root {label}", "failed", str(exc).splitlines()[-1]))
+        return rows
+    for line in refs.splitlines():
+        parts = line.split("\x00")
+        if len(parts) != 4:
+            continue
+        branch, upstream, track, cdate = parts
+        age = _age_days(cdate, now)
+        last = cdate[:10] if cdate else "unknown"
+        ahead = re.search(r"ahead (\d+)", track or "")
+        # Integration branches are promotion PR heads (development -> main); a name match there is
+        # never a retirement hint, and a local `development` is tracked by every clone anyway.
+        matches = [] if branch in INTEGRATION_BRANCHES else pr_heads.get(branch, [])
+        closed = [m for m in matches if str(m.get("state", "")).upper() in {"MERGED", "CLOSED"}]
+        if closed and not any(str(m.get("state", "")).upper() == "OPEN" for m in matches):
+            m = closed[0]
+            rows.append({"kind": "branch", "ref": f"{label}:{branch}", "path": str(path), "device": device,
+                         "last_activity": last,
+                         "reason": f"PR #{m.get('number')} is {str(m.get('state')).lower()} (name match, unverified)"
+                                   + (f"; local ahead {ahead.group(1)} as of last fetch" if ahead else ""),
+                         "next_action": "retire? name match — verify with /merge-cleanup"})
+        elif not upstream and branch not in INTEGRATION_BRANCHES:
+            rows.append({"kind": "branch", "ref": f"{label}:{branch}", "path": str(path), "device": device,
+                         "last_activity": last, "reason": "no upstream (never pushed)",
+                         "next_action": "inspect; push or delete"})
+        elif ahead:
+            rows.append({"kind": "branch", "ref": f"{label}:{branch}", "path": str(path), "device": device,
+                         "last_activity": last, "reason": f"ahead {ahead.group(1)} of {upstream} (as of last fetch)",
+                         "next_action": "inspect; push or open PR"})
+        _ = age
+    try:
+        porcelain = run_cmd(["git", "-C", str(path), "--no-optional-locks", "status", "--porcelain"])
+    except Exception as exc:
+        coverage.append(_coverage(f"local root {label} status", "failed", str(exc).splitlines()[-1]))
+        return rows
+    dirty = [l for l in porcelain.splitlines() if l.strip()]
+    if dirty:
+        rows.append({"kind": "worktree", "ref": label, "path": str(path), "device": device,
+                     "last_activity": now.date().isoformat(), "reason": f"{len(dirty)} uncommitted change(s)",
+                     "next_action": "commit or stash"})
+    coverage.append(_coverage(f"local root {label}", "ok", count=len(rows)))
+    return rows
+
+
+def scan_notes(repo_root: Path, now: datetime, notes_days: int, device: str, coverage: list) -> list[dict]:
+    """Open session notes touched in the window: dated PARKED/YYYY-MM-DD-*.md not marked resolved, and
+    relay threads whose STATUS is not Approved/Closed. Path, mtime and status only — never contents,
+    and a note's `check`/`close` fields are never executed."""
+    rows: list[dict] = []
+    cutoff = now - timedelta(days=notes_days)
+
+    # "Touched in the window" means the last COMMIT touching the file, or an uncommitted change —
+    # never the filesystem mtime, which a fresh clone sets to the clone time for every file.
+    touched: dict[str, str] = {}
+    try:
+        log = run_cmd(["git", "-C", str(repo_root), "log", f"--since={cutoff.isoformat()}", "--format=%cI",
+                       "--name-only", "--", "PARKED", "relay-system"])
+        stamp = ""
+        for line in log.splitlines():
+            if not line.strip():
+                continue
+            if re.match(r"\d{4}-\d{2}-\d{2}T", line):
+                stamp = line.strip()
+            else:
+                touched.setdefault(line.strip(), stamp)
+        porcelain = run_cmd(["git", "-C", str(repo_root), "--no-optional-locks", "status", "--porcelain", "--",
+                             "PARKED", "relay-system"])
+        for line in porcelain.splitlines():
+            if len(line) > 3:
+                touched[line[3:].strip()] = now.isoformat()
+    except Exception as exc:
+        coverage.append(_coverage("note history", "failed", str(exc).splitlines()[-1] if str(exc) else repr(exc)))
+
+    def last_touch(f: Path) -> datetime | None:
+        rel = str(f.relative_to(repo_root))
+        return _parse_gh_time(touched.get(rel)) if rel in touched else None
+
+    parked = repo_root / "PARKED"
+    if parked.is_dir():
+        seen = 0
+        for f in sorted(parked.glob("*.md")):
+            if not re.match(r"\d{4}-\d{2}-\d{2}-", f.name):
+                continue   # README.md / PARKED.md are folder metadata, not notes
+            mtime = last_touch(f)
+            if mtime is None or mtime < cutoff:
+                continue
+            seen += 1
+            try:
+                text = f.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            if RESOLVED_NOTE_RE.search(text):
+                continue
+            rows.append({"kind": "note", "ref": f"PARKED/{f.name}", "path": str(f), "device": device,
+                         "last_activity": mtime.date().isoformat(), "reason": "parked note, not marked resolved",
+                         "next_action": "resolve, promote to an issue, or mark Resolved:"})
+        coverage.append(_coverage("PARKED notes", "ok", f"{seen} touched in window", count=len([r for r in rows if r["kind"] == "note"])))
+    else:
+        coverage.append(_coverage("PARKED notes", "absent"))
+    relay_root = repo_root / "relay-system"
+    if relay_root.is_dir():
+        open_threads = 0
+        for f in sorted(relay_root.glob("*/*.md")):
+            mtime = last_touch(f)
+            if mtime is None or mtime < cutoff:
+                continue
+            status = ""
+            try:
+                with open(f, encoding="utf-8", errors="replace") as fh:
+                    for line in fh:
+                        m = re.match(r"^[`*]*STATUS[`*]*:[`*]*\s*(.*)", line)   # poll.relay_field's grammar
+                        if m:
+                            status = m.group(1).strip("`* \t\n")
+                            break
+            except OSError:
+                continue
+            if status.lower() in {"approved", "closed"}:
+                continue
+            open_threads += 1
+            rows.append({"kind": "relay", "ref": str(f.relative_to(repo_root)), "path": str(f), "device": device,
+                         "last_activity": mtime.date().isoformat(),
+                         "reason": f"relay thread STATUS: {status or 'unknown'}",
+                         "next_action": "take or close the pending turn"})
+        coverage.append(_coverage("relay threads", "ok", count=open_threads))
+    else:
+        coverage.append(_coverage("relay threads", "absent"))
+    return rows
+
+
+def _labels(item: dict) -> set[str]:
+    return {str(l.get("name", "")).lower() for l in (item.get("labels") or []) if isinstance(l, dict)}
+
+
+def collect_stalled_stale(prs: list[dict], issues: dict[int, dict] | None, sequence: dict, operator: str | None,
+                          now: datetime, stale_days: int, draft_stale_days: int, device: str,
+                          local_rows: list[dict], coverage: list, prior_reports: dict[str, str]) -> dict:
+    """Pure over its inputs. Held is decided before Stalled and wins."""
+    held_numbers = {p.get("number") for p in sequence.get("evidence_carriers_or_held", [])}
+    hold_reasons = {p.get("number"): p.get("hold_reason") or ("evidence carrier" if p.get("is_evidence_carrier") else "held")
+                    for p in sequence.get("evidence_carriers_or_held", [])}
+    stalled: list[dict] = []
+    held: list[dict] = []
+
+    for pr in prs:
+        n = pr.get("number")
+        age = _age_days(pr.get("updatedAt"), now)
+        ref, url = f"PR #{n}", pr.get("url") or ""
+        last = (pr.get("updatedAt") or "")[:10]
+        labels = _labels(pr)
+        reason = None
+        if n in held_numbers:
+            reason = hold_reasons.get(n) or "held (engine)"
+        elif labels & HOLD_LABELS:
+            reason = f"label {sorted(labels & HOLD_LABELS)[0]}"
+        elif OWNER_HOLD_RE.search(pr.get("body") or ""):
+            reason = "owner decision: hold (body)"
+        if reason:
+            held.append({"kind": "pr", "ref": ref, "url": url, "device": "github", "last_activity": last,
+                         "reason": reason, "next_action": "none (intentional hold)"})
+            continue
+        if age is None:
+            continue
+        if pr.get("isDraft") and age >= draft_stale_days:
+            stalled.append({"kind": "pr", "ref": ref, "url": url, "device": "github", "last_activity": last,
+                            "reason": f"draft idle {age:.0f}d (>= {draft_stale_days})",
+                            "next_action": "resume or close"})
+        elif not pr.get("isDraft") and age >= stale_days:
+            mergeable = str(pr.get("mergeable") or "")
+            stalled.append({"kind": "pr", "ref": ref, "url": url, "device": "github", "last_activity": last,
+                            "reason": f"idle {age:.0f}d (>= {stale_days}); review {pr.get('reviewDecision') or 'none'}",
+                            "next_action": "rebase" if mergeable == "CONFLICTING" else "resume or close"})
+
+    for n, iss in sorted((issues or {}).items()):
+        labels = _labels(iss)
+        assignees = {str(a.get("login", "")).lower() for a in (iss.get("assignees") or []) if isinstance(a, dict)}
+        mine = bool(operator) and operator.lower() in assignees
+        in_progress = bool(labels & IN_PROGRESS_LABELS)
+        ref, url, last = f"issue #{n}", iss.get("url") or "", (iss.get("updatedAt") or "")[:10]
+        if labels & HOLD_LABELS or OWNER_HOLD_RE.search(iss.get("body") or ""):
+            if mine or in_progress:
+                held.append({"kind": "issue", "ref": ref, "url": url, "device": "github", "last_activity": last,
+                             "reason": "label hold/parked" if labels & HOLD_LABELS else "owner decision: hold (body)",
+                             "next_action": "none (intentional hold)"})
+            continue
+        if not (mine or in_progress):
+            continue
+        age = _age_days(iss.get("updatedAt"), now)
+        if age is not None and age >= stale_days:
+            stalled.append({"kind": "issue", "ref": ref, "url": url, "device": "github", "last_activity": last,
+                            "reason": f"{'assigned' if mine else 'in progress'}, idle {age:.0f}d (>= {stale_days})",
+                            "next_action": "resume or route to the weekly issue"})
+
+    today = now.date().isoformat()
+    devices = []
+    for dev, last_date in sorted(prior_reports.items()):
+        devices.append({"device": dev, "last_report": last_date,
+                        "status": "today" if (dev == device or last_date == today) else f"no report since {last_date}"})
+    if device not in prior_reports:
+        devices.append({"device": device, "last_report": today, "status": "today"})
+
+    return {
+        "generated_at": now.isoformat(), "device": device,
+        "thresholds": {"stale_days": stale_days, "draft_stale_days": draft_stale_days},
+        "stalled": stalled, "held": held, "local": local_rows,
+        "coverage": coverage,
+        "disclosures": [HOLD_DISCLOSURE, AGE_DISCLOSURE, LOCAL_DISCLOSURE],
+        "devices": devices,
+    }
+
+
+def format_stalled_markdown(section: dict, title: str, date_local: str) -> str:
+    """Render one Stalled & stale section (used for the daily MD, the stalled MD and the comment)."""
+    gaps = [c for c in section.get("coverage", []) if c.get("status") not in {"ok"}]
+    lines = [title, "",
+             f"- **Device:** `{section.get('device')}` · **Date:** {date_local} · **Generated:** {section.get('generated_at')}",
+             f"- **Thresholds:** stale ≥ {section['thresholds']['stale_days']}d, drafts ≥ {section['thresholds']['draft_stale_days']}d",
+             "", "**Coverage**", ""]
+    for c in section.get("coverage", []):
+        extra = f" — {c.get('detail')}" if c.get("detail") else ""
+        cnt = f" ({c.get('count')})" if c.get("count") is not None else ""
+        lines.append(f"- `{c.get('status')}` {c.get('source')}{cnt}{extra}")
+    for d in section.get("devices", []):
+        lines.append(f"- device `{d['device']}`: {d['status']}")
+    for note in section.get("disclosures", []):
+        lines.append(f"- _{note}_")
+    lines += ["", "**Stalled**", ""]
+    if section.get("stalled"):
+        for r in section["stalled"]:
+            link = f"[{r['ref']}]({r['url']})" if r.get("url") else r["ref"]
+            lines.append(f"- {link} — last activity {r['last_activity']} — {r['reason']} → _{r['next_action']}_")
+    elif gaps:
+        lines.append("- *No stalled items observed — coverage incomplete (see gaps above).*")
+    else:
+        lines.append("- *No stalled GitHub items.*")
+    lines += ["", f"**Local — {section.get('device')}**", ""]
+    if section.get("local"):
+        # Newest first, at most LOCAL_ROWS_SHOWN per checkout so one orphan-heavy clone cannot flood
+        # the comment; the JSON keeps every row.
+        per_checkout: dict[str, list[dict]] = {}
+        for r in section["local"]:
+            per_checkout.setdefault(r.get("path") or r["ref"], []).append(r)
+        for _path, rows in per_checkout.items():
+            rows.sort(key=lambda r: r.get("last_activity", ""), reverse=True)
+            for r in rows[:LOCAL_ROWS_SHOWN]:
+                lines.append(f"- `{r['ref']}` — {r['last_activity']} — {r['reason']} → _{r['next_action']}_")
+            if len(rows) > LOCAL_ROWS_SHOWN:
+                lines.append(f"- `{rows[0]['ref'].split(':')[0]}` … +{len(rows) - LOCAL_ROWS_SHOWN} more row(s) in the JSON")
+    else:
+        lines.append("- *Nothing unpushed, uncommitted or orphaned observed on this device (subject to coverage).*")
+    lines += ["", "**Held (intentional, not stalled)**", ""]
+    if section.get("held"):
+        for r in section["held"]:
+            link = f"[{r['ref']}]({r['url']})" if r.get("url") else r["ref"]
+            lines.append(f"- {link} — {r['reason']}")
+    else:
+        lines.append("- *None.*")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def read_stalled_comments(repo_root: Path, slug: str, issue_num: int, coverage: list) -> tuple[list[dict] | None, dict[str, str]]:
+    """List the weekly issue's comments once: returns (comments or None on failure, {device: latest date})."""
+    out = _gh_json(["gh", "api", "--paginate", "--slurp", f"repos/{slug}/issues/{issue_num}/comments?per_page=100"],
+                   repo_root, "weekly issue comments", coverage)
+    if out is None:
+        return None, {}
+    comments: list[dict] = []
+    for entry in out if isinstance(out, list) else []:
+        if isinstance(entry, list):
+            comments.extend(c for c in entry if isinstance(c, dict))
+        elif isinstance(entry, dict):
+            comments.append(entry)
+    prior: dict[str, str] = {}
+    for c in comments:
+        for dev, day in STALLED_MARKER_RE.findall(str(c.get("body", ""))):
+            if day > prior.get(dev, ""):
+                prior[dev] = day
+    return comments, prior
+
+
+def sync_stalled_comment(repo_root: Path, slug: str, issue_num: int, comments: list[dict], device: str,
+                         date_local: str, body_md: str) -> tuple[bool, str]:
+    """Edit this device's comment for today if it exists (marker match), else create it. Pattern copied
+    from utils/py/marathon_drive.py:332-362,1696-1722 (importing that module is heavy)."""
+    marker = f"<!-- planner-stalled:{device}:{date_local} -->"
+    body = f"{marker}\n{body_md}"
+    comment_id = ""
+    for c in comments:
+        if marker in str(c.get("body", "")):
+            comment_id = str(c.get("id", ""))
+            break
+    payload = json.dumps({"body": body})
+    import tempfile
+    fd, path = tempfile.mkstemp(prefix="planner-stalled-", suffix=".json")
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(payload)
+    try:
+        if comment_id:
+            run_cmd(["gh", "api", "--method", "PATCH", f"repos/{slug}/issues/comments/{comment_id}", "--input", path], cwd=repo_root)
+            return True, f"edited comment {comment_id}"
+        run_cmd(["gh", "api", "--method", "POST", f"repos/{slug}/issues/{issue_num}/comments", "--input", path], cwd=repo_root)
+        return True, "created comment"
+    except Exception as exc:
+        return False, str(exc).splitlines()[-1] if str(exc) else repr(exc)
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
+
+def run_stalled_scan(repo_root: Path, gh_repo: str | None, prs: list[dict], sequence: dict, args, now: datetime) -> tuple[dict, dict]:
+    """Collect everything for the section. Returns (section, context) where context carries what the
+    comment step needs (slug, comments, date_local, device)."""
+    coverage: list[dict] = []
+    slug = resolve_gh_slug(repo_root, gh_repo)
+    if not slug:
+        coverage.append(_coverage("repo slug", "failed", "gh repo view failed and --gh-repo not given"))
+    device = resolve_device_id(repo_root, args.device_id)
+    date_local = datetime.now().date().isoformat()
+    coverage.append(_coverage("open PRs", "truncated" if len(prs) >= 300 else "ok", count=len(prs)))
+    issues = None
+    try:
+        issues = get_open_issues(repo_root, gh_repo)
+        coverage.append(_coverage("open issues", "ok", count=len(issues)))
+    except Exception as exc:
+        coverage.append(_coverage("open issues", "failed", str(exc).splitlines()[-1] if str(exc) else repr(exc)))
+    operator = args.operator
+    if not operator:
+        try:
+            operator = run_cmd(["gh", "api", "user", "-q", ".login"], cwd=repo_root) or None
+            coverage.append(_coverage("operator login", "ok", operator or ""))
+        except Exception as exc:
+            coverage.append(_coverage("operator login", "failed", str(exc).splitlines()[-1]))
+    all_prs = _gh_json(["gh", "pr", "list", "--state", "all", "--limit", "500", "--json", "number,headRefName,state"]
+                       + (["-R", gh_repo] if gh_repo else []), repo_root, "PR heads (all states)", coverage, limit=500)
+    pr_heads: dict[str, list[dict]] = {}
+    for p in all_prs or []:
+        pr_heads.setdefault(str(p.get("headRefName")), []).append(p)
+    roots = list(args.local_roots or [str(repo_root), "~/marathon-clones/*"])
+    local_rows: list[dict] = []
+    for path in discover_local_roots(repo_root, roots, slug, coverage):
+        local_rows.extend(scan_local_checkout(path, pr_heads, now, device, coverage))
+    local_rows.extend(scan_notes(repo_root, now, args.stale_days, device, coverage))
+    comments, prior = None, {}
+    if args.team_issue and slug:
+        comments, prior = read_stalled_comments(repo_root, slug, args.team_issue, coverage)
+    section = collect_stalled_stale(prs, issues, sequence, operator, now, args.stale_days, args.draft_stale_days,
+                                    device, local_rows, coverage, prior)
+    return section, {"slug": slug, "comments": comments, "date_local": date_local, "device": device}
+
+
+def publish_stalled_comment(repo_root: Path, section: dict, ctx: dict, team_issue: int) -> int:
+    """Post or edit this device's comment. Returns 0, or 3 when the listing or the write failed
+    (a failed listing never falls through to a blind POST)."""
+    if not ctx.get("slug"):
+        print("[ERROR] stalled comment: repo slug unresolved; pass --gh-repo", file=sys.stderr)
+        return 3
+    if ctx.get("comments") is None:
+        print("[ERROR] stalled comment: could not list the weekly issue's comments; not posting blind", file=sys.stderr)
+        return 3
+    title = f"### Stalled & stale — {ctx['device']} — {ctx['date_local']}"
+    body = format_stalled_markdown(section, title, ctx["date_local"])
+    ok, what = sync_stalled_comment(repo_root, ctx["slug"], team_issue, ctx["comments"], ctx["device"], ctx["date_local"], body)
+    print(f"stalled comment on #{team_issue}: {what}" if ok else f"[ERROR] stalled comment on #{team_issue}: {what}",
+          file=sys.stdout if ok else sys.stderr)
+    return 0 if ok else 3
+
+
 def format_daily_markdown(date_str: str, pivot_data: dict) -> str:
     """Format daily pivot as a clean, complete Markdown document."""
     pivot = pivot_data.get("pivot", {})
@@ -1264,6 +1805,10 @@ def format_daily_markdown(date_str: str, pivot_data: dict) -> str:
     else:
         lines.append("- **PASS:** Zero contradictions or data race hazards detected for today's execution.")
 
+    section = pivot_data.get("stalled_stale")
+    if section:
+        lines.append("")
+        lines.append(format_stalled_markdown(section, "## 5. Stalled & stale", pivot_data.get("date_local") or date_str))
     lines.append("")
     return "\n".join(lines)
 
@@ -1272,14 +1817,26 @@ def main():
     parser = argparse.ArgumentParser(description="Planner Core Engine")
     parser.add_argument("--repo-root", default=".", help="Path to repository root")
     parser.add_argument("--gh-repo", default=None, help="Target GitHub repo (e.g. Org/Name)")
-    parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake"], default="weekly")
+    parser.add_argument("--mode", choices=["weekly", "daily", "audit", "sequence", "intake", "stalled"], default="weekly")
     parser.add_argument("--plan-file", help="Path to existing weekly plan JSON/MD")
     parser.add_argument("--decisions-issue", help="Canonical GH issue number for provisional decisions tracker")
-    parser.add_argument("--team-issue", "--issue", dest="team_issue", type=int, help="Team weekly issue number for focus assignments")
+    parser.add_argument("--team-issue", "--issue", dest="team_issue", type=int,
+                        help="Team weekly issue number for focus assignments; in daily/stalled mode also the "
+                             "target of the per-device Stalled & stale comment (GH-1184)")
     parser.add_argument("--hours", type=int, default=36, help="Lookback interval in hours for daily mode")
     parser.add_argument("--fallback", action="store_true", help="Force scratch markdown fallback intake")
+    # GH-1184 Stalled & stale (daily section + headless `--mode stalled`)
+    parser.add_argument("--stale-days", type=int, default=3, help="PRs / in-progress issues idle this many days are stalled")
+    parser.add_argument("--draft-stale-days", type=int, default=7, help="draft PRs idle this many days are stalled")
+    parser.add_argument("--local-roots", action="append",
+                        help="checkout path or glob to scan read-only (repeatable; default: --repo-root and ~/marathon-clones/*)")
+    parser.add_argument("--device-id", help="device id for the comment marker (default: device_config device_id, normalized)")
+    parser.add_argument("--operator", help="GitHub login whose assigned issues count as 'mine' (default: gh api user)")
 
     args = parser.parse_args()
+    if args.stale_days < 1 or args.draft_stale_days < 1:
+        print("[ERROR] --stale-days/--draft-stale-days must be >= 1", file=sys.stderr)
+        sys.exit(2)
     repo_root = Path(args.repo_root).resolve()
     if not repo_root.is_dir():
         print(f"[ERROR] repo root not found: {repo_root}", file=sys.stderr)
@@ -1301,22 +1858,43 @@ def main():
     now_utc = datetime.now(timezone.utc)
     date_str = now_utc.strftime("%Y-%m-%d")
 
+    if args.mode == "stalled":
+        # Headless GH-1184 entry point for the #1168 scheduler: only the read-only scan and, with
+        # --team-issue, this device's comment. Never pivot_daily (no weekly baseline needed).
+        section, ctx = run_stalled_scan(repo_root, args.gh_repo, prs, sequence, args, now_utc)
+        result = {"mode": "stalled", "date": date_str, "date_local": ctx["date_local"], "stalled_stale": section}
+        out_json = temp_dir / f"stalled-{date_str}.json"
+        out_json.write_text(json.dumps(result, indent=2), encoding="utf-8")
+        out_md = temp_dir / f"STALLED-{date_str}.md"
+        out_md.write_text(format_stalled_markdown(section, f"# Stalled & stale — {ctx['device']} — {ctx['date_local']}",
+                                                  ctx["date_local"]), encoding="utf-8")
+        gaps = sum(1 for c in section["coverage"] if c.get("status") != "ok")
+        print(f"stalled scan: {len(section['stalled'])} stalled, {len(section['held'])} held, "
+              f"{len(section['local'])} local, {gaps} coverage gap(s) → {out_md}")
+        rc = publish_stalled_comment(repo_root, section, ctx, args.team_issue) if args.team_issue else 0
+        sys.exit(rc)
+
     if args.mode == "daily":
         plan_file_arg = Path(args.plan_file) if args.plan_file else None
         pivot = pivot_daily(plan_file_arg, repo_root, args.gh_repo, hours=args.hours)
         audit = audit_adversarial({"prs": prs, "pivot": pivot}, prs=prs)
+        section, ctx = run_stalled_scan(repo_root, args.gh_repo, prs, sequence, args, now_utc)
         result = {
             "mode": "daily_pivot",
             "date": date_str,
+            "date_local": ctx["date_local"],
             "merge_sequence": sequence,
             "pivot": pivot,
             "adversarial_audit": audit,
+            "stalled_stale": section,
         }
         out_json = temp_dir / f"daily-pivot-{date_str}.json"
         out_json.write_text(json.dumps(result, indent=2), encoding="utf-8")
         out_md = temp_dir / f"DAILY-PIVOT-{date_str}.md"
         out_md.write_text(format_daily_markdown(date_str, result), encoding="utf-8")
         print(f"Daily pivot generated at:\n  - JSON: {out_json}\n  - Markdown: {out_md}")
+        if args.team_issue:
+            sys.exit(publish_stalled_comment(repo_root, section, ctx, args.team_issue))
         return
 
     # Weekly mode
