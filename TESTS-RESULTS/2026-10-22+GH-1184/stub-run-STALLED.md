@@ -1,6 +1,6 @@
 # Stalled & stale — noels-mac-studio — 2026-10-22
 
-- **Device:** `noels-mac-studio` · **Date:** 2026-10-22 · **Generated:** 2026-10-23T06:22:23.848084+00:00
+- **Device:** `noels-mac-studio` · **Date:** 2026-10-22 · **Generated:** 2026-10-23T06:36:51.986194+00:00
 - **Thresholds:** stale ≥ 3d, drafts ≥ 7d
 
 **Coverage**
@@ -9,9 +9,9 @@
 - `ok` open issues (3)
 - `ok` operator login — noelsaw1
 - `ok` PR heads (all states) (2)
-- `ok` local root repo (1)
+- `ok` local root repo (2)
 - `ok` local root root2 (4)
-- `ok` PARKED notes (1) — 2 touched in window
+- `ok` PARKED notes (15) — 16 touched in window
 - `ok` relay threads (1)
 - `ok` weekly issue comments (1)
 - device `other-mac`: no report since 2026-10-20
@@ -27,17 +27,28 @@
 
 **Local — noels-mac-studio**
 
-- `repo:feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22` — 2026-10-22 — ahead 1 of origin/feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22 (as of last fetch) → _inspect; push or open PR_
+- `repo` — 2026-10-23 — 1 uncommitted change(s) → _commit or stash_
+- `repo:feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22` — 2026-10-22 — ahead 2 of origin/feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22 (as of last fetch) → _inspect; push or open PR_
 - `root2` — 2026-10-23 — 1 uncommitted change(s) → _commit or stash_
-- `root2:feat/recent-unpushed` — 2026-10-22 — no upstream (never pushed) → _inspect; push or delete_
 - `root2:fix/report` — 2026-10-22 — PR #20 is merged (name match, unverified) → _retire? name match — verify with /merge-cleanup_
+- `root2:feat/recent-unpushed` — 2026-10-22 — no upstream (never pushed) → _inspect; push or delete_
 - `root2:fix/forgotten` — 2026-10-01 — no upstream (never pushed) → _inspect; push or delete_
+- `PARKED/2026-09-01-oldnote.md` — 2026-10-23 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
 - `PARKED/2026-10-22-smoke.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
+- `PARKED/2026-10-22-closedloop.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
+- `PARKED/2026-10-21-many-9.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
+- `PARKED/2026-10-21-many-8.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
+- `PARKED/2026-10-21-many-7.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
+- `PARKED/2026-10-21-many-6.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
+- `PARKED/2026-10-21-many-5.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
+- `PARKED/2026-10-21-many-4.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
+- `PARKED/2026-10-21-many-3.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
+- `PARKED notes` … +5 more row(s) in the JSON
 - `relay-system/2026-10-22/smoke-open.md` — 2026-10-22 — relay thread STATUS: Open → _take or close the pending turn_
 
 **Held (intentional, not stalled)**
 
-- [PR #10](u10) — Explicit HOLD in title
-- [PR #11](u11) — Explicit evidence-only purpose
-- [PR #12](u12) — label hold
-- [issue #101](i101) — owner decision: hold (body)
+- [PR #10](u10) — last activity 2026-09-01 — Explicit HOLD in title → _none (intentional hold)_
+- [PR #11](u11) — last activity 2026-09-01 — Explicit evidence-only purpose → _none (intentional hold)_
+- [PR #12](u12) — last activity 2026-09-01 — label hold → _none (intentional hold)_
+- [issue #101](i101) — last activity 2026-10-01 — owner decision: hold (body) → _none (intentional hold)_

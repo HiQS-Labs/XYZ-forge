@@ -1,0 +1,336 @@
+{
+  "mode": "stalled",
+  "date": "2026-10-23",
+  "date_local": "2026-10-22",
+  "stalled_stale": {
+    "generated_at": "2026-10-23T06:36:51.986194+00:00",
+    "device": "noels-mac-studio",
+    "thresholds": {
+      "stale_days": 3,
+      "draft_stale_days": 7
+    },
+    "stalled": [
+      {
+        "kind": "pr",
+        "ref": "PR #13",
+        "url": "u13",
+        "device": "github",
+        "last_activity": "2026-10-10",
+        "reason": "idle 13d (>= 3); review none",
+        "next_action": "rebase"
+      },
+      {
+        "kind": "issue",
+        "ref": "issue #100",
+        "url": "i100",
+        "device": "github",
+        "last_activity": "2026-10-01",
+        "reason": "assigned, idle 22d (>= 3)",
+        "next_action": "resume or route to the weekly issue"
+      }
+    ],
+    "held": [
+      {
+        "kind": "pr",
+        "ref": "PR #10",
+        "url": "u10",
+        "device": "github",
+        "last_activity": "2026-09-01",
+        "reason": "Explicit HOLD in title",
+        "next_action": "none (intentional hold)"
+      },
+      {
+        "kind": "pr",
+        "ref": "PR #11",
+        "url": "u11",
+        "device": "github",
+        "last_activity": "2026-09-01",
+        "reason": "Explicit evidence-only purpose",
+        "next_action": "none (intentional hold)"
+      },
+      {
+        "kind": "pr",
+        "ref": "PR #12",
+        "url": "u12",
+        "device": "github",
+        "last_activity": "2026-09-01",
+        "reason": "label hold",
+        "next_action": "none (intentional hold)"
+      },
+      {
+        "kind": "issue",
+        "ref": "issue #101",
+        "url": "i101",
+        "device": "github",
+        "last_activity": "2026-10-01",
+        "reason": "owner decision: hold (body)",
+        "next_action": "none (intentional hold)"
+      }
+    ],
+    "local": [
+      {
+        "kind": "branch",
+        "ref": "repo:feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "ahead 2 of origin/feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22 (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "worktree",
+        "ref": "repo",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-23",
+        "reason": "1 uncommitted change(s)",
+        "next_action": "commit or stash"
+      },
+      {
+        "kind": "branch",
+        "ref": "root2:feat/recent-unpushed",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/root2",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "root2:fix/forgotten",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/root2",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-01",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "root2:fix/report",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/root2",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "PR #20 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "worktree",
+        "ref": "root2",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/root2",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-23",
+        "reason": "1 uncommitted change(s)",
+        "next_action": "commit or stash"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-09-01-oldnote.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-09-01-oldnote.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-23",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-21-many-1.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-21-many-1.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-21-many-10.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-21-many-10.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-21-many-11.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-21-many-11.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-21-many-12.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-21-many-12.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-21-many-2.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-21-many-2.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-21-many-3.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-21-many-3.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-21-many-4.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-21-many-4.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-21-many-5.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-21-many-5.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-21-many-6.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-21-many-6.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-21-many-7.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-21-many-7.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-21-many-8.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-21-many-8.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-21-many-9.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-21-many-9.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-22-closedloop.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-22-closedloop.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "note",
+        "ref": "PARKED/2026-10-22-smoke.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/PARKED/2026-10-22-smoke.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "parked note, not marked resolved",
+        "next_action": "resolve, promote to an issue, or mark Resolved:"
+      },
+      {
+        "kind": "relay",
+        "ref": "relay-system/2026-10-22/smoke-open.md",
+        "path": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/relay-system/2026-10-22/smoke-open.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "relay thread STATUS: Open",
+        "next_action": "take or close the pending turn"
+      }
+    ],
+    "coverage": [
+      {
+        "source": "open PRs",
+        "status": "ok",
+        "count": 5
+      },
+      {
+        "source": "open issues",
+        "status": "ok",
+        "count": 3
+      },
+      {
+        "source": "operator login",
+        "status": "ok",
+        "detail": "noelsaw1"
+      },
+      {
+        "source": "PR heads (all states)",
+        "status": "ok",
+        "count": 2
+      },
+      {
+        "source": "local root repo",
+        "status": "ok",
+        "count": 2
+      },
+      {
+        "source": "local root root2",
+        "status": "ok",
+        "count": 4
+      },
+      {
+        "source": "PARKED notes",
+        "status": "ok",
+        "detail": "16 touched in window",
+        "count": 15
+      },
+      {
+        "source": "relay threads",
+        "status": "ok",
+        "count": 1
+      },
+      {
+        "source": "weekly issue comments",
+        "status": "ok",
+        "count": 1
+      }
+    ],
+    "disclosures": [
+      "holds recognised: engine title/body phrases (HOLD, leave unmerged, not an authorized merge, prerequisites required/live-pilot, review authority limit, evidence carrier), labels hold/parked, body line 'owner decision: hold'; comment-only holds are NOT detected",
+      "ages are GitHub update age (updatedAt): label/metadata churn and bot comments count as activity, so a human stall after such activity can be missed",
+      "'ahead' counts come from cached tracking refs (as of last fetch; this scan never fetches); merged/closed matches are by branch NAME only and are unverified"
+    ],
+    "devices": [
+      {
+        "device": "other-mac",
+        "last_report": "2026-10-20",
+        "status": "no report since 2026-10-20"
+      },
+      {
+        "device": "noels-mac-studio",
+        "last_report": "2026-10-22",
+        "status": "today"
+      }
+    ]
+  }
+}

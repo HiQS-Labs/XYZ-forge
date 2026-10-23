@@ -3,7 +3,7 @@
   "date": "2026-10-23",
   "date_local": "2026-10-22",
   "stalled_stale": {
-    "generated_at": "2026-10-23T06:23:05.540537+00:00",
+    "generated_at": "2026-10-23T06:37:14.347490+00:00",
     "device": "noels-mac-studio",
     "thresholds": {
       "stale_days": 3,
@@ -74,7 +74,7 @@
         "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1184-stalled-stale-section-2026-10-22",
         "device": "noels-mac-studio",
         "last_activity": "2026-10-22",
-        "reason": "ahead 8 of origin/development (as of last fetch)",
+        "reason": "ahead 13 of origin/development (as of last fetch)",
         "next_action": "inspect; push or open PR"
       },
       {
@@ -1291,6 +1291,15 @@
         "last_activity": "2026-10-23",
         "reason": "1 uncommitted change(s)",
         "next_action": "commit or stash"
+      },
+      {
+        "kind": "relay",
+        "ref": "relay-system/2026-10-22/gh1184-final-qa.md",
+        "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1184-stalled-stale-section-2026-10-22/relay-system/2026-10-22/gh1184-final-qa.md",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "relay thread STATUS: Open",
+        "next_action": "take or close the pending turn"
       }
     ],
     "coverage": [
@@ -1448,7 +1457,7 @@
       {
         "source": "relay threads",
         "status": "ok",
-        "count": 0
+        "count": 1
       },
       {
         "source": "weekly issue comments",

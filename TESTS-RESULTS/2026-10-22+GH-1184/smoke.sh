@@ -22,10 +22,16 @@ echo dirty > "$W/root2/README.md"
 mkdir -p "$REPO/PARKED"
 printf '# smoke\n- open item SENTINEL-7f3a9c do not publish\n' > "$REPO/PARKED/2026-10-22-smoke.md"
 printf '# resolved\n- **Resolved 2026-10-22:** done\n' > "$REPO/PARKED/2026-10-22-resolved.md"
+printf '# prose\nClosed-loop review remains open for this item.\n' > "$REPO/PARKED/2026-10-22-closedloop.md"
+for i in $(seq 1 12); do printf '# many %s\n- open\n' "$i" > "$REPO/PARKED/2026-10-21-many-$i.md"; done
+# an OLD committed note (back-dated commit) that only an UNSTAGED edit can bring into the window (F3)
+printf '# old committed note\n- open\n' > "$REPO/PARKED/2026-09-01-oldnote.md"
+git -C "$REPO" add PARKED/2026-09-01-oldnote.md && GIT_COMMITTER_DATE="2026-09-01T12:00:00-07:00" git -C "$REPO" commit -q -m "old note" --date "2026-09-01T12:00:00-07:00"
 mkdir -p "$REPO/relay-system/2026-10-22"
 printf 'NEXT: Reviewer\nSTATUS: Open\n' > "$REPO/relay-system/2026-10-22/smoke-open.md"
 printf 'NEXT: Producer\nSTATUS: Approved\n' > "$REPO/relay-system/2026-10-22/smoke-approved.md"
 git -C "$REPO" add PARKED relay-system && git -C "$REPO" commit -q -m "smoke notes"
+printf '\n- unstaged edit today\n' >> "$REPO/PARKED/2026-09-01-oldnote.md"
 touch "$REPO/PARKED/README.md"
 
 # --- stub gh ---
@@ -54,6 +60,7 @@ if a[:2]==["issue","list"] and "--state" in a and a[a.index("--state")+1]=="clos
 if a[:2]==["pr","list"] and "--state" in a and a[a.index("--state")+1]=="all":
     print(json.dumps([{"number":20,"headRefName":"fix/report","state":"MERGED"},{"number":21,"headRefName":"fix/report","state":"OPEN"} if mode=="reused" else {"number":22,"headRefName":"zzz","state":"CLOSED"}])); sys.exit(0)
 if a[:2]==["issue","list"]:
+    if mode=="prfail": print("boom",file=sys.stderr); sys.exit(1)
     print(json.dumps([
       {"number":100,"title":"mine idle","url":"i100","labels":[],"assignees":[{"login":"noelsaw1"}],"body":"","updatedAt":"2026-10-01T00:00:00Z"},
       {"number":101,"title":"mine owner hold","url":"i101","labels":[],"assignees":[{"login":"noelsaw1"}],"body":"Owner decision: hold until product sign-off","updatedAt":"2026-10-01T00:00:00Z"},
@@ -114,12 +121,19 @@ grep -q 'root2:fix/forgotten' "$OUT/STALLED.md" && pass "3-week-old no-upstream 
 grep -q 'uncommitted change' "$OUT/STALLED.md" && pass "dirty tree row" || fail "dirty"
 grep -q 'retire? name match' "$OUT/STALLED.md" && pass "merged-name branch is an unverified candidate (F3)" || fail "retire candidate"
 grep -q 'safe to retire' "$OUT/STALLED.md" && fail "says safe to retire" || pass "never says safe to retire"
-# notes
-grep -q 'PARKED/2026-10-22-smoke.md' "$OUT/STALLED.md" && pass "open PARKED note listed" || fail "open note"
-grep -q '2026-10-22-resolved.md' "$OUT/STALLED.md" && fail "resolved note listed" || pass "resolved note excluded (F4)"
-grep -q 'PARKED/README.md' "$OUT/STALLED.md" && fail "README listed" || pass "README excluded (F4)"
-grep -q 'smoke-open.md' "$OUT/STALLED.md" && pass "open relay thread listed" || fail "open relay"
-grep -q 'smoke-approved.md' "$OUT/STALLED.md" && fail "approved relay listed" || pass "approved relay excluded"
+# notes — presence is checked in the JSON (the rendered section caps rows at 10 per group), rendering in the MD
+JSONF=$(ls "$REPO"/temp/planner/stalled-*.json | head -1); cp "$JSONF" "$OUT/stalled.json"
+refs=$(python3 -c "import json;print('\n'.join(r['ref'] for r in json.load(open('$JSONF'))['stalled_stale']['local'] if r['kind'] in ('note','relay')))")
+echo "$refs" | grep -q 'PARKED/2026-10-22-smoke.md' && pass "open PARKED note listed" || fail "open note"
+echo "$refs" | grep -q '2026-10-22-resolved.md' && fail "resolved note listed" || pass "resolved note excluded (F4)"
+echo "$refs" | grep -q 'PARKED/README.md' && fail "README listed" || pass "README excluded (F4)"
+echo "$refs" | grep -q 'smoke-open.md' && pass "open relay thread listed" || fail "open relay"
+echo "$refs" | grep -q 'smoke-approved.md' && fail "approved relay listed" || pass "approved relay excluded"
+echo "$refs" | grep -q '2026-10-22-closedloop.md' && pass "'Closed-loop …' prose is NOT treated as resolved (nit)" || fail "closedloop prose excluded"
+echo "$refs" | grep -q '2026-09-01-oldnote.md' && pass "old note with an UNSTAGED edit today is listed (F3: porcelain first line)" || fail "unstaged note edit missed (F3)"
+[ "$(echo "$refs" | grep -c PARKED/)" -ge 15 ] && pass "all $(echo "$refs" | grep -c PARKED/) PARKED notes in the JSON" || fail "note count in JSON"
+grep -q 'PARKED notes. … +' "$OUT/STALLED.md" && pass "rendered PARKED notes capped at 10 with '+N more' (F4)" || fail "note cap"
+grep -A60 '\*\*Held' "$OUT/STALLED.md" | grep 'PR #10' | grep -q 'last activity 2026-09-01' && pass "Held row carries dated evidence (F5)" || fail "held row date"
 # secrets
 echo "$BODY" | grep -q 'SENTINEL-7f3a9c' && fail "sentinel leaked into comment" || pass "no note contents in comment (sentinel absent, body non-empty)"
 echo "$BODY SENTINEL-7f3a9c" | grep -q 'SENTINEL-7f3a9c' && pass "RED CONTROL: contaminated body is detected" || fail "red control sentinel"
@@ -140,7 +154,9 @@ echo "== adjacent: daily mode with a baseline renders section 5, no comment with
 echo '{"mode":"weekly_plan","date":"2026-10-20","tasks":[],"raw_tasks":[],"roadmap_items":[]}' > "$REPO/temp/planner/weekly-plan-2026-10-20.json"; : > "$STUBSTATE/gh.log"
 run --mode daily > "$OUT/run5.out" 2>&1; rc=$?; grep -q '## 5. Stalled & stale' "$REPO"/temp/planner/DAILY-PIVOT-*.md && pass "daily MD has section 5 (rc=$rc)" || fail "daily section 5 rc=$rc"
 grep -q 'POST\|PATCH' "$STUBSTATE/gh.log" && fail "daily without --team-issue posted" || pass "daily without --team-issue posts nothing"
-echo "== gaps"; echo prfail > "$STUBSTATE/mode"; run --mode stalled > "$OUT/run6.out" 2>&1; rc=$?; echo "prfail rc=$rc" >> "$OUT/run6.out"
+echo "== gaps"; echo prfail > "$STUBSTATE/mode"; rm -f "$REPO"/temp/planner/STALLED-*.md; run --mode stalled > "$OUT/run6.out" 2>&1; rc=$?; echo "prfail rc=$rc" >> "$OUT/run6.out"
+[ $rc -eq 0 ] && grep -q 'failed. open PRs' "$REPO"/temp/planner/STALLED-*.md && pass "open-PR lookup failure → report still produced with 'failed open PRs' coverage (F1)" || fail "prfail rc=$rc or no coverage line"
+grep -q 'coverage incomplete' "$REPO"/temp/planner/STALLED-*.md && pass "empty Stalled under a gap renders 'coverage incomplete'" || fail "coverage incomplete wording"
 echo trunc > "$STUBSTATE/mode"; run --mode stalled > "$OUT/run7.out" 2>&1; grep -q 'truncated' "$REPO"/temp/planner/STALLED-*.md && pass "300-row PR list → truncated coverage" || fail "truncated"
 echo listfail > "$STUBSTATE/mode"; : > "$STUBSTATE/gh.log"; run --mode stalled --team-issue 999 > "$OUT/run8.out" 2>&1; rc=$?; grep -q POST "$STUBSTATE/gh.log" && fail "blind POST after list failure" || { [ $rc -eq 3 ] && pass "comment list failure → no POST, exit 3" || fail "listfail rc=$rc"; }
 grep -q 'failed. weekly issue comments' "$REPO"/temp/planner/STALLED-*.md && pass "list failure visible as coverage gap" || fail "listfail coverage"

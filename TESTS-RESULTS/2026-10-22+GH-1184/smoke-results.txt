@@ -1,4 +1,4 @@
-PASS: comment body captured (non-empty, 2574 bytes)
+PASS: comment body captured (non-empty, 4181 bytes)
 PASS: marker device normalized (noels-mac-studio)
 PASS: prior-day device gap reported (other-mac)
 PASS: PR #10 under Held
@@ -20,6 +20,11 @@ PASS: resolved note excluded (F4)
 PASS: README excluded (F4)
 PASS: open relay thread listed
 PASS: approved relay excluded
+PASS: 'Closed-loop …' prose is NOT treated as resolved (nit)
+PASS: old note with an UNSTAGED edit today is listed (F3: porcelain first line)
+PASS: all 15 PARKED notes in the JSON
+PASS: rendered PARKED notes capped at 10 with '+N more' (F4)
+PASS: Held row carries dated evidence (F5)
 PASS: no note contents in comment (sentinel absent, body non-empty)
 PASS: RED CONTROL: contaminated body is detected
 PASS: git argv log non-empty (7 calls)
@@ -31,6 +36,8 @@ PASS: second device → separate comment (2 → 3)
 PASS: daily without baseline → nonzero with weekly hint (unchanged)
 PASS: daily MD has section 5 (rc=0)
 PASS: daily without --team-issue posts nothing
+PASS: open-PR lookup failure → report still produced with 'failed open PRs' coverage (F1)
+PASS: empty Stalled under a gap renders 'coverage incomplete'
 PASS: 300-row PR list → truncated coverage
 PASS: comment list failure → no POST, exit 3
 PASS: list failure visible as coverage gap

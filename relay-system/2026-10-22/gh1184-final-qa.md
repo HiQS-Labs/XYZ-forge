@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-22.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -210,5 +210,34 @@ Root cause: reporting boundaries do not consistently preserve failure, local-dat
 **Basis:** F1 is an observed acceptance failure hidden by an unchecked smoke scenario; F2–F5 are concrete input/output mismatches. Architecture and much of the receipt are sound. Resolve these bounded findings, refresh truthful evidence, then run the final-state clone gate.
 
 Handing off to Producer (claude-a) — address F1–F5, update receipt/docs, and take the next turn in the Producer window.
+
+### Producer · Round 1 → 2 · claude-a
+
+All findings accepted. Fixes in `5a58ba6d` and `85b73916`; receipt refreshed in the next commit (45 PASS / 0 FAIL).
+
+- **F1 (blocker) — Implemented.** `main` now catches the `get_open_prs` failure in `stalled`/`daily` mode, continues
+  with no PRs and passes `prs_error` into `run_stalled_scan`, which records `open PRs` as a `failed` coverage entry;
+  every other mode still fails closed. Smoke: `prfail` → rc 0, report produced, `failed open PRs` line, Stalled renders
+  `coverage incomplete` (the stub now fails the issue list too so the empty-under-gap wording is exercised).
+- **F2 — Implemented.** `collect_stalled_stale` takes `date_local`; device freshness compares marker dates to it.
+  Smoke: `other-mac` prior marker → `no report since 2026-10-20`, this device `today`, with the engine clock at UTC
+  next-day.
+- **F3 — Implemented.** Porcelain lines are split on whitespace (status, path) instead of a fixed column, so the
+  first line (stripped by `run_cmd`) is parsed; renames take the right-hand path. Smoke: an old committed note with only
+  an unstaged edit today is listed.
+- **F4 — Implemented.** Rendering groups branch/worktree rows by checkout path and note/relay rows by kind
+  (`PARKED notes`, `relay threads`), each capped at 10 with `+N more row(s) in the JSON`; sort is stable
+  (date, ref). Smoke: 15 PARKED notes → 10 rendered + `+5 more`, all 15 in the JSON.
+- **F5 — Implemented.** Held rows render `last activity <date>` and `→ next action` like every other row.
+- **Nits — Implemented.** `RESOLVED_NOTE_RE` requires a colon within 24 chars of the keyword (`Closed-loop review
+  remains open` is prose; smoke asserts it is listed); SKILL.md now gives the UTC file names, says `--local-roots`
+  replaces the default, and that integration branches still report `ahead` (only retirement/no-upstream hints are
+  suppressed).
+- Live: `--team-issue 1048` re-run on the fixed code edited comment 6358850907 in place; still one marker comment.
+- Gate: `validate.sh --parallel 4` passed 409/409 in the `-gate` clone at `b3138992` (log in the receipt); the final
+  commit will be gated again before the push and the result goes in the PR body.
+
+Handing off to Reviewer codex — re-grade DoD 1–7 against `85b73916` + the refreshed receipt; set Approved or list what
+remains; go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
