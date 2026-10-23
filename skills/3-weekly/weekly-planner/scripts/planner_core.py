@@ -1456,8 +1456,9 @@ def scan_notes(repo_root: Path, now: datetime, notes_days: int, device: str, cov
                 continue
             if RESOLVED_NOTE_RE.search(text):
                 continue
-            rows.append({"kind": "note", "ref": f"PARKED/{f.name}", "path": str(f), "device": device,
-                         "last_activity": mtime.date().isoformat(), "reason": "parked note, not marked resolved",
+            rows.append({"kind": "note", "ref": f"PARKED/{f.name}", "path": str(f), "checkout": str(repo_root),
+                         "device": device, "last_activity": mtime.date().isoformat(),
+                         "reason": "parked note, not marked resolved",
                          "next_action": "resolve, promote to an issue, or mark Resolved:"})
         coverage.append(_coverage("PARKED notes", "ok", f"{seen} touched in window", count=len([r for r in rows if r["kind"] == "note"])))
     else:
@@ -1482,8 +1483,8 @@ def scan_notes(repo_root: Path, now: datetime, notes_days: int, device: str, cov
             if status.lower() in {"approved", "closed"}:
                 continue
             open_threads += 1
-            rows.append({"kind": "relay", "ref": str(f.relative_to(repo_root)), "path": str(f), "device": device,
-                         "last_activity": mtime.date().isoformat(),
+            rows.append({"kind": "relay", "ref": str(f.relative_to(repo_root)), "path": str(f),
+                         "checkout": str(repo_root), "device": device, "last_activity": mtime.date().isoformat(),
                          "reason": f"relay thread STATUS: {status or 'unknown'}",
                          "next_action": "take or close the pending turn"})
         coverage.append(_coverage("relay threads", "ok", count=open_threads))
@@ -1560,8 +1561,11 @@ def collect_stalled_stale(prs: list[dict], issues: dict[int, dict] | None, seque
     today = date_local or now.date().isoformat()
     devices = []
     for dev, last_date in sorted(prior_reports.items()):
-        devices.append({"device": dev, "last_report": last_date,
-                        "status": "today" if (dev == device or last_date == today) else f"no report since {last_date}"})
+        if dev == device:
+            devices.append({"device": dev, "last_report": today, "status": "today"})   # this run IS its report
+        else:
+            devices.append({"device": dev, "last_report": last_date,
+                            "status": "today" if last_date == today else f"no report since {last_date}"})
     if device not in prior_reports:
         devices.append({"device": device, "last_report": today, "status": "today"})
 
@@ -1603,20 +1607,18 @@ def format_stalled_markdown(section: dict, title: str, date_local: str) -> str:
     if section.get("local"):
         # Newest first, at most LOCAL_ROWS_SHOWN per checkout so one orphan-heavy clone cannot flood
         # the comment; the JSON keeps every row.
-        # Branch/worktree rows group by checkout; note rows (one path each) group by their kind so a
-        # pile of PARKED files or relay threads is capped the same way.
-        group_names = {"note": "PARKED notes", "relay": "relay threads"}
-        per_group: dict[str, list[dict]] = {}
+        # One bucket per CHECKOUT: branch/worktree rows by their checkout path, note/relay rows by the
+        # checkout that owns the file (`checkout`), so no single clone renders more than LOCAL_ROWS_SHOWN.
+        per_checkout: dict[str, list[dict]] = {}
         for r in section["local"]:
-            key = (r.get("path") or r["ref"]) if r.get("kind") in {"branch", "worktree"} else group_names.get(r.get("kind"), "notes")
-            per_group.setdefault(key, []).append(r)
-        for key, rows in per_group.items():
+            key = r.get("checkout") or r.get("path") or r["ref"]
+            per_checkout.setdefault(key, []).append(r)
+        for key, rows in per_checkout.items():
             rows.sort(key=lambda r: (r.get("last_activity", ""), r.get("ref", "")), reverse=True)
             for r in rows[:LOCAL_ROWS_SHOWN]:
                 lines.append(f"- `{r['ref']}` — {r['last_activity']} — {r['reason']} → _{r['next_action']}_")
             if len(rows) > LOCAL_ROWS_SHOWN:
-                label = key if key in group_names.values() else rows[0]["ref"].split(":")[0]
-                lines.append(f"- `{label}` … +{len(rows) - LOCAL_ROWS_SHOWN} more row(s) in the JSON")
+                lines.append(f"- `{Path(key).name}` … +{len(rows) - LOCAL_ROWS_SHOWN} more row(s) in the JSON")
     else:
         lines.append("- *Nothing unpushed, uncommitted or orphaned observed on this device (subject to coverage).*")
     lines += ["", "**Held (intentional, not stalled)**", ""]
