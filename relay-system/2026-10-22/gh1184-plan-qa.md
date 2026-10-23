@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-22.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -114,5 +114,82 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+**Call: revise before implementation.** Read the entire 208-line plan, including its pre-existing recon, design, rating and verification sections. Findings below exhaust the defects identified in that plan sweep; this is not a review of unrelated defects in the ground-truth code. `P` below means `skills/3-weekly/weekly-planner/scripts/planner_core.py`; `Plan` means `PROJECT/2-WORKING/GH-1184-STALLED-STALE-SECTION.md`.
+
+Evidence boundary: GitHub connector `github_fetch_issue(repo="HiQS-Labs/XYZ-forge", issue_number=1184)` succeeded and supplied the complete open issue, including all seven ACs and the scheduled-run decision. CLI `gh issue view 1184 --repo HiQS-Labs/XYZ-forge --json title,body,state` exited 1: `error connecting to api.github.com`. Graph project `XYZ-forge` is the canonical checkout, not this relay worktree; `check_index_coverage` reports generation `2026-09-01T15:54:30Z`, with P/scan_clones/ratchet not tracked and other relevant paths changed. The symbol search returned no matches. Consequently the source citations below come from direct reads of the seeded files, not an assertion of current graph completeness. No git command, suite, executable fixture, or artifact edit was performed.
+
+- **[Should] F1 — AC2 lacks PR-label data and a complete owner-decision input contract** (Plan:53-61,116-122,169-173). P:332 omits `labels`; retaining that query cannot implement the promised `hold`/`parked` classification. Also P:399-427 recognizes specific PR title/body phrases; it neither reads owner comments nor classifies issue bodies. Calling those predicates “owner decisions already encoded” does not cover all owner-held decisions promised by the issue.
+  Observed input: P:332's actual field list ends `files,body,isDraft` and has no labels. Concrete counterexamples are an old ordinary PR whose only hold signal is `labels=[{"name":"hold"}]`, and an operator-assigned old issue whose body says `Owner decision: hold until product sign-off` with no hold label. These are input examples, not claims that such live items were queried.
+  Affected scope: held PRs/issues whose hold is a label or explicit owner decision outside the existing PR regexes.
+  Falsifier: feed those two inputs plus an ordinary idle item to the eventual manual smoke; both held inputs must appear only under Held, and the ordinary item under Stalled. A documented owner-decision representation/source that actually reaches the collector would resolve the second gap.
+  Fix: explicitly extend the PR field list with labels; specify the smallest supported owner-decision source/representation for PRs **and issues**, including how any unsupported/unread decision source is disclosed. Add those examples to the recorded smoke, rather than introducing a general natural-language decision engine.
+  Read-only probe: `python3 -c 'from pathlib import Path; p=Path("skills/3-weekly/weekly-planner/scripts/planner_core.py"); s=p.read_text().splitlines(); print(s[331]); print("resolved note:",Path("PARKED/2026-09-29-xyz-mini-sync.md").read_text().splitlines()[23])'` exited 0; decisive PR output: `"--json", "number,title,author,headRefName,baseRefName,mergeable,reviewDecision,reviews,updatedAt,statusCheckRollup,files,body,isDraft"`.
+
+- **[Should] F2 — Do not age out unpublished local branches** (Plan:123-131; issue “How it works” §2). The window restriction is required for notes, but the issue does not restrict unpushed work to recent commits. The proposed `no upstream and a commit in the window` drops the forgotten work this feature is meant to recover.
+  Observed input: the Plan:127 predicate excludes a `for-each-ref` row with branch `fix/forgotten`, empty upstream/track fields and committer date `2026-10-01T12:00:00-07:00` on the October 22 run.
+  Affected scope: no-upstream local branches older than the lookback window.
+  Falsifier: the old unpublished branch remains visible with its date and a cautious inspect/push suggestion; an otherwise equivalent recent branch remains visible too.
+  Fix: remove the recency cutoff for unpublished branch candidates, or explicitly report that older branches are excluded as a coverage limitation; reserve the notes window for notes. Include an old branch in the smoke.
+
+- **[Should] F3 — A name match is a retirement candidate, not proof of safe retirement** (Plan:128-134; issue “How it works” §2, AC5). The selected `headRefName,state,number` projection cannot distinguish reused branch names or fork heads. A successful list below 300 therefore still has semantic uncertainty that the current failure/truncation rules never display. Cached tracking refs also cannot establish current remote push status without fetching.
+  Observed input: local branch `fix/report` with an extra unpublished commit, and PR rows `[{"number":10,"headRefName":"fix/report","state":"MERGED"},{"number":11,"headRefName":"fix/report","state":"OPEN"}]`; the name-only retirement predicate matches #10 even though the branch still carries work. A fork's closed `fix/report` creates the same collision.
+  Affected scope: local retirement suggestions derived only from branch names and unpushed conclusions derived from cached upstream refs.
+  Falsifier: the reused/fork-name cases must not say “safe to retire”; a unique merged-name match may be shown as a candidate requiring cleanup verification. Renamed/unmatched branches must remain visible as unmatched, and 300 PR rows must retain the planned truncation gap.
+  Fix: retain the bounded read-only scan, but explicitly label name matches as unverified retirement candidates and route the next action to the existing merge-cleanup verification; disclose cached-ref/name-match limits in coverage. Do not add fetches, ancestry machinery or deletion to this feature. One-hop local-origin discovery is reasonable; an unresolved second hop must be a visible gap rather than silently absent coverage.
+
+- **[Should] F4 — Exclude resolved notes and metadata files** (Plan:129-131; issue “How it works” §2 requires notes “not marked resolved”). Only relay `Approved|Closed` filtering is specified; `PARKED/*.md` includes resolved pointers and `README.md`.
+  Observed input: `PARKED/2026-09-29-xyz-mini-sync.md:24` says `- **Resolved 2026-09-29:**` and :28 says `Kept as a pointer.` If touched during the chosen window it passes the plan's PARKED predicate. `PARKED/README.md:1` is folder guidance, not an open session note.
+  Affected scope: recently touched PARKED notes already resolved/promoted, plus folder metadata matched by the glob.
+  Falsifier: a recent unresolved note is listed; an otherwise recent resolved note and README are absent. Unknown note status must not be presented as established open work.
+  Fix: define a small resolved/promoted-note filter using the existing note conventions (`PARKED/README.md:17`) and exclude metadata files; record the example in the smoke. Do not execute note contents or their `check`/`close` fields. The F1 probe above exited 0 and printed the cited `Resolved 2026-09-29` line.
+
+- **[Should] F5 — Make the status read genuinely non-writing** (Plan:125-126,153-154,195-197). Plain `git status --porcelain` can refresh/write the index. The proposed before/after status and reflog comparison does not detect that mutation. Git's [BACKGROUND REFRESH documentation](https://git-scm.com/docs/git-status#_background_refresh) explicitly describes this and recommends disabling optional locks.
+  Observed input: Plan:126's exact `git status --porcelain` invocation on a checkout whose cached index stat information needs refresh; output can remain identical while index bytes change. This is a documented failure path, not a git experiment performed in this turn.
+  Affected scope: every checkout scanned by the status command, particularly later scheduled/background runs.
+  Falsifier: in the disposable smoke checkout, change tracked-file stat information without changing its content, capture index bytes before scanning, then show identical index bytes afterward and unchanged reported dirtiness.
+  Fix: specify `git --no-optional-locks status --porcelain` (or `GIT_OPTIONAL_LOCKS=0`) and add the index observation to the existing manual smoke. No additional gate machinery is needed.
+
+- **[Should] F6 — Specify actual red controls and nonempty observations** (Plan:184-208; AGENTS.md:107-125,154-166). Stub error inputs and the existing before/after checks are useful planned scenarios, but `any fetch|prune|push|checkout in the log fails` only states an assertion; it does not witness that assertion failing. Likewise an empty captured comment passes the sentinel-absence check.
+  Observed input: an empty captured body satisfies Plan:198-199's “sentinel absent” check; an empty argv log satisfies Plan:197's forbidden-command check.
+  Affected scope: the manual receipt used to substantiate AC5 and the claimed verification completion.
+  Falsifier: the clean nonempty body/log passes, while an intentionally contaminated body containing the sentinel and a scratch copy of the argv log containing a forbidden mutation each make their respective check fail.
+  Fix: require successful capture and nonempty expected report/command evidence before assertions; specify these two deliberate red observations and their retained commands, statuses and output under the same `TESTS-RESULTS/.../provenance.jsonl` receipt. Also exercise the F1–F5 inputs, comment-list failure (no blind POST), comment-write failure (exit 3), and a prior-day device marker. Keep this a recorded manual check, not a new suite.
+
+- **[Nit] N1 — Describe `updatedAt` as a proxy, not an exact activity ledger** (Plan:119-120). Keeping this cheap timestamp is proportionate; GitHub's own [stale action](https://github.com/actions/stale) uses update time as its idle signal. Label/metadata churn can hide human inactivity, and bot comments count as activity. Fix: disclose that the report measures GitHub update age and may miss human stalls after metadata/bot activity; avoid claiming exact equivalence to “no commits, review or comment.” No timeline crawler is requested.
+
+- **[Pass] Grounding and reuse, with the exceptions above.** P:1271-1320 matches the flags, unconditional PR/sequence call, UTC naming and daily files; P:732-742 establishes the baseline requirement and closure reads; P:259-275 and :326-341 match issue/PR fields and limit handling. P:399-447, :451-486 and :1120 establish hold predicates, precedence, prerequisite demotion and Phase 5. P:911-925 is a read-only team-issue read; comment posting is absent from the source read of P. `marathon_drive.py:332-362,1696-1722` supplies pagination flattening and PATCH/POST; its :19-22 imports justify copying the small pattern rather than importing the driver. `device_config.py:19,120-140` supports the planned resolver; `poll.py:74-90` supports header reads. `scan_clones.py:494,525` fetches, so retaining a separate small read-only collector is justified. `check_inventory_ratchet.py:50-85` scopes script inventory to utils/scripts/bin and SQLite scanning more broadly; extending P with no new connect is the right home. `ci-route.sh:63-70` routes this non-core skill path as docs/tier 1. `xyz_mini_sync.py:57-72` establishes adapted ownership. Retain these choices. Machine-specific inventory counts in Plan:73-77 were not remeasured and should remain dated reconnaissance, not current completeness evidence.
+
+- **[Pass] Comment design and operational scope, subject to the failure smoke.** Plan:143-152's device+local-date marker, paginated comment read and PATCH-vs-POST meet same-day reruns/two-device separation within this single-run-per-device envelope. Lowercasing/stripping `.local` is deterministic for an unchanged configured id; document that the scheduler/manual command use the same stable per-device id (hostname fallback changes if the host is renamed). Prior comments establish only previously seen devices, not a never-reporting Mac. Retain the known-device/latest-date derivation; rebuild the current device's date as today when composing its new report. Treat failed comment discovery as a publication failure (exit 3, no blind POST), while unrelated collection gaps remain visible with exit 0, as Plan:132-150 intends.
+
+**Acceptance mapping and DoD disposition** (all references to the [issue](https://github.com/HiQS-Labs/XYZ-forge/issues/1184) mean its numbered Acceptance criteria):
+
+| Requirement / DoD | Grade | Design/step and disposition |
+|---|---|---|
+| AC1: section, dates, reasons/actions | [Pass] design | Plan:112-115,135-138,169-178 define row fields, JSON and section 5; retain. |
+| AC2: Held never Stalled | [Should] | Plan:121-122; resolve F1 and exercise label/owner holds, not just HOLD titles. |
+| AC3: two Macs / own same-day edit | [Pass] design | Plan:143-150,188-190; retain marker and PATCH contract; runtime still unverified. |
+| AC4: failures/truncation as gaps | [Pass] design | Plan:132-134,193-194; retain. Wrap P:1289's initial fetch and issue/closure reads before they can abort the report; keep existing other modes' semantics. |
+| AC5: read-only local scan / no secrets | [Should] | Plan:123-134,195-199; resolve F2–F6. |
+| AC6: no new SQLite / no ledger writes | [Pass] design | Plan:153-154,169-173; retain existing connection unchanged and keep stalled mode out of weekly intake. |
+| AC7: extend existing coverage, no new suite | [Pass] policy resolution / [Should] smoke | Plan:200-208 explicitly discloses the manual-smoke substitution. Read-only search of 457 test source files found planner skill references only in `test/gh589-xyz-mini-sync.sh:62,95-126` and zero direct `planner_core` references; no existing planner behavior suite was found in that bounded scope. AGENTS.md:154-166 permits recorded manual evidence. Describe this as a disclosed substitution, not literally a test extension; resolve F6. |
+| Scheduled scan-only entry point | [Pass] design | Plan:139-142,176-178: no weekly baseline/pivot; #1168 owns missed-run/skipped scheduling and enabling. Prior-device gaps come from :149-150; retain and smoke a prior-day marker. |
+| DoD 1–3: recon / coverage / extension | [Pass] with F1 | Source checks above; extend P and copy the small comment pattern. |
+| DoD 4–6: local / comment / staleness | [Should] local; [Pass] comment design; [Nit] proxy | F2–F5, comment assessment, N1. A 300-row result is already a visible gap; rename/fork/name-reuse uncertainty currently is not. |
+| DoD 7: rating | [Pass] | Plan:156-162 explains 50/30/50/45 with effort as cheapness and appeal 50. No reason to change it. |
+| DoD 8: verification | [Should] | Resolve F6. Plan:181-183's full gate in a separate disposable clone is appropriate despite docs/tier 1 classification. **[Unverified — needs clone run]** All runtime/smoke/gate claims remain pending; none ran this turn. |
+| DoD 9: non-goals / risk / mini | [Pass] | Plan:15-20,107-108,153-154,167 excludes arc/shared body/scheduler/dispatch/ledger writes and mini port. Easy reversal is credible; no one-way door is proposed. Retain. |
+
+Root cause at plan level: the proposed collector lacks some required classification inputs and treats limited local evidence as stronger than it is; fix site: Plan design 1 and manual-smoke step 4; these are the origin contracts to settle before implementing, without a new subsystem.
+
+**VERDICT: FAIL**
+
+**Basis:** The small extension to P is appropriate and most recon is grounded, but AC2 and parts of the local/verification contracts are not yet credible as specified. F1–F6 are bounded plan corrections; no observed runtime implementation failure is alleged and no new tests/gates/frameworks are requested. After dispositions and plan edits, return the same artifact for round 2.
+
+Handing off to Producer (claude-a) — address each finding, update the plan and take the next turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
