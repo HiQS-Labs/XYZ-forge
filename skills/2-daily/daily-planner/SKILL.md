@@ -83,13 +83,14 @@ empty Stalled list under a gap renders *coverage incomplete*, never "nothing sta
   merge`, `prerequisites required`/`live-pilot`, `review authority limit`, evidence-carrier phrasing), anything
   labelled `hold`/`parked`, and a body line `Owner decision: hold`. Comment-only holds are **not** read; the coverage
   block states the recognised set.
-- **This device only, read-only:** for `--repo-root` and every checkout under `--local-roots` (default
-  `~/marathon-clones/*`; globs allowed, repeatable) whose `origin` is this repo (one hop through a local-path origin;
-  an unresolved origin is a visible gap): branches with no upstream or `ahead N` (regardless of age — forgotten work is
-  the point; `ahead` is *as of last fetch*, this scan never fetches), uncommitted changes (count only, via
-  `git --no-optional-locks status --porcelain`), and branches whose name matches a merged/closed PR head —
-  reported as **`retire? name match — verify with /merge-cleanup`**, never "safe to retire" (names get reused,
-  forks share names, local commits may exist). Integration branches (`development`, `main`, `master`) are skipped.
+- **This device only, read-only:** for every checkout under `--local-roots` (repeatable, globs allowed; the default
+  is `--repo-root` plus `~/marathon-clones/*`, and passing the flag **replaces** that default) whose `origin` is this
+  repo (one hop through a local-path origin; an unresolved origin is a visible gap): branches with no upstream or
+  `ahead N` (regardless of age — forgotten work is the point; `ahead` is *as of last fetch*, this scan never fetches),
+  uncommitted changes (count only, via `git --no-optional-locks status --porcelain`), and branches whose name matches
+  a merged/closed PR head — reported as **`retire? name match — verify with /merge-cleanup`**, never "safe to retire"
+  (names get reused, forks share names, local commits may exist). Integration branches (`development`, `main`,
+  `master`) never get a retirement or no-upstream hint; an `ahead N` on them is still reported.
   Open session notes: dated `PARKED/YYYY-MM-DD-*.md` not marked `Resolved:`/`Promoted:`/`Closed:` and relay threads
   whose `STATUS:` is not Approved/Closed, when their last **commit** (or an uncommitted edit) is inside the window —
   path, date and status only, never contents; a note's `check`/`close` fields are never executed.
@@ -108,8 +109,11 @@ nothing is posted. If the comment listing fails the run does not post blind; a f
 python3 "$PLANNER_ENGINE" --repo-root "$PLANNER_REPO" --mode stalled --team-issue <weekly issue>
 ```
 
-runs only the scan and the comment (no weekly baseline needed), writes `temp/planner/stalled-<date>.{json,md}`, and
-is non-interactive. Enabling a scheduled job is a separate operator approval under #1168. The scan writes nothing
+runs only the scan and the comment (no weekly baseline needed), writes `temp/planner/stalled-<UTC date>.json` and
+`temp/planner/STALLED-<UTC date>.md` (file names use the engine's UTC date like every other planner file; the comment
+header and marker use the device's local date), and is non-interactive. If the open-PR lookup itself fails, the
+report is still produced with `open PRs` as a `failed` coverage entry (daily mode does the same; the other modes keep
+failing closed as before). Enabling a scheduled job is a separate operator approval under #1168. The scan writes nothing
 but `temp/planner/*` and that one comment; it never fetches, prunes, deletes, or touches `releases.db`.
 
 This change is forge-only: XYZ-mini's copies of both planner skills are `adapted` (`utils/py/xyz_mini_sync.py`)

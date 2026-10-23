@@ -1203,7 +1203,9 @@ LOCAL_ROWS_SHOWN = 10          # per checkout in the rendered section; the JSON 
 HOLD_LABELS = {"hold", "parked"}
 IN_PROGRESS_LABELS = {"in progress", "in-progress", "🚧"}
 OWNER_HOLD_RE = re.compile(r"(?im)^\s*(?:owner decision|decision)\s*:\s*hold\b")
-RESOLVED_NOTE_RE = re.compile(r"(?im)^\s*-?\s*\**\s*(?:resolved|promoted|closed)\b")
+# A status line, not a word: `- **Resolved 2026-09-29:**`, `Promoted: #123`, `Closed:` — the keyword must be
+# followed by a colon within a short span, so prose like "Closed-loop review remains open" is not a status.
+RESOLVED_NOTE_RE = re.compile(r"(?im)^\s*-?\s*\**\s*(?:resolved|promoted|closed)\b[^:\n]{0,24}:")
 HOLD_DISCLOSURE = (
     "holds recognised: engine title/body phrases (HOLD, leave unmerged, not an authorized merge, "
     "prerequisites required/live-pilot, review authority limit, evidence carrier), labels hold/parked, "
@@ -1424,9 +1426,13 @@ def scan_notes(repo_root: Path, now: datetime, notes_days: int, device: str, cov
                 touched.setdefault(line.strip(), stamp)
         porcelain = run_cmd(["git", "-C", str(repo_root), "--no-optional-locks", "status", "--porcelain", "--",
                              "PARKED", "relay-system"])
+        # run_cmd strips stdout, so the first porcelain line has lost its leading status space:
+        # split on whitespace once (status token, path) instead of slicing a fixed column.
         for line in porcelain.splitlines():
-            if len(line) > 3:
-                touched[line[3:].strip()] = now.isoformat()
+            parts = line.strip().split(None, 1)
+            if len(parts) == 2:
+                path = parts[1].split(" -> ")[-1].strip().strip('"')
+                touched[path] = now.isoformat()
     except Exception as exc:
         coverage.append(_coverage("note history", "failed", str(exc).splitlines()[-1] if str(exc) else repr(exc)))
 
@@ -1492,8 +1498,10 @@ def _labels(item: dict) -> set[str]:
 
 def collect_stalled_stale(prs: list[dict], issues: dict[int, dict] | None, sequence: dict, operator: str | None,
                           now: datetime, stale_days: int, draft_stale_days: int, device: str,
-                          local_rows: list[dict], coverage: list, prior_reports: dict[str, str]) -> dict:
-    """Pure over its inputs. Held is decided before Stalled and wins."""
+                          local_rows: list[dict], coverage: list, prior_reports: dict[str, str],
+                          date_local: str | None = None) -> dict:
+    """Pure over its inputs. Held is decided before Stalled and wins. `date_local` is the device's
+    calendar date the comment markers use; device freshness is judged against it, not against UTC."""
     held_numbers = {p.get("number") for p in sequence.get("evidence_carriers_or_held", [])}
     hold_reasons = {p.get("number"): p.get("hold_reason") or ("evidence carrier" if p.get("is_evidence_carrier") else "held")
                     for p in sequence.get("evidence_carriers_or_held", [])}
@@ -1549,7 +1557,7 @@ def collect_stalled_stale(prs: list[dict], issues: dict[int, dict] | None, seque
                             "reason": f"{'assigned' if mine else 'in progress'}, idle {age:.0f}d (>= {stale_days})",
                             "next_action": "resume or route to the weekly issue"})
 
-    today = now.date().isoformat()
+    today = date_local or now.date().isoformat()
     devices = []
     for dev, last_date in sorted(prior_reports.items()):
         devices.append({"device": dev, "last_report": last_date,
@@ -1595,22 +1603,26 @@ def format_stalled_markdown(section: dict, title: str, date_local: str) -> str:
     if section.get("local"):
         # Newest first, at most LOCAL_ROWS_SHOWN per checkout so one orphan-heavy clone cannot flood
         # the comment; the JSON keeps every row.
-        per_checkout: dict[str, list[dict]] = {}
+        # Branch/worktree rows group by checkout; note rows (one path each) group by their kind so a
+        # pile of PARKED files or relay threads is capped the same way.
+        per_group: dict[str, list[dict]] = {}
         for r in section["local"]:
-            per_checkout.setdefault(r.get("path") or r["ref"], []).append(r)
-        for _path, rows in per_checkout.items():
+            key = r.get("path") or r["ref"] if r.get("kind") in {"branch", "worktree"} else f"{r.get('kind')} notes"
+            per_group.setdefault(key, []).append(r)
+        for key, rows in per_group.items():
             rows.sort(key=lambda r: r.get("last_activity", ""), reverse=True)
             for r in rows[:LOCAL_ROWS_SHOWN]:
                 lines.append(f"- `{r['ref']}` — {r['last_activity']} — {r['reason']} → _{r['next_action']}_")
             if len(rows) > LOCAL_ROWS_SHOWN:
-                lines.append(f"- `{rows[0]['ref'].split(':')[0]}` … +{len(rows) - LOCAL_ROWS_SHOWN} more row(s) in the JSON")
+                label = key if key.endswith(" notes") else rows[0]["ref"].split(":")[0]
+                lines.append(f"- `{label}` … +{len(rows) - LOCAL_ROWS_SHOWN} more row(s) in the JSON")
     else:
         lines.append("- *Nothing unpushed, uncommitted or orphaned observed on this device (subject to coverage).*")
     lines += ["", "**Held (intentional, not stalled)**", ""]
     if section.get("held"):
         for r in section["held"]:
             link = f"[{r['ref']}]({r['url']})" if r.get("url") else r["ref"]
-            lines.append(f"- {link} — {r['reason']}")
+            lines.append(f"- {link} — last activity {r['last_activity']} — {r['reason']} → _{r['next_action']}_")
     else:
         lines.append("- *None.*")
     lines.append("")
@@ -1668,7 +1680,8 @@ def sync_stalled_comment(repo_root: Path, slug: str, issue_num: int, comments: l
             pass
 
 
-def run_stalled_scan(repo_root: Path, gh_repo: str | None, prs: list[dict], sequence: dict, args, now: datetime) -> tuple[dict, dict]:
+def run_stalled_scan(repo_root: Path, gh_repo: str | None, prs: list[dict], sequence: dict, args, now: datetime,
+                     prs_error: str | None = None) -> tuple[dict, dict]:
     """Collect everything for the section. Returns (section, context) where context carries what the
     comment step needs (slug, comments, date_local, device)."""
     coverage: list[dict] = []
@@ -1677,7 +1690,10 @@ def run_stalled_scan(repo_root: Path, gh_repo: str | None, prs: list[dict], sequ
         coverage.append(_coverage("repo slug", "failed", "gh repo view failed and --gh-repo not given"))
     device = resolve_device_id(repo_root, args.device_id)
     date_local = datetime.now().date().isoformat()
-    coverage.append(_coverage("open PRs", "truncated" if len(prs) >= 300 else "ok", count=len(prs)))
+    if prs_error:
+        coverage.append(_coverage("open PRs", "failed", prs_error))
+    else:
+        coverage.append(_coverage("open PRs", "truncated" if len(prs) >= 300 else "ok", count=len(prs)))
     issues = None
     try:
         issues = get_open_issues(repo_root, gh_repo)
@@ -1705,7 +1721,7 @@ def run_stalled_scan(repo_root: Path, gh_repo: str | None, prs: list[dict], sequ
     if args.team_issue and slug:
         comments, prior = read_stalled_comments(repo_root, slug, args.team_issue, coverage)
     section = collect_stalled_stale(prs, issues, sequence, operator, now, args.stale_days, args.draft_stale_days,
-                                    device, local_rows, coverage, prior)
+                                    device, local_rows, coverage, prior, date_local)
     return section, {"slug": slug, "comments": comments, "date_local": date_local, "device": device}
 
 
@@ -1843,7 +1859,16 @@ def main():
         sys.exit(2)
     temp_dir = ensure_temp_dir(repo_root)
 
-    prs = get_open_prs(repo_root, args.gh_repo)
+    # The stalled scan must still produce its report when the PR lookup fails (the failure becomes a
+    # coverage gap, GH-1184 AC4); every other mode keeps today's fail-closed behaviour.
+    prs_error = None
+    try:
+        prs = get_open_prs(repo_root, args.gh_repo)
+    except Exception as exc:
+        if args.mode not in {"stalled", "daily"}:
+            raise
+        prs, prs_error = [], (str(exc).splitlines()[-1] if str(exc) else repr(exc))
+        print(f"[WARN] open PR lookup failed; continuing with a coverage gap: {prs_error}", file=sys.stderr)
     sequence = detect_merge_sequence(prs)
 
     if args.mode == "sequence":
@@ -1861,7 +1886,7 @@ def main():
     if args.mode == "stalled":
         # Headless GH-1184 entry point for the #1168 scheduler: only the read-only scan and, with
         # --team-issue, this device's comment. Never pivot_daily (no weekly baseline needed).
-        section, ctx = run_stalled_scan(repo_root, args.gh_repo, prs, sequence, args, now_utc)
+        section, ctx = run_stalled_scan(repo_root, args.gh_repo, prs, sequence, args, now_utc, prs_error)
         result = {"mode": "stalled", "date": date_str, "date_local": ctx["date_local"], "stalled_stale": section}
         out_json = temp_dir / f"stalled-{date_str}.json"
         out_json.write_text(json.dumps(result, indent=2), encoding="utf-8")
@@ -1878,7 +1903,7 @@ def main():
         plan_file_arg = Path(args.plan_file) if args.plan_file else None
         pivot = pivot_daily(plan_file_arg, repo_root, args.gh_repo, hours=args.hours)
         audit = audit_adversarial({"prs": prs, "pivot": pivot}, prs=prs)
-        section, ctx = run_stalled_scan(repo_root, args.gh_repo, prs, sequence, args, now_utc)
+        section, ctx = run_stalled_scan(repo_root, args.gh_repo, prs, sequence, args, now_utc, prs_error)
         result = {
             "mode": "daily_pivot",
             "date": date_str,
