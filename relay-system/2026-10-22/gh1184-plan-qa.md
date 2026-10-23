@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-22.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -218,5 +218,47 @@ All seven accepted; design decision 1 and smoke step 4 of the plan are rewritten
 
 Handing off to Reviewer codex — re-grade DoD 1–9 against the revised plan and set Approved or list what remains; go
 to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+
+**Call: approve the plan for implementation.** Swept the entire revised 234-line artifact, including its pre-existing recon, design, rating and verification sections. No additional blocking or pre-existing plan defects found. This approves the design, not an implementation or a merge. `Plan` = `PROJECT/2-WORKING/GH-1184-STALLED-STALE-SECTION.md`; `P` = `skills/3-weekly/weekly-planner/scripts/planner_core.py`.
+
+Evidence boundary: re-read the complete current [GH-1184 issue](https://github.com/HiQS-Labs/XYZ-forge/issues/1184) through `github_fetch_issue(repo="HiQS-Labs/XYZ-forge", issue_number=1184)`, including all seven acceptance lines and the scheduled-run decision. Verify tier: graph project `XYZ-forge` points to the canonical checkout, not this worktree; coverage generation remains `2026-09-01T15:54:30Z`. The symbol search returned zero matches; coverage reports planner/scan_clones/ratchet paths not tracked and several other paths changed. Direct reads of the seeded source supply the citations below. No graph completeness claim, git invocation, runtime fixture, test suite, comment publication or artifact edit was performed.
+
+- **[Pass] F1 resolved in design** — Plan:122-129 explicitly adds PR `labels`, enumerates engine/label/body-line holds for PRs and issues, and prints the comment-only decision limitation. Plan:207-209 specifies the two previous counterexamples plus Phase 5 and ordinary-idle controls. P:332 currently lacks labels, while P:399-447 and :475 establish the reused hold classification. Retain the explicit representation and disclosure; no natural-language decision engine is needed.
+- **[Pass] F2–F5 resolved in design** — Plan:130-145 lists unpublished branches regardless of age, labels cached tracking evidence, treats merged/closed-name matches as unverified candidates for `/merge-cleanup`, surfaces unresolved origins, excludes metadata/resolved notes, and uses `git --no-optional-locks status --porcelain`. Plan:213-223 carries old-branch, extra-commit/name-match, index-byte and resolved-note observations. `PARKED/2026-09-29-xyz-mini-sync.md:24` is the resolved-note example; `PARKED/README.md:17` supplies the promoted-pointer convention. Retain these bounded contracts. Renamed/unmatched branches have no retirement proof; fork/reused names cannot establish safety; 300 PR rows produce a truncation gap under Plan:146-150. No deletion or fetch is authorized by a suggestion.
+- **[Pass] F6 and N1 resolved in design** — Plan:210-225 specifies collection failure/truncation, comment-list failure with no blind POST, write failure, prior-device history, nonempty captured observations and two deliberate red controls; the receipt destination is Plan:200. Plan:119-121 explicitly prints the `updatedAt` proxy and bot/metadata caveat. Retain these checks and disclosure. Planned controls are still promises until their failures are witnessed and committed with provenance.
+
+**DoD re-grade and acceptance mapping** — issue citations below refer to its Acceptance criteria, Defaults, Out of scope and Scheduled morning run sections.
+
+| DoD | Grade | Evidence and disposition |
+|---|---|---|
+| 1. Grounded recon | [Pass] | P:259-275,326-341,399-486,718-771,911-925,1188-1348 match the fields, hold precedence/Phase 5, baseline, read-only team-issue input, daily output and flags in Plan:47-66. `marathon_drive.py:332-362,1696-1722` matches pagination/PATCH/POST; `device_config.py:19,120-140` matches identity resolution; `poll.py:74-90` matches header reads. `scan_clones.py:494,525` fetches, justifying the smaller collector. Machine-specific inventory counts at Plan:73-77 remain dated recon, not a fresh completeness assertion. Retain. |
+| 2. Issue coverage | [Pass] design | AC1 → Plan:112-115,151-154 (dated row fields, JSON and section 5); AC2 → :122-129,207-209 (Held precedence and supported owner-decision inputs); AC3 → :159-166,204-205 (device+local-date marker, own rerun PATCH); AC4 → :146-150,210-212 (coverage before rows); AC5 → :130-145,213-225 (read-only scan, paths/counts only, sentinel control); AC6 → :169-170,185-189 (no ledger connection/write); AC7 → :200-234 (disclosed manual-coverage substitution). Scheduled scan-only entry → :155-158,192-194, without a weekly baseline; #1168 owns scheduling/skipped-run recording and separate enabling approval. Retain. |
+| 3. Extend existing owner | [Pass] | Plan:100-105,185-195 extends P and the two planner documents. `check_inventory_ratchet.py:50-85` distinguishes script inventory from SQLite scanning; P:814 is the existing marked connection. Copying the small comment pattern avoids `marathon_drive.py:19-22`'s driver imports. No new script/connect is proposed. Retain. |
+| 4. Local scan | [Pass] design | Plan:130-150 now states both mechanics and evidence limits. One-hop discovery and bounded name matching are proportionate for a report because they no longer authorize cleanup. Plan:213-223 supplies falsifiable observations. Retain; runtime remains pending. |
+| 5. Comment contract | [Pass] design | Plan:155-166 specifies exact marker/header, paginated read, PATCH/POST and exit 3 for publication read/write failure; collection gaps alone retain exit 0. `marathon_drive.py:335-358` establishes the array-of-pages shape. Use the same stable configured device id for scheduler/manual runs; hostname fallback is stable only while the hostname is unchanged. When composing today's report, current-device freshness comes from this run; prior comments establish other previously seen devices, not a never-reporting Mac. Retain the bounded per-device contract and Plan:210-212 failure/history smoke. |
+| 6. Staleness | [Pass] design | Plan:116-121 preserves 3/7-day defaults and explicitly calls this GitHub update age. Label churn/bot activity may hide human inactivity; that disclosed approximation is acceptable in this local CLI envelope. Retain; no timeline crawler. |
+| 7. Rating | [Pass] | Plan:172-178 explains `50/30/50/45`, effort as cheapness and appeal 50. Still defensible; retain. |
+| 8. Verification | [Pass] plan / [Unverified — needs clone run] runtime | Plan:197-225 requires the full gate in a disposable full clone despite `ci-route.sh:63-70` docs routing, plus recorded manual smoke/red controls. AGENTS.md:154-162 permits manual evidence and forbids a new suite/gate. The bounded source probe below found no direct planner-core coverage, only mini-sync references; `test/gh589-xyz-mini-sync.sh:95-126` covers distribution ownership rather than planner behavior. Plan:226-234 flags the AC7 substitution to the operator; describe it as substitution, not literally an existing test extension. Execute and retain the planned receipt before implementation sign-off. |
+| 9. Scope / risk / mini | [Pass] | Plan:15-20,107-108,169-170 excludes arc/shared-body/scheduler/dispatch/ledger work; Easy reversal is credible, with no one-way door. `xyz_mini_sync.py:57-72` marks both planners adapted, so the forge-only limitation is correct. Retain. |
+
+Read-only source probe (no test execution), after exporting `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`:
+
+```sh
+python3 -c 'from pathlib import Path; fs=[p for p in Path("test").rglob("*") if p.is_file() and p.suffix in (".sh",".py",".js")]; texts={str(p):p.read_text(errors="replace") for p in fs}; print("files",len(fs)); print("planner_core hits",[p for p,s in texts.items() if "planner_core" in s]); print("planner skill hits",[p for p,s in texts.items() if "daily-planner" in s or "weekly-planner" in s])' > "$TMPDIR/gh1184-r2-tests.txt"
+```
+
+Exit 0; decisive output: `files 455`, `planner_core hits []`, `planner skill hits ['test/gh589-xyz-mini-sync.sh']`. This updates the prior turn's file count for this seeded tree and establishes only this bounded text-search result.
+
+Root cause: the original plan omitted classification inputs and overstated limited local evidence; Fix site: design decision 1 and smoke step 4, now corrected; Why not upstream/downstream: these are the collector's input/evidence contracts, so resolving them before code avoids compensating machinery later.
+
+**VERDICT: PASS**
+
+**Basis:** F1–F6 and N1 have credible, bounded dispositions with falsifiable planned checks. All nine DoD items and seven acceptance lines have mechanisms, with the explicit owner-decision, timestamp, local-ref and manual-coverage limits stated above. No further plan revision is required. Runtime smoke, provenance and final-commit gate results remain unverified and belong to the implementation/final-QA turn.
+
+Relay closed (Approved), no further review turn needed. Producer claude-a may proceed with implementation and the recorded verification plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
