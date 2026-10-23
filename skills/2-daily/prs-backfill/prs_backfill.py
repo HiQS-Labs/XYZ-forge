@@ -10,6 +10,8 @@ roadmap rows WITHOUT becoming a second scorer or a second writer:
              approvable plan with a content hash
   apply      writes ONLY through `releases roadmap rate` (never --force, never --ovr), with
              a fresh-issue check before every write and a read-back after it
+  comment    posts the dated rationale on issues whose rating was applied without
+             `--post-rationale`; same plan approval, one receipt per attempt, re-runnable
   calibrate  E0: compares blind proposals for already-rated rows against the ledger; no writes
   status     summary of the last scan, open plans and receipts
 
@@ -24,10 +26,12 @@ parked.
 
 State lives under `<root>/.tick/prs-backfill/` (gitignored):
   runs/<run_id>/scan.json | packets/GH-N.json | proposals.json | plan.json | calibration.json
-  receipts.jsonl   append-only provenance: applied / held / skipped / write-failed / calibration
+  receipts.jsonl   append-only provenance: applied / held / skipped / write-failed / commented /
+                   calibration
   lock             single-instance flock
 
-Exit codes: 0 ok · 2 usage · 3 refused (incl. `apply` stopped on a failed write) ·
+Exit codes: 0 ok · 2 usage · 3 refused (incl. `apply` stopped on a failed write, `comment` on a
+            failed post) ·
             4 disabled (PRS_BACKFILL_DISABLE=1) · 5 busy
 """
 import argparse
@@ -38,13 +42,25 @@ import hashlib
 import json
 import os
 import re
-import sqlite3
 import subprocess
 import sys
 
 POLICY_VERSION = "prs-backfill/1"
+# This file lives beside its SKILL.md (skills/2-daily/prs-backfill/), not in utils/py: the GH-777
+# inventory ratchet freezes the set of loose scripts there, and the ledger is opened only through
+# releases_app.connect() — the one canonical SQLite gateway — never a direct sqlite3.connect.
 SELF_DIR = os.path.dirname(os.path.realpath(__file__))
-RELEASES_APP = os.path.join(SELF_DIR, "releases_app.py")
+HARNESS = os.path.realpath(os.path.join(SELF_DIR, "..", "..", ".."))
+UTILS_PY = os.path.join(HARNESS, "utils", "py")
+RELEASES_APP = os.path.join(UTILS_PY, "releases_app.py")
+
+
+def _releases_app():
+    """Import the canonical ledger module lazily (6,900 lines; only `connect` is used here)."""
+    if UTILS_PY not in sys.path:
+        sys.path.insert(0, UTILS_PY)
+    import releases_app  # noqa: E402
+    return releases_app
 
 EXIT_OK, EXIT_USAGE, EXIT_REFUSED, EXIT_DISABLED, EXIT_BUSY = 0, 2, 3, 4, 5
 
@@ -123,7 +139,8 @@ def resolve_slug(root, arg):
     if arg:
         return arg
     try:
-        sys.path.insert(0, SELF_DIR)
+        if UTILS_PY not in sys.path:
+            sys.path.insert(0, UTILS_PY)
         from harness_paths import github_slug_from_origin  # noqa: E402
         slug = github_slug_from_origin(root)
     except Exception:
@@ -215,9 +232,9 @@ def open_ledger_ro(root):
     p = db_path(root)
     if not os.path.exists(p):
         die(EXIT_REFUSED, "no-ledger", "%s not found (a releases-mode repo is required)" % p)
-    conn = sqlite3.connect("file:%s?mode=ro" % p, uri=True)
-    conn.row_factory = sqlite3.Row
-    return conn
+    # readonly=True opens `file:…?mode=ro`, sets row_factory and the foreign-key pragma exactly as
+    # every other reader of this ledger does.
+    return _releases_app().connect(p, readonly=True)
 
 
 def ledger_rows(conn):
@@ -608,15 +625,19 @@ def run_rate(root, issue, rated, dry_run):
     return cmd, p.returncode, (p.stdout + p.stderr).strip()[-600:]
 
 
-def post_rationale(slug, item, plan_sha):
+def rationale_body(item, plan_sha):
     r = item["rationale"]
-    body = ("**PRS rating** `rated %s` (pri/sev/appeal/effort) — %s\n\n"
+    return ("**PRS rating** `rated %s` (pri/sev/appeal/effort) — %s\n\n"
             "- Consequence: %s\n- Recurrence: %s\n- Uncertainty: %s\n\n"
             "Rater: %s/%s · reviewer: %s/%s · plan `%s` · `%s`"
             % (item["rated"], now_iso()[:10], r["consequence"], r["recurrence"],
                r["uncertainty"], item["rater"]["agent"], item["rater"]["model"],
                (item.get("review") or {}).get("agent", "-"),
                (item.get("review") or {}).get("model", "-"), plan_sha[:12], POLICY_VERSION))
+
+
+def post_rationale(slug, item, plan_sha):
+    body = rationale_body(item, plan_sha)
     try:
         p = subprocess.run(["gh", "issue", "comment", str(item["issue"]), "-R", slug,
                             "--body", body], capture_output=True, text=True, timeout=120)
@@ -625,21 +646,26 @@ def post_rationale(slug, item, plan_sha):
     return p.returncode == 0
 
 
+def load_approved_plan(root, run, approve):
+    """(plan, plan_sha) for a run, refusing a tampered plan or an --approve that does not name it."""
+    plan_file = os.path.join(state_dir(root), "runs", run, "plan.json")
+    if not os.path.exists(plan_file):
+        die(EXIT_USAGE, "no-plan", "run `validate --run %s` first" % run)
+    plan = read_json(plan_file)
+    real_sha = sha256(plan["items"])
+    if real_sha != plan["plan_sha"]:
+        die(EXIT_REFUSED, "plan-tampered", "plan.json items no longer match plan_sha")
+    if len(approve) < 12 or not real_sha.startswith(approve.lower()):
+        die(EXIT_REFUSED, "approval-mismatch",
+            "--approve %s does not name plan %s" % (approve, real_sha[:12]))
+    return plan, real_sha
+
+
 def cmd_apply(a):
     check_disabled()
     root = resolve_root(a.root)
     with Lock(root):
-        run_dir = os.path.join(state_dir(root), "runs", a.run)
-        plan_file = os.path.join(run_dir, "plan.json")
-        if not os.path.exists(plan_file):
-            die(EXIT_USAGE, "no-plan", "run `validate --run %s` first" % a.run)
-        plan = read_json(plan_file)
-        real_sha = sha256(plan["items"])
-        if real_sha != plan["plan_sha"]:
-            die(EXIT_REFUSED, "plan-tampered", "plan.json items no longer match plan_sha")
-        if len(a.approve) < 12 or not real_sha.startswith(a.approve.lower()):
-            die(EXIT_REFUSED, "approval-mismatch",
-                "--approve %s does not name plan %s" % (a.approve, real_sha[:12]))
+        plan, real_sha = load_approved_plan(root, a.run, a.approve)
         slug = resolve_slug(root, a.repo or plan.get("repo"))
         done = {int(r["issue"]) for r in load_receipts(root)
                 if r.get("type") == "applied" and r.get("plan_sha") == real_sha}
@@ -726,6 +752,70 @@ def cmd_apply(a):
     print("summary: %s" % ", ".join("%s %d" % kv for kv in tally.items()))
     # A caller (a scheduled E2 pass most of all) must be able to tell "stopped on a failed
     # ledger write" from "done": exit 0 after a failure is a lie.
+    return EXIT_REFUSED if failed else EXIT_OK
+
+
+# ── comment ─────────────────────────────────────────────────────────────────────────────────────
+
+def cmd_comment(a):
+    """Posts the rationale for ratings applied WITHOUT `--post-rationale` (`apply` skips applied
+    rows, so it cannot be re-run for them). Eligible: the latest `applied` receipt for the issue
+    under this plan, not already commented, and the ledger still holding exactly that rating."""
+    check_disabled()
+    root = resolve_root(a.root)
+    with Lock(root):
+        plan, real_sha = load_approved_plan(root, a.run, a.approve)
+        slug = resolve_slug(root, a.repo or plan.get("repo"))
+        receipts = [r for r in load_receipts(root) if r.get("plan_sha") == real_sha]
+        applied = latest_by_issue(receipts, {"applied"})
+        commented = {int(r["issue"]) for r in receipts
+                     if r.get("type") == "commented" and r.get("ok")}
+        posts, failed = 0, False
+        tally = {"commented": 0, "dry-run": 0, "skipped": 0, "held": 0, "failed": 0}
+        for it in plan["items"]:
+            n = it["issue"]
+            if n not in applied:
+                tally["skipped"] += 1
+                print("  GH-%-5d SKIPPED not-applied" % n)
+                continue
+            if applied[n].get("commented") or n in commented:
+                tally["skipped"] += 1
+                print("  GH-%-5d SKIPPED already-commented" % n)
+                continue
+            if posts >= a.max_comments:
+                print("  GH-%-5d deferred (max-comments %d)" % (n, a.max_comments))
+                continue
+            conn = open_ledger_ro(root)
+            try:
+                rows = ledger_rows(conn).get(n, [])
+            finally:
+                conn.close()
+            got = ("/".join(str(rows[0][c]) for c in ("rating_pri", "rating_sev",
+                                                      "rating_appeal", "rating_effort"))
+                   if len(rows) == 1 else None)
+            # Never comment a score the ledger does not hold (re-rated, overridden, row gone).
+            if got != it["rated"] or rows[0]["rating_ovr"] is not None:
+                tally["held"] += 1
+                print("  GH-%-5d HELD row-changed" % n)
+                continue
+            if a.dry_run:
+                tally["dry-run"] += 1
+                print("  GH-%-5d dry-run would comment on %s:\n%s\n" % (n, slug,
+                                                                        rationale_body(it, real_sha)))
+                continue
+            posts += 1
+            ok = post_rationale(slug, it, real_sha)
+            append_receipt(root, {"type": "commented", "stage": "comment", "run_id": a.run,
+                                  "plan_sha": real_sha, "issue": n, "rated": it["rated"],
+                                  "ok": ok})
+            tally["commented" if ok else "failed"] += 1
+            print("  GH-%-5d %s rated %s" % (n, "COMMENTED" if ok else "COMMENT-FAILED", it["rated"]))
+            if not ok:
+                failed = True
+                print("prs-backfill: stopping after a failed post; re-run `comment` to retry",
+                      file=sys.stderr)
+                break
+    print("summary: %s" % ", ".join("%s %d" % kv for kv in tally.items()))
     return EXIT_REFUSED if failed else EXIT_OK
 
 
@@ -846,6 +936,14 @@ def main(argv=None):
                    help="also comment the dated rationale on each issue (off by default)")
     w.set_defaults(fn=cmd_apply)
 
+    m = sub.add_parser("comment", help="post the rationale for ratings applied without "
+                                       "--post-rationale")
+    m.add_argument("--run", required=True)
+    m.add_argument("--approve", required=True, help="plan sha (>=12 hex) printed by validate")
+    m.add_argument("--dry-run", action="store_true", help="print the comments, post nothing")
+    m.add_argument("--max-comments", type=int, default=50)
+    m.set_defaults(fn=cmd_comment)
+
     c = sub.add_parser("calibrate", help="E0: score blind proposals against the ledger")
     c.add_argument("--run", required=True)
     c.set_defaults(fn=cmd_calibrate)
@@ -854,8 +952,9 @@ def main(argv=None):
     t.set_defaults(fn=cmd_status)
 
     a = ap.parse_args(argv)
-    if getattr(a, "limit", 1) < 1 or getattr(a, "max_writes", 1) < 1:
-        die(EXIT_USAGE, "bad-bound", "--limit/--max-writes must be >= 1")
+    if getattr(a, "limit", 1) < 1 or getattr(a, "max_writes", 1) < 1 \
+            or getattr(a, "max_comments", 1) < 1:
+        die(EXIT_USAGE, "bad-bound", "--limit/--max-writes/--max-comments must be >= 1")
     return a.fn(a)
 
 

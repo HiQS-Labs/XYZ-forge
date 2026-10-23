@@ -3,7 +3,10 @@
 ## 2026-10-21 — prs-backfill: reviewed PRS rating backfill (GH-1175)
 
 New skill `skills/2-daily/prs-backfill/` (SKILL.md, locator `prs-backfill.sh`, `install.sh`) with
-implementation `utils/py/prs_backfill.py` (stdlib only). Deterministic `scan` inventories open
+implementation `skills/2-daily/prs-backfill/prs_backfill.py` (stdlib + `releases_app.connect`;
+moved out of `utils/py/` on 2026-10-22 because the GH-777 inventory ratchet — which the PR lane's
+smoke gate does not run — went red on development for a new loose script and a direct
+`sqlite3.connect`). Deterministic `scan` inventories open
 issues against `releases.db` (one list call; comments fetched only for the bounded packet set) and
 writes evidence packets; the agent proposes `pri/sev/appeal/effort` under the start-task rating
 policy; `validate` enforces appeal=50 unless operator-supplied, complete dated rationale, and an
@@ -22,6 +25,11 @@ withhold `rating:` lines and calibration never samples placeholder rows. Registr
 `PRS_BACKFILL_DISABLE=1`; single-instance flock. No new tests (GH-831); exercised end-to-end on a
 disposable ledger copy against live issues. Reversibility: **Easy** — new files plus one Skills
 Index row; delete them.
+
+`comment --run <id> --approve <sha12> [--dry-run]` posts the dated rationale for ratings already applied
+without `--post-rationale` (the 14 ratings of 2026-10-21), under the same plan-hash approval as `apply`;
+it holds any issue whose ledger row no longer equals the planned rating, records a `commented` receipt per
+attempt so a re-run is idempotent, and exits 3 on a failed post.
 
 ## 2026-10-21 — ATE/fuzzing documentation correction (GH-1174)
 
