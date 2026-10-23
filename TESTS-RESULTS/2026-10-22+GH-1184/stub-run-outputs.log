@@ -1,0 +1,42 @@
+stalled scan: 2 stalled, 4 held, 7 local, 0 coverage gap(s) → /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/temp/planner/STALLED-2026-10-23.md
+stalled comment on #999: created comment
+rc=0
+stalled scan: 2 stalled, 4 held, 7 local, 0 coverage gap(s) → /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/temp/planner/STALLED-2026-10-23.md
+stalled scan: 2 stalled, 4 held, 7 local, 0 coverage gap(s) → /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/temp/planner/STALLED-2026-10-23.md
+stalled comment on #999: edited comment 2
+rc=0
+stalled scan: 2 stalled, 4 held, 3 local, 0 coverage gap(s) → /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/temp/planner/STALLED-2026-10-23.md
+stalled comment on #999: created comment
+Traceback (most recent call last):
+  File "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/skills/3-weekly/weekly-planner/scripts/planner_core.py", line 1930, in <module>
+    main()
+    ~~~~^^
+  File "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/skills/3-weekly/weekly-planner/scripts/planner_core.py", line 1879, in main
+    pivot = pivot_daily(plan_file_arg, repo_root, args.gh_repo, hours=args.hours)
+  File "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/skills/3-weekly/weekly-planner/scripts/planner_core.py", line 735, in pivot_daily
+    raise FileNotFoundError(
+    ...<2 lines>...
+    )
+FileNotFoundError: No active weekly plan baseline found in temp/planner/. Please run /weekly-planner first to establish the baseline before generating a daily pivot.
+Daily pivot generated at:
+  - JSON: /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/temp/planner/daily-pivot-2026-10-23.json
+  - Markdown: /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/temp/planner/DAILY-PIVOT-2026-10-23.md
+Traceback (most recent call last):
+  File "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/skills/3-weekly/weekly-planner/scripts/planner_core.py", line 1930, in <module>
+    main()
+    ~~~~^^
+  File "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/skills/3-weekly/weekly-planner/scripts/planner_core.py", line 1846, in main
+    prs = get_open_prs(repo_root, args.gh_repo)
+  File "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/skills/3-weekly/weekly-planner/scripts/planner_core.py", line 339, in get_open_prs
+    out = run_cmd(cmd, cwd=repo_root, check=True)
+  File "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/skills/3-weekly/weekly-planner/scripts/planner_core.py", line 35, in run_cmd
+    raise RuntimeError(f"Command failed (exit {res.returncode}): {cmd}\n{res.stderr.strip()}")
+RuntimeError: Command failed (exit 1): ['gh', 'pr', 'list', '--state', 'open', '--limit', '300', '--json', 'number,title,author,headRefName,baseRefName,mergeable,reviewDecision,reviews,updatedAt,statusCheckRollup,files,body,isDraft,labels,url', '-R', 'HiQS-Labs/XYZ-forge']
+boom
+prfail rc=1
+[WARN] Fetched 300 open PRs (limit=300); result may be truncated.
+stalled scan: 61 stalled, 181 held, 7 local, 1 coverage gap(s) → /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/temp/planner/STALLED-2026-10-23.md
+[ERROR] stalled comment: could not list the weekly issue's comments; not posting blind
+stalled scan: 2 stalled, 4 held, 7 local, 1 coverage gap(s) → /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/temp/planner/STALLED-2026-10-23.md
+[ERROR] stalled comment on #999: boom
+stalled scan: 2 stalled, 4 held, 7 local, 0 coverage gap(s) → /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge--claude-worktrees-cranky-montalcini-71101e/d377f34e-e23c-4b49-afdf-41633876bce5/scratchpad/gh1184-smoke-out/work/repo/temp/planner/STALLED-2026-10-23.md

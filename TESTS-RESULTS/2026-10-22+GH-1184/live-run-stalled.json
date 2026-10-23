@@ -1,0 +1,1472 @@
+{
+  "mode": "stalled",
+  "date": "2026-10-23",
+  "date_local": "2026-10-22",
+  "stalled_stale": {
+    "generated_at": "2026-10-23T06:23:05.540537+00:00",
+    "device": "noels-mac-studio",
+    "thresholds": {
+      "stale_days": 3,
+      "draft_stale_days": 7
+    },
+    "stalled": [
+      {
+        "kind": "pr",
+        "ref": "PR #1170",
+        "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1170",
+        "device": "github",
+        "last_activity": "2026-10-19",
+        "reason": "idle 4d (>= 3); review none",
+        "next_action": "rebase"
+      },
+      {
+        "kind": "issue",
+        "ref": "issue #120",
+        "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/120",
+        "device": "github",
+        "last_activity": "2026-09-25",
+        "reason": "assigned, idle 28d (>= 3)",
+        "next_action": "resume or route to the weekly issue"
+      },
+      {
+        "kind": "issue",
+        "ref": "issue #467",
+        "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/467",
+        "device": "github",
+        "last_activity": "2026-09-23",
+        "reason": "assigned, idle 30d (>= 3)",
+        "next_action": "resume or route to the weekly issue"
+      },
+      {
+        "kind": "issue",
+        "ref": "issue #854",
+        "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/854",
+        "device": "github",
+        "last_activity": "2026-10-02",
+        "reason": "assigned, idle 21d (>= 3)",
+        "next_action": "resume or route to the weekly issue"
+      },
+      {
+        "kind": "issue",
+        "ref": "issue #1092",
+        "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1092",
+        "device": "github",
+        "last_activity": "2026-10-16",
+        "reason": "assigned, idle 7d (>= 3)",
+        "next_action": "resume or route to the weekly issue"
+      }
+    ],
+    "held": [
+      {
+        "kind": "pr",
+        "ref": "PR #1024",
+        "url": "https://github.com/HiQS-Labs/XYZ-forge/pull/1024",
+        "device": "github",
+        "last_activity": "2026-10-19",
+        "reason": "Review authority limit / unresolved escalation",
+        "next_action": "none (intentional hold)"
+      }
+    ],
+    "local": [
+      {
+        "kind": "branch",
+        "ref": "XYZ-forge-gh1184-stalled-stale-section-2026-10-22:feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22",
+        "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1184-stalled-stale-section-2026-10-22",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "ahead 8 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-gh605-verify2-20260913:fix/work-state-projection",
+        "path": "/Users/noelsaw/marathon-clones/forge-gh605-verify2-20260913",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-14",
+        "reason": "PR #607 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "worktree",
+        "ref": "forge-gh605-verify2-20260913",
+        "path": "/Users/noelsaw/marathon-clones/forge-gh605-verify2-20260913",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-23",
+        "reason": "2 uncommitted change(s)",
+        "next_action": "commit or stash"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-gh945-radar-verify-reco:feat/gh-945-radar-verify-asset-reco",
+        "path": "/Users/noelsaw/marathon-clones/forge-gh945-radar-verify-reco",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-02",
+        "reason": "PR #946 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "worktree",
+        "ref": "forge-gh945-radar-verify-reco",
+        "path": "/Users/noelsaw/marathon-clones/forge-gh945-radar-verify-reco",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-23",
+        "reason": "1 uncommitted change(s)",
+        "next_action": "commit or stash"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:backup/development-preflight-20260909",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-08",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:backup/pre-refresh-2026-10-08",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-07",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:chore/agents-vacuous-checks",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-16",
+        "reason": "PR #389 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:chore/gh377-closeout",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-16",
+        "reason": "PR #387 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:chore/park-386-followups",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-16",
+        "reason": "PR #390 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:chore/primary-harness-telemetry-2026-09-09",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-09",
+        "reason": "PR #550 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:chore/reconcile-378",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-16",
+        "reason": "PR #388 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:claude/cranky-montalcini-71101e",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:docs/opinionated-sops",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-24",
+        "reason": "PR #212 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:docs/registry-commandcode-deepseek-v4-pro",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-20",
+        "reason": "ahead 1 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:docs/worktree-safety-recovery-containment",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-28",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:feat/dry-converge-skills",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-30",
+        "reason": "PR #324 is merged (name match, unverified); local ahead 2 as of last fetch",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:feat/gh-889-weekly-daily-planner-skills",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-02",
+        "reason": "PR #890 is closed (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:feat/gh165-post-merge-wave-reconciler",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "PR #166 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:feat/gh174-ate-hardening",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-23",
+        "reason": "PR #199 is closed (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:feat/gh174-harness-models-sqlite",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:feat/merge-cleanup-activity-windows",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-13",
+        "reason": "PR #601 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:feat/review-pr-xyz-and-rename",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-14",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:feat/todo-list-harness-tiers",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-20",
+        "reason": "ahead 1 of origin/feat/todo-list-harness-tiers (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:feat/triangulate-skill",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-30",
+        "reason": "PR #323 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:fix/gh-942-skill-desc-1024-limit",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-02",
+        "reason": "PR #943 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:fix/gh-roadmap-section-duplicate-detection",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "PR #164 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:fix/gh236-followups",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-30",
+        "reason": "PR #331 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:fix/gh270-express-post-merge-review",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-27",
+        "reason": "PR #278 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:fix/gh346-relay-agent",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-16",
+        "reason": "PR #392 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:fix/gh379-canary-uses-validate",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-16",
+        "reason": "PR #383 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:fix/gh474-dropped-row-signal",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-07",
+        "reason": "PR #485 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:fix/gh474-retire-rendered-html",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-07",
+        "reason": "PR #483 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:gh-170-agent2agent-glitches",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "PR #175 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:gh-197/vendor-tier-split",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-24",
+        "reason": "PR #211 is merged (name match, unverified); local ahead 1 as of last fetch",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:intake/gh-720-review-once-block-regex",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-21",
+        "reason": "PR #729 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:main",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-18",
+        "reason": "ahead 638 of origin/main (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:pr-278",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-27",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:pr-984-review",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-06",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:pr159",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:pr160",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:pr162",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:pr348",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-31",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:pr356",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-31",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:pr361",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-01",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:pr363",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-01",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:pr364",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-01",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:preserve/primary-gate-8b310626-2026-10-09",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-09",
+        "reason": "ahead 1 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:preserve/primary-local-work-2026-09-22",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:preserve/primary-relay-jev-2026-09-20",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-20",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:preserve/relay-062ae45f-2026-10-08",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-07",
+        "reason": "ahead 1 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:relay/gh384-qa",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-02",
+        "reason": "ahead 4 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:temp-merge-cleanup-2026-10-09-062ae45f",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-07",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:temp-merge-cleanup-2026-10-09-8b310626",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-09",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-0860b2da:wip/primary-local-backup-2026-09-15",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-0860b2da",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-15",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:backup/development-preflight-20260909",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-08",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:backup/pre-refresh-2026-10-08",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-07",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:chore/agents-vacuous-checks",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-16",
+        "reason": "PR #389 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:chore/gh377-closeout",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-16",
+        "reason": "PR #387 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:chore/park-386-followups",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-16",
+        "reason": "PR #390 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:chore/primary-harness-telemetry-2026-09-09",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-09",
+        "reason": "PR #550 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:chore/reconcile-378",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-16",
+        "reason": "PR #388 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:claude/cranky-montalcini-71101e",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:docs/opinionated-sops",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-24",
+        "reason": "PR #212 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:docs/registry-commandcode-deepseek-v4-pro",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-20",
+        "reason": "ahead 1 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:docs/worktree-safety-recovery-containment",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-28",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:feat/dry-converge-skills",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-30",
+        "reason": "PR #324 is merged (name match, unverified); local ahead 2 as of last fetch",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:feat/gh-889-weekly-daily-planner-skills",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-02",
+        "reason": "PR #890 is closed (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:feat/gh165-post-merge-wave-reconciler",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "PR #166 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:feat/gh174-ate-hardening",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-23",
+        "reason": "PR #199 is closed (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:feat/gh174-harness-models-sqlite",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:feat/merge-cleanup-activity-windows",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-13",
+        "reason": "PR #601 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:feat/review-pr-xyz-and-rename",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-14",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:feat/todo-list-harness-tiers",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-20",
+        "reason": "ahead 1 of origin/feat/todo-list-harness-tiers (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:feat/triangulate-skill",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-30",
+        "reason": "PR #323 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:fix/gh-942-skill-desc-1024-limit",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-02",
+        "reason": "PR #943 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:fix/gh-roadmap-section-duplicate-detection",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "PR #164 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:fix/gh236-followups",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-30",
+        "reason": "PR #331 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:fix/gh270-express-post-merge-review",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-27",
+        "reason": "PR #278 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:fix/gh346-relay-agent",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-16",
+        "reason": "PR #392 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:fix/gh379-canary-uses-validate",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-16",
+        "reason": "PR #383 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:fix/gh474-dropped-row-signal",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-07",
+        "reason": "PR #485 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:fix/gh474-retire-rendered-html",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-07",
+        "reason": "PR #483 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:gh-170-agent2agent-glitches",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "PR #175 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:gh-197/vendor-tier-split",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-24",
+        "reason": "PR #211 is merged (name match, unverified); local ahead 1 as of last fetch",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:intake/gh-720-review-once-block-regex",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-21",
+        "reason": "PR #729 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:main",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-18",
+        "reason": "ahead 638 of origin/main (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:pr-278",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-27",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:pr-984-review",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-06",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:pr159",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:pr160",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:pr162",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:pr348",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-31",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:pr356",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-08-31",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:pr361",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-01",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:pr363",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-01",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:pr364",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-01",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:preserve/primary-gate-8b310626-2026-10-09",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-09",
+        "reason": "ahead 1 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:preserve/primary-local-work-2026-09-22",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-22",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:preserve/primary-relay-jev-2026-09-20",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-20",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:preserve/relay-062ae45f-2026-10-08",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-07",
+        "reason": "ahead 1 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:relay/gh384-qa",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-02",
+        "reason": "ahead 4 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:temp-merge-cleanup-2026-10-09-062ae45f",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-07",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:temp-merge-cleanup-2026-10-09-8b310626",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-09",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "forge-vendor-src-ab3a75d5:wip/primary-local-backup-2026-09-15",
+        "path": "/Users/noelsaw/marathon-clones/forge-vendor-src-ab3a75d5",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-15",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh584-reconciler-catchup:docs/gh522-issue-admission-capture",
+        "path": "/Users/noelsaw/marathon-clones/gh584-reconciler-catchup",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-15",
+        "reason": "PR #634 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh584-reconciler-catchup:docs/gh591-retain-pr600-recovery-qa",
+        "path": "/Users/noelsaw/marathon-clones/gh584-reconciler-catchup",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-15",
+        "reason": "PR #633 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh584-reconciler-catchup:fix/gh584-reconciliation-recovery",
+        "path": "/Users/noelsaw/marathon-clones/gh584-reconciler-catchup",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-13",
+        "reason": "PR #600 is merged (name match, unverified); local ahead 1 as of last fetch",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh591-reconciler:docs/gh591-retain-pr599-review-evidence",
+        "path": "/Users/noelsaw/marathon-clones/gh591-reconciler",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-15",
+        "reason": "PR #632 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh591-reconciler:fix/gh546-hosted-reconciliation",
+        "path": "/Users/noelsaw/marathon-clones/gh591-reconciler",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-13",
+        "reason": "PR #599 is merged (name match, unverified); local ahead 6 as of last fetch",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh620-skills-army-mini:feat/gh620-skills-army-mini",
+        "path": "/Users/noelsaw/marathon-clones/gh620-skills-army-mini",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-14",
+        "reason": "ahead 7 of origin/feat/gh620-skills-army-mini (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh620-skills-army-mini:feat/gh620-skills-army-mini-publish",
+        "path": "/Users/noelsaw/marathon-clones/gh620-skills-army-mini",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-14",
+        "reason": "PR #622 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh645-hotfix-qa-reconcile:development",
+        "path": "/Users/noelsaw/marathon-clones/gh645-hotfix-qa-reconcile",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-16",
+        "reason": "ahead 1 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh645-hotfix-qa-tests:fix/gh645-hotfix-qa",
+        "path": "/Users/noelsaw/marathon-clones/gh645-hotfix-qa-tests",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-16",
+        "reason": "PR #652 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "worktree",
+        "ref": "gh645-hotfix-qa-tests",
+        "path": "/Users/noelsaw/marathon-clones/gh645-hotfix-qa-tests",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-23",
+        "reason": "2 uncommitted change(s)",
+        "next_action": "commit or stash"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh797-flightdeck-unknown:backup/gh797-pre-rebase",
+        "path": "/Users/noelsaw/marathon-clones/gh797-flightdeck-unknown",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-24",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh797-flightdeck-unknown:backup/gh797-pre-rebase2",
+        "path": "/Users/noelsaw/marathon-clones/gh797-flightdeck-unknown",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-24",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh797-flightdeck-unknown:fix/gh797-flightdeck-unknown-help",
+        "path": "/Users/noelsaw/marathon-clones/gh797-flightdeck-unknown",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-24",
+        "reason": "PR #820 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "gh797-gate:fix/gh797-flightdeck-unknown-help",
+        "path": "/Users/noelsaw/marathon-clones/gh797-gate",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-24",
+        "reason": "PR #820 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "marathon-gh-299-gen4-ate:feat/gh299-gen4-ate",
+        "path": "/Users/noelsaw/marathon-clones/marathon-gh-299-gen4-ate",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-03",
+        "reason": "PR #441 is merged (name match, unverified); local ahead 12 as of last fetch",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "worktree",
+        "ref": "marathon-gh-299-gen4-ate",
+        "path": "/Users/noelsaw/marathon-clones/marathon-gh-299-gen4-ate",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-23",
+        "reason": "10 uncommitted change(s)",
+        "next_action": "commit or stash"
+      },
+      {
+        "kind": "branch",
+        "ref": "marathon-gh-462-planner-core:docs/gh445-link-held-lane-findings",
+        "path": "/Users/noelsaw/marathon-clones/marathon-gh-462-planner-core",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-15",
+        "reason": "PR #638 is merged (name match, unverified); local ahead 1 as of last fetch",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "marathon-gh-462-planner-core:marathon/10days-gh462-planner-core",
+        "path": "/Users/noelsaw/marathon-clones/marathon-gh-462-planner-core",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-06",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "worktree",
+        "ref": "pr519-repair",
+        "path": "/Users/noelsaw/marathon-clones/pr519-repair",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-23",
+        "reason": "2 uncommitted change(s)",
+        "next_action": "commit or stash"
+      },
+      {
+        "kind": "branch",
+        "ref": "workhorse-claude-optimization-20261006:fix/workhorse-claude-optimization",
+        "path": "/Users/noelsaw/marathon-clones/workhorse-claude-optimization-20261006",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-06",
+        "reason": "PR #986 is closed (name match, unverified); local ahead 23 as of last fetch",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "xyz-gh1048-preparation-2026-10-12:docs/gh1048-preparation-2026-10-12",
+        "path": "/Users/noelsaw/marathon-clones/xyz-gh1048-preparation-2026-10-12",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-13",
+        "reason": "ahead 2 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "xyz-gh547-modernbert:feat/gh547-modernbert",
+        "path": "/Users/noelsaw/marathon-clones/xyz-gh547-modernbert",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-15",
+        "reason": "PR #631 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "xyz-jog-529-533-555-561:chore/jog-hotfix-529-533-554-555",
+        "path": "/Users/noelsaw/marathon-clones/xyz-jog-529-533-555-561",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-10",
+        "reason": "PR #563 is merged (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "branch",
+        "ref": "xyz-jog-529-533-555-561:development",
+        "path": "/Users/noelsaw/marathon-clones/xyz-jog-529-533-555-561",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-10",
+        "reason": "ahead 1 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "xyz-jog-529-533-555-561:marathon/gh-529-relay-marker-attestation-2026-09-10",
+        "path": "/Users/noelsaw/marathon-clones/xyz-jog-529-533-555-561",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-10",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "xyz-jog-529-533-555-561:marathon/gh-533-relay-verdict-vocabulary-2026-09-10",
+        "path": "/Users/noelsaw/marathon-clones/xyz-jog-529-533-555-561",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-10",
+        "reason": "no upstream (never pushed)",
+        "next_action": "inspect; push or delete"
+      },
+      {
+        "kind": "branch",
+        "ref": "xyz-jog-529-533-555-561:marathon/gh-554-tick-unknown-flags-2026-09-10",
+        "path": "/Users/noelsaw/marathon-clones/xyz-jog-529-533-555-561",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-10",
+        "reason": "PR #566 is closed (name match, unverified)",
+        "next_action": "retire? name match \u2014 verify with /merge-cleanup"
+      },
+      {
+        "kind": "worktree",
+        "ref": "xyz-jog-529-533-555-561",
+        "path": "/Users/noelsaw/marathon-clones/xyz-jog-529-533-555-561",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-23",
+        "reason": "4 uncommitted change(s)",
+        "next_action": "commit or stash"
+      },
+      {
+        "kind": "branch",
+        "ref": "xyz-relay-gh25:development",
+        "path": "/Users/noelsaw/marathon-clones/xyz-relay-gh25",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-09-22",
+        "reason": "ahead 8 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "branch",
+        "ref": "xyz-vendor-frontdoor-remediation-2026-10-05:fix/vendor-pdda-frontdoor",
+        "path": "/Users/noelsaw/marathon-clones/xyz-vendor-frontdoor-remediation-2026-10-05",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-05",
+        "reason": "ahead 8 of origin/development (as of last fetch)",
+        "next_action": "inspect; push or open PR"
+      },
+      {
+        "kind": "worktree",
+        "ref": "xyz-vendor-frontdoor-remediation-2026-10-05",
+        "path": "/Users/noelsaw/marathon-clones/xyz-vendor-frontdoor-remediation-2026-10-05",
+        "device": "noels-mac-studio",
+        "last_activity": "2026-10-23",
+        "reason": "1 uncommitted change(s)",
+        "next_action": "commit or stash"
+      }
+    ],
+    "coverage": [
+      {
+        "source": "open PRs",
+        "status": "ok",
+        "count": 5
+      },
+      {
+        "source": "open issues",
+        "status": "ok",
+        "count": 268
+      },
+      {
+        "source": "operator login",
+        "status": "ok",
+        "detail": "noelsaw1"
+      },
+      {
+        "source": "PR heads (all states)",
+        "status": "ok",
+        "count": 445
+      },
+      {
+        "source": "local root xyz-claude-review-fixes-test",
+        "status": "skipped",
+        "detail": "origin unresolved: unparseable origin /Users/noelsaw/marathon-clones/xyz-claude-review-fixes"
+      },
+      {
+        "source": "local root xyz-gh1001-1002-verify",
+        "status": "skipped",
+        "detail": "origin unresolved: unparseable origin /Users/noelsaw/marathon-clones/xyz-gh1001-1002-vendored-marathon"
+      },
+      {
+        "source": "local root xyz-sanity-check-gate-20261002",
+        "status": "skipped",
+        "detail": "origin unresolved: unparseable origin /Users/noelsaw/marathon-clones/xyz-sanity-check-20261002/."
+      },
+      {
+        "source": "local root XYZ-forge-gh1184-stalled-stale-section-2026-10-22",
+        "status": "ok",
+        "count": 1
+      },
+      {
+        "source": "local root forge-gh605-verify2-20260913",
+        "status": "ok",
+        "count": 2
+      },
+      {
+        "source": "local root forge-gh945-radar-verify-reco",
+        "status": "ok",
+        "count": 2
+      },
+      {
+        "source": "local root forge-vendor-src-0860b2da",
+        "status": "ok",
+        "count": 50
+      },
+      {
+        "source": "local root forge-vendor-src-ab3a75d5",
+        "status": "ok",
+        "count": 50
+      },
+      {
+        "source": "local root gh584-reconciler-catchup",
+        "status": "ok",
+        "count": 3
+      },
+      {
+        "source": "local root gh591-reconciler",
+        "status": "ok",
+        "count": 2
+      },
+      {
+        "source": "local root gh620-skills-army-mini",
+        "status": "ok",
+        "count": 2
+      },
+      {
+        "source": "local root gh645-hotfix-qa-reconcile",
+        "status": "ok",
+        "count": 1
+      },
+      {
+        "source": "local root gh645-hotfix-qa-tests",
+        "status": "ok",
+        "count": 2
+      },
+      {
+        "source": "local root gh797-flightdeck-unknown",
+        "status": "ok",
+        "count": 3
+      },
+      {
+        "source": "local root gh797-gate",
+        "status": "ok",
+        "count": 1
+      },
+      {
+        "source": "local root marathon-gh-299-gen4-ate",
+        "status": "ok",
+        "count": 2
+      },
+      {
+        "source": "local root marathon-gh-462-planner-core",
+        "status": "ok",
+        "count": 2
+      },
+      {
+        "source": "local root pr519-repair",
+        "status": "ok",
+        "count": 1
+      },
+      {
+        "source": "local root workhorse-claude-optimization-20261006",
+        "status": "ok",
+        "count": 1
+      },
+      {
+        "source": "local root xyz-gh1048-preparation-2026-10-12",
+        "status": "ok",
+        "count": 1
+      },
+      {
+        "source": "local root xyz-gh547-modernbert",
+        "status": "ok",
+        "count": 1
+      },
+      {
+        "source": "local root xyz-gh968-verification-2026-10-05",
+        "status": "ok",
+        "count": 0
+      },
+      {
+        "source": "local root xyz-jog-529-533-555-561",
+        "status": "ok",
+        "count": 6
+      },
+      {
+        "source": "local root xyz-relay-gh25",
+        "status": "ok",
+        "count": 1
+      },
+      {
+        "source": "local root xyz-vendor-frontdoor-remediation-2026-10-05",
+        "status": "ok",
+        "count": 2
+      },
+      {
+        "source": "PARKED notes",
+        "status": "ok",
+        "detail": "0 touched in window",
+        "count": 0
+      },
+      {
+        "source": "relay threads",
+        "status": "ok",
+        "count": 0
+      },
+      {
+        "source": "weekly issue comments",
+        "status": "ok",
+        "count": 1
+      }
+    ],
+    "disclosures": [
+      "holds recognised: engine title/body phrases (HOLD, leave unmerged, not an authorized merge, prerequisites required/live-pilot, review authority limit, evidence carrier), labels hold/parked, body line 'owner decision: hold'; comment-only holds are NOT detected",
+      "ages are GitHub update age (updatedAt): label/metadata churn and bot comments count as activity, so a human stall after such activity can be missed",
+      "'ahead' counts come from cached tracking refs (as of last fetch; this scan never fetches); merged/closed matches are by branch NAME only and are unverified"
+    ],
+    "devices": [
+      {
+        "device": "noels-mac-studio",
+        "last_report": "2026-10-22",
+        "status": "today"
+      }
+    ]
+  }
+}

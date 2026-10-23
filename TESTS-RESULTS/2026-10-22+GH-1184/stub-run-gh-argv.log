@@ -1,0 +1,7 @@
+pr list --state open --limit 300 --json number,title,author,headRefName,baseRefName,mergeable,reviewDecision,reviews,updatedAt,statusCheckRollup,files,body,isDraft,labels,url -R HiQS-Labs/XYZ-forge
+issue list --state open --limit 500 --json number,title,url,labels,assignees,body,updatedAt -R HiQS-Labs/XYZ-forge
+api user -q .login
+pr list --state all --limit 500 --json number,headRefName,state -R HiQS-Labs/XYZ-forge
+api --paginate --slurp repos/HiQS-Labs/XYZ-forge/issues/999/comments?per_page=100
+api --method POST repos/HiQS-Labs/XYZ-forge/issues/999/comments --input /tmp/claude-501/planner-stalled-am4_uu5a.json
+POST 2

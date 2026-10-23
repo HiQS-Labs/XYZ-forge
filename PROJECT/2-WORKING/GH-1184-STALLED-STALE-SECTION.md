@@ -37,7 +37,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1 (Codex): 6 Should + 1 Nit, all accepted — PR `labels` field + explicit recognised-holds set with disclosure (F1), unpublished branches listed regardless of age (F2), name-match retirement is an unverified candidate routed to /merge-cleanup (F3), resolved/metadata notes excluded (F4), `--no-optional-locks` status (F5), non-vacuous red controls and failure cases in the smoke (F6), `updatedAt` disclosed as a proxy (N1). | Plan QA round 2 → implement in this clone → full gate in a disposable `-gate` clone → smoke receipt → final relay QA → PR against `development`. |
+| Plan QA Approved in round 2. Implemented in `planner_core.py` (b3138992): `--mode stalled`, section 5 in daily, per-device comment with marker edit, read-only local scan, note history by last commit (not mtime), integration branches skipped, local rows capped at 10/checkout in the rendering. Smoke receipt `TESTS-RESULTS/2026-10-22+GH-1184/` — 38 PASS / 0 FAIL stub runs incl. 2 red controls, live run posted and edited one comment on #1048. Ratchet `--check` clean in the `-gate` clone; ci-route docs/tier 1. | Full `validate.sh --parallel 4` running in the `-gate` clone → final Codex relay QA (`relay-system/2026-10-22/gh1184-final-qa.md`) → PR against `development` → retire task/gate clones. |
 
 ## Observed Problem & Recon
 

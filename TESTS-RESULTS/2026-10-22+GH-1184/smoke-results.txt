@@ -1,0 +1,38 @@
+PASS: comment body captured (non-empty, 2574 bytes)
+PASS: marker device normalized (noels-mac-studio)
+PASS: prior-day device gap reported (other-mac)
+PASS: PR #10 under Held
+PASS: PR #11 under Held
+PASS: PR #12 under Held
+PASS: PR #13 Stalled (rebase)
+PASS: fresh PR #14 not stalled
+PASS: CONFLICTING idle PR → rebase
+PASS: issue #101 owner-decision hold under Held
+PASS: issue #100 assigned idle → Stalled
+PASS: unassigned issue #102 not listed
+PASS: recent no-upstream branch listed
+PASS: 3-week-old no-upstream branch listed (F2)
+PASS: dirty tree row
+PASS: merged-name branch is an unverified candidate (F3)
+PASS: never says safe to retire
+PASS: open PARKED note listed
+PASS: resolved note excluded (F4)
+PASS: README excluded (F4)
+PASS: open relay thread listed
+PASS: approved relay excluded
+PASS: no note contents in comment (sentinel absent, body non-empty)
+PASS: RED CONTROL: contaminated body is detected
+PASS: git argv log non-empty (7 calls)
+PASS: no fetch/prune/push/checkout/pull/reset/clean in git argv
+PASS: RED CONTROL: a fetch line is detected
+PASS: index bytes unchanged after scan (--no-optional-locks) (F5)
+PASS: re-run PATCHed own comment; count 2 → 2
+PASS: second device → separate comment (2 → 3)
+PASS: daily without baseline → nonzero with weekly hint (unchanged)
+PASS: daily MD has section 5 (rc=0)
+PASS: daily without --team-issue posts nothing
+PASS: 300-row PR list → truncated coverage
+PASS: comment list failure → no POST, exit 3
+PASS: list failure visible as coverage gap
+PASS: comment write failure → exit 3
+PASS: reused name with an OPEN PR → not a retire candidate
