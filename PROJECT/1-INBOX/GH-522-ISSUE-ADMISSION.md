@@ -117,3 +117,7 @@ not a claimed incident trend. Reassess against the approved implementation plan.
 Proposal-only is Easy: stop schedule. Automatic membership is Costly: it redirects
 real work. Default-disabled writes, immediate disable on invalid admission, and canonical
 removal of only unstarted watcher-owned memberships form the rollback; retain receipts.
+
+## Merge evidence
+
+- PR #1176 merged 2026-10-22 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
