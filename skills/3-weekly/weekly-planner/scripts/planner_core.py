@@ -1605,16 +1605,17 @@ def format_stalled_markdown(section: dict, title: str, date_local: str) -> str:
         # the comment; the JSON keeps every row.
         # Branch/worktree rows group by checkout; note rows (one path each) group by their kind so a
         # pile of PARKED files or relay threads is capped the same way.
+        group_names = {"note": "PARKED notes", "relay": "relay threads"}
         per_group: dict[str, list[dict]] = {}
         for r in section["local"]:
-            key = r.get("path") or r["ref"] if r.get("kind") in {"branch", "worktree"} else f"{r.get('kind')} notes"
+            key = (r.get("path") or r["ref"]) if r.get("kind") in {"branch", "worktree"} else group_names.get(r.get("kind"), "notes")
             per_group.setdefault(key, []).append(r)
         for key, rows in per_group.items():
-            rows.sort(key=lambda r: r.get("last_activity", ""), reverse=True)
+            rows.sort(key=lambda r: (r.get("last_activity", ""), r.get("ref", "")), reverse=True)
             for r in rows[:LOCAL_ROWS_SHOWN]:
                 lines.append(f"- `{r['ref']}` — {r['last_activity']} — {r['reason']} → _{r['next_action']}_")
             if len(rows) > LOCAL_ROWS_SHOWN:
-                label = key if key.endswith(" notes") else rows[0]["ref"].split(":")[0]
+                label = key if key in group_names.values() else rows[0]["ref"].split(":")[0]
                 lines.append(f"- `{label}` … +{len(rows) - LOCAL_ROWS_SHOWN} more row(s) in the JSON")
     else:
         lines.append("- *Nothing unpushed, uncommitted or orphaned observed on this device (subject to coverage).*")
