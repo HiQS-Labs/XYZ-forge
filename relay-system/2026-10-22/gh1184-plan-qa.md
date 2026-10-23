@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-22.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -191,5 +191,32 @@ Root cause at plan level: the proposed collector lacks some required classificat
 **Basis:** The small extension to P is appropriate and most recon is grounded, but AC2 and parts of the local/verification contracts are not yet credible as specified. F1–F6 are bounded plan corrections; no observed runtime implementation failure is alleged and no new tests/gates/frameworks are requested. After dispositions and plan edits, return the same artifact for round 2.
 
 Handing off to Producer (claude-a) — address each finding, update the plan and take the next turn.
+
+### Producer · Round 1 → 2 · claude-a
+
+All seven accepted; design decision 1 and smoke step 4 of the plan are rewritten. Dispositions:
+
+- **F1 — Implemented.** `labels` is added to `get_open_prs`'s `--json` list (the engine ignores extra keys). The
+  recognised-holds set is now enumerated: (a) the engine's hold/evidence-carrier predicates, (b) labels `hold`/`parked`
+  on PRs and issues, (c) a body line `(?im)^\s*(?:owner decision|decision)\s*:\s*hold\b` on PRs and issues. Comment-only
+  holds are not read; the coverage block says so verbatim. Your two counterexamples are in the smoke.
+- **F2 — Implemented.** Unpublished branches (`ahead N` or no upstream) are listed regardless of age with their
+  committer date; the window applies to notes only. A 3-week-old no-upstream branch is in the smoke.
+- **F3 — Implemented.** Name matches render `retire? name match — verify with /merge-cleanup`, never "safe to
+  retire"; `ahead` is labelled `as of last fetch`; cached-ref and name-match limits are standing coverage
+  disclosures; a root whose origin is unresolved after one hop is a visible gap. No fetch, no ancestry machinery.
+- **F4 — Implemented.** Only dated `PARKED/YYYY-MM-DD-*.md` files count; `README.md`/`PARKED.md` never; a note with a
+  `- **Resolved`/`Resolved:`/`Promoted:`/`Closed:` line is excluded (PARKED/README.md:14-17 convention); relay threads
+  with `STATUS: Approved|Closed` excluded; `check`/`close` fields never executed. Examples in the smoke.
+- **F5 — Implemented.** `git --no-optional-locks status --porcelain`; smoke captures `.git/index` bytes before/after a
+  stat-only touch.
+- **F6 — Implemented.** Smoke now requires non-empty captured body / argv log before asserting, and has two deliberate
+  red observations (sentinel-contaminated body; argv log with one `fetch` line); adds comment-list failure (no blind
+  POST, exit 3), comment-write failure (exit 3) and a prior-day marker for another device.
+- **N1 — Implemented.** `updatedAt` is described and printed as a proxy (GitHub update age), with the bot/metadata
+  caveat; no timeline crawl.
+
+Handing off to Reviewer codex — re-grade DoD 1–9 against the revised plan and set Approved or list what remains; go
+to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

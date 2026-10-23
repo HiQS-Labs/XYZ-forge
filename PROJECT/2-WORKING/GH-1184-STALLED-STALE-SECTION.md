@@ -37,7 +37,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake parked (`rmi-01M5KMYBGA9R5BE619TX3MY0N3`), rated 50/30/50/45, promoted; recon of `planner_core.py`, comment-edit pattern, device identity, local-scan helpers, tests/CI/ratchet done; plan written. | Codex relay plan QA (`relay-system/2026-10-22/gh1184-plan-qa.md`, cap 3) → implement in this clone → full gate in a disposable `-gate` clone → smoke receipt → final relay QA → PR against `development`. |
+| Plan QA round 1 (Codex): 6 Should + 1 Nit, all accepted — PR `labels` field + explicit recognised-holds set with disclosure (F1), unpublished branches listed regardless of age (F2), name-match retirement is an unverified candidate routed to /merge-cleanup (F3), resolved/metadata notes excluded (F4), `--no-optional-locks` status (F5), non-vacuous red controls and failure cases in the smoke (F6), `updatedAt` disclosed as a proxy (N1). | Plan QA round 2 → implement in this clone → full gate in a disposable `-gate` clone → smoke receipt → final relay QA → PR against `development`. |
 
 ## Observed Problem & Recon
 
@@ -113,25 +113,41 @@ Base: `origin/development` @ `eb0623ce` (task clone `XYZ-forge-gh1184-stalled-st
    stale_days, draft_stale_days, device, local_rows, coverage) -> dict` with keys `stalled`, `held`, `local`,
    `coverage`, `generated_at`, `device`, `thresholds`. Rows: `{kind, ref, url_or_path, device, last_activity,
    reason, next_action}`.
-   - GitHub stalled: open non-draft PR not in `evidence_carriers_or_held` with `updatedAt` older than `stale_days`
-     → `next_action: rebase|resume|close`; open draft idle `draft_stale_days` → `resume|close`; open issue assigned
-     to the operator (login from `gh api user`, cached per run; override `--operator`) or labelled `in progress`/
-     `🚧`, idle `stale_days` → `resume|route to weekly`. `updatedAt` is GitHub's own last-activity (commits, review,
-     comment all bump it), which is the issue's "no commits, review or comment in N days".
-   - Held (never stalled): every PR in `evidence_carriers_or_held` with its `hold_reason`; any PR/issue with label
-     `hold` or `parked`; owner decisions already encoded by the engine (`leave unmerged`, `not an authorized merge`).
+   - GitHub stalled: open non-draft PR not Held with `updatedAt` older than `stale_days` → `next_action:
+     rebase|resume|close`; open draft idle `draft_stale_days` → `resume|close`; open issue assigned to the operator
+     (login from `gh api user`, cached per run; override `--operator`) or labelled `in progress`/`🚧`, idle
+     `stale_days` → `resume|route to weekly`. **`updatedAt` is a proxy** (the same idle signal GitHub's own stale
+     action uses): any update — label or metadata churn, bot comments — bumps it, so the report measures "GitHub
+     update age", may miss a human stall after bot/metadata activity, and says so in its header (N1).
+   - Held (never stalled) — the complete recognised set, printed in the coverage block so anything outside it is a
+     disclosed gap (F1): (a) every PR in the engine's `evidence_carriers_or_held` with its `hold_reason` (title
+     `HOLD`/`[HOLD]`, `leave unmerged`, `not an authorized merge`, `prerequisites required|live-pilot`, `review
+     authority limit`, evidence-carrier phrasing); (b) any PR or issue carrying label `hold` or `parked` — this needs
+     `labels` added to `get_open_prs`'s `--json` list (P:332; the engine ignores extra keys); (c) an issue or PR body
+     line matching `(?im)^\s*(?:owner decision|decision)\s*:\s*hold\b`. Owner decisions expressed only in comments
+     are **not read** (no comment crawl) and the coverage line states `owner decisions: labels + title/body phrases
+     only; comment-only holds not detected`.
    - Local (this device only, read-only): for each root in `--local-roots` (default: `--repo-root` + every
-     `~/marathon-clones/*` whose `origin` is the target repo, following one hop of local-path origins), run
+     `~/marathon-clones/*` whose `origin` is the target repo, following one hop of local-path origins; a root whose
+     origin cannot be resolved in one hop is a coverage gap `root skipped (origin unresolved)`), run
      `git for-each-ref refs/heads --format='%(refname:short)%00%(upstream:short)%00%(upstream:track)%00%(committerdate:iso8601)'`
-     and `git status --porcelain` (count only); no `fetch`, `prune`, `worktree prune`, or any write. Rows: branch with
-     `ahead N` or no upstream and a commit in the window → `push or open PR`; dirty tree → `commit or stash`
-     (count only); branch whose head ref name matches a merged/closed PR (`gh pr list --state all --limit 300 --json
-     headRefName,state,number` keyed by name) → `retire clone/branch`. Notes: `PARKED/*.md` and
-     `relay-system/**/*.md` under the target checkout with mtime in the window; a relay thread counts only when
-     `STATUS:` (via `poll.relay_field`) is not `Approved|Closed`; published as path + mtime + `STATUS`, never contents.
+     and `git --no-optional-locks status --porcelain` (count only; `--no-optional-locks` so the status read never
+     refreshes the index, F5); no `fetch`, `prune`, `worktree prune`, or any write. Rows: a branch with `ahead N`, or
+     with no upstream at all, is listed **regardless of age** with its committer date (F2: forgotten work is the
+     point) → `inspect; push or delete`; dirty tree → `commit or stash` (count only); a branch whose name matches a
+     merged/closed PR head in `gh pr list --state all --limit 300 --json headRefName,state,number` is a **retirement
+     candidate, unverified** (`retire? name match — verify with /merge-cleanup`), because a name match cannot see
+     reused names, fork heads or extra local commits (F3); `ahead` comes from cached tracking refs and is labelled
+     `as of last fetch`. Notes (F4): dated `PARKED/YYYY-MM-DD-*.md` files (never `README.md`/`PARKED.md`) and
+     `relay-system/**/*.md` under the target checkout with mtime in the window; a PARKED note is excluded when it
+     contains a line starting `- **Resolved`, `Resolved:`, `Promoted:` or `Closed:` (the PARKED/README.md:14-17
+     convention); a relay thread counts only when `STATUS:` (via `poll.relay_field`) is not `Approved|Closed`;
+     published as path + mtime + status, never contents, and never executing a note's `check`/`close` fields.
    - Coverage: every external read is wrapped; failure → `{source, status: failed, error}`; a list at its limit →
-     `status: truncated`; a missing root → `status: absent`. The section header prints coverage before rows, and an
-     empty Stalled list with any gap renders `no stalled items observed — coverage incomplete`, never "nothing stalled".
+     `status: truncated`; a missing root → `status: absent`; the recognised-holds set, the `updatedAt` proxy and
+     the cached-ref / name-match limits are printed as standing disclosures. The section header prints coverage
+     before rows, and an empty Stalled list with any gap renders `no stalled items observed — coverage incomplete`,
+     never "nothing stalled".
 2. **Daily integration:** in `--mode daily` the collector runs after the sequence with the already-fetched `prs`,
    `issues` (fetched once for this), merges/closures from `pivot_daily`'s window; result stored at
    `result["stalled_stale"]` and rendered as `## 5. Stalled & stale` by `format_stalled_markdown(section)` which
@@ -188,15 +204,25 @@ checkout on macOS; python3 stdlib; `gh` on PATH. Not a service. No new tests (GH
    - adjacent: immediate re-run → the same comment is edited (comment count unchanged, body updated); second device
      simulated with `--device-id other-mac` → a second comment; `--mode daily` without `--team-issue` → section 5 in
      `DAILY-PIVOT-<date>.md`, no comment; `--mode daily` without a baseline → still fails exactly as today (unchanged).
-   - held vs stalled: a `HOLD` PR and an `evidence carrier` PR in the stub data appear under Held, not Stalled; an idle
-     non-draft PR appears under Stalled with `rebase|resume`.
-   - gaps: stub `gh pr list` exits 1 → coverage `failed`, Stalled header says `coverage incomplete`; stub returns 300
-     PRs → `truncated`.
-   - local read-only: run against a throwaway clone with an unpushed branch, a dirty file and a branch whose PR
-     merged → three rows; `git reflog`/`git status` before and after identical; `git fetch` never invoked (stub `git`
-     wrapper logs argv; red control: any `fetch|prune|push|checkout` in the log fails the check).
-   - secrets: the comment body contains no file contents (grep the posted body for a sentinel string placed in a
-     PARKED note → absent).
+   - held vs stalled (F1): stub data with a `HOLD`-titled PR, an `evidence carrier` PR, an old PR whose only hold
+     signal is `labels=[{"name":"hold"}]`, and an operator-assigned old issue whose body says `Owner decision: hold
+     until product sign-off` → all four under Held; an ordinary idle non-draft PR → Stalled with `rebase|resume`.
+   - gaps (F6): stub `gh pr list` exits 1 → coverage `failed`, Stalled header says `coverage incomplete`; stub returns
+     300 PRs → `truncated`; stub comment *listing* fails → no POST is attempted and the run exits 3; stub comment
+     *write* fails → exit 3; a stub prior-day marker for `other-mac` → `no report from other-mac since <date>`.
+   - local read-only (F2/F3/F5): throwaway clone with (i) an unpushed branch with a recent commit, (ii) a no-upstream
+     branch whose last commit is 3 weeks old, (iii) a dirty file, (iv) a branch whose name matches a merged PR but
+     carries one extra local commit → rows: (i) and (ii) both listed (`inspect; push or delete`), (iii) `commit or
+     stash (1 file)`, (iv) `retire? name match — verify with /merge-cleanup`, never "safe to retire". Index bytes
+     (`.git/index` sha) captured before and after the scan are identical after touching a tracked file's mtime
+     without changing content; the stub `git` wrapper's argv log is **non-empty** and contains no
+     `fetch|prune|push|checkout|worktree prune`; red control: a scratch copy of the log with one `fetch` line
+     makes the same check fail.
+   - notes (F4): a recent unresolved `PARKED/2026-10-22-smoke.md` is listed; a recent note containing
+     `- **Resolved 2026-10-22:**` and `PARKED/README.md` (touched) are absent; a relay thread with `STATUS: Approved`
+     is absent, one with `STATUS: Open` is listed.
+   - secrets (F6): the captured comment body is **non-empty** and contains none of a sentinel string placed in the
+     smoke PARKED note; red control: a scratch copy of the body with the sentinel appended makes the check fail.
 5. Final Codex relay QA on the diff + smoke receipt; PR against `development` referencing #1184, noting: forge-only
    (mini `adapted`), scheduler not enabled, and the acceptance line "covered by an extension to the existing
    daily-planner/planner_core tests" is satisfied by the recorded manual smoke because **no such test exists** and
