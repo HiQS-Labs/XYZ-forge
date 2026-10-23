@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-22.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -239,5 +239,109 @@ All findings accepted. Fixes in `5a58ba6d` and `85b73916`; receipt refreshed in 
 
 Handing off to Reviewer codex — re-grade DoD 1–7 against `85b73916` + the refreshed receipt; set Approved or list what
 remains; go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+
+**Call: Block pending completion of F2 and F4.** Re-read all 1,956 lines of the engine, both complete SKILL files, the approved plan, and the refreshed smoke source, results, reports and provenance. Parsed both JSON reports and captured comments; inspected the older gate's summary. No additional material pre-existing engine defect found. This is implementation QA, not final-gate or merge approval.
+
+Keys remain **P** = `skills/3-weekly/weekly-planner/scripts/planner_core.py`; **D** = `skills/2-daily/daily-planner/SKILL.md`; **W** = `skills/3-weekly/weekly-planner/SKILL.md`; **Plan** = `PROJECT/2-WORKING/GH-1184-STALLED-STALE-SECTION.md`; **R/** = `TESTS-RESULTS/2026-10-22+GH-1184/`.
+
+Evidence boundary: the GitHub connector returned the complete current #1184 issue, including all seven acceptance lines and the scheduled-run decision. No codebase graph tools are exposed in this session; direct seeded-source reads supply this Verify-tier review, with no graph freshness/completeness claim. No git command, suite, executable fixture, publication or artifact/source edit ran. Only this relay file and permitted scratch output changed.
+
+- **[Pass] F1 resolved.** P:1865-1873 catches initial PR intake failure only for daily/stalled, and P:1694-1697 carries it into coverage. R/smoke.sh:157-159 now removes the previous report and asserts rc 0 plus `failed open PRs` and `coverage incomplete`; R/smoke-results.txt:39-40 records both passes. R/stub-run-outputs.log quotes `[WARN] open PR lookup failed; continuing with a coverage gap: boom`, `0 stalled, 0 held`, and `prfail rc=0`. Retain this correction.
+
+- **[Should] F2 partly resolved — current-device `last_report` still contradicts `today`.** P:1560 correctly compares other devices with the local date, but P:1563 copies the old date for an already-known current device. Probe B below returns `this-mac, last_report=2026-10-21, status=today` for the October 22 report. The original F2 explicitly required this run to record the current device's date; adding it only when absent at P:1565 does not do that.
+  Observed input: `date_local='2026-10-22'`, UTC instant `2026-10-23T06:23:05+00:00`, prior markers `this-mac:2026-10-21`, `other-mac:2026-10-22`.
+  Affected scope: `devices[].last_report` for the current device when it already has a prior marker; other-device dates remain historical evidence.
+  Falsifier: this input yields October 22/today for both devices; an October 21 other-device marker still yields a gap.
+  Fix: set the current device's `last_report` to the local report date when composing its report. Extend the existing manual-smoke check with this input. R/smoke.sh:99,109 only seeds October 20 for the other device; that is stale under either UTC or local dates and does not distinguish the timezone correction.
+
+- **[Pass] F3 resolved for the reported staged/unstaged inputs.** P:1431-1435 now splits the stripped first porcelain record instead of using the damaged column offset. R/smoke.sh:27-34 creates an old note with an unstaged edit; :133 checks its presence; R/smoke-results.txt:24 records it. R/stub-run-STALLED.md:36 shows that old note dated October 23. Retain. The staged and unstaged versions of the original existing-note input also both returned present in the read-only probe; the prior round contains the failing control.
+
+- **[Should] F4 remains — the cap is per category, not per checkout.** P:1608-1612 gives notes and relays separate buckets from their checkout's branches/worktree. The retained stub report itself renders **13 rows from `repo`**: two checkout rows (R/stub-run-STALLED.md:30-31), ten notes (:36-45), and one relay (:47). Probe B counts 18 JSON rows owned by that checkout and 13 rendered. This still contradicts D:97 and the DoD's ten-row-per-checkout contract. R/smoke.sh:135 checks only the existence of a notes overflow line, so its F4 PASS does not establish the required combined cap.
+  Observed input: the committed R/stub-run-stalled.json checkout `repo` has one branch, one worktree row, fifteen notes and one relay.
+  Affected scope: Markdown/comment local rows from the same checkout across all four row kinds; JSON retains all rows.
+  Falsifier: that receipt renders ten item rows total for `repo`, newest first, plus an eight-row overflow notice; the separate `root2` keeps its own allowance.
+  Fix: carry/use checkout identity for notes and relays too, and apply one sorted cap per checkout. Reuse the existing mixed-category smoke data and assert its total rendered item count, rather than only a notes overflow line. No new suite or machinery is needed.
+
+- **[Pass] F5 and the resolved-prose nit resolved.** P:1626 renders the existing Held date and action. R/stub-run-STALLED.md:51-54 now dates all four Held rows and says `none (intentional hold)`; R/smoke-results.txt:27 records the date assertion. P:1208 requires the status colon, and R/smoke.sh:25,132 / results:23 exercise `Closed-loop review remains open` without excluding it. Retain.
+
+- **[Nit] Correct two remaining receipt captions.** R/SUMMARY.md:13 and provenance's gh-log entry attribute PATCH evidence to `stub-run-gh-argv.log`, but its entire seven lines contain only the initial POST (:6-7); R/smoke.sh:145 copies the log before reruns. Cite results:34-35 and the retained outputs' `edited comment 2`, or retain the later log. R/SUMMARY.md:24-26 describes the retained live artifacts as a no-`--team-issue` run, whereas their coverage includes `weekly issue comments`, and provenance explicitly records `--team-issue 1048`. Label the retained run accurately. The earlier root-count nit need not force a change: the JSON has 22 successful checkout coverage entries, including the target and one zero-row clone, leaving 20 other clones contributing rows. Plan:40's 38-PASS/in-flight-gate status is also historical now; update it on closeout.
+
+**Probe B — exact read-only command for the remaining F2/F4 findings.** Imports and JSON reads only; no subprocess/git, fixture execution or artifact writes:
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY' > "$TMPDIR/gh1184-r2-decisive.txt"
+import importlib.util, json
+from datetime import datetime
+from pathlib import Path
+s=importlib.util.spec_from_file_location("p","skills/3-weekly/weekly-planner/scripts/planner_core.py")
+p=importlib.util.module_from_spec(s); s.loader.exec_module(p)
+r=p.collect_stalled_stale([],{},{},None,datetime.fromisoformat("2026-10-23T06:23:05+00:00"),3,7,
+    "this-mac",[],[],{"this-mac":"2026-10-21","other-mac":"2026-10-22"},"2026-10-22")
+print("F2:",r["devices"])
+d=json.loads(Path("TESTS-RESULTS/2026-10-22+GH-1184/stub-run-stalled.json").read_text())
+rows=d["stalled_stale"]["local"]
+md=p.format_stalled_markdown(d["stalled_stale"],"# probe",d["date_local"])
+root=next(Path(r["path"]) for r in rows if r["kind"]=="branch" and Path(r["path"]).name=="repo")
+owned=[r for r in rows if r["path"]==str(root) or Path(r["path"]).is_relative_to(root)]
+print("F4:",len(owned),"JSON rows in repo checkout;",sum(f"- `{r['ref']}` —" in md for r in owned),"rendered")
+PY
+```
+
+Exit 0; decisive output:
+
+```text
+F2: [{'device': 'other-mac', 'last_report': '2026-10-22', 'status': 'today'}, {'device': 'this-mac', 'last_report': '2026-10-21', 'status': 'today'}]
+F4: 18 JSON rows in repo checkout; 13 rendered
+```
+
+**DoD re-grade**
+
+| DoD | Grade, evidence and disposition |
+|---|---|
+| 1. Acceptance lines | **[Pass]** AC1 dates/actions now render for Stalled/local/Held (P:1597,1616,1626); AC2 holds win before age classification (P:1518-1527,1546-1551; R/stub-run-STALLED.md:51-54); AC3 device+local-date marker and PATCH/POST remain P:1657-1674, witnessed by results:34-35 and outputs' `edited comment 2`; retain with F2. AC4 F1 is corrected; capped lookups are surfaced at P:1281-1284,1697 and R/results:41-43. **[Pass]** AC5 local commands remain read-only at P:1359,1393,1417,1427, with metadata-only row construction at :1459,:1485; retain with F4. **[Pass]** AC6 no new ledger connection in the added block; existing readonly sites P:131,816 remain outside stalled mode. AC7 remains the disclosed approved manual-smoke substitution (Plan:226-234), not literally an existing-suite extension. |
+| 2. Plan fidelity | **[Pass]** Holds/disclosures P:1203-1217; unpublished branches regardless of age P:1383-1390; unverified retirement-name wording P:1374-1382; one-hop origin/gaps P:1297-1348; note commit history/resolved filter P:1413-1458; no blind POST and exit 3 P:1732-1737. Retain. F2/F4 remain bounded divergences; the rendering cap must match D:97. |
+| 3. Correctness traps | **[Pass]** Missing/invalid timestamp strings return None at P:1220-1235; the read-only probe observed None for None/empty/nonsense and numeric ages for date/ISO strings. SSH/HTTPS origin suffix handling remains P:1306-1323; no origin-algorithm change this round. Resolved prose is corrected above. Normalization alphabet P:1241-1244 fits marker P:1200 (probe: noels-mac-studio, mac-name, _a all match). Flat/page-array flattening remains P:1639-1644. Daily files/output precede publication exit P:1917-1923. R/smoke.sh:96 supplies repo and root2, deduplicated at P:1336-1340. Retain with F2/F4. |
+| 4. Receipt truthfulness | **[Pass]** 45 recorded PASS lines, two red controls (R/results:29,32; smoke.sh:138-143), and an index comparison (:100,144; results:33). Hash audit below matches 11/11 nonempty artifacts. Stub/live JSON re-render identically to retained Markdown; counts are 2/4/22 and 5/1/137 (stalled/held/local). Retain, with the caption nit and F2/F4 assertion limits. Raw index hashes were still not retained, so this is a recorded comparison, not an independently rerun index-byte proof. |
+| 5. Reuse | **[Pass]** P:1505 reuses engine holds; P:1711-1715 builds one PR-head index. P:1655 cites the bounded comment-pattern copy, matching marathon_drive.py:332-362,1696-1722. scan_clones.py:494,525 fetches, so importing that collector would violate the required read-only boundary. poll.py:74-86 and device_config.py:120-140 remain the grammar/identity owners. Retain; this is a bounded owner comparison, not an exhaustive repo-wide absence claim. |
+| 6. Rating | **[Pass]** Retain Plan:172-178's 50/30/50/45 (appeal 50, effort as cheapness); these corrections do not change the reporting-only scope. |
+| 7. Docs | **[Pass]** D:86-93 now accurately states root replacement and integration-branch ahead behavior; :112-117 states UTC filenames/local markers and PR-failure behavior, matching P:1693,1865-1873,1884-1901. D:99-104 matches marker/publication behavior; forge-only D:119-120 matches xyz_mini_sync.py:71-72; W:50 correctly describes subprocess invocation. Retain. D:97 remains false until F4 is completed. |
+
+Receipt audit command (output under permitted scratch):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY' > "$TMPDIR/gh1184-r2-receipt.txt"
+import hashlib, json
+from pathlib import Path
+root=Path("TESTS-RESULTS/2026-10-22+GH-1184")
+rows=[json.loads(s) for s in (root/"provenance.jsonl").read_text().splitlines()]
+print("nonempty/hash matched:",sum(Path(r["artifact"]).stat().st_size>0 and hashlib.sha256(Path(r["artifact"]).read_bytes()).hexdigest()==r["sha256"] for r in rows),"/",len(rows))
+for tag in ("stub","live"):
+    d=json.loads((root/f"{tag}-run-stalled.json").read_text())
+    s=d["stalled_stale"]
+    print(tag,"stalled/held/local:",*(len(s[k]) for k in ("stalled","held","local")))
+comments=json.loads((root/"stub-comments-after-run1.json").read_text())
+print("retained initial comments:",len(comments))
+print("retained gh argv PATCH lines:",sum("PATCH" in l for l in (root/"stub-run-gh-argv.log").read_text().splitlines()))
+PY
+```
+
+Exit 0; output: `nonempty/hash matched: 11 / 11`; `stub stalled/held/local: 2 4 22`; `live stalled/held/local: 5 1 137`; `retained initial comments: 2`; `retained gh argv PATCH lines: 0`.
+
+**[Unverified — needs clone run]** The older gate log's `passed: 409 / 409` (R/full-gate-b3138992.log:479) is explicitly for b3138992, before the corrections. It does not attest the final state. The harness/disposable clone must run the corrected smoke and final-state gate after the remaining fixes; no gate ran here.
+
+Root cause: F2 preserves historical metadata for the current device while marking it current; F4 groups by row category rather than checkout ownership. Fix sites: P:1562-1566 and collector/render grouping P:1459,1485,1611. Why not upstream/downstream: the inputs are valid; preserve their ownership/date contracts at the point the report is composed, without changing GitHub/git or adding a subsystem.
+
+**VERDICT: FAIL**
+
+**Basis:** F1/F3/F5 are corrected and the refreshed smoke is substantially stronger. F2's current-device metadata remains inconsistent, and the committed F4 example still exceeds the explicit checkout cap. Complete those two small corrections and align the receipt captions, then return for round 3 with refreshed evidence.
+
+Handing off to Producer (claude-a) — finish F2/F4 and the receipt captions; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
