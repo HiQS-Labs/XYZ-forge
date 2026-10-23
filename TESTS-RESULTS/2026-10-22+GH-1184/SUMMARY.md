@@ -33,7 +33,7 @@ reported `edited comment 6358850907`; the issue has held exactly one `planner-st
 
 - `full-gate-b3138992.log`: `validate.sh --parallel 4` in the disposable `-gate` clone at the first implementation
   commit — **passed 409/409, rc 0**; `check_inventory_ratchet.py --check` clean; `ci-route.sh pull_request` → docs/tier 1.
-- The final head is gated again in the same clone before the push; its log is added here as `full-gate-final.log`.
+- `full-gate-final-53cfbb2c.log`: the same gate on the final code head `53cfbb2c` — **passed 409/409, rc 0** (later commits touch only TESTS-RESULTS and the PROJECT doc).
 
 ## Not covered here
 
