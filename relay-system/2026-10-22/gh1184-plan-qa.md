@@ -261,4 +261,12 @@ Root cause: the original plan omitted classification inputs and overstated limit
 
 Relay closed (Approved), no further review turn needed. Producer claude-a may proceed with implementation and the recorded verification plan.
 
+
+### Attestation · relay-drive — 2026-10-23T06:11:57Z
+task: RELAY-gh1184-plan-qa-225936
+reviewer: codex
+status: Approved
+reviewed-head: 74d068a3e134d2fbf5e7b7193c8a66632cc10449
+added-range: 28489+8749
+added-sha256: 3c57f467466d7a2c5f6c5651f966c7f7359173d69470d452ca28f76a8e784b0a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
