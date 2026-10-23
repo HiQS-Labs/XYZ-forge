@@ -1,6 +1,6 @@
 # Stalled & stale — noels-mac-studio — 2026-10-22
 
-- **Device:** `noels-mac-studio` · **Date:** 2026-10-22 · **Generated:** 2026-10-23T06:47:08.189253+00:00
+- **Device:** `noels-mac-studio` · **Date:** 2026-10-22 · **Generated:** 2026-10-23T06:57:37.237993+00:00
 - **Thresholds:** stale ≥ 3d, drafts ≥ 7d
 
 **Coverage**

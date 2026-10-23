@@ -37,7 +37,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved in round 2. Implemented in `planner_core.py` (b3138992): `--mode stalled`, section 5 in daily, per-device comment with marker edit, read-only local scan, note history by last commit (not mtime), integration branches skipped, local rows capped at 10/checkout in the rendering. Smoke receipt `TESTS-RESULTS/2026-10-22+GH-1184/` — 38 PASS / 0 FAIL stub runs incl. 2 red controls, live run posted and edited one comment on #1048. Ratchet `--check` clean in the `-gate` clone; ci-route docs/tier 1. | Full `validate.sh --parallel 4` running in the `-gate` clone → final Codex relay QA (`relay-system/2026-10-22/gh1184-final-qa.md`) → PR against `development` → retire task/gate clones. |
+| Plan QA Approved (round 2). Implemented in `planner_core.py` (b3138992 + fixes 5a58ba6d, 85b73916, 452c2f66 from final QA rounds 1–2). Final Codex QA **Approved in round 3** (`relay-system/2026-10-22/gh1184-final-qa.md`). Smoke receipt `TESTS-RESULTS/2026-10-22+GH-1184/`: 47 PASS / 0 FAIL stub runs incl. 2 red controls; live run created then edited one comment on #1048. Full `validate.sh --parallel 4` 409/409 at b3138992 in the `-gate` clone; re-run on the final head recorded in the receipt and PR; ratchet `--check` clean; ci-route docs/tier 1. | Push through the pre-push gate → PR against `development` referencing #1184 → retire task/gate clones. Awaiting merge by the operator. |
 
 ## Observed Problem & Recon
 

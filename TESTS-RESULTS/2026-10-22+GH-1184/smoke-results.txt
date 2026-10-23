@@ -1,4 +1,4 @@
-PASS: comment body captured (non-empty, 63 bytes)
+PASS: comment body captured (non-empty, 3759 bytes)
 PASS: marker device normalized (noels-mac-studio)
 PASS: prior-day device gap reported (other-mac)
 PASS: PR #10 under Held

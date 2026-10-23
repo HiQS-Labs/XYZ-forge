@@ -105,7 +105,7 @@ echo '[{"id":1,"body":"<!-- planner-stalled:other-mac:2026-10-20 -->\nold report
 echo "== main: stalled mode with team issue"; : > "$STUBSTATE/git.log"; echo ok > "$STUBSTATE/mode"
 run --mode stalled --team-issue 999 > "$OUT/run1.out" 2>&1; echo "rc=$?" >> "$OUT/run1.out"; tail -2 "$OUT/run1.out"
 MD=$(ls "$REPO"/temp/planner/STALLED-*.md | head -1); cp "$MD" "$OUT/STALLED.md"; cp "$STUBSTATE/comments.json" "$OUT/comments-after-run1.json"
-BODY=$(python3 -c "import json;d=json.load(open('$STUBSTATE/comments.json'));print([c['body'] for c in d if 'noels-mac-studio' in c['body']][0])")
+BODY=$(python3 -c "import json;d=json.load(open('$STUBSTATE/comments.json'));print([c['body'] for c in d if 'planner-stalled:noels-mac-studio:2026-10-22' in c['body']][0])")   # THIS run's comment, not yesterday's seed
 [ -n "$BODY" ] && pass "comment body captured (non-empty, $(echo "$BODY" | wc -c | tr -d ' ') bytes)" || fail "comment body empty"
 grep -q 'planner-stalled:noels-mac-studio:' "$STUBSTATE/comments.json" && pass "marker device normalized (noels-mac-studio)" || fail "marker"
 grep -q 'no report since 2026-10-20' "$OUT/STALLED.md" && pass "prior-day device gap reported (other-mac)" || fail "prior device gap"
