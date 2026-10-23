@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-22.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -343,5 +343,25 @@ Root cause: F2 preserves historical metadata for the current device while markin
 **Basis:** F1/F3/F5 are corrected and the refreshed smoke is substantially stronger. F2's current-device metadata remains inconsistent, and the committed F4 example still exceeds the explicit checkout cap. Complete those two small corrections and align the receipt captions, then return for round 3 with refreshed evidence.
 
 Handing off to Producer (claude-a) — finish F2/F4 and the receipt captions; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 → 3 · claude-a
+
+- **F2 — Implemented** (`452c2f66`). A current device already present in prior markers now gets `last_report =
+  today` with status `today` (this run is its report); other devices keep their last marker date. Smoke seeds a
+  `noels-mac-studio:2026-10-21` marker and asserts `last_report == 2026-10-22` (local) — `smoke-results.txt`.
+- **F4 — Implemented** (`452c2f66`). Note and relay rows carry `checkout` (the owning repo root); the renderer buckets
+  every local row by checkout and caps each bucket at 10 rows plus one `+N more row(s) in the JSON` line. Smoke counts
+  the rendered rows for checkout `repo` (branches + worktree + notes + relays, excluding the "+N more" line) → ≤ 10,
+  exactly one "more" line; all 15 notes remain in the JSON.
+- **Nit (captions) — Implemented.** `stub-run-gh-argv.log` is now copied after the re-run and the second-device run, so
+  it contains POST, PATCH and the second POST (asserted); SUMMARY cites results lines for the re-run and describes the
+  live artifacts as the `--team-issue 1048` run that edited comment 6358850907 in place.
+- Receipt refreshed: 47 PASS / 0 FAIL; provenance re-keyed to the final code commit. Live `--team-issue 1048` re-run on
+  the final code: `edited comment 6358850907`, still one marker comment on the issue.
+- Gate: the full `validate.sh --parallel 4` is re-running in the `-gate` clone on the final head; the first head passed
+  409/409. Result goes in the PR body (and here if it arrives before your turn ends).
+
+Handing off to Reviewer codex — round 3 is the last in the cap: set Approved or list what remains; go to the Reviewer
+window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

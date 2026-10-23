@@ -100,6 +100,8 @@ echo '[{"id":1,"body":"<!-- planner-stalled:other-mac:2026-10-20 -->\nold report
 IDX_BEFORE=$(shasum "$W/root2/.git/index" | cut -c1-40)
 touch "$W/root2/.gitignore"   # stat-only change to a tracked file
 
+# seed a prior-day marker for THIS device too (F2: this run must report its own date as today)
+echo '[{"id":1,"body":"<!-- planner-stalled:other-mac:2026-10-20 -->\nold report"},{"id":2,"body":"<!-- planner-stalled:noels-mac-studio:2026-10-21 -->\nyesterday"}]' > "$STUBSTATE/comments.json"
 echo "== main: stalled mode with team issue"; : > "$STUBSTATE/git.log"; echo ok > "$STUBSTATE/mode"
 run --mode stalled --team-issue 999 > "$OUT/run1.out" 2>&1; echo "rc=$?" >> "$OUT/run1.out"; tail -2 "$OUT/run1.out"
 MD=$(ls "$REPO"/temp/planner/STALLED-*.md | head -1); cp "$MD" "$OUT/STALLED.md"; cp "$STUBSTATE/comments.json" "$OUT/comments-after-run1.json"
@@ -132,7 +134,11 @@ echo "$refs" | grep -q 'smoke-approved.md' && fail "approved relay listed" || pa
 echo "$refs" | grep -q '2026-10-22-closedloop.md' && pass "'Closed-loop …' prose is NOT treated as resolved (nit)" || fail "closedloop prose excluded"
 echo "$refs" | grep -q '2026-09-01-oldnote.md' && pass "old note with an UNSTAGED edit today is listed (F3: porcelain first line)" || fail "unstaged note edit missed (F3)"
 [ "$(echo "$refs" | grep -c PARKED/)" -ge 15 ] && pass "all $(echo "$refs" | grep -c PARKED/) PARKED notes in the JSON" || fail "note count in JSON"
-grep -q 'PARKED notes. … +' "$OUT/STALLED.md" && pass "rendered PARKED notes capped at 10 with '+N more' (F4)" || fail "note cap"
+# F4: at most 10 rendered rows per CHECKOUT (branches + worktree + notes + relays together) plus one "+N more" line
+RENDERED_REPO=$(sed -n '/\*\*Local/,/\*\*Held/p' "$OUT/STALLED.md" | grep -v '… +' | grep -c '^- `repo\|^- `PARKED/\|^- `relay-system/')
+MORE_REPO=$(sed -n '/\*\*Local/,/\*\*Held/p' "$OUT/STALLED.md" | grep -c '^- `repo` … +')
+[ "$RENDERED_REPO" -le 10 ] && [ "$MORE_REPO" -eq 1 ] && pass "checkout 'repo' renders $RENDERED_REPO rows (<= 10) + one '+N more' line (F4)" || fail "per-checkout cap: rendered=$RENDERED_REPO more=$MORE_REPO"
+python3 -c "import json;d=json.load(open('$JSONF'))['stalled_stale'];me=[x for x in d['devices'] if x['device']=='noels-mac-studio'][0];import sys;sys.exit(0 if me['last_report']=='2026-10-22' and me['status']=='today' else 1)" && pass "current device last_report == local today (F2)" || fail "current device last_report (F2)"
 grep -A60 '\*\*Held' "$OUT/STALLED.md" | grep 'PR #10' | grep -q 'last activity 2026-09-01' && pass "Held row carries dated evidence (F5)" || fail "held row date"
 # secrets
 echo "$BODY" | grep -q 'SENTINEL-7f3a9c' && fail "sentinel leaked into comment" || pass "no note contents in comment (sentinel absent, body non-empty)"
@@ -149,6 +155,8 @@ run --mode stalled --team-issue 999 > "$OUT/run2.out" 2>&1; echo "rc=$?" >> "$OU
 N2=$(python3 -c "import json;print(len(json.load(open('$STUBSTATE/comments.json'))))"); grep -q 'PATCH' "$STUBSTATE/gh.log" && [ "$N1" = "$N2" ] && pass "re-run PATCHed own comment; count $N1 → $N2" || fail "re-run did not edit in place ($N1 → $N2)"
 echo "== adjacent: second device"; (cd "$REPO" && python3 "$ENGINE" --repo-root "$REPO" --gh-repo HiQS-Labs/XYZ-forge --local-roots "$REPO" --device-id other-mac --mode stalled --team-issue 999 > "$OUT/run3.out" 2>&1)
 N3=$(python3 -c "import json;print(len(json.load(open('$STUBSTATE/comments.json'))))"); [ "$N3" -eq $((N2+1)) ] && pass "second device → separate comment ($N2 → $N3)" || fail "second device comment count $N3"
+cp "$STUBSTATE/gh.log" "$OUT/gh-argv.log"   # retained AFTER the re-run and second device, so POST, PATCH and the second POST are all in it
+grep -q '^PATCH' "$OUT/gh-argv.log" && [ "$(grep -c '^POST' "$OUT/gh-argv.log")" -eq 2 ] && pass "retained gh log shows POST, PATCH (re-run), POST (second device)" || fail "gh log shape"
 echo "== adjacent: daily mode without baseline still fails as before"; rm -f "$REPO"/temp/planner/weekly-plan-*; run --mode daily > "$OUT/run4.out" 2>&1; rc=$?; grep -qi 'weekly' "$OUT/run4.out" && [ $rc -ne 0 ] && pass "daily without baseline → nonzero with weekly hint (unchanged)" || fail "daily baseline rc=$rc"
 echo "== adjacent: daily mode with a baseline renders section 5, no comment without --team-issue"
 echo '{"mode":"weekly_plan","date":"2026-10-20","tasks":[],"raw_tasks":[],"roadmap_items":[]}' > "$REPO/temp/planner/weekly-plan-2026-10-20.json"; : > "$STUBSTATE/gh.log"

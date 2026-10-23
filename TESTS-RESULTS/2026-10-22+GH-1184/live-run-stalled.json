@@ -3,7 +3,7 @@
   "date": "2026-10-23",
   "date_local": "2026-10-22",
   "stalled_stale": {
-    "generated_at": "2026-10-23T06:37:14.347490+00:00",
+    "generated_at": "2026-10-23T06:48:15.676675+00:00",
     "device": "noels-mac-studio",
     "thresholds": {
       "stale_days": 3,
@@ -74,7 +74,7 @@
         "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1184-stalled-stale-section-2026-10-22",
         "device": "noels-mac-studio",
         "last_activity": "2026-10-22",
-        "reason": "ahead 13 of origin/development (as of last fetch)",
+        "reason": "ahead 16 of origin/development (as of last fetch)",
         "next_action": "inspect; push or open PR"
       },
       {
@@ -1296,6 +1296,7 @@
         "kind": "relay",
         "ref": "relay-system/2026-10-22/gh1184-final-qa.md",
         "path": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1184-stalled-stale-section-2026-10-22/relay-system/2026-10-22/gh1184-final-qa.md",
+        "checkout": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1184-stalled-stale-section-2026-10-22",
         "device": "noels-mac-studio",
         "last_activity": "2026-10-22",
         "reason": "relay thread STATUS: Open",

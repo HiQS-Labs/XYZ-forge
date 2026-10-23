@@ -1,4 +1,4 @@
-PASS: comment body captured (non-empty, 4181 bytes)
+PASS: comment body captured (non-empty, 63 bytes)
 PASS: marker device normalized (noels-mac-studio)
 PASS: prior-day device gap reported (other-mac)
 PASS: PR #10 under Held
@@ -23,7 +23,8 @@ PASS: approved relay excluded
 PASS: 'Closed-loop …' prose is NOT treated as resolved (nit)
 PASS: old note with an UNSTAGED edit today is listed (F3: porcelain first line)
 PASS: all 15 PARKED notes in the JSON
-PASS: rendered PARKED notes capped at 10 with '+N more' (F4)
+PASS: checkout 'repo' renders 10 rows (<= 10) + one '+N more' line (F4)
+PASS: current device last_report == local today (F2)
 PASS: Held row carries dated evidence (F5)
 PASS: no note contents in comment (sentinel absent, body non-empty)
 PASS: RED CONTROL: contaminated body is detected
@@ -31,8 +32,9 @@ PASS: git argv log non-empty (7 calls)
 PASS: no fetch/prune/push/checkout/pull/reset/clean in git argv
 PASS: RED CONTROL: a fetch line is detected
 PASS: index bytes unchanged after scan (--no-optional-locks) (F5)
-PASS: re-run PATCHed own comment; count 2 → 2
-PASS: second device → separate comment (2 → 3)
+PASS: re-run PATCHed own comment; count 3 → 3
+PASS: second device → separate comment (3 → 4)
+PASS: retained gh log shows POST, PATCH (re-run), POST (second device)
 PASS: daily without baseline → nonzero with weekly hint (unchanged)
 PASS: daily MD has section 5 (rc=0)
 PASS: daily without --team-issue posts nothing

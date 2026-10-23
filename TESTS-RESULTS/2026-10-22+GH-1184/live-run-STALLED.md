@@ -1,6 +1,6 @@
 # Stalled & stale — noels-mac-studio — 2026-10-22
 
-- **Device:** `noels-mac-studio` · **Date:** 2026-10-22 · **Generated:** 2026-10-23T06:37:14.347490+00:00
+- **Device:** `noels-mac-studio` · **Date:** 2026-10-22 · **Generated:** 2026-10-23T06:48:15.676675+00:00
 - **Thresholds:** stale ≥ 3d, drafts ≥ 7d
 
 **Coverage**
@@ -52,7 +52,8 @@
 
 **Local — noels-mac-studio**
 
-- `XYZ-forge-gh1184-stalled-stale-section-2026-10-22:feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22` — 2026-10-22 — ahead 13 of origin/development (as of last fetch) → _inspect; push or open PR_
+- `relay-system/2026-10-22/gh1184-final-qa.md` — 2026-10-22 — relay thread STATUS: Open → _take or close the pending turn_
+- `XYZ-forge-gh1184-stalled-stale-section-2026-10-22:feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22` — 2026-10-22 — ahead 16 of origin/development (as of last fetch) → _inspect; push or open PR_
 - `forge-gh605-verify2-20260913` — 2026-10-23 — 2 uncommitted change(s) → _commit or stash_
 - `forge-gh605-verify2-20260913:fix/work-state-projection` — 2026-09-14 — PR #607 is merged (name match, unverified) → _retire? name match — verify with /merge-cleanup_
 - `forge-gh945-radar-verify-reco` — 2026-10-23 — 1 uncommitted change(s) → _commit or stash_
@@ -110,7 +111,6 @@
 - `xyz-relay-gh25:development` — 2026-09-22 — ahead 8 of origin/development (as of last fetch) → _inspect; push or open PR_
 - `xyz-vendor-frontdoor-remediation-2026-10-05` — 2026-10-23 — 1 uncommitted change(s) → _commit or stash_
 - `xyz-vendor-frontdoor-remediation-2026-10-05:fix/vendor-pdda-frontdoor` — 2026-10-05 — ahead 8 of origin/development (as of last fetch) → _inspect; push or open PR_
-- `relay-system/2026-10-22/gh1184-final-qa.md` — 2026-10-22 — relay thread STATUS: Open → _take or close the pending turn_
 
 **Held (intentional, not stalled)**
 

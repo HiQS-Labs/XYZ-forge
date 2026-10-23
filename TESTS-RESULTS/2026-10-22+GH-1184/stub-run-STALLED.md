@@ -1,6 +1,6 @@
 # Stalled & stale — noels-mac-studio — 2026-10-22
 
-- **Device:** `noels-mac-studio` · **Date:** 2026-10-22 · **Generated:** 2026-10-23T06:36:51.986194+00:00
+- **Device:** `noels-mac-studio` · **Date:** 2026-10-22 · **Generated:** 2026-10-23T06:47:08.189253+00:00
 - **Thresholds:** stale ≥ 3d, drafts ≥ 7d
 
 **Coverage**
@@ -14,8 +14,8 @@
 - `ok` PARKED notes (15) — 16 touched in window
 - `ok` relay threads (1)
 - `ok` weekly issue comments (1)
-- device `other-mac`: no report since 2026-10-20
 - device `noels-mac-studio`: today
+- device `other-mac`: no report since 2026-10-20
 - _holds recognised: engine title/body phrases (HOLD, leave unmerged, not an authorized merge, prerequisites required/live-pilot, review authority limit, evidence carrier), labels hold/parked, body line 'owner decision: hold'; comment-only holds are NOT detected_
 - _ages are GitHub update age (updatedAt): label/metadata churn and bot comments count as activity, so a human stall after such activity can be missed_
 - _'ahead' counts come from cached tracking refs (as of last fetch; this scan never fetches); merged/closed matches are by branch NAME only and are unverified_
@@ -28,23 +28,20 @@
 **Local — noels-mac-studio**
 
 - `repo` — 2026-10-23 — 1 uncommitted change(s) → _commit or stash_
-- `repo:feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22` — 2026-10-22 — ahead 2 of origin/feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22 (as of last fetch) → _inspect; push or open PR_
-- `root2` — 2026-10-23 — 1 uncommitted change(s) → _commit or stash_
-- `root2:fix/report` — 2026-10-22 — PR #20 is merged (name match, unverified) → _retire? name match — verify with /merge-cleanup_
-- `root2:feat/recent-unpushed` — 2026-10-22 — no upstream (never pushed) → _inspect; push or delete_
-- `root2:fix/forgotten` — 2026-10-01 — no upstream (never pushed) → _inspect; push or delete_
 - `PARKED/2026-09-01-oldnote.md` — 2026-10-23 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
+- `repo:feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22` — 2026-10-22 — ahead 2 of origin/feat/XYZ-forge-gh1184-stalled-stale-section-2026-10-22 (as of last fetch) → _inspect; push or open PR_
+- `relay-system/2026-10-22/smoke-open.md` — 2026-10-22 — relay thread STATUS: Open → _take or close the pending turn_
 - `PARKED/2026-10-22-smoke.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
 - `PARKED/2026-10-22-closedloop.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
 - `PARKED/2026-10-21-many-9.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
 - `PARKED/2026-10-21-many-8.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
 - `PARKED/2026-10-21-many-7.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
 - `PARKED/2026-10-21-many-6.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
-- `PARKED/2026-10-21-many-5.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
-- `PARKED/2026-10-21-many-4.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
-- `PARKED/2026-10-21-many-3.md` — 2026-10-22 — parked note, not marked resolved → _resolve, promote to an issue, or mark Resolved:_
-- `PARKED notes` … +5 more row(s) in the JSON
-- `relay-system/2026-10-22/smoke-open.md` — 2026-10-22 — relay thread STATUS: Open → _take or close the pending turn_
+- `repo` … +8 more row(s) in the JSON
+- `root2` — 2026-10-23 — 1 uncommitted change(s) → _commit or stash_
+- `root2:fix/report` — 2026-10-22 — PR #20 is merged (name match, unverified) → _retire? name match — verify with /merge-cleanup_
+- `root2:feat/recent-unpushed` — 2026-10-22 — no upstream (never pushed) → _inspect; push or delete_
+- `root2:fix/forgotten` — 2026-10-01 — no upstream (never pushed) → _inspect; push or delete_
 
 **Held (intentional, not stalled)**
 
