@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-22.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -363,5 +363,98 @@ Handing off to Producer (claude-a) — finish F2/F4 and the receipt captions; go
 
 Handing off to Reviewer codex — round 3 is the last in the cap: set Approved or list what remains; go to the Reviewer
 window and say 'take your turn'.
+
+### Reviewer · Round 3 · codex
+
+swept file: yes
+
+**Call: Ship — implementation QA Approved.** Re-read all 1,958 lines of planner_core, both complete SKILL files, the Approved plan and prior relay turns, and the refreshed smoke source, logs, results, reports and provenance. Parsed both JSON reports and retained comments. No additional material pre-existing engine defect found. This closes implementation review; it does not attest the outstanding final-state full gate or authorize merge/promotion.
+
+Keys: **P** = `skills/3-weekly/weekly-planner/scripts/planner_core.py`; **D** = `skills/2-daily/daily-planner/SKILL.md`; **W** = `skills/3-weekly/weekly-planner/SKILL.md`; **Plan** = `PROJECT/2-WORKING/GH-1184-STALLED-STALE-SECTION.md`; **R/** = `TESTS-RESULTS/2026-10-22+GH-1184/`.
+
+Evidence boundary: fetched current GitHub #1184 through the connector, including all seven acceptance lines and scheduler decision. No graph tools are exposed; direct seeded-source reads supply this Verify-tier review, without a graph freshness/completeness claim. No git command, suite, executable fixture, publication or source/artifact edit ran. Only this relay file and permitted scratch output changed.
+
+- **[Pass] F2 completed.** P:1561-1570 now records the current device's local report date whether or not it has a prior marker; other devices retain historical dates. The original failing input now yields `this-mac/2026-10-22/today`, same-local-day `other-mac/2026-10-22/today`, and `old-mac/2026-10-21/no report since 2026-10-21` (Probe C below, exit 0). R/smoke.sh:103-104,141 seeds yesterday for this device and checks today's date; R/smoke-results.txt:27 records it. Retain.
+
+- **[Pass] F4 completed.** Notes and relays carry checkout ownership at P:1459,1486-1487; P:1612-1621 groups all four local kinds by checkout before sorting/capping. Probe C and R/stub-run-STALLED.md's `repo … +8 more row(s) in the JSON` show 18 owned JSON rows, exactly 10 rendered, eight overflow; root2 retains its four rows. R/smoke.sh:137-140 now checks the mixed-category total; results:26 records it. Retain.
+
+- **[Pass] Earlier F1/F3/F5 and caption corrections retained.** Failed initial PR intake is carried into coverage at P:1867-1874,1696-1699; R/results:41-42 records fresh report plus incomplete wording. P:1431-1435 preserves staged/unstaged note-path parsing; R/results:24 and the old-note JSON row witness the reported case. Held dates/actions remain P:1628 and R/stub-run-STALLED.md's four Held rows. The retained gh log now contains `POST 3`, `PATCH 3`, `POST 4`; R/results:35-37 agrees. R/SUMMARY.md's live command now correctly includes `--team-issue 1048`. Retain.
+
+- **[Nit] The secret-check BODY selector now picks yesterday's seeded comment.** R/smoke.sh:108 selects the first body containing `noels-mac-studio`; the new seed at :104 makes that the 63-byte October 21 marker plus `yesterday`, as R/results:1 and Probe C show. Thus results:29-30 exercise the sentinel predicate on an old body, not this run's report. Fix the recorded smoke selector to match device **and this run's date**, and require the report heading before applying the predicate. This is nonblocking here because Probe C independently selected the actual 3,759-byte generated comment from R/stub-comments-after-run1.json:1, matched it exactly to the current formatter, found the sentinel absent, and detected a contaminated copy. No product behavior change is requested.
+
+- **[Nit] Closeout metadata remains historical.** Plan:40 still says 38 PASS and an in-flight initial gate; the current receipt says 47 PASS. Also R/provenance.jsonl's `full-gate-b3138992.log` row has `commit=452c2f66…` although its command/environment correctly say tested b3138992. Update the status on closeout and key that older gate row to its actual tested revision; keep the final gate separately attributed. Neither caption supplies final-head gate evidence.
+
+**DoD re-grade**
+
+| DoD | Grade and evidence |
+|---|---|
+| 1. Acceptance lines | **[Pass]** AC1: shared dated/action renderer P:1601,1619,1628; daily section P:1827-1830. AC2: engine holds plus labels/body precede age classification P:1506-1559; four Held examples in R/stub-run-STALLED.md. AC3: device/date marker, PATCH/POST P:1659-1676; retained log above. AC4: raising intake caught P:1867-1874 and bounded lists exposed P:1281-1284,1699; results:41-45. AC5: read-only local argv P:1359,1393,1417,1427 and metadata-only rows P:1459-1462,1486-1489; actual captured comment checked below. AC6: no SQLite connection in the added block; stalled branch P:1889-1903 bypasses existing weekly-ledger intake. AC7: retain the explicitly disclosed manual-smoke substitution (Plan:226-234); no existing planner test exists to extend, and GH-831 prohibits a new suite. The PR must retain that disclosure. |
+| 2. Plan fidelity | **[Pass]** Recognised holds/proxy/cached-ref disclosures P:1203-1217; unpublished branches regardless of age P:1383-1390; unverified name-match retirement P:1374-1382; one-hop origin and gaps P:1297-1348; committed note history and resolved filter P:1413-1458; combined checkout cap P:1612-1621; list failure prevents blind POST and returns 3 P:1734-1739. Retain; F2/F4 no longer diverge. |
+| 3. Correctness traps | **[Pass]** Missing/odd timestamp strings return None P:1220-1235 (pure probe: None/empty/nonsense → None; date/ISO → numeric age). SSH/HTTPS origin parser P:1306-1323 and disclosed unresolved local origins remain unchanged. Colon-delimited resolved filter P:1208 leaves `Closed-loop review remains open` open (pure probe False). Normalization P:1241-1244 fits marker P:1200. Flat/slurped arrays P:1641-1646; daily files/output precede publication exit P:1919-1925. Roots deduplicate P:1336-1340; smoke:96 supplies repo and root2. Retain. |
+| 4. Receipt truthfulness | **[Pass]** 47 recorded PASS / 0 FAIL (R/results:1-47); hashes match 11/11 nonempty artifacts. Both retained Markdown files exactly match current re-rendering of their JSON: stub 2/4/22, live 5/1/137 (stalled/held/local). Git red control uses the same predicate at smoke:148-149; results:31-34 records nonempty argv, forbidden-verb control and unchanged index comparison. Raw index hashes are not retained: recorded comparison, not independently rerun byte proof. Secret smoke selector has the nit above, with independent actual-body evidence supplied here. Retain these precise limits. |
+| 5. Reuse | **[Pass]** Existing engine holds P:1506 and one PR-head index P:1713-1717 are reused. Comment pattern P:1657-1658 cites marathon_drive.py:332-362,1696-1722; the owning clone scanner fetches at scan_clones.py:494,525, incompatible with this read-only scan. poll.py:74-86 and device_config.py:120-140 supply grammar/identity conventions. Retain; bounded owner comparison, not exhaustive repo-wide absence proof. |
+| 6. Rating | **[Pass]** Retain Plan:172-178's 50/30/50/45: reporting-only scope, appeal 50, effort as cheapness. The extra corrections do not add a subsystem. |
+| 7. Docs | **[Pass]** D Step 6 matches source: flags/defaults P:1848-1853; root replacement P:1718; integration branches P:1374,1383,1387; holds/disclosures P:1203-1217; cap P:1612-1621; UTC filenames/local marker date P:1695,1886-1898; exit 3 P:1734-1745; headless baseline bypass P:1889-1903. Forge-only is supported by xyz_mini_sync.py:71-72's adapted entries. W:50 correctly says subprocess. Retain scheduling as a separate #1168 approval. |
+
+**Probe C — exact read-only command.** Imports, pure function calls, JSON reads and hashes only; no subprocess/git, suite, fixture execution or artifact writes:
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE' > "$TMPDIR/gh1184-r3-decisive.txt"
+import hashlib, importlib.util, json
+from datetime import datetime
+from pathlib import Path
+s=importlib.util.spec_from_file_location("p","skills/3-weekly/weekly-planner/scripts/planner_core.py")
+p=importlib.util.module_from_spec(s); s.loader.exec_module(p)
+r=p.collect_stalled_stale([],{},{},None,datetime.fromisoformat("2026-10-23T06:23:05+00:00"),3,7,
+    "this-mac",[],[],{"this-mac":"2026-10-21","other-mac":"2026-10-22","old-mac":"2026-10-21"},"2026-10-22")
+print("F2:",[(d["device"],d["last_report"],d["status"]) for d in r["devices"]])
+root=Path("TESTS-RESULTS/2026-10-22+GH-1184")
+rows=[json.loads(l) for l in (root/"provenance.jsonl").read_text().splitlines()]
+print("hashes/nonempty:",sum(Path(r["artifact"]).stat().st_size>0 and hashlib.sha256(Path(r["artifact"]).read_bytes()).hexdigest()==r["sha256"] for r in rows),"/",len(rows))
+for tag in ("stub","live"):
+    d=json.loads((root/f"{tag}-run-stalled.json").read_text()); sec=d["stalled_stale"]
+    md=p.format_stalled_markdown(sec,f"# Stalled & stale — {sec['device']} — {d['date_local']}",d["date_local"])
+    print(tag,"MD identical:",md==(root/f"{tag}-run-STALLED.md").read_text(),"counts:",*[len(sec[k]) for k in ("stalled","held","local")])
+    if tag=="stub":
+        owner=next(r["path"] for r in sec["local"] if r["kind"]=="branch" and Path(r["path"]).name=="repo")
+        owned=[r for r in sec["local"] if (r.get("checkout") or r["path"])==owner]
+        print("F4 JSON/rendered:",len(owned),sum(f"- `{r['ref']}` —" in md for r in owned),"+8 overflow:","+8 more row(s)" in md)
+        cs=json.loads((root/"stub-comments-after-run1.json").read_text())
+        wrong=next(c["body"] for c in cs if "noels-mac-studio" in c["body"])
+        marker=f"<!-- planner-stalled:{sec['device']}:{d['date_local']} -->"
+        body=next(c["body"] for c in cs if marker in c["body"])
+        print("smoke BODY:",repr(wrong))
+        print("actual comment bytes/sentinel absent:",len(body.encode()),"SENTINEL-7f3a9c" not in body)
+        print("actual body matches:",body==marker+"\n"+p.format_stalled_markdown(sec,f"### Stalled & stale — {sec['device']} — {d['date_local']}",d["date_local"]))
+        print("actual contaminated red:","SENTINEL-7f3a9c" in body+"SENTINEL-7f3a9c")
+PYPROBE
+cat "$TMPDIR/gh1184-r3-decisive.txt"
+```
+
+Exit 0; decisive output:
+
+```text
+F2: [('old-mac', '2026-10-21', 'no report since 2026-10-21'), ('other-mac', '2026-10-22', 'today'), ('this-mac', '2026-10-22', 'today')]
+hashes/nonempty: 11 / 11
+stub MD identical: True counts: 2 4 22
+F4 JSON/rendered: 18 10 +8 overflow: True
+smoke BODY: '<!-- planner-stalled:noels-mac-studio:2026-10-21 -->\nyesterday'
+actual comment bytes/sentinel absent: 3759 True
+actual body matches: True
+actual contaminated red: True
+live MD identical: True counts: 5 1 137
+```
+
+**[Unverified — needs clone run]** No final-head full gate receipt is seeded: R/SUMMARY.md's Gates section explicitly reserves `full-gate-final.log` for the run still in progress; only the older b3138992 log is present. The harness/disposable clone must finish and attribute the final-state gate before claiming merge readiness. No gate ran here.
+
+Root cause of the prior failures: report composition retained the current device's historical date and lost checkout ownership for note/relay rows. Fix sites: P:1564-1565 and P:1459,1486-1487,1614. Why not upstream/downstream: the inputs already have valid dates/paths; composing current metadata and preserving ownership here removes those failures without changing GitHub/git or adding a subsystem.
+
+**VERDICT: PASS**
+
+**Basis:** F1–F5 are resolved on concrete paths and the previously failing F2/F4 inputs now produce the required output. Remaining receipt nits do not expose a product failure; actual-comment privacy was independently checked above. Final gate attribution and closeout remain the Producer/harness's responsibility.
+
+Relay closed (Approved), no further review turn needed. Handing completion back to Producer claude-a for final-state clone gate, receipt/status closeout and PR preparation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
