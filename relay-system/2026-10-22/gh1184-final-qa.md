@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-22.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -110,5 +110,105 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+**Call: Block pending the bounded corrections below.** Swept all 1,930 lines of planner_core, both complete SKILL files, the approved plan and plan-QA log, and the receipt files (JSON parsed in full). No additional pre-existing engine defect found. This is implementation QA, not gate or merge approval.
+
+Keys: **P** = `skills/3-weekly/weekly-planner/scripts/planner_core.py`; **D** = `skills/2-daily/daily-planner/SKILL.md`; **W** = `skills/3-weekly/weekly-planner/SKILL.md`; **Plan** = `PROJECT/2-WORKING/GH-1184-STALLED-STALE-SECTION.md`; **R/** = `TESTS-RESULTS/2026-10-22+GH-1184/`.
+
+Verify tier: graph project XYZ-forge resolves to the canonical checkout, not this worktree; generation `2026-09-01T15:54:30Z`. Targeted planner symbol lookup returned zero rows, no more pages. Coverage marked planner bundles and scan_clones/mini-sync untracked, marathon_drive/device_config changed, poll matching. Seeded-source reads supply the evidence; no graph completeness claim. No git invocation, suite, executable fixture, publication, or source edit was performed.
+
+- **[Blocker] F1 — Initial PR lookup failure aborts instead of producing the required coverage-gap report.** P:1846 invokes the raising P:339 before either scan branch; P:1680 assumes success. This is already observed in **R/stub-run-outputs.log:28-36**: `RuntimeError: Command failed (exit 1): ['gh', 'pr', 'list', '--state', 'open', ...]`, `boom`, `prfail rc=1`. Recorded command: smoke.sh:143's `run --mode stalled` with `mode=prfail`; it never reaches report generation. **R/SUMMARY.md:13** nevertheless claims `prfail → coverage failed`; **R/smoke.sh:143** only captures rc and asserts nothing, so “38 PASS” does not cover it.
+  Observed input: committed stub open-PR lookup exits 1, stderr `boom` (smoke.sh:41-42).
+  Affected scope: open-PR read failure in daily/stalled reporting; preserve unrelated modes' failure semantics.
+  Falsifier: in a disposable clone with fresh output, that failure produces this run's report with `open PRs: failed` and `coverage incomplete`, permits other sources to report, and exits 0 absent publication failure; successful empty lookup remains distinct.
+  Fix: carry PR-fetch failure into reporting coverage at the intake boundary. Add assertions for this existing manual-smoke scenario, require fresh/nonempty output, and refresh SUMMARY/provenance. An old STALLED file from a preceding run is not evidence.
+
+- **[Should] F2 — Device freshness mixes local marker dates with UTC.** P:1552 uses `now.date()`, supplied UTC at P:1858, while comments use local date (P:1679,1644). **R/live-run-STALLED.md:3** demonstrates Date `2026-10-22`, Generated `2026-10-23T06:23:05.540537+00:00`. Probe A below exits 0 and mislabels another device's same-local-day marker as stale; this device also keeps an old last_report while claiming today.
+  Observed input: that receipt instant; prior markers `other-mac:2026-10-22`, `this-mac:2026-10-21`.
+  Affected scope: known-device freshness and current-device last_report in JSON/comments.
+  Falsifier: for local report date October 22, other-mac October 22 is today, October 21 is a gap, and this run records this-mac October 22.
+  Fix: use the same explicit local report date for marker comparison and this run's freshness. Keep UTC age calculations and filenames.
+
+- **[Should] F3 — Ordinary unstaged note edits can disappear under ok coverage.** run_cmd strips leading whitespace (P:36); scan_notes then slices porcelain at column 3 (P:1427-1429). The first ` M PARKED/...` loses the initial P, so last_touch cannot match it. Probe A exits 0: unstaged input is absent with “0 touched in window”; changing only the status to staged makes it present.
+  Observed input: existing unresolved `PARKED/2026-08-16-xyz-forge-2143.md`, no recent committed touch, porcelain ` M PARKED/2026-08-16-xyz-forge-2143.md`.
+  Affected scope: uncommitted note edits whose first porcelain record begins with a space, including relay paths parsed through the same boundary.
+  Falsifier: staged and unstaged versions both list the note as touched today; unchanged old note remains excluded.
+  Fix: preserve porcelain status columns at this read boundary without changing generic stripped-output consumers. Record the staged/unstaged manual control.
+
+- **[Should] F4 — Ten-row checkout cap does not include notes.** P:1600 groups by path, but notes' paths are individual files (P:1453,1479), unlike branch/worktree checkout paths. Probe A exits 0 with `cap: 11` for eleven notes in one checkout.
+  Observed input: eleven rows under `/checkout/PARKED/2026-10-22-note-{0..10}.md`.
+  Affected scope: local Markdown rows per checkout, including notes/relays; JSON keeps all.
+  Falsifier: eleven notes render ten rows plus an overflow notice; separate checkouts retain separate allowances.
+  Fix: carry/use checkout identity for grouping while preserving each note's path/ref.
+
+- **[Should] F5 — Held Markdown omits dated evidence and next actions.** P:1517-1518 stores both fields; P:1613 renders only link/reason. **R/stub-run-STALLED.md**, quoted row `- [PR #10](u10) — Explicit HOLD in title`, demonstrates the omission. This contradicts SUMMARY:10's “every row” and #1184's row contract.
+  Observed input: stub PR #10, updatedAt `2026-09-01T00:00:00Z`, intentional HOLD title.
+  Affected scope: Held rows in the shared Markdown/comment formatter.
+  Falsifier: that row displays September 1 and `none (intentional hold)`, stays Held and remains absent from Stalled.
+  Fix: render the existing last_activity and next_action for Held rows, retaining intentional-hold wording.
+
+- **[Nit] Align docs with delivered behavior.** D:111's actual filenames are `stalled-<UTC-date>.json` and `STALLED-<UTC-date>.md` (P:1866-1869). Explicit --local-roots replaces the defaults (P:1699), unlike D:86's wording. D:92 overstates integration-branch skipping: retirement/no-upstream hints are excluded, ahead rows remain (P:1372-1385; live receipt:89,106,110). Clarify these. P:1206 also matches `Closed-loop review remains open` as resolved (read-only regex probe returned True); narrowing to documented status delimiters is optional useful hardening.
+
+**Probe A: exact command and decisive output for F2–F4.** In-memory run_cmd replacement supplies note-read output; no subprocess/git runs or file mutations occur inside the Python probe. Scratch output is discarded, so retain the command here:
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY' > "$TMPDIR/decisive.txt"
+import importlib.util
+from pathlib import Path
+from datetime import datetime
+s=importlib.util.spec_from_file_location("p","skills/3-weekly/weekly-planner/scripts/planner_core.py")
+p=importlib.util.module_from_spec(s); s.loader.exec_module(p)
+now=datetime.fromisoformat("2026-10-23T06:23:05.540537+00:00")
+report=lambda rows,prior:p.collect_stalled_stale([],{},{},"me",now,3,7,"this-mac",rows,[],prior)
+print("dates:",report([],{"this-mac":"2026-10-21","other-mac":"2026-10-22"})["devices"])
+f=Path("PARKED/2026-08-16-xyz-forge-2143.md")
+for status in [" M ","M  "]:
+    p.run_cmd=lambda cmd,**kw:"" if "log" in cmd else (status+str(f)).strip()
+    cov=[]; rows=p.scan_notes(Path("."),now,3,"this-mac",cov)
+    print("note:",repr(status),any(r["ref"]==str(f) for r in rows),cov[0])
+notes=[dict(kind="note",ref=f"PARKED/2026-10-22-note-{i}.md",path=f"/checkout/PARKED/2026-10-22-note-{i}.md",device="this-mac",last_activity="2026-10-22",reason="open",next_action="resume") for i in range(11)]
+md=p.format_stalled_markdown(report(notes,{}),"## Stalled & stale","2026-10-22")
+print("cap:",sum(line.startswith("- `PARKED/") for line in md.splitlines()))
+PY
+cat "$TMPDIR/decisive.txt"
+```
+
+Exit 0:
+
+```text
+dates: [{'device': 'other-mac', 'last_report': '2026-10-22', 'status': 'no report since 2026-10-22'}, {'device': 'this-mac', 'last_report': '2026-10-21', 'status': 'today'}]
+note: ' M ' False {'source': 'PARKED notes', 'status': 'ok', 'detail': '0 touched in window', 'count': 0}
+note: 'M  ' True {'source': 'PARKED notes', 'status': 'ok', 'detail': '1 touched in window', 'count': 1}
+cap: 11
+```
+
+**DoD disposition**
+
+| DoD | Grade, evidence and disposition |
+|---|---|
+| 1. Acceptance lines | AC1: F5; dated Stalled/local rows exist at P:1589,1604. **[Pass]** AC2: engine/label/body holds win at P:1497-1543, witnessed by the four Held examples in stub-run-STALLED.md; retain. **[Pass]** AC3 comment routing: marker and PATCH/POST P:1644-1661; retain, with freshness F2. AC4: F1; truncation surfaced P:1680,1279. **[Pass]** AC5 scoped source inspection: read-only local commands P:1357,1391,1415,1425; note output metadata only P:1453-1455; retain with F3/F4. **[Pass]** AC6: scan calls P:1864,1881 bypass weekly intake; existing readonly SQLite sites P:131,816, no connection in added block. AC7 remains the approved manual-smoke substitution (Plan:226-234), not literally an existing-suite extension. |
+| 2. Plan fidelity | **[Pass]** Retain holds/disclosures P:1203-1215; unpublished branches without age filtering P:1381-1388; unverified name-match wording P:1373-1380; one-hop origin and unresolved gaps P:1295-1347; committed note history P:1415-1424; comment-list failure blocks POST P:1718-1720. F1/F3/F4 break coverage/uncommitted-touch/rendering contracts. |
+| 3. Correctness traps | **[Pass]** P:1218-1233 returns None for missing/invalid timestamp strings; pure probe observed None for None/empty/nonsense, numeric ages for date/ISO strings. URL probe on SCP/HTTPS/ssh forms yielded hiqs-labs/xyz-forge (P:1305); local hops require existing directories, otherwise visible gaps. Normalized noels-mac-studio, mac-name and _a all matched marker alphabet P:1200. Flat/page-array handling P:1627-1631 is sound. Daily files/output precede sys.exit P:1891-1897. Roots deduplicate resolved paths P:1333-1338; smoke.sh:89 passes repo and root2, not repo twice. Retain; F2/F3 and resolved-note nit remain. |
+| 4. Receipt truthfulness | **[Pass]** Read-only hashlib probe: all nine provenance-listed hashes match nonempty artifacts, exit 0. Red controls use the same predicates at smoke.sh:100,124-129, witnessed in results:23-27; retain. Index comparison exists at smoke.sh:93-94,130 and results:28, but raw before/after hashes were not retained: recorded check, not independently rerun byte proof. F1 disproves SUMMARY:13. SUMMARY:12 cites gh-argv.log for PATCH, but smoke.sh:131 copies it before reruns; retained log contains only initial POST. Cite results:29-30 / outputs.log or retain final argv log. Live JSON/MD agree on 5 stalled, 1 held, 136 local, 3 gaps; 22 successful checkout coverage entries contradict SUMMARY:22's “20 clones.” Correct the count. No live publication repeated. |
+| 5. Reuse | **[Pass]** Existing hold phase P:1497, one PR-head index P:1694-1702. Comment copy cites and matches marathon_drive.py:332-362,1696-1722; scan_clones.py:494,525 fetches, justifying this read-only collector. poll.py:74-86 supplies header grammar; device_config.py:120-140 supplies identity. Retain. This is bounded owner comparison, not exhaustive repo-wide absence proof. |
+| 6. Rating | **[Pass]** Retain 50/30/50/45 (Plan:172-178): reporting-only scope, appeal 50 and effort as cheapness fit; implementation exceeds the rough 300-line estimate without adding a subsystem. |
+| 7. Docs | F1 makes D:74's every-source wrapper claim false; F4 contradicts D:96. Resolve these and named nits. **[Pass]** Defaults/flags P:1829-1834, publication exit 3 P:1712-1726, headless baseline bypass P:1861-1875, mini adapted ownership utils/py/xyz_mini_sync.py:71-72 match D:98-116 otherwise. W:50 correctly describes subprocess invocation. Retain scheduler-enabling separation. |
+
+**[Unverified — needs clone run]** Full gate and revised smoke execution belong to the harness/disposable clone at the final corrected state (Plan:197-199). Prior green checks cannot resolve these findings. All probe output used for findings is quoted above; auxiliary source-only probes did not run suites or fixtures.
+
+Root cause: reporting boundaries do not consistently preserve failure, local-date, raw-status and checkout-identity contracts. Fix sites: reporting intake, freshness comparison, porcelain read boundary and shared renderer. Why not upstream/downstream: GitHub/git provide valid evidence; interpret it correctly here without altering unrelated planner modes or adding subsystems.
+
+**VERDICT: FAIL**
+
+**Basis:** F1 is an observed acceptance failure hidden by an unchecked smoke scenario; F2–F5 are concrete input/output mismatches. Architecture and much of the receipt are sound. Resolve these bounded findings, refresh truthful evidence, then run the final-state clone gate.
+
+Handing off to Producer (claude-a) — address F1–F5, update receipt/docs, and take the next turn in the Producer window.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
