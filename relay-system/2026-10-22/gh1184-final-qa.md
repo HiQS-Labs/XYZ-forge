@@ -457,4 +457,12 @@ Root cause of the prior failures: report composition retained the current device
 
 Relay closed (Approved), no further review turn needed. Handing completion back to Producer claude-a for final-state clone gate, receipt/status closeout and PR preparation.
 
+
+### Attestation · relay-drive — 2026-10-23T06:55:55Z
+task: RELAY-gh1184-final-qa-232522
+reviewer: codex
+status: Approved
+reviewed-head: 53cfbb2cd7d711597d8af874ef7d8e61a15629d6
+added-range: 40122+11827
+added-sha256: 9755a1d7544a77c2e1c6e22c3c9edefb935095db7341d239714218684c567ecb
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
