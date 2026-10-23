@@ -1,5 +1,7 @@
 # ROUTER.md
 
+XYZ Forge exists for cross-model reviews and agentic work on business information, including private code, within the task’s authorized scope and applicable data-protection requirements.
+
 This file is the first entry point for an AI agent working in this repo: it tells you what to read, what to run, and which files are canonical.
 
 XYZ Forge is three parts: **XYZ Forge**, the harness (this router and `AGENTS.md`); **PDDA**, project-doc governance (`PROJECT/PDDA.md`); and **PRS**, the Product Release System, which is the RELEASES ledger (`RELEASES-DB-FAQS.md`). Definition: [HOW-TO-USE.md → Glossary](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first).

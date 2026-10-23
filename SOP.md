@@ -1,5 +1,7 @@
 # Standard Operating Procedure (SOP): Testing Campaigns, Benchmarks, and Artifact Provenance
 
+XYZ Forge exists for cross-model reviews and agentic work on business information, including private code, within the task’s authorized scope and applicable data-protection requirements.
+
 > **Scope & Relationship to `AGENTS.md`**:
 > - **`GUIDING-PRINCIPLES.md` → "The North Star"** is the canonical source of truth for the durable / reversible / DRY bar and the "extend what exists, don't fork a parallel system" rule. Nothing here restates it.
 > - **`AGENTS.md`** owns repo-wide behavioral governance, core principles (*Verified Beats Plausible*, blast radius sizing, reversibility scale), marathon load rails, role splits, and push boundary gates.
