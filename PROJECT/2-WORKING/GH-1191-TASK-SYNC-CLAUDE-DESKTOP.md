@@ -151,3 +151,7 @@ Codex relay `relay-system/2026-10-24/gh1191-plan-qa.md`, Approved in round 2 of 
 Codex relay `relay-system/2026-10-24/gh1191-final-qa.md`, Approved in round 2 of 3.
 - Round 1 returned FAIL with one `[Should]`: R3 claimed a sidebar check that was never made by eye. The claim was narrowed to native state plus the app's session record, and the by-eye check is the operator's.
 - Round 2: PASS, no new findings.
+
+## Merge evidence
+
+- PR #1194 merged 2026-10-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
