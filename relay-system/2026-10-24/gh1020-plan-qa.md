@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -111,5 +111,36 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 — codex
+
+Block — the two-edit design is sound for the observed failure, but its verification must force the bad command rather than depend on the model repeating it.
+
+swept file: yes
+
+Reviewed the entire 109-line seeded plan, including frontmatter, alternatives, verification and rating. The factual overstatements found in that sweep are noted below; no other pre-existing plan defects found within this scope. This is plan QA, not implementation approval.
+
+- [Should] **S1 — Make the guard independently falsifiable.** `.relay-artifacts/GH-1020-REVIEWER-CLOSE-MISMATCH.md:93` only promises another real-model approval. Once edit 1 works, that model can use `tick done`, so this check passes even if edit 2 is absent. The named GH-554 suite exercises unknown flags, not a valid `--to done` (`test/gh554-tick-unknown-flags.sh:52`); the existing handoff suite starts with a worker that never releases (`test/relay-turn-handoff.sh:44`). Fix the verification paragraph: in the disposable full clone, deliberately replay the retained `release ... --to done` command while the reviewer owns the token; require nonzero exit, a diagnostic naming `done`, unchanged event count and reviewer ownership, then existing shim closure and driver attestation/exit 0. Check the two other words the plan explicitly rejects, and retain ordinary peer/no-target release controls. Record commands, nonempty outputs, revision and provenance in the existing GH-1020 evidence directory; no new suite, registry entry or gate is needed. Keep the real-model rerun as the prompt check. Replace the ambiguous `test/gh67-*` shorthand (which matches unrelated GH-674/GH-678 suites) with the actual `test/relay-turn-handoff.sh`.
+  Observed input: `TESTS-RESULTS/2026-10-24+GH-1020/before-fix-codex-tick-commands.txt:3` records the exact `release RELAY-gh1020-repro-073438 --agent codex --to done`; line 5 records `released: RELAY-gh1020-repro-073438`.
+  Affected scope: the verification of edit 2 and acceptance line 1's model-runs-tick branch; no additional runtime behavior requested.
+  Falsifier: with the prompt fixed but the guard removed, the forced command must succeed, lose ownership and fail closure; with the guard present it must refuse before any release event and permit shim closure. A passing prompt-only rerun cannot discharge this check.
+- [Pass] **Grounding / DoD 1.** The observed failure matches `relay-turn-lib.sh:999`, `:1060`, `:1587`, `src/scope.js:31`, `:89`, `:121`, and `relay_drive.py:730`. The Python default also uses this same Bash prompt (`utils/py/codex-turn.py:43`, `:53`; `utils/py/rtl.py:849`); driver dispatch sets file/task/actor/role without assigning RELAY_PEER (`utils/py/relay_drive.py:830`). The retained driver log reports the ownership WARN, refusal and exit 4 at `before-fix-drive-run1.log:5`, `:6`, `:17`. No change needed to that causal chain. The binding [second operator comment, Root cause found / Smallest fix](https://github.com/HiQS-Labs/XYZ-forge/issues/1020#issuecomment-6101865814) independently describes it.
+- [Nit] **N1 — Qualify the recovery claim.** Plan lines 61–62 say “Nobody can ever own that token again; the only recovery is a fresh token id.” `src/claim.js:52` only rejects a *different* agent: an identity literally named `done` would satisfy that predicate. Fix the prose to say the configured reviewer cannot normally reclaim it and a fresh token is the supported recovery; do not add such a repair path. The same caveat applies to “impossible” at line 81.
+- [Pass] **Prompt / DoD 2.** Plan lines 65–69 explicitly choose the terminal verb and retain peer release otherwise. Implement that conditional for both peer-present and peer-absent prompt branches (`relay-turn-lib.sh:999`–1000); keep the reviewer sentence at `:1060` unchanged, as pinned by `test/gh681-reviewer-probe-rules.sh:51`. No additional prompt surface is required.
+- [Pass] **Guard placement and sequence / DoD 3–4.** `src/scope.js:89` is the existing release mutation boundary, before `emitEvent` at line 91. Refusal there leaves the claim available for the existing `rtl_enforce` terminal branch (`relay-turn-lib.sh:1587`–1593), after which the driver's existing token/role/byte attestation remains authoritative (`relay_drive.py:705`, `:718`, `:730`). This is a design trace; execution remains **[Unverified — needs clone run]**. The #554 refusal precedent is visible at `bin/tick:103`. Keep exactly the two proposed runtime edits; no shim repair, second writer or weakening of close-mismatch.
+- [Pass] **Blast radius / DoD 5.** The guard applies to every caller of release, not just reviewers: CLI dispatch (`bin/tick:327`), shim peer handoff (`relay-turn-lib.sh:1598`), marathon seeding/routing (`utils/py/marathon_drive.py:3348`, `:3460`), Jog seeding (`utils/py/jog_run.py:1546`), and existing tests (`test/relay-review-once.sh:34`). These inspected callers target configured agents or ordinary peer identities; no legitimate literal terminal target was found in the searched source. Dynamic user-selected identities remain possible: this intentionally disallows release targets named `done`, `Approved`, `Closed`; acknowledge that compatibility limit, without inventing an agent registry. An approving model that releases to a real peer can still relinquish ownership; the guard's guarantee is specifically the observed terminal-target misuse. Costly shared coordination surface, with the plan's two-hunk revert as rollback (`plan:83`).
+- [Pass] **Gate and scope / DoD 6, 8.** Existing suites plus a manual receipt and a single final full gate in a disposable clone respect GH-831 (`AGENTS.md:154`; plan lines 85–97). `utils/ci-route.sh:339` and `:342` require the full route for both changed surfaces. Header-left-Open, marathon retry and attestation relaxation are correctly excluded (plan lines 77–82; [issue #1020, Acceptance / Non-goals](https://github.com/HiQS-Labs/XYZ-forge/issues/1020)). No suites, pytest, executable fixtures or git commands were run in this reviewer turn.
+- [Nit] **N2 — Separate mixed-mode incident counts / DoD 7.** The proposed `85/82/50/80` is defensible for a repeated halt with bounded recovery and two small edits, and appeal is correctly 50 (plan lines 101–109). But “2026-10-10 ×5” as five instances of this class overstates [#1020's Observed table](https://github.com/HiQS-Labs/XYZ-forge/issues/1020): rows 1–3 are close mismatch, row 4 is the excluded header defect, row 5 is retry fallout. The second comment adds a Codex reproduction. Fix the wording to distinguish those counts; avoid “every reviewer model” beyond the observed Agy/Codex seats. The three older receipts are supported by [#763, Observed](https://github.com/HiQS-Labs/XYZ-forge/issues/763), `relay-system/2026-09-24/gh796-plan-qa.md:99`, and `relay-system/2026-09-28/gh879-n5-final-qa-r2.md:63`; #1081's Prerequisites records the later factory occurrence. No rating change required solely for this correction.
+
+Evidence query (read-only; output in `.relay-scratch/receipt-audit.txt`):
+```sh
+python3 -B -c 'import json,hashlib,pathlib; rows=[json.loads(s) for s in pathlib.Path("TESTS-RESULTS/2026-10-24+GH-1020/provenance.jsonl").read_text().splitlines() if s.strip()]; assert len(rows)==5; blobs=[pathlib.Path(r["artifact"]).read_bytes() for r in rows]; assert all(blobs); assert all(hashlib.sha256(b).hexdigest()==r["sha256"] for b,r in zip(blobs,rows)); print("5/5 retained artifacts nonempty; SHA-256 matches provenance; before rc="+str(rows[0]["exit_code"]))'
+```
+Exit 0; decisive output: `5/5 retained artifacts nonempty; SHA-256 matches provenance; before rc=4`. This verifies retained receipt integrity, not post-fix execution. GitHub CLI and web fetch failed, but connected GitHub reads subsequently retrieved the full #1020 body and both comments, #763 body and #1081 body. Graph discovery subsequently became available: nearest registered project `XYZ-forge`, generation `2026-09-01T15:54:30Z`, is a different checkout with changed metadata on the prompt/Python paths and excluded `bin/`; coverage checked, source fallback used. Graph inbound trace was unavailable, so caller claims above are bounded source inspection, not exhaustive graph claims.
+
+VERDICT: FAIL
+Basis: S1 leaves the guard's acceptance claim untested if the corrected prompt succeeds. Add the forced-command manual check to the plan and correct N1/N2; the runtime design can stay at two edits.
+
+Handing off to Producer (claude-a) — address S1 and disposition N1/N2, then return for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
