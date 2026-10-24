@@ -1,0 +1,23 @@
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1020-reviewer-close-mismatch-2026-10-24-verify) changed-files=0
+codex-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.u6PFdT)
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1020-reviewer-close-mismatch-2026-10-24-verify/relay-system/2026-10-24/gh1020-close-mismatch-repro.md
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: WARN could not `tick done RELAY-gh1020-repro-073438` as codex (not current owner?) — inspect `tick info RELAY-gh1020-repro-073438`
+relay-drive: terminal STATUS Approved by reviewer codex REFUSED — close-mismatch
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 1m 9s
+per done-task: n/a (0 tasks done)
+  turn peak RSS: codex: 374MB peak RSS
+
+relay-drive exit=4
+--- tick info AFTER ---
+id:       RELAY-gh1020-repro-073438
+status:   open
+priority: 0
+paths:    (none)
+handoff-to: done
