@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -171,5 +171,65 @@ VERDICT: PASS
 Basis: all round-1 findings folded into the artifact at this commit; requesting round 2 review of the revised plan.
 
 Handing off to Reviewer (codex) — review the revised artifact; go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 2
+
+**Ship the plan.** No remaining Blocker or Should findings.
+
+VERDICT: PASS
+Basis: the revised verification distinguishes the selected ledger, contains the red control, and preserves the surgical implementation. Approval is for the plan; implementation receipts and the final gate remain pending.
+
+swept file: yes
+
+Read the entire revised artifact and entire Python CLI wrapper; rechecked resolver precedence/vendored handling, Bash dispatch/root selection, engine ledger loading/classification/JSON rendering, reconciler attribution, the recorded red control, and the named suites. No additional material in-scope defects found. Graph tools were unavailable; direct source inspection supplied the evidence. Reversibility: Easy — one default-root call, with the override and existing writer retained.
+
+- **[Pass] R1 resolved:** artifact:58-64 now reports planner rc=4 and the primary write accurately. Artifact:93-104 requires disposable A/B clones, `--dry-run`, direct planner status, missing local DB versus alternate ledger, and retained provenance. The expected fixed rc=3 follows `_marathon_plan.py:765-809,815-835`; `marathon_plan.py:192-197` exits dry-run before the plan-copy path. The earlier JSON parse error remains documented in the supplied receipt and Round 1; the plan no longer uses it as evidence of successful parsing.
+- **[Pass] R2 resolved at plan scope:** artifact:111-117 replaces ambiguous relative paths with distinguishable ledger content and an override to a different root. A queued issue with no doc yields the concrete `issue #N has no PROJECT capture doc` finding (`_marathon_plan.py:986-989`), so presence/absence of its issue number can distinguish B from A and fail on reversion. Artifact:118-123 correctly limits suite claims to pinned-root engine behavior and stubbed reconciler tool resolution; the simulated vendored resolver observation is explicitly identified at artifact:107-110. These are planned checks, not executed CLI evidence.
+- **[Pass] Root cause, proposed fix and override:** `marathon_plan.py:114-115` still resolves an unanchored default, then applies `QUEUE_PLAN_ROOT`. `harness_paths.py:43-46,57-59,80-89` makes an existing explicit anchor win and strips `.xyz` for the consumer. The pure probe below independently observed canonical and simulated vendored results. Root cause: an unanchored install-resolution request selects the global alternate; Fix site: the planner default-root call; Why not upstream/downstream: the resolver already supplies the right contract, while a reconciler-only override misses direct calls.
+- **[Pass] R3 and scope:** artifact:128-136 scopes rollback to findings attributable to reconciled issues, matching `wave_reconcile.py:1735-1752`. The 72/70/50/92 rating is a reasonable judgment for the supplied recurring landing-path consequence and bounded repair; historical incidents beyond the supplied receipt were not independently replayed. Artifact:17-20,75,84-89 proposes no new suite, resolver, gate or parallel writer.
+- **[Nit] Make the sentinel assertion literal during execution:** artifact:112-117 says a sentinel issue URL, but JSON emits the issue number in a finding, not that URL or its title (`_marathon_plan.py:987-989,1254-1258`). Use a unique issue number absent from A and a queued row with no doc; assert the corresponding `#N` finding in nonempty parsed JSONL. Do not grep for the whole URL. This clarifies the planned observable without changing runtime behavior or expanding scope.
+
+Probe command (exit **0**; imports and pure resolver/renderer calls only, no CLI, `engine.run`, suites, subprocesses, or executable fixtures):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+PYTHONPATH=utils/py python3 - <<'PY'
+import os
+from unittest.mock import patch
+import harness_paths as hp
+from _marathon_plan import Engine
+anchor = os.path.abspath("utils/py/marathon_plan.py")
+alternate = os.path.abspath(os.environ["TMPDIR"])
+with patch.dict(os.environ, {"XYZ_HARNESS": alternate}):
+    print("unanchored_is_alternate =", hp.repo_root() == alternate)
+    print("anchored_is_candidate =", hp.repo_root(anchor_file=anchor) == os.getcwd())
+    assert hp.repo_root() == alternate
+    assert hp.repo_root(anchor_file=anchor) == os.getcwd()
+    vendored = os.path.join(alternate, "consumer/.xyz/utils/py/marathon_plan.py")
+    original_isfile = os.path.isfile
+    with patch("harness_paths.os.path.isfile", side_effect=lambda p: p == vendored or original_isfile(p)):
+        consumer = hp.repo_root(anchor_file=vendored)
+        print("vendored_is_consumer =", consumer == os.path.join(alternate, "consumer"))
+        assert consumer == os.path.join(alternate, "consumer")
+e = Engine.__new__(Engine)
+e.FORMAT, e.NOW, e.GH_MODE, e.findings = "json", "2026-10-24T00:00:00Z", "off", []
+e._flag("info", "needs-doc", {"title": "sentinel", "docRel": None},
+        "issue #987654 has no PROJECT capture doc linked in the ledger",
+        "promote to a 2-WORKING capture doc with a preflight contract")
+report = e._render_report([{}], [], [], [], False, 5, {}, "")
+assert report.strip()
+assert "#987654" in report
+print("nonempty_sentinel_finding =", "#987654" in report)
+print("literal_issue_url_in_json =", "https://github.com/" in report)
+print("pure resolver/renderer assertions passed; no CLI or engine.run executed")
+PY
+```
+
+Decisive output: `unanchored_is_alternate = True`, `anchored_is_candidate = True`, `vendored_is_consumer = True`, `nonempty_sentinel_finding = True`, `literal_issue_url_in_json = False`, `pure resolver/renderer assertions passed; no CLI or engine.run executed`. Vendored file existence was simulated; this does not attest an installed vendored CLI.
+
+**[Unverified — needs clone run]** Actual missing-DB red/green control, distinguishable-ledger/override smoke, four suites and final gate were not run here. Execute the approved plan in disposable full clones and retain the specified evidence before implementation sign-off. No artifact/source edits or Git commands were performed; the harness owns the relay-only commit. The first relay-edit command failed shell parsing (exit 1, `unmatched` backtick); a subsequent read showed the header still Open. The corrected edit uses a distinct outer heredoc delimiter.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
