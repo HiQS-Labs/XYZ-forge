@@ -83,4 +83,12 @@ Basis: No Blocker or Should finding remains. The intake is evidence-bounded, its
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-24T21:51:23Z
+task: RELAY-gh1201-code-audit-final
+reviewer: codex
+status: Approved
+reviewed-head: 2ab26894b378e48de4d29ae2190435e77b2d8237
+added-range: 6203+2353
+added-sha256: 505563e822c6a33e976ea09f45cd5f7d90904c842293b660e25eeb65315ac047
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
