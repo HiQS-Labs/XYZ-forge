@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -81,5 +81,30 @@ Questions:
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+- [Should] The native pre-write recheck omits `isArchived` and the exclusion check. A row can be eligible in the snapshot, then be archived before `set_session_title`; the written procedure still permits the rename because it only requires same title, `not running`, and same activity (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:82`). The established native pattern rechecks every candidate predicate and skips on any change (`skills/3-weekly/task-sync/SKILL.md:120-125`). Add `not archived` and `not own/excluded session` to the Desktop recheck, with skip/replan on mismatch.
+  Observed input: proposal row `{sessionId:"s", title:"Fix", isArchived:false, isRunning:false, lastActivityAt:"2026-10-24T10:00:00Z"}`; pre-write `get_session("s")` returns the same title/activity and `isRunning:false` but `isArchived:true`.
+  Affected scope: any proposed session whose archive or ownership state changes after the ≤300-second snapshot and before the native write.
+  Falsifier: a fixture/native-tool transcript in which `get_session` does not expose `isArchived`; expected result is that this predicate cannot be rechecked and the plan must explicitly document that limitation rather than claim the check.
+
+- [Should] The smoke’s required `titleSource` observation is not executable as written: the documented `get_session` result is only `sessionId`, `title`, `isArchived`, `isRunning`, and `lastActivityAt` (`relay-system/2026-10-24/gh1191-plan-qa.md:16` Setup, “Native tool facts”), while the smoke says to check `titleSource` (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:101`). Specify the read-only local-record observation from Recon, or state that an observed `get_session` field must be captured in the receipt before relying on it.
+  Observed input: documented `get_session` response `{sessionId, title, isArchived, isRunning, lastActivityAt}` with no `titleSource` member.
+  Affected scope: every R3 smoke intended to prove that a native rename remains eligible for unattended later stamps.
+  Falsifier: an actual captured `get_session` response containing `titleSource`; expected result is that the procedure can name that field/tool directly and no local-record observation is needed.
+
+- [Pass] R1–R3 map to an adapter, native procedure, and device smoke with falsifiable acceptance checks (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:48-52`); the scope correctly excludes scheduler rollout and unrelated adapters (`:14-19`).
+- [Pass] The design extends the existing subsystem: one class in `adapters/claude.py`, existing core helpers, existing CLI registration points, and native-only writes (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:70-77`; `skills/3-weekly/task-sync/scripts/task_sync.py:37-60,223-234`). No pre-existing defect was found in the reviewed source files.
+- [Pass] Using each Desktop row’s `lastActivityAt` is sound within the recorded evidence that it equals turn activity, and the plan names the only material invalidator—rename-induced activity mutation—with a live-smoke check (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:61-66,72,118-120`).
+- [Pass] Allowing an empty Desktop inventory is justified: the native list excludes its caller, the procedure first requires a successful list response, and this planner has no writer (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:75,79-85`). This does not turn a failed list into `[]` under the specified procedure.
+- [Pass] The planned probes are proportionate and cover filtering, idempotence, malformed/future activity, duplicate IDs, plan-only guards, empty inventory, and a witnessed running-row red control (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:89-103`). The rating is explicitly grounded in cosmetic severity, operator priority, neutral appeal, and the bounded one-class reuse (`:130-137`).
+
+VERDICT: FAIL
+Basis: The subsystem fit, activity basis, empty-inventory decision, coverage, and rating are sound, but the plan must close the two native-procedure/smoke-evidence gaps above before it is executable as its R2/R3 acceptance claims require.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
