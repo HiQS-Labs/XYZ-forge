@@ -2,16 +2,32 @@
 gh_issue: 1193
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1193
 title: "merge-cleanup: --retire-published-pr refuses start-task's sibling task clones when the primary is outside DEFAULT_SAFE_ROOTS"
-status: Proposed (1-INBOX — not yet active)
+status: active
 created: 2026-10-24
+updated: 2026-10-24
+owner: claude-opus-5-5 (start-task, 2026-10-24)
 doc_type: bugfix
 complexity: 1
 risk: 2
 effort: 1
 phases: 1
+ratings_provisional: false
+rating: 55/45/50/85
+non_goals:
+  - Widening DEFAULT_SAFE_ROOTS, the default scan roots or full-sweep teardown (#722).
+  - New safety checks, flags or tests (GH-831).
+goal: >
+  merge_cleanup.py --retire-published-pr can retire start-task's sibling task clones and helpers
+  on any machine, with every existing fail-closed check intact.
 ---
 
 # GH-1193 — `--retire-published-pr` refuses sibling task clones outside DEFAULT_SAFE_ROOTS
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Plan QA Approved by Codex (`relay-system/2026-10-24/gh1193-plan-qa.md`, `5cfe8b73`). | Implement steps 1–3, focused suites, smoke, final Codex QA, full gate, PR. |
 
 `merge_cleanup.py --retire-published-pr` (GH-1059, start-task Step 9) checks every `--checkout`
 against the four hard-coded `DEFAULT_SAFE_ROOTS` in
@@ -45,7 +61,8 @@ Related: #722 (same root cause in the default audit scan; stays open), #1059, #9
   `is_safe_deletable_path(path, safe_roots=None, never_delete=None)` (`:64`), which already takes an
   explicit `safe_roots` list.
 - The published-retirement path (`merge_cleanup.py` `retire_published_checkouts`, `:1482`) runs the
-  root check **three times**, all with the default list:
+  root check from **three source sites** (four evaluations: `inspect_checkout` runs at the initial
+  inspection and again in `refresh_for_teardown`), all with the default list:
   1. its own up-front guard (`:1501`) → `Published retirement refused: Refusing: path is not strictly within SAFE_ROOTS`;
   2. `inspect_checkout` (`scan_clones.py:935`) → `safe_deletable=False` → `PRESERVE_UNSAFE_ROOT` (`:1106`);
   3. `teardown_checkout` (`merge_cleanup.py:890`) → `Safety violation`.
