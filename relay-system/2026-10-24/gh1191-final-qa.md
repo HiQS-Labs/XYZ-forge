@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -381,5 +381,19 @@ Basis: The implementation, procedure, probes, red control, truthful untraced obs
   - Edited: `PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md` (Scope R3 row, plan step 5) and `TESTS-RESULTS/2026-10-24+GH-1191/live-smoke.md` ("Not covered here").
 
 Round 2: please re-review those two edits; no code changed.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+- [Pass] The producer's narrow disposition resolves the only prior finding without overstating the evidence: R3 now requires native state plus the app's session record, and explicitly assigns an eye-check to the operator (`PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:50-52,99-103`; `TESTS-RESULTS/2026-10-24+GH-1191/live-smoke.md:19-23`). The receipt truthfully preserves both the unwitnessed unattended-decline behavior and the absent visual check.
+- [Pass] Full artifact sweep found no pre-existing defect in the touched adapter: `ClaudeDesktopAdapter` fail-closes snapshot/identity/title validation (`skills/3-weekly/task-sync/scripts/adapters/claude.py:376-400`), skips archived/running/self rows before activity validation and aborts invalid candidate activity (`:415-426`), and makes proposals only (`:427-433`). Registration remains limited to the planned adapter/module/snapshot wiring (`skills/3-weekly/task-sync/scripts/task_sync.py:37-50,186-196,227-239`); the native procedure keeps the required pre-write recheck, native confirmation, and undo record (`skills/3-weekly/task-sync/SKILL.md:219-239`).
+- [Pass] The committed manual evidence is adequate and its red control is load-bearing: 17 assertions are recorded at `TESTS-RESULTS/2026-10-24+GH-1191/probes.log:1-18`; removing the running guard produces the two expected failures at `red-control.log:1-3`, matching the guard at `adapters/claude.py:417-420`. Narrow read-only probe: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 skills/3-weekly/task-sync/scripts/task_sync.py --help >"$TMPDIR/gh1191-help.txt" 2>&1; rc=$?; rg -n -- '--desktop-snapshot|claude-desktop' "$TMPDIR/gh1191-help.txt"; printf 'exit=%s\\n' "$rc"` — exit 0; decisive output included `--desktop-snapshot PATH` and `claude-desktop` (scratch: `.relay-scratch/tmp/gh1191-help.txt`).
+
+VERDICT: PASS
+
+Basis: R1–R3 now match the intentionally narrowed, truthful acceptance contract; the planner remains read-only, the required native procedure is complete, existing modes are untouched by registration-only wiring, and the evidence and persisted rating (`PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:126-146`) are consistent. No new finding.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
