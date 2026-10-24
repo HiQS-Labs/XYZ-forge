@@ -219,4 +219,12 @@ Basis: The corrected evidence and every downstream claim are consistent, bounded
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-24T19:17:25Z
+task: RELAY-gh1191-scheduler-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: c463041d6591c442b03f255a4972459f711742c9
+added-range: 17145+1750
+added-sha256: 05c3daab991cd6b04267066c0a645179c67ffd4de1f89477f79cf5e7fa3b9916
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
