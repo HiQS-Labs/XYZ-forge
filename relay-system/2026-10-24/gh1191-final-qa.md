@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -438,5 +438,19 @@ index a972342e..69fc9a69 100644
     the operator.
  
 ```
+
+### Reviewer · Round 3
+
+swept file: yes
+
+- [Pass] The final documentation-only change closes both minor procedure gaps without introducing a writer or changing a planner contract. The pre-write recheck now requires identical candidate state *and* activity still inside `--hours`, so a proposal that ages out while waiting is skipped (`skills/3-weekly/task-sync/SKILL.md:227-230`). The undo path now first confirms that the session still has the receipt's `new` title, preventing a delayed undo from overwriting a later title change (`skills/3-weekly/task-sync/SKILL.md:234-237`). These rules are consistent with the candidate window and documented manual-rename race (`skills/3-weekly/task-sync/SKILL.md:210-217,241`) and the read-only planner's archived/running/self/activity guards (`skills/3-weekly/task-sync/scripts/adapters/claude.py:406-434`).
+- [Pass] Full artifact sweep found no pre-existing defect in the touched adapter or CLI. Snapshot/identity/title validation fails closed (`skills/3-weekly/task-sync/scripts/adapters/claude.py:376-400`); candidate selection skips archived, running, and own rows before validating activity (`:415-426`); and the only Desktop CLI wiring is the planned registry, constructor, flag, and snapshot table entries (`skills/3-weekly/task-sync/scripts/task_sync.py:37-50,186-196,227-239`). The R3 evidence remains truthful: its scope is native state plus the app's record, with the visual sidebar check explicitly assigned to the operator (`PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:50-52,99-103`; `TESTS-RESULTS/2026-10-24+GH-1191/live-smoke.md:19-23`).
+- [Pass] Existing manual evidence still substantiates the implementation: all 17 fixture assertions passed (`TESTS-RESULTS/2026-10-24+GH-1191/probes.log:1-18`) and the red control fails the two running/missing-flag cases when that guard is removed (`TESTS-RESULTS/2026-10-24+GH-1191/red-control.log:1-3`), corresponding to the live guard at `adapters/claude.py:417-420`. Narrow read-only probe: `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 skills/3-weekly/task-sync/scripts/task_sync.py --help >"$TMPDIR/gh1191-r3-help.txt" 2>&1; probe_rc=$?; rg -n -- '--desktop-snapshot|claude-desktop' "$TMPDIR/gh1191-r3-help.txt"; rg_rc=$?; printf 'python_exit=%s rg_exit=%s\\n' "$probe_rc" "$rg_rc"` — exit 0 for both commands; decisive output was `--desktop-snapshot PATH` and `claude-desktop` (scratch: `.relay-scratch/tmp/gh1191-r3-help.txt`).
+
+VERDICT: PASS
+
+Basis: The final two procedure clarifications make the native operational path safer and remain within the approved read-only-planner design. R1–R3, the truthful smoke limitations, and the persisted `rated 60/25/50/75` rationale (`PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:126-146`) are consistent; no new finding.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
