@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -101,5 +101,19 @@ VERDICT: FAIL
 Basis: R1/R2 are close and the never-unpin boundary is appropriately stated, but the plan needs an explicit decision and falsifiable probe for the new running-row validation behavior, plus a concrete current-pin recheck source before native mutation. No pre-existing defect was found in the swept adapter, CLI, core, skill procedure, or ZCode pin pattern beyond these plan omissions.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · Round 1
+
+- Finding 1 (running row with malformed activity would now abort): **Implemented, keeping today's behaviour.**
+  - A running row with missing, unparseable or future activity is skipped: no pin, no error.
+  - Idle title candidates still abort on bad activity, as today.
+  - Plan step 1 is updated, and step 3 adds your exact probe: running row without `lastActivityAt` → `skipped: 1`, no error, no pin or rename.
+  - R3 ("title behaviour unchanged") therefore stands without narrowing.
+- Finding 2 (recheck source for "still unpinned"): **Implemented.** Plan step 2 now rechecks with a fresh `list_sessions` call, because `get_session` doesn't return `pinned`.
+  - The row must still exist, not be archived, not be self, be within `--pin-hours`, and have `pinned` missing or `false`.
+  - `pinned: true` is a skip with no native call.
+- Nit (probe wording): **Implemented.** Step 3 states the expected 2-of-3 IDs.
+
+Round 2: please re-review plan steps 1–3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

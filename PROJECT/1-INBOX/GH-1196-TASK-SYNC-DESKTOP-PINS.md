@@ -61,25 +61,26 @@ Operator, 2026-10-24: "Are you able to also move active tasks to the pinned area
 
 1. **`ClaudeDesktopAdapter.sweep`** (`adapters/claude.py`). Restructure the loop:
    - Skip archived and self rows.
-   - Validate activity for every remaining row. This is the one ordering change: running rows are now validated as well.
+   - Read activity for every remaining row. A running row with missing, unparseable or future activity is skipped exactly as today (no pin, no error). An idle row with bad activity still aborts, as today.
    - If `pin` and the row's `pinned` is not `True` and activity is within `pin_hours`, append `{task_id, title, activity_at}` to `pinned`.
    - Running or out-of-window rows are then skipped for titles exactly as before.
    - Update the refusal message to "no groups or unpinning" and the docstring.
 
    -> expect the new probes plus the #1191 probes green.
 2. **`SKILL.md` "Claude Desktop (GH-1191)":** add the pin rule to the candidate paragraph and a pin step to the native procedure:
-   - Recheck: not archived, still unpinned, not self, activity still within `--pin-hours`.
+   - Recheck with a fresh `list_sessions` call (`get_session` doesn't return `pinned`): the row must still exist, not be archived, not be self, have activity within `--pin-hours`, and have `pinned` missing or `false`. `pinned: true` (a concurrent manual pin) is a skip with no native call.
    - `set_pinned(<id>, true)`; a decline is a skip.
    - Append `{"at", "session_id", "op": "pin"}` to the same receipt.
    - Undo `set_pinned(<id>, false)` only while the session is still pinned.
    - Never unpin otherwise.
 3. **Probes** `TESTS-RESULTS/2026-10-24+GH-1196/probes.py`:
    - an unpinned active row → pin proposal;
-   - already pinned, or `pinned: false` vs key missing → only the unpinned get proposals;
+   - `pinned: true`, `pinned: false` and a missing key → proposals for exactly the `false` and missing rows (2 of 3);
    - a running row → pin but no rename;
    - archived or self → neither;
    - outside `--pin-hours` → no pin;
-   - `--no-pin` → no pins.
+   - `--no-pin` → no pins;
+   - a running row with missing activity → `skipped: 1`, no error, no pin, no rename (today's behaviour kept).
 
    Plus the #1191 battery re-run. Red control: drop the `pinned is not True` check and watch the already-pinned probe fail.
 4. **Live smoke:** pin one idle session through the procedure, confirm `pinned: true` via `list_sessions`, rerun (no proposal), undo via the receipt rule.
