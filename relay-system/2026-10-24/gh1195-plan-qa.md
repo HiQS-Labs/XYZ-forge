@@ -232,4 +232,12 @@ Decisive output: `unanchored_is_alternate = True`, `anchored_is_candidate = True
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-24T22:17:46Z
+task: RELAY-gh1195-plan-qa-r1
+reviewer: codex
+status: Approved
+reviewed-head: 4f83fa9df77a52fc18fdc00e96faf4d09b3b5813
+added-range: 17556+6351
+added-sha256: de219347ea973c5b65984fc5d9f9376d304986f49f49ba0705f788fc97ad5836
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
