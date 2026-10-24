@@ -75,17 +75,6 @@ function scope(repoRoot, { task, agent, paths, force = false }) {
   });
 }
 
-/**
- * Releases the claiming agent's hold on `task`, optionally handing it off to
- * another agent (`to_agent`).
- * @param {string} repoRoot - absolute path to the repo root
- * @param {Object} opts
- * @param {string} opts.task - task id (must be claimed by `agent`)
- * @param {string} opts.agent - the claiming agent
- * @param {string} [opts.to_agent] - agent to reserve the task for on release
- * @returns {{ok: true}}
- * @throws {Error} if {@link assertOwnership} fails
- */
 // GH-1020: terminal STATUS words are not agents. A reviewer that ran `release --to done` on approval
 // handed the token to nobody — claim.js then reserves it for "done", so no real agent can reclaim it,
 // and the shim's deterministic `tick done` fails ownership (relay-drive: close-mismatch, exit 4).
@@ -93,6 +82,18 @@ function scope(repoRoot, { task, agent, paths, force = false }) {
 // Compatibility limit: an agent id literally named done/Approved/Closed is not a valid release target.
 const TERMINAL_WORDS = /^(done|approved|closed)$/i;
 
+/**
+ * Releases the claiming agent's hold on `task`, optionally handing it off to
+ * another agent (`to_agent`).
+ * @param {string} repoRoot - absolute path to the repo root
+ * @param {Object} opts
+ * @param {string} opts.task - task id (must be claimed by `agent`)
+ * @param {string} opts.agent - the claiming agent
+ * @param {string} [opts.to_agent] - agent to reserve the task for on release; a terminal
+ *   status word (`done`, `Approved`, `Closed`) is refused — run `tick done` instead (GH-1020)
+ * @returns {{ok: true}}
+ * @throws {Error} if {@link assertOwnership} fails or `to_agent` is a terminal word
+ */
 function release(repoRoot, { task, agent, to_agent }) {
   if (typeof to_agent === 'string' && TERMINAL_WORDS.test(to_agent)) {
     throw new Error(`release --to ${to_agent}: "${to_agent}" is a terminal status, not an agent — ` +
