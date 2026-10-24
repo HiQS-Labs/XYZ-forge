@@ -52,10 +52,11 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the committed implementation on this branch (`fix/XYZ-forge-gh1020-reviewer-close-mismatch-2026-10-24`,
-  reviewed head = the worktree you are in) against the plan `PROJECT/2-WORKING/GH-1020-REVIEWER-CLOSE-MISMATCH.md`
-  (also seeded at `.relay-artifacts/GH-1020-REVIEWER-CLOSE-MISMATCH.md`), which Codex approved as a plan in
-  `relay-system/2026-10-24/gh1020-plan-qa.md` round 2. This is FINAL QA of code + evidence.
+- Artifact under review: `PROJECT/2-WORKING/GH-1020-REVIEWER-CLOSE-MISMATCH.md` (the approved plan; also seeded at
+  `.relay-artifacts/GH-1020-REVIEWER-CLOSE-MISMATCH.md`) together with the committed implementation in
+  `relay-automation/relay-turn-lib.sh` and `src/scope.js` at the worktree head you are in.
+- Branch: fix/XYZ-forge-gh1020-reviewer-close-mismatch-2026-10-24 (reviewed head = your worktree HEAD). Codex approved
+  the plan in `relay-system/2026-10-24/gh1020-plan-qa.md` round 2. This is FINAL QA of code + evidence.
 - Requirements source: https://github.com/HiQS-Labs/XYZ-forge/issues/1020 (second comment "Root cause found / Smallest
   fix" binding; Acceptance lines 1 and 4 binding) and https://github.com/HiQS-Labs/XYZ-forge/issues/763 (duplicate).
 - Diff under review (`git diff origin/development..HEAD -- relay-automation/relay-turn-lib.sh src/scope.js`):
