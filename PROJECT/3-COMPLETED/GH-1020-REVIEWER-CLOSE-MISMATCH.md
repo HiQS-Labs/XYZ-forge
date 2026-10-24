@@ -2,7 +2,7 @@
 gh_issue: 1020
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1020
 title: "Relay reviewer close: STATUS header and token disagree (close-mismatch)"
-status: active
+status: Complete
 created: 2026-10-10
 updated: 2026-10-24
 owner: claude-fable-5-1 (start-task, 2026-10-24)
