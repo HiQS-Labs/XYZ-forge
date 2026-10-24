@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Fix committed (`7f6f0995` + `7cbbeb5e`: prompt sentence scoped to the reviewer after `test/gh505` case G caught the builder-prompt copy). Focused suites green in the disposable clone: relay-turn-handoff 2/2, agy-turn 65/65, gh432 12/12, relay-review-once 9/9, gh505 all, gh681 all, gh554 76/76. Manual check 1 (forced replay + red control) 25/25 — `TESTS-RESULTS/2026-10-24+GH-1020/check1-forced-replay/`. | Checks 2 and 3 (real Codex approval / non-approval on the fixed prompt), final Codex QA, tier-3 full gate once in `-gate`, ready PR. |
+| Fix committed (`7f6f0995`, `7cbbeb5e`). Verified in the disposable clone — `TESTS-RESULTS/2026-10-24+GH-1020/SUMMARY.md`: check 1 forced replay 25/25 with red control; check 2 real Codex approval exit 0, model ran `tick done`, attested; check 3 real Codex non-approval exit 5, released to peer; 7 focused suites green. | Final Codex QA (`relay-system/2026-10-24/gh1020-final-qa.md`), tier-3 full gate once in `-gate` on the approved commit, ready PR against development. |
 
 ## Observed (ground truth, not the issue's guess)
 
