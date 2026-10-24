@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -86,5 +86,69 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 — codex
+
+**Block final approval on evidence gaps; the default-root repair is sound.**
+
+VERDICT: FAIL
+Basis: the retained outputs support the root-selection repair and smoke reevaluation, but the byte-identity claim is stronger than its check, the issue's end-to-end reconciliation acceptance is neither demonstrated nor explicitly deferred, and exact-revision/scope attestation remains incomplete. No runtime expansion is requested.
+
+swept file: yes
+
+Read the entire seeded artifact, entire `marathon_plan.py` and `harness_paths.py`, every supplied receipt, the approved plan relay, and relevant engine, reconciler and suite seams. No additional material defects found in the touched runtime file. Reversibility: Easy — the default-root call reuses the existing resolver and leaves the override and writer intact. Graph discovery eventually became available: `list_projects` has no index for this worktree; nearest `XYZ-forge` is the primary tree, generation `2026-09-01T15:54:30Z`. Coverage reports changed metadata or untracked paths for the relevant files, so its one `main` search result is provisional only; the trace call was denied. Findings below rely on current direct source reads, not that stale graph.
+
+- **[Should] R1 — substantiate B's byte identity.** `SUMMARY.md:18` and the artifact's check A claim “B tree byte-identical”; `checks-5623dfd7/checks.sh:23,34-35` merely compares two `status --porcelain` strings. That can remain identical when an already-modified or ignored file changes again; it records neither bytes nor a successful nonempty status extraction. The log's PASS at `checks-driver.log:7` therefore does not prove the stated Definition of Done (2). In the existing disposable-clone manual check, retain before/after content digests for the protected B ledger/plan/tree scope and a successful comparison, with a scoped mutation witnessed to fail the comparison. Preserve the original run honestly; add a receipt rather than relabeling it. No new suite or gate.
+  Observed input: the actual assertion is `[ "$b_before" = "$b_after" ]`, where both values come solely from `git ... status --porcelain` (`checks.sh:23,34-35`); there is no digest comparison in the entire driver.
+  Affected scope: the check A preservation assertion and its byte-identity claim, not planner behavior.
+  Falsifier: different bytes in a protected B file must fail the preservation comparison even when its porcelain status text is unchanged; unchanged bytes must pass.
+
+- **[Should] R2 — disposition the actual reconciliation acceptance explicitly.** Issue [#1195](https://github.com/HiQS-Labs/XYZ-forge/issues/1195), Acceptance bullet 2, requires a closing-issue `wave_reconcile.py --pr N` from a fresh landing clone without env pinning. The cited `test/wave-reconcile.sh:203-208` installs `echo "MOCK: marathon-plan OK"; exit 0`; its 23 passing assertions do not exercise the repaired planner through reconciliation. The vendored suites also stub it (`test/gh358-wave-reconcile-vendored-paths.sh:57`, `test/gh429-wave-reconcile-vendored-observe.sh:39`). Supply a contained manual lifecycle receipt, **or explicitly defer this acceptance bullet with a reason** in the capture/summary, as Definition of Done (4) permits. Existing suite success plus independent planner smoke is useful compositional evidence, but must not be described as that end-to-end run.
+  Observed input: the concrete mocked planner body at `test/wave-reconcile.sh:203-208`, and the supplied driver containing only planner and resolver calls.
+  Affected scope: acceptance accounting and suite-boundary documentation.
+  Falsifier: a retained run showing the real repaired planner invoked by a closing-issue reconciliation in a disposable sibling clone, with no `QUEUE_PLAN_ROOT`, would satisfy the missing observation.
+
+- **[Should] R3 — complete revision/scope and focused-run attestation.** The 12-entry `checks-5623dfd7/provenance.jsonl` authenticates the manual output files, but contains no record for `focused-suites-5623dfd7.log`; the log itself starts with `=== marathon-plan.sh`, without a revision/command header. Add the existing focused-run receipt to provenance with its actual command, revision and exit status; do not infer a revision from its filename. Also provide a retained base-to-reviewed-head changed-path/diff receipt for Definition of Done (1)/(5): the local anchor is visible, but that does not establish that no other protected source/test/registry path changed. No Git command was run in this review. The remote read-only compare returned 404 for `80e67677...ac12b1b2` (unpublished head); a read-only loose-object inspection exited 1 because the base object is packed. This leaves range-wide scope **unverified**, not a detected extra source change. The harness/Producer can supply that attestation without changing runtime code or adding verification machinery.
+
+- **[Pass] Root-selection behavior and override:** `utils/py/marathon_plan.py:114-118` contains the anchored call followed by `QUEUE_PLAN_ROOT`; `harness_paths.py:43-46,80-89` supplies canonical and vendored-consumer behavior. An independent pure resolver probe exited 0 with `pure resolver: alternate, anchored candidate, simulated vendored consumer all match`. It imported only the resolver, patched env/file-existence for the simulated path, and invoked no CLI/subprocess. A simulated vendored anchor is acceptable for this one-line call-site change because the existing resolver is reused unchanged; it does **not** attest an installed vendored planner CLI.
+
+- **[Pass] Manual red/green and smoke reevaluation:** all 12 manifest hashes and byte sizes match. The independent extraction below parses nonempty JSONL for every successful report: check A reverted rc=4/119 rows, fixed rc=3/zero rows with `cannot read releases.db` in `checkA-fixed.err`; smoke sentinel rows are **0/1/1** for fixed-unpinned/reverted-unpinned/fixed-override. The sentinel row names `PROJECT/1-INBOX/GH-987654-SENTINEL.md` in both `file` and `message`, without literal `#987654`. Thus `smoke-reevaluation.txt` honestly explains the driver's two string-assertion FAILs; the driver itself remains exit 1 (`checks-driver.log:13-18`). The reevaluation is evidence of those three output properties, not a retroactive green driver run.
+
+- **[Pass] Recorded suite outcomes and admission:** `focused-suites-5623dfd7.log` has all six named `--- <suite> rc=0` endings; marathon-plan reports 70 passed/0 failed/**2 skipped**, wave-reconcile 23/0, gh358 8/0, gh429 15/0, gh362 9/0, and gh418 its PASS summary. These are reviewed logs, not reruns or independent exact-revision attribution (R3). Read-only SQLite inspection returned `In progress`, `in-progress`, the canonical working-doc path, ratings **72/70/50/92**, and an `in_flight` event with `"accepted_start": true`; this agrees with artifact:5,15,38. The rating rationale's attribution condition agrees with `wave_reconcile.py:1735-1752`.
+
+Independent receipt-inspection command (exit **0**; no fixture, CLI, engine, test or Git execution):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import hashlib,json
+from pathlib import Path
+p=Path('TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7')
+rows=[json.loads(s) for s in (p/'provenance.jsonl').read_text().splitlines()]
+assert rows
+for r in rows:
+ b=(p/r['artifact']).read_bytes(); assert len(b)==r['bytes'] and hashlib.sha256(b).hexdigest()==r['sha256']
+print('manifest matches:',len(rows))
+for n in ('checkA-reverted','checkA-fixed','smoke-fixed-unpinned','smoke-reverted-unpinned','smoke-fixed-override'):
+ data=[json.loads(s) for s in (p/(n+'.jsonl')).read_text().splitlines()]
+ print(n,'rc='+(p/(n+'.rc')).read_text().strip(),'rows='+str(len(data)),'sentinel_rows='+str(sum('987654' in json.dumps(r) for r in data)))
+print('focused suite provenance:',any(r['artifact']=='focused-suites-5623dfd7.log' for r in rows))
+PY
+```
+
+Decisive output:
+```text
+manifest matches: 12
+checkA-reverted rc=4 rows=119 sentinel_rows=0
+checkA-fixed rc=3 rows=0 sentinel_rows=0
+smoke-fixed-unpinned rc=4 rows=119 sentinel_rows=0
+smoke-reverted-unpinned rc=4 rows=120 sentinel_rows=1
+smoke-fixed-override rc=4 rows=120 sentinel_rows=1
+focused suite provenance: False
+```
+
+**[Unverified — needs clone run]** No suites, executable fixtures, actual planner or reconciliation were run here. The separate tier-3 full gate is outside this review and remains a prerequisite for readiness; its pending state is accurately named in the artifact's Status. Only this relay file was edited; the harness owns its commit.
+
+Handing off to Producer (claude-a) — resolve R1–R3 and return the evidence for round 2; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
