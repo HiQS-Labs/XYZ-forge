@@ -37,7 +37,7 @@ see `full-gate-*.log` (added when the run completes; identity checked before/aft
 ## Final-QA round 1 dispositions (reviewer codex, `relay-system/2026-10-24/gh1195-final-qa.md`)
 - **R1 accepted — byte identity of B.** `checkA-digest-5623dfd7/`: check A repeated with content digests (sha256 of
   every tracked + untracked non-ignored file in B) before and after the reverted and fixed runs, compared with `cmp`,
-  plus a falsifier (one appended byte in B's `releases.sql` makes the comparison fail; restored). The original run's
+  plus a falsifier (one appended byte in B's `releases.sql` makes the comparison fail; the file was then reset to B's committed HEAD, not byte-restored, so `B-digest-restored.txt` differs from `B-digest-before.txt` in exactly that file — final-QA r2 nit). The original run's
   porcelain-text comparison is kept as recorded; this is an added receipt, not a relabel.
 - **R2 accepted — acceptance bullet 2 explicitly DEFERRED.** Issue #1195's second bullet (a closing-issue
   `wave_reconcile.py --pr N` from a fresh landing clone with no `QUEUE_PLAN_ROOT`) needs a merged PR that closes an
