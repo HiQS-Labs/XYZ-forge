@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """task_sync — unified IDE task-list grooming (GH-896).
 
-One CLI over per-IDE adapters (zcode, agy, codex, claude, claude-cloud). Default is dry-run; pass
+One CLI over per-IDE adapters (zcode, agy, codex, claude, claude-cloud, claude-desktop). Default is dry-run; pass
 ``--apply`` to commit. Emits one merged JSON report; per-IDE sections
 stay machine-addressable (the heartbeat consumes ``needs_summary``).
 
@@ -34,18 +34,20 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import core  # noqa: E402
 
-ADAPTERS = ("zcode", "agy", "codex", "claude", "claude-cloud")
+ADAPTERS = ("zcode", "agy", "codex", "claude", "claude-cloud", "claude-desktop")
 # Read-only planners over a native snapshot; app tools own their mutations.
-PLAN_ONLY = ("codex", "claude-cloud")
+PLAN_ONLY = ("codex", "claude-cloud", "claude-desktop")
 
 SWEEP_KNOBS = ("hours", "all", "pin_hours", "no_pin", "unpin_days", "include_cron", "group")
 
 
 def _build_adapter(name: str, args, apply: bool):
-    module_name = {"agy": "antigravity", "claude-cloud": "claude"}.get(name, name)
+    module_name = {"agy": "antigravity", "claude-cloud": "claude", "claude-desktop": "claude"}.get(name, name)
     module = importlib.import_module(f"adapters.{module_name}")
     if name == "claude-cloud":
         return module.ClaudeCloudAdapter(args.claude_snapshot, args.exclude_thread, apply=apply)
+    if name == "claude-desktop":
+        return module.ClaudeDesktopAdapter(args.desktop_snapshot, args.exclude_thread, apply=apply)
     if name == "claude":
         return module.ClaudeLocalAdapter(root=args.claude_root, apply=apply)
     if name == "codex":
@@ -164,7 +166,7 @@ def run_set_title(args) -> tuple[dict, int]:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(
-        description="Unified IDE task-list grooming (zcode, agy, codex, claude, claude-cloud). "
+        description="Unified IDE task-list grooming (zcode, agy, codex, claude, claude-cloud, claude-desktop). "
                     "Dry-run by default."
     )
     parser.add_argument("--ide", default="zcode,agy",
@@ -184,12 +186,14 @@ def main(argv=None) -> int:
     parser.add_argument("--codex-snapshot", metavar="PATH",
                         help="fresh native Codex state + actual turn activity snapshot (planning only)")
     parser.add_argument("--exclude-thread", metavar="ID",
-                        help="Codex heartbeat chat / Claude cloud session ID; required to avoid self-grooming")
+                        help="Codex heartbeat chat / Claude cloud or Desktop session ID; required to avoid self-grooming")
     parser.add_argument("--claude-root", metavar="PATH", default=None,
                         help="override the Claude Code root (default ~/.claude: projects/ transcripts, "
                              "sessions/ running registry); probes use fixture roots")
     parser.add_argument("--claude-snapshot", metavar="PATH",
                         help="fresh native Claude cloud sessions + actual turn activity snapshot (planning only)")
+    parser.add_argument("--desktop-snapshot", metavar="PATH",
+                        help="fresh Claude Desktop list_sessions snapshot (planning only)")
     parser.add_argument("--hours", type=float, default=24.0,
                         help="sweep window in hours of last activity (default 24)")
     parser.add_argument("--all", action="store_true",
@@ -221,7 +225,8 @@ def main(argv=None) -> int:
         parser.error("--group applies to sweeps only; not valid with --set-title")
 
     snapshots = {"codex": ("Codex", args.codex_snapshot, "--codex-snapshot"),
-                 "claude-cloud": ("Claude cloud", args.claude_snapshot, "--claude-snapshot")}
+                 "claude-cloud": ("Claude cloud", args.claude_snapshot, "--claude-snapshot"),
+                 "claude-desktop": ("Claude Desktop", args.desktop_snapshot, "--desktop-snapshot")}
     for name in (n for n in args.ide if n in PLAN_ONLY):
         label, snapshot, flag = snapshots[name]
         if args.apply or args.set_title or args.unpin_days is not None or args.group:

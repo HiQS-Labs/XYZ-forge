@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-10-24 — task-sync: Claude Desktop sidebar titles (GH-1191)
+
+The Claude Desktop app keeps each Code session's sidebar title in its own session record,
+so `--ide claude`'s transcript append (GH-1105) never reached the Desktop sidebar. New
+`--ide claude-desktop` (`ClaudeDesktopAdapter` in `skills/3-weekly/task-sync/scripts/adapters/claude.py`,
+beside `ClaudeCloudAdapter`) is a read-only planner over a `list_sessions` snapshot
+(`--desktop-snapshot`). Activity is each row's own `lastActivityAt`. It skips archived,
+running, unflagged and own sessions, and an empty inventory is valid, because the tool
+never lists its caller. The app's `set_session_title` owns every write, through the new
+native procedure in `SKILL.md`: recheck every predicate, rename (a decline is a skip),
+re-read, and keep an undo line in `~/.cache/task-sync/claude-desktop-renames.jsonl`.
+
+The live smoke on one device showed that a native rename leaves `lastActivityAt` alone and
+marks the title `titleSource: tool`, not user-set. Whether an unattended run may re-stamp a
+`tool` title is still unwitnessed and is checked at #1191's scheduler step. The CLI-side
+`--ide claude` description no longer claims the desktop app. Probes 17/17 on Python 3.9 and
+3.14, plus a red control (2 probes fail when the `isRunning` skip is removed). No new tests
+(GH-831). Plan QA: Codex, Approved in round 2. Reversibility: **Easy**. The planner never
+writes, and each live rename is listed in the undo receipt.
+
 ## 2026-10-21 — prs-backfill: reviewed PRS rating backfill (GH-1175)
 
 New skill `skills/2-daily/prs-backfill/` (SKILL.md, locator `prs-backfill.sh`, `install.sh`) with
