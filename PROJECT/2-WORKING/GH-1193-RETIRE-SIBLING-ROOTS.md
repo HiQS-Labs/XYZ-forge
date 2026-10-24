@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved by Codex (`relay-system/2026-10-24/gh1193-plan-qa.md`, `5cfe8b73`). | Implement steps 1–3, focused suites, smoke, final Codex QA, full gate, PR. |
+| Fix `f7d148ec`; smoke + focused suites green (`TESTS-RESULTS/2026-10-24+GH-1193/`); final Codex QA Approved (`relay-system/2026-10-24/gh1193-final-qa.md`, `40a7a07a`). | Full route gate once on the final commit in the disposable `-gate` clone, then PR against development; awaiting merge. |
 
 `merge_cleanup.py --retire-published-pr` (GH-1059, start-task Step 9) checks every `--checkout`
 against the four hard-coded `DEFAULT_SAFE_ROOTS` in
