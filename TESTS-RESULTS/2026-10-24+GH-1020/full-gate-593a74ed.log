@@ -1,0 +1,31 @@
+gate clone: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1020-reviewer-close-mismatch-2026-10-24-gate
+origin: https://github.com/HiQS-Labs/XYZ-forge.git
+HEAD before: 593a74ed41a5b80b7c104c54d4b0c488029dccff
+dirty before:        0
+=== bash ci-local.sh start 2026-10-24T16:10:45Z
+[1mci-local — mirroring .github/workflows/ci.yml tier1[0m
+repo: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1020-reviewer-close-mismatch-2026-10-24-gate
+HEAD: 593a74ed chore(GH-1020): gate fixes — JSDoc stays attached to release() (checkjs), capture doc 'updated' key (pdda), regenerate relay-pkg.tar.gz (relay-pkg-freshness)
+[...    14586 lines; full log sha256 33d18fab5878a998b39e4b5fa3852af99a7b5fc1cdd18bf402c5658132c27015 retained in the session scratchpad ...]
+[1m─── ci-local summary ───[0m
+  [32m+[0m prerequisites
+  [32m+[0m shellcheck tracked scripts
+  [32m+[0m bash syntax
+  [32m+[0m node syntax
+  [32m+[0m settings JSON
+  [32m+[0m PDDA deterministic gate
+  [32m+[0m npm ci + acorn-extract
+  [32m+[0m validate.sh suite
+  [32m+[0m clone-identity invariant (GH-1)
+
+[32mci-local: all steps passed[0m
+Green on the shipping platform, with the full suite — including the one hosted ubuntu skips.
+NOT a promotion qualification: this run is self-reported. Promotion needs a hosted macOS run
+for this exact commit (GH-509 §6) — a clean machine, and evidence you did not produce.
+
+gate-record: recorded .gate-evidence/593a74ed.txt
+telemetry: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1020-reviewer-close-mismatch-2026-10-24-gate/.tick/telemetry/ci-local-sequential-1792858246037-76705.jsonl
+=== ci-local.sh rc=0 end 2026-10-24T17:04:29Z
+HEAD after: 593a74ed41a5b80b7c104c54d4b0c488029dccff
+origin after: https://github.com/HiQS-Labs/XYZ-forge.git
+dirty after:        0

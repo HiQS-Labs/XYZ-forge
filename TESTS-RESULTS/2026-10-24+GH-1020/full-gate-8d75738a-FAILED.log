@@ -1,0 +1,31 @@
+gate clone: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1020-reviewer-close-mismatch-2026-10-24-gate
+origin: https://github.com/HiQS-Labs/XYZ-forge.git
+HEAD before: 8d75738aa9722b5ca1e0fabfa0879e6037d68a4b
+       0
+diff vs origin/development:  28 files changed, 1087 insertions(+), 2 deletions(-)
+=== bash ci-local.sh start 2026-10-24T15:13:03Z
+[1mci-local — mirroring .github/workflows/ci.yml tier1[0m
+repo: /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1020-reviewer-close-mismatch-2026-10-24-gate
+[... first run on 8d75738a: rc=1 — checkjs, pdda frontmatter, relay-pkg-freshness; fixed in 593a74ed ...]
+9666:  ^^ FAILED: relay-pkg-freshness.sh
+11938:  ^^ FAILED: pdda-repo-contract.sh
+13836:  ^^ FAILED: sentinel-overlay.sh
+13849:  ^^ FAILED: checkjs.sh
+[1m─── ci-local summary ───[0m
+  [32m+[0m prerequisites
+  [32m+[0m shellcheck tracked scripts
+  [32m+[0m bash syntax
+  [32m+[0m node syntax
+  [32m+[0m settings JSON
+  [32m+[0m npm ci + acorn-extract
+  [32m+[0m clone-identity invariant (GH-1)
+  [31m-[0m PDDA deterministic gate
+  [31m-[0m validate.sh suite
+
+[31mci-local: 2 step(s) failed[0m
+This ran on macOS — the platform XYZ ships to — so a failure here is a real defect for
+real users. Do not wait for hosted CI to confirm it; the ubuntu job is advisory (GH-509).
+=== ci-local.sh rc=1 end 2026-10-24T16:06:32Z
+HEAD after: 8d75738aa9722b5ca1e0fabfa0879e6037d68a4b
+origin after: https://github.com/HiQS-Labs/XYZ-forge.git
+dirty after:        0

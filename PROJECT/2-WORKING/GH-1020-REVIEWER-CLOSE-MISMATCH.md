@@ -34,7 +34,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Final Codex QA **PASS** (`relay-system/2026-10-24/gh1020-final-qa.md`, attested on `1fd5d8b6`; one text nit on the rating windows, applied here). Code: `7f6f0995` + `7cbbeb5e`. Receipts: `TESTS-RESULTS/2026-10-24+GH-1020/`. | Tier-3 `ci-local.sh` once in the disposable `-gate` clone on this commit, then push through the pre-push gate and open the ready PR against development (do not merge). |
+| Tier-3 `ci-local.sh` **green** on `593a74ed` in the disposable `-gate` clone (all steps; identity unchanged) — `TESTS-RESULTS/2026-10-24+GH-1020/full-gate-593a74ed.log`. First run on `8d75738a` failed only on checkjs/pdda-frontmatter/relay-pkg-freshness housekeeping, fixed in `593a74ed` (no behaviour change). Final Codex QA PASS (`1fd5d8b6`). | PR ready against development; awaiting Noel's merge (do not merge here). After merge: `wave_reconcile.py --pr <N>`. |
 
 ## Observed (ground truth, not the issue's guess)
 
