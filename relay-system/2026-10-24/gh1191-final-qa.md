@@ -396,4 +396,12 @@ Basis: R1–R3 now match the intentionally narrowed, truthful acceptance contrac
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-24T18:30:42Z
+task: RELAY-gh1191-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 2c8f9233d99f9e47d95b1a633b6ca214f3a66034
+added-range: 27049+2310
+added-sha256: 8d00102bbbeabe596027a49defe311760cc391f4095128ffe4e5d659befc36d0
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
