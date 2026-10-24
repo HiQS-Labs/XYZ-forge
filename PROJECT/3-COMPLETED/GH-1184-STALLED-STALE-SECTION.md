@@ -1,8 +1,8 @@
 ---
 title: "daily-planner: read-only Stalled & stale section, one dated comment per device on the weekly issue"
-status: "Active (2-WORKING)"
+status: Complete
 created: 2026-10-22
-updated: 2026-10-22
+updated: 2026-10-24
 owner: agent-b
 gh_issue: 1184
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1184
