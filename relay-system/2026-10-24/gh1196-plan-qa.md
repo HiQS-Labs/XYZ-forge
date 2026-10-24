@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -115,5 +115,26 @@ Handing off to Producer — go to the Producer window and say “take your turn�
 - Nit (probe wording): **Implemented.** Step 3 states the expected 2-of-3 IDs.
 
 Round 2: please re-review plan steps 1–3.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+- [Should] Preserve the existing fail-closed handling of a missing `isRunning` flag. The current adapter skips any row whose value is not literal `false` ([`adapters/claude.py:417-420`](skills/3-weekly/task-sync/scripts/adapters/claude.py#L417-L420)). Step 1 now only says to skip archived/self before proposing a pin, then skips “running” rows for titles ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:62-66`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L62-L66)); it does not state the missing-flag case. Unless the implementation independently retains the old literal-`false` predicate, `{"sessionId":"local_flag","title":"B","isArchived":false,"lastActivityAt":"2026-10-24T12:00:00Z"}` can become a pin and/or rename candidate although it is currently one skipped row. Specify that a missing/non-boolean `isRunning` is skipped for both operations, and add that exact probe, so R3 remains falsifiable.
+  Observed input: `{"sessionId":"local_flag","title":"B","isArchived":false,"lastActivityAt":"2026-10-24T12:00:00Z"}` with `isRunning` absent.
+  Affected scope: every Desktop row whose running-state field is absent or not literal `false`.
+  Falsifier: a probe with that row reports `skipped: 1`, no error, no pin and no rename; a row identical except for `isRunning:false` remains eligible according to its activity/pin state.
+- [Should] Make the “guarded undo” compatible with the never-unpin promise. A re-read that merely finds `pinned:true` cannot establish that it is still the pin from this receipt: after task-sync pins `local_manual`, the operator can unpin and manually re-pin it, and the proposed undo would still call `set_pinned(local_manual, false)` ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:73-75`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L73-L75)). The available native state is only the boolean `pinned` ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:58`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L58)), so it supplies no ownership/version predicate. Remove automatic boolean-only undo (the receipt can still record the pin for operator-directed recovery), or identify a native provenance/revision predicate and require it before unpinning.
+  Observed input: receipt `{"session_id":"local_manual","op":"pin"}`; task-sync successfully sets `pinned:true`; the operator then changes it `true → false → true` before undo.
+  Affected scope: every pin receipt that may be undone after any intervening manual pin-state change.
+  Falsifier: a native recheck exposes a stable pin provenance/revision that matches the recorded tool mutation; an undo with a nonmatching provenance/revision performs no `set_pinned(..., false)`.
+- [Pass] Round 1’s running-row activity regression is now explicitly kept: malformed activity on a running row skips without error or proposal, while bad activity on an idle row still aborts ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:63`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L63)); the planned probe names the prior missing-activity input and expected result ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:82`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L82)).
+- [Pass] Round 1’s pre-write-pin race is now specified as a fresh `list_sessions` read with a literal predicate: missing/`false` proceeds and `true` is a recorded no-call skip ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:70-72`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L70-L72)).
+
+VERDICT: FAIL
+
+Basis: The prior activity-order and recheck findings are resolved, and the plan still extends the existing adapter/report surface without a second planner. However, it must retain the pre-existing fail-closed missing-running-flag behavior and make undo incapable of removing a later manual pin before R1–R3 and the never-unpin boundary can be approved. No other pre-existing defect was found in the swept adapter, CLI, core, SKILL procedure, or ZCode pin pattern.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
