@@ -53,27 +53,43 @@ Two writers, one token, and the prompt itself names the wrong verb for the termi
 `role_note` sentence *"When approving, hand the token off with done"* is in the same prompt, so the
 model receives both instructions and merges them into `release --to done`.
 
-## Smallest fix (one file, no new state)
+## Smallest fix (two edits, no new state, no new writer)
 
-1. **Prompt (`rtl_turn_prompt`):** the `handoff` text names the terminal verb explicitly:
-   if `STATUS` is `Approved`/`Closed`, run `done <task> --agent <me>`; otherwise `release --to <peer>`
-   (or the agent named by `NEXT`); **never `release --to done`** — `done` is a verb, not an agent.
-   Keeps the GH-681 `role_note` sentence byte-identical (pinned by `test/gh681-reviewer-probe-rules.sh`).
-2. **Shim (`rtl_enforce` step 4):** when the header is terminal and the token is `open` (the model
-   released it — to `done`, to the peer, or to nobody), re-`claim` it as this agent (claim is legal:
-   `src/claim.js` refuses an open token only when `handoff_to` names a *different* agent; `done` and the
-   peer are handled by passing `--force` only if needed — see plan) and then `tick done`. The existing
-   WARN stays for a token another agent actually holds. This makes the acceptance line *"whether or not
-   the model also runs tick itself"* true.
+Why the shim cannot repair it after the fact: once the model has run `release --to done`, the token is
+`open` with `handoff_to = "done"`. `src/claim.js` refuses a claim on an open token whose `handoff_to`
+names a different agent (`reserved for another agent`; `--force` only bypasses path overlap), and
+`src/scope.js` `done()`/`release()` require a live claim by the caller. Nobody can ever own that token
+again; the only recovery is a fresh token id — exactly the manual recovery in #1020. So the fix must
+stop the bad write, not clean up after it.
 
-Row 4 of the issue (header left `Open`, token `done`) is not reproduced here and is out of this fix's
-scope; it is tracked in the issue as proposal 2.
+1. **Prompt (`rtl_turn_prompt`, `relay-turn-lib.sh:999-1000`):** the `handoff` text names the
+   terminal verb: *if you set `STATUS: Approved` or `Closed`, close the token with `done <task> --agent
+   <me>`; otherwise `release --to <peer>` (or the agent named by `NEXT`). `done` is a verb, never a
+   `--to` target.* The GH-681 `role_note` sentence stays byte-identical (pinned by
+   `test/gh681-reviewer-probe-rules.sh`). Covers the observed trigger.
+2. **Tick guard (`src/scope.js` `release()`):** refuse `--to done` (and the other terminal words
+   `Approved`/`Closed`) with a one-line error naming the right verb. The model's misfire then fails
+   *before* ownership changes hands, the agent still owns the token, and the shim's existing
+   deterministic `tick done` (`rtl_enforce` step 4) closes it. This is what makes the acceptance line
+   *"whether or not the model also runs `tick` itself"* true, in the same style as #554 (tick refuses a
+   misuse instead of silently recording it). `rtl_enforce` itself is unchanged.
+
+Row 4 of the issue (header left `Open`, token `done`) was not reproduced here and is out of this fix's
+scope; it stays tracked in #1020 as proposal 2. Proposal 3 (marathon `--retry` replay) is a non-goal.
+
+Alternatives rejected: (a) prompt-only — leaves the acceptance line untrue for a model that ignores the
+prompt (two were observed on 2026-10-10); (b) shim reclaim-and-done — impossible, see above; (c)
+loosening `close-mismatch` in `relay_drive.py` — the agreement rule is the safety property (non-goal).
+Rollback: revert the two hunks; no state or schema involved.
 
 ## Verification (GH-831: no new tests)
 
-- Existing suites: `test/agy-turn.sh`, `test/gh432-failed-turn-persist.sh`, `test/relay-review-once.sh`,
-  `test/gh505-relay-attest.sh`, `test/gh681-reviewer-probe-rules.sh` (pins the role_note sentence),
-  `test/gh554-tick-unknown-flags.sh`. Run in a disposable full clone.
+- Focused suites during iteration: `test/agy-turn.sh`, `test/gh432-failed-turn-persist.sh`,
+  `test/relay-review-once.sh`, `test/gh505-relay-attest.sh`, `test/gh681-reviewer-probe-rules.sh` (pins
+  the role_note sentence), `test/gh554-tick-unknown-flags.sh`, `test/gh67-*`/tick lifecycle suites.
+- Final gate: `utils/ci-route.sh` classifies `relay-automation/relay-turn-lib.sh` and `src/scope.js` as
+  kernel/gate surface → `route=full`, `tier=3`; run `bash ci-local.sh` exactly once on the final approved
+  commit in a disposable full clone (`<folder>-gate`), identity checked before and after.
 - Manual check (recorded under `TESTS-RESULTS/2026-10-24+GH-1020/`): the same real Codex
   `--review-once` approval on the same trivial artifact, before (exit 4, `handoff-to: done`) and after
   the fix (exit 0, token `done`, attested). Red control = the before run above.
@@ -84,7 +100,10 @@ scope; it is tracked in the issue as proposal 2.
 
 `rated 85/82/50/80` — sev 82: an approving review is refused and the automated relay/marathon halts
 until an operator repairs the token by hand; no data lost, recovery bounded (matches #763's 82).
-pri 85: factory run 4 (#1081 successor) is blocked on it; 6 incidents in the last 14 days window
-(2026-10-10 ×5 across Agy and Codex, 2026-10-14 in #1081) vs 1 in the preceding 14 (none; #763 is
-2026-09-23) — rising, same class, reproduced today on demand. appeal 50 neutral. effort 80: two
-edits in one file, no schema, no new state.
+pri 85: factory run 4 (#1081 successor) is blocked on it. Recurrence, 2026-10-10..24 vs 2026-09-26..10-09:
+6 incidents in the recent window (2026-10-10 ×5 across Agy and Codex per #1020, 2026-10-14 per #1081),
+3 just before it (2026-09-23 #763; 2026-09-24 `relay-system/2026-09-24/gh796-plan-qa.md:99`;
+2026-09-28 `relay-system/2026-09-28/gh879-n5-final-qa-r2.md:65`, both Agy, both recovered with a fresh
+token), plus one on-demand reproduction today with Codex — same class, every reviewer model, rising.
+appeal 50 neutral. effort 80: two small edits (one prompt string, one guard), no schema, no new state;
+the cost is the tier-3 full gate the kernel surface requires.
