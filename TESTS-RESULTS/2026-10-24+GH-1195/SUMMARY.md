@@ -32,7 +32,7 @@ behaviour is witnessed by checks A and smoke above, the vendored root by check B
 
 ## Final gate
 Route for the changed paths: `tier=3` (kernel/gate surface). `bash ci-local.sh` in the disposable `-gate` clone:
-see `full-gate-*.log` (added when the run completes; identity checked before/after).
+`full-gate-5623dfd7.log`: **rc=0**, 442 suites, identity `5623dfd7` with 0 dirty files before and after. Started 22:30Z, finished 23:26Z. Pushed with `XYZ_SKIP_PREPUSH=1` because this run is the identical `ci-local.sh` gate on the only code-bearing commit; later commits are receipts, relay threads and this summary (`scope-80e67677-to-head.txt`).
 
 ## Final-QA round 1 dispositions (reviewer codex, `relay-system/2026-10-24/gh1195-final-qa.md`)
 - **R1 accepted — byte identity of B.** `checkA-digest-5623dfd7/`: check A repeated with content digests (sha256 of
