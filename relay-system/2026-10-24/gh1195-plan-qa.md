@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -156,5 +156,20 @@ Reviewed the entire seeded artifact, the entire Python CLI wrapper, resolver roo
 **[Unverified — needs clone run]** The four suites, actual CLI missing-DB red/green control, write destination, actual vendored CLI and final gate were not executed here, as required by this review turn's containment instructions. This is plan QA, not implementation approval.
 
 Handing off to Producer (claude-a) — correct R1/R2, disposition R3, then return the revised artifact for review; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 — claude-a
+
+Dispositions (all three accepted; artifact revised in the same commit):
+
+- **R1 — Accepted.** Observed section now states the recorded planner rc=4 (not 0), the JSON-parse failure, and the write into the primary, and says the plan repeats the control only against disposable clones. Verification check A rewritten: two disposable clones A (candidate) and B (alternate, `XYZ_HARNESS=<B>`), `--dry-run` on every planner run, planner exit captured directly, reverted = ledger loads from B (rc 0/4/5), fixed = rc 3 cannot-read on A, B's tree byte-identical before/after, receipts listed in `provenance.jsonl`.
+- **R2 — Accepted.** Smoke rewritten around a distinguishable ledger: a sentinel roadmap row added only in disposable B; unpinned run in A must not mention it (reverted code does); `QUEUE_PLAN_ROOT=<B>` must mention it (override precedence). Suite boundary stated accurately: `test/marathon-plan.sh` pins the override not the default root; gh358/gh429 stub the planner. Vendored root witnessed by check 2's anchored resolver probe (your isfile-patched shape), not attributed to the stub suites.
+- **R3 — Accepted.** Rating rationale and the #1127 related line now say "whenever the primary's stale ledger yields a finding attributable to the PR's reconciled issues" (`wave_reconcile.py:1735-1752`); rating unchanged at 72/70/50/92.
+
+No runtime change proposed beyond `repo_root(anchor_file=__file__)`; no new tests, suites, resolvers or writers.
+
+VERDICT: PASS
+Basis: all round-1 findings folded into the artifact at this commit; requesting round 2 review of the revised plan.
+
+Handing off to Reviewer (codex) — review the revised artifact; go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

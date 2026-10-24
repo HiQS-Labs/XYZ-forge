@@ -19,7 +19,7 @@ non_goals:
   - Any change to `wave_reconcile.py`, `_marathon_plan.py` or the Bash planner.
   - New tests, suites or registry entries (GH-831).
 related:
-  - https://github.com/HiQS-Labs/XYZ-forge/issues/1127 (local reconcile is the default; this bug refuses every local reconcile that closes an issue)
+  - https://github.com/HiQS-Labs/XYZ-forge/issues/1127 (local reconcile is the default; this bug refuses a local reconcile whenever the primary's stale ledger yields a finding attributable to the PR's closed issues)
   - https://github.com/HiQS-Labs/XYZ-forge/issues/1100 (same leak class on the jog → marathon-drive side, fixed by #1104)
   - https://github.com/HiQS-Labs/XYZ-forge/issues/1001 (harness_home precedence; vendored copy must win over XYZ_HARNESS)
   - utils/py/marathon_plan.py:112-114, utils/py/harness_paths.py:31-60, utils/marathon-plan.sh:26-28
@@ -55,8 +55,13 @@ repo_root()        = /Users/noelsaw/Documents/GH Repos/XYZ-forge          ← th
 anchor on own file = /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1195-planner-root-leak-2026-10-24
 ```
 
-Red control: with this clone's `releases.db` moved away, `bash utils/marathon-plan.sh --format json`
-still succeeds (it is reading the primary's ledger). The 2026-10-24 #1192 landing hit exactly this:
+Red control (recorded, `TESTS-RESULTS/2026-10-24+GH-1195/before-fix-red-control.txt`): with this
+clone's `releases.db` moved away, `bash utils/marathon-plan.sh --format json` still loaded a ledger
+and produced a report — planner **rc=4** (drift findings), not the rc=3 "cannot read releases.db" that
+reading this clone would give — and it wrote `PROJECT/2-WORKING/MARATHON-PLAN-2026-10-24.md` into the
+**primary** clone (`before-fix-primary-write.diff`, reverted by hand). That run used the live primary as
+the alternate clone; the plan's check A below repeats it only against disposable clones and with
+`--dry-run`. The 2026-10-24 #1192 landing hit exactly this:
 `wave_reconcile.py --pr 1192` wrote the clone's rows to Completed, then the planner step saw the
 primary's still-parked GH-763 row, reported `already-closed`, and rolled everything back. The
 operator workaround was `QUEUE_PLAN_ROOT="$PWD"`.
@@ -85,26 +90,45 @@ Rollback: revert the one line.
 
 ## Verification (GH-831: no new tests; receipts under `TESTS-RESULTS/2026-10-24+GH-1195/`)
 
-1. **Manual check A (red → green).** In the task clone with `XYZ_HARNESS` exported to the primary,
-   move `releases.db` away and run `bash utils/marathon-plan.sh --format json`. Before the fix: exit 0,
-   items read from the primary. After the fix: exit 3 `marathon-plan: cannot read releases.db` (or the
-   no-table variant) because it now reads this clone. Restore the file.
-2. **Manual check B (resolver).** `PYTHONPATH=utils/py python3 -c` printing `repo_root()` vs
-   `repo_root(anchor_file='utils/py/marathon_plan.py')` from the task clone: the second names the
-   task clone; the first names the primary (the retained misfire).
-3. **Smoke, main path.** From a fresh disposable sibling clone at the PR head, `bash
-   utils/marathon-plan.sh --format json` with no `QUEUE_PLAN_ROOT`: `ROOT`-derived paths in the JSON
-   name the clone. **Adjacent path:** the same command with `QUEUE_PLAN_ROOT` set to the clone: byte-
-   identical findings (override still honoured).
-4. **Existing suites:** `bash test/marathon-plan.sh` (pins `QUEUE_PLAN_ROOT` behaviour and the engine
-   contract), `bash test/wave-reconcile.sh`, `bash test/gh358-wave-reconcile-vendored-paths.sh` and
-   `bash test/gh429-wave-reconcile-vendored-observe.sh` (vendored root must still resolve to the
-   consumer repo). Final gate chosen by `utils/ci-route.sh` on the changed paths.
+All checks run in **two disposable sibling clones**, never the live primary: clone **A** (the
+candidate, where the planner runs) and clone **B** (the alternate, which `XYZ_HARNESS` points at).
+Every planner run uses `--dry-run` so no plan file is written anywhere; the planner's own exit status
+is captured directly (`rc=$?` on the planner command, not on an outer transcript). Each receipt is
+listed in `provenance.jsonl` (artifact, sha256, exit code, revision).
+
+1. **Manual check A (missing-DB red → green).** In A, move `releases.db` aside; `XYZ_HARNESS=<B>`;
+   run `bash utils/marathon-plan.sh --dry-run --format json; echo rc=$?`. Reverted code: a ledger
+   loads and a report renders (planner rc 0/4/5 depending on B's drift state) because it read B.
+   Fixed code: planner **rc=3** with `marathon-plan: cannot read releases.db` (or the no-table
+   variant) because it now reads A. Both runs leave B's tree byte-identical (`git -C B status
+   --porcelain` empty before and after). Restore A's ledger.
+2. **Manual check B (resolver).** In A, `PYTHONPATH=utils/py python3 -c` printing `repo_root()` vs
+   `repo_root(anchor_file='utils/py/marathon_plan.py')`: the first names B (the retained misfire), the
+   second names A. Add a simulated vendored anchor (`<tmp>/consumer/.xyz/utils/py/marathon_plan.py`
+   with `os.path.isfile` patched for that one path) and assert the anchored root is
+   `<tmp>/consumer`; this is the only vendored observation, since the vendored suites stub the
+   planner (see 4).
+3. **Smoke, main path (distinguishable ledgers).** Make A and B differ observably: in B add one
+   roadmap row via `releases_app.py roadmap add` for a sentinel issue URL (B is disposable, so this
+   write is contained). In A, unpinned: `bash utils/marathon-plan.sh --dry-run --format json` must
+   **not** mention the sentinel (it read A). Reverted code mentions it (it read B). **Adjacent path
+   (override precedence):** in A with `QUEUE_PLAN_ROOT=<B>`, the same command **does** mention the
+   sentinel: the override still wins over the anchor. Relative doc paths in the JSON are not a root
+   signal (`_marathon_plan.py:1245-1266` renders none), so the sentinel row is the observable.
+4. **Existing suites and their actual boundary:** `bash test/marathon-plan.sh` pins the engine
+   contract with `QUEUE_PLAN_ROOT` set (`:49-61`) and so exercises the override, not the default
+   root; `bash test/wave-reconcile.sh` covers the reconciler's planner call; the vendored suites
+   `test/gh358-wave-reconcile-vendored-paths.sh:57` and `test/gh429-wave-reconcile-vendored-observe.sh:39`
+   replace the planner with stubs and prove only tool resolution, not the vendored planner's root.
+   All four must stay green; the vendored root behaviour is witnessed by check 2's anchored probe.
+   Final gate chosen by `utils/ci-route.sh` on the changed paths, run once on the final commit.
 
 ## Rating rationale (2026-10-24)
 
-`rated 72/70/50/92`. Severity 70: every local `wave_reconcile` (the GH-1127 default) that closes an
-issue is refused and rolled back whenever the primary's ledger lags, which is the normal state during a
+`rated 72/70/50/92`. Severity 70: a local `wave_reconcile` (the GH-1127 default) that closes an
+issue is refused and rolled back whenever the primary's stale ledger yields a finding attributable to
+that PR's reconciled issues (`wave_reconcile.py:1735-1752`; unrelated stale findings only warn) — the
+normal state for a closing PR during a
 landing; work is not lost (rollback is clean) but the landing cannot complete without an env override.
 Priority 72: it sits on the landing path of every PR and on the #1200 factory lifecycle (step 5).
 Recurrence: one measured incident (#1192, 2026-10-24); #1187 the same day passed only because it closed
