@@ -242,4 +242,12 @@ An earlier combined pure-resolver/SQLite probe exited **1** after its resolver a
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-24T22:52:09Z
+task: RELAY-gh1195-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 09f3825c11824651175b31f656a6645e01675757
+added-range: 18250+8176
+added-sha256: 43ac6474719a107f903cbd9f2bab269a9811b093951d9f7467295eeb28852ed4
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
