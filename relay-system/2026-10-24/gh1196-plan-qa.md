@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -80,5 +80,26 @@ Questions:
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+- [Should] Define and prove the deliberate changed handling for a running row with malformed activity. Current code skips every `isRunning != false` row before reading `lastActivityAt` ([`adapters/claude.py:417-423`](skills/3-weekly/task-sync/scripts/adapters/claude.py#L417-L423)); proposed step 1 instead validates activity before the title-only running skip ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:62-66`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L62-L66)). For `{"sessionId":"local_run","title":"B","isArchived":false,"isRunning":true}` with `lastActivityAt` absent, the existing behavior is one skipped row and no error, while the stated restructure will abort the whole plan. Either retain the old skip for malformed running rows (then that row cannot be pinned), or explicitly make the abort intentional, narrow R3's unchanged-title claim, and add this exact probe with its expected outcome.
+  Observed input: `{"sessionId":"local_run","title":"B","isArchived":false,"isRunning":true}` with no `lastActivityAt`.
+  Affected scope: all running Desktop rows that are now activity-validated solely to be eligible for pin proposals.
+  Falsifier: an existing-equivalent fixture with this row returns `skipped: 1`, no adapter error, and no rename/pin proposal under the chosen contract.
+- [Should] Make R2's “still unpinned” recheck operationally complete: name the fresh tool read and exact `pinned` predicate before `set_pinned`. The supplied native fact guarantees `pinned` on `list_sessions` rows ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:58`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L58)), but step 2 only says “Recheck … still unpinned” ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:70-75`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L70-L75)); unlike the title procedure, it does not say how. Require a fresh `list_sessions` lookup (or document that `get_session` returns `pinned`) and treat absent/`false` as unpinned and `true` as skip. This makes a concurrent operator pin a no-op rather than a redundant native write.
+  Observed input: the snapshot proposes `{"sessionId":"local_a"}` (missing `pinned`), then the recheck row is `{"sessionId":"local_a","pinned":true}`.
+  Affected scope: every proposal whose pin state can change after the planning snapshot and before the native write.
+  Falsifier: a recheck row with `pinned` missing or `false` proceeds to one `set_pinned("local_a", true)`; `pinned:true` produces no call and a recorded skip.
+- [Pass] Missing `pinned` is correctly treated as unpinned by the proposed `row["pinned"] is not True` predicate; it accepts both a missing key and `false`, while excluding only literal `true` ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:65`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L65)). The probe wording at line 78 should state both expected proposal IDs/counts to avoid ambiguity, but that is a Nit once the R2 recheck is specified.
+- [Pass] The plan keeps one planner/report surface: `pin` and `pin_hours` already flow through `_sweep_kwargs` ([`task_sync.py:52-61`](skills/3-weekly/task-sync/scripts/task_sync.py#L52-L61)) and `new_ide_report` already supplies `pinned` ([`core.py:76-85`](skills/3-weekly/task-sync/scripts/core.py#L76-L85)); no CLI, second adapter, or writer is proposed.
+
+VERDICT: FAIL
+
+Basis: R1/R2 are close and the never-unpin boundary is appropriately stated, but the plan needs an explicit decision and falsifiable probe for the new running-row validation behavior, plus a concrete current-pin recheck source before native mutation. No pre-existing defect was found in the swept adapter, CLI, core, skill procedure, or ZCode pin pattern beyond these plan omissions.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
