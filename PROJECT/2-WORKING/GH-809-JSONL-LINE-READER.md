@@ -1,7 +1,14 @@
 ---
 title: "tick: readAllEvents parses each .jsonl FILE as one JSON doc"
-status: "Proposed (1-INBOX - not yet active)"
+status: In Progress
 created: 2026-10-24
+updated: 2026-10-24
+owner: agent
+goal: "tick read verbs survive multi-line .jsonl event files: one event per line, bad lines skipped with a warning."
+complexity: 1
+risk: 1
+effort: 1
+phases: 1
 gh_issue: 809
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/809
 doc_type: bugfix
@@ -12,6 +19,22 @@ non_goals:
 ---
 
 # GH-809 — tick reads `.jsonl` event files as one JSON document
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Plan written by Kimi K3.1 (planner/builder for this task); plan QA by Claude approved round 1. | Kimi builds `readAllEvents` per the plan; red/green manual control and existing suites; Claude final QA; PR. |
+
+## Plan QA (2026-10-24, reviewer: Claude; operator named Claude as reviewer in place of Codex)
+
+Verdict: **Approved, round 1.** Checked against source: `TICK_REPO_ROOT`
+(`bin/tick:19`), `task.created`/`task.commented` in `EVENT_TYPES`
+(`src/events.js:12,16`), `status:` line of `tick info` (`bin/tick:466`), 21
+`readAllEvents` call sites outside `src/events.js`, and `test/unit/events.test.js`
+present. Scope stays in one function, no new tests or writers, GH-5 excluded.
+Non-blocking: `test/unit/events.test.js` is not in the `validate.sh` registry, so
+it is a manual regression run, not gate evidence.
 
 ## Ask
 
