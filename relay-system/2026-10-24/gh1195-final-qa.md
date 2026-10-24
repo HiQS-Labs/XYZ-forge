@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -165,5 +165,81 @@ VERDICT: PASS
 Basis: R1 digest receipt with falsifier, R2 deferral recorded, R3 attestation files added; requesting round 2.
 
 Handing off to Reviewer (codex) — go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 2 — codex
+
+**Ship within this final-QA scope.** No remaining Blocker or Should findings; the separate full gate and landing witness remain outstanding.
+
+VERDICT: PASS
+Basis: R1 now has content-level preservation evidence and a sensitive mutation control; R2 is explicitly deferred as permitted by Definition of Done (4); R3 supplies the requested focused-run and changed-scope attestations. The live planner matches the attested postimage. Approval does not attest the pending full gate or authorize merge.
+
+swept file: yes
+
+Read the entire revised seeded artifact, entire `marathon_plan.py` and `harness_paths.py`, plan relay, both manual drivers, manifests, scope receipt, focused log, and relevant suite/reconciler seams. No additional material defects found in the touched runtime file. Reversibility: Easy — the default-root call reuses the existing resolver; the override and writer remain intact. Verify-tier graph lookup: no project for this worktree among all 84 projects; nearest `XYZ-forge` generation `2026-09-01T15:54:30Z` returns one `main` result with no further page. Coverage marks the runtime/suite paths changed or not tracked. Evidence below therefore uses current direct source and receipt reads; the stale graph is provisional only.
+
+- **[Pass] R1 resolved for the stated preservation scope.** `checkA-digest-5623dfd7/driver.log` records `B digest extracted: 7912 files`, `B content digests identical before/after (7912 files)`, and `summary: 6 pass, 0 fail`, `exit=0`. Independent parsing found identical nonempty before/after maps including `releases.db` and `releases.sql`; the mutated map differs in exactly `releases.sql`. This proves the protected tracked/untracked non-ignored content comparison across both planner runs, not ignored files or Git metadata. The original porcelain-only receipt remains unaltered, as `SUMMARY.md:38-41` states. The new run retains reverted rc=4/120 JSONL rows and fixed rc=3/zero rows with `cannot read releases.db`; the original run retains rc=4/119 rows versus rc=3/zero rows.
+
+- **[Pass] R2 resolved by explicit deferral, not by an end-to-end run.** `SUMMARY.md:42-47` and artifact verification item 5 explicitly defer the closing-issue sibling-clone reconciliation without `QUEUE_PLAN_ROOT` to this PR's landing and require recording its outcome on #1195. That is acceptable under this relay's Definition of Done (4). The suite boundary is accurate: `test/wave-reconcile.sh:203-208` installs `MOCK: marathon-plan OK`; `test/marathon-plan.sh:51,59` pins `QUEUE_PLAN_ROOT`; gh358:57 and gh429:39 stub the planner. A simulated vendored anchor is acceptable for this one-call-site repair because `harness_paths.py:43-46,80-89` is reused unchanged; it does not attest an installed vendored CLI.
+
+- **[Pass] R3 resolved as supplied attestation.** The thirteenth entry of `checks-5623dfd7/provenance.jsonl` now names the focused log, six-suite command, `5623dfd7 (clone -verify, git diff --quiet before run)` and all-six rc=0 outcome; its hash/11,212-byte size match the retained log (located in the receipt directory's parent). `scope-80e67677-to-head.txt` records base through `bbd6b94fe6c1e1da75fa8c99d363b57d905271fd`, an empty protected-path exclusion list, and the sole runtime delta: three explanatory comments plus `repo_root(anchor_file=__file__)`. A read-only Python blob-hash calculation on the live planner returned `f813f7a70f08d7cd3ecf09d53d3c8ad3a94ae3fd`, matching that diff's `f813f7a7` postimage. Subsequent receipt-only scope is the Producer's attestation above, not an independently executed Git comparison; no Git command was run here. The supplied scope shows no new test, registry, resolver, or writer.
+
+- **[Pass] Retained smoke, suite results and admission agree.** Independent nonempty JSONL parsing again finds sentinel counts **0/1/1** for fixed-unpinned/reverted-unpinned/fixed-override, with `GH-987654-SENTINEL.md` in the latter two findings. `smoke-reevaluation.txt` accurately explains the literal `#987654` mismatch; `checks-driver.log` still honestly ends `checks exit=1`. The focused log has all six rc=0 endings; marathon-plan reports **70 passed, 0 failed, 2 skipped**, wave-reconcile 23/0, gh358 8/0, gh429 15/0, gh418 PASS, gh362 9/0. Read-only DB queries returned `in-progress`, ratings **72/70/50/92**, and an `in_flight` payload with `accepted_start: true`, consistent with the artifact's admission/status. These are receipt inspections, not suite reruns.
+
+- **[Nit] The falsifier's “restored” file was reset to committed SQL, not its pre-probe bytes.** `checkA-digest-5623dfd7/checkA-digest.sh:28-29` uses committed-state restoration; independent comparison finds `B-digest-restored.txt` still differs from `B-digest-before.txt` in `releases.sql`. Thus `SUMMARY.md:40`'s “restored” should be read as reset to HEAD, not exact restoration. On any reuse, copy and restore the prior SQL bytes (or label the receipt accurately). No rerun is needed for approval: the successful before/after planner comparison and mutation detection occur before that reset, and B is disposable. This observation does not establish loss in a shared checkout.
+
+Independent receipt/admission probe (exit **0**, no CLI, fixture, suite, engine run, or Git execution):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import hashlib,json,re,sqlite3
+from pathlib import Path
+p=Path('TESTS-RESULTS/2026-10-24+GH-1195')
+for sub in ('checks-5623dfd7','checkA-digest-5623dfd7'):
+ d=p/sub; rows=[json.loads(s) for s in (d/'provenance.jsonl').read_text().splitlines()]
+ assert rows
+ for r in rows:
+  f=(p if r['artifact']=='focused-suites-5623dfd7.log' else d)/r['artifact']
+  b=f.read_bytes(); assert len(b)==r['bytes'] and hashlib.sha256(b).hexdigest()==r['sha256']
+ print(sub,'hash matches:',len(rows))
+d=p/'checkA-digest-5623dfd7'
+def dig(n):
+ lines=(d/('B-digest-'+n+'.txt')).read_text().splitlines(); assert lines
+ return dict(line.split('  ',1)[::-1] for line in lines)
+b,a,m,r=[dig(n) for n in ('before','after','mutated','restored')]
+assert len(b)==7912 and b==a and {'releases.db','releases.sql'}<=b.keys()
+assert [k for k in b if b[k]!=m.get(k)]==['releases.sql']
+print('7912-file preservation PASS; mutation detected; restore differences:',[k for k in b if b[k]!=r.get(k)])
+for n in ('smoke-fixed-unpinned','smoke-reverted-unpinned','smoke-fixed-override'):
+ rows=[json.loads(s) for s in (p/'checks-5623dfd7'/(n+'.jsonl')).read_text().splitlines()]; assert rows
+ print(n,'rows',len(rows),'sentinel',sum('987654' in json.dumps(r) for r in rows))
+log=(p/'focused-suites-5623dfd7.log').read_text()
+ends=re.findall(r'^--- .* rc=0$',log,re.M); assert len(ends)==6
+print('six focused rc=0 endings')
+db=sqlite3.connect(Path('releases.db').resolve().as_uri()+'?mode=ro',uri=True)
+print('admission:',db.execute('select status_label,rating_pri,rating_sev,rating_appeal,rating_effort from roadmap_items where gh_number=1195').fetchone())
+assert any(json.loads(r[0]).get('accepted_start') is True for r in db.execute("select payload from work_events where gh_number=1195 and event='in_flight'"))
+print('accepted_start=True')
+PY
+```
+
+Decisive output:
+```text
+checks-5623dfd7 hash matches: 13
+checkA-digest-5623dfd7 hash matches: 8
+7912-file preservation PASS; mutation detected; restore differences: ['releases.sql']
+smoke-fixed-unpinned rows 119 sentinel 0
+smoke-reverted-unpinned rows 120 sentinel 1
+smoke-fixed-override rows 120 sentinel 1
+six focused rc=0 endings
+admission: ('in-progress', 72, 70, 50, 92)
+accepted_start=True
+```
+
+An earlier combined pure-resolver/SQLite probe exited **1** after its resolver assertions passed because the query guessed nonexistent column `issue_num`. The corrected read-only query above uses actual `gh_number` and exits 0; that query error is not planner evidence.
+
+**[Unverified — needs clone run]** The separate tier-3 full gate and actual closing-issue reconciliation are not attested here. No suites, executable fixtures, planner CLI, or reconciler were executed. Only this relay file was edited; the harness owns the file-scoped commit.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
