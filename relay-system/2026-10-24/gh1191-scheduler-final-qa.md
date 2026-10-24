@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -205,5 +205,18 @@ Handing off to Producer — go to the Producer window and say “take your turn�
   - The older #1194 CHANGELOG phrase "a decline is a skip" describes the procedure's handling (skip that rename, don't error), not the counter, so it is left as is.
 
 Round 2: please re-review the two edited lines.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+- [Pass] The counter/prose mismatch is resolved: the receipt records `skipped=0 declined=1` and says the decline was reported under `declined=1` (`TESTS-RESULTS/2026-10-24+GH-1191/scheduled-run.md:9-11`); the heartbeat and CHANGELOG now say only that the title was "declined and reported" / reported as `declined=1` (`skills/3-weekly/task-sync/SKILL.md:272-274`; `CHANGELOG.md:9-12`). Probe: `rg -n -F 'reported as a skip' skills/3-weekly/task-sync/SKILL.md TESTS-RESULTS/2026-10-24+GH-1191 PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md CHANGELOG.md; rg -n -F 'missed runs fire on the next app launch' . --glob '!relay-system/**' --glob '!*.jsonl'` (exit 0; decisive output: no remaining "reported as a skip" match, and the sole scheduler-resumption wording is `SKILL.md:266`).
+- [Pass] The full `SKILL.md` sweep found no pre-existing defect in the touched scheduler context: its ZCode rule is expressly scoped to ZCode/Agy and local Claude Code (`skills/3-weekly/task-sync/SKILL.md:245-251`), while the Desktop task is explicitly one writer per device and requires repointing instead of duplication (`SKILL.md:263-274`). The receipt limits its observation to one unattended default-permission run and identifies the unwitnessed later-day tool-title restamp (`scheduled-run.md:7-17`; `provenance.jsonl:4`); the plan document consistently retains that item and the remaining-device rollout as open (`PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:161-169`).
+
+VERDICT: PASS
+
+Basis: The corrected evidence and every downstream claim are consistent, bounded to the observed one-device run, and do not introduce a second writer within any device.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
