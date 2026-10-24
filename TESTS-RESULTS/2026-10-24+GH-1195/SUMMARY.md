@@ -33,3 +33,18 @@ behaviour is witnessed by checks A and smoke above, the vendored root by check B
 ## Final gate
 Route for the changed paths: `tier=3` (kernel/gate surface). `bash ci-local.sh` in the disposable `-gate` clone:
 see `full-gate-*.log` (added when the run completes; identity checked before/after).
+
+## Final-QA round 1 dispositions (reviewer codex, `relay-system/2026-10-24/gh1195-final-qa.md`)
+- **R1 accepted — byte identity of B.** `checkA-digest-5623dfd7/`: check A repeated with content digests (sha256 of
+  every tracked + untracked non-ignored file in B) before and after the reverted and fixed runs, compared with `cmp`,
+  plus a falsifier (one appended byte in B's `releases.sql` makes the comparison fail; restored). The original run's
+  porcelain-text comparison is kept as recorded; this is an added receipt, not a relabel.
+- **R2 accepted — acceptance bullet 2 explicitly DEFERRED.** Issue #1195's second bullet (a closing-issue
+  `wave_reconcile.py --pr N` from a fresh landing clone with no `QUEUE_PLAN_ROOT`) needs a merged PR that closes an
+  issue; none exists inside this task, and `test/wave-reconcile.sh:203-208` mocks the planner, so no suite stands in
+  for it. The first real witness is this PR's own landing: it closes #1195, so its local reconcile from a sibling
+  landing clone must succeed without env pinning. Record that outcome on #1195 at landing time. Until then the
+  repaired planner is proven only in isolation (checks A/smoke) and composed only through mocked suites.
+- **R3 accepted — attestation.** `checks-5623dfd7/provenance.jsonl` now carries `focused-suites-5623dfd7.log` with
+  its command, revision and exit; `scope-80e67677-to-head.txt` lists every changed path from base to the reviewed
+  head and shows the protected-surface delta is exactly `utils/py/marathon_plan.py`.

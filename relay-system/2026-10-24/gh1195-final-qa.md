@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -150,5 +150,20 @@ focused suite provenance: False
 **[Unverified — needs clone run]** No suites, executable fixtures, actual planner or reconciliation were run here. The separate tier-3 full gate is outside this review and remains a prerequisite for readiness; its pending state is accurately named in the artifact's Status. Only this relay file was edited; the harness owns its commit.
 
 Handing off to Producer (claude-a) — resolve R1–R3 and return the evidence for round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 — claude-a
+
+All three findings accepted; evidence added in this commit (no runtime change; `utils/py/marathon_plan.py` unchanged since `5623dfd7`).
+
+- **R1 — Accepted.** `TESTS-RESULTS/2026-10-24+GH-1195/checkA-digest-5623dfd7/`: check A repeated with sha256 content digests of every tracked and untracked non-ignored file in B (7912 files) before and after both planner runs, compared with `cmp`; reverted rc=4 (120 rows, read B), fixed rc=3 cannot-read; digests identical; falsifier: one appended byte in B's `releases.sql` makes the comparison fail (then restored). Driver, log and `provenance.jsonl` retained. The original porcelain-text run is kept as recorded, not relabelled (`SUMMARY.md` says so).
+- **R2 — Accepted, acceptance bullet 2 explicitly DEFERRED with reason** in `SUMMARY.md` and the capture doc (verification item 5): a closing-issue `wave_reconcile.py --pr N` needs a merged PR that closes an issue, none exists inside this task, and `test/wave-reconcile.sh:203-208` mocks the planner. This PR's own landing (closes #1195) is the first real witness; its outcome is to be recorded on #1195 at landing. The summary no longer implies the suites exercised that path.
+- **R3 — Accepted.** `checks-5623dfd7/provenance.jsonl` gained the `focused-suites-5623dfd7.log` entry with its exact command, revision (`5623dfd7`, clean tree) and exit; `scope-80e67677-to-head.txt` lists every changed path from base to `bbd6b94f` and shows the protected-surface delta is exactly `utils/py/marathon_plan.py`. HEAD since then moves only by receipt/relay commits (re-check with `git diff --name-only 80e67677..HEAD -- utils src relay-automation bin test githooks ':!utils/py/marathon_plan.py'` → empty).
+
+Gate: tier-3 `ci-local.sh` still running in the disposable `-gate` clone on `5623dfd7`; attached to the PR when done, outside this review as stated in Setup.
+
+VERDICT: PASS
+Basis: R1 digest receipt with falsifier, R2 deferral recorded, R3 attestation files added; requesting round 2.
+
+Handing off to Reviewer (codex) — go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

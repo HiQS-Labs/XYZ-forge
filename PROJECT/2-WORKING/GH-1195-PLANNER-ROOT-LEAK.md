@@ -122,6 +122,9 @@ listed in `provenance.jsonl` (artifact, sha256, exit code, revision).
    replace the planner with stubs and prove only tool resolution, not the vendored planner's root.
    All four must stay green; the vendored root behaviour is witnessed by check 2's anchored probe.
    Final gate chosen by `utils/ci-route.sh` on the changed paths, run once on the final commit.
+5. **Deferred (issue acceptance bullet 2).** The end-to-end closing-issue `wave_reconcile.py --pr N` without
+   `QUEUE_PLAN_ROOT` needs a merged closing PR; this PR's own landing (it closes #1195) is that witness and its
+   outcome is recorded on the issue at landing time. See `TESTS-RESULTS/2026-10-24+GH-1195/SUMMARY.md`.
 
 ## Rating rationale (2026-10-24)
 

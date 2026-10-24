@@ -1,0 +1,55 @@
+# scope receipt: base 80e67677 .. reviewed head bbd6b94fe6c1e1da75fa8c99d363b57d905271fd
+## changed paths
+A	PROJECT/2-WORKING/GH-1195-PLANNER-ROOT-LEAK.md
+A	TESTS-RESULTS/2026-10-24+GH-1195/SUMMARY.md
+A	TESTS-RESULTS/2026-10-24+GH-1195/before-fix-NOTE.md
+A	TESTS-RESULTS/2026-10-24+GH-1195/before-fix-primary-write.diff
+A	TESTS-RESULTS/2026-10-24+GH-1195/before-fix-red-control.txt
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/checkA-fixed.err
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/checkA-fixed.jsonl
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/checkA-fixed.rc
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/checkA-reverted.err
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/checkA-reverted.jsonl
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/checkA-reverted.rc
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/checkB-resolver.txt
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/checks-driver.log
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/checks.sh
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/provenance.jsonl
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/smoke-fixed-override.err
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/smoke-fixed-override.jsonl
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/smoke-fixed-override.rc
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/smoke-fixed-unpinned.err
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/smoke-fixed-unpinned.jsonl
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/smoke-fixed-unpinned.rc
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/smoke-reevaluation.txt
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/smoke-reverted-unpinned.err
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/smoke-reverted-unpinned.jsonl
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/smoke-reverted-unpinned.rc
+A	TESTS-RESULTS/2026-10-24+GH-1195/checks-5623dfd7/smoke-sentinel-add.txt
+A	TESTS-RESULTS/2026-10-24+GH-1195/focused-suites-5623dfd7.log
+A	relay-system/2026-10-24/gh1195-final-qa.md
+A	relay-system/2026-10-24/gh1195-plan-qa.md
+M	releases.db
+M	releases.sql
+M	utils/py/marathon_plan.py
+
+## protected-surface delta (utils/ src/ relay-automation/ bin/ test/ githooks/ validate.sh ci-local.sh), excluding the one approved file:
+(end of list; empty = no other protected path changed)
+
+## the approved change
+diff --git a/utils/py/marathon_plan.py b/utils/py/marathon_plan.py
+index 9fd38eab..f813f7a7 100755
+--- a/utils/py/marathon_plan.py
++++ b/utils/py/marathon_plan.py
+@@ -111,7 +111,10 @@ def main():
+     here_parent = os.path.dirname(here)
+     from harness_paths import repo_root, is_vendored
+ 
+-    default_root = repo_root()
++    # GH-1195: anchor on THIS file so the engine plans the clone it ships in, not whatever a
++    # shell-global XYZ_HARNESS points at (the Bash engine already derives ROOT from its own path).
++    # Vendored .xyz/ copies still resolve to the consumer repo via repo_root's anchored branch.
++    default_root = repo_root(anchor_file=__file__)
+     root = os.environ.get("QUEUE_PLAN_ROOT", default_root)
+     if is_vendored():
+         sp_cmd = ".xyz/utils/swarm-preflight.sh"
