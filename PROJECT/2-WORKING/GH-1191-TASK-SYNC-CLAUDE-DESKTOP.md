@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (Codex, round 2 of 3); promoted to 2-WORKING | Build the planner, SKILL section and probes; live smoke |
+| Built; probes 17/17 (Python 3.9 and 3.14) with red control; live smoke passed on one device | Route-selected gate, final Codex QA, PR |
 
 ## Key concepts
 
@@ -122,6 +122,14 @@ Untraced: whether `set_session_title` changes `lastActivityAt` or flips `titleSo
 ## Verification (no new test/ suites)
 
 Manual probes and the live smoke, recorded under `TESTS-RESULTS/2026-10-24+GH-1191/` with `provenance.jsonl`.
+
+Results (2026-10-24):
+- **Probes:** 17/17 on Python 3.9.6 and 3.14.7. The red control (the `isRunning` skip removed in a scratch copy) went 15/17, failing the running-row and missing-flag probes.
+- **Live smoke** (`live-smoke.md`): the full SKILL procedure renamed one idle Desktop session, and a rerun proposed nothing.
+  - `lastActivityAt` is unchanged by a rename.
+  - `titleSource` goes `auto` → `tool`, not user-set.
+  - Undo from the receipt restored the title, and the stamp was re-applied.
+- **Not witnessed:** whether an unattended (scheduled) run can re-stamp a `tool` title without approval. This session ran in bypass mode, where the tool never asks. Carry it to #1191 step 4.
 
 ## Plan QA
 
