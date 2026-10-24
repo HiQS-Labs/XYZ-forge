@@ -226,13 +226,15 @@ Native Desktop sweep procedure:
    and a null `claude-desktop` error.
 3. Immediately before each proposed rename, `get_session(<id>)`. Require the same title,
    `isArchived: false`, `isRunning: false`, not your own session, and the same
-   `lastActivityAt` as the proposal. Any change or missing field: skip it this tick.
+   `lastActivityAt` as the proposal, still inside the `--hours` window. Any change, missing
+   field or aged-out activity: skip it this tick.
 4. `set_session_title(<id>, <new>)`. App-generated titles are replaced directly; a title the
    operator set needs their approval, which an unattended run cannot give, so a decline is a
    skip, not an error.
 5. `get_session(<id>)` again and confirm the new title. Append one JSON line
    `{"at", "session_id", "old", "new"}` to `~/.cache/task-sync/claude-desktop-renames.jsonl`
-   (private, machine-local); undo is `set_session_title(<id>, <old>)` from that line.
+   (private, machine-local). Undo from that line only while `get_session(<id>)` still shows
+   its `new` title: `set_session_title(<id>, <old>)`. A title changed since is left alone.
 6. Stay quiet when nothing changed; report failures, a missing tool, or declines that need
    the operator.
 
