@@ -1,6 +1,6 @@
 ---
 title: "task-sync: Claude Desktop sidebar titles (native planner)"
-status: Inbox
+status: In progress
 created: 2026-10-24
 updated: 2026-10-24
 owner: claude
@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured; recon and plan written (base `45eb73a7`) | Codex plan QA |
+| Plan QA Approved (Codex, round 2 of 3); promoted to 2-WORKING | Build the planner, SKILL section and probes; live smoke |
 
 ## Key concepts
 
@@ -125,7 +125,9 @@ Manual probes and the live smoke, recorded under `TESTS-RESULTS/2026-10-24+GH-11
 
 ## Plan QA
 
-Pending.
+Codex relay `relay-system/2026-10-24/gh1191-plan-qa.md`, Approved in round 2 of 3.
+- Round 1 returned FAIL with two `[Should]` findings, both implemented. First, the pre-write recheck now covers every candidate predicate (not archived, not the sweeping session). Second, `titleSource` is read from the throwaway's local record, because `get_session` doesn't return it.
+- Round 2: PASS.
 
 ## Rating rationale (2026-10-24)
 
