@@ -438,7 +438,7 @@ function main(argv) {
       let claimed;
       try {
         fs.readdirSync(evDir);
-        claimed = Array.from(fold(readAllEvents(root)).values())
+        claimed = Array.from(fold(readAllEvents(root, { strict: true })).values())
           .filter(t => t.status === 'claimed')
           .sort((a, b) => a.id.localeCompare(b.id))
           .map(t => ({ task: t.id, agent: t.claim.agent, paths: t.claim.paths, epoch: t.claim.epoch }));
