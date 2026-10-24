@@ -25,6 +25,7 @@ from scan_clones import (
     DEFAULT_SAFE_ROOTS,
     DEFAULT_NEVER_DELETE,
     is_safe_deletable_path,
+    published_retirement_roots,
     scan_directories,
     inspect_checkout,
     inspect_primary_landing,
@@ -869,11 +870,13 @@ def refresh_for_teardown(checkouts: List[Dict[str, Any]], primary_repo: Path,
     return fresh
 
 
-def teardown_checkout(checkout: Dict[str, Any], dry_run: bool = True) -> bool:
+def teardown_checkout(checkout: Dict[str, Any], dry_run: bool = True,
+                      safe_roots: Optional[List[Path]] = None) -> bool:
     """Safely tears down a worktree or standalone clone in strict compliance with WORKTREE-SAFETY.md.
 
     `checkout` must be a FRESH inspection from refresh_for_teardown(); a scan-time record is
-    refused so a stale SAFE_REMOVE_* can never be acted on (A.5).
+    refused so a stale SAFE_REMOVE_* can never be acted on (A.5). `safe_roots` is passed only by
+    published retirement (GH-1193); every other caller keeps DEFAULT_SAFE_ROOTS.
     """
     path = Path(checkout["path"]).resolve()
     c_type = checkout["checkout_type"]
@@ -887,7 +890,7 @@ def teardown_checkout(checkout: Dict[str, Any], dry_run: bool = True) -> bool:
         log(f"Skipping {path.name}: disposition is {disp} ({checkout['disposition_reason']})")
         return False
 
-    is_safe, msg = is_safe_deletable_path(path)
+    is_safe, msg = is_safe_deletable_path(path, safe_roots=safe_roots)
     if not is_safe:
         log_err(f"Safety violation on {path}: {msg}")
         return False
@@ -1486,6 +1489,7 @@ def retire_published_checkouts(primary: Path, paths: List[str], number: int,
     if primary_origin.returncode or not primary_origin.stdout.strip():
         log_err("Cannot verify the protected primary's origin; preserving all checkouts")
         return 2
+    safe_roots = published_retirement_roots(primary)
     candidates = []
     try:
         for raw in paths:
@@ -1498,7 +1502,7 @@ def retire_published_checkouts(primary: Path, paths: List[str], number: int,
                 raise ValueError(f"protected primary/ancestor or executing directory: {path}")
             if not (path / ".git").exists():
                 raise ValueError(f"not a Git checkout: {path}")
-            safe, why = is_safe_deletable_path(path)
+            safe, why = is_safe_deletable_path(path, safe_roots=safe_roots)
             if not safe:
                 raise ValueError(why)
             if any(path == other or path in other.parents or other in path.parents for other in candidates):
@@ -1518,7 +1522,7 @@ def retire_published_checkouts(primary: Path, paths: List[str], number: int,
                                      published_pr=number)
         info = fresh[0] if fresh else scanned
         print(format_scan_table([info]))
-        if not fresh or not teardown_checkout(info, dry_run=not execute):
+        if not fresh or not teardown_checkout(info, dry_run=not execute, safe_roots=safe_roots):
             failed = True
     return 1 if failed else 0
 

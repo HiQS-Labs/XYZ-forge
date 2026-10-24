@@ -564,6 +564,8 @@ python3 /path/to/merge-cleanup/scripts/merge_cleanup.py --primary "$PRIMARY_REPO
 # Inspect the preview, then repeat this exact scope with --execute.
 ```
 
+This mode accepts checkouts under `SAFE_ROOTS` or directly beside the primary (its parent
+folder, start-task's GH-970 location), unless that parent is a `NEVER_DELETE` root (GH-1193).
 Repeat `--checkout` only for explicit paths created by this workflow. Do not infer
 the primary from the task clone: `--primary` must be an explicit absolute path;
 empty/relative values refuse instead of inferring the current directory. Do not
