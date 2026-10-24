@@ -131,4 +131,12 @@ Basis: Both Round-1 findings are implemented, and the full plan meets the stated
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-24T18:21:46Z
+task: RELAY-gh1191-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 60346dd9766419dbd4e4e0424831a2a2bbd77535
+added-range: 13561+2324
+added-sha256: e14359a85973ad70f60a073bf944d8b51b5ff475e5722505a2393699bda46bed
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
