@@ -113,4 +113,12 @@ Basis: All seven Definition of Done checks are supported by source and committed
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-24T18:42:19Z
+task: RELAY-gh1193-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0e77d0231dfc8d6db3d1bff315f6b4220cd5a96e
+added-range: 8255+2629
+added-sha256: ebc9f38f6423bfe3cf5641506d811ef0e3767bbcd2bda10bff14da6e6cb35377
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
