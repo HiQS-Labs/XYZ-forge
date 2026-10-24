@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: the GH-1191 implementation on this branch (base `origin/development` 45eb73a7). Code and docs: `skills/3-weekly/task-sync/scripts/adapters/claude.py` (new `ClaudeDesktopAdapter` at the end), `skills/3-weekly/task-sync/scripts/task_sync.py`, `skills/3-weekly/task-sync/SKILL.md` (new "Claude Desktop (GH-1191)" section, edited frontmatter and `--ide claude` line), `CHANGELOG.md` (top entry). Evidence: `TESTS-RESULTS/2026-10-24+GH-1191/` (`probes.py`, `probes.log`, `probe-results.json`, `red-control.log`, `live-smoke.md`, `provenance.jsonl`). Approved plan: `PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md`; plan QA thread `relay-system/2026-10-24/gh1191-plan-qa.md`.
+- Artifact under review: `skills/3-weekly/task-sync/scripts/adapters/claude.py` and the rest of the GH-1191 implementation on this branch (base development at 45eb73a7). Code and docs: `skills/3-weekly/task-sync/scripts/adapters/claude.py` (new `ClaudeDesktopAdapter` at the end), `skills/3-weekly/task-sync/scripts/task_sync.py`, `skills/3-weekly/task-sync/SKILL.md` (new "Claude Desktop (GH-1191)" section, edited frontmatter and `--ide claude` line), `CHANGELOG.md` (top entry). Evidence: `TESTS-RESULTS/2026-10-24+GH-1191/` (`probes.py`, `probes.log`, `probe-results.json`, `red-control.log`, `live-smoke.md`, `provenance.jsonl`). Approved plan: `PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md`; plan QA thread `relay-system/2026-10-24/gh1191-plan-qa.md`.
 - The diff for the code/docs paths is embedded below (review turns cannot run git); read the full files too.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-24
