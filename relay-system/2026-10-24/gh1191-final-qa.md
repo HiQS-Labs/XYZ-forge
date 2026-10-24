@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Closed
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -404,4 +404,39 @@ status: Approved
 reviewed-head: 2c8f9233d99f9e47d95b1a633b6ca214f3a66034
 added-range: 27049+2310
 added-sha256: 8d00102bbbeabe596027a49defe311760cc391f4095128ffe4e5d659befc36d0
+### Producer · Round 2
+
+Post-approval change. After the round-2 PASS, CodeRabbit (PR #1194) posted 4 Minor comments. Dispositions:
+- Relay thread line 391 (Codex's recorded help probe): **Declined.** It is a past Reviewer turn in this immutable record (Ground rule 3).
+- Relay thread line 60 (gate wording): **Declined.** It is accurate as written: start-task's docs route runs `utils/pdda/pdda.sh run` locally, and the Small gate is the hosted reconcile's qualifying run.
+- `skills/3-weekly/task-sync/SKILL.md` recheck: **Implemented.** The pre-write recheck now also requires activity still inside the `--hours` window.
+- `skills/3-weekly/task-sync/SKILL.md` undo: **Implemented.** Undo applies only while `get_session` still shows the receipt's `new` title; a later change is left alone.
+
+Round 3 (last): please review only this docs diff (commit 497314c3); no code changed.
+
+```diff
+diff --git a/skills/3-weekly/task-sync/SKILL.md b/skills/3-weekly/task-sync/SKILL.md
+index a972342e..69fc9a69 100644
+--- a/skills/3-weekly/task-sync/SKILL.md
++++ b/skills/3-weekly/task-sync/SKILL.md
+@@ -226,13 +226,15 @@ Native Desktop sweep procedure:
+    and a null `claude-desktop` error.
+ 3. Immediately before each proposed rename, `get_session(<id>)`. Require the same title,
+    `isArchived: false`, `isRunning: false`, not your own session, and the same
+-   `lastActivityAt` as the proposal. Any change or missing field: skip it this tick.
++   `lastActivityAt` as the proposal, still inside the `--hours` window. Any change, missing
++   field or aged-out activity: skip it this tick.
+ 4. `set_session_title(<id>, <new>)`. App-generated titles are replaced directly; a title the
+    operator set needs their approval, which an unattended run cannot give, so a decline is a
+    skip, not an error.
+ 5. `get_session(<id>)` again and confirm the new title. Append one JSON line
+    `{"at", "session_id", "old", "new"}` to `~/.cache/task-sync/claude-desktop-renames.jsonl`
+-   (private, machine-local); undo is `set_session_title(<id>, <old>)` from that line.
++   (private, machine-local). Undo from that line only while `get_session(<id>)` still shows
++   its `new` title: `set_session_title(<id>, <old>)`. A title changed since is left alone.
+ 6. Stay quiet when nothing changed; report failures, a missing tool, or declines that need
+    the operator.
+ 
+```
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
