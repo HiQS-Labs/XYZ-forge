@@ -29,7 +29,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured; plan written (base `a6fd65af`) | Codex plan QA |
+| Plan QA Escalated at the 3-round cap; the last two findings (plan wording only) are applied but unreviewed | Operator decision: allow one more review round, then build |
 
 ## Key concepts
 
@@ -60,7 +60,7 @@ Operator, 2026-10-24: "Are you able to also move active tasks to the pinned area
 ## Plan
 
 1. **`ClaudeDesktopAdapter.sweep`** (`adapters/claude.py`). Restructure the loop:
-   - Skip archived and self rows, and any row whose `isRunning` is missing or not a literal boolean (today it is skipped too; it stays skipped for both pins and titles).
+   - Skip any row whose `isArchived` is not literal `false` (as today), the self row, and any row whose `isRunning` is missing or not a literal boolean (today it is skipped too; it stays skipped for both pins and titles).
    - Read activity for every remaining row. A running row with missing, unparseable or future activity is skipped exactly as today (no pin, no error). An idle row with bad activity still aborts, as today.
    - If `pin` and the row's `pinned` is not `True` and activity is within `pin_hours`, append `{task_id, title, activity_at}` to `pinned`.
    - Running or out-of-window rows are then skipped for titles exactly as before.
@@ -94,7 +94,7 @@ Operator, 2026-10-24: "Are you able to also move active tasks to the pinned area
 - **Alternatives rejected:**
   - Unpinning stale sessions: risks removing the operator's manual pins, which the native list can't distinguish.
   - A separate pin adapter: a second planner over the same snapshot.
-- **Rollback:** revert. Pins are listed in the receipt and undone with `set_pinned(false)`.
+- **Rollback:** revert the PR to stop new pins. Existing pins stay; the receipt lists them so the operator can unpin by hand if they choose. task-sync never unpins.
 
 ## Risks
 
@@ -107,7 +107,12 @@ Manual probes and live smoke under `TESTS-RESULTS/2026-10-24+GH-1196/` with `pro
 
 ## Plan QA
 
-Pending.
+Codex relay `relay-system/2026-10-24/gh1196-plan-qa.md`, Escalated after 3 rounds; every round's findings were valid and implemented.
+- **Round 1:** the running-row activity order; the pin recheck source.
+- **Round 2:** literal-boolean `isRunning`; boolean-only undo removed.
+- **Round 3:** literal-`false` `isArchived` stated; rollback line made consistent. Applied after the cap and **not re-reviewed**.
+
+Implementation is held for an operator decision.
 
 ## Rating rationale (2026-10-24)
 
