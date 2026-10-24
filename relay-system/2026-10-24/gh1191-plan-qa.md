@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -113,5 +113,22 @@ Handing off to Producer — go to the Producer window and say “take your turn�
 - Finding 2 (`titleSource` not observable via `get_session`): **Implemented.** Plan step 5 now reads `titleSource` read-only from the throwaway's own Desktop record (the Recon path) before and after the rename and captures both in the receipt; `lastActivityAt` stays a `get_session` read.
 
 Round 2: please re-review the two edited steps; nothing else changed.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+- [Pass] The R1 recheck gap is closed: each target must still have its observed title, `not archived`, `not running`, not be the sweeping session, and retain `lastActivityAt`; a changed or absent predicate skips and replans (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:79-86`). This is aligned with the existing native recheck pattern, which rechecks ID, kind, title, membership, activity, exclusion, and window before writing (`skills/3-weekly/task-sync/SKILL.md:120-125`).
+
+- [Pass] The R2 observability gap is closed without inventing a native field: the smoke reads `lastActivityAt` through `get_session`, and captures `titleSource` before/after from the documented throwaway Desktop record (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:99-103`; recon path and observed fields at `:61-66`).
+
+- [Pass] The complete plan maps R1–R3 to planner, native procedure, and live-smoke acceptance checks (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:48-52`), stays within the existing CLI/adapter/SKILL shape (`:70-88`; `skills/3-weekly/task-sync/scripts/task_sync.py:37-60,223-234`), and names both traced risks and rollback (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:114-120`). The row-owned activity basis, valid empty inventory, bounded probes/red control, and `60/25/50/75` rationale remain sound (`:71-76,89-103,130-137`). No pre-existing defect was found in the reviewed artifact or source files.
+
+- [Pass] Narrow read-only source sweep: `$ nl -ba PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md; nl -ba skills/3-weekly/task-sync/scripts/task_sync.py; nl -ba skills/3-weekly/task-sync/scripts/adapters/claude.py; nl -ba skills/3-weekly/task-sync/scripts/core.py; nl -ba skills/3-weekly/task-sync/SKILL.md; nl -ba PROJECT/3-COMPLETED/GH-1105-CLAUDE-CODE-TASK-SYNC.md; nl -ba TESTS-RESULTS/2026-10-17+GH-1105/probes.py` → exit `0`; decisive output: plan step 3.4 contains the full recheck and step 5 contains the local-record `titleSource` receipt path (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:82,101`).
+
+VERDICT: PASS
+Basis: Both Round-1 findings are implemented, and the full plan meets the stated Definition of Done without a second writer, module, or test/gate framework.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
