@@ -996,13 +996,8 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   local agent="$1" f="$2" task="$3" csv="$4" peer="${5:-}"
   # Name the peer explicitly when known — a live Gemini turn (2026-06-15) released the token to the
   # literal role "Producer" because "the other agent" was unnamed. RELAY_PEER closes that ambiguity.
-  # GH-1020: name the TERMINAL verb too. On approval the thread sets `NEXT: done`, so "release --to the
-  # role named by NEXT" was read as `tick release --to done` (Agy and Codex, #763/#1020): the token went
-  # to nobody, the shim's deterministic `tick done` (rtl_enforce step 4) then failed ownership, and
-  # relay-drive exited 4 close-mismatch. `done` is a verb, never a --to target; tick refuses it too.
-  local terminal="if you set STATUS: Approved or Closed, close the token with: done ${task} --agent ${agent} (never release --to done — done is a verb, not an agent); otherwise "
-  local handoff="${terminal}release --to the other agent (the role named by NEXT in the file)"
-  [[ -n "$peer" ]] && handoff="${terminal}release --to ${peer}"
+  local handoff="release --to the other agent (the role named by NEXT in the file)"
+  [[ -n "$peer" ]] && handoff="release --to ${peer}"
   # Emit repo-root-relative EDIT paths (relay file, artifact) so they resolve against the turn's CWD —
   # which under worktree isolation IS the throwaway worktree. An ABSOLUTE edit path would invite the
   # model to write straight into RTL_ROOT, bypassing the worktree (Codex review 2026-06-20). RTL_ROOT
@@ -1062,6 +1057,13 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
     # evidence must be quoted in the finding. The first and last sentences are asserted by
     # test/gh397 and test/gh505 respectively — keep them verbatim.
     verify_note=''
+    # GH-1020: the REVIEWER's handoff sentence names the TERMINAL verb. On approval the thread sets
+    # `NEXT: done`, so "release --to the role named by NEXT" was read as `tick release --to done` (Agy
+    # and Codex, #763/#1020): the token went to nobody, the shim's deterministic `tick done` (rtl_enforce
+    # step 4) then failed ownership, and relay-drive exited 4 close-mismatch. `done` is a verb, never a
+    # --to target; tick refuses it too (src/scope.js). Reviewer-only: a builder never closes the relay,
+    # and test/gh505 case G pins that the builder prompt never mentions Approved.
+    handoff="if you set STATUS: Approved or Closed, close the token with: done ${task} --agent ${agent} (never release --to done — done is a verb, not an agent); otherwise ${handoff}"
     role_note=' You are the REVIEWER this turn: do NOT edit or create any artifact or source file; the relay file is the only tracked file you may change. You MAY run narrow, non-mutating probes and queries against the seeded artifact to measure a claim. Put probe output and temp files under .relay-scratch/ or $TMPDIR, never elsewhere in the tree: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR". Scratch is discarded after your turn, so quote the command, exit status and decisive output in the finding itself. Do NOT run validate.sh, test/*.sh, pytest, or executable fixtures here — those belong in a disposable full clone; a claim that can only be measured that way is graded [Unverified — needs clone run], and the harness gate runs after your turn. Any other change to the tree is reverted and fails your turn. When approving, hand the token off with done and set STATUS: Approved.'
   fi
   # GH-31 / #15: point the reviewer at the seeded read-only artifact (worktree-relative; it is NOT a
