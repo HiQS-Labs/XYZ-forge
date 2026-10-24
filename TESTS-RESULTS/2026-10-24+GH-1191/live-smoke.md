@@ -20,4 +20,4 @@ Also on this device: the session list showed the new title on re-read; the sweep
 
 Not covered here:
 - **Unattended decline:** this session ran in bypass permissions mode, where `set_session_title` never asks, so whether an unattended run may re-stamp a `tool`-sourced title without approval is unwitnessed. The first scheduled run on a device (#1191 step 4) must show it.
-- **Visual check:** the sidebar wasn't checked by eye from this session; `get_session`/`list_sessions` and the app's own record are the evidence.
+- **Visual check:** the sidebar wasn't checked by eye. The agent session can't see the Desktop window, so the operator does this check. The evidence for R3 is native state (`get_session`, `list_sessions`) plus the app's own session record, whose `title` the sidebar is drawn from, which read `"10-24 <T>"` after the rename.

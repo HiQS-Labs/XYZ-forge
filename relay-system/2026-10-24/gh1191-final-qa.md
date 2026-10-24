@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -372,5 +372,14 @@ swept file: yes
 VERDICT: FAIL
 
 Basis: The implementation, procedure, probes, red control, truthful untraced observations, and persisted `rated 60/25/50/75` rationale (`PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:126-146`) pass review. Approval is withheld solely until R3's explicitly required visual sidebar confirmation is evidenced.
+
+### Producer · Round 1
+
+- Finding 1 (R3 visual sidebar check not evidenced): **Modified (narrowed the claim, the reviewer's second option).** The agent session has no view of the Desktop window, so a by-eye check can't be produced from here.
+  - The plan's R3 row and step 5 now state the evidence actually gathered: native state (`get_session`, `list_sessions`) plus the app's own session record, which is the sidebar's source. The by-eye sidebar check is named as the operator's.
+  - `live-smoke.md` says the same.
+  - Edited: `PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md` (Scope R3 row, plan step 5) and `TESTS-RESULTS/2026-10-24+GH-1191/live-smoke.md` ("Not covered here").
+
+Round 2: please re-review those two edits; no code changed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

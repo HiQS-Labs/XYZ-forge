@@ -49,7 +49,7 @@ Steps 1–3 of [#1191](https://github.com/HiQS-Labs/XYZ-forge/issues/1191) only.
 |---|---|---|
 | R1 | `--ide claude-desktop` read-only planner over a `list_sessions` snapshot | Probe battery (below) |
 | R2 | Native sweep procedure in `SKILL.md` | Read from the consumer entry point; followed verbatim in the live smoke |
-| R3 | Live verification on one device | Smoke receipt: sidebar title changed, rerun no-op, undo restored |
+| R3 | Live verification on one device | Smoke receipt: title changed in native state and the app's record, rerun no-op, undo restored; sidebar by eye is the operator's check |
 
 ## Recon (base `45eb73a7`)
 
@@ -97,7 +97,7 @@ Untraced: whether `set_session_title` changes `lastActivityAt` or flips `titleSo
 
    Red control: drop the `isRunning` skip in a copy and watch the running-row probe fail. -> expect all PASS, with the red control witnessed FAIL.
 5. **Live smoke (R3) on this device:** start one throwaway Desktop session and let it go idle, then follow the SKILL procedure.
-   - Main path: rename it and confirm the title through `get_session` and the sidebar.
+   - Main path: rename it and confirm the title through `get_session`/`list_sessions` and the app's own session record (the sidebar's source). The operator confirms the sidebar by eye; the agent session cannot see the Desktop window. (Narrowed in final QA round 1.)
    - Adjacent path: rerun, expecting no proposal, and check `lastActivityAt` (from `get_session`) after the rename. `titleSource` isn't returned by any native tool, so read it read-only from the throwaway's own Desktop record (`claude-code-sessions/<account>/<org>/local_<id>.json`, the Recon path) before and after the rename, and capture both values in the receipt. Then undo from the receipt and archive the throwaway.
 
    -> receipt and `provenance.jsonl` under `TESTS-RESULTS/2026-10-24+GH-1191/`.
