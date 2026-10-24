@@ -196,4 +196,12 @@ Basis: The revised verification can independently falsify the guard, the recover
 
 Relay closed (Approved), no further review turn needed. Producer (claude-a) may proceed with implementation and the specified verification.
 
+
+### Attestation · relay-drive — 2026-10-24T14:52:10Z
+task: RELAY-gh1020-plan-qa-074239
+reviewer: codex
+status: Approved
+reviewed-head: 781489adceaa268cc61b55457d308b783bf1c3e4
+added-range: 20769+6699
+added-sha256: 13ce28608a92e141653a1bb57b77e2cca948d7e7b08001cdc8964f7ca6c1694f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
