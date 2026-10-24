@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -143,5 +143,26 @@ Handing off to Producer — go to the Producer window and say “take your turn�
 - Finding 2 (boolean-only undo could remove a later manual pin): **Implemented (the reviewer's first option).** Automatic undo is removed: `pinned` carries no ownership, so task-sync never calls `set_pinned(..., false)`. The receipt line stays for operator-directed recovery. R2 and plan steps 2 and 4 are updated.
 
 Round 3 (last): please re-review plan steps 1–4 and the R2 row.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+- [Should] Retain the existing fail-closed `isArchived` predicate explicitly. The implementation currently skips any row whose archived flag is not literal `false` ([`adapters/claude.py:417-420`](skills/3-weekly/task-sync/scripts/adapters/claude.py#L417-L420)), but plan step 1 only names archived rows, self rows, and malformed `isRunning` ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:62-66`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L62-L66)). For `{\"sessionId\":\"local_arch_flag\",\"title\":\"B\",\"isRunning\":false,\"lastActivityAt\":\"2026-10-24T12:00:00Z\"}` with `isArchived` absent, the present adapter records one skip; an implementation that reads “skip archived” as only `isArchived is True` can instead pin and rename it. State `isArchived is not False` is skipped for both operations and add this exact probe.
+  Observed input: `{\"sessionId\":\"local_arch_flag\",\"title\":\"B\",\"isRunning\":false,\"lastActivityAt\":\"2026-10-24T12:00:00Z\"}` with `isArchived` absent; current `row.get(\"isArchived\") is not False` skips it.
+  Affected scope: every Desktop row whose archived-state field is absent or not literal `false`.
+  Falsifier: a probe with this row reports `skipped: 1`, no error, no pin and no rename; the same row with `isArchived: false` remains eligible according to activity/pin state.
+- [Should] Remove or qualify the rollback promise to manually unpin receipt entries. Step 2 correctly says there is no automatic undo because native `pinned` has no ownership ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:70-75`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L70-L75)), but Bet check says the receipt pins are “undone with `set_pinned(false)`” ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:97`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L97)). That contradicts the plan’s never-unpin safety rationale: the receipt cannot prove ownership after an operator has changed the boolean. Limit rollback to reverting the planner/SKILL change; any operator-directed unpin must be an explicit manual choice, not a promised rollback action.
+  Observed input: receipt `{\"session_id\":\"local_manual\",\"op\":\"pin\"}`; task-sync pins it, then an operator changes `true → false → true` before the documented rollback.
+  Affected scope: every receipt entry acted on after an intervening manual pin-state change.
+  Falsifier: native state gains a stable pin provenance or revision matching the recorded mutation; a nonmatching recheck then performs no `set_pinned(..., false)`.
+- [Pass] The plan now preserves the existing missing/non-boolean `isRunning` skip and specifies the corresponding no-proposal probe ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:63`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L63), [`GH-1196-TASK-SYNC-DESKTOP-PINS.md:84`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L84)).
+- [Pass] The native recheck and no-automatic-undo contract are now concrete: a fresh `list_sessions` accepts only missing/`false` pin state, and a boolean-only undo is forbidden ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:71-75`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L71-L75)).
+
+VERDICT: FAIL
+
+Basis: The prior running-row and ownership findings are resolved; the plan remains one planner/report surface and its rating is commensurate. It still needs exact `isArchived` fail-closed parity and a non-contradictory rollback promise. No other pre-existing defect was found in the swept adapter, CLI, core, SKILL procedure, or ZCode pin pattern.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
