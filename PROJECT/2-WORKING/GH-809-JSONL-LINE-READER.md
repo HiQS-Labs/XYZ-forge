@@ -24,7 +24,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Plan written by Kimi K3.1 (planner/builder for this task); plan QA by Claude approved round 1. | Kimi builds `readAllEvents` per the plan; red/green manual control and existing suites; Claude final QA; PR. |
+| Kimi K3.1 built the per-line reader; Claude final QA round 1 found the `tick claims` safety audit no longer failed closed; Kimi added `readAllEvents(root, { strict: true })` for that one caller; Claude final QA round 2 approved after independent re-run. | Full gate once in a disposable clone, then PR. |
 
 ## Plan QA (2026-10-24, reviewer: Claude; operator named Claude as reviewer in place of Codex)
 
@@ -100,6 +100,7 @@ All direct callers were traced with `readAllEvents` searches under `src/` and
   through the callers at `:90`, `:105`, `:121`, and `:146`.
 - Analysis reads at `src/analyze.js:416`; the read-only `claims` audit reads at
   `bin/tick:441` and retains its existing unreadable-events error handling.
+- Final QA correction: `claims` uses `readAllEvents(root, { strict: true })` so malformed JSON still exits 3 as `events-unreadable`; all other readers retain skip-and-warn behavior.
 - Thus malformed event input can stop projection, claims, mutation ownership
   checks, routing, reaping, analysis, and audit consumers. `tick log` and the
   other append-only paths do not call the reader and are not changed. No caller
@@ -266,3 +267,23 @@ without the recorded pre-fix nonzero control is insufficient.
    `provenance.jsonl` under `TESTS-RESULTS/2026-10-24+GH-809/`.
    -> expect production changes confined to `src/events.js`, with documented
    before/after evidence and no new test or writer files.
+
+## Final QA (2026-10-24, reviewer: Claude)
+
+- **Round 1 — Blocking:** `bin/tick` `claims` is the safety query merge-cleanup
+  uses to decide whether a clone may be retired
+  (`skills/2-daily/merge-cleanup/scripts/scan_clones.py:273-290`, SKILL.md "every
+  safety query fails closed"). With fail-soft parsing, a malformed line exited 0
+  and could read as "verified, no claims". Sent back to the builder.
+- **Fix (Kimi):** optional `opts.strict` on `readAllEvents`; only `claims` passes
+  it, so it exits 3 `events-unreadable: <file>:<line>` on a malformed line. All
+  other callers keep skip-and-warn.
+- **Round 2 — Approved.** Independent re-run by the reviewer: base `tick info`
+  on a two-line file exits 1 with the JSON error; candidate exits 0
+  (`status: open`); an appended bad line warns with `x.jsonl:3` and `info` still
+  exits 0; `claims --json` exits 0 on valid input and 3 on the bad line; a
+  blank-only file yields no events and no warning.
+- **Accepted, non-blocking:** `claim`/`scope`/`reap` now skip a malformed line
+  rather than die, as the issue requested. Event writes are atomic
+  (temp + rename, GH-14), so a malformed line means outside corruption; the
+  merge-cleanup safety path stays fail-closed.
