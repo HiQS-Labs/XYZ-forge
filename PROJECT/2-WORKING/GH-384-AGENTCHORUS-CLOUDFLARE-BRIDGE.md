@@ -131,3 +131,7 @@ Implement two layers of authentication and session lifecycle management:
 - [x] `bash test/agent-chorus-bridge.sh` passes 100% assertions.
 - [x] `bash test/agent-chorus.sh` passes 100% assertions without regressions.
 - [x] DeepSeek QA relay completes and approves (see `relay-system/2026-09-02/gh-384-agentchorus-cf-bridge-qa.md`).
+
+## Merge evidence
+
+- PR #1187 merged 2026-10-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
