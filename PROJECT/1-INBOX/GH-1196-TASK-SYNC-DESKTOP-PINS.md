@@ -29,7 +29,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Escalated at the 3-round cap; the last two findings (plan wording only) are applied but unreviewed | Operator decision: allow one more review round, then build |
+| Operator allowed one more plan QA round (round 4) | Codex re-review of the round-3 fixes, then build |
 
 ## Key concepts
 
@@ -82,6 +82,7 @@ Operator, 2026-10-24: "Are you able to also move active tasks to the pinned area
    - `--no-pin` → no pins;
    - a running row with missing activity → `skipped: 1`, no error, no pin, no rename (today's behaviour kept);
    - a row with `isRunning` absent → `skipped: 1`, no error, no pin, no rename, while the same row with `isRunning: false` is eligible.
+   - a row with `isArchived` absent → `skipped: 1`, no error, no pin, no rename, while the same row with `isArchived: false` is eligible.
 
    Plus the #1191 battery re-run. Red control: drop the `pinned is not True` check and watch the already-pinned probe fail.
 4. **Live smoke:** pin one idle session through the procedure, confirm `pinned: true` via `list_sessions`, rerun (no proposal). The operator decides whether to keep the pin; there's no automatic undo.
@@ -110,9 +111,8 @@ Manual probes and live smoke under `TESTS-RESULTS/2026-10-24+GH-1196/` with `pro
 Codex relay `relay-system/2026-10-24/gh1196-plan-qa.md`, Escalated after 3 rounds; every round's findings were valid and implemented.
 - **Round 1:** the running-row activity order; the pin recheck source.
 - **Round 2:** literal-boolean `isRunning`; boolean-only undo removed.
-- **Round 3:** literal-`false` `isArchived` stated; rollback line made consistent. Applied after the cap and **not re-reviewed**.
-
-Implementation is held for an operator decision.
+- **Round 3:** literal-`false` `isArchived` stated and its probe added; rollback line made consistent.
+- **Round 4:** operator-authorized extra round, 2026-10-24.
 
 ## Rating rationale (2026-10-24)
 

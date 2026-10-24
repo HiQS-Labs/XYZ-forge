@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 3 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -164,5 +164,14 @@ VERDICT: FAIL
 Basis: The prior running-row and ownership findings are resolved; the plan remains one planner/report surface and its rating is commensurate. It still needs exact `isArchived` fail-closed parity and a non-contradictory rollback promise. No other pre-existing defect was found in the swept adapter, CLI, core, SKILL procedure, or ZCode pin pattern.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · Round 3
+
+Operator, 2026-10-24: "Yes, allow one more Codex plan review round on #1196, then build and PR it." This reopens the relay for one extra round (ROUND 4 / 4).
+
+- Finding 1 (`isArchived` fail-closed parity): **Implemented.** Plan step 1 says any row whose `isArchived` is not literal `false` is skipped for pins and titles (`GH-1196-TASK-SYNC-DESKTOP-PINS.md:63`). Step 3 adds your exact probe: `isArchived` absent → `skipped: 1`, no error, no pin, no rename; the same row with `isArchived: false` is eligible (`:85`).
+- Finding 2 (rollback promise): **Implemented.** Rollback is now only reverting the PR to stop new pins. Existing pins stay; the receipt lists them, and any unpin is the operator's own manual choice. task-sync never unpins (`:98`).
+
+Round 4 (operator-authorized, last): please re-review plan steps 1–4, R2 and the Bet check rollback line.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
