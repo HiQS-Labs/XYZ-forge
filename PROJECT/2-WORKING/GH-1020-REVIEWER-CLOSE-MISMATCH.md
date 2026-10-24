@@ -2,7 +2,7 @@
 gh_issue: 1020
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1020
 title: "Relay reviewer close: STATUS header and token disagree (close-mismatch)"
-status: Proposed (1-INBOX — not yet active)
+status: active
 created: 2026-10-10
 owner: claude-fable-5-1 (start-task, 2026-10-24)
 doc_type: bugfix
@@ -28,6 +28,12 @@ goal: >
 ---
 
 # Relay reviewer close-mismatch (GH-1020, closes GH-763)
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Plan QA Approved by Codex (round 2, `relay-system/2026-10-24/gh1020-plan-qa.md`, attested on `781489ad`); task admitted (`--accepted-start`). | Implement the two edits, run focused suites + the three manual checks in the disposable clone, tier-3 full gate once, final Codex QA, ready PR. |
 
 ## Observed (ground truth, not the issue's guess)
 
