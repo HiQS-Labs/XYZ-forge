@@ -35,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Root cause traced and reproduced on `development` @ `80e67677` (see Observed); plan written; capture registered. | Codex plan QA, then the one-line fix, focused suites, smoke receipt, final QA, ready PR against development (do not merge). |
+| Plan QA Approved r2 (`b7baa523`). Fix landed as `5623dfd7`; row admitted (`--accepted-start`). Checks A/B/smoke green with red controls in disposable clones; six focused suites green (`TESTS-RESULTS/2026-10-24+GH-1195/SUMMARY.md`). | Tier-3 `ci-local.sh` running in the `-gate` clone; final Codex QA; ready PR against development (do not merge). |
 
 ## Observed (ground truth)
 
