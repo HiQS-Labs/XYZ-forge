@@ -29,12 +29,12 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Operator allowed one more plan QA round (round 4) | Codex re-review of the round-3 fixes, then build |
+| Plan QA round 4: substance passed; last wording fix applied | Build, probes, live smoke, final QA |
 
 ## Key concepts
 
 - Pins come from the same `list_sessions` snapshot as titles; `set_pinned` is the only writer.
-- Never unpin: a pin is only ever added, and undo checks the session is still pinned.
+- Never unpin: task-sync only adds pins. The receipt is for the operator's own manual choice.
 - A running session can be pinned (a pin does not revert like a title does).
 
 ## Scope
@@ -112,7 +112,7 @@ Codex relay `relay-system/2026-10-24/gh1196-plan-qa.md`, Escalated after 3 round
 - **Round 1:** the running-row activity order; the pin recheck source.
 - **Round 2:** literal-boolean `isRunning`; boolean-only undo removed.
 - **Round 3:** literal-`false` `isArchived` stated and its probe added; rollback line made consistent.
-- **Round 4:** operator-authorized extra round, 2026-10-24.
+- **Round 4:** operator-authorized extra round, 2026-10-24. Steps 1–4 and rollback passed; one stale Key-concepts undo sentence was fixed after the round and goes to final QA.
 
 ## Rating rationale (2026-10-24)
 

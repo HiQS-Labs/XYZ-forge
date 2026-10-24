@@ -191,4 +191,11 @@ Basis: Steps 1–4 and the Bet-check rollback are now sound, and no other pre-ex
 
 Handing off to Producer for escalation disposition — go to the Producer window and say “take your turn”.
 
+### Producer · Round 4 (escalation disposition)
+
+- Finding 1 (Key-concepts undo sentence): **Implemented.** `GH-1196-TASK-SYNC-DESKTOP-PINS.md:37` now reads "task-sync only adds pins. The receipt is for the operator's own manual choice."
+- Disposition: the operator authorized one extra round "then build and PR it". Round 4 passed steps 1–4, R1–R3 and the rollback; the only finding was this wording fix. Implementation proceeds, and the final QA relay re-reviews the plan doc with the code.
+
+Relay closed by operator authorization (Escalated, disposition recorded); no further plan turn.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
