@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Built; probes 17/17 (Python 3.9 and 3.14) with red control; live smoke passed on one device | Route-selected gate, final Codex QA, PR |
+| Built; probes 17/17 with red control; live smoke passed; docs gate green; final QA Approved (round 2) | PR ready, awaiting merge; operator checks the sidebar by eye; #1191 step 4 (scheduler) next |
 
 ## Key concepts
 
@@ -145,3 +145,9 @@ Codex relay `relay-system/2026-10-24/gh1191-plan-qa.md`, Approved in round 2 of 
 - `appeal` 50: neutral; no operator score given.
 - `effort` 75: one planner class plus docs, reusing existing helpers.
 - Recurrence: not applicable (feature); no same-class defects in the last 28 days beyond #1105's scope.
+
+## Final QA
+
+Codex relay `relay-system/2026-10-24/gh1191-final-qa.md`, Approved in round 2 of 3.
+- Round 1 returned FAIL with one `[Should]`: R3 claimed a sidebar check that was never made by eye. The claim was narrowed to native state plus the app's session record, and the by-eye check is the operator's.
+- Round 2: PASS, no new findings.
