@@ -153,4 +153,12 @@ Basis: The observed terminal-target ownership loss is prevented before any write
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) proceeds to the disposable-clone gate and ready-PR closeout.
 
+
+### Attestation · relay-drive — 2026-10-24T15:12:16Z
+task: RELAY-gh1020-final-qa-080535
+reviewer: codex
+status: Approved
+reviewed-head: 1fd5d8b63304164837846d25aea03169bb5ac653
+added-range: 10832+9588
+added-sha256: d2900ee41a37e730d60d8c459fbf1f4a3bf5c4bd09a82a1aca1895c62ff8563f
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
