@@ -453,4 +453,12 @@ Basis: The final two procedure clarifications make the native operational path s
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-24T18:44:43Z
+task: RELAY-gh1191-final-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: 02b948413b5128efe5fb701e60e1f5ec33850821
+added-range: 31989+2863
+added-sha256: c4fefac964f5598c7544d5b155c0b287dde0aab2456034a61b1d846bf81ebc6d
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
