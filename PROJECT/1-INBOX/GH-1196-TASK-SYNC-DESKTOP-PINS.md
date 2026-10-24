@@ -44,7 +44,7 @@ Operator, 2026-10-24: "Are you able to also move active tasks to the pinned area
 | # | Requirement | Acceptance check |
 |---|---|---|
 | R1 | Planner proposes pins for recently active, unpinned, non-archived, non-self sessions; `--no-pin` disables | Probes |
-| R2 | Native pin procedure in `SKILL.md` (recheck, `set_pinned`, decline = skip, receipt, guarded undo) | Followed verbatim in the live smoke |
+| R2 | Native pin procedure in `SKILL.md` (fresh recheck, `set_pinned`, decline = skip, receipt; no automatic unpin) | Followed verbatim in the live smoke |
 | R3 | Title behaviour unchanged | `TESTS-RESULTS/2026-10-24+GH-1191/probes.py` 17/17 on the new code |
 
 ## Recon (base `a6fd65af`)
@@ -60,7 +60,7 @@ Operator, 2026-10-24: "Are you able to also move active tasks to the pinned area
 ## Plan
 
 1. **`ClaudeDesktopAdapter.sweep`** (`adapters/claude.py`). Restructure the loop:
-   - Skip archived and self rows.
+   - Skip archived and self rows, and any row whose `isRunning` is missing or not a literal boolean (today it is skipped too; it stays skipped for both pins and titles).
    - Read activity for every remaining row. A running row with missing, unparseable or future activity is skipped exactly as today (no pin, no error). An idle row with bad activity still aborts, as today.
    - If `pin` and the row's `pinned` is not `True` and activity is within `pin_hours`, append `{task_id, title, activity_at}` to `pinned`.
    - Running or out-of-window rows are then skipped for titles exactly as before.
@@ -71,7 +71,7 @@ Operator, 2026-10-24: "Are you able to also move active tasks to the pinned area
    - Recheck with a fresh `list_sessions` call (`get_session` doesn't return `pinned`): the row must still exist, not be archived, not be self, have activity within `--pin-hours`, and have `pinned` missing or `false`. `pinned: true` (a concurrent manual pin) is a skip with no native call.
    - `set_pinned(<id>, true)`; a decline is a skip.
    - Append `{"at", "session_id", "op": "pin"}` to the same receipt.
-   - Undo `set_pinned(<id>, false)` only while the session is still pinned.
+   - No automatic undo: `pinned` is a bare boolean with no ownership, so an unpin could remove a pin the operator re-added by hand. The receipt line exists for operator-directed recovery only.
    - Never unpin otherwise.
 3. **Probes** `TESTS-RESULTS/2026-10-24+GH-1196/probes.py`:
    - an unpinned active row → pin proposal;
@@ -80,10 +80,11 @@ Operator, 2026-10-24: "Are you able to also move active tasks to the pinned area
    - archived or self → neither;
    - outside `--pin-hours` → no pin;
    - `--no-pin` → no pins;
-   - a running row with missing activity → `skipped: 1`, no error, no pin, no rename (today's behaviour kept).
+   - a running row with missing activity → `skipped: 1`, no error, no pin, no rename (today's behaviour kept);
+   - a row with `isRunning` absent → `skipped: 1`, no error, no pin, no rename, while the same row with `isRunning: false` is eligible.
 
    Plus the #1191 battery re-run. Red control: drop the `pinned is not True` check and watch the already-pinned probe fail.
-4. **Live smoke:** pin one idle session through the procedure, confirm `pinned: true` via `list_sessions`, rerun (no proposal), undo via the receipt rule.
+4. **Live smoke:** pin one idle session through the procedure, confirm `pinned: true` via `list_sessions`, rerun (no proposal). The operator decides whether to keep the pin; there's no automatic undo.
 5. **Gate:** `utils/ci-route.sh pull_request` → run what it selects once; CHANGELOG entry.
 
 ## Bet check

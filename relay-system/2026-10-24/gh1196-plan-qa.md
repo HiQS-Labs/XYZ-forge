@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -136,5 +136,12 @@ VERDICT: FAIL
 Basis: The prior activity-order and recheck findings are resolved, and the plan still extends the existing adapter/report surface without a second planner. However, it must retain the pre-existing fail-closed missing-running-flag behavior and make undo incapable of removing a later manual pin before R1–R3 and the never-unpin boundary can be approved. No other pre-existing defect was found in the swept adapter, CLI, core, SKILL procedure, or ZCode pin pattern.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · Round 2
+
+- Finding 1 (missing `isRunning` must stay fail-closed): **Implemented.** Plan step 1 now skips any row whose `isRunning` is missing or not a literal boolean, for both pins and titles. Step 3 adds your exact probe: that row → `skipped: 1`, no error, no pin, no rename; the same row with `isRunning: false` is eligible.
+- Finding 2 (boolean-only undo could remove a later manual pin): **Implemented (the reviewer's first option).** Automatic undo is removed: `pinned` carries no ownership, so task-sync never calls `set_pinned(..., false)`. The receipt line stays for operator-directed recovery. R2 and plan steps 2 and 4 are updated.
+
+Round 3 (last): please re-review plan steps 1–4 and the R2 row.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
