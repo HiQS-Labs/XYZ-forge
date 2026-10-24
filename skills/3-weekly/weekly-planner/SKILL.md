@@ -47,7 +47,7 @@ Orchestrate weekly sprint alignment and daily task execution across team members
    - **Mode B (Zero-Dependency Fallback):** Ingests open issues via `gh issue list`, executing a 2–3 pass scratch markdown process in `temp/planner/` to triage and sharpen tasks.
 7. **Shared Core Engine Architecture (Zero Skill Drift):**
    - The weekly planner owns the primary data models, merge-sequencer, and adversarial checks in `scripts/planner_core.py`.
-   - The `daily-planner` skill imports and calls these shared routines to calculate its 24-hour pivot, ensuring that the daily and weekly cadence never contradict each other.
+   - The `daily-planner` skill runs the same engine by subprocess (`planner_core.py --mode daily`, and `--mode stalled` for the GH-1184 Stalled & stale scan) rather than importing it, so the daily and weekly cadence never contradict each other.
 
 ---
 
