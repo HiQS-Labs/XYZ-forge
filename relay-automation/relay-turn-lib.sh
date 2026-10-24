@@ -996,8 +996,13 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   local agent="$1" f="$2" task="$3" csv="$4" peer="${5:-}"
   # Name the peer explicitly when known — a live Gemini turn (2026-06-15) released the token to the
   # literal role "Producer" because "the other agent" was unnamed. RELAY_PEER closes that ambiguity.
-  local handoff="release --to the other agent (the role named by NEXT in the file)"
-  [[ -n "$peer" ]] && handoff="release --to ${peer}"
+  # GH-1020: name the TERMINAL verb too. On approval the thread sets `NEXT: done`, so "release --to the
+  # role named by NEXT" was read as `tick release --to done` (Agy and Codex, #763/#1020): the token went
+  # to nobody, the shim's deterministic `tick done` (rtl_enforce step 4) then failed ownership, and
+  # relay-drive exited 4 close-mismatch. `done` is a verb, never a --to target; tick refuses it too.
+  local terminal="if you set STATUS: Approved or Closed, close the token with: done ${task} --agent ${agent} (never release --to done — done is a verb, not an agent); otherwise "
+  local handoff="${terminal}release --to the other agent (the role named by NEXT in the file)"
+  [[ -n "$peer" ]] && handoff="${terminal}release --to ${peer}"
   # Emit repo-root-relative EDIT paths (relay file, artifact) so they resolve against the turn's CWD —
   # which under worktree isolation IS the throwaway worktree. An ABSOLUTE edit path would invite the
   # model to write straight into RTL_ROOT, bypassing the worktree (Codex review 2026-06-20). RTL_ROOT
