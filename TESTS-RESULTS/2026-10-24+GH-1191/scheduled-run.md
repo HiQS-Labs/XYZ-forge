@@ -8,7 +8,7 @@ Scheduled task `task-sync-desktop-titles` (hourly at :22) was created from a Des
 | Duration | ~40 s, status `succeeded` |
 | Run's report | `task-sync desktop: proposed=2 renamed=1 skipped=0 declined=1` |
 | App-generated title | Renamed (stamp added; one undo line appended to `~/.cache/task-sync/claude-desktop-renames.jsonl`) |
-| Operator-set title | **Declined** by `set_session_title`: it needs approval and nobody could give it. The run reported this as a skip, not an error |
+| Operator-set title | **Declined** by `set_session_title`: it needs approval and nobody could give it. The run continued (not an error) and reported it under `declined=1`, separate from `skipped=0` |
 | Script call | The `task_sync.py` Bash call did not block the run |
 | Run session record | Carries `scheduledTaskId: task-sync-desktop-titles` |
 

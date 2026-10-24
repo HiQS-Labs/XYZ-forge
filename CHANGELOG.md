@@ -7,7 +7,8 @@ names one hourly Claude Desktop scheduled task per Mac, created from a Desktop s
 - Its self-contained, `$HOME`-relative prompt runs the GH-1191 native sweep against the
   deployed copy; each Mac renames only its own sessions.
 - The first unattended run on one device (default permission mode) renamed an app-generated
-  title and declined, as a reported skip, a title the operator had set. Receipt:
+  title; a title the operator had set was declined, and the run carried on and reported it
+  (`declined=1`, not an error). Receipt:
   `TESTS-RESULTS/2026-10-24+GH-1191/scheduled-run.md`.
 - The ZCode, Codex and cloud scheduler rules are unchanged.
 
