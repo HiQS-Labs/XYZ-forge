@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -106,5 +106,12 @@ VERDICT: FAIL
 Basis: The subsystem fit, activity basis, empty-inventory decision, coverage, and rating are sound, but the plan must close the two native-procedure/smoke-evidence gaps above before it is executable as its R2/R3 acceptance claims require.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · Round 1
+
+- Finding 1 (pre-write recheck omits archived/exclusion): **Implemented.** Plan step 3.4 now requires every candidate predicate to still hold at `get_session`: same title, not archived, not running, not the sweeping session, same `lastActivityAt`; any change or missing field is a skip and a replan next tick (`PROJECT/1-INBOX/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md`, plan step 3).
+- Finding 2 (`titleSource` not observable via `get_session`): **Implemented.** Plan step 5 now reads `titleSource` read-only from the throwaway's own Desktop record (the Recon path) before and after the rename and captures both in the receipt; `lastActivityAt` stays a `get_session` read.
+
+Round 2: please re-review the two edited steps; nothing else changed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

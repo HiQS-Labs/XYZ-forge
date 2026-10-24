@@ -79,7 +79,7 @@ Untraced: whether `set_session_title` changes `lastActivityAt` or flips `titleSo
    1. `list_sessions(limit=100)` and require success.
    2. Write the snapshot to workspace `temp/`.
    3. Run the planner with `--exclude-thread <own id>` and require exit 0 and a null error.
-   4. Before each target, `get_session` and require the same title, not running, and the same `lastActivityAt`.
+   4. Before each target, `get_session` and require every candidate predicate to still hold: same title, not archived, not running, not the sweeping session, and the same `lastActivityAt`. Any change or missing field is a skip for this tick and a replan on the next.
    5. `set_session_title`; a decline (user-set title, unattended) is a skip.
    6. Re-read with `get_session` to confirm.
    7. Append `{at, session_id, old, new}` to the private undo receipt `~/.cache/task-sync/claude-desktop-renames.jsonl`.
@@ -98,7 +98,7 @@ Untraced: whether `set_session_title` changes `lastActivityAt` or flips `titleSo
    Red control: drop the `isRunning` skip in a copy and watch the running-row probe fail. -> expect all PASS, with the red control witnessed FAIL.
 5. **Live smoke (R3) on this device:** start one throwaway Desktop session and let it go idle, then follow the SKILL procedure.
    - Main path: rename it and confirm the title through `get_session` and the sidebar.
-   - Adjacent path: rerun, expecting no proposal, and check `lastActivityAt` and `titleSource` after the rename. Then undo from the receipt and archive the throwaway.
+   - Adjacent path: rerun, expecting no proposal, and check `lastActivityAt` (from `get_session`) after the rename. `titleSource` isn't returned by any native tool, so read it read-only from the throwaway's own Desktop record (`claude-code-sessions/<account>/<org>/local_<id>.json`, the Recon path) before and after the rename, and capture both values in the receipt. Then undo from the receipt and archive the throwaway.
 
    -> receipt and `provenance.jsonl` under `TESTS-RESULTS/2026-10-24+GH-1191/`.
 6. **Gate:** route via `utils/ci-route.sh` on the final diff and run what it selects once; add a CHANGELOG entry.
