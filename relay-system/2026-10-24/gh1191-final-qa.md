@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -358,5 +358,19 @@ index dbaac758..e666094d 100644
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+- [Pass] R1 is a single read-only `ClaudeDesktopAdapter`: snapshot freshness and row identity/title validation are fail-closed at `skills/3-weekly/task-sync/scripts/adapters/claude.py:376-400`; the sweep skips archived, running, and own rows before activity validation at `:415-426`, accepts a valid empty list, and retains full title wording through `clean_base(..., max_length=None)` at `:428-433`. No pre-existing defect found in the fully swept adapter file.
+- [Pass] The CLI change is registration-only: the new name is in `ADAPTERS`/`PLAN_ONLY` (`skills/3-weekly/task-sync/scripts/task_sync.py:37-39`), maps to the existing Claude module and constructor (`:44-52`), and adds only the Desktop snapshot flag/table entry (`:186-196`, `:227-239`). The existing local Claude and Codex constructor branches remain at `:51-54`.
+- [Pass] The Desktop procedure is ordered and includes the round-1 recheck predicates, native write, confirmation, undo record, and quiet/failure handling (`skills/3-weekly/task-sync/SKILL.md:219-239`); its correction that `--ide claude` does not update the Desktop sidebar is explicit at `:144-149`.
+- [Pass] The fixture evidence is substantive: `probes.log:1-17` records 17/17 passing assertions across candidate, refusal, empty-inventory, compatibility, and help paths; the red control becomes 15/17 and exposes both the running and missing-flag regressions (`TESTS-RESULTS/2026-10-24+GH-1191/red-control.log:1-3`). Those failures correspond to the live guard at `adapters/claude.py:417-420`, so the guard is load-bearing.
+- [Should] R3's approved smoke requires confirmation through `get_session` **and the sidebar** (`PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:99-101`), but the receipt says the sidebar was not checked by eye (`TESTS-RESULTS/2026-10-24+GH-1191/live-smoke.md:21-23`). Perform and record that visual sidebar check on the already-restamped throwaway session (or truthfully narrow the approval claim); the current `get_session`/`list_sessions` evidence is strong native-state evidence but does not meet that stated visual acceptance check.
+
+VERDICT: FAIL
+
+Basis: The implementation, procedure, probes, red control, truthful untraced observations, and persisted `rated 60/25/50/75` rationale (`PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md:126-146`) pass review. Approval is withheld solely until R3's explicitly required visual sidebar confirmation is evidenced.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
