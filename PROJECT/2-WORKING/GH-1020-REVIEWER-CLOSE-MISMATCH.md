@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Fix committed (`7f6f0995`, `7cbbeb5e`). Verified in the disposable clone — `TESTS-RESULTS/2026-10-24+GH-1020/SUMMARY.md`: check 1 forced replay 25/25 with red control; check 2 real Codex approval exit 0, model ran `tick done`, attested; check 3 real Codex non-approval exit 5, released to peer; 7 focused suites green. | Final Codex QA (`relay-system/2026-10-24/gh1020-final-qa.md`), tier-3 full gate once in `-gate` on the approved commit, ready PR against development. |
+| Final Codex QA **PASS** (`relay-system/2026-10-24/gh1020-final-qa.md`, attested on `1fd5d8b6`; one text nit on the rating windows, applied here). Code: `7f6f0995` + `7cbbeb5e`. Receipts: `TESTS-RESULTS/2026-10-24+GH-1020/`. | Tier-3 `ci-local.sh` once in the disposable `-gate` clone on this commit, then push through the pre-push gate and open the ready PR against development (do not merge). |
 
 ## Observed (ground truth, not the issue's guess)
 
@@ -123,10 +123,10 @@ Rollback: revert the two hunks; no state or schema involved.
 `rated 85/82/50/80` — sev 82: an approving review is refused and the automated relay/marathon halts
 until an operator repairs the token by hand; no data lost, recovery bounded (matches #763's 82).
 pri 85: factory run 4 (#1081 successor) is blocked on it. Recurrence of *this* mode (approved review,
-token released to `done`, close-mismatch), 2026-10-10..24 vs 2026-09-26..10-09: 5 in the recent window
+token released to `done`, close-mismatch): 5 in the last 14 days (2026-10-10..24)
 (#1020 rows 1–3, Agy, 2026-10-10; #1020 second comment, Codex, 2026-10-10; #1081 Prerequisites,
 2026-10-14) — #1020 row 4 (header left Open) and row 5 (retry fallout) are a different mode and are not
-counted; 3 just before it (2026-09-23 #763; 2026-09-24 `relay-system/2026-09-24/gh796-plan-qa.md:99`;
+counted; 3 earlier incidents across 2026-09-23..28 (#763; 2026-09-24 `relay-system/2026-09-24/gh796-plan-qa.md:99`;
 2026-09-28 `relay-system/2026-09-28/gh879-n5-final-qa-r2.md:63`, all Agy, each recovered with a fresh
 token); plus one on-demand reproduction today with Codex. Same class on both observed reviewer seats
 (Agy, Codex), rising.
