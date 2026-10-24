@@ -58,9 +58,10 @@ model receives both instructions and merges them into `release --to done`.
 Why the shim cannot repair it after the fact: once the model has run `release --to done`, the token is
 `open` with `handoff_to = "done"`. `src/claim.js` refuses a claim on an open token whose `handoff_to`
 names a different agent (`reserved for another agent`; `--force` only bypasses path overlap), and
-`src/scope.js` `done()`/`release()` require a live claim by the caller. Nobody can ever own that token
-again; the only recovery is a fresh token id — exactly the manual recovery in #1020. So the fix must
-stop the bad write, not clean up after it.
+`src/scope.js` `done()`/`release()` require a live claim by the caller. The configured reviewer (or
+any other real agent) cannot reclaim it; only an identity literally named `done` could, and no such
+agent exists. The supported recovery is a fresh token id — exactly the manual recovery in #1020. So
+the fix must stop the bad write, not clean up after it.
 
 1. **Prompt (`rtl_turn_prompt`, `relay-turn-lib.sh:999-1000`):** the `handoff` text names the
    terminal verb: *if you set `STATUS: Approved` or `Closed`, close the token with `done <task> --agent
@@ -78,32 +79,50 @@ Row 4 of the issue (header left `Open`, token `done`) was not reproduced here an
 scope; it stays tracked in #1020 as proposal 2. Proposal 3 (marathon `--retry` replay) is a non-goal.
 
 Alternatives rejected: (a) prompt-only — leaves the acceptance line untrue for a model that ignores the
-prompt (two were observed on 2026-10-10); (b) shim reclaim-and-done — impossible, see above; (c)
+prompt (two were observed on 2026-10-10); (b) shim reclaim-and-done — refused by `claim` for the
+reviewer, see above, and a repair path that re-owns a released token would be a second writer; (c)
 loosening `close-mismatch` in `relay_drive.py` — the agreement rule is the safety property (non-goal).
 Rollback: revert the two hunks; no state or schema involved.
 
 ## Verification (GH-831: no new tests)
 
-- Focused suites during iteration: `test/agy-turn.sh`, `test/gh432-failed-turn-persist.sh`,
-  `test/relay-review-once.sh`, `test/gh505-relay-attest.sh`, `test/gh681-reviewer-probe-rules.sh` (pins
-  the role_note sentence), `test/gh554-tick-unknown-flags.sh`, `test/gh67-*`/tick lifecycle suites.
+- Focused suites during iteration: `test/relay-turn-handoff.sh` (the rtl_enforce step-4 suite),
+  `test/agy-turn.sh`, `test/gh432-failed-turn-persist.sh`, `test/relay-review-once.sh`,
+  `test/gh505-relay-attest.sh`, `test/gh681-reviewer-probe-rules.sh` (pins the role_note sentence),
+  `test/gh554-tick-unknown-flags.sh`.
 - Final gate: `utils/ci-route.sh` classifies `relay-automation/relay-turn-lib.sh` and `src/scope.js` as
   kernel/gate surface → `route=full`, `tier=3`; run `bash ci-local.sh` exactly once on the final approved
   commit in a disposable full clone (`<folder>-gate`), identity checked before and after.
-- Manual check (recorded under `TESTS-RESULTS/2026-10-24+GH-1020/`): the same real Codex
-  `--review-once` approval on the same trivial artifact, before (exit 4, `handoff-to: done`) and after
-  the fix (exit 0, token `done`, attested). Red control = the before run above.
-- Adjacent path: a non-approval review (`STATUS: Open`, `NEXT: Producer`) still hands off to the peer
-  and exits 5.
+- Manual checks, all recorded under `TESTS-RESULTS/2026-10-24+GH-1020/` with commands, non-empty
+  outputs, revision and provenance (GH-831: no suite, registry entry or gate added):
+  1. **Guard, forced (edit 2 — falsifiable on its own):** in the disposable clone, with the reviewer
+     owning a token, replay the retained command verbatim (`before-fix-codex-tick-commands.txt:3`):
+     `tick release <task> --agent codex --to done`. Required: non-zero exit, a diagnostic naming `done`
+     and the right verb, the `.tick/events` count unchanged, `tick info` still `claimed` by codex. Same
+     for `--to Approved` and `--to Closed`. Controls: `--to claude-a` (peer) and a bare `release` with no
+     `--to` still succeed and emit one `task.released` each. Then the shim's own closure path:
+     `rtl_enforce` step 4 on a header `STATUS: Approved` runs `tick done` and the driver attests / exits 0.
+     **Red control:** the same forced replay with the guard hunk reverted succeeds, prints `released:`,
+     ownership is lost, and the shim's `tick done` fails — the before-fix state.
+  2. **Prompt (edit 1), real model:** the same real Codex `--review-once` approval on the same trivial
+     artifact as the before run (exit 4, `handoff-to: done` — the retained red control), now expected
+     exit 0, token `done`, attested; the transcript must show no `release --to done`.
+  3. **Adjacent path:** a non-approval review (`STATUS: Open`, `NEXT: Producer`) still hands off to the
+     peer and exits 5.
+  A passing run of check 2 alone does not discharge check 1: once the prompt is fixed the model may
+  simply run `tick done`, which says nothing about the guard.
 
 ## Rating (2026-10-24)
 
 `rated 85/82/50/80` — sev 82: an approving review is refused and the automated relay/marathon halts
 until an operator repairs the token by hand; no data lost, recovery bounded (matches #763's 82).
-pri 85: factory run 4 (#1081 successor) is blocked on it. Recurrence, 2026-10-10..24 vs 2026-09-26..10-09:
-6 incidents in the recent window (2026-10-10 ×5 across Agy and Codex per #1020, 2026-10-14 per #1081),
-3 just before it (2026-09-23 #763; 2026-09-24 `relay-system/2026-09-24/gh796-plan-qa.md:99`;
-2026-09-28 `relay-system/2026-09-28/gh879-n5-final-qa-r2.md:65`, both Agy, both recovered with a fresh
-token), plus one on-demand reproduction today with Codex — same class, every reviewer model, rising.
+pri 85: factory run 4 (#1081 successor) is blocked on it. Recurrence of *this* mode (approved review,
+token released to `done`, close-mismatch), 2026-10-10..24 vs 2026-09-26..10-09: 5 in the recent window
+(#1020 rows 1–3, Agy, 2026-10-10; #1020 second comment, Codex, 2026-10-10; #1081 Prerequisites,
+2026-10-14) — #1020 row 4 (header left Open) and row 5 (retry fallout) are a different mode and are not
+counted; 3 just before it (2026-09-23 #763; 2026-09-24 `relay-system/2026-09-24/gh796-plan-qa.md:99`;
+2026-09-28 `relay-system/2026-09-28/gh879-n5-final-qa-r2.md:63`, all Agy, each recovered with a fresh
+token); plus one on-demand reproduction today with Codex. Same class on both observed reviewer seats
+(Agy, Codex), rising.
 appeal 50 neutral. effort 80: two small edits (one prompt string, one guard), no schema, no new state;
 the cost is the tier-3 full gate the kernel surface requires.

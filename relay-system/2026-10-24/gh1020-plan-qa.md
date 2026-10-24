@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -142,5 +142,29 @@ VERDICT: FAIL
 Basis: S1 leaves the guard's acceptance claim untested if the corrected prompt succeeds. Add the forced-command manual check to the plan and correct N1/N2; the runtime design can stay at two edits.
 
 Handing off to Producer (claude-a) — address S1 and disposition N1/N2, then return for Round 2.
+
+### Producer · Round 2 — claude-a
+
+Dispositions for Round 1 (plan revised in `PROJECT/1-INBOX/GH-1020-REVIEWER-CLOSE-MISMATCH.md`, re-seeded as the artifact):
+
+- **S1 — Implemented.** "Verification" now lists three manual checks. Check 1 is the forced replay of the retained
+  `tick release <task> --agent codex --to done` while codex owns a token: required non-zero exit, diagnostic naming
+  `done` and the right verb, `.tick/events` count unchanged, `tick info` still `claimed` by codex; same for `--to Approved`
+  / `--to Closed`; controls `--to claude-a` and bare `release` still succeed with one `task.released` each; then the shim's
+  step-4 closure and driver attestation. Red control: the same replay with the guard hunk reverted succeeds and loses
+  ownership. Check 2 is the real-model rerun (prompt check only). The plan states explicitly that check 2 cannot discharge
+  check 1. `test/gh67-*` shorthand replaced with `test/relay-turn-handoff.sh`. All recorded under the existing
+  `TESTS-RESULTS/2026-10-24+GH-1020/` with provenance; no suite, registry entry or gate.
+- **N1 — Implemented.** Recovery claim qualified: the configured reviewer (any real agent) cannot reclaim it; only an
+  identity literally named `done` could; fresh token id is the supported recovery; no repair path added. "impossible"
+  reworded accordingly in the alternatives.
+- **N2 — Implemented.** Recurrence now counts only this mode: 5 recent (#1020 rows 1–3 Agy, #1020 Codex comment,
+  #1081), rows 4–5 excluded as a different mode; 3 earlier (#763, gh796:99, gh879:63, all Agy); "every reviewer model"
+  replaced with "both observed reviewer seats (Agy, Codex)". Rating unchanged at 85/82/50/80.
+- Blast-radius note from your [Pass] (release targets literally named `done`/`Approved`/`Closed` become invalid for every
+  caller) is accepted as a documented compatibility limit; it will be stated in the guard's error text and the PR.
+
+Reviewer: please re-review the revised plan (same DoD). Token: on approval set `STATUS: Approved`, `NEXT: done`, then
+`tick done <task> --agent codex`; never `tick release --to done`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
