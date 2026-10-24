@@ -260,6 +260,19 @@ before enabling the replacement. Never introduce launchd, a daemon or a second
 writer. A Codex-only installation runs only the native sweep; adding Codex does
 not authorize enabling absent ZCode/Agy stores. Keep it quiet while unchanged.
 
+Claude Desktop sidebar titles (GH-1191) have one writer **per device**: one hourly Claude
+Desktop scheduled task on that Mac, created from a Desktop Code session (the native session
+tools exist only there). Each Mac renames only its own sessions, so the devices never compete
+and a closed laptop simply skips its runs (missed runs fire on the next app launch). Inspect
+the Mac's existing scheduled tasks first and repoint a task-sync one instead of adding a second.
+Use an off-minute hourly schedule; each run opens a short session, so 15 minutes would flood
+the sidebar. The task prompt must be self-contained and `$HOME`-relative so the same text works
+on every Mac: run the "Claude Desktop (GH-1191)" native sweep above from
+`~/git-pulse-sync/Deployed Skills/task-sync`, titles only, ending with one line
+`task-sync desktop: proposed=N renamed=M skipped=K declined=D`. Runs start in the device's
+default permission mode, not the creating session's mode. Observed on the first unattended
+run: app-generated titles are renamed, and a title the operator set is declined and reported.
+
 Cloud Claude Code titles have exactly one writer: one hourly Claude Code scheduled
 task (cloud tasks run at most hourly) that selects the XYZ-forge repository and runs
 the native cloud sweep procedure above with
