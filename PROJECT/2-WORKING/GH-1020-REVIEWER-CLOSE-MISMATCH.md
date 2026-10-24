@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved by Codex (round 2, `relay-system/2026-10-24/gh1020-plan-qa.md`, attested on `781489ad`); task admitted (`--accepted-start`). | Implement the two edits, run focused suites + the three manual checks in the disposable clone, tier-3 full gate once, final Codex QA, ready PR. |
+| Fix committed (`7f6f0995` + `7cbbeb5e`: prompt sentence scoped to the reviewer after `test/gh505` case G caught the builder-prompt copy). Focused suites green in the disposable clone: relay-turn-handoff 2/2, agy-turn 65/65, gh432 12/12, relay-review-once 9/9, gh505 all, gh681 all, gh554 76/76. Manual check 1 (forced replay + red control) 25/25 — `TESTS-RESULTS/2026-10-24+GH-1020/check1-forced-replay/`. | Checks 2 and 3 (real Codex approval / non-approval on the fixed prompt), final Codex QA, tier-3 full gate once in `-gate`, ready PR. |
 
 ## Observed (ground truth, not the issue's guess)
 
