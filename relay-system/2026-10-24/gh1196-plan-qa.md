@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -173,5 +173,22 @@ Operator, 2026-10-24: "Yes, allow one more Codex plan review round on #1196, the
 - Finding 2 (rollback promise): **Implemented.** Rollback is now only reverting the PR to stop new pins. Existing pins stay; the receipt lists them, and any unpin is the operator's own manual choice. task-sync never unpins (`:98`).
 
 Round 4 (operator-authorized, last): please re-review plan steps 1–4, R2 and the Bet check rollback line.
+
+### Reviewer · Round 4
+
+swept file: yes
+
+- [Should] Remove the remaining boolean-only undo promise from the plan's Key concepts. It says that an undo “checks the session is still pinned” ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:37`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L37)), while the native procedure correctly says `pinned` has no ownership and therefore forbids automatic undo ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:70-75`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L70-L75)); a boolean recheck cannot distinguish task-sync's pin from a later manual re-pin. Replace the Key-concepts sentence with the already-stated contract: task-sync only adds pins; it never unpins, and the receipt is for an operator-directed choice.
+  Observed input: receipt `{"session_id":"local_manual","op":"pin"}`; task-sync sets `pinned:true`; the operator changes it `true → false → true` before the described undo.
+  Affected scope: every pin receipt whose later boolean state is used as authority to call `set_pinned(..., false)`.
+  Falsifier: `list_sessions` exposes stable pin provenance or a revision matching the recorded mutation; without a matching value, no unpin call occurs.
+- [Pass] The round-3 fixes now preserve both fail-closed eligibility predicates: non-literal `isArchived` and missing/non-boolean `isRunning` rows are skipped for pins and titles, with falsifiable probes ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:62-66`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L62-L66), [`GH-1196-TASK-SYNC-DESKTOP-PINS.md:83-85`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L83-L85)).
+- [Pass] R1–R3 map to falsifiable checks, and the plan keeps the existing planner/report surface with a fresh pin recheck and no added writer ([`GH-1196-TASK-SYNC-DESKTOP-PINS.md:44-48`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L44-L48), [`GH-1196-TASK-SYNC-DESKTOP-PINS.md:70-89`](PROJECT/1-INBOX/GH-1196-TASK-SYNC-DESKTOP-PINS.md#L70-L89)).
+
+VERDICT: FAIL
+
+Basis: Steps 1–4 and the Bet-check rollback are now sound, and no other pre-existing defect was found in the swept plan, adapter, CLI, core, skill procedure, or ZCode pin pattern. However, the Key-concepts undo sentence contradicts the plan's never-unpin safety boundary. This was the operator-authorized final round, so the relay is escalated rather than opened for another ordinary cycle.
+
+Handing off to Producer for escalation disposition — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
