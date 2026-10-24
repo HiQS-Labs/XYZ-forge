@@ -113,4 +113,12 @@ swept file: yes
 VERDICT: PASS
 Basis: The plan addresses the published-retirement root boundary at every source site while preserving the normal sweep and the existing fail-closed checks. The only correction is wording about repeated inspection.
 
+
+### Attestation · relay-drive — 2026-10-24T18:28:56Z
+task: RELAY-gh1193-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: d5ca0238846a49e746cae57811d2e7ef69becbdb
+added-range: 8371+2175
+added-sha256: 6c0e49c7799af56a2674d9cee4a06d91c8d82ba00667519c6377fa2f7d803c72
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
