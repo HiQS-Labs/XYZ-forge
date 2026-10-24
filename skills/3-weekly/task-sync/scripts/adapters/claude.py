@@ -17,6 +17,9 @@ unreadable registry fails closed; a missing registry means nothing runs.
 
 ``ClaudeCloudAdapter`` is a read-only planner over a native snapshot,
 mirroring the Codex adapter: ``set_session_title`` owns all mutation.
+``ClaudeDesktopAdapter`` (GH-1191) is the same kind of planner over Claude
+Desktop's ``list_sessions`` rows; Desktop owns its sidebar title, so the
+transcript append above does not reach it.
 """
 from __future__ import annotations
 
@@ -351,4 +354,81 @@ class ClaudeCloudAdapter:
             if desired != title:
                 report["renamed"].append({"task_id": session_id, "old": title, "new": desired,
                                           "activity_at": at})
+        return report
+
+
+class ClaudeDesktopAdapter:
+    """Read-only planner for Claude Desktop sidebar sessions (GH-1191).
+
+    Desktop keeps its own sidebar title, so a transcript append (``ClaudeLocalAdapter``)
+    does not reach it; ``set_session_title`` owns every write. The snapshot rows are
+    ``list_sessions`` rows, whose ``lastActivityAt`` is the session's own turn activity.
+    ``list_sessions`` excludes the caller, so an empty inventory is valid, not a refusal.
+    """
+
+    NAME = "claude-desktop"
+
+    def __init__(self, snapshot_path: str, exclude_thread: str, apply: bool = False):
+        self.snapshot_path = snapshot_path
+        self.exclude_thread = exclude_thread
+        self.apply = apply
+
+    def _snapshot(self):
+        if self.apply:
+            raise core.AdapterError("claude-desktop plans only; apply with set_session_title")
+        try:
+            data = json.loads(Path(self.snapshot_path).read_text(encoding="utf-8"))
+        except (OSError, ValueError, TypeError) as exc:
+            raise core.AdapterError("claude-desktop snapshot unreadable") from exc
+        if not isinstance(data, dict) or not self.exclude_thread:
+            raise core.AdapterError("claude-desktop requires a snapshot object and own-session exclusion")
+        captured = data.get("captured_at")
+        if not ClaudeCloudAdapter._seconds(captured) or not 0 <= time.time() - captured <= 300:
+            raise core.AdapterError("claude-desktop snapshot stale or invalid (freshness limit 300s)")
+        sessions = data.get("sessions")
+        if not isinstance(sessions, list):
+            raise core.AdapterError("claude-desktop snapshot requires a sessions list")
+        ids = set()
+        for row in sessions:
+            if not isinstance(row, dict) or not isinstance(row.get("sessionId"), str) or not row["sessionId"]:
+                raise core.AdapterError("claude-desktop inventory has invalid session ID")
+            if row["sessionId"] in ids:
+                raise core.AdapterError("claude-desktop inventory has duplicate session ID")
+            ids.add(row["sessionId"])
+            if not isinstance(row.get("title"), str):
+                raise core.AdapterError(f"claude-desktop session title invalid for {row['sessionId']}")
+        return captured, sessions
+
+    def doctor(self):
+        self._snapshot()
+        return {"ok": True, "reds": [], "note": "snapshot ready; native mutations require set_session_title"}
+
+    def sweep(self, *, hours=24, include_all=False, pin=True, pin_hours=24,
+              unpin_days=None, include_cron=False, group=None):
+        if unpin_days is not None or group:
+            raise core.AdapterError("claude-desktop: no pins or groups; --unpin-days/--group unsupported")
+        captured, sessions = self._snapshot()
+        report = core.new_ide_report()
+        report["scope"] = "list_sessions inventory; the sweeping session is excluded by the tool"
+        report["execution"] = "native-tools-required"
+        cutoff = captured - hours * 3600
+        for row in sessions:
+            session_id = row["sessionId"]
+            if row.get("isArchived") is not False or row.get("isRunning") is not False \
+                    or session_id == self.exclude_thread:
+                report["skipped"] += 1
+                continue
+            at = _iso_to_local(row.get("lastActivityAt"))
+            if at is None or at.timestamp() > captured + 60:
+                raise core.AdapterError(f"claude-desktop lastActivityAt missing/invalid for {session_id}")
+            if at.timestamp() < cutoff:
+                report["skipped"] += 1
+                continue
+            report["swept"] += 1
+            title = row["title"]
+            base = core.clean_base(title, max_length=None)
+            desired = f"{core.local_stamp(at)} {base}" if base else title
+            if desired != title:
+                report["renamed"].append({"task_id": session_id, "old": title, "new": desired,
+                                          "activity_at": row["lastActivityAt"]})
         return report
