@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -97,5 +97,20 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+- [Pass] The approved three-site change is present: `scan_clones.py:53-60,945-946` derives the resolved parent only for published inspection; `merge_cleanup.py:1492,1505,1525` supplies it to the up-front and teardown guards. The normal sweep remains `teardown_checkout(c, dry_run=dry_run)` at `merge_cleanup.py:1942`, and `is_safe_deletable_path` still reads module-global `DEFAULT_SAFE_ROOTS` when passed `None` (`scan_clones.py:74-77`).
+- [Pass] Published retirement still checks origin, absolute non-symlink checkout, protected primary/ancestor/CWD, Git checkout, root, distinct paths, and matching origin before inspection (`merge_cleanup.py:1488-1517`); fresh inspection and teardown remain in that order (`:1519-1525`). The existing inspection checks for publication/ref proof, active claims/handles, dirty state, failed queries, ignored worktree files, stashes, unpublished refs, dependents, and unsafe roots remain in `scan_clones.py:976-1121`. No pre-existing defect found in the touched paths.
+- [Pass] `primary.resolve().parent` and resolved existing `DEFAULT_NEVER_DELETE` members are compared on both sides (`scan_clones.py:57-60`), including symlinked primary/parent cases. The unchanged §16.1 `SAFE_ROOTS` list is at `WORKTREE-SAFETY.md:798-803`; the derived-root prose follows the code block at `:827-831`, and the skill describes the same boundary at `skills/2-daily/merge-cleanup/SKILL.md:568-569`.
+- [Pass] Receipts substantiate the acceptance checks: `red-control-base-45eb73a7.txt` exits 2 on SAFE_ROOTS; `smoke-main-f7d148ec.txt` reaches `ACTIVE_PROCESS` for the task clone and `SAFE_REMOVE_CLONE` dry run for its gate helper; `smoke-adjacent-f7d148ec.txt` shows NEVER_DELETE parents retain defaults and an outside checkout still exits 2 on SAFE_ROOTS. `focused-suites-f7d148ec.txt` records the parity and focused suites exiting 0 in a disposable full clone; `provenance.jsonl` records the commit and artifact hashes. Preview only; the full route gate remains the post-review harness step.
+- [Pass] The persisted 55/45/50/85 rating remains supported by the blocker and bounded fix described in `.relay-artifacts/GH-1193-RETIRE-SIBLING-ROOTS.md` under “Rating rationale”; appeal remains neutral. The scoped code and two doc edits introduce no duplicate writer, new test, or unrelated behavior (`scan_clones.py:53-60,945-946`; `merge_cleanup.py:873-893,1492-1525`).
+
+VERDICT: PASS
+Basis: All seven Definition of Done checks are supported by source and committed receipts; no blocker or should finding.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
