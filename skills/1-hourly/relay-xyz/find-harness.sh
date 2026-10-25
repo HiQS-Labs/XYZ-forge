@@ -372,6 +372,16 @@ if [ -f "$HARNESS/utils/py/deepseek-turn.py" ] && command -v python3 >/dev/null 
   fi
 fi
 
+# GH-1215: Kimi Code's installer puts `kimi` in ~/.kimi-code/bin and edits only ~/.zshrc, so ask the
+# shim's own rule (KIMI_BIN, PATH, installer path) rather than PATH alone — the GH-393 parity lesson.
+KIMI_PATH=""
+if [ -f "$HARNESS/utils/py/kimi-turn.py" ] && command -v python3 >/dev/null 2>&1; then
+  _kimi_out="$(python3 "$HARNESS/utils/py/kimi-turn.py" --print-bin 2>/dev/null || true)"
+  if [ -n "$_kimi_out" ] && [ -x "$_kimi_out" ]; then
+    KIMI_PATH="$_kimi_out"
+  fi
+fi
+
 HAS_DEEPSEEK=0
 if [ -n "$DEEPSEEK_PATH" ] && { [ -n "${OPENROUTER_API_KEY:-}" ] || [ -n "${DEEPSEEK_API_KEY:-}" ]; }; then
   HAS_DEEPSEEK=1
@@ -391,11 +401,13 @@ case "$ACTION" in
     [ -n "$AGY_PATH" ]   && printf 'export AGY_BIN=%q\n'    "$AGY_PATH"
     [ -n "$COMMANDCODE_PATH" ] && printf 'export COMMANDCODE_BIN=%q\n' "$COMMANDCODE_PATH"
     [ -n "$DEEPSEEK_PATH" ]    && printf 'export DEEPSEEK_BIN=%q\n'    "$DEEPSEEK_PATH"
+    [ -n "$KIMI_PATH" ]        && printf 'export KIMI_BIN=%q\n'        "$KIMI_PATH"
     printf 'export RELAY_HAS_TICK=%s\n'  "$(_flag "$TICK")"
     printf 'export RELAY_HAS_CODEX=%s\n' "$(_flag "$CODEX_PATH")"
     printf 'export RELAY_HAS_AGY=%s\n'   "$(_flag "$AGY_PATH")"
     printf 'export RELAY_HAS_COMMANDCODE=%s\n' "$(_flag "$COMMANDCODE_PATH")"
     printf 'export RELAY_HAS_DEEPSEEK=%s\n'    "$HAS_DEEPSEEK"
+    printf 'export RELAY_HAS_KIMI=%s\n'        "$(_flag "$KIMI_PATH")"
     printf 'export XYZ_VENDORED=%s\n'    "$VENDORED"
     [ -n "$CALLER_ROOT" ]     && printf 'export XYZ_CALLER_ROOT=%q\n'     "$CALLER_ROOT"
     [ -n "$VENDORED_STATUS" ] && printf 'export XYZ_VENDORED_STATUS=%q\n' "$VENDORED_STATUS"
@@ -455,6 +467,7 @@ case "$ACTION" in
     mark "$AGY_PATH"   "agy CLI   (Path A worker)"
     mark "$COMMANDCODE_PATH" "cmd CLI   (Path A worker, Command Code)"
     mark "$DEEPSEEK_PATH"    "dsh CLI   (Path A worker, DeepSeek)"
+    mark "$KIMI_PATH"        "kimi CLI  (Path A worker, Kimi Code)"
     if [ -z "$CODEX_PATH" ] && [ -z "$AGY_PATH" ]; then
       echo "  !   no cross-model headless worker on PATH — only Path B (all-Claude poll) is available"
     fi
