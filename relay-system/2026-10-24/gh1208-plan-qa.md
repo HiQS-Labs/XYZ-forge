@@ -150,4 +150,12 @@ Whole-artifact sweep completed (`:1-150`), including frontmatter, status, observ
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-25T03:36:23Z
+task: RELAY-gh1208-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 6ec90623b882a6c779884a3c8a82d05c18132794
+added-range: 15260+4311
+added-sha256: 0fd9d67b7e652a08c7c7787e4a32e393654c842b33991bddcd25da8831c5b81a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
