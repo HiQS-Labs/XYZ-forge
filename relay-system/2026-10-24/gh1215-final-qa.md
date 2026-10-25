@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -611,5 +611,26 @@ Write a verdict below. Set STATUS to Approved if it passes; otherwise leave it O
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+- [Pass] R1--R3 are implemented on the intended single adapter surface: dispatch is gated by `KIMI_AGENT`, the CLI command carries the documented model/flags/log inputs, and zero-exit meta-only output becomes exit 5 (`utils/py/kimi-turn.py:93-118,156-177,200-204`; `relay-automation/kimi-turn.sh:11-14`). The receipt records both mismatch deferral and the meta-only red control (`TESTS-RESULTS/2026-10-24+GH-1215/live-smoke.md:7-10`).
+
+- [Pass] R4's detector and runtime have matching resolution semantics: runtime is `KIMI_BIN` then PATH then `~/.kimi-code/bin/kimi` (`utils/py/kimi-turn.py:45-50`), while the marathon probe uses `[KIMI_BIN, "kimi", KIMI_DEFAULT_BIN]` and the identical installer path (`utils/py/marathon_drive.py:735-738,808-814`). `find-harness` asks the shim's `--print-bin` rule and exports/prints the resulting Kimi capability (`skills/1-hourly/relay-xyz/find-harness.sh:375-382,401-407,467-474`); the receipt records both positive detection and the absent-binary red control (`TESTS-RESULTS/2026-10-24+GH-1215/live-smoke.md:11-12`).
+
+- [Pass] R5--R6 use the existing lane and documentation mechanisms, not a parallel route: `route_agent` sets `KIMI_AGENT` while the distinct marathon reviewer gate remains codex/agy (`utils/py/marathon_drive.py:2026-2061`), and the relay skill names Kimi in both worker and model tables (`skills/1-hourly/relay-xyz/SKILL.md:366-379`). The receipt's profile probe records `KIMI_AGENT`, `KIMI_MODEL`, and the Kimi shim command (`TESTS-RESULTS/2026-10-24+GH-1215/live-smoke.md:13`).
+
+- [Pass] R7 has durable, scoped evidence: the receipt records a 0-exit live `--reviewer kimi --review-once` drive, an Approved attestation, and the closed-thread re-fire refusal (`TESTS-RESULTS/2026-10-24+GH-1215/live-smoke.md:16-17`; `TESTS-RESULTS/2026-10-24+GH-1215/provenance.jsonl:5-6`). The retained first-relay block independently cites the adapter lifecycle and output guard (`relay-system/2026-10-24/gh1215-kimi-first-relay.md:100-104`). The lost stream transcript and known bare-PATH warning are explicitly bounded in the receipt (`TESTS-RESULTS/2026-10-24+GH-1215/live-smoke.md:19`).
+
+- [Pass] The implementation follows the approved plan's limited builder-only scope and the plan's rating rationale is consistent with the one-shim/allowlist shape and recorded evidence (`PROJECT/2-WORKING/GH-1215-KIMI-RELAY-WORKER.md:75-101,160-166`; `CHANGELOG.md:3-15`). No pre-existing defects found in the swept artifact files; no out-of-scope subsystem, writer, or new test suite was introduced.
+
+Probe (exit 0): `python3 -B - <<'PY' ...` AST-parsed `utils/py/kimi-turn.py`, `marathon_drive.py`, `relay_drive.py`, and `gate_env.py`; decisive output: `runtime-bin-order: True`, `probe-bin-order: True`, `same-installer-path: True`, `output-guard: True`, `finder-calls-shim: True`, `dispatcher-arm: True`.
+
+VERDICT: PASS
+Basis: R1--R7 map to the adapter and existing routing surfaces, with a witnessed red control, focused disposable-clone suite evidence, and an attested live relay. The documented transcript/PATH limitations do not undermine the stated local-adapter scope.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
