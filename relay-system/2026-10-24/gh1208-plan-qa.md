@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -88,5 +88,34 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The local-ledger design fits the actual call order and keeps the change in one function, but the plan stops before an existing downstream consumer that crashes on its primary success case. Amend the plan for that consumer before implementation. Reversibility: Easy — one-function change with a one-hunk rollback.
+swept file: yes
+
+- [Blocker] **The planned local-only success still crashes while constructing landing evidence.** Artifact lines 89-90 say “Nothing else in `jog_land` changes”, but `utils/py/jog_run.py:1221` unconditionally serializes `"hosted_reconcile": matching[0]`. With the planned `run list -> []` input, local evidence can pass the new gate while this expression raises `IndexError`. This occurs **after** `jog_set_status(..., "completed")` at lines 1215-1217 and outside the refusal handler at lines 1209-1211: queue completion can be written while the command fails and no landing marker is produced.
+  Observed input: `matching=[]`, exactly the no-hosted-run case specified in artifact lines 104-108. The read-only expression probe below failed with exit 1.
+  Affected scope: local-ledger acceptance when there is no matching hosted run; the existing hosted-success serialization must retain its current value.
+  Falsifier: in the disposable gh280 copy, return `[]` from `run list` with the reconciled GH-901 row present; fixed L5 must exit 0, write parseable `landing.json` without inventing a green hosted run, and L6/L7 must replay successfully. An unchanged line 1221 cannot meet that result.
+  Concrete fix: extend the one-function plan to define how the **existing** landing marker represents absent hosted evidence (for example, `hosted_reconcile: null` on local-only acceptance), preserving the hosted-success object. Include this marker assertion in the already-planned manual L5 check; no new receipt file, schema version, suite, or registry entry is needed.
+
+  Probe command (with `PYTHONDONTWRITEBYTECODE=1` and scratch `TMPDIR`):
+  ```sh
+  python3 -c 'import ast,pathlib; t=ast.parse(pathlib.Path("utils/py/jog_run.py").read_text()); n=next(n for n in ast.walk(t) if isinstance(n,ast.Subscript) and n.lineno==1221); print(ast.unparse(n), flush=True); eval(compile(ast.Expression(n),"jog_run.py","eval"),{"matching":[]})'
+  ```
+  Exit: `1`. Decisive output: `matching[0]` followed by `IndexError: list index out of range` at `jog_run.py:1221`. Only this expression was evaluated; no repository function, fixture, git command, or suite was executed.
+
+- [Pass] **Defect and call-site claims are grounded.** `utils/py/jog_run.py:1189-1201` queries hosted runs and refuses an empty list; `.github/workflows/wave-reconcile.yml:10-11` contains only `workflow_dispatch`. `merge_cleanup.py:782-805` runs local reconciliation and checks before Jog landing; both outer callers commit afterward (`:1423-1432`, `:1719-1726`). Requiring an already-created reconcile commit would fail at this call site.
+- [Pass] **The proposed predicate reuses the existing owner and reader.** `wave_reconcile.py:1520-1521,1550-1558` writes `Completed` and `SHIPPED ... (PR #N)`; `jog_run.py:1202-1206` already opens the ledger read-only. The seeded `releases.sql:770,891` contains the cited GH-763/GH-1020 Completed rows with `(PR #1192)`. Artifact lines 17-21 and 77-90 preserve pre-merge/tail checks and the hosted branch, require refusal when neither evidence exists, and introduce no separate writer or store. Root cause: the landing consumer retained a per-merge hosted requirement after the workflow became dispatch-only; fix site: `jog_land`; upstream intentionally follows decision #1131.
+- [Pass] **Verification is falsifiable at plan level.** The existing gh stub synthesizes green hosted evidence (`test/gh280-jog-marathon-adapter.sh:45-48`); L5 runs the actual offline reconciler before landing (`:1009-1013`), and L6/L7 already exercise replay (`:1029-1043`). Artifact lines 100-116 name retained provenance, a no-run pre-fix red/fixed green comparison, a neither-evidence refusal, replay, and a disposable full-clone gate without adding suites. Add the marker assertion requested above to close the missed consumer.
+- [Unverified — needs clone run] No claim that the suite currently passes 223/223, that the modified copy passes, or that the final gate is green: those runs are prohibited in this reviewer worktree and remain implementation evidence owed under artifact lines 102-116.
+- [Pass] **Rating rationale is proportionate to the stated scope.** Artifact lines 120-127 distinguish a blocked unattended landing from data loss, identify recurrence since #1131 and the #1200 dependency, and keep appeal at neutral 50. The one-function reuse supports the stated cheapness; these are prioritization judgments, not measured frequency claims.
+- [Nit] **Correct two descriptions while revising.** Artifact line 30 says “committed ledger evidence”, although lines 61-63 and 83-84 correctly allow the about-to-be-committed writes. Lines 78-79 also overstate current error handling: `jog_run.py:1196` maps nonzero `gh` exit to `[]`, while malformed JSON reaches the outer `ValueError` handler. Describe that existing behavior accurately without silently widening this patch's scope.
+
+Whole-artifact sweep completed, including frontmatter, scope, alternatives, rollback, verification, and rating rationale. No additional pre-existing defects found in the artifact beyond the findings above. Graph tools were unavailable; evidence uses direct source reads and the quoted pure-expression probe.
+
+Handing off to Producer (claude-a) — revise the plan for the existing landing marker consumer and disposition these findings, then return for Round 2 QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
