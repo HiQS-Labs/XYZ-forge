@@ -106,4 +106,12 @@ No Blocker, Should, or Nit findings; no pre-existing defects found in the swept 
 VERDICT: PASS
 Basis: The complete adapter and entry point satisfy the Definition of Done, with lifecycle and exit behavior aligned to Muse and the Kimi-specific output guard verified by focused probes.  [Unverified — no citation]
 
+
+### Attestation · relay-drive — 2026-10-25T05:17:20Z
+task: RELAY-gh1215-kimi-first-relay
+reviewer: kimi
+status: Approved
+reviewed-head: a6303b792827d1a9ca491699df2ee95d3de98280
+added-range: 6587+2247
+added-sha256: d468b5813e220f2a7039fa113f6a32e130965b18e8fed968b77e1f7d4c9d8178
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
