@@ -1,5 +1,5 @@
 # Marathon Phase p4
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN builder=agy reviewer=codex round-cap=7 -->
@@ -267,3 +267,15 @@ Resolved the Round 1 `[Should]` finding on non-monotonic / out-of-order entry da
 - **`TESTS-RESULTS/2026-10-25+GH-1218/manual-check.md` & `TESTS-RESULTS/2026-10-25+GH-1218/provenance.jsonl`**:
   - Added the 6-entry out-of-order date control (`Entry 1` dated `2026-12-31`, `Entry 2`..`Entry 6` dated `2026-10-02`..`2026-10-06`) to the throwaway-repo probe, confirming that `Entry 1`, `Entry 3`, `Entry 4`, `Entry 5`, and `Entry 6` are selected while `Entry 2` (`2026-10-02`) is omitted with `+1 earlier lesson(s) omitted — see LESSONS-LEARNED.md for full history.`, and that output remains byte-for-byte identical across Python (`utils/py/rtl.py`), Bash fallback (`XYZ_PYTHON=0`), and SmallCode (`relay-automation/smallcode-turn.sh`), alongside the existing 7-entry (1 superseded) and absent-file controls.
   - Appended the corresponding `manual_probe_out_of_order_dates` receipt entry to `TESTS-RESULTS/2026-10-25+GH-1218/provenance.jsonl`.
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Approved
+
+The Round 1 selection defect is resolved: the reader ranks every eligible entry by its date, retains the five greatest values, and then emits the selected set in deterministic source order. Independent narrow probe (exit 0): `RTL_ROOT="$probe" bash -c 'source "$root/relay-automation/relay-turn-lib.sh"; rtl_turn_prompt agy "$probe/RELAY.md" T art codex' | sed -n '/^\\[lessons learned/,/^+.*omitted/p'` with dates `2026-12-31, 2026-10-02..06` emitted Entries 1 and 3–6, omitted Entry 2, and printed `+1 earlier lesson(s) omitted`. `bash -n relay-automation/relay-turn-lib.sh` exited 0; the packaged `relay-automation/relay-turn-lib.sh` compared byte-identically with its source (exit 0).
+
+I swept the complete listed reader implementation, package contents, structured lessons document, all three writer prompts, manual receipt, and provenance. I found no remaining pre-existing in-scope defect or unmet phase criterion. The manual receipt records the normal, absent-file, out-of-order-date, and Python/Bash/SmallCode parity controls; no clone-only suite was run in this reviewer worktree.
+
+relay closed, no further turn needed
