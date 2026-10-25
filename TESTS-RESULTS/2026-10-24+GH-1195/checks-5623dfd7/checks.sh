@@ -2,6 +2,9 @@
 # GH-1195 manual checks A (missing-DB red→green), B (resolver), smoke (distinguishable ledgers + override).
 # Runs ONLY in two disposable clones. Usage: bash gh1195-checks.sh <A candidate clone> <B alternate clone> <out dir>
 set -u
+# Post-run correction (CodeRabbit on #1211, 2026-10-25): the smoke greps originally matched "#987654", which the
+# planner never emits (it names GH-987654-SENTINEL.md). checks-driver.log is the ORIGINAL run with that bug;
+# smoke-reevaluation.txt re-checked the retained artifacts. This copy is corrected so a rerun asserts the right text.
 A="$1"; B="$2"; OUT="$3"; mkdir -p "$OUT"
 BASE=80e67677
 PASS=0; FAIL=0
@@ -58,11 +61,11 @@ PY
 
 echo "== smoke: distinguishable ledgers (sentinel row only in B) + override precedence"
 ( cd "$B" && python3 utils/py/releases_app.py roadmap add --issue-num 987654 --issue-url https://github.com/HiQS-Labs/XYZ-forge/issues/987654 --title "GH-1195 smoke sentinel (disposable clone B only)" --created 2026-10-24 --doc-path PROJECT/1-INBOX/GH-987654-SENTINEL.md ) > "$OUT/smoke-sentinel-add.txt" 2>&1 || fail "sentinel add in B"
-rc=$(run_plan smoke-fixed-unpinned); [ -s "$OUT/smoke-fixed-unpinned.jsonl" ] && ! grep -q -F "#987654" "$OUT/smoke-fixed-unpinned.jsonl" && pass "main path: fixed, unpinned → report nonempty, sentinel ABSENT (read A) rc=$rc" || fail "main path: sentinel present or empty report (rc=$rc)"
+rc=$(run_plan smoke-fixed-unpinned); [ -s "$OUT/smoke-fixed-unpinned.jsonl" ] && ! grep -q -F "GH-987654-SENTINEL.md" "$OUT/smoke-fixed-unpinned.jsonl" && pass "main path: fixed, unpinned → report nonempty, sentinel ABSENT (read A) rc=$rc" || fail "main path: sentinel present or empty report (rc=$rc)"
 revert
-rc=$(run_plan smoke-reverted-unpinned); grep -q -F "#987654" "$OUT/smoke-reverted-unpinned.jsonl" && pass "red control: reverted, unpinned → sentinel PRESENT (read B) rc=$rc" || fail "red control: sentinel absent on reverted code (rc=$rc)"
+rc=$(run_plan smoke-reverted-unpinned); grep -q -F "GH-987654-SENTINEL.md" "$OUT/smoke-reverted-unpinned.jsonl" && pass "red control: reverted, unpinned → sentinel PRESENT (read B) rc=$rc" || fail "red control: sentinel absent on reverted code (rc=$rc)"
 restore
-rc=$(run_plan smoke-fixed-override "QUEUE_PLAN_ROOT=$B"); grep -q -F "#987654" "$OUT/smoke-fixed-override.jsonl" && pass "adjacent path: fixed + QUEUE_PLAN_ROOT=B → sentinel PRESENT (override wins) rc=$rc" || fail "adjacent path: override not honoured (rc=$rc)"
+rc=$(run_plan smoke-fixed-override "QUEUE_PLAN_ROOT=$B"); grep -q -F "GH-987654-SENTINEL.md" "$OUT/smoke-fixed-override.jsonl" && pass "adjacent path: fixed + QUEUE_PLAN_ROOT=B → sentinel PRESENT (override wins) rc=$rc" || fail "adjacent path: override not honoured (rc=$rc)"
 git -C "$A" diff --quiet -- utils/py/marathon_plan.py && pass "A restored to fixed code (end)" || fail "A not restored (end)"
 
 echo "== provenance"

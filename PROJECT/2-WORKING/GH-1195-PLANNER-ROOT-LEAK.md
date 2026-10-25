@@ -51,8 +51,8 @@ any sibling clone the engine's `ROOT`, and therefore `<ROOT>/releases.db` (`_mar
 Measured in the task clone (2026-10-24, login env):
 
 ```text
-repo_root()        = /Users/noelsaw/Documents/GH Repos/XYZ-forge          ← the primary
-anchor on own file = /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1195-planner-root-leak-2026-10-24
+repo_root()        = <primary clone>                          ← the primary
+anchor on own file = <task clone: XYZ-forge-gh1195-planner-root-leak-2026-10-24>
 ```
 
 Red control (recorded, `TESTS-RESULTS/2026-10-24+GH-1195/before-fix-red-control.txt`): with this
