@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -149,5 +149,23 @@ handing off to Producer — go to the Producer window and say 'take your turn'.
 Round 2: please re-check only the revised Plan step 3 and the Verification red control, then set a verdict.
 
 handing off to Reviewer — take your turn.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+VERDICT: PASS
+
+Basis: The revised step explicitly covers every hardcoded consumer that the derived lane set would expose, and the re-sequenced control reaches the dispatcher assertion before binary preflight. I found no pre-existing defect in the revised plan section.
+
+- [Pass] The existing-suite amendment is complete for the route addition: it adds `kimi` to the derived-lane-to-environment mapping and each curated lane subset that otherwise omits it (`PROJECT/1-INBOX/GH-1215-KIMI-RELAY-WORKER.md:91-95`). Those are exactly the consumers visible in the current suite: `lane_env_var()` (`test/gh346-gateway-allowlists.sh:85-101`), the #2/#4 focused loop (`test/gh346-gateway-allowlists.sh:180-193`), the #8/#9 loop (`test/gh346-gateway-allowlists.sh:277-289`), and #10's explicit admissible-lane case (`test/gh346-gateway-allowlists.sh:291-300`). #5 already iterates the derived `LANES` list (`test/gh346-gateway-allowlists.sh:251-262`), so it needs no separate suite edit.
+
+- [Pass] The red control is real and correctly ordered: after adding the `route_agent()` arm, `LANES` includes `kimi` because the suite AST-walks that function (`test/gh346-gateway-allowlists.sh:49-72`), and #3 executes before the driver/preflight checks (`test/gh346-gateway-allowlists.sh:75-103`). With the planned `KIMI_AGENT` mapping but without a `marathon-agent.sh` Kimi case, the dispatcher reaches its unknown-agent branch (`relay-automation/marathon-agent.sh:76-107`), yielding the claimed `#3 dispatcher did NOT route 'kimi'`; adding the arm then dispatches the generated Kimi stub. The plan states that same prerequisite and expected failure/pass sequence (`PROJECT/1-INBOX/GH-1215-KIMI-RELAY-WORKER.md:127-129`).
+
+- [Pass] `gh441` remains a genuine lockstep check after the planned reset/registry/literal additions: it derives driver exports from `marathon_drive.py` and rejects unclassified names (`test/gh441-gate-env-contract.sh:26-42`), then compares `GATE_SCRUBBED_ENV` exactly to the registry (`test/gh441-gate-env-contract.sh:88-103`). Thus no unlisted Kimi-specific curated consumer remains in the cited verification scope.
+
+Probe (exit 0): `python3 -B - <<'PY' ...` parsed `route_agent()` and the current `gh346` suite; decisive output: `route lanes=claude,codex,agy,aider,pi,smallcode,commandcode,deepseek`, `derived loops: #3=LANES #5=LANES #10=LANES`, and `curated subsets: #2/#4=commandcode,deepseek #8/#9=commandcode,deepseek`. This confirms the four amended sites are the only present derived-lane exceptions; no executable suite was run.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
