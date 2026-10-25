@@ -112,3 +112,11 @@ Verdict: Approved — the five plans may fire as written. The amended p2 design 
 Static verification confirms the remaining seam claims: p1’s `issue_ref_id` is non-null (`utils/py/releases_app.py:547-553`), so `COUNT(DISTINCT issue_ref_id)` has the intended row-to-issue behavior; p3’s JSON projection is correctly scoped to the validator’s decoded `.response` boundary (`utils/py/consult.py:203-214; PROJECT/2-WORKING/GH-1219-CONSULT-BLIND-B-RECONCILE.md:48-69`); p4’s shared prompt helper remains the single shim path, including SmallCode (`utils/py/rtl.py:849-852; relay-automation/smallcode-turn.sh:26-28`); and p5’s child environment is passed directly to `relay-drive.sh` (`utils/py/marathon_drive.py:3362-3417`), whose Python-default path execs `relay_drive.py` (`relay-automation/relay-drive.sh:9-18`). Once implemented, the optional field will be protected because `load()` reconstructs and verifies `trailer_text` against both the stored hash and relay body (`utils/py/relay_attest.py:301-305`).
 
 Scope note: this was the requested pre-fire static plan QA. No executable fixtures or test suites were run in this linked worktree; each phase’s required disposable-clone/manual receipt and harness gate remain its execution proof.
+
+### Attestation · relay-drive — 2026-10-25T06:56:50Z
+task: RELAY-gh1214-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 25591066d00c0b3dcec07908c5e3ce73a11f0bd6
+added-range: 13550+1852
+added-sha256: 40bb2f74e6ce1264b75b6f5d5a78eb6059c6a6ad448de9f50f1a581ead84ebdd
