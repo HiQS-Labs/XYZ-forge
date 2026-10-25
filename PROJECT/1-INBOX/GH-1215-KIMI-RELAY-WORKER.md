@@ -88,6 +88,11 @@ Untraced: `consult.py` panel routing and the HiQS catalog's `moonshotai/kimi-cod
    `*_TURN_ROOT` tuple (#5), `KIMI_AGENT` reset (#9) and `GATE_SCRUBBED_ENV` (#10);
    `gate_env.py` registry (#8); `marathon-agent.sh` dispatcher case (#3); `relay_drive.py`
    `prepare_turn_log` table.
+   - **Existing-suite amendment (plan QA r1):** `test/gh346-gateway-allowlists.sh` derives its lanes
+     from `route_agent()` but maps them to `*_AGENT` through a hardcoded `lane_env_var()` (:85-90)
+     and hardcoded #2/#4 (:182), #8/#9 (:277) and #10 (:294) lane lists. Add `kimi` to each so the
+     suite keeps pinning what it claims (AGENTS.md: edit an existing suite only to keep it truthful).
+     No new suite or registry entry.
 4. **`find-harness.sh`**: `KIMI_PATH` from `kimi-turn.py --print-bin`, `export KIMI_BIN`,
    `RELAY_HAS_KIMI`, and `mark "$KIMI_PATH" "kimi CLI  (Path A worker, Kimi Code)"`.
 5. **Docs**: relay-xyz `SKILL.md` worker table, model table, and the `--env` / `--check` comment
@@ -119,15 +124,20 @@ Untraced: `consult.py` panel routing and the HiQS catalog's `moonshotai/kimi-cod
   checks kimi in #2–#5), `test/gh441-gate-env-contract.sh` (#8/#10 lockstep),
   `test/find-harness.sh`, `test/relay-xyz-skill-guard.sh`, `test/marathon-drive.sh`; then the
   route the classifier picks for the final diff.
-- Red control: run `gh346-gateway-allowlists.sh` after step 3's `route_agent` line but before the
-  dispatcher case → it must fail on `#3 dispatcher did NOT route 'kimi'`.
+- Red control: with `route_agent`'s `kimi` line and the suite amendment in place but the
+  `marathon-agent.sh` dispatcher arm not yet added, `gh346-gateway-allowlists.sh` must fail on
+  `#3 dispatcher did NOT route 'kimi'`; after the arm it must pass.
 - Manual checks under `TESTS-RESULTS/2026-10-24+GH-1215/` with `provenance.jsonl`: R1 deferral,
   R3 empty-output stub, R4 detection + red control, R5 profile, and the R7 live relay (main path)
   plus a second invocation on the already-reviewed thread (adjacent path).
 
 ## Plan QA
 
-Pending.
+Thread: `relay-system/2026-10-24/gh1215-plan-qa.md` (Codex).
+
+| Round | Verdict | Finding | Disposition |
+|---|---|---|---|
+| 1 | FAIL | [Should] `gh346-gateway-allowlists.sh` hardcodes `lane_env_var()` and three lane lists; the red control could not reach its assertion | Implemented: suite amendment added to step 3; red control re-sequenced |
 
 ## Final QA
 

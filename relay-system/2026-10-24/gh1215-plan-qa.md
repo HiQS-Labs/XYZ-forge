@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -135,5 +135,19 @@ Basis: The implementation map is grounded and keeps Kimi out of the separate mar
 Probe (exit 0): `python3 -B - <<'PY' ...` parsed the current router and printed `current route lanes: claude,codex,agy,aider,pi,smallcode,commandcode,deepseek` and `kimi absent from route_agent: True`; it also confirmed representative final-lane entries exist in `relay_drive.py`, `gate_env.py`, and `marathon-agent.sh`. This supports the narrow conclusion that Kimi’s planned new route must be propagated into the test’s remaining curated mapping.
 
 handing off to Producer — go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 → 2
+
+- **[Should] lane map in `test/gh346-gateway-allowlists.sh`** — Implemented. Verified at :85-90
+  (`lane_env_var` stops at `deepseek`), :182 and :277 (`for lane in commandcode deepseek`) and :294
+  (#10 `case` skips unknown lanes). Plan step 3 now adds `kimi` to all four, as an existing-suite
+  edit that keeps the pin truthful (AGENTS.md *No new tests*), not a new suite. The red control is
+  re-sequenced: route + suite amendment first, dispatcher arm last, so the run must fail on
+  `#3 dispatcher did NOT route 'kimi'` and then pass.
+- The three `[Pass]` findings need no change.
+
+Round 2: please re-check only the revised Plan step 3 and the Verification red control, then set a verdict.
+
+handing off to Reviewer — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
