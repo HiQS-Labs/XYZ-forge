@@ -1,5 +1,5 @@
 # Marathon Phase p5
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P5-TURN builder=agy reviewer=codex round-cap=7 -->
@@ -221,3 +221,19 @@ Implemented GH-1220 optional `config_sha256` attestation and resume check across
    - Passed `force=bool(args.force or config_mismatch_rebuild[0])` to `resolve_force_relay_task(...)` (line 2944) so a config-mismatch rebuild on a spent `done` base token allocates a fresh `-R2` (`-R3`, …) retry token rather than failing at `tick claim`.
 4. **`TESTS-RESULTS/2026-10-25+GH-1220/manual-check.md` & `TESTS-RESULTS/2026-10-25+GH-1220/provenance.jsonl`**:
    - Recorded red/green control verification in throwaway git repos under `$TMPDIR` covering all cases (a)–(e) plus existing regression suites (`test/gh505-relay-attest.sh`, `test/gh385-retry-token-satisfied.sh`, `test/gh371-interrupt-snapshot.sh`, `test/gh372-escalation-log-tail.sh`, `test/gh441-gate-env-contract.sh`, `test/gh308-frozen-twin-guard.sh`).
+
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Approved
+
+Reviewed the full requested artifact set, including the complete `relay_attest.py`, the `relay_drive.py` attestation path, the `marathon_drive.py` resume/render/child-environment paths, and both GH-1220 evidence files. No pre-existing defect in the touched source files was identified that changes this phase's correctness.
+
+The implementation meets the brief: it derives the identity from the brief bytes, actors, and their resolved model variables; scopes `MARATHON_CONFIG_SHA256` to the relay-drive child; preserves legacy attestations with the stated warning; rebuilds on a mismatch using a fresh force-family token; keeps `relay-drive/attest@1`; and binds a present value to both the record digest and relay trailer. `relay_attest.load()` rejects an empty present value and rejects a modified stored value when its recomputed trailer digest no longer agrees (`utils/py/relay_attest.py:203-215`, `utils/py/relay_attest.py:278-313`, `utils/py/marathon_drive.py:487-498`, `utils/py/marathon_drive.py:2876-2917`, `utils/py/marathon_drive.py:3386-3417`).
+
+Read-only reviewer probe: `python3 -B` parsed all three Python artifacts with `ast.parse`, then evaluated the canonical AGY/Codex model-input hash and optional trailer line in a `$TMPDIR` temporary directory; exit 0; decisive output: `AST_PARSE=PASS; CONFIG_CANONICALIZATION=PASS; TRAILER_BINDING=PASS`.
+
+The committed manual receipt records red/green controls for legacy reuse, exact reuse, each required identity change, jog-compatible loading, and trailer-tamper refusal, plus the named existing-suite runs (`TESTS-RESULTS/2026-10-25+GH-1220/manual-check.md:8-102`, `TESTS-RESULTS/2026-10-25+GH-1220/provenance.jsonl:1-3`). No executable fixtures or test suites were run in this reviewer worktree.
+
+relay closed, no further turn needed
