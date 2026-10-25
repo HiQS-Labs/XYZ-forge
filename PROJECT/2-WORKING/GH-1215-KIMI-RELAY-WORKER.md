@@ -1,6 +1,6 @@
 ---
 title: "Add a native kimi relay worker (Kimi Code CLI) to the relay harness"
-status: Planned (plan QA pending)
+status: In progress (final QA)
 created: 2026-10-24
 updated: 2026-10-24
 owner: claude
@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon and plan written | Codex plan QA via relay-xyz |
+| Built; suites green; live Kimi relay turn attested Approved | Codex final QA, then PR |
 
 ## Key concepts
 
@@ -138,6 +138,19 @@ Thread: `relay-system/2026-10-24/gh1215-plan-qa.md` (Codex).
 | Round | Verdict | Finding | Disposition |
 |---|---|---|---|
 | 1 | FAIL | [Should] `gh346-gateway-allowlists.sh` hardcodes `lane_env_var()` and three lane lists; the red control could not reach its assertion | Implemented: suite amendment added to step 3; red control re-sequenced |
+
+## Results
+
+Receipt: `TESTS-RESULTS/2026-10-24+GH-1215/live-smoke.md` (with `provenance.jsonl`).
+
+- Red control witnessed: 62/63 with `#3 dispatcher did NOT route 'kimi'` before the dispatcher arm; 63/0 after.
+- Nine focused existing suites green in a disposable verify clone.
+- R7: `relay-drive.sh … --agent-cmd relay-automation/kimi-turn.sh --reviewer kimi --review-once`
+  exit 0, attested Approved by kimi (`relay-system/2026-10-24/gh1215-kimi-first-relay.md`).
+  Re-firing on the closed thread exits 4 with no dispatch.
+- Known limit, not changed: `resolve-profile.sh --env` prints a false "CLI 'kimi' is NOT on PATH"
+  comment in a non-interactive shell because it checks bare PATH. The same check already
+  misfires for deepseek and smallcode; the turn itself resolves the installer path.
 
 ## Final QA
 
