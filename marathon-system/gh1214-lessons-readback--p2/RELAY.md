@@ -215,3 +215,11 @@ The guard snapshots porcelain, the index, and a content/mode manifest plus byte 
 Reviewer probe (permitted static check): `bash -n relay-automation/improve-loop.sh`; exit status `0`; decisive output: `bash -n exit=0`. I did not execute fixtures or suites in this linked worktree; the recorded disposable-repo manual probe and existing-suite receipt remain subject to the harness gate.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-25T08:19:40Z
+task: MARATHON-P2-TURN-2
+reviewer: codex
+status: Approved
+reviewed-head: abe681dd61e71b44337d7008f100247e70f544da
+added-range: 16509+1364
+added-sha256: c2b1c99ba1f7c424ba916f0992f05e0f093b9cd9874c4ef492d61a24da354b38
