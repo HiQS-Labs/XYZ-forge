@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: None
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -204,5 +204,21 @@ index 462b8af9..275922ce 100644
 
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+- [Pass] R1 and unchanged title eligibility are implemented in the single existing planner: literal-`false` archive, self, and non-boolean-running rows skip; bad activity skips only a running row and aborts an idle row; pin proposals precede the unchanged running/out-of-title-window skip ([`skills/3-weekly/task-sync/scripts/adapters/claude.py:417-443`](skills/3-weekly/task-sync/scripts/adapters/claude.py:417)). The proposal condition is `pin`, `pinned is not True`, and `pin_hours`, with no writer or report-shape change ([`skills/3-weekly/task-sync/scripts/adapters/claude.py:430-436`](skills/3-weekly/task-sync/scripts/adapters/claude.py:430)); the already-present CLI wires `--no-pin` and `--pin-hours` into every adapter ([`skills/3-weekly/task-sync/scripts/task_sync.py:66-73`](skills/3-weekly/task-sync/scripts/task_sync.py:66)).
+- [Pass] The native procedure supplies every R2 protection: fresh inventory recheck, manual-pin skip, scheduled-session skip via `get_session`, decline-as-skip, receipt, and no automated undo/unpin ([`skills/3-weekly/task-sync/SKILL.md:244-253`](skills/3-weekly/task-sync/SKILL.md:244)). The live smoke establishes the scheduled-run input and the ordinary session's successful recheck, pin, rerun exclusion, and receipt ([`TESTS-RESULTS/2026-10-24+GH-1196/live-smoke.md:8-16`](TESTS-RESULTS/2026-10-24+GH-1196/live-smoke.md:8)).
+- [Pass] The receipt records 11/11 probe success on Python 3.9 and 3.14 and the unchanged 17/17 GH-1191 battery ([`TESTS-RESULTS/2026-10-24+GH-1196/provenance.jsonl:1-2`](TESTS-RESULTS/2026-10-24+GH-1196/provenance.jsonl:1)); each probe asserts the specified output rather than merely command success ([`TESTS-RESULTS/2026-10-24+GH-1196/probes.py:31-85`](TESTS-RESULTS/2026-10-24+GH-1196/probes.py:31)). The recorded red control removed the `pinned is not True` guard and made exactly the already-pinned assertion fail (10/11), so that predicate is load-bearing ([`TESTS-RESULTS/2026-10-24+GH-1196/red-control.log:1-12`](TESTS-RESULTS/2026-10-24+GH-1196/red-control.log:1)).
+- [Unverified — needs clone run] I did not independently mutate and execute the other ten probe paths: this reviewer turn may not run executable fixtures in this linked relay worktree. Read-only probe-source and receipt inspection command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; rg -n -C 4 -- '--no-pin|pin_hours|"pinned"|PLAN_ONLY|claude-desktop' skills/3-weekly/task-sync/scripts/task_sync.py skills/3-weekly/task-sync/scripts/core.py; nl -ba TESTS-RESULTS/2026-10-24+GH-1196/provenance.jsonl; nl -ba TESTS-RESULTS/2026-10-24+GH-1196/live-smoke.md; nl -ba TESTS-RESULTS/2026-10-24+GH-1196/red-control.log; nl -ba TESTS-RESULTS/2026-10-24+GH-1196/probes.py | sed -n '1,100p'` — exit 0; decisive output was the recorded `10/11 probes passed` red control and the eleven explicit assertions. The planned harness gate remains the required independent execution boundary.
+- [Pass] The top changelog accurately limits scope to planner proposals plus native `set_pinned`, names the scheduled-run procedure protection, preserves no-unpin reversibility, and retains the approved rating statement ([`CHANGELOG.md:3-15`](CHANGELOG.md:3)). No pre-existing defect was found in the swept adapter, Desktop procedure, or changelog entry.
+
+VERDICT: PASS
+
+Basis: The implementation matches plan steps 1–4 and R1–R3 without a second writer, CLI surface, or report-shape change. The scheduler exclusion belongs in the native procedure because only `get_session` exposes its observed discriminator. The sole dynamic red-control claim is witnessed; broader mutation re-execution is deliberately left to the disposable-clone harness gate.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
