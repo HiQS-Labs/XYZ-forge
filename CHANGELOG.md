@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-10-24 — task-sync: one Claude Desktop scheduled task per device (GH-1191 step 4)
+
+The operator dropped the ZCode heartbeat for Claude Desktop. `SKILL.md`'s heartbeat section now
+names one hourly Claude Desktop scheduled task per Mac, created from a Desktop session.
+- Its self-contained, `$HOME`-relative prompt runs the GH-1191 native sweep against the
+  deployed copy; each Mac renames only its own sessions.
+- The first unattended run on one device (default permission mode) renamed an app-generated
+  title; a title the operator had set was declined, and the run carried on and reported it
+  (`declined=1`, not an error). Receipt:
+  `TESTS-RESULTS/2026-10-24+GH-1191/scheduled-run.md`.
+- The ZCode, Codex and cloud scheduler rules are unchanged.
+
+Reversibility: **Easy** (docs; disable the scheduled task per device).
+
 ## 2026-10-24 — task-sync: Claude Desktop sidebar titles (GH-1191)
 
 The Claude Desktop app keeps each Code session's sidebar title in its own session record,
