@@ -37,7 +37,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Fix landed as `f5a4e42f`. Unmodified gh280 suite 223/223; disposable-copy variants: reverted code refuses (red control), fixed code lands on the local SHIPPED row with `hosted_reconcile: null` + `local_reconcile` in `landing.json` (225/225, L6/L7 replay green), neither-evidence refuses with the combined message (`TESTS-RESULTS/2026-10-24+GH-1208/SUMMARY.md`). | Tier-3 `ci-local.sh` running in the `-gate` clone; final Codex QA; ready PR against development (do not merge). |
+| Fix `f5a4e42f`; plan QA Approved r2 (`94542fbb`), final QA Approved r2 (`76d9b810`); gh280 unmodified 223/223; disposable-copy variants red/green/neither with landing-marker receipts; tier-3 `ci-local.sh` rc=0 (442 suites) on `f5a4e42f` (`TESTS-RESULTS/2026-10-24+GH-1208/SUMMARY.md`). | PR ready against development; awaiting Noel's merge (do not merge here). At landing: local `wave_reconcile.py --pr <N>` then `jog land` — the first live witness of this change. |
 
 ## Observed (ground truth, development @ 80e67677)
 

@@ -32,7 +32,7 @@ None of those touched the fix; all are recorded in the issue-#1210 class of laun
 
 ## Final gate
 Route for the changed paths: `tier=3` (kernel/gate surface). `bash ci-local.sh` in the disposable `-gate` clone on `f5a4e42f`:
-see `full-gate-f5a4e42f.log` (identity checked before/after; result filled in when the run completes).
+`full-gate-f5a4e42f.log`: **rc=0**, 442 suites, identity `f5a4e42f` with 0 dirty files before and after (03:38Z–04:31Z, slowed by the parallel fixture runs). Pushed with `XYZ_SKIP_PREPUSH=1` because this run is the identical `ci-local.sh` gate on the only code-bearing commit; every later commit is receipts, relay threads or this summary (`scope-80e67677-to-head.txt`).
 
 ## Final-QA round 1 dispositions (reviewer codex, `relay-system/2026-10-24/gh1208-final-qa.md`)
 - **Should (baseline run not in provenance) — accepted.** `checks-f5a4e42f/provenance.jsonl` now carries a record for
