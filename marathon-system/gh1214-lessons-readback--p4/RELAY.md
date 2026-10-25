@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN builder=agy reviewer=codex round-cap=7 -->
 
@@ -239,3 +239,20 @@ Implemented GH-1218 (#1214 Phase 1 + 6a) across all declared phase artifacts:
   - Documented the worked writer-rule example (refusal on empty evidence / `confounded`-only verdicts -> `NO_ENTRY` vs acceptance with `helped` verdict and public evidence).
   - Verified `test/relay-pkg-freshness.sh`, `test/gh397-reviewer-turn-role.sh`, `test/gh681-reviewer-probe-rules.sh`, `test/gh91-relay-scratch.sh`, `test/gh304-vendored-relay-path.sh`, `test/gh609-sdlc-agent-gaps.sh`, `test/gh615-start-task-reinforce.sh`, `test/gh616-start-task-commensurate-envelope.sh`, and `test/gh308-frozen-twin-guard.sh --check --base HEAD` all pass.
 
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+[Should] `rtl_turn_prompt` does not reliably select the newest five lessons when field dates are out of source order. Its GH-1218 branch deliberately switches to `_lend=5` when `_first_date > _last_date`, which selects the first five parsed entries (including an older entry) rather than the five newest. This contradicts the phase requirement, and the supplied manual check covers only increasing dates.
+
+Observed input: a temporary `LESSONS-LEARNED.md` containing six valid entries in source order `Entry 1` through `Entry 6`, each with a cue; `Entry 1` has `- **date**: 2026-12-31`, and Entries 2–6 have dates `2026-10-02` through `2026-10-06`. Probe command (run with `PYTHONDONTWRITEBYTECODE=1`, output under `.relay-scratch/tmp`): `bash -c 'RTL_ROOT="$probe"; export RTL_ROOT; source relay-automation/relay-turn-lib.sh; rtl_turn_prompt codex "$probe/RELAY.md" T probe agy' | sed -n '/^\\[lessons learned/,/^+.*omitted/p'`; exit 0. Decisive output selected `Entry 1`, `Entry 2`, `Entry 3`, `Entry 4`, and `Entry 5`, then `+1 earlier lesson(s) omitted`; it omitted `Entry 6`, although `Entry 6` is newer than Entries 2–5.
+
+Affected scope: `relay-automation/relay-turn-lib.sh` GH-1218 reader (and its packaged `relay-pkg.tar.gz` copy); any historical/manual date correction or imported entry that makes first/last dates descend can display a stale pointer instead of a newest one.
+
+Falsifier: a focused throwaway-repo probe with the same six-entry fixture emits exactly the five entries with greatest parsed ISO `YYYY-MM-DD` dates (`Entry 1`, `Entry 6`, `Entry 5`, `Entry 4`, `Entry 3`, in whichever deterministic presentation order is documented), with `Entry 2` omitted; retain the existing normal-order and absent-file parity controls. Regenerate the package and update the manual receipt/provenance to record the added control.
+
+I swept the listed implementation, skills, manual receipt, provenance, and packaged relay copy; aside from the selection defect above, I found no pre-existing in-scope defect requiring a finding. The package's embedded `relay-turn-lib.sh` SHA-256 matches the source (`20672503e7991333336dcd8dc1890bd22a1e367f9af57566d2e21919626dea28`).
+
+handing off to agy — agy, take your turn
