@@ -1,5 +1,5 @@
 # Marathon Phase p3
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -204,3 +204,14 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   - JSON-mode transcripts (`CONSULT_GEMINI_JSON=1`) project only the decoded `.response` text into `answer-*.md` so envelope metadata (`model`, `provider`, etc.) never leaks into the neutral payload.
   - Ordering uses `random.Random` seeded from the first 8 bytes of `SHA-256(label)`, ensuring deterministic ordering across reruns with the same `--label`.
 
+### Round 1 · Reviewer · codex
+
+- swept file: yes
+- Reviewed the entire `utils/py/consult.py` (1,061 lines), entire `skills/1-hourly/consult/SKILL.md`, and both required GH-1219 evidence files. No pre-existing in-scope defect was found in the swept Python or skill file.
+- `write_neutral_payloads` runs only after validation, citation stamping, and degraded-panel stamping; it shuffles successful advisors from a SHA-256(label) seed, writes neutral Markdown plus an attribution key, and leaves named originals untouched. JSON-mode projects only `.response`. The skill enforces payload-first reconciliation, fixed criteria order, verdict-before-key attribution, and the best-effort limitation.
+- Evidence reviewed: the committed manual check records a red control, direct Python and default-shell green controls, deterministic rerun/order change, single-survivor behavior, JSON-envelope projection, and the four existing consult suites green. Its recorded command is `bash test/consult.sh && bash test/gh308-consult-guards.sh && bash test/gh589-consult-no-tick.sh && bash test/gh648-l3-consult-cap.sh`; recorded exit status: 0; decisive output: `consult: 62 passed, 0 failed`, `4 pass, 0 fail`, `6 passed, 0 failed`, and `PASS`.
+- Independent narrow probe in `.relay-scratch/tmp`: `python3 - <<'PY' [AST-extract _NEUTRAL_BANNER_RE, _neutralize_answer_text, and write_neutral_payloads; synthesize attested Codex and Gemini JSON inputs; assert no tested identifiers in answer payloads and complete key fields] PY`; exit status: 0; decisive output: `neutral-function probe: PASS; ids=A,B; payloads contain no tested identifiers`.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
