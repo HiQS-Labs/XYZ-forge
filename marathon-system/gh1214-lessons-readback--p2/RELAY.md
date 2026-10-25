@@ -1,6 +1,6 @@
 # Marathon Phase p2
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -188,5 +188,22 @@ Implemented GH-1221 pre/post-build snapshot, NUL-safe content/mode manifest, and
   - After each build (`il_build_guard after`), both porcelain status and the fresh content/mode manifest are compared against the pre-build snapshot. Any added path, removed path, or in-place byte/mode change outside `ALLOW` and `$STATE_DIR` logs `off-ALLOW write violation (<paths>) — restored snapshot`, forces `op=0` so `champion.sh judge` rejects the iteration (rolling back `$ARTIFACT` and recording provenance), removes newly created paths, restores clean tracked files from `HEAD` (`git checkout HEAD -- <path>` + mode) and pre-existing dirty/untracked/ignored files from the byte/mode snapshot.
 - **Verification**:
   - Throwaway git repo probe under `$TMPDIR` verified red (before fix) and green (after fix) for cases (a), (b), (c), (d1 in-place ignored `cache/x`), and (d2 newly created ignored sibling `cache/y`).
-  - Existing suites `test/improve-loop.sh` (11/11), `test/improve-loop-qa.sh` (11/11), `test/improve-loop-dogfood.sh` (7/7), `test/champion.sh` (13/13), and `test/gh430-state-dir-tracked-default.sh` (8/8) all pass.
+- Existing suites `test/improve-loop.sh` (11/11), `test/improve-loop-qa.sh` (11/11), `test/improve-loop-dogfood.sh` (7/7), `test/champion.sh` (13/13), and `test/gh430-state-dir-tracked-default.sh` (8/8) all pass.
 
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+Reviewed the complete `relay-automation/improve-loop.sh` (486 lines) and both evidence artifacts. No unrelated pre-existing defect was found in the swept loop surface. Static syntax probe passed: `bash -n relay-automation/improve-loop.sh` → exit 0. I did not run the mutation-heavy suites or executable fixtures, per the relay constraint; their recorded runs remain builder-provided evidence.
+
+[Should] Preserve and restore the Git index as well as worktree bytes for a pre-existing dirty tracked path. The current restore only runs `git reset -q HEAD -- <path>` for a post-build status path absent from the pre-build path set (`improve-loop.sh:318-323`); a path already dirty before the build is therefore skipped. The later restoration at `:357-369` copies (or checks out) worktree content only. Consequently, the guard does not restore the exact pre-build repository state when the build stages a pre-existing dirty path.
+
+Observed input: before the iteration, `tracked_other.txt` has an unstaged pre-existing edit (porcelain `" M tracked_other.txt"`); the build runs `printf 'builder\n' > tracked_other.txt; git add tracked_other.txt` while `tracked_other.txt` is outside `ALLOW`. Post-build porcelain is `"M  tracked_other.txt"`. The path appears in both `pre_porc_set` and `post_porc_set`, so the `:318-323` reset condition is false; restoration copies the pre-build worktree bytes but leaves the builder's staged index entry.
+
+Affected scope: every tracked file that was pre-existing and dirty (staged, unstaged, or both) before an off-`ALLOW` build write; this contradicts the brief's requirement to restore every pre-existing path exactly.
+
+Falsifier: in a throwaway repo, seed distinct HEAD/index/worktree versions of an off-`ALLOW` tracked file, run one rejected iteration that stages a fourth version, then verify `git diff --cached -- <path>` and `git diff -- <path>` exactly match their pre-build outputs after restoration. A fix may snapshot/index-restore the preexisting index state rather than reset it to HEAD.
+
+handing off to agy — agy, take your turn
