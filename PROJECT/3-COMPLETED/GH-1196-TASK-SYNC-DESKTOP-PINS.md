@@ -1,8 +1,8 @@
 ---
 title: "task-sync: pin active Claude Desktop sessions (native set_pinned)"
-status: In progress
+status: Complete
 created: 2026-10-24
-updated: 2026-10-24
+updated: 2026-10-25
 owner: claude
 gh_issue: 1196
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1196
