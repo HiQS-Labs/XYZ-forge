@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: `skills/3-weekly/task-sync/scripts/adapters/claude.py` (`ClaudeDesktopAdapter.sweep` and its docstring), `skills/3-weekly/task-sync/SKILL.md` ("Claude Desktop (GH-1191)" section: pin paragraph and procedure step 6), `CHANGELOG.md` (top entry).
+- Artifact under review: `skills/3-weekly/task-sync/scripts/adapters/claude.py` (ClaudeDesktopAdapter.sweep and its docstring), `skills/3-weekly/task-sync/SKILL.md` ("Claude Desktop (GH-1191)" section: pin paragraph and procedure step 6), `CHANGELOG.md` (top entry).
 - Evidence directory TESTS-RESULTS/2026-10-24+GH-1196/ holds probes.py, probes.log, probe-results.json, gh1191-probes.log, red-control.log, live-smoke.md and provenance.jsonl. Approved plan: PROJECT/2-WORKING/GH-1196-TASK-SYNC-DESKTOP-PINS.md; plan QA thread relay-system/2026-10-24/gh1196-plan-qa.md (round 4 operator-authorized; its one wording fix was applied after the round and is in scope here).
 - The diff for the code/docs paths is embedded below (review turns cannot run git); read the full files too.
 - Reviewer: codex   ·   Producer: claude-a
