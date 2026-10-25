@@ -738,17 +738,19 @@ DEEPSEEK_DEFAULT_BIN = "/Users/noelsaw/Documents/GH Repos/deepseek-harness/apps/
 # GH-1215: mirrors kimi-turn.py's INSTALLER_BIN (the Kimi Code installer's PATH edit is in ~/.zshrc).
 KIMI_DEFAULT_BIN = os.path.join(os.path.expanduser("~"), ".kimi-code", "bin", "kimi")
 
-def _probe_bin_or_file(candidates, role_label, agent_id, override_env):
+def _probe_bin_or_file(candidates, role_label, agent_id, override_env, executable=False):
     """Pass if ANY candidate resolves — on PATH, or as an existing file dispatched by interpreter.
 
     Mirrors the shim's own resolution order so preflight never rejects a lane the shim could run.
+    `executable=True` is for a lane whose shim execs the candidate directly (GH-1215 kimi): only an
+    executable counts there, since a plain file would pass preflight and then fail at launch.
     """
     tried = []
     for cand in candidates:
         if not cand:
             continue
         tried.append(cand)
-        if shutil.which(cand) or os.path.isfile(cand):
+        if shutil.which(cand) or (not executable and os.path.isfile(cand)):
             return
     _RESULT["reason"] = f"{role_label}-binary-missing"
     die(
@@ -813,7 +815,7 @@ def _probe_agent_bin(agent_id, role_label):
         # because the shim never falls back from it; otherwise `kimi` on PATH, then the installer path.
         _probe_bin_or_file(
             [get_env("KIMI_BIN")] if get_env("KIMI_BIN") else ["kimi", KIMI_DEFAULT_BIN],
-            role_label, agent_id, "KIMI_BIN",
+            role_label, agent_id, "KIMI_BIN", executable=True,
         )
     else:
         # GH-346: the comment above used to STATE this invariant and nothing enforced it, so an id
