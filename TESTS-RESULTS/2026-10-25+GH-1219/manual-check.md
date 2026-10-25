@@ -246,3 +246,15 @@ Probe: `_neutralize_answer_text` on a SINGLE-MODEL-stamped codex answer that cit
 Duplicate advisors (4370486860): `--models` is de-duplicated in order before launch, with a warning, so each advisor gets one process, transcript and answer ID. This was verified by **code inspection** (a single `dict.fromkeys` line), not by an executed probe.
 
 Existing suites green: `consult` 62/0, `gh308-consult-guards` 4/0, `gh589-consult-no-tick` 6/0, `gh648-l3-consult-cap`.
+
+
+## PR #1223 review follow-up, round 2 (CodeRabbit, 2026-10-25)
+
+Findings 4371191684 (provider routes) and the outside-diff degraded-JSON finding at `consult.py:1025`.
+
+| | Red (`44e451ab`) | Green |
+|---|---|---|
+| `openrouter/anthropic/claude-sonnet-5` in answer text | shielded as a "path", so the provider and model names leak | neutralized (`A/A/A-sonnet-5`); `utils/py/consult.py:302` citation kept |
+| Lone JSON survivor of a degraded panel | `answer-A.md` lacks the warning | `DEGRADED PANEL` warning present (state passed via `write_neutral_payloads(degraded=…)`) |
+
+Suites green: `consult` 62/0, `gh308` 4/0, `gh589` 6/0, `gh648-l3`.

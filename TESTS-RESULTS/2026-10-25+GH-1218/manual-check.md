@@ -339,3 +339,14 @@ Probe: a fixture `LESSONS-LEARNED.md` with one real entry, plus a ```` ```` ````
 | Pointers emitted | `Real lesson — cue: REAL-CUE` **and** `Fake copied example — cue: FAKE-CUE` | `Real lesson — cue: REAL-CUE` only |
 
 Fix: a fence closes only on a bare backtick run at least as long as its opener. `relay-pkg.tar.gz` was regenerated: `relay-pkg-freshness` 3/0; `gh397`, `gh681` and `relay-self-sufficiency` green.
+
+
+## PR #1223 review follow-up, round 2 (CodeRabbit, 2026-10-25)
+
+Finding 4371191681. Fixture: a real entry, an indented (2-space) backtick fence containing a fake entry, and a `~~~` fence containing another fake entry.
+
+| | Red (`44e451ab`) | Green |
+|---|---|---|
+| Pointers emitted | `REAL-CUE`, `FAKE-INDENTED`, `FAKE-TILDE` | `REAL-CUE` only |
+
+Fix: CommonMark fences with up to 3 leading spaces, for both backtick and tilde. A fence closes only on the same character, with a run at least as long as its opener. `relay-pkg-freshness` 3/0.

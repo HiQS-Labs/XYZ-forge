@@ -340,3 +340,21 @@ Fixes:
 - Index restore uses `git update-index -z --index-info` for off-ALLOW paths only, replacing the whole-index copy.
 
 Existing suites green after the fix: `improve-loop` 11/0, `improve-loop-qa` 11/0, `improve-loop-dogfood` 7/0, `champion` 13/0, `gh430-state-dir-tracked-default` 8/0, `security-scan` 35/0.
+
+
+## PR #1223 review follow-up, round 2 (CodeRabbit, 2026-10-25)
+
+Findings 4371191672 (glob ancestors) and 4371191676 (snapshot location). Red is `44e451ab`, green is the fix.
+
+| Case | Red | Green |
+|---|---|---|
+| G1: allowed `out/*/result.txt`; build creates `out/a/result.txt` | `off-ALLOW write violation (out/a)` (false positive) | no violation; result kept |
+| G2: pre-existing ancestor `out/` (allowed `out/result.txt`); build `chmod 700 out` | no violation; mode stays 700 | `off-ALLOW write violation (out)`; mode restored to 755 |
+| G3: build wipes `STATE_DIR`, then edits off-ALLOW `other.txt` | `violation (snapshot-missing)`; `other.txt` stays `HACK` (no restore) | `violation (other.txt)`; restored to `keep` |
+
+Fixes:
+- Ancestors are now matched per path segment (`fnmatch`, `**`-aware).
+- Ancestor directories keep their metadata in the manifest. Only *new* ancestors are structural.
+- The guard snapshot moved to a private `mktemp -d` outside the repo and `STATE_DIR`, removed on exit. If `mktemp` fails, every iteration is rejected (fail closed).
+
+Suites green: `improve-loop` 11/0, `improve-loop-qa` 11/0, `improve-loop-dogfood` 7/0, `champion` 13/0, `gh430` 8/0, `security-scan` 35/0.

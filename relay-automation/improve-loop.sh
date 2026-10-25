@@ -91,19 +91,23 @@ if [ -z "$REPO_ROOT" ]; then
   # GH-1221: run from outside Git — guard the repository that holds the artifact instead.
   REPO_ROOT="$(git -C "$(dirname "$ARTIFACT")" rev-parse --show-toplevel 2>/dev/null || true)"
 fi
+# GH-1221: the guard snapshot lives outside STATE_DIR (exempt, and a build may clear it) and outside
+# the repo. Empty means mktemp failed: the guard then fails closed and every iteration is rejected.
+GUARD_SNAP="$(mktemp -d "${TMPDIR:-/tmp}/il-guard.XXXXXX" 2>/dev/null || true)"
+[ -n "$GUARD_SNAP" ] && trap 'rm -rf "$GUARD_SNAP"' EXIT
 
 # GH-1221: pre/post-build snapshot, content manifest, and off-ALLOW violation check + restore.
 # Captures git status --porcelain -z --untracked-files=all --ignored AND a NUL-safe content+mode
 # manifest + byte backup for every pre-existing path outside ALLOW and outside STATE_DIR.
 il_build_guard() {
   [ -n "$REPO_ROOT" ] || return 0
-  python3 - "$1" "$REPO_ROOT" "$STATE_DIR" "$ALLOW" <<'PYEOF'
+  [ -n "$GUARD_SNAP" ] || return 1
+  python3 - "$1" "$REPO_ROOT" "$STATE_DIR" "$ALLOW" "$GUARD_SNAP" <<'PYEOF'
 import os, sys, subprocess, hashlib, shutil, json
 
-mode, root_arg, state_arg, allow_csv = sys.argv[1:5]
+mode, root_arg, state_arg, allow_csv, snap_dir = sys.argv[1:6]
 root = os.path.realpath(root_arg)
 state_real = os.path.realpath(state_arg)
-snap_dir = os.path.join(state_arg, ".gh1221_snap")
 
 state_rel = None
 if state_real == root:
@@ -175,18 +179,31 @@ def is_exempt(rel):
                 return True
     return False
 
+def _can_prefix(dsegs, psegs):
+    """Can directory segments dsegs be a strict ancestor of some path matching glob segments psegs?"""
+    import fnmatch
+    if not dsegs:
+        return bool(psegs)
+    if not psegs:
+        return False
+    if psegs[0] == "**":
+        return _can_prefix(dsegs, psegs[1:]) or _can_prefix(dsegs[1:], psegs)
+    return fnmatch.fnmatchcase(dsegs[0], psegs[0]) and _can_prefix(dsegs[1:], psegs[1:])
+
 def is_allow_ancestor(rel):
-    """A directory that only exists to hold an allowed path is structure, not an off-ALLOW write."""
+    """A directory on the way to an allowed path is structure: a NEW one is not an off-ALLOW write.
+    Pre-existing ancestors keep their metadata in the manifest, so mode/type changes still count."""
     rel = rel.rstrip("/")
     for a_rel, is_dir, has_glob in allow_entries:
         if has_glob:
-            lit = a_rel[:min([i for i, c in enumerate(a_rel) if c in "*?["] or [len(a_rel)])]
-            lit = lit.rsplit("/", 1)[0] if "/" in lit else ""
-            if not lit or rel == lit or lit.startswith(rel + "/"):
+            if _can_prefix(rel.split("/"), a_rel.split("/")):
                 return True
         elif a_rel and a_rel.startswith(rel + "/"):
             return True
     return False
+
+def _norm(info):
+    return None if info is None else {k: v for k, v in info.items() if k != "anc"}
 
 def get_porcelain():
     p = subprocess.run(
@@ -255,9 +272,6 @@ def scan_tree():
             if is_exempt(d_rel):
                 continue
             full_d = os.path.join(dirpath, d)
-            if is_allow_ancestor(d_rel) and not os.path.islink(full_d):
-                kept_dirs.append(d)
-                continue
             st = os.lstat(full_d)
             if os.path.islink(full_d):
                 target = os.readlink(full_d)
@@ -265,6 +279,8 @@ def scan_tree():
                 manifest[d_rel] = {"type": "symlink", "mode": st.st_mode & 0o7777, "hash": h}
             else:
                 manifest[d_rel] = {"type": "dir", "mode": st.st_mode & 0o7777, "hash": "-"}
+                if is_allow_ancestor(d_rel):
+                    manifest[d_rel]["anc"] = True
                 kept_dirs.append(d)
         dirnames[:] = kept_dirs
         for fn in sorted(filenames):
@@ -343,7 +359,10 @@ elif mode == "after":
     violated = set()
     all_keys = set(pre_manifest.keys()) | set(post_manifest.keys())
     for k in all_keys:
-        if pre_manifest.get(k) != post_manifest.get(k):
+        pre_i, post_i = pre_manifest.get(k), post_manifest.get(k)
+        if pre_i is None and post_i is not None and post_i.get("anc"):
+            continue  # a new directory that only holds an allowed path
+        if _norm(pre_i) != _norm(post_i):
             violated.add(k)
 
     for k in (set(pre_idx_map.keys()) | set(post_idx_map.keys())):
@@ -363,7 +382,8 @@ elif mode == "after":
         sys.exit(0)
 
     # Restore: (1) remove only paths that are new since the build started
-    new_paths = sorted([k for k in post_manifest if k not in pre_manifest], key=lambda x: x.count("/"), reverse=True)
+    new_paths = sorted([k for k in post_manifest if k not in pre_manifest and not post_manifest[k].get("anc")],
+                       key=lambda x: x.count("/"), reverse=True)
     for k in new_paths:
         target = os.path.join(root, k)
         if os.path.islink(target) or os.path.isfile(target):
@@ -381,7 +401,7 @@ elif mode == "after":
 
     # Restore: (2) pre-existing paths whose state changed
     changed_pre = sorted(
-        [k for k in pre_manifest if post_manifest.get(k) != pre_manifest[k]],
+        [k for k in pre_manifest if _norm(post_manifest.get(k)) != _norm(pre_manifest[k])],
         key=lambda x: x.count("/")
     )
     for k in changed_pre:

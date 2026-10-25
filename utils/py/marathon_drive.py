@@ -492,7 +492,11 @@ def compute_config_sha256(brief_file, builder, reviewer, env=None):
     def _model_val(agent_id):
         for prefix in ("claude", "codex", "agy", "aider", "pi", "smallcode", "commandcode", "deepseek"):
             if agent_id.startswith(prefix):
-                return env.get(f"{prefix.upper()}_MODEL") or "default"
+                explicit = env.get(f"{prefix.upper()}_MODEL")
+                if not explicit and prefix == "aider" and env.get("AIDER_OPENAI_API_BASE"):
+                    # aider-turn.py picks a different default model when an OpenAI-compatible base is set.
+                    return "default@" + env["AIDER_OPENAI_API_BASE"]
+                return explicit or "default"
         return "default"
     canonical = "\n".join([brief_text, builder, reviewer, _model_val(builder), _model_val(reviewer)])
     return relay_attest.sha256(canonical.encode("utf-8"))

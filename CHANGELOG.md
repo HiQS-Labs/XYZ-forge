@@ -29,7 +29,9 @@ Five fixes landed through one marathon chain (agy builder, codex reviewer, full 
 Plans were QA'd by Kimi K3.1 Pro (on #1214) and by Codex (three rounds, Approved). Each phase has a
 manual red/green receipt under `TESTS-RESULTS/2026-10-25+GH-<n>/`. The design ideas are adapted
 from Harness² (google-research/harness2, Apache-2.0; arXiv:2610.14224); no code was copied.
-#1214 stays open for Phase 6b. → [#1214](https://github.com/HiQS-Labs/XYZ-forge/issues/1214) · PR #1223
+Reversibility: easy. Each fix is one revertable diff, `attest@1` gains only an optional field
+(legacy records still load), and nothing migrates stored data, so these sit below PDDA's
+Costly/one-way bet threshold and need no `decisions/` record. #1214 stays open for Phase 6b. → [#1214](https://github.com/HiQS-Labs/XYZ-forge/issues/1214) · PR #1223
 
 ## 2026-10-24 — task-sync: pin active Claude Desktop sessions (GH-1196)
 

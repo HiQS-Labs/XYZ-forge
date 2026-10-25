@@ -294,20 +294,24 @@ def _neutralize_answer_text(raw_text, out_path, neutral_id, advisor):
         re.IGNORECASE,
     )
     # Repository citations (paths, file.ext[:line]) are evidence, not identity: shield them.
-    path_re = re.compile(r"[\w.-]*/[\w./-]+(?::\d+(?:-\d+)?)?|\b[\w-]+\.[A-Za-z]{1,5}(?::\d+(?:-\d+)?)?\b")
+    # Only file references (a name with an extension, optionally a directory and :line) count;
+    # a slash-separated provider route such as openrouter/vendor/model-name is still neutralized.
+    path_re = re.compile(r"(?<![\w./-])(?:[\w.-]+/)*[\w-]+\.[A-Za-z][A-Za-z0-9]{0,4}(?::\d+(?:-\d+)?)?(?![\w/-])")
     shielded = []
-    def _shield(m):
+    def _shield(m) -> str:
         shielded.append(m.group(0))
         return f"\x00{len(shielded) - 1}\x00"
     body = path_re.sub(_shield, body)
     body = token_re.sub(neutral_id, body)
     body = re.sub(r"\x00(\d+)\x00", lambda m: shielded[int(m.group(1))], body)
     if degraded:
-        body = ("**DEGRADED PANEL — a requested advisor did not answer; this is the only payload and it is "
-                "NOT RECONCILED.**\n\n" + body).strip()
+        body = (_DEGRADED_PANEL_NOTE + body).strip()
     return (body + "\n") if body else ""
 
-def write_neutral_payloads(run_dir, label, results, citeless_models=()):
+_DEGRADED_PANEL_NOTE = ("**DEGRADED PANEL — a requested advisor did not answer; this is the only payload and it is "
+                "NOT RECONCILED.**\n\n")
+
+def write_neutral_payloads(run_dir, label, results, citeless_models=(), degraded=False):
     """GH-1219: write neutral, label-seeded shuffled answer-A.md, answer-B.md, ... and key.json."""
     import hashlib
     import json as _json
@@ -334,6 +338,9 @@ def write_neutral_payloads(run_dir, label, results, citeless_models=()):
         except OSError:
             raw_text = ""
         neutral_body = _neutralize_answer_text(raw_text, out, neutral_id, m)
+        if degraded and _DEGRADED_PANEL_NOTE not in neutral_body:
+            # GH-1219: a JSON survivor is never text-stamped, so the panel state is passed in.
+            neutral_body = _DEGRADED_PANEL_NOTE + neutral_body
         if m in citeless_set:
             nocite_neutral = (
                 f"**NO FIRSTHAND VERIFICATION CITED** — treat conclusions as conditional "
@@ -1022,7 +1029,7 @@ def main():
 
         # GH-1219: after every advisor answer is validated and stamped, write neutral shuffled
         # answer-A.md, answer-B.md, ... and key.json while leaving the named originals untouched.
-        write_neutral_payloads(run_dir, label, results, citeless_models=citeless_models)
+        write_neutral_payloads(run_dir, label, results, citeless_models=citeless_models, degraded=degraded)
 
         if os.environ.get("CONSULT_GEMINI_JSON", "0") == "1":
             gj = os.path.join(run_dir, f"{label}.gemini.json")

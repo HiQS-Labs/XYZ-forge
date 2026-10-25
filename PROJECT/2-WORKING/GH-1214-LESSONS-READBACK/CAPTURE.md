@@ -43,7 +43,7 @@ Tracking issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1214. It holds the
 
 **Collision map.** The declared write-sets are pairwise disjoint. Two things are shared by every lane: `CHANGELOG.md` and the ledger (`releases.db`/`releases.sql`). No lane writes either; the orchestrator reconciles them at landing. The chain is sequential anyway.
 
-**Order rationale.** The two lanes that edit harness code the driver itself runs go last: p4 changes `rtl_turn_prompt`, which every later turn renders, and p5 changes the attestation and resume code. A regression in them can only halt their own phase. p1 and p2 are the smallest and least coupled, so they go first.
+**Order rationale.** The two lanes that edit harness code the driver itself runs go last: p4 changes `rtl_turn_prompt`, which every later turn renders, and p5 changes the attestation and resume code. Running them last limits who could inherit a regression: a defect in p4's prompt builder would reach p5's turns, and a defect in p5's resume code would reach any later re-fire. No earlier phase can be affected. p1 and p2 are the smallest and least coupled, so they go first.
 
 **Ratings and selection.** #1220 is rated risk 3, so the planner would hold it from *automatic* selection. The operator selected it explicitly (#1214, 2026-10-25), and the risk is mitigated by the optional field, no schema bump and legacy records accepted.
 

@@ -119,3 +119,10 @@ Probe: `test/lib/attest-stub.sh` writes a real `attest@1` record for reviewer `c
 Spent explicit task (4370486865): when the config changed and an explicit `--relay-task` is already `done` or `circuit_broken`, the driver now stops with `die()` **before** rendering, telling the operator to re-fire with a fresh `--relay-task` or `--retry`. This was verified by **code inspection** (it runs before the render), not by an executed probe.
 
 Existing suites green: `gh505-relay-attest`, `gh385-retry-token-satisfied`, `gh371-interrupt-snapshot` 2/0, `gh372-escalation-log-tail` 3/0.
+
+
+## PR #1223 review follow-up, round 2 (CodeRabbit, 2026-10-25)
+
+Outside-diff finding at `marathon_drive.py:487-499`. `compute_config_sha256` now hashes `default@<AIDER_OPENAI_API_BASE>` for an aider agent with no explicit `AIDER_MODEL`, matching how `aider-turn.py` selects its default.
+
+Probe: same brief, builder `aider`. The hash with no env versus with `AIDER_OPENAI_API_BASE=http://localhost:1234/v1` was equal on red (`44e451ab`) and differs on green.

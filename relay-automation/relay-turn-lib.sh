@@ -1085,16 +1085,17 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   fi
   if [[ -n "$_lroot" && -f "$_lroot/LESSONS-LEARNED.md" && -r "$_lroot/LESSONS-LEARNED.md" ]]; then
     local _line _in_fence=0 _lin_body=0 _ltitle="" _lcue="" _lsup="" _ldate="" _lval _lsup_lc
-    local _lftick _lfence_re='^(`{3,})' _lfence_close_re='^`+[[:space:]]*$'
+    local _lftick _lfence_ch="" _lfence_re='^ {0,3}(`{3,}|~{3,})' _lfence_close_re='^ {0,3}(`+|~+)[[:space:]]*$'
     local -a _lessons=() _ldates=()
     while IFS= read -r _line || [[ -n "$_line" ]]; do
       _line="${_line%$'\r'}"
-      # GH-1218: a fence closes only on a bare backtick run at least as long as its opener.
+      # GH-1218: CommonMark fences (``` or ~~~, up to 3 leading spaces). A fence closes only on a bare
+      # run of the SAME character at least as long as its opener.
       if [[ "$_line" =~ $_lfence_re ]]; then
         _lftick="${BASH_REMATCH[1]}"
         if ((_in_fence == 0)); then
-          _in_fence=${#_lftick}; continue
-        elif ((${#_lftick} >= _in_fence)) && [[ "$_line" =~ $_lfence_close_re ]]; then
+          _in_fence=${#_lftick}; _lfence_ch="${_lftick:0:1}"; continue
+        elif [[ "${_lftick:0:1}" == "$_lfence_ch" ]] && ((${#_lftick} >= _in_fence)) && [[ "$_line" =~ $_lfence_close_re ]]; then
           _in_fence=0; continue
         fi
       fi
