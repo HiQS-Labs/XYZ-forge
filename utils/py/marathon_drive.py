@@ -735,6 +735,8 @@ SMALLCODE_DEFAULT_BIN = os.path.join(
     os.path.expanduser("~"), "Documents", "GH Repos", "smallcode", "bin", "smallcode.js"
 )
 DEEPSEEK_DEFAULT_BIN = "/Users/noelsaw/Documents/GH Repos/deepseek-harness/apps/cli/lib/bin.js"
+# GH-1215: mirrors kimi-turn.py's INSTALLER_BIN (the Kimi Code installer's PATH edit is in ~/.zshrc).
+KIMI_DEFAULT_BIN = os.path.join(os.path.expanduser("~"), ".kimi-code", "bin", "kimi")
 
 def _probe_bin_or_file(candidates, role_label, agent_id, override_env):
     """Pass if ANY candidate resolves — on PATH, or as an existing file dispatched by interpreter.
@@ -805,6 +807,12 @@ def _probe_agent_bin(agent_id, role_label):
         _probe_bin_or_file(
             [get_env("DEEPSEEK_BIN"), DEEPSEEK_DEFAULT_BIN, "dsh"],
             role_label, agent_id, "DEEPSEEK_BIN",
+        )
+    elif agent_id.startswith("kimi"):
+        # GH-1215: mirrors kimi-turn.py's default_kimi_bin(): override, `kimi` on PATH, installer path.
+        _probe_bin_or_file(
+            [get_env("KIMI_BIN"), "kimi", KIMI_DEFAULT_BIN],
+            role_label, agent_id, "KIMI_BIN",
         )
     else:
         # GH-346: the comment above used to STATE this invariant and nothing enforced it, so an id
@@ -1979,6 +1987,7 @@ def main():
     # asked for. Omitting the two new lanes here would have left exactly that hole open for them.
     os.environ["COMMANDCODE_AGENT"] = ""
     os.environ["DEEPSEEK_AGENT"] = ""
+    os.environ["KIMI_AGENT"] = ""
 
     def route_agent(agent_id):
         # GH-414 — BASH/PYTHON DIVERGENCE, deliberate and pinned. This router accepts `pi*`
@@ -2026,7 +2035,9 @@ def main():
         # is what made these two gateways accept-then-die.
         elif agent_id.startswith("commandcode"): os.environ["COMMANDCODE_AGENT"] = agent_id
         elif agent_id.startswith("deepseek"): os.environ["DEEPSEEK_AGENT"] = agent_id
-        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi/smallcode/commandcode/deepseek")
+        # GH-1215: builder lane only; the reviewer gate below stays codex/agy.
+        elif agent_id.startswith("kimi"): os.environ["KIMI_AGENT"] = agent_id
+        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi/smallcode/commandcode/deepseek/kimi")
         
     if args.builder == args.reviewer:
         _RESULT["reason"] = "builder-equals-reviewer"
@@ -2297,7 +2308,7 @@ relay-file: {rel_relay}
         "SMALLCODE_AGENT",
         # GH-346 Phase 2: TENTH copy. Kept in lockstep with gate_env.py's registry, which
         # test/gh441-gate-env-contract.sh compares against this literal.
-        "COMMANDCODE_AGENT", "DEEPSEEK_AGENT",
+        "COMMANDCODE_AGENT", "DEEPSEEK_AGENT", "KIMI_AGENT",
         "RELAY_TARGET_ROOT", "RELAY_TASK", "RELAY_WORKTREE_ISOLATION",
         "RELAY_TOOL_MODE", "XYZ_TOOL_MODE",
         "XYZ_HARNESS_CONTEXT", "XYZ_SESSION_ID",
@@ -3412,7 +3423,7 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
         # with no guard root — deepseek-turn.py:93 reads DEEPSEEK_TURN_ROOT, so a --target-root
         # deepseek turn was resolving containment against the harness clone, not the target.
         if args.target_root:
-            for _shim in ("CLAUDE", "CODEX", "AGY", "AIDER", "PI", "SMALLCODE", "COMMANDCODE", "DEEPSEEK"):
+            for _shim in ("CLAUDE", "CODEX", "AGY", "AIDER", "PI", "SMALLCODE", "COMMANDCODE", "DEEPSEEK", "KIMI"):
                 env2[f"{_shim}_TURN_ROOT"] = args.target_root
         return subprocess.run(cmd2, env=env2, cwd=root).returncode
 
