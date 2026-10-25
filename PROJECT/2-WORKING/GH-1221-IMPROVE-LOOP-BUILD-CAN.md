@@ -44,11 +44,19 @@ Umbrella: #1214 · Phase p2 · `depends_on: p1`.
 
 ## Plan (one phase)
 
-1. Before each build: record `git status --porcelain -z --untracked-files=all --ignored` for the repo, and save a copy of every tracked file's content that the restore might need (for example with `git stash create`, or a per-iteration copy of changed paths). Keep it inside the loop's existing state dir.
+1. Before each build, take a snapshot inside the loop's state dir. If the snapshot fails, reject the iteration (fail closed).
+   - Record `git status --porcelain -z --untracked-files=all --ignored`, parsed NUL-safe.
+   - Save the bytes, mode and directory shape of **every pre-existing path outside `ALLOW`** that the build could change, for example with a `tar` of those paths. This covers tracked files with local changes, untracked files and **ignored** files. Clean tracked files can be restored from `git` itself.
+   - Exclude `$STATE_DIR` by its normalized repo-relative prefix. Plan review (Codex, 2026-10-25) noted that a status listing records paths, not bytes, so it alone cannot restore a pre-existing ignored file.
 2. After the build: take the same listing and compare it with the **pre-build** listing, not with a clean tree. Any path that is new or changed and lies outside `ALLOW` and outside `$STATE_DIR` is a violation.
-3. On a violation: log one line naming the paths, treat the iteration as rejected (the existing rejection path, provenance included), and restore every violating path from the snapshot. Restore tracked files to their pre-build content, delete newly created untracked or ignored files, and restore previously existing ignored files that were changed. Also restore `$ARTIFACT` as today.
+3. On a violation: log one line naming the paths, treat the iteration as rejected (the existing rejection path, provenance included), and restore from the snapshot:
+   - pre-existing paths go back to their exact pre-build bytes and mode, whether tracked, untracked or ignored
+   - clean tracked files go back to `HEAD` content
+   - only paths that are new since the build started are removed
+
+   Also restore `$ARTIFACT` as today.
 4. Allowed changes (`ALLOW` entries plus the loop's own `$STATE_DIR`) behave exactly as before.
-5. Manual check under `TESTS-RESULTS/2026-10-25+GH-1221/` in a throwaway git repo under `$TMPDIR` with a scripted `--build-cmd`. Cover four cases: (a) a clean iteration with default settings is not rejected; (b) a tracked file outside `ALLOW` is changed, then detected and restored; (c) an untracked file is created, then detected and removed; (d) an ignored file is created or changed, then detected and restored. Record each case before the fix (red control) and after. Write `manual-check.md` plus `provenance.jsonl`.
+5. Manual check under `TESTS-RESULTS/2026-10-25+GH-1221/` in a throwaway git repo under `$TMPDIR` with a scripted `--build-cmd`. Cover four cases: (a) a clean iteration with default settings is not rejected; (b) a tracked file outside `ALLOW` is changed, then detected and restored; (c) an untracked file is created, then detected and removed; (d) a pre-existing ignored `cache/x` with known content is changed by the build, then restored to exactly its old bytes and mode, while a newly created ignored sibling is removed. Record each case before the fix (red control) and after. Write `manual-check.md` plus `provenance.jsonl`.
 
 Rules: Bash 3.2-compatible (match the file's existing idiom); shortest diff; no new script file (inventory ratchet) and no new suite (GH-831 D7). Edit an existing improve-loop suite only if one of its pinned assertions becomes untrue. Never run the loop against this repository's own tree with a live agent.
 

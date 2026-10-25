@@ -56,18 +56,24 @@ Umbrella: #1214 · Phase p5 · `depends_on: p4`. Ordered **last** because it edi
   - The record carries `config_sha256` and it differs from the current value: log one line naming the phase and saying the config changed (do not print the brief), then return `False`, so the phase rebuilds through the existing fresh-token path.
   - The record has no `config_sha256`: log a warning ("legacy attestation without config identity — reusing") and reuse as today.
   - The values match: reuse as today.
-- `relay_attest.py`: keep `SCHEMA` unchanged. The optional field must not fail validation. Update the docstring or field list only if one exists that enumerates fields. `jog` must accept records with or without the field.
+- **Bind the field into the trailer (plan-review blocker, Codex, 2026-10-25).** `relay_attest.trailer_text` (`utils/py/relay_attest.py:203-210`) currently emits only task, reviewer, status, head, added-range and digest. Two records differing only in `config_sha256` produce identical trailers (Codex probe printed `True`), so a tampered value would still load.
+  - When the record carries `config_sha256`, `trailer_text` must include it.
+  - `load()` must validate it as a non-empty string when present.
+  - A record whose stored field no longer matches its trailer must be refused.
+  - Legacy records and trailers without the field still load unchanged.
+  - `SCHEMA` stays `relay-drive/attest@1`, and `jog` accepts records with or without the field.
 
 ## Plan (one phase)
 
 1. `relay_drive.py`: add the optional field from `MARATHON_CONFIG_SHA256` (tag `GH-1220`).
 2. `marathon_drive.py`: compute and export the value for the relay-drive child, and apply the comparison and legacy-warning logic in `satisfied_lane_terminal` (tag `GH-1220`).
-3. `relay_attest.py`: no change unless validation rejects unknown keys; if it does, allow `config_sha256` as an optional string.
+3. `relay_attest.py`: include `config_sha256` in `trailer_text` when present, validate it as a non-empty string when present, and keep legacy records accepted. Tag the change `GH-1220`.
 4. Manual check under `TESTS-RESULTS/2026-10-25+GH-1220/`, using the existing attestation stub (`test/lib/attest-stub.sh`) and a throwaway repo in `$TMPDIR`. Show:
    - (a) a legacy record without the field is reused with a warning, in both marathon resume and a `relay_attest.load` call like `jog`'s
    - (b) a matching record is reused
    - (c) changing the brief file, the builder, or `AGY_MODEL` rebuilds with the one-line reason
    - (d) `jog`'s loader accepts a record that has the field
+   - (e) changing only the stored `config_sha256` in a record makes `relay_attest.load()` refuse it, because the reconstructed trailer no longer matches, while a legacy record without the field still loads
 
    Write `manual-check.md` plus `provenance.jsonl`.
 
@@ -115,7 +121,7 @@ Rules: Python only; shortest diff; no new suite or registry entry (GH-831 D7). E
   ],
   "remediation": {
     "source": "issue#1220",
-    "criteria": "marathon_drive computes config_sha256 (brief content + builder + reviewer + their resolved *_MODEL or 'default') and passes it to its relay-drive child via MARATHON_CONFIG_SHA256; relay_drive writes it as an optional attest@1 field (no schema bump, no frozen-twin edit); satisfied_lane_terminal rebuilds with a one-line reason on mismatch, reuses on match, and reuses legacy records with a warning; jog's loader accepts both; tagged GH-1220; manual check recorded; existing attestation suites green."
+    "criteria": "marathon_drive computes config_sha256 (brief content + builder + reviewer + their resolved *_MODEL or 'default') and passes it to its relay-drive child via MARATHON_CONFIG_SHA256; relay_drive writes it as an optional attest@1 field that relay_attest binds into trailer_text and validates when present (no schema bump, no frozen-twin edit; a tampered field is refused); satisfied_lane_terminal rebuilds with a one-line reason on mismatch, reuses on match, and reuses legacy records with a warning; jog's loader accepts both; tagged GH-1220; manual check recorded; existing attestation suites green."
   },
   "lanes": {
     "agy_safe": [

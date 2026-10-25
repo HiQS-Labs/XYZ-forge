@@ -52,6 +52,8 @@ Umbrella: #1214 · Phase p3 · `depends_on: p2`.
    - leave the named originals untouched; tag the code `GH-1219`
 
    With a single advisor, write `answer-A.md` and `key.json` too; the SINGLE-MODEL stamp logic is unchanged.
+
+   **JSON-mode answers** (`CONSULT_GEMINI_JSON=1`, written as `${label}.gemini.json` at `consult.py:664-672`, which skips text-stamp rewriting at `:876-885`) get a neutral **Markdown projection**: decode only the `.response` value, the same boundary the validator already uses at `consult.py:208-214`. Never copy the raw JSON, because its envelope can carry model, provider or metadata fields. (Plan review, Codex, 2026-10-25.)
 2. **`relay-automation/consult.sh` is not edited.** It is FROZEN (GH-308), and by default it execs `consult.py` (`consult.sh:9-18`), so the Python change covers the supported path. The Bash fallback (`XYZ_PYTHON=0`) keeps its historical output; that is GH-308 policy, not a gap. Swarm preflight refused the frozen artifact at prep (exit 5), and the write-set was narrowed to match.
 3. **`skills/1-hourly/consult/SKILL.md` steps 3-4:**
    - read only `answer-*.md` first
@@ -63,6 +65,7 @@ Umbrella: #1214 · Phase p3 · `depends_on: p2`.
    - the payloads contain no `ATTESTATION`/`Model:`/`Provider:` lines, no advisor names and no named filenames
    - `key.json` maps correctly
    - a rerun produces the same order
+   - a stubbed `CONSULT_GEMINI_JSON=1` run, whose JSON envelope contains identifying fields, yields an `answer-*.md` holding only the decoded response
    - the default entry point `relay-automation/consult.sh` (which execs `consult.py`) produces the same files
 
    Write `manual-check.md` plus `provenance.jsonl`.

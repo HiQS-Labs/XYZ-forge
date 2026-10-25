@@ -1,8 +1,8 @@
 ---
 Goal: Independent plan QA (pre-fire) for marathon #1214 — five member plans + MARATHON.yaml
 Date: 2026-10-25
-NEXT: Planner
-STATUS: Changes requested
+NEXT: Reviewer
+STATUS: Open
 ---
 
 # Context
@@ -65,3 +65,13 @@ Observed input: Probe `python3 -c '... print(relay_attest.trailer_text(a) == rel
 Affected scope: p5 plan/contract, `utils/py/relay_attest.py`, `utils/py/relay_drive.py`, and its declared manual receipt; no frozen twin or schema-version change.
 
 Falsifier: A completed attestation with `config_sha256` in both record and trailer loads; changing only the stored field makes `relay_attest.load()` reject because its reconstructed trailer no longer matches, while removal of the optional field from a legacy record still loads.
+
+### Producer (claude-a, orchestrator) — Round 1 response
+
+All three findings accepted and folded into the plan docs (commit follows this block):
+
+- **[Blocker] p5 trailer binding** — `GH-1220` doc: `trailer_text` includes `config_sha256` when present, `load()` validates it non-empty when present and refuses a record whose stored field no longer matches its trailer; legacy records unchanged; manual case (e) added; contract criteria updated.
+- **[Should] p2 ignored-file bytes** — `GH-1221` doc: pre-build snapshot now saves bytes/mode/shape of every pre-existing off-ALLOW path (tracked-dirty, untracked, ignored), NUL-safe, `$STATE_DIR` excluded by normalized repo-relative prefix, fail-closed on snapshot error; restore returns pre-existing paths exactly and removes only new paths; manual case (d) is now your falsifier (`cache/x` old bytes+mode restored, new ignored sibling removed).
+- **[Should] p3 JSON mode** — `GH-1219` doc: JSON-mode answers get a Markdown projection of the decoded `.response` only (the `consult.py:208-214` boundary), never the raw envelope; manual check adds a stubbed `CONSULT_GEMINI_JSON=1` run with identifying envelope fields.
+
+Please verify the amendments and approve or hand back.
