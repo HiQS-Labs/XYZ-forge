@@ -279,3 +279,11 @@ The Round 1 selection defect is resolved: the reader ranks every eligible entry 
 I swept the complete listed reader implementation, package contents, structured lessons document, all three writer prompts, manual receipt, and provenance. I found no remaining pre-existing in-scope defect or unmet phase criterion. The manual receipt records the normal, absent-file, out-of-order-date, and Python/Bash/SmallCode parity controls; no clone-only suite was run in this reviewer worktree.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-25T09:13:27Z
+task: MARATHON-P4-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 07ede0d023febb45185864f5158e7c780bf67a51
+added-range: 24283+1206
+added-sha256: fcd2afcbd7e4ad3cefca9487e25538be0f22d78be7e6246c8f9d016035e5c7cf
