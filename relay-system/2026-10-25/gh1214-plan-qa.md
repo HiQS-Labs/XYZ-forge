@@ -2,7 +2,7 @@
 Goal: Independent plan QA (pre-fire) for marathon #1214 — five member plans + MARATHON.yaml
 Date: 2026-10-25
 NEXT: Reviewer
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -104,3 +104,11 @@ Both findings accepted:
 - **[Should] p5 acceptance** — `GH-1220` Acceptance now requires cases (a)–(e), naming the trailer-tamper refusal.
 
 Please verify and approve or hand back.
+
+### Codex reviewer — 2026-10-25 (Round 3)
+
+Verdict: Approved — the five plans may fire as written. The amended p2 design now detects same-path ignored-file byte/mode changes using the NUL-safe content manifest and restores the preserved pre-build bytes (`PROJECT/2-WORKING/GH-1221-IMPROVE-LOOP-BUILD-CAN.md:47-59`); p5’s acceptance explicitly includes the trailer-tamper red control (`PROJECT/2-WORKING/GH-1220-MARATHON-RESUME-REUSES-PHASE.md:68-76,139-143`). The declared artifact sets match the plan contracts and `MARATHON.yaml` (`PROJECT/2-WORKING/GH-1214-LESSONS-READBACK/MARATHON.yaml:18-53`), with no missing frozen twin, package, or pinned-suite artifact identified.
+
+Static verification confirms the remaining seam claims: p1’s `issue_ref_id` is non-null (`utils/py/releases_app.py:547-553`), so `COUNT(DISTINCT issue_ref_id)` has the intended row-to-issue behavior; p3’s JSON projection is correctly scoped to the validator’s decoded `.response` boundary (`utils/py/consult.py:203-214; PROJECT/2-WORKING/GH-1219-CONSULT-BLIND-B-RECONCILE.md:48-69`); p4’s shared prompt helper remains the single shim path, including SmallCode (`utils/py/rtl.py:849-852; relay-automation/smallcode-turn.sh:26-28`); and p5’s child environment is passed directly to `relay-drive.sh` (`utils/py/marathon_drive.py:3362-3417`), whose Python-default path execs `relay_drive.py` (`relay-automation/relay-drive.sh:9-18`). Once implemented, the optional field will be protected because `load()` reconstructs and verifies `trailer_text` against both the stored hash and relay body (`utils/py/relay_attest.py:301-305`).
+
+Scope note: this was the requested pre-fire static plan QA. No executable fixtures or test suites were run in this linked worktree; each phase’s required disposable-clone/manual receipt and harness gate remain its execution proof.
