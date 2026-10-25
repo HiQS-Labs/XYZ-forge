@@ -27,7 +27,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| 2026-10-25: members #1218–#1222 filed, captured, promoted with contracts and rated; ledger marathon row `mar-01M5RWFT9ZAJVN1P7QCSDAT0KX` → #1214; plan QA by Codex (receipt below) | Fire the chain from `~/marathon-clones/marathon-gh-1214-lessons-readback` on `feat/gh1214-lessons-readback` with `--builder agy`, codex reviewer per phase, `--closeout-pr` |
+| 2026-10-25: members #1218–#1222 filed, captured, promoted with contracts and rated; ledger marathon row `mar-01M5RWFT9ZAJVN1P7QCSDAT0KX` → #1214; plan QA by Codex Approved in round 3 (receipt below) | Fire the chain from `~/marathon-clones/marathon-gh-1214-lessons-readback` on `feat/gh1214-lessons-readback` with `--builder agy`, codex reviewer per phase, `--closeout-pr` |
 
 Tracking issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1214. It holds the full plan, the Phase 0 decisions and the QA dispositions.
 
@@ -90,4 +90,8 @@ relay-automation/marathon.sh --plan PROJECT/2-WORKING/GH-1214-LESSONS-READBACK/M
 
 ## Plan QA (pre-fire)
 
-- (receipt recorded after the Codex plan-QA relay)
+- **Codex, 3 rounds, `STATUS: Approved`** in `relay-system/2026-10-25/gh1214-plan-qa.md`, with a relay-drive attestation (reviewed-head `25591066`).
+  - Round 1 found 1 Blocker (p5 trailer binding) and 2 Shoulds (p2 ignored-file bytes, p3 JSON projection).
+  - Round 2 found 2 Shoulds (p2 content manifest, p5 acceptance case e).
+  - All were accepted and folded in; round 3 approved.
+- Earlier independent QA of the whole plan: Kimi K3.1 Pro on #1214 (13 findings, all accepted; disposition table in #1214's comments).
