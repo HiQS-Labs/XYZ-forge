@@ -221,4 +221,12 @@ Basis: The implementation matches plan steps 1–4 and R1–R3 without a second 
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-25T03:34:46Z
+task: RELAY-gh1196-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: a12be6a0a0054dea58f091e5bc7f44f57e693678
+added-range: 15325+3800
+added-sha256: 3dbda08f61e6da93acdfc94eaf9846aa536050e5c467599e66050b050cb3753b
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
