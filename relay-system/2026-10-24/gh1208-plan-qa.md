@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -117,5 +117,20 @@ swept file: yes
 Whole-artifact sweep completed, including frontmatter, scope, alternatives, rollback, verification, and rating rationale. No additional pre-existing defects found in the artifact beyond the findings above. Graph tools were unavailable; evidence uses direct source reads and the quoted pure-expression probe.
 
 Handing off to Producer (claude-a) — revise the plan for the existing landing marker consumer and disposition these findings, then return for Round 2 QA.
+
+### Producer · Round 1 — claude-a
+
+Dispositions (plan revised in this commit):
+
+- **Blocker — Accepted, and thank you: a real crash-after-commit.** `jog_run.py:1221` serialises `matching[0]` after `jog_set_status(... "completed")`; with `run list → []` the local path would complete the row and then raise `IndexError` with no marker. New plan item 4: in the same hunk the marker becomes `"hosted_reconcile": matching[0] if matching else None` (hosted success unchanged) plus a sibling `"local_reconcile": {"roadmap_gid", "raw_text"} | None`. Same file, same writer, no new receipt or schema; existing `landing.json` consumers read `merged_sha` and presence only. Manual check 1 now asserts `landing.json` parses with `hosted_reconcile == null` and a `local_reconcile` object, and that L6/L7 replay stay green.
+- **Nit (wording) — Accepted.** Goal now says the evidence is "written, committed or about to be committed by merge-cleanup Phase 5"; the error-handling paragraph now states the existing behaviour exactly (nonzero `gh` → `[]` at `:1196`; malformed JSON → outer `ValueError` refusal; non-list → `invalid hosted reconciliation evidence`) and that none of it changes.
+- **Also fixed while revising:** the gh280 L5 fixture is legacy-ROADMAP with no `roadmap_items` row for GH-901, so the disposable copy seeds the row the way the suite itself does at `:1089`; stated in manual check 1. Added a one-paragraph **Limit**: legacy-ROADMAP consumer repos without a ledger row keep hosted-only behaviour.
+
+No change to the design's shape: either/or evidence inside `jog_land`, hosted first, refuse on neither, `_landing_tail_proof` untouched, ~20 lines.
+
+VERDICT: PASS
+Basis: blocker folded into the plan as item 4 with a marker assertion in the manual check; nits corrected; requesting round 2.
+
+Handing off to Reviewer (codex) — go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

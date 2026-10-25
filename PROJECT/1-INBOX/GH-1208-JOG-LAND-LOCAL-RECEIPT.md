@@ -27,7 +27,8 @@ related:
 goal: >
   `jog land GH-N --pr M` completes an ordinary development landing under the GH-1127 default: it accepts
   either a green hosted wave-reconcile run for the landed head (unchanged) or the local reconciler's own
-  committed ledger evidence for that PR, and still refuses when neither exists.
+  ledger evidence for that PR (written, committed or about to be committed by merge-cleanup Phase 5),
+  and still refuses when neither exists.
 ---
 
 # GH-1208 · `jog land` accepts the local reconcile evidence
@@ -86,8 +87,21 @@ In `jog_land`, replace the unconditional hosted requirement with **either/or evi
    for the landed head and the GH-N roadmap row is not SHIPPED (PR #N) — run wave_reconcile.py --pr N
    locally (GH-1127) or dispatch the hosted lane")`.
 
-Order: hosted first (keeps today's behaviour byte-identical when a run exists), then local. Nothing else
-in `jog_land` changes; `_landing_tail_proof` remains the post-merge moved-head authority. ~15 lines.
+Order: hosted first (keeps today's behaviour byte-identical when a run exists), then local.
+
+4. **Landing marker (plan QA r1 blocker).** `jog_land` serialises `"hosted_reconcile": matching[0]` into
+   the existing `landing.json` (`jog_run.py:1221`) **after** `jog_set_status(..., "completed")`; with no
+   hosted run `matching` is `[]` and that line raises `IndexError` after the queue row is already
+   completed. The marker therefore changes with the gate, in the same hunk: `"hosted_reconcile":
+   matching[0] if matching else None` (hosted success keeps today's object), plus one sibling key
+   `"local_reconcile": {"roadmap_gid": <row global_id>, "raw_text": <row raw_text>}` when the local
+   branch supplied the evidence, else `None`. Same file, same writer, no new receipt or schema version;
+   the existing `landing.json` consumers (`test/gh280…:1019,1042`) read `merged_sha` and file presence only.
+
+Existing error handling, described accurately: a nonzero `gh` exit already maps to `[]`
+(`jog_run.py:1196`), malformed JSON reaches the outer `ValueError` handler and refuses, and a non-list
+answer raises `invalid hosted reconciliation evidence`. None of that changes. `_landing_tail_proof`
+remains the post-merge moved-head authority. ~20 lines in one function.
 
 Alternatives rejected: (a) require the `chore: reconcile after PR #N` commit on origin/development — wrong
 at merge-cleanup's call site (above) and brittle on subject text (today's hand reconcile used a different
@@ -101,12 +115,15 @@ Rollback: revert the one hunk.
 
 1. **Existing suite, unchanged:** `XYZ_WORK_CONNECTORS=0 RELAY_SELF_SUFFICIENCY_SKIP=1 bash
    test/gh280-jog-marathon-adapter.sh` stays 223/223 (hosted-green path, L5).
-2. **Manual check 1 — GH-1127 state (red → green).** A *copy* of that suite in a disposable clone with one
-   edit: the stub's `run list` answers `[]` (no hosted run), everything else identical. Reverted code: L5
-   `jog land` refuses with `hosted wave-reconcile is not green for the landed PR head` (the live defect).
-   Fixed code: L5 completes (`completed|landed via PR #42`) on the local row evidence the fixture's own
-   `wave_reconcile.py --pr 42 --offline` wrote. Record both logs; the copy is deleted with the clone and
-   is not a registered suite.
+2. **Manual check 1 — GH-1127 state (red → green).** A *copy* of that suite in a disposable clone with two
+   edits: the stub's `run list` answers `[]` (no hosted run), and a `roadmap add --issue-num 901` row is
+   seeded before L5 (the fixture is legacy-ROADMAP at that point and has no `roadmap_items` row; the same
+   seeding the suite itself performs later at `:1089`), so the fixture's own `wave_reconcile.py --pr 42
+   --offline` writes the `SHIPPED (PR #42)` badge into `releases.db`. Reverted code: L5 `jog land` refuses
+   with `hosted wave-reconcile is not green for the landed PR head` (the live defect). Fixed code: L5
+   completes (`completed|landed via PR #42`), `landing.json` parses with `hosted_reconcile == null` and a
+   `local_reconcile` object naming the GH-901 row, and L6/L7 replay stay green. Record both logs; the copy
+   lives under the clone's gitignored `temp/` and is deleted with the clone — not a registered suite.
 3. **Manual check 2 — neither evidence refuses.** Same copy, additionally skipping the fixture's
    `wave_reconcile.py` step (or resetting the row's section) before L5: fixed code refuses with the new
    combined message; the row stays untouched. This is the red control for the local branch.
@@ -114,6 +131,12 @@ Rollback: revert the one hunk.
    returns the same completed state with no DB byte change (`releases.db` sha256 before/after).
 5. Final gate by `utils/ci-route.sh` on the changed paths (`utils/py/jog_run.py` → tier 3), run once on
    the final code commit in a disposable `-gate` clone with identity checked before and after.
+
+## Limit
+
+The local branch reads `roadmap_items`; a consumer repo still in legacy ROADMAP.md mode with no ledger row
+for the issue gets no local evidence and keeps today's hosted-only behaviour. XYZ-forge is releases-mode
+(DB is roadmap truth), so this does not bite here; it is stated, not solved.
 
 ## Rating rationale (2026-10-24)
 
