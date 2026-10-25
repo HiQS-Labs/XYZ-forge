@@ -192,3 +192,11 @@ swept file: yes
 - The builder's existing-suite evidence is recorded as `gh32-releases-app` 145/145 and `gh351-manifest-unship` 13/13. I did not run executable fixtures, test scripts, or `validate.sh` in this linked worktree; the harness gate remains the appropriate disposable-clone validation.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-25T07:04:45Z
+task: MARATHON-P1-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 737aa79f34d4ee23e8c6564fb25f4db93edee9ec
+added-range: 12117+1536
+added-sha256: da7b580c0662a80f25033f1cb76f436284eddea970c33448df0b5300e95a2e67
