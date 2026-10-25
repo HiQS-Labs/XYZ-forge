@@ -1,6 +1,6 @@
 ---
 title: "Add a native kimi relay worker (Kimi Code CLI) to the relay harness"
-status: In progress (final QA)
+status: PR ready; awaiting merge
 created: 2026-10-24
 updated: 2026-10-24
 owner: claude
@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Built; suites green; live Kimi relay turn attested Approved | Codex final QA, then PR |
+| Final Codex QA Approved (round 1); PR open | Merge, then switch the operator's Kimi profile to `harness: kimi` |
 
 ## Key concepts
 
@@ -154,7 +154,8 @@ Receipt: `TESTS-RESULTS/2026-10-24+GH-1215/live-smoke.md` (with `provenance.json
 
 ## Final QA
 
-Pending.
+Thread: `relay-system/2026-10-24/gh1215-final-qa.md` (Codex). Round 1: VERDICT PASS, five cited
+`[Pass]` findings, no Blocker/Should/Nit; attested Approved at `ba9313fb`.
 
 ## Rating rationale (2026-10-24)
 
