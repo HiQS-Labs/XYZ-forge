@@ -364,6 +364,7 @@ class ClaudeDesktopAdapter:
     does not reach it; ``set_session_title`` owns every write. The snapshot rows are
     ``list_sessions`` rows, whose ``lastActivityAt`` is the session's own turn activity.
     ``list_sessions`` excludes the caller, so an empty inventory is valid, not a refusal.
+    Pins (GH-1196) are proposals for ``set_pinned``; the planner only ever adds pins.
     """
 
     NAME = "claude-desktop"
@@ -406,22 +407,31 @@ class ClaudeDesktopAdapter:
     def sweep(self, *, hours=24, include_all=False, pin=True, pin_hours=24,
               unpin_days=None, include_cron=False, group=None):
         if unpin_days is not None or group:
-            raise core.AdapterError("claude-desktop: no pins or groups; --unpin-days/--group unsupported")
+            raise core.AdapterError("claude-desktop: no groups or unpinning; --unpin-days/--group unsupported")
         captured, sessions = self._snapshot()
         report = core.new_ide_report()
         report["scope"] = "list_sessions inventory; the sweeping session is excluded by the tool"
         report["execution"] = "native-tools-required"
         cutoff = captured - hours * 3600
+        pin_cutoff = captured - pin_hours * 3600
         for row in sessions:
             session_id = row["sessionId"]
-            if row.get("isArchived") is not False or row.get("isRunning") is not False \
-                    or session_id == self.exclude_thread:
+            running = row.get("isRunning")
+            if row.get("isArchived") is not False or session_id == self.exclude_thread \
+                    or not isinstance(running, bool):
                 report["skipped"] += 1
                 continue
             at = _iso_to_local(row.get("lastActivityAt"))
             if at is None or at.timestamp() > captured + 60:
+                if running:  # skipped before activity was read, as before GH-1196
+                    report["skipped"] += 1
+                    continue
                 raise core.AdapterError(f"claude-desktop lastActivityAt missing/invalid for {session_id}")
-            if at.timestamp() < cutoff:
+            # GH-1196: pins only ever get added; a running session can be pinned.
+            if pin and row.get("pinned") is not True and at.timestamp() >= pin_cutoff:
+                report["pinned"].append({"task_id": session_id, "title": row["title"],
+                                         "activity_at": row["lastActivityAt"]})
+            if running or at.timestamp() < cutoff:
                 report["skipped"] += 1
                 continue
             report["swept"] += 1

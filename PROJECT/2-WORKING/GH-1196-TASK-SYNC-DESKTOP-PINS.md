@@ -1,6 +1,6 @@
 ---
 title: "task-sync: pin active Claude Desktop sessions (native set_pinned)"
-status: Inbox
+status: In progress
 created: 2026-10-24
 updated: 2026-10-24
 owner: claude
@@ -29,7 +29,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 4: substance passed; last wording fix applied | Build, probes, live smoke, final QA |
+| Built: planner pins, SKILL pin step, probes 11/11 + #1191 17/17, red control, live smoke | Final Codex QA, then PR |
 
 ## Key concepts
 
@@ -105,6 +105,14 @@ Operator, 2026-10-24: "Are you able to also move active tasks to the pinned area
 ## Verification (no new test/ suites)
 
 Manual probes and live smoke under `TESTS-RESULTS/2026-10-24+GH-1196/` with `provenance.jsonl`.
+
+- Probes 11/11 on Python 3.9.6 and 3.14.7; the #1191 battery 17/17 on the new code (R3).
+- Red control: removing the `pinned is not True` check fails only the already-pinned probe (10/11).
+- Live smoke (`live-smoke.md`): one ordinary session pinned through the procedure, re-read `pinned: true`, `lastActivityAt` unchanged, rerun no longer proposes it.
+
+### Found in the live smoke
+
+3 of the 4 live pin proposals were this Mac's own hourly scheduled runs. Each run is a new session, so pinning them would add a pin an hour and keep them from auto-archiving. `list_sessions` rows don't say a session came from a scheduled task; `get_session` does (`scheduledTaskId`). The SKILL pin step now skips those sessions. This is a procedure rule only; the planner is unchanged.
 
 ## Plan QA
 

@@ -205,7 +205,8 @@ The Claude Desktop app keeps each Code session's sidebar title in its own sessio
 so `--ide claude`'s transcript append does not reach the sidebar. **`--ide claude-desktop`**
 is a read-only planner like `codex` and `claude-cloud`: `set_session_title` owns every
 write. It needs a Claude Desktop session (the native session tools exist only there) and
-refuses `--apply`, `--set-title`, `--group` and `--unpin-days`.
+refuses `--apply`, `--set-title`, `--group` and `--unpin-days`. It also proposes pins
+(GH-1196), written with `set_pinned`; it never unpins.
 
 Snapshot: `{ "captured_at": <Unix seconds>, "sessions": [<list_sessions rows>] }`, at most
 300 seconds old. Activity is each row's own `lastActivityAt` (Desktop's turn activity), so
@@ -215,6 +216,11 @@ missing either flag is skipped; a candidate with a missing, unparseable or futur
 `lastActivityAt` aborts the sweep. `list_sessions` never returns the caller, so an empty
 `sessions` list is a valid zero-candidate inventory. The title keeps its full wording; only
 the stamp changes.
+
+Pins: a non-archived, non-self row with a literal boolean `isRunning`, `pinned` missing or
+`false`, and `lastActivityAt` within `--pin-hours` (default 24) gets a `pinned` proposal.
+A running session can be pinned. A running row with bad activity is skipped, as before.
+`--no-pin` turns pins off.
 
 Native Desktop sweep procedure:
 
@@ -235,7 +241,16 @@ Native Desktop sweep procedure:
    `{"at", "session_id", "old", "new"}` to `~/.cache/task-sync/claude-desktop-renames.jsonl`
    (private, machine-local). Undo from that line only while `get_session(<id>)` still shows
    its `new` title: `set_session_title(<id>, <old>)`. A title changed since is left alone.
-6. Stay quiet when nothing changed; report failures, a missing tool, or declines that need
+6. For each `pinned` proposal, recheck with a fresh `list_sessions` (`get_session` has no
+   `pinned` field). The row must still exist, not be archived or your own session, have
+   activity inside `--pin-hours`, and have `pinned` missing or `false`; `pinned: true` (a
+   manual pin since) is a skip with no call. Also skip a session whose `get_session(<id>)`
+   has a `scheduledTaskId`: scheduled runs (this sweep's own heartbeat included) start a new
+   session each time, and a pin would also keep them from being auto-archived. Then
+   `set_pinned(<id>, true)`; a decline is a skip. Append `{"at", "session_id", "op": "pin"}` to the same
+   receipt. There is no automatic undo: `pinned` does not record who set it, so an unpin could remove a pin the
+   operator made. Unpinning is the operator's own choice.
+7. Stay quiet when nothing changed; report failures, a missing tool, or declines that need
    the operator.
 
 No concurrency guarantee: the recheck narrows, but cannot close, a race with a manual rename.
