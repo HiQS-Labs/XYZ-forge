@@ -167,3 +167,7 @@ Codex relay `relay-system/2026-10-24/gh1191-final-qa.md`, Approved in round 2 of
   - re-stamping a `tool`-sourced title on a later day;
   - the 16" and Mac Studio rollout (step 5);
   - pinning (#1196, plan QA escalated).
+
+## Merge evidence
+
+- PR #1197 merged 2026-10-25 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
