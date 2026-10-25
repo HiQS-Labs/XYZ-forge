@@ -633,4 +633,12 @@ Basis: R1--R7 map to the adapter and existing routing surfaces, with a witnessed
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-25T05:22:53Z
+task: RELAY-gh1215-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: ba9313fb53dac64c486513ccc6062619de4a3f70
+added-range: 34499+3216
+added-sha256: 80dec908157b0bdef7be190ab321c6e27a742628d2a4a410b2c972c0779ef342
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
