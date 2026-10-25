@@ -1084,8 +1084,8 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
     _lroot="$(git -C "$(dirname "$f")" rev-parse --show-toplevel 2>/dev/null || git rev-parse --show-toplevel 2>/dev/null || true)"
   fi
   if [[ -n "$_lroot" && -f "$_lroot/LESSONS-LEARNED.md" && -r "$_lroot/LESSONS-LEARNED.md" ]]; then
-    local _line _in_fence=0 _lin_body=0 _ltitle="" _lcue="" _lsup="" _ldate="" _lval _lsup_lc _first_date="" _last_date=""
-    local -a _lessons=()
+    local _line _in_fence=0 _lin_body=0 _ltitle="" _lcue="" _lsup="" _ldate="" _lval _lsup_lc
+    local -a _lessons=() _ldates=()
     while IFS= read -r _line || [[ -n "$_line" ]]; do
       _line="${_line%$'\r'}"
       if [[ "$_line" == '```'* ]]; then
@@ -1096,8 +1096,7 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
       if [[ "$_line" == '## '* ]]; then
         if [[ -n "$_ltitle" && -n "$_lcue" && -z "$_lsup" ]]; then
           _lessons+=("- ${_ltitle} — cue: ${_lcue}")
-          [[ -z "$_first_date" && -n "$_ldate" ]] && _first_date="$_ldate"
-          [[ -n "$_ldate" ]] && _last_date="$_ldate"
+          _ldates+=("${_ldate:-0000-00-00}")
         fi
         _ltitle="${_line#\#\# }"
         _ltitle="${_ltitle#"${_ltitle%%[![:space:]]*}"}"
@@ -1130,21 +1129,32 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
     done < "$_lroot/LESSONS-LEARNED.md"
     if [[ -n "$_ltitle" && -n "$_lcue" && -z "$_lsup" ]]; then
       _lessons+=("- ${_ltitle} — cue: ${_lcue}")
-      [[ -z "$_first_date" && -n "$_ldate" ]] && _first_date="$_ldate"
-      [[ -n "$_ldate" ]] && _last_date="$_ldate"
+      _ldates+=("${_ldate:-0000-00-00}")
     fi
     local _ln=${#_lessons[@]}
     if ((_ln > 0)); then
-      local _lstart=0 _lend="$_ln" _li
-      if ((_ln > 5)); then
-        if [[ -n "$_first_date" && -n "$_last_date" && "$_first_date" > "$_last_date" ]]; then
-          _lend=5
-        else
-          _lstart=$((_ln - 5))
-        fi
+      local -a _lsel=()
+      local _li _lk _best _best_d
+      if ((_ln <= 5)); then
+        for ((_li=0; _li<_ln; _li++)); do _lsel+=("$_li"); done
+      else
+        local -a _lpicked=()
+        for ((_lk=0; _lk<5; _lk++)); do
+          _best=-1; _best_d=""
+          for ((_li=0; _li<_ln; _li++)); do
+            [[ -n "${_lpicked[$_li]:-}" ]] && continue
+            if ((_best < 0)) || [[ "${_ldates[$_li]}" > "$_best_d" ]] || [[ "${_ldates[$_li]}" == "$_best_d" && $_li -gt $_best ]]; then
+              _best=$_li; _best_d="${_ldates[$_li]}"
+            fi
+          done
+          ((_best >= 0)) && _lpicked[$_best]=1
+        done
+        for ((_li=0; _li<_ln; _li++)); do
+          [[ -n "${_lpicked[$_li]:-}" ]] && _lsel+=("$_li")
+        done
       fi
       lessons_note=$'\n[lessons learned (LESSONS-LEARNED.md) — informational, warn-only; inspect LESSONS-LEARNED.md when a cue matches your task]'
-      for ((_li=_lstart; _li<_lend; _li++)); do
+      for _li in "${_lsel[@]}"; do
         lessons_note+=$'\n'"${_lessons[$_li]}"
       done
       if ((_ln > 5)); then

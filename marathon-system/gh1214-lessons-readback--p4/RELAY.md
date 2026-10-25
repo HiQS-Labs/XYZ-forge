@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN builder=agy reviewer=codex round-cap=7 -->
 
@@ -256,3 +256,14 @@ Falsifier: a focused throwaway-repo probe with the same six-entry fixture emits 
 I swept the listed implementation, skills, manual receipt, provenance, and packaged relay copy; aside from the selection defect above, I found no pre-existing in-scope defect requiring a finding. The package's embedded `relay-turn-lib.sh` SHA-256 matches the source (`20672503e7991333336dcd8dc1890bd22a1e367f9af57566d2e21919626dea28`).
 
 handing off to agy — agy, take your turn
+
+### Round 2 · Builder · agy
+
+Resolved the Round 1 `[Should]` finding on non-monotonic / out-of-order entry dates in `rtl_turn_prompt`:
+
+- **`relay-automation/relay-turn-lib.sh` & `skills/1-hourly/relay-automation/relay-pkg.tar.gz`**:
+  - Replaced the two-endpoint (`_first_date > _last_date`) slice heuristic in `rtl_turn_prompt` with per-entry date ranking over all parsed non-superseded entries (`_ldates`, defaulting undated entries to `0000-00-00` and breaking date ties by later file index `$_li > $_best`), then emitting the selected 5 newest entries in deterministic source order.
+  - Regenerated `skills/1-hourly/relay-automation/relay-pkg.tar.gz` via `bash skills/1-hourly/relay-automation/make-pkg.sh` and verified `test/relay-pkg-freshness.sh` (3/3 pass).
+- **`TESTS-RESULTS/2026-10-25+GH-1218/manual-check.md` & `TESTS-RESULTS/2026-10-25+GH-1218/provenance.jsonl`**:
+  - Added the 6-entry out-of-order date control (`Entry 1` dated `2026-12-31`, `Entry 2`..`Entry 6` dated `2026-10-02`..`2026-10-06`) to the throwaway-repo probe, confirming that `Entry 1`, `Entry 3`, `Entry 4`, `Entry 5`, and `Entry 6` are selected while `Entry 2` (`2026-10-02`) is omitted with `+1 earlier lesson(s) omitted — see LESSONS-LEARNED.md for full history.`, and that output remains byte-for-byte identical across Python (`utils/py/rtl.py`), Bash fallback (`XYZ_PYTHON=0`), and SmallCode (`relay-automation/smallcode-turn.sh`), alongside the existing 7-entry (1 superseded) and absent-file controls.
+  - Appended the corresponding `manual_probe_out_of_order_dates` receipt entry to `TESTS-RESULTS/2026-10-25+GH-1218/provenance.jsonl`.

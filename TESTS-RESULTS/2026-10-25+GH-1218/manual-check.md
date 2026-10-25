@@ -11,6 +11,7 @@ Verified on a throwaway repository under `$TMPDIR` (`PYTHONDONTWRITEBYTECODE=1`)
    - `Entry 1` omitted as the 6th non-superseded entry, reported via `+1 earlier lesson(s) omitted — see LESSONS-LEARNED.md for full history.`,
    - byte-for-byte identical prompt output across the Python path (`utils/py/rtl.py` `RelayTurnLib.turn_prompt`), the Bash fallback (`XYZ_PYTHON=0`), and `relay-automation/smallcode-turn.sh`.
 3. **Silence when absent**: when `LESSONS-LEARNED.md` is absent in the throwaway repo, `rtl_turn_prompt` emits no lessons block, and the output is byte-for-byte identical across Python, Bash fallback, and SmallCode.
+3b. **Out-of-order / non-monotonic ISO dates control**: with 6 valid entries where `Entry 1` carries `- **date**: 2026-12-31` and `Entry 2` through `Entry 6` carry `2026-10-02` through `2026-10-06`, `rtl_turn_prompt` selects the 5 entries with the greatest parsed `- **date**:` values (`Entry 1`, `Entry 3`, `Entry 4`, `Entry 5`, `Entry 6` in deterministic source order, with ties broken by later file position) and omits `Entry 2` (`2026-10-02`) with `+1 earlier lesson(s) omitted — see LESSONS-LEARNED.md for full history.`, identically across Python, Bash fallback, and SmallCode.
 4. **Writer rules (worked example)**: demonstrated a refused candidate entry (empty `evidence` / `confounded`-only edit verdicts -> `NO_ENTRY`) and an accepted candidate entry (helped verdict + public evidence path -> structured entry).
 5. **Existing suites**: `test/relay-pkg-freshness.sh` (3/3), `test/gh397-reviewer-turn-role.sh` (11/11), `test/gh681-reviewer-probe-rules.sh` (22/22), `test/gh91-relay-scratch.sh` (22/22), `test/gh304-vendored-relay-path.sh` (11/11), `test/gh609-sdlc-agent-gaps.sh` (33/33), `test/gh615-start-task-reinforce.sh` (8/8), `test/gh616-start-task-commensurate-envelope.sh` (7/7), and `test/gh308-frozen-twin-guard.sh --check --base HEAD` all pass cleanly.
 
@@ -148,6 +149,51 @@ Body text for entry 2 MUST NOT appear in prompt.
     block = py_present[py_present.index("[lessons learned"):]
     print("=== CAPTURED LESSONS BLOCK (7 entries, 1 superseded) ===")
     print(block)
+
+    # 3. Non-monotonic / out-of-order dates control (Entry 1 dated 2026-12-31, Entries 2..6 dated 2026-10-02..2026-10-06)
+    ooo_md = """# Lessons Learned
+
+## Entry 1
+- **cue**: Cue 1 (future-dated / corrected date)
+- **date**: 2026-12-31
+
+## Entry 2
+- **cue**: Cue 2 (oldest date)
+- **date**: 2026-10-02
+
+## Entry 3
+- **cue**: Cue 3
+- **date**: 2026-10-03
+
+## Entry 4
+- **cue**: Cue 4
+- **date**: 2026-10-04
+
+## Entry 5
+- **cue**: Cue 5
+- **date**: 2026-10-05
+
+## Entry 6
+- **cue**: Cue 6
+- **date**: 2026-10-06
+"""
+    with open(os.path.join(tmp, "LESSONS-LEARNED.md"), "w") as f:
+        f.write(ooo_md)
+
+    py_ooo = RelayTurnLib(tmp, root, relay_file, "art.md").turn_prompt("agy", "T-1218", "codex")
+    bash_ooo = subprocess.check_output(
+        ["bash", "-c", 'XYZ_PYTHON=0; source "$1/relay-automation/relay-turn-lib.sh"; rtl_init "$2" "$3" "art.md"; rtl_turn_prompt agy "$3" T-1218 "art.md" codex', "_", root, tmp, relay_file],
+        text=True
+    )
+    sc_ooo = subprocess.check_output(
+        ["bash", "-c", 'source "$1/relay-automation/relay-turn-lib.sh"; ROOT="$2"; f="$3"; me="agy"; t="T-1218"; ALLOW_PATHS="art.md"; RELAY_PEER="codex"; rtl_init "$ROOT" "$f" "${ALLOW_PATHS:-}"; prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"; printf "%s" "$prompt"', "_", root, tmp, relay_file],
+        text=True
+    )
+    assert py_ooo == bash_ooo == sc_ooo
+    ooo_block = py_ooo[py_ooo.index("[lessons learned"):]
+    print("=== CAPTURED LESSONS BLOCK (6 entries, out-of-order dates) ===")
+    print(ooo_block)
+
     print("=== EQUALITY CHECKS ===")
     print(json.dumps({
         "absent_silent": "[lessons learned" not in py_absent,
@@ -158,6 +204,9 @@ Body text for entry 2 MUST NOT appear in prompt.
         "bodies_excluded": ("MUST NOT appear" not in py_present),
         "pointer_count": sum(1 for line in block.splitlines() if line.startswith("- Entry ")),
         "omitted_line": block.splitlines()[-1],
+        "ooo_identical_py_bash_smallcode": (py_ooo == bash_ooo == sc_ooo),
+        "ooo_oldest_entry_2_omitted": ("Entry 2" not in ooo_block),
+        "ooo_selected_entries": [line.split(" — ")[0] for line in ooo_block.splitlines() if line.startswith("- Entry ")],
     }, indent=2))
 PYEOF
 ```
@@ -173,6 +222,14 @@ PYEOF
 - Entry 6: Sixth lesson — cue: Counting live manifest items across release transitions
 - Entry 7: Seventh lesson (newest) — cue: Checking worktree cleanliness after a builder command in improve-loop.sh
 +1 earlier lesson(s) omitted — see LESSONS-LEARNED.md for full history.
+=== CAPTURED LESSONS BLOCK (6 entries, out-of-order dates) ===
+[lessons learned (LESSONS-LEARNED.md) — informational, warn-only; inspect LESSONS-LEARNED.md when a cue matches your task]
+- Entry 1 — cue: Cue 1 (future-dated / corrected date)
+- Entry 3 — cue: Cue 3
+- Entry 4 — cue: Cue 4
+- Entry 5 — cue: Cue 5
+- Entry 6 — cue: Cue 6
++1 earlier lesson(s) omitted — see LESSONS-LEARNED.md for full history.
 === EQUALITY CHECKS ===
 {
   "absent_silent": true,
@@ -182,7 +239,16 @@ PYEOF
   "oldest_entry_1_omitted": true,
   "bodies_excluded": true,
   "pointer_count": 5,
-  "omitted_line": "+1 earlier lesson(s) omitted \u2014 see LESSONS-LEARNED.md for full history."
+  "omitted_line": "+1 earlier lesson(s) omitted \u2014 see LESSONS-LEARNED.md for full history.",
+  "ooo_identical_py_bash_smallcode": true,
+  "ooo_oldest_entry_2_omitted": true,
+  "ooo_selected_entries": [
+    "- Entry 1",
+    "- Entry 3",
+    "- Entry 4",
+    "- Entry 5",
+    "- Entry 6"
+  ]
 }
 ```
 
