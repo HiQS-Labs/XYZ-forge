@@ -358,3 +358,15 @@ Fixes:
 - The guard snapshot moved to a private `mktemp -d` outside the repo and `STATE_DIR`, removed on exit. If `mktemp` fails, every iteration is rejected (fail closed).
 
 Suites green: `improve-loop` 11/0, `improve-loop-qa` 11/0, `improve-loop-dogfood` 7/0, `champion` 13/0, `gh430` 8/0, `security-scan` 35/0.
+
+
+## PR #1223 review follow-up, round 3 (CodeRabbit, 2026-10-25)
+
+Finding 4371250010: a new directory that only *could* hold an allowed path was suppressed. With `--allow 'out/*/result.txt'`, a build that runs only `mkdir -p out/empty` created empty directories, which git never reports, and the guard missed them.
+
+| Case | Red (`7d8bdbf6`) | Green |
+|---|---|---|
+| G4: build runs only `mkdir -p out/empty` | no violation; `out/empty` left behind | `off-ALLOW write violation (out, out/empty)`; both removed |
+| G1 regression: build creates allowed `out/a/result.txt` | accepted | accepted; file kept |
+
+Fix: a **new** ancestor directory is treated as structure only when it actually contains an allowed file now (`supports_allowed`). Otherwise it counts as a write and is removed on rejection. G2 and G3 rerun green. Suites green: `improve-loop` 11/0, `improve-loop-qa` 11/0, `improve-loop-dogfood` 7/0, `champion` 13/0, `gh430` 8/0, `security-scan` 35/0.

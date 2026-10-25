@@ -202,6 +202,14 @@ def is_allow_ancestor(rel):
             return True
     return False
 
+def supports_allowed(rel):
+    """Does this directory actually hold an allowed file now (not merely a path that could match)?"""
+    for dp, _dns, fns in os.walk(os.path.join(root, rel), followlinks=False):
+        for fn in fns:
+            if is_exempt(os.path.relpath(os.path.join(dp, fn), root).replace(os.sep, "/")):
+                return True
+    return False
+
 def _norm(info):
     return None if info is None else {k: v for k, v in info.items() if k != "anc"}
 
@@ -360,8 +368,8 @@ elif mode == "after":
     all_keys = set(pre_manifest.keys()) | set(post_manifest.keys())
     for k in all_keys:
         pre_i, post_i = pre_manifest.get(k), post_manifest.get(k)
-        if pre_i is None and post_i is not None and post_i.get("anc"):
-            continue  # a new directory that only holds an allowed path
+        if pre_i is None and post_i is not None and post_i.get("anc") and supports_allowed(k):
+            continue  # a new directory that holds an allowed file (empty or off-ALLOW-only ones still count)
         if _norm(pre_i) != _norm(post_i):
             violated.add(k)
 
@@ -382,7 +390,8 @@ elif mode == "after":
         sys.exit(0)
 
     # Restore: (1) remove only paths that are new since the build started
-    new_paths = sorted([k for k in post_manifest if k not in pre_manifest and not post_manifest[k].get("anc")],
+    new_paths = sorted([k for k in post_manifest
+                        if k not in pre_manifest and not (post_manifest[k].get("anc") and supports_allowed(k))],
                        key=lambda x: x.count("/"), reverse=True)
     for k in new_paths:
         target = os.path.join(root, k)
