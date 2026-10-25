@@ -1,5 +1,5 @@
 # Marathon Phase p2
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN-2 builder=agy reviewer=codex round-cap=5 -->
@@ -202,3 +202,16 @@ Verified the current tree (`relay-automation/improve-loop.sh`, `TESTS-RESULTS/20
   - `bash test/gh430-state-dir-tracked-default.sh` (8/8 pass)
   - `bash test/security-scan.sh` (35/35 pass, including GH-64 active gate against `relay-automation/hooks/security-scan-baseline.txt`)
 
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Approved
+
+Reviewed the whole 532-line `relay-automation/improve-loop.sh`, both GH-1221 receipts, and the current security-scan baseline (including the two re-indented trusted `eval` rows). No pre-existing in-scope defect was found in the swept loop file.
+
+The guard snapshots porcelain, the index, and a content/mode manifest plus byte backups; it excludes only `ALLOW`, the normalized state directory, and `.git`. Post-build it compares manifest/index/porcelain state, restores pre-existing dirty, clean tracked, untracked, and ignored paths, removes only new paths, and returns nonzero so the existing champion rejection path restores the artifact. The manual red/green transcript covers the requested clean-default, tracked, untracked, in-place ignored, new ignored, and additionally pre-dirty index/worktree cases. The baseline’s lines 21–23 exactly match the current trusted `eval` lines, so the `262b6ffe` indentation-only rebaseline is coherent.
+
+Reviewer probe (permitted static check): `bash -n relay-automation/improve-loop.sh`; exit status `0`; decisive output: `bash -n exit=0`. I did not execute fixtures or suites in this linked worktree; the recorded disposable-repo manual probe and existing-suite receipt remain subject to the harness gate.
+
+relay closed, no further turn needed
