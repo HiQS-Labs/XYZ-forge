@@ -33,3 +33,12 @@ None of those touched the fix; all are recorded in the issue-#1210 class of laun
 ## Final gate
 Route for the changed paths: `tier=3` (kernel/gate surface). `bash ci-local.sh` in the disposable `-gate` clone on `f5a4e42f`:
 see `full-gate-f5a4e42f.log` (identity checked before/after; result filled in when the run completes).
+
+## Final-QA round 1 dispositions (reviewer codex, `relay-system/2026-10-24/gh1208-final-qa.md`)
+- **Should (baseline run not in provenance) — accepted.** `checks-f5a4e42f/provenance.jsonl` now carries a record for
+  `gh280-unmodified-f5a4e42f.log` with its digest, size, command, revision and exit.
+- **Unverified: replay byte identity — explicitly deferred.** The plan asked for `releases.db` sha256 before/after the L6
+  replay; the retained receipts establish unchanged manifest/receipt counts (L6/L7), not byte identity. Capturing the hashes
+  needs one more variant edit and rerun, which the operator has bounded for this task; recorded here as not measured.
+- **Unverified: range scope — supplied.** `scope-80e67677-to-head.txt` lists every changed path from base to the reviewed head
+  and shows the protected-surface delta is exactly `utils/py/jog_run.py`.

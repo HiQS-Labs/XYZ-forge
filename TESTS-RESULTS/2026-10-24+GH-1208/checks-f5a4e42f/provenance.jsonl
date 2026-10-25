@@ -16,3 +16,4 @@
 {"artifact":"checks.sh","sha256":"ca892a98d59efc249a0f833787ed0530b8e4b5e7cfdac897d85ad410d64f0fb3","bytes":7609,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
 {"artifact":"variant-GH1127.sh","sha256":"5928772f00f68b32440cc051c44008cada6eb530ac3870f1f8dedc0b4f572719","bytes":84599,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
 {"artifact":"variant-NEITHER.sh","sha256":"2cc45ae760528a26719f47c9bbe2f38fe20dfbcc2cb6b3762544860ff8928e09","bytes":84099,"suite_exit":"","revision":"f5a4e42f","date":"2026-10-25T04:12:16Z"}
+{"artifact":"../gh280-unmodified-f5a4e42f.log","sha256":"9538f6eadf8203ab855be710d50989bb93180e930ce6b029d5f8452536a89801","bytes":13573,"suite_exit":"0 (223 pass, 0 fail)","revision":"f5a4e42f (clone -verify, git diff --quiet before run)","command":"env -u XYZ_HARNESS XYZ_WORK_CONNECTORS=0 RELAY_SELF_SUFFICIENCY_SKIP=1 bash test/gh280-jog-marathon-adapter.sh","date":"2026-10-25T03:50Z"}

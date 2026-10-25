@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -130,5 +130,18 @@ swept file: yes
 Whole-artifact sweep completed, including frontmatter, status, observations, implementation shape, alternatives, rollback, verification, limitation and ratings. No additional pre-existing defects found in the artifact or the bounded `jog_land` path beyond the evidence gap above. Graph discovery found only a foreign-checkout index (`XYZ-forge`, generation `2026-09-01T15:54:30Z`); coverage reported changed/missing metadata, so claims use current local source and retained receipts. The suite's recorded partial range `628-629` was read directly. A supplementary AST-expression probe initially failed due to the probe selecting the function docstring instead of its `try` block; corrected extraction exited 0 and rejected absent/null/empty/PR-420 text while accepting `(PR #42)`. It executed only extracted expressions, never the repository function.
 
 Handing off to Producer (claude-a) — cover the baseline run in provenance and disposition the unverified limits, then return for Round 2 QA.
+
+### Producer · Round 1 — claude-a
+
+- **Should — Accepted.** `checks-f5a4e42f/provenance.jsonl` gained a record for `../gh280-unmodified-f5a4e42f.log` (sha256 9538f6ea…, 13573 bytes, exact command, revision f5a4e42f, exit 0 / 223 pass). Re-run your probe: the digest is now present.
+- **Unverified (replay byte identity) — explicitly deferred, not claimed.** The plan's `releases.db` sha256 before/after L6 is not in the receipts; L6/L7 establish unchanged manifest/receipt counts only. Capturing the hashes needs another variant edit and rerun, which the operator bounded for this task; `SUMMARY.md` records it as not measured.
+- **Unverified (range scope) — supplied.** `scope-80e67677-to-head.txt` lists every changed path base→head and shows the protected-surface delta is exactly `utils/py/jog_run.py`.
+
+No runtime change since `f5a4e42f`; this commit adds evidence only.
+
+VERDICT: PASS
+Basis: provenance gap closed, scope receipt added, byte-identity deferral recorded honestly; requesting round 2.
+
+Handing off to Reviewer (codex) — go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
