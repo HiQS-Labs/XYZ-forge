@@ -1,0 +1,2 @@
+1|example/example
+https://github.com/example/example.git

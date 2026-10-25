@@ -37,7 +37,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved r2 (`94542fbb`; r1 blocker: landing marker crashed on an empty hosted list — folded in as item 4). Row admitted (`--accepted-start`). | Implement the one hunk, run the gh280 suite + the two disposable-copy manual checks, tier-3 gate, final Codex QA, ready PR against development (do not merge). |
+| Fix landed as `f5a4e42f`. Unmodified gh280 suite 223/223; disposable-copy variants: reverted code refuses (red control), fixed code lands on the local SHIPPED row with `hosted_reconcile: null` + `local_reconcile` in `landing.json` (225/225, L6/L7 replay green), neither-evidence refuses with the combined message (`TESTS-RESULTS/2026-10-24+GH-1208/SUMMARY.md`). | Tier-3 `ci-local.sh` running in the `-gate` clone; final Codex QA; ready PR against development (do not merge). |
 
 ## Observed (ground truth, development @ 80e67677)
 
