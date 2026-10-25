@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -132,5 +132,22 @@ VERDICT: PASS
 Basis: blocker folded into the plan as item 4 with a marker assertion in the manual check; nits corrected; requesting round 2.
 
 Handing off to Reviewer (codex) — go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Ship the plan. The revision closes the observed empty-hosted-list crash, specifies the existing marker's local-only representation, and makes the existing fixture usable for the proposed local predicate. Approval is for the plan; implementation and clone-run evidence remain outstanding. Reversibility: Easy — one function, existing reader/writer, one-hunk rollback.
+swept file: yes
+
+- [Pass] **Round 1 blocker is resolved at plan level.** Artifact `.relay-artifacts/GH-1208-JOG-LAND-LOCAL-RECEIPT.md:92-99` explicitly replaces the unsafe `matching[0]` at `utils/py/jog_run.py:1221` with `matching[0] if matching else None` and records local evidence in the same marker. Its verification at artifact `:123-125` requires parseable `landing.json`, null hosted evidence, the GH-901 local row, and successful replay. The hosted-success object remains unchanged; no additional receipt file or writer is proposed.
+- [Pass] **The source still supports the defect, ordering, and bounded fix.** `jog_run.py:1189-1201` requires a successful hosted run; `.github/workflows/wave-reconcile.yml:9-11` is dispatch-only. `merge_cleanup.py:782-805` reconciles and checks before Jog landing, while its callers commit afterward (`:1423-1432`, `:1719-1726`). The existing read-only connection is at `jog_run.py:1202-1206`; the writer sets `Completed` and the PR badge at `wave_reconcile.py:1520-1521,1550-1558`. The actual GH-763 and GH-1020 rows carry `(PR #1192)` in `releases.sql:770,891`. Artifact `:17-21,81-90,101-104` preserves the committed-receipt, pre-merge and tail-proof boundaries and requires refusal naming both remedies when neither evidence exists. Root cause: the landing consumer retained a hosted-per-merge requirement after decision #1131; fix site: `jog_land`; why not upstream: dispatch-only reconciliation is intentional.
+- [Pass] **Fixture correction and falsification are specified adequately.** The existing hosted stub is `test/gh280-jog-marathon-adapter.sh:45-48`, the real offline reconciler runs at `:1009`, and L6/L7 replay at `:1029-1043`. Artifact `:118-126` now seeds GH-901 using the existing `roadmap add` pattern at suite `:1089-1092`; `wave_reconcile.py:1525-1558` updates an existing DB row independently of the legacy markdown branch at `:1561`. Thus the copy can exercise the actual local evidence writer rather than relying on a missing row. Artifact `:114-133` requires retained provenance, pre-fix red/fixed green, neither-evidence refusal, marker assertions, replay with DB hash comparison, and the final disposable-clone gate, without a new registered suite.
+- [Pass] **Rating remains proportionate to the bounded consequence.** Artifact `:143-150` explains 78/75/50/85 using a blocked unattended lifecycle, recurrence from the dispatch-only default, neutral appeal, and one-function reuse. Artifact `:135-139` explicitly limits local acceptance to issues with ledger rows. These are prioritization judgments, not claims of measured failure frequency.
+- [Nit] **One stale error-handling sentence remains.** Artifact `:79-80` still says “Any error or non-list answer still raises `invalid hosted reconciliation evidence`”, contradicting the accurate paragraph at `:101-103`. `jog_run.py:1196` maps nonzero `gh` exit to `[]`, and malformed JSON reaches the outer `ValueError` handler at `:1209`. Delete that stale sentence or make it agree with the later paragraph during implementation; the later explicit paragraph makes the intended behavior clear, so this is not an approval blocker.
+- [Unverified — needs clone run] No suite, executable fixture, gate, or git command was run in this reviewer turn. The 223/223 baseline, modified-copy outcomes, marker serialization, and DB-byte replay assertions are implementation evidence still owed under artifact `:114-133`; source review does not establish their runtime results.
+
+Whole-artifact sweep completed (`:1-150`), including frontmatter, status, observations, alternatives, rollback, verification, limitation, and ratings. No additional pre-existing defects found in the artifact beyond the nonblocking wording nit above. Graph tools were unavailable; the bounded source evidence above comes from direct reads and text searches.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
