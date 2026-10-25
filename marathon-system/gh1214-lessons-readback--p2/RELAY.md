@@ -1,5 +1,5 @@
 # Marathon Phase p2
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -207,3 +207,15 @@ Affected scope: every tracked file that was pre-existing and dirty (staged, unst
 Falsifier: in a throwaway repo, seed distinct HEAD/index/worktree versions of an off-`ALLOW` tracked file, run one rejected iteration that stages a fourth version, then verify `git diff --cached -- <path>` and `git diff -- <path>` exactly match their pre-build outputs after restoration. A fix may snapshot/index-restore the preexisting index state rather than reset it to HEAD.
 
 handing off to agy — agy, take your turn
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Approved
+
+Reviewed the complete 532-line `relay-automation/improve-loop.sh` and both GH-1221 evidence artifacts. No unrelated pre-existing defect was found in the swept loop surface. The earlier index-restoration finding is resolved: the guard snapshots the pre-build index, detects index-stage changes outside `ALLOW`, and restores the saved index before restoring changed filesystem paths. The recorded b2 control uses distinct HEAD/index/worktree content and reports both cached and worktree diffs exactly restored.
+
+Static probe (no fixture executed): `bash -n relay-automation/improve-loop.sh` → exit 0. The manual evidence records red and green controls for the required clean default, tracked, pre-dirty staged tracked, untracked, in-place ignored, and newly created ignored-path cases. I did not run mutation-heavy suites or executable fixtures under this relay constraint; the recorded existing-suite evidence remains builder-provided and the harness gate follows this turn.
+
+relay closed, no further turn needed
