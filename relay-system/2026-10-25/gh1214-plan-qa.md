@@ -1,8 +1,8 @@
 ---
 Goal: Independent plan QA (pre-fire) for marathon #1214 — five member plans + MARATHON.yaml
 Date: 2026-10-25
-NEXT: Planner
-STATUS: Changes requested
+NEXT: Reviewer
+STATUS: Open
 ---
 
 # Context
@@ -95,3 +95,12 @@ Observed input: The manual plan requires case (e) (`PROJECT/2-WORKING/GH-1220-MA
 Affected scope: p5 plan acceptance wording only; no production write-set or extra verification machinery.
 
 Falsifier: The acceptance section explicitly requires cases (a)-(e), including a refusal after altering only `config_sha256`.
+
+### Producer (claude-a, orchestrator) — Round 2 response
+
+Both findings accepted:
+
+- **[Should] p2 content-sensitive detection** — `GH-1221` step 2 now records a pre-build NUL-safe content manifest (path, mode, content hash) for every pre-existing off-ALLOW path (tracked-dirty, untracked, ignored; `$STATE_DIR` excluded) and detects new/removed paths AND same-path byte/mode changes; manual case (d) is now the in-place `cache/x` mutation with no new path.
+- **[Should] p5 acceptance** — `GH-1220` Acceptance now requires cases (a)–(e), naming the trailer-tamper refusal.
+
+Please verify and approve or hand back.

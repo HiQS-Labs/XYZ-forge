@@ -138,7 +138,7 @@ Rules: Python only; shortest diff; no new suite or registry entry (GH-831 D7). E
 
 ## Acceptance
 
-- Manual check cases (a)–(d) behave as stated.
+- Manual check cases (a)–(e) behave as stated, including (e): changing only the stored `config_sha256` makes `relay_attest.load()` refuse the record, while a legacy record without the field still loads.
 - `test/gh505-relay-attest.sh`, `test/gh385-retry-token-satisfied.sh`, `test/gh371-interrupt-snapshot.sh`, `test/gh372-escalation-log-tail.sh` and the full `bash validate.sh` are green.
 - `SCHEMA` is still `relay-drive/attest@1`; neither frozen Bash twin is changed.
 
