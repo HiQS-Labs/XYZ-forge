@@ -155,6 +155,11 @@ Receipt: `TESTS-RESULTS/2026-10-24+GH-1215/live-smoke.md` (with `provenance.json
   lane's gateway and CLI from `utils/py/<lane>-turn.py`, and moving it out of the scanned tree to
   dodge the ratchet would game it. Precedent: #794 and #765 each grew the baseline by one file in a
   reviewed PR. This is a deliberate one-file growth for the operator to see in review.
+- Hosted `vendored smoke gate` round 1 was red on `gh308-frozen-twin-guard.sh --check --base
+  395e9d64 --allow-exceptions`: GH-551 blocks a new Bash file unless a commit trailer names it.
+  `relay-automation/kimi-turn.sh` is declared with `New-bash-exception:` exactly as
+  `muse-turn.sh` was (GH-518). The local gate runs only that suite's self-test, not the range check,
+  so this surfaced only in CI.
 - Known limit, not changed: `resolve-profile.sh --env` prints a false "CLI 'kimi' is NOT on PATH"
   comment in a non-interactive shell because it checks bare PATH. The same check already
   misfires for deepseek and smallcode; the turn itself resolves the installer path.
