@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -91,5 +91,19 @@ Write a verdict below. Set STATUS to Approved if it passes; otherwise leave it O
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · kimi
+
+swept file: yes
+
+- [Pass] Lifecycle order is faithful to Muse: claim (`utils/py/kimi-turn.py:128-129`), `rtl.before` (`:131`), optional worktree begin (`:141-149`), bounded run (`:158-179`), timeout record (`:181-188`), worktree end (`:190-195`), empty-output guard (`:200-204`), `rtl.enforce` (`:206`), telemetry (`:208-223`), then exit mapping (`:225-234`). No step is missing or reordered relative to `utils/py/muse-turn.py:203-234,274-382`.
+- [Pass] `has_model_output()` accepts only an assistant event with non-blank string content or a truthy tool-call list, while ignoring meta, tool, malformed, and blank events (`utils/py/kimi-turn.py:60-74`). Probe: `PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$PWD/utils/py" TMPDIR="$PWD/.relay-scratch/tmp" python3 .relay-scratch/kimi_output_probe.py`; exit status 0; decisive output: `meta_only: expected=False actual=False`, `tool_only: expected=False actual=False`, `empty_assistant: expected=False actual=False`, `assistant_text: expected=True actual=True`, `assistant_tool_call: expected=True actual=True`, `all output-guard probes passed`.
+- [Pass] Exit behavior matches Muse: usage exits 2 (`utils/py/kimi-turn.py:40-42`), non-Kimi defer exits 0 (`:105-108`), launch and empty-output failures become 5 (`:171-177,200-204,231-232`), containment exits 6 (`:225-228`), and timeout exits 7 (`:229-230`), matching `utils/py/muse-turn.py:373-382`.
+- [Pass] The entry point only establishes `XYZ_ROOT`/`PYTHONPATH` and execs Python (`relay-automation/kimi-turn.sh:11-14`); containment remains delegated to `RelayTurnLib` rather than reimplemented (`utils/py/kimi-turn.py:120,128-131,141-151,190-206`). Probe: `relay-automation/kimi-turn.sh --help`; exit status 0; decisive output included `Usage: kimi-turn.py [--print-bin]` and the required environment variables. Nothing is over-built or missing within the stated scope.
+
+No Blocker, Should, or Nit findings; no pre-existing defects found in the swept files. Concrete fix: none required.
+
+VERDICT: PASS
+Basis: The complete adapter and entry point satisfy the Definition of Done, with lifecycle and exit behavior aligned to Muse and the Kimi-specific output guard verified by focused probes.  [Unverified — no citation]
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
