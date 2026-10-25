@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -664,5 +664,18 @@ this scope, or is there an existing entry point the adapter should route through
 only this change, then set a verdict.
 
 handing off to Reviewer — take your turn.
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+
+- [Pass] The post-approval change is the necessary, scoped ratchet acknowledgement for the new native adapter: the baseline lists `utils/py/kimi-turn.py` in sorted order and changes its declared inventory to 122 (`utils/pdda/inventory_ratchet_baseline.json:2,72`), while the scanner treats every `.py` below `utils/` as inventory debt (`utils/pdda/check_inventory_ratchet.py:50-62,145-150`). The documented adapter location is not arbitrary: profile resolution derives a lane's CLI metadata from `utils/py/<lane>-turn.py` (`utils/py/profile_resolve.py:132-149`), and the approved plan explicitly requires that adapter at that path (`PROJECT/2-WORKING/GH-1215-KIMI-RELAY-WORKER.md:77-91,121-126`). No existing entry point can satisfy the native Kimi adapter requirement without either losing that convention or evading the ratchet.
+
+- [Pass] The growth is honestly recorded and mechanically coherent: the plan's Results name the gate failure, one-file 121-to-122 baseline increase, reason, and precedents (`PROJECT/2-WORKING/GH-1215-KIMI-RELAY-WORKER.md:164-170`). Probe (exit 0): `python3 -B - <<'PY' ...` JSON-read the baseline; decisive output: `baseline pathlib: True`, `declared total_scripts: 122`, `actual scripts list: 122`, `sorted: True`. No pre-existing defect found in the swept baseline/scanner surface.
+
+VERDICT: PASS
+Basis: The one-file baseline growth is an explicit reviewable exception demanded by R1's sanctioned adapter path, preserves the ratchet's exact-inventory contract, and is documented with its cost and rationale.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
