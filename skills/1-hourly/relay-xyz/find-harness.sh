@@ -377,6 +377,8 @@ fi
 KIMI_PATH=""
 if [ -f "$HARNESS/utils/py/kimi-turn.py" ] && command -v python3 >/dev/null 2>&1; then
   _kimi_out="$(python3 "$HARNESS/utils/py/kimi-turn.py" --print-bin 2>/dev/null || true)"
+  # A bare KIMI_BIN name (e.g. `kimi`) is resolved through PATH, as the shim's exec would.
+  case "$_kimi_out" in */*) ;; ?*) _kimi_out="$(command -v "$_kimi_out" 2>/dev/null || true)" ;; esac
   if [ -n "$_kimi_out" ] && [ -x "$_kimi_out" ]; then
     KIMI_PATH="$_kimi_out"
   fi

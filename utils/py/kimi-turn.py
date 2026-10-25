@@ -50,8 +50,11 @@ def default_kimi_bin():
     return shutil.which("kimi") or os.path.expanduser(INSTALLER_BIN)
 
 
-def has_model_output(log_path):
-    """True when the stream-json log holds at least one assistant message or tool call.
+def has_model_output(log_path, offset=0):
+    """True when the stream-json log, from byte `offset`, holds an assistant message or tool call.
+
+    `offset` is the log's size before this invocation: KIMI_LOG is appended to and relay_drive.py
+    reuses one log across a drive's turns, so an earlier turn's output must not satisfy this one.
 
     Meta events (`system.version`, `session.resume_hint`) and any non-JSON chatter do not count:
     the CLI emits those even when the model produced nothing, which is the GH-178 / GH-518 trap of
@@ -59,6 +62,7 @@ def has_model_output(log_path):
     """
     try:
         with open(log_path) as log_f:
+            log_f.seek(offset)
             for line in log_f:
                 try:
                     event = json.loads(line)
@@ -155,6 +159,11 @@ def main():
     # in RelayTurnLib are what bound the turn.
     cmd = [kimi_bin, "-p", prompt, "-m", kimi_model, "--output-format", "stream-json"] + kimi_flags
 
+    try:
+        log_offset = os.path.getsize(kimi_log)
+    except OSError:
+        log_offset = 0
+
     diag = TurnDiagnostics(worktree=run_cwd)
     if bounded_rc == 0:
         diag.start()
@@ -198,7 +207,7 @@ def main():
         print(f"kimi-turn: kimi failed (exit {bounded_rc})", file=sys.stderr)
 
     # GH-178's empty-exit-0 failure mode: a turn with no assistant output is a failed turn.
-    if bounded_rc == 0 and not has_model_output(kimi_log):
+    if bounded_rc == 0 and not has_model_output(kimi_log, log_offset):
         print("kimi-turn: kimi exited 0 but produced NO model output (only CLI meta events) — "
               "failing the turn.", file=sys.stderr)
         bounded_rc = 5

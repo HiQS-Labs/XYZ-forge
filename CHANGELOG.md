@@ -3,8 +3,8 @@
 ## 2026-10-24 — relay harness: native kimi worker for the Kimi Code CLI (GH-1215)
 
 `relay-automation/kimi-turn.sh` (over `utils/py/kimi-turn.py`) drives Kimi K3.1 through
-`kimi -p … --output-format stream-json` on the operator's Kimi plan, replacing the Aider and
-OpenRouter route whose whole-file edits once failed relay-block validation (XYZ-CLIO#12). It
+`kimi -p … --output-format stream-json` on the operator's Kimi plan, alongside the Aider and
+OpenRouter route, whose whole-file edits once failed relay-block validation (XYZ-CLIO#12). It
 follows `muse-turn.py`: `KIMI_AGENT` gates dispatch; `KIMI_BIN`, `KIMI_MODEL` (default
 `kimi-code/k3.1-pro`), `KIMI_FLAGS` and `KIMI_LOG` are honoured; containment stays in
 `RelayTurnLib`. A turn with no assistant message or tool call exits 5. `find-harness.sh` reports

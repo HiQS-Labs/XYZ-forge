@@ -809,9 +809,10 @@ def _probe_agent_bin(agent_id, role_label):
             role_label, agent_id, "DEEPSEEK_BIN",
         )
     elif agent_id.startswith("kimi"):
-        # GH-1215: mirrors kimi-turn.py's default_kimi_bin(): override, `kimi` on PATH, installer path.
+        # GH-1215: mirrors kimi-turn.py's default_kimi_bin(). A set KIMI_BIN is the ONLY candidate,
+        # because the shim never falls back from it; otherwise `kimi` on PATH, then the installer path.
         _probe_bin_or_file(
-            [get_env("KIMI_BIN"), "kimi", KIMI_DEFAULT_BIN],
+            [get_env("KIMI_BIN")] if get_env("KIMI_BIN") else ["kimi", KIMI_DEFAULT_BIN],
             role_label, agent_id, "KIMI_BIN",
         )
     else:
