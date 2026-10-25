@@ -678,4 +678,12 @@ Basis: The one-file baseline growth is an explicit reviewable exception demanded
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-25T05:39:18Z
+task: RELAY-gh1215-final-qa-r2
+reviewer: codex
+status: Approved
+reviewed-head: 184ef41068d1afd4e3fc34f720618a90dee54c81
+added-range: 39456+1644
+added-sha256: e35bdb145a05d07aa54268f205a167dc441b9da3807495e6912a5f9cad21f55e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
