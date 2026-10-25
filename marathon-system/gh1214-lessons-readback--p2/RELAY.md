@@ -1,6 +1,6 @@
 # Marathon Phase p2
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -171,3 +171,22 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 1 · Builder · agy
+
+Implemented GH-1221 pre/post-build snapshot, NUL-safe content/mode manifest, and off-`ALLOW` violation detection + restoration in `relay-automation/improve-loop.sh`:
+
+- **Files touched**:
+  - `relay-automation/improve-loop.sh`: added `il_build_guard` (`before` / `after`) and wired it around `eval "$BUILD_CMD"` in the hill-climb loop (`# GH-1221`).
+  - `TESTS-RESULTS/2026-10-25+GH-1221/manual-check.md`: recorded red/green verification across cases (a)–(d) in throwaway git repositories under `$TMPDIR` plus existing test suite results.
+  - `TESTS-RESULTS/2026-10-25+GH-1221/provenance.jsonl`: recorded structured provenance receipts for the red control, post-fix probe, and regression suites.
+- **Key decisions**:
+  - Before each build (`il_build_guard before`), `improve-loop.sh` records `git status --porcelain -z --untracked-files=all --ignored`, `git ls-files -z` (to distinguish clean tracked files from pre-dirty/untracked/ignored files), a NUL-safe content+mode manifest (`manifest.nul` / `manifest.json` with SHA-256 content hashes and octal modes), and a byte/mode/symlink snapshot under `$STATE_DIR/.gh1221_snap/files/` for every pre-existing path outside `ALLOW` and outside `$STATE_DIR`. If the snapshot fails, the iteration fails closed (`op=0`, rejected via `champion.sh judge`).
+  - `REPO_ROOT` resolves to the current working tree's git toplevel only when `$ARTIFACT` resides inside that tree (or to `$ARTIFACT`'s own git toplevel if `$ARTIFACT` is in another git repo), so test harnesses invoking `improve-loop.sh` from a repo CWD against a non-git `$TMPDIR` artifact directory continue to work without snapshotting the caller's repo.
+  - After each build (`il_build_guard after`), both porcelain status and the fresh content/mode manifest are compared against the pre-build snapshot. Any added path, removed path, or in-place byte/mode change outside `ALLOW` and `$STATE_DIR` logs `off-ALLOW write violation (<paths>) — restored snapshot`, forces `op=0` so `champion.sh judge` rejects the iteration (rolling back `$ARTIFACT` and recording provenance), removes newly created paths, restores clean tracked files from `HEAD` (`git checkout HEAD -- <path>` + mode) and pre-existing dirty/untracked/ignored files from the byte/mode snapshot.
+- **Verification**:
+  - Throwaway git repo probe under `$TMPDIR` verified red (before fix) and green (after fix) for cases (a), (b), (c), (d1 in-place ignored `cache/x`), and (d2 newly created ignored sibling `cache/y`).
+  - Existing suites `test/improve-loop.sh` (11/11), `test/improve-loop-qa.sh` (11/11), `test/improve-loop-dogfood.sh` (7/7), `test/champion.sh` (13/13), and `test/gh430-state-dir-tracked-default.sh` (8/8) all pass.
+

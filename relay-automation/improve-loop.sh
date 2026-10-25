@@ -75,6 +75,312 @@ ALLOW="${ALLOW:-$ARTIFACT}"
 STATE_DIR="${STATE_DIR:-$HERE/state/improve-loop.$$}"
 mkdir -p "$STATE_DIR"
 SNAP="$STATE_DIR/champion.artifact"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -n "$REPO_ROOT" ]; then
+  _r_phys="$(cd "$REPO_ROOT" 2>/dev/null && pwd -P)"
+  _a_phys="$(cd "$(dirname "$ARTIFACT")" 2>/dev/null && pwd -P)/$(basename "$ARTIFACT")"
+  case "$_a_phys" in
+    "$_r_phys"/*) ;;
+    *)
+      _a_top="$(git -C "$(dirname "$ARTIFACT")" rev-parse --show-toplevel 2>/dev/null || true)"
+      REPO_ROOT="$_a_top"
+      ;;
+  esac
+fi
+
+# GH-1221: pre/post-build snapshot, content manifest, and off-ALLOW violation check + restore.
+# Captures git status --porcelain -z --untracked-files=all --ignored AND a NUL-safe content+mode
+# manifest + byte backup for every pre-existing path outside ALLOW and outside STATE_DIR.
+il_build_guard() {
+  [ -n "$REPO_ROOT" ] || return 0
+  python3 - "$1" "$REPO_ROOT" "$STATE_DIR" "$ALLOW" <<'PYEOF'
+import os, sys, subprocess, hashlib, shutil, json
+
+mode, root_arg, state_arg, allow_csv = sys.argv[1:5]
+root = os.path.realpath(root_arg)
+state_real = os.path.realpath(state_arg)
+snap_dir = os.path.join(state_arg, ".gh1221_snap")
+
+state_rel = None
+if state_real == root:
+    state_rel = ""
+elif state_real.startswith(root + os.sep):
+    state_rel = state_real[len(root) + 1:].replace(os.sep, "/")
+
+allow_entries = []
+for raw in allow_csv.split(","):
+    s = raw.strip()
+    if not s:
+        continue
+    has_glob = any(c in s for c in "*?[")
+    trailing_slash = s.endswith("/")
+    p_abs = os.path.abspath(s)
+    p_real = os.path.realpath(p_abs)
+    for cand in (p_real, p_abs):
+        if cand == root:
+            rel = ""
+        elif cand.startswith(root + os.sep):
+            rel = cand[len(root) + 1:].replace(os.sep, "/")
+        else:
+            continue
+        is_dir = trailing_slash or (not has_glob and os.path.isdir(cand))
+        allow_entries.append((rel.rstrip("/"), is_dir, has_glob))
+
+def glob_match(rel, pat):
+    re_s = "^"
+    i = 0
+    while i < len(pat):
+        ch = pat[i]
+        if ch == "*":
+            if i + 1 < len(pat) and pat[i + 1] == "*":
+                re_s += ".*"
+                i += 1
+                if i + 1 < len(pat) and pat[i + 1] == "/":
+                    i += 1
+            else:
+                re_s += "[^/]*"
+        elif ch == "?":
+            re_s += "[^/]"
+        elif ch in ".+^$()[]{}|\\":
+            re_s += "\\" + ch
+        else:
+            re_s += ch
+        i += 1
+    re_s += "$"
+    import re
+    return bool(re.match(re_s, rel))
+
+def is_exempt(rel):
+    rel = rel.rstrip("/")
+    if rel == ".git" or rel.startswith(".git/"):
+        return True
+    if state_rel is not None:
+        if state_rel == "" or rel == state_rel or rel.startswith(state_rel + "/"):
+            return True
+    for a_rel, is_dir, has_glob in allow_entries:
+        if a_rel == "":
+            return True
+        if has_glob:
+            if glob_match(rel, a_rel):
+                return True
+        elif is_dir:
+            if rel == a_rel or rel.startswith(a_rel + "/"):
+                return True
+        else:
+            if rel == a_rel:
+                return True
+    return False
+
+def get_porcelain():
+    p = subprocess.run(
+        ["git", "-C", root, "status", "--porcelain", "-z", "--untracked-files=all", "--ignored"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if p.returncode != 0:
+        sys.exit(1)
+    return p.stdout
+
+def get_tracked():
+    p = subprocess.run(
+        ["git", "-C", root, "ls-files", "-z"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if p.returncode != 0:
+        sys.exit(1)
+    return [x.decode("utf-8", errors="surrogateescape") for x in p.stdout.split(b"\0") if x]
+
+def parse_porcelain_paths(raw):
+    fields = raw.split(b"\0")
+    i = 0
+    out = []
+    while i < len(fields):
+        f = fields[i]
+        if not f:
+            i += 1
+            continue
+        xy = f[:2].decode("latin1")
+        path = f[3:].decode("utf-8", errors="surrogateescape")
+        out.append((xy, path))
+        if xy[0] in ("R", "C") and i + 1 < len(fields):
+            src = fields[i + 1].decode("utf-8", errors="surrogateescape")
+            out.append((xy, src))
+            i += 2
+        else:
+            i += 1
+    return out
+
+def scan_tree():
+    manifest = {}
+    for dirpath, dirnames, filenames in os.walk(root, topdown=True, followlinks=False):
+        rel_dir = "" if dirpath == root else dirpath[len(root) + 1:].replace(os.sep, "/")
+        if rel_dir and is_exempt(rel_dir):
+            dirnames[:] = []
+            continue
+        kept_dirs = []
+        for d in sorted(dirnames):
+            d_rel = d if not rel_dir else f"{rel_dir}/{d}"
+            if is_exempt(d_rel):
+                continue
+            full_d = os.path.join(dirpath, d)
+            st = os.lstat(full_d)
+            if os.path.islink(full_d):
+                target = os.readlink(full_d)
+                h = hashlib.sha256(os.fsencode(target)).hexdigest()
+                manifest[d_rel] = {"type": "symlink", "mode": st.st_mode & 0o7777, "hash": h}
+            else:
+                manifest[d_rel] = {"type": "dir", "mode": st.st_mode & 0o7777, "hash": "-"}
+                kept_dirs.append(d)
+        dirnames[:] = kept_dirs
+        for fn in sorted(filenames):
+            f_rel = fn if not rel_dir else f"{rel_dir}/{fn}"
+            if is_exempt(f_rel):
+                continue
+            full_f = os.path.join(dirpath, fn)
+            st = os.lstat(full_f)
+            if os.path.islink(full_f):
+                target = os.readlink(full_f)
+                h = hashlib.sha256(os.fsencode(target)).hexdigest()
+                manifest[f_rel] = {"type": "symlink", "mode": st.st_mode & 0o7777, "hash": h}
+            elif os.path.isfile(full_f):
+                h_obj = hashlib.sha256()
+                with open(full_f, "rb") as fp:
+                    while True:
+                        chunk = fp.read(65536)
+                        if not chunk:
+                            break
+                        h_obj.update(chunk)
+                manifest[f_rel] = {"type": "file", "mode": st.st_mode & 0o7777, "hash": h_obj.hexdigest()}
+    return manifest
+
+if mode == "before":
+    if os.path.exists(snap_dir):
+        shutil.rmtree(snap_dir)
+    os.makedirs(os.path.join(snap_dir, "files"), exist_ok=True)
+    porc = get_porcelain()
+    tracked_set = set(get_tracked())
+    pre_dirty = {p.rstrip("/") for _, p in parse_porcelain_paths(porc)}
+    clean_tracked = sorted(tracked_set - pre_dirty)
+    with open(os.path.join(snap_dir, "porcelain.bin"), "wb") as f:
+        f.write(porc)
+    manifest = scan_tree()
+    with open(os.path.join(snap_dir, "manifest.json"), "w", encoding="utf-8") as f:
+        json.dump({"manifest": manifest, "clean_tracked": clean_tracked}, f, sort_keys=True)
+    with open(os.path.join(snap_dir, "manifest.nul"), "wb") as f:
+        for rel, info in sorted(manifest.items()):
+            rec = f"{info['type']} {info['mode']:04o} {info['hash']}\t{rel}\0"
+            f.write(rec.encode("utf-8", errors="surrogateescape"))
+    for rel, info in manifest.items():
+        src = os.path.join(root, rel)
+        dst = os.path.join(snap_dir, "files", rel)
+        if info["type"] == "dir":
+            os.makedirs(dst, exist_ok=True)
+        elif info["type"] == "symlink":
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            os.symlink(os.readlink(src), dst)
+        elif info["type"] == "file":
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.copy2(src, dst, follow_symlinks=False)
+    sys.exit(0)
+
+elif mode == "after":
+    manifest_path = os.path.join(snap_dir, "manifest.json")
+    porc_path = os.path.join(snap_dir, "porcelain.bin")
+    if not os.path.isfile(manifest_path) or not os.path.isfile(porc_path):
+        print("snapshot-missing")
+        sys.exit(1)
+    with open(manifest_path, "r", encoding="utf-8") as f:
+        saved = json.load(f)
+    pre_manifest = saved["manifest"]
+    clean_tracked_set = set(saved.get("clean_tracked", []))
+    with open(porc_path, "rb") as f:
+        pre_porc = f.read()
+    post_porc = get_porcelain()
+    post_manifest = scan_tree()
+
+    violated = set()
+    all_keys = set(pre_manifest.keys()) | set(post_manifest.keys())
+    for k in all_keys:
+        if pre_manifest.get(k) != post_manifest.get(k):
+            violated.add(k)
+
+    pre_porc_set = set(parse_porcelain_paths(pre_porc))
+    post_porc_set = set(parse_porcelain_paths(post_porc))
+    for xy, p in (post_porc_set - pre_porc_set):
+        p_clean = p.rstrip("/")
+        if not is_exempt(p_clean):
+            violated.add(p_clean)
+
+    if not violated:
+        shutil.rmtree(snap_dir, ignore_errors=True)
+        sys.exit(0)
+
+    # Unstage any off-ALLOW index modifications if HEAD exists
+    if subprocess.run(["git", "-C", root, "rev-parse", "--verify", "HEAD"],
+                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+        for _, p in (post_porc_set - pre_porc_set):
+            p_clean = p.rstrip("/")
+            if not is_exempt(p_clean) and p_clean not in {x.rstrip("/") for _, x in pre_porc_set}:
+                subprocess.run(["git", "-C", root, "reset", "-q", "HEAD", "--", p_clean],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    # Restore: (1) remove only paths that are new since the build started
+    new_paths = sorted([k for k in post_manifest if k not in pre_manifest], key=lambda x: x.count("/"), reverse=True)
+    for k in new_paths:
+        target = os.path.join(root, k)
+        if os.path.islink(target) or os.path.isfile(target):
+            try: os.unlink(target)
+            except OSError: pass
+        elif os.path.isdir(target):
+            shutil.rmtree(target, ignore_errors=True)
+
+    # Restore: (2) pre-existing paths whose state changed
+    changed_pre = sorted(
+        [k for k in pre_manifest if post_manifest.get(k) != pre_manifest[k]],
+        key=lambda x: x.count("/")
+    )
+    for k in changed_pre:
+        info = pre_manifest[k]
+        target = os.path.join(root, k)
+        backup = os.path.join(snap_dir, "files", k)
+        if info["type"] == "dir":
+            if os.path.islink(target) or os.path.isfile(target):
+                os.unlink(target)
+            os.makedirs(target, exist_ok=True)
+            os.chmod(target, info["mode"])
+        elif info["type"] == "symlink":
+            if os.path.isdir(target) and not os.path.islink(target):
+                shutil.rmtree(target)
+            elif os.path.lexists(target):
+                os.unlink(target)
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            os.symlink(os.readlink(backup), target)
+        elif info["type"] == "file":
+            if os.path.isdir(target) and not os.path.islink(target):
+                shutil.rmtree(target)
+            elif os.path.islink(target):
+                os.unlink(target)
+            os.makedirs(os.path.dirname(target), exist_ok=True)
+            if k in clean_tracked_set:
+                r = subprocess.run(["git", "-C", root, "checkout", "HEAD", "--", k],
+                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                if r.returncode != 0 or not os.path.isfile(target):
+                    shutil.copy2(backup, target, follow_symlinks=False)
+            else:
+                shutil.copy2(backup, target, follow_symlinks=False)
+            os.chmod(target, info["mode"])
+
+    # Restore directory modes bottom-up in case file restores inside them altered dir mtime/mode
+    for k in sorted([k for k in changed_pre if pre_manifest[k]["type"] == "dir"], key=lambda x: x.count("/"), reverse=True):
+        target = os.path.join(root, k)
+        if os.path.isdir(target) and not os.path.islink(target):
+            try: os.chmod(target, pre_manifest[k]["mode"])
+            except OSError: pass
+
+    shutil.rmtree(snap_dir, ignore_errors=True)
+    print(", ".join(sorted(violated)))
+    sys.exit(1)
+PYEOF
+}
 
 log(){ echo "improve-loop: $*"; }
 
@@ -115,9 +421,18 @@ while :; do
     *) echo "improve-loop: stop-condition evaluator errored (exit $src): $dec — aborting" >&2; exit 2 ;;
   esac
 
+  # GH-1221: snapshot pre-build tree state; fail closed if snapshot fails
+  snap_ok=1
+  if ! il_build_guard before >/dev/null 2>&1; then
+    snap_ok=0
+    log "iter $((IT+1)): pre-build snapshot failed — rejecting iteration (fail closed)"
+  fi
+
   # build a challenger, timed (wall-clock = the universal exact cost)
   t0=$(date +%s)
-  eval "$BUILD_CMD" >/dev/null 2>&1 || true
+  if [ "$snap_ok" = 1 ]; then
+    eval "$BUILD_CMD" >/dev/null 2>&1 || true
+  fi
   t1=$(date +%s); elapsed=$((t1 - t0))
   # Keep loop-cost's exact|floor honesty flag (its last stderr line) instead of dropping it: a floored
   # spend is a LOWER bound, so cumulative budget accounting under-counts and --max-total-budget could
@@ -125,18 +440,25 @@ while :; do
   SPENT_IT="$(bash "$COST" --agent "$AGENT" --currency "$CURRENCY" --wall-clock-sec "$elapsed" 2>"$STATE_DIR/.costerr")" || SPENT_IT="$elapsed"
   [ "$(tail -1 "$STATE_DIR/.costerr" 2>/dev/null)" = floor ] && SPEND_FLOORED=1
 
-  # oracle gate
-  op=1; eval "$ORACLE_CMD" >/dev/null 2>&1 || op=0
-  M="$MC"
-  if [ "$op" = 1 ]; then M="$(bash "$MEASURE" -c "$MEASURE_CMD" 2>/dev/null)" || { op=0; M="$MC"; }; fi
-
-  # anti-gaming veto (only meaningful when the oracle passed and we have a held-out metric)
   reason_extra=""
-  if [ "$op" = 1 ] && [ -n "$HELD_CMD" ]; then
-    HA="$(bash "$MEASURE" -c "$HELD_CMD" 2>/dev/null)" || HA="$HELD_CUR"
-    if [ -n "$HELD_CUR" ] && [ -n "$HA" ]; then
-      if ! bash "$HELD" --visible-before "$MC" --visible-after "$M" --held-before "$HELD_CUR" --held-after "$HA" --goal "$GOAL" >/dev/null 2>&1; then
-        op=0; reason_extra=" (held-out anti-gaming veto)"   # treat gaming as an oracle failure
+  if [ "$snap_ok" = 0 ]; then
+    op=0; M="$MC"; reason_extra=" (pre-build snapshot failed)"
+  elif ! VIOL_PATHS="$(il_build_guard after 2>/dev/null)"; then
+    log "iter $((IT+1)): off-ALLOW write violation (${VIOL_PATHS:-unknown}) — restored snapshot"
+    op=0; M="$MC"; reason_extra=" (off-ALLOW write: ${VIOL_PATHS:-unknown})"
+  else
+    # oracle gate
+    op=1; eval "$ORACLE_CMD" >/dev/null 2>&1 || op=0
+    M="$MC"
+    if [ "$op" = 1 ]; then M="$(bash "$MEASURE" -c "$MEASURE_CMD" 2>/dev/null)" || { op=0; M="$MC"; }; fi
+
+    # anti-gaming veto (only meaningful when the oracle passed and we have a held-out metric)
+    if [ "$op" = 1 ] && [ -n "$HELD_CMD" ]; then
+      HA="$(bash "$MEASURE" -c "$HELD_CMD" 2>/dev/null)" || HA="$HELD_CUR"
+      if [ -n "$HELD_CUR" ] && [ -n "$HA" ]; then
+        if ! bash "$HELD" --visible-before "$MC" --visible-after "$M" --held-before "$HELD_CUR" --held-after "$HA" --goal "$GOAL" >/dev/null 2>&1; then
+          op=0; reason_extra=" (held-out anti-gaming veto)"   # treat gaming as an oracle failure
+        fi
       fi
     fi
   fi
