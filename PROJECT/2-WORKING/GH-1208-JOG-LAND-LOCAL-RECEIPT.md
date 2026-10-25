@@ -37,7 +37,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Recon traced; design chosen (ledger-native local evidence, no new receipt); capture registered and rated. | Codex plan QA, then the fix, manual checks on the existing gh280 fixture, final QA, ready PR against development (do not merge). |
+| Plan QA Approved r2 (`94542fbb`; r1 blocker: landing marker crashed on an empty hosted list — folded in as item 4). Row admitted (`--accepted-start`). | Implement the one hunk, run the gh280 suite + the two disposable-copy manual checks, tier-3 gate, final Codex QA, ready PR against development (do not merge). |
 
 ## Observed (ground truth, development @ 80e67677)
 
@@ -76,8 +76,7 @@ synthetic green run (`test/gh280-jog-marathon-adapter.sh:46-49`); it does not ex
 In `jog_land`, replace the unconditional hosted requirement with **either/or evidence**:
 
 1. **Hosted (unchanged):** the existing `gh run list --workflow wave-reconcile.yml --commit <head>` query;
-   accepted when a matching run is `completed`/`success`. Any error or non-list answer still raises
-   `invalid hosted reconciliation evidence`.
+   accepted when a matching run is `completed`/`success` (existing error handling unchanged; see below).
 2. **Local:** the landed issue's own `roadmap_items` row in `<root>/releases.db`, read through the same
    read-only `connect()` the function already uses for `jog_queue`: `section == "Completed"` and
    `raw_text` contains `(PR #<pr_number>)` (the badge `wave_reconcile.py:1521` writes). This is the
