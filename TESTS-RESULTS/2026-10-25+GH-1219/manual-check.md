@@ -258,3 +258,15 @@ Findings 4371191684 (provider routes) and the outside-diff degraded-JSON finding
 | Lone JSON survivor of a degraded panel | `answer-A.md` lacks the warning | `DEGRADED PANEL` warning present (state passed via `write_neutral_payloads(degraded=…)`) |
 
 Suites green: `consult` 62/0, `gh308` 4/0, `gh589` 6/0, `gh648-l3`.
+
+
+## PR #1223 review follow-up, round 4 (CodeRabbit, 2026-10-25)
+
+Findings 4372766672 (provider domain shielded) and the outside-diff `consult.py:290-293` (partial model token).
+
+| | Red (`0bc215ff`) | Green |
+|---|---|---|
+| `openrouter/anthropic/claude-sonnet-5 via openrouter.ai` | `A/A/A-sonnet-5 via openrouter.ai` (model family and provider leak) | `A/A/A via A.ai` |
+| `utils/py/consult.py:302` citation | kept | kept |
+
+Fix: full model names are matched before short provider names, and shielding is limited to known source and doc extensions.

@@ -126,3 +126,8 @@ Existing suites green: `gh505-relay-attest`, `gh385-retry-token-satisfied`, `gh3
 Outside-diff finding at `marathon_drive.py:487-499`. `compute_config_sha256` now hashes `default@<AIDER_OPENAI_API_BASE>` for an aider agent with no explicit `AIDER_MODEL`, matching how `aider-turn.py` selects its default.
 
 Probe: same brief, builder `aider`. The hash with no env versus with `AIDER_OPENAI_API_BASE=http://localhost:1234/v1` was equal on red (`44e451ab`) and differs on green.
+
+
+## PR #1223 review follow-up, round 4 (CodeRabbit, 2026-10-25)
+
+Finding 4372766675. The config hash now appends `@<AIDER_OPENAI_API_BASE>` for aider whether or not `AIDER_MODEL` is set, because the endpoint is passed to the subprocess via `--openai-api-base`. Probe: with an explicit model, two endpoints gave equal hashes on red (`0bc215ff`) and different hashes on green.

@@ -288,15 +288,18 @@ def _neutralize_answer_text(raw_text, out_path, neutral_id, advisor):
     if base_name:
         body = body.replace(out_path, f"answer-{neutral_id}.md").replace(base_name, f"answer-{neutral_id}.md")
     token_re = re.compile(
-        r"\b(" + re.escape(advisor) + r"|codex|agy|gemini|claude|aider|muse"
-        r"|openai|anthropic|openrouter|antigravity"
-        r"|gpt-[A-Za-z0-9._-]+|claude-[A-Za-z0-9._-]+|gemini-[A-Za-z0-9._-]+|muse-[A-Za-z0-9._-]+)\b",
+        # Full model names first, so `claude-sonnet-5` is replaced whole rather than leaving `sonnet-5`.
+        r"\b(gpt-[A-Za-z0-9._-]+|claude-[A-Za-z0-9._-]+|gemini-[A-Za-z0-9._-]+|muse-[A-Za-z0-9._-]+"
+        r"|" + re.escape(advisor) + r"|codex|agy|gemini|claude|aider|muse"
+        r"|openai|anthropic|openrouter|antigravity)\b",
         re.IGNORECASE,
     )
     # Repository citations (paths, file.ext[:line]) are evidence, not identity: shield them.
     # Only file references (a name with an extension, optionally a directory and :line) count;
     # a slash-separated provider route such as openrouter/vendor/model-name is still neutralized.
-    path_re = re.compile(r"(?<![\w./-])(?:[\w.-]+/)*[\w-]+\.[A-Za-z][A-Za-z0-9]{0,4}(?::\d+(?:-\d+)?)?(?![\w/-])")
+    # Known source/doc extensions only, so a provider domain such as `openrouter.ai` is not shielded.
+    path_re = re.compile(r"(?<![\w./-])(?:[\w.-]+/)*[\w-]+\.(?:py|sh|md|js|ts|tsx|json|jsonl|ya?ml|toml|txt|sql"
+                         r"|html|css|cfg|ini|go|rs|rb|php|java|c|h|cpp|swift|kt)(?::\d+(?:-\d+)?)?(?![\w/-])")
     shielded = []
     def _shield(m) -> str:
         shielded.append(m.group(0))

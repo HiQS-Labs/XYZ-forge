@@ -370,3 +370,16 @@ Finding 4371250010: a new directory that only *could* hold an allowed path was s
 | G1 regression: build creates allowed `out/a/result.txt` | accepted | accepted; file kept |
 
 Fix: a **new** ancestor directory is treated as structure only when it actually contains an allowed file now (`supports_allowed`). Otherwise it counts as a write and is removed on rejection. G2 and G3 rerun green. Suites green: `improve-loop` 11/0, `improve-loop-qa` 11/0, `improve-loop-dogfood` 7/0, `champion` 13/0, `gh430` 8/0, `security-scan` 35/0.
+
+
+## PR #1223 review follow-up, round 4 (CodeRabbit, 2026-10-25)
+
+Findings 4372766664 (snapshot inside the repo) and 4372766670 (allowed empty directories). Red is `0bc215ff`, green is the fix.
+
+| Case | Red | Green |
+|---|---|---|
+| R4b: `TMPDIR` inside the repo; clean build | rejected: the guard snapshot showed up as new files (it even copied itself into its own backup) | accepted |
+| R4c: `--allow 'out/*/'`; build `mkdir -p out/a` | `violation (out)`; allowed `out/a` removed | accepted; `out/a` kept |
+| G4 regression: `out/*/result.txt` allowed; `mkdir -p out/empty` | violation | violation (still caught) |
+
+Fix: the guard snapshot dir is exempt wherever it resolves. `supports_allowed()` now counts allowed directories as well as files, through a new `is_allowed()` that never treats `.git`, `STATE_DIR` or the snapshot as build output.

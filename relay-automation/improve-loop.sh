@@ -109,6 +109,13 @@ mode, root_arg, state_arg, allow_csv, snap_dir = sys.argv[1:6]
 root = os.path.realpath(root_arg)
 state_real = os.path.realpath(state_arg)
 
+def _rel_under_root(p):
+    p = os.path.realpath(p)
+    if p == root:
+        return ""
+    return p[len(root) + 1:].replace(os.sep, "/") if p.startswith(root + os.sep) else None
+
+snap_rel = _rel_under_root(snap_dir)  # GH-1221: TMPDIR may resolve inside the repo
 state_rel = None
 if state_real == root:
     state_rel = ""
@@ -162,9 +169,14 @@ def is_exempt(rel):
     rel = rel.rstrip("/")
     if rel == ".git" or rel.startswith(".git/"):
         return True
-    if state_rel is not None:
-        if state_rel == "" or rel == state_rel or rel.startswith(state_rel + "/"):
+    for own in (state_rel, snap_rel):
+        if own is not None and (own == "" or rel == own or rel.startswith(own + "/")):
             return True
+    return is_allowed(rel)
+
+def is_allowed(rel):
+    """Matches an ALLOW entry (never .git, STATE_DIR or the guard snapshot on their own)."""
+    rel = rel.rstrip("/")
     for a_rel, is_dir, has_glob in allow_entries:
         if a_rel == "":
             return True
@@ -204,10 +216,10 @@ def is_allow_ancestor(rel):
 
 def supports_allowed(rel):
     """Does this directory actually hold an allowed file now (not merely a path that could match)?"""
-    for dp, _dns, fns in os.walk(os.path.join(root, rel), followlinks=False):
-        for fn in fns:
-            if is_exempt(os.path.relpath(os.path.join(dp, fn), root).replace(os.sep, "/")):
-                return True
+    for dp, dns, fns in os.walk(os.path.join(root, rel), followlinks=False):
+        for name in list(dns) + list(fns):
+            if is_allowed(os.path.relpath(os.path.join(dp, name), root).replace(os.sep, "/")):
+                return True  # an allowed file, or an allowed (possibly empty) directory
     return False
 
 def _norm(info):
