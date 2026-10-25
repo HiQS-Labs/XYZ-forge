@@ -96,9 +96,16 @@ def rtl_has_uncited_claim(path, window=None):
         window = _citation_window()
     try:
         with open(path, "r", errors="replace") as f:
-            lines = f.read().splitlines()
+            raw_text = f.read()
     except OSError:
         return True
+    if path.endswith(".json"):
+        try:
+            import json as _json
+            raw_text = str(_json.loads(raw_text[raw_text.index("{"):]).get("response", "") or "")
+        except (ValueError, AttributeError):
+            pass
+    lines = raw_text.splitlines()
     if not lines:
         return True
     any_cite = any(_RTL_CITATION_RE.search(l) for l in lines)
@@ -136,9 +143,16 @@ def rtl_classify_cited_claims(transcript_path, prompt_path, window=None):
         with open(prompt_path, "r", errors="replace") as f:
             prompt_lines = f.read().splitlines()
         with open(transcript_path, "r", errors="replace") as f:
-            lines = f.read().splitlines()
+            raw_text = f.read()
     except OSError:
         return
+    if transcript_path.endswith(".json"):
+        try:
+            import json as _json
+            raw_text = str(_json.loads(raw_text[raw_text.index("{"):]).get("response", "") or "")
+        except (ValueError, AttributeError):
+            pass
+    lines = raw_text.splitlines()
     # awk builds prompt as each line + "\n" then norms it (newlines collapse to spaces).
     prompt_norm = _rtl_norm("".join(pl + "\n" for pl in prompt_lines))
     n = len(lines)
@@ -220,6 +234,111 @@ def advisor_answer_ok(out_path, model):
             warn(f"{model} returned no visible content (exit 0, empty JSON response) — counted as FAILED")
         return False
     return True
+
+# GH-1219: blind A/B reconcile with neutral answer payloads.
+_NEUTRAL_BANNER_RE = re.compile(
+    r"^(model|provider|sandbox|workdir|approval|reasoning effort|reasoning summaries|session id):"
+    r"|^--------$"
+    r"|^OpenAI Codex\b"
+    r"|^Aider v[0-9]"
+    r"|^consult: (WARNING|NOTE) —",
+    re.IGNORECASE,
+)
+
+def _neutralize_answer_text(raw_text, out_path, neutral_id, advisor):
+    """GH-1219: project an advisor transcript into a neutral Markdown payload with no
+    harness attestation, CLI banners, advisor-named stamps or identifying filenames."""
+    import json as _json
+    if out_path.endswith(".json"):
+        try:
+            body = str(_json.loads(raw_text[raw_text.index("{"):]).get("response", "") or "")
+        except (ValueError, AttributeError):
+            body = ""
+    else:
+        body = raw_text
+
+    # Strip prepended attestation block(s) and advisor-named mechanical stamps.
+    while True:
+        stripped = body.lstrip()
+        if stripped.startswith("> **ATTESTATION**"):
+            body = stripped.split("\n\n", 1)[1] if "\n\n" in stripped else ""
+            continue
+        if stripped.startswith("**SINGLE-MODEL — NOT RECONCILED**"):
+            body = stripped.split("\n\n", 1)[1] if "\n\n" in stripped else ""
+            continue
+        if stripped.startswith("**NO FIRSTHAND VERIFICATION CITED**"):
+            body = stripped.split("\n\n", 1)[1] if "\n\n" in stripped else ""
+            continue
+        break
+
+    # Strip CLI banners, raw provenance headers, and harness preflight warnings.
+    kept_lines = []
+    for line in body.splitlines():
+        if line.startswith("> ") and re.match(r"^>\s*(\*\*ATTESTATION\*\*|(Model|Provider|Sandbox):)", line):
+            continue
+        if _NEUTRAL_BANNER_RE.match(line.strip()):
+            continue
+        kept_lines.append(line)
+    body = "\n".join(kept_lines).strip()
+
+    # Replace any remaining advisor/model/provider tokens or named transcript paths with neutral_id.
+    base_name = os.path.basename(out_path)
+    if base_name:
+        body = body.replace(out_path, f"answer-{neutral_id}.md").replace(base_name, f"answer-{neutral_id}.md")
+    token_re = re.compile(
+        r"\b(" + re.escape(advisor) + r"|codex|agy|gemini|claude|aider|muse"
+        r"|openai|anthropic|openrouter|antigravity"
+        r"|gpt-[A-Za-z0-9._-]+|claude-[A-Za-z0-9._-]+|gemini-[A-Za-z0-9._-]+|muse-[A-Za-z0-9._-]+)\b",
+        re.IGNORECASE,
+    )
+    body = token_re.sub(neutral_id, body)
+    return (body + "\n") if body else ""
+
+def write_neutral_payloads(run_dir, label, results, citeless_models=()):
+    """GH-1219: write neutral, label-seeded shuffled answer-A.md, answer-B.md, ... and key.json."""
+    import hashlib
+    import json as _json
+    import random
+    answered_items = [(m, out) for (m, out, ok) in results if ok and os.path.isfile(out)]
+    if not answered_items:
+        return
+    seed_int = int.from_bytes(hashlib.sha256(label.encode("utf-8")).digest()[:8], "big")
+    rng = random.Random(seed_int)
+    shuffled = list(answered_items)
+    rng.shuffle(shuffled)
+    citeless_set = set(citeless_models or ())
+    key_map = {}
+    for idx, (m, out) in enumerate(shuffled):
+        if idx < 26:
+            neutral_id = chr(ord("A") + idx)
+        else:
+            neutral_id = f"A{idx - 25}"
+        ans_file = f"answer-{neutral_id}.md"
+        ans_path = os.path.join(run_dir, ans_file)
+        try:
+            with open(out, "r", errors="replace") as f:
+                raw_text = f.read()
+        except OSError:
+            raw_text = ""
+        neutral_body = _neutralize_answer_text(raw_text, out, neutral_id, m)
+        if m in citeless_set:
+            nocite_neutral = (
+                f"**NO FIRSTHAND VERIFICATION CITED** — treat conclusions as conditional "
+                f"({neutral_id}'s answer carries an unsupported [Pass]/verified/confirmed-style claim "
+                f"with no quoted span or file:line citation nearby, despite the consult "
+                f"PREAMBLE asking advisors to cite evidence.)\n\n"
+            )
+            neutral_body = nocite_neutral + neutral_body
+        with open(ans_path, "w") as f:
+            f.write(neutral_body)
+        key_map[neutral_id] = {
+            "advisor": m,
+            "file": os.path.basename(out),
+            "answer_file": ans_file,
+        }
+    with open(os.path.join(run_dir, "key.json"), "w") as f:
+        _json.dump(key_map, f, indent=2, sort_keys=True)
+        f.write("\n")
 
 def consult_codex_attestation(out_path):
     # GH-308 port (consult.sh run_codex): prepend an ATTESTATION provenance header (which
@@ -883,6 +1002,10 @@ def main():
                     pass
             with open(os.path.join(run_dir, "DEGRADED-SINGLE-MODEL.txt"), "w") as f:
                 f.write(stamp + "\n")
+
+        # GH-1219: after every advisor answer is validated and stamped, write neutral shuffled
+        # answer-A.md, answer-B.md, ... and key.json while leaving the named originals untouched.
+        write_neutral_payloads(run_dir, label, results, citeless_models=citeless_models)
 
         if os.environ.get("CONSULT_GEMINI_JSON", "0") == "1":
             gj = os.path.join(run_dir, f"{label}.gemini.json")

@@ -1,6 +1,6 @@
 # Marathon Phase p3
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -191,3 +191,16 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+- **Files touched**:
+  - `utils/py/consult.py`: added `_neutralize_answer_text` and `write_neutral_payloads` (tagged `GH-1219`), invoked after all advisor validation and mechanical stamping (`NO FIRSTHAND VERIFICATION CITED` and `SINGLE-MODEL — NOT RECONCILED`). Also extracted decoded `.response` in `rtl_has_uncited_claim` and `rtl_classify_cited_claims` when inspecting `.json` transcripts so `CONSULT_GEMINI_JSON=1` answers are judged on their decoded response text rather than JSON envelope metadata.
+  - `skills/1-hourly/consult/SKILL.md`: updated steps 3–4 so the reconciler reads only `answer-*.md` first, settles disagreements in the fixed criteria order (claims checked against source/repo → reproducibility & citations → internal consistency → whether the next consumer can use it → scope; length and polish are not merits), names the deciding criterion and runner-up's specific defect in the verdict, only then opens `key.json` and the named originals, and states plainly that this is best-effort pseudonymization.
+  - `TESTS-RESULTS/2026-10-25+GH-1219/manual-check.md` & `TESTS-RESULTS/2026-10-25+GH-1219/provenance.jsonl`: recorded red/green manual checks in throwaway git repositories under `$TMPDIR` with stub advisor binaries across direct `consult.py`, default `consult.sh`, label-seeded shuffle stability, degraded single-model runs, and `CONSULT_GEMINI_JSON=1` envelope projection, plus existing consult regression suites (`test/consult.sh`, `test/gh308-consult-guards.sh`, `test/gh589-consult-no-tick.sh`, `test/gh648-l3-consult-cap.sh`).
+- **Key decisions**:
+  - Named originals (`<label>.<advisor>.md` / `.json`) and sidecars remain completely untouched for audit and cost capture (`relay-automation/consult.sh` is untouched per GH-308).
+  - Neutral payloads (`answer-A.md`, `answer-B.md`, …) strip attestation blocks, CLI banners, raw provenance headers, and single-model stamps, and replace advisor/model/provider tokens in kept warnings (such as `NO FIRSTHAND VERIFICATION CITED`) with the neutral ID (`A`, `B`, …).
+  - JSON-mode transcripts (`CONSULT_GEMINI_JSON=1`) project only the decoded `.response` text into `answer-*.md` so envelope metadata (`model`, `provider`, etc.) never leaks into the neutral payload.
+  - Ordering uses `random.Random` seeded from the first 8 bytes of `SHA-256(label)`, ensuring deterministic ordering across reruns with the same `--label`.
+
