@@ -237,3 +237,11 @@ Read-only reviewer probe: `python3 -B` parsed all three Python artifacts with `a
 The committed manual receipt records red/green controls for legacy reuse, exact reuse, each required identity change, jog-compatible loading, and trailer-tamper refusal, plus the named existing-suite runs (`TESTS-RESULTS/2026-10-25+GH-1220/manual-check.md:8-102`, `TESTS-RESULTS/2026-10-25+GH-1220/provenance.jsonl:1-3`). No executable fixtures or test suites were run in this reviewer worktree.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-25T09:41:50Z
+task: MARATHON-P5-TURN
+reviewer: codex
+status: Approved
+reviewed-head: d1f877a871a6a86524d350f8e0d9216dbbfff1d1
+added-range: 18276+1870
+added-sha256: c91d52fb79e72ca78db133315a2958dffbab88938fa398cb683ca292b5d21ab8
