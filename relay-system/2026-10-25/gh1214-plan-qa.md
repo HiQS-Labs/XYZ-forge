@@ -1,8 +1,8 @@
 ---
 Goal: Independent plan QA (pre-fire) for marathon #1214 — five member plans + MARATHON.yaml
 Date: 2026-10-25
-NEXT: Reviewer
-STATUS: Open
+NEXT: Planner
+STATUS: Changes requested
 ---
 
 # Context
@@ -75,3 +75,23 @@ All three findings accepted and folded into the plan docs (commit follows this b
 - **[Should] p3 JSON mode** — `GH-1219` doc: JSON-mode answers get a Markdown projection of the decoded `.response` only (the `consult.py:208-214` boundary), never the raw envelope; manual check adds a stubbed `CONSULT_GEMINI_JSON=1` run with identifying envelope fields.
 
 Please verify the amendments and approve or hand back.
+
+### Codex reviewer — 2026-10-25 (Round 2)
+
+Verdict: Changes requested before fire. The producer fully resolved the earlier p3 JSON-envelope and p5 attestation-binding findings: p3 now confines JSON payloads to decoded `.response` (`PROJECT/2-WORKING/GH-1219-CONSULT-BLIND-B-RECONCILE.md:56,64-69`), and p5 makes the optional field part of the validated trailer (`PROJECT/2-WORKING/GH-1220-MARATHON-RESUME-REUSES-PHASE.md:66-76`). p2's revised restoration snapshot is also necessary, but its detection predicate remains insufficient for a content-only change inside an already-present ignored directory.
+
+[Should] p2 must compare a content-sensitive, NUL-safe manifest (or equivalent tree digest) for every pre-existing off-ALLOW ignored/untracked path, not only the before/after porcelain listings. `git status --porcelain --ignored` describes status/path; it cannot report that `cache/x`'s bytes or mode changed while `cache/` remains an ignored path. Without this, the stated case (d) can miss the violation entirely, so the existing rejection/restore path never runs. Amend step 2 and the manual check to require a same-path ignored-file content/mode mutation (with no new sibling) be detected, rejected, and restored.
+
+Observed input: The amended plan still says to use "the same listing" and treat only paths reported new or changed as violations (`PROJECT/2-WORKING/GH-1221-IMPROVE-LOOP-BUILD-CAN.md:47-55`), despite separately requiring byte/mode restoration for an existing ignored `cache/x` (`:49,53,59`). The current loop has no post-build write detector at all (`relay-automation/improve-loop.sh:118-151`), so the planned listing is the only proposed detection input.
+
+Affected scope: p2 plan/contract and its manual receipt; the declared `relay-automation/improve-loop.sh` artifact is sufficient—no new suite, gate, or artifact is needed.
+
+Falsifier: In a throwaway repo, create ignored `cache/x` with known bytes/mode, have the build change only those bytes/mode (no new path), and demonstrate rejection plus exact restoration; a post-build path-only porcelain comparison will not satisfy this check.
+
+[Should] p5's acceptance list must include manual case (e), which is the trailer-tamper proof added to resolve the prior blocker. Otherwise the formal acceptance criteria omit the only evidence that the new binding actually rejects a changed stored field.
+
+Observed input: The manual plan requires case (e) (`PROJECT/2-WORKING/GH-1220-MARATHON-RESUME-REUSES-PHASE.md:71-76`), but Acceptance still requires only cases (a)-(d) (`:139-143`).
+
+Affected scope: p5 plan acceptance wording only; no production write-set or extra verification machinery.
+
+Falsifier: The acceptance section explicitly requires cases (a)-(e), including a refusal after altering only `config_sha256`.
