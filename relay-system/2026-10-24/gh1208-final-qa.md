@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -143,5 +143,67 @@ VERDICT: PASS
 Basis: provenance gap closed, scope receipt added, byte-identity deferral recorded honestly; requesting round 2.
 
 Handing off to Reviewer (codex) — go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Ship within this review's envelope. The Round 1 provenance finding is resolved; current source and retained red/green controls support the approved local-or-hosted landing behavior. No open required correction remains. The separate full gate and independent current-HEAD range attestation remain outer-harness responsibilities; DB byte identity is explicitly unmeasured. Reversibility: Easy — the existing one-function reader/writer change.
+swept file: yes
+
+- [Pass] **Round 1 provenance correction is complete.** `TESTS-RESULTS/2026-10-24+GH-1208/checks-f5a4e42f/provenance.jsonl:19` covers the retained baseline's exact digest and 13,573-byte size, with command, revision and exit result. All 19 records match nonempty retained files. `SUMMARY.md:38-42` records both the correction and the byte-identity limit. No runtime change is needed.
+- [Pass] **The entire artifact and bounded landing path still agree.** Artifact `.relay-artifacts/GH-1208-JOG-LAND-LOCAL-RECEIPT.md:1-149` was swept, including frontmatter, status, observations, alternatives, rollback, verification, limitation and ratings. `utils/py/jog_run.py:1189-1201` preserves the hosted query/error handling and first matching run's completed/success predicate; `:1202-1218` reads the exact issue's `Completed` row and PR substring through the existing read-only connection; `:1219-1223` names both remedies on refusal; `:1235-1239` safely serializes hosted/local evidence. The local predicate matches the reconciler at `utils/py/wave_reconcile.py:1520-1521,1550-1558`. The approved-receipt and tail-proof boundaries were read at `jog_run.py:1041-1134`. No additional pre-existing defect was found in the artifact or this bounded path. Root cause: the consumer retained a hosted-per-merge requirement after intentional dispatch-only reconciliation; fix site: `jog_land`.
+- [Pass] **Retained functional controls remain persuasive.** Baseline `gh280-unmodified-f5a4e42f.log:226-227` reports 223/223, rc=0. Under `checks-f5a4e42f/`, `reverted-gh1127.log:175` refuses on the old hosted requirement; `fixed-neither.log:175` refuses with both remedies; their retained `.rc` files are 1. `fixed-gh1127.log:175-189` records local-only landing, null hosted evidence and L6/L7 replay with unchanged selected counts; its `.rc` is 0. Its 225 PASS lines comprise the existing 223 assertions plus two manual marker observations, while the suite's own summary remains 223 (`:228`). The retained landing JSON's local object exactly matches the GH-901 Completed row in `rows-fixed-gh1127.json`, including `(PR #42)`.
+- [Pass] **Variant scope, admission and evidence wording remain bounded.** Read-only `difflib` comparison again showed only the workflow-specific empty hosted answer, GH-901/releases-mode seed and commit, diagnostic/marker capture, and NEITHER's removal of L5 reconciliation (`variant-GH1127.sh:46,1010-1030`; `variant-NEITHER.sh:1010-1027`); the existing landing/replay assertions remain. `checks.sh:68-69` and `reevaluation.txt:1-5` explain the two anchoring FAILs honestly. Artifact `:16-21,136-149` retains GH-831 scope and the legacy-ledger limitation; `releases.sql:893,4013` carries 78/75/50/85 and `accepted_start: true`.
+- [Pass] **The supplied scope receipt is consistent with the live implementation.** `scope-80e67677-to-head.txt:1,32-39` names reviewed head `b177c535e02c3c2585dac7d10a551a6e54001a27` and an empty protected-path remainder. Its only source patch (`:42-84`) is the approved gate/marker change. Computing the live file's blob digest without invoking git gives `7b5f1f5f8d1a034fc75cc773a7cb28ed31e2320f`, matching the receipt's new-file prefix at `:39`. This corroborates the supplied patch, not an independently queried current-HEAD range.
+
+  Read-only evidence probe (exit `0`; output saved only under `.relay-scratch/round2-check.txt`):
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PY' > .relay-scratch/round2-check.txt
+  import hashlib,json,re
+  from pathlib import Path
+  b=Path('TESTS-RESULTS/2026-10-24+GH-1208'); c=b/'checks-f5a4e42f'
+  rs=[json.loads(s) for s in (c/'provenance.jsonl').read_text().splitlines() if s.strip()]
+  assert rs
+  for r in rs:
+      raw=(c/r['artifact']).read_bytes()
+      assert raw and len(raw)==r['bytes'] and hashlib.sha256(raw).hexdigest()==r['sha256']
+  raw=(b/'gh280-unmodified-f5a4e42f.log').read_bytes(); h=hashlib.sha256(raw).hexdigest()
+  assert any(r['sha256']==h for r in rs)
+  print('provenance:',len(rs),'valid records; baseline covered:',len(raw),h)
+  for name,p in [('baseline',b/'gh280-unmodified-f5a4e42f.log')]+[(n,c/(n+'.log')) for n in ['reverted-gh1127','fixed-gh1127','fixed-neither']]:
+      s=p.read_text(); assert s
+      rc='0' if name=='baseline' else (c/(name+'.rc')).read_text().strip()
+      print(name,'PASS',len(re.findall(r'^\s*PASS:',s,re.M)),'FAIL',len(re.findall(r'^\s*FAIL:',s,re.M)),'rc',rc)
+  d=json.loads((c/'landing-fixed-gh1127.json').read_text())
+  rows=json.loads((c/'rows-fixed-gh1127.json').read_text())
+  r=next(r for r in rows if r['global_id']==d['local_reconcile']['roadmap_gid'])
+  assert d['hosted_reconcile'] is None and r['gh_number']==901 and r['section']=='Completed'
+  assert r['raw_text']==d['local_reconcile']['raw_text'] and '(PR #42)' in r['raw_text']
+  print('marker: hosted null; exact GH-901 Completed row',r['global_id'])
+  s=Path('utils/py/jog_run.py').read_bytes()
+  blob=hashlib.sha1(b'blob '+str(len(s)).encode()+b'\0'+s).hexdigest()
+  receipt=(b/'scope-80e67677-to-head.txt').read_text()
+  assert re.search(r'index [0-9a-f]+\.\.'+blob[:8],receipt)
+  print('live jog_run.py blob:',blob,'matches supplied scope patch')
+  PY
+  ```
+  Decisive output:
+  ```text
+  provenance: 19 valid records; baseline covered: 13573 9538f6eadf8203ab855be710d50989bb93180e930ce6b029d5f8452536a89801
+  baseline PASS 223 FAIL 0 rc 0
+  reverted-gh1127 PASS 172 FAIL 1 rc 1
+  fixed-gh1127 PASS 225 FAIL 0 rc 0
+  fixed-neither PASS 172 FAIL 1 rc 1
+  marker: hosted null; exact GH-901 Completed row rmi-01M5RKXFK1T9EH4JF8J8KXT3J6
+  live jog_run.py blob: 7b5f1f5f8d1a034fc75cc773a7cb28ed31e2320f matches supplied scope patch
+  ```
+
+- [Unverified — needs clone run] **Full gate and byte identity remain outside this approval's empirical claims.** No suite, executable fixture, pytest or gate was executed in this turn. `SUMMARY.md:33-35` leaves the separate full gate pending; `:40-42` explicitly defers byte hashes. Existing L6/L7 count/replay evidence meets the bounded replay claim, without establishing DB byte identity.
+- [Unverified — no git permitted] **Current-HEAD historical scope was not independently queried.** The supplied historical scope receipt and matching source blob close the missing-documentation point. The harness/outer reviewer must still bind the current revision and protected-path range; no git command or self-commit was run here.
+
+Graph check: Verify tier, nearest available index is the foreign primary checkout `Users-noelsaw-Documents-GH-Repos-XYZ-forge`, generation `2026-10-24T22:06:23Z`; no index exists for this isolated worktree. Current local source/receipts are the evidence. Coverage reported missing task-doc metadata and suite parse gaps `715-716`; the task documents and that suite range were read directly. No claim of exhaustive graph coverage is made.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
