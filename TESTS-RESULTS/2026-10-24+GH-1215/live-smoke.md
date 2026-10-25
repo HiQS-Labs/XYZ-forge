@@ -21,3 +21,13 @@ Limits: the live turn's stream-json transcript was not kept. It was pointed at `
 which `rtl_enforce` sweeps after every turn (GH-91); the default `KIMI_LOG` is durable. The relay
 block and attestation are the record. One live turn only; no timeout or containment-violation
 case was run live (both paths are `RelayTurnLib`'s, unchanged).
+
+## Review-fix checks (CodeRabbit on PR #1217, 2026-10-25, at `41fb5b28`)
+
+| Finding | Check | Before → after |
+|---|---|---|
+| Empty-output guard read the whole reused `KIMI_LOG` | `has_model_output(log, offset)` on a log that already holds an assistant line, then a meta-only append | `True` (old, whole log) → `False`; a new assistant line → `True`. Driven smoke with `KIMI_LOG` pre-filled and the meta-only stub: shim exit 5, driver exit 5. `reused-log-smoke.log` |
+| Bare `KIMI_BIN` name not resolved | `KIMI_BIN=kimi find-harness.sh --env` with `~/.kimi-code/bin` on PATH | `RELAY_HAS_KIMI=0` (previous revision) → `1`, `KIMI_BIN=~/.kimi-code/bin/kimi` |
+| Preflight passed on a fallback the shim never uses | `_probe_agent_bin('kimi')` with `KIMI_BIN=/nope/kimi` and `kimi` on PATH | refused, rc 2, `tried ['/nope/kimi']`; unset `KIMI_BIN` → probe ok |
+
+The nine focused suites were re-run at `41fb5b28`: all green, same counts as above. The ratchet is clean, and the gh308 range guard passes with CI's arguments.
