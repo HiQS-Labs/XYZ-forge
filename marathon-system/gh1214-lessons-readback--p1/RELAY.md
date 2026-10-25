@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -160,3 +160,22 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 1 · Builder · agy
+
+- **Files touched:**
+  - `utils/py/releases_app.py`
+  - `TESTS-RESULTS/2026-10-25+GH-1222/manual-check.md`
+  - `TESTS-RESULTS/2026-10-25+GH-1222/provenance.jsonl`
+  - `marathon-system/gh1214-lessons-readback--p1/RELAY.md`
+- **Summary of changes:**
+  1. Updated `_live_manifest_count` (`utils/py/releases_app.py:2519-2526`) from `SELECT COUNT(*)` to `SELECT COUNT(DISTINCT issue_ref_id)` with a `# GH-1222:` comment explaining that one issue can hold both a `shipped` row and a redialed `dialed_in` row at once.
+  2. Updated migration 004's active-release baseline backfill query (`utils/py/releases_app.py:826-832`) to `SELECT COUNT(DISTINCT issue_ref_id)` with the same `# GH-1222:` comment.
+  3. Executed a throwaway SQLite ledger verification under `$TMPDIR` (never touching the repository's `releases.db`) demonstrating:
+     - Red control: `COUNT(*)` returns `2` when one issue is dialed in, shipped, and redialed.
+     - Green control: `_live_manifest_count` and the migration-004 backfill query return `1` for that shipped+redialed issue, and `2` once a second distinct issue is dialed in (and `baseline_count=2` on `draft -> active`).
+  4. Recorded the commands, output, and provenance under `TESTS-RESULTS/2026-10-25+GH-1222/manual-check.md` and `TESTS-RESULTS/2026-10-25+GH-1222/provenance.jsonl`.
+  5. Verified existing releases test suites pass: `bash test/gh32-releases-app.sh` (145/145) and `bash test/gh351-manifest-unship.sh` (13/13).
+
