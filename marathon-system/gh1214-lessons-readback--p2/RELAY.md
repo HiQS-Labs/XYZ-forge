@@ -219,3 +219,11 @@ Reviewed the complete 532-line `relay-automation/improve-loop.sh` and both GH-12
 Static probe (no fixture executed): `bash -n relay-automation/improve-loop.sh` → exit 0. The manual evidence records red and green controls for the required clean default, tracked, pre-dirty staged tracked, untracked, in-place ignored, and newly created ignored-path cases. I did not run mutation-heavy suites or executable fixtures under this relay constraint; the recorded existing-suite evidence remains builder-provided and the harness gate follows this turn.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-25T07:37:08Z
+task: MARATHON-P2-TURN
+reviewer: codex
+status: Approved
+reviewed-head: b361d96f379ceb60e63aa4f447ac728154a0dc58
+added-range: 17752+1089
+added-sha256: 25d786cc1079a5bab3971b8a78e441406a9daa45c9b4b071d4ab963c68fe2dcd
