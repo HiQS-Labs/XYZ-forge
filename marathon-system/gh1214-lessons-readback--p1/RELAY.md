@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -19,7 +19,7 @@ complexity: 1
 risk: 1
 effort: 1
 phases: 1
-ratings_provisional: false   # rated 2026-10-25 at marathon prep: two COUNT queries, confirmed reachable by Kimi K3.1 QA on #1214
+ratings_provisional: false   # rated 2026-10-25 at marathon prep: two COUNT queries, confirmed reachable by Kimi K3.1 QA on #1214  [Unverified — no citation]
 non_goals:
   - Changing redial semantics (a redial still inserts a second row — GH-111/GH-351 append-only trail)
   - Rewriting already-captured baseline_count values in existing databases
@@ -179,3 +179,16 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   4. Recorded the commands, output, and provenance under `TESTS-RESULTS/2026-10-25+GH-1222/manual-check.md` and `TESTS-RESULTS/2026-10-25+GH-1222/provenance.jsonl`.
   5. Verified existing releases test suites pass: `bash test/gh32-releases-app.sh` (145/145) and `bash test/gh351-manifest-unship.sh` (13/13).
 
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Approved
+
+- Reviewed the complete `utils/py/releases_app.py` and both required evidence artifacts. No pre-existing defect in the swept source file was found that is in scope for this phase.
+- `_migration_004` now backfills active releases with `COUNT(DISTINCT issue_ref_id)` over exactly `dialed_in` and `shipped` rows; `_live_manifest_count` uses the identical predicate. Both carry the scoped GH-1222 rationale, so shipped-plus-redialed history is one live issue while distinct issue references still add.
+- Evidence is internally consistent: the recorded red control gives `COUNT(*) = 2` for two live rows of one issue; the green controls give both production paths `1`, then give `_live_manifest_count` and the activation baseline `2` after issue #2 is dialed in. The provenance records the command purpose, base SHA, platform, zero exit codes, and outputs.
+- Narrow read-only reviewer probe (exit 0): `python3 -B - <<'PY' ... ast.parse(Path('utils/py/releases_app.py').read_text()) ... PY` reported `AST_PARSE=ok`, `GH1222_OCCURRENCES=2`, and exactly two `COUNT(DISTINCT issue_ref_id)` statements—the migration backfill and `_live_manifest_count`.
+- The builder's existing-suite evidence is recorded as `gh32-releases-app` 145/145 and `gh351-manifest-unship` 13/13. I did not run executable fixtures, test scripts, or `validate.sh` in this linked worktree; the harness gate remains the appropriate disposable-clone validation.
+
+relay closed, no further turn needed
