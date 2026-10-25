@@ -42,6 +42,14 @@ Umbrella: #1214 · Phase p2 · `depends_on: p1`.
 - `:69-77`: `ALLOW` defaults to the artifact, and `STATE_DIR` defaults to `relay-automation/state/improve-loop.$$`, which is **outside** `ALLOW`.
 - `.gitignore:1,23-27`: `.tick/` and `relay-system/logs/` are ignored, so a plain `git status --porcelain` never shows them.
 
+## Retry note (2026-10-25, orchestrator)
+
+The first attempt's implementation is **already in the tree**: codex approved it at `b361d96f`. Its gate went red on `security-scan.sh` alone, because two pre-existing trusted `eval` lines were re-indented. The orchestrator re-baselined those two lines in `262b6ffe` (scan exit 0, `test/security-scan.sh` 35/0). That commit landed after the reviewed head, so GH-505 correctly refused the old attestation, and this retry exists to get a review of the current tree.
+
+**Builder:** verify the current `relay-automation/improve-loop.sh` and the `TESTS-RESULTS/2026-10-25+GH-1221/` receipt against the acceptance list. Fix only a concrete gap you can show. Do not rewrite working code. Then hand off.
+
+**Reviewer:** review the current tree, including `262b6ffe` (the baseline-only indentation change in `relay-automation/hooks/security-scan-baseline.txt`).
+
 ## Plan (one phase)
 
 1. Before each build, take a snapshot inside the loop's state dir. If the snapshot fails, reject the iteration (fail closed).
