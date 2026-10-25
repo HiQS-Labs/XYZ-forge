@@ -201,13 +201,18 @@ def path_for(task, target_repo):
 
 
 def trailer_text(record):
+    # GH-1220: bind config_sha256 into the trailer when present so a tampered value is refused at
+    # load() while legacy records without the field continue to match their legacy trailers.
+    cfg = record.get("config_sha256")
+    cfg_line = f"config-sha256: {cfg}\n" if cfg else ""
     return (f"\n{TRAILER_HEAD} — {record['attested_at']}\n"
             f"task: {record['task']}\n"
             f"reviewer: {record['reviewer']}\n"
             f"status: {record['status']}\n"
             f"reviewed-head: {record['reviewed_head']}\n"
             f"added-range: {record['added_start']}+{record['added_len']}\n"
-            f"added-sha256: {record['added_sha256']}\n")
+            f"added-sha256: {record['added_sha256']}\n"
+            f"{cfg_line}")
 
 
 def write(record):
@@ -270,6 +275,10 @@ def _load(task, *, expected_reviewer, relay_file, target_repo, path=None):
         v = rec.get(k)
         if v is not None and (not isinstance(v, str) or not v):
             return None, f"attestation record field {k} is neither null nor a non-empty string"
+    if "config_sha256" in rec:
+        # GH-1220: optional config identity; when present it must be a non-empty string.
+        if not isinstance(rec["config_sha256"], str) or not rec["config_sha256"]:
+            return None, "attestation record field config_sha256 is not a non-empty string"
     if rec["task"] != task:
         return None, f"attestation record is for task {rec['task']}, not {task}"
     if relay_file is None:

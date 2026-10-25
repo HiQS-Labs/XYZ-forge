@@ -1,6 +1,6 @@
 # Marathon Phase p5
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P5-TURN builder=agy reviewer=codex round-cap=7 -->
 
@@ -200,3 +200,24 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · agy
+
+Implemented GH-1220 optional `config_sha256` attestation and resume check across `utils/py/relay_attest.py`, `utils/py/relay_drive.py`, and `utils/py/marathon_drive.py`, with verification receipts in `TESTS-RESULTS/2026-10-25+GH-1220/`.
+
+#### Files Touched & Key Decisions
+
+1. **`utils/py/relay_attest.py`**:
+   - Kept `SCHEMA = "relay-drive/attest@1"` unchanged.
+   - In `trailer_text(record)` (lines 203–215), when `record.get("config_sha256")` is present and truthy, appended `config-sha256: <value>\n` to the trailer text so `trailer_sha256` and the relay file trailer bind `config_sha256`. Legacy records without `config_sha256` omit the line and match their legacy trailers unchanged.
+   - In `_load()` (lines 278–281), validated that when `"config_sha256" in rec`, it is a non-empty `str` (`"attestation record field config_sha256 is not a non-empty string"`), and because `trailer_text(rec)` is hashed against `rec["trailer_sha256"]` and compared against the relay file trailer bytes, any tampering with a stored `config_sha256` is refused with `"attestation record does not match its own trailer"`.
+2. **`utils/py/relay_drive.py`**:
+   - In `judge_terminal()` (lines 752–755), read `MARATHON_CONFIG_SHA256` via `get_env("MARATHON_CONFIG_SHA256", "")`; when non-empty, set `record["config_sha256"] = cfg_sha` before computing `relay_attest.trailer_text(record)` and `record["trailer_sha256"]`.
+3. **`utils/py/marathon_drive.py`**:
+   - Added `compute_config_sha256(brief_file, builder, reviewer, env=None)` (lines 487–498) with the required credit comment (`# GH-1220: idea adapted from Harness² core/runmark.py (google-research/harness2, Apache-2.0).`), hashing newline-joined `[brief_text, builder, reviewer, _model_val(builder), _model_val(reviewer)]` via `relay_attest.sha256`.
+   - Passed `MARATHON_CONFIG_SHA256` in `_run_relay_drive()` on the child environment `env2` (line 3416) so `os.environ` is not mutated (keeping `test/gh441-gate-env-contract.sh` C1 green without touching `gate_env.py`).
+   - In `satisfied_lane_terminal()` (lines 2908–2915): if `config_sha256` is absent/empty on the attested record, logged `marathon-drive: phase <id>: legacy attestation without config identity — reusing (GH-1220)` and reused; if `rec.get("config_sha256") != config_sha256`, logged `marathon-drive: phase <id>: phase config changed since attestation — rebuilding (GH-1220)`, marked `config_mismatch_rebuild[0] = True`, and returned `False`.
+   - Passed `force=bool(args.force or config_mismatch_rebuild[0])` to `resolve_force_relay_task(...)` (line 2944) so a config-mismatch rebuild on a spent `done` base token allocates a fresh `-R2` (`-R3`, …) retry token rather than failing at `tick claim`.
+4. **`TESTS-RESULTS/2026-10-25+GH-1220/manual-check.md` & `TESTS-RESULTS/2026-10-25+GH-1220/provenance.jsonl`**:
+   - Recorded red/green control verification in throwaway git repos under `$TMPDIR` covering all cases (a)–(e) plus existing regression suites (`test/gh505-relay-attest.sh`, `test/gh385-retry-token-satisfied.sh`, `test/gh371-interrupt-snapshot.sh`, `test/gh372-escalation-log-tail.sh`, `test/gh441-gate-env-contract.sh`, `test/gh308-frozen-twin-guard.sh`).
