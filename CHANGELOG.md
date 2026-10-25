@@ -12,7 +12,8 @@ follows `muse-turn.py`: `KIMI_AGENT` gates dispatch; `KIMI_BIN`, `KIMI_MODEL` (d
 `route_agent()` as a builder lane, so `resolve-profile.sh` routes a `kimi` harness, and the
 agent-id allowlists `test/gh346-gateway-allowlists.sh` pins now include it; the marathon reviewer
 gate stays codex/agy. The first live turn (`--reviewer kimi --review-once`) was attested Approved.
-No new tests (GH-831); evidence in `TESTS-RESULTS/2026-10-24+GH-1215/`. Reversibility: **Easy**
+The GH-777 inventory ratchet baseline grows by this one adapter file (121 → 122), as #794 and
+#765 did. No new tests (GH-831); evidence in `TESTS-RESULTS/2026-10-24+GH-1215/`. Reversibility: **Easy**
 (revert; nothing dispatches to the shim unless `KIMI_AGENT` is set).
 
 ## 2026-10-24 — task-sync: pin active Claude Desktop sessions (GH-1196)

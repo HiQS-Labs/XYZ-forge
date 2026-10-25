@@ -1,5 +1,5 @@
 {
-  "total_scripts": 121,
+  "total_scripts": 122,
   "scripts": [
     "utils/ate/install.sh",
     "utils/ate/scripts/checkin.py",
@@ -69,6 +69,7 @@
     "utils/py/hosted_lane_report.py",
     "utils/py/jev_triage.py",
     "utils/py/jog_run.py",
+    "utils/py/kimi-turn.py",
     "utils/py/marathon_drive.py",
     "utils/py/marathon_plan.py",
     "utils/py/marathon_yaml_emit.py",

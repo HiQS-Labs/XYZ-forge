@@ -148,6 +148,13 @@ Receipt: `TESTS-RESULTS/2026-10-24+GH-1215/live-smoke.md` (with `provenance.json
 - R7: `relay-drive.sh … --agent-cmd relay-automation/kimi-turn.sh --reviewer kimi --review-once`
   exit 0, attested Approved by kimi (`relay-system/2026-10-24/gh1215-kimi-first-relay.md`).
   Re-firing on the closed thread exits 4 with no dispatch.
+- Pre-push gate round 1 (851s) was red on one suite, `gh777-inventory-ratchet.sh`: the GH-777
+  shrink-only ratchet refuses any new `.py`/`.sh` under `utils/`. `utils/py/kimi-turn.py` is
+  added to `utils/pdda/inventory_ratchet_baseline.json` by hand (121 → 122). Why this and not a
+  relocation: GH-148 puts every turn adapter's Python in `utils/py/`, `profile_resolve.py` derives a
+  lane's gateway and CLI from `utils/py/<lane>-turn.py`, and moving it out of the scanned tree to
+  dodge the ratchet would game it. Precedent: #794 and #765 each grew the baseline by one file in a
+  reviewed PR. This is a deliberate one-file growth for the operator to see in review.
 - Known limit, not changed: `resolve-profile.sh --env` prints a false "CLI 'kimi' is NOT on PATH"
   comment in a non-interactive shell because it checks bare PATH. The same check already
   misfires for deepseek and smallcode; the turn itself resolves the installer path.

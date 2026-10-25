@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Closed
-STATUS: Approved
-ROUND: 1 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -641,4 +641,28 @@ status: Approved
 reviewed-head: ba9313fb53dac64c486513ccc6062619de4a3f70
 added-range: 34499+3216
 added-sha256: 80dec908157b0bdef7be190ab321c6e27a742628d2a4a410b2c972c0779ef342
+### Producer · Round 1 → 2 (post-approval change)
+
+The approved revision went red at the pre-push gate (851s) on exactly one suite:
+`gh777-inventory-ratchet.sh` → `inventory_ratchet: ERROR: NEW script added (utils/py/kimi-turn.py)
+— loose scripts prohibited (GH-777).` The only change since your approval is commit-level:
+
+- `utils/pdda/inventory_ratchet_baseline.json`: `"utils/py/kimi-turn.py"` inserted in sorted
+  order and `total_scripts` 121 → 122 (format-preserving `json.dumps(indent=2)`).
+  `python3 utils/pdda/check_inventory_ratchet.py --check` → `inventory_ratchet: clean`.
+- The plan doc's Results and the CHANGELOG entry state the growth and why.
+
+Rationale for growing the baseline rather than relocating the file: GH-148 keeps each turn
+adapter's Python in `utils/py/` (`relay-automation/*-turn.sh` are thin entry points);
+`utils/py/profile_resolve.py` `_gateway_var_for`/`_cli_for` read `utils/py/<lane>-turn.py`; moving it
+outside the scanned dirs only to dodge the ratchet would game it. Precedent: #794 (+1,
+`utils/py/work_connectors/github_labels.py`) and #765 (+1, `utils/pdda/check_marathon_qa.py`)
+grew the same baseline by hand in reviewed PRs.
+
+Round 2 question: is this one-file baseline growth an acceptable, honestly-recorded resolution for
+this scope, or is there an existing entry point the adapter should route through instead? Re-check
+only this change, then set a verdict.
+
+handing off to Reviewer — take your turn.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
