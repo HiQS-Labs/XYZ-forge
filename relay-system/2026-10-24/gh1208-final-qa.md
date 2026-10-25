@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -93,5 +93,42 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The bounded implementation and retained red/green controls support the requested landing behavior. Final QA needs one evidence correction: the cited unmodified-suite run is missing from provenance coverage, contrary to AGENTS.md's committed-run-evidence requirement. No observed implementation defect warrants a behavior change. Reversibility: Easy — one function and the existing read-only connection/landing writer.
+swept file: yes
+
+- [Should] **Cover the cited baseline run in the existing provenance evidence.** Artifact `:40,113-116` and `TESTS-RESULTS/2026-10-24+GH-1208/SUMMARY.md:6-9` cite the unmodified 223/223 run. Its retained log ends with `223 pass, 0 fail` and `rc=0` (`gh280-unmodified-f5a4e42f.log:226-227`), but the only `provenance.jsonl` under this evidence directory contains 18 records, none covering that log's digest. AGENTS.md requires provenance committed in the same PR for any cited run. Concrete fix: retain the baseline's original run provenance, or extend the existing manifest with an accurately attributed record for this retained baseline (artifact path, digest, size, revision and exit result, following the existing format). Do not invent missing execution metadata or add a suite. This is an evidence correction, not a request to change runtime behavior.
+
+  Read-only probe, exit `0` (with `PYTHONDONTWRITEBYTECODE=1` and scratch `TMPDIR`):
+  ```sh
+  python3 - <<'PY'
+  import hashlib,json
+  from pathlib import Path
+  b=Path('TESTS-RESULTS/2026-10-24+GH-1208')
+  records=[json.loads(s) for s in (b/'checks-f5a4e42f/provenance.jsonl').read_text().splitlines() if s.strip()]
+  raw=(b/'gh280-unmodified-f5a4e42f.log').read_bytes()
+  assert raw and records
+  digest=hashlib.sha256(raw).hexdigest()
+  print(len(raw),digest)
+  print(len(records),any(r.get('sha256')==digest for r in records))
+  print([str(p.relative_to(b)) for p in b.rglob('provenance.jsonl')])
+  PY
+  ```
+  Decisive output: `13573 9538f6eadf8203ab855be710d50989bb93180e930ce6b029d5f8452536a89801`; `18 False`; `['checks-f5a4e42f/provenance.jsonl']`.
+
+- [Pass] **The live function implements the approved either/or gate without the old empty-list crash.** `utils/py/jog_run.py:1189-1201` retains the hosted query, validation and first matching run's completed/success predicate. `:1202-1218` reads `roadmap_items` through the existing read-only connection, constrains GH number and `Completed`, and matches the exact `(PR #N)` substring with null-safe raw text. `:1219-1223` refuses with both remedies before queue completion at `:1230-1234`. The existing marker at `:1235-1239` records a green hosted object or null, and the local row object or null. `_committed_jog_receipt` and `_landing_tail_proof` remain the source-level approval/tail boundaries (`:1041-1134`); this turn does not attest their historical diff.
+- [Pass] **The local receipt agrees with the actual reconciler output.** `wave_reconcile.py:1520-1521,1550-1558` writes `Completed` and `SHIPPED ... (PR #N)`. In retained `checks-f5a4e42f/landing-fixed-gh1127.json`, `hosted_reconcile` is null and `local_reconcile.roadmap_gid` is `rmi-01M5RKXFK1T9EH4JF8J8KXT3J6`; its raw text exactly equals the GH-901 `Completed` row in `rows-fixed-gh1127.json`, including `(PR #42)`. Root cause: the landing consumer retained a per-merge hosted requirement after dispatch-only decision #1131; fix site: `jog_land`; upstream dispatch-only behavior is intentional (`.github/workflows/wave-reconcile.yml:3-10`).
+- [Pass] **The retained controls support the functional claims.** Re-grepping nonempty logs gives: unmodified 223 PASS / 0 FAIL (`gh280-unmodified-f5a4e42f.log:226-227`, rc=0); reverted GH1127 refuses at `reverted-gh1127.log:175` with `hosted wave-reconcile is not green for the landed PR head` (retained `.rc` = 1); fixed GH1127 has 225 PASS / 0 FAIL lines, consisting of the existing 223 assertions plus two manual marker observations (`fixed-gh1127.log:175-189,228`, retained `.rc` = 0); fixed NEITHER refuses at `fixed-neither.log:175` with the combined local/hosted remedy (retained `.rc` = 1). L6/L7 successful replay and unchanged manifest/receipt counts are explicitly present at fixed log `:184-189`. These are reviewed retained clone results, not newly executed suites.
+- [Pass] **The variant edits preserve the measurement.** A read-only Python `difflib.unified_diff` comparison of each retained variant against `test/gh280-jog-marathon-adapter.sh` (exit 0) found only the workflow-specific empty hosted answer, GH-901 roadmap/releases-mode seed and its commit, diagnostic/marker capture, and the NEITHER removal of L5 reconciliation. Existing L5 assertions and L6/L7 replay checks are unchanged (`variant-GH1127.sh:1010-1062`; `variant-NEITHER.sh:1010-1015`). No assertion was removed to obtain green. Recomputing SHA-256 and byte sizes for all 18 manifest entries returned zero mismatches. The two driver FAILs are accounted for honestly: `checks.sh:68-69` anchors `^PASS`, while fixed log `:175,184` begins with two spaces; `reevaluation.txt:1-5` explains this and reports the actual results.
+- [Pass] **Capture status, scope and admission agree with the retained state.** The seeded artifact equals the tracked capture byte for byte; `:40` distinguishes the committed fix from the still-running full gate and pending PR. `:135-139` states the legacy-ledger limitation, and `:143-150` grounds 78/75/50/85 without claiming measured frequency. `releases.sql:893` carries those ratings and the working-doc pointer; `:4013` records `in_flight` with `"accepted_start": true`. Artifact `:16-21` preserves the explicit non-goals and GH-831 boundary.
+- [Unverified — needs clone run] **The separate full gate and the plan's DB-byte replay check are not established by this turn.** Artifact `:129-132` asks for before/after DB SHA-256; retained L6/L7 checks establish unchanged selected counts, not byte identity. No byte-hash pair is retained in these receipts. Do not report byte identity as measured. The tier-3 gate is expressly outside this review; no suite, fixture, pytest or gate was executed here.
+- [Unverified — no git permitted] **Historical change scope remains for the harness/outer reviewer.** The user prohibits all git commands in this turn, so I did not execute the requested `80e67677..HEAD` path comparison, independently establish commit identity, or attest that no other runtime/test files changed. Source inspection and variant comparisons above do not substitute for that range check.
+
+Whole-artifact sweep completed, including frontmatter, status, observations, implementation shape, alternatives, rollback, verification, limitation and ratings. No additional pre-existing defects found in the artifact or the bounded `jog_land` path beyond the evidence gap above. Graph discovery found only a foreign-checkout index (`XYZ-forge`, generation `2026-09-01T15:54:30Z`); coverage reported changed/missing metadata, so claims use current local source and retained receipts. The suite's recorded partial range `628-629` was read directly. A supplementary AST-expression probe initially failed due to the probe selecting the function docstring instead of its `try` block; corrected extraction exited 0 and rejected absent/null/empty/PR-420 text while accepting `(PR #42)`. It executed only extracted expressions, never the repository function.
+
+Handing off to Producer (claude-a) — cover the baseline run in provenance and disposition the unverified limits, then return for Round 2 QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
