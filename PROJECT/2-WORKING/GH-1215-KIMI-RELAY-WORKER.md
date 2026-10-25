@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Final Codex QA Approved (round 1); PR open | Merge, then switch the operator's Kimi profile to `harness: kimi` |
+| Final Codex QA Approved (rounds 1–2); PR open | Merge, then switch the operator's Kimi profile to `harness: kimi` |
 
 ## Key concepts
 
@@ -163,6 +163,9 @@ Receipt: `TESTS-RESULTS/2026-10-24+GH-1215/live-smoke.md` (with `provenance.json
 
 Thread: `relay-system/2026-10-24/gh1215-final-qa.md` (Codex). Round 1: VERDICT PASS, five cited
 `[Pass]` findings, no Blocker/Should/Nit; attested Approved at `ba9313fb`.
+Round 2 (after the pre-push gate flagged the GH-777 ratchet): VERDICT PASS on the one-file
+baseline growth; attested Approved at `184ef410` (token `RELAY-gh1215-final-qa-r2`, since the
+round-1 token was spent).
 
 ## Rating rationale (2026-10-24)
 
