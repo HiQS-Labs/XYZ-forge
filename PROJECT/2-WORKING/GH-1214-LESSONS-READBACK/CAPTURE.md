@@ -1,6 +1,6 @@
 ---
 title: "GH-1214 lessons read-back + Harness² borrows — marathon capture (one chain, five lanes)"
-status: "Prepared — reviewed, preflighted, dry-run; firing from the marathon clone"
+status: "Delivered — five phases Approved and gated; PR #1223 open against development"
 created: 2026-10-25
 updated: 2026-10-25
 owner: marathon-gh-1214
@@ -27,7 +27,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| 2026-10-25: members #1218–#1222 filed, captured, promoted with contracts and rated; ledger marathon row `mar-01M5RWFT9ZAJVN1P7QCSDAT0KX` → #1214; plan QA by Codex Approved in round 3 (receipt below) | Fire the chain from `~/marathon-clones/marathon-gh-1214-lessons-readback` on `feat/gh1214-lessons-readback` with `--builder agy`, codex reviewer per phase, `--closeout-pr` |
+| 2026-10-25: chain complete (run `marathon-MARATHON_-010448-63424`). Every phase was Approved by codex with a full gate exit 0: p1 #1222, p2 #1221 (retry after a GH-505 refusal; orchestrator re-baselined two re-indented trusted evals in `262b6ffe`), p3 #1219, p4 #1218, p5 #1220. Closeout opened PR #1223 (head `dc415bbc`, MERGEABLE). | Land #1223 through the merge lane: CodeRabbit/peer review adjudication (checklist item 3 per wave), CHANGELOG reconciled at landing, then the hosted reconcile promotes the member docs. #1214 stays open for Phase 6b. |
 
 Tracking issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1214. It holds the full plan, the Phase 0 decisions and the QA dispositions.
 
@@ -64,28 +64,28 @@ relay-automation/marathon.sh --plan PROJECT/2-WORKING/GH-1214-LESSONS-READBACK/M
 ## Acceptance & Quality Checklist
 
 ### Wave 1
-- [ ] Wave 1 Proof of Done Test Suite Green (runnable command + test exit 0)
-- [ ] Wave 1 Post-Build Codex QA Relay executed (receipt recorded under `relay-system/<YYYY-MM-DD>/<label>.codex.md`)
+- [x] Wave 1 Proof of Done Test Suite Green (runnable command + test exit 0): `bash validate.sh` exit 0 after 748s in the pre-advance gate (run log `relay-system/run-logs/2026-10-25/marathon-MARATHON_-010448-63424.log`)
+- [x] Wave 1 Post-Build Codex QA Relay executed: receipt [`relay-system/2026-10-25/marathon-p1-081718.md`](../../../relay-system/2026-10-25/marathon-p1-081718.md) (STATUS: Approved, relay-drive attested)
 - [ ] Wave 1 CodeRabbit / Peer Review findings adjudicated
 
 ### Wave 2
-- [ ] Wave 2 Proof of Done Test Suite Green (runnable command + test exit 0)
-- [ ] Wave 2 Post-Build Codex QA Relay executed (receipt recorded under `relay-system/<YYYY-MM-DD>/<label>.codex.md`)
+- [x] Wave 2 Proof of Done Test Suite Green (runnable command + test exit 0): `bash validate.sh` exit 0 after 778s in the pre-advance gate (run log `relay-system/run-logs/2026-10-25/marathon-MARATHON_-010448-63424.log`)
+- [x] Wave 2 Post-Build Codex QA Relay executed: receipt [`relay-system/2026-10-25/marathon-p2-083239.md`](../../../relay-system/2026-10-25/marathon-p2-083239.md) (STATUS: Approved, relay-drive attested)
 - [ ] Wave 2 CodeRabbit / Peer Review findings adjudicated
 
 ### Wave 3
-- [ ] Wave 3 Proof of Done Test Suite Green (runnable command + test exit 0)
-- [ ] Wave 3 Post-Build Codex QA Relay executed (receipt recorded under `relay-system/<YYYY-MM-DD>/<label>.codex.md`)
+- [x] Wave 3 Proof of Done Test Suite Green (runnable command + test exit 0): `bash validate.sh` exit 0 after 734s in the pre-advance gate (run log `relay-system/run-logs/2026-10-25/marathon-MARATHON_-010448-63424.log`)
+- [x] Wave 3 Post-Build Codex QA Relay executed: receipt [`relay-system/2026-10-25/marathon-p3-085323.md`](../../../relay-system/2026-10-25/marathon-p3-085323.md) (STATUS: Approved, relay-drive attested)
 - [ ] Wave 3 CodeRabbit / Peer Review findings adjudicated
 
 ### Wave 4
-- [ ] Wave 4 Proof of Done Test Suite Green (runnable command + test exit 0)
-- [ ] Wave 4 Post-Build Codex QA Relay executed (receipt recorded under `relay-system/<YYYY-MM-DD>/<label>.codex.md`)
+- [x] Wave 4 Proof of Done Test Suite Green (runnable command + test exit 0): `bash validate.sh` exit 0 after 729s in the pre-advance gate (run log `relay-system/run-logs/2026-10-25/marathon-MARATHON_-010448-63424.log`)
+- [x] Wave 4 Post-Build Codex QA Relay executed: receipt [`relay-system/2026-10-25/marathon-p4-092537.md`](../../../relay-system/2026-10-25/marathon-p4-092537.md) (STATUS: Approved, relay-drive attested)
 - [ ] Wave 4 CodeRabbit / Peer Review findings adjudicated
 
 ### Wave 5
-- [ ] Wave 5 Proof of Done Test Suite Green (runnable command + test exit 0)
-- [ ] Wave 5 Post-Build Codex QA Relay executed (receipt recorded under `relay-system/<YYYY-MM-DD>/<label>.codex.md`)
+- [x] Wave 5 Proof of Done Test Suite Green (runnable command + test exit 0): `bash validate.sh` exit 0 after 749s in the pre-advance gate (run log `relay-system/run-logs/2026-10-25/marathon-MARATHON_-010448-63424.log`)
+- [x] Wave 5 Post-Build Codex QA Relay executed: receipt [`relay-system/2026-10-25/marathon-p5-095420.md`](../../../relay-system/2026-10-25/marathon-p5-095420.md) (STATUS: Approved, relay-drive attested)
 - [ ] Wave 5 CodeRabbit / Peer Review findings adjudicated
 
 ## Plan QA (pre-fire)

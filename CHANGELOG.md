@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-10-25 — lessons read-back, blind consult, config-pinned resume, improve-loop write check, manifest count (marathon #1214)
+
+Five fixes landed through one marathon chain (agy builder, codex reviewer, full gate per phase).
+
+- **#1218, lessons read-back.** `rtl_turn_prompt` now appends a warn-only list naming the newest
+  five non-superseded `LESSONS-LEARNED.md` entries (heading plus cue) to every relay and marathon
+  turn prompt, on the Python, Bash and SmallCode paths. It prints nothing when the file is absent.
+  `LESSONS-LEARNED.md` gains a structured entry format, and the #591 lesson is converted to it.
+  Writer prompts in `/start-task` step 9, `/marathon-cleanup` and `defect-campaign` (Phase 6a)
+  apply the admission rules: no entry without public evidence, edit verdicts, and ATE evidence only
+  after semantic replay. These are prompt rules only, with no new guard or suite (GH-831 D7).
+- **#1219, blind consult.** `consult.py` writes neutral, shuffled `answer-A/B.md` payloads plus
+  `key.json` after stamping. JSON-mode answers are reduced to the decoded `.response`. The consult
+  skill now settles disagreements blind, in a fixed criteria order. `consult.sh` is frozen
+  (GH-308) and unchanged; by default it already runs `consult.py`.
+- **#1220, config-pinned resume.** `marathon_drive` records `config_sha256` (the brief plus the
+  builder and reviewer and their resolved models) through `MARATHON_CONFIG_SHA256`. `relay_attest`
+  binds the hash into the `attest@1` trailer as an optional field, with no schema bump. Resume
+  rebuilds a phase when the hash differs, and reuses records that lack it, with a warning.
+- **#1221, improve-loop write check.** Before each build, the loop records a NUL-safe content
+  manifest and a byte snapshot of every pre-existing path outside `ALLOW`. Any change outside
+  `ALLOW` and the loop's own state dir, including ignored files, rejects the iteration and is
+  restored. Two re-indented trusted-config `eval` lines were re-baselined in `security-scan`.
+- **#1222, manifest count.** `_live_manifest_count` and the migration-004 backfill now use
+  `COUNT(DISTINCT issue_ref_id)`, so an issue that shipped and was redialed counts once.
+
+Plans were QA'd by Kimi K3.1 Pro (on #1214) and by Codex (three rounds, Approved). Each phase has a
+manual red/green receipt under `TESTS-RESULTS/2026-10-25+GH-<n>/`. The design ideas are adapted
+from Harness² (google-research/harness2, Apache-2.0; arXiv:2610.14224); no code was copied.
+#1214 stays open for Phase 6b. → [#1214](https://github.com/HiQS-Labs/XYZ-forge/issues/1214) · PR #1223
+
 ## 2026-10-24 — task-sync: pin active Claude Desktop sessions (GH-1196)
 
 `--ide claude-desktop` now also proposes pins: a non-archived, non-self session with a literal
