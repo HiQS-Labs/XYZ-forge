@@ -2895,6 +2895,15 @@ relay-file: {rel_relay}
         # cannot be reopened (GH-274), so the run refuses loudly instead of re-dispatching.
         record = attested_terminal(task, where=f"phase {args.phase_id} startup", completed=True)
         if record is None:
+            # GH-1220: a valid record attested for a DIFFERENT reviewer is a config change — rebuild
+            # rather than halting as unattested. Never reused: the strict check above still refused it.
+            prior, _why = relay_attest.load(task, expected_reviewer=None, any_reviewer=True,
+                                            relay_file=relay_file, target_repo=args.target_root or root)
+            if prior is not None and prior.get("reviewer") != args.reviewer:
+                log(f"phase {args.phase_id}: attested by reviewer '{prior.get('reviewer')}' but this run names "
+                    f"'{args.reviewer}' — phase config changed, rebuilding (GH-1220)")
+                config_mismatch_rebuild[0] = True
+                return False
             if args.force and not args.relay_task:
                 # Preserve GH-642's explicit rebuild escape. This does not accept the old
                 # approval: normal render/seed/build/review runs on a fresh force token.
@@ -2944,6 +2953,12 @@ relay-file: {rel_relay}
                     f"terminal (STATUS: {_s}) and its recorded token '{_recorded}' reads done — re-firing "
                     f"WITHOUT --retry would have re-run only the pre-advance gate and dispatched no "
                     f"builder or reviewer turn (GH-491)")
+
+    # GH-1220: never re-render over a spent explicit token — the old approved relay must stay intact.
+    if config_mismatch_rebuild[0] and args.relay_task and token_state(args.relay_task)[0] in ("done", "circuit_broken"):
+        _RESULT["reason"] = "config-mismatch-spent-explicit-task"
+        die(f"phase {args.phase_id}: config changed but explicit --relay-task {args.relay_task} is spent — "
+            f"re-fire with a fresh --relay-task (or --retry {args.phase_id} via marathon.sh) (GH-1220)")
 
     # GH-1042: only a lane that actually rebuilds needs GH-642's fresh force token.
     # GH-1220: a config-mismatch rebuild also allocates a fresh token when the base token is spent.

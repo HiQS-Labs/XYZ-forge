@@ -234,16 +234,17 @@ def write(record):
     return path
 
 
-def load(task, *, expected_reviewer, relay_file, target_repo, path=None):
+def load(task, *, expected_reviewer, relay_file, target_repo, path=None, any_reviewer=False):
     """Validated read. Returns (record, None) or (None, reason). Never trusts existence, never raises
     on a malformed record — a consumer parks or escalates on the reason instead of crashing."""
     try:
-        return _load(task, expected_reviewer=expected_reviewer, relay_file=relay_file, target_repo=target_repo, path=path)
+        return _load(task, expected_reviewer=expected_reviewer, relay_file=relay_file, target_repo=target_repo,
+                     path=path, any_reviewer=any_reviewer)
     except Exception as e:  # noqa: BLE001 — any malformed record is a refusal, not a crash
         return None, f"attestation record malformed ({e.__class__.__name__}: {e})"
 
 
-def _load(task, *, expected_reviewer, relay_file, target_repo, path=None):
+def _load(task, *, expected_reviewer, relay_file, target_repo, path=None, any_reviewer=False):
     try:
         path = path or path_for(task, target_repo)
     except RuntimeError as e:
@@ -290,7 +291,9 @@ def _load(task, *, expected_reviewer, relay_file, target_repo, path=None):
         return None, f"attestation record is for relay file {rec['relay_file']}, not {relay_file}"
     if os.path.realpath(rec["target_repo"]) != os.path.realpath(target_repo):
         return None, f"attestation record is for repo {rec['target_repo']}, not {target_repo}"
-    if not expected_reviewer or rec["reviewer"] != expected_reviewer:
+    # GH-1220: any_reviewer validates a historical record without binding it to this run's reviewer,
+    # so a reviewer swap reads as a config change (rebuild), never as an approval to reuse.
+    if not any_reviewer and (not expected_reviewer or rec["reviewer"] != expected_reviewer):
         return None, f"attestation reviewer is {rec['reviewer']}, expected {expected_reviewer or '(none)'}"
     if rec["status"] not in TERMINAL:
         return None, f"attestation status {rec['status']} is not terminal"

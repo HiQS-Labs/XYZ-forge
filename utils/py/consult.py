@@ -258,12 +258,14 @@ def _neutralize_answer_text(raw_text, out_path, neutral_id, advisor):
         body = raw_text
 
     # Strip prepended attestation block(s) and advisor-named mechanical stamps.
+    degraded = False
     while True:
         stripped = body.lstrip()
         if stripped.startswith("> **ATTESTATION**"):
             body = stripped.split("\n\n", 1)[1] if "\n\n" in stripped else ""
             continue
         if stripped.startswith("**SINGLE-MODEL — NOT RECONCILED**"):
+            degraded = True
             body = stripped.split("\n\n", 1)[1] if "\n\n" in stripped else ""
             continue
         if stripped.startswith("**NO FIRSTHAND VERIFICATION CITED**"):
@@ -291,7 +293,18 @@ def _neutralize_answer_text(raw_text, out_path, neutral_id, advisor):
         r"|gpt-[A-Za-z0-9._-]+|claude-[A-Za-z0-9._-]+|gemini-[A-Za-z0-9._-]+|muse-[A-Za-z0-9._-]+)\b",
         re.IGNORECASE,
     )
+    # Repository citations (paths, file.ext[:line]) are evidence, not identity: shield them.
+    path_re = re.compile(r"[\w.-]*/[\w./-]+(?::\d+(?:-\d+)?)?|\b[\w-]+\.[A-Za-z]{1,5}(?::\d+(?:-\d+)?)?\b")
+    shielded = []
+    def _shield(m):
+        shielded.append(m.group(0))
+        return f"\x00{len(shielded) - 1}\x00"
+    body = path_re.sub(_shield, body)
     body = token_re.sub(neutral_id, body)
+    body = re.sub(r"\x00(\d+)\x00", lambda m: shielded[int(m.group(1))], body)
+    if degraded:
+        body = ("**DEGRADED PANEL — a requested advisor did not answer; this is the only payload and it is "
+                "NOT RECONCILED.**\n\n" + body).strip()
     return (body + "\n") if body else ""
 
 def write_neutral_payloads(run_dir, label, results, citeless_models=()):
@@ -733,6 +746,10 @@ def main():
 
         timeout_s = int(os.environ.get("CONSULT_TIMEOUT", 600))
         models = [m.strip() for m in models_str.split(",") if m.strip()]
+        if len(set(models)) != len(models):
+            # GH-1219: one advisor must map to one transcript and one blind answer ID.
+            warn(f"--models repeats an advisor ({models_str}); running each advisor once")
+            models = list(dict.fromkeys(models))
         
         procs = []
         

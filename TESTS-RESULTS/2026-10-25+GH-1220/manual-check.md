@@ -100,3 +100,22 @@ gh372-escalation-log-tail: 3 pass, 0 fail
 gh441-gate-env-contract: 18 pass, 0 fail
 gh308-frozen-twin-guard: PASS
 ```
+
+
+## PR #1223 review follow-up (CodeRabbit, 2026-10-25)
+
+Findings 4370486863 (reviewer swap) and 4370486865 (spent explicit task).
+
+Probe: `test/lib/attest-stub.sh` writes a real `attest@1` record for reviewer `codex` in a throwaway repo, then three loads.
+
+| Load | Red (`cb1e2d50`) | Green (fix) |
+|---|---|---|
+| strict, `expected_reviewer="agy"` | refused (reviewer is codex) | refused (unchanged — strictness kept) |
+| `any_reviewer=True` | unsupported (`TypeError`) | returns the record, reviewer `codex` |
+| strict, `expected_reviewer="codex"` | accepted | accepted |
+
+`satisfied_lane_terminal()` now uses the reviewer-agnostic read only after the strict check has refused. If the valid record names a different reviewer, it logs a config change and rebuilds, where it used to halt as `unattested-terminal`. The old approval is never reused.
+
+Spent explicit task (4370486865): when the config changed and an explicit `--relay-task` is already `done` or `circuit_broken`, the driver now stops with `die()` **before** rendering, telling the operator to re-fire with a fresh `--relay-task` or `--retry`. This was verified by **code inspection** (it runs before the render), not by an executed probe.
+
+Existing suites green: `gh505-relay-attest`, `gh385-retry-token-satisfied`, `gh371-interrupt-snapshot` 2/0, `gh372-escalation-log-tail` 3/0.

@@ -1085,12 +1085,18 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   fi
   if [[ -n "$_lroot" && -f "$_lroot/LESSONS-LEARNED.md" && -r "$_lroot/LESSONS-LEARNED.md" ]]; then
     local _line _in_fence=0 _lin_body=0 _ltitle="" _lcue="" _lsup="" _ldate="" _lval _lsup_lc
+    local _lftick _lfence_re='^(`{3,})' _lfence_close_re='^`+[[:space:]]*$'
     local -a _lessons=() _ldates=()
     while IFS= read -r _line || [[ -n "$_line" ]]; do
       _line="${_line%$'\r'}"
-      if [[ "$_line" == '```'* ]]; then
-        _in_fence=$((1 - _in_fence))
-        continue
+      # GH-1218: a fence closes only on a bare backtick run at least as long as its opener.
+      if [[ "$_line" =~ $_lfence_re ]]; then
+        _lftick="${BASH_REMATCH[1]}"
+        if ((_in_fence == 0)); then
+          _in_fence=${#_lftick}; continue
+        elif ((${#_lftick} >= _in_fence)) && [[ "$_line" =~ $_lfence_close_re ]]; then
+          _in_fence=0; continue
+        fi
       fi
       ((_in_fence)) && continue
       if [[ "$_line" == '## '* ]]; then

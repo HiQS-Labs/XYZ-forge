@@ -19,7 +19,7 @@ Verified on a throwaway repository under `$TMPDIR` (`PYTHONDONTWRITEBYTECODE=1`)
 
 ### Command
 
-```bash
+````bash
 export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
 mkdir -p "$TMPDIR"
 python3 -B - <<'PYEOF'
@@ -209,7 +209,7 @@ Body text for entry 2 MUST NOT appear in prompt.
         "ooo_selected_entries": [line.split(" — ")[0] for line in ooo_block.splitlines() if line.startswith("- Entry ")],
     }, indent=2))
 PYEOF
-```
+````
 
 ### Observed Output
 
@@ -326,3 +326,16 @@ $ bash test/gh308-frozen-twin-guard.sh --check --base HEAD
   gh308 guard: no frozen Bash twin changed
   gh308 guard: no new Bash under utils/ or relay-automation/
 ```
+
+
+## PR #1223 review follow-up (CodeRabbit, 2026-10-25)
+
+Finding 4370486844 (`rtl_turn_prompt` fence tracking) and 4370486847 (this receipt's outer fence, now four backticks).
+
+Probe: a fixture `LESSONS-LEARNED.md` with one real entry, plus a ```` ```` ```` fenced example containing a ```` ``` ```` line, a `## Fake copied example` heading and a `- **cue**: FAKE-CUE` line.
+
+| | Red (`cb1e2d50`) | Green (fix) |
+|---|---|---|
+| Pointers emitted | `Real lesson — cue: REAL-CUE` **and** `Fake copied example — cue: FAKE-CUE` | `Real lesson — cue: REAL-CUE` only |
+
+Fix: a fence closes only on a bare backtick run at least as long as its opener. `relay-pkg.tar.gz` was regenerated: `relay-pkg-freshness` 3/0; `gh397`, `gh681` and `relay-self-sufficiency` green.

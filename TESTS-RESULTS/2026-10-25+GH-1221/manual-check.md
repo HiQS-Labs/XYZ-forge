@@ -322,3 +322,21 @@ $ bash test/improve-loop.sh && bash test/improve-loop-qa.sh && bash test/improve
 == test: gh430-state-dir-tracked-default ==
   gh430-state-dir-tracked-default: 8 pass, 0 fail
 ```
+
+
+## PR #1223 review follow-up (CodeRabbit, 2026-10-25)
+
+Findings 4370486837 / 4370486839 / 4370486842 on `relay-automation/improve-loop.sh`. Probe: a throwaway repo per case, `--max-iterations 1`, run against `HEAD` (`cb1e2d50`, red) and the fixed tree (green).
+
+| Case | Red (`cb1e2d50`) | Green (fix) |
+|---|---|---|
+| F1: loop run from **outside Git**; build edits off-ALLOW `other.txt` | no violation reported; `other.txt` stays `HACK` | `off-ALLOW write violation (other.txt)`; restored to `keep` |
+| F2: allowed `out/result.txt` in a **new** dir; build creates only it | `off-ALLOW write violation (out)`; allowed file **deleted** | no violation (clean iteration accepted); file kept |
+| F3: build **stages** allowed `allowed2.txt` and edits off-ALLOW `other.txt` | violation caught, but the allowed staged blob is **lost** (whole-index restore) | violation caught, `other.txt` restored; staged `allowed2.txt` kept |
+
+Fixes:
+- `REPO_ROOT` falls back to the artifact's repository.
+- Structural parent directories of allowed paths are walked but not recorded (`is_allow_ancestor`), and new-directory cleanup removes only non-exempt files.
+- Index restore uses `git update-index -z --index-info` for off-ALLOW paths only, replacing the whole-index copy.
+
+Existing suites green after the fix: `improve-loop` 11/0, `improve-loop-qa` 11/0, `improve-loop-dogfood` 7/0, `champion` 13/0, `gh430-state-dir-tracked-default` 8/0, `security-scan` 35/0.

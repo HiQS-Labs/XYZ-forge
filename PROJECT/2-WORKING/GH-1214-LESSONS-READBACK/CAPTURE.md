@@ -51,12 +51,12 @@ Tracking issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1214. It holds the
 - **#1214 Phase 6b** (the ATE-metric champion experiment) is a live multi-hour campaign. It needs separate operator approval under the ATE skill, plus p2 landed first.
 - Dialing the members into a release is a manifest-scope decision left to the operator.
 
-## Firing recipe
+## Firing recipe (historical — the chain completed 2026-10-25)
 
 ```bash
 CLONE="$HOME/marathon-clones/marathon-gh-1214-lessons-readback"   # full clone, branch feat/gh1214-lessons-readback
 cd "$CLONE"
-export PATH="$HOME/.cache/xyz-forge-test-venv/bin:/opt/homebrew/bin:$PATH"
+# Gate toolchain: put the test-venv python3 (with pytest) and php first on PATH; the gate names a missing one (GH-732 B.1/B.2).
 relay-automation/marathon.sh --plan PROJECT/2-WORKING/GH-1214-LESSONS-READBACK/MARATHON.yaml --builder agy --dry-run
 relay-automation/marathon.sh --plan PROJECT/2-WORKING/GH-1214-LESSONS-READBACK/MARATHON.yaml --builder agy --closeout-pr
 ```

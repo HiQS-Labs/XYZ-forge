@@ -87,6 +87,10 @@ if [ -n "$REPO_ROOT" ]; then
       ;;
   esac
 fi
+if [ -z "$REPO_ROOT" ]; then
+  # GH-1221: run from outside Git — guard the repository that holds the artifact instead.
+  REPO_ROOT="$(git -C "$(dirname "$ARTIFACT")" rev-parse --show-toplevel 2>/dev/null || true)"
+fi
 
 # GH-1221: pre/post-build snapshot, content manifest, and off-ALLOW violation check + restore.
 # Captures git status --porcelain -z --untracked-files=all --ignored AND a NUL-safe content+mode
@@ -171,6 +175,19 @@ def is_exempt(rel):
                 return True
     return False
 
+def is_allow_ancestor(rel):
+    """A directory that only exists to hold an allowed path is structure, not an off-ALLOW write."""
+    rel = rel.rstrip("/")
+    for a_rel, is_dir, has_glob in allow_entries:
+        if has_glob:
+            lit = a_rel[:min([i for i, c in enumerate(a_rel) if c in "*?["] or [len(a_rel)])]
+            lit = lit.rsplit("/", 1)[0] if "/" in lit else ""
+            if not lit or rel == lit or lit.startswith(rel + "/"):
+                return True
+        elif a_rel and a_rel.startswith(rel + "/"):
+            return True
+    return False
+
 def get_porcelain():
     p = subprocess.run(
         ["git", "-C", root, "status", "--porcelain", "-z", "--untracked-files=all", "--ignored"],
@@ -179,16 +196,6 @@ def get_porcelain():
     if p.returncode != 0:
         sys.exit(1)
     return p.stdout
-
-def get_git_index_path():
-    p = subprocess.run(
-        ["git", "-C", root, "rev-parse", "--git-path", "index"],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    if p.returncode != 0:
-        return None
-    raw = p.stdout.decode("utf-8", errors="surrogateescape").rstrip("\r\n")
-    return raw if os.path.isabs(raw) else os.path.join(root, raw)
 
 def get_tracked():
     p = subprocess.run(
@@ -248,6 +255,9 @@ def scan_tree():
             if is_exempt(d_rel):
                 continue
             full_d = os.path.join(dirpath, d)
+            if is_allow_ancestor(d_rel) and not os.path.islink(full_d):
+                kept_dirs.append(d)
+                continue
             st = os.lstat(full_d)
             if os.path.islink(full_d):
                 target = os.readlink(full_d)
@@ -289,18 +299,12 @@ if mode == "before":
     clean_tracked = sorted(tracked_set - pre_dirty)
     with open(os.path.join(snap_dir, "porcelain.bin"), "wb") as f:
         f.write(porc)
-    git_index_path = get_git_index_path()
-    has_index_backup = False
-    if git_index_path and os.path.isfile(git_index_path):
-        shutil.copy2(git_index_path, os.path.join(snap_dir, "git.index"), follow_symlinks=False)
-        has_index_backup = True
     manifest = scan_tree()
     with open(os.path.join(snap_dir, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump({
             "manifest": manifest,
             "clean_tracked": clean_tracked,
             "index_stage": idx_map,
-            "has_index_backup": has_index_backup,
         }, f, sort_keys=True)
     with open(os.path.join(snap_dir, "manifest.nul"), "wb") as f:
         for rel, info in sorted(manifest.items()):
@@ -330,7 +334,6 @@ elif mode == "after":
     pre_manifest = saved["manifest"]
     clean_tracked_set = set(saved.get("clean_tracked", []))
     pre_idx_map = saved.get("index_stage", {})
-    has_index_backup = saved.get("has_index_backup", False)
     with open(porc_path, "rb") as f:
         pre_porc = f.read()
     post_porc = get_porcelain()
@@ -359,16 +362,6 @@ elif mode == "after":
         shutil.rmtree(snap_dir, ignore_errors=True)
         sys.exit(0)
 
-    # Restore exact pre-build Git index state (preserves staged/unstaged state of pre-dirty tracked files)
-    git_index_path = get_git_index_path()
-    idx_backup = os.path.join(snap_dir, "git.index")
-    if git_index_path:
-        if has_index_backup and os.path.isfile(idx_backup):
-            shutil.copy2(idx_backup, git_index_path, follow_symlinks=False)
-        elif not has_index_backup and os.path.exists(git_index_path):
-            try: os.unlink(git_index_path)
-            except OSError: pass
-
     # Restore: (1) remove only paths that are new since the build started
     new_paths = sorted([k for k in post_manifest if k not in pre_manifest], key=lambda x: x.count("/"), reverse=True)
     for k in new_paths:
@@ -377,7 +370,14 @@ elif mode == "after":
             try: os.unlink(target)
             except OSError: pass
         elif os.path.isdir(target):
-            shutil.rmtree(target, ignore_errors=True)
+            for dp, dns, fns in os.walk(target, topdown=False):
+                for fn in fns:
+                    fp = os.path.join(dp, fn)
+                    if not is_exempt(os.path.relpath(fp, root).replace(os.sep, "/")):
+                        try: os.unlink(fp)
+                        except OSError: pass
+                try: os.rmdir(dp)
+                except OSError: pass
 
     # Restore: (2) pre-existing paths whose state changed
     changed_pre = sorted(
@@ -421,6 +421,19 @@ elif mode == "after":
         if os.path.isdir(target) and not os.path.islink(target):
             try: os.chmod(target, pre_manifest[k]["mode"])
             except OSError: pass
+
+    # Restore pre-build index entries for off-ALLOW paths only; staged changes to allowed paths stay.
+    idx_lines = []
+    for k in sorted(set(pre_idx_map) | set(post_idx_map)):
+        if is_exempt(k.rstrip("/")) or pre_idx_map.get(k) == post_idx_map.get(k):
+            continue
+        oid_len = next((len(meta.split()[1]) for metas in pre_idx_map.values() for meta in metas), 40)
+        idx_lines.append(f"0 {'0' * oid_len}\t{k}")
+        idx_lines.extend(f"{meta}\t{k}" for meta in pre_idx_map.get(k, []))
+    if idx_lines:
+        subprocess.run(["git", "-C", root, "update-index", "-z", "--index-info"],
+                       input=b"".join(l.encode("utf-8", errors="surrogateescape") + b"\0" for l in idx_lines),
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     shutil.rmtree(snap_dir, ignore_errors=True)
     print(", ".join(sorted(violated)))

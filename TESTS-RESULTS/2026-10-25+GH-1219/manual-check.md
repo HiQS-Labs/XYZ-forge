@@ -229,3 +229,20 @@ $ bash test/consult.sh && bash test/gh308-consult-guards.sh && bash test/gh589-c
 gh589-consult-no-tick: 6 passed, 0 failed
 PASS: default 600s, override, wall partial, truthful idle kill, completion, wall/idle JSON preservation
 ```
+
+
+## PR #1223 review follow-up (CodeRabbit, 2026-10-25)
+
+Findings 4370486852 (degraded-panel warning), 4370486855 (citations) and 4370486860 (duplicate advisors).
+
+Probe: `_neutralize_answer_text` on a SINGLE-MODEL-stamped codex answer that cites `relay-automation/codex-turn.sh:10` and `utils/py/claude_cli.py:19`.
+
+| | Red (`cb1e2d50`) | Green (fix) |
+|---|---|---|
+| Degraded-panel warning in payload | dropped | `**DEGRADED PANEL — a requested advisor did not answer; this is the only payload and it is NOT RECONCILED.**` |
+| Citation `relay-automation/codex-turn.sh:10` | rewritten to `relay-automation/A-turn.sh:10` | intact |
+| Advisor name in prose (`Codex agrees`) | neutralized to `A agrees` | neutralized to `A agrees` |
+
+Duplicate advisors (4370486860): `--models` is de-duplicated in order before launch, with a warning, so each advisor gets one process, transcript and answer ID. This was verified by **code inspection** (a single `dict.fromkeys` line), not by an executed probe.
+
+Existing suites green: `consult` 62/0, `gh308-consult-guards` 4/0, `gh589-consult-no-tick` 6/0, `gh648-l3-consult-cap`.
