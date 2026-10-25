@@ -180,6 +180,16 @@ def get_porcelain():
         sys.exit(1)
     return p.stdout
 
+def get_git_index_path():
+    p = subprocess.run(
+        ["git", "-C", root, "rev-parse", "--git-path", "index"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if p.returncode != 0:
+        return None
+    raw = p.stdout.decode("utf-8", errors="surrogateescape").rstrip("\r\n")
+    return raw if os.path.isabs(raw) else os.path.join(root, raw)
+
 def get_tracked():
     p = subprocess.run(
         ["git", "-C", root, "ls-files", "-z"],
@@ -188,6 +198,22 @@ def get_tracked():
     if p.returncode != 0:
         sys.exit(1)
     return [x.decode("utf-8", errors="surrogateescape") for x in p.stdout.split(b"\0") if x]
+
+def get_index_stage_map():
+    p = subprocess.run(
+        ["git", "-C", root, "ls-files", "--stage", "-z"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    if p.returncode != 0:
+        sys.exit(1)
+    out = {}
+    for rec in p.stdout.split(b"\0"):
+        if not rec or b"\t" not in rec:
+            continue
+        meta, path_b = rec.split(b"\t", 1)
+        path = path_b.decode("utf-8", errors="surrogateescape")
+        out.setdefault(path, []).append(meta.decode("ascii", errors="replace"))
+    return out
 
 def parse_porcelain_paths(raw):
     fields = raw.split(b"\0")
@@ -257,14 +283,25 @@ if mode == "before":
         shutil.rmtree(snap_dir)
     os.makedirs(os.path.join(snap_dir, "files"), exist_ok=True)
     porc = get_porcelain()
+    idx_map = get_index_stage_map()
     tracked_set = set(get_tracked())
     pre_dirty = {p.rstrip("/") for _, p in parse_porcelain_paths(porc)}
     clean_tracked = sorted(tracked_set - pre_dirty)
     with open(os.path.join(snap_dir, "porcelain.bin"), "wb") as f:
         f.write(porc)
+    git_index_path = get_git_index_path()
+    has_index_backup = False
+    if git_index_path and os.path.isfile(git_index_path):
+        shutil.copy2(git_index_path, os.path.join(snap_dir, "git.index"), follow_symlinks=False)
+        has_index_backup = True
     manifest = scan_tree()
     with open(os.path.join(snap_dir, "manifest.json"), "w", encoding="utf-8") as f:
-        json.dump({"manifest": manifest, "clean_tracked": clean_tracked}, f, sort_keys=True)
+        json.dump({
+            "manifest": manifest,
+            "clean_tracked": clean_tracked,
+            "index_stage": idx_map,
+            "has_index_backup": has_index_backup,
+        }, f, sort_keys=True)
     with open(os.path.join(snap_dir, "manifest.nul"), "wb") as f:
         for rel, info in sorted(manifest.items()):
             rec = f"{info['type']} {info['mode']:04o} {info['hash']}\t{rel}\0"
@@ -292,9 +329,12 @@ elif mode == "after":
         saved = json.load(f)
     pre_manifest = saved["manifest"]
     clean_tracked_set = set(saved.get("clean_tracked", []))
+    pre_idx_map = saved.get("index_stage", {})
+    has_index_backup = saved.get("has_index_backup", False)
     with open(porc_path, "rb") as f:
         pre_porc = f.read()
     post_porc = get_porcelain()
+    post_idx_map = get_index_stage_map()
     post_manifest = scan_tree()
 
     violated = set()
@@ -302,6 +342,11 @@ elif mode == "after":
     for k in all_keys:
         if pre_manifest.get(k) != post_manifest.get(k):
             violated.add(k)
+
+    for k in (set(pre_idx_map.keys()) | set(post_idx_map.keys())):
+        k_clean = k.rstrip("/")
+        if not is_exempt(k_clean) and pre_idx_map.get(k) != post_idx_map.get(k):
+            violated.add(k_clean)
 
     pre_porc_set = set(parse_porcelain_paths(pre_porc))
     post_porc_set = set(parse_porcelain_paths(post_porc))
@@ -314,14 +359,15 @@ elif mode == "after":
         shutil.rmtree(snap_dir, ignore_errors=True)
         sys.exit(0)
 
-    # Unstage any off-ALLOW index modifications if HEAD exists
-    if subprocess.run(["git", "-C", root, "rev-parse", "--verify", "HEAD"],
-                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
-        for _, p in (post_porc_set - pre_porc_set):
-            p_clean = p.rstrip("/")
-            if not is_exempt(p_clean) and p_clean not in {x.rstrip("/") for _, x in pre_porc_set}:
-                subprocess.run(["git", "-C", root, "reset", "-q", "HEAD", "--", p_clean],
-                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # Restore exact pre-build Git index state (preserves staged/unstaged state of pre-dirty tracked files)
+    git_index_path = get_git_index_path()
+    idx_backup = os.path.join(snap_dir, "git.index")
+    if git_index_path:
+        if has_index_backup and os.path.isfile(idx_backup):
+            shutil.copy2(idx_backup, git_index_path, follow_symlinks=False)
+        elif not has_index_backup and os.path.exists(git_index_path):
+            try: os.unlink(git_index_path)
+            except OSError: pass
 
     # Restore: (1) remove only paths that are new since the build started
     new_paths = sorted([k for k in post_manifest if k not in pre_manifest], key=lambda x: x.count("/"), reverse=True)

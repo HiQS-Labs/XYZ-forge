@@ -2,12 +2,16 @@
 
 ## Summary
 
-Verified in throwaway git repositories under `$TMPDIR` with scripted `--build-cmd` invocations (never running the loop against this repository's tree with a live agent) across all four required cases, both before the fix (**red control**) and after the fix (**green control**):
+Verified in throwaway git repositories under `$TMPDIR` with scripted `--build-cmd` invocations (never running the loop against this repository's tree with a live agent) across all required cases, both before the fix (**red control**) and after the fix (**green control**):
 
-1. **Case (a) — Clean iteration with default settings**: running `improve-loop.sh` without `--state-dir` or `--allow` (default `ALLOW=$ARTIFACT`, default `STATE_DIR=$HERE/state/improve-loop.$$`) where `--build-cmd` only modifies `artifact.txt` (`50 -> 60`) is **accepted** (`CHAMPION 60`), not rejected by theloop's own state writes.
-2. **Case (b) — Tracked file outside `ALLOW` changed**: `--build-cmd` modifies `artifact.txt` (`50 -> 60`) and also alters `tracked_other.txt` (`clean-initial` mode `0644` -> `Tampered` mode `0755`).
-   - **Red control (pre-fix)**: iteration accepted (`CHAMPION 60`), leaving `tracked_other.txt` dirty (`Tampered`, mode `0755`).
-   - **Green control (post-fix)**: violation logged (`off-ALLOW write violation (tracked_other.txt) — restored snapshot`), iteration rejected (`CHAMPION 50`), `artifact.txt` rolled back to `50`, and `tracked_other.txt` restored to `HEAD` content (`clean-initial`) and mode (`0644`).
+1. **Case (a) — Clean iteration with default settings**: running `improve-loop.sh` without `--state-dir` or `--allow` (default `ALLOW=$ARTIFACT`, default `STATE_DIR=$HERE/state/improve-loop.$$`) where `--build-cmd` only modifies `artifact.txt` (`50 -> 60`) is **accepted** (`CHAMPION 60`), not rejected by the loop's own state writes.
+2. **Case (b) — Tracked file outside `ALLOW` changed**:
+   - **Clean tracked file (`case_b_tracked_outside_allow`)**: `--build-cmd` modifies `artifact.txt` (`50 -> 60`) and alters `tracked_other.txt` (`clean-initial` mode `0644` -> `Tampered` mode `0755`).
+     - **Red control (pre-fix)**: iteration accepted (`CHAMPION 60`), leaving `tracked_other.txt` dirty (`Tampered`, mode `0755`).
+     - **Green control (post-fix)**: violation logged (`off-ALLOW write violation (tracked_other.txt) — restored snapshot`), iteration rejected (`CHAMPION 50`), `artifact.txt` rolled back to `50`, and `tracked_other.txt` restored to `HEAD` content (`clean-initial`) and mode (`0644`).
+   - **Pre-existing dirty tracked file with distinct `HEAD`, index, and worktree state (`case_b2_pre_dirty_tracked_index_and_wt`)**: `tracked_other.txt` has `clean-initial` in `HEAD`, `staged-v2` in the Git index, and `worktree-v3` in the worktree before the build; `--build-cmd` overwrites and stages `builder-v4` (`git add tracked_other.txt`).
+     - **Red control (pre-fix)**: iteration accepted (`CHAMPION 60`), leaving `builder-v4` in both the index and worktree.
+     - **Green control (post-fix)**: violation detected (`off-ALLOW write violation (tracked_other.txt) — restored snapshot`), iteration rejected (`CHAMPION 50`), and both the Git index (`git diff --cached -- tracked_other.txt`) and worktree (`git diff -- tracked_other.txt`) are restored to their exact pre-build state (`staged-v2` staged, `worktree-v3` on disk).
 3. **Case (c) — Untracked file created outside `ALLOW`**: `--build-cmd` creates `stray_untracked.txt`.
    - **Red control (pre-fix)**: iteration accepted (`CHAMPION 60`) and `stray_untracked.txt` survives in the tree.
    - **Green control (post-fix)**: violation logged (`off-ALLOW write violation (stray_untracked.txt) — restored snapshot`), iteration rejected (`CHAMPION 50`), `artifact.txt` rolled back to `50`, and `stray_untracked.txt` removed.
@@ -30,7 +34,7 @@ python3 - <<'PYEOF'
 import os, subprocess, tempfile, shutil, json
 
 repo_root = os.getcwd()
-old_il_bytes = subprocess.check_output(["git", "show", "HEAD:relay-automation/improve-loop.sh"])
+old_il_bytes = subprocess.check_output(["git", "show", "e7e0c628ebf4424c082c4d6ab12de9e2e6f7ff54:relay-automation/improve-loop.sh"])
 
 def run_cases(use_old=False):
     results = {}
@@ -95,6 +99,34 @@ def run_cases(use_old=False):
             "tracked_other_content": open(os.path.join(db, "tracked_other.txt")).read().strip(),
             "tracked_other_mode": oct(st_b),
             "artifact_after": open(os.path.join(db, "artifact.txt")).read().strip(),
+        }
+
+        # (b2) pre-existing dirty tracked file (distinct HEAD, staged index, and worktree bytes) staged by build
+        db2 = init_repo("case_b2")
+        with open(os.path.join(db2, "tracked_other.txt"), "w") as f:
+            f.write("staged-v2\n")
+        subprocess.run(["git", "-C", db2, "add", "tracked_other.txt"], check=True)
+        with open(os.path.join(db2, "tracked_other.txt"), "w") as f:
+            f.write("worktree-v3\n")
+        pre_cached = subprocess.check_output(["git", "-C", db2, "diff", "--cached", "--", "tracked_other.txt"], text=True)
+        pre_wt = subprocess.check_output(["git", "-C", db2, "diff", "--", "tracked_other.txt"], text=True)
+        p = subprocess.run(
+            ["bash", "relay-automation/improve-loop.sh", "--artifact", "artifact.txt",
+             "--measure-cmd", "cat artifact.txt", "--oracle-cmd", "true",
+             "--build-cmd", "echo 60 > artifact.txt; printf 'builder-v4\\n' > tracked_other.txt; git add tracked_other.txt",
+             "--goal", "max", "--max-iterations", "1", "--state-dir", "state_b2"],
+            cwd=db2, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        )
+        post_cached = subprocess.check_output(["git", "-C", db2, "diff", "--cached", "--", "tracked_other.txt"], text=True)
+        post_wt = subprocess.check_output(["git", "-C", db2, "diff", "--", "tracked_other.txt"], text=True)
+        results["case_b2_pre_dirty_tracked_index_and_wt"] = {
+            "rc": p.returncode,
+            "rejected": "CHAMPION 50" in p.stdout,
+            "violation_logged": "off-ALLOW write" in p.stdout and "tracked_other.txt" in p.stdout,
+            "tracked_other_content": open(os.path.join(db2, "tracked_other.txt")).read().strip(),
+            "cached_diff_matches_pre": post_cached == pre_cached,
+            "worktree_diff_matches_pre": post_wt == pre_wt,
+            "artifact_after": open(os.path.join(db2, "artifact.txt")).read().strip(),
         }
 
         # (c) untracked file created -> detected, rejected, removed
@@ -165,7 +197,7 @@ def run_cases(use_old=False):
         }
     return results
 
-print("=== RED (pre-fix) ===")
+print("=== RED (pre-fix e7e0c628) ===")
 print(json.dumps(run_cases(use_old=True), indent=2))
 print("=== GREEN (post-fix) ===")
 print(json.dumps(run_cases(use_old=False), indent=2))
@@ -175,7 +207,7 @@ PYEOF
 Output:
 
 ```json
-=== RED (pre-fix) ===
+=== RED (pre-fix e7e0c628) ===
 {
   "case_a_clean_default": {
     "rc": 0,
@@ -188,6 +220,15 @@ Output:
     "violation_logged": false,
     "tracked_other_content": "Tampered",
     "tracked_other_mode": "0o755",
+    "artifact_after": "60"
+  },
+  "case_b2_pre_dirty_tracked_index_and_wt": {
+    "rc": 0,
+    "rejected": false,
+    "violation_logged": false,
+    "tracked_other_content": "builder-v4",
+    "cached_diff_matches_pre": false,
+    "worktree_diff_matches_pre": false,
     "artifact_after": "60"
   },
   "case_c_untracked_created": {
@@ -228,6 +269,15 @@ Output:
     "violation_logged": true,
     "tracked_other_content": "clean-initial",
     "tracked_other_mode": "0o644",
+    "artifact_after": "50"
+  },
+  "case_b2_pre_dirty_tracked_index_and_wt": {
+    "rc": 0,
+    "rejected": true,
+    "violation_logged": true,
+    "tracked_other_content": "worktree-v3",
+    "cached_diff_matches_pre": true,
+    "worktree_diff_matches_pre": true,
     "artifact_after": "50"
   },
   "case_c_untracked_created": {
