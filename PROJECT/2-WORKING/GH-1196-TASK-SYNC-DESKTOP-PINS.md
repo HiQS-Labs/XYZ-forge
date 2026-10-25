@@ -29,7 +29,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Built: planner pins, SKILL pin step, probes 11/11 + #1191 17/17, red control, live smoke | Final Codex QA, then PR |
+| Final Codex QA Approved (round 1); PR open | Merge, then the operator decides whether to pin unattended |
 
 ## Key concepts
 
@@ -121,6 +121,10 @@ Codex relay `relay-system/2026-10-24/gh1196-plan-qa.md`, Escalated after 3 round
 - **Round 2:** literal-boolean `isRunning`; boolean-only undo removed.
 - **Round 3:** literal-`false` `isArchived` stated and its probe added; rollback line made consistent.
 - **Round 4:** operator-authorized extra round, 2026-10-24. Steps 1–4 and rollback passed; one stale Key-concepts undo sentence was fixed after the round and goes to final QA.
+
+## Final QA
+
+Codex relay `relay-system/2026-10-24/gh1196-final-qa.md`, **Approved in round 1** (no findings; one `[Unverified]` note that the reviewer couldn't execute probes in its worktree, covered by the recorded probe runs).
 
 ## Rating rationale (2026-10-24)
 
