@@ -1,6 +1,6 @@
 # Marathon Phase p2
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN-2 builder=agy reviewer=codex round-cap=5 -->
 
@@ -184,3 +184,21 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 1 · Builder · agy
+
+Verified the current tree (`relay-automation/improve-loop.sh`, `TESTS-RESULTS/2026-10-25+GH-1221/manual-check.md`, and `TESTS-RESULTS/2026-10-25+GH-1221/provenance.jsonl`) following the orchestrator's `262b6ffe` security-scan baseline update for the two re-indented trusted `eval` lines (`MARATHON-P2-TURN` escalated as `unattested-terminal` solely because `262b6ffe` landed after the prior Codex review at `b361d96f`):
+
+- **Files verified (no rewrite needed; existing implementation satisfies all acceptance criteria)**:
+  - `relay-automation/improve-loop.sh`: `il_build_guard` (`before` / `after`) records `git status --porcelain -z --untracked-files=all --ignored`, git index stage map + `.git/index` backup, and a NUL-safe content/mode manifest (`manifest.nul` + `manifest.json`) and byte/symlink/directory backup of every pre-existing path outside `ALLOW` and outside normalized `$STATE_DIR`. On snapshot failure it fails closed; on post-build content, mode, porcelain, or index-stage changes outside `ALLOW` and `$STATE_DIR`, it logs the offending paths, rejects the iteration through the existing champion rejection path (rolling back `$ARTIFACT` and recording provenance), removes newly created paths, restores clean tracked files to `HEAD`, and restores pre-existing dirty tracked (worktree + index), untracked, and ignored files to their exact pre-build bytes and mode.
+  - `TESTS-RESULTS/2026-10-25+GH-1221/manual-check.md` & `TESTS-RESULTS/2026-10-25+GH-1221/provenance.jsonl`: document red (pre-fix `e7e0c628`) and green (post-fix) verification in throwaway git repos under `$TMPDIR` across cases (a) clean default settings, (b) clean and pre-dirty tracked file outside `ALLOW`, (c) untracked file creation, and (d1/d2) in-place mutation of pre-existing ignored `cache/x` and creation of ignored sibling `cache/y`.
+- **Verification**:
+  - `bash test/improve-loop.sh` (11/11 pass)
+  - `bash test/improve-loop-qa.sh` (11/11 pass)
+  - `bash test/improve-loop-dogfood.sh` (7/7 pass)
+  - `bash test/champion.sh` (13/13 pass)
+  - `bash test/gh430-state-dir-tracked-default.sh` (8/8 pass)
+  - `bash test/security-scan.sh` (35/35 pass, including GH-64 active gate against `relay-automation/hooks/security-scan-baseline.txt`)
+
