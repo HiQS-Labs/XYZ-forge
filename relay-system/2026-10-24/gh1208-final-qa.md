@@ -206,4 +206,12 @@ Graph check: Verify tier, nearest available index is the foreign primary checkou
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-25T04:20:37Z
+task: RELAY-gh1208-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0dfd18988daff1cb8ea4c98e13a864046f7e35dc
+added-range: 16947+7417
+added-sha256: d17c2cbaf48b910020d611ccbea712cd18ce7405a0d552a8993ff2f953bec8c6
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
