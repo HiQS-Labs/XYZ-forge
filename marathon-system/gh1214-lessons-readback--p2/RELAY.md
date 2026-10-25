@@ -1,8 +1,8 @@
 # Marathon Phase p2
-STATUS: Approved
+STATUS: Open
 NEXT: agy (Builder)
 
-<!-- marathon-drive: task=MARATHON-P2-TURN builder=agy reviewer=codex round-cap=5 -->
+<!-- marathon-drive: task=MARATHON-P2-TURN-2 builder=agy reviewer=codex round-cap=5 -->
 
 ## Phase Brief
 
@@ -49,6 +49,14 @@ Umbrella: #1214 · Phase p2 · `depends_on: p1`.
 - `:144-152`: a rejected iteration restores only `$ARTIFACT` (`cp "$SNAP" "$ARTIFACT"`).
 - `:69-77`: `ALLOW` defaults to the artifact, and `STATE_DIR` defaults to `relay-automation/state/improve-loop.$$`, which is **outside** `ALLOW`.
 - `.gitignore:1,23-27`: `.tick/` and `relay-system/logs/` are ignored, so a plain `git status --porcelain` never shows them.
+
+## Retry note (2026-10-25, orchestrator)
+
+The first attempt's implementation is **already in the tree**: codex approved it at `b361d96f`. Its gate went red on `security-scan.sh` alone, because two pre-existing trusted `eval` lines were re-indented. The orchestrator re-baselined those two lines in `262b6ffe` (scan exit 0, `test/security-scan.sh` 35/0). That commit landed after the reviewed head, so GH-505 correctly refused the old attestation, and this retry exists to get a review of the current tree.
+
+**Builder:** verify the current `relay-automation/improve-loop.sh` and the `TESTS-RESULTS/2026-10-25+GH-1221/` receipt against the acceptance list. Fix only a concrete gap you can show. Do not rewrite working code. Then hand off.
+
+**Reviewer:** review the current tree, including `262b6ffe` (the baseline-only indentation change in `relay-automation/hooks/security-scan-baseline.txt`).
 
 ## Plan (one phase)
 
@@ -126,6 +134,11 @@ Rules: Bash 3.2-compatible (match the file's existing idiom); shortest diff; no 
 - (filled at closeout)
 
 
+## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+
+Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
+Last recorded reason (`marathon-system/gh1214-lessons-readback--p2/ESCALATION.md`): `unattested-terminal`. Read it before re-guessing.
+
 ---
 
 ▶ TAKE YOUR TURN (agy — BUILDER role)
@@ -135,9 +148,9 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 1. Implement the brief by creating/editing the artifact file(s): relay-automation/improve-loop.sh, TESTS-RESULTS/2026-10-25+GH-1221/manual-check.md, TESTS-RESULTS/2026-10-25+GH-1221/provenance.jsonl
 2. Append a build block to this relay file: `### Round N · Builder · agy` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/marathon-clones/marathon-gh-1214-lessons-readback/bin/tick
-   - /Users/noelsaw/marathon-clones/marathon-gh-1214-lessons-readback/bin/tick claim MARATHON-P2-TURN --agent agy --paths "marathon-system/gh1214-lessons-readback--p2/RELAY.md,relay-automation/improve-loop.sh, TESTS-RESULTS/2026-10-25+GH-1221/manual-check.md, TESTS-RESULTS/2026-10-25+GH-1221/provenance.jsonl"
-   - /Users/noelsaw/marathon-clones/marathon-gh-1214-lessons-readback/bin/tick ping MARATHON-P2-TURN --agent agy
-   - /Users/noelsaw/marathon-clones/marathon-gh-1214-lessons-readback/bin/tick release MARATHON-P2-TURN --agent agy --to codex
+   - /Users/noelsaw/marathon-clones/marathon-gh-1214-lessons-readback/bin/tick claim MARATHON-P2-TURN-2 --agent agy --paths "marathon-system/gh1214-lessons-readback--p2/RELAY.md,relay-automation/improve-loop.sh, TESTS-RESULTS/2026-10-25+GH-1221/manual-check.md, TESTS-RESULTS/2026-10-25+GH-1221/provenance.jsonl"
+   - /Users/noelsaw/marathon-clones/marathon-gh-1214-lessons-readback/bin/tick ping MARATHON-P2-TURN-2 --agent agy
+   - /Users/noelsaw/marathon-clones/marathon-gh-1214-lessons-readback/bin/tick release MARATHON-P2-TURN-2 --agent agy --to codex
 4. Edit ONLY these paths: marathon-system/gh1214-lessons-readback--p2/RELAY.md and relay-automation/improve-loop.sh, TESTS-RESULTS/2026-10-25+GH-1221/manual-check.md, TESTS-RESULTS/2026-10-25+GH-1221/provenance.jsonl. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to codex — codex, take your turn." A turn that ends without that line
@@ -151,8 +164,8 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: relay-automation/improve-loop.sh, TESTS-RESULTS/2026-10-25+GH-1221/manual-check.md, TESTS-RESULTS/2026-10-25+GH-1221/provenance.jsonl. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delete, reorder, or rewrite any existing content — the terminal attestation refuses the approval if any byte above your block changed, even a tidy-up.
 1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /Users/noelsaw/marathon-clones/marathon-gh-1214-lessons-readback/bin/tick release MARATHON-P2-TURN --agent codex --to agy
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/marathon-clones/marathon-gh-1214-lessons-readback/bin/tick done MARATHON-P2-TURN --agent codex
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /Users/noelsaw/marathon-clones/marathon-gh-1214-lessons-readback/bin/tick release MARATHON-P2-TURN-2 --agent codex --to agy
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/marathon-clones/marathon-gh-1214-lessons-readback/bin/tick done MARATHON-P2-TURN-2 --agent codex
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/marathon-clones/marathon-gh-1214-lessons-readback/bin/tick
    Edit ONLY marathon-system/gh1214-lessons-readback--p2/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
 4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
@@ -171,59 +184,3 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
----
-
-### Round 1 · Builder · agy
-
-Implemented GH-1221 pre/post-build snapshot, NUL-safe content/mode manifest, and off-`ALLOW` violation detection + restoration in `relay-automation/improve-loop.sh`:
-
-- **Files touched**:
-  - `relay-automation/improve-loop.sh`: added `il_build_guard` (`before` / `after`) and wired it around `eval "$BUILD_CMD"` in the hill-climb loop (`# GH-1221`).
-  - `TESTS-RESULTS/2026-10-25+GH-1221/manual-check.md`: recorded red/green verification across cases (a)–(d) in throwaway git repositories under `$TMPDIR` plus existing test suite results.
-  - `TESTS-RESULTS/2026-10-25+GH-1221/provenance.jsonl`: recorded structured provenance receipts for the red control, post-fix probe, and regression suites.
-- **Key decisions**:
-  - Before each build (`il_build_guard before`), `improve-loop.sh` records `git status --porcelain -z --untracked-files=all --ignored`, `git ls-files -z` (to distinguish clean tracked files from pre-dirty/untracked/ignored files), a NUL-safe content+mode manifest (`manifest.nul` / `manifest.json` with SHA-256 content hashes and octal modes), and a byte/mode/symlink snapshot under `$STATE_DIR/.gh1221_snap/files/` for every pre-existing path outside `ALLOW` and outside `$STATE_DIR`. If the snapshot fails, the iteration fails closed (`op=0`, rejected via `champion.sh judge`).
-  - `REPO_ROOT` resolves to the current working tree's git toplevel only when `$ARTIFACT` resides inside that tree (or to `$ARTIFACT`'s own git toplevel if `$ARTIFACT` is in another git repo), so test harnesses invoking `improve-loop.sh` from a repo CWD against a non-git `$TMPDIR` artifact directory continue to work without snapshotting the caller's repo.
-  - After each build (`il_build_guard after`), both porcelain status and the fresh content/mode manifest are compared against the pre-build snapshot. Any added path, removed path, or in-place byte/mode change outside `ALLOW` and `$STATE_DIR` logs `off-ALLOW write violation (<paths>) — restored snapshot`, forces `op=0` so `champion.sh judge` rejects the iteration (rolling back `$ARTIFACT` and recording provenance), removes newly created paths, restores clean tracked files from `HEAD` (`git checkout HEAD -- <path>` + mode) and pre-existing dirty/untracked/ignored files from the byte/mode snapshot.
-- **Verification**:
-  - Throwaway git repo probe under `$TMPDIR` verified red (before fix) and green (after fix) for cases (a), (b), (c), (d1 in-place ignored `cache/x`), and (d2 newly created ignored sibling `cache/y`).
-- Existing suites `test/improve-loop.sh` (11/11), `test/improve-loop-qa.sh` (11/11), `test/improve-loop-dogfood.sh` (7/7), `test/champion.sh` (13/13), and `test/gh430-state-dir-tracked-default.sh` (8/8) all pass.
-
-### Round 1 · Reviewer · codex
-
-swept file: yes
-
-**Verdict:** Changes requested
-
-Reviewed the complete `relay-automation/improve-loop.sh` (486 lines) and both evidence artifacts. No unrelated pre-existing defect was found in the swept loop surface. Static syntax probe passed: `bash -n relay-automation/improve-loop.sh` → exit 0. I did not run the mutation-heavy suites or executable fixtures, per the relay constraint; their recorded runs remain builder-provided evidence.
-
-[Should] Preserve and restore the Git index as well as worktree bytes for a pre-existing dirty tracked path. The current restore only runs `git reset -q HEAD -- <path>` for a post-build status path absent from the pre-build path set (`improve-loop.sh:318-323`); a path already dirty before the build is therefore skipped. The later restoration at `:357-369` copies (or checks out) worktree content only. Consequently, the guard does not restore the exact pre-build repository state when the build stages a pre-existing dirty path.
-
-Observed input: before the iteration, `tracked_other.txt` has an unstaged pre-existing edit (porcelain `" M tracked_other.txt"`); the build runs `printf 'builder\n' > tracked_other.txt; git add tracked_other.txt` while `tracked_other.txt` is outside `ALLOW`. Post-build porcelain is `"M  tracked_other.txt"`. The path appears in both `pre_porc_set` and `post_porc_set`, so the `:318-323` reset condition is false; restoration copies the pre-build worktree bytes but leaves the builder's staged index entry.
-
-Affected scope: every tracked file that was pre-existing and dirty (staged, unstaged, or both) before an off-`ALLOW` build write; this contradicts the brief's requirement to restore every pre-existing path exactly.
-
-Falsifier: in a throwaway repo, seed distinct HEAD/index/worktree versions of an off-`ALLOW` tracked file, run one rejected iteration that stages a fourth version, then verify `git diff --cached -- <path>` and `git diff -- <path>` exactly match their pre-build outputs after restoration. A fix may snapshot/index-restore the preexisting index state rather than reset it to HEAD.
-
-handing off to agy — agy, take your turn
-
-### Round 2 · Reviewer · codex
-
-swept file: yes
-
-**Verdict:** Approved
-
-Reviewed the complete 532-line `relay-automation/improve-loop.sh` and both GH-1221 evidence artifacts. No unrelated pre-existing defect was found in the swept loop surface. The earlier index-restoration finding is resolved: the guard snapshots the pre-build index, detects index-stage changes outside `ALLOW`, and restores the saved index before restoring changed filesystem paths. The recorded b2 control uses distinct HEAD/index/worktree content and reports both cached and worktree diffs exactly restored.
-
-Static probe (no fixture executed): `bash -n relay-automation/improve-loop.sh` → exit 0. The manual evidence records red and green controls for the required clean default, tracked, pre-dirty staged tracked, untracked, in-place ignored, and newly created ignored-path cases. I did not run mutation-heavy suites or executable fixtures under this relay constraint; the recorded existing-suite evidence remains builder-provided and the harness gate follows this turn.
-
-relay closed, no further turn needed
-
-### Attestation · relay-drive — 2026-10-25T07:37:08Z
-task: MARATHON-P2-TURN
-reviewer: codex
-status: Approved
-reviewed-head: b361d96f379ceb60e63aa4f447ac728154a0dc58
-added-range: 17752+1089
-added-sha256: 25d786cc1079a5bab3971b8a78e441406a9daa45c9b4b071d4ab963c68fe2dcd
