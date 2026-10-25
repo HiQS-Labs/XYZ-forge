@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN builder=agy reviewer=codex round-cap=7 -->
 
@@ -216,3 +216,26 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 1 · Builder · agy
+
+Implemented GH-1218 (#1214 Phase 1 + 6a) across all declared phase artifacts:
+
+- **`LESSONS-LEARNED.md`**:
+  - Added the structured entry format specification (`## <short title>` with `- **cue**:`, `- **lesson**:`, `- **evidence**:`, `- **confidence**:`, `- **area**:` [`relay | marathon | pdda | gate | skills | releases`], `- **source**:`, `- **date**:`, and optional `- **superseded-by**:`) and the four prompt-enforced writer/admission rules (**Admission**, **Edit verdicts**, **Public evidence**, **ATE/fuzz evidence (Phase 6a)**) at the top of the file.
+  - Converted the existing #591 lesson into the structured field format while preserving its full narrative body under `### What happened`, `### The lesson`, and `### How to apply`.
+- **`relay-automation/relay-turn-lib.sh` & `skills/1-hourly/relay-automation/relay-pkg.tar.gz`**:
+  - In `rtl_turn_prompt` (tagged `GH-1218` with the `Design adapted from Harness² (google-research/harness2, Apache-2.0)` credit comment), resolved `LESSONS-LEARNED.md` at the turn's repo root (`RTL_ROOT` when set, else git toplevel).
+  - Parsed non-superseded entries (`## <short title>` + `- **cue**:`, skipping fenced code blocks, `###` narrative bodies, and entries with a non-empty `- **superseded-by**:` value other than `none`/`null`/`-`/`~`) and appended a warn-only `[lessons learned (LESSONS-LEARNED.md) — informational, warn-only; inspect LESSONS-LEARNED.md when a cue matches your task]` block listing the newest 5 non-superseded entries' heading + `cue` and `+N earlier lesson(s) omitted — see LESSONS-LEARNED.md for full history.` when more exist. Silent when `LESSONS-LEARNED.md` is absent or unreadable.
+  - Regenerated `skills/1-hourly/relay-automation/relay-pkg.tar.gz` via `bash skills/1-hourly/relay-automation/make-pkg.sh`.
+- **Skill writer & reader prompts**:
+  - `skills/1-hourly/start-task/SKILL.md`: added the reader instruction in Step 1 (`Read relevant entries in LESSONS-LEARNED.md (when present at the repo root) whose cue matches the task`) and the evidence-gated writer instruction with all four rules in Step 9.
+  - `skills/3-weekly/marathon-cleanup/SKILL.md`: added the evidence-gated writer instruction with all four rules under Guardrails / evidence review per verified-complete member task doc.
+  - `skills/4-occasional/defect-campaign/SKILL.md`: added the optional evidence-gated writer instruction with all four rules in the disposition step (`Replay, classify and hand off`) for `new defect` / `faulty oracle` backed by a semantic replay, staying inside the skill's approval boundary.
+- **Verification & Manual Check (`TESTS-RESULTS/2026-10-25+GH-1218/manual-check.md`, `TESTS-RESULTS/2026-10-25+GH-1218/provenance.jsonl`)**:
+  - Verified in a throwaway repo under `$TMPDIR` with 7 entries (1 superseded) and an absent-file control that 5 pointers + `+1 earlier lesson(s) omitted` appear, the superseded entry and narrative bodies are excluded, absent file is silent, and output is byte-for-byte identical across Python (`utils/py/rtl.py`), Bash fallback (`XYZ_PYTHON=0`), and SmallCode (`relay-automation/smallcode-turn.sh`).
+  - Documented the worked writer-rule example (refusal on empty evidence / `confounded`-only verdicts -> `NO_ENTRY` vs acceptance with `helped` verdict and public evidence).
+  - Verified `test/relay-pkg-freshness.sh`, `test/gh397-reviewer-turn-role.sh`, `test/gh681-reviewer-probe-rules.sh`, `test/gh91-relay-scratch.sh`, `test/gh304-vendored-relay-path.sh`, `test/gh609-sdlc-agent-gaps.sh`, `test/gh615-start-task-reinforce.sh`, `test/gh616-start-task-commensurate-envelope.sh`, and `test/gh308-frozen-twin-guard.sh --check --base HEAD` all pass.
+

@@ -1077,8 +1077,83 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   if [[ "${XYZ_TOOL_MODE:-${RELAY_TOOL_MODE:-}}" == "programmatic" ]]; then
     prog_note=" Programmatic tool mode is enabled: diagnostic Python scripts may be executed via script_runner.py with output directed to .relay-scratch/."
   fi
-  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s. Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token.%s%s%s' \
-    "$agent" "$f_rel" "$task" "$tickroot" "$tickbin" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note" "$verify_note" "$scratch_note" "$prog_note"
+  # GH-1218: append warn-only pointer list of the newest 5 non-superseded lessons from LESSONS-LEARNED.md.
+  # Design adapted from Harness² (google-research/harness2, Apache-2.0).
+  local lessons_note="" _lroot="${RTL_ROOT:-}"
+  if [[ -z "$_lroot" ]]; then
+    _lroot="$(git -C "$(dirname "$f")" rev-parse --show-toplevel 2>/dev/null || git rev-parse --show-toplevel 2>/dev/null || true)"
+  fi
+  if [[ -n "$_lroot" && -f "$_lroot/LESSONS-LEARNED.md" && -r "$_lroot/LESSONS-LEARNED.md" ]]; then
+    local _line _in_fence=0 _lin_body=0 _ltitle="" _lcue="" _lsup="" _ldate="" _lval _lsup_lc _first_date="" _last_date=""
+    local -a _lessons=()
+    while IFS= read -r _line || [[ -n "$_line" ]]; do
+      _line="${_line%$'\r'}"
+      if [[ "$_line" == '```'* ]]; then
+        _in_fence=$((1 - _in_fence))
+        continue
+      fi
+      ((_in_fence)) && continue
+      if [[ "$_line" == '## '* ]]; then
+        if [[ -n "$_ltitle" && -n "$_lcue" && -z "$_lsup" ]]; then
+          _lessons+=("- ${_ltitle} — cue: ${_lcue}")
+          [[ -z "$_first_date" && -n "$_ldate" ]] && _first_date="$_ldate"
+          [[ -n "$_ldate" ]] && _last_date="$_ldate"
+        fi
+        _ltitle="${_line#\#\# }"
+        _ltitle="${_ltitle#"${_ltitle%%[![:space:]]*}"}"
+        _ltitle="${_ltitle%"${_ltitle##*[![:space:]]}"}"
+        _lcue=""; _lsup=""; _ldate=""; _lin_body=0
+      elif [[ "$_line" == '### '* ]]; then
+        _lin_body=1
+      elif ((!_lin_body)) && [[ -n "$_ltitle" ]]; then
+        if [[ -z "$_lcue" && "$_line" == '- **cue**:'* ]]; then
+          _lval="${_line#- \*\*cue\*\*:}"
+          _lval="${_lval#"${_lval%%[![:space:]]*}"}"
+          _lval="${_lval%"${_lval##*[![:space:]]}"}"
+          _lcue="$_lval"
+        elif [[ "$_line" == '- **superseded-by**:'* ]]; then
+          _lval="${_line#- \*\*superseded-by\*\*:}"
+          _lval="${_lval#"${_lval%%[![:space:]]*}"}"
+          _lval="${_lval%"${_lval##*[![:space:]]}"}"
+          _lsup_lc="$(printf '%s' "$_lval" | tr '[:upper:]' '[:lower:]')"
+          case "$_lsup_lc" in
+            ""|none|null|-|"~"|n/a|no|false) _lsup="" ;;
+            *) _lsup="$_lval" ;;
+          esac
+        elif [[ -z "$_ldate" && "$_line" == '- **date**:'* ]]; then
+          _lval="${_line#- \*\*date\*\*:}"
+          _lval="${_lval#"${_lval%%[![:space:]]*}"}"
+          _lval="${_lval%"${_lval##*[![:space:]]}"}"
+          _ldate="$_lval"
+        fi
+      fi
+    done < "$_lroot/LESSONS-LEARNED.md"
+    if [[ -n "$_ltitle" && -n "$_lcue" && -z "$_lsup" ]]; then
+      _lessons+=("- ${_ltitle} — cue: ${_lcue}")
+      [[ -z "$_first_date" && -n "$_ldate" ]] && _first_date="$_ldate"
+      [[ -n "$_ldate" ]] && _last_date="$_ldate"
+    fi
+    local _ln=${#_lessons[@]}
+    if ((_ln > 0)); then
+      local _lstart=0 _lend="$_ln" _li
+      if ((_ln > 5)); then
+        if [[ -n "$_first_date" && -n "$_last_date" && "$_first_date" > "$_last_date" ]]; then
+          _lend=5
+        else
+          _lstart=$((_ln - 5))
+        fi
+      fi
+      lessons_note=$'\n[lessons learned (LESSONS-LEARNED.md) — informational, warn-only; inspect LESSONS-LEARNED.md when a cue matches your task]'
+      for ((_li=_lstart; _li<_lend; _li++)); do
+        lessons_note+=$'\n'"${_lessons[$_li]}"
+      done
+      if ((_ln > 5)); then
+        lessons_note+=$'\n'"+$((_ln - 5)) earlier lesson(s) omitted — see LESSONS-LEARNED.md for full history."
+      fi
+    fi
+  fi
+  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s. Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token.%s%s%s%s' \
+    "$agent" "$f_rel" "$task" "$tickroot" "$tickbin" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note" "$verify_note" "$scratch_note" "$prog_note" "$lessons_note"
 }
 
 rtl_before() {

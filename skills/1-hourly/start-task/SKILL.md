@@ -73,6 +73,7 @@ Then begin work.
    Follow the target repo's branch and governance contracts. Missing PDDA or
    RELEASES infrastructure is not permission to install it or invent a substitute.
    Record which local equivalent applies or that the repo has none.
+   Read relevant entries in `LESSONS-LEARNED.md` (when present at the repo root) whose `cue` matches the task.
 
 2. **Group and order the work.** For multiple issues, keep a compact table in the
    canonical plan: issue URL, scope, dependencies, clone/branch, plan location,
@@ -298,7 +299,18 @@ Then begin work.
    authorized, but cannot be reported ready. Keep issue/doc/ledger state truthful:
    "PR ready; awaiting merge" is not "shipped" or "completed" when governance
    requires landing first. Do not close issues or run post-merge reconciliation
-   prematurely. Report each issue/group's PR or blocker and QA/gate result. Then
+   prematurely. Before handoff, read the task doc's own `## Lessons Learned`
+   section (if present) as the candidate lesson, apply the `LESSONS-LEARNED.md`
+   writer rules below, and either append one structured entry (`## <short title>`
+   with `- **cue**:`, `- **lesson**:`, `- **evidence**:`, `- **confidence**:`,
+   `- **area**:` [`relay | marathon | pdda | gate | skills | releases`],
+   `- **source**:`, `- **date**:`, and optional `- **superseded-by**:`) to
+   `LESSONS-LEARNED.md` in the PR or explicitly state `NO_ENTRY` in the handoff:
+   - **Admission:** refuse an entry whose `cue`, `lesson` or `evidence` is empty. Adoption or a merge alone is not evidence. Writing `NO_ENTRY` is a valid outcome.
+   - **Edit verdicts:** before drafting, write one row per changed component: `helped` / `hurt` / `no observed effect` / `confounded`. Use `confounded` when several things changed at once or a single run is the only support. A lesson resting only on `confounded` rows is refused.
+   - **Public evidence:** use repo-relative paths to committed `TESTS-RESULTS/` receipts, stable IDs, or public issue/PR/commit links. Never paste DB narratives, transcripts, credentials, hostnames or absolute paths.
+   - **ATE/fuzz evidence (Phase 6a):** it counts only after semantic replay, and the cited record must show the predicate and the clean/failing controls. A raw cluster, or a replay matched only by digest or exit code, is `confounded`.
+   Report each issue/group's PR or blocker and QA/gate result. Then
    complete automatic published-checkout retirement (GH-1059), rather than ending
    with a reminder (GH-690):
    - Retain required plans, code, review receipts and verification evidence in the PR;
