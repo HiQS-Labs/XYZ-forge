@@ -205,7 +205,8 @@ The Claude Desktop app keeps each Code session's sidebar title in its own sessio
 so `--ide claude`'s transcript append does not reach the sidebar. **`--ide claude-desktop`**
 is a read-only planner like `codex` and `claude-cloud`: `set_session_title` owns every
 write. It needs a Claude Desktop session (the native session tools exist only there) and
-refuses `--apply`, `--set-title`, `--group` and `--unpin-days`.
+refuses `--apply`, `--set-title`, `--group` and `--unpin-days`. It also proposes pins
+(GH-1196), written with `set_pinned`; it never unpins.
 
 Snapshot: `{ "captured_at": <Unix seconds>, "sessions": [<list_sessions rows>] }`, at most
 300 seconds old. Activity is each row's own `lastActivityAt` (Desktop's turn activity), so
@@ -215,6 +216,11 @@ missing either flag is skipped; a candidate with a missing, unparseable or futur
 `lastActivityAt` aborts the sweep. `list_sessions` never returns the caller, so an empty
 `sessions` list is a valid zero-candidate inventory. The title keeps its full wording; only
 the stamp changes.
+
+Pins: a non-archived, non-self row with a literal boolean `isRunning`, `pinned` missing or
+`false`, and `lastActivityAt` within `--pin-hours` (default 24) gets a `pinned` proposal.
+A running session can be pinned. A running row with bad activity is skipped, as before.
+`--no-pin` turns pins off.
 
 Native Desktop sweep procedure:
 
@@ -235,7 +241,16 @@ Native Desktop sweep procedure:
    `{"at", "session_id", "old", "new"}` to `~/.cache/task-sync/claude-desktop-renames.jsonl`
    (private, machine-local). Undo from that line only while `get_session(<id>)` still shows
    its `new` title: `set_session_title(<id>, <old>)`. A title changed since is left alone.
-6. Stay quiet when nothing changed; report failures, a missing tool, or declines that need
+6. For each `pinned` proposal, recheck with a fresh `list_sessions` (`get_session` has no
+   `pinned` field). The row must still exist, not be archived or your own session, have
+   activity inside `--pin-hours`, and have `pinned` missing or `false`; `pinned: true` (a
+   manual pin since) is a skip with no call. Also skip a session whose `get_session(<id>)`
+   has a `scheduledTaskId`: scheduled runs (this sweep's own heartbeat included) start a new
+   session each time, and a pin would also keep them from being auto-archived. Then
+   `set_pinned(<id>, true)`; a decline is a skip. Append `{"at", "session_id", "op": "pin"}`
+   to the same receipt. There is no automatic undo: `pinned` does not record who set it, so
+   an unpin could remove a pin the operator made. Unpinning is the operator's own choice.
+7. Stay quiet when nothing changed; report failures, a missing tool, or declines that need
    the operator.
 
 No concurrency guarantee: the recheck narrows, but cannot close, a race with a manual rename.
@@ -259,6 +274,19 @@ ZCode/Agy command if those stores are installed; retire/disable the previous job
 before enabling the replacement. Never introduce launchd, a daemon or a second
 writer. A Codex-only installation runs only the native sweep; adding Codex does
 not authorize enabling absent ZCode/Agy stores. Keep it quiet while unchanged.
+
+Claude Desktop sidebar titles (GH-1191) have one writer **per device**: one hourly Claude
+Desktop scheduled task on that Mac, created from a Desktop Code session (the native session
+tools exist only there). Each Mac renames only its own sessions, so the devices never compete
+and a closed laptop simply skips its runs (missed runs fire on the next app launch). Inspect
+the Mac's existing scheduled tasks first and repoint a task-sync one instead of adding a second.
+Use an off-minute hourly schedule; each run opens a short session, so 15 minutes would flood
+the sidebar. The task prompt must be self-contained and `$HOME`-relative so the same text works
+on every Mac: run the "Claude Desktop (GH-1191)" native sweep above from
+`~/git-pulse-sync/Deployed Skills/task-sync`, titles only, ending with one line
+`task-sync desktop: proposed=N renamed=M skipped=K declined=D`. Runs start in the device's
+default permission mode, not the creating session's mode. Observed on the first unattended
+run: app-generated titles are renamed, and a title the operator set is declined and reported.
 
 Cloud Claude Code titles have exactly one writer: one hourly Claude Code scheduled
 task (cloud tasks run at most hourly) that selects the XYZ-forge repository and runs

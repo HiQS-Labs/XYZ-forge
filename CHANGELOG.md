@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-10-24 — task-sync: pin active Claude Desktop sessions (GH-1196)
+
+`--ide claude-desktop` now also proposes pins: a non-archived, non-self session with a literal
+boolean `isRunning`, `pinned` missing or `false`, and activity inside `--pin-hours` (default 24).
+A running session can be pinned; `--no-pin` turns pins off. The planner still never writes. The
+new step in `SKILL.md` rechecks with a fresh `list_sessions`, then calls `set_pinned` (a decline is
+a skip) and logs a receipt line. task-sync never unpins, because `pinned` does not record who set
+it. The live smoke found that a device's own hourly scheduled runs were pin candidates. Each run is
+a new session, so the pin step now skips any session whose `get_session` has a `scheduledTaskId`.
+Probes 11/11 on Python 3.9 and 3.14, the GH-1191 battery 17/17, and a red control (the
+already-pinned probe fails without its check). No new tests (GH-831). Plan QA: Codex, 4 rounds
+(the 4th authorized by the operator). Reversibility: **Easy**. Revert to stop new pins; existing
+pins stay until the operator unpins them.
+
+## 2026-10-24 — task-sync: one Claude Desktop scheduled task per device (GH-1191 step 4)
+
+The operator dropped the ZCode heartbeat for Claude Desktop. `SKILL.md`'s heartbeat section now
+names one hourly Claude Desktop scheduled task per Mac, created from a Desktop session.
+- Its self-contained, `$HOME`-relative prompt runs the GH-1191 native sweep against the
+  deployed copy; each Mac renames only its own sessions.
+- The first unattended run on one device (default permission mode) renamed an app-generated
+  title; a title the operator had set was declined, and the run carried on and reported it
+  (`declined=1`, not an error). Receipt:
+  `TESTS-RESULTS/2026-10-24+GH-1191/scheduled-run.md`.
+- The ZCode, Codex and cloud scheduler rules are unchanged.
+
+Reversibility: **Easy** (docs; disable the scheduled task per device).
+
 ## 2026-10-24 — task-sync: Claude Desktop sidebar titles (GH-1191)
 
 The Claude Desktop app keeps each Code session's sidebar title in its own session record,

@@ -155,3 +155,23 @@ Codex relay `relay-system/2026-10-24/gh1191-final-qa.md`, Approved in round 2 of
 ## Merge evidence
 
 - PR #1194 merged 2026-10-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Step 4 (2026-10-24): one Desktop scheduled task per device
+
+- **Operator decision:** no ZCode heartbeat. The scheduler is one hourly Claude Desktop scheduled task per Mac (`SKILL.md` → "The heartbeat").
+- **First device (MacBook Pro 14"):** `task-sync-desktop-titles` was created, and its first unattended run succeeded.
+  - It renamed an app-generated title.
+  - It declined an operator-set title, which needs approval.
+  - Receipt: `TESTS-RESULTS/2026-10-24+GH-1191/scheduled-run.md`.
+- **Still open:**
+  - re-stamping a `tool`-sourced title on a later day;
+  - the 16" and Mac Studio rollout (step 5);
+  - pinning (#1196, plan QA escalated).
+
+## Merge evidence
+
+- PR #1197 merged 2026-10-25 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1212 merged 2026-10-25 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
