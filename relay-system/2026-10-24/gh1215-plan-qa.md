@@ -168,4 +168,12 @@ Probe (exit 0): `python3 -B - <<'PY' ...` parsed `route_agent()` and the current
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-25T05:11:27Z
+task: RELAY-gh1215-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: b6ab4366d9840f522837558f385c60eece955279
+added-range: 13053+2638
+added-sha256: 384a318f3fa47c16604118ea13e7d0a03324bc58be4ae555bb28286e18c59976
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
