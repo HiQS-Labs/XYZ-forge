@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -112,5 +112,28 @@ Write a verdict below. Set STATUS to Approved if it passes; otherwise leave it O
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+VERDICT: FAIL
+
+Basis: The implementation map is grounded and keeps Kimi out of the separate marathon-reviewer eligibility gates, but the stated verification/red-control sequence omits the necessary update to the existing lane-derived allowlist suite. Without it, the planned route addition makes that suite reject Kimi before it can verify the dispatcher or later allowlists.
+
+- [Should] Add the required existing-suite amendments to Plan step 3 (or Verification): teach `test/gh346-gateway-allowlists.sh`'s `lane_env_var()` about `kimi`, and include `kimi` in its #8/#9 and #10 lane checks. Its lane set is dynamically derived from `route_agent()` (`test/gh346-gateway-allowlists.sh:49-72`), but its mapping currently enumerates only through `deepseek` (`test/gh346-gateway-allowlists.sh:85-90`) and #10 explicitly skips any other lane (`test/gh346-gateway-allowlists.sh:291-300`). Once Plan step 3 adds `route_agent("kimi")`, the test will iterate Kimi with an empty env-variable name, so its announced red control cannot reach the claimed “#3 dispatcher did NOT route 'kimi'” assertion. The current test is an existing behavior pin and needs adjustment, not a new suite; this follows the repository’s existing-test policy.
+  Observed input: `test/gh346-gateway-allowlists.sh:85-90` has no `kimi) echo KIMI_AGENT ;;` arm while `test/gh346-gateway-allowlists.sh:49-66` derives every `route_agent()` prefix.
+  Affected scope: any new `route_agent()` lane whose `_AGENT` mapping is absent from the existing suite.
+  Falsifier: after adding `kimi) echo KIMI_AGENT ;;` and including Kimi in the #8/#9/#10 loops, a disposable-clone run of `bash test/gh346-gateway-allowlists.sh` should proceed to the intended dispatcher assertion; before the production dispatcher arm it must report `#3 dispatcher did NOT route 'kimi'`, and after that arm it must pass.
+
+- [Pass] Leaving Kimi out of the marathon reviewer gates is consistent with R7’s direct `relay-drive` review: `relay_drive.py` accepts an unconstrained `--reviewer` argument (`utils/py/relay_drive.py:52-98`), while marathon explicitly limits reviewers to `codex`/`agy` (`utils/py/marathon_drive.py:2043-2050`; `src/marathon-yaml.js:113-119`). The plan’s separate `relay_drive.py` log-table update is also necessary because `prepare_turn_log()` owns per-shim log routing (`utils/py/relay_drive.py:145-166`).
+
+- [Pass] The profile-routing claim is sound for the stated shim shape: lanes are derived from `route_agent()` assignments (`utils/py/profile_resolve.py:151-181`), gateway discovery recognizes direct `gateway=os.environ.get(...)` telemetry (`utils/py/profile_resolve.py:93-128`), and `shutil.which("kimi")` supplies the CLI fallback the resolver scans (`utils/py/profile_resolve.py:132-149`).
+
+- [Pass] Stream JSON does not need to be human-readable to satisfy containment: `rtl_enforce` acts on the relay-file structure and its log handling treats the passed log as a transcript/cleanup path (`relay-automation/relay-turn-lib.sh:1384-1459`); the planned assistant-content-or-tool-call criterion is therefore a more specific empty-turn signal than Muse’s banner-filter guard (`utils/py/muse-turn.py:327-350`).
+
+Probe (exit 0): `python3 -B - <<'PY' ...` parsed the current router and printed `current route lanes: claude,codex,agy,aider,pi,smallcode,commandcode,deepseek` and `kimi absent from route_agent: True`; it also confirmed representative final-lane entries exist in `relay_drive.py`, `gate_env.py`, and `marathon-agent.sh`. This supports the narrow conclusion that Kimi’s planned new route must be propagated into the test’s remaining curated mapping.
+
+handing off to Producer — go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
