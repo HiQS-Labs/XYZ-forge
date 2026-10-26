@@ -434,6 +434,11 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
                        else {"return_value": _verdict(landing_ready)})
 
         scanned = [] if checkouts is None else checkouts
+        # GH-1226: a merging --execute needs --prs and a dry-run pin. Orchestration tests name every
+        # PR and stand in for the pin (its own behaviour is in the end-to-end suite and the manual check).
+        merging = "--execute" in argv and not {"--teardown-only", "--scan-only", "--prs-only"} & set(argv)
+        if merging and prs and "--prs" not in argv:
+            argv = argv + ["--prs", ",".join(str(p["number"]) for p in prs)]
         refresh = (mock.Mock(side_effect=refresh_values) if refresh_values is not None else
                    mock.Mock(side_effect=lambda n, repo: {"number": n, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40, "headRefName": "feat/x", "baseRefName": next(p.get("baseRefName") for p in (prs or []) if p["number"] == n), "labels": [], "mergeCommit": None}))
         with mock.patch.object(sys, "argv", ["merge_cleanup.py"] + argv), \
@@ -442,6 +447,8 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
              mock.patch.object(merge_cleanup, "inspect_primary_landing", **insp_kwargs) as insp, \
              mock.patch.object(merge_cleanup, "run_git", side_effect=fake_git), \
              mock.patch.object(merge_cleanup, "refresh_pr", refresh), \
+             mock.patch.object(merge_cleanup, "verify_selection", side_effect=lambda primary, branch, listed, open_prs: {n: "a" * 40 for n in listed}), \
+             mock.patch.object(merge_cleanup, "required_checks_state", return_value=("ok", "no required checks")), \
              mock.patch.object(merge_cleanup, "prepare_landing_clone", side_effect=lambda pr, primary, branch, wd: {"clone": wd, "merge_rc": 0, "error": ""}), \
              mock.patch.object(merge_cleanup, "pre_merge_ledger_gate", return_value={"green": True, "failures": [], "diagnostics": []}), \
              mock.patch.object(merge_cleanup, "execute_pr_merge", return_value=(True, "f" * 40)) as merged, \
@@ -539,13 +546,15 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         merged.assert_not_called()
         reconcile.assert_not_called()
 
-    def test_excluded_pr_is_removed_before_the_base_check(self):
+    def test_unlisted_pr_is_never_sequenced(self):
+        # GH-1226: --prs is an allowlist; an open PR outside it (here one that would also fail the
+        # base check) is never sequenced, whatever opened since the dry run.
         prs = [
             {"number": 7, "baseRefName": "development", "title": "land", "files": [], "body": ""},
-            {"number": 8, "baseRefName": "main", "title": "excluded", "files": [], "body": ""},
+            {"number": 8, "baseRefName": "main", "title": "unlisted", "files": [], "body": ""},
         ]
         rc, _, merged, _, _ = self._drive_phase5(
-            ["--primary", str(self.primary), "--exclude", "8", "--execute"], prs=prs)
+            ["--primary", str(self.primary), "--prs", "7", "--execute"], prs=prs)
         self.assertEqual(rc, 0)
         self.assertEqual([call.args[0] for call in merged.call_args_list], [7])
 
@@ -652,14 +661,17 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         teardown.assert_called_once_with(candidate, dry_run=False)
         self.pruner.assert_called_once_with(dry_run=False)
 
-    def test_ready_primary_allows_zero_pr_cleanup(self):
+    def test_merging_execute_without_prs_refuses_before_any_mutation(self):
+        # GH-1226: a merging --execute must name its PRs up front; cleanup alone is --teardown-only.
         candidate = self._removable_candidate()
-        rc, _, _, _, teardown = self._drive_phase5(
+        rc, _, merged, _, teardown = self._drive_phase5(
             ["--primary", str(self.primary), "--execute"],
             landing_ready=True, checkouts=[candidate])
-        self.assertEqual(rc, 0)
-        teardown.assert_called_once_with(candidate, dry_run=False)
-        self.pruner.assert_called_once_with(dry_run=False)
+        self.assertEqual(rc, 2)
+        self.assertFalse(self.inspections.called)
+        merged.assert_not_called()
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
 
     def test_scan_only_does_not_require_primary_override(self):
         rc, _, _, _, teardown = self._drive_phase5(

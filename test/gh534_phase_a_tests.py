@@ -570,8 +570,11 @@ class TestA5FreshInspection(unittest.TestCase):
             removed.append((c["name"], c["disposition"], "scan_disposition" in c))
             return True
 
-        argv = ["merge_cleanup.py", "--primary", str(self.primary), "--root", str(self.roots), "--execute"]
+        argv = ["merge_cleanup.py", "--primary", str(self.primary), "--root", str(self.roots), "--execute",
+                "--prs", ",".join(str(p["number"]) for p in prs)]
         with mock.patch.object(sys, "argv", argv), \
+             mock.patch.object(merge_cleanup, "verify_selection", side_effect=lambda primary, branch, listed, open_prs: {n: "b" * 40 for n in listed}), \
+             mock.patch.object(merge_cleanup, "required_checks_state", return_value=("ok", "no required checks")), \
              mock.patch.object(merge_cleanup, "prune_dangling_skill_symlinks"), \
              mock.patch.object(merge_cleanup, "inspect_primary_landing", return_value=verdict), \
              mock.patch.object(merge_cleanup, "refresh_pr", return_value={"number": 1, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "b" * 40, "headRefName": "feat/land", "baseRefName": "development", "labels": [], "mergeCommit": None}), \
