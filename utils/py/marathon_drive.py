@@ -490,7 +490,7 @@ def compute_config_sha256(brief_file, builder, reviewer, env=None):
     with open(brief_file, "r", encoding="utf-8", errors="replace") as f:
         brief_text = f.read()
     def _model_val(agent_id):
-        for prefix in ("claude", "codex", "agy", "aider", "pi", "smallcode", "commandcode", "deepseek"):
+        for prefix in ("claude", "codex", "agy", "aider", "pi", "smallcode", "commandcode", "deepseek", "kimi"):
             if agent_id.startswith(prefix):
                 val = env.get(f"{prefix.upper()}_MODEL") or "default"
                 if prefix == "aider" and env.get("AIDER_OPENAI_API_BASE"):
