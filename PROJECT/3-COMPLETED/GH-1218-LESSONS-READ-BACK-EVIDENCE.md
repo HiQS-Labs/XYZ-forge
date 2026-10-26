@@ -2,9 +2,9 @@
 gh_issue: 1218
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1218
 title: "Lessons read-back: evidence-gated LESSONS-LEARNED.md entries via rtl_turn_prompt + defect-campaign writer (#1214 P1+6a)"
-status: Active (2-WORKING — marathon GH-1214 phase p4)
+status: Complete
 created: 2026-10-25
-updated: 2026-10-25
+updated: 2026-10-26
 owner: marathon-gh-1214
 doc_type: feedback
 complexity: 3

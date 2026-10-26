@@ -2,9 +2,9 @@
 gh_issue: 1219
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1219
 title: "consult: blind A/B reconcile with neutral answer payloads (#1214 P2)"
-status: Active (2-WORKING — marathon GH-1214 phase p3)
+status: Complete
 created: 2026-10-25
-updated: 2026-10-25
+updated: 2026-10-26
 owner: marathon-gh-1214
 doc_type: feedback
 complexity: 2

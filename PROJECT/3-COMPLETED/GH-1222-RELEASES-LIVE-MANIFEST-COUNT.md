@@ -2,9 +2,9 @@
 gh_issue: 1222
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1222
 title: "releases: _live_manifest_count double-counts a shipped+redialed issue (#1214 P5)"
-status: Active (2-WORKING — marathon GH-1214 phase p1)
+status: Complete
 created: 2026-10-25
-updated: 2026-10-25
+updated: 2026-10-26
 owner: marathon-gh-1214
 doc_type: bugfix
 complexity: 1

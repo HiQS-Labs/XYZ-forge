@@ -2,9 +2,9 @@
 gh_issue: 1221
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1221
 title: "improve-loop: build can change files outside ALLOW unnoticed — snapshot/restore write check (#1214 P4)"
-status: Active (2-WORKING — marathon GH-1214 phase p2)
+status: Complete
 created: 2026-10-25
-updated: 2026-10-25
+updated: 2026-10-26
 owner: marathon-gh-1214
 doc_type: bugfix
 complexity: 3
