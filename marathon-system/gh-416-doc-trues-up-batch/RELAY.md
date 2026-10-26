@@ -123,3 +123,12 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-26T03:29:17Z
+task: MARATHON-GH-416-DOC-TRUES-UP-BATCH-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 54751a04f79e4732a5f79b8c5191ad9c4780ba3f
+added-range: 11856+1251
+added-sha256: 5f6301e874dbe845bb3b1647a6b8e9b885418c72b2e434e0ff8d65508266edae
+config-sha256: 32c464b61d266e58b54eeab192f0bf306426d98897240f1a150572ae9ee0ed8d
