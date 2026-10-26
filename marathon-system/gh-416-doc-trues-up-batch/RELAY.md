@@ -1,6 +1,6 @@
 # Marathon Phase gh-416-doc-trues-up-batch
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-416-DOC-TRUES-UP-BATCH-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -102,3 +102,12 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · agy
+
+- **Files touched:**
+  - `package.json`: Moved `acorn` (`^8.17.0`) and `acorn-walk` (`^8.3.5`) from `dependencies` to `devDependencies`.
+  - `package-lock.json`: Mirrored the `devDependencies` classification under root `packages[""]` and added `"dev": true` to `node_modules/acorn` and `node_modules/acorn-walk`.
+  - `skills/1-hourly/relay-xyz/SKILL.md`: Updated the `CODEX_FLAGS` default in the turn-taker env table (line 597) from `-s workspace-write` to `-s workspace-write -c approval_policy=never`, and removed the dead `(or -c approval_policy=never)` escalation suffix on line 602 so only `CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox'` is named as the escalation rung.
+- **Verification:** Checked against `GH-416-DOC-TRUES-UP-BATCH.md` fix probes and acceptance criteria (no test scripts run inside the isolated worktree per the scope lock).
