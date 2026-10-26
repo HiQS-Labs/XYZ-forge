@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured GH-1226 with the operator's scope comment; recon traced Phase 4 selection and the Phase 5 merge loop. | Implement `--prs` + head pins + required-check gate in `merge_cleanup.py`, update the existing suites that pinned `--exclude <PR#>`, smoke the dry-run → execute path. |
+| Implemented `--prs` allowlist + dry-run head pins + required-check gate + merged ⊆ list assertion; existing suites updated; CLI smoke green (`TESTS-RESULTS/2026-10-26+GH-1226/`). | Full gate on the final commit, final review, PR to `development`; after merge the reconciler closes the doc. |
 
 ## Problem (observed)
 
@@ -98,3 +98,26 @@ integration branch ahead of its required check — a work-integrity failure need
 audit. Priority follows severity plus the operator's explicit scoping. Recurrence: one incident in the
 last 14 days (LTVera-Pandas batch #842); prior 14 days unknown. Appeal neutral. Effort: one script plus
 existing-suite edits.
+
+## Plan QA (2026-10-26)
+
+Codex relay is unavailable in this cloud session; the plan was reviewed by an independent
+fresh-context Claude reviewer instead. Verdict: Approved with changes. Dispositions:
+
+- Merge-time live head == pin (covers B1 heads whose checks are not registered yet): **Accepted.**
+- Unknown/unreadable check output defers, never proceeds: **Accepted.**
+- Per-PR refresh instead of list discovery (30-item default limit): **Accepted in part** —
+  `gh pr list --limit 1000` + `headRefOid`, one call instead of N.
+- Dry run must apply the `--prs` deferral: **Accepted**; a dry run without `--prs` stays a full preview.
+- GH-1066 count / resume compare / group batch on listed PRs only: **Accepted** (early block filters to pins).
+- Persist the allowlist through the batch save merge and render it for 2+ batches: **Accepted**
+  (`allowlist` + `_allowlist_touched`).
+- Separate count for check/pin deferrals: **Accepted.**
+- Stacked retargeting keeps covering unlisted PRs: **Accepted** (commented in code).
+- Sanitize `/` in the pin filename: **Accepted.**
+- Suite edits in shared helpers; repurpose the two exclude-PR pins; parity guard row + `--prs`: **Accepted.**
+
+## Lessons Learned
+
+- A denylist chosen at execute time cannot bound a run: whatever opens between preview and
+  execute is in scope. Pin the vetted set at preview and refuse on drift.

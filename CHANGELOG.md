@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-10-26 — merge-cleanup lands only a pinned `--prs` allowlist, gated on required checks (#1226)
+
+- **Allowlist, not denylist.** A merging `--execute` now requires `--prs N[,N...]` and exits 2
+  without it; `--teardown-only`, `--scan-only`, `--prs-only` and `--reconcile-pr` are unchanged.
+  The dry run with `--prs` pins each listed PR's head under `.tick/merge-cleanup/<slug>/`.
+  `--execute` refuses before any mutation if a listed PR closed, went draft, moved off its pin, or
+  was never pinned. Unlisted open PRs log `not in --prs; not sequenced`. After Phase 5 the script
+  asserts merged ⊆ `--prs`, and the batch issue renders the list. `--exclude` filters checkouts only.
+- **Required checks gate.** Before each merge, `gh pr checks --required` must read green (or "no
+  required checks"). Pending or unreadable checks defer the PR; failing checks mean it is not merged.
+  A B1-repaired head no longer matches its pin, so it is deferred to a re-pinned run instead of
+  merging before its CI exists. This was the LTVera-Pandas #841 incident.
+- Discovery now passes `gh pr list --limit 1000` and reads `headRefOid`. SKILL.md example 6 and the
+  drive loop are updated. The existing suites were edited only where they pinned the old denylist
+  or the same-run B1 landing. Manual smoke: `TESTS-RESULTS/2026-10-26+GH-1226/`.
+
 ## 2026-10-25 — lessons read-back, blind consult, config-pinned resume, improve-loop write check, manifest count (marathon #1214)
 
 Five fixes landed through one marathon chain (agy builder, codex reviewer, full gate per phase).

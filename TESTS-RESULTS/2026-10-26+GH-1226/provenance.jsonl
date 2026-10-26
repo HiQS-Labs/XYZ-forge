@@ -1,0 +1,1 @@
+{"timestamp": "2026-10-26T23:30:00Z", "commit": "5c9b3cd5e23e7306e3eb1e008ddd915ba4f694bd", "issue": 1226, "case": "allowlist-and-check-gate-smoke", "gate": "manual-check", "command": "python3 TESTS-RESULTS/2026-10-26+GH-1226/smoke.py", "rc": 0, "result": "pass", "environment": "disposable full clone; phase-B fixture (bare origin + gh stub); main path + 6 adjacent paths"}
