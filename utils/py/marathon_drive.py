@@ -484,6 +484,23 @@ def die(msg):
 def log(msg):
     print(f"marathon-drive: {msg}")
 
+def compute_config_sha256(brief_file, builder, reviewer, env=None):
+    # GH-1220: idea adapted from Harness² core/runmark.py (google-research/harness2, Apache-2.0).
+    env = os.environ if env is None else env
+    with open(brief_file, "r", encoding="utf-8", errors="replace") as f:
+        brief_text = f.read()
+    def _model_val(agent_id):
+        for prefix in ("claude", "codex", "agy", "aider", "pi", "smallcode", "commandcode", "deepseek"):
+            if agent_id.startswith(prefix):
+                val = env.get(f"{prefix.upper()}_MODEL") or "default"
+                if prefix == "aider" and env.get("AIDER_OPENAI_API_BASE"):
+                    # aider-turn.py passes the endpoint via --openai-api-base and picks its default from it.
+                    val += "@" + env["AIDER_OPENAI_API_BASE"]
+                return val
+        return "default"
+    canonical = "\n".join([brief_text, builder, reviewer, _model_val(builder), _model_val(reviewer)])
+    return relay_attest.sha256(canonical.encode("utf-8"))
+
 def resolve_force_relay_task(base_task, tick_bin, force, explicit):
     """GH-642: --force on a lane whose default token is already spent used to die at the tick
     seed with "not claimable — use a fresh per-relay id", AFTER the operator had already chosen
@@ -2669,6 +2686,8 @@ relay-file: {rel_relay}
                 f"gh pr create --base {base} --head {head}")
 
     completed_candidate = [None]
+    config_sha256 = compute_config_sha256(args.phase_brief_file, args.builder, args.reviewer)
+    config_mismatch_rebuild = [False]
 
     def complete_phase_success(success_mode="approved"):
         historical = success_mode == "already-satisfied" and completed_candidate[0] is not None
@@ -2880,6 +2899,15 @@ relay-file: {rel_relay}
         # cannot be reopened (GH-274), so the run refuses loudly instead of re-dispatching.
         record = attested_terminal(task, where=f"phase {args.phase_id} startup", completed=True)
         if record is None:
+            # GH-1220: a valid record attested for a DIFFERENT reviewer is a config change — rebuild
+            # rather than halting as unattested. Never reused: the strict check above still refused it.
+            prior, _why = relay_attest.load(task, expected_reviewer=None, any_reviewer=True,
+                                            relay_file=relay_file, target_repo=args.target_root or root)
+            if prior is not None and prior.get("reviewer") != args.reviewer:
+                log(f"phase {args.phase_id}: attested by reviewer '{prior.get('reviewer')}' but this run names "
+                    f"'{args.reviewer}' — phase config changed, rebuilding (GH-1220)")
+                config_mismatch_rebuild[0] = True
+                return False
             if args.force and not args.relay_task:
                 # Preserve GH-642's explicit rebuild escape. This does not accept the old
                 # approval: normal render/seed/build/review runs on a fresh force token.
@@ -2890,6 +2918,14 @@ relay-file: {rel_relay}
             escalate("unattested-terminal", 0)
             xyz_marathon_emit("red", f"halted at phase {args.phase_id} — terminal relay without a reviewer attestation")
             sys.exit(4)
+        # GH-1220: verify phase config identity (brief content + builder + reviewer + resolved models).
+        rec_cfg = record.get("config_sha256")
+        if not rec_cfg:
+            log(f"phase {args.phase_id}: legacy attestation without config identity — reusing (GH-1220)")
+        elif rec_cfg != config_sha256:
+            log(f"phase {args.phase_id}: phase config changed since attestation — rebuilding (GH-1220)")
+            config_mismatch_rebuild[0] = True
+            return False
         completion = record.get("phase_completion")
         completed_candidate[0] = completion["candidate"] if completion else None
         return True
@@ -2922,9 +2958,16 @@ relay-file: {rel_relay}
                     f"WITHOUT --retry would have re-run only the pre-advance gate and dispatched no "
                     f"builder or reviewer turn (GH-491)")
 
+    # GH-1220: never re-render over a spent explicit token — the old approved relay must stay intact.
+    if config_mismatch_rebuild[0] and args.relay_task and token_state(args.relay_task)[0] in ("done", "circuit_broken"):
+        _RESULT["reason"] = "config-mismatch-spent-explicit-task"
+        die(f"phase {args.phase_id}: config changed but explicit --relay-task {args.relay_task} is spent — "
+            f"re-fire with a fresh --relay-task (or --retry {args.phase_id} via marathon.sh) (GH-1220)")
+
     # GH-1042: only a lane that actually rebuilds needs GH-642's fresh force token.
+    # GH-1220: a config-mismatch rebuild also allocates a fresh token when the base token is spent.
     relay_task = resolve_force_relay_task(
-        relay_task, tick_bin, force=bool(args.force), explicit=bool(args.relay_task))
+        relay_task, tick_bin, force=bool(args.force or config_mismatch_rebuild[0]), explicit=bool(args.relay_task))
     _RESULT["token"] = relay_task
 
     if not args.dry_run:
@@ -3389,6 +3432,7 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
         env2["XYZ_HARNESS_CONTEXT"] = "marathon-phase"
         env2["RELAY_COST_SUMMARY"] = "0"
         env2["TICK_REPO_ROOT"] = get_env("TICK_REPO_ROOT", root)
+        env2["MARATHON_CONFIG_SHA256"] = config_sha256  # GH-1220
         # GH-256: under --target-root the turn shim must GUARD the repo the worktree is cut FROM.
         #
         # relay-drive exports RELAY_TARGET_ROOT and relay-turn-lib.sh:251 reads

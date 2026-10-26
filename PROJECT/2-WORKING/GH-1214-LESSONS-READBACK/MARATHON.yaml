@@ -1,0 +1,56 @@
+# MARATHON.yaml — GH-1214 lessons read-back + Harness² borrows, one chain of five lanes.
+# Umbrella/tracking issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1214
+# Members: #1222 (p1), #1221 (p2), #1219 (p3), #1218 (p4, incl. Phase 6a), #1220 (p5). Held: #1214 Phase 6b.
+#
+# Phases run STRICTLY ONE AT A TIME in this chain order (depends_on constrains, never parallelizes).
+# Write-sets are disjoint; CHANGELOG.md and the ledger are reconciled at landing by the orchestrator.
+# p4 (rtl_turn_prompt) and p5 (attestation/resume) edit harness code the driver itself runs, so they go last.
+# Builder: agy (pass --builder agy). Reviewer (post-build QA): codex on every phase.
+#
+# Fire ONLY from the marathon clone on branch feat/gh1214-lessons-readback. ALWAYS --dry-run first:
+#   relay-automation/marathon.sh --plan PROJECT/2-WORKING/GH-1214-LESSONS-READBACK/MARATHON.yaml --builder agy --dry-run
+name: gh1214-lessons-readback
+phases:
+  - id: p1
+    name: "L1 #1222 — _live_manifest_count counts a shipped+redialed issue once"
+    reviewer: codex
+    brief: PROJECT/2-WORKING/GH-1222-RELEASES-LIVE-MANIFEST-COUNT.md
+    artifact: utils/py/releases_app.py, TESTS-RESULTS/2026-10-25+GH-1222/manual-check.md, TESTS-RESULTS/2026-10-25+GH-1222/provenance.jsonl
+    turn_timeout_s: 1200
+    max_review_rounds: 2
+
+  - id: p2
+    name: "L2 #1221 — improve-loop rejects and restores off-ALLOW build writes"
+    reviewer: codex
+    brief: PROJECT/2-WORKING/GH-1221-IMPROVE-LOOP-BUILD-CAN.md
+    artifact: relay-automation/improve-loop.sh, TESTS-RESULTS/2026-10-25+GH-1221/manual-check.md, TESTS-RESULTS/2026-10-25+GH-1221/provenance.jsonl
+    turn_timeout_s: 1500
+    depends_on: p1
+    max_review_rounds: 2
+
+  - id: p3
+    name: "L3 #1219 — consult writes neutral blind A/B payloads + key"
+    reviewer: codex
+    brief: PROJECT/2-WORKING/GH-1219-CONSULT-BLIND-B-RECONCILE.md
+    artifact: utils/py/consult.py, skills/1-hourly/consult/SKILL.md, TESTS-RESULTS/2026-10-25+GH-1219/manual-check.md, TESTS-RESULTS/2026-10-25+GH-1219/provenance.jsonl
+    turn_timeout_s: 1500
+    depends_on: p2
+    max_review_rounds: 2
+
+  - id: p4
+    name: "L4 #1218 — lessons read-back via rtl_turn_prompt + evidence-gated writers (6a)"
+    reviewer: codex
+    brief: PROJECT/2-WORKING/GH-1218-LESSONS-READ-BACK-EVIDENCE.md
+    artifact: relay-automation/relay-turn-lib.sh, skills/1-hourly/relay-automation/relay-pkg.tar.gz, LESSONS-LEARNED.md, skills/1-hourly/start-task/SKILL.md, skills/3-weekly/marathon-cleanup/SKILL.md, skills/4-occasional/defect-campaign/SKILL.md, TESTS-RESULTS/2026-10-25+GH-1218/manual-check.md, TESTS-RESULTS/2026-10-25+GH-1218/provenance.jsonl
+    turn_timeout_s: 1800
+    depends_on: p3
+    max_review_rounds: 3
+
+  - id: p5
+    name: "L5 #1220 — config_sha256 in attest@1; resume rebuilds on config change"
+    reviewer: codex
+    brief: PROJECT/2-WORKING/GH-1220-MARATHON-RESUME-REUSES-PHASE.md
+    artifact: utils/py/marathon_drive.py, utils/py/relay_drive.py, utils/py/relay_attest.py, TESTS-RESULTS/2026-10-25+GH-1220/manual-check.md, TESTS-RESULTS/2026-10-25+GH-1220/provenance.jsonl
+    turn_timeout_s: 1800
+    depends_on: p4
+    max_review_rounds: 3
