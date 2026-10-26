@@ -823,9 +823,11 @@ def _migration_004(conn):
                       BEGIN SELECT RAISE(ABORT, 'releases.baseline_count is write-once'); END""")
     # Backfill releases already underway. Flagged 'backfilled', never 'observed': the count is
     # inferred from today's manifest, not witnessed at the kickoff it claims to describe.
+    # GH-1222: COUNT(DISTINCT issue_ref_id) because one issue can hold a shipped row and a
+    # redialed dialed_in row at once.
     stamp = now_iso()
     for row in conn.execute("SELECT id FROM releases WHERE status = 'active'").fetchall():
-        n = conn.execute("""SELECT COUNT(*) FROM manifest_items
+        n = conn.execute("""SELECT COUNT(DISTINCT issue_ref_id) FROM manifest_items
                              WHERE release_id = ? AND state IN ('dialed_in','shipped')""",
                          (row["id"],)).fetchone()[0]
         if n:
@@ -2517,7 +2519,9 @@ def cmd_update(args):
 def _live_manifest_count(conn, release_id):
     """The commitment denominator: dialed-in plus shipped. Cut rows are history, not scope —
     counting them contradicts the repo's own prose that a cut REDUCES the manifest."""
-    return conn.execute("""SELECT COUNT(*) FROM manifest_items
+    # GH-1222: COUNT(DISTINCT issue_ref_id) because one issue can hold a shipped row and a
+    # redialed dialed_in row at once.
+    return conn.execute("""SELECT COUNT(DISTINCT issue_ref_id) FROM manifest_items
                             WHERE release_id = ? AND state IN ('dialed_in','shipped')""",
                         (release_id,)).fetchone()[0]
 
