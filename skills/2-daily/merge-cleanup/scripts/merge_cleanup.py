@@ -1484,7 +1484,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
             # GH-1226: the merge waits for this head's required checks. Pending or unreadable defers
             # (exit 3; re-run once CI settles), failing is not merged; neither stops the queue.
             checks, detail = required_checks_state(p_num, primary_repo)
-            if checks != "ok":
+            if checks != "ok" and dry_run:  # a preview reports it; only --execute defers
+                log(f"[DRY RUN] PR #{p_num}: required checks {checks} ({detail}) — --execute would not merge it yet")
+            elif checks != "ok":
                 if checks == "failing":
                     log_err(f"PR #{p_num}: required checks failing ({detail}) — not merged")
                     failed[p_num] = f"required checks failing: {detail}"
@@ -1492,7 +1494,8 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                     log_err(f"PR #{p_num}: DEFERRED — required checks {checks} ({detail})")
                     failed[p_num] = f"deferred: required checks {checks} ({detail[:120]})"
                 continue
-            log(f"PR #{p_num}: required checks: {detail}")
+            else:
+                log(f"PR #{p_num}: required checks: {detail}")
 
             if dry_run:
                 log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy} --delete-branch`")

@@ -242,7 +242,7 @@ Parking preserves work for later review; it never qualifies it for integration o
   - A dry run without `--prs` previews every open PR and pins nothing.
 
 ### Phase 5: required checks and pinned heads (GH-1226)
-- Before each merge the script reads `gh pr checks <n> --required --json name,bucket`. `pass`/`skipping` proceed, and so does gh's "no required checks reported". Failing or cancelled checks mean the PR is not merged (exit 3). A pending or unreadable answer defers the PR (exit 3); the script never waits and never merges on a guess.
+- Before each merge the script reads `gh pr checks <n> --required --json name,bucket`. `pass`/`skipping` proceed, and so does gh's "no required checks reported". Failing or cancelled checks mean the PR is not merged (exit 3). A pending or unreadable answer defers the PR (exit 3); the script never waits and never merges on a guess. A dry run only reports the check state; it does not change its exit code.
 - At final eligibility the live head must equal the dry-run pin. A B1 repair pushes a new head, so a repaired PR is always **deferred** in the run that repaired it. Wait for its checks, re-run the dry run to re-pin, then `--execute` again.
 
 ### CI-heavy repositories: plan merge groups before qualification (GH-1066)

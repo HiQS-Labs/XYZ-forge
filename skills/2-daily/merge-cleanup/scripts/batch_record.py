@@ -320,8 +320,11 @@ def set_landing_plan(rec: Dict[str, Any], decision: str, reason: str, prs: List[
 
 
 def set_allowlist(rec: Dict[str, Any], pins: Dict[int, str]) -> None:
-    """GH-1226: the operator's --prs list and the head each PR was pinned to by the dry run."""
-    rec["allowlist"] = {str(n): sha for n, sha in sorted(pins.items())}
+    """GH-1226: the operator's --prs list and the head each PR was pinned to by the dry run. A resume
+    with a narrowed --prs adds to the record (latest pin wins), so earlier landings stay listed."""
+    merged = {int(n): sha for n, sha in (rec.get("allowlist") or {}).items()}
+    merged.update(pins)
+    rec["allowlist"] = {str(n): sha for n, sha in sorted(merged.items())}
     rec["_allowlist_touched"] = True
     save(rec)
 
