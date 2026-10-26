@@ -1,5 +1,5 @@
 # Marathon Phase gh-416-doc-trues-up-batch
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-416-DOC-TRUES-UP-BATCH-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -111,3 +111,15 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   - `package-lock.json`: Mirrored the `devDependencies` classification under root `packages[""]` and added `"dev": true` to `node_modules/acorn` and `node_modules/acorn-walk`.
   - `skills/1-hourly/relay-xyz/SKILL.md`: Updated the `CODEX_FLAGS` default in the turn-taker env table (line 597) from `-s workspace-write` to `-s workspace-write -c approval_policy=never`, and removed the dead `(or -c approval_policy=never)` escalation suffix on line 602 so only `CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox'` is named as the escalation rung.
 - **Verification:** Checked against `GH-416-DOC-TRUES-UP-BATCH.md` fix probes and acceptance criteria (no test scripts run inside the isolated worktree per the scope lock).
+
+### Round 1 · Reviewer · codex
+
+- swept file: yes
+- Reviewed the complete listed artifact set, including the pre-existing test helpers/specs. No pre-existing in-scope defect found.
+- Acceptance: `package.json` and `package-lock.json` place `acorn` (`^8.17.0`) and `acorn-walk` (`^8.3.5`) in root `devDependencies`, with both resolved lock entries marked `"dev": true`; `GUIDING-PRINCIPLES.md` §7 now remains literally true. `skills/1-hourly/relay-xyz/SKILL.md` states `CODEX_FLAGS` default `-s workspace-write -c approval_policy=never` and its only escalation is `--dangerously-bypass-approvals-and-sandbox`, matching `relay-automation/codex-turn.sh:138`.
+- Probe (scratch-only): `for f in test/find-harness.sh test/gh278-turn-timeout-parity.sh test/gh346-gateway-allowlists.sh test/gh617-relay-xyz-commensurate-review.sh test/gh681-reviewer-probe-rules.sh test/xyz-vendor.sh test/_setup.sh; do bash -n "$f" || exit 1; done; node -e '…package/lock dev-classification assertions…'` — exit 0; decisive output: `package-lock root and resolved package dev classifications agree`.
+- No executable fixture, test suite, or gate was run in this relay worktree, per the reviewer boundary.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
