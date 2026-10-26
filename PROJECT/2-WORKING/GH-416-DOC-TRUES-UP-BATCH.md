@@ -1,7 +1,8 @@
 ---
-title: Four documentation trues-ups — package.json vs §7, dead PROJECT/4-MISC refs, CODEX_FLAGS default and dead escalation rung, uncommitted ROUTER pointer
-status: Proposed (1-INBOX — not yet active)
+title: Documentation trues-ups (narrowed to items 1 and 3) — acorn deps classification, CODEX_FLAGS default and dead escalation rung
+status: Active
 created: 2026-09-03
+updated: 2026-10-25
 owner: noelsaw1
 gh_issue: 416
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/416
@@ -18,14 +19,18 @@ related:
   - GH-406 (umbrella — external review by Russ K.)
   - GH-414 (the dead-reference class this batch's items 2 and 4 belong to)
 goal: >
-  Make four documents literally true of the tree: §7's no-dependencies claim, the README's
-  PROJECT/4-MISC references, SKILL.md's CODEX_FLAGS default and its no-op escalation rung, and
-  the ROUTER pointer that exists only in an uncommitted working tree.
+  Make the tree match its documents for the two items still open: acorn and acorn-walk classified
+  as devDependencies (package.json + package-lock.json), and relay-xyz SKILL.md stating the real
+  CODEX_FLAGS default and a real escalation rung. Items 2 and 4 were already true at a3450a2c.
 ---
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Scope narrowed to items 1 and 3; contract refreshed; promoted to 2-WORKING by SOP Step 1b (2026-10-25, GH-1175 Phase 0) | Jog run: Marathon one-phase build of items 1 and 3, then landing |
+
 
 # GH-416: documentation trues-ups
-
-> **1-INBOX capture**, not an active-work doc. On promotion, create the status table.
 
 ## Why batched
 
