@@ -134,6 +134,16 @@ def _derive_issue_number(lane, task, brief_name):
     return None
 
 
+def lane_pr_notes(phase_id, issue, closes_issue):
+    """The lane PR body (GH-561). GH-1234: only a caller that knows this lane finishes the issue
+    (Jog: one issue, one phase) may close it; a wave phase of a multi-phase umbrella only
+    references it. No derivable issue leaves the body as it was."""
+    notes = f"Automated marathon closeout for phase `{phase_id}` (GH-561)."
+    if issue:
+        notes += f"\n\nCloses #{issue}" if closes_issue else f"\n\nRefs #{issue}"
+    return notes
+
+
 def _result_cmd_out(cmd, cwd=None):
     """Best-effort stdout capture for the receipt's git/gh probes; failure yields None."""
     try:
@@ -2686,12 +2696,7 @@ relay-file: {rel_relay}
         # --no-commit is the load-bearing flag: closeout's default is `git add -A` + commit, which in
         # an automated call would sweep every unrelated dirty file in the target into the PR. The
         # driver has already committed everything this phase produced.
-        notes = f"Automated marathon closeout for phase `{args.phase_id}` (GH-561)."
-        # GH-1234: only a caller that knows this lane finishes the issue (Jog) may close it; a wave
-        # phase of a multi-phase umbrella just references it.
-        issue = lane_issue_number()
-        if issue:
-            notes += f"\n\nCloses #{issue}" if args.lane_closes_issue else f"\n\nRefs #{issue}"
+        notes = lane_pr_notes(args.phase_id, lane_issue_number(), args.lane_closes_issue)
         cmd = [closeout, "--repo", repo, "--head", head, "--base", base,
                "--open-only", "--no-commit",
                "--title", f"Marathon lane {args.phase_id}",
