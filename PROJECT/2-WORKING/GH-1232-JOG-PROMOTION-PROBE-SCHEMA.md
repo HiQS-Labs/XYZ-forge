@@ -1,11 +1,13 @@
 ---
 title: "jog promotion reads the Preflight Contract's JSON fix_probes"
-status: "Proposed (1-INBOX - not yet active)"
+status: Active
 created: 2026-10-27
+updated: 2026-10-27
 owner: noelsaw1
 gh_issue: 1232
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1232
 doc_type: project
+goal: "Unattended jog promotion accepts a well-formed JSON Preflight Contract as reviewed probes"
 phases: 1
 ---
 
@@ -113,4 +115,4 @@ Cause, traced at base `5cab70c8`:
 
 | What was just completed | What's next |
 |---|---|
-| Capture + plan written from recon at 5cab70c8 | Codex plan QA |
+| Plan QA approved (codex r3, attested f1e5547d) | Implement plan steps 1–3, then smoke + gate |
