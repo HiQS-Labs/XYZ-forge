@@ -504,6 +504,9 @@ def _marathon_argv_from_invocation(invocation, builder, reviewer):
         argv.remove("--require-clean")
     if "--phase-id" not in argv and invocation.get("phase"):
         argv += ["--phase-id", invocation["phase"]]
+    # GH-1234: a Jog item is one issue in one phase, so its lane PR closes the issue.
+    if invocation.get("issue") and "--lane-closes-issue" not in argv:
+        argv.append("--lane-closes-issue")
     return argv
 
 

@@ -412,7 +412,8 @@ class ClaudeDesktopAdapter:
         report = core.new_ide_report()
         report["scope"] = "list_sessions inventory; the sweeping session is excluded by the tool"
         report["execution"] = "native-tools-required"
-        cutoff = captured - hours * 3600
+        # GH-1230: titles have no age window and include running sessions; a stamp is
+        # correct when it matches the session's own activity date, whatever its age.
         pin_cutoff = captured - pin_hours * 3600
         for row in sessions:
             session_id = row["sessionId"]
@@ -431,9 +432,6 @@ class ClaudeDesktopAdapter:
             if pin and row.get("pinned") is not True and at.timestamp() >= pin_cutoff:
                 report["pinned"].append({"task_id": session_id, "title": row["title"],
                                          "activity_at": row["lastActivityAt"]})
-            if running or at.timestamp() < cutoff:
-                report["skipped"] += 1
-                continue
             report["swept"] += 1
             title = row["title"]
             base = core.clean_base(title, max_length=None)

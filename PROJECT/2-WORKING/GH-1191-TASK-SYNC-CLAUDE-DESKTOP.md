@@ -175,3 +175,7 @@ Codex relay `relay-system/2026-10-24/gh1191-final-qa.md`, Approved in round 2 of
 ## Merge evidence
 
 - PR #1212 merged 2026-10-25 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1239 merged 2026-10-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

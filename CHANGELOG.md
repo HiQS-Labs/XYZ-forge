@@ -24,6 +24,20 @@
   - Manual smoke passed: `TESTS-RESULTS/2026-10-26+GH-1226/`.
   - The qualifying macOS full-gate run is outstanding.
 
+## 2026-10-27 — task-sync Desktop titles stay current with no manual step (GH-1230)
+
+- **#1230.** Desktop sidebar stamps went stale in three ways, all fixed. `ClaudeDesktopAdapter.sweep`
+  now proposes titles for running sessions and drops the age window, so a wrong stamp is corrected
+  whatever the session's age (`--hours` no longer applies to claude-desktop titles; pins keep
+  `--pin-hours`). The SKILL procedure reads `list_sessions(limit=500)` and fails closed on a full
+  page, rechecks by activity date instead of exact timestamp, and archives the scheduled task's own
+  runs once they are a day old. A scheduled run cannot rename a title the operator typed, even in
+  bypass mode, so it forwards those to a pinned, interactive `task-sync sweeper` session with
+  `send_message`; the sweeper rechecks and renames. Probes showed `SendMessage` cannot reach it from
+  a scheduled run and a scheduled run cannot create sessions, so a missing sweeper is reported as
+  `forward_failed`. Verification: 8/8 new probes, red control, the GH-1191/GH-1196 batteries with
+  their by-design deltas, and a live run, in `TESTS-RESULTS/2026-10-26+GH-1230/`. No tests added (GH-831).
+
 ## 2026-10-26 — Vendored copies keep the host repo's own test policy (GH-1228)
 
 - **#1228.** Three skill lines stated GH-831 ("no new tests") without naming XYZ-forge. Vendored
