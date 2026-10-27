@@ -1,0 +1,20 @@
+{
+  "issue": 416,
+  "queue_gid": "jog-01M5V2Q6CK5GW0B5V25KFQQ1XE",
+  "execution_id": "gh416-exec2",
+  "pr_number": 1225,
+  "merged_sha": "81352026118dfd0d28536dc1bb1f853a4b95869e",
+  "approved_head_sha": "80a11644f1206011ae68b11061aa906ba3314a7c",
+  "landed_head_sha": "b8733346e271b1460f48a8976e2fadca55bd2e7e",
+  "tail_proof": [
+    {
+      "commit": "b8733346e271b1460f48a8976e2fadca55bd2e7e",
+      "kind": "receipt-publication"
+    }
+  ],
+  "hosted_reconcile": null,
+  "local_reconcile": {
+    "roadmap_gid": "rmi-01M1M3CB6E0MKZNSCR4BM0EESS",
+    "raw_text": "- **GH-416 \u00b7 Documentation trues-ups (narrowed to items 1 and 3) \u2014 acorn deps classification, CODEX_FLAGS default and dead escalation rung** \u2705 **SHIPPED 2026-10-27 (PR #1225)** \u2014 acorn deps classification, CODEX_FLAGS default and dead escalation rung** \ud83d\udea7 **promoted 2026-10-25 (GH-1175 Phase 0)** \u2014 items 2 and 4 already true at a3450a2c. \u2014 [GH-416-DOC-TRUES-UP-BATCH.md](PROJECT/3-COMPLETED/GH-416-DOC-TRUES-UP-BATCH.md) \u00b7 [#416](https://github.com/HiQS-Labs/XYZ-forge/issues/416) (rated 50/30/60/95)"
+  }
+}
