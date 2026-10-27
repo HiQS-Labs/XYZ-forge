@@ -73,3 +73,11 @@ Basis: The three scoped skill-text edits, committed manual evidence, and GH-1228
   `sqlite3 -header -column releases.db "SELECT event, payload FROM work_events WHERE gh_number = '1228' ORDER BY at;"`
   returned precisely those three events, with rating `60/45/50/92` and
   `accepted_start: true`.
+
+### Attestation · relay-drive — 2026-10-27T03:35:05Z
+task: RELAY-gh1228-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: c94a14e9eda41b84f2b9d16b7b1f72ef962fb465
+added-range: 1989+2523
+added-sha256: 9fff4577f551e78a4cf6998b4094cc995b800a6824ca999dc8d6efc88d905556
