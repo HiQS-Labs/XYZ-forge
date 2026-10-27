@@ -91,6 +91,7 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
    If a task's capture doc is in `PROJECT/1-INBOX/`, `jog run` promotes it to `PROJECT/2-WORKING/`, formats the status table, and lints its `fix_probes`:
    - Rejects trivial or dummy probe patterns (e.g. `exit 0`, `true`).
    - Requires referenced probe scripts/globs to resolve to actual files.
+   - With no frontmatter `fix_probes`, accepts the `## Swarm Preflight Contract` JSON `fix_probes` when every entry is well-formed (known `type`; non-empty `path`, grep `pattern`, or a `command` `cmd` that passes the same lint). Promotion evaluates no probe: preflight judges "unfixed" next, in its ref-pinned worktree (GH-1232).
    - In interactive mode, prompts operator to approve drafted probes before running preflight.
    - In unattended mode, unreviewed auto-scaffolding without verified probes is parked with `unreviewed-probe-contract` to prevent false-green runs.
 
