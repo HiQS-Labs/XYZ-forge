@@ -1,0 +1,18 @@
+wave-reconcile: Starting wave reconciliation (dry_run=False, root=/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh280-jog-marathon-adapter.XXXXXX.XKdAisrT3C/root-install)
+wave-reconcile: Processing PR #42...
+wave-reconcile:   PR #42 closes [901]; references []
+TRANSITION ["manifest", "ship", "--gid", "rel-01M5RKS37BXXA1G3X6GHDT2X14", "https://github.com/example/example/issues/901", "--evidence", "af6c38c58771b9388a9e22c2070f73d8b8949c14"]
+wave-reconcile:   Found active doc: GH-901-FIXTURE-LANE.md
+TRANSITION ["doc", "move", "GH-901-FIXTURE-LANE.md", "3-COMPLETED", "2026-08-28"]
+wave-reconcile:   Moved -> GH-901-FIXTURE-LANE.md (destination: 3-COMPLETED)
+TRANSITION ["roadmap", "repoint", "--gid", "rmi-01M5RKS3F4FF9J7AYWP5007YAS", "--doc-path", "PROJECT/3-COMPLETED/GH-901-FIXTURE-LANE.md"]
+TRANSITION ["roadmap", "update", "--gid", "rmi-01M5RKS3F4FF9J7AYWP5007YAS", "--section", "Completed", "--status-marker", "✅", "--raw-text", "- **GH-901 · GH-901 fixture lane** ✅ **SHIPPED 2026-08-28 (PR #42)** — [GH-901-FIXTURE-LANE.md](PROJECT/3-COMPLETED/GH-901-FIXTURE-LANE.md) · [#901](https://github.com/example/example/issues/901)"]
+wave-reconcile:   ROADMAP.md entry updated for GH-901
+wave-reconcile: Running downstream database sync and dashboard regeneration...
+wave-reconcile:   (skipping export_timeline.py --preview — RELEASES-PREVIEW.html is not adopted here)
+wave-reconcile:   (skipping leaderboard.sh — LEADERBOARD.md is not adopted here)
+wave-reconcile:   -> releases roadmap sync
+wave-reconcile:   -> releases check
+wave-reconcile:   -> marathon-plan.sh
+wave-reconcile: Running PDDA doc-hygiene gate...
+wave-reconcile: Wave reconciliation completed successfully! ✅
