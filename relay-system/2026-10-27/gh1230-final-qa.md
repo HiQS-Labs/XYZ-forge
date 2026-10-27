@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -266,5 +266,19 @@ index e666094d..02fc2c88 100644
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+- swept file: yes
+- [Pass] R2/R3 and the existing fail-closed split are correctly represented: the planner retains literal-boolean and archive/self skips, keeps a bad idle row fatal, but no longer gates titles on age or `isRunning` (`skills/3-weekly/task-sync/scripts/adapters/claude.py:421-441`). The documented procedure uses the corresponding moving-session recheck (`skills/3-weekly/task-sync/SKILL.md:236-242`). Narrow read-only receipt probe: `python3 -c 'import json; p="TESTS-RESULTS/2026-10-26+GH-1230/probe-results.json"; x=json.load(open(p)); print(type(x).__name__); print(json.dumps(x, indent=2)[:10000])'`; exit 0; decisive output records all 8 probes as `"pass": true`, including the running, 3-day-old, `--hours`, and malformed/future-activity cases (`TESTS-RESULTS/2026-10-26+GH-1230/probe-results.json:1`).
+- [Pass] R4 archive containment is explicit: a candidate must be non-running and older than 24h, then its freshly-read `scheduledTaskId` must equal the caller's before `archive_session`; other sessions cannot meet that predicate (`skills/3-weekly/task-sync/SKILL.md:264-269`). The bounded-inventory retry fails closed before either rename or archive (`skills/3-weekly/task-sync/SKILL.md:228-231`).
+- [Pass] R1/R5 have an executable no-approval forward route: the session-id `mcp__ccd_session_mgmt__send_message` payload, sweeper lookup, delivery/failure accounting, and recheck-before-overwrite contract are all specified (`skills/3-weekly/task-sync/SKILL.md:256-291`). The primary native probe supports the selected route: `delivery: delivered; ... its turn has started on it` and `renamed=1` (`TESTS-RESULTS/2026-10-26+GH-1230/forward-probe.md:9-13`).
+- [Pass] The only outstanding live acceptance gap is honestly stated rather than claimed: a forward of a genuinely `titleSource: user` title is pending because none exists on the device (`TESTS-RESULTS/2026-10-26+GH-1230/forward-probe.md:11`); setup also declares this gap (`relay-system/2026-10-27/gh1230-final-qa.md:51-52`). This does not invalidate the documented automatic path or its bounded recheck.
+
+VERDICT: PASS
+
+Basis: The full changed planner and SKILL procedure were swept. The diff fulfills R2-R4 with cited probe/live evidence, and R1/R5’s only unavailable device-specific witness is explicitly recorded as a gap while the tested forwarding mechanism and fail-closed behavior remain specified. No pre-existing defect in the touched planner or procedure file was found.
+
+relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
