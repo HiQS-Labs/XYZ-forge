@@ -184,3 +184,11 @@ Basis: The revised plan completely scopes the three host-facing GH-831 SKILL.md 
 - [Pass] The round-3 adjudication’s routing result is correct. Read-only probe (exit 0): `printf '%s\n' skills/2-daily/express/SKILL.md skills/4-occasional/ci-suite-audit/SKILL.md | bash utils/ci-route.sh push` returned `route=docs`, `tier=1`, and `tier_reason=docs-only`. `utils/ci-route.sh:65` matches both `SKILL.md` paths as `*.md` before the non-text core-skill exclusion at `:67`.
 - [Pass] The recon and disposition are now complete: `skills/2-daily/express/SKILL.md:28` and `:173`, plus `skills/4-occasional/ci-suite-audit/SKILL.md:342`, are the three host-facing policy leaks and their planned text retains the XYZ-forge `AGENTS.md`/GH-831 rule. `utils/py/express.py:603` and `:639` remain correctly scoped Express-lane requirements; `relay-automation/README.md:40` governs edits to harness-owned code, not host-repository tests.
 - [Unverified — no citation] The 60/45/50/92 rating remains appropriately qualified as captured LTVera evidence. The recon red control, manual vendored-entry-point smoke, and committed receipt alongside the routed PDDA docs gate are commensurate for this reversible three-line documentation change.
+
+### Attestation · relay-drive — 2026-10-27T03:25:42Z
+task: RELAY-gh1228-plan-qa-r4
+reviewer: codex
+status: Approved
+reviewed-head: 830c513f18019f29b2ec73713a10c4bb9f96a051
+added-range: 12814+1490
+added-sha256: 0ede0a3475c975a2fd692de5b26c8625dd6450e1a39b6be94f083373f53b9f60
