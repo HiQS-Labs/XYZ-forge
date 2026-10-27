@@ -126,3 +126,11 @@ probe exited `0` with `ast=ok utils/py/marathon_drive.py` and `ast=ok utils/py/j
 
 VERDICT: PASS
 Basis: Jog is the only automatic opt-in caller, its structured issue field is present on both dispatch paths, and the default/failed-derivation behavior is safely non-closing.
+
+### Attestation · relay-drive — 2026-10-27T15:22:27Z
+task: RELAY-gh1234-plan-qa-r2
+reviewer: codex
+status: Approved
+reviewed-head: b6cf952b8f33463f9f281dca9a01d17eb0748b82
+added-range: 6656+2429
+added-sha256: 5bd1d07598a969597e8116d7aee08e7ee1a167423cc3d16f142f17d3406bf0f4
