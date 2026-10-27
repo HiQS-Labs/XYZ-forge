@@ -1,6 +1,6 @@
 ---
 title: "task-sync Desktop: titles go stale (user-set titles, >24h rows, busy sessions)"
-status: Inbox
+status: Complete
 created: 2026-10-26
 updated: 2026-10-27
 owner: claude
