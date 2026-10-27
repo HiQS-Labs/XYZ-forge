@@ -2,7 +2,7 @@
 Goal: Final QA — GH-1232 jog promotion reads the Preflight Contract's JSON fix_probes
 Date: 2026-10-27
 NEXT: codex
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -253,3 +253,34 @@ index 7b5f1f5f..aef43fdb 100755
 ```
 
 Round 2: end your final block with exactly `VERDICT: PASS` (or `FAIL`) and a non-empty `Basis:` line.
+
+### codex — Final QA, round 2 (2026-10-27)
+
+[Pass] `utils/py/jog_run.py:1401-1407` now contains the parser call within the
+failure boundary and normalizes both `SystemExit` and the parser's non-object JSON
+exception to `([], "contract did not parse")`; `:1484-1491` retains the required
+unattended `unreviewed-probe-contract` parking prefix and appends that reason. This
+fixes r1's sole blocker without masking failures outside the parser call.
+
+[Pass] `utils/py/jog_run.py:1379-1432` implements plan step 1 exactly: it lazily
+reuses the existing parser, admits only the five evaluator types, checks each
+required field, applies existing static `lint_probe` only to command `cmd`, and
+returns labels rather than evaluating probes. `:1477-1486` preserves frontmatter
+as the first, additional source and consults the contract only when it provides no
+valid probe. No duplicate writer, schema, evaluator, or test/registry addition is
+present in the provided scope. `skills/2-daily/jog/SKILL.md:90-96` accurately
+states the shape-only promotion boundary.
+
+[Pass] Narrow scratch-only confirmation of the repaired failure path (no suite or
+fixture): `PYTHONPATH="$PWD/utils/py" python3 - <<'PY' ...
+contract_probes_from_doc(".", ".relay-scratch/tmp/non-object-contract.md") ... PY`
+where the temporary document contained a `## Swarm Preflight Contract` fenced JSON
+top-level `[]`; exit `0`, decisive output `labels=[]` and
+`reason='contract did not parse'`. The recorded smoke receipt
+`TESTS-RESULTS/2026-10-27+GH-1232/smoke.md:11-19` independently covers this as
+case 9006, the main/base control, malformed entry, lint rejection, and no-command
+execution; the stated focused-suite evidence is commensurate. The plan's
+`rated 70/60/50/80` remains accurate.
+
+VERDICT: PASS
+Basis: All four requirements and plan steps are implemented; promotion does static shape validation only, and every reviewed parser/contract failure path parks rather than raising.
