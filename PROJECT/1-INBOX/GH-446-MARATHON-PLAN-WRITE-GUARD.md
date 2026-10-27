@@ -37,3 +37,7 @@ Zero-State Oracle), and causes `wave_reconcile` runs to leave an untracked plan 
 3. Guard CLI argument handling so invalid or empty invocations display `--help` or exit 2 rather than
    generating an untracked file on disk.
 4. Add regression test pinning read-only default behavior.
+
+## Merge evidence
+
+- commit 5265cfad9815 landed 2026-10-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

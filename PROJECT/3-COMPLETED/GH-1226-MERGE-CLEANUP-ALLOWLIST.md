@@ -2,7 +2,7 @@
 gh_issue: 1226
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1226
 title: "merge-cleanup --execute lands PRs opened after the dry run (denylist, not allowlist) and merges with checks pending"
-status: Active
+status: Complete
 created: 2026-10-26
 updated: 2026-10-27
 owner: claude

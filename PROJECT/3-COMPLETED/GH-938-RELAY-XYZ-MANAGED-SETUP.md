@@ -2,9 +2,9 @@
 gh_issue: 938
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/938
 title: "relay-xyz SKILL.md: First-time setup tells Skills Army-managed Macs to run install.sh"
-status: active
+status: Complete
 created: 2026-10-02
-updated: 2026-10-02
+updated: 2026-10-03
 owner: XYZ Forge maintainers
 doc_type: bugfix
 branch: fix/gh938-relay-xyz-managed-setup
