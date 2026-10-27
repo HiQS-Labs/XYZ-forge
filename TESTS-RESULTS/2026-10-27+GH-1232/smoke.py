@@ -37,6 +37,8 @@ CASES = [
     ("adjacent: non-object probe", FM + contract(["x"])),
     ("adjacent: no execution (command would touch a marker)",
      FM + contract([{"type": "command", "cmd": "touch .promotion-ran && false"}])),
+    ("adjacent: non-object contract (top-level [] JSON, final QA r1)",
+     FM + "\n## Swarm Preflight Contract\n\n```json\n[]\n```\n"),
 ]
 
 for n, (label, text) in enumerate(CASES, 9001):

@@ -1400,7 +1400,10 @@ def contract_probes_from_doc(root, doc_path):
         return [], f"could not load the preflight contract parser ({e})"
     try:
         contract = extract_contract(doc_path)
-    except SystemExit:
+    except (SystemExit, Exception):
+        # SystemExit(3) on a contract error; a non-object JSON value raises inside its validation.
+        contract = None
+    if not isinstance(contract, dict):
         return [], "contract did not parse"
     labels = []
     for n, p in enumerate(contract.get("fix_probes") or [], 1):
