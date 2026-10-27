@@ -271,6 +271,11 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: Optional[str] = Non
     for _ in range(6):
         info = refresh_pr(pr_num, repo_path)
         if info.get("state") == "MERGED" and (info.get("mergeCommit") or {}).get("oid"):
+            if match_head and info.get("headRefOid") != match_head:
+                # GH-1226: the same pin rule as the failed-command fallback above.
+                log_err(f"PR #{pr_num}: reads MERGED at head {str(info.get('headRefOid'))[:10]}, not the pinned "
+                        f"{match_head[:10]} — not counted as this run's landing")
+                return False, ""
             log(f"✅ PR #{pr_num} is MERGED as {info['mergeCommit']['oid'][:10]}")
             return True, info["mergeCommit"]["oid"]
         time.sleep(2)
