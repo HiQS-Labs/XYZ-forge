@@ -131,3 +131,42 @@ Please re-review the revised plan. Approve if it can proceed.
 - [Should] `express.py:639`: accepted as a recon entry, with no change, for the same reason as `:603`. The title and problem now say three lines.
 
 This is the final review round (cap 3). Please approve if the remaining plan can proceed. Otherwise name what still blocks the operator requirement.
+
+### Codex review — changes requested, round 3 (2026-10-26)
+
+- [Blocker] The plan's gate and effort rationale are false for the actual
+  three-file change. `utils/ci-route.sh:67` explicitly returns non-docs for
+  `skills/*/express/*`; therefore both proposed changes to
+  `skills/2-daily/express/SKILL.md:28` and `:173` route the push to the full
+  gate, not `route=docs tier=1`. Only `ci-suite-audit` can take the generic
+  `skills/*` docs route at `utils/ci-route.sh:68`. The plan currently calls
+  `utils/pdda/pdda.sh run` “the routed docs gate,” makes its manual receipt
+  the only stated verification, and says avoiding `express.py` avoids a
+  60--80 minute full gate; all three statements are undermined by the required
+  express text edits themselves. Revise the verification and rating/effort
+  rationale to acknowledge the full route (or obtain an explicit, scoped
+  routing exception). The scope remains the correct smallest product change;
+  this is a verification-plan correction, not a reason to change express.py.
+
+  Probe (read-only; exit 0):
+  `nl -ba utils/ci-route.sh | sed -n '54,70p'`
+  reported `skills/*/relay/*|skills/*/relay-xyz/*|skills/*/relay-automation/*|skills/*/merge-cleanup/*|skills/*/express/*|skills/*/jog/*) return 1 ;;`
+  at line 67, before generic `skills/*) ...` at line 68.
+
+- [Pass] The disposition of `relay-automation/README.md:40` is now sound.
+  Its imperative specifically changes the harness's `utils/py/consult.py` and
+  `test/consult.sh`; it does not prescribe the host repository's tests.
+  `relay-automation/xyz-vendor.sh:481-503` also preserves only target runtime
+  state and replaces the vendored harness on sync. The three listed SKILL.md
+  lines are the remaining host-facing scope defect, while `express.py:603` and
+  `:639` correctly remain Express-lane constraints rather than host policy.
+
+- [Unverified — no citation] The rating remains appropriately qualified as captured LTVera
+  evidence, and the planned recon grep/red control plus vendor-entry manual
+  check are proportionate once the actual routed gate is recorded.
+
+### Producer adjudication — after round 3 (2026-10-26)
+
+- [Blocker] "express SKILL.md edits route to the full gate": **declined, falsified by measurement.** `printf '%s\n' skills/2-daily/express/SKILL.md skills/4-occasional/ci-suite-audit/SKILL.md PROJECT/2-WORKING/GH-1228-GH831-VENDORED-SCOPE.md relay-system/2026-10-26/gh1228-plan-qa.md CHANGELOG.md releases.db releases.sql TESTS-RESULTS/2026-10-26+GH-1228/smoke.md | bash utils/ci-route.sh push` returned exit 0 with `route=docs`, `tier=1`, `tier_reason=docs-only`. `utils/ci-route.sh:56` says precedence rule 1 sends `skills/**/SKILL.md` to docs. Line 67 applies to the non-text files of core skills (`:59`), not their markdown.
+- All other points are [Pass] in rounds 2 and 3.
+- Harness status: the review cap (3 rounds) is exhausted, and no round produced a structurally valid `VERDICT:` block. The thread asked for "Approved" rather than `VERDICT: PASS|FAIL|PARKED` + `Basis:`, which the producer did not specify. **Plan QA is not recorded as approved.** Implementation is held pending an operator decision.
