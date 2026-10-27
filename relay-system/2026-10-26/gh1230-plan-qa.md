@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -82,5 +82,34 @@ Questions:
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+- [Blocker] Step 3a requires an operator to create, pin, and give a standing instruction to the sweeper (`GH-1230…md:96`), contradicting R5's no-operator-step acceptance criterion (`GH-1230…md:51`) and the stated zero-manual-step constraint. Make provision/discovery of the pinned sweeper and its instruction part of the scheduled-task procedure, or state that no new-device rollout can claim R5 until it is automatically provisioned.
+  Observed input: A device with the scheduled task but no pre-existing named, pinned interactive sweeper session reaches a declined `titleSource: user` row; step 3a then has no recipient and line 96 calls for an operator setup action.
+  Affected scope: Every device/new installation lacking the preconfigured sweeper session.
+  Falsifier: A documented unattended bootstrap/recovery path creates or deterministically discovers the sweeper, pins it, and installs its standing instruction without an operator action; then the same declined row is forwarded and renamed.
+
+- [Should] R4 requires a complete non-archived inventory (`GH-1230…md:50`), but step 2 permits an exactly-500-row response merely to be reported as “possibly truncated” (`GH-1230…md:89`). Define that boundary as a fail-closed/retry-or-page condition, and add a probe/live assertion that the successful snapshot is demonstrably complete before accepting R4.
+  Observed input: `list_sessions(limit=500)` returns exactly 500 rows while a 501st non-archived session exists; the proposed procedure continues with an incomplete snapshot.
+  Affected scope: Devices whose non-archived session count meets or exceeds the selected limit.
+  Falsifier: Native `list_sessions` proves it has no pagination/truncation signal and a documented hard maximum below 500; then an exactly-500 response is complete by contract.
+
+- [Should] The forwarding contract is not yet executable enough for its safety claim. Step 3a says only that the scheduled run forwards IDs and old/new titles and the sweeper “re-runs the recheck” (`GH-1230…md:95–98`), but it does not name the stable sweeper identity/lookup, the required current-title/activity/date predicates, the post-write confirmation, or which failures increment `forward_failed`. Specify these as a single per-target contract and test a stale forwarded proposal so a manual rename or changed activity is skipped, not overwritten.
+  Observed input: A declined proposal for `{id, old="10-23 A", new="10-24 A"}` is forwarded; before delivery the user renames the same session to `"Investigating B"` or its activity date changes. The listed payload alone cannot distinguish a safe retry from an overwrite without an explicit recheck contract.
+  Affected scope: Every forwarded decline during concurrent user activity or delayed/unavailable sweeper delivery.
+  Falsifier: The receiving native tool atomically compares the old title and activity date as part of `set_session_title`; then the explicit client-side recheck is redundant.
+
+- [Should] The rating's appeal component is ungrounded: `appeal 45` has no rationale while pri/sev/effort do (`GH-1230…md:140–144`). Add its evidence or mark it operator-neutral/assumed, so `rated 70/40/45/60` meets DoD 5.
+
+- [Pass] The plan correctly confines direct title mutation to the existing planner/native `set_session_title` path: the current adapter is plan-only and fail-closed on non-literal archive/running fields (`skills/3-weekly/task-sync/scripts/adapters/claude.py:377–443`); the CLI refuses plan-only apply/set-title modes (`skills/3-weekly/task-sync/scripts/task_sync.py:227–239`); and the existing Desktop procedure already supplies the native write/re-read pattern (`skills/3-weekly/task-sync/SKILL.md:225–256`). No additional pre-existing defect was found in the three source files swept for this plan.
+
+VERDICT: FAIL
+
+Basis: The plan has the right single-planner/single-writer shape and retains the fail-closed planner rules, but its manual sweeper setup violates R5 and the remaining two operational contracts cannot yet prove R1/R4 under their stated boundary inputs.
+
+Handing off to Producer — go to the Producer window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
