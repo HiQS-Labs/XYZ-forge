@@ -1090,6 +1090,9 @@ def main():
     # land on main, which is the kind of coupling that is obvious only after it happens.
     parser.add_argument("--allow-trunk-commit", dest="allow_trunk_commit", action="store_true",
                         help="permit committing to the receiving repo's trunk/default branch (GH-402)")
+    parser.add_argument("--lane-closes-issue", dest="lane_closes_issue", action="store_true",
+                        help="this lane finishes its issue: the lane PR body says Closes #N, not Refs #N "
+                             "(passed by Jog, one issue = one phase; GH-1234)")
     parser.add_argument("--dry-run", dest="dry_run", action="store_true")
     parser.add_argument("--log-github", dest="log_github", action="store_true")  # GH-284 P2 / GH-322
     # GH-280: opt-in durable terminal-result receipt for supervisors. No behavior change when unset.
@@ -2683,10 +2686,16 @@ relay-file: {rel_relay}
         # --no-commit is the load-bearing flag: closeout's default is `git add -A` + commit, which in
         # an automated call would sweep every unrelated dirty file in the target into the PR. The
         # driver has already committed everything this phase produced.
+        notes = f"Automated marathon closeout for phase `{args.phase_id}` (GH-561)."
+        # GH-1234: only a caller that knows this lane finishes the issue (Jog) may close it; a wave
+        # phase of a multi-phase umbrella just references it.
+        issue = lane_issue_number()
+        if issue:
+            notes += f"\n\nCloses #{issue}" if args.lane_closes_issue else f"\n\nRefs #{issue}"
         cmd = [closeout, "--repo", repo, "--head", head, "--base", base,
                "--open-only", "--no-commit",
                "--title", f"Marathon lane {args.phase_id}",
-               "--notes", f"Automated marathon closeout for phase `{args.phase_id}` (GH-561)."]
+               "--notes", notes]
         res = subprocess.run(cmd, capture_output=True, text=True)
         for line in (res.stdout or "").splitlines() + (res.stderr or "").splitlines():
             if line.strip():
