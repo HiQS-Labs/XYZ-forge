@@ -135,3 +135,11 @@ exited `0`; decisive output: `ast=ok jog_run.py marathon_drive.py`.
 
 VERDICT: PASS
 Basis: The one explicit Jog policy flag is the sole automatic selector for `Closes`; all default lanes are non-closing, the no-issue body is unchanged, and the recorded smoke observes the body at the closeout boundary with a base red control.
+
+### Attestation · relay-drive — 2026-10-27T15:36:09Z
+task: RELAY-gh1234-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: c387d9a2d1cbb90ddd266ef321d6ef280ae0f416
+added-range: 5585+2634
+added-sha256: ef2733ca1aeeda33e1299dcd57a90d7068338825d5b2f7594ff7f0f828e34edd
