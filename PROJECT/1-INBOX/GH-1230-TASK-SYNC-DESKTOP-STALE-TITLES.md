@@ -2,7 +2,7 @@
 title: "task-sync Desktop: titles go stale (user-set titles, >24h rows, busy sessions)"
 status: Inbox
 created: 2026-10-26
-updated: 2026-10-26
+updated: 2026-10-27
 owner: claude
 gh_issue: 1230
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1230
@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (Codex, round 2) | Step 0 probes, then build |
+| Step 0 probes, planner, SKILL procedure, probes and live run | Final Codex QA, then PR |
 
 ## Key concepts
 
@@ -147,6 +147,14 @@ Operator, 2026-10-26: "It should be working without any manual intervention", th
 - **First run after the window drop renames many old sessions at once.** Expected and correct: each gets its own activity date.
 - **The forwarding route may hold peer messages for approval if the modes differ.** Both sides run in bypass mode; step 0 proves the route.
 - **The sweeper session is a single point.** If it's gone, renames of typed titles stop and `forward_failed` reports it. Everything else keeps working.
+
+## Step 0 outcome (2026-10-27)
+
+Receipt: `TESTS-RESULTS/2026-10-26+GH-1230/forward-probe.md`.
+- **Route:** `mcp__ccd_session_mgmt__send_message` by session id works from a scheduled run; `SendMessage` cannot resolve the sweeper there. Step 3a uses `send_message`.
+- **Self-recovery:** scheduled runs are not offered `start_session`, so a missing sweeper is reported as `forward_failed` until the per-device setup recreates it.
+- **Archive:** scheduled runs are offered `archive_session` and `list_task_runs`; step 4 uses `list_task_runs` for the task's own runs.
+- **Pending on the device:** a forwarded rename of a title the operator typed (none exists to test with), and a forward after a Desktop restart.
 
 ## Plan QA
 

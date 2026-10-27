@@ -1,0 +1,160 @@
+[
+  {
+    "probe": "running row, wrong stamp -> proposed",
+    "pass": true,
+    "detail": {
+      "rc": 0,
+      "section": {
+        "swept": 1,
+        "renamed": [
+          {
+            "task_id": "local_r",
+            "old": "01-01 Live work",
+            "new": "10-27 Live work",
+            "activity_at": "2026-10-27T13:45:55.591Z"
+          }
+        ],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 0,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  },
+  {
+    "probe": "3-day-old row, wrong stamp -> proposed",
+    "pass": true,
+    "detail": {
+      "rc": 0,
+      "section": {
+        "swept": 1,
+        "renamed": [
+          {
+            "task_id": "local_o",
+            "old": "01-01 Old work",
+            "new": "10-24 Old work",
+            "activity_at": "2026-10-24T15:45:55.591Z"
+          }
+        ],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 0,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  },
+  {
+    "probe": "old row, correct stamp -> not proposed",
+    "pass": true,
+    "detail": {
+      "rc": 0,
+      "section": {
+        "swept": 1,
+        "renamed": [],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 0,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  },
+  {
+    "probe": "--hours 1 does not hide a 10h-old row",
+    "pass": true,
+    "detail": {
+      "rc": 0,
+      "section": {
+        "swept": 1,
+        "renamed": [
+          {
+            "task_id": "local_h",
+            "old": "Untitled work",
+            "new": "10-26 Untitled work",
+            "activity_at": "2026-10-27T05:45:55.591Z"
+          }
+        ],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 0,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  },
+  {
+    "probe": "archived/self/non-boolean running -> skipped",
+    "pass": true,
+    "detail": {
+      "rc": 0,
+      "section": {
+        "swept": 0,
+        "renamed": [],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 3,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  },
+  {
+    "probe": "running row missing activity -> skipped, no error",
+    "pass": true,
+    "detail": {
+      "rc": 0,
+      "section": {
+        "swept": 0,
+        "renamed": [],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 1,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  },
+  {
+    "probe": "idle row invalid activity -> refused",
+    "pass": true,
+    "detail": {
+      "rc": 3,
+      "error": "claude-desktop lastActivityAt missing/invalid for local_i"
+    }
+  },
+  {
+    "probe": "future activity: idle refused, running skipped",
+    "pass": true,
+    "detail": {
+      "idle": [
+        3,
+        "claude-desktop lastActivityAt missing/invalid for local_f"
+      ],
+      "running": {
+        "swept": 0,
+        "renamed": [],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 1,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  }
+]
