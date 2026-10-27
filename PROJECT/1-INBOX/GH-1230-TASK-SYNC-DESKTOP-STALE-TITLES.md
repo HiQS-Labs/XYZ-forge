@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Step 0 probes, planner, SKILL procedure, probes and live run | Final Codex QA, then PR |
+| Build, probes, two live runs; final QA Approved (Codex, round 1) | PR; after merge, publish via HQ and repoint the device task to Pulse |
 
 ## Key concepts
 
@@ -155,6 +155,10 @@ Receipt: `TESTS-RESULTS/2026-10-26+GH-1230/forward-probe.md`.
 - **Self-recovery:** scheduled runs are not offered `start_session`, so a missing sweeper is reported as `forward_failed` until the per-device setup recreates it.
 - **Archive:** scheduled runs are offered `archive_session` and `list_task_runs`; step 4 uses `list_task_runs` for the task's own runs.
 - **Pending on the device:** a forwarded rename of a title the operator typed (none exists to test with), and a forward after a Desktop restart.
+
+## Final QA
+
+Codex relay `relay-system/2026-10-27/gh1230-final-qa.md`, **Approved in round 1** with no findings. Live receipt: `TESTS-RESULTS/2026-10-26+GH-1230/live-check.md`. Open on the device: a forwarded rename of a title the operator typed, and a forward after a Desktop restart.
 
 ## Plan QA
 
