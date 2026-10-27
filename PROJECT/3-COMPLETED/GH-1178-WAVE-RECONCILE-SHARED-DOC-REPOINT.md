@@ -2,8 +2,8 @@
 gh_issue: 1178
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1178
 title: "wave_reconcile: when several issues share one plan doc, only the doc's own issue gets its ledger doc_path repointed"
-status: In Progress
-updated: 2026-10-22
+status: Complete
+updated: 2026-10-27
 owner: operator
 goal: "Every ledger row that pointed at a doc moved during a reconcile run points at the doc's new location afterwards."
 created: 2026-10-22
