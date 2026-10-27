@@ -256,6 +256,12 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: Optional[str] = Non
         # MERGED + merge commit counts, the same evidence the zero-exit path requires below.
         info = refresh_pr(pr_num, repo_path)
         oid = (info.get("mergeCommit") or {}).get("oid")
+        if info.get("state") == "MERGED" and oid and match_head and info.get("headRefOid") != match_head:
+            # GH-1226: merged, but not at the pinned head (--match-head-commit refused ours and
+            # someone else merged a moved head). Never record or reconcile it as this run's landing.
+            log_err(f"PR #{pr_num}: merged outside this run at head {str(info.get('headRefOid'))[:10]}, "
+                    f"not the pinned {match_head[:10]} — not counted as this run's landing")
+            return False, ""
         if info.get("state") == "MERGED" and oid:
             log_warn(f"`gh pr merge` exited {res.returncode} but PR #{pr_num} reads MERGED as {oid[:10]} — continuing")
             return True, oid
