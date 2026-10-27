@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-10-26 — merge-cleanup lands only an explicit, pinned PR list (GH-1226)
+
+A run meant to land one LTVera-Pandas PR also merged a PR opened after its dry run, before that
+PR's database tests had finished. `--exclude` was a denylist, so anything new rode along.
+
+- **`--prs` is now the only PR selector, and a merging `--execute` requires it.** Each entry is
+  pinned as `N@<head sha>`. A dry run with `--prs 783,811` prints the exact pinned list to pass.
+  Without it, or with an unpinned entry, `--execute` exits 2 before any fetch, scan or write.
+  `--teardown-only`, `--scan-only`, `--prs-only` and `--reconcile-pr` do not need it.
+- **Unlisted PRs are never sequenced, repaired or merged.** They are logged
+  `PR #N: not in --prs; not sequenced`. A listed PR whose head moved from its pin, that closed, or
+  that went draft stops the run before the first merge.
+- **No merge while checks run.** Before each merge the PR head's checks are read. While any is
+  still running, the script waits up to `MERGE_CLEANUP_CHECKS_WAIT_S` (default 1800 s), then stops
+  with exit 2 naming them.
+- **The merged set is checked against the list.** A merge outside `--prs` is refused at merge time,
+  and the run exits 2 after Phase 5 if anything it merged is not listed. The batch issue records
+  the list under `Allowed PRs (GH-1226)`.
+- **`--exclude` is for checkouts and teardown only** again. The GH-736 behavior that dropped a
+  bare PR number from the queue is removed; SKILL.md example 6 now lists the one PR to land.
+- Tests: the merge-cleanup suites pass the pinned list the way an operator would. New tests cover
+  the #841 shape, a missing or unpinned list, a moved head, closed and draft PRs, the dry-run pin
+  line, the checks wait and the boundary assertion.
+
 ## 2026-10-25 — lessons read-back, blind consult, config-pinned resume, improve-loop write check, manifest count (marathon #1214)
 
 Five fixes landed through one marathon chain (agy builder, codex reviewer, full gate per phase).

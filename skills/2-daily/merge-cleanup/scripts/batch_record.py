@@ -191,6 +191,8 @@ def _merge_records(disk: Dict[str, Any], mine: Dict[str, Any]) -> Dict[str, Any]
         out["sweep_inputs"] = disk["sweep_inputs"]
     if isinstance(disk.get("landing_plan"), dict) and not mine.get("_landing_plan_touched"):
         out["landing_plan"] = disk["landing_plan"]
+    if not isinstance(mine.get("allowlist"), dict) and isinstance(disk.get("allowlist"), dict):
+        out["allowlist"] = disk["allowlist"]
 
     for k in ("issue", "issue_url"):
         if not out.get(k) and disk.get(k):
@@ -317,6 +319,13 @@ def set_landing_plan(rec: Dict[str, Any], decision: str, reason: str, prs: List[
     save(rec)
 
 
+def set_allowlist(rec: Dict[str, Any], allowed: Dict[int, Optional[str]]) -> None:
+    """GH-1226: the operator's --prs list for the current run — the only PRs it may merge."""
+    rec["allowlist"] = {"prs": {str(n): sha or "" for n, sha in sorted(allowed.items())},
+                        "recorded_at": _now()}
+    save(rec)
+
+
 # --- the issue -----------------------------------------------------------------------------------
 
 def _cell(text: str) -> str:
@@ -333,6 +342,15 @@ def script_block(rec: Dict[str, Any]) -> str:
             f"- Plan: `{lp.get('decision', '—')}`",
             f"- Reason: {_cell(lp.get('reason') or '—')}",
             f"- Decided: `{lp.get('decided_at') or '—'}` for PRs {prs_str}",
+            "",
+        ]
+    al = rec.get("allowlist")
+    if al and isinstance(al, dict):
+        pinned = ", ".join(f"#{n}" + (f" @ `{sha[:12]}`" if sha else "") for n, sha in (al.get("prs") or {}).items())
+        lines += [
+            "## Allowed PRs (GH-1226)",
+            f"- `--prs`: {pinned or 'none'} (recorded `{al.get('recorded_at') or '—'}`)",
+            "- Nothing outside this list may be merged by this run.",
             "",
         ]
     lines += [

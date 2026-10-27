@@ -71,6 +71,61 @@ USE_HOSTED_ENV = "MERGE_CLEANUP_USE_HOSTED"
 # GH-1066 / GH-1158: landing plan required for queues of 3+ PRs before any mutation
 EXIT_LANDING_PLAN_REQUIRED = 5
 
+# GH-1226: a merge waits (bounded) while any check on the PR head is still running, then stops.
+CHECKS_WAIT_ENV = "MERGE_CLEANUP_CHECKS_WAIT_S"
+CHECKS_POLL_ENV = "MERGE_CLEANUP_CHECKS_POLL_S"
+# GH-1226: every PR number this process merged, checked against --prs after Phase 5.
+_MERGED_THIS_RUN: List[int] = []
+
+
+def parse_prs(values: List[str]) -> Dict[int, Optional[str]]:
+    """GH-1226 `--prs 783@<sha>,811@<sha>` (repeatable) -> {783: sha, 811: sha}. A bare number pins
+    no head and is accepted by a dry run only. Raises ValueError on a malformed entry."""
+    allowed: Dict[int, Optional[str]] = {}
+    for token in (t.strip() for v in values for t in str(v).split(",")):
+        if not token:
+            continue
+        m = re.fullmatch(r"#?(\d+)(?:@([0-9a-fA-F]{7,40}))?", token)
+        if not m or int(m.group(1)) <= 0:
+            raise ValueError(f"--prs entry {token!r} is not N or N@<head sha, 7-40 hex>")
+        allowed[int(m.group(1))] = m.group(2).lower() if m.group(2) else None
+    return allowed
+
+
+def apply_pr_allowlist(prs: List[Dict[str, Any]], allowed: Dict[int, Optional[str]]
+                       ) -> Tuple[List[Dict[str, Any]], List[str]]:
+    """GH-1226: keep only the listed PRs. Unlisted open PRs are logged and never sequenced. Returns
+    (kept, problems); a problem is a listed PR that is not open, went draft, or whose head moved
+    from its pin — an executing run refuses on any of them before the first mutation."""
+    kept, problems = [], []
+    for p in prs:
+        n = int(p.get("number", 0))
+        if n not in allowed:
+            log(f"PR #{n}: not in --prs; not sequenced")
+            continue
+        kept.append(p)
+        pin, head = allowed[n], (p.get("headRefOid") or "").lower()
+        if p.get("isDraft"):
+            problems.append(f"#{n} is a draft")
+        elif pin and not head.startswith(pin):
+            problems.append(f"#{n} head moved: pinned {pin[:12]}, now {head[:12] or 'unknown'}")
+    open_nums = {int(p.get("number", 0)) for p in prs}
+    problems += [f"#{n} is not open" for n in sorted(allowed) if n not in open_nums]
+    return kept, problems
+
+
+def pending_checks(info: Dict[str, Any]) -> List[str]:
+    """GH-1226: names of checks on the PR head that have not finished (statusCheckRollup)."""
+    names = []
+    for c in info.get("statusCheckRollup") or []:
+        if c.get("__typename") == "StatusContext" or ("state" in c and "status" not in c):
+            running = (c.get("state") or "").upper() in ("PENDING", "EXPECTED")
+        else:
+            running = (c.get("status") or "").upper() != "COMPLETED"
+        if running:
+            names.append(c.get("name") or c.get("context") or "unnamed check")
+    return names
+
 
 def _gh_bin() -> str:
     return os.environ.get(GH_BIN_ENV) or "gh"
@@ -267,7 +322,8 @@ def refresh_pr(pr_num: int, repo_path: Path) -> Dict[str, Any]:
     """Live PR state, re-fetched before every decision (E). Any failure -> {"error": ...}.
     GH-1140/#444: `title` is fetched so the hold-marker scan can see title-carried vetoes."""
     res = _gh(["pr", "view", str(pr_num), "--json",
-               "number,state,isDraft,title,mergeable,headRefOid,headRefName,baseRefName,labels,mergeCommit,url"], repo_path)
+               "number,state,isDraft,title,mergeable,headRefOid,headRefName,baseRefName,labels,mergeCommit,url,"
+               "statusCheckRollup"], repo_path)
     if res.returncode != 0:
         return {"error": f"gh pr view #{pr_num} failed: {res.stderr.strip() or 'no diagnostic'}"}
     try:
@@ -1209,6 +1265,11 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
             if (info.get("baseRefName") or "") != branch:
                 log_err(f"PR #{p_num} targets '{info.get('baseRefName')}', not '{branch}' — stopping")
                 return 2
+            pin = (getattr(args, "_allowed_prs", None) or {}).get(p_num)
+            if pin and not (info.get("headRefOid") or "").lower().startswith(pin):
+                log_err(f"PR #{p_num}: head is {str(info.get('headRefOid'))[:12]}, not the pinned {pin[:12]} "
+                        f"— stopping; re-run the dry run (GH-1226)")
+                return 2
             info = _await_mergeable(p_num, info, primary_repo)
             if info.get("error"):  # a refresh inside the poll failed: same rules as the first read
                 if _transient(info["error"]):
@@ -1378,7 +1439,20 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
             if dry_run:
                 log(f"[DRY RUN] Would merge PR #{p_num} via `gh pr merge {p_num} --{strategy} --delete-branch`")
                 continue
+            if p_num not in (getattr(args, "_allowed_prs", None) or {}):
+                log_err(f"PR #{p_num}: not in --prs — refusing to merge (GH-1226)")
+                return 2
+            # GH-1226: never merge while a check on the head is still running. Wait (bounded).
             live = refresh_pr_with_retry(p_num, primary_repo)
+            checks_wait = _seconds_from_env(CHECKS_WAIT_ENV, 1800.0)
+            checks_poll = max(_seconds_from_env(CHECKS_POLL_ENV, 30.0), 1.0)
+            waited = 0.0
+            while not live.get("error") and pending_checks(live) and waited < checks_wait:
+                log(f"PR #{p_num}: waiting for running check(s) {', '.join(pending_checks(live))} "
+                    f"({int(waited)}s of {int(checks_wait)}s)")
+                _sleep(checks_poll)
+                waited += checks_poll
+                live = refresh_pr_with_retry(p_num, primary_repo)
             if live.get("error"):
                 log_err(f"PR #{p_num}: final eligibility refresh failed — {live['error']}")
                 return 2
@@ -1400,12 +1474,18 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
             if live.get("headRefOid") != info.get("headRefOid"):
                 log_err(f"PR #{p_num}: head changed after validation — not merging")
                 return 2
+            running = pending_checks(live)
+            if running:
+                log_err(f"PR #{p_num}: check(s) still running after {int(waited)}s: {', '.join(running)} "
+                        f"— not merging (GH-1226; raise {CHECKS_WAIT_ENV} or re-run when CI finishes)")
+                return 2
             _WITHHOLD_BRANCH_DELETE.discard(p_num)
             open_prs = getattr(args, "_open_prs_for_stacks", ordered_prs)
             _protect_stacked_dependents(info, open_prs, primary_repo, branch)
             merged_ok, merged_oid = execute_pr_merge(p_num, primary_repo, strategy=args.strategy, dry_run=False)
             if not merged_ok:
                 return 2
+            _MERGED_THIS_RUN.append(p_num)
             _record_merge_outcome(batch, p_num, merged_oid, primary_repo)
             # Land it locally before anything writes into the primary. In particular, emitting
             # pr_merged before this fast-forward dirties releases.sql and can block the landing
@@ -1529,6 +1609,7 @@ def main():
     # wake. An operator's own values win.
     os.environ.setdefault("GIT_HTTP_LOW_SPEED_LIMIT", "1000")
     os.environ.setdefault("GIT_HTTP_LOW_SPEED_TIME", "120")
+    _MERGED_THIS_RUN.clear()
     parser = argparse.ArgumentParser(
         description="/merge-cleanup — Consolidate checkouts, sequence PRs, reconcile docs, and tear down safely."
     )
@@ -1538,7 +1619,8 @@ def main():
     parser.add_argument("--primary", required=True, help="Path to the primary working repo (required; never inferred from the CWD)")
     parser.add_argument("--root", action="append", help="Root directory to search for checkouts")
     parser.add_argument("--prefix", default="", help="Filter checkouts by repo name substring")
-    parser.add_argument("--exclude", action="append", default=[], help="Pattern, branch, or PR number to exclude from cleanup and PR sequencing")
+    parser.add_argument("--exclude", action="append", default=[], help="Pattern or branch to exclude from checkout cleanup and teardown; never selects PRs (use --prs)")
+    parser.add_argument("--prs", action="append", default=[], help="The only PRs this run may merge, as N@<head sha> (comma-separated, repeatable; GH-1226). Required with --execute for any merging run; a dry run with --prs prints the pinned list to pass")
     parser.add_argument("--strategy", choices=["squash", "merge", "rebase"], default=None, help="PR merge strategy (default: project policy, otherwise squash)")
     parser.add_argument("--show-merge-policy", action="store_true", help="Print the effective project merge policy as JSON and exit without scanning or contacting GitHub")
     parser.add_argument("--scan-only", action="store_true", help="Only audit and list checkouts")
@@ -1559,6 +1641,11 @@ def main():
     parser.add_argument("--landing-reason", default="", help="Non-empty justification for the chosen --landing-plan (GH-1066)")
 
     args = parser.parse_args()
+    try:
+        allowed_prs = parse_prs(args.prs)
+    except ValueError as exc:
+        parser.error(str(exc))
+    args._allowed_prs = allowed_prs if args.prs else None
 
     try:
         primary_repo = Path(args.primary).expanduser().resolve()
@@ -1583,7 +1670,7 @@ def main():
     if args.retire_published_pr is not None or args.checkout:
         if (not args.retire_published_pr or args.retire_published_pr <= 0 or not args.checkout
                 or not Path(args.primary).expanduser().is_absolute()
-                or args.root or args.prefix or args.exclude or args.strategy or args.show_merge_policy
+                or args.root or args.prefix or args.exclude or args.prs or args.strategy or args.show_merge_policy
                 or args.scan_only or args.prs_only or args.teardown_only or args.reconcile_pr
                 or args.marker or args.allow_unready_primary or args.resume or args.backup_first or args.backup_root or args.record_sweep):
             parser.error("published retirement requires a positive PR, absolute --primary and --checkout path(s), without other workflow modes/overrides")
@@ -1608,6 +1695,16 @@ def main():
     if dry_run:
         log("Running in SAFE DRY-RUN mode. Pass --execute to apply changes.")
 
+    # GH-1226: a merging run lands only the PRs the operator listed, each pinned to the head the
+    # dry run showed. Refuse before any fetch, scan or write when that list is missing or unpinned.
+    merging = (args.execute and not (args.teardown_only or args.scan_only or args.prs_only)
+               and args.reconcile_pr == 0)
+    if merging and (not allowed_prs or any(sha is None for sha in allowed_prs.values())):
+        log_err("REFUSING to execute: a merging run needs --prs with every PR pinned as N@<head sha> (GH-1226).")
+        log_err("Run the dry run with --prs N,M first; it prints the exact pinned --prs to pass to --execute.")
+        log_err("For checkout cleanup alone, use --teardown-only.")
+        return 2
+
     # Upfront landing plan checkpoint for queues of 3+ PRs (GH-1066 / GH-1158 / Plan QA R1).
     # Refuse execution before ANY mutation (before prepare_primary_landing prunes REBASE_HEAD,
     # before scan_directories fetches refs/FETCH_HEAD, and before --marker comments or batch issue writes).
@@ -1619,9 +1716,13 @@ def main():
             log_err(f"PR discovery failed after {RETRY_ATTEMPTS} attempts: {exc} — refusing to continue; "
                     f"the queue cannot be verified empty")
             return 2
-        excluded_prs = {int(str(x).lstrip("#")) for x in (args.exclude or [])
-                        if str(x).lstrip("#").isdigit()}
-        active_early = [p for p in early_prs if int(p.get("number", 0)) not in excluded_prs] if excluded_prs else early_prs
+        active_early, problems = apply_pr_allowlist(early_prs, allowed_prs)
+        if problems:
+            log_err("REFUSING to execute: the --prs list no longer matches GitHub (GH-1226):")
+            for problem in problems:
+                log_err(f"  - {problem}")
+            log_err("Re-run the dry run with --prs and pass the pinned list it prints.")
+            return 2
         early_ordered: List[Dict[str, Any]] = []
         if active_early:
             early_ordered, _, _ = toposort_prs(active_early)
@@ -1666,6 +1767,7 @@ def main():
                 log(f"Landing decision recorded: GROUP ({args.landing_reason.strip()})")
                 log(f"Target PRs ({len(early_ordered)}): {pr_list_str}")
                 batch = batch_record.new(primary_repo, origin, args.integration_branch, early_ordered)
+                batch_record.set_allowlist(batch, allowed_prs)
                 batch_record.set_landing_plan(batch, "group", args.landing_reason.strip(), current_pr_nums)
                 batch_record.create(batch, _gh, primary_repo, attempt_record.repo_slug(origin))
                 if batch.get("issue_error"):
@@ -1769,15 +1871,15 @@ def main():
         return 2
     args._open_prs_for_stacks = list(prs)
     ordered_prs: List[Dict[str, Any]] = []
-    # `--exclude <N>` (a bare PR number) drops that PR from the queue, as SKILL.md's example 6
-    # documents; other patterns still apply to checkouts only.
-    excluded_prs = {int(str(x).lstrip("#")) for x in (args.exclude or [])
-                    if str(x).lstrip("#").isdigit()}
-    if excluded_prs:
-        skipped = [p for p in prs if int(p.get("number", 0)) in excluded_prs]
-        prs = [p for p in prs if int(p.get("number", 0)) not in excluded_prs]
-        for p in skipped:
-            log(f"PR #{p['number']}: excluded by --exclude; not sequenced this run")
+    # GH-1226: --prs is the only PR selector; --exclude applies to checkouts only. Re-checked here
+    # against a fresh list, so a head that moved after the early check still refuses before Phase 5.
+    if args._allowed_prs is not None:
+        prs, problems = apply_pr_allowlist(prs, args._allowed_prs)
+        for problem in problems:
+            (log_err if merging else log_warn)(f"--prs: {problem}")
+        if problems and merging:
+            log_err("REFUSING to execute: re-run the dry run with --prs and pass the pinned list it prints.")
+            return 2
     if prs:
         all_ordered, _, warnings = toposort_prs(prs)
         if checkpoint_eligible_prs is not None:
@@ -1812,6 +1914,11 @@ def main():
         print(f"PHASE 4: TOPOLOGICAL PR SEQUENCE ({len(ordered_prs)} open PRs)")
         print("=" * 80 + "\n")
         print(format_pr_table(ordered_prs) + "\n")
+        if args._allowed_prs is None:
+            log("No --prs given: this table is a survey. --execute merges only an explicit --prs list (GH-1226).")
+        elif dry_run and ordered_prs:
+            log("Pinned for --execute: --prs " + ",".join(f"{p['number']}@{p.get('headRefOid') or '?'}"
+                                                          for p in ordered_prs))
         if not primary_landing["landing_ready"]:
             log_warn(
                 "This sequence is NOT executable as things stand: the primary checkout cannot "
@@ -1898,6 +2005,13 @@ def main():
         print("PHASE 5: EXECUTING PR MERGES & RECONCILIATION")
         print("=" * 80 + "\n")
         rc = land_prs(ordered_prs, primary_repo, args, dry_run, batch=batch)
+        # GH-1226: whatever happened above, the merged set must be a subset of --prs.
+        stray = sorted(set(_MERGED_THIS_RUN) - set(args._allowed_prs or {}))
+        if stray:
+            log_err("BOUNDARY VIOLATION: merged PR(s) not in --prs: " + ", ".join(f"#{n}" for n in stray))
+            return 2
+        if _MERGED_THIS_RUN:
+            log("Merged this run (all in --prs): " + ", ".join(f"#{n}" for n in _MERGED_THIS_RUN))
         if rc != 0:
             log_err("Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.")
             return rc
@@ -1978,6 +2092,7 @@ def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) ->
         # GH-1074: a queue of only new PRs must not orphan a batch whose QA is still pending.
         if batch is not None:
             batch_record.extend(batch, ordered_prs)
+            batch_record.set_allowlist(batch, args._allowed_prs or {})
             if args.landing_plan:
                 batch_record.set_landing_plan(batch, args.landing_plan, args.landing_reason,
                                               [pr["number"] for pr in ordered_prs])
@@ -1986,6 +2101,7 @@ def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) ->
     if len(ordered_prs) < 2:
         return None
     batch = batch_record.new(primary_repo, origin, args.integration_branch, ordered_prs)
+    batch_record.set_allowlist(batch, args._allowed_prs or {})
     if args.landing_plan:
         batch_record.set_landing_plan(batch, args.landing_plan, args.landing_reason,
                                       [pr["number"] for pr in ordered_prs])

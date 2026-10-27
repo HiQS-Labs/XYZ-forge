@@ -546,7 +546,7 @@ REQUIRED_CAPABILITIES = {
     "batch-regression-sweep": "caller", "post-deploy-carryover-dual-sink": "caller",
     # GH-1064: the script now owns the batch issue; the sweep record is script-owned too but has no
     # existing suite test (GH-831), so its SKILL.md row points at the manual checks instead.
-    "mergeable-unknown-poll": "script", "exclude-drops-pr": "script",
+    "mergeable-unknown-poll": "script", "prs-allowlist": "script",
 }
 AST_CALLS = {  # (module source, enclosing function, callee that must be invoked — a comment is not a call)
     "D": (SC_SRC, "inspect_checkout", "inspect_tick_claims"),

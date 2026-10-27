@@ -554,7 +554,8 @@ class TestA5FreshInspection(unittest.TestCase):
         _git(self.task, "push", "-q", "origin", "feat/land:development")
 
     def _run(self, on_merge=None, verdict_ready=True):
-        prs = [{"number": 1, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        prs = [{"number": 1, "baseRefName": "development", "title": "t", "files": [], "body": "",
+                "headRefOid": "b" * 40}]
         verdict = {"path": str(self.primary), "integration_branch": "development", "current_branch": "development",
                    "is_clean": True, "dirty_count": 0, "on_integration_branch": True, "unpushed_on_integration": 0,
                    "can_ff": True, "operation_in_progress": "", "operation_evidence_ok": True,
@@ -570,7 +571,8 @@ class TestA5FreshInspection(unittest.TestCase):
             removed.append((c["name"], c["disposition"], "scan_disposition" in c))
             return True
 
-        argv = ["merge_cleanup.py", "--primary", str(self.primary), "--root", str(self.roots), "--execute"]
+        argv = ["merge_cleanup.py", "--primary", str(self.primary), "--root", str(self.roots), "--execute",
+                "--prs", "1@" + "b" * 40]  # GH-1226
         with mock.patch.object(sys, "argv", argv), \
              mock.patch.object(merge_cleanup, "prune_dangling_skill_symlinks"), \
              mock.patch.object(merge_cleanup, "inspect_primary_landing", return_value=verdict), \

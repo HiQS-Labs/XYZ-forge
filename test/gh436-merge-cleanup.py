@@ -7,6 +7,8 @@ Tests:
 3. Git checkout inspection & disposition classification.
 """
 
+import contextlib
+import io
 import os
 import sys
 import tempfile
@@ -434,6 +436,12 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
                        else {"return_value": _verdict(landing_ready)})
 
         scanned = [] if checkouts is None else checkouts
+        # GH-1226: a merging run needs the operator's pinned --prs. The harness plays the operator
+        # who dry-ran and pinned every listed PR at the head the fake list reports.
+        prs = [dict({"headRefOid": "a" * 40}, **p) for p in (prs or [])]
+        if ("--execute" in argv and prs and "--prs" not in argv
+                and not {"--teardown-only", "--scan-only", "--prs-only", "--reconcile-pr"} & set(argv)):
+            argv = argv + ["--prs", ",".join(f"{p['number']}@{p['headRefOid']}" for p in prs)]
         refresh = (mock.Mock(side_effect=refresh_values) if refresh_values is not None else
                    mock.Mock(side_effect=lambda n, repo: {"number": n, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40, "headRefName": "feat/x", "baseRefName": next(p.get("baseRefName") for p in (prs or []) if p["number"] == n), "labels": [], "mergeCommit": None}))
         with mock.patch.object(sys, "argv", ["merge_cleanup.py"] + argv), \
@@ -539,15 +547,119 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         merged.assert_not_called()
         reconcile.assert_not_called()
 
-    def test_excluded_pr_is_removed_before_the_base_check(self):
+    def test_unlisted_pr_is_removed_before_the_base_check(self):
         prs = [
             {"number": 7, "baseRefName": "development", "title": "land", "files": [], "body": ""},
-            {"number": 8, "baseRefName": "main", "title": "excluded", "files": [], "body": ""},
+            {"number": 8, "baseRefName": "main", "title": "unlisted", "files": [], "body": ""},
         ]
         rc, _, merged, _, _ = self._drive_phase5(
-            ["--primary", str(self.primary), "--exclude", "8", "--execute"], prs=prs)
+            ["--primary", str(self.primary), "--prs", "7@" + "a" * 40, "--execute"], prs=prs)
         self.assertEqual(rc, 0)
         self.assertEqual([call.args[0] for call in merged.call_args_list], [7])
+
+    # --- GH-1226: a merging run lands only the operator's pinned --prs list -------------------
+
+    def _drive_captured(self, argv, **kw):
+        out, err = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            result = self._drive_phase5(argv, **kw)
+        return result, out.getvalue(), err.getvalue()
+
+    def test_execute_without_prs_refuses_before_discovery(self):
+        with mock.patch.object(merge_cleanup, "fetch_open_prs_with_retry") as discovery:
+            (rc, _, merged, _, teardown), _, err = self._drive_captured(
+                ["--primary", str(self.primary), "--execute"])
+        self.assertEqual(rc, 2)
+        self.assertIn("needs --prs", err)
+        discovery.assert_not_called()
+        merged.assert_not_called()
+        teardown.assert_not_called()
+        self.inspections.assert_not_called()  # refused before Phase 0 prunes anything
+
+    def test_execute_with_an_unpinned_pr_refuses(self):
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        (rc, _, merged, _, _), _, err = self._drive_captured(
+            ["--primary", str(self.primary), "--execute", "--prs", "7"], prs=prs)
+        self.assertEqual(rc, 2)
+        self.assertIn("N@<head sha>", err)
+        merged.assert_not_called()
+
+    def test_pr_opened_after_the_dry_run_is_never_merged(self):
+        """THE PIN (#841): a PR the operator did not list rides along under no circumstances."""
+        prs = [{"number": 783, "baseRefName": "development", "title": "vetted", "files": [], "body": ""},
+               {"number": 841, "baseRefName": "development", "title": "opened later", "files": [], "body": ""}]
+        (rc, _, merged, _, _), out, _ = self._drive_captured(
+            ["--primary", str(self.primary), "--execute", "--prs", "783@" + "a" * 12], prs=prs)
+        self.assertEqual(rc, 0)
+        self.assertEqual([call.args[0] for call in merged.call_args_list], [783])
+        self.assertIn("PR #841: not in --prs; not sequenced", out)
+        self.assertIn("Merged this run (all in --prs): #783", out)
+
+    def test_moved_head_refuses_before_any_merge(self):
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": "",
+                "headRefOid": "c" * 40}]
+        (rc, _, merged, _, teardown), _, err = self._drive_captured(
+            ["--primary", str(self.primary), "--execute", "--prs", "7@" + "a" * 40], prs=prs)
+        self.assertEqual(rc, 2)
+        self.assertIn("#7 head moved", err)
+        merged.assert_not_called()
+        teardown.assert_not_called()
+
+    def test_listed_pr_that_closed_or_went_draft_refuses(self):
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": "", "isDraft": True}]
+        (rc, _, merged, _, _), _, err = self._drive_captured(
+            ["--primary", str(self.primary), "--execute", "--prs", f"7@{'a' * 40},9@{'b' * 40}"], prs=prs)
+        self.assertEqual(rc, 2)
+        self.assertIn("#7 is a draft", err)
+        self.assertIn("#9 is not open", err)
+        merged.assert_not_called()
+
+    def test_dry_run_prints_the_pinned_list_to_execute(self):
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""},
+               {"number": 8, "baseRefName": "development", "title": "u", "files": [], "body": ""}]
+        (rc, _, merged, _, _), out, _ = self._drive_captured(
+            ["--primary", str(self.primary), "--prs", "7"], prs=prs)
+        self.assertEqual(rc, 0)
+        self.assertIn("Pinned for --execute: --prs 7@" + "a" * 40, out)
+        self.assertNotIn("8@", out)
+        merged.assert_not_called()
+
+    def test_running_checks_block_the_merge_after_a_bounded_wait(self):
+        """THE PIN (#841): `pytest db fast` was still running when the PR merged."""
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        with mock.patch.dict(os.environ, {merge_cleanup.CHECKS_WAIT_ENV: "60", merge_cleanup.CHECKS_POLL_ENV: "30"}), \
+             mock.patch.object(merge_cleanup, "pending_checks", return_value=["pytest db fast"]), \
+             mock.patch.object(merge_cleanup, "_sleep") as sleep:
+            (rc, _, merged, _, _), _, err = self._drive_captured(
+                ["--primary", str(self.primary), "--execute"], prs=prs)
+        self.assertEqual(rc, 2)
+        self.assertIn("still running after 60s: pytest db fast", err)
+        self.assertEqual([c.args[0] for c in sleep.call_args_list], [30.0, 30.0])
+        merged.assert_not_called()
+
+    def test_checks_that_finish_during_the_wait_let_the_pr_land(self):
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        answers = iter([["pytest db fast"], ["pytest db fast"]])
+        with mock.patch.object(merge_cleanup, "pending_checks", side_effect=lambda info: next(answers, [])), \
+             mock.patch.object(merge_cleanup, "_sleep"):
+            (rc, _, merged, _, _), _, _ = self._drive_captured(
+                ["--primary", str(self.primary), "--execute"], prs=prs)
+        self.assertEqual(rc, 0)
+        self.assertEqual([call.args[0] for call in merged.call_args_list], [7])
+
+    def test_merged_set_outside_prs_is_a_boundary_violation(self):
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+
+        def merge_and_leak(*a, **k):
+            merge_cleanup._MERGED_THIS_RUN.append(99)  # a stray landing from any path
+            return True, "f" * 40
+        with mock.patch.object(merge_cleanup, "land_prs",
+                               side_effect=lambda *a, **k: merge_and_leak() and 0):
+            (rc, _, _, _, teardown), _, err = self._drive_captured(
+                ["--primary", str(self.primary), "--execute"], prs=prs)
+        self.assertEqual(rc, 2)
+        self.assertIn("BOUNDARY VIOLATION: merged PR(s) not in --prs: #99", err)
+        teardown.assert_not_called()
 
     def test_unknown_then_mergeable_is_polled_and_lands(self):
         prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
@@ -655,7 +767,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
     def test_ready_primary_allows_zero_pr_cleanup(self):
         candidate = self._removable_candidate()
         rc, _, _, _, teardown = self._drive_phase5(
-            ["--primary", str(self.primary), "--execute"],
+            ["--primary", str(self.primary), "--teardown-only", "--execute"],
             landing_ready=True, checkouts=[candidate])
         self.assertEqual(rc, 0)
         teardown.assert_called_once_with(candidate, dry_run=False)
@@ -734,6 +846,41 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertFalse(merged.called)
         self.assertTrue(self.pruner.called)
+
+class TestPrAllowlistHelpers(unittest.TestCase):
+    """GH-1226: the parsing and classification the bounded landing rests on."""
+
+    def test_parse_prs_accepts_pins_lists_and_repeats(self):
+        self.assertEqual(merge_cleanup.parse_prs(["783@ABCDEF1,#811", "825@" + "0" * 40]),
+                         {783: "abcdef1", 811: None, 825: "0" * 40})
+
+    def test_parse_prs_rejects_malformed_entries(self):
+        for bad in ("abc", "7@xyz", "7@abc", "0", "-3", "7@" + "a" * 41):
+            with self.assertRaises(ValueError, msg=bad):
+                merge_cleanup.parse_prs([bad])
+
+    def test_pending_checks_reads_check_runs_and_status_contexts(self):
+        info = {"statusCheckRollup": [
+            {"__typename": "CheckRun", "name": "pytest db fast", "status": "IN_PROGRESS", "conclusion": ""},
+            {"__typename": "CheckRun", "name": "lint", "status": "COMPLETED", "conclusion": "SUCCESS"},
+            {"__typename": "CheckRun", "name": "queued", "status": "QUEUED"},
+            {"__typename": "StatusContext", "context": "ci/legacy", "state": "PENDING"},
+            {"__typename": "StatusContext", "context": "ci/done", "state": "SUCCESS"},
+        ]}
+        self.assertEqual(merge_cleanup.pending_checks(info), ["pytest db fast", "queued", "ci/legacy"])
+        self.assertEqual(merge_cleanup.pending_checks({"statusCheckRollup": None}), [])
+
+    def test_batch_issue_records_the_allowlist(self):
+        import batch_record
+        with tempfile.TemporaryDirectory() as tmp:
+            rec = batch_record.new(Path(tmp), "https://github.com/o/r", "development",
+                                   [{"number": 783, "title": "t", "files": []},
+                                    {"number": 811, "title": "u", "files": []}])
+            batch_record.set_allowlist(rec, {783: "a" * 40, 811: "b" * 40})
+            body = batch_record.script_block(rec)
+        self.assertIn("## Allowed PRs (GH-1226)", body)
+        self.assertIn("#783 @ `aaaaaaaaaaaa`, #811 @ `bbbbbbbbbbbb`", body)
+
 
 class TestDanglingSymlinkPrune(unittest.TestCase):
     """Phase 6 prune missed two whole classes of dangling link (fixed 2026-09-05).

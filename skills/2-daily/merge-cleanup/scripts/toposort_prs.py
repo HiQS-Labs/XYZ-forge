@@ -32,7 +32,7 @@ def fetch_open_prs(repo_path: Optional[str] = None) -> List[Dict[str, Any]]:
     cmd = [
         os.environ.get("MERGE_CLEANUP_GH_BIN") or "gh", "pr", "list",
         "--state", "open",
-        "--json", "number,title,headRefName,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url"
+        "--json", "number,title,headRefName,headRefOid,baseRefName,isDraft,labels,mergeable,statusCheckRollup,body,files,createdAt,url"
     ]
     cwd = repo_path or "."
     try:

@@ -224,6 +224,13 @@ class LedgerFixture(unittest.TestCase):
         argv = ["merge_cleanup.py", "--primary", str(self.primary), "--root", str(self.tmp / "no-roots")] + list(extra)
         if execute:
             argv.append("--execute")
+            if "--prs" not in extra:  # GH-1226: the operator pins every open PR at its current head
+                st = self.load()
+                _git(st["probe"], "fetch", "-q", "origin")
+                pins = [f"{p['number']}@{_git(st['probe'], 'rev-parse', 'origin/' + p['headRefName']).stdout.strip()}"
+                        for p in st["prs"].values() if p["state"] == "OPEN"]
+                if pins:
+                    argv += ["--prs", ",".join(pins)]
         err = io.StringIO()
         with mock.patch.object(sys, "argv", argv), \
              mock.patch.object(merge_cleanup, "prune_dangling_skill_symlinks") as pruner, \
@@ -439,19 +446,19 @@ class TestPhase5EndToEnd(LedgerFixture):
         self.assertTrue(1 <= len(polls) < merge_cleanup.MERGEABLE_POLL_ATTEMPTS, sleeps)
         self.assertIn("waiting 15s for GitHub to decide", out.getvalue())
 
-    def test_exclude_pr_number_drops_it_from_the_queue(self):
-        # GH-736: `--exclude <N>` (SKILL.md example 6) removes PR N from the queue; before the
-        # fix it filtered checkouts only and PR N was still merged.
-        self.branch("feat/a", 1, lambda r: park(r, 200, "excluded"))
-        self.branch("feat/b", 2, lambda r: park(r, 201, "kept"))
+    def test_unlisted_pr_is_never_sequenced_or_merged(self):
+        # GH-1226: --prs is the only PR selector. An open PR left off it stays open, whatever
+        # opened between the dry run and the execute; --exclude no longer selects PRs at all.
+        self.branch("feat/a", 1, lambda r: park(r, 200, "unlisted"))
+        head = self.branch("feat/b", 2, lambda r: park(r, 201, "listed"))
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            rc = self.run_main(extra=("--exclude", "1"))
+            rc = self.run_main(extra=("--prs", f"2@{head}"))
         self.assertEqual(rc, 0, self.err)
         st = self.load()
         self.assertEqual(st["prs"]["1"]["state"], "OPEN")
         self.assertEqual(st["prs"]["2"]["state"], "MERGED")
-        self.assertIn("PR #1: excluded by --exclude", out.getvalue())
+        self.assertIn("PR #1: not in --prs; not sequenced", out.getvalue())
 
     def _error_after_first_read(self, msg):
         """GH-736: the first land-loop read is real (UNKNOWN via force_mergeable); every read after
