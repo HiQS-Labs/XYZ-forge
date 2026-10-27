@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1 findings applied | Codex plan QA round 2 |
+| Plan QA Approved (Codex, round 2) | Step 0 probes, then build |
 
 ## Key concepts
 
@@ -147,6 +147,10 @@ Operator, 2026-10-26: "It should be working without any manual intervention", th
 - **First run after the window drop renames many old sessions at once.** Expected and correct: each gets its own activity date.
 - **The forwarding route may hold peer messages for approval if the modes differ.** Both sides run in bypass mode; step 0 proves the route.
 - **The sweeper session is a single point.** If it's gone, renames of typed titles stop and `forward_failed` reports it. Everything else keeps working.
+
+## Plan QA
+
+Codex relay `relay-system/2026-10-26/gh1230-plan-qa.md`, **Approved in round 2**. Round 1: one blocker (manual sweeper setup vs R5) and three should-fixes (inventory boundary, forwarding contract, appeal rationale), all implemented.
 
 ## Rating rationale (2026-10-26)
 
