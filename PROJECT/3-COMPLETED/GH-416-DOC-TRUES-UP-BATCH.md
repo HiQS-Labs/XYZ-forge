@@ -1,8 +1,8 @@
 ---
 title: Documentation trues-ups (narrowed to items 1 and 3) — acorn deps classification, CODEX_FLAGS default and dead escalation rung
-status: Active
+status: Complete
 created: 2026-09-03
-updated: 2026-10-25
+updated: 2026-10-27
 owner: noelsaw1
 gh_issue: 416
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/416
