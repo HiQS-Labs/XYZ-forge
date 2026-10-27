@@ -390,7 +390,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         self.assertEqual(insp.call_args.kwargs.get("integration_branch"), "main")
 
     def _drive_phase5(self, argv, landing_ready=True, prs=None, fetch_rc=0, verdicts=None,
-                      ff_rc=0, final_fetch_rc=0, checkouts=None, refresh_values=None, checks=None):
+                      ff_rc=0, final_fetch_rc=0, checkouts=None, refresh_values=None, checks=None, fetch=None):
         """Drive main() through a NONEMPTY Phase 5, capturing the git commands it issues.
 
         Phase 5's tail calls `prune_dangling_skill_symlinks(dry_run=False)`, which walks the REAL
@@ -458,7 +458,8 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
              mock.patch.object(merge_cleanup, "teardown_checkout") as teardown, \
              mock.patch.object(merge_cleanup, "scan_directories", return_value=scanned), \
              mock.patch.object(merge_cleanup, "refresh_for_teardown", return_value=scanned), \
-             mock.patch.object(merge_cleanup, "fetch_open_prs", return_value=prs or []):
+             mock.patch.object(merge_cleanup, "fetch_open_prs",
+                               **({"side_effect": fetch} if fetch else {"return_value": prs or []})):
             rc = merge_cleanup.main()
         self.pruner = pruner
         self.inspections = insp
@@ -591,6 +592,18 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
                {"number": 8, "baseRefName": "development", "title": "unlisted", "files": [], "body": ""}]
         rc, _, merged, _, teardown = self._drive_phase5(
             ["--primary", str(self.primary), "--prs", "7", "--execute"], prs=prs)
+        self.assertEqual(rc, 3)
+        merged.assert_not_called()
+        teardown.assert_not_called()
+
+    def test_pinned_pr_gone_by_phase4_discovery_exits_3(self):
+        # GH-1226 (CodeRabbit): PR 7 passes the startup pin check, then closes before Phase 4's second
+        # discovery. It never lands, so the run must not report success.
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        listing = [prs, []]
+        rc, _, merged, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--prs", "7", "--execute"], prs=prs,
+            fetch=lambda repo: listing.pop(0))
         self.assertEqual(rc, 3)
         merged.assert_not_called()
         teardown.assert_not_called()

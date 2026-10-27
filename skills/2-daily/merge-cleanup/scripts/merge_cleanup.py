@@ -19,7 +19,7 @@ import subprocess
 import shutil
 import time
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional, Set, Tuple
 
 from scan_clones import (
     DEFAULT_SAFE_ROOTS,
@@ -1983,7 +1983,13 @@ def main():
     # unlisted PR whose base branch a listed landing deletes (GH-1226 keeps this deliberately).
     args._open_prs_for_stacks = list(prs)
     ordered_prs: List[Dict[str, Any]] = []
-    listed_deferred: Set[int] = set()  # GH-1226: listed PRs held back by an unlisted hard dependency
+    listed_deferred: Set[int] = set()  # GH-1226: listed PRs that will not reach Phase 5 this run
+    if checkpoint_eligible_prs is not None:
+        # GH-1226: a pinned PR that closed or merged between the startup verification and this second
+        # discovery never reaches Phase 5; that is not a landing, so the run must not report success.
+        for n in sorted(checkpoint_eligible_prs - {int(p.get("number", 0)) for p in prs}):
+            log_err(f"PR #{n}: pinned but no longer open at Phase 4 discovery; not landed by this run")
+            listed_deferred.add(n)
     if dry_run and args.prs and not (args.scan_only or args.teardown_only) and args.reconcile_pr == 0:
         if not pin_selection(primary_repo, args.integration_branch, args.prs, prs):
             return 2
@@ -2128,8 +2134,8 @@ def main():
             return rc
     if args.execute and not args.teardown_only and listed_deferred:
         # GH-1226: a listed PR that never reached Phase 5 did not land; that is exit 3, not success.
-        log_err("Listed PR(s) deferred by an unlisted hard dependency (add it to --prs or land it first): "
-                + ", ".join(f"#{n}" for n in sorted(listed_deferred)))
+        log_err("Listed PR(s) not landed by this run (closed since the pin check, or held by an unlisted "
+                "hard dependency): " + ", ".join(f"#{n}" for n in sorted(listed_deferred)))
         return 3
 
     # Phase 6: Safe Teardown
