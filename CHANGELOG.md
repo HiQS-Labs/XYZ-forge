@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-26 — Vendored copies keep the host repo's own test policy (GH-1228)
+
+- **#1228.** Three skill lines stated GH-831 ("no new tests") without naming XYZ-forge. Vendored
+  into BinoidCBD/LTVera-Pandas, that text read as LTVera's own test ban (LTVera #845). Each line now
+  names XYZ-forge and defers elsewhere to the host repo's own test policy: `express/SKILL.md` (the
+  recited discipline, step 2, and Phase 4), and `ci-suite-audit/SKILL.md`'s proposed authoring gate.
+  XYZ-forge's rule is unchanged. `utils/py/express.py:603` and `:639` stay as they are: express needs
+  an existing covering suite in every repo. `relay-automation/README.md:40` stays too, since it governs
+  harness code that hosts never edit. Verification: docs gate, recon grep red control and a
+  vendored-copy read-back in `TESTS-RESULTS/2026-10-26+GH-1228/`. No tests added (GH-831).
+
 ## 2026-10-25 — lessons read-back, blind consult, config-pinned resume, improve-loop write check, manifest count (marathon #1214)
 
 Five fixes landed through one marathon chain (agy builder, codex reviewer, full gate per phase).

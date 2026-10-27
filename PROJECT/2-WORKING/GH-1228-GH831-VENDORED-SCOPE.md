@@ -17,7 +17,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Captured, parked, rated and promoted with plan | Codex plan QA, then implement |
+| Plan approved (Codex round 4, attested; round 4 operator-authorized for format only). Implemented the three scoping edits and the CHANGELOG entry; docs gate, red control and vendor smoke in `TESTS-RESULTS/2026-10-26+GH-1228/` | Final Codex QA, then PR |
 
 ## Problem
 
