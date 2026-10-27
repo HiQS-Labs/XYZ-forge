@@ -97,6 +97,15 @@ marks the title `titleSource: tool`, not user-set. Whether an unattended run may
 (GH-831). Plan QA: Codex, Approved in round 2. Reversibility: **Easy**. The planner never
 writes, and each live rename is listed in the undo receipt.
 
+## 2026-10-22 — wave_reconcile repoints every row sharing a moved plan doc (GH-1178)
+
+When one PR closed several issues that share one plan doc, `utils/py/wave_reconcile.py` moved the
+doc but repointed only the row of the issue the doc is named after; the others kept a dangling
+`doc_path` (seen in HiQS-Labs/rebalanceOS#350). A new `repoint_moved_doc_rows` pass after the landing
+loop repoints every owned row still naming a doc moved this run, through the existing
+`roadmap repoint` writer. Verification: `TESTS-RESULTS/2026-10-22+GH-1178/` (red control on
+`f243ccfbf`, fixture green, tier-2 route + gh421/gh454/gh168 green; no new suite).
+
 ## 2026-10-21 — prs-backfill: reviewed PRS rating backfill (GH-1175)
 
 New skill `skills/2-daily/prs-backfill/` (SKILL.md, locator `prs-backfill.sh`, `install.sh`) with
