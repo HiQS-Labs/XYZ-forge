@@ -117,3 +117,49 @@ context as Preflight nor safe for `command` probes.
 Revised plan: `PROJECT/1-INBOX/GH-1232-JOG-PROMOTION-PROBE-SCHEMA.md` (Requirements 1 and 3, the
 bet check, Plan step 1, Verification). Round 2: is the static-shape design sufficient for the
 stated requirement, and is anything still missing?
+
+## Reviewer verdict — codex (round 2)
+
+**Approved.** The revised static-shape admission is sufficient for the stated requirement: it
+removes the sole first-promotion refusal for a contract-only doc without creating a second,
+mutable-checkout execution path. Preflight remains the single ref-pinned verdict and can still
+park a stale, blocked, or otherwise not-ready contract.
+
+- [Pass] The acceptance rule is now correctly scoped. `promote_contract_to_working` needs a
+  reviewed/usable probe source before its unattended guard (`utils/py/jog_run.py:1421-1430`); it
+  does not need to decide whether the fix is landed. The next preflight resolves `target.ref` and
+  evaluates in its detached worktree (`utils/py/swarm_preflight.py:1340-1364`), returning a
+  nonzero result that Jog parks (`utils/py/jog_run.py:1968-1989`). Thus a well-formed but already
+  landed probe promotes and is then classified by the existing preflight semantics, rather than
+  being misclassified at promotion.
+
+- [Pass] Not evaluating `command` probes at promotion resolves the prior safety objection.
+  `eval_probes` invokes command probes with `shell=True` (`utils/py/swarm_preflight.py:223-233`),
+  while the proposed admission is limited to static `lint_probe` validation. The planned marker
+  control is the right proof that promotion does not execute it.
+
+- [Should] In Plan step 1, import only `extract_contract`; `eval_probes` is no longer used and
+  retaining it contradicts the parse-only design. Also spell every required `path`, `pattern`, and
+  `cmd` as a **non-empty** string. An empty `path` currently makes the evaluator use `root`
+  (`utils/py/swarm_preflight.py:201-204`), so accepting it as merely a string would not be a
+  meaningful well-formed probe. This is a local implementation clarification, not a new schema.
+
+- [Pass] The parser boundary is adequate once the stated shape checks are implemented. The shared
+  parser already requires a non-empty `fix_probes` list (`utils/py/swarm_preflight.py:108-110`);
+  rejecting scalar entries before any `p.get(...)` follows the evaluator's failure surface
+  (`utils/py/swarm_preflight.py:199-206`) and gives the requested stable park reason.
+
+- [Pass] Import risk remains low: both modules prepend their own `utils/py` directory and import
+  `harness_paths` (`utils/py/jog_run.py:36-42`, `utils/py/swarm_preflight.py:16-24`). Narrow probe:
+  `rg -n "from jog_run|import jog_run|harness_paths" utils/py/swarm_preflight.py utils/py/jog_run.py utils/py/harness_paths.py`;
+  exit 0; decisive output contained only each module's `harness_paths` import and no
+  `swarm_preflight -> jog_run` import. A lazy `extract_contract` import therefore introduces no
+  cycle or vendored-layout change.
+
+- [Pass] The rating and verification remain proportionate. Keep the existing-suite/Python-layer
+  run plus routed gate, and the disposable-clone red/green receipt with all four listed adjacent
+  controls. The previous narrow consumer probe also found no exact-match consumer of the reason
+  prefix, so preserving `unreviewed-probe-contract` remains safe.
+
+### System · relay-drive — 2026-10-27T15:18:20Z
+terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
