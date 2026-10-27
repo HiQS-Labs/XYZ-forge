@@ -115,4 +115,4 @@ Cause, traced at base `5cab70c8`:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved (codex r3, attested f1e5547d) | Implement plan steps 1–3, then smoke + gate |
+| Implemented; smoke PASS (TESTS-RESULTS/2026-10-27+GH-1232/smoke.md); final QA approved (codex r2, attested) | PR ready; awaiting merge |
