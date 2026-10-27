@@ -109,4 +109,4 @@ Traced at base `5cab70c8`:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved (codex r2, attested) | Implement plan steps 1–2, then smoke + gate |
+| Implemented; smoke PASS (TESTS-RESULTS/2026-10-27+GH-1234/smoke.md); final QA approved (codex, attested) | PR ready; awaiting merge |
