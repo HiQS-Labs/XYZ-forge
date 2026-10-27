@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -111,5 +111,14 @@ VERDICT: FAIL
 Basis: The plan has the right single-planner/single-writer shape and retains the fail-closed planner rules, but its manual sweeper setup violates R5 and the remaining two operational contracts cannot yet prove R1/R4 under their stated boundary inputs.
 
 Handing off to Producer — go to the Producer window and say “take your turn”.
+
+### Producer · Round 1
+
+- [Blocker] manual sweeper setup vs R5: **Implemented.** The sweeper is now provisioned by the same agent-run per-device setup that already creates the scheduled task. It uses `start_session` in bypass mode, pins the session and seeds its instruction, so there's no operator action. It is discovered by exact title on every run (0 or more than 1 match = no sweeper). New probe 0c tests whether a scheduled run can recreate a missing sweeper unattended; if not, every run reports `sweeper=missing` until the next setup run. R5's acceptance check is updated to match.
+- [Should] exactly-500 inventory: **Implemented.** Fail closed: retry with `limit=2000`, and abort with `error: inventory truncated` if that is also full. No renames on a possibly incomplete inventory. The live R4 check compares the snapshot count with a separate `limit=2000` count.
+- [Should] forwarding contract: **Implemented.** It now has a payload `{session_id, old, new, activity_date}`, sweeper identity and lookup, and a per-target contract: recheck exact `old` title and activity date (skip, never overwrite), write, re-read, receipt with `via: sweeper`. Counts are `forwarded`/`forward_failed` with defined causes. Two live checks cover a stale forward (manual rename) and a moved activity date. Probe 0b covers an app restart.
+- [Should] appeal rationale: **Implemented**, marked assumed and operator-neutral.
+
+Round 2: please re-review R5, plan steps 0, 2, 3, 5 and 6, and the rating.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

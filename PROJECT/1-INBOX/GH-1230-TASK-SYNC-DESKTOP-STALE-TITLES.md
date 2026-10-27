@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed; deciding probe run; plan drafted | Codex plan QA |
+| Plan QA round 1 findings applied | Codex plan QA round 2 |
 
 ## Key concepts
 
@@ -48,7 +48,7 @@ Operator, 2026-10-26: "It should be working without any manual intervention", th
 | R2 | A wrong stamp is corrected whatever the session's age | Probe: a row active 3 days ago with a wrong stamp is proposed |
 | R3 | Busy (running) sessions are stamped | Probe: a running row with a wrong stamp is proposed; live: a running session renamed and the title persists after its turn ends |
 | R4 | The inventory stays complete as run sessions accumulate | Live: the sweep's snapshot holds every non-archived session; the scheduled task's own finished runs older than one day are archived |
-| R5 | No approval queue, no operator step | The procedure has no "pending approval" state; declines are retried automatically by the sweeper |
+| R5 | No approval queue, no operator step | The procedure has no "pending approval" state. Declines are forwarded automatically. The sweeper is created by the same agent-run per-device setup that creates the scheduled task (no extra operator action), and discovered by name on every run |
 
 ## Evidence (one device, 2026-10-26; sanitized)
 
@@ -73,11 +73,12 @@ Operator, 2026-10-26: "It should be working without any manual intervention", th
 
 ## Plan
 
-0. **Probe the forwarding path first** (decides step 3's shape; no code).
-   - From a scheduled-task run, send a sweep request to an open interactive bypass session: once with `SendMessage`, once with `mcp__ccd_session_mgmt__send_message`.
-   - In the receiving session, rename a `titleSource: user` title.
-   - Record which route renames without a decline, as the GH-1230 receipt `forward-probe.md`.
-   - If neither does, stop and bring the result back to the operator. The fallback is step 3b, which isn't fully automatic across app restarts.
+0. **Probe the forwarding path first** (decides step 3's shape; no code). Record each answer in the GH-1230 receipt `forward-probe.md`:
+   - **a. Route:** from a scheduled-task run, send a forward to an idle interactive bypass session, once with `SendMessage` and once with `mcp__ccd_session_mgmt__send_message`. Does the receiver's turn rename a `titleSource: user` title without a decline?
+   - **b. Restart:** after the Desktop app restarts, does a forward still wake the sweeper?
+   - **c. Self-recovery:** can a scheduled-task run create a session (`start_session`), so a missing sweeper can be recreated unattended?
+
+   If (a) fails on both routes, stop and bring the result back to the operator; the fallback is step 3b, which isn't fully automatic. If (c) fails, a missing sweeper is reported loudly by every run (step 3a) until the next setup run recreates it.
 
 1. **Planner** (`ClaudeDesktopAdapter.sweep`):
    - **Running rows:** they're eligible for titles. The existing fail-closed rules stay: non-literal `isArchived` or non-boolean `isRunning` is skipped; a running row with missing or bad activity is skipped, an idle one aborts.
@@ -86,16 +87,23 @@ Operator, 2026-10-26: "It should be working without any manual intervention", th
    - **No change** to report shape or CLI surface.
 
 2. **`SKILL.md` Desktop procedure:**
-   - **Step 1:** `list_sessions(limit=500)`. If the result has exactly `limit` rows, treat the inventory as possibly truncated and say so in the report line.
+   - **Step 1:** `list_sessions(limit=500)`. If exactly `limit` rows come back, the inventory may be truncated, so fail closed: retry with `limit=2000`. If that also returns exactly `limit` rows, abort the run with `error: inventory truncated`. There are no renames on a possibly incomplete inventory.
    - **Recheck (step 3):** same title, not archived, not self, and the **local date** of the current `lastActivityAt` equals the proposal's date. The exact timestamp and `isRunning: false` are no longer required, because a running session's activity moves.
    - **Decline:** see step 3.
    - Remove "Undo only while…" wording that assumes an idle row. Undo itself is unchanged.
 
 3. **Sweeper (R1, R5).**
    - **3a (if step 0 finds a working route):** the scheduled task keeps sweeping every 30 min. When `set_session_title` declines, it forwards the declined ids, with old and new titles, to the device's **sweeper session** over the probed route. The sweeper re-runs the recheck and renames.
-     - The sweeper is one named, pinned interactive Desktop session in bypass mode. Its standing instruction comes from the operator once, at setup, and is recorded in the private recipe.
+     - **Identity:** the sweeper is one interactive Desktop session in bypass mode, titled exactly `task-sync sweeper`, pinned, in no group. Each run finds it by that exact title with `list_sessions` (non-archived). Zero or more than one match counts as "no sweeper".
+     - **Provisioning (no operator action):** the per-device setup is an agent-run session that already creates the scheduled task. It also creates the sweeper with `start_session` in bypass mode, pins it, and seeds its standing instruction as the first message. If probe 0c passes, a scheduled run that finds no sweeper recreates it the same way. Otherwise every run reports `sweeper=missing` until the next setup run.
+     - **Forward payload, one per declined target:** `{session_id, old, new, activity_date}`, where `activity_date` is the proposal's local mm-dd.
+     - **Sweeper contract, per target:**
+       1. `get_session(session_id)`. Require: not archived, not the sweeper itself, current title exactly `old`, and the local date of the current `lastActivityAt` equal to `activity_date`. Otherwise skip with a reason, such as a manual rename or an activity change; never overwrite.
+       2. `set_session_title(session_id, new)`.
+       3. `get_session` again and confirm the title is `new`.
+       4. Append `{"at", "session_id", "old", "new", "via": "sweeper"}` to the receipt.
+     - **Counts:** the run reports `forwarded=N`, plus `forward_failed=N` for "no sweeper" or a send-tool error. The sweeper replies with one line, `task-sync sweeper: renamed=… skipped=… (reasons)`.
      - That rename flips the title to `titleSource: tool`, so later runs re-stamp it directly.
-     - If the sweeper is missing or doesn't reply, the run reports `forward_failed=N`. It isn't silent and isn't an error.
    - **3b (fallback only):** the sweeper session arms its own 30-minute `CronCreate` loop, which the probe showed can rename user-set titles. It is session-only and expires after 7 days, so it needs re-arming. That's why 3b isn't the primary path.
 
 4. **Run-session hygiene (R4).** At the end of each run, the scheduled task archives its **own** earlier run sessions: those whose `get_session` shows this task's `scheduledTaskId`, not running, finished more than 24 h ago.
@@ -110,12 +118,17 @@ Operator, 2026-10-26: "It should be working without any manual intervention", th
    - the fail-closed rules unchanged (archived/self/non-boolean running/bad activity);
    - pins unchanged (the GH-1196 battery passes).
 
+   Sweeper-contract checks run live (native tools only):
+   - a stale forward (title renamed manually after the decline) is skipped with reason `title changed`;
+   - a forward whose activity date has moved is skipped.
+
    The GH-1191 battery's "running skipped" and "outside window" probes change by design. Re-run it and list those expected deltas, each with its reason. Red control: restore the window and watch the old-row probe fail.
 
 6. **Live:** on the operator's device, with the step 0 route:
    - a typed title renamed by the forward path (R1);
    - a running session renamed and the title still there after its turn ends (R3);
-   - one run archiving its old run sessions, and the snapshot holding every non-archived session (R4).
+   - one run archiving its old run sessions, and the snapshot holding every non-archived session (R4): its row count equals a separate `list_sessions(limit=2000)` count taken right after;
+   - a run with the sweeper renamed away reports `forward_failed`.
 
 7. **Gate:** `utils/ci-route.sh pull_request` with the changed paths on stdin, then CHANGELOG. The private per-device recipe (task prompt, sweeper setup) is updated after merge, through Skills Army HQ publication, with no hand edits.
 
@@ -140,5 +153,5 @@ Operator, 2026-10-26: "It should be working without any manual intervention", th
 `rated 70/40/45/60`.
 - `pri` 70: the operator expects zero-touch stamps and observed stale ones.
 - `sev` 40: wrong dates in the sidebar mislead, but no data is lost.
-- `appeal` 45.
+- `appeal` 45: assumed, operator-neutral. There is no external demand; it serves this operator's sidebar.
 - `effort` 60: small loop change plus one probe-gated forwarding hop.
