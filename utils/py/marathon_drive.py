@@ -490,7 +490,7 @@ def compute_config_sha256(brief_file, builder, reviewer, env=None):
     with open(brief_file, "r", encoding="utf-8", errors="replace") as f:
         brief_text = f.read()
     def _model_val(agent_id):
-        for prefix in ("claude", "codex", "agy", "aider", "pi", "smallcode", "commandcode", "deepseek"):
+        for prefix in ("claude", "codex", "agy", "aider", "pi", "smallcode", "commandcode", "deepseek", "kimi"):
             if agent_id.startswith(prefix):
                 val = env.get(f"{prefix.upper()}_MODEL") or "default"
                 if prefix == "aider" and env.get("AIDER_OPENAI_API_BASE"):
@@ -752,18 +752,22 @@ SMALLCODE_DEFAULT_BIN = os.path.join(
     os.path.expanduser("~"), "Documents", "GH Repos", "smallcode", "bin", "smallcode.js"
 )
 DEEPSEEK_DEFAULT_BIN = "/Users/noelsaw/Documents/GH Repos/deepseek-harness/apps/cli/lib/bin.js"
+# GH-1215: mirrors kimi-turn.py's INSTALLER_BIN (the Kimi Code installer's PATH edit is in ~/.zshrc).
+KIMI_DEFAULT_BIN = os.path.join(os.path.expanduser("~"), ".kimi-code", "bin", "kimi")
 
-def _probe_bin_or_file(candidates, role_label, agent_id, override_env):
+def _probe_bin_or_file(candidates, role_label, agent_id, override_env, executable=False):
     """Pass if ANY candidate resolves — on PATH, or as an existing file dispatched by interpreter.
 
     Mirrors the shim's own resolution order so preflight never rejects a lane the shim could run.
+    `executable=True` is for a lane whose shim execs the candidate directly (GH-1215 kimi): only an
+    executable counts there, since a plain file would pass preflight and then fail at launch.
     """
     tried = []
     for cand in candidates:
         if not cand:
             continue
         tried.append(cand)
-        if shutil.which(cand) or os.path.isfile(cand):
+        if shutil.which(cand) or (not executable and os.path.isfile(cand)):
             return
     _RESULT["reason"] = f"{role_label}-binary-missing"
     die(
@@ -822,6 +826,13 @@ def _probe_agent_bin(agent_id, role_label):
         _probe_bin_or_file(
             [get_env("DEEPSEEK_BIN"), DEEPSEEK_DEFAULT_BIN, "dsh"],
             role_label, agent_id, "DEEPSEEK_BIN",
+        )
+    elif agent_id.startswith("kimi"):
+        # GH-1215: mirrors kimi-turn.py's default_kimi_bin(). A set KIMI_BIN is the ONLY candidate,
+        # because the shim never falls back from it; otherwise `kimi` on PATH, then the installer path.
+        _probe_bin_or_file(
+            [get_env("KIMI_BIN")] if get_env("KIMI_BIN") else ["kimi", KIMI_DEFAULT_BIN],
+            role_label, agent_id, "KIMI_BIN", executable=True,
         )
     else:
         # GH-346: the comment above used to STATE this invariant and nothing enforced it, so an id
@@ -1996,6 +2007,7 @@ def main():
     # asked for. Omitting the two new lanes here would have left exactly that hole open for them.
     os.environ["COMMANDCODE_AGENT"] = ""
     os.environ["DEEPSEEK_AGENT"] = ""
+    os.environ["KIMI_AGENT"] = ""
 
     def route_agent(agent_id):
         # GH-414 — BASH/PYTHON DIVERGENCE, deliberate and pinned. This router accepts `pi*`
@@ -2043,7 +2055,9 @@ def main():
         # is what made these two gateways accept-then-die.
         elif agent_id.startswith("commandcode"): os.environ["COMMANDCODE_AGENT"] = agent_id
         elif agent_id.startswith("deepseek"): os.environ["DEEPSEEK_AGENT"] = agent_id
-        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi/smallcode/commandcode/deepseek")
+        # GH-1215: builder lane only; the reviewer gate below stays codex/agy.
+        elif agent_id.startswith("kimi"): os.environ["KIMI_AGENT"] = agent_id
+        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi/smallcode/commandcode/deepseek/kimi")
         
     if args.builder == args.reviewer:
         _RESULT["reason"] = "builder-equals-reviewer"
@@ -2314,7 +2328,7 @@ relay-file: {rel_relay}
         "SMALLCODE_AGENT",
         # GH-346 Phase 2: TENTH copy. Kept in lockstep with gate_env.py's registry, which
         # test/gh441-gate-env-contract.sh compares against this literal.
-        "COMMANDCODE_AGENT", "DEEPSEEK_AGENT",
+        "COMMANDCODE_AGENT", "DEEPSEEK_AGENT", "KIMI_AGENT",
         "RELAY_TARGET_ROOT", "RELAY_TASK", "RELAY_WORKTREE_ISOLATION",
         "RELAY_TOOL_MODE", "XYZ_TOOL_MODE",
         "XYZ_HARNESS_CONTEXT", "XYZ_SESSION_ID",
@@ -3456,7 +3470,7 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
         # with no guard root — deepseek-turn.py:93 reads DEEPSEEK_TURN_ROOT, so a --target-root
         # deepseek turn was resolving containment against the harness clone, not the target.
         if args.target_root:
-            for _shim in ("CLAUDE", "CODEX", "AGY", "AIDER", "PI", "SMALLCODE", "COMMANDCODE", "DEEPSEEK"):
+            for _shim in ("CLAUDE", "CODEX", "AGY", "AIDER", "PI", "SMALLCODE", "COMMANDCODE", "DEEPSEEK", "KIMI"):
                 env2[f"{_shim}_TURN_ROOT"] = args.target_root
         return subprocess.run(cmd2, env=env2, cwd=root).returncode
 
