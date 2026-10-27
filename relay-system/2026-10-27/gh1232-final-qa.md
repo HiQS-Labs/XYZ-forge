@@ -284,3 +284,11 @@ execution; the stated focused-suite evidence is commensurate. The plan's
 
 VERDICT: PASS
 Basis: All four requirements and plan steps are implemented; promotion does static shape validation only, and every reviewed parser/contract failure path parks rather than raising.
+
+### Attestation · relay-drive — 2026-10-27T15:29:45Z
+task: RELAY-gh1232-final-qa-r2
+reviewer: codex
+status: Approved
+reviewed-head: fe7c0bc890fe94237d627115c34d71f4428c788c
+added-range: 12944+1950
+added-sha256: 1891f256fcea51277c75a93f33aebd216d54635cf40451d5acd61785c0258fa4
