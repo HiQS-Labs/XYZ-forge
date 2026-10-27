@@ -280,6 +280,8 @@ class TestCScript(LedgerFixture):
         self.save()
 
         rc = self.run_main()
+        self.assertEqual(rc, 3, self.err)  # GH-1226: PR 2's repaired head is deferred to a re-pin
+        rc = self.land_repaired(2)
 
         self.assertEqual(rc, 4, self.err)  # GH-1064: landed, QA pending
         self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"MERGED"})
@@ -385,15 +387,16 @@ class TestCScript(LedgerFixture):
         self.save()
         rc = self.run_main(extra=("--landing-plan", "direct", "--landing-reason", "direct landing for dependent test"))
         self.assertEqual(rc, 3)
+        self.assertIn("PR #3: NOT attempted — depends on #2 (handoff)", self.err)
+        self.pruner.assert_not_called()  # a handoff is still a non-zero Phase 5; teardown does not run
+        self.land_repaired(4)  # GH-1226: independent PR 4 was B1-repaired; it lands after a re-pin
         st = self.load()
         self.assertEqual({n: p["state"] for n, p in st["prs"].items()},
                          {"1": "MERGED", "2": "OPEN", "3": "OPEN", "4": "MERGED"})
-        self.assertIn("PR #3: NOT attempted — depends on #2 (handoff)", self.err)
         self.assertFalse(any(c[:2] == ["pr", "view"] and c[2] == "3" for c in st["calls"]), "PR 3 was refreshed, i.e. attempted")
         self.assertIn(301, self.dev_rows())
         self.assertNotIn(300, self.dev_rows())
         self.assertFalse(self.record_for(3).exists())
-        self.pruner.assert_not_called()  # a handoff is still a non-zero Phase 5; teardown does not run
 
     def test_omitted_primary_is_refused_and_no_record_root_is_minted(self):
         """R1-2: the coordinator is never the CWD. Run the orchestrator from a disposable clone
@@ -450,6 +453,8 @@ class TestCScript(LedgerFixture):
         self.branch("feat/a", 1, pr1)
         self.branch("feat/b", 2, pr2)
         rc = self.run_main()
+        self.assertEqual(rc, 3, self.err)  # GH-1226: PR 2's repaired head is deferred to a re-pin
+        rc = self.land_repaired(2)
         self.assertEqual(rc, 4, self.err)  # GH-1064: landed, QA pending
         self.assertEqual({p["state"] for p in self.load()["prs"].values()}, {"MERGED"})
         self.assertEqual(self.dev_rows(), [100, 101, 200, 201])
@@ -546,7 +551,7 @@ REQUIRED_CAPABILITIES = {
     "batch-regression-sweep": "caller", "post-deploy-carryover-dual-sink": "caller",
     # GH-1064: the script now owns the batch issue; the sweep record is script-owned too but has no
     # existing suite test (GH-831), so its SKILL.md row points at the manual checks instead.
-    "mergeable-unknown-poll": "script", "exclude-drops-pr": "script",
+    "mergeable-unknown-poll": "script", "prs-allowlist": "script",
 }
 AST_CALLS = {  # (module source, enclosing function, callee that must be invoked — a comment is not a call)
     "D": (SC_SRC, "inspect_checkout", "inspect_tick_claims"),
@@ -654,11 +659,12 @@ class TestGh623Resilience(LedgerFixture):
         self.save()
         rc = self.run_main(extra=("--landing-plan", "direct", "--landing-reason", "direct landing for soft edge test"))
         self.assertEqual(rc, 3, self.err)
+        self.assertIn("attempting anyway", self.err)
+        self.assertIn("PR #4: NOT attempted — depends on #2 (handoff)", self.err)
+        self.land_repaired(3)  # GH-1226: PR 3 was B1-repaired; it lands after a re-pin
         st = self.load()
         self.assertEqual({n: p["state"] for n, p in st["prs"].items()},
                          {"1": "MERGED", "2": "OPEN", "3": "MERGED", "4": "OPEN"})
-        self.assertIn("attempting anyway", self.err)
-        self.assertIn("PR #4: NOT attempted — depends on #2 (handoff)", self.err)
         self.assertEqual(self.dev_rows(), [100, 101, 300])
 
     def test_transient_view_failure_defers_and_independents_land(self):

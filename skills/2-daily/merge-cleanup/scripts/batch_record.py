@@ -48,10 +48,10 @@ def _now() -> str:
 
 def _strip_marks(obj: Any) -> Any:
     """Drop the one-shot intent markers before persisting (`_touched`, `_verdict_touched`,
-    `_sweep_touched`, `_refreshed`, `_landing_plan_touched`) — they describe THIS save's intentional writes only."""
+    `_sweep_touched`, `_refreshed`, `_landing_plan_touched`, `_allowlist_touched`) — they describe THIS save's intentional writes only."""
     if isinstance(obj, dict):
         return {k: _strip_marks(v) for k, v in obj.items()
-                if k not in ("_touched", "_verdict_touched", "_sweep_touched", "_refreshed", "_landing_plan_touched")}
+                if k not in ("_touched", "_verdict_touched", "_sweep_touched", "_refreshed", "_landing_plan_touched", "_allowlist_touched")}
     if isinstance(obj, list):
         return [_strip_marks(v) for v in obj]
     return obj
@@ -191,6 +191,8 @@ def _merge_records(disk: Dict[str, Any], mine: Dict[str, Any]) -> Dict[str, Any]
         out["sweep_inputs"] = disk["sweep_inputs"]
     if isinstance(disk.get("landing_plan"), dict) and not mine.get("_landing_plan_touched"):
         out["landing_plan"] = disk["landing_plan"]
+    if isinstance(disk.get("allowlist"), dict) and not mine.get("_allowlist_touched"):
+        out["allowlist"] = disk["allowlist"]
 
     for k in ("issue", "issue_url"):
         if not out.get(k) and disk.get(k):
@@ -317,6 +319,16 @@ def set_landing_plan(rec: Dict[str, Any], decision: str, reason: str, prs: List[
     save(rec)
 
 
+def set_allowlist(rec: Dict[str, Any], pins: Dict[int, str]) -> None:
+    """GH-1226: the operator's --prs list and the head each PR was pinned to by the dry run. A resume
+    with a narrowed --prs adds to the record (latest pin wins), so earlier landings stay listed."""
+    merged = {int(n): sha for n, sha in (rec.get("allowlist") or {}).items()}
+    merged.update(pins)
+    rec["allowlist"] = {str(n): sha for n, sha in sorted(merged.items())}
+    rec["_allowlist_touched"] = True
+    save(rec)
+
+
 # --- the issue -----------------------------------------------------------------------------------
 
 def _cell(text: str) -> str:
@@ -333,6 +345,14 @@ def script_block(rec: Dict[str, Any]) -> str:
             f"- Plan: `{lp.get('decision', '—')}`",
             f"- Reason: {_cell(lp.get('reason') or '—')}",
             f"- Decided: `{lp.get('decided_at') or '—'}` for PRs {prs_str}",
+            "",
+        ]
+    allow = rec.get("allowlist")
+    if allow and isinstance(allow, dict):
+        lines += [
+            "## Allowlist (--prs, GH-1226)",
+            "- Only these PRs may land, each at the head the dry run pinned: "
+            + ", ".join(f"#{n} @ `{(sha or '')[:10]}`" for n, sha in allow.items()),
             "",
         ]
     lines += [

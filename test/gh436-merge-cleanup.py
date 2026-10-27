@@ -7,6 +7,7 @@ Tests:
 3. Git checkout inspection & disposition classification.
 """
 
+import json
 import os
 import sys
 import tempfile
@@ -389,7 +390,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         self.assertEqual(insp.call_args.kwargs.get("integration_branch"), "main")
 
     def _drive_phase5(self, argv, landing_ready=True, prs=None, fetch_rc=0, verdicts=None,
-                      ff_rc=0, final_fetch_rc=0, checkouts=None, refresh_values=None):
+                      ff_rc=0, final_fetch_rc=0, checkouts=None, refresh_values=None, checks=None, fetch=None):
         """Drive main() through a NONEMPTY Phase 5, capturing the git commands it issues.
 
         Phase 5's tail calls `prune_dangling_skill_symlinks(dry_run=False)`, which walks the REAL
@@ -434,6 +435,11 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
                        else {"return_value": _verdict(landing_ready)})
 
         scanned = [] if checkouts is None else checkouts
+        # GH-1226: a merging --execute needs --prs and a dry-run pin. Orchestration tests name every
+        # PR and stand in for the pin (its own behaviour is in the end-to-end suite and the manual check).
+        merging = "--execute" in argv and not {"--teardown-only", "--scan-only", "--prs-only"} & set(argv)
+        if merging and prs and "--prs" not in argv:
+            argv = argv + ["--prs", ",".join(str(p["number"]) for p in prs)]
         refresh = (mock.Mock(side_effect=refresh_values) if refresh_values is not None else
                    mock.Mock(side_effect=lambda n, repo: {"number": n, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40, "headRefName": "feat/x", "baseRefName": next(p.get("baseRefName") for p in (prs or []) if p["number"] == n), "labels": [], "mergeCommit": None}))
         with mock.patch.object(sys, "argv", ["merge_cleanup.py"] + argv), \
@@ -442,6 +448,9 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
              mock.patch.object(merge_cleanup, "inspect_primary_landing", **insp_kwargs) as insp, \
              mock.patch.object(merge_cleanup, "run_git", side_effect=fake_git), \
              mock.patch.object(merge_cleanup, "refresh_pr", refresh), \
+             mock.patch.object(merge_cleanup, "verify_selection", side_effect=lambda primary, branch, listed, open_prs: {n: "a" * 40 for n in listed}), \
+             mock.patch.object(merge_cleanup, "required_checks_state",
+                               **({"side_effect": checks} if checks else {"return_value": ("ok", "no required checks")})), \
              mock.patch.object(merge_cleanup, "prepare_landing_clone", side_effect=lambda pr, primary, branch, wd: {"clone": wd, "merge_rc": 0, "error": ""}), \
              mock.patch.object(merge_cleanup, "pre_merge_ledger_gate", return_value={"green": True, "failures": [], "diagnostics": []}), \
              mock.patch.object(merge_cleanup, "execute_pr_merge", return_value=(True, "f" * 40)) as merged, \
@@ -449,7 +458,8 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
              mock.patch.object(merge_cleanup, "teardown_checkout") as teardown, \
              mock.patch.object(merge_cleanup, "scan_directories", return_value=scanned), \
              mock.patch.object(merge_cleanup, "refresh_for_teardown", return_value=scanned), \
-             mock.patch.object(merge_cleanup, "fetch_open_prs", return_value=prs or []):
+             mock.patch.object(merge_cleanup, "fetch_open_prs",
+                               **({"side_effect": fetch} if fetch else {"return_value": prs or []})):
             rc = merge_cleanup.main()
         self.pruner = pruner
         self.inspections = insp
@@ -539,15 +549,64 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         merged.assert_not_called()
         reconcile.assert_not_called()
 
-    def test_excluded_pr_is_removed_before_the_base_check(self):
+    def test_unlisted_pr_is_never_sequenced(self):
+        # GH-1226: --prs is an allowlist; an open PR outside it (here one that would also fail the
+        # base check) is never sequenced, whatever opened since the dry run.
         prs = [
             {"number": 7, "baseRefName": "development", "title": "land", "files": [], "body": ""},
-            {"number": 8, "baseRefName": "main", "title": "excluded", "files": [], "body": ""},
+            {"number": 8, "baseRefName": "main", "title": "unlisted", "files": [], "body": ""},
         ]
         rc, _, merged, _, _ = self._drive_phase5(
-            ["--primary", str(self.primary), "--exclude", "8", "--execute"], prs=prs)
+            ["--primary", str(self.primary), "--prs", "7", "--execute"], prs=prs)
         self.assertEqual(rc, 0)
         self.assertEqual([call.args[0] for call in merged.call_args_list], [7])
+
+    def test_required_checks_that_finish_during_the_wait_let_the_pr_land(self):
+        # GH-1226 (from #1231): a pinned head whose required check is still running is waited for.
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        with mock.patch.object(merge_cleanup, "_sleep") as sleep, \
+             mock.patch.dict(os.environ, {"MERGE_CLEANUP_CHECKS_WAIT_S": "60", "MERGE_CLEANUP_CHECKS_POLL_S": "30"}):
+            rc, _, merged, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--execute"], prs=prs,
+                checks=[("pending", "pytest db fast"), ("ok", "1 required check(s) green")])
+        self.assertEqual(rc, 0)
+        merged.assert_called_once()
+        sleep.assert_called_once_with(30.0)
+
+    def test_required_checks_still_running_after_the_wait_defer_and_never_merge(self):
+        # GH-1226: the #841 shape — a pending required check never merges; the PR is deferred (rc 3).
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        with mock.patch.object(merge_cleanup, "_sleep") as sleep, \
+             mock.patch.dict(os.environ, {"MERGE_CLEANUP_CHECKS_WAIT_S": "60", "MERGE_CLEANUP_CHECKS_POLL_S": "30"}):
+            rc, _, merged, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--execute"], prs=prs,
+                checks=[("pending", "pytest db fast")] * 3)
+        self.assertEqual(rc, 3)
+        merged.assert_not_called()
+        self.assertEqual(sleep.call_count, 2)
+
+    def test_listed_pr_held_by_an_unlisted_dependency_exits_3(self):
+        # GH-1226 (CodeRabbit): a listed PR that never reaches Phase 5 because it hard-depends on an
+        # unlisted PR did not land — the run must say so (rc 3), not report success.
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": "depends on #8"},
+               {"number": 8, "baseRefName": "development", "title": "unlisted", "files": [], "body": ""}]
+        rc, _, merged, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--prs", "7", "--execute"], prs=prs)
+        self.assertEqual(rc, 3)
+        merged.assert_not_called()
+        teardown.assert_not_called()
+
+    def test_pinned_pr_gone_by_phase4_discovery_exits_3(self):
+        # GH-1226 (CodeRabbit): PR 7 passes the startup pin check, then closes before Phase 4's second
+        # discovery. It never lands, so the run must not report success.
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
+        listing = [prs, []]
+        rc, _, merged, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--prs", "7", "--execute"], prs=prs,
+            fetch=lambda repo: listing.pop(0))
+        self.assertEqual(rc, 3)
+        merged.assert_not_called()
+        teardown.assert_not_called()
 
     def test_unknown_then_mergeable_is_polled_and_lands(self):
         prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
@@ -652,14 +711,17 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         teardown.assert_called_once_with(candidate, dry_run=False)
         self.pruner.assert_called_once_with(dry_run=False)
 
-    def test_ready_primary_allows_zero_pr_cleanup(self):
+    def test_merging_execute_without_prs_refuses_before_any_mutation(self):
+        # GH-1226: a merging --execute must name its PRs up front; cleanup alone is --teardown-only.
         candidate = self._removable_candidate()
-        rc, _, _, _, teardown = self._drive_phase5(
+        rc, _, merged, _, teardown = self._drive_phase5(
             ["--primary", str(self.primary), "--execute"],
             landing_ready=True, checkouts=[candidate])
-        self.assertEqual(rc, 0)
-        teardown.assert_called_once_with(candidate, dry_run=False)
-        self.pruner.assert_called_once_with(dry_run=False)
+        self.assertEqual(rc, 2)
+        self.assertFalse(self.inspections.called)
+        merged.assert_not_called()
+        teardown.assert_not_called()
+        self.pruner.assert_not_called()
 
     def test_scan_only_does_not_require_primary_override(self):
         rc, _, _, _, teardown = self._drive_phase5(
@@ -929,6 +991,93 @@ class TestMergeCleanupActivityAndCompletion(unittest.TestCase):
 from gh534_phase_a_tests import *  # noqa: E402,F401,F403
 from gh534_phase_b_tests import *  # noqa: E402,F401,F403
 from gh534_phase_c_tests import *  # noqa: E402,F401,F403
+
+
+class TestGh1226AllowlistHelpers(unittest.TestCase):
+    """GH-1226: the --prs parser, the pin verifier, the required-checks reader and the merge
+    confirmation's pin rule (Kimi K3 review on #1227; cases adapted from #1231)."""
+
+    def setUp(self):
+        self.temp_dir = tempfile.mkdtemp(prefix="gh1226-")
+        self.addCleanup(shutil.rmtree, self.temp_dir, True)
+        self.primary = Path(self.temp_dir)
+        origin = mock.patch.object(merge_cleanup, "origin_url", return_value="")
+        origin.start()
+        self.addCleanup(origin.stop)
+
+    @staticmethod
+    def _open(n, head, draft=False):
+        return {"number": n, "headRefOid": head, "isDraft": draft}
+
+    def _record(self, pins):
+        path = merge_cleanup.selection_path(self.primary, "", "development")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"prs": {str(n): sha for n, sha in pins.items()}}))
+
+    def test_parse_accepts_bare_pinned_and_hash_entries(self):
+        self.assertEqual(merge_cleanup.parse_pr_list("783, #811@ABCDEF1"), [(783, None), (811, "abcdef1")])
+
+    def test_parse_rejects_malformed_entries(self):
+        for bad in ("0", "x", "783@zz", "783@abc", ","):
+            with self.assertRaises(Exception, msg=bad):
+                merge_cleanup.parse_pr_list(bad)
+
+    def test_inline_pin_needs_no_record_and_returns_the_full_head(self):
+        got = merge_cleanup.verify_selection(self.primary, "development", {7: "aaaaaaa"}, [self._open(7, "a" * 40)])
+        self.assertEqual(got, {7: "a" * 40})
+
+    def test_bare_entry_without_a_dry_run_record_refuses(self):
+        self.assertIsNone(merge_cleanup.verify_selection(self.primary, "development", {7: None},
+                                                         [self._open(7, "a" * 40)]))
+
+    def test_bare_entry_uses_the_record_and_an_unrecorded_pr_refuses(self):
+        self._record({7: "a" * 40})
+        opened = [self._open(7, "a" * 40), self._open(8, "b" * 40)]
+        self.assertEqual(merge_cleanup.verify_selection(self.primary, "development", {7: None}, opened), {7: "a" * 40})
+        self.assertIsNone(merge_cleanup.verify_selection(self.primary, "development", {7: None, 8: None}, opened))
+
+    def test_moved_draft_or_closed_listed_pr_refuses(self):
+        for opened in ([self._open(7, "b" * 40)], [self._open(7, "a" * 40, draft=True)], []):
+            self.assertIsNone(merge_cleanup.verify_selection(self.primary, "development", {7: "a" * 40}, opened),
+                              opened)
+
+    def test_required_checks_are_read_from_buckets(self):
+        def state(rc, out="", err=""):
+            with mock.patch.object(merge_cleanup, "_gh", return_value=subprocess.CompletedProcess([], rc, out, err)):
+                return merge_cleanup.required_checks_state(7, self.primary)[0]
+        row = lambda b: json.dumps([{"name": "pytest", "bucket": b}])
+        self.assertEqual(state(0, row("pass")), "ok")
+        self.assertEqual(state(0, row("skipping")), "ok")
+        self.assertEqual(state(8, row("pending")), "pending")
+        self.assertEqual(state(1, row("fail")), "failing")
+        self.assertEqual(state(1, err="no required checks reported on the 'development' branch"), "ok")
+        self.assertEqual(state(1, err="HTTP 502"), "unknown")
+
+    def test_merge_confirmation_counts_only_the_pinned_head(self):
+        # Kimi K3 on #1227: both the zero-exit and the failed-command path must reject an off-pin merge.
+        policy = {"strategy": "squash", "preserve_commit_history": False, "source": "t"}
+        for rc in (0, 1):
+            for head, landed in (("b" * 40, False), ("a" * 40, True)):
+                merge_cleanup._MATCH_HEAD[7] = "a" * 40
+                merged = {"state": "MERGED", "headRefOid": head, "mergeCommit": {"oid": "c" * 40}}
+                with mock.patch.object(merge_cleanup, "resolve_merge_policy", return_value=policy), \
+                     mock.patch.object(merge_cleanup, "check_merge_capability"), \
+                     mock.patch.object(merge_cleanup.time, "sleep"), \
+                     mock.patch.object(merge_cleanup, "_gh", return_value=subprocess.CompletedProcess([], rc, "", "")) as gh, \
+                     mock.patch.object(merge_cleanup, "refresh_pr", return_value=merged):
+                    ok, _ = merge_cleanup.execute_pr_merge(7, self.primary, dry_run=False)
+                self.assertEqual(ok, landed, (rc, head[:1]))
+                self.assertIn("--match-head-commit", gh.call_args_list[0].args[0])
+
+    def test_batch_issue_records_the_allowlist_and_a_resume_adds_to_it(self):
+        import batch_record
+        rec = batch_record.new(self.primary, "", "development", [{"number": 7, "title": "t"}])
+        batch_record.set_allowlist(rec, {7: "a" * 40})
+        batch_record.set_allowlist(rec, {8: "b" * 40})
+        block = batch_record.script_block(rec)
+        self.assertIn("## Allowlist (--prs, GH-1226)", block)
+        self.assertIn("#7 @ `aaaaaaaaaa`", block)
+        self.assertIn("#8 @ `bbbbbbbbbb`", block)
 
 
 class TestBatchRecordStaleState(unittest.TestCase):
