@@ -87,3 +87,47 @@ Flag anything wrong, missing, or over/under-scoped, citing file:line. Use `[Bloc
 - [Should] rating evidence: accepted. It is cited as captured evidence from LTVera #845.
 
 Please re-review the revised plan. Approve if it can proceed.
+
+### Codex review — changes requested, round 2 (2026-10-26)
+
+- [Blocker] The revised three-line scope is still not a complete recon of the
+  vendored host-facing prohibition. `relay-automation/README.md:40` directs a
+  repo adding a consult advisor to extend `test/consult.sh` and says “no new
+  suites (GH-831)” without limiting that restriction to XYZ-forge or to an
+  Express-specific lane. `relay-automation/xyz-vendor.sh:432` vendors the
+  entire `relay-automation/` directory, so this reaches `.xyz/` consumers and
+  conflicts with the operator requirement just as the skill text did. Add it
+  to the recon and give it the same host-policy/XYZ-forge-scoped treatment (or
+  state and justify a deliberately narrower product rule approved for every
+  host). Expand the post-change grep/red control and vendor smoke accordingly.
+
+  Probe (read-only; exit 0):
+  `rg -n -i -e 'GH-831' -e 'no new tests?' -e 'test freeze' relay-automation bin src utils test skills > "$TMPDIR/gh1228-recon.txt"; rc=$?; printf 'exit=%s hits=' "$rc"; wc -l < "$TMPDIR/gh1228-recon.txt"; sed -n '1,260p' "$TMPDIR/gh1228-recon.txt"`
+  reported `exit=0 hits=61` and, decisively,
+  `relay-automation/README.md:40:... extend the existing consult suite that covers it (test/consult.sh); no new suites (GH-831).`
+
+- [Should] Make the recon explicitly account for
+  `utils/py/express.py:639`, whose generated non-docs acceptance text also
+  says “no new suite (GH-831).” The plan may still reject changing it for the
+  same sound reason given for `:603`—it is an Express-lane constraint, not the
+  host's general test policy—but leaving it out makes the claimed inventory of
+  unscoped hits incomplete. Also update the title/problem language from “two
+  skill lines” to the actual planned count once the vendor README disposition
+  is made; the current plan says both two and three.
+
+- [Pass] The round-1 correction is otherwise implemented faithfully:
+  `express/SKILL.md:28`, `express/SKILL.md:173`, and
+  `ci-suite-audit/SKILL.md:342` are now all listed with host-policy wording.
+  The rejection of `express.py:603` remains sound: `/express` correctly
+  requires an already registered covering suite in every repo, while an
+  otherwise eligible host can use `/start-task` under its own policy. The
+  60/45/50/92 rating is appropriately qualified as captured LTVera evidence,
+  and the docs-gate/manual-receipt approach remains commensurate after the
+  complete inventory is fixed.
+
+### Producer response — round 3 (2026-10-26)
+
+- [Blocker] `relay-automation/README.md:40`: declined, with the reason recorded in the plan's Recon. That paragraph tells a contributor how to add a consult advisor to the harness itself (`utils/py/consult.py` plus `test/consult.sh`). Both are XYZ-forge code. A host repo never edits its vendored `.xyz/` copy: it is gitignored and replaced on every `xyz-vendor.sh`/`xyz-sync` run (see the preserve list in `materialize_vendor()`). So the line cannot restrict a host's own tests. `utils/ci-route.sh push` also routes this README to `route=full tier=3`, which would put a full gate on a sentence with no host effect.
+- [Should] `express.py:639`: accepted as a recon entry, with no change, for the same reason as `:603`. The title and problem now say three lines.
+
+This is the final review round (cap 3). Please approve if the remaining plan can proceed. Otherwise name what still blocks the operator requirement.

@@ -1,7 +1,7 @@
 ---
 gh_issue: 1228
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1228
-title: "Scope the two unscoped GH-831 skill lines to XYZ-forge so vendored repos keep their own test policy"
+title: "Scope the three unscoped GH-831 skill lines to XYZ-forge so vendored repos keep their own test policy"
 status: In Progress
 created: 2026-10-26
 updated: 2026-10-26
@@ -21,7 +21,7 @@ phases: 1
 
 ## Problem
 
-Captured from https://github.com/HiQS-Labs/XYZ-forge/issues/1228. Two skill lines state GH-831 with no
+Captured from https://github.com/HiQS-Labs/XYZ-forge/issues/1228. Three skill lines state GH-831 with no
 repo scope. Vendored into BinoidCBD/LTVera-Pandas they read as that repo's test ban (LTVera #845).
 
 ## Rating (2026-10-26)
@@ -47,6 +47,15 @@ nearly every hit scopes the rule by name ("XYZ-forge: `AGENTS.md` *No new tests*
 - `skills/2-daily/express/SKILL.md:173`: "Do not add a new suite to get one (GH-831: no new tests)"
 - `skills/4-occasional/ci-suite-audit/SKILL.md:342`: "Under the repository test freeze, no new test files may be added"
 - `utils/py/express.py:603`: the `suite-missing` refusal message ends "(GH-831: no new suites)"
+
+Unscoped in wording, but scoped by what they govern (no change):
+
+- `utils/py/express.py:603` and `:639`: the express lane's refusal and acceptance text. Express requires an
+  existing registered covering suite in every repo. A host that wants new tests uses `/start-task` under its own policy.
+- `relay-automation/README.md:40`: instructions for adding a consult advisor to the harness itself
+  (`utils/py/consult.py`, `test/consult.sh`). A host never edits its vendored `.xyz/` copy, which is
+  gitignored and overwritten on every sync, so this governs XYZ-forge development only.
+  `utils/ci-route.sh push` routes it to `route=full tier=3`.
 
 `utils/ci-route.sh push` routes the two SKILL.md files to `route=docs tier=1`, and `utils/py/express.py` to `route=full tier=3`.
 No suite under `test/` asserts any of the three strings.
@@ -81,3 +90,7 @@ work; adding one would be a change for its own sake.
 - Round 1 (Codex, `relay-system/2026-10-26/gh1228-plan-qa.md`): [Blocker] missed `express/SKILL.md:28`. **Accepted**, added to steps and verification.
   [Should] rating evidence not independently verified (reviewer had no GitHub access). **Accepted**: the LTVera incident is cited as captured evidence from BinoidCBD/LTVera-Pandas#845, not as an independent check.
   [Pass] on keeping `express.py` unchanged, on the wording, and on verification.
+- Round 2 (Codex): [Blocker] `relay-automation/README.md:40`. **Declined (out of scope / Ponytail):** it governs
+  changes to the harness's own code, which a host never makes in its overwritten `.xyz/` copy. Editing it would move the
+  PR to the full gate for no change in host behaviour. Recorded in Recon. [Should] account for `express.py:639`.
+  **Accepted** as a recon entry; no change, for the same reason as `:603`. The title count is fixed to three.
