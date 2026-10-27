@@ -30,4 +30,5 @@ Run once in a disposable full clone at `db2f6e8`, rc 1. Seven suites failed:
   lock timing and the pre-push merge-base fixture. Each fails the same way at `origin/development`
   in this Linux container, which is not the macOS shipping platform.
 
-None of these suites touch merge-cleanup. A qualifying run on macOS is still owed.
+The six other suites do not cover merge-cleanup; the one `gh436-merge-cleanup` failure is the
+root-only test that fails identically on the baseline. A qualifying run on macOS is still owed.

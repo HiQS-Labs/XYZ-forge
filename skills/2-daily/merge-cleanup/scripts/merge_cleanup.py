@@ -102,6 +102,10 @@ PUSH_GATE_TIMEOUT_S = 3600    # a push to the integration branch runs the pre-pu
 _WITHHOLD_BRANCH_DELETE: set[int] = set()
 # GH-1226: every PR this run merged, for the post-run merged ⊆ --prs assertion (batch or not).
 _MERGED_THIS_RUN: set[int] = set()
+# GH-1226: the pinned head each PR may merge at, passed to `gh pr merge --match-head-commit` so GitHub
+# rejects a head pushed after the final refresh. A module map, like _WITHHOLD_BRANCH_DELETE, keeps
+# execute_pr_merge's signature for the Phase-A stubs.
+_MATCH_HEAD: Dict[int, str] = {}
 
 TRANSIENT_RE = re.compile(
     r"could not resolve host|connection refused|connection timed out|timed out|TLS|SSL|rate limit"
@@ -242,6 +246,9 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: Optional[str] = Non
     merge_args = ["pr", "merge", str(pr_num), f"--{strategy}"]
     if delete_branch:
         merge_args.append("--delete-branch")
+    match_head = _MATCH_HEAD.pop(pr_num, None)
+    if match_head:
+        merge_args += ["--match-head-commit", match_head]
     log(f"Merging PR #{pr_num} via `gh {' '.join(merge_args)}`...")
     res = _gh(merge_args, repo_path, timeout=600)
     if res.returncode != 0:
@@ -1332,6 +1339,13 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
             if mergeable not in ("MERGEABLE", "CONFLICTING"):
                 log_err(f"PR #{p_num}: mergeable is {mergeable!r} — GitHub has not decided; stopping rather than guessing")
                 return 2
+            pinned = (getattr(args, "_pins", None) or {}).get(p_num)
+            if pinned is not None and info.get("headRefOid") != pinned:
+                # GH-1226: a head pushed after the startup verification is never repaired or merged.
+                log_err(f"PR #{p_num}: DEFERRED — head {str(info.get('headRefOid'))[:10]} moved off the dry-run pin "
+                        f"{pinned[:10]} during the run; re-run the dry run to re-pin")
+                failed[p_num] = "deferred: head is not the dry-run pin"
+                continue
 
             # Simulate this landing against the integration head fetched NOW.
             prep = prepare_landing_clone(info, primary_repo, branch, workdir)
@@ -1533,7 +1547,9 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
             _WITHHOLD_BRANCH_DELETE.discard(p_num)
             open_prs = getattr(args, "_open_prs_for_stacks", ordered_prs)
             _protect_stacked_dependents(info, open_prs, primary_repo, branch)
+            _MATCH_HEAD[p_num] = pinned
             merged_ok, merged_oid = execute_pr_merge(p_num, primary_repo, strategy=args.strategy, dry_run=False)
+            _MATCH_HEAD.pop(p_num, None)
             if not merged_ok:
                 return 2
             _MERGED_THIS_RUN.add(p_num)

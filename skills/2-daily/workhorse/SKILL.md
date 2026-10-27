@@ -340,8 +340,8 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
      resolved|parked` for merge-cleanup), then immediately re-enter the parent by the mechanism that
      matches the item's actual state, never a universal resume:
      - `merge-cleanup`: `python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <primary> --prefix <prefix> --prs <N,...> --execute --resume`
-       with the run's own `--prs` list (GH-1226). If the repair pushed a new head, first re-run the same
-       command without `--execute` to re-pin it.
+       naming only the run's `--prs` PRs that are still open (GH-1226). If the repair pushed a new head,
+       first dry-run that narrowed list (the same command without `--execute`) to re-pin it.
      - `jog`: pick the Recovery Verb from `skills/2-daily/jog/SKILL.md` that fits what must be redone:
        `releases jog resume <GH-NUM>` only reconciles state and re-projects a valid terminal receipt after
        a crash/restart; `releases jog retry-gate <GH-NUM>` re-runs the gate on the same head when the fix
