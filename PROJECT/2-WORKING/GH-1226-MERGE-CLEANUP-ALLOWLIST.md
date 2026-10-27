@@ -121,3 +121,22 @@ fresh-context Claude reviewer instead. Verdict: Approved with changes. Dispositi
 
 - A denylist chosen at execute time cannot bound a run: whatever opens between preview and
   execute is in scope. Pin the vetted set at preview and refuse on drift.
+
+## Consolidation with PR #1231 (2026-10-27)
+
+PR #1231 implemented the same issue in parallel. At the operator's request, #1227 now carries the
+strengths of both. #1227 keeps:
+- the record-file pin;
+- deferral, not a stop, when a head moves mid-run;
+- `--match-head-commit`, with the pinned-head check on both merge-confirmation paths;
+- the required-only checks gate;
+- `--limit 1000` discovery.
+
+From #1231 it adopts:
+- inline `--prs N@sha` pins, which need no record;
+- the printed `Pinned for --execute` line;
+- the bounded wait for pending checks (`MERGE_CLEANUP_CHECKS_WAIT_S` / `_POLL_S`), applied to required checks only;
+- unit coverage of the parser, the pin verifier, the checks reader and the merge confirmation, now in `TestGh1226AllowlistHelpers` in the existing suite.
+
+#1231 checked *any* running check and stopped on a moved head. #1227 keeps the issue's required-check
+scope and defers a moved head, so the rest of the queue continues.

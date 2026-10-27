@@ -234,7 +234,8 @@ Parking preserves work for later review; it never qualifies it for integration o
 - Builds a Directed Acyclic Graph (DAG) and computes topological merge order.
 - **`--prs` allowlist (GH-1226).** The PRs a run may land are fixed when it starts, never discovered at merge time:
   - A merging `--execute` (anything but `--teardown-only`, `--scan-only`, `--prs-only` or `--reconcile-pr`) without `--prs N[,N...]` exits 2 before any mutation.
-  - The dry run with `--prs` pins each listed PR's head SHA to `.tick/merge-cleanup/<slug>/selection-<integration>.json`. It refuses to pin (exit 2) if a listed PR is not open or is a draft.
+  - The dry run with `--prs` pins each listed PR's head SHA to `.tick/merge-cleanup/<slug>/selection-<integration>.json`. It refuses to pin (exit 2) if a listed PR is not open or is a draft. It also prints the same pins as `Pinned for --execute: --prs N@sha,...`.
+  - An entry may carry its own pin as `N@sha` (7-40 hex; a prefix is enough). Such an entry needs no record, so the printed line can be passed to `--execute` from another checkout. A bare `N` needs the dry run's record.
   - `--execute` with the same `--prs` refuses (exit 2, before any mutation) if there is no pin, if it names a PR the dry run did not, or if a listed PR closed, went draft, or moved off its pinned head. `--prs` may narrow the pinned list (drop PRs that already landed on `--resume`), never widen it.
   - Every open PR is still sequenced so dependency edges stay visible. Unlisted PRs are logged `not in --prs; not sequenced` and never merged, and B1 repairs touch only listed PRs. A listed PR with a hard dependency on an unlisted one is deferred.
   - Stacked-PR base retargeting still covers unlisted PRs, because it protects them; it does not merge them.
@@ -242,7 +243,8 @@ Parking preserves work for later review; it never qualifies it for integration o
   - A dry run without `--prs` previews every open PR and pins nothing.
 
 ### Phase 5: required checks and pinned heads (GH-1226)
-- Before each merge the script reads `gh pr checks <n> --required --json name,bucket`. `pass`/`skipping` proceed, and so does gh's "no required checks reported". Failing or cancelled checks mean the PR is not merged (exit 3). A pending or unreadable answer defers the PR (exit 3); the script never waits and never merges on a guess. A dry run only reports the check state; it does not change its exit code.
+- Before each merge the script reads `gh pr checks <n> --required --json name,bucket`. `pass`/`skipping` proceed, and so does gh's "no required checks reported". Failing or cancelled checks mean the PR is not merged (exit 3).
+- While required checks are pending, the script re-reads them every `MERGE_CLEANUP_CHECKS_POLL_S` (default 30 s) for up to `MERGE_CLEANUP_CHECKS_WAIT_S` (default 1800 s). Still pending after that defers the PR (exit 3), and so does an unreadable answer. It never merges on a guess. A dry run only reports the check state; it does not change its exit code.
 - At final eligibility the live head must equal the dry-run pin. A B1 repair pushes a new head, so a repaired PR is always **deferred** in the run that repaired it. Wait for its checks, re-run the dry run to re-pin, then `--execute` again.
 
 ### CI-heavy repositories: plan merge groups before qualification (GH-1066)

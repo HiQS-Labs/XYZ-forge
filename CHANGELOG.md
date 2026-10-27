@@ -12,6 +12,10 @@
   required checks"). Pending or unreadable checks defer the PR; failing checks mean it is not merged.
   A B1-repaired head no longer matches its pin, so it is deferred to a re-pinned run instead of
   merging before its CI exists. This was the LTVera-Pandas #841 incident.
+- **Merged with #1231's approach.**
+  - An entry may carry its own pin as `--prs N@sha`, so it needs no dry-run record, and the dry run prints that line.
+  - Pending required checks are waited for (bounded by `MERGE_CLEANUP_CHECKS_WAIT_S`, default 1800 s) before the PR is deferred.
+  - Both merge-confirmation paths now share one pinned-head rule (Kimi K3 review). The merge call itself uses `--match-head-commit`.
 - Discovery now passes `gh pr list --limit 1000` and reads `headRefOid`. SKILL.md example 6 and the
   drive loop are updated. The existing suites were edited only where they pinned the old denylist
   or the same-run B1 landing. Manual smoke: `TESTS-RESULTS/2026-10-26+GH-1226/`.

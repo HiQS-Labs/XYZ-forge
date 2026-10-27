@@ -106,6 +106,16 @@ _MERGED_THIS_RUN: set[int] = set()
 # rejects a head pushed after the final refresh. A module map, like _WITHHOLD_BRANCH_DELETE, keeps
 # execute_pr_merge's signature for the Phase-A stubs.
 _MATCH_HEAD: Dict[int, str] = {}
+# GH-1226 (from #1231): a pinned head whose required checks are still running is waited for, bounded,
+# before it is deferred.
+CHECKS_WAIT_ENV = "MERGE_CLEANUP_CHECKS_WAIT_S"
+CHECKS_POLL_ENV = "MERGE_CLEANUP_CHECKS_POLL_S"
+
+
+def _off_pin(info: Dict[str, Any], match_head: Optional[str]) -> bool:
+    """GH-1226: a MERGED read counts as this run's landing only at the pinned head. Both merge
+    confirmation paths use this one predicate so they cannot drift apart again."""
+    return bool(match_head) and info.get("headRefOid") != match_head
 
 TRANSIENT_RE = re.compile(
     r"could not resolve host|connection refused|connection timed out|timed out|TLS|SSL|rate limit"
@@ -256,7 +266,7 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: Optional[str] = Non
         # MERGED + merge commit counts, the same evidence the zero-exit path requires below.
         info = refresh_pr(pr_num, repo_path)
         oid = (info.get("mergeCommit") or {}).get("oid")
-        if info.get("state") == "MERGED" and oid and match_head and info.get("headRefOid") != match_head:
+        if info.get("state") == "MERGED" and oid and _off_pin(info, match_head):
             # GH-1226: merged, but not at the pinned head (--match-head-commit refused ours and
             # someone else merged a moved head). Never record or reconcile it as this run's landing.
             log_err(f"PR #{pr_num}: merged outside this run at head {str(info.get('headRefOid'))[:10]}, "
@@ -271,8 +281,7 @@ def execute_pr_merge(pr_num: int, repo_path: Path, strategy: Optional[str] = Non
     for _ in range(6):
         info = refresh_pr(pr_num, repo_path)
         if info.get("state") == "MERGED" and (info.get("mergeCommit") or {}).get("oid"):
-            if match_head and info.get("headRefOid") != match_head:
-                # GH-1226: the same pin rule as the failed-command fallback above.
+            if _off_pin(info, match_head):  # GH-1226: the same rule as the failed-command fallback
                 log_err(f"PR #{pr_num}: reads MERGED at head {str(info.get('headRefOid'))[:10]}, not the pinned "
                         f"{match_head[:10]} — not counted as this run's landing")
                 return False, ""
@@ -371,19 +380,21 @@ def hold_label(info: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def parse_pr_list(value: str) -> List[int]:
-    """`--prs 783,811` (repeatable): positive PR numbers, `#` optional."""
-    nums = []
+def parse_pr_list(value: str) -> List[Tuple[int, Optional[str]]]:
+    """`--prs 783,811` or `--prs 783@<sha>,811@<sha>` (repeatable; `#` optional). A bare number is
+    pinned by the dry run's record; `N@sha` (7-40 hex, a prefix is enough) carries its own pin."""
+    entries = []
     for tok in value.replace(" ", ",").split(","):
-        tok = tok.strip().lstrip("#")
+        tok = tok.strip()
         if not tok:
             continue
-        if not tok.isdigit() or int(tok) <= 0:
-            raise argparse.ArgumentTypeError(f"not a PR number: {tok!r}")
-        nums.append(int(tok))
-    if not nums:
+        m = re.fullmatch(r"#?(\d+)(?:@([0-9a-fA-F]{7,40}))?", tok)
+        if not m or int(m.group(1)) <= 0:
+            raise argparse.ArgumentTypeError(f"not N or N@<head sha, 7-40 hex>: {tok!r}")
+        entries.append((int(m.group(1)), m.group(2).lower() if m.group(2) else None))
+    if not entries:
         raise argparse.ArgumentTypeError("empty PR list")
-    return nums
+    return entries
 
 
 def selection_path(primary: Path, origin: str, integration: str) -> Path:
@@ -409,10 +420,11 @@ def _listed_open(listed: List[int], open_prs: List[Dict[str, Any]]) -> Tuple[Dic
     return found, problems
 
 
-def pin_selection(primary: Path, integration: str, listed: List[int],
+def pin_selection(primary: Path, integration: str, listed: Dict[int, Optional[str]],
                   open_prs: List[Dict[str, Any]]) -> bool:
-    """Dry run: record each listed PR's head so --execute can refuse if anything moved."""
-    found, problems = _listed_open(listed, open_prs)
+    """Dry run: record each listed PR's head so --execute can refuse if anything moved, and print the
+    same pins as a self-contained `--prs N@sha` list (from #1231) for a run from another checkout."""
+    found, problems = _listed_open(list(listed), open_prs)
     if problems:
         log_err("--prs: nothing pinned — " + "; ".join(problems))
         return False
@@ -421,33 +433,42 @@ def pin_selection(primary: Path, integration: str, listed: List[int],
     pins = {str(n): found[n]["headRefOid"] for n in sorted(found)}
     path.write_text(json.dumps({"integration": integration, "pinned_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                                 "prs": pins}, indent=1) + "\n")
+    stale = [f"#{n} (given {sha[:10]}, now {found[n]['headRefOid'][:10]})"
+             for n, sha in listed.items() if sha and not found[n]["headRefOid"].lower().startswith(sha)]
+    if stale:
+        log_warn("--prs: inline pin(s) no longer match; pinned the live head instead: " + ", ".join(stale))
     log(f"--prs pinned for --execute ({path}): " + ", ".join(f"#{n} @ {sha[:10]}" for n, sha in pins.items()))
+    log("Pinned for --execute: --prs " + ",".join(f"{n}@{sha}" for n, sha in pins.items()))
     return True
 
 
-def verify_selection(primary: Path, integration: str, listed: List[int],
+def verify_selection(primary: Path, integration: str, listed: Dict[int, Optional[str]],
                      open_prs: List[Dict[str, Any]]) -> Optional[Dict[int, str]]:
-    """--execute: the listed PRs must be a subset of the dry run's pin, each still open, not a draft,
-    and at the pinned head. Returns the pins, or None after logging why the run is refused."""
-    path = selection_path(primary, origin_url(primary) or "", integration)
-    try:
-        pinned = {int(n): sha for n, sha in json.loads(path.read_text())["prs"].items()}
-    except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
-        log_err(f"REFUSING to merge: no usable dry-run pin at {path} ({exc.__class__.__name__}). "
-                f"Run the same command without --execute first.")
-        return None
-    problems = [f"#{n} was not in the dry run's --prs" for n in listed if n not in pinned]
-    found, absent = _listed_open([n for n in listed if n in pinned], open_prs)
+    """--execute: each listed PR must be pinned (inline `N@sha`, or a bare N found in the dry run's
+    record), still open, not a draft, and at its pinned head. Returns {N: full live head}, or None
+    after logging why the run is refused."""
+    pinned: Dict[int, str] = {}
+    if any(sha is None for sha in listed.values()):
+        path = selection_path(primary, origin_url(primary) or "", integration)
+        try:
+            pinned = {int(n): sha for n, sha in json.loads(path.read_text())["prs"].items()}
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
+            log_err(f"REFUSING to merge: no usable dry-run pin at {path} ({exc.__class__.__name__}). "
+                    f"Run the same command without --execute first, or pass the `--prs N@sha` list it prints.")
+            return None
+    want = {n: (sha or pinned.get(n)) for n, sha in listed.items()}
+    problems = [f"#{n} was not in the dry run's --prs" for n, sha in want.items() if not sha]
+    found, absent = _listed_open([n for n, sha in want.items() if sha], open_prs)
     problems += absent
-    problems += [f"#{n} head moved {pinned[n][:10]} -> {p['headRefOid'][:10]}"
-                 for n, p in found.items() if p["headRefOid"] != pinned[n]]
+    problems += [f"#{n} head moved {want[n][:10]} -> {p['headRefOid'][:10]}"
+                 for n, p in found.items() if not p["headRefOid"].lower().startswith(want[n].lower())]
     if problems:
         log_err("REFUSING to merge: the --prs selection no longer matches the dry run:")
         for line in problems:
             log_err(f"  - {line}")
         log_err("Re-run the dry run to re-pin (drop merged or closed PRs from --prs), then --execute.")
         return None
-    return {n: pinned[n] for n in listed}
+    return {n: found[n]["headRefOid"] for n in listed}
 
 
 def required_checks_state(pr_num: int, repo_path: Path) -> Tuple[str, str]:
@@ -1506,9 +1527,26 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 return 2
             log(f"PR #{p_num}: pre-merge ledger gate green on {info['headRefOid'][:10]} + origin/{branch}")
 
-            # GH-1226: the merge waits for this head's required checks. Pending or unreadable defers
-            # (exit 3; re-run once CI settles), failing is not merged; neither stops the queue.
+            pinned = (getattr(args, "_pins", None) or {}).get(p_num)
+            if not dry_run and info.get("headRefOid") != pinned:
+                # GH-1226: a B1-repaired head is never the pin; defer before waiting on its new CI.
+                log_err(f"PR #{p_num}: DEFERRED — head {str(info.get('headRefOid'))[:10]} is not the dry-run pin "
+                        f"{str(pinned)[:10]}; re-run the dry run to re-pin once its checks finish")
+                failed[p_num] = "deferred: head is not the dry-run pin"
+                continue
+            # GH-1226: the merge waits for this head's required checks — bounded (from #1231), then
+            # pending or unreadable defers (exit 3; re-run once CI settles), failing is not merged;
+            # neither stops the queue.
             checks, detail = required_checks_state(p_num, primary_repo)
+            if checks == "pending" and not dry_run:
+                wait = _seconds_from_env(CHECKS_WAIT_ENV, 1800.0)
+                poll = max(_seconds_from_env(CHECKS_POLL_ENV, 30.0), 1.0)
+                waited = 0.0
+                while checks == "pending" and waited < wait:
+                    log(f"PR #{p_num}: waiting for required check(s) {detail} ({int(waited)}s of {int(wait)}s)")
+                    _sleep(poll)
+                    waited += poll
+                    checks, detail = required_checks_state(p_num, primary_repo)
             if checks != "ok" and dry_run:  # a preview reports it; only --execute defers
                 log(f"[DRY RUN] PR #{p_num}: required checks {checks} ({detail}) — --execute would not merge it yet")
             elif checks != "ok":
@@ -1699,9 +1737,9 @@ def main():
     parser.add_argument("--root", action="append", help="Root directory to search for checkouts")
     parser.add_argument("--prefix", default="", help="Filter checkouts by repo name substring")
     parser.add_argument("--exclude", action="append", default=[], help="Pattern or branch to exclude from checkout scan and teardown (never a PR filter; use --prs)")
-    parser.add_argument("--prs", action="append", type=parse_pr_list, default=[], metavar="N[,N...]",
-                        help="Allowlist of PR numbers to land (required for a merging --execute). The dry run pins their heads; "
-                             "--execute lands only these, at those heads (GH-1226)")
+    parser.add_argument("--prs", action="append", type=parse_pr_list, default=[], metavar="N[@SHA][,...]",
+                        help="Allowlist of PRs to land (required for a merging --execute). The dry run pins their heads and "
+                             "prints the same pins as N@sha; --execute lands only these, at those heads (GH-1226)")
     parser.add_argument("--strategy", choices=["squash", "merge", "rebase"], default=None, help="PR merge strategy (default: project policy, otherwise squash)")
     parser.add_argument("--show-merge-policy", action="store_true", help="Print the effective project merge policy as JSON and exit without scanning or contacting GitHub")
     parser.add_argument("--scan-only", action="store_true", help="Only audit and list checkouts")
@@ -1754,7 +1792,7 @@ def main():
                                          args.integration_branch, args.execute)
     if args.record_sweep:
         return record_sweep(primary_repo, args.integration_branch, Path(args.record_sweep))
-    args.prs = sorted({n for group in args.prs for n in group})
+    args.prs = {n: sha for group in args.prs for n, sha in group}
     args._pins = None
     _MERGED_THIS_RUN.clear()
     merging = args.execute and not (args.teardown_only or args.scan_only or args.prs_only) and args.reconcile_pr == 0
@@ -2081,7 +2119,7 @@ def main():
             return 2
         if _MERGED_THIS_RUN:
             log("Merged set ⊆ --prs: " + ", ".join(f"#{n}" for n in sorted(_MERGED_THIS_RUN))
-                + " within " + ", ".join(f"#{n}" for n in args.prs))
+                + " within " + ", ".join(f"#{n}" for n in sorted(args.prs)))
         if rc != 0:
             log_err("Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.")
             return rc
