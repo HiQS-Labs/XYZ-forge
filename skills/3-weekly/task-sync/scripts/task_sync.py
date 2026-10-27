@@ -195,7 +195,7 @@ def main(argv=None) -> int:
     parser.add_argument("--desktop-snapshot", metavar="PATH",
                         help="fresh Claude Desktop list_sessions snapshot (planning only)")
     parser.add_argument("--hours", type=float, default=24.0,
-                        help="sweep window in hours of last activity (default 24)")
+                        help="sweep window in hours of last activity (default 24; claude-desktop titles have no window, GH-1230)")
     parser.add_argument("--all", action="store_true",
                         help="sweep everything recent rather than the default candidate set")
     parser.add_argument("--pin", dest="pin", action="store_true", default=True,
