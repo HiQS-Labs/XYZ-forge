@@ -37,7 +37,7 @@ bash "$L" --check
 ```
 
 That locator resolves the harness from wherever your CWD is and reports which workers
-(tick/codex/agy/cmd/dsh) are on PATH. See
+(tick/codex/agy/cmd/dsh/kimi) are on PATH. See
 [Preconditions](#preconditions--locate-the-harness-bundled-locator-never-hardcode-a-path) below for the
 full env-exporting form (`eval "$(... --env)"` + `cd`) that every recipe in this doc assumes has already
 run.
@@ -185,9 +185,9 @@ for L in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/1-hourly/relay-xyz/find-harness.sh}
 done
 [ -x "$L" ] || { echo "relay-xyz: locator not found — set XYZ_HARNESS to your XYZ-forge clone"; exit 1; }
 
-eval "$("$L" --env)"   # exports HARNESS, TICK, TICK_REPO_ROOT, RELAY_HAS_{TICK,CODEX,AGY,COMMANDCODE,DEEPSEEK}
+eval "$("$L" --env)"   # exports HARNESS, TICK, TICK_REPO_ROOT, RELAY_HAS_{TICK,CODEX,AGY,COMMANDCODE,DEEPSEEK,KIMI}
 cd "$HARNESS"
-"$L" --check           # prints: harness path + which Path-A workers (tick/codex/agy/cmd/dsh) are on PATH
+"$L" --check           # prints: harness path + which Path-A workers (tick/codex/agy/cmd/dsh/kimi) are on PATH
 ```
 
 After this, `$HARNESS` is the harness repo root, `$TICK` is the absolute `bin/tick`, and
@@ -366,6 +366,7 @@ exists, or when you want a one-off that is not worth naming.
 | agy | `"$RELAY_HAS_AGY" = 1` | `agy` | `AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn-$$.log"` | `relay-automation/agy-turn.sh` | `${TMPDIR:-/tmp}/agy-turn-$$.log` |
 | Commandcode | `"$RELAY_HAS_COMMANDCODE" = 1` | `commandcode` | `COMMANDCODE_AGENT=commandcode ALLOW_PATHS="$ARTIFACT" COMMANDCODE_LOG="${TMPDIR:-/tmp}/commandcode-turn-$$.log"` | `relay-automation/commandcode-turn.sh` | `${TMPDIR:-/tmp}/commandcode-turn-$$.log` |
 | DeepSeek | `"$RELAY_HAS_DEEPSEEK" = 1` | `deepseek` | `DEEPSEEK_AGENT=deepseek ALLOW_PATHS="$ARTIFACT" DEEPSEEK_LOG="${TMPDIR:-/tmp}/deepseek-turn-$$.log"` | `relay-automation/deepseek-turn.sh` | `${TMPDIR:-/tmp}/deepseek-turn-$$.log` |
+| Kimi | `"$RELAY_HAS_KIMI" = 1` | `kimi` | `KIMI_AGENT=kimi ALLOW_PATHS="$ARTIFACT" KIMI_LOG="${TMPDIR:-/tmp}/kimi-turn-$$.log"` | `relay-automation/kimi-turn.sh` | `${TMPDIR:-/tmp}/kimi-turn-$$.log` |
 
 **Model selection per worker** (GH-346) — the one lookup that used to mean reading each shim's
 source. `RELAY_HAS_*` is set by `find-harness.sh --env`; every worker below also honors
@@ -377,6 +378,7 @@ source. `RELAY_HAS_*` is set by `find-harness.sh --env`; every worker below also
 | agy | `AGY_MODEL` | agy CLI's own | validated against `agy models` — an unlisted id fails fast rather than falling back |
 | Commandcode | `COMMANDCODE_MODEL` | `meta/muse-spark-1.2-contributor` | `cmd --list-models` for the live catalog (GLM, Qwen, DeepSeek all reachable here) |
 | DeepSeek | `DEEPSEEK_MODEL` | `deepseek/deepseek-v4-pro` | accepts a colloquial alias (`"deepseek v4 pro"`); also `DEEPSEEK_PROVIDER` (`openrouter`\|`deepseek`\|`alibaba`) selecting the endpoint and its key variable. An unrecognised value REFUSES the turn (it used to fall through to DeepSeek silently). `alibaba` is the Alibaba Token Plan, which serves Qwen under bare ids (`qwen3.8-max`, not `qwen/...`) and reads its key from `ALIBABA_TOKEN_PLAN_API_KEY` or, failing that, the file named by `ALIBABA_TOKEN_PLAN_API_KEY_FILE`. |
+| Kimi | `KIMI_MODEL` | `kimi-code/k3.1-pro` | Kimi Code CLI on the operator's Kimi plan, not OpenRouter (GH-1215); other ids are the `[models]` in `~/.kimi-code/config.toml` (`k3.1-pro-highspeed`, `k3`, `kimi-for-coding`). Runs `kimi -p` headless, which edits without asking; do not put `--yolo`/`--auto` in `KIMI_FLAGS` (the CLI refuses them with `-p`). No reasoning-effort flag. The CLI has no stdin or prompt-file mode, so the turn prompt is a process argument: visible to other local processes while the turn runs, and bounded by `ARG_MAX`. Do not use this lane for prompts that must stay private from other local users. `KIMI_BIN` defaults to `kimi` on PATH, then `~/.kimi-code/bin/kimi`. |
 | Aider | `AIDER_MODEL` | `openrouter/anthropic/claude-sonnet-5`, or `openai/agents-a1` when `AIDER_OPENAI_API_BASE` is set | force `AIDER_FLAGS=--edit-format diff` on GLM |
 | Claude | `CLAUDE_MODEL` | `claude-sonnet-4-6` | Explicit operator choice, never a session default; see [subscription setup](https://github.com/HiQS-Labs/XYZ-forge/blob/development/relay-automation/README.md#claude-subscription-mode) |
 | Pi | `PI_MODEL` | **none — required** | refuses to guess (GH-295) |
@@ -594,12 +596,12 @@ they share the same env shape:
 | extra writable paths | `ALLOW_PATHS` | `ALLOW_PATHS` | comma-sep git paths the turn may change (the relay file is always allowed). **For a review turn, set `ALLOW_PATHS=""` — relay file only.** If the artifact is writable, the reviewer tends to start *editing and building* it instead of reviewing (it can read any path regardless), which over-runs the turn cap (exit 7) — observed 2026-06-26. A build/fix turn is the only case that needs the artifact in `ALLOW_PATHS`. **A whole DIRECTORY is a valid lane entry** (GH-90): an entry that names an existing directory, or any entry written with a **trailing slash** (`skills/1-hourly/standup/fixtures/` — the only form that works when the turn is about to *create* the directory), makes that directory and everything beneath it writable. Without either signal the entry is a FILE path, and a file entry is never a bare prefix — GH-59: `green` must not reach `greenfield/output.txt`. Before GH-90 a bare directory entry was unmatchable by construction and the turn failed as a *containment violation*, which reads as a misbehaving builder rather than a malformed lane spec; the off-lane report now names that mistake explicitly. |
 | peer id | `RELAY_PEER` | `RELAY_PEER` | so the turn hands off `--to <peer>` (else "the other agent") |
 | binary | `CODEX_BIN` | `AGY_BIN` | override the CLI path |
-| autonomy | `CODEX_FLAGS` (default `-s workspace-write`) | `AGY_MODEL` / `AGY_FLAGS` | the codex sandbox/approval flags or the agy model |
+| autonomy | `CODEX_FLAGS` (default `-s workspace-write -c approval_policy=never`) | `AGY_MODEL` / `AGY_FLAGS` | the codex sandbox/approval flags or the agy model |
 | transcript | `CODEX_LOG` | `AGY_LOG` | where the CLI transcript lands (default a `$TMPDIR` file) |
 | turn ceiling | `RELAY_TURN_TIMEOUT_S` | `RELAY_TURN_TIMEOUT_S` | per-turn wall-clock cap (Aider default: 900s in both runtime shims; hung CLI → exit 7) |
 
 If a fresh device's `codex` still blocks writes, escalate autonomy:
-`CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox'` (or `-c approval_policy=never`).
+`CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox'`.
 For agy, the common failure is different: sandboxed runs can exit `0` with empty
 output, so run the lane sandbox-OFF before concluding the worker is broken.
 
