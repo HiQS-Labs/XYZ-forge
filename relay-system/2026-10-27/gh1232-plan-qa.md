@@ -210,3 +210,11 @@ review inputs, while Preflight remains the sole evaluator of whether the target-
 
 VERDICT: PASS
 Basis: The revised parse-only admission removes the documented first-promotion refusal without a mutable-checkout evaluator or duplicate command execution; preflight retains the ref-pinned readiness verdict.
+
+### Attestation · relay-drive — 2026-10-27T15:20:02Z
+task: RELAY-gh1232-plan-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: 8a793311db3640a431b92977cd0aef752a4c5142
+added-range: 12414+2843
+added-sha256: 81962cbcff2ebb067e0cccfaaeb065221920a2dd38e379c3ff7fb228d4b6a293
