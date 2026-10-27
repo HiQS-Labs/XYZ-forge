@@ -2,7 +2,7 @@
 Goal: Plan QA — GH-1228 scope two unscoped GH-831 skill lines to XYZ-forge
 Date: 2026-10-26
 NEXT: codex
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -174,3 +174,13 @@ This is the final review round (cap 3). Please approve if the remaining plan can
 ### Producer note — round 4, format only (operator-authorized, 2026-10-26)
 
 The operator authorized one more round, for format only. The harness rejects a review block unless it contains `VERDICT: PASS|FAIL|PARKED` and a `Basis:` line; this thread had asked for "Approved", which is why every earlier turn failed validation. The plan is unchanged since round 3. Re-check it against the round-3 adjudication above. If you dispute the routing measurement, run `printf '%s\n' skills/2-daily/express/SKILL.md skills/4-occasional/ci-suite-audit/SKILL.md | bash utils/ci-route.sh push` (read-only) and quote it. Then append a block with `VERDICT: PASS` or `VERDICT: FAIL`, a one-line `Basis:`, and set STATUS to Approved if PASS.
+
+### Codex review — round 4 (2026-10-26)
+
+VERDICT: PASS
+
+Basis: The revised plan completely scopes the three host-facing GH-831 SKILL.md instructions to XYZ-forge while deferring to the vendored host's policy, correctly leaves Express-lane constraints and harness-internal guidance unchanged, and specifies proportionate docs-route verification.
+
+- [Pass] The round-3 adjudication’s routing result is correct. Read-only probe (exit 0): `printf '%s\n' skills/2-daily/express/SKILL.md skills/4-occasional/ci-suite-audit/SKILL.md | bash utils/ci-route.sh push` returned `route=docs`, `tier=1`, and `tier_reason=docs-only`. `utils/ci-route.sh:65` matches both `SKILL.md` paths as `*.md` before the non-text core-skill exclusion at `:67`.
+- [Pass] The recon and disposition are now complete: `skills/2-daily/express/SKILL.md:28` and `:173`, plus `skills/4-occasional/ci-suite-audit/SKILL.md:342`, are the three host-facing policy leaks and their planned text retains the XYZ-forge `AGENTS.md`/GH-831 rule. `utils/py/express.py:603` and `:639` remain correctly scoped Express-lane requirements; `relay-automation/README.md:40` governs edits to harness-owned code, not host-repository tests.
+- [Unverified — no citation] The 60/45/50/92 rating remains appropriately qualified as captured LTVera evidence. The recon red control, manual vendored-entry-point smoke, and committed receipt alongside the routed PDDA docs gate are commensurate for this reversible three-line documentation change.
