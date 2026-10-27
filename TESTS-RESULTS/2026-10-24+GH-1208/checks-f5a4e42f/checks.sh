@@ -75,5 +75,6 @@ grep -q -E "^PASS: L5 jog land completes cleanly" "$OUT/fixed-neither.log" && fa
 git -C "$C" diff --quiet -- utils/py/jog_run.py && pass "clone back at fixed code" || fail "clone not restored"
 : > "$OUT/provenance.jsonl"
 for f in "$OUT"/*.log; do rcf="${f%.log}.rc"; printf '{"artifact":"%s","sha256":"%s","bytes":%s,"suite_exit":"%s","revision":"%s","date":"%s"}\n' "$(basename "$f")" "$(shasum -a 256 "$f" | cut -d' ' -f1)" "$(wc -c < "$f" | tr -d ' ')" "$(cat "$rcf" 2>/dev/null)" "$(git -C "$C" rev-parse --short HEAD)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$OUT/provenance.jsonl"; done
-cp "$C/test/gh1208-GH1127.sh" "$OUT/variant-GH1127.sh"; cp "$C/test/gh1208-NEITHER.sh" "$OUT/variant-NEITHER.sh"; rm -f "$C/test/gh1208-GH1127.sh" "$C/test/gh1208-NEITHER.sh"
+V="$C/test/gh1208"  # transient variant copies in the disposable clone, never in this tree
+cp "$V-GH1127.sh" "$OUT/variant-GH1127.sh"; cp "$V-NEITHER.sh" "$OUT/variant-NEITHER.sh"; rm -f "$V-GH1127.sh" "$V-NEITHER.sh"
 echo "== summary: $PASS pass, $FAIL fail"; [ "$FAIL" -eq 0 ]
