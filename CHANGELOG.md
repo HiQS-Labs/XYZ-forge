@@ -18,7 +18,11 @@
   - Both merge-confirmation paths now share one pinned-head rule (Kimi K3 review). The merge call itself uses `--match-head-commit`.
 - Discovery now passes `gh pr list --limit 1000` and reads `headRefOid`. SKILL.md example 6 and the
   drive loop are updated. The existing suites were edited only where they pinned the old denylist
-  or the same-run B1 landing. Manual smoke: `TESTS-RESULTS/2026-10-26+GH-1226/`.
+  or the same-run B1 landing.
+- Verification:
+  - Focused suite: 199 tests, 1 failure in the Linux cloud container (`test_iv_unreadable_event_log_preserves`; it needs a non-root user and fails the same way at `origin/development`). Agy's macOS run of the same suite had 0 failures.
+  - Manual smoke passed: `TESTS-RESULTS/2026-10-26+GH-1226/`.
+  - The qualifying macOS full-gate run is outstanding.
 
 ## 2026-10-26 — Vendored copies keep the host repo's own test policy (GH-1228)
 

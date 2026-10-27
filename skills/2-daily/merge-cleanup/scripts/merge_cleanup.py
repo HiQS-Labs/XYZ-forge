@@ -1983,6 +1983,7 @@ def main():
     # unlisted PR whose base branch a listed landing deletes (GH-1226 keeps this deliberately).
     args._open_prs_for_stacks = list(prs)
     ordered_prs: List[Dict[str, Any]] = []
+    listed_deferred: Set[int] = set()  # GH-1226: listed PRs held back by an unlisted hard dependency
     if dry_run and args.prs and not (args.scan_only or args.teardown_only) and args.reconcile_pr == 0:
         if not pin_selection(primary_repo, args.integration_branch, args.prs, prs):
             return 2
@@ -2018,6 +2019,8 @@ def main():
                         hard_deps = [d for d in (p.get("_hard_deps") or []) if d in deferred_set]
                         deps_str = ", ".join(f"#{d}" for d in hard_deps)
                         log(f"PR #{p_num}: depends on deferred prerequisite ({deps_str}); deferred to next run")
+                        if p_num in args.prs:
+                            listed_deferred.add(p_num)
 
             ordered_prs = [p for p in all_ordered if int(p["number"]) not in deferred_set]
         else:
@@ -2123,6 +2126,11 @@ def main():
         if rc != 0:
             log_err("Phase 5 stopped; teardown and symlink pruning are NOT run after a failed landing.")
             return rc
+    if args.execute and not args.teardown_only and listed_deferred:
+        # GH-1226: a listed PR that never reached Phase 5 did not land; that is exit 3, not success.
+        log_err("Listed PR(s) deferred by an unlisted hard dependency (add it to --prs or land it first): "
+                + ", ".join(f"#{n}" for n in sorted(listed_deferred)))
+        return 3
 
     # Phase 6: Safe Teardown
     print("=" * 80)

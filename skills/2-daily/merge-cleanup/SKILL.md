@@ -237,7 +237,7 @@ Parking preserves work for later review; it never qualifies it for integration o
   - The dry run with `--prs` pins each listed PR's head SHA to `.tick/merge-cleanup/<slug>/selection-<integration>.json`. It refuses to pin (exit 2) if a listed PR is not open or is a draft. It also prints the same pins as `Pinned for --execute: --prs N@sha,...`.
   - An entry may carry its own pin as `N@sha` (7-40 hex; a prefix is enough). Such an entry needs no record, so the printed line can be passed to `--execute` from another checkout. A bare `N` needs the dry run's record.
   - `--execute` with the same `--prs` refuses (exit 2, before any mutation) if there is no pin, if it names a PR the dry run did not, or if a listed PR closed, went draft, or moved off its pinned head. `--prs` may narrow the pinned list (drop PRs that already landed on `--resume`), never widen it.
-  - Every open PR is still sequenced so dependency edges stay visible. Unlisted PRs are logged `not in --prs; not sequenced` and never merged, and B1 repairs touch only listed PRs. A listed PR with a hard dependency on an unlisted one is deferred.
+  - Every open PR is still sequenced so dependency edges stay visible. Unlisted PRs are logged `not in --prs; not sequenced` and never merged, and B1 repairs touch only listed PRs. A listed PR with a hard dependency on an unlisted one is deferred, and an executing run then exits 3.
   - Stacked-PR base retargeting still covers unlisted PRs, because it protects them; it does not merge them.
   - After Phase 5 the script asserts merged ⊆ `--prs` (exit 2 otherwise). The batch issue renders the pinned list.
   - A dry run without `--prs` previews every open PR and pins nothing.

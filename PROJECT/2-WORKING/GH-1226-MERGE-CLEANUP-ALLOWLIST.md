@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/1226
 title: "merge-cleanup --execute lands PRs opened after the dry run (denylist, not allowlist) and merges with checks pending"
 status: Active
 created: 2026-10-26
-updated: 2026-10-26
+updated: 2026-10-27
 owner: claude
 doc_type: bugfix
 complexity: 3
@@ -12,7 +12,7 @@ risk: 3
 effort: 3
 phases: 1
 non_goals:
-  - Waiting on CI inside the run (a pending check defers the PR; the operator re-runs)
+  - Unbounded waiting on CI inside the run (pending required checks are polled, bounded, then deferred)
   - New test suites or registry entries (GH-831)
   - Changing teardown, reconcile, or retire-published-pr behaviour
 goal: >
@@ -33,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Implemented `--prs` allowlist + dry-run head pins + required-check gate + merged ⊆ list assertion; existing suites updated; CLI smoke green (`TESTS-RESULTS/2026-10-26+GH-1226/`). | Full gate on the final commit, final review, PR to `development`; after merge the reconciler closes the doc. |
+| Implemented the `--prs` allowlist, dry-run head pins (record or inline `N@sha`), a bounded required-check gate, `--match-head-commit` with pinned-head confirmation, and the merged ⊆ list assertion. Consolidated #1231. Kimi K3 and Agy reviewed it; smoke is green (`TESTS-RESULTS/2026-10-26+GH-1226/`). | Run the qualifying macOS full gate, then merge PR #1227 to `development`; after merge the reconciler closes the doc. |
 
 ## Problem (observed)
 
@@ -83,7 +83,7 @@ under `TESTS-RESULTS/2026-10-26+GH-1226/`.
 
 Rollback: revert the PR; no schema or ledger format change. The pin file is untracked `.tick/` state.
 
-## Bet check
+## Bet check (pre-consolidation; superseded in part by the 2026-10-27 consolidation below)
 
 - Outcome sought: nothing outside the operator's vetted list ever lands; nothing lands on red/pending CI.
 - Smallest bet: one flag, one JSON pin, one `gh pr checks` call. No CI wait loop.

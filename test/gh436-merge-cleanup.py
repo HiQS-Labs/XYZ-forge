@@ -584,6 +584,17 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         merged.assert_not_called()
         self.assertEqual(sleep.call_count, 2)
 
+    def test_listed_pr_held_by_an_unlisted_dependency_exits_3(self):
+        # GH-1226 (CodeRabbit): a listed PR that never reaches Phase 5 because it hard-depends on an
+        # unlisted PR did not land — the run must say so (rc 3), not report success.
+        prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": "depends on #8"},
+               {"number": 8, "baseRefName": "development", "title": "unlisted", "files": [], "body": ""}]
+        rc, _, merged, _, teardown = self._drive_phase5(
+            ["--primary", str(self.primary), "--prs", "7", "--execute"], prs=prs)
+        self.assertEqual(rc, 3)
+        merged.assert_not_called()
+        teardown.assert_not_called()
+
     def test_unknown_then_mergeable_is_polled_and_lands(self):
         prs = [{"number": 7, "baseRefName": "development", "title": "t", "files": [], "body": ""}]
         base = {"number": 7, "state": "OPEN", "headRefOid": "a" * 40, "headRefName": "feat/x",
