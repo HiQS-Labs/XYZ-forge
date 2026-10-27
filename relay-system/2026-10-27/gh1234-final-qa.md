@@ -2,7 +2,7 @@
 Goal: Final QA — GH-1234 marathon lane PR body carries Closes #<issue>
 Date: 2026-10-27
 NEXT: codex
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -99,3 +99,39 @@ index e0012770..fd5d2b66 100644
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 ## Log
+
+### Codex final QA — 2026-10-27
+
+[Pass] **Ship.** The implementation meets requirements 1–4 and plan steps 1–3.  Jog appends the
+opt-in flag once only when its structured `issue` value is present
+(`utils/py/jog_run.py:484-510`); the driver parses that flag beside the established branch-safety
+control (`utils/py/marathon_drive.py:1101-1105`).  The sole lane-PR publisher passes the exact
+derived issue and parsed flag to the body builder (`utils/py/marathon_drive.py:2680-2704`), so a
+flagged Jog lane produces `Closes #N`, an ordinary wave/direct invocation produces `Refs #N`, and
+an underivable issue preserves the original body (`utils/py/marathon_drive.py:137-144`).  No
+`marathon-closeout.sh` behavior changed, and the frozen Bash fallback remains untouched.
+
+[Pass] There is no implicit closing path: `lane_pr_notes()` selects `Closes` only for a truthy
+`closes_issue` argument and a derivable issue (`utils/py/marathon_drive.py:141-144`).  A direct
+operator may explicitly supply the public driver flag, as accepted in plan QA round 2; that is an
+intentional override rather than an automatic direct-drive closure.  The lane-PR attempt remains
+after durable success recording and green publication (`utils/py/marathon_drive.py:2815-2834`), so
+a nonzero closeout result is logged without reversing phase approval
+(`utils/py/marathon_drive.py:2704-2714`).
+
+[Pass] The module-level `lane_pr_notes()` extraction is behavior-preserving for the former body
+literal and makes the exact builder independently observable without introducing a second body
+owner (`utils/py/marathon_drive.py:137-144,2699-2703`).  Its only added behavior is the planned
+issue suffix.
+
+[Pass] The manual receipt substantiates the required sensitivity: it drives the exact body helper
+through closeout dry-run, reports the flagged `Closes #416` path, unflagged `Refs #648`, unchanged
+no-issue body, Jog's add/none/no-duplicate cases, and the base red control
+(`TESTS-RESULTS/2026-10-27+GH-1234/smoke.md:3-10,14-27,29-53`).  The listed disposable-clone
+focused-suite results are consistent with the changed adapter and lane-PR surfaces; the scheduled
+full gate remains the final broader check.  Read-only syntax probe:
+`PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - <<'PY' ... ast.parse(...) ... PY`
+exited `0`; decisive output: `ast=ok jog_run.py marathon_drive.py`.
+
+VERDICT: PASS
+Basis: The one explicit Jog policy flag is the sole automatic selector for `Closes`; all default lanes are non-closing, the no-issue body is unchanged, and the recorded smoke observes the body at the closeout boundary with a base red control.
