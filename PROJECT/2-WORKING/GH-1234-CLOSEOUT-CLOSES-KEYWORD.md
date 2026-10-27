@@ -1,11 +1,13 @@
 ---
 title: "Marathon lane PR body carries Closes #<issue>"
-status: "Proposed (1-INBOX - not yet active)"
+status: Active
 created: 2026-10-27
+updated: 2026-10-27
 owner: noelsaw1
 gh_issue: 1234
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1234
 doc_type: project
+goal: "A Jog-dispatched Marathon lane PR closes its issue; other lanes only reference it"
 phases: 1
 ---
 
@@ -107,4 +109,4 @@ Traced at base `5cab70c8`:
 
 | What was just completed | What's next |
 |---|---|
-| Capture + plan written from recon at 5cab70c8 | Codex plan QA |
+| Plan QA approved (codex r2, attested) | Implement plan steps 1–2, then smoke + gate |
