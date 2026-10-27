@@ -2,7 +2,7 @@
 Goal: Plan QA — GH-1234 marathon lane PR body carries Closes #<issue>
 Date: 2026-10-27
 NEXT: codex
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -93,3 +93,36 @@ actual marathon plans.
 
 Round 2: is the explicit-flag design sound and sufficient? End your final block with exactly
 `VERDICT: PASS` (or `FAIL`) on its own line, followed by a non-empty `Basis:` line (GH-533).
+
+### Codex plan QA — round 2 — 2026-10-27
+
+[Pass] **Ship.** The opt-in flag is the smallest sound boundary: `open_lane_pr()` is the sole
+automatic lane-PR publisher (`utils/py/marathon_drive.py:2667-2700,2819`), and it sees the parsed
+driver arguments. Therefore a Jog-supplied `--lane-closes-issue` gates `Closes #N`, while an
+ordinary Marathon wave or direct invocation has no implicit close behavior and receives `Refs #N`.
+This removes the unreliable frontmatter/plan-topology inference and protects #648-style umbrellas.
+
+[Pass] Jog reaches the policy helper for both its normal dispatch and its gate-only retry
+(`utils/py/jog_run.py:615,861`); the structured preflight artifact sets `issue` to the accepted
+issue number or `null` (`utils/py/swarm_preflight.py:1085-1134`). Appending the flag only when
+`invocation.get("issue")` is truthy, and only if absent, therefore covers the intended one-issue
+Jog contract without duplicating the rule in `marathon-closeout.sh`. The exposed driver option is
+an explicit operator override, analogous to the existing explicit driver controls; it is not an
+automatic direct-drive closure path.
+
+[Pass] The planned fallback is conservative and preserves the existing body when
+`lane_issue_number()` cannot derive a number. The failure mode is recoverable (a `Refs` PR needs
+an intentional keyword edit) rather than an early closure. Scope is Easy to revert: one parser
+argument, one Jog argv augmentation, and the PR-notes suffix.
+
+[Pass] Verification is commensurate and the manual smoke has the right sensitivity: it observes
+the final `gh pr create --body` boundary, includes the base red control, and exercises flagged,
+unflagged, and no-issue behavior. No new test suite is warranted. Read-only probes used
+`export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3
+- <<'PY' ... from jog_run import _marathon_argv_from_invocation ... PY`; exit status `0`; decisive
+output was `existing_flag_count= 0` and identical current argv for `issue='416'` and `issue=None`,
+which establishes that the proposed helper addition is the sole flag injection. A separate AST
+probe exited `0` with `ast=ok utils/py/marathon_drive.py` and `ast=ok utils/py/jog_run.py`.
+
+VERDICT: PASS
+Basis: Jog is the only automatic opt-in caller, its structured issue field is present on both dispatch paths, and the default/failed-derivation behavior is safely non-closing.
