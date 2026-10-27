@@ -30,18 +30,24 @@ Cause, traced at base `5cab70c8`:
 
 ## Requirements
 
-1. An unattended promotion accepts the doc's JSON contract probes when the contract parses and
-   **every** probe evaluates `unfixed` against the target (the same evaluator preflight uses).
+1. An unattended promotion accepts the doc's JSON contract probes as reviewed probes when the
+   contract parses and every probe is well-formed: an object with a known `type`, a `path` (or a
+   `cmd` for `command`), and a `pattern` for the grep types. Promotion **evaluates no probe**.
+   Whether a probe is unfixed is preflight's job, and preflight runs next in its ref-pinned
+   worktree (`utils/py/swarm_preflight.py:1340-1364`).
 2. A doc with no usable probes in either place still parks `unreviewed-probe-contract`.
-3. A JSON `command` probe goes through the existing `lint_probe` (so `true` / `exit 0` stay rejected).
+3. A JSON `command` probe's `cmd` goes through the existing `lint_probe`, so `true` and `exit 0` stay
+   rejected. Linting is static, the same as for frontmatter probes. Nothing is executed.
 4. Frontmatter probes keep working unchanged, as an additional source.
 
 ## Preflight bet check
 
 - **Outcome sought:** unattended Jog runs (#1175 Phase 1) can promote a correctly contracted 1-INBOX doc.
-- **Smallest viable bet:** reuse `swarm_preflight.extract_contract` + `eval_probes` inside
-  `promote_contract_to_working`, the same import pattern `marathon_drive.py:2627-2647` already uses.
-  Not built: a new probe schema, a converter, a new parker, or any change to preflight.
+- **Smallest viable bet:** reuse `swarm_preflight.extract_contract` (parse only) inside
+  `promote_contract_to_working`, with the same lazy-import pattern as `marathon_drive.py:2627-2647`,
+  plus a static shape check. Not built: probe evaluation at promotion (plan QA round 1: a second
+  evaluation context, and `shell=True` commands run twice), a new schema, a converter, a new
+  parker, or any change to preflight.
 - **Alternative rejected:** "promote via SOP 1b by hand first" (the Phase 0 workaround). It works, but
   every reconciler pass would have to do it, so the defect stays.
 - **Rollback:** one function in one file; revert the commit.
@@ -54,9 +60,12 @@ Cause, traced at base `5cab70c8`:
      because `extract_contract` `sys.exit(3)`s without one);
    - import `extract_contract, eval_probes` inside `try`; parse inside `try/except SystemExit` → on
      failure `([], "contract did not parse")`;
-   - any `command` probe whose `cmd` fails `lint_probe` → `([], "<lint reason>")`;
-   - `eval_probes(root, contract)`; accept only if every verdict is `unfixed`; otherwise
-     `([], "contract probes not all unfixed: landed=N blocked=N")`.
+   - every entry must be a dict with `type` in the evaluator's set
+     (`path_absent|path_present|grep_present|grep_absent|command`). The path types need a string
+     `path`; the grep types also need a non-empty string `pattern`; `command` needs a string `cmd`
+     that passes `lint_probe`. The first violation → `([], "contract probe N malformed: <why>")`.
+     Non-dict entries are covered (plan QA round 1, [Should]);
+   - no probe is executed.
    It returns one label per probe (`grep_present:path`, `command:cmd`, …) for the existing
    interactive printout.
 2. In `promote_contract_to_working`, when the frontmatter yields no valid probe, use the contract
@@ -78,18 +87,22 @@ Cause, traced at base `5cab70c8`:
   routed final gate (`utils/ci-route.sh`).
 - Manual smoke under `TESTS-RESULTS/2026-10-27+GH-1232/`, run in a disposable full clone, calling
   `promote_contract_to_working(..., interactive=False)` directly:
-  - **Main path:** a 1-INBOX doc with a JSON contract whose probes read unfixed promotes (it returns
+  - **Main path:** a 1-INBOX doc with a well-formed JSON contract (and no frontmatter probes) promotes (it returns
     the new path). **Red control:** the same doc at base `5cab70c8` parks.
   - **Adjacent paths:**
     - a doc with no probes anywhere still parks;
-    - a contract whose probe already reads `landed` parks and names the counts;
-    - a `command` probe of `true` parks with the lint reason.
+    - a `command` probe of `true` parks with the lint reason;
+    - a contract with a non-object probe (e.g. `"fix_probes": ["x"]`) parks with a malformed-probe
+      reason;
+    - **no execution:** a `command` probe that would create a marker file
+      (`touch .promotion-ran && false`) leaves no marker after promotion.
 
 ## Rating (2026-10-27)
 
 `rated 70/60/50/80`.
 
-- **sev 60:** it blocks every unattended run on a 1-INBOX doc. It parks safely (no data loss) and a
+- **sev 60:** it blocks every unattended run on a 1-INBOX doc that relies on JSON contract probes
+  and has no frontmatter probes (that is every contracted capture today). It parks safely (no data loss) and a
   manual workaround exists (SOP 1b promotion).
 - **pri 70:** a hard prerequisite for #1175 Phase 1. One incident (Phase 0), not a recurring class
   yet. Trend unknown.
