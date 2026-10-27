@@ -2,9 +2,9 @@
 gh_issue: 1228
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1228
 title: "Scope the three unscoped GH-831 skill lines to XYZ-forge so vendored repos keep their own test policy"
-status: In Progress
+status: Complete
 created: 2026-10-26
-updated: 2026-10-26
+updated: 2026-10-27
 owner: operator
 goal: "Vendored copies of the express and ci-suite-audit skills defer to the host repo's own test policy; in XYZ-forge they still cite GH-831."
 complexity: 1
