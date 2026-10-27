@@ -1,0 +1,49 @@
+## snap 6-after-restart at 2026-10-26T03:24:51Z
+### jog list --all (head)
+### root: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge
+#### .tick/jog state files
+-- /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.tick/jog/jog-01M5V2Q6CK5GW0B5V25KFQQ1XE/state.json
+{
+  "schema": "jog/execution-state@1",
+  "gid": "jog-01M5V2Q6CK5GW0B5V25KFQQ1XE",
+  "executions": [
+    {
+      "execution_id": "gh416-exec1",
+      "mode": "run",
+      "started_at": "2026-10-26T03:22:13Z",
+      "status": "cold-start-paused",
+      "packet_dir": "gh416-exec1/preflight",
+      "result_path": "gh416-exec1/preflight/marathon-result.json"
+    }
+  ],
+  "gh_number": 416
+}
+
+#### driver-heartbeat.json
+cat: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.tick/driver-heartbeat.json: No such file or directory
+
+#### rtl_driver_heartbeat_status
+finished (rc=1)
+#### driver lock
+ls: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.git/relay-driver.lock: No such file or directory
+
+### root: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0
+#### .tick/jog state files
+#### driver-heartbeat.json
+{"phase_id": "gh-416-doc-trues-up-batch", "pid": 32725, "plan": "packet", "relay_task": "MARATHON-GH-416-DOC-TRUES-UP-BATCH-TURN", "started_utc": "2026-10-26T03:22:19Z", "updated_utc": "2026-10-26T03:22:19Z"}
+
+#### rtl_driver_heartbeat_status
+stale (rc=2)
+#### driver lock
+total 8
+drwxr-xr-x@  3 noelsaw  staff   96 Oct 25 20:22 .
+drwxr-xr-x@ 17 noelsaw  staff  544 Oct 25 20:23 ..
+-rw-r--r--@  1 noelsaw  staff    6 Oct 25 20:22 pid
+
+### processes
+ 4779 67871       00:34 bash -c vp_run_one "$1" pool _ marathon-drive.sh
+ 4796  4779       00:34 bash /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/test/marathon-drive.sh
+17584 17583       00:01 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/utils/py/agy-turn
+17645 17644       00:00 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/utils/py/agy-turn
+17966  4796       00:00 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/utils/py/marathon
+18012 17584       00:00 node /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/bin/tick ping GH417 --agent agy
