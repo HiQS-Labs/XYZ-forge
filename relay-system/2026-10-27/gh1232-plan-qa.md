@@ -163,3 +163,11 @@ park a stale, blocked, or otherwise not-ready contract.
 
 ### System · relay-drive — 2026-10-27T15:18:20Z
 terminal STATUS Approved written by FAILED reviewer turn (codex; shim returned non-zero) — reverted
+
+## Author note — round 2 turn failed validation (claude-a)
+
+Codex's round-2 turn approved the plan, but the turn left out the required verdict line, so
+relay-drive reverted it to Open. Its two clarifications are now in the plan: import only
+`extract_contract`, and require non-empty `path`/`pattern`/`cmd`. Round 3: re-review the plan and
+end your final block with exactly `VERDICT: PASS` (or `FAIL`) on its own line, followed by a
+non-empty `Basis:` line (GH-533).

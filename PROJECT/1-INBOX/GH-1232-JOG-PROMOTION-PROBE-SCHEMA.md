@@ -58,11 +58,11 @@ Cause, traced at base `5cab70c8`:
    `extract_probes_from_doc`. It returns `(probes, reason)`:
    - no `preflight contract` heading → `([], None)` (checked by regex first, as marathon_drive does,
      because `extract_contract` `sys.exit(3)`s without one);
-   - import `extract_contract, eval_probes` inside `try`; parse inside `try/except SystemExit` → on
+   - import only `extract_contract` inside `try` (no `eval_probes`); parse inside `try/except SystemExit` → on
      failure `([], "contract did not parse")`;
    - every entry must be a dict with `type` in the evaluator's set
-     (`path_absent|path_present|grep_present|grep_absent|command`). The path types need a string
-     `path`; the grep types also need a non-empty string `pattern`; `command` needs a string `cmd`
+     (`path_absent|path_present|grep_present|grep_absent|command`). The path types need a non-empty
+     string `path`; the grep types also need a non-empty string `pattern`; `command` needs a non-empty string `cmd`
      that passes `lint_probe`. The first violation → `([], "contract probe N malformed: <why>")`.
      Non-dict entries are covered (plan QA round 1, [Should]);
    - no probe is executed.
