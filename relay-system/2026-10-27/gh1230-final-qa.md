@@ -281,4 +281,12 @@ Basis: The full changed planner and SKILL procedure were swept. The diff fulfill
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-27T15:54:21Z
+task: RELAY-gh1230-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: e6b974d5e941f4a7c95dc3702cad66e599e2f7a4
+added-range: 20868+2540
+added-sha256: 09d700dba87a6bce046dfe13ad1718c34e9010b36036424db1cedf59dbd3f383
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
