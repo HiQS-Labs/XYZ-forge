@@ -1,8 +1,8 @@
 ---
 Goal: Final QA — GH-1232 jog promotion reads the Preflight Contract's JSON fix_probes
 Date: 2026-10-27
-NEXT: codex
-STATUS: Open
+NEXT: agy
+STATUS: Changes requested
 ---
 
 # Context
@@ -125,3 +125,32 @@ index 7b5f1f5f..5f026d6e 100755
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 ## Log
+
+### codex — Final QA (2026-10-27)
+
+[Blocker] `utils/py/jog_run.py:1404-1406` catches only `SystemExit` from
+`extract_contract`, then assumes `contract` has `.get`. A syntactically valid JSON
+contract whose top-level value is `[]` makes `swarm_preflight.extract_contract`
+raise `AttributeError` while validating `target` (`utils/py/swarm_preflight.py:84-86`);
+the exception escapes promotion rather than parking unattended as a malformed/parse
+failure. Narrow probe (scratch only): `python3 - <non-object JSON contract>` exited
+0 after the wrapper printed `ESCAPED AttributeError: 'list' object has no attribute
+'get'`. The manual smoke receipt covers a non-object *probe*, not a non-object
+contract, so it does not substantiate this failure path. Catch the parser failure
+without masking unrelated promotion failures (or make `extract_contract` return its
+normal exit-3 contract error for non-object JSON), then retain the specified parked
+reason.
+
+[Pass] `utils/py/jog_run.py:1379-1428` otherwise follows plan steps 1–2: it reuses
+the preflight parser lazily, validates the five evaluator types and required fields,
+lints only command `cmd`, and does not invoke `eval_probes`. Frontmatter remains the
+preferred additional source at `utils/py/jog_run.py:1470-1484`; no duplicate schema
+or writer appears in the supplied diff. `skills/2-daily/jog/SKILL.md:94` documents
+the shape-only, no-execution boundary. The supplied smoke receipt and listed focused
+suites substantiate their covered main and adjacent cases, but not the blocker above.
+
+[Pass] Static syntax probe: `python3` AST-parsed `utils/py/jog_run.py` and
+`utils/py/swarm_preflight.py`, exit 0, output `AST_OK` for both files.
+
+VERDICT: FAIL
+Basis: A valid JSON value with an invalid top-level contract shape raises instead of returning the required unattended parking result.
