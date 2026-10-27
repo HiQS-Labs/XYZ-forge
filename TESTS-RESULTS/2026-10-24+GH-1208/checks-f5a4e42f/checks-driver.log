@@ -1,0 +1,14 @@
+== A: reverted jog_run.py (80e67677) + GH1127 variant — expect L5 refused by the hosted requirement
+PASS: reverted: L5 jog land refuses on the hosted requirement (the live defect)
+== B: fixed + GH1127 variant — expect L5 lands on local evidence, L6 replay idempotent
+  [fixed-gh1127] PASS: GH1208 hosted_reconcile is null when no hosted run (got None)
+  [fixed-gh1127] PASS: GH1208 local_reconcile names the ledger row (got {'roadmap_gid': 'rmi-01M5RKXFK1T9EH4JF8J8KXT3J6', 'raw_text': '- **GH-901 · GH-901 fixture lane** ✅ **SHIPPED 2026-08-28 (PR #42)** — [GH-901-FIXTURE-LANE.md](PROJECT/3-COMPLETED/GH-901-FIXTURE-LANE.md) · [#901](https://github.com/example/example/issues/901)'})
+FAIL: fixed: L5 did not complete
+FAIL: fixed: L6 replay
+PASS: fixed: landing.json has hosted_reconcile=null and a local_reconcile object
+== C: fixed + NEITHER variant — expect L5 refused with the combined message
+PASS: fixed: neither evidence → refuses with the combined message
+PASS: fixed: NEITHER variant did not land
+PASS: clone back at fixed code
+== summary: 5 pass, 2 fail
+exit=1

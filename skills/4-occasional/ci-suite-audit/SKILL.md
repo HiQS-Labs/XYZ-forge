@@ -339,7 +339,7 @@ Every audit report and issue concludes with a status block:
 ## Proposed Authoring Gate (Proposal for Operators)
 
 > **For operator decision. Not active by default.** Adapted from OpenClaw (MIT).
-> Under the repository test freeze, no new test files may be added. When modifying or extending existing suites, apply this 4-question gate to every new assertion:
+> Where the repository forbids new tests (XYZ-forge: `AGENTS.md` *No new tests*, GH-831), no new test files may be added; elsewhere the host repo's own test policy applies. When modifying or extending existing suites, apply this 4-question gate to every new assertion:
 
 1. **What behavior or contract does this assertion protect?** (Name the CLI verb, schema constraint, or isolation boundary).
 2. **What credible regression makes this assertion fail?** (Witness the failure under mutation or record a red control).

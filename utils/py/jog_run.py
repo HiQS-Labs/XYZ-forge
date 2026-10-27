@@ -1197,13 +1197,30 @@ def jog_land(root, gh_num, pr_arg=None):
         if not isinstance(runs, list) or any(not isinstance(run, dict) for run in runs):
             raise ContractError("invalid hosted reconciliation evidence")
         matching = [run for run in runs if run.get("headSha") in (head, merged)]
-        if not matching or matching[0].get("status") != "completed" or matching[0].get("conclusion") != "success":
-            raise ContractError("hosted wave-reconcile is not green for the landed PR head")
+        hosted_green = bool(matching) and matching[0].get("status") == "completed" \
+            and matching[0].get("conclusion") == "success"
         conn = connect(os.path.join(root, "releases.db"), readonly=True)
         try:
             rows = conn.execute("SELECT global_id,status FROM jog_queue WHERE gh_number=? LIMIT 2", (gh_num,)).fetchall()
+            # GH-1208 / GH-1127: development merges reconcile LOCALLY and the hosted wave-reconcile lane is
+            # dispatch-only, so a green hosted run is one acceptable evidence, not the only one. The other is
+            # the local reconciler's own ledger write for this PR: wave_reconcile.py moves the issue's row to
+            # Completed with the badge `SHIPPED <date> (PR #N)`. merge-cleanup calls jog land after that write
+            # and before committing it, so the row (not a reconcile commit) is what exists at the call site.
+            local_rows = conn.execute("SELECT global_id,raw_text FROM roadmap_items WHERE gh_number=? "
+                                      "AND section='Completed'", (gh_num,)).fetchall()
         finally:
             conn.close()
+        local_reconcile = None
+        for local_gid, raw_text in local_rows:
+            if f"(PR #{int(pr_number)})" in (raw_text or ""):
+                local_reconcile = {"roadmap_gid": local_gid, "raw_text": raw_text}
+                break
+        if not hosted_green and local_reconcile is None:
+            raise ContractError(
+                f"no reconciliation evidence for PR #{pr_number}: hosted wave-reconcile is not green for the "
+                f"landed head and the GH-{gh_num} roadmap row is not SHIPPED (PR #{pr_number}) — run "
+                f"wave_reconcile.py --pr {pr_number} locally (GH-1127) or dispatch the hosted lane")
         if len(rows) != 1:
             raise ContractError("landing requires exactly one canonical Jog queue row")
     except (ContractError, OSError, ValueError, KeyError, sqlite3.Error) as exc:
@@ -1218,7 +1235,8 @@ def jog_land(root, gh_num, pr_arg=None):
     landing = {"issue": gh_num, "queue_gid": gid, "execution_id": receipt["execution_id"],
                "pr_number": int(pr_number), "merged_sha": merged,
                "approved_head_sha": receipt["head_sha"], "landed_head_sha": head,
-               "tail_proof": proof, "hosted_reconcile": matching[0]}
+               "tail_proof": proof, "hosted_reconcile": matching[0] if hosted_green else None,
+               "local_reconcile": local_reconcile}
     path = os.path.join(root, bundle, "landing.json")
     encoded = json.dumps(landing, indent=2) + "\n"
     if not os.path.isfile(path) or Path(path).read_text(encoding="utf-8") != encoded:

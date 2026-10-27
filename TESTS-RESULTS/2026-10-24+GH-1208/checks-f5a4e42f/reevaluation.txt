@@ -1,0 +1,24 @@
+# post-hoc re-evaluation of the driver's L5/L6 assertions on the retained variant logs
+The driver grepped '^PASS: L5 ...' but the suite indents its lines ('  PASS: ...'); the two FAIL lines in checks-driver.log for variant B are anchoring errors. Re-evaluated with leading whitespace allowed:
+reverted-gh1127: suite rc=1 pass=172 fail=1
+fixed-gh1127: suite rc=0 pass=225 fail=0
+fixed-neither: suite rc=1 pass=172 fail=1
+  fixed-gh1127:   PASS: L5 release member fixture is nonempty
+  fixed-gh1127:   PASS: L5 exact owned member starts dialed_in
+  fixed-gh1127:   PASS: L5 jog land completes cleanly
+  fixed-gh1127:   PASS: L5 row completed with landed-PR reason
+  fixed-gh1127:   PASS: L5 wave_reconcile promoted the capture doc to 3-COMPLETED
+  fixed-gh1127:   PASS: L5 ROADMAP entry archived with the shipping badge
+  fixed-gh1127:   PASS: L5 landing evidence records verified merge
+  fixed-gh1127: PASS: GH1208 hosted_reconcile is null when no hosted run (got None)
+  fixed-gh1127: PASS: GH1208 local_reconcile names the ledger row (got {'roadmap_gid': 'rmi-01M5RKXFK1T9EH4JF8J8KXT3J6', 'raw_text': '- **GH-901 · GH-901 fixture lane** ✅ **SHIPPED 2026-08-28 (PR #
+  fixed-gh1127:   PASS: L5 real reconciler ships owned dialed-in member
+  fixed-gh1127:   PASS: L5 shipped evidence equals verified full merge SHA
+  fixed-gh1127:   PASS: L6 land replay is idempotent
+  fixed-gh1127:   PASS: L6 replay retains exactly one shipped member
+  fixed-gh1127:   PASS: L6 replay emits no duplicate manifest evidence or receipts
+  fixed-gh1127:   PASS: L7 reconcile reads committed evidence without cache
+  fixed-gh1127:   PASS: L7 committed-channel landing evidence retained
+  fixed-gh1127:   PASS: L7 cache-independent replay emits no duplicate shipping evidence
+  reverted-gh1127:   FAIL: L5 rc=2: jog: refusing to land GH-901: hosted wave-reconcile is not green for the landed PR head
+  fixed-neither:   FAIL: L5 rc=2: jog: refusing to land GH-901: no reconciliation evidence for PR #42: hosted wave-reconcile is not green for the landed head and the GH-901 roadmap row is not SHIPPED (PR #42) — run wave_reconcile.py --pr 42 locally (GH-1127)
