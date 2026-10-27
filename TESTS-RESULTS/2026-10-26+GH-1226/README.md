@@ -15,6 +15,7 @@ output, with fixture paths redacted. `provenance.jsonl` names the commit.
 | 7 | re-pin after the move | pins the new head | rc 0, pinned |
 | 8 | required check `pytest db fast` pending | defer, not merged | rc 3; #2 OPEN |
 | 9 | rerun after the check passed (same pin, `--resume`) | lands | rc 0; #2 MERGED, #3 OPEN |
+| 10 | dry run `--prs 3` prints `--prs 3@sha`; record deleted; execute with that line (#1231's path) | lands without the record | see `smoke.log` |
 
 Verdict: pass. The B1-repaired-head deferral is exercised by the existing suite
 (`TestPhase5EndToEnd.test_two_prs_second_conflicts_after_first_lands_and_b1_resolves_it`, now a

@@ -49,6 +49,15 @@ st = json.loads(f.state.read_text()); st["checks"] = {"2": [{"name": "pytest db 
 f.state.write_text(json.dumps(st))
 rc = cli("9. rerun once the check passed (same pin)", "--prs", "2", "--resume", "--execute")
 results["green_check_lands"] = rc in (0, 4) and states()["2"] == "MERGED" and states()["3"] == "OPEN"
+sel = json.loads(merge_cleanup_sel.read_text()) if (merge_cleanup_sel := next(f.primary.glob(".tick/merge-cleanup/*/selection-development.json"), None)) else {}
+merge_cleanup_sel.unlink()  # #1231's path: the printed N@sha line stands alone, without the record
+r = subprocess.run([sys.executable, str(MC), "--primary", str(f.primary), "--root", str(f.tmp / "no-roots"), "--prs", "3"],
+                   capture_output=True, text=True, env=env)
+line = next((l.split("--prs ", 1)[1].strip() for l in (r.stdout + r.stderr).splitlines() if "Pinned for --execute: --prs" in l), "")
+print(f"# 10a. dry run --prs 3 printed: --prs {line}")
+merge_cleanup_sel.unlink(missing_ok=True)
+rc = cli("10. execute the printed N@sha line with no dry-run record", "--prs", line, "--execute")
+results["inline_pin_line_lands_without_record"] = bool(line) and rc in (0, 4) and states()["3"] == "MERGED"
 print(json.dumps(results, indent=1))
 f.doCleanups()
 sys.exit(0 if all(results.values()) else 1)
