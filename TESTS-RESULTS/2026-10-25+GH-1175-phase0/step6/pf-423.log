@@ -1,0 +1,15 @@
+swarm-preflight · gh-bundle · slug=gh-423-roadmap-render
+  target-root : /Users/noelsaw/Documents/GitHub Repos/XYZ-forge (development @ 08c2a2fba)
+  branch      : suggested=marathon/gh-423-roadmap-render-2026-10-27 branch_ready=false skip_branch_prompt=true
+  freshness   : fetch_ok=1 upstream=origin/development ahead=0 behind=0 dirty=0
+  ref-probed  : development @ 08c2a2fba (checkout matches)
+  candidate   : stale
+  inlined-acc : 0 criterion(a) from the acceptance-section
+  source-url  : ok — source: resolves to issue #423 (https://github.com/HiQS-Labs/XYZ-forge/issues/423)
+  acceptance  : match — 0/0 criteria copied verbatim from issue #423
+  issue-state : OPEN — issue #423 is OPEN
+  readiness   : ready=1
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : STALE (exit 4)
+
+No packet written — candidate is not preflight-ready (STALE).

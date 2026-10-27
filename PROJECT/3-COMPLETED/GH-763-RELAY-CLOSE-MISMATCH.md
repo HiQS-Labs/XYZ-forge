@@ -2,7 +2,7 @@
 gh_issue: 763
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/763
 title: "Relay approved reviewer turn leaves token open with close-mismatch"
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-09-23
 owner: unassigned
 doc_type: bugfix
@@ -69,3 +69,7 @@ TODO: why this matters now -- what prompted it, what breaks or slows without it.
 ## Merge evidence
 
 - PR #765 merged 2026-09-25 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1179 merged 2026-10-23 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

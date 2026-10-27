@@ -70,3 +70,7 @@ Display order only; not blocking. Active work is not the first open card a reade
 - [ ] The repro is confirmed from the report, not assumed
 - [ ] A regression test covers the failure path before the fix lands
 - [ ] The fix composes with the existing harness rather than adding a parallel path
+
+## Merge evidence
+
+- PR #1187 merged 2026-10-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

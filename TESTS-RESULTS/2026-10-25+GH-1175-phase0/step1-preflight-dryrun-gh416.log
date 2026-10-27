@@ -1,0 +1,3 @@
+BLOCKED: issue #416 has no in-repo GH-416-*.md capture doc under PROJECT/2-WORKING/.
+  Per GUIDING-PRINCIPLES.md §11 the planner reads the capture doc, not the issue thread.
+  Remediation: promote issue #416 to a GH-416 capture doc with a preflight contract first.

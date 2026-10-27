@@ -95,3 +95,7 @@ For current bounded discovery and remediation boundaries see
 - Historical plans and fixture benchmarks do not establish current execution or safety contracts.
 - Packaging, replay predicates, clustering identity and repair qualification remain separate code
   follow-ups in #1174; this docs correction changes no executable behavior.
+
+## Merge evidence
+
+- PR #1187 merged 2026-10-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

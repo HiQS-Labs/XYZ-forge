@@ -86,7 +86,7 @@ lane_env_var() {
   case "$1" in
     claude) echo CLAUDE_AGENT ;; codex) echo CODEX_AGENT ;; agy) echo AGY_AGENT ;;
     aider) echo AIDER_AGENT ;; pi) echo PI_AGENT ;; smallcode) echo SMALLCODE_AGENT ;;
-    commandcode) echo COMMANDCODE_AGENT ;; deepseek) echo DEEPSEEK_AGENT ;;
+    commandcode) echo COMMANDCODE_AGENT ;; deepseek) echo DEEPSEEK_AGENT ;; kimi) echo KIMI_AGENT ;;
   esac
 }
 
@@ -179,7 +179,7 @@ fi
 
 # the two lanes GH-346 added must now get past BOTH route_agent (#2) and _probe_agent_bin (#4).
 # Skipped, not failed, where the lane's tooling is genuinely absent on this host.
-for lane in commandcode deepseek; do
+for lane in commandcode deepseek kimi; do
   rc="$(drive_rc "$lane")"
   if drive_locked_out; then
     echo "  SKIP: driver lock held — '$lane' routing not evaluated"
@@ -274,7 +274,7 @@ fi
 # #9 is not cosmetic: without it, a COMMANDCODE_AGENT left in the parent shell survives into a run
 # that never asked for that lane.
 # ------------------------------------------------------------------------------------------------
-for lane in commandcode deepseek; do
+for lane in commandcode deepseek kimi; do
   upper="$(printf '%s' "$lane" | tr '[:lower:]' '[:upper:]')"
   if grep -q "\"${upper}_AGENT\"" "$ROOT/utils/py/gate_env.py"; then
     pass "#8 gate_env.py classifies ${upper}_AGENT"
@@ -291,7 +291,7 @@ done
 scrub="$(sed -n '/GATE_SCRUBBED_ENV = (/,/^    )/p' "$ROOT/utils/py/marathon_drive.py")"
 for lane in $LANES; do
   upper="$(printf '%s' "$lane" | tr '[:lower:]' '[:upper:]')"
-  case "$lane" in claude|codex|agy|aider|pi|smallcode|commandcode|deepseek) ;; *) continue ;; esac
+  case "$lane" in claude|codex|agy|aider|pi|smallcode|commandcode|deepseek|kimi) ;; *) continue ;; esac
   if grep -q "\"${upper}_AGENT\"" <<<"$scrub"; then
     pass "#10 GATE_SCRUBBED_ENV includes ${upper}_AGENT"
   else

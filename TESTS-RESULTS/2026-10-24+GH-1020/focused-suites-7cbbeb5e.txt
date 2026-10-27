@@ -1,0 +1,14 @@
+=== test/relay-turn-handoff.sh
+rc=0   relay-turn-handoff: 2 pass, 0 fail
+=== test/agy-turn.sh
+rc=0   agy-turn: 65 pass, 0 fail
+=== test/gh432-failed-turn-persist.sh
+rc=0   gh432-failed-turn-persist: 12 pass, 0 fail
+=== test/relay-review-once.sh
+rc=0   relay-review-once: 9 pass, 0 fail
+=== test/gh505-relay-attest.sh
+rc=0   PASS: RED CONTROL C: base driver exits 0 on a pre-approved file after 0 turns
+=== test/gh681-reviewer-probe-rules.sh
+rc=0 gh681-reviewer-probe-rules: all cases passed
+=== test/gh554-tick-unknown-flags.sh
+rc=0   gh554-tick-unknown-flags: 76 pass, 0 fail

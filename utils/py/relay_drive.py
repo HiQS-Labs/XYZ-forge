@@ -153,6 +153,7 @@ def main():
             ("smallcode", "SMALLCODE", "smallcode-turn"),
             ("commandcode", "COMMANDCODE", "commandcode-turn"),
             ("deepseek", "DEEPSEEK", "deepseek-turn"),
+            ("kimi", "KIMI", "kimi-turn"),
         )
         for prefix, env_prefix, tool_name in shims:
             if actor.startswith(prefix):
@@ -749,6 +750,10 @@ def main():
             "attested_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "driver_pid": os.getpid(),
         }
+        # GH-1220: optional phase config identity passed by marathon-drive (no CLI flag, no schema bump).
+        cfg_sha = get_env("MARATHON_CONFIG_SHA256", "")
+        if cfg_sha:
+            record["config_sha256"] = cfg_sha
         trailer = relay_attest.trailer_text(record)
         record["trailer_sha256"] = relay_attest.sha256(trailer.encode("utf-8"))
         relay_attest.append_before_marker(relay_file, trailer)
