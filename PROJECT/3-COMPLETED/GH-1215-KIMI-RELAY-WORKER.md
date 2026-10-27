@@ -1,8 +1,8 @@
 ---
 title: "Add a native kimi relay worker (Kimi Code CLI) to the relay harness"
-status: PR ready; awaiting merge
+status: Complete
 created: 2026-10-24
-updated: 2026-10-24
+updated: 2026-10-27
 owner: claude
 gh_issue: 1215
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1215
