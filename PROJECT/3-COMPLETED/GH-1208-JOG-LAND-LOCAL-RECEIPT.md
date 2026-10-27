@@ -2,9 +2,9 @@
 gh_issue: 1208
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1208
 title: "jog land requires a green hosted wave-reconcile run per landed head; since GH-1127 that lane is dispatch-only — accept the local reconcile evidence"
-status: active
+status: Complete
 created: 2026-10-24
-updated: 2026-10-24
+updated: 2026-10-27
 owner: claude-fable-5-1 (start-task, 2026-10-24)
 doc_type: bugfix
 complexity: 2
