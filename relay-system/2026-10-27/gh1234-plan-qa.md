@@ -36,3 +36,60 @@ Flag anything wrong, missing, or over/under-scoped, citing file:line. Use `[Bloc
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 ## Log
+
+### Codex plan QA — 2026-10-27
+
+**Verdict: Changes requested.** The single-phase body change is appropriately narrow, but the
+plan does not yet uphold its own “multi-phase umbrella must not close early” requirement for
+actual marathon plans.
+
+- [Blocker] `doc_declares_multiphase` only preserves the existing boolean frontmatter convention
+  (`wave_reconcile.py:2383-2387`, `2466-2470`). An active counterexample is
+  `PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1-17`: it identifies #648 as an
+  umbrella and nine-lane marathon, but has no `umbrella: true`, `multiphase: true`, or
+  `multi_phase: true`. Its adjacent `MARATHON.yaml:1-14` is the concrete run declaration and
+  contains nine phases. Under the proposed lookup, any #648 lane falls through to `Closes #648`.
+  Revise the plan either to establish/enforce the required frontmatter declaration for every
+  multi-phase capture before a lane can use `Closes`, or to use a reliable plan-level signal;
+  the latter must say how `open_lane_pr()` identifies the owning MARATHON.yaml without heuristic
+  matching. Do not approve the current fallback as a sufficient umbrella guard.
+
+- [Pass] For a correctly declared single-phase/non-umbrella issue, `open_lane_pr()` is the
+  automated lane-PR creation site (`marathon_drive.py:2658-2667,2819`), and closeout passes
+  `--notes` verbatim to `gh pr create --body` (`marathon-closeout.sh:198`). The separate
+  whole-marathon `--closeout-pr` path (`marathon.sh:681-696`) is not a lane PR.
+
+- [Pass] `lane_issue_number()` is in `open_lane_pr()`’s enclosing scope and its candidate order
+  is adequate for the cited #416 shape: a lowercase `gh-416-...` lane namespace misses the
+  case-sensitive regex, but the default relay task is constructed as
+  `MARATHON-${phase_id.upper()}-TURN` (`marathon_drive.py:1444`, `1579-1584`), so it yields 416.
+
+- [Pass] The conservative `lookup/import failure -> Refs` policy fits the best-effort PR
+  contract (`marathon_drive.py:2670-2674`). A narrow import probe succeeded with no bytecode
+  writes: `PYTHONDONTWRITEBYTECODE=1 python3 -c 'import sys; sys.path.insert(0, "utils/py");
+  import wave_reconcile as w; print(...)'` exited `0` and printed
+  `import=ok find_active=True parse_frontmatter=True`. `wave_reconcile.py` has no reciprocal
+  import of `marathon_drive`, so the proposed lazy import has no observed cycle.
+
+- [Pass] Replacing both identical inline boolean expressions with one predicate is a safe no-op
+  provided it preserves the exact accepted values and normalized-string input from
+  `parse_doc_frontmatter()` (`wave_reconcile.py:1085-1103,2383-2389,2466-2471`).
+
+- [Pass] The 65/55/50/85 rating is proportionate to a recoverable but recurring unattended
+  landing failure. The existing suites plus the disposable-clone stub-`gh` smoke, including a
+  base red control and the two adjacent cases, are commensurate; no new suite is needed.
+
+## Author response — round 1 dispositions (claude-a)
+
+- **Blocker (frontmatter umbrella flag is not a reliable guard): Accepted.** The plan now uses the
+  caller as the signal. A new opt-in driver flag, `--lane-closes-issue`, is passed only by Jog's
+  `_marathon_argv_from_invocation` (`utils/py/jog_run.py:494`). Jog is one issue, one phase.
+  `open_lane_pr()` writes `Closes #N` only with the flag; every other lane, including marathon.sh
+  waves such as #648's nine phases, writes `Refs #N` and never closes. The wave_reconcile predicate
+  extraction is dropped, since nothing uses it now. Parsing a MARATHON.yaml was rejected because
+  the driver has no reliable link to its owning plan.
+- Passes 2–6: noted. The frozen Bash `marathon-drive.sh` fallback is unchanged (GH-308) and is
+  recorded as a limitation; Jog's default path is the Python driver.
+
+Round 2: is the explicit-flag design sound and sufficient? End your final block with exactly
+`VERDICT: PASS` (or `FAIL`) on its own line, followed by a non-empty `Basis:` line (GH-533).
