@@ -2,7 +2,7 @@
 Goal: Plan QA — GH-1232 jog promotion reads the Preflight Contract's JSON fix_probes
 Date: 2026-10-27
 NEXT: codex
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -171,3 +171,42 @@ relay-drive reverted it to Open. Its two clarifications are now in the plan: imp
 `extract_contract`, and require non-empty `path`/`pattern`/`cmd`. Round 3: re-review the plan and
 end your final block with exactly `VERDICT: PASS` (or `FAIL`) on its own line, followed by a
 non-empty `Basis:` line (GH-533).
+
+## Reviewer verdict — codex (round 3)
+
+**Approved.** The plan can proceed: promotion now establishes only that JSON probes are usable
+review inputs, while Preflight remains the sole evaluator of whether the target-ref state is ready.
+
+- [Pass] The recon and control flow are correct. The present unattended refusal is the empty
+  `valid_probes` branch in `promote_contract_to_working` (`utils/py/jog_run.py:1428-1430`), whose
+  returned reason is parked by the caller (`utils/py/jog_run.py:1935-1944`). After promotion,
+  preflight independently parks a non-ready contract (`utils/py/jog_run.py:1968-1989`). The plan
+  correctly admits static JSON probes at the first boundary and leaves readiness to that latter
+  boundary.
+
+- [Pass] The parse-only design is the right acceptance rule. `extract_contract` already requires
+  a non-empty `fix_probes` list (`utils/py/swarm_preflight.py:108-110`); the planned type and
+  non-empty field checks close the evaluator's pre-`try` `.get()` failure surface
+  (`utils/py/swarm_preflight.py:199-206`). It deliberately avoids the evaluator's `shell=True`
+  command execution (`utils/py/swarm_preflight.py:223-233`), so promotion cannot execute the
+  contract's marker command or duplicate a command probe.
+
+- [Pass] The sole live evaluation remains ref-pinned. Preflight creates a detached worktree from
+  `target.ref` and calls `eval_probes` within it (`utils/py/swarm_preflight.py:1356-1364`), then
+  removes/prunes it (`:1379-1382`). This is consistent with the plan's no-worktree/no-evaluation
+  promotion helper and prevents checkout drift from becoming an admission verdict.
+
+- [Pass] A lazy `extract_contract` import has the established `marathon_drive` shape and no
+  observed cycle. Narrow probe run with
+  `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" rg -n 'from jog_run|import jog_run|from swarm_preflight|import swarm_preflight|harness_paths' utils/py/swarm_preflight.py utils/py/jog_run.py utils/py/harness_paths.py`
+  exited 0; decisive output contained each module's `harness_paths` import and no
+  `swarm_preflight -> jog_run` import. Both modules already resolve that shared helper locally.
+
+- [Pass] Preserving the `unreviewed-probe-contract` prefix while appending a diagnostic remains
+  compatible with the identified producer/parking path. The 70/60/50/80 rating is proportionate
+  to the documented contract-only 1-INBOX cohort and small reversible implementation. The existing
+  suite/Python-layer/routed-gate plan plus a disposable-clone red control and the four listed
+  adjacent manual cases is commensurate under the no-new-tests rail.
+
+VERDICT: PASS
+Basis: The revised parse-only admission removes the documented first-promotion refusal without a mutable-checkout evaluator or duplicate command execution; preflight retains the ref-pinned readiness verdict.
