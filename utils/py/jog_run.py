@@ -1376,6 +1376,59 @@ def extract_probes_from_doc(doc_path):
     return probes
 
 
+_CONTRACT_PROBE_TYPES = ("path_absent", "path_present", "grep_present", "grep_absent", "command")
+
+
+def contract_probes_from_doc(root, doc_path):
+    """GH-1232: the Preflight Contract's JSON fix_probes, checked for shape only.
+
+    Returns (labels, reason). Nothing is evaluated: whether a probe still reads "unfixed" is
+    preflight's verdict, made next in its ref-pinned worktree. Running the probes here would judge
+    the mutable checkout instead and execute shell `command` probes twice (plan QA round 1).
+    """
+    try:
+        with open(doc_path, "r", encoding="utf-8") as f:
+            text = f.read()
+    except OSError:
+        return [], None
+    # extract_contract sys.exit(3)s on a doc without the heading; check first (marathon_drive idiom).
+    if not re.search(r'^#{1,6}\s+.*preflight\s+contract', text, re.IGNORECASE | re.MULTILINE):
+        return [], None
+    try:
+        from swarm_preflight import extract_contract
+    except Exception as e:
+        return [], f"could not load the preflight contract parser ({e})"
+    try:
+        contract = extract_contract(doc_path)
+    except SystemExit:
+        return [], "contract did not parse"
+    labels = []
+    for n, p in enumerate(contract.get("fix_probes") or [], 1):
+        if not isinstance(p, dict):
+            return [], f"contract probe {n} malformed: not an object"
+        ptype = p.get("type")
+        if ptype not in _CONTRACT_PROBE_TYPES:
+            return [], f"contract probe {n} malformed: unknown type {ptype!r}"
+        if ptype == "command":
+            cmd = p.get("cmd")
+            if not isinstance(cmd, str) or not cmd.strip():
+                return [], f"contract probe {n} malformed: command needs a non-empty cmd"
+            ok, why = lint_probe(root, cmd)
+            if not ok:
+                return [], f"contract probe {n}: {why}"
+            labels.append(f"command:{cmd}")
+            continue
+        path = p.get("path")
+        if not isinstance(path, str) or not path.strip():
+            return [], f"contract probe {n} malformed: {ptype} needs a non-empty path"
+        if ptype.startswith("grep_"):
+            pattern = p.get("pattern")
+            if not isinstance(pattern, str) or not pattern:
+                return [], f"contract probe {n} malformed: {ptype} needs a non-empty pattern"
+        labels.append(f"{ptype}:{path}")
+    return labels, None
+
+
 def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primary=None):
     """Promote a 1-INBOX doc to 2-WORKING/ with verified status table and probes."""
     _require_jog_primary(primary or root)
@@ -1425,9 +1478,14 @@ def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primar
         if ok:
             valid_probes.append(p)
 
+    contract_reason = None
+    if not valid_probes:
+        valid_probes, contract_reason = contract_probes_from_doc(root, doc_path)
+
     if not valid_probes:
         if not interactive:
-            return None, "unreviewed-probe-contract (no valid probes in unattended mode)"
+            detail = f"; {contract_reason}" if contract_reason else ""
+            return None, f"unreviewed-probe-contract (no valid probes in unattended mode{detail})"
 
     if interactive and sys.stdin.isatty():
         print(f"\n[jog] Auto-promoted contract for GH-{gh_num}:")
