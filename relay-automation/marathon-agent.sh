@@ -18,6 +18,7 @@ set -euo pipefail
 #   SMALLCODE_AGENT   — agent id that routes to smallcode-turn.sh (SmallCode)
 #   COMMANDCODE_AGENT — agent id that routes to commandcode-turn.sh (Command Code / cmd)
 #   DEEPSEEK_AGENT    — agent id that routes to deepseek-turn.sh (DeepSeek via dsh)
+#   KIMI_AGENT        — agent id that routes to kimi-turn.sh (Kimi Code CLI; GH-1215)
 # Peer threading (set by marathon-drive.sh — prevents "release to literal role-string" failure):
 #   MARATHON_BUILDER  — builder agent id; when RELAY_AGENT matches this, RELAY_PEER = MARATHON_REVIEWER
 #   MARATHON_REVIEWER — reviewer agent id; when RELAY_AGENT is the reviewer, RELAY_PEER = MARATHON_BUILDER
@@ -45,6 +46,7 @@ smallcode_agent="${SMALLCODE_AGENT:-}"
 # route_agent() alone would have shipped a lane that still could not dispatch.
 commandcode_agent="${COMMANDCODE_AGENT:-}"
 deepseek_agent="${DEEPSEEK_AGENT:-}"
+kimi_agent="${KIMI_AGENT:-}"
 
 # GH-368: a builder and reviewer may share the agy lane (for example `agy,agy-qa`).
 # Route by exact membership rather than treating AGY_AGENT as one overwrite-prone actor slot.
@@ -102,7 +104,11 @@ case "$me" in
     [[ -n "$deepseek_agent" ]] || die "RELAY_AGENT='$me' matched an empty DEEPSEEK_AGENT — set DEEPSEEK_AGENT"
     exec "$HERE/deepseek-turn.sh"
     ;;
+  "$kimi_agent")
+    [[ -n "$kimi_agent" ]] || die "RELAY_AGENT='$me' matched an empty KIMI_AGENT — set KIMI_AGENT"
+    exec "$HERE/kimi-turn.sh"
+    ;;
   *)
-    die "unknown agent '$me'; set CLAUDE_AGENT/CODEX_AGENT/AGY_AGENT/AIDER_AGENT/PI_AGENT/SMALLCODE_AGENT/COMMANDCODE_AGENT/DEEPSEEK_AGENT to map it to a shim"
+    die "unknown agent '$me'; set CLAUDE_AGENT/CODEX_AGENT/AGY_AGENT/AIDER_AGENT/PI_AGENT/SMALLCODE_AGENT/COMMANDCODE_AGENT/DEEPSEEK_AGENT/KIMI_AGENT to map it to a shim"
     ;;
 esac

@@ -153,6 +153,7 @@ def main():
             ("smallcode", "SMALLCODE", "smallcode-turn"),
             ("commandcode", "COMMANDCODE", "commandcode-turn"),
             ("deepseek", "DEEPSEEK", "deepseek-turn"),
+            ("kimi", "KIMI", "kimi-turn"),
         )
         for prefix, env_prefix, tool_name in shims:
             if actor.startswith(prefix):
