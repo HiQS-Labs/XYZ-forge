@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026-10-26 — merge-cleanup lands only a pinned `--prs` allowlist, gated on required checks (#1226)
+## 2026-10-27 — merge-cleanup lands only a pinned `--prs` allowlist, gated on required checks (#1226)
 
 - **Allowlist, not denylist.** A merging `--execute` now requires `--prs N[,N...]` and exits 2
   without it; `--teardown-only`, `--scan-only`, `--prs-only` and `--reconcile-pr` are unchanged.
