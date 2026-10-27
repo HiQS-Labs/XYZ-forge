@@ -78,8 +78,8 @@ The promotion procedure is four DB/file steps on the RELEASES DB:
 2. Repoint the parked row: `python3 utils/py/releases_app.py roadmap repoint --issue-num <n> --doc-path PROJECT/2-WORKING/GH-<n>-<SLUG>.md`.
 3. Refresh the row text: `python3 utils/py/releases_app.py roadmap update --issue-num <n> --raw-text '- **GH-<n> · <title>** ...'`
    — the value **must be a markdown bullet starting `- **<title>**`** or the verb refuses.
-4. Regenerate the views (`bash utils/roadmap-dashboard.sh`; ledger writes auto-refresh the baked
-   HTML) and verify: `releases check` clean + `utils/pdda/pdda.sh run` zero errors. pdda's
+4. The views need no separate step (ledger writes auto-refresh the baked HTML; the old
+   `roadmap-dashboard.sh` is retired, GH-567). Verify: `releases check` clean + `utils/pdda/pdda.sh run` zero errors. pdda's
    coverage check reads the DB in releases-mode — a promoted doc needs **no** `ROADMAP.md` line.
 
 ### Step 2: Isolated Full Clone Provisioning

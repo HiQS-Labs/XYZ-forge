@@ -1,0 +1,11 @@
+### main path: fresh vendor of this branch into an empty host repo
+merge-cleanup batch sweeps: declare this repo's qualification command in .merge-cleanup.json (merge-cleanup SKILL.md, Project merge policy)
+### vendored copy: unscoped patterns (expect none)
+exit=1 (1 = none)
+### vendored copy: scoped lines present
+.xyz/skills/2-daily/express/SKILL.md
+.xyz/skills/4-occasional/ci-suite-audit/SKILL.md
+### adjacent path: re-vendor over the existing copy (update)
+merge-cleanup batch sweeps: declare this repo's qualification command in .merge-cleanup.json (merge-cleanup SKILL.md, Project merge policy)
+.xyz/skills/2-daily/express/SKILL.md:2
+.xyz/skills/4-occasional/ci-suite-audit/SKILL.md:1

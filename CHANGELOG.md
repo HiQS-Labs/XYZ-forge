@@ -20,6 +20,17 @@
   drive loop are updated. The existing suites were edited only where they pinned the old denylist
   or the same-run B1 landing. Manual smoke: `TESTS-RESULTS/2026-10-26+GH-1226/`.
 
+## 2026-10-26 — Vendored copies keep the host repo's own test policy (GH-1228)
+
+- **#1228.** Three skill lines stated GH-831 ("no new tests") without naming XYZ-forge. Vendored
+  into BinoidCBD/LTVera-Pandas, that text read as LTVera's own test ban (LTVera #845). Each line now
+  names XYZ-forge and defers elsewhere to the host repo's own test policy: `express/SKILL.md` (the
+  recited discipline, step 2, and Phase 4), and `ci-suite-audit/SKILL.md`'s proposed authoring gate.
+  XYZ-forge's rule is unchanged. `utils/py/express.py:603` and `:639` stay as they are: express needs
+  an existing covering suite in every repo. `relay-automation/README.md:40` stays too, since it governs
+  harness code that hosts never edit. Verification: docs gate, recon grep red control and a
+  vendored-copy read-back in `TESTS-RESULTS/2026-10-26+GH-1228/`. No tests added (GH-831).
+
 ## 2026-10-25 — lessons read-back, blind consult, config-pinned resume, improve-loop write check, manifest count (marathon #1214)
 
 Five fixes landed through one marathon chain (agy builder, codex reviewer, full gate per phase).
@@ -116,6 +127,15 @@ marks the title `titleSource: tool`, not user-set. Whether an unattended run may
 3.14, plus a red control (2 probes fail when the `isRunning` skip is removed). No new tests
 (GH-831). Plan QA: Codex, Approved in round 2. Reversibility: **Easy**. The planner never
 writes, and each live rename is listed in the undo receipt.
+
+## 2026-10-22 — wave_reconcile repoints every row sharing a moved plan doc (GH-1178)
+
+When one PR closed several issues that share one plan doc, `utils/py/wave_reconcile.py` moved the
+doc but repointed only the row of the issue the doc is named after; the others kept a dangling
+`doc_path` (seen in HiQS-Labs/rebalanceOS#350). A new `repoint_moved_doc_rows` pass after the landing
+loop repoints every owned row still naming a doc moved this run, through the existing
+`roadmap repoint` writer. Verification: `TESTS-RESULTS/2026-10-22+GH-1178/` (red control on
+`f243ccfbf`, fixture green, tier-2 route + gh421/gh454/gh168 green; no new suite).
 
 ## 2026-10-21 — prs-backfill: reviewed PRS rating backfill (GH-1175)
 
