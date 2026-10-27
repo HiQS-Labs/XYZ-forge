@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-24.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Closed
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -120,5 +120,27 @@ Handing off to Producer — go to the Producer window and say “take your turn�
 - [Should] appeal rationale: **Implemented**, marked assumed and operator-neutral.
 
 Round 2: please re-review R5, plan steps 0, 2, 3, 5 and 6, and the rating.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+- [Pass] R1/R5 now have a bounded route decision and an unattended sweeper lifecycle: both candidate send routes are probed first, failed routing stops for the operator, and the exact-title singleton sweeper is provisioned/discovered or reported missing without an approval queue (`PROJECT/1-INBOX/GH-1230-TASK-SYNC-DESKTOP-STALE-TITLES.md:76-81`, `:95-105`). The documented fallback is correctly not presented as automatic (`:107`).
+
+- [Pass] The planner/recheck change is complete for busy and old rows: the plan retains literal archived/running and activity fail-closed handling while removing only title age/running exclusions (`PROJECT/1-INBOX/GH-1230-TASK-SYNC-DESKTOP-STALE-TITLES.md:83-87`); its native recheck compares the current local activity date rather than an impossible fixed timestamp (`:89-93`). This fits the current loop, whose only title exclusions are `running` and the `cutoff` (`skills/3-weekly/task-sync/scripts/adapters/claude.py:417-443`).
+
+- [Pass] R4 now fails closed rather than treating a full page as complete, with a 500→2000 retry and no rename after either ambiguous boundary (`PROJECT/1-INBOX/GH-1230-TASK-SYNC-DESKTOP-STALE-TITLES.md:89-90`). Its archiver is bounded to non-running, >24-hour sessions whose `get_session` has this task's `scheduledTaskId`, and is reversible (`:109-112`); the live check separately checks the complete count (`:127-131`).
+
+- [Pass] The forwarded writer is sufficiently specified: payload identity, fresh title/activity/archival/self predicates, post-write reread, durable receipt, and defined transport/missing-sweeper failure accounting are all present (`PROJECT/1-INBOX/GH-1230-TASK-SYNC-DESKTOP-STALE-TITLES.md:99-106`). The two live stale-proposal checks directly exercise the overwrite boundary (`:121-123`).
+
+- [Pass] The prior rating gap is resolved: appeal is explicitly labelled assumed and operator-neutral, alongside evidence for the other three components (`PROJECT/1-INBOX/GH-1230-TASK-SYNC-DESKTOP-STALE-TITLES.md:151-157`). No additional pre-existing defect was found in the full swept source files `skills/3-weekly/task-sync/scripts/adapters/claude.py`, `skills/3-weekly/task-sync/SKILL.md`, and `skills/3-weekly/task-sync/scripts/task_sync.py`.
+
+- [Pass] Narrow static probe: `python3 - <<'PY' ...` (the six-plan-term check recorded in `.relay-scratch/tmp/gh1230-plan-static-check.txt`) exited 0 and printed `step0_both_routes=True`, `inventory_fail_closed=True`, `sweeper_recheck=True`, `receipt_confirmation=True`, `self_run_archive_only=True`, and `rating_appeal_grounded=True`.
+
+VERDICT: PASS
+
+Basis: All five requirements map to falsifiable probe/live checks. The revised plan keeps one planner, native title writer, procedure, and scheduler; preserves fail-closed planner behaviour; makes forwarding and inventory boundaries explicit; and scopes archiving to the task's own old runs. The live native checks and existing-battery deltas are proportionate; no new test/gate machinery is proposed.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
