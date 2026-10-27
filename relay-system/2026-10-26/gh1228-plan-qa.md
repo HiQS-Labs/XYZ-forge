@@ -36,3 +36,54 @@ Flag anything wrong, missing, or over/under-scoped, citing file:line. Use `[Bloc
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 ## Log
+
+### Codex review — changes requested (2026-10-26)
+
+- [Blocker] Recon and the implementation scope miss a third, equally unscoped
+  host-facing instruction: `skills/2-daily/express/SKILL.md:28` says “Do not add
+  a suite (GH-831).” `relay-automation/xyz-vendor.sh:432` vendors `skills`, so
+  this line ships into `.xyz/` and still tells an LTVera agent not to add tests,
+  even if line 173 is corrected. Include line 28 in the same XYZ-forge-scoped
+  rewrite (or make one edit covering both express statements), then update the
+  recon result and verification grep accordingly.
+
+  Probe (read-only; exit 0):
+  `nl -ba skills/2-daily/express/SKILL.md | sed -n '20,35p;165,180p'`
+  reported line 28 as `Do not add a suite (GH-831).` and line 173 as the
+  planned target. `rg -n -i -e 'GH-831' -e 'no new tests' -e 'test freeze'
+  relay-automation bin src utils test skills || true` also reported that line;
+  the same command identified the planned line 342 in ci-suite-audit.
+
+- [Pass] The proposed replacement at `express/SKILL.md:173` and the one at
+  `ci-suite-audit/SKILL.md:342` are correctly scoped: each preserves XYZ-forge’s
+  AGENTS.md/GH-831 rule and explicitly defers elsewhere to the host policy.
+  Apply that form to express line 28 as well. The other grep hits either scope
+  the rule or describe XYZ-forge-local runtime/test machinery; none was found
+  to be another host-wide prohibition requiring this plan’s scope.
+
+- [Pass] Do not change `utils/py/express.py:603`. Its refusal is an Express
+  workflow constraint—an Express code fix must name an existing registered
+  covering suite—not a general claim that every host forbids new tests. A host
+  that allows tests can use `/start-task`; changing this code parenthesis would
+  expand the diff to the full-gate route without changing the correct refusal.
+
+- [Should] The 60/45/50/92 rating is plausible for the observed three-text-line
+  docs fix and its rationale is candid about a single known incident, but the
+  downstream issue evidence was not independently verified: `gh issue view
+  1228 -R HiQS-Labs/XYZ-forge --json number,title,state,body,url` exited 1 with
+  `error connecting to api.github.com`. Retain the stated attribution as
+  reported/captured evidence, rather than presenting it as independently
+  confirmed in this turn.  [Unverified — no citation]
+
+- [Pass] After broadening the express edit, the proposed docs gate and manual
+  vendor-entry smoke are commensurate. Keep the before/after grep as the red
+  control, but make its expected post-change condition cover all three former
+  unscoped instructions, including `express/SKILL.md:28`; preserve the command,
+  exit status, and decisive output in the committed manual receipt.
+
+### Producer response — round 2 (2026-10-26)
+
+- [Blocker] `express/SKILL.md:28`: accepted. The plan now rewrites all three lines (express :28 and :173, ci-suite-audit :342), and the verification grep covers all three.
+- [Should] rating evidence: accepted. It is cited as captured evidence from LTVera #845.
+
+Please re-review the revised plan. Approve if it can proceed.

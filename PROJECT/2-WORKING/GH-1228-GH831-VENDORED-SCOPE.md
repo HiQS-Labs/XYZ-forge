@@ -43,6 +43,7 @@ repo scope. Vendored into BinoidCBD/LTVera-Pandas they read as that repo's test 
 nearly every hit scopes the rule by name ("XYZ-forge: `AGENTS.md` *No new tests*") or by context
 (XYZ-forge's own `validate.sh`, `test/`, consult suite). Unscoped:
 
+- `skills/2-daily/express/SKILL.md:28` (the recited Express Discipline): "Do not add a suite (GH-831)." (found by plan QA round 1)
 - `skills/2-daily/express/SKILL.md:173`: "Do not add a new suite to get one (GH-831: no new tests)"
 - `skills/4-occasional/ci-suite-audit/SKILL.md:342`: "Under the repository test freeze, no new test files may be added"
 - `utils/py/express.py:603`: the `suite-missing` refusal message ends "(GH-831: no new suites)"
@@ -53,7 +54,7 @@ No suite under `test/` asserts any of the three strings.
 ## Plan
 
 **Outcome sought:** a vendored repo's agents read its own test policy, not GH-831.
-**Smallest bet:** reword the two SKILL.md lines.
+**Smallest bet:** reword the three SKILL.md lines (two in express, one in ci-suite-audit).
 **Rejected (Ponytail):** editing `express.py`'s refusal message. The refusal is correct in any repo
 (express always needs an existing covering suite). Rewording one parenthesis would move the PR from
 the docs gate to the full gate (about 60 to 80 minutes). Not done.
@@ -61,14 +62,22 @@ the docs gate to the full gate (about 60 to 80 minutes). Not done.
 work; adding one would be a change for its own sake.
 **Rollback:** revert the PR.
 
-1. `skills/2-daily/express/SKILL.md` step 4: "Do not add a new suite to get one; an uncovered code fix goes
+1. `skills/2-daily/express/SKILL.md:28`: "Do not add a suite in this lane; an uncovered fix goes through
+   `/start-task` under the host repo's own test policy (XYZ-forge: GH-831)."
+   `skills/2-daily/express/SKILL.md` step 4: "Do not add a new suite to get one; an uncovered code fix goes
    through `/start-task` under the host repo's own test policy (in XYZ-forge: `AGENTS.md` *No new tests*, GH-831)."
 2. `skills/4-occasional/ci-suite-audit/SKILL.md:342`: "Where the repository forbids new tests (XYZ-forge:
    `AGENTS.md` *No new tests*, GH-831), no new test files may be added; elsewhere the host repo's own test
    policy applies."
 3. CHANGELOG entry.
-4. Verify: `utils/pdda/pdda.sh run` (the routed docs gate). Re-run the recon grep; the two lines now name
+4. Verify: `utils/pdda/pdda.sh run` (the routed docs gate). Re-run the recon grep; all three lines now name
    XYZ-forge. Red control: the grep shows them unscoped on base `1f5b0508`. Smoke: read both lines from
    the vendored-repo entry point (LTVera `.xyz/` after re-vendor). Manual check under `TESTS-RESULTS/2026-10-26+GH-1228/`.
 
 **Test scope:** no new tests (GH-831). Docs gate only.
+
+## Plan QA dispositions
+
+- Round 1 (Codex, `relay-system/2026-10-26/gh1228-plan-qa.md`): [Blocker] missed `express/SKILL.md:28`. **Accepted**, added to steps and verification.
+  [Should] rating evidence not independently verified (reviewer had no GitHub access). **Accepted**: the LTVera incident is cited as captured evidence from BinoidCBD/LTVera-Pandas#845, not as an independent check.
+  [Pass] on keeping `express.py` unchanged, on the wording, and on verification.
