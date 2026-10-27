@@ -143,4 +143,12 @@ Basis: All five requirements map to falsifiable probe/live checks. The revised p
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-27T04:17:55Z
+task: RELAY-gh1230-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 2a1b2630de2580ccfd7e23c3117de9f8774ac1b3
+added-range: 13219+3081
+added-sha256: e791a6fd645f2eb6f46635a08ea03bf3192e43bcc8f481d5e3e1ec35c579c1d9
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
