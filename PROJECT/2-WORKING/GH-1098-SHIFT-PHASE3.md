@@ -160,3 +160,7 @@ PRS pri/sev/appeal/effort = 75/55/50/55. Severity: no data loss; the cost is was
 ## Merge evidence
 
 - PR #1104 merged 2026-10-17 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1237 merged 2026-10-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
