@@ -11,7 +11,8 @@ from gh534_phase_b_tests import LedgerFixture, park  # noqa: E402
 f = LedgerFixture("setUp")
 f.setUp()
 MC = REPO / "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py"
-env = {**os.environ, "MERGE_CLEANUP_GH_BIN": str(f.gh), "GH_STATE": str(f.state), "RELEASES_GH_BIN": str(f.gh)}
+env = {**os.environ, "MERGE_CLEANUP_GH_BIN": str(f.gh), "GH_STATE": str(f.state), "RELEASES_GH_BIN": str(f.gh),
+       "MERGE_CLEANUP_CHECKS_WAIT_S": "2", "MERGE_CLEANUP_CHECKS_POLL_S": "1"}  # a short, real bounded wait
 
 def cli(label, *extra):
     r = subprocess.run([sys.executable, str(MC), "--primary", str(f.primary), "--root", str(f.tmp / "no-roots"), *extra],
