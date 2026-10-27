@@ -1,0 +1,4977 @@
+[
+ {
+  "n": 1230,
+  "title": "task-sync Desktop: titles go stale (user-set titles, >24h rows, busy sessions)",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2238,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1228,
+  "title": "GH-831 text in three vendored skill/utility lines is unscoped, so vendored repos",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1229"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1147,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1226,
+  "title": "merge-cleanup --execute lands PRs opened after the dry run (denylist, not allowl",
+  "miss": [
+   "row",
+   "doc",
+   "rating",
+   "open-PR#1231,1227"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1009,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1224,
+  "title": "Explore: move each project's operational work ledger outside the repo (factory f",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "design-only"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 9079,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": false
+ },
+ {
+  "n": 1216,
+  "title": "resolve-profile: Aider profile with gateway openrouter emits AIDER_MODEL without",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1832,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1214,
+  "title": "Plan (draft r4): evidence-gated lessons read-back + champion/ATE tie-in, borrowi",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 24159,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1210,
+  "title": "relay-drive --review-once: four launch traps surface one per run (shim, token se",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1213"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3395,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1208,
+  "title": "jog land (#1200 P2): requires a green hosted wave-reconcile run for the landed h",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1213"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2402,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1207,
+  "title": "factory reconcile (#1200 P1): a mutating Jog verb leaves the primary dirty, so t",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1213"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2458,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1206,
+  "title": "Audit E: correct package identity entrypoint and contents",
+  "miss": [
+   "row",
+   "doc",
+   "rating",
+   "open-PR#1209"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2564,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1205,
+  "title": "Audit D: split large core modules behind stable facades",
+  "miss": [
+   "row",
+   "doc",
+   "rating",
+   "open-PR#1209"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3414,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1204,
+  "title": "Audit C: add logical SQLite ledger hygiene and safe maintenance",
+  "miss": [
+   "row",
+   "doc",
+   "rating",
+   "open-PR#1209"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3436,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1203,
+  "title": "Audit B: evaluate and stage a pure-Python production runtime",
+  "miss": [
+   "row",
+   "doc",
+   "rating",
+   "open-PR#1209"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3601,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1202,
+  "title": "Audit A: safely compact active documentation and source commentary",
+  "miss": [
+   "row",
+   "doc",
+   "rating",
+   "open-PR#1209"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3454,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1201,
+  "title": "Code audit: reduce operational complexity while preserving safety contracts",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1209"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4655,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1200,
+  "title": "Factory flywheel experiment (supersedes #1199): prove the decision layer, not th",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1213,1211"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 14657,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1195,
+  "title": "wave_reconcile in a sibling clone: marathon-plan (Python engine) reads the PRIMA",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1213,1211"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3491,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1193,
+  "title": "merge-cleanup: --retire-published-pr refuses start-task's sibling task clones wh",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1198"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2536,
+  "labels": [
+   "bug"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1191,
+  "title": "task-sync: Claude Desktop sidebar titles + one Desktop scheduled task per device",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   60,
+   25,
+   50,
+   75,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md"
+  ],
+  "blen": 3907,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1189,
+  "title": "Kimi K3.1 limited code review initial impressions",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 7799,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1188,
+  "title": "Factory liveness: foreman dead-man's switch + Jog lease reads driver heartbeat (",
+  "miss": [
+   "row",
+   "doc",
+   "rating",
+   "design-only"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5748,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1178,
+  "title": "wave_reconcile: when several issues share one plan doc, only the doc's own issue",
+  "miss": [
+   "row",
+   "doc",
+   "rating",
+   "open-PR#1180"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3200,
+  "labels": [
+   "bug"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1177,
+  "title": "releases.db: 60 of 342 rated roadmap rows carry placeholder ratings (13 on the P",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2223,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1175,
+  "title": "Hosted factory control plane over Jog: continuous one-issue cycle (light plan + ",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "design-only"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 16027,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": false
+ },
+ {
+  "n": 1171,
+  "title": "relay-drive preflight treats a backticked branch name on the \"Artifact under rev",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1852,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1169,
+  "title": "express: vendored-host mode \u2014 docs lane uses the host's PDDA gate; host hook, ha",
+  "miss": [
+   "row",
+   "doc",
+   "rating",
+   "open-PR#1170"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2832,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1168,
+  "title": "scheduler: shared local scheduler (launchd) for XYZ jobs \u2014 first job #1184, then",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2672,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1167,
+  "title": "Merge sequence 2026-10-18 (afternoon): #1164 promotion \u2192 #1161 \u2192 #1162 \u2192 #1163 \u2014",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5143,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1166,
+  "title": "Merge batch 2026-10-18 \u2014 HiQS-Labs-XYZ-forge \u2014 #1163, #1165",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2662,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1160,
+  "title": "docs: AGENTS.md:66 still says wave-reconcile.yml reconciles automatically after ",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1372,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1157,
+  "title": "skills-army-hq: stale canonical baseline, stale device receipts, no post-pull re",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   45,
+   45,
+   50,
+   50,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-1157-SKILLS-ARMY-HARD-RULES.md"
+  ],
+  "blen": 10559,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1156,
+  "title": "Merge batch 2026-10-18 \u2014 HiQS-Labs-XYZ-forge \u2014 #1141, #1151",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3092,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1155,
+  "title": "Release review 2026-10-18: open-PR merge sequence + Express/Radar hotfix QA \u2192 ma",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 7702,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1154,
+  "title": "merge-cleanup: recover merges a batch record missed (crash between remote merge ",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1798,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1149,
+  "title": "Merge batch 2026-10-18 \u2014 HiQS-Labs-XYZ-forge \u2014 #1147, #1148",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2275,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1145,
+  "title": "relay harness reverts substantive PASS verdicts on block format (VERDICT:/Basis:",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2275,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1138,
+  "title": "Radar run 6 (2026-10-18): greenest window on record \u2014 Grow at six-run low 3.4%, ",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3909,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1137,
+  "title": "relay: end-of-turn .relay-scratch sweep deletes host-tracked files (rm -rf in rt",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2476,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1135,
+  "title": "Merge batch 2026-10-17 \u2014 HiQS-Labs-XYZ-forge \u2014 #1132, #1134",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2492,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1133,
+  "title": "ci-optimize: require whole-workflow necessity review before tuning CI speed (tex",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4233,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1131,
+  "title": "DECISION: reconcile ledgers locally; full suite only at development \u2192 main promo",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1213"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4313,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1130,
+  "title": "CI optimization umbrella (proposal / research only \u2014 not approved)",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 8760,
+  "labels": [
+   "ci"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1129,
+  "title": "Linux canary: gh123-lock-progress-bound fails deterministically \u2014 test fixture u",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5098,
+  "labels": [
+   "bug",
+   "ci",
+   "ci:portability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 1124,
+  "title": "Merge batch 2026-10-18 \u2014 GH-1121 batch (landed) + #1123 CI quick wins: landing o",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5500,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1121,
+  "title": "Merge batch 2026-10-17 \u2014 HiQS-Labs/XYZ-forge \u2014 #1062, #1089, #1097, #1120",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 11523,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1113,
+  "title": "Post-merge sequence QA 2026-10-17: #1099 \u2192 #1101 \u2192 #1102 \u2192 #1104 (no regressions",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4311,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1112,
+  "title": "[Gemini 4 Argon (High)] Technical Spike: CI Quick Wins \u2014 Subprocess Hotspot Trim",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   70,
+   40,
+   50,
+   85,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-1112-CI-QUICK-WINS.md"
+  ],
+  "blen": 4893,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1111,
+  "title": "Experiment [Codex / GPT-6 family / effort unavailable]: CI audit process-overhea",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2401,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1110,
+  "title": "CI audit - October 16: full suite ~64 min/merge; hosted reconcile is single-lane",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 7595,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1103,
+  "title": "Merge batch 2026-10-16 \u2014 HiQS-Labs-XYZ-forge \u2014 #1101, #1102",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5626,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1098,
+  "title": "Shift outer loop \u2014 Phase 3: apply Phase 2 lessons (jog root pin, promotion front",
+  "miss": [],
+  "rating": [
+   75,
+   55,
+   50,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-1098-SHIFT-PHASE3.md"
+  ],
+  "blen": 4789,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": false
+ },
+ {
+  "n": 1096,
+  "title": "Preserve accepted-start status metadata across canonical B1 replay",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1375,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1095,
+  "title": "radar: include milestone PRs in combined release analysis without double-countin",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2273,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1094,
+  "title": "Merge batch 2026-10-15 \u2014 HiQS-Labs/XYZ-forge \u2014 #1085, #1091",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 8050,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1092,
+  "title": "relay and radar: a reviewer that may not measure a claim can still approve the a",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5655,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1086,
+  "title": "Merge batch 2026-10-15 \u2014 HiQS-Labs-XYZ-forge \u2014 #1053, #1082",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 16673,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1084,
+  "title": "merge-cleanup batch record: QA gate bypassed on a non-resume rerun, plus three m",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2088,
+  "labels": [
+   "priority:medium"
+  ],
+  "acc": false
+ },
+ {
+  "n": 1076,
+  "title": "Establish one safe selective-CI and batch-qualification policy",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 12598,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1073,
+  "title": "Medium: merge-batch resume retains stale repaired-PR files and omits sweep overl",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4270,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1071,
+  "title": "Low: deferred documentation and historical-provenance follow-ups from GH1063",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2801,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1070,
+  "title": "cleanup QA: trace unexplained ignored-query replay and preserve receipt attribut",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 6976,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1063,
+  "title": "Merge batch 2026-10-15 \u2014 XYZ Forge 1054 \u2192 1065 \u2192 1058 \u2192 1061 \u2192 1067",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 19325,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1052,
+  "title": "spike(recon): assess contracts across vendored artifacts and runtime",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   30,
+   25,
+   50,
+   60,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-1052-RECON-VENDOR-CONTRACTS.md"
+  ],
+  "blen": 2544,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1050,
+  "title": "GH-382 low-swap warning is a standing false alarm on hosts with no swap configur",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1727,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1049,
+  "title": "dependency.drift fires \"(0 lines)\" on every turn when RTL_ROOT is a target repo ",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3066,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1048,
+  "title": "Weekly Plan Outline \u2014 2026-10-13",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 8177,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1041,
+  "title": "Rename review-code to review-xyz and existing review-xyz to review-models",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 740,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1040,
+  "title": "Muse follow-ups from #1038 review: log --approval-mode in telemetry; check consu",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1233,
+  "labels": [
+   "runtime:python",
+   "deferred"
+  ],
+  "acc": false
+ },
+ {
+  "n": 1032,
+  "title": "Oct 8 full-suite audit (ci-suite-audit) did not run: routine failed before any w",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4766,
+  "labels": [
+   "ci"
+  ],
+  "acc": false
+ },
+ {
+  "n": 1030,
+  "title": "Merge record + post-merge code review 2026-10-12 \u2014 #1019, #1024 (pending)",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 11016,
+  "labels": [
+   "merge-batch",
+   "ci",
+   "stability"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1029,
+  "title": "Gitignore pass: decide which TESTS-RESULTS logs to keep in-repo vs stop committi",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2832,
+  "labels": [
+   "enhancement",
+   "ci",
+   "stability"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1028,
+  "title": "weekly: preflight exact canonical registration grammar before partial writes (R6",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1024"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3194,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1027,
+  "title": "Approval request: three RELEASES stale-writer regression cases (PR #1024 S8)",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1024"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2886,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1023,
+  "title": "commandcode-turn: profile effort never reaches the cmd CLI; telemetry records an",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3531,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1022,
+  "title": "Umbrella: Daily issue intake and weekly auto-* Jog/Marathon planning branches",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1024",
+   "design-only"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 33661,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1021,
+  "title": "umbrella: remaining reconciler/driver archival, telemetry and acceptance sequenc",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5264,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1013,
+  "title": "marathon-drive renders the absolute vendored tick path into phase briefs; consum",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2082,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1012,
+  "title": "Merge batch 2026-10-09 \u2014 HiQS-Labs/XYZ-forge \u2014 #954, #982, #1009, #1014",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 15209,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1011,
+  "title": "xyz-vendor.sh re-vendors a target with a live marathon; concurrent run dies with",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2447,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1008,
+  "title": "Add a minimal performance-measurement skill using existing evidence",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1638,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 1006,
+  "title": "Marathon: bounded unattended progress, safe repair PRs, and conditional continua",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   80,
+   65,
+   80,
+   45,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-1006-BOUNDED-RECOVERY.md"
+  ],
+  "blen": 8217,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 1003,
+  "title": "Merge batch 2026-10-08 \u2014 HiQS-Labs/XYZ-forge \u2014 #953 #966 #971 #979 #999",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 10537,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 1002,
+  "title": "agy builder repeatedly writes probe scripts off-lane; one stray test_*.mjs disca",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   65,
+   65,
+   50,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-1002-OFFLANE-SCRATCH-CAP.md"
+  ],
+  "blen": 3582,
+  "labels": [
+   "bug"
+  ],
+  "acc": false
+ },
+ {
+  "n": 1000,
+  "title": "Umbrella: Consolidate Storyline, Kanban, and dashboard efforts into an evidence-",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 8859,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 997,
+  "title": "skills: governance-doc review & simplification skill (4-occasional) \u2014 high-effor",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1442,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 996,
+  "title": "Exploration: lessons from Google ADK (adk-python) for XYZ-forge \u2014 umbrella, no c",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3575,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 991,
+  "title": "validate.sh: 13 harness/vendoring suites red on this Mac at clean development (e",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1586,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 980,
+  "title": "codebase-memory skill: per-device path-independent setup, correct tool list, CLI",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2857,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 977,
+  "title": "releases: roadmap update --raw-text without a rated token nulls the row's rating",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1820,
+  "labels": [
+   "bug"
+  ],
+  "acc": false
+ },
+ {
+  "n": 974,
+  "title": "Revisit advisory Jev screening for HiQS recipe intake after live chain validatio",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   20,
+   10,
+   50,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-974-REVISIT-ADVISORY-JEV-SCREENING.md"
+  ],
+  "blen": 2219,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 968,
+  "title": "Fix XYZ + PDDA blank-repo frontdoor documentation gaps",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2450,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 967,
+  "title": "Umbrella: Claude Code mods follow-ups after GH-964 (/xyz-status) \u2014 gated on its ",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   20,
+   5,
+   50,
+   40,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-967-MODS-FOLLOW-UPS.md"
+  ],
+  "blen": 3229,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 964,
+  "title": "Explore Claude Code mods for XYZ-forge: turn-free /xyz status commands via a man",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   35,
+   15,
+   50,
+   70,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-964-CLAUDE-CODE-MODS.md"
+  ],
+  "blen": 10936,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 963,
+  "title": "GH-955 follow-ups: publisher --check ownership/missing-source gaps and push-down",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1810,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 957,
+  "title": "Merge batch 2026-10-03 \u2014 HiQS-Labs/XYZ-forge \u2014 #956, #946 (+ downstream publish,",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 6221,
+  "labels": [
+   "merge-batch"
+  ],
+  "acc": true
+ },
+ {
+  "n": 947,
+  "title": "HiQS recipe-backed profiles: pin one route through the existing XYZ resolver (Cl",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 14948,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 945,
+  "title": "radar: recommend the repo's own verification assets (harness/fuzzer) for recurri",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   55,
+   35,
+   50,
+   85,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-945-RADAR-VERIFY-ASSET-RECO.md"
+  ],
+  "blen": 1674,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 940,
+  "title": "2026-10-02 landing summary: everything merged into development (zero open PRs)",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 10016,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 937,
+  "title": "Umbrella: CLIO fleet completion and Rebalance integration",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   40,
+   30,
+   50,
+   25,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-937-UMBRELLA-CLIO-FLEET-COMPLETION.md"
+  ],
+  "blen": 3576,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 931,
+  "title": "skills: cross-link sanity-check with ARCHITECTURE index, debug-mantra, unstuck, ",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   65,
+   35,
+   60,
+   85,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-931-SANITY-CHECK-CROSS-LINKS.md"
+  ],
+  "blen": 675,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 928,
+  "title": "Canary gate: a clean-room, sub-minute top-level smoke tier for the core XYZ surf",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2190,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 926,
+  "title": "wave_reconcile catch-up fails closed on an issue transferred to another repo",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1892,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 920,
+  "title": "Deferred: ungated-clone warning test fixture copy failure \u2014 retire universal gat",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   15,
+   30,
+   50,
+   75,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-920-UNGATED-FIXTURE-DEFERRED.md"
+  ],
+  "blen": 1872,
+  "labels": [
+   "ci",
+   "stability",
+   "deferred"
+  ],
+  "acc": false
+ },
+ {
+  "n": 918,
+  "title": "Deferred: Gen4 domain-oracle shared-root zero-state failure \u2014 retire universal g",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   15,
+   30,
+   50,
+   75,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-918-GEN4-ORACLE-DEFERRED.md"
+  ],
+  "blen": 1896,
+  "labels": [
+   "ci",
+   "stability",
+   "deferred"
+  ],
+  "acc": false
+ },
+ {
+  "n": 917,
+  "title": "Deferred: registry-lock-concurrency missing install row \u2014 retain installer scope",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   20,
+   40,
+   50,
+   60,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-917-INSTALL-REGISTRY-DEFERRED.md"
+  ],
+  "blen": 2048,
+  "labels": [
+   "ci",
+   "stability",
+   "deferred"
+  ],
+  "acc": false
+ },
+ {
+  "n": 916,
+  "title": "Deferred: attribute live relay-self-sufficiency failure only when the live skill",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   30,
+   55,
+   50,
+   50,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-916-LIVE-RELAY-DEFERRED.md"
+  ],
+  "blen": 1862,
+  "labels": [
+   "ci",
+   "stability",
+   "deferred"
+  ],
+  "acc": false
+ },
+ {
+  "n": 899,
+  "title": "hq: default HQ_REBALANCE_DB points at a stale path; live rebalanceOS DB is in Ap",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 772,
+  "labels": [
+   "bug"
+  ],
+  "acc": false
+ },
+ {
+  "n": 897,
+  "title": "Hourly frontier-LLM board review: propose (then gated-apply) Kanban moves via bo",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4224,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 887,
+  "title": "marathon-plan --deep ignores QUEUE_PLAN_ROOT: deep preflight targets the harness",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2380,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 885,
+  "title": "Skills fast lane: markdown-first policy, two measurements, and /express choosing",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4787,
+  "labels": [
+   "documentation",
+   "enhancement"
+  ],
+  "acc": false
+ },
+ {
+  "n": 884,
+  "title": "Exploration: clean-room CI rebuild contingency (core harnesses, then ratchets, t",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 9607,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 961,
+  "title": "skills-army-hq: make the publisher role device-agnostic (any device may publish)",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   20,
+   15,
+   50,
+   85,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-961-SKILLS-ARMY-ANY-DEVICE-PUBLISHER.md"
+  ],
+  "blen": 3198,
+  "labels": [
+   "documentation",
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 879,
+  "title": "Post merge CI Audit skill improvements",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   75,
+   55,
+   70,
+   85,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-879-CI-SUITE-AUDIT-FIXES.md"
+  ],
+  "blen": 15156,
+  "labels": [
+   "enhancement",
+   "ci",
+   "stability"
+  ],
+  "acc": true
+ },
+ {
+  "n": 868,
+  "title": "ci-suite-audit: Full Suite Audit Report (2026-09-27 \u2014 a076b1b1)",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 7289,
+  "labels": [
+   "ci",
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 859,
+  "title": "Sketch: Test Impact Analysis / Regression Test Selection for CI (extends ci-rout",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 15664,
+  "labels": [
+   "enhancement",
+   "ci",
+   "ci:hosted",
+   "ci:local-gates"
+  ],
+  "acc": false
+ },
+ {
+  "n": 855,
+  "title": "Light review: Command Code \u2192 stealth/space-bunny-alpha as a relay-xyz reviewer \u2014",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 6177,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 854,
+  "title": "Stabilization window: a 10-day staging branch that runs only changed-code checks",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   70,
+   50,
+   50,
+   85,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-854-GATE-DISPOSITIONS.md"
+  ],
+  "blen": 39029,
+  "labels": [
+   "priority:high",
+   "ci",
+   "stability",
+   "ci:hosted",
+   "ci:local-gates"
+  ],
+  "acc": true
+ },
+ {
+  "n": 853,
+  "title": "Umbrella: suite isolation \u2014 existing gate suites assume a quiet, clean, single-t",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 14383,
+  "labels": [
+   "bug",
+   "priority:high",
+   "ci",
+   "stability",
+   "ci:local-gates"
+  ],
+  "acc": true
+ },
+ {
+  "n": 849,
+  "title": "merge-cleanup batch 2026-09-27: land the open PR queue (#799 #803 #806 #810 #818",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4132,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 845,
+  "title": "umbrella: #840 (GH-833) follow-ups from CodeRabbit's post-merge review",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1229"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1755,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 843,
+  "title": "relay: new-relay.sh writes the caller's absolute --artifact-file path (username,",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2830,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 841,
+  "title": "skills: /releases tells releases-mode agents to sync ROADMAP.md (a no-op), and /",
+  "miss": [
+   "row",
+   "doc",
+   "rating",
+   "open-PR#1231,1227"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3977,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 836,
+  "title": "CI refactor: trim the measured gate hotspots (gh549 race leg, gh436 parity doubl",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   70,
+   45,
+   50,
+   70,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-836-GATE-HOTSPOTS.md"
+  ],
+  "blen": 5949,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 819,
+  "title": "Stop running the full gate on every push",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 6257,
+  "labels": [
+   "ci",
+   "ci:local-gates"
+  ],
+  "acc": true
+ },
+ {
+  "n": 817,
+  "title": "Gate front lane: run the fast static guards first and stop on red, before the fu",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 9392,
+  "labels": [
+   "enhancement",
+   "ci",
+   "ci:local-gates"
+  ],
+  "acc": true
+ },
+ {
+  "n": 816,
+  "title": "Exploratory: spin CI/CD out to an external test repo \u2014 keep ~10-20% canaries in-",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 7109,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 815,
+  "title": "Test admission: new suites must run code; fold text-only skill tests into one li",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3120,
+  "labels": [
+   "enhancement",
+   "ci"
+  ],
+  "acc": true
+ },
+ {
+  "n": 809,
+  "title": "tick: readAllEvents parses each .jsonl FILE as one JSON doc \u2014 one 2-line event f",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1198,1190"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3106,
+  "labels": [
+   "bug",
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 805,
+  "title": "Audit: how many tests do we need? Evidence-based consolidation and enforced test",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 13811,
+  "labels": [
+   "enhancement",
+   "priority:high",
+   "ci",
+   "ci:local-gates"
+  ],
+  "acc": false
+ },
+ {
+  "n": 802,
+  "title": "Retrospective: CI versus actual harness file repo issue coverage",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5039,
+  "labels": [
+   "bug",
+   "priority:high",
+   "ci",
+   "stability",
+   "ci:local-gates"
+  ],
+  "acc": true
+ },
+ {
+  "n": 800,
+  "title": "Benchmark full local CI suite across Mac mini M6, MacBook Pro M4 Pro, and Mac St",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   50,
+   10,
+   50,
+   40,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-800-CROSS-DEVICE-GATE-BENCHMARK.md"
+  ],
+  "blen": 2979,
+  "labels": [
+   "ci"
+  ],
+  "acc": true
+ },
+ {
+  "n": 796,
+  "title": "Integration review: sequence and remediate open PRs #794, #795, #765; assess and",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   80,
+   75,
+   50,
+   65,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md"
+  ],
+  "blen": 24126,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 792,
+  "title": "gen4_campaign.make_sandbox deletes the existing clone before checking it is disj",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1768,
+  "labels": [
+   "bug"
+  ],
+  "acc": true
+ },
+ {
+  "n": 786,
+  "title": "merge-cleanup: file one GH issue per PR merge batch (feeds rebalanceOS sync, Foc",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4712,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 785,
+  "title": "merge-cleanup: a hold-labelled or closed predecessor does not block its hard dep",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1704,
+  "labels": [
+   "bug"
+  ],
+  "acc": true
+ },
+ {
+  "n": 777,
+  "title": "Umbrella: Adopt rebalanceOS #257 Retrospective Lessons & Starter Kit into XYZ Fo",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4741,
+  "labels": [
+   "enhancement",
+   "priority:high"
+  ],
+  "acc": true
+ },
+ {
+  "n": 775,
+  "title": "umbrella: broken or fragile releases_app call sites (10days, standup, marathon-t",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   50,
+   50,
+   50,
+   70,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-775-UMBRELLA-BROKEN-OR-FRAGILE.md"
+  ],
+  "blen": 1494,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 772,
+  "title": "marathon_drive: memory-compressor figure assumes 4K pages, logs 4x low on 16K-pa",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   25,
+   20,
+   50,
+   85,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-772-MARATHON-DRIVE-MEMORY-COMPRESSOR.md"
+  ],
+  "blen": 499,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 769,
+  "title": "audit: DRY and optimization review of utils/py/marathon_drive.py (3,573 lines)",
+  "miss": [
+   "contract",
+   "open-PR#1209"
+  ],
+  "rating": [
+   30,
+   20,
+   50,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-769-MARATHON-DRIVE-AUDIT.md"
+  ],
+  "blen": 1076,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 768,
+  "title": "audit: DRY and optimization review of utils/py/releases_app.py (6,695 lines)",
+  "miss": [
+   "contract",
+   "open-PR#1209"
+  ],
+  "rating": [
+   30,
+   20,
+   50,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-768-RELEASES-APP-AUDIT.md"
+  ],
+  "blen": 1074,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 767,
+  "title": "docs: regenerate ARCHITECTURE diagrams from current codebase",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   20,
+   15,
+   50,
+   65,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-767-REGENERATE-ARCHITECTURE-DIAGRAMS.md"
+  ],
+  "blen": 812,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 760,
+  "title": "agent-chorus-bridge.sh flakes on hosted wave-reconcile: remote send misses turn ",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   60,
+   80,
+   50,
+   35,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-760-AGENT-CHORUS-BRIDGE-READY-POLL.md"
+  ],
+  "blen": 4092,
+  "labels": [
+   "ci"
+  ],
+  "acc": true
+ },
+ {
+  "n": 758,
+  "title": "Results register: next-action candidates and related classification evidence \u2014 c",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 7706,
+  "labels": [
+   "ci",
+   "ci:hosted"
+  ],
+  "acc": false
+ },
+ {
+  "n": 757,
+  "title": "Experiment: next-action prediction vs useful advice \u2014 fresh evaluation and candi",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 17536,
+  "labels": [
+   "ci",
+   "ci:hosted"
+  ],
+  "acc": true
+ },
+ {
+  "n": 752,
+  "title": "marathon.sh: a multi-phase plan cannot be re-fired after phase 1 \u2014 GH-505's whol",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1024"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2762,
+  "labels": [
+   "bug",
+   "runtime:python",
+   "ci"
+  ],
+  "acc": false
+ },
+ {
+  "n": 749,
+  "title": "MARATHON umbrella: relay exit-code truth + measured gate cost (GH-720, GH-732)",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3502,
+  "labels": [
+   "enhancement",
+   "ci",
+   "ci:local-gates"
+  ],
+  "acc": true
+ },
+ {
+  "n": 748,
+  "title": "merge-cleanup: landing clones kept 'for inspection' are never reaped \u2014 671 merge",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1179,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 732,
+  "title": "Mid September CI/CD optimizations \u2014 measured gate cost vs documented; render exi",
+  "miss": [
+   "plan-in-issue"
+  ],
+  "rating": [
+   55,
+   40,
+   50,
+   70,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-732-MID-SEPTEMBER-CICD-OPTIMIZATIONS.md"
+  ],
+  "blen": 22968,
+  "labels": [
+   "enhancement",
+   "ci",
+   "ci:local-gates"
+  ],
+  "acc": true
+ },
+ {
+  "n": 727,
+  "title": "feat(ledger): retire committed LEADERBOARD.md \u2014 render from releases.db on deman",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2850,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 722,
+  "title": "merge-cleanup: SAFE_ROOTS never includes the primary's own parent, so the SOP's ",
+  "miss": [
+   "plan-in-issue",
+   "open-PR#1198"
+  ],
+  "rating": [
+   60,
+   60,
+   90,
+   60,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-722-MERGE-CLEANUP-SAFE-ROOTS-PARENT.md"
+  ],
+  "blen": 1670,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": false
+ },
+ {
+  "n": 718,
+  "title": "Tighten consult-to-relay handoff and Agy review recovery guidance",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3907,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 717,
+  "title": "jev: auto-label issue purpose on intake for /10days and radar (shadow, then appl",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4110,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": false
+ },
+ {
+  "n": 715,
+  "title": "vendored .xyz/test: 11 suites still red for non-path reasons (module paths, beha",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3131,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 709,
+  "title": "recon: TypeSafe.ai Jev as a zero-shot classifier for work-purpose (#547/Needle #",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 17255,
+  "labels": [
+   "enhancement",
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 959,
+  "title": "Link-drift reporting: name dangling/foreign/retargeted app links as DRIFT and li",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   40,
+   40,
+   50,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-959-SKILLS-ARMY-LINK-DRIFT.md"
+  ],
+  "blen": 6052,
+  "labels": [
+   "documentation",
+   "enhancement"
+  ],
+  "acc": false
+ },
+ {
+  "n": 670,
+  "title": "Marathon: support explicitly selected Claude CLI reviewers instead of Codex/Agy-",
+  "miss": [
+   "plan-in-issue"
+  ],
+  "rating": [
+   60,
+   60,
+   90,
+   60,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-670-CLAUDE-REVIEWER.md"
+  ],
+  "blen": 1772,
+  "labels": [
+   "ci"
+  ],
+  "acc": false
+ },
+ {
+  "n": 621,
+  "title": "Playbook: running a marathon on a foreign XYZ consumer repo (first run: local-ad",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3393,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 591,
+  "title": "umbrella: the post-merge reconciler actually lands \u2014 every merged PR reconciled ",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   72,
+   72,
+   50,
+   15,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-591-RECONCILER-LIFECYCLE.md"
+  ],
+  "blen": 10030,
+  "labels": [
+   "ci"
+  ],
+  "acc": true
+ },
+ {
+  "n": 582,
+  "title": "Pointer: Terra Low work classification and synthesis for RebalanceOS",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 508,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 579,
+  "title": "HiQS integration: resolve explicit model requests for consult, relay, builder an",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   70,
+   55,
+   50,
+   25,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-579-HIQS-CONSUMER.md"
+  ],
+  "blen": 7850,
+  "labels": [
+   "ci"
+  ],
+  "acc": true
+ },
+ {
+  "n": 575,
+  "title": "Align marathon and Aider reviewer prompts with the canonical relay verdict contr",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1898,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 572,
+  "title": "feat(hygiene): surgical cleanup of stale self-descriptions \u2014 deterministic scann",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 6754,
+  "labels": [
+   "documentation",
+   "enhancement",
+   "runtime:python"
+  ],
+  "acc": true
+ },
+ {
+  "n": 571,
+  "title": "Research: GitHub Merge Queue for development \u2014 availability on our free org plan",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4554,
+  "labels": [
+   "enhancement",
+   "ci",
+   "ci:local-gates"
+  ],
+  "acc": false
+ },
+ {
+  "n": 562,
+  "title": "research: standardized model-neutral Git/PR analyst benchmark protocol v1",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 15213,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 552,
+  "title": "jog --dry-run claims \"zero DB writes\" one line before it can CREATE TABLE on the",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4554,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 551,
+  "title": "Relocated harness telemetry breaks the in-repo evidence chain: site_build bakes ",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4187,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 544,
+  "title": "research: archive Luna/Needle model benchmarks and Git/PR analyst findings",
+  "miss": [
+   "row",
+   "plan-in-issue",
+   "rating",
+   "open-PR#1227"
+  ],
+  "rating": null,
+  "docs": [
+   "PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md"
+  ],
+  "blen": 4303,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 522,
+  "title": "feat: continuous issue admission into Jog/Marathon proposals \u2014 require remediati",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   55,
+   30,
+   50,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-522-ISSUE-ADMISSION.md"
+  ],
+  "blen": 21805,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 518,
+  "title": "harness: wire Meta's native muse CLI (Muse Spark 1.3 Contributor) as an XYZ rout",
+  "miss": [
+   "contract",
+   "open-PR#1227"
+  ],
+  "rating": [
+   70,
+   50,
+   50,
+   35,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-518-MUSE-SPARK-HARNESS-ROUTE.md"
+  ],
+  "blen": 7715,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 514,
+  "title": "skills: new co-author skill \"keel\" \u2014 balance modularity, flexibility, maintainab",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   70,
+   25,
+   50,
+   65,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-514-KEEL-SKILL.md"
+  ],
+  "blen": 3811,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 512,
+  "title": "test/gh57-releases-fuzz.sh: union_dump() helper leaves a duplicate 'generation' ",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2473,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 507,
+  "title": "test/marathon-drive.sh's vendored-fixture case pollutes the real clone when nest",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4580,
+  "labels": [
+   "ci"
+  ],
+  "acc": false
+ },
+ {
+  "n": 958,
+  "title": "skills-army-hq: replicate a collection to a second device, migrate-from name mis",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   40,
+   40,
+   50,
+   45,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-958-SKILLS-ARMY-HQ-REPLICATE.md"
+  ],
+  "blen": 2208,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 497,
+  "title": "MARATHON umbrella: make the roadmap ledger's state trustworthy \u2014 write path, swe",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4348,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 492,
+  "title": "Nothing reconciles roadmap_items against issues closed outside a merged PR \u2014 33 ",
+  "miss": [
+   "plan-in-issue"
+  ],
+  "rating": [
+   45,
+   45,
+   50,
+   60,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md"
+  ],
+  "blen": 3867,
+  "labels": [
+   "bug"
+  ],
+  "acc": true
+ },
+ {
+  "n": 490,
+  "title": "Marathon: complete the ROADMAP.md \u2192 releases.db flip (planner, render, status wr",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1922,
+  "labels": [
+   "ci"
+  ],
+  "acc": true
+ },
+ {
+  "n": 484,
+  "title": "feat(skill): deploy-skills \u2014 durable local catalog and global symlink deployment",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   72,
+   58,
+   50,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md"
+  ],
+  "blen": 2199,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 482,
+  "title": "relay-drive.sh --artifact-file silently seeds nothing \u2014 the reviewer completes a",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   75,
+   80,
+   55,
+   30,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-482-RELAY-ARTIFACT-FILE-SILENT-NOOP.md"
+  ],
+  "blen": 3178,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 481,
+  "title": "consult.sh: the agy lane answered from a months-old copy of this repo in ~/.gemi",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   80,
+   85,
+   60,
+   40,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-481-CONSULT-AGY-STALE-TREE.md"
+  ],
+  "blen": 4951,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 478,
+  "title": "Add ATE exit-cleanup / runaway-process guard \u2014 gen4 adaptive-ate test hung ~3 da",
+  "miss": [
+   "contract",
+   "open-PR#1227"
+  ],
+  "rating": [
+   80,
+   80,
+   50,
+   65,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-478-ATE-RUNAWAY-GUARD.md"
+  ],
+  "blen": 3475,
+  "labels": [
+   "ci",
+   "stability"
+  ],
+  "acc": true
+ },
+ {
+  "n": 477,
+  "title": "ATE/fuzz follow-up: property targets for the alias-resolution stack's reviewer c",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5052,
+  "labels": [
+   "enhancement",
+   "ci"
+  ],
+  "acc": false
+ },
+ {
+  "n": 472,
+  "title": "harnesses.db records no duration, tokens or cost on any real turn \u2014 732 rows, 0 ",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 8653,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 470,
+  "title": "Driven lanes cannot fix frozen .sh turn fallbacks \u2014 preflight refuses frozen-art",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1643,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 469,
+  "title": "Two leftovers from the HiQS-Suite\u2192HiQS-Labs org repoint and the AGENTS.md safety",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2488,
+  "labels": [
+   "bug",
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 468,
+  "title": "gh1-adoption-guard: the offender detector greps comments, so a comment naming a ",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2603,
+  "labels": [
+   "bug",
+   "ci"
+  ],
+  "acc": false
+ },
+ {
+  "n": 467,
+  "title": "Umbrella - Side Quest: Cactus Needle Oracle for what to do next and doc governan",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5786,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 462,
+  "title": "MARATHON umbrella: 10-day sweep \u2014 GH-418 planner DB sourcing, GH-316 tracking id",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2340,
+  "labels": [
+   "ci"
+  ],
+  "acc": true
+ },
+ {
+  "n": 460,
+  "title": "ATE/Fuzz campaign vs the model-alias resolver \u2014 counterexamples must land as fix",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   60,
+   40,
+   50,
+   70,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md"
+  ],
+  "blen": 3497,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 453,
+  "title": "Audit governance document ownership and correct XYZ principles drift",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   70,
+   65,
+   50,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md"
+  ],
+  "blen": 10764,
+  "labels": [
+   "ci"
+  ],
+  "acc": false
+ },
+ {
+  "n": 452,
+  "title": "Start publishing release tags (git tag + GitHub Release per shipped ledger relea",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   25,
+   22,
+   50,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-452-RELEASE-TAGS.md"
+  ],
+  "blen": 1529,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 446,
+  "title": "marathon_plan.py writes unprompted plan file to disk on default invocation witho",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   65,
+   60,
+   75,
+   80,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-446-MARATHON-PLAN-WRITE-GUARD.md"
+  ],
+  "blen": 944,
+  "labels": [
+   "bug",
+   "runtime:python"
+  ],
+  "acc": false
+ },
+ {
+  "n": 445,
+  "title": "runtime:parity \u2014 turn shims reject --help when RELAY_AGENT is unset under XYZ_PY",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   50,
+   40,
+   60,
+   80,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-445-TURN-SHIM-HELP-PARITY.md"
+  ],
+  "blen": 1102,
+  "labels": [
+   "bug",
+   "runtime:bash",
+   "runtime:parity"
+  ],
+  "acc": false
+ },
+ {
+  "n": 444,
+  "title": "merge-cleanup: Phase 5 merges PRs marked \"do not merge\" \u2014 a conflict is not a gu",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2931,
+  "labels": [
+   "bug"
+  ],
+  "acc": true
+ },
+ {
+  "n": 443,
+  "title": "marathon-triage: verify PRS ratings, then compute, preflight, and dry-run the ma",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   60,
+   40,
+   50,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-443-MARATHON-RATING-PASS.md"
+  ],
+  "blen": 3324,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 442,
+  "title": "skills/browserbase: cloud-browser skill for agent research + Relay/Consult integ",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4702,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 435,
+  "title": "feat(ate): Environment Matrix Testing Engine \u2014 Dependency Completeness, CWD/Syml",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4787,
+  "labels": [
+   "ci",
+   "stability",
+   "ci:portability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 423,
+  "title": "releases roadmap render: emit the DB as ledger markdown \u2014 the missing verb #418 ",
+  "miss": [],
+  "rating": [
+   80,
+   60,
+   85,
+   88,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md"
+  ],
+  "blen": 6053,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 418,
+  "title": "Marathon planner still reads the frozen ROADMAP.md \u2014 37 DB-parked items are invi",
+  "miss": [
+   "open-PR#1211"
+  ],
+  "rating": [
+   88,
+   78,
+   80,
+   75,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-418-MARATHON-ADOPT-RELEASES-DB.md"
+  ],
+  "blen": 5578,
+  "labels": [
+   "runtime:python"
+  ],
+  "acc": true
+ },
+ {
+  "n": 417,
+  "title": "MARATHON umbrella: GH-406 remediation \u2014 seven guards that cover a narrower path ",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3329,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 406,
+  "title": "External review (Russ K.): eight findings on guards that cover a narrower path t",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   52,
+   62,
+   50,
+   30,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-406-RUSS-EXTERNAL-REVIEW.md",
+   "PROJECT/1-INBOX/GH-406-RADAR-CROSSWALK.md"
+  ],
+  "blen": 20394,
+  "labels": [
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 402,
+  "title": "Board-sync brainstorm: auto-add issues to the Projects board when any agent star",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   18,
+   15,
+   50,
+   25,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-402-BOARD-SYNC.md"
+  ],
+  "blen": 20751,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 399,
+  "title": "Adding a model route means editing Python in three places \u2014 let the profile carr",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   30,
+   35,
+   50,
+   45,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md"
+  ],
+  "blen": 4916,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 398,
+  "title": "deepseek-turn.py hardcodes an absolute machine path for the DeepSeek CLI \u2014 the r",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2392,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 391,
+  "title": "AgentChorus bridge: four hardening follow-ups from the #386 review (token revoca",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2590,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 384,
+  "title": "Explore a secure cross-device AgentChorus bridge over Cloudflare Tunnel",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   14,
+   15,
+   50,
+   20,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-384-AGENTCHORUS-CLOUDFLARE-BRIDGE.md"
+  ],
+  "blen": 8783,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 382,
+  "title": "Test Suite - Lighter Gate",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3592,
+  "labels": [
+   "ci",
+   "ci:local-gates"
+  ],
+  "acc": false
+ },
+ {
+  "n": 381,
+  "title": "CI: gh280-jog-marathon-adapter.sh H2 fails reproducibly on the Ubuntu canary \u2014 c",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3817,
+  "labels": [
+   "ci",
+   "stability",
+   "ci:portability"
+  ],
+  "acc": true
+ },
+ {
+  "n": 355,
+  "title": "Migration 007: updated_at across all releases.db tables, so consumers can detect",
+  "miss": [
+   "plan-in-issue"
+  ],
+  "rating": [
+   30,
+   25,
+   50,
+   30,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-355-UPDATED-AT-MIGRATION.md"
+  ],
+  "blen": 3312,
+  "labels": [
+   "stability"
+  ],
+  "acc": true
+ },
+ {
+  "n": 346,
+  "title": "Speed up harness -> gateway -> model resolution with a real cache",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   78,
+   72,
+   60,
+   48,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md",
+   "PROJECT/1-INBOX/GH-346-PHASE-3-SPEC.md"
+  ],
+  "blen": 4757,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 345,
+  "title": "Sleep-vs-readiness audit: one confirmed race in the agent-chorus doorbell assert",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   10,
+   30,
+   50,
+   92,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-345-SLEEP-READINESS-AUDIT.md"
+  ],
+  "blen": 9237,
+  "labels": [
+   "ci",
+   "stability"
+  ],
+  "acc": true
+ },
+ {
+  "n": 344,
+  "title": "StarSling optimizations: run what we already vendor, and be clear about what it ",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4730,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 342,
+  "title": "This repo is public: proxy infra details behind aliases so hosts, addresses and ",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3611,
+  "labels": [
+   "stability"
+  ],
+  "acc": true
+ },
+ {
+  "n": 341,
+  "title": "CI: attest Linux as an unprivileged user \u2014 the canary's 14 failures are almost a",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   28,
+   35,
+   50,
+   45,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-341-LINUX-UNPRIVILEGED-ATTESTATION.md"
+  ],
+  "blen": 4346,
+  "labels": [
+   "ci",
+   "stability",
+   "ci:portability"
+  ],
+  "acc": true
+ },
+ {
+  "n": 313,
+  "title": "test-agy-isolation.sh: stale exit-5 expectation (red on development) AND exits 0",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1133,
+  "labels": [
+   "ci"
+  ],
+  "acc": false
+ },
+ {
+  "n": 310,
+  "title": "GH-222 dogfood: executor lane parked at attempt cap; dead GH-292 F3 regen + unro",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating",
+   "jog:parked"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2339,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 307,
+  "title": "Runner hygiene: self-hosted ubuntu canary drift on 2026-08-28 \u2014 17:42Z run fails",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3276,
+  "labels": [
+   "ci",
+   "ci:portability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 299,
+  "title": "feat(ate): Gen 4 ATE & True Evolutionary Fuzzing \u2014 Feedback-guided mutational en",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   22,
+   20,
+   50,
+   12,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-299-GEN4-FUZZING-ATE.md"
+  ],
+  "blen": 2204,
+  "labels": [
+   "ci",
+   "ci:portability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 298,
+  "title": "test(ate): Extensively test and fuzz ATE Gen 4 against CI test suites, runner en",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1965,
+  "labels": [
+   "ci",
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 295,
+  "title": "Recalibrate the current course: 0.7.4 is named Linux RC while 96.8% of effort we",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5517,
+  "labels": [
+   "ci",
+   "ci:portability"
+  ],
+  "acc": true
+ },
+ {
+  "n": 294,
+  "title": "Work-type tagging gap: zero rgt: adoption makes Transform structurally 0%, and t",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5639,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 293,
+  "title": "radar: XYZ-forge \u2014 recurring targets",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 16112,
+  "labels": [
+   "radar"
+  ],
+  "acc": true
+ },
+ {
+  "n": 279,
+  "title": "jog run: first unattended queue run needs 6 operator-side unblocks; success is r",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4800,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 277,
+  "title": "Enable Ask-Code to query RELEASES SQLite DBs for cross-repo project scheduling",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1035,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 275,
+  "title": "Medium-level write-ops logging: durable trail of agent disk-write/teardown comma",
+  "miss": [],
+  "rating": [
+   70,
+   60,
+   60,
+   75,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md"
+  ],
+  "blen": 10772,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 260,
+  "title": "Improvement Opportunities \u2014 system assessment after extended hands-on session (F",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4854,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 259,
+  "title": "User Guide and Skills",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   8,
+   10,
+   50,
+   60,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-259-JOG-SERIAL-QUEUE.md"
+  ],
+  "blen": 4827,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 256,
+  "title": "No preflight checks the builder can reach a phase's artifact paths \u2014 the phase b",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   58,
+   62,
+   50,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md"
+  ],
+  "blen": 4875,
+  "labels": [
+   "ci"
+  ],
+  "acc": true
+ },
+ {
+  "n": 254,
+  "title": "export_timeline: draft release cards render before active cards \u2014 open-bucket so",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   14,
+   12,
+   50,
+   95,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-254-PREVIEW-DRAFT-SORT.md"
+  ],
+  "blen": 1384,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 252,
+  "title": "hq park cannot score an entry \u2014 hq_roadmap_line emits no rated token, so the doc",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3440,
+  "labels": [
+   "bug"
+  ],
+  "acc": true
+ },
+ {
+  "n": 248,
+  "title": "Bug: Aider's file-addition prompt hijacks Qwen 3.8 Max in headless relay runs",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1758,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 237,
+  "title": "consult.sh agy lane hangs idle in throwaway worktree (2/2, idle-killed before 30",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3027,
+  "labels": [
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 229,
+  "title": "ATE / Fuzzer Gen 3.5: 2-Hour Soak & Invariant Verification Run Receipts",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2733,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 227,
+  "title": "agy-turn: auth pre-flight fails on agy 1.1.19 because it has no 'whoami' subcomm",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3398,
+  "labels": [
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 225,
+  "title": "releases_cycle: marathons tracked only by temp_id are silently dropped from runn",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2463,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 224,
+  "title": "Linux MVP RC \u2014 tracking umbrella",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5843,
+  "labels": [
+   "ci",
+   "ci:portability"
+  ],
+  "acc": true
+ },
+ {
+  "n": 223,
+  "title": "pre-push gate: push double-applies through ref lock \u2014 retry reports own success ",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   80,
+   75,
+   65,
+   60,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-223-GATE-PUSH-DOUBLE-APPLY.md"
+  ],
+  "blen": 1273,
+  "labels": [
+   "ci",
+   "stability",
+   "ci:local-gates"
+  ],
+  "acc": false
+ },
+ {
+  "n": 216,
+  "title": "marathon-plan.sh ledger parser rejects link-style ROADMAP.md bullets \u2014 reconcile",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   75,
+   65,
+   70,
+   70,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md"
+  ],
+  "blen": 2415,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 207,
+  "title": "gh103-timeline-exporter uses BSD `md5`: on Linux the read-only safety assertion ",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2286,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 203,
+  "title": "marathon_drive.py: the signal.SIGHUP guard cannot fire \u2014 SIGHUP is dereferenced ",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3222,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 201,
+  "title": "Gen 3.5 follow-ups \u2014 remaining ATE hardening arc (tasks 3\u20138b of #174): determini",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   80,
+   70,
+   80,
+   45,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-201-GEN35-FOLLOWUPS.md"
+  ],
+  "blen": 4139,
+  "labels": [
+   "ci",
+   "ci:portability"
+  ],
+  "acc": true
+ },
+ {
+  "n": 193,
+  "title": "Agent2Agent (AgentChorus) Improvements",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   75,
+   70,
+   85,
+   50,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-193-AGENTCHORUS-GEN2.md"
+  ],
+  "blen": 9391,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 192,
+  "title": "QA follow-ups (PR #185, ox-alpha review): rewrite-all-matches path heuristic, --",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1799,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 191,
+  "title": "Cost dashboard + model router: route low-complexity tasks to cheaper models",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1337,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 190,
+  "title": "Memory: per-agent OOM thresholds and leak detection for long-context runs",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1187,
+  "labels": [
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 189,
+  "title": "Auto-reap zombie claims on missed heartbeats (parked-claim recovery)",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1331,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 187,
+  "title": "Lane utilization: dynamic dispatch to keep concurrency near 50% target",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1302,
+  "labels": [
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 186,
+  "title": "Architectural Improvements from Marathon Telemetry",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1859,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 177,
+  "title": "ATE/Fuzzing Tests post Gen 3 implementation",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 7716,
+  "labels": [
+   "ci"
+  ],
+  "acc": false
+ },
+ {
+  "n": 169,
+  "title": "Research: ROADMAP.md / RELEASES DB overlap \u2014 is a canonical-DB flip viable, or i",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4415,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 152,
+  "title": "StarSling Runner test migration \u2014 findings (PR #151)",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1885,
+  "labels": [
+   "ci"
+  ],
+  "acc": false
+ },
+ {
+  "n": 143,
+  "title": "Generate event sequences against the tick state machine instead of hand-picking ",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 7909,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": false
+ },
+ {
+  "n": 141,
+  "title": "Make Fuzzing and ATE actually useful: neither currently fuzzes",
+  "miss": [],
+  "rating": [
+   80,
+   65,
+   85,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md"
+  ],
+  "blen": 24383,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": false
+ },
+ {
+  "n": 120,
+  "title": "Compatibility testing with stealth/ox-alpha",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 674,
+  "labels": [
+   "ci"
+  ],
+  "acc": false
+ },
+ {
+  "n": 98,
+  "title": "Automated Fuzzing: Enforce Orchestrator QA and PR target validations",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1609,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 88,
+  "title": "feat(visual planner): explainable multi-factor queue ranking",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 2944,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 75,
+  "title": "feat(releases): single-page HTML dashboard \u2014 releases (mid/long term) + roadmap ",
+  "miss": [
+   "plan-in-issue"
+  ],
+  "rating": [
+   90,
+   40,
+   85,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-75-RELEASES-ROADMAP-DASHBOARD.md"
+  ],
+  "blen": 3949,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 69,
+  "title": "Design: should ROADMAP.md become a ledger? (it already is one \u2014 with a regex for",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 7530,
+  "labels": [
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 68,
+  "title": "P3: HARNESS-MODELS-REGISTRY.md \u2014 PR #60's new row is off-schema (date in the Har",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 1883,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 67,
+  "title": "P1: PR #60 widened the Commandcode builder default from --permission-mode auto-a",
+  "miss": [
+   "doc",
+   "plan-in-issue"
+  ],
+  "rating": [
+   88,
+   80,
+   45,
+   70,
+   340
+  ],
+  "docs": [],
+  "blen": 3764,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 65,
+  "title": "test(releases): use a portable artifact-hash helper",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 581,
+  "labels": [
+   "ci"
+  ],
+  "acc": false
+ },
+ {
+  "n": 64,
+  "title": "test(releases): add seeded malformed-dump property coverage",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 579,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 63,
+  "title": "test(releases): stress writer locking and owner-death recovery",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 541,
+  "labels": [
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 62,
+  "title": "test(releases): assert exact ledger state after crash recovery",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 612,
+  "labels": [
+   "ci",
+   "stability"
+  ],
+  "acc": false
+ },
+ {
+  "n": 61,
+  "title": "GH-57 follow-up: RELEASES ledger durability hardening",
+  "miss": [
+   "doc",
+   "plan-in-issue"
+  ],
+  "rating": [
+   45,
+   55,
+   40,
+   50,
+   null
+  ],
+  "docs": [],
+  "blen": 755,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 59,
+  "title": "Re-arm hosted CI: fire on merge/push into development and main only \u2014 the repo i",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3866,
+  "labels": [
+   "ci",
+   "ci:hosted"
+  ],
+  "acc": true
+ },
+ {
+  "n": 58,
+  "title": "GH-35 Phase 3 follow-up: tier-2 hygiene gap (P2) + two tier/hook defects (P3) fr",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4819,
+  "labels": [
+   "ci",
+   "ci:local-gates"
+  ],
+  "acc": true
+ },
+ {
+  "n": 56,
+  "title": "chore(P3): split the 2,214-line skills/xyz/SKILL.md into SKILL.md + MANUAL.md",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3864,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 49,
+  "title": "spike(marathon): decide SQLite control plane and migration boundary",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5934,
+  "labels": [
+   "ci"
+  ],
+  "acc": true
+ },
+ {
+  "n": 48,
+  "title": "feat(marathon): prepare lazy Agent2Agent merge coordination in the existing ledg",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 7009,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 32,
+  "title": "RELEASES app: SQLite-backed release ledger with CLI-only writes, generated RELEA",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   70,
+   50,
+   65,
+   35,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md"
+  ],
+  "blen": 3238,
+  "labels": [],
+  "acc": false
+ },
+ {
+  "n": 30,
+  "title": "Reduce push volume / GH Actions cost exposure: ci-route.sh docs gap + push caden",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3102,
+  "labels": [
+   "ci",
+   "ci:hosted"
+  ],
+  "acc": true
+ },
+ {
+  "n": 28,
+  "title": "RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   40,
+   35,
+   40,
+   55,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-28-RELEASES-LEDGER-DISCIPLINE.md"
+  ],
+  "blen": 5414,
+  "labels": [
+   "ci"
+  ],
+  "acc": true
+ },
+ {
+  "n": 27,
+  "title": "Local half of the rgt: adoption \u2014 vendor-sync pickup, radar verification, GH-NNN",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 5756,
+  "labels": [],
+  "acc": true
+ },
+ {
+  "n": 26,
+  "title": "Adopt the rgt: frontmatter key so radar's Transform bucket stops printing an uni",
+  "miss": [
+   "row",
+   "doc",
+   "plan-in-issue",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4455,
+  "labels": [
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 25,
+  "title": "radar scores a cluster before verifying member bodies reduce to the class, so ki",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3829,
+  "labels": [
+   "bug"
+  ],
+  "acc": true
+ },
+ {
+  "n": 17,
+  "title": "SOP: Standard Operating Procedure for evaluating new agent harnesses and frontie",
+  "miss": [
+   "contract",
+   "plan-in-issue"
+  ],
+  "rating": [
+   45,
+   30,
+   50,
+   60,
+   null
+  ],
+  "docs": [
+   "PROJECT/1-INBOX/GH-17-SOP-HARNESS-MODEL-EVAL.md"
+  ],
+  "blen": 2927,
+  "labels": [
+   "documentation",
+   "enhancement"
+  ],
+  "acc": true
+ },
+ {
+  "n": 13,
+  "title": "Fold scaling: benchmark the O(all-events) projection, then checkpoint-if-justifi",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3844,
+  "labels": [
+   "bug",
+   "ci",
+   "ci:local-gates"
+  ],
+  "acc": true
+ },
+ {
+  "n": 12,
+  "title": "Tree diet: retire the ingestion scaffold, relocate marathon-system run logs, spl",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3131,
+  "labels": [
+   "bug"
+  ],
+  "acc": true
+ },
+ {
+  "n": 11,
+  "title": "Sundown twin retirement: sweep XYZ_PYTHON=0 usage, re-vendor fleet to Python, de",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 3603,
+  "labels": [
+   "bug"
+  ],
+  "acc": true
+ },
+ {
+  "n": 9,
+  "title": "Tooling floor and structural cleanup: eslint/prettier, unit coverage for all src",
+  "miss": [
+   "row",
+   "doc",
+   "rating"
+  ],
+  "rating": null,
+  "docs": [],
+  "blen": 4011,
+  "labels": [
+   "bug",
+   "ci"
+  ],
+  "acc": true
+ },
+ {
+  "n": 5,
+  "title": "tick kernel: readAllEvents has no corrupt-file recovery; src/ has no unit-test r",
+  "miss": [
+   "contract"
+  ],
+  "rating": [
+   45,
+   40,
+   45,
+   80,
+   null
+  ],
+  "docs": [
+   "PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md"
+  ],
+  "blen": 1513,
+  "labels": [
+   "bug",
+   "ci",
+   "stability"
+  ],
+  "acc": true
+ }
+]

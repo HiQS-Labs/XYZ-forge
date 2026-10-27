@@ -104,15 +104,33 @@ answer still comes back (**graceful degrade**, and the degrade is stated, never 
    `$ROOT/relay-automation/consult.sh`, fall back to `$ROOT/.xyz/relay-automation/consult.sh`, and
    always pass `CONSULT_ROOT="$ROOT"`) with the prompt + a `--label`. Both models run at once. Don't
    invoke a bare `consult.sh`; it only resolves at the repo root.
-3. **Read both transcripts** in `relay-system/<today>/<label>-<HHMMSS>/<label>.codex.md` and `…agy.*`.
-4. **Reconcile — this is the load-bearing step.** Produce a synthesis with four parts, in this order:
-   - **TLDR** (new — one to two sentences, before anything else): the reconciled call and how confident
+3. **Read only the neutral `answer-*.md` payloads first** (`answer-A.md`, `answer-B.md`, … in
+   `relay-system/<today>/<label>-<HHMMSS>/`). Do **not** open `key.json` or the named transcripts
+   (`<label>.codex.md`, `<label>.agy.md`, …) until your reconciliation verdict is written. This is
+   **best-effort pseudonymization** (the harness strips attestation blocks, CLI banners, and
+   advisor-named stamps, and orders the neutral payloads by a shuffle seeded from `--label`, though a
+   model can still name itself inside its prose).
+4. **Reconcile — this is the load-bearing step.** Settle every disagreement using this **fixed criteria
+   order**:
+   1. **Claims checked against the source and repo** (`file:line` ground truth in the tree)
+   2. **Reproducibility and citations** (firsthand quoted spans / verifiable commands over bare assertions)
+   3. **Internal consistency** (does the argument hold together without contradicting its own premises?)
+   4. **Whether the next consumer can use it** (actionable, concrete call over vague advice)
+   5. **Scope** (fits the stated question and non-goals without speculative sprawl)
+
+   **Length and polish are not merits.** Write the verdict first — naming the **deciding criterion**
+   from the list above and the **runner-up's specific defect** — and **only then** open `key.json` and
+   the named originals (`<label>.codex.md`, `<label>.agy.md`, plus any `.NO-CITATION.txt` /
+   `.PROVENANCE.txt` / `DEGRADED-SINGLE-MODEL.txt` sidecars) to attribute the result. Produce a
+   synthesis with four parts, in this order:
+   - **TLDR** (one to two sentences, before anything else): the reconciled call and how confident
      it is, so the operator can stop reading right there if that's all they need. e.g. *"Both models
      agree the migration is safe — go ahead. Codex flagged one edge case worth a follow-up (see below)."*
-   - **Disagree** (it's the whole point of asking two models): every point the two differ on, with your
-     adjudication and *why*. Never in the TLDR — the TLDR previews the call, it doesn't bury the split.
+   - **Disagree** (it's the whole point of asking two models): every point the two differ on, your
+     adjudication under the fixed criteria order above, the **deciding criterion**, and the **runner-up's
+     specific defect**. Never in the TLDR — the TLDR previews the call, it doesn't bury the split.
    - **Agree:** what both independently converged on (higher confidence because it's cross-model).
-   - **Sorted categories** (new — closes the synthesis, replaces a bare prose recommendation): bucket
+   - **Sorted categories** (closes the synthesis, replaces a bare prose recommendation): bucket
      every point either advisor raised — agreements and adjudicated disagreements alike — into exactly
      one:
      - **Blocking** — a real risk either advisor surfaced; must address before proceeding.

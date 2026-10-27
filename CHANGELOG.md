@@ -1,5 +1,54 @@
 # Changelog
 
+## 2026-10-25 — lessons read-back, blind consult, config-pinned resume, improve-loop write check, manifest count (marathon #1214)
+
+Five fixes landed through one marathon chain (agy builder, codex reviewer, full gate per phase).
+
+- **#1218, lessons read-back.** `rtl_turn_prompt` now appends a warn-only list naming the newest
+  five non-superseded `LESSONS-LEARNED.md` entries (heading plus cue) to every relay and marathon
+  turn prompt, on the Python, Bash and SmallCode paths. It prints nothing when the file is absent.
+  `LESSONS-LEARNED.md` gains a structured entry format, and the #591 lesson is converted to it.
+  Writer prompts in `/start-task` step 9, `/marathon-cleanup` and `defect-campaign` (Phase 6a)
+  apply the admission rules: no entry without public evidence, edit verdicts, and ATE evidence only
+  after semantic replay. These are prompt rules only, with no new guard or suite (GH-831 D7).
+- **#1219, blind consult.** `consult.py` writes neutral, shuffled `answer-A/B.md` payloads plus
+  `key.json` after stamping. JSON-mode answers are reduced to the decoded `.response`. The consult
+  skill now settles disagreements blind, in a fixed criteria order. `consult.sh` is frozen
+  (GH-308) and unchanged; by default it already runs `consult.py`.
+- **#1220, config-pinned resume.** `marathon_drive` records `config_sha256` (the brief plus the
+  builder and reviewer and their resolved models) through `MARATHON_CONFIG_SHA256`. `relay_attest`
+  binds the hash into the `attest@1` trailer as an optional field, with no schema bump. Resume
+  rebuilds a phase when the hash differs, and reuses records that lack it, with a warning.
+- **#1221, improve-loop write check.** Before each build, the loop records a NUL-safe content
+  manifest and a byte snapshot of every pre-existing path outside `ALLOW`. Any change outside
+  `ALLOW` and the loop's own state dir, including ignored files, rejects the iteration and is
+  restored. Two re-indented trusted-config `eval` lines were re-baselined in `security-scan`.
+- **#1222, manifest count.** `_live_manifest_count` and the migration-004 backfill now use
+  `COUNT(DISTINCT issue_ref_id)`, so an issue that shipped and was redialed counts once.
+
+Plans were QA'd by Kimi K3.1 Pro (on #1214) and by Codex (three rounds, Approved). Each phase has a
+manual red/green receipt under `TESTS-RESULTS/2026-10-25+GH-<n>/`. The design ideas are adapted
+from Harness² (google-research/harness2, Apache-2.0; arXiv:2610.14224); no code was copied.
+Reversibility: easy. Each fix is one revertable diff, `attest@1` gains only an optional field
+(legacy records still load), and nothing migrates stored data, so these sit below PDDA's
+Costly/one-way bet threshold and need no `decisions/` record. #1214 stays open for Phase 6b. → [#1214](https://github.com/HiQS-Labs/XYZ-forge/issues/1214) · PR #1223
+
+## 2026-10-24 — relay harness: native kimi worker for the Kimi Code CLI (GH-1215)
+
+`relay-automation/kimi-turn.sh` (over `utils/py/kimi-turn.py`) drives Kimi K3.1 through
+`kimi -p … --output-format stream-json` on the operator's Kimi plan, alongside the Aider and
+OpenRouter route, whose whole-file edits once failed relay-block validation (XYZ-CLIO#12). It
+follows `muse-turn.py`: `KIMI_AGENT` gates dispatch; `KIMI_BIN`, `KIMI_MODEL` (default
+`kimi-code/k3.1-pro`), `KIMI_FLAGS` and `KIMI_LOG` are honoured; containment stays in
+`RelayTurnLib`. A turn with no assistant message or tool call exits 5. `find-harness.sh` reports
+`RELAY_HAS_KIMI` and a `kimi CLI` line, and falls back to `~/.kimi-code/bin/kimi`. `kimi` joins
+`route_agent()` as a builder lane, so `resolve-profile.sh` routes a `kimi` harness, and the
+agent-id allowlists `test/gh346-gateway-allowlists.sh` pins now include it; the marathon reviewer
+gate stays codex/agy. The first live turn (`--reviewer kimi --review-once`) was attested Approved.
+The GH-777 inventory ratchet baseline grows by this one adapter file (121 → 122), as #794 and
+#765 did. No new tests (GH-831); evidence in `TESTS-RESULTS/2026-10-24+GH-1215/`. Reversibility: **Easy**
+(revert; nothing dispatches to the shim unless `KIMI_AGENT` is set).
+
 ## 2026-10-24 — task-sync: pin active Claude Desktop sessions (GH-1196)
 
 `--ide claude-desktop` now also proposes pins: a non-archived, non-self session with a literal
@@ -47,6 +96,15 @@ marks the title `titleSource: tool`, not user-set. Whether an unattended run may
 3.14, plus a red control (2 probes fail when the `isRunning` skip is removed). No new tests
 (GH-831). Plan QA: Codex, Approved in round 2. Reversibility: **Easy**. The planner never
 writes, and each live rename is listed in the undo receipt.
+
+## 2026-10-22 — wave_reconcile repoints every row sharing a moved plan doc (GH-1178)
+
+When one PR closed several issues that share one plan doc, `utils/py/wave_reconcile.py` moved the
+doc but repointed only the row of the issue the doc is named after; the others kept a dangling
+`doc_path` (seen in HiQS-Labs/rebalanceOS#350). A new `repoint_moved_doc_rows` pass after the landing
+loop repoints every owned row still naming a doc moved this run, through the existing
+`roadmap repoint` writer. Verification: `TESTS-RESULTS/2026-10-22+GH-1178/` (red control on
+`f243ccfbf`, fixture green, tier-2 route + gh421/gh454/gh168 green; no new suite).
 
 ## 2026-10-21 — prs-backfill: reviewed PRS rating backfill (GH-1175)
 
