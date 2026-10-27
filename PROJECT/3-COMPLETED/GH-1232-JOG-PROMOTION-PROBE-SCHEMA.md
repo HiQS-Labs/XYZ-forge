@@ -1,6 +1,6 @@
 ---
 title: "jog promotion reads the Preflight Contract's JSON fix_probes"
-status: Active
+status: Complete
 created: 2026-10-27
 updated: 2026-10-27
 owner: noelsaw1
