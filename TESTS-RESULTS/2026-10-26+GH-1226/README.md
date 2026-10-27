@@ -19,3 +19,15 @@ output, with fixture paths redacted. `provenance.jsonl` names the commit.
 Verdict: pass. The B1-repaired-head deferral is exercised by the existing suite
 (`TestPhase5EndToEnd.test_two_prs_second_conflicts_after_first_lands_and_b1_resolves_it`, now a
 two-step run → re-pin → `--resume`).
+
+## Full gate (`./validate.sh`, route=full) on the final commit
+
+Run once in a disposable full clone at `db2f6e8`, rc 1. Seven suites failed:
+
+- **`gh436-merge-cleanup`:** one test failed, `test_iv_unreadable_event_log_preserves`. The container
+  runs as root, so the chmod-000 event log is still readable. It fails the same way at `origin/development`.
+- **`gh478`, `gh518`, `gh409`, `gh544`, `gh648`, `gh123`:** process-group reaping, worktree setup,
+  lock timing and the pre-push merge-base fixture. Each fails the same way at `origin/development`
+  in this Linux container, which is not the macOS shipping platform.
+
+None of these suites touch merge-cleanup. A qualifying run on macOS is still owed.
