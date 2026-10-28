@@ -2,9 +2,9 @@
 gh_issue: 1195
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1195
 title: "marathon-plan Python engine reads the primary clone's ledger from a sibling clone (XYZ_HARNESS wins over the script's own tree)"
-status: active
+status: Complete
 created: 2026-10-24
-updated: 2026-10-24
+updated: 2026-10-28
 owner: claude-fable-5-1 (start-task, 2026-10-24)
 doc_type: bugfix
 complexity: 1
