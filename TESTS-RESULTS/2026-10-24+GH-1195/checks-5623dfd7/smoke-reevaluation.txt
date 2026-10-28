@@ -1,0 +1,8 @@
+== post-hoc re-evaluation of the smoke assertions on the retained artifacts (pattern 987654, not '#987654')
+smoke-fixed-unpinned: rc=4 lines=119 sentinel_hits=0
+smoke-reverted-unpinned: rc=4 lines=120 sentinel_hits=1
+smoke-fixed-override: rc=4 lines=120 sentinel_hits=1
+PASS main path: fixed+unpinned → sentinel ABSENT (read A)
+PASS red control: reverted+unpinned → sentinel PRESENT (read B)
+PASS adjacent: fixed+QUEUE_PLAN_ROOT=B → sentinel PRESENT (override wins)
+note: the driver script asserted the literal '#987654'; the engine renders the number without '#' in this finding, so the two FAIL lines in gh1195-checks.log are assertion-string errors, not check failures. Artifacts unchanged; this file re-evaluates them.
