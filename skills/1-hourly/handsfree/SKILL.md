@@ -57,6 +57,10 @@ when an external result leaves nothing actionable in the current turn.
      the created task returns to this conversation. Project scheduled tasks are
      not proof of that. Antigravity CLI and Gemini CLI require the same live
      capability check; do not infer it from the desktop app.
+   - In Claude Desktop chat and Cowork, scheduled tasks (routines) start
+     separate runs and do not return to this conversation, so they never
+     satisfy this check; leave the wake unarmed unless a same-conversation
+     scheduler passes create, readback, and cancel in that session.
    - For any other harness, use its native same-conversation scheduler only
      after the same create, readback, and cancel checks.
 
