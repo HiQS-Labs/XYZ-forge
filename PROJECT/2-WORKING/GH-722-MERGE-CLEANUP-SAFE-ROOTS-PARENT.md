@@ -102,3 +102,7 @@ Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet
 ## Merge evidence
 
 - PR #753 merged 2026-09-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1198 merged 2026-10-28 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

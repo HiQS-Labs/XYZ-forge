@@ -2,9 +2,9 @@
 gh_issue: 1193
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1193
 title: "merge-cleanup: --retire-published-pr refuses start-task's sibling task clones when the primary is outside DEFAULT_SAFE_ROOTS"
-status: active
+status: Complete
 created: 2026-10-24
-updated: 2026-10-24
+updated: 2026-10-28
 owner: claude-opus-5-5 (start-task, 2026-10-24)
 doc_type: bugfix
 complexity: 1
