@@ -33,3 +33,7 @@ Nothing starts until GH-964 records D4/D5 (interactive terminal + VS Code) and a
 ## Constraints
 
 Read-only by default; logic stays in CLIs (Codex/agy parity); no new suites (GH-831); no npm dependencies.
+
+## Merge evidence
+
+- PR #1241 merged 2026-10-28 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

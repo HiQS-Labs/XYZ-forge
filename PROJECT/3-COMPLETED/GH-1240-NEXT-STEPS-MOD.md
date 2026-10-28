@@ -1,8 +1,8 @@
 ---
 title: "GH-1240: next-steps-mod — Claude names the next steps every turn, no \"what's next?\" needed"
-status: Queued
+status: Complete
 created: 2026-10-27
-updated: 2026-10-27
+updated: 2026-10-28
 owner: operator
 gh_issue: 1240
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1240
