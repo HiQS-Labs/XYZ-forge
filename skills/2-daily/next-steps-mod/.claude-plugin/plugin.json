@@ -1,0 +1,6 @@
+{
+  "name": "next-steps-mod",
+  "version": "0.1.0",
+  "description": "XYZ-forge: Claude names the next steps at the end of every turn and offers them as buttons, a Tab suggestion and /next-steps, so nobody has to ask \"what's next?\" (GH-1240)",
+  "types": "./types/index.d.ts"
+}

@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-10-27 — next-steps-mod: Claude names the next steps every turn, nobody asks "what's next?" (GH-1240)
+
+- **New skill + mod `skills/2-daily/next-steps-mod/`.** A `prompt.compose` hook appends one
+  session-scope section so every main-loop answer ends with `Next: <one recommended step>` and up to
+  two `Also:` lines; a `turn.complete` hook parses them and offers the top one as the Tab prompt
+  suggestion; an `AbovePrompt` band draws them as one-press buttons (terminal and Desktop) with
+  **Ask what's next** when an answer carries none; `/next-steps` asks for a ranked list. Nothing is
+  auto-submitted. No `tool.call`, `tool.check`, `prompt.submit` or `session.append` hook.
+- **Auto-load through Skills Army HQ (GH-967 item 1).** The plugin manifest sits at the skill folder
+  root, so the HQ link `~/.claude/skills/next-steps-mod` is loaded and watched by Claude Code
+  (≥ 2.1.309) with no `--plugin-dir`. A nested `.gitignore` keeps the engine-written
+  `.claude-plugin/types/` out of the repo and the Pulse collection.
+- Recon of record (in the capture doc): the previous customization method is Output Styles (still
+  supported; built-ins Default, Concise, Explanatory, Learning, Proactive); there is no "Lean" style,
+  the engine's `lean` trait being the short system prompt.
+- Verification: `claude plugin validate` (2.1.309) passes with the hooks and calls above; `tsc` zero
+  errors; manual diagnostic recorded under `TESTS-RESULTS/2026-10-27+GH-1240/`.
+
 ## 2026-10-27 — merge-cleanup lands only a pinned `--prs` allowlist, gated on required checks (#1226)
 
 - **Allowlist, not denylist.** A merging `--execute` now requires `--prs N[,N...]` and exits 2

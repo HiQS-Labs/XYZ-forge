@@ -69,7 +69,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [triangulate](skills/1-hourly/triangulate/SKILL.md) | Reconcile three independent probes into an evidence-ranked verdict. |
 | [unstuck](skills/1-hourly/unstuck/SKILL.md) | Interrupt a stalled AI session and restore movement toward the original outcome. |
 
-### `2-daily` — A few times a day (21)
+### `2-daily` — A few times a day (23)
 
 _landing, queueing and driving work; multi-session and multi-repo coordination._
 
@@ -97,6 +97,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [workhorse](skills/2-daily/workhorse/SKILL.md) | Disciplined end-to-end resolution ladder: triage intake, ground truth, plan, build, verify. |
 | [xyz](skills/2-daily/xyz/SKILL.md) | Coordinate concurrent agents on non-overlapping lanes via `tick`. |
 | [xyz-mod](skills/2-daily/xyz-mod/SKILL.md) | Read-only Claude Code mod: `/xyz-status` prints hosted runs, tick claims and marathon/relay drivers with no model turn. |
+| [next-steps-mod](skills/2-daily/next-steps-mod/SKILL.md) | Claude Code mod: every answer ends with a `Next:`/`Also:` block, drawn as one-press buttons above the prompt, the top one as the Tab suggestion, plus `/next-steps`; auto-loads from the Skills Army HQ link. |
 
 ### `3-weekly` — Weekly (15)
 
