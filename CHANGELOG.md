@@ -144,6 +144,19 @@ names one hourly Claude Desktop scheduled task per Mac, created from a Desktop s
 
 Reversibility: **Easy** (docs; disable the scheduled task per device).
 
+## 2026-10-24 — code-audit intake: five bounded maintainability plans (GH-1201–GH-1206)
+
+Filed and revised the umbrella code audit, then captured five rated follow-up plans for selective
+documentation compaction, a staged pure-Python runtime, logical SQLite ledger hygiene, large-module
+decomposition, and package drift. Parked all six inbox docs in the PRS ledger with their four-axis
+ratings. The review narrows the work: preserve historical evidence, avoid routine SQLite compaction,
+treat strict Python-only as a Costly compatibility program, execute the existing #768/#769 module
+audits, and bound npm package contents as well as metadata. Intake only; no runtime or package
+implementation changed. Reversibility: **Easy** — revert the docs and receipted ledger addition.
+Verification: `npm run test:unit` 14/14; `releases_app.py check` clean with ten existing warnings;
+`pdda.sh run` no errors with 37 existing repository warnings. Read-only SQLite inspection and
+`npm pack --dry-run --json` informed the plans; no publish or mutation-heavy full gate was run.
+
 ## 2026-10-24 — task-sync: Claude Desktop sidebar titles (GH-1191)
 
 The Claude Desktop app keeps each Code session's sidebar title in its own session record,

@@ -111,7 +111,10 @@ def main():
     here_parent = os.path.dirname(here)
     from harness_paths import repo_root, is_vendored
 
-    default_root = repo_root()
+    # GH-1195: anchor on THIS file so the engine plans the clone it ships in, not whatever a
+    # shell-global XYZ_HARNESS points at (the Bash engine already derives ROOT from its own path).
+    # Vendored .xyz/ copies still resolve to the consumer repo via repo_root's anchored branch.
+    default_root = repo_root(anchor_file=__file__)
     root = os.environ.get("QUEUE_PLAN_ROOT", default_root)
     if is_vendored():
         sp_cmd = ".xyz/utils/swarm-preflight.sh"

@@ -50,6 +50,16 @@ DEFAULT_NEVER_DELETE = {
 }
 
 
+def published_retirement_roots(primary: Path) -> List[Path]:
+    """GH-1193: published-PR retirement (GH-1059) also accepts the primary's parent folder, where
+    start-task's GH-970 rule puts task clones, unless that parent is a NEVER_DELETE root. The
+    default scan and the full sweep keep DEFAULT_SAFE_ROOTS (#722 tracks widening those)."""
+    parent = primary.resolve().parent
+    if parent in {r.resolve() for r in DEFAULT_NEVER_DELETE if r.exists()}:
+        return list(DEFAULT_SAFE_ROOTS)
+    return DEFAULT_SAFE_ROOTS + [parent]
+
+
 def _within(child: Path, parent: Path) -> bool:
     """True only if child is STRICTLY inside parent (rejects child == parent)."""
     if child == parent:
@@ -932,7 +942,8 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
         res["checkout_type"] = "unusual"
 
     # Check deletable boundary
-    is_safe, safe_msg = is_safe_deletable_path(path)
+    retire_roots = published_retirement_roots(primary_repo_path) if published_pr and primary_repo_path else None
+    is_safe, safe_msg = is_safe_deletable_path(path, safe_roots=retire_roots)
     res["safe_deletable"] = is_safe
     res["safe_deletable_reason"] = safe_msg
 

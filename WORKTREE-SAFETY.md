@@ -824,6 +824,11 @@ def assert_deletable(path: Path):
     log_action("file_delete", path=str(p))
 ```
 
+One per-run addition sits outside that list: merge-cleanup's published-PR retirement
+(`--retire-published-pr`) also accepts the `--primary` clone's parent folder, where start-task puts
+task clones (GH-970), unless that parent is a `NEVER_DELETE` root (GH-1193). The default scan and
+full sweep use the list alone.
+
 Four things here are load-bearing, and three of them are defects this example had in an earlier draft:
 
 - **Resolve before comparing.** Without it a path inside the safe root can still point outside it via a
