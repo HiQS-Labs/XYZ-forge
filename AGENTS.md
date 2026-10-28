@@ -1,5 +1,7 @@
 # AGENTS.md
 
+XYZ Forge exists for cross-model reviews and agentic work on business information, including private code, within the task’s authorized scope and applicable data-protection requirements.
+
 ## Danger: commands agents must not run
 
 - Never run `git reset --hard`, `git checkout -- <path>`, or a tree-wide `git stash` in a checkout
