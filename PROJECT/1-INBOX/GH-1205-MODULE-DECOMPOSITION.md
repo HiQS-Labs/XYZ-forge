@@ -52,3 +52,7 @@ Prior #768/#769 audits already identify module seams, imported-symbol surfaces, 
 ## Non-goals
 
 No big-bang rearchitecture, abstractions for small files, runtime-language migration, or new test/gate machinery.
+
+## Merge evidence
+
+- PR #1209 merged 2026-10-28 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -42,3 +42,7 @@ goal: Align npm metadata with XYZ Forge and explicitly bound package contents wi
 - Dry-run contents exclude evidence, state, ledgers, and transcripts.
 - All 14 kernel unit tests pass; any declared CLI works from the packed artifact.
 - No publish, version bump, or release-tag change occurs.
+
+## Merge evidence
+
+- PR #1209 merged 2026-10-28 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

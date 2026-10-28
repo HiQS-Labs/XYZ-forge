@@ -49,3 +49,7 @@ External Git, GitHub CLI, and agent CLIs remain subprocess dependencies. Histori
 ## Non-goals and risk
 
 No big-bang kernel/containment rewrite and no removal of external agent/Git subprocesses. This is Costly; strict Python-only remains an explicit decision after the inventory and containment stages quantify cost.
+
+## Merge evidence
+
+- PR #1209 merged 2026-10-28 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -52,3 +52,7 @@ Preserve current behavior, commands, ownership, canonical routing, safety warnin
 ## Non-goals
 
 No blanket LLM summarization, age/length-based deletion, evidence retention purge, or new gates/tests.
+
+## Merge evidence
+
+- PR #1209 merged 2026-10-28 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

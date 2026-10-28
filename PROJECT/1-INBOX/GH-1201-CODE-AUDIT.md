@@ -56,3 +56,7 @@ goal: Coordinate five evidence-backed maintainability plans without losing safet
 - No blanket history deletion, big-bang rewrite, routine `VACUUM`, or automatic purge.
 - No new test suites or gate machinery.
 - No claim of full-gate health without a qualifying run.
+
+## Merge evidence
+
+- PR #1209 merged 2026-10-28 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

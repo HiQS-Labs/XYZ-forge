@@ -50,3 +50,7 @@ Routine `VACUUM` is not currently justified. Extend existing PRS/reconciliation 
 ## Non-goals
 
 No automatic retention purge, routine `VACUUM`, direct hand edits, second ledger, or new cleanup state database.
+
+## Merge evidence
+
+- PR #1209 merged 2026-10-28 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
