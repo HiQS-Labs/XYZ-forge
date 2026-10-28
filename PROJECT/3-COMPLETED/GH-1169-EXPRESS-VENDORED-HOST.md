@@ -2,9 +2,9 @@
 gh_issue: 1169
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1169
 title: "express: vendored-host mode — docs lane uses the host's PDDA gate; host hook, harness tool resolution"
-status: "In progress — final QA Approved; PR ready, awaiting merge"
+status: Complete
 created: 2026-10-19
-updated: 2026-10-19
+updated: 2026-10-28
 owner: claude
 goal: "Let /express --docs-only land in a vendored host (a repo using the harness from .xyz/) using the host's own PDDA gate, with XYZ Forge's behaviour unchanged"
 doc_type: feature

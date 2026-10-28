@@ -84,7 +84,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 
 ### ✅ Likely done — verify-and-close, not a build lane
 - #141 GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison — `already-landed`
-- #1169 GH-1169 · express: vendored-host mode — docs lane uses the host's PDDA gate; host hook, harness tool resolution — `already-closed`
 - #809 GH-809 · tick: readAllEvents parses each .jsonl FILE as one JSON doc — `already-closed`
 - #1195 GH-1195 · marathon-plan Python engine reads the primary clone's ledger from a sibling clone — `already-closed`
 - #1193 GH-1193 · merge-cleanup: --retire-published-pr refuses start-task's sibling task clones when the primary is outside DEFAULT_SAFE_ROOTS — `already-closed`
