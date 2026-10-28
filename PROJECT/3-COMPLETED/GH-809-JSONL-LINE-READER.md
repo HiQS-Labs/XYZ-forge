@@ -1,8 +1,8 @@
 ---
 title: "tick: readAllEvents parses each .jsonl FILE as one JSON doc"
-status: In Progress
+status: Complete
 created: 2026-10-24
-updated: 2026-10-24
+updated: 2026-10-28
 owner: agent
 goal: "tick read verbs survive multi-line .jsonl event files: one event per line, bad lines skipped with a warning."
 complexity: 1

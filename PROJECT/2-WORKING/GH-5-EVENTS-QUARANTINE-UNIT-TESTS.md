@@ -68,3 +68,7 @@ The reader-recovery half was rejected on review (unsafe while writes are non-ato
 ## Merge evidence
 
 - PR #1217 merged 2026-10-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1190 merged 2026-10-28 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
