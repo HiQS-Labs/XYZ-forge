@@ -1,0 +1,21 @@
+gate: githooks: INSTALLED — <tmp>
+base: 7eeae804 | origin/HEAD: origin/development | change:  M README.md 
+old driver: <W>/forge/utils/py/express.py (ac3815f2) | new driver: <task-clone>/utils/py/express.py (dc33ddfd)
+old rc=0
+new rc=0
+## old output
+express-check [dry-run]: PASS
+  issue   : #1169 express: vendored-host mode — docs lane uses the host's PDDA gate; host hook, harness tool resolution
+  files   : 1 core, 2 insertions (bounds 4/150)
+  suite   : test/pdda-repo-contract.sh (registered docs gate; no runtime coverage claim)
+  changes : README.md
+## new output
+express-check [dry-run]: PASS
+  issue   : #1169 express: vendored-host mode — docs lane uses the host's PDDA gate; host hook, harness tool resolution
+  files   : 1 core, 2 insertions (bounds 4/150)
+  suite   : test/pdda-repo-contract.sh (registered docs gate; no runtime coverage claim)
+  changes : README.md
+RESULT: byte-identical
+## canonical recovery text, old vs new (import only)
+test/pdda-repo-contract.sh byte-identical
+test/gh267-express-skill.sh byte-identical

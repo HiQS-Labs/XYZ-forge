@@ -1,0 +1,69 @@
+# GH-1169 manual check: express in a vendored host shaped like HiQS-Labs/XYZ-layout-engine.
+# Usage: source host-fixture.sh; mkhost <work-dir>   (needs FORGE=<forge clone with this branch>, PRIMARY=<local layout-engine>)
+set -u
+SLUG=HiQS-Labs/XYZ-layout-engine; N=9001
+mkhost(){
+  W="$1"; mkdir -p "$W/bin" "$W/gh" "$W/home"
+  export HOME="$W/home" XYZ_WORK_CONNECTORS=0 GH_STATE="$W/gh" PATH="$W/bin:$PATH"; unset XYZ_HARNESS TICK_REPO_ROOT
+  BARE="$W/github.com/$SLUG.git"; mkdir -p "$(dirname "$BARE")"
+  git clone -q --bare --no-local "$PRIMARY" "$BARE"
+  git clone -q "$BARE" "$W/host"; H="$W/host"
+  git -C "$H" config user.email t@t; git -C "$H" config user.name t
+  bash "$FORGE/relay-automation/xyz-vendor.sh" "$H" --no-register >/dev/null 2>&1
+  printf '{"state":"OPEN","title":"Demo doc fix","url":"https://github.com/%s/issues/%s","createdAt":"2026-10-19T00:00:00Z"}\n' "$SLUG" "$N" > "$W/gh/issue-$N.json"
+  cat > "$W/bin/gh" <<'GH'
+#!/usr/bin/env bash
+set -u
+echo "$*" >> "$GH_STATE/calls.log"
+if [ "$1 $2" = "repo view" ]; then printf '{"nameWithOwner":"HiQS-Labs/XYZ-layout-engine"}\n'; exit 0; fi
+if [ "$1" = api ]; then
+  case "$2" in repos/HiQS-Labs/XYZ-layout-engine/issues/[0-9]*) ;; *) echo "foreign" >&2; exit 1;; esac
+  n="${2##*/}"; python3 - "$GH_STATE/issue-$n.json" "$n" <<'PY'
+import json,sys
+i=json.load(open(sys.argv[1])); print(json.dumps(dict(number=int(sys.argv[2]),html_url=i["url"],state=i["state"].lower(),labels=[])))
+PY
+  exit $?
+fi
+n=""; prev=""; for a in "$@"; do case "$prev" in view|close) n="$a";; esac; prev="$a"; done
+if [ "$1 $2" = "issue view" ]; then cat "$GH_STATE/issue-$n.json"; exit 0; fi
+if [ "$1 $2" = "issue close" ]; then python3 - "$GH_STATE/issue-$n.json" <<'PY'
+import json,sys
+p=sys.argv[1]; i=json.load(open(p)); i["state"]="CLOSED"; json.dump(i,open(p,"w"))
+PY
+exit 0; fi
+echo "gh-stub: unsupported: $*" >&2; exit 1
+GH
+  chmod +x "$W/bin/gh"
+  git -C "$H" checkout -q -b task/gh-$N
+}
+doc_change(){ printf '\nGH-%s demo line.\n' "$N" >> "$H/PROJECT/3-COMPLETED/GH-63-VIBE-CODING-LOOP.md"; }
+X(){ python3 -B "$H/.xyz/utils/py/express.py" --root "$H" "$@" --repo "$SLUG"; }
+# S8 helper: land a commit on main without express (no receipt), with an owned ledger row parked.
+land_without_receipt(){ # $1 = "broken" to include a PDDA error in the landed tree
+  git -C "$H" checkout -q main
+  (cd "$H" && python3 .xyz/utils/py/releases_app.py roadmap add --issue-num $N --issue-url "https://github.com/$SLUG/issues/$N" --title "Demo doc fix" --created 2026-10-19 --doc-path "PROJECT/3-COMPLETED/GH-63-VIBE-CODING-LOOP.md" --raw-text "- **GH-$N · Demo doc fix** 🚧 **active 2026-10-19** — demo · [#$N](https://github.com/$SLUG/issues/$N)" >/dev/null)
+  git -C "$H" add -A; git -C "$H" commit -qm "chore: park GH-$N"
+  doc_change; [ "${1:-}" = broken ] && printf '# no frontmatter\n' > "$H/PROJECT/2-WORKING/GH-$N-BROKEN.md"
+  git -C "$H" add -A; git -C "$H" commit -qm "docs(GH-$N): demo [express]
+
+Closes #$N"; git -C "$H" push -q origin main; LANDED=$(git -C "$H" rev-parse HEAD)
+}
+vendored_recipe(){ # the SKILL.md recovery recipe with its documented vendored-host substitutions, steps 1-7
+  ( cd "$H" && set -euo pipefail
+    SHA=$LANDED; N=$N; SUITE='utils/pdda/pdda.sh run'; BASE=main; REPO=$SLUG
+    git checkout "$SHA" -q
+    git diff-index --quiet HEAD -- && [ "$(git ls-files --others --exclude-standard | wc -c)" -eq 0 ]   # 1. clean baseline
+    LOG=$(mktemp -t express-recovery)                                                                 # 2. log OUTSIDE the tree
+    snap(){ git rev-parse HEAD && git status --porcelain && git remote -v && git config --list --local | shasum -a 256; }
+    BEFORE=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "$BEFORE" >"$LOG"
+    set +e; PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run >>"$LOG" 2>&1; RC=$?; set -e; echo "rc=$RC" >>"$LOG"   # 3. vendored suite command
+    AFTER=$(snap) || { echo "identity inspection failed"; exit 1; }; printf '%s\n' "$AFTER" >>"$LOG"
+    [ "$BEFORE" = "$AFTER" ] || { echo "VOID: identity drifted during the suite — no receipt"; exit 1; }  # 4.
+    git checkout "$BASE" -q && git diff-index --quiet HEAD --                                        # 5. vendored driver path
+    REC=$(python3 -c "import sys; sys.path.insert(0,'.xyz/utils/py'); import express; print(express.write_receipt('.', '$SHA', $N, '$SUITE', $RC, base='$BASE'))")
+    cp "$LOG" "$(dirname "$REC")/recovery-run.log"                                                   # 6.
+    git add TESTS-RESULTS && git commit -qm "chore(express): recovery receipt GH-$N (commit $SHA)" && git push -q origin "$BASE"
+    echo "recipe RC=$RC receipt=$REC"
+    set +e; python3 .xyz/utils/py/express.py --root . resume --issue "$N" --docs-only --sha "$SHA" --base "$BASE" --repo "$REPO" > "$W/resume.txt" 2>&1   # 7. documented resume
+    echo "resume rc=$?"; grep -E "^express-resume|express-refused" "$W/resume.txt" | head -2 | cut -c1-170 )
+}
