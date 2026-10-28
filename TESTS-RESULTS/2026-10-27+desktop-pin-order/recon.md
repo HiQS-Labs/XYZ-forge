@@ -23,7 +23,7 @@ task-sync until the app exposes an order argument.
 | Hypothesis | Result | Evidence |
 |---|---|---|
 | H1 no supported tool sets pin order | **Holds** | Every `ccd_sidebar` and `ccd_session_mgmt` schema read: `set_pinned(session_id, pinned)` only; `move_sessions` files into groups and unpins on the way; `set_view(section_id, sort_by)` exists but the renderer's handler for a section only records the setting (`setSectionView`), and the Pinned list sorts by the order list first (see H4). No tool has an order, position or index argument. |
-| H2 Pinned already sorts by last activity | **Falsified (by code and stored state)** | Stored order `P0…P8` vs activity order `P8,P0,P1,P2,P5,P4,P3,P6,P7` vs creation order `P8,P0,P5,P4,P7,P3,P1,P6,P2`: no match. The renderer sorts pinned rows by index in the order list; activity is at most a tie-break for rows absent from it. Visual read of the sidebar by the operator still pending (the agent cannot see the window). |
+| H2 Pinned already sorts by last activity | **Falsified (code, stored state, and operator's eye)** | Stored order `P0…P8` vs activity order `P8,P0,P1,P2,P5,P4,P3,P6,P7` vs creation order `P8,P0,P5,P4,P7,P3,P1,P6,P2`: no match. The renderer sorts pinned rows by index in the order list; activity is at most a tie-break for rows absent from it. Operator read the sidebar on 2026-10-27: `P0` at the top and `P8` at the bottom, as stored; activity order would have put `P7` and `P8` on top. |
 | H3 order is pin time | **Falsified** | No pin timestamp anywhere: the 120 session records carry no pin field at all (0 of 120 contain `pinned`). Live test on `<self>`: pin → appended to the pin set, order list unchanged (9 → 9); unpin → removed from the set; pin again → appended again, order list still unchanged. Re-pinning cannot move a row to the top. |
 | H4 order lives in an app-wide list | **Holds** | `claude_desktop_config.json` → `preferences.epitaxyPrefs["dframe-local-slice"].pinnedOrder` (9 strings `code:<session id>`) is the order; `preferences.epitaxyPrefs["starred-local-code-sessions"]` (9 ids, same set) is the pin set. The app rewrites the file within a second of each `set_pinned` (mtime moved on every call). Session records, `Local Storage`, `IndexedDB` hold only mirrors or hints (`seenDragPinHint`). |
 
@@ -75,7 +75,6 @@ main-process MCP shim; the sidebar is a web bundle.
 | Unknown | Why it matters | What would settle it |
 |---|---|---|
 | The comparator used for ties among rows absent from `pinnedOrder` (import `nJ` of a shared chunk; export not resolved in the cached copy) | Decides how several tool-pinned rows order among themselves at the bottom (recency is the likely default) | Pin two sessions through the tool and read the sidebar, or resolve the export in an un-minified build |
-| Visual confirmation of `P0…P8` top to bottom | Closes H2 by eye; the code and file say the same thing | Operator reads the Pinned section once |
 | Whether the app ever rewrites `pinnedOrder` without a UI action (e.g. a later version materializing tool pins) | Would change where tool pins land after a restart | Re-run `probe` after an app update |
 
 ## Breadcrumb ledger (mantra 4)
@@ -94,6 +93,7 @@ main-process MCP shim; the sidebar is a web bundle.
 | 10 | `x6`, `Fo` handlers read | SetPinned toggles star; SetView records `sortBy` per section | H1 lead closed |
 | 11 | `set_pinned(<self>, true)`, read, `set_pinned(<self>, false)`, read | appended last again; order list never changed; final state equals initial | re-pin cannot move to top; restored |
 | 12 | `pinReorder` prop trace | passed to Code session rows; Move up/down menu | UI reorder exists, menu + drag only |
+| 13 | Operator reads the Pinned section top to bottom | top row is `P0`, bottom row is `P8`, matching `pinnedOrder` | H2 closed by eye; stored list is the sidebar's source |
 
 Root cause statement: the pin order is a renderer-owned, drag-maintained list persisted in the app
 config; the MCP sidebar surface exposes the pin set but not the list. Fix site, if any: the
