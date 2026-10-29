@@ -18,7 +18,7 @@ goal: "Land the four reviewed Phase 0 follow-up lanes (#1233, #1235, #1251, #123
 
 | What was just completed | What's next |
 |---|---|
-| Plans approved (codex plan QA r3, attested); YAML prepared; dry-run pending | Operator confirms the exact plan and order, then fire via /pre-marathon |
+| Plans approved (codex plan QA r3, attested); all four preflight ready (exit 0); marathon.sh --dry-run exit 0 | Operator confirms the exact plan and order, then fire via /pre-marathon |
 
 ## Members
 
