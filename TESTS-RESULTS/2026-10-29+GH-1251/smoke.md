@@ -21,7 +21,7 @@
 
 Run with `PYTHONDONTWRITEBYTECODE=1 python3 -` from the repository root (uses `tempfile.TemporaryDirectory()` under `$TMPDIR` and performs zero writes inside the repository):
 
-```python
+````python
 import hashlib, importlib.util, io, os, stat, sys, tempfile
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -221,7 +221,7 @@ for label, mod in [("CAND", cand_mod), ("BASE", base_mod)]:
         rc, out, _ = run_case(mod, cid)
         sum_line = [l for l in out.splitlines() if l.startswith("SUMMARY")][0]
         print(f"{label} {cid}: rc={rc} | {sum_line}")
-```
+````
 
 ## Case 1 — Deep delegation unknown/invalid preflight exits (`2`, `3`, `127`)
 
@@ -346,3 +346,15 @@ gh308-frozen-twin-guard: clean (0 frozen twins modified)
 ## Verdict
 
 PASS.
+
+## Orchestrator addendum — CodeRabbit review on PR #1253 (2026-10-29)
+
+1. **Consumer gap (Major), fixed.** `utils/py/wave_reconcile.py` `marathon_plan_findings` `held_types` now includes `preflight-error` and `unplaceable`. Before the fix, an exit-5 report carrying only these findings was treated as unstructured, and reconciliation continued. Red/green check (in-memory, both module versions):
+
+```
+base (pre-fix): exit-5 findings recognised = [] -> issues []
+fix: exit-5 findings recognised = ['marathon-plan/preflight-error', 'marathon-plan/unplaceable'] -> issues [901, 902]
+```
+
+   Suites: `test/gh421-auto-wave-reconcile.sh` OK, `test/gh202-wave-reconcile-issue-state.sh` 40/0, `test/wave-reconcile.sh` 23/0, `test/gh168-wave-reconcile-scope.sh` 7/0.
+2. **Rendering (Minor), fixed.** The recipe's outer fence is now four backticks, so its embedded ` ```json ` block no longer ends the recipe early on GitHub.
