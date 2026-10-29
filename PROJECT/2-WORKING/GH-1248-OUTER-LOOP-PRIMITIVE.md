@@ -29,17 +29,17 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 control plane implemented; 17/17 manual controls passed with retained logs; shared scenario now has 27 inputs including 24 deterministic adversarial canaries | Run the outstanding one-hour rules-only gate; watchdog, report generator, agent adapters, multi-arm runs, and 24-hour soak remain unimplemented |
+| `checkpoint2`: 17/17 manual controls passed after consolidating the Phase 1 control plane behind `utils/py/harness.py factory-primitive`; the inventory-ratchet defect is corrected | Run focused existing checks and the outstanding one-hour rules-only gate; watchdog, report generator, agent adapters, multi-arm runs, and 24-hour soak remain unimplemented |
 
-The full experiment contract and acceptance criteria live in issue #1248. This document is the execution surface and build record.
+The full experiment contract and acceptance criteria live in issue #1248. This document is the execution surface and build record. The initial full gate at `503a1ca5` did not complete: it reported the now-corrected GH-777 layout errors and 11 GH-666 `agy-turn` model-probe failures. Do not claim a full-gate pass; see `TESTS-RESULTS/2026-10-28+GH-1248/SUMMARY.md` for retained output and comparison results.
 
 ## Tracked source and runtime boundary
 
-Source is versioned on `feat/gh1248-outer-loop-primitive`; the branch is not merged when incomplete and may be retained for later revisit. The implementation uses Python only and does not alter existing production entry points.
+Source is versioned on `feat/gh1248-outer-loop-primitive`; the branch is not merged when incomplete and may be retained for later revisit. The implementation uses Python only. It extends the existing registry launcher while preserving its fallback and uses the canonical SQLite gateway; it does not alter Jog, scheduler, or relay entry points.
 
 ```text
-utils/py/factory-primitive.py          # CLI entry point
-utils/py/factory_primitive/            # loop, state, adapters, tools, sandbox
+utils/py/harness.py                    # existing launcher + factory-primitive subcommand
+utils/py/factory_primitive/            # data-only prompts, schemas, and scenarios
   prompts/evaluator.v1.md
   schemas/*.json
   scenarios/soak-v1.jsonl
@@ -55,11 +55,11 @@ temp/factory-primitive/                # gitignored mutable runtime root
     PAUSE
 ```
 
-The source tree contains no live database, output, transcript, heartbeat, lock, or pause state. Existing `proc_group.run_bounded` owns process-group timeout behavior. The experiment is separate from GH-1098's production Jog work and creates no scheduler or queue integration.
+Invoke the experiment as `python3 utils/py/harness.py factory-primitive ...`. Mutable run roots must remain beneath `temp/factory-primitive/`. `releases_app.connect(path, must_exist=False)` is the SQLite gateway; `proc_group.run_bounded` owns tool process-group timeout behavior. The data directory contains no live database, output, transcript, heartbeat, lock, pause state, or Python module. The experiment is separate from GH-1098's production Jog work and creates no scheduler or queue integration.
 
 ## Bet, reversibility, and blast radius
 
-**Bet:** a small deterministic executive can enforce the issue's four-action contract across adapters without forking Jog or making model output an execution authority. **Reversibility: Easy** — retain or abandon the unmerged branch. **Blast radius:** new experiment files, this plan and its ledger pointer, and manual evidence; existing relay/Jog/gate behavior is untouched. The primary failure mode is a clean synthetic result being overread as production readiness, so integration remains separately gated.
+**Bet:** a small deterministic executive can enforce the issue's four-action contract across adapters without forking Jog or making model output an execution authority. **Reversibility: Easy** — retain or abandon the unmerged branch. **Blast radius:** the shared registry launcher gains one explicit subcommand, plus data-only experiment files, this plan and its ledger pointer, and manual evidence; existing registry fallback behavior and relay/Jog/gate behavior must remain unchanged. The primary failure modes are regressions in the shared launcher and a clean synthetic result being overread as production readiness, so focused existing checks and separate integration gates are required.
 
 ## Phases and QA gates
 
