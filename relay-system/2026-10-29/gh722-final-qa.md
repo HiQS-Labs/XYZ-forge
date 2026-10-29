@@ -1,7 +1,7 @@
 ---
 Goal: Final QA — GH-722 merge-cleanup same-origin sibling root (default scan + Phase 6)
 Date: 2026-10-29
-NEXT: claude-a
+NEXT: codex
 STATUS: Pending
 ---
 
