@@ -2,7 +2,7 @@
 Goal: Post-approval QA — GH-1236 lazy gate_receipt import in marathon_drive (marathon #1250)
 Date: 2026-10-29
 NEXT: codex
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -357,3 +357,116 @@ index 324f4a26..48b1e7fd 100644
 ```
 
 Round 3 (final under the cap): end with exactly `VERDICT: PASS` (or `FAIL`) and a non-empty `Basis:` line.
+
+### Codex — postfix review round 3, 2026-10-29
+
+**Ship — the seeded revision resolves both prior receipt-preservation findings.** Review approval is scoped to the supplied postfix and its current implementation.
+
+1. **Resolved:** `utils/py/marathon_drive.py:159-202` uses the resolved writer for eligibility and writing, with no eager `gate_receipt` import. Missing writers return without writing. If the writer lacks the predicate or cannot load, the fallback preserves a passing receipt for the requested SHA at the canonical path. The fallback matches the current shared pass predicate for a nonempty candidate SHA. Keeping weaker passing evidence in this compatibility case is conservative and does not promote it to full-gate evidence; the current writer still replaces weaker receipts.
+2. **Measured:** 21 in-memory branch observations covered eligible, weaker, failed, wrong-SHA, boolean exit-code, corrupt and absent receipts with current, predicate-less and load-failing writers. Eligible receipts produced no writer dispatch in all three modes. Invalid receipts dispatched replacement; weaker passing receipts were preserved only in compatibility mode. Filesystem reads and subprocess calls were intercepted. This measures decisions, not successful on-disk writes or a historical harness integration.
+3. **Imports and scope:** the seeded driver header has no new top-level `gate_receipt` dependency; the added import is lazy standard-library `importlib.util`. No additional defect was found in the supplied revisions. The whole-#1250 import delta remains author-reported because a complete delta was not supplied and git is prohibited.
+4. **[Unverified — needs clone run]** The smoke addendum's gh371/gh372/gh280 and 15-case recipe results were read, not rerun. Final-candidate integration and the harness gate remain outstanding under this turn's explicit boundary.
+
+**Read-only probe command (exit 0):**
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+import ast, builtins, io, json, os, types
+from pathlib import Path
+fn = next(n for n in ast.parse(Path("utils/py/marathon_drive.py").read_text()).body
+          if isinstance(n, ast.FunctionDef) and n.name == "_write_marathon_gate_receipt")
+writer = ast.parse(Path("utils/py/gate_receipt.py").read_text())
+sha = "a"*40
+good = dict(sha=sha, gate="validate.sh", mode="parallel", scope="full", exit_code=0)
+real_import = builtins.__import__
+for mode in ("current", "legacy", "load_error"):
+    for case, data in (("full", good), ("weak", dict(good, scope=None)),
+                       ("failed", dict(good, exit_code=1)),
+                       ("wrong_sha", dict(good, sha="b"*40)),
+                       ("boolean", dict(good, exit_code=False)),
+                       ("corrupt", "{"), ("absent", None)):
+        calls = []
+        mod = types.ModuleType("_gate_receipt_resolved")
+        class Loader:
+            def exec_module(self, target):
+                if mode == "load_error":
+                    raise ImportError("controlled load failure")
+                body = [n for n in writer.body if isinstance(n, ast.FunctionDef)
+                        and not (mode == "legacy" and n.name == "is_full_gate_receipt")]
+                target.__dict__["os"] = os
+                exec(compile(ast.Module(body=body, type_ignores=[]), "<writer-functions>", "exec"),
+                     target.__dict__)
+        util = types.SimpleNamespace(
+            spec_from_file_location=lambda *a: types.SimpleNamespace(loader=Loader()),
+            module_from_spec=lambda s: mod)
+        def importing(name, *a, **kw):
+            if name == "gate_receipt":
+                raise ModuleNotFoundError(name)
+            if name == "importlib.util":
+                return types.SimpleNamespace(util=util)
+            return real_import(name, *a, **kw)
+        scope = dict(__builtins__=dict(vars(builtins), __import__=importing),
+            os=types.SimpleNamespace(path=types.SimpleNamespace(
+                join=os.path.join,
+                isfile=lambda p: p.endswith("gate_receipt.py") or case != "absent")),
+            json=json, open=lambda *a, **kw: io.StringIO(data if isinstance(data, str) else json.dumps(data)),
+            subprocess=types.SimpleNamespace(DEVNULL=-3, run=lambda cmd, **kw: calls.append(cmd)))
+        exec(compile(ast.Module(body=[fn], type_ignores=[]), "<seeded-function>", "exec"), scope)
+        result = scope[fn.name]("/target", sha, "validate.sh", "/external-harness")
+        expected = case != "full" and not (case == "weak" and mode != "current")
+        assert result == expected and len(calls) == int(expected), (mode, case, result, calls)
+        print(f"{mode}/{case}: returned={result} writer_calls={len(calls)}")
+print("21 branch observations matched; no subprocess or receipt write executed.")
+PY
+```
+
+Decisive output:
+```text
+current/full: returned=False writer_calls=0
+current/weak: returned=True writer_calls=1
+current/failed: returned=True writer_calls=1
+current/wrong_sha: returned=True writer_calls=1
+current/boolean: returned=True writer_calls=1
+current/corrupt: returned=True writer_calls=1
+current/absent: returned=True writer_calls=1
+legacy/full: returned=False writer_calls=0
+legacy/weak: returned=False writer_calls=0
+legacy/failed: returned=True writer_calls=1
+legacy/wrong_sha: returned=True writer_calls=1
+legacy/boolean: returned=True writer_calls=1
+legacy/corrupt: returned=True writer_calls=1
+legacy/absent: returned=True writer_calls=1
+load_error/full: returned=False writer_calls=0
+load_error/weak: returned=False writer_calls=0
+load_error/failed: returned=True writer_calls=1
+load_error/wrong_sha: returned=True writer_calls=1
+load_error/boolean: returned=True writer_calls=1
+load_error/corrupt: returned=True writer_calls=1
+load_error/absent: returned=True writer_calls=1
+21 branch observations matched; no subprocess or receipt write executed.
+```
+
+**Red control:** reran the same command, changing only the in-memory source expression before AST parsing:
+```python
+Path("utils/py/marathon_drive.py").read_text().replace(
+    "elif (isinstance(existing, dict)",
+    "elif (False and isinstance(existing, dict)")
+```
+No source file was changed. Exit **1**; the assertion failed at the first legacy eligible receipt, after the current-writer cases passed:
+```text
+current/full: returned=False writer_calls=0
+current/weak: returned=True writer_calls=1
+current/failed: returned=True writer_calls=1
+current/wrong_sha: returned=True writer_calls=1
+current/boolean: returned=True writer_calls=1
+current/corrupt: returned=True writer_calls=1
+current/absent: returned=True writer_calls=1
+Traceback (most recent call last):
+  File "<stdin>", line 44, in <module>
+AssertionError: ('legacy', 'full', True, [['python3', '/external-harness/utils/py/gate_receipt.py', 'write', '--repo', '/target', '--sha', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', '--gate', 'validate.sh', '--mode', 'marathon', '--exit-code', '0']])
+```
+This demonstrates sensitivity to removing the compatibility preservation branch.
+
+VERDICT: PASS
+Basis: The resolved writer and conservative fallback preserve eligible evidence across the observed current, missing-predicate and load-error paths while retaining invalid-receipt recovery dispatch; the in-memory red control detects the prior defect. Integration gates remain outside this review turn.
