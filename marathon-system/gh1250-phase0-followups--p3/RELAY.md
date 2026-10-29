@@ -300,3 +300,12 @@ The candidate hash matches every candidate receipt. This verifies the recipe's r
 **Verification limits:** End-to-end smoke and existing-suite execution remain builder-reported: **[Unverified — needs clone run]** for independent execution. The recorded disposable-clone results are 70 planner passes / 2 skips, GH-418 PASS, GH-362 9 passes, GH-423 8 passes, and frozen-twin guard clean. No Git commands, suites, pytest, or executable fixtures were run by this reviewer. Approval is for this artifact review; the outer harness gate remains required.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-29T15:36:13Z
+task: MARATHON-P3-TURN
+reviewer: codex
+status: Approved
+reviewed-head: c95c8c22ea8e646bcb11a233cec93ae8554e7c7f
+added-range: 22356+2300
+added-sha256: 3bc6e3fa7cc9d87c25da43b06f85ed2e67cf4fdd8837e67a1d644fb636e38c0e
+config-sha256: 6ba8a65d3597121a4d81cbcdf85d48142a54edcb483e1100a540ab5d5bd16878
