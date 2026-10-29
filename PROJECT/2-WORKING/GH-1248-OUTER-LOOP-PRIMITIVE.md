@@ -29,9 +29,9 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| `checkpoint2`: 17/17 manual controls passed after consolidating the Phase 1 control plane behind `utils/py/harness.py factory-primitive`; the inventory-ratchet defect is corrected | Run focused existing checks and the outstanding one-hour rules-only gate; watchdog, report generator, agent adapters, multi-arm runs, and 24-hour soak remain unimplemented |
+| `checkpoint2`: 17/17 manual controls passed behind `utils/py/harness.py factory-primitive`; five focused existing suites passed on `833c87c8`, including registry compatibility and sequential `agy-turn` | Run the outstanding one-hour rules-only gate; watchdog, report generator, agent adapters, multi-arm runs, and 24-hour soak remain unimplemented |
 
-The full experiment contract and acceptance criteria live in issue #1248. This document is the execution surface and build record. The initial full gate at `503a1ca5` did not complete: it reported the now-corrected GH-777 layout errors and 11 GH-666 `agy-turn` model-probe failures. Do not claim a full-gate pass; see `TESTS-RESULTS/2026-10-28+GH-1248/SUMMARY.md` for retained output and comparison results.
+The full experiment contract and acceptance criteria live in issue #1248. This document is the execution surface and build record. The initial full gate at `503a1ca5` did not complete: it reported the now-corrected GH-777 layout errors and 11 GH-666 `agy-turn` model-probe failures. Those model-probe tests and all 65 `agy-turn` checks subsequently passed sequentially on both base and `833c87c8`, but this does not complete or clear the full gate. See `TESTS-RESULTS/2026-10-28+GH-1248/SUMMARY.md` for retained output and comparison results.
 
 ## Tracked source and runtime boundary
 

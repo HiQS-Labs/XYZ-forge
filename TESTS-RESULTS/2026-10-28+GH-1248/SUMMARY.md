@@ -37,9 +37,23 @@ Expected nonzero exits are retained in the logs: 70 for simulated process crashe
 The initial full `./validate.sh` run at `503a1ca5` in disposable clone `temp/XYZ-forge-gh1248-gate-503a1ca5` hit the 300-second tool limit before producing a complete result. It is **incomplete and not a pass**. Its 129 retained result lines include:
 
 - **GH-777 inventory ratchet:** failed on seven new loose Python modules and a direct SQLite connection. This was caused by the initial layout. The corrected tree removes those modules, uses the existing launcher and canonical gateway, and the standalone `python3 utils/pdda/check_inventory_ratchet.py --check` reports clean with zero new scripts/connects.
-- **GH-666 `agy-turn` model-probe caller preservation:** the initial parallel gate ran 14 tests with 11 failures dominated by one-second probe timeouts and missing records. A separate sequential base run at `93f41cb8` subsequently passed all 14 model-probe tests and all 65 `agy-turn` checks in 3.698 seconds for the Python segment. This establishes that the base can pass sequentially, not that the candidate is cleared or that the original parallel failure was load-related; the corrected candidate still needs its own run.
+- **GH-666 `agy-turn` model-probe caller preservation:** the initial parallel gate ran 14 tests with 11 failures dominated by one-second probe timeouts and missing records. Separate sequential runs then passed all 14 model-probe tests and all 65 `agy-turn` checks on both base `93f41cb8` and candidate `833c87c8`. The candidate's Python segment took 8.359 seconds. This clears the focused sequential comparison, not the incomplete parallel full gate.
 
-The exact aggregate output and both failed-suite logs are retained under `logs/gate-503a1ca5-*.log`. The base output and before/after clone identity are retained under `logs/base-93f41cb8-*.log`. Focused existing-suite checks are recorded separately after the corrected checkpoint is committed; no full-gate pass is claimed. The Python dependency preflight also found `pytest` missing from the active Python 3.12.15 environment, while `requests` and `yaml` imported successfully; no dependency installation was attempted.
+The exact aggregate output and both failed-suite logs are retained under `logs/gate-503a1ca5-*.log`. The base output and before/after clone identity are retained under `logs/base-93f41cb8-*.log`. The Python dependency preflight also found `pytest` missing from the active Python 3.12.15 environment, while `requests` and `yaml` imported successfully; no dependency installation was attempted.
+
+## Focused existing suites at `833c87c8`
+
+All five selected existing suites passed sequentially in the disposable full clone `temp/XYZ-forge-gh1248-focused-833c87c8`:
+
+| Existing suite | Result |
+|---|---|
+| `gh777-inventory-ratchet.sh` | Inventory ratchet enforcement and negative controls passed |
+| `gh174-harness-registry.sh` | 8 pass, 0 fail |
+| `gh496-telemetry-isolation.sh` | 15 pass, 0 fail |
+| `gh788-python-path-space.sh` | 11 pass, 0 fail |
+| `agy-turn.sh` | 65 pass, 0 fail; 14 model-probe tests passed |
+
+The candidate clone remained at `833c87c86428abe885a00736bd48d48875113a77`, with `core.bare=false`, its original local remote, and no local user-email mutation before or after the run. Logs and provenance use the `focused-833c87c8` prefix/run ID. These are focused checks, not a substitute for the full gate or the one-hour soak.
 
 ## Artifacts
 

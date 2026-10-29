@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-28 — GH-1248 rules-only outer-loop checkpoint stays local and unmerged
+
+- Added the deterministic four-tool experiment behind `utils/py/harness.py factory-primitive`, preserving the registry fallback and using `releases_app.connect` for state. Prompts, schemas, and slot-indexed scenarios are tracked under `utils/py/factory_primitive/`; mutable state stays under gitignored `temp/factory-primitive/`. No Jog, scheduler, repository-execution, GitHub-write, deployment, or multi-repo behavior was added. Reversibility: Easy — retain or abandon the branch.
+- `checkpoint2` passed 17/17 recorded manual controls. Five focused existing suites passed on `833c87c8`: GH-777 inventory enforcement, GH-174 registry (8), GH-496 telemetry isolation (15), GH-788 path-space handling (11), and `agy-turn` (65). Evidence and provenance are under `TESTS-RESULTS/2026-10-28+GH-1248/`.
+- The initial full gate at `503a1ca5` was interrupted and remains incomplete; its layout failures were corrected, and the model-probe failure set passed sequentially on base and candidate. The active Python lacks `pytest`. The one-hour rules-only gate has not run, and watchdog/reporting, agent adapters, multi-arm runs, the 24-hour soak, and independent review remain unimplemented.
+
 ## 2026-10-27 — next-steps-mod: Claude names the next steps every turn, nobody asks "what's next?" (GH-1240)
 
 - **New skill + mod `skills/2-daily/next-steps-mod/`.** A `prompt.compose` hook appends one
