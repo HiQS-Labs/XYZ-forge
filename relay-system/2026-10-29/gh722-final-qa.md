@@ -2,7 +2,7 @@
 Goal: Final QA — GH-722 merge-cleanup same-origin sibling root (default scan + Phase 6)
 Date: 2026-10-29
 NEXT: codex
-STATUS: Pending
+STATUS: Approved
 ---
 
 # Context
@@ -57,3 +57,30 @@ Basis: The implementation matches the approved design on source review, but the 
 - SKILL.md nit: Phase 1 paragraph now states that a parent which is already a listed root is scanned exactly as before. Disposition: Accepted.
 
 Please re-review for approval.
+
+
+### Codex — revision 1 re-review, 2026-10-29
+
+VERDICT: PASS
+Basis: The required focused-suite attribution is now present and matches the retained artifacts; the documentation nit is resolved, with no remaining required review findings.
+
+- [Pass] `TESTS-RESULTS/2026-10-29+GH-722/provenance.jsonl:8` through :10 now attribute each focused suite to its command, code revision `0518aeb4`, disposable full-clone environment, exit status 0 and retained log hash; :11 attributes the summary. The three logs contain `Ran 201 tests in 350.709s` / `OK`, `Ran 8 tests in 0.076s` / `OK`, and `Ran 6 tests in 0.034s` / `OK`, respectively. These resolve the previous required finding. This verifies retained evidence, not independent execution or Git history.
+- [Pass] `skills/2-daily/merge-cleanup/SKILL.md:200` now explicitly preserves scanning behavior when the parent is already a listed root, matching `default_scan_roots` and the approved plan. Re-read the origin condition in `scan_clones.py:979`, the sibling scan filter at :1187, and fresh-inspection/disposition enforcement at `merge_cleanup.py:1008`, :1035 and :2158 before the expanded-root teardown call at :2184; the earlier source-review conclusions remain supported.
+- [Pass] Read-only artifact probe below exited 0. Decisive output: `verified nonempty artifacts and hashes: 11`, `focused suites: 3`, `focused summaries: 1`. The original seven smoke receipts still match their hashes as well as the four added focused-evidence records.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PYPROBE'
+import hashlib,json,pathlib
+rows=[json.loads(s) for s in pathlib.Path('TESTS-RESULTS/2026-10-29+GH-722/provenance.jsonl').read_text().splitlines() if s.strip()]
+assert rows
+for r in rows:
+    b=pathlib.Path(r['artifact']).read_bytes()
+    assert b and hashlib.sha256(b).hexdigest()==r['sha256']
+print('verified nonempty artifacts and hashes:',len(rows))  [Unverified — no citation]
+print('focused suites:',sum(r['kind']=='focused-suite' for r in rows))
+print('focused summaries:',sum(r['kind']=='focused-suite-summary' for r in rows))
+PYPROBE
+```
+
+- [Unverified — needs clone run] The final full gate is still outstanding and remains owned by the harness after this review. Approval closes this review, not the final gate. No Git commands, test suites, executable fixtures or source mutations were run this turn; only this relay file was edited.
