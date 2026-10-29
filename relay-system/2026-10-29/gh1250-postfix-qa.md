@@ -1,7 +1,7 @@
 ---
 Goal: Post-approval QA — GH-1236 lazy gate_receipt import in marathon_drive (marathon #1250)
 Date: 2026-10-29
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 ---
 
@@ -230,3 +230,71 @@ index 455ebf33..324f4a26 100644
 ```
 
 Round 2: end with exactly `VERDICT: PASS` (or `FAIL`) and a non-empty `Basis:` line.
+
+### Codex — postfix review round 2, 2026-10-29
+
+**Block — the resolved current writer fixes the original split-harness case, but the explicit compatibility fallback still discards stronger evidence.**
+
+1. **[Required] Preserve existing evidence when the resolved writer cannot judge it.** In `utils/py/marathon_drive.py:172-197`, a writer without `is_full_gate_receipt` (or a load failure) bypasses inspection and dispatches the unconditional writer. The author's argument that such a writer's validator never stamped `scope: full` does not establish that the **target repository** has no such receipt: it may already have run a newer validator, then be driven using an older external harness. The round-1 fix addresses local-missing/current-external layouts, but leaves this explicitly supported older-writer fallback with the same loss of reuse evidence. This does not falsely qualify a push; it needlessly destroys the evidence that would avoid another full gate. When eligibility cannot be evaluated, conservatively skip replacement of an existing receipt (or skip this optional write entirely). Keep replacement of corrupt/failed/weaker receipts when the current predicate is available. No new machinery or suite is needed.
+
+   **Read-only probe, exit 0:** extracted the seeded function and writer into memory, intercepted filesystem reads and subprocess calls, and removed only the predicate from the in-memory writer for the legacy-capability control. No real writer, fixture, git command, or suite ran. The second case measures the missing-predicate branch; it is not an integration run against a historical checkout.
+
+   Command:
+   ```sh
+   PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'
+   import ast, builtins, io, json, os, types
+   from pathlib import Path
+   driver = ast.parse(Path("utils/py/marathon_drive.py").read_text())
+   fn = next(n for n in driver.body if isinstance(n, ast.FunctionDef)
+             and n.name == "_write_marathon_gate_receipt")
+   writer = ast.parse(Path("utils/py/gate_receipt.py").read_text())
+   sha = "a"*40
+   data = dict(sha=sha, gate="validate.sh", mode="parallel", scope="full", exit_code=0)
+   real_import = builtins.__import__
+   for legacy in (False, True):
+       calls = []
+       body = [n for n in writer.body if not (legacy and
+               isinstance(n, ast.FunctionDef) and n.name == "is_full_gate_receipt")]
+       mod = types.ModuleType("_gate_receipt_resolved")
+       class Loader:
+           def exec_module(self, target):
+               exec(compile(ast.Module(body=body, type_ignores=[]),
+                            "<seeded-writer>", "exec"), target.__dict__)
+       util = types.SimpleNamespace(
+           spec_from_file_location=lambda *a: types.SimpleNamespace(loader=Loader()),
+           module_from_spec=lambda s: mod)
+       def importing(name, *a, **kw):
+           if name == "gate_receipt":
+               raise ModuleNotFoundError(name)
+           if name == "importlib.util":
+               return types.SimpleNamespace(util=util)
+           return real_import(name, *a, **kw)
+       scope = dict(
+           __builtins__=dict(vars(builtins), __import__=importing),
+           os=types.SimpleNamespace(path=types.SimpleNamespace(
+               join=os.path.join, isfile=lambda p: True)),
+           json=json, open=lambda *a, **kw: io.StringIO(json.dumps(data)),
+           subprocess=types.SimpleNamespace(
+               DEVNULL=-3, run=lambda cmd, **kw: calls.append(cmd)))
+       exec(compile(ast.Module(body=[fn], type_ignores=[]),
+                    "<seeded-function>", "exec"), scope)
+       result = scope[fn.name]("/target", sha, "validate.sh", "/external-harness")
+       print(f"predicate_available={not legacy}: returned={result}, writer_calls={len(calls)}")
+       if calls:
+           print("writer argv:", calls[0])
+   PY
+   ```
+
+   Decisive output:
+   ```text
+   predicate_available=True: returned=False, writer_calls=0
+   predicate_available=False: returned=True, writer_calls=1
+   writer argv: ['python3', '/external-harness/utils/py/gate_receipt.py', 'write', '--repo', '/target', '--sha', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', '--gate', 'validate.sh', '--mode', 'marathon', '--exit-code', '0']
+   ```
+
+2. **Resolved:** the first control confirms the current resolved writer preserves eligible evidence with the local import unavailable. The revision introduces only a lazy standard-library import; it does not restore the startup dependency. The author's whole-#1250 import-delta statement remains author-supplied; no complete delta was supplied for independent verification without git.
+
+3. **[Unverified — needs clone run]** The smoke addendum reports the split-harness and suite reruns. Those executable checks were not run in this review worktree. Final-candidate integration and harness gates remain the caller's responsibility.
+
+VERDICT: FAIL
+Basis: The current-writer control preserves the eligible receipt, but removing the predicate activates an unconditional replacement dispatch; the target may retain full-gate evidence from a newer validator regardless of the external writer's age.
