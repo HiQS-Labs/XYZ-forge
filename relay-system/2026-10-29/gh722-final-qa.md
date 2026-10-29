@@ -1,7 +1,7 @@
 ---
 Goal: Final QA — GH-722 merge-cleanup same-origin sibling root (default scan + Phase 6)
 Date: 2026-10-29
-NEXT: codex
+NEXT: claude-a
 STATUS: Pending
 ---
 
@@ -31,3 +31,22 @@ Cite file:line. Use `[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`. Do not edit source 
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 ## Log
+
+### Codex — final QA, 2026-10-29
+
+VERDICT: FAIL
+Basis: The implementation matches the approved design on source review, but the cited focused-suite runs lack the required provenance records.
+
+- [Should — required] Complete the focused-suite evidence attribution. `TESTS-RESULTS/2026-10-29+GH-722/focused-suites-0518aeb4.txt:1` reports a disposable-clone run and three passing suites, but `provenance.jsonl:1-7` contains only the seven smoke cases; no record identifies the focused-suite artifact. AGENTS.md's “Verified beats plausible” rule requires provenance for cited runs. Add records for the actual three commands with revision, environment, exit status and artifact attribution/hash, using retained execution evidence. If that evidence is unavailable, rerun in the disposable full clone rather than reconstructing unobserved statuses. No source change or new test is requested. Read-only probe (exit 0): `python3` parsed every nonempty JSONL line, read each artifact, compared `hashlib.sha256(bytes).hexdigest()` with its recorded hash, and counted records whose `artifact` equals `TESTS-RESULTS/2026-10-29+GH-722/focused-suites-0518aeb4.txt`. Decisive output: all seven smoke artifacts `nonempty=True hash_match=True`; `focused suite provenance entries: 0`. Inventory command `rg -n 'focused-suites-0518aeb4' TESTS-RESULTS relay-system/2026-10-29` (exit 0) found only this relay's context citation.
+
+- [Pass] The added parent does not independently authorize foreign or unreadable-origin removal. `scan_clones.py:417-427` requires successful, nonempty origin lookups; inspection at :979-982 grants the expanded roots only on a match. Otherwise existing default-root eligibility remains, as the revised plan requires. `merge_cleanup.py:1008` repeats that inspection, :2158-2159 selects fresh removable dispositions, and :2184 passes the expanded roots to teardown. Teardown's disposition rejection at :1035 precedes its path check. Published retirement retains its independent origin check at :1712-1714 and fresh inspection at :1718-1724. These source references are under `skills/2-daily/merge-cleanup/scripts/`.
+
+- [Pass] Discovery and root identity follow the approved overlap contract. `scan_clones.py:53-81` resolves the parent, excludes NEVER_DELETE and omits the separate sibling marker when the parent is already a default root. The appended search-root Path and sibling marker are the same value, so the `root == sibling_root` check at :1187 is correct for both production callers. Default roots precede the added parent; resolved-path deduplication at :1183-1186 preserves existing-root discoveries. Primary insertion at :1204-1219 still works even if its origin lookup fails. Both explicit-root branches pass no sibling marker (`scan_clones.py:1459`, `merge_cleanup.py:1820`), preserving explicit discovery behavior while inspection retains the new deletion boundary. JSON stdout remains separate from the roots header at `scan_clones.py:1467-1469`.
+
+- [Pass] Both existing test adaptations are truthful: `test/gh436-merge-cleanup.py:711` still asserts the exact teardown call, now including its roots, and `test/gh534_phase_a_tests.py:569` accepts the new keyword without changing the recorded removal/disposition checks. Read-only `rg -n 'published_retirement_roots' skills test` returned no matches. An AST import-use inventory (exit 0) found no unused from-imports in `scan_clones.py`; the only unused from-imports in `merge_cleanup.py` are `DEFAULT_NEVER_DELETE` and `resolve_canonical_issue`, neither a newly introduced helper. No cleanup of unrelated imports is required by this review.
+
+- [Pass] The seven retained smoke artifacts support the targeted behaviors and meaningful red controls: `a1-new-scan-3f5820f3.txt:24` lists the sibling while the base receipt omits it; `b1-new-teardown-default-3f5820f3.txt:32` reaches dry-run removal; `b2-new-teardown-explicit-root-3f5820f3.txt:24,38` preserves the foreign checkout and removes only the matching one; removing the inspection origin condition makes the foreign checkout removable in `b3-nogate-teardown-explicit-root-3f5820f3.txt:38`. `c1-origin-fail-closed-3f5820f3.txt:3` independently records false safe-root eligibility for the missing-origin checkout, and `d1-neverdelete-scan-3f5820f3.txt:19` records the skipped parent. All are under `TESTS-RESULTS/2026-10-29+GH-722/`; the hash probe above verifies the retained bytes against provenance.
+
+- [Nit] `skills/2-daily/merge-cleanup/SKILL.md:200` says the primary's parent is filtered without mentioning the already-listed-root exception. `WORKTREE-SAFETY.md:830-835` and `CHANGELOG.md:13-14` correctly preserve existing listed-root behavior. A short matching qualification in the skill would remove that prose ambiguity; it does not change the implementation verdict.
+
+- [Unverified — needs clone run] The final full gate remains outstanding by the relay's stated workflow. No Git commands, suites, executable fixtures or mutation probes were run in this review. This is a review of the seeded source and retained receipts, not an independently extracted Git diff or a fresh runtime attestation. Only this relay file was edited. Resolve the focused-suite provenance finding, then return for approval; the harness still owns the final gate.
