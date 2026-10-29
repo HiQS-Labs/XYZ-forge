@@ -1,6 +1,6 @@
 # Marathon Phase p2
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -175,3 +175,19 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 1 · Builder · agy
+
+- **Files touched:**
+  - `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`
+  - `TESTS-RESULTS/2026-10-29+GH-1235/smoke.md`
+  - `TESTS-RESULTS/2026-10-29+GH-1235/provenance.jsonl`
+  - `marathon-system/gh1250-phase0-followups--p2/RELAY.md`
+- **Key decisions & implementation:**
+  - In `run_post_merge_reconcile` (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:951-961`), preserved the existing early return when `ok` is `False` (when local `wave_reconcile`, `releases_app.py check`, or `pdda.sh issue-doc-sync` fails) so nothing is committed and `run_jog_post_merge_land` is not called.
+  - When `ok` is `True`, ran `run_jog_post_merge_land(pr_num, repo_path)`. On `True`, returned `True` unchanged.
+  - On `False` (a Jog-hook refusal), called `commit_and_push_phase5_writes(pr_num, repo_path, integration_branch)` to commit and push the reconciliation writes and verify that the primary is clean and level with `origin/<integration_branch>`. When that durability push succeeds, logged `Reconcile writes for PR #<pr> were made durable; Jog completion failed (see the error above) — Jog rows are left exactly as they are; rerun releases jog land after fixing the cause.` via `log_err`; if the durable push itself fails, its own error stands without claiming durability. Returned `False` so both callers (`_land_prs_loop` and `--reconcile-pr`) exit `2`, skip their own second commit, and stop before the next PR.
+  - Verified the fix, base red control, and adjacent failure cases (`releases check` failure, `pdda issue-doc-sync` failure, and durable push failure) via a scratch probe in `.relay-scratch/smoke_gh1235.py` against disposable bare-origin + primary Git fixtures, plus the `gh549` AST call-order invariant, and recorded the receipts in `TESTS-RESULTS/2026-10-29+GH-1235/smoke.md` and `TESTS-RESULTS/2026-10-29+GH-1235/provenance.jsonl`.
+
