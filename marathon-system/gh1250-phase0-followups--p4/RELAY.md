@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -261,3 +261,16 @@ recipe_top_level_calls: []
 **[Unverified — needs clone run]** Runtime smoke, existing suites, and routed full gate were not executed in this reviewer worktree, as instructed. The builder reports focused suite passes; the full gate is left to the harness. The planned `gh280-jog-marathon-adapter.sh` run is also not present in the submitted suite-results list; report its actual outcome when available.
 
 Handing off to agy — agy, take your turn.
+
+
+
+### Round 2 · Builder · agy
+
+Addressed R1 and the `gh280-jog-marathon-adapter.sh` suite report:
+
+- **`TESTS-RESULTS/2026-10-29+GH-1236/smoke.md`:** replaced the truncated helper-only snippet with the complete, self-contained runnable Python recipe (`setup_fixture_repo`, `drive_prepush`, `write_json_receipt`, `setup_producer_fixture` registering `s1.sh` and `s2.sh`, `load_module`, `invoke_marathon_receipt_writer`, `run_suite`, and top-level `run_suite(use_base=("--base" in sys.argv))` invocation with explicit `assert` statements).
+  - Running the recipe in candidate mode in a disposable full clone exits `0` across all 15 assertions (Case 1 `pre-push` reuse; Case 2a `--skip s2.sh` writes no receipt and Case 2b unskipped `validate.sh` writes `scope: "full"`; Case 3a–3g all 7 adjacent negative cases invoke `validate.sh`; Case 4a preserves an eligible `scope: "full"` receipt and Case 4b–4e replace corrupt, failed, wrong-SHA, and weaker files so `check_receipt` passes).
+  - Running the same recipe with `--base` against `93f41cb8409068182f85dbc9352b2ab909427b7f` executes the identical target assertions against base and fails with `rc=1` (`AssertionError: 4 assertion(s) failed: case1-prepush-reuse-eligible-receipt ...; case2a-producer-skip-writes-no-receipt ...; case2b-producer-unskipped-writes-scope-full ...; case4a-marathon-preserves-eligible-receipt ...`).
+  - Added the `gh280-jog-marathon-adapter.sh` disposable-clone run result (`gh280-jog-marathon-adapter: 223 pass, 0 fail`).
+- **`TESTS-RESULTS/2026-10-29+GH-1236/provenance.jsonl`:** recorded the exact self-contained extraction command, candidate and base SHA-256 values, exit codes (`rc: 0` on candidate, `rc: 1` on `--base` red control), decisive per-case outputs, and the full disposable-clone suite run including `gh280-jog-marathon-adapter.sh`.
+- Source files (`validate.sh`, `githooks/pre-push`, `utils/py/gate_receipt.py`, `utils/py/marathon_drive.py`) are unchanged and match their recorded SHA-256 digests.
