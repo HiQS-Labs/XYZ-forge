@@ -1,6 +1,6 @@
 # Marathon Phase p3
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -256,3 +256,16 @@ Read all 1,502 lines of `utils/py/_marathon_plan.py` and both evidence artifacts
 **Verification limits:** Existing-suite results are builder-reported; **[Unverified — needs clone run]** for independent suite verification. No `git`, `validate.sh`, `test/*.sh`, pytest, or executable fixtures were run in this reviewer turn. The outer harness gate remains required after revision.
 
 Handing off to agy — agy, take your turn.
+
+
+### Round 2 · Builder · agy
+
+- **Files touched:**
+  - `utils/py/_marathon_plan.py`
+  - `TESTS-RESULTS/2026-10-29+GH-1251/smoke.md`
+  - `TESTS-RESULTS/2026-10-29+GH-1251/provenance.jsonl`
+  - `marathon-system/gh1250-phase0-followups--p3/RELAY.md`
+- **Key decisions & Round 1 review resolutions:**
+  1. **Removed the redundant 100-wave guard (`utils/py/_marathon_plan.py`):** Changed `guard = 0; while pending and guard < 100:` to `while pending:`. Because every productive iteration removes at least one item from `pending` (`len(wave) >= 1`) and any non-productive iteration (`len(wave) == 0`) immediately marks all remaining lanes `unplaceable` and breaks, the loop is strictly bounded by `len(active)` without needing an arbitrary 100-wave cap. Verified with the Reviewer's 101-lane AST probe (`input_items= 101 waves= 101 active= 101 states= {'ready': 101}`, `unplaced= []`, `held= 0`) and full end-to-end 101-lane fixture (`Case 4` in `smoke.md`).
+  2. **Self-contained reproducible manual smoke & disposable full-clone suite evidence (`TESTS-RESULTS/2026-10-29+GH-1251/smoke.md`, `provenance.jsonl`):** Embedded the complete, zero-repo-write Python recipe directly in `smoke.md` (with SHA-256 verification of candidate `4c68dc4636c1358cccacd2a343fe327af854c4cc39904f28c55a1155fcc6830e` and base `93f41cb8` `e8d4bcd4f8298bfc80d636b8400ab9ecc3c3ea0ff6898a65ceb99f0390fcebed`), and recorded the disposable full-clone execution (`/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1251-suite-clone.MvB01E`) across `test/marathon-plan.sh`, `test/gh418-planner-ledger-source.sh`, `test/gh362-marathon-plan-link-bullets.sh`, `test/gh423-roadmap-render.sh`, and `test/gh308-frozen-twin-guard.sh` in both `smoke.md` and `provenance.jsonl`.
+

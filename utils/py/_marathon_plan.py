@@ -1143,9 +1143,7 @@ class Engine:
         waves = []
         placed_issue = {}
         pending = active[:]
-        guard = 0
-        while pending and guard < 100:
-            guard += 1
+        while pending:
             wave = []
             wave_writeset = set()
             wave_zone_counts = {}
