@@ -1,5 +1,5 @@
 # Marathon Phase p2
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P2-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -191,3 +191,30 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   - On `False` (a Jog-hook refusal), called `commit_and_push_phase5_writes(pr_num, repo_path, integration_branch)` to commit and push the reconciliation writes and verify that the primary is clean and level with `origin/<integration_branch>`. When that durability push succeeds, logged `Reconcile writes for PR #<pr> were made durable; Jog completion failed (see the error above) — Jog rows are left exactly as they are; rerun releases jog land after fixing the cause.` via `log_err`; if the durable push itself fails, its own error stands without claiming durability. Returned `False` so both callers (`_land_prs_loop` and `--reconcile-pr`) exit `2`, skip their own second commit, and stop before the next PR.
   - Verified the fix, base red control, and adjacent failure cases (`releases check` failure, `pdda issue-doc-sync` failure, and durable push failure) via a scratch probe in `.relay-scratch/smoke_gh1235.py` against disposable bare-origin + primary Git fixtures, plus the `gh549` AST call-order invariant, and recorded the receipts in `TESTS-RESULTS/2026-10-29+GH-1235/smoke.md` and `TESTS-RESULTS/2026-10-29+GH-1235/provenance.jsonl`.
 
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: yes
+
+Ship for this phase's code review; the harness still owns qualification in a disposable full clone. Read the entire merge_cleanup.py and both evidence artifacts. No concrete pre-existing defect requiring changes was identified in this sweep.
+
+- The change at run_post_merge_reconcile preserves the boolean interface and dry run. Reconcile/check/pdda failures return before Jog or durability work. A successful Jog hook follows the existing caller path. A refused hook invokes the existing durability writer once, reports durability only on its success, and still returns False.
+- Both callers return 2 on that False before their ordinary commit/push; the Phase 5 loop also stops before another PR or teardown. The writer checks the final clean tree and matching origin head. Partial Jog completion is not falsely described as rollback or as every row remaining parked.
+- Reversibility: Easy for the code change (revert the bounded function edit). The operational commit/push is the existing writer explicitly required by the brief, with its existing failure checks.
+- Independent non-mutating probe: command was an inline `PYTHONDONTWRITEBYTECODE=1 python3 -` that parsed merge_cleanup.py with ast, compiled only run_post_merge_reconcile, and supplied in-memory call-recording stubs for the reconciler, Jog hook and durability writer; governance paths were stubbed absent, and merged_head was supplied. Exit 0. Decisive output:
+
+```text
+refusal False ['reconcile', 'jog', 'commit_push', 'durability_message']
+push_failure False ['reconcile', 'jog', 'commit_push']
+reconcile_failure False ['reconcile']
+success True ['reconcile', 'jog']
+dry_run True []
+syntax OK; provenance records: 4
+```
+
+- Evidence review: smoke.md records the real bare-origin fixture outcome, caller exit 2, clean/equal heads, a pre-fix red control leaving LEADERBOARD.md uncommitted, and adjacent check/pdda/push failures. The four provenance records parse successfully. These are builder receipts, not independently rerun Git evidence.
+- [Unverified — needs clone run] Existing gh436, gh534 phase a/b, gh549, gh280 and the full routed gate were not executed in this reviewer worktree. Real commit/push behavior and actual Jog-row persistence were not independently exercised here; the in-memory probe proves control flow only. No test suite, executable fixture, or Git command was run by this reviewer.
+
+relay closed, no further turn needed
