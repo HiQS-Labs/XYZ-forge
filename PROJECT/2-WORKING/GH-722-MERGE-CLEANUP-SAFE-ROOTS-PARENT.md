@@ -51,7 +51,7 @@ Authored by `/10days` — the tracking issue has no `## Acceptance` section swar
 - [ ] `skills/merge-cleanup/SKILL.md` mentions the derived sibling root.
 - [ ] `bash validate.sh` exits 0.
 - [ ] `bash test/gh436-merge-cleanup.sh` stays green. (Superseded 2026-10-29: #1198 already gave `teardown_checkout` a `safe_roots` kwarg, so Phase 6 passes it and the one exact-call assertion is updated to stay truthful.)
-- [ ] (2026-10-29) A clean, landed checkout in the primary's parent folder whose `origin` differs from the primary's stays `PRESERVE_UNSAFE_ROOT`; the default scan does not inspect foreign-origin entries of that folder at all.
+- [ ] (2026-10-29) The parent folder grants removal eligibility only to checkouts with the primary's origin: a clean, landed foreign-origin checkout there (outside the listed roots) stays `PRESERVE_UNSAFE_ROOT`, and the default scan does not inspect foreign-origin entries of that folder. Checkouts inside a listed root keep today's behaviour.
 
 ## Swarm Preflight Contract
 
@@ -115,7 +115,7 @@ Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet
 
 **Recon finding that shapes the fix.** The parent folder holds unrelated repositories. The disposition ladder (`scan_clones.py:1036-1130`) has no origin check, so a clean, fully landed checkout of another project would become `SAFE_REMOVE_CLONE` once its folder is a safe root. Retire mode already refuses a foreign origin (`merge_cleanup.py:1712`); the default path must do the same.
 
-**Outcome sought.** `merge-cleanup` run against a primary finds and can retire its own sibling task clones without `--root`, and never treats another project's checkout as removable.
+**Outcome sought.** `merge-cleanup` run against a primary finds and can retire its own sibling task clones without `--root`, and the parent folder never makes another project's checkout removable.
 
 **Smallest change (existing subsystem: `scan_clones.py` roots + `inspect_checkout`, canonical writer unchanged).**
 1. `scan_clones.py`: rename `published_retirement_roots` to `primary_safe_roots(primary)` (same body; docstring now covers every mode) and update all four sites (definition :53, inspection :945, import `merge_cleanup.py:28`, retire caller :1690) plus the stale teardown docstring (:1023). Add `same_origin(a, b)`: both `git remote get-url origin` calls must succeed and return non-empty URLs, then compare with the existing `_normalize_remote`; any failure is "not the same" (fail closed).
