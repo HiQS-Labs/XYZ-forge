@@ -1,6 +1,6 @@
 # Marathon Phase p3
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -185,3 +185,19 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · agy
+
+- **Files touched:**
+  - `utils/py/_marathon_plan.py`
+  - `TESTS-RESULTS/2026-10-29+GH-1251/smoke.md`
+  - `TESTS-RESULTS/2026-10-29+GH-1251/provenance.jsonl`
+  - `marathon-system/gh1250-phase0-followups--p3/RELAY.md`
+- **Key decisions & implementation:**
+  1. **Phase 0 fixture check (`smoke.md`):** Grepped all planner suites (`test/marathon-plan.sh`, `test/gh418-planner-ledger-source.sh`, `test/gh362-marathon-plan-link-bullets.sh`, `test/gh423-roadmap-render.sh`). Confirmed Scenario G tests a present-but-held dependency, Scenario T has neither a cycle, missing dep, nor `--deep`, and no existing test assertion pins the old advisory behaviour on missing deps, unknown preflight exits, or unplaceable cycles. Zero test files needed edits (GH-831).
+  2. **Deep delegation (`utils/py/_marathon_plan.py`):** Added `code == 3` → `state = "needs-contract"` (`"swarm-preflight --dry-run → invalid contract (exit 3)"`) and `elif code != 0:` → `state = "preflight-error"` (`"unknown/failed preflight exit %d — hold; rerun swarm-preflight directly" % code`).
+  3. **Missing dependency resolution (`utils/py/_marathon_plan.py`):** Changed `if not dep or dep["state"] in DEP_RESOLVED or dep["state"] == "ready":` to `if dep and (dep["state"] in DEP_RESOLVED or dep["state"] == "ready"):` so a missing ledger dependency (`not dep`) is appended to `blocked_by` and transitions the dependent item to `blocked-dep` while retaining the `dep-not-found` flag.
+  4. **No-progress wave fallback (`utils/py/_marathon_plan.py`):** Replaced the `len(wave) == 0` co-waving fallback with holding each remaining deferred lane as `state = "unplaceable"` (`"could not be placed in any wave (dependency cycle / zero zone cap) — hold, do not co-wave"`), then `break`. Recomputed `active = [r for w in waves for r in w]` after packing so summary counts and the per-item scoring table only include placed lanes.
+  5. **Held set & rendering (`utils/py/_marathon_plan.py`):** Added `"preflight-error"` and `"unplaceable"` to the `held` tuple (feeding exit code `5` when `has_drift` is false) and to the `"⚠️ Not yet sequenceable — rate / add doc / add contract"` bucket in `_render_queue_doc`.
+  6. **Verification:** Targeted suites (`test/marathon-plan.sh`, `test/gh418-planner-ledger-source.sh`, `test/gh362-marathon-plan-link-bullets.sh`, `test/gh423-roadmap-render.sh`, `test/gh308-frozen-twin-guard.sh --check --base development`) all pass, and manual smoke with base `93f41cb8` red controls is recorded in `TESTS-RESULTS/2026-10-29+GH-1251/smoke.md` and `provenance.jsonl`.

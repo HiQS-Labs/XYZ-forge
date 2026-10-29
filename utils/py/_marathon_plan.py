@@ -1032,7 +1032,12 @@ class Engine:
                     code = e.returncode or 1
                 except OSError:
                     code = 1
-                if code == 4:
+                if code == 3:
+                    r["state"] = "needs-contract"
+                    self._flag("info", "needs-contract", r,
+                               "swarm-preflight --dry-run → invalid contract (exit 3)",
+                               "fix the ## Swarm Preflight Contract json block")
+                elif code == 4:
                     r["state"] = "already-landed"
                     self._flag("warn", "already-landed", r,
                                "swarm-preflight --dry-run → stale (exit 4)",
@@ -1048,6 +1053,11 @@ class Engine:
                                "swarm-preflight --dry-run → %s (exit %d)"
                                % ("blocked" if code == 6 else "ambiguous", code),
                                "resolve target/contract before sequencing")
+                elif code != 0:
+                    r["state"] = "preflight-error"
+                    self._flag("warn", "preflight-error", r,
+                               "unknown/failed preflight exit %d — hold; rerun swarm-preflight directly" % code,
+                               "rerun swarm-preflight directly")
 
         # ── dependency resolution ──────────────────────────────────────────────
         for r in deduped:
@@ -1066,7 +1076,7 @@ class Engine:
                 blocked_by = []
                 for d in r["deps"]:
                     dep = self._find_by_gh(deduped, d)
-                    if not dep or dep["state"] in DEP_RESOLVED or dep["state"] == "ready":
+                    if dep and (dep["state"] in DEP_RESOLVED or dep["state"] == "ready"):
                         continue
                     blocked_by.append(d)
                 if blocked_by:
@@ -1162,10 +1172,11 @@ class Engine:
                     wave_writeset.add(p)
                 wave_zone_counts[r["zone"]] = wave_zone_counts.get(r["zone"], 0) + 1
             if len(wave) == 0:
-                waves.append(deferred)
                 for r in deferred:
-                    if r["gh"] is not None:
-                        placed_issue[r["gh"]] = len(waves) - 1
+                    r["state"] = "unplaceable"
+                    self._flag("warn", "unplaceable", r,
+                               "could not be placed in any wave (dependency cycle / zero zone cap) — hold, do not co-wave",
+                               "break the dependency cycle or raise the zone cap")
                 break
             waves.append(wave)
             for r in wave:
@@ -1175,6 +1186,7 @@ class Engine:
         for i, w in enumerate(waves):
             for r in w:
                 r["wave"] = i + 1
+        active = [r for w in waves for r in w]
 
         # GH-5 contract seams
         contract_seams = []
@@ -1195,7 +1207,8 @@ class Engine:
         # ── exit code ───────────────────────────────────────────────────────────
         has_drift = any(r["state"] in ("already-landed", "already-closed") for r in deduped)
         held = [r for r in deduped if r["state"] in
-                ("unrated", "needs-doc", "needs-contract", "note-only", "not-ready", "blocked", "blocked-dep")]
+                ("unrated", "needs-doc", "needs-contract", "note-only", "not-ready", "blocked", "blocked-dep",
+                 "preflight-error", "unplaceable")]
         exit_code = 0
         if has_drift:
             exit_code = 4
@@ -1427,7 +1440,7 @@ class Engine:
             ("\U0001F527 Reconcile — undocumented partial completion", ["partial"]),
             ("⏸️ Gated on operator GO", ["gated"]),
             ("⚠️ Not yet sequenceable — rate / add doc / add contract",
-             ["unrated", "needs-doc", "needs-contract", "not-ready", "blocked"]),
+             ["unrated", "needs-doc", "needs-contract", "not-ready", "blocked", "preflight-error", "unplaceable"]),
             ("⛔ Blocked on a held dependency", ["blocked-dep"]),
             ("\U0001F6AB Rating-exempt (completed / hub / superseded)", ["exempt"]),
             ("\U0001F5D2️ Notes (no issue, no doc)", ["note-only"]),
