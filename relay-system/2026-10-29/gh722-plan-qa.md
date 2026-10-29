@@ -2,7 +2,7 @@
 Goal: Plan QA — GH-722 merge-cleanup sibling safe root for the default scan and Phase 6
 Date: 2026-10-29
 NEXT: codex
-STATUS: Pending
+STATUS: Approved
 ---
 
 # Context
@@ -66,3 +66,20 @@ All three findings accepted; plan section revised in `PROJECT/2-WORKING/GH-722-M
 - Overlap contract: step 2 states that the parent root grants eligibility only to same-origin checkouts and existing-root behaviour is unchanged; step 3 passes the derived root as a separate `sibling_root` argument (not path equality) and omits it when the parent is NEVER_DELETE or already a default root. `same_origin` fails closed on failed or empty lookups. `--json` header goes to stderr. Disposition: Accepted.
 
 Please re-review the revised plan section for approval.
+
+### Codex — revision 1 plan QA, 2026-10-29
+
+VERDICT: PASS
+Basis: The revised plan resolves the three previous findings and is ready for implementation; this approves the design, not unexecuted runtime verification.
+
+- [Pass] The added-root origin boundary is now explicit in plan steps 1–3 (`PROJECT/2-WORKING/GH-722-MERGE-CLEANUP-SAFE-ROOTS-PARENT.md:121-123`). Successful, nonempty origin lookups precede normalized comparison; foreign candidates retain only the existing default-root eligibility. Putting that decision in `inspect_checkout` (`skills/2-daily/merge-cleanup/scripts/scan_clones.py:945`) covers both explicit scans and `refresh_for_teardown` (`skills/2-daily/merge-cleanup/scripts/merge_cleanup.py:1008`). Phase 6 selects only fresh removable dispositions (:2152-2153), and `teardown_checkout` refuses other dispositions (:1033). Within the stated contract, no reviewed caller bypasses the planned origin condition to gain eligibility from the added parent root.
+
+- [Pass] The separate optional `sibling_root` in step 3 preserves explicit-root discovery and avoids confusing an already-default root with newly granted scope. Apply its filtering before `inspect_checkout` in the walk (`scan_clones.py:1152`), as the plan requires, to avoid fetching foreign sibling repositories. Existing callers without a primary must retain default-root behavior; the current optional-primary signature at :1133 supports that compatibility. Step 5 preserves JSON stdout, and step 6 updates the existing documentation without changing the pinned roots list.
+
+- [Pass] The rename and caller adaptation are complete at plan level. Read-only inventory command `rg -n 'published_retirement_roots' skills test` exited 0 with exactly four matches: `scan_clones.py:53`, :945, `merge_cleanup.py:28`, :1690 (paths under `skills/2-daily/merge-cleanup/scripts/`). Step 4 now names both the exact-call assertion (`test/gh436-merge-cleanup.py:711`) and the installed `fake_teardown` side effect (`test/gh534_phase_a_tests.py:569`, :585). Reusing the existing roots helper, remote normalizer, containment check and teardown writer is appropriately small; no parallel subsystem is needed.
+
+- [Pass / Unverified — needs clone run] Plan :132-136 now covers discovery, same-origin dry-run removal, explicit foreign-origin scanning through refresh, failed origin lookup and NEVER_DELETE. Its pre-fix discovery control and removal of the inspection origin condition are falsifiable controls for the two new behaviors. Execute these and the named existing suites in a disposable full clone, recording nonempty results, exit statuses and committed provenance as planned. A missing-origin case must actually reach the explicit scan/inspection boundary rather than pass merely because default discovery omitted it. No suites, executable fixtures or Git commands were run in this turn.
+
+- [Nit] Align acceptance :54 and outcome :118 with the precise scoped contract at :122 when implementing the planned docs update: foreign-origin preservation is guaranteed for eligibility newly granted by the parent root, not for all existing safe roots. The explicit step-2 contract resolves the design ambiguity, so this remaining prose inconsistency does not block plan approval.
+
+- [Pass / limitation] Live issue read command `gh issue view 722 --repo HiQS-Labs/XYZ-forge --json body,title` exited 1: `error connecting to api.github.com`. Issue coverage is assessed against the seeded transcription and acceptance list, not a successful live issue read. Source inspection confirms the prior retire-only helper and the default-scan/Phase 6 gap. Only this relay file was edited; implementation and runtime evidence remain the builder's next work.
