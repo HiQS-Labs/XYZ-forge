@@ -47,7 +47,7 @@ All changes are in `utils/py/_marathon_plan.py`:
    - add them to the existing "⚠️ Not yet sequenceable" bucket at `:1425-1432`, since it has explicit buckets rather than generic rendering;
    - keep exit precedence: drift (4) still outranks held (5), so exit 5 is expected only when there is no drift.
 
-**Phase 0 inside the lane** (record findings in this doc before building):
+**Phase 0 inside the lane** (record findings in a `## Phase 0` section of the lane's `smoke.md` before building; the orchestrator copies them into this doc):
 - grep the planner fixtures for missing-dependency and cycle cases. Plan QA found that scenario G covers a present-but-held dependency (`test/marathon-plan.sh:234`), not a missing row, and that scenario T has neither a cycle nor deep delegation (`:629-685`), so its parity should not change;
 - update only an assertion that truly pins the old behaviour, adding no scenario (GH-831);
 - do not broaden the GH-698 rendered-table skip (`:688-697`) to hide any other failure.
@@ -55,8 +55,9 @@ All changes are in `utils/py/_marathon_plan.py`:
 Write-set:
 - `utils/py/_marathon_plan.py`;
 - existing planner test files only where Phase 0 shows an assertion pins old behaviour;
-- the smoke bundle, `TESTS-RESULTS/2026-10-29+GH-1251/`;
-- this doc's Phase 0 findings and Status row.
+- the evidence bundle, `TESTS-RESULTS/2026-10-29+GH-1251/smoke.md` and `provenance.jsonl`;
+
+This doc (Phase 0 findings copied from `smoke.md`, and the Status row) is updated by the orchestrator.
 
 Full route.
 
@@ -100,14 +101,20 @@ Rollback: revert one commit. The planner returns to advisory behaviour.
     {
       "type": "path_absent",
       "path": "TESTS-RESULTS/2026-10-29+GH-1251/smoke.md"
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-10-29+GH-1251/provenance.jsonl"
     }
   ],
   "artifacts": [
     "utils/py/_marathon_plan.py",
-    "TESTS-RESULTS/2026-10-29+GH-1251/smoke.md"
+    "TESTS-RESULTS/2026-10-29+GH-1251/smoke.md",
+    "TESTS-RESULTS/2026-10-29+GH-1251/provenance.jsonl"
   ],
   "artifacts_new": [
-    "TESTS-RESULTS/2026-10-29+GH-1251/smoke.md"
+    "TESTS-RESULTS/2026-10-29+GH-1251/smoke.md",
+    "TESTS-RESULTS/2026-10-29+GH-1251/provenance.jsonl"
   ],
   "remediation": {
     "source": "issue#1251",
@@ -116,7 +123,8 @@ Rollback: revert one commit. The planner returns to advisory behaviour.
   "lanes": {
     "agy_safe": [
       "utils/py/_marathon_plan.py",
-      "TESTS-RESULTS/2026-10-29+GH-1251/smoke.md"
+      "TESTS-RESULTS/2026-10-29+GH-1251/smoke.md",
+      "TESTS-RESULTS/2026-10-29+GH-1251/provenance.jsonl"
     ],
     "orchestrator_only": []
   }

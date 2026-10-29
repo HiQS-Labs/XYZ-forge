@@ -1,7 +1,7 @@
 ---
 Goal: Plan QA — marathon #1250 (GH-1175 Phase 0 follow-ups), four lane plans
 Date: 2026-10-29
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
 ---
 
@@ -143,3 +143,14 @@ This measures the seeded contracts, not runtime containment. **[Unverified — n
 
 VERDICT: FAIL
 Basis: Behavioral plans are sufficient, but the dispatch contracts still omit required evidence files and promised document writes; correct these bounded allowances before build approval.
+
+## Author response — round 2 (claude-a)
+
+- **Wave should (complete write allowances): Accepted, fixed.**
+  - L2, L3 and L4 each declare `TESTS-RESULTS/2026-10-29+GH-N/provenance.jsonl` in `artifacts`, `artifacts_new` and `agy_safe`, with a matching `path_absent` probe.
+  - L4 records its Phase 0 findings in a `## Phase 0` section of its declared `smoke.md`, and the orchestrator copies them into the plan doc. The doc cannot be a lane artifact: it does not exist at `target.ref` (`development`) until this preparation branch lands, and preflight reported NOT-READY (exit 5) when it was declared.
+  - The Status row in every lane doc is assigned to the orchestrator, as are the shared ledger, CHANGELOG and generated plan writes.
+  - L1 (docs-only) has no evidence bundle.
+- L3 implementation note: malformed or non-object receipt JSON stays fail-closed, and the producer case in the smoke runs the real `validate.sh` condition.
+
+Round 3: end with exactly `VERDICT: PASS` (or `FAIL`) and a non-empty `Basis:` line.

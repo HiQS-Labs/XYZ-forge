@@ -59,8 +59,9 @@ Producer and consumer ship together. Old receipts fail closed.
 
 Write-set:
 - `validate.sh`, `githooks/pre-push`, `utils/py/gate_receipt.py`, `utils/py/marathon_drive.py`;
-- the lane's smoke bundle, `TESTS-RESULTS/2026-10-29+GH-1236/`;
-- this doc's Status row.
+- the lane's evidence bundle, `TESTS-RESULTS/2026-10-29+GH-1236/smoke.md` and `provenance.jsonl`.
+
+This doc's Status row is updated by the orchestrator, not the lane.
 
 Full route.
 
@@ -105,6 +106,10 @@ Rollback: revert one commit. Without the hook change every push gates fully, as 
     {
       "type": "path_absent",
       "path": "TESTS-RESULTS/2026-10-29+GH-1236/smoke.md"
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-10-29+GH-1236/provenance.jsonl"
     }
   ],
   "artifacts": [
@@ -112,10 +117,12 @@ Rollback: revert one commit. Without the hook change every push gates fully, as 
     "githooks/pre-push",
     "utils/py/gate_receipt.py",
     "utils/py/marathon_drive.py",
-    "TESTS-RESULTS/2026-10-29+GH-1236/smoke.md"
+    "TESTS-RESULTS/2026-10-29+GH-1236/smoke.md",
+    "TESTS-RESULTS/2026-10-29+GH-1236/provenance.jsonl"
   ],
   "artifacts_new": [
-    "TESTS-RESULTS/2026-10-29+GH-1236/smoke.md"
+    "TESTS-RESULTS/2026-10-29+GH-1236/smoke.md",
+    "TESTS-RESULTS/2026-10-29+GH-1236/provenance.jsonl"
   ],
   "remediation": {
     "source": "issue#1236",
@@ -127,7 +134,8 @@ Rollback: revert one commit. Without the hook change every push gates fully, as 
       "githooks/pre-push",
       "utils/py/gate_receipt.py",
       "utils/py/marathon_drive.py",
-      "TESTS-RESULTS/2026-10-29+GH-1236/smoke.md"
+      "TESTS-RESULTS/2026-10-29+GH-1236/smoke.md",
+      "TESTS-RESULTS/2026-10-29+GH-1236/provenance.jsonl"
     ],
     "orchestrator_only": []
   }

@@ -55,7 +55,7 @@ In `run_post_merge_reconcile` only:
 4. Keep the hook's own specific diagnostic. It already logs the queue, PR, capability or `jog land` error, and its loop can land one row before a later one refuses. Then add one line: `Reconcile writes for PR #<pr> were made durable; Jog completion failed (see the error above) — Jog rows are left exactly as they are; rerun releases jog land after fixing the cause.` If the durable push itself fails, its own error stands instead.
 5. Return False. Both callers (`:1622`, `:1935`) then exit 2, skip their own second commit, and stop before the next PR.
 
-The dry-run path is unchanged. Write-set: `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` and the smoke bundle `TESTS-RESULTS/2026-10-29+GH-1235/`. Full route (`utils/ci-route.sh` treats merge-cleanup as a full-gate surface).
+The dry-run path is unchanged. Write-set: `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` and the evidence bundle `TESTS-RESULTS/2026-10-29+GH-1235/smoke.md` and `provenance.jsonl`. The Status row is updated by the orchestrator. Full route (`utils/ci-route.sh` treats merge-cleanup as a full-gate surface).
 
 ## Acceptance
 
@@ -91,14 +91,20 @@ Rollback: revert one commit.
     {
       "type": "path_absent",
       "path": "TESTS-RESULTS/2026-10-29+GH-1235/smoke.md"
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-10-29+GH-1235/provenance.jsonl"
     }
   ],
   "artifacts": [
     "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
-    "TESTS-RESULTS/2026-10-29+GH-1235/smoke.md"
+    "TESTS-RESULTS/2026-10-29+GH-1235/smoke.md",
+    "TESTS-RESULTS/2026-10-29+GH-1235/provenance.jsonl"
   ],
   "artifacts_new": [
-    "TESTS-RESULTS/2026-10-29+GH-1235/smoke.md"
+    "TESTS-RESULTS/2026-10-29+GH-1235/smoke.md",
+    "TESTS-RESULTS/2026-10-29+GH-1235/provenance.jsonl"
   ],
   "remediation": {
     "source": "issue#1235",
@@ -107,7 +113,8 @@ Rollback: revert one commit.
   "lanes": {
     "agy_safe": [
       "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
-      "TESTS-RESULTS/2026-10-29+GH-1235/smoke.md"
+      "TESTS-RESULTS/2026-10-29+GH-1235/smoke.md",
+      "TESTS-RESULTS/2026-10-29+GH-1235/provenance.jsonl"
     ],
     "orchestrator_only": []
   }
