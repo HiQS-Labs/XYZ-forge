@@ -1,7 +1,7 @@
 ---
 Goal: Post-approval QA — GH-1236 lazy gate_receipt import in marathon_drive (marathon #1250)
 Date: 2026-10-29
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
 ---
 
@@ -141,3 +141,92 @@ index 03e65f3f..455ebf33 100644
 
 VERDICT: FAIL
 Basis: The supported external-harness fallback dispatches an unconditional receipt replacement after skipping eligibility checks; the local-missing/external-present control demonstrates the path without mutating repository state.
+
+## Author response — round 1 (claude-a)
+
+- **[Required] (preservation and write must use the same implementation): Accepted, fixed in `d49944be`.** `_write_marathon_gate_receipt` now resolves `xyz_harness/utils/py/gate_receipt.py` (the writer), loads that file lazily with `importlib`, and uses **its** `is_full_gate_receipt` and `get_receipt_path`. With no writer file it returns without writing. If the module cannot be loaded, or predates the predicate, it writes as before; such a writer's validate.sh never stamped `scope: full`.
+- Your split-harness case, rerun against the fixed function (local import forced to fail, temp external harness with the real writer): the eligible `scope: full` receipt is **preserved** (`replaced=False`, `mode=parallel`, `scope=full`), and the weaker receipt is **replaced**. Recorded in the addendum to `TESTS-RESULTS/2026-10-29+GH-1236/smoke.md`.
+- gh371 2/0, gh372 3/0, gh280 223/0; GH-1236 smoke recipe rc=0 (15/0).
+- On the whole-#1250 import delta: the only new import was the module-level `import gate_receipt` from p4, now removed. `_marathon_plan.py` and `merge_cleanup.py` gained no imports.
+
+Diff for `d49944be`:
+
+```diff
+commit d49944befddcc9132a98ea83850683bdcee11fd8
+Author: noelsaw1 <noel@neochro.me>
+Date:   Thu Oct 29 12:08:08 2026 -0500
+
+    fix(GH-1236): judge receipt eligibility with the resolved harness writer, loaded lazily (post-fix QA r1)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+diff --git a/utils/py/marathon_drive.py b/utils/py/marathon_drive.py
+index 455ebf33..324f4a26 100644
+--- a/utils/py/marathon_drive.py
++++ b/utils/py/marathon_drive.py
+@@ -159,32 +159,37 @@ def _result_cmd_out(cmd, cwd=None):
+ def _write_marathon_gate_receipt(root, head_sha, pre_advance_cmd, xyz_harness):
+     """GH-1236: keep an existing validate.sh full-gate receipt for head_sha; otherwise write the
+     marathon receipt (replacing any absent, corrupt, failed, wrong-SHA, or weaker file)."""
+-    # Lazy, like the subprocess write below: a partial utils/py (vendored subsets, suite fixtures)
+-    # may lack gate_receipt.py, and the driver must not fail to import over an optional receipt.
+-    try:
+-        import gate_receipt
+-    except ImportError:
+-        gate_receipt = None
+-    if gate_receipt is not None:
+-        receipt_path = gate_receipt.get_receipt_path(root, head_sha)
+-        if os.path.isfile(receipt_path):
+-            try:
+-                with open(receipt_path, "r", encoding="utf-8") as f:
+-                    existing = json.load(f)
+-            except Exception:
+-                existing = None
+-            if gate_receipt.is_full_gate_receipt(existing, head_sha):
+-                return False
+     receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
+-    if os.path.isfile(receipt_py):
+-        subprocess.run(
+-            ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
+-             "--gate", pre_advance_cmd or "pre-advance-gate", "--mode", "marathon",
+-             "--exit-code", "0"],
+-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
+-        )
+-        return True
+-    return False
++    if not os.path.isfile(receipt_py):
++        return False
++    # Judge and write with the SAME implementation: the resolved harness's gate_receipt.py, loaded
++    # lazily from that path. A module-level import broke partial utils/py layouts (suite fixtures),
++    # and the driver's own utils/py need not be the harness that writes (XYZ_HARNESS).
++    is_full, receipt_path = None, None
++    try:
++        import importlib.util
++        spec = importlib.util.spec_from_file_location("_gate_receipt_resolved", receipt_py)
++        mod = importlib.util.module_from_spec(spec)
++        spec.loader.exec_module(mod)
++        is_full = getattr(mod, "is_full_gate_receipt", None)
++        receipt_path = mod.get_receipt_path(root, head_sha)
++    except Exception:
++        is_full, receipt_path = None, None
++    if is_full and receipt_path and os.path.isfile(receipt_path):
++        try:
++            with open(receipt_path, "r", encoding="utf-8") as f:
++                existing = json.load(f)
++        except Exception:
++            existing = None
++        if is_full(existing, head_sha):
++            return False
++    subprocess.run(
++        ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
++         "--gate", pre_advance_cmd or "pre-advance-gate", "--mode", "marathon",
++         "--exit-code", "0"],
++        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
++    )
++    return True
+ 
+ 
+ def write_terminal_result(code):
+```
+
+Round 2: end with exactly `VERDICT: PASS` (or `FAIL`) and a non-empty `Basis:` line.
