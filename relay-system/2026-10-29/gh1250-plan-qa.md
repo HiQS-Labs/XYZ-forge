@@ -1,7 +1,7 @@
 ---
 Goal: Plan QA — marathon #1250 (GH-1175 Phase 0 follow-ups), four lane plans
 Date: 2026-10-29
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 ---
 
@@ -96,3 +96,50 @@ Basis: L3 can reuse a reduced-run receipt and can strand successful closeout beh
 Direct preflight after the revisions: all four READY (exit 0), with acceptance 3/3, 4/4, 4/4 and 4/4 copied verbatim.
 
 Round 2: are the revised plans sufficient? End with exactly `VERDICT: PASS` (or `FAIL`) and a non-empty `Basis:` line.
+
+
+### Codex — round 2 plan QA, 2026-10-29
+
+Return for one narrow dispatch-contract correction. The behavioral revisions resolve the round-1 findings; no additional subsystem or test suite is needed. The assumption remains isolated lane checkouts, a pinned supervisor, and disposable full-clone verification. Reversibility remains Easy for L1 and Costly for L2–L4 because they affect landing, gate reuse and admission; the documented revert paths apply.
+
+- **L1 [Pass].** `PROJECT/2-WORKING/GH-1233-JOG-RECOVERY-AFTER-DRIVER.md:43-51` now separates execution ownership from preservation of unique work, preserves unpublished branches, points to merge-cleanup checks, and keeps fresh-clone recovery and verb ordering. This is sufficient for the documentation-only change at `skills/2-daily/jog/SKILL.md:178`.
+- **L2 [Pass] behavior and verification plan.** `PROJECT/2-WORKING/GH-1235-MERGE-CLEANUP-JOG-LAND.md:49-55` keeps every existing early return and the `ok` boundary before durability, retains specific Jog diagnostics, and returns False after the durability attempt. Both callers still stop with exit 2 (`merge_cleanup.py:1622`, `:1935`). The bool mocks in gh534/gh436 and gh549's outer-loop ordering assertion remain structurally compatible. The revised smoke at plan `:69-72` covers caller exit and failed-check/pdda stops. Execution remains unverified.
+- **L3 [Pass] revised design.** `PROJECT/2-WORKING/GH-1236-JOG-MARATHON-LANE-RUNS.md:47-58` now ships the producer with the consumer: unskipped, environment-fault-free, clean tier-3 runs stamp `scope: full`; the shared full-gate predicate checks success, exact SHA, producer and non-Marathon mode. Old and legacy receipts cannot satisfy reuse. The hook requires nonempty pushed refs and every SHA, only in the full-gate arm. Marathon preserves only eligible receipts and replaces corrupt/failed/wrong-SHA/weaker ones, preserving closeout's existing recovery behavior. This closes both prior blockers without changing plain `check` semantics. Keep malformed/non-object JSON fail-closed in implementation. The smoke at `:76-86` is appropriately scoped; its producer case must exercise the actual producer condition, while the hook invocation-count case may use its documented stub.
+- **L4 [Pass] algorithm and rendering plan.** `PROJECT/2-WORKING/GH-1251-GH-522-SLICE-1.md:42-53` covers unknown exits, missing-dependency propagation, the ready-cycle/zero-cap fallback, recomputed active rows, explicit held buckets and existing exit precedence. This matches `_marathon_plan.py:1021-1071`, `:1131-1176`, `:1194-1203` and `:1425-1444`. Scenario G is present-but-held; T's dry-run parity remains meaningful and its GH-698 render skip must stay narrow. No algorithmic revision requested.
+- **Wave [Should — required before dispatch]: the complete write allowances are still missing.** The author disposition says the bundles and L4 doc update are included, but L2's contract (`GH-1235…md:96-110`), L3's (`GH-1236…md:110-130`) and L4's (`GH-1251…md:105-119`) declare only `smoke.md` for evidence. None declares `TESTS-RESULTS/2026-10-29+GH-N/provenance.jsonl`, required by AGENTS.md §6 for cited execution evidence. L4's plan explicitly requires recording Phase 0 findings in its own doc before building (`:50`, `:59`), but that doc is absent from both `artifacts` and `agy_safe`. L3 likewise promises its Status-row write (`:63`) without declaring it. `swarm_preflight.py:413-469` expands declared paths with covering tests/helpers, not arbitrary evidence siblings or project docs; `:1402-1405` derives the dispatch artifact list from that expansion. A `smoke.md` path does not authorize its sibling provenance file.
+  **Smallest correction:** declare each L2–L4 provenance path in `artifacts`, `artifacts_new`, `agy_safe`, and a matching `path_absent` probe. Declare L4's existing doc in `artifacts`/`agy_safe` (not `artifacts_new`). Either declare L3's doc similarly or explicitly assign its Status update to the orchestrator. Explicitly assign any additional raw evidence writes to the lane or orchestrator; do not create a new mechanism. The source write-sets and issue-specific bundles remain disjoint, so one wave remains reasonable with pinned supervisor code and isolated gates. Shared ledger, CHANGELOG and generated plan writes remain orchestrator-owned.
+- **Ratings [Pass as estimates].** The original relative priorities remain reasonable, and lowering L3 ease from 70 to 60 reflects the producer compatibility work. These are judgment estimates, not measured scores.
+
+Evidence: read-only source and fixture inspection; no git commands, executable fixtures, suites, pytest or gates. A static JSON inspection ran with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`. Command: `python3 -` with this stdin (exit 0):
+
+```python
+import json, re
+from pathlib import Path
+for n in (1235,1236,1251):
+    matches=list(Path('PROJECT/2-WORKING').glob(f'GH-{n}-*.md'))
+    assert len(matches)==1
+    p=matches[0]
+    raw=p.read_text()
+    blocks=re.findall(r'```json\n(.*?)\n```',raw,re.S)
+    assert len(blocks)==1
+    c=json.loads(blocks[0])
+    assert c['artifacts'] and c['lanes']['agy_safe']
+    evidence=f'TESTS-RESULTS/2026-10-29+GH-{n}/provenance.jsonl'
+    print(n, 'provenance in artifacts:',evidence in c['artifacts'], 'in agy_safe:', evidence in c['lanes']['agy_safe'])
+    if n==1251:
+        print(n,'plan doc in artifacts:',p.as_posix() in c['artifacts'],'in agy_safe:',p.as_posix() in c['lanes']['agy_safe'])
+```
+
+Decisive stdout:
+
+```text
+1235 provenance in artifacts: False in agy_safe: False
+1236 provenance in artifacts: False in agy_safe: False
+1251 provenance in artifacts: False in agy_safe: False
+1251 plan doc in artifacts: False in agy_safe: False
+```
+
+This measures the seeded contracts, not runtime containment. **[Unverified — needs clone run]** functional smoke/red controls, suite compatibility, gate success and preflight READY claims remain for execution. The producer/consumer lesson in `LESSONS-LEARNED.md:38-82` is now addressed by the L3 design.
+
+VERDICT: FAIL
+Basis: Behavioral plans are sufficient, but the dispatch contracts still omit required evidence files and promised document writes; correct these bounded allowances before build approval.
