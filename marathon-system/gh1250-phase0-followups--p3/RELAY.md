@@ -1,6 +1,6 @@
 # Marathon Phase p3
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -201,3 +201,58 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   4. **No-progress wave fallback (`utils/py/_marathon_plan.py`):** Replaced the `len(wave) == 0` co-waving fallback with holding each remaining deferred lane as `state = "unplaceable"` (`"could not be placed in any wave (dependency cycle / zero zone cap) — hold, do not co-wave"`), then `break`. Recomputed `active = [r for w in waves for r in w]` after packing so summary counts and the per-item scoring table only include placed lanes.
   5. **Held set & rendering (`utils/py/_marathon_plan.py`):** Added `"preflight-error"` and `"unplaceable"` to the `held` tuple (feeding exit code `5` when `has_drift` is false) and to the `"⚠️ Not yet sequenceable — rate / add doc / add contract"` bucket in `_render_queue_doc`.
   6. **Verification:** Targeted suites (`test/marathon-plan.sh`, `test/gh418-planner-ledger-source.sh`, `test/gh362-marathon-plan-link-bullets.sh`, `test/gh423-roadmap-render.sh`, `test/gh308-frozen-twin-guard.sh --check --base development`) all pass, and manual smoke with base `93f41cb8` red controls is recorded in `TESTS-RESULTS/2026-10-29+GH-1251/smoke.md` and `provenance.jsonl`.
+
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Changes requested
+
+swept file: yes
+
+Read all 1,502 lines of `utils/py/_marathon_plan.py` and both evidence artifacts. The three requested changes are present, including transitive missing-dependency blocking, held rendering, and drift-before-held exit precedence. The full-file sweep found the following pre-existing limit interacting with the new active-count recomputation; no additional confirmed defects are asserted.
+
+1. **[Should] Hold pending lanes when the 100-wave guard expires.** At `_marathon_plan.py:1147` (`while pending and guard < 100`), 101 ready lanes with `maxPerWave=1` exhaust the loop with one lane still pending. The new `active = [r for w in waves for r in w]` removes it from all active views, but it remains `ready`, so it is absent from held buckets and the planner can return success. This violates the lane-accounting/fail-closed goal. Either remove the redundant bound (each productive iteration consumes at least one lane; no-progress already breaks), or explicitly hold all remaining pending lanes with an accurate named reason.
+
+   Observed input: 101 records, GH-1 through GH-101, all `state=ready`, `score=1`, no dependencies, empty write sets, same zone with `maxPerWave=1`, `conservativeWhenInferred=False`.
+
+   Affected scope: queues requiring more than 100 waves; the guard predates this change, while recomputing active now also hides the omitted lanes from the scoring/collision views.
+
+   Falsifier: the same input must either place all 101 lanes or report every unplaced lane as held with a named reason and nonzero held exit; no lane may disappear from both active and held.
+
+   Narrow non-mutating probe (exit **0**; executes only the seeded in-memory packing statements, no suites, executable fixtures, subprocesses, or repository writes):
+
+   ```python
+   import ast, functools
+   from pathlib import Path
+   from collections import Counter
+   tree = ast.parse(Path('utils/py/_marathon_plan.py').read_text())
+   engine = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Engine')
+   run = next(n for n in engine.body if isinstance(n, ast.FunctionDef) and n.name == 'run')
+   start = next(i for i,n in enumerate(run.body) if isinstance(n, ast.FunctionDef) and n.name == 'active_cmp')
+   end = next(i for i,n in enumerate(run.body) if isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'contract_seams' for t in n.targets))
+   class Context:
+       _zone_rank = lambda self,z: 0
+       _find_by_gh = lambda self,rs,d: next((r for r in rs if r['gh'] == d), None)
+       def _flag(self,*args): raise AssertionError(args)
+   rows = [dict(gh=i,slug=str(i),state='ready',score=1,deps=[],zone='serial',zoneRule={'maxPerWave':1,'conservativeWhenInferred':False},zoneInferred=False,writeset=[],wave=None) for i in range(1,102)]
+   ns = {'self':Context(),'deduped':rows,'functools':functools,'DEP_RESOLVED':set()}
+   exec(compile(ast.Module(body=run.body[start:end],type_ignores=[]), '<seeded wave-packing AST>', 'exec'), ns)
+   print('input_items=',len(rows),'waves=',len(ns['waves']),'active=',len(ns['active']),'states=',dict(Counter(r['state'] for r in rows)))
+   print('unplaced=',[(r['gh'],r['state'],r['wave']) for r in rows if r['wave'] is None])
+   print('held=',sum(r['state'] in ('unrated','needs-doc','needs-contract','note-only','not-ready','blocked','blocked-dep','preflight-error','unplaceable') for r in rows))
+   print('smoke_script_present=',Path('.relay-scratch/smoke_gh1251.py').exists())
+   ```
+
+   Command: `PYTHONDONTWRITEBYTECODE=1 python3 -` with the above stdin. Decisive output:
+   ```text
+   input_items= 101 waves= 100 active= 100 states= {'ready': 101}
+   unplaced= [(101, 'ready', None)]
+   held= 0
+   smoke_script_present= False
+   ```
+
+2. **[Should — evidence] Make the manual smoke reproducible within the existing evidence files.** All six manual receipts invoke `.relay-scratch/smoke_gh1251.py`, which is absent (probe above), and `smoke.md` records output without the fixture construction, Engine configuration, or executable procedure. Embed the complete manual recipe as a code block in `smoke.md` (no new suite/file), with exact base/candidate source identity and invocation. Identify the disposable full clone used for suite execution and retain decisive output in the existing evidence bundle; the current targeted-suite receipt does not identify its execution boundary. This is an evidence request, not a new test or gate request.
+
+**Verification limits:** Existing-suite results are builder-reported; **[Unverified — needs clone run]** for independent suite verification. No `git`, `validate.sh`, `test/*.sh`, pytest, or executable fixtures were run in this reviewer turn. The outer harness gate remains required after revision.
+
+Handing off to agy — agy, take your turn.
