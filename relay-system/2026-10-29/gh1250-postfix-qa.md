@@ -1,7 +1,7 @@
 ---
 Goal: Post-approval QA — GH-1236 lazy gate_receipt import in marathon_drive (marathon #1250)
 Date: 2026-10-29
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
 ---
 
@@ -298,3 +298,62 @@ Round 2: end with exactly `VERDICT: PASS` (or `FAIL`) and a non-empty `Basis:` l
 
 VERDICT: FAIL
 Basis: The current-writer control preserves the eligible receipt, but removing the predicate activates an unconditional replacement dispatch; the target may retain full-gate evidence from a newer validator regardless of the external writer's age.
+
+## Author response — round 2 (claude-a)
+
+- **[Required] (preserve evidence when the writer cannot judge): Accepted, fixed in `ae0b4586`.** If the resolved writer has no `is_full_gate_receipt`, or fails to load, an existing receipt that is a passing receipt for this exact SHA (a dict, matching `sha`, integer `exit_code == 0`) is kept, so a newer validator's `scope: full` evidence is never downgraded. Absent, corrupt, failed and wrong-SHA files are still replaced, so closeout's recovery behaviour (plan QA r1 blocker 2) holds. The receipt path falls back to `.xyz/receipts/<sha>.json`, which matches `gate_receipt.get_receipt_dir`.
+- Widened split-harness control against the fixed function (local import forced to fail; the external harness is either the current writer or an old copy without the predicate), rc=0:
+
+```
+[PASS] split-harness (current writer; local gate_receipt missing) — eligible scope=full: replaced=False mode=parallel scope=full
+[PASS] split-harness (current writer; local gate_receipt missing) — weaker (no scope): replaced=True mode=marathon scope=None
+[PASS] split-harness (old writer, no predicate; local gate_receipt missing) — eligible scope=full: replaced=False mode=parallel scope=full
+[PASS] split-harness (old writer, no predicate; local gate_receipt missing) — corrupt JSON: replaced=True mode=marathon scope=None
+[PASS] split-harness (old writer, no predicate; local gate_receipt missing) — failed exit_code=1: replaced=True mode=marathon scope=None
+```
+
+- gh371 2/0, gh372 3/0, gh280 223/0; GH-1236 smoke recipe rc=0 (15/0).
+
+Diff for `ae0b4586`:
+
+```diff
+commit ae0b4586a2b4a00b14346d26f24377dfc8823ca2
+Author: noelsaw1 <noel@neochro.me>
+Date:   Thu Oct 29 12:14:03 2026 -0500
+
+    fix(GH-1236): never downgrade a passing receipt when the resolved writer cannot judge eligibility (post-fix QA r2)
+    
+    Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+
+diff --git a/utils/py/marathon_drive.py b/utils/py/marathon_drive.py
+index 324f4a26..48b1e7fd 100644
+--- a/utils/py/marathon_drive.py
++++ b/utils/py/marathon_drive.py
+@@ -175,13 +175,22 @@ def _write_marathon_gate_receipt(root, head_sha, pre_advance_cmd, xyz_harness):
+         receipt_path = mod.get_receipt_path(root, head_sha)
+     except Exception:
+         is_full, receipt_path = None, None
+-    if is_full and receipt_path and os.path.isfile(receipt_path):
++    if receipt_path is None:
++        receipt_path = os.path.join(root, ".xyz", "receipts", f"{head_sha}.json")
++    if os.path.isfile(receipt_path):
+         try:
+             with open(receipt_path, "r", encoding="utf-8") as f:
+                 existing = json.load(f)
+         except Exception:
+             existing = None
+-        if is_full(existing, head_sha):
++        if is_full:
++            if is_full(existing, head_sha):
++                return False
++        elif (isinstance(existing, dict) and existing.get("sha") == head_sha
++              and not isinstance(existing.get("exit_code"), bool) and existing.get("exit_code") == 0):
++            # The writer cannot judge eligibility (older harness, or it failed to load): never
++            # downgrade a passing receipt for this SHA — it may carry a newer validator's scope=full.
++            # Absent, corrupt, failed and wrong-SHA files are still replaced, as closeout needs.
+             return False
+     subprocess.run(
+         ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
+```
+
+Round 3 (final under the cap): end with exactly `VERDICT: PASS` (or `FAIL`) and a non-empty `Basis:` line.
