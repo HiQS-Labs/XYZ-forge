@@ -20,7 +20,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from harness_paths import harness_home, repo_root, resolve_tool, is_vendored  # noqa: E402
 from rtl import driver_lock_path  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: validated reader of relay-drive/attest@1
-import gate_receipt  # noqa: E402  GH-1236: full-gate receipt predicate
 
 # GH-284 Phase 2 / GH-322: hooks run on EVERY terminal path with the driver's real exit code — the
 # Python equivalent of marathon-drive.sh's `trap _marathon_drive_on_exit EXIT`. Same contract as
@@ -160,15 +159,22 @@ def _result_cmd_out(cmd, cwd=None):
 def _write_marathon_gate_receipt(root, head_sha, pre_advance_cmd, xyz_harness):
     """GH-1236: keep an existing validate.sh full-gate receipt for head_sha; otherwise write the
     marathon receipt (replacing any absent, corrupt, failed, wrong-SHA, or weaker file)."""
-    receipt_path = gate_receipt.get_receipt_path(root, head_sha)
-    if os.path.isfile(receipt_path):
-        try:
-            with open(receipt_path, "r", encoding="utf-8") as f:
-                existing = json.load(f)
-        except Exception:
-            existing = None
-        if gate_receipt.is_full_gate_receipt(existing, head_sha):
-            return False
+    # Lazy, like the subprocess write below: a partial utils/py (vendored subsets, suite fixtures)
+    # may lack gate_receipt.py, and the driver must not fail to import over an optional receipt.
+    try:
+        import gate_receipt
+    except ImportError:
+        gate_receipt = None
+    if gate_receipt is not None:
+        receipt_path = gate_receipt.get_receipt_path(root, head_sha)
+        if os.path.isfile(receipt_path):
+            try:
+                with open(receipt_path, "r", encoding="utf-8") as f:
+                    existing = json.load(f)
+            except Exception:
+                existing = None
+            if gate_receipt.is_full_gate_receipt(existing, head_sha):
+                return False
     receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
     if os.path.isfile(receipt_py):
         subprocess.run(
