@@ -1,7 +1,7 @@
 ---
 Goal: Post-approval QA — GH-1236 lazy gate_receipt import in marathon_drive (marathon #1250)
 Date: 2026-10-29
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 ---
 
@@ -88,3 +88,56 @@ index 03e65f3f..455ebf33 100644
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
 ## Log
+
+### Codex — postfix review, 2026-10-29
+
+**Block — the lazy import fixes startup, but the fallback does not preserve the receipt contract in a supported split-harness layout.**
+
+1. **[Required] Resolve preservation and writing against the same receipt implementation.** At `utils/py/marathon_drive.py:164-189`, an unavailable local import skips the preservation check but still invokes `xyz_harness/utils/py/gate_receipt.py write` if that file exists. These locations need not coincide: the import search starts beside the running driver (`:19`), whereas `xyz_harness = harness_home()` (`:1193`) honors an existing external `XYZ_HARNESS` directory (`utils/py/harness_paths.py:56-59`) for a non-vendored driver. A partial local driver plus a complete external harness can therefore overwrite an existing eligible receipt with `mode: marathon`, losing `scope: full`. The writer replaces the target unconditionally (`utils/py/gate_receipt.py:27-53`). This loses reuse evidence and forces another full push gate; it does not falsely qualify a push. The claim that no eligible receipt can exist is too strong: the target may have run its own complete validate.sh previously, and the external harness writer is available now. Keep the lazy startup behavior, but use the resolved writer's existing full-gate predicate before its fallback write (or otherwise preserve eligible evidence without restoring the eager dependency). No new suite or gate is needed.
+
+   **Read-only probe:** extracted only the seeded function into memory, forced the missing import, and replaced filesystem checks/subprocess execution with observations; no writer, fixture, git command, or suite ran. Command below exited **0**:
+   ```sh
+   PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'
+   import ast, builtins, json, os, types
+   from pathlib import Path
+   tree = ast.parse(Path("utils/py/marathon_drive.py").read_text())
+   fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef)
+             and n.name == "_write_marathon_gate_receipt")
+   calls = []
+   real_import = builtins.__import__
+   def missing(name, *a, **kw):
+       if name == "gate_receipt":
+           raise ModuleNotFoundError("No module named 'gate_receipt'")
+       return real_import(name, *a, **kw)
+   def run(writer_exists):
+       calls.clear()
+       fake_os = types.SimpleNamespace(path=types.SimpleNamespace(
+           join=os.path.join, isfile=lambda p: writer_exists))
+       scope = {"__builtins__": dict(vars(builtins), __import__=missing),
+                "os": fake_os, "json": json,
+                "subprocess": types.SimpleNamespace(
+                    DEVNULL=-3, run=lambda cmd, **kw: calls.append(cmd))}
+       exec(compile(ast.Module(body=[fn], type_ignores=[]),
+                    "<seeded-function>", "exec"), scope)
+       result = scope[fn.name]("/target", "a"*40, "validate.sh", "/external-harness")
+       print(f"missing_import writer_exists={writer_exists}: returned={result}, writer_calls={len(calls)}")
+       if calls:
+           print("writer argv:", calls[0])
+   run(False)
+   run(True)
+   PY
+   ```
+   Decisive output:
+   ```text
+   missing_import writer_exists=False: returned=False, writer_calls=0
+   missing_import writer_exists=True: returned=True, writer_calls=1
+   writer argv: ['python3', '/external-harness/utils/py/gate_receipt.py', 'write', '--repo', '/target', '--sha', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', '--gate', 'validate.sh', '--mode', 'marathon', '--exit-code', '0']
+   ```
+   The first case is the control: when both module locations lack the writer, nothing is overwritten. The second demonstrates the unconditional writer dispatch; the on-disk replacement consequence is established by reading the writer, not by claiming an integration run.
+
+2. **Other imports:** the displayed postfix adds no other top-level dependency. The current marathon driver imports only standard-library modules plus `harness_paths`, `rtl`, and `relay_attest`; both affected fixtures copy those three (`test/gh371-interrupt-snapshot.sh:9`, `test/gh372-escalation-log-tail.sh:9`). I also inspected import headers for the other Python artifacts named in `PROJECT/2-WORKING/GH-1250-PHASE0-FOLLOWUPS/MARATHON.yaml`: `_marathon_plan.py` and `merge_cleanup.py`. A whole-#1250 **new-import delta is unverified**: the supplied diff contains only the postfix, and this turn prohibits git. No second newly introduced partial-utils dependency is established by the supplied evidence.
+
+3. **[Unverified — needs clone run]** The reported gh371/gh372/gh280 and smoke reruns were not rerun here, per the review boundary. The seeded GH-1236 provenance records the earlier candidate `5f3f8a8b`, not postfix `27c994a9`; it cannot independently attest the postfix rerun. After the correction, retain the focused clone-run result for the final candidate, including an eligible receipt with a missing local module and an external writer. The harness gate remains outstanding.
+
+VERDICT: FAIL
+Basis: The supported external-harness fallback dispatches an unconditional receipt replacement after skipping eligibility checks; the local-missing/external-present control demonstrates the path without mutating repository state.
