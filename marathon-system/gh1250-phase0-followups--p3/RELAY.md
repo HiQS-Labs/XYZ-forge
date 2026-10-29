@@ -1,5 +1,5 @@
 # Marathon Phase p3
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P3-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -269,3 +269,34 @@ Handing off to agy — agy, take your turn.
   1. **Removed the redundant 100-wave guard (`utils/py/_marathon_plan.py`):** Changed `guard = 0; while pending and guard < 100:` to `while pending:`. Because every productive iteration removes at least one item from `pending` (`len(wave) >= 1`) and any non-productive iteration (`len(wave) == 0`) immediately marks all remaining lanes `unplaceable` and breaks, the loop is strictly bounded by `len(active)` without needing an arbitrary 100-wave cap. Verified with the Reviewer's 101-lane AST probe (`input_items= 101 waves= 101 active= 101 states= {'ready': 101}`, `unplaced= []`, `held= 0`) and full end-to-end 101-lane fixture (`Case 4` in `smoke.md`).
   2. **Self-contained reproducible manual smoke & disposable full-clone suite evidence (`TESTS-RESULTS/2026-10-29+GH-1251/smoke.md`, `provenance.jsonl`):** Embedded the complete, zero-repo-write Python recipe directly in `smoke.md` (with SHA-256 verification of candidate `4c68dc4636c1358cccacd2a343fe327af854c4cc39904f28c55a1155fcc6830e` and base `93f41cb8` `e8d4bcd4f8298bfc80d636b8400ab9ecc3c3ea0ff6898a65ceb99f0390fcebed`), and recorded the disposable full-clone execution (`/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh1251-suite-clone.MvB01E`) across `test/marathon-plan.sh`, `test/gh418-planner-ledger-source.sh`, `test/gh362-marathon-plan-link-bullets.sh`, `test/gh423-roadmap-render.sh`, and `test/gh308-frozen-twin-guard.sh` in both `smoke.md` and `provenance.jsonl`.
 
+
+
+### Round 2 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: yes
+
+Reviewed the full planner and both evidence artifacts. Both Round 1 findings are resolved: the arbitrary 100-wave bound is removed, and the smoke file now embeds the complete fixture recipe, source hashes, and disposable full-clone suite location/results. Every productive packing iteration consumes at least one pending lane; the no-progress branch holds the remainder and breaks. Unknown preflight exits, missing dependencies, held rendering, active accounting, and drift-before-held exit precedence remain consistent with the brief. No additional confirmed pre-existing defects were found in the full-file sweep.
+
+**Independent read-only verification:** `PYTHONDONTWRITEBYTECODE=1 python3 -` replayed the exact Python AST probe printed in Round 1 against the current source (extracted from that review's fenced Python block and de-indented). Exit **0**, decisive output:
+
+```text
+input_items= 101 waves= 101 active= 101 states= {'ready': 101}
+unplaced= []
+held= 0
+```
+
+The same invocation parsed the embedded smoke recipe without executing its fixtures, evaluated only its `cand_sha`, `base_src`, and `base_sha` assignments and hash assertions with the current source, and parsed all JSONL receipts. Exit **0**, decisive output:
+
+```text
+candidate_sha256= 4c68dc4636c1358cccacd2a343fe327af854c4cc39904f28c55a1155fcc6830e
+reconstructed_base_sha256= e8d4bcd4f8298bfc80d636b8400ab9ecc3c3ea0ff6898a65ceb99f0390fcebed
+valid_provenance_records= 8
+```
+
+The candidate hash matches every candidate receipt. This verifies the recipe's reconstruction against its recorded base hash, not an independent Git lookup of the base revision. The Round 1 observed 100-wave failure is the red control for the repeated packing probe.
+
+**Verification limits:** End-to-end smoke and existing-suite execution remain builder-reported: **[Unverified — needs clone run]** for independent execution. The recorded disposable-clone results are 70 planner passes / 2 skips, GH-418 PASS, GH-362 9 passes, GH-423 8 passes, and frozen-twin guard clean. No Git commands, suites, pytest, or executable fixtures were run by this reviewer. Approval is for this artifact review; the outer harness gate remains required.
+
+relay closed, no further turn needed
