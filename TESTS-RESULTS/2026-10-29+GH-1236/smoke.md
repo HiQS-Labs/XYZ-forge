@@ -406,3 +406,15 @@ test_python_layer.py: 21 passed in 23.16s
 ## Verdict
 
 PASS.
+
+## Orchestrator addendum — post-approval fix (2026-10-29)
+
+The branch pre-push gate failed `test/gh371-interrupt-snapshot.sh` and `test/gh372-escalation-log-tail.sh` (both reproduced alone) with `ModuleNotFoundError: gate_receipt`. p4's module-level import broke fixtures that copy a subset of `utils/py`. The fix loads `gate_receipt.py` lazily **from the resolved harness writer path** (`xyz_harness/utils/py/gate_receipt.py`) and judges eligibility with that same module (post-fix QA r1: a local-missing/external-present split harness must not overwrite an eligible receipt).
+
+- gh371 2/0, gh372 3/0, gh280 223/0; the recipe above reruns with rc=0 (15 PASS, 0 FAIL).
+- Split-harness control: the AST-extracted `_write_marathon_gate_receipt`, with local `import gate_receipt` forced to fail and a temp external harness holding the real `gate_receipt.py`; rc=0:
+
+```
+[PASS] split-harness, local gate_receipt missing — eligible scope=full receipt (must be preserved): replaced=False mode=parallel scope=full
+[PASS] split-harness, local gate_receipt missing — weaker receipt, no scope (must be replaced): replaced=True mode=marathon scope=None
+```

@@ -159,32 +159,37 @@ def _result_cmd_out(cmd, cwd=None):
 def _write_marathon_gate_receipt(root, head_sha, pre_advance_cmd, xyz_harness):
     """GH-1236: keep an existing validate.sh full-gate receipt for head_sha; otherwise write the
     marathon receipt (replacing any absent, corrupt, failed, wrong-SHA, or weaker file)."""
-    # Lazy, like the subprocess write below: a partial utils/py (vendored subsets, suite fixtures)
-    # may lack gate_receipt.py, and the driver must not fail to import over an optional receipt.
-    try:
-        import gate_receipt
-    except ImportError:
-        gate_receipt = None
-    if gate_receipt is not None:
-        receipt_path = gate_receipt.get_receipt_path(root, head_sha)
-        if os.path.isfile(receipt_path):
-            try:
-                with open(receipt_path, "r", encoding="utf-8") as f:
-                    existing = json.load(f)
-            except Exception:
-                existing = None
-            if gate_receipt.is_full_gate_receipt(existing, head_sha):
-                return False
     receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
-    if os.path.isfile(receipt_py):
-        subprocess.run(
-            ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
-             "--gate", pre_advance_cmd or "pre-advance-gate", "--mode", "marathon",
-             "--exit-code", "0"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
-        )
-        return True
-    return False
+    if not os.path.isfile(receipt_py):
+        return False
+    # Judge and write with the SAME implementation: the resolved harness's gate_receipt.py, loaded
+    # lazily from that path. A module-level import broke partial utils/py layouts (suite fixtures),
+    # and the driver's own utils/py need not be the harness that writes (XYZ_HARNESS).
+    is_full, receipt_path = None, None
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_gate_receipt_resolved", receipt_py)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        is_full = getattr(mod, "is_full_gate_receipt", None)
+        receipt_path = mod.get_receipt_path(root, head_sha)
+    except Exception:
+        is_full, receipt_path = None, None
+    if is_full and receipt_path and os.path.isfile(receipt_path):
+        try:
+            with open(receipt_path, "r", encoding="utf-8") as f:
+                existing = json.load(f)
+        except Exception:
+            existing = None
+        if is_full(existing, head_sha):
+            return False
+    subprocess.run(
+        ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
+         "--gate", pre_advance_cmd or "pre-advance-gate", "--mode", "marathon",
+         "--exit-code", "0"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
+    )
+    return True
 
 
 def write_terminal_result(code):
