@@ -470,3 +470,11 @@ This demonstrates sensitivity to removing the compatibility preservation branch.
 
 VERDICT: PASS
 Basis: The resolved writer and conservative fallback preserve eligible evidence across the observed current, missing-predicate and load-error paths while retaining invalid-receipt recovery dispatch; the in-memory red control detects the prior defect. Integration gates remain outside this review turn.
+
+### Attestation · relay-drive — 2026-10-29T17:15:50Z
+task: RELAY-gh1250-postfix-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: b1e2ecb6a43663d16dbf2e6af807e11b55fd1d18
+added-range: 23514+7402
+added-sha256: 33cf46cece581dc3773bbda9726b98d31b4bf08319e7d9cc83901168222761d3
