@@ -1,5 +1,5 @@
 # Marathon Phase p4
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -274,3 +274,50 @@ Addressed R1 and the `gh280-jog-marathon-adapter.sh` suite report:
   - Added the `gh280-jog-marathon-adapter.sh` disposable-clone run result (`gh280-jog-marathon-adapter: 223 pass, 0 fail`).
 - **`TESTS-RESULTS/2026-10-29+GH-1236/provenance.jsonl`:** recorded the exact self-contained extraction command, candidate and base SHA-256 values, exit codes (`rc: 0` on candidate, `rc: 1` on `--base` red control), decisive per-case outputs, and the full disposable-clone suite run including `gh280-jog-marathon-adapter.sh`.
 - Source files (`validate.sh`, `githooks/pre-push`, `utils/py/gate_receipt.py`, `utils/py/marathon_drive.py`) are unchanged and match their recorded SHA-256 digests.
+
+
+### Round 2 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: yes
+
+Reviewed all six seeded artifacts, including the whole source-file control flows rather than only the receipt edits. No additional actionable pre-existing defect established in this sweep. The source changes implement the agreed contract: the producer excludes skipped/faulted/dirty runs, full-receipt eligibility is shared, Marathon preserves eligible receipts, and the hook requires receipts for every non-delete pushed SHA only after the existing narrow routes decline. Plain receipt checks retain legacy compatibility. Producer and consumer ship together, satisfying the matching LESSONS-LEARNED guidance.
+
+R1 is resolved. The smoke document now includes both fixture constructors, registered s1/s2 producer fixtures, actual case invocations, assertions and the terminal run_suite call. Candidate and base provenance commands extract the complete recipe. The submitted evidence records candidate rc=0 and base rc=1 with four named target assertion failures, and now includes gh280-jog-marathon-adapter (223 pass, 0 fail). All four candidate source hashes match the seeded files.
+
+Independent non-executing probe (exit 0):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PROBE'
+import ast, hashlib, json, pathlib, shlex
+p=pathlib.Path('TESTS-RESULTS/2026-10-29+GH-1236')
+rows=[json.loads(x) for x in (p/'provenance.jsonl').read_text().splitlines()]
+for f,h in rows[0]['candidate_sha256'].items():
+ assert hashlib.sha256(pathlib.Path(f).read_bytes()).hexdigest()==h
+print('candidate hashes: 4/4 match')
+for row in rows[:2]:
+ args=shlex.split(row['command'])
+ t=ast.parse(args[args.index('-c')+1])
+ a=next(n for n in t.body if isinstance(n,ast.Assign))
+ code=eval(compile(ast.Expression(a.value),'<extraction-only>','eval'),{'pathlib':pathlib})
+ assert len(code)>0
+ recipe=ast.parse(code)
+ assert isinstance(recipe.body[-1],ast.Expr) and isinstance(recipe.body[-1].value,ast.Call)
+ print(row['case'], 'extraction/AST OK;',len(code),'bytes; terminal call:',ast.unparse(recipe.body[-1]))
+PROBE
+```
+
+Decisive output:
+```text
+candidate hashes: 4/4 match
+candidate-full-smoke-recipe-cases-1-to-4 extraction/AST OK; 17660 bytes; terminal call: run_suite(use_base='--base' in sys.argv)
+base-red-control-target-assertions-fail-on-93f41cb8 extraction/AST OK; 17660 bytes; terminal call: run_suite(use_base='--base' in sys.argv)
+```
+
+`bash -n githooks/pre-push` and AST parsing both Python source files also returned 0. These are syntax/consistency checks, not runtime proof.
+
+**[Unverified — needs clone run]** I did not execute the smoke fixtures, existing suites, or full gate in this reviewer worktree. Runtime passes and the red control above are the builder's recorded disposable-clone results; the harness must run its gate after this review. Approval completes peer review, not final gate qualification.
+
+relay closed, no further turn needed
