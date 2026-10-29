@@ -54,10 +54,10 @@ Write-set: `githooks/pre-push`, `utils/py/gate_receipt.py`, `utils/py/marathon_d
 
 ## Acceptance
 
-- pre-push skips the full gate only when a passing full-gate receipt written by `validate.sh` (tier 3, unfiltered, clean tree) exists for the exact local SHA being pushed, and it says so in its output.
-- Marathon's pre-advance receipt no longer overwrites a `validate.sh` full-gate receipt for the same SHA.
-- Every other case (no receipt, a marathon-only receipt, a different SHA, a docs or tier-2 route, a deleted ref) gates exactly as today.
-- A manual smoke receipt under `TESTS-RESULTS/` shows the fix and a base red control; no new tests (GH-831).
+- [ ] pre-push skips the full gate only when a passing full-gate receipt written by `validate.sh` (tier 3, unfiltered, clean tree) exists for the exact local SHA being pushed, and it says so in its output.
+- [ ] Marathon's pre-advance receipt no longer overwrites a `validate.sh` full-gate receipt for the same SHA.
+- [ ] Every other case (no receipt, a marathon-only receipt, a different SHA, a docs or tier-2 route, a deleted ref) gates exactly as today.
+- [ ] A manual smoke receipt under `TESTS-RESULTS/` shows the fix and a base red control; no new tests (GH-831).
 
 ## Verification
 

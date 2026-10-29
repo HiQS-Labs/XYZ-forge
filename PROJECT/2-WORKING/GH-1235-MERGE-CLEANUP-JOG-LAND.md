@@ -61,10 +61,10 @@ Write-set: `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`. Full route: 
 
 ## Acceptance
 
-- When the Jog hook's `jog land` refuses after a successful local reconcile, merge-cleanup still commits and pushes the reconcile writes, leaving the primary clean and level with origin.
-- It then reports the Jog refusal and exits non-zero, and the Jog row stays parked.
-- A failing reconcile, `releases check` or pdda step still stops before the commit, as today.
-- A manual smoke receipt under `TESTS-RESULTS/` shows the fix and a base red control; no new tests (GH-831).
+- [ ] When the Jog hook's `jog land` refuses after a successful local reconcile, merge-cleanup still commits and pushes the reconcile writes, leaving the primary clean and level with origin.
+- [ ] It then reports the Jog refusal and exits non-zero, and the Jog row stays parked.
+- [ ] A failing reconcile, `releases check` or pdda step still stops before the commit, as today.
+- [ ] A manual smoke receipt under `TESTS-RESULTS/` shows the fix and a base red control; no new tests (GH-831).
 
 ## Verification
 

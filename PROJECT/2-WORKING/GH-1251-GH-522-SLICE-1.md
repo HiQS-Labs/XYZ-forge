@@ -54,10 +54,10 @@ Write-set: `utils/py/_marathon_plan.py`, plus existing planner test files only w
 
 ## Acceptance
 
-- A deep-preflight exit other than 0, 4, 5, 6 or 7 (including 1, 2, 3, 127 and signals) holds the item with a named reason and planner exit 5 instead of leaving it ready.
-- A dependency that is not in the ledger holds the dependent item (`blocked-dep`) instead of only warning.
-- When no ready lane can be placed in a wave, the remaining lanes are held with a named reason instead of being packed together into one wave.
-- Existing planner suites stay green, changed only where they pin the old advisory behaviour, and a manual smoke receipt under `TESTS-RESULTS/` shows each seam with a base red control; no new tests (GH-831).
+- [ ] A deep-preflight exit other than 0, 4, 5, 6 or 7 (including 1, 2, 3, 127 and signals) holds the item with a named reason and planner exit 5 instead of leaving it ready.
+- [ ] A dependency that is not in the ledger holds the dependent item (`blocked-dep`) instead of only warning.
+- [ ] When no ready lane can be placed in a wave, the remaining lanes are held with a named reason instead of being packed together into one wave.
+- [ ] Existing planner suites stay green, changed only where they pin the old advisory behaviour, and a manual smoke receipt under `TESTS-RESULTS/` shows each seam with a base red control; no new tests (GH-831).
 
 ## Verification
 

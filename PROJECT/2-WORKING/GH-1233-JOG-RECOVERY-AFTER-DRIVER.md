@@ -52,9 +52,9 @@ Write-set: `skills/2-daily/jog/SKILL.md`. Docs route (`utils/ci-route.sh` classi
 
 ## Acceptance
 
-- `skills/2-daily/jog/SKILL.md` "Recovery Verbs" names each crash leftover (isolation worktree, claimed tick token, clone driver lock, unpushed local marathon branch) and how to confirm it is safe to clear.
-- It states that after a cold-start park, `retry-build` targets a fresh disposable full clone and the crashed clone is retired through `/merge-cleanup`, never reused.
-- `utils/pdda/pdda.sh run` is clean; no new tests (GH-831).
+- [ ] `skills/2-daily/jog/SKILL.md` "Recovery Verbs" names each crash leftover (isolation worktree, claimed tick token, clone driver lock, unpushed local marathon branch) and how to confirm it is safe to clear.
+- [ ] It states that after a cold-start park, `retry-build` targets a fresh disposable full clone and the crashed clone is retired through `/merge-cleanup`, never reused.
+- [ ] `utils/pdda/pdda.sh run` is clean; no new tests (GH-831).
 
 ## Verification
 
