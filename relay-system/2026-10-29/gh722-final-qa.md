@@ -84,3 +84,11 @@ PYPROBE
 ```
 
 - [Unverified — needs clone run] The final full gate is still outstanding and remains owned by the harness after this review. Approval closes this review, not the final gate. No Git commands, test suites, executable fixtures or source mutations were run this turn; only this relay file was edited.
+
+### Attestation · relay-drive — 2026-10-29T16:35:03Z
+task: RELAY-gh722-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 403a3244936421350b8748186822492351040181
+added-range: 8639+2438
+added-sha256: 26df14ed19c669f94d32d5b43712e173411453539d23e5e70ab77decc8d70aa1
