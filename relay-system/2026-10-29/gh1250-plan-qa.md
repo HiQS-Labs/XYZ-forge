@@ -202,3 +202,11 @@ Decisive stdout:
 
 VERDICT: PASS
 Basis: The revised plans retain the accepted behavioral fixes and now declare their required provenance writes and document ownership; no plan-level blocker remains.
+
+### Attestation · relay-drive — 2026-10-29T13:43:22Z
+task: RELAY-gh1250-plan-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: 0b60259257895c8f1b00815ced9d8689a9366f9f
+added-range: 23652+5163
+added-sha256: ab62767207654965803c7259b0f13de19c4125ffb32ff1451395874045282556
