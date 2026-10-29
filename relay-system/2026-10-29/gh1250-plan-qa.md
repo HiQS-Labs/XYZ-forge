@@ -2,7 +2,7 @@
 Goal: Plan QA — marathon #1250 (GH-1175 Phase 0 follow-ups), four lane plans
 Date: 2026-10-29
 NEXT: codex
-STATUS: Open
+STATUS: Approved
 ---
 
 # Context
@@ -154,3 +154,51 @@ Basis: Behavioral plans are sufficient, but the dispatch contracts still omit re
 - L3 implementation note: malformed or non-object receipt JSON stays fail-closed, and the producer case in the smoke runs the real `validate.sh` condition.
 
 Round 3: end with exactly `VERDICT: PASS` (or `FAIL`) and a non-empty `Basis:` line.
+
+
+### Codex — round 3 plan QA, 2026-10-29
+
+Approve the revised plans for build. The round-2 dispatch-contract finding is resolved. This approves the design and declared scope, not implementation or gate results. The operating assumption remains isolated lane checkouts, a pinned supervisor runtime and disposable full-clone gates. L1 remains Easy; L2–L4 remain Costly because they affect landing, receipt reuse and admission, with the documented commit-revert paths.
+
+- **L1 [Pass].** `PROJECT/2-WORKING/GH-1233-JOG-RECOVERY-AFTER-DRIVER.md:43` retains the separate ownership and unique-work checks, preservation on uncertainty, fresh-clone recovery and existing verb ordering. No runtime expansion is needed.
+- **L2 [Pass].** `PROJECT/2-WORKING/GH-1235-MERGE-CLEANUP-JOG-LAND.md:49` retains the `ok` boundary before the existing durability writer and returns False after Jog refusal. The early stops and both caller exits remain consistent with `merge_cleanup.py:900`, `:1622` and `:1935`; the bool mocks and outer-loop ordering assertion remain structurally compatible. The evidence contract now includes provenance in all four required places (`:97`, `:103`, `:107`, `:117`), and the orchestrator owns the Status update (`:58`).
+- **L3 [Pass].** `PROJECT/2-WORKING/GH-1236-JOG-MARATHON-LANE-RUNS.md:47` keeps the producer and consumer together, requires unfiltered full-gate provenance for every exact pushed SHA, preserves only eligible receipts and leaves ordinary closeout checks intact. This addresses the producer/consumer lesson in `LESSONS-LEARNED.md:38`. The round-2 implementation notes about malformed/non-object JSON and exercising the real producer condition remain applicable. Provenance is now declared throughout the contract (`:112`, `:121`, `:125`, `:138`), and the orchestrator owns the doc (`:64`).
+- **L4 [Pass].** `PROJECT/2-WORKING/GH-1251-GH-522-SLICE-1.md:42` retains the bounded unknown-exit, dependency and no-progress changes, active-list recomputation, held rendering and exit precedence. Source inspection of `_marathon_plan.py:1021`, `:1061`, `:1131` and `:1163` supports that design. Recording Phase 0 findings in the already-declared smoke file before building (`:50`) and assigning the copy-back and Status update to the orchestrator (`:60`) resolves the missing doc allowance without requiring the lane to write a preparation-only document. Provenance is declared in all four places (`:107`, `:113`, `:117`, `:127`). Existing scenario G/T handling remains narrowly scoped.
+- **Wave [Pass].** All four declared artifact sets are pairwise disjoint. The L2–L4 evidence files are now explicitly allowed; shared ledger, CHANGELOG and generated plan writes remain orchestrator-owned. The prior one-wave assessment stands under isolated gates and pinned supervisor code. The relay's opening source-only table is historical context; use the revised lane contracts for dispatch, including L3's `validate.sh` producer. No additional mechanism is needed.
+- **Ratings [Pass as estimates].** The prior relative-priority assessment stands, including the author's revised L3 ease of 60. These are planning judgments, not measured scores.
+
+Evidence: read-only inspection of all four plans and the cited runtime/fixture seams; no git commands, suites, pytest, executable fixtures or gates. Static JSON inspection confirmed nonempty contracts and disjoint declared artifact sets. The following command exited 0; the same coverage predicate rejects an in-memory copy with the provenance artifact removed (no source mutation):
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 - <<'PYPROBE'
+import copy, json, re
+from pathlib import Path
+def covered(c, e):
+    return all(e in xs for xs in (c['artifacts'], c['artifacts_new'], c['lanes']['agy_safe'])) and any(p.get('type') == 'path_absent' and p.get('path') == e for p in c['fix_probes'])
+for n in (1235,1236,1251):
+    paths=list(Path('PROJECT/2-WORKING').glob(f'GH-{n}-*.md'))
+    assert len(paths)==1
+    blocks=re.findall(r'```json\n(.*?)\n```', paths[0].read_text(), re.S)
+    assert len(blocks)==1
+    c=json.loads(blocks[0])
+    e=f'TESTS-RESULTS/2026-10-29+GH-{n}/provenance.jsonl'
+    assert covered(c,e)
+    bad=copy.deepcopy(c)
+    bad['artifacts'].remove(e)
+    assert not covered(bad,e)
+    print(f'{n}: coverage PASS; missing-artifact control REJECTED')
+PYPROBE
+```
+
+Decisive stdout:
+
+```text
+1235: coverage PASS; missing-artifact control REJECTED
+1236: coverage PASS; missing-artifact control REJECTED
+1251: coverage PASS; missing-artifact control REJECTED
+```
+
+**[Unverified — needs clone run]** Functional smoke/base red controls, existing-suite compatibility, final gate success and live preflight READY claims. Those remain execution obligations; this static review does not attest them. The author's explanation that the plan doc is absent at `target.ref` was not independently queried, but the explicit orchestrator ownership resolves the allowance regardless.
+
+VERDICT: PASS
+Basis: The revised plans retain the accepted behavioral fixes and now declare their required provenance writes and document ownership; no plan-level blocker remains.
