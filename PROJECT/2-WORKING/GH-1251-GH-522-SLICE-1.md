@@ -33,24 +33,32 @@ related:
 
 1. **Deep delegation** (`:1021-1048`) maps preflight exits 4 to already-landed, 5 to not-ready, and 6/7 to blocked. Any other nonzero exit (1 from `OSError`, 2 usage, 3 invalid contract, 127, signals) leaves `state == "ready"`, so the item is waved.
 2. **A dependency not in the ledger** (`:1052-1057`) gets only an info flag, `dep-not-found`. The dependent stays ready because the resolution loop skips a missing dep (`:1061`, `if not dep … continue`), and so does wave packing (`:1147`).
-3. **The no-progress wave fallback** (`:1163-1168`): when nothing in `pending` can be placed, every deferred lane is appended as **one** wave, including lanes deferred for write-set collisions or zone caps.
+3. **The no-progress wave fallback** (`:1163-1168`): when nothing in `pending` can be placed, every deferred lane is appended as **one** wave. The demonstrated triggers are a ready dependency cycle (resolution allows ready deps at `:1061`, but neither is in `placed_issue` at packing, `:1145-1151`) and a zero zone cap. Ordinary collisions and positive caps do not trigger it, because the first lane always enters an empty wave.
 
 Held states feed the exit code at `:1194-1203` (`held` → 5).
 
 ## Plan (one phase)
-
 All changes are in `utils/py/_marathon_plan.py`:
-1. **Deep delegation:** add `elif code == 3: state "needs-contract"` with the reason "swarm-preflight --dry-run → invalid contract (exit 3)". Then add `elif code != 0: state "preflight-error"` with a flag naming the code ("unknown/failed preflight exit N — hold; rerun swarm-preflight directly"). Add `"preflight-error"` to the `held` tuple (`:1196-1197`).
+1. **Deep delegation:** add `elif code == 3: state "needs-contract"` with the reason "swarm-preflight --dry-run → invalid contract (exit 3)". Then add `elif code != 0: state "preflight-error"` with a flag naming the code ("unknown/failed preflight exit N — hold; rerun swarm-preflight directly").
 2. **Missing dependency:** in the resolution loop, treat a dep with no ledger row (`not dep`) as blocking. `blocked_by` includes it, so the dependent becomes `blocked-dep`. The existing `dep-not-found` flag keeps its message.
-3. **No-progress fallback:** replace the packing at `:1163-1168` with holding. Each remaining deferred lane gets a new held state, `unplaceable`, with a flag ("could not be placed in any wave (collision / zone cap / unmet dependency) — hold, do not co-wave"). Then `break`. Add `"unplaceable"` to `held`.
-4. **Rendering:** confirm the new state names render in the held/flags sections (they use the generic `_flag`). There is no new section.
+3. **No-progress fallback:** replace the packing at `:1163-1168` with holding. Each remaining deferred lane gets the held state `unplaceable`, with a flag ("could not be placed in any wave (dependency cycle / zero zone cap) — hold, do not co-wave"). Then `break`. After packing, recompute `active` (captured at `:1131`) as the lanes actually placed, so the summary counts (`:1262-1274`) and the scoring table (`:1373`) do not report a lane as both active and held.
+4. **Held set and rendering:**
+   - add `"preflight-error"` and `"unplaceable"` to the `held` tuple (`:1196-1197`);
+   - add them to the existing "⚠️ Not yet sequenceable" bucket at `:1425-1432`, since it has explicit buckets rather than generic rendering;
+   - keep exit precedence: drift (4) still outranks held (5), so exit 5 is expected only when there is no drift.
 
 **Phase 0 inside the lane** (record findings in this doc before building):
-- grep the planner fixtures (`test/marathon-plan.sh`, `test/gh418-planner-ledger-source.sh`, `test/gh362-marathon-plan-link-bullets.sh`, `test/gh423-roadmap-render.sh`) for scenarios hitting `dep-not-found` or the fallback;
-- update any assertion that pins the old advisory behaviour, without adding a scenario (GH-831);
-- if scenario T's Bash/Python parity diverges, follow the GH-698 precedent: keep the frozen twin and record the intentional divergence in the existing skip reason.
+- grep the planner fixtures for missing-dependency and cycle cases. Plan QA found that scenario G covers a present-but-held dependency (`test/marathon-plan.sh:234`), not a missing row, and that scenario T has neither a cycle nor deep delegation (`:629-685`), so its parity should not change;
+- update only an assertion that truly pins the old behaviour, adding no scenario (GH-831);
+- do not broaden the GH-698 rendered-table skip (`:688-697`) to hide any other failure.
 
-Write-set: `utils/py/_marathon_plan.py`, plus existing planner test files only where the Phase 0 grep shows an assertion pins old behaviour. Full route.
+Write-set:
+- `utils/py/_marathon_plan.py`;
+- existing planner test files only where Phase 0 shows an assertion pins old behaviour;
+- the smoke bundle, `TESTS-RESULTS/2026-10-29+GH-1251/`;
+- this doc's Phase 0 findings and Status row.
+
+Full route.
 
 ## Acceptance
 
@@ -73,14 +81,44 @@ Rollback: revert one commit. The planner returns to advisory behaviour.
 
 ```json
 {
-  "target": {"repo": ".", "ref": "development"},
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
   "gate": "bash validate.sh --auto development",
   "fix_probes": [
-    {"type": "grep_absent", "path": "utils/py/_marathon_plan.py", "pattern": "preflight-error"},
-    {"type": "grep_absent", "path": "utils/py/_marathon_plan.py", "pattern": "unplaceable"}
+    {
+      "type": "grep_absent",
+      "path": "utils/py/_marathon_plan.py",
+      "pattern": "preflight-error"
+    },
+    {
+      "type": "grep_absent",
+      "path": "utils/py/_marathon_plan.py",
+      "pattern": "unplaceable"
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-10-29+GH-1251/smoke.md"
+    }
   ],
-  "artifacts": ["utils/py/_marathon_plan.py"],
-  "remediation": {"source": "issue#1251", "criteria": "Unknown deep-preflight exits hold (preflight-error), missing deps block, no-progress lanes hold (unplaceable); held feeds exit 5."},
-  "lanes": {"agy_safe": ["utils/py/_marathon_plan.py"], "orchestrator_only": []}
+  "artifacts": [
+    "utils/py/_marathon_plan.py",
+    "TESTS-RESULTS/2026-10-29+GH-1251/smoke.md"
+  ],
+  "artifacts_new": [
+    "TESTS-RESULTS/2026-10-29+GH-1251/smoke.md"
+  ],
+  "remediation": {
+    "source": "issue#1251",
+    "criteria": "Unknown deep-preflight exits hold (preflight-error), missing deps block, no-progress lanes hold (unplaceable); held feeds exit 5."
+  },
+  "lanes": {
+    "agy_safe": [
+      "utils/py/_marathon_plan.py",
+      "TESTS-RESULTS/2026-10-29+GH-1251/smoke.md"
+    ],
+    "orchestrator_only": []
+  }
 }
 ```

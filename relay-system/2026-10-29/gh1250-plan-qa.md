@@ -1,7 +1,7 @@
 ---
 Goal: Plan QA — marathon #1250 (GH-1175 Phase 0 follow-ups), four lane plans
 Date: 2026-10-29
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
 ---
 
@@ -82,3 +82,17 @@ Command: `PYTHONDONTWRITEBYTECODE=1 python3 -` with the above stdin. Decisive st
 
 VERDICT: FAIL
 Basis: L3 can reuse a reduced-run receipt and can strand successful closeout behind an invalid existing receipt; amend those plans and the specific rendering/operational clarifications above before build approval.
+
+## Author response — round 1 dispositions (claude-a)
+
+- **L3 blocker (`gate == validate.sh` is not proof of an unfiltered run): Accepted.** Producer and consumer now ship together. `validate.sh` writes its receipt only when `SKIPPED_SUITES` and `XYZ_ENV_FAULTS` are empty (in addition to tier 3, no subsystem and a clean tree), and stamps it `scope: full`. `gate_receipt.py check --require-full-gate` demands `gate == "validate.sh"`, `mode != "marathon"` and `scope == "full"`. Old receipts and legacy `.gate-evidence` fail closed. The validate.sh non-goal and the write-set are revised; effort is re-rated from 70 to 60.
+- **L3 blocker (existence-only preservation): Accepted.** Marathon keeps an existing receipt only when it satisfies `is_full_gate_receipt`. A corrupt, failed, wrong-SHA or weaker file is replaced as today. All three cases are in the smoke, plus valid-receipt preservation.
+- **L3 should (empty input and fallback): Accepted.** Reuse needs at least one non-delete entry and every pushed SHA. The docs and tier-2 routes decide first. Missing tools and malformed receipts fall through.
+- **L2 should (message overstated): Accepted.** The hook's specific diagnostic stays, followed by one line stating that the reconcile writes were made durable, Jog completion failed, and the rows are left as they are. The probe pattern now follows that line. The smoke now shows the False return, the caller's exit 2, and no commit when check or pdda fails.
+- **L1 should (preservation checks): Accepted.** The plan separates "no owner" from "no unique work". `tick info` is described as naming an agent, with ownership established through the lock and lease pid. An unpushed branch is evidence to preserve. Readers are pointed to merge-cleanup's checks.
+- **L4 should (rendering recon): Accepted.** The new states join the explicit "Not yet sequenceable" bucket. `active` is recomputed after packing. Exit precedence (drift 4 over held 5) is stated. The trigger is described as a ready cycle or a zero cap. The scenario G/T findings are recorded, and the GH-698 skip is not broadened.
+- **Wave should (complete write allowances): Accepted.** Each lane's write-set and contract (`artifacts`, `artifacts_new` and a `path_absent` probe) now include its `TESTS-RESULTS/2026-10-29+GH-N/smoke.md`. L4 includes its Phase 0 doc update. CHANGELOG, ledger and generated marathon-plan writes stay with the orchestrator.
+
+Direct preflight after the revisions: all four READY (exit 0), with acceptance 3/3, 4/4, 4/4 and 4/4 copied verbatim.
+
+Round 2: are the revised plans sufficient? End with exactly `VERDICT: PASS` (or `FAIL`) and a non-empty `Basis:` line.

@@ -48,16 +48,14 @@ A concurrent session (#1217) could not land until these were committed by hand (
 Suites mock `run_post_merge_reconcile` as a bool (`test/gh534_phase_a_tests.py:584`, `gh534_phase_b_tests.py:560,574`, `gh436-merge-cleanup.py:360,457`), and `test/gh549-work-events.sh:627-640` pins the call order. So the signature and the callers stay as they are.
 
 ## Plan (one phase)
-
 In `run_post_merge_reconcile` only:
-1. If `ok` is False (reconcile, check or pdda failed), return False exactly as today, with nothing committed.
+1. If `ok` is False (reconcile, check or pdda failed), return False exactly as today, with nothing committed. The early returns at `:900-930` (unknown head, hosted timeout, fetch or fast-forward failure) are untouched.
 2. Otherwise run the Jog hook. On True, return True as today.
-3. On a Jog refusal, call the existing `commit_and_push_phase5_writes(pr_num, repo_path, integration_branch)`. That reuses the one durability writer, with its clean/level verification.
-4. Then log exactly `Jog landing refused after the reconcile writes were made durable — the Jog row stays parked; rerun releases jog land <issue> --pr <pr> once the cause is fixed`, and return False. The caller still exits 2 and stops before the next PR. If the durable push itself fails, log that failure instead and return False.
+3. On a False hook result, call the existing `commit_and_push_phase5_writes(pr_num, repo_path, integration_branch)`. That reuses the one durability writer with its clean/level verification.
+4. Keep the hook's own specific diagnostic. It already logs the queue, PR, capability or `jog land` error, and its loop can land one row before a later one refuses. Then add one line: `Reconcile writes for PR #<pr> were made durable; Jog completion failed (see the error above) — Jog rows are left exactly as they are; rerun releases jog land after fixing the cause.` If the durable push itself fails, its own error stands instead.
+5. Return False. Both callers (`:1622`, `:1935`) then exit 2, skip their own second commit, and stop before the next PR.
 
-The dry-run path is unchanged.
-
-Write-set: `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`. Full route: `utils/ci-route.sh` treats merge-cleanup as a full-gate surface.
+The dry-run path is unchanged. Write-set: `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py` and the smoke bundle `TESTS-RESULTS/2026-10-29+GH-1235/`. Full route (`utils/ci-route.sh` treats merge-cleanup as a full-gate surface).
 
 ## Acceptance
 
@@ -67,12 +65,11 @@ Write-set: `skills/2-daily/merge-cleanup/scripts/merge_cleanup.py`. Full route: 
 - [ ] A manual smoke receipt under `TESTS-RESULTS/` shows the fix and a base red control; no new tests (GH-831).
 
 ## Verification
-
 - **Existing suites:** gh436, gh534 (phase a/b), gh549 and gh280, in a disposable full clone.
-- **Manual smoke** (`TESTS-RESULTS/<date>+GH-1235/`): drive `run_post_merge_reconcile` in a disposable fixture repo with a bare origin, stubbing `run_local_wave_reconcile` to write a file and `run_jog_post_merge_land` to return False.
-  - **Fix:** the file is committed and pushed, and the primary is clean and level with origin.
+- **Manual smoke** (`TESTS-RESULTS/2026-10-29+GH-1235/`), in a disposable fixture repo with a bare origin. Stub `run_local_wave_reconcile` to write a file and `run_jog_post_merge_land` to return False:
+  - **Fix:** the file is committed and pushed; the primary is clean and level with origin; `run_post_merge_reconcile` returns False; the `--reconcile-pr` caller exits 2.
   - **Base red control:** the file is left uncommitted.
-  - **Adjacent:** the reconcile stub returns False, and nothing is committed.
+  - **Adjacent:** a failing `releases check` stub and a failing pdda stub each return False with nothing committed.
 
 Rollback: revert one commit.
 
@@ -80,13 +77,39 @@ Rollback: revert one commit.
 
 ```json
 {
-  "target": {"repo": ".", "ref": "development"},
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
   "gate": "bash validate.sh --auto development",
   "fix_probes": [
-    {"type": "grep_absent", "path": "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py", "pattern": "Jog landing refused after the reconcile writes were made durable"}
+    {
+      "type": "grep_absent",
+      "path": "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
+      "pattern": "were made durable; Jog completion failed"
+    },
+    {
+      "type": "path_absent",
+      "path": "TESTS-RESULTS/2026-10-29+GH-1235/smoke.md"
+    }
   ],
-  "artifacts": ["skills/2-daily/merge-cleanup/scripts/merge_cleanup.py"],
-  "remediation": {"source": "issue#1235", "criteria": "A Jog-hook refusal after a good reconcile commits/pushes the writes via commit_and_push_phase5_writes, then reports and returns False."},
-  "lanes": {"agy_safe": ["skills/2-daily/merge-cleanup/scripts/merge_cleanup.py"], "orchestrator_only": []}
+  "artifacts": [
+    "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
+    "TESTS-RESULTS/2026-10-29+GH-1235/smoke.md"
+  ],
+  "artifacts_new": [
+    "TESTS-RESULTS/2026-10-29+GH-1235/smoke.md"
+  ],
+  "remediation": {
+    "source": "issue#1235",
+    "criteria": "A Jog-hook refusal after a good reconcile commits/pushes the writes via commit_and_push_phase5_writes, then reports and returns False."
+  },
+  "lanes": {
+    "agy_safe": [
+      "skills/2-daily/merge-cleanup/scripts/merge_cleanup.py",
+      "TESTS-RESULTS/2026-10-29+GH-1235/smoke.md"
+    ],
+    "orchestrator_only": []
+  }
 }
 ```
