@@ -321,3 +321,12 @@ base-red-control-target-assertions-fail-on-93f41cb8 extraction/AST OK; 17660 byt
 **[Unverified — needs clone run]** I did not execute the smoke fixtures, existing suites, or full gate in this reviewer worktree. Runtime passes and the red control above are the builder's recorded disposable-clone results; the harness must run its gate after this review. Approval completes peer review, not final gate qualification.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-29T16:23:05Z
+task: MARATHON-P4-TURN
+reviewer: codex
+status: Approved
+reviewed-head: ba4b9f02cf5196757d7b940ed8fb0df01bd79231
+added-range: 22107+2957
+added-sha256: 1c44faa1a36d04ec8b0620c5ad680f9a9a3d53ac63e1312aa47c0ec8f6d60479
+config-sha256: 4a74507bd830809b561e0955b519056fb8ef1056ba044bd112b302aafd65ce9a
