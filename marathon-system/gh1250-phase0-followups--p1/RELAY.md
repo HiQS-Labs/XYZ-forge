@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -129,3 +129,20 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 1 · Builder · agy
+
+- **Files touched:** `skills/2-daily/jog/SKILL.md`, `marathon-system/gh1250-phase0-followups--p1/RELAY.md`
+- **Key decisions & changes:**
+  - Added the `### Crash leftovers` subsection under `## Recovery Verbs` in `skills/2-daily/jog/SKILL.md` (immediately after the three recovery verbs `jog resume`, `jog retry-gate`, and `jog retry-build`).
+  - Reinforced the recovery verb order (`resume` first without spending a token, then `retry-gate` for approved builds with a failed gate, then `retry-build` for real rebuilds).
+  - Named all four crash leftovers observed in GH-1175 Phase 0 (`TESTS-RESULTS/2026-10-25+GH-1175-phase0/step3-*`) and separated "no process owns it" from "no unique work remains" (preserving on any uncertainty):
+    1. **Isolation worktree (`rtl-wt.*`):** `git worktree list`, no live process holding the path (`lsof`), and `git -C <wt> status` check before `git worktree remove`.
+    2. **Claimed tick token (`MARATHON-…-TURN`):** `tick info <token>` names an agent, not a pid; confirm owning execution is dead via the driver lock and the Jog row's `lease_pid` (`kill -0`) before clearing.
+    3. **Clone driver lock (`.git/relay-driver.lock`):** confirm the pid in it is not alive (`kill -0`); the driver reclaims a stale lock itself on the next run.
+    4. **Unpushed local marathon branch (`marathon/gh-…`):** work evidence to preserve, never proof that removal is safe.
+  - Directed operators to rely on `/merge-cleanup`'s existing safety checks (dirty files, unpublished refs, dependent worktrees, live handles) rather than repeating them by hand.
+  - Stated the fresh-clone rule for `retry-build`: after a cold-start park, `jog retry-build --target-root <clone>` targets a fresh disposable full clone, never the crashed one, while the crashed clone is retired through `/merge-cleanup` (preserving any unpushed branch until the operator confirms it is disposable).
+- **Verification:** Confirmed against `TESTS-RESULTS/2026-10-25+GH-1175-phase0/step3-leftovers-after-kill.log` and `step3-recovery-prep.log`, verified the `grep_absent` fix probe (`Crash leftovers` now present in `skills/2-daily/jog/SKILL.md`), and ran PDDA doc-hygiene checks.

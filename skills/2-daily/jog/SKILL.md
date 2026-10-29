@@ -188,3 +188,16 @@ After an interrupted or failed item, pick the verb that matches what actually ne
   intake-hygiene fixes).
 - `jog retry-build <GH-NUM>` — the real rebuild: a fresh Marathon attempt on a fresh execution id
   when the build itself must be redone; all prior Tick history and execution records are preserved.
+
+### Crash leftovers
+
+Keep the verb order above: run `resume` first (spends no token), then `retry-gate` (approved build, failed gate), then `retry-build` (real rebuild). When a crashed run parks on cold-start (`cold-start-paused` / no valid result receipt), the crashed target clone may still hold four leftovers. For each, separate **"no process owns it"** from **"no unique work remains"**, and preserve on any uncertainty:
+
+1. **Isolation worktree (`rtl-wt.*`):** inspect `git worktree list` and confirm no live process holds the path (`lsof`). A worktree with no live owner can still hold unpublished edits, so check `git -C <wt> status` to confirm no unique work remains before removing it (`git worktree remove`).
+2. **Claimed tick token (`MARATHON-…-TURN`):** `tick info <token>` names an agent, not a pid. Establish the owning execution from the driver lock and the Jog row's `lease_pid` (`kill -0`). The token only clears once that execution is confirmed dead.
+3. **Clone driver lock (`.git/relay-driver.lock`):** confirm the pid in it is not alive (`kill -0`). Once no process owns it, the driver reclaims a stale lock itself on the next run.
+4. **Unpushed local marathon branch (`marathon/gh-…`):** this is evidence to **preserve**, never proof that removal is safe.
+
+Before anything is cleared, rely on `/merge-cleanup`'s existing checks — dirty files, unpublished refs, dependent worktrees, and live handles — rather than repeating them by hand.
+
+**Fresh-clone rule for `retry-build`:** after a cold-start park, `jog retry-build --target-root <clone>` targets a **fresh disposable full clone**, never the crashed one. The crashed clone is retired through `/merge-cleanup`, which preserves an unpushed branch until the operator says it is disposable.
