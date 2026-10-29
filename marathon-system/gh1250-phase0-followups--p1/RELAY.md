@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -146,3 +146,21 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   - Directed operators to rely on `/merge-cleanup`'s existing safety checks (dirty files, unpublished refs, dependent worktrees, live handles) rather than repeating them by hand.
   - Stated the fresh-clone rule for `retry-build`: after a cold-start park, `jog retry-build --target-root <clone>` targets a fresh disposable full clone, never the crashed one, while the crashed clone is retired through `/merge-cleanup` (preserving any unpushed branch until the operator confirms it is disposable).
 - **Verification:** Confirmed against `TESTS-RESULTS/2026-10-25+GH-1175-phase0/step3-leftovers-after-kill.log` and `step3-recovery-prep.log`, verified the `grep_absent` fix probe (`Crash leftovers` now present in `skills/2-daily/jog/SKILL.md`), and ran PDDA doc-hygiene checks.
+
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: yes
+
+Ship the documentation change. Read all of `skills/2-daily/jog/SKILL.md`, including its existing primary-writer, execution, publication and recovery instructions. No actionable pre-existing defect found in this review. The new section names all four observed leftovers, distinguishes process ownership from recoverable work, preserves uncertainty and unpublished branches, delegates disposal checks to `/merge-cleanup`, and explicitly requires a fresh disposable full clone after a cold-start park. This is a small, reversible documentation change; no runtime change or new test is needed.
+
+Evidence inspected (read-only):
+- Command: `cat TESTS-RESULTS/2026-10-25+GH-1175-phase0/step3-leftovers-after-kill.log TESTS-RESULTS/2026-10-25+GH-1175-phase0/step3-recovery-prep.log`. Both files were read successfully; decisive output names clone lock pid `32725`, branch `marathon/gh-416-doc-trues-up-batch-2026-10-25`, detached worktree `rtl-wt.6YDYAC`, token `status: claimed` / `claimer: agy`, and the replacement clone ending `phase0-r2`. The combined shell call subsequently exited 2 because a separate search named nonexistent `utils/py/relay_turn_lib.py`; no log read failed. Follow-up searches used the actual `utils/py/rtl.py` and exited 0.
+- Command: `rg -n "unpublished|unpushed|live handles|lsof|worktree|PRESERVE" skills/2-daily/merge-cleanup/SKILL.md` (exit 0). Lines 207–227 explicitly cover pinned Tick claims, live handles, detached HEAD/local refs, dependent worktrees and failed safety queries. This supports the new block's delegation to existing checks rather than treating a clean status alone as disposal proof.
+- Command: `sed -n '905,950p' utils/py/jog_run.py; sed -n '1245,1325p' utils/py/jog_run.py` (exit 0). Retry-build accepts the supplied target root, validates it and creates a new attempt; the supervisor reads `relay-driver.lock/pid`, probes liveness and reclaims a stale lock. The fresh-clone requirement is operator guidance, not a claim that runtime enforces clone novelty.
+
+[Unverified — needs clone run] The required `utils/pdda/pdda.sh run` gate was not independently executed here. The builder reports running doc-hygiene checks but supplies no decisive output in its block. Gate verification remains with the post-turn harness; this approval attests the document review, not a passing gate. No git commands, suites or executable fixtures were run, and no artifact/source files were edited.
+
+relay closed, no further turn needed
