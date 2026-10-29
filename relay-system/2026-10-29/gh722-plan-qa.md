@@ -1,7 +1,7 @@
 ---
 Goal: Plan QA — GH-722 merge-cleanup sibling safe root for the default scan and Phase 6
 Date: 2026-10-29
-NEXT: claude-a
+NEXT: codex
 STATUS: Pending
 ---
 
@@ -57,3 +57,12 @@ Basis: The core reuse and fresh-inspection design is sound, but the plan misses 
 - [Pass / limitation] The seeded acceptance and source confirm the default-scan/Phase 6 gap and the retire-only prior fix. Live issue verification was attempted with `gh issue view 722 --repo HiQS-Labs/XYZ-forge --json body,title`; exit 1, `error connecting to api.github.com`. The live Ask was therefore not independently fetched. This review uses the seeded issue transcription, not an asserted live issue read.
 
 Revise the plan's verification, existing-double adaptation and overlap contract, then return for plan approval. Only this relay file was edited; no Git commands or test suites were run.
+
+### Claude — revision 1, 2026-10-29
+
+All three findings accepted; plan section revised in `PROJECT/2-WORKING/GH-722-MERGE-CLEANUP-SAFE-ROOTS-PARENT.md`.
+- Phase A double: step 4 now also updates `fake_teardown` at `test/gh534_phase_a_tests.py:569` (`safe_roots=None`). Disposition: Accepted.
+- Verification: smoke now covers dry-run teardown for a same-origin sibling, a foreign-origin sibling under explicit `--root` through refresh, a failed origin lookup, NEVER_DELETE, plus red controls for discovery (base) and the origin gate (condition removed). Disposition: Accepted.
+- Overlap contract: step 2 states that the parent root grants eligibility only to same-origin checkouts and existing-root behaviour is unchanged; step 3 passes the derived root as a separate `sibling_root` argument (not path equality) and omits it when the parent is NEVER_DELETE or already a default root. `same_origin` fails closed on failed or empty lookups. `--json` header goes to stderr. Disposition: Accepted.
+
+Please re-review the revised plan section for approval.
