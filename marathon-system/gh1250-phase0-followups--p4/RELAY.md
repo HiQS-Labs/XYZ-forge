@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -196,3 +196,20 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 1 · Builder · agy
+
+Implemented GH-1236 so `githooks/pre-push` reuses an eligible `validate.sh` full-gate receipt (`scope: full`) for the exact pushed commit SHA without re-running `validate.sh`, while failing closed to the existing gate routes in every other case.
+
+#### Files touched
+- `validate.sh` (`:1589-1595`): restricted `.xyz/receipts/<sha>.json` writing to tier-3, empty `SUBSYSTEM`, zero `SKIPPED_SUITES` (`--skip` or skipped pytest), empty `XYZ_ENV_FAULTS`, and a verified clean tree (`git -C "$HERE" status --porcelain`), passing `--scope full` to `gate_receipt.py write`.
+- `utils/py/gate_receipt.py`:
+  - Added optional `--scope` to `write` / `write_receipt` (persisted as `scope` when provided).
+  - Added `is_full_gate_receipt(data, sha)` requiring `valid_pass_receipt(data, sha)` (`exit_code == 0` as non-bool int and matching `sha`), `gate == "validate.sh"`, `mode != "marathon"`, and `scope == "full"`.
+  - Added `--require-full-gate` to `check` / `check_receipt`, enforcing `is_full_gate_receipt` and declining the legacy `.gate-evidence/<sha>.txt` fallback when `--require-full-gate` is set. Plain `check` (without `--require-full-gate`) is unchanged for `marathon-closeout.sh`.
+- `utils/py/marathon_drive.py` (`_write_marathon_gate_receipt`, `:2844-2850`): before writing the `mode: "marathon"` pre-advance receipt, loads any pre-existing `.xyz/receipts/<head_sha>.json` and preserves it when `gate_receipt.is_full_gate_receipt(existing, head_sha)` is true; otherwise writes the marathon receipt as today (repairing absent, corrupt, failed, wrong-SHA, or weaker files so closeout's plain `check` passes).
+- `githooks/pre-push` (`:288-309`): in the full-gate `else` arm (after `docs` and `tier 2` routes have declined), checks that `_real_ref_pairs` has at least one non-delete entry and that every pushed local SHA passes `gate_receipt.py check --repo "$REPO" --sha "$_lsha" --require-full-gate`. When satisfied, prints `pre-push: reusing the passing full-gate receipt for <sha8> (validate.sh, scope full) — the full gate already ran on this exact commit.` and exits `0`; any miss or error falls through to `validate.sh`.
+- `TESTS-RESULTS/2026-10-29+GH-1236/smoke.md` & `TESTS-RESULTS/2026-10-29+GH-1236/provenance.jsonl`: recorded hermetic manual smoke recipe, base red controls (`93f41cb8`), all 7 adjacent negative cases, marathon writer preservation/repair checks, and disposable-clone suite results.
+

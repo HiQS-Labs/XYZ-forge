@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from harness_paths import harness_home, repo_root, resolve_tool, is_vendored  # noqa: E402
 from rtl import driver_lock_path  # noqa: E402
 import relay_attest  # noqa: E402  GH-505/GH-509: validated reader of relay-drive/attest@1
+import gate_receipt  # noqa: E402  GH-1236: full-gate receipt predicate
 
 # GH-284 Phase 2 / GH-322: hooks run on EVERY terminal path with the driver's real exit code — the
 # Python equivalent of marathon-drive.sh's `trap _marathon_drive_on_exit EXIT`. Same contract as
@@ -154,6 +155,30 @@ def _result_cmd_out(cmd, cwd=None):
         return None
     out = (res.stdout or "").strip()
     return out or None
+
+
+def _write_marathon_gate_receipt(root, head_sha, pre_advance_cmd, xyz_harness):
+    """GH-1236: keep an existing validate.sh full-gate receipt for head_sha; otherwise write the
+    marathon receipt (replacing any absent, corrupt, failed, wrong-SHA, or weaker file)."""
+    receipt_path = gate_receipt.get_receipt_path(root, head_sha)
+    if os.path.isfile(receipt_path):
+        try:
+            with open(receipt_path, "r", encoding="utf-8") as f:
+                existing = json.load(f)
+        except Exception:
+            existing = None
+        if gate_receipt.is_full_gate_receipt(existing, head_sha):
+            return False
+    receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
+    if os.path.isfile(receipt_py):
+        subprocess.run(
+            ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
+             "--gate", pre_advance_cmd or "pre-advance-gate", "--mode", "marathon",
+             "--exit-code", "0"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
+        )
+        return True
+    return False
 
 
 def write_terminal_result(code):
@@ -2819,14 +2844,7 @@ relay-file: {rel_relay}
         head_sha = candidate
         if head_sha and not historical:
             try:
-                receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
-                if os.path.isfile(receipt_py):
-                    subprocess.run(
-                        ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
-                         "--gate", pre_advance_cmd or "pre-advance-gate", "--mode", "marathon",
-                         "--exit-code", "0"],
-                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
-                    )
+                _write_marathon_gate_receipt(root, head_sha, pre_advance_cmd, xyz_harness)
             except Exception:
                 pass
             marathon_emit_phase_qa_attestation(head_sha, pre_advance_cmd)
