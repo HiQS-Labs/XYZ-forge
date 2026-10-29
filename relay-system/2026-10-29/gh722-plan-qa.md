@@ -83,3 +83,11 @@ Basis: The revised plan resolves the three previous findings and is ready for im
 - [Nit] Align acceptance :54 and outcome :118 with the precise scoped contract at :122 when implementing the planned docs update: foreign-origin preservation is guaranteed for eligibility newly granted by the parent root, not for all existing safe roots. The explicit step-2 contract resolves the design ambiguity, so this remaining prose inconsistency does not block plan approval.
 
 - [Pass / limitation] Live issue read command `gh issue view 722 --repo HiQS-Labs/XYZ-forge --json body,title` exited 1: `error connecting to api.github.com`. Issue coverage is assessed against the seeded transcription and acceptance list, not a successful live issue read. Source inspection confirms the prior retire-only helper and the default-scan/Phase 6 gap. Only this relay file was edited; implementation and runtime evidence remain the builder's next work.
+
+### Attestation · relay-drive — 2026-10-29T16:23:32Z
+task: RELAY-gh722-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 715f73ca6dac0a468ff6cd727f6a30e8fe1350d9
+added-range: 9246+3717
+added-sha256: 561f30bba568687f2a21284e7e32a69819b1f76a5389bfd8a64b5da0431e809a
