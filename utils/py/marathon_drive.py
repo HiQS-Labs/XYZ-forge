@@ -175,13 +175,22 @@ def _write_marathon_gate_receipt(root, head_sha, pre_advance_cmd, xyz_harness):
         receipt_path = mod.get_receipt_path(root, head_sha)
     except Exception:
         is_full, receipt_path = None, None
-    if is_full and receipt_path and os.path.isfile(receipt_path):
+    if receipt_path is None:
+        receipt_path = os.path.join(root, ".xyz", "receipts", f"{head_sha}.json")
+    if os.path.isfile(receipt_path):
         try:
             with open(receipt_path, "r", encoding="utf-8") as f:
                 existing = json.load(f)
         except Exception:
             existing = None
-        if is_full(existing, head_sha):
+        if is_full:
+            if is_full(existing, head_sha):
+                return False
+        elif (isinstance(existing, dict) and existing.get("sha") == head_sha
+              and not isinstance(existing.get("exit_code"), bool) and existing.get("exit_code") == 0):
+            # The writer cannot judge eligibility (older harness, or it failed to load): never
+            # downgrade a passing receipt for this SHA — it may carry a newer validator's scope=full.
+            # Absent, corrupt, failed and wrong-SHA files are still replaced, as closeout needs.
             return False
     subprocess.run(
         ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
