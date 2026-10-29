@@ -218,3 +218,12 @@ syntax OK; provenance records: 4
 - [Unverified — needs clone run] Existing gh436, gh534 phase a/b, gh549, gh280 and the full routed gate were not executed in this reviewer worktree. Real commit/push behavior and actual Jog-row persistence were not independently exercised here; the in-memory probe proves control flow only. No test suite, executable fixture, or Git command was run by this reviewer.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-29T15:04:14Z
+task: MARATHON-P2-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 2045072a464c4210daf20d56756c674bd33c45d1
+added-range: 14077+2491
+added-sha256: 10714a9c12198224dd2ced56f60d07987420cdfcfbcacd9b53329ecd0e7f17ff
+config-sha256: d46286752745b6827df780805abaa5ef5944bbfbcfdf0861e6e55851a9047596
