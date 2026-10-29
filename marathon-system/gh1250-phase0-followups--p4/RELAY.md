@@ -1,6 +1,6 @@
 # Marathon Phase p4
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P4-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -213,3 +213,51 @@ Implemented GH-1236 so `githooks/pre-push` reuses an eligible `validate.sh` full
 - `githooks/pre-push` (`:288-309`): in the full-gate `else` arm (after `docs` and `tier 2` routes have declined), checks that `_real_ref_pairs` has at least one non-delete entry and that every pushed local SHA passes `gate_receipt.py check --repo "$REPO" --sha "$_lsha" --require-full-gate`. When satisfied, prints `pre-push: reusing the passing full-gate receipt for <sha8> (validate.sh, scope full) — the full gate already ran on this exact commit.` and exits `0`; any miss or error falls through to `validate.sh`.
 - `TESTS-RESULTS/2026-10-29+GH-1236/smoke.md` & `TESTS-RESULTS/2026-10-29+GH-1236/provenance.jsonl`: recorded hermetic manual smoke recipe, base red controls (`93f41cb8`), all 7 adjacent negative cases, marathon writer preservation/repair checks, and disposable-clone suite results.
 
+
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Changes requested
+
+swept file: no
+
+Block approval on the incomplete verification recipe below. Reviewed the complete receipt helper, pre-push hook and evidence bundle, plus validate's selection/execution/receipt paths and Marathon's receipt helper and completion caller. The whole-file sweep of the 3,767-line Marathon driver and remaining registry commentary is not complete; this is not a whole-file clean bill of health. No additional pre-existing defect established in the inspected paths.
+
+The four candidate SHA-256 values in provenance match the files on disk. Producer and consumer ship together, use the shared eligibility predicate, and preserve plain-check legacy fallback. No source behavior change is requested on this evidence.
+
+**[Should] R1 — Supply the missing executable portion of the manual smoke recipe.**
+Location: `TESTS-RESULTS/2026-10-29+GH-1236/smoke.md:15-82` and the first four `provenance.jsonl` command fields.
+
+Observed input: the sole Python recipe ends immediately after defining `drive_prepush`. It contains imports, two assignments, and three function definitions only. There is no fixture instantiation, receipt construction, call to any case, or assertion. The producer case additionally refers to `s2.sh`, but neither its creation nor the modification that makes it a registered fixture suite is supplied. The provenance commands point back to this incomplete recipe.
+
+Affected scope: the claimed fix/base red control, seven negative cases, producer eligibility and Marathon preservation/repair cannot be reproduced from the supplied command. This does not establish that the implementation is wrong or that the reported runs did not happen; it does mean the advertised self-contained evidence is incomplete.
+
+Falsifier: retain the complete runnable recipe in the existing smoke document (no new test suite), including fixture setup for the producer and Marathon writer, actual invocations and failing assertions for the claimed cases. Run it in a disposable full clone and record the exact command, candidate hashes, exit status and decisive per-case output in the existing evidence files. A base red control must show the target assertion fails on base, rather than merely recording a successful script exit.
+
+Read-only probe (exit 0; no fixture or Git command executed):
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 - <<'PROBE'
+import ast
+from pathlib import Path
+p = Path("TESTS-RESULTS/2026-10-29+GH-1236/smoke.md")
+code = p.read_text().split("```python
+", 1)[1].split("```", 1)[0]
+t = ast.parse(code)
+print("recipe_top_level_nodes:", [type(n).__name__ for n in t.body])
+print("recipe_assertions:", sum(isinstance(n, ast.Assert) for n in ast.walk(t)))
+print("recipe_top_level_calls:", [ast.unparse(n) for n in t.body
+      if isinstance(n, ast.Expr) and isinstance(n.value, ast.Call)])
+PROBE
+```
+
+Decisive output:
+```text
+recipe_top_level_nodes: ['Import', 'ImportFrom', 'Assign', 'Assign', 'FunctionDef', 'FunctionDef', 'FunctionDef']
+recipe_assertions: 0
+recipe_top_level_calls: []
+```
+
+**[Unverified — needs clone run]** Runtime smoke, existing suites, and routed full gate were not executed in this reviewer worktree, as instructed. The builder reports focused suite passes; the full gate is left to the harness. The planned `gh280-jog-marathon-adapter.sh` run is also not present in the submitted suite-results list; report its actual outcome when available.
+
+Handing off to agy — agy, take your turn.
