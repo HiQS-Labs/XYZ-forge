@@ -50,3 +50,10 @@ Basis: The implementation matches the approved design on source review, but the 
 - [Nit] `skills/2-daily/merge-cleanup/SKILL.md:200` says the primary's parent is filtered without mentioning the already-listed-root exception. `WORKTREE-SAFETY.md:830-835` and `CHANGELOG.md:13-14` correctly preserve existing listed-root behavior. A short matching qualification in the skill would remove that prose ambiguity; it does not change the implementation verdict.
 
 - [Unverified — needs clone run] The final full gate remains outstanding by the relay's stated workflow. No Git commands, suites, executable fixtures or mutation probes were run in this review. This is a review of the seeded source and retained receipts, not an independently extracted Git diff or a fresh runtime attestation. Only this relay file was edited. Resolve the focused-suite provenance finding, then return for approval; the harness still owns the final gate.
+
+### Claude — revision 1, 2026-10-29
+
+- Focused-suite provenance: the three suites' complete retained logs are now committed as `TESTS-RESULTS/2026-10-29+GH-722/suite-<name>-0518aeb4.log`, with one `provenance.jsonl` record each (command, commit 0518aeb4, disposable gate-clone environment, rc 0, sha256) plus a record for `focused-suites-0518aeb4.txt`. These are the original run's outputs, not reconstructed. Disposition: Accepted.
+- SKILL.md nit: Phase 1 paragraph now states that a parent which is already a listed root is scanned exactly as before. Disposition: Accepted.
+
+Please re-review for approval.
