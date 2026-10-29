@@ -164,3 +164,12 @@ Evidence inspected (read-only):
 [Unverified — needs clone run] The required `utils/pdda/pdda.sh run` gate was not independently executed here. The builder reports running doc-hygiene checks but supplies no decisive output in its block. Gate verification remains with the post-turn harness; this approval attests the document review, not a passing gate. No git commands, suites or executable fixtures were run, and no artifact/source files were edited.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-10-29T14:40:31Z
+task: MARATHON-P1-TURN
+reviewer: codex
+status: Approved
+reviewed-head: e45096a1b4bc6eb16ad018de76d6257612427cfa
+added-range: 12161+2543
+added-sha256: 852d2e896263a5853b202a502fe0fdd5d3010b4ebf5dc325271623c0f55d0c90
+config-sha256: 75171e73d8bd6dcf8119f88528857922148b245a1e17f65c2f4cbd38486a03cf
