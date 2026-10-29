@@ -18,7 +18,7 @@ goal: "Land the four reviewed Phase 0 follow-up lanes (#1233, #1235, #1251, #123
 
 | What was just completed | What's next |
 |---|---|
-| Plans approved (codex plan QA r3, attested); all four preflight ready (exit 0); marathon.sh --dry-run exit 0 | Operator confirms the exact plan and order, then fire via /pre-marathon |
+| Marathon fired 2026-10-29 14:36Z, complete 16:43Z: all 4 phases approved (Codex, attested) with full gate green | Open the PR; CodeRabbit / peer review; merge only on operator approval |
 
 ## Members
 
@@ -34,6 +34,6 @@ Plan QA: `relay-system/2026-10-29/gh1250-plan-qa.md` (r1 FAIL → r2 FAIL on wri
 ## Acceptance & Quality Checklist
 
 ### Wave 1
-- [ ] Wave 1 Proof of Done Test Suite Green (runnable command + test exit 0)
-- [ ] Wave 1 Post-Build Codex QA Relay executed (receipt recorded under `relay-system/<YYYY-MM-DD>/<label>.codex.md`)
+- [x] Wave 1 Proof of Done Test Suite Green (runnable command + test exit 0): `bash validate.sh` pre-advance gate passed on each of p1–p4 (local run log `relay-system/run-logs/2026-10-29/marathon-MARATHON_-093622-5022.log`, not committed; marathon exit 0)
+- [x] Wave 1 Post-Build Codex QA Relay executed: attested Approved per phase in `marathon-system/gh1250-phase0-followups--p1/RELAY.md`, `--p2/RELAY.md`, `--p3/RELAY.md`, `--p4/RELAY.md`
 - [ ] Wave 1 CodeRabbit / Peer Review findings adjudicated

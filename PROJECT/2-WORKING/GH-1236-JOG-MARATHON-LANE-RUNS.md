@@ -26,7 +26,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Promoted for marathon #1250 (lane L3) with plan, acceptance and contract | Codex plan QA, then build |
+| Built in marathon #1250 p4; smoke PASS (TESTS-RESULTS/2026-10-29+GH-1236/smoke.md); Codex post-build QA attested (marathon-system/gh1250-phase0-followups--p4/RELAY.md); full gate passed | PR ready; awaiting merge |
 
 ## Observed (GH-1175 Phase 0, gh416-exec2, 2026-10-26)
 

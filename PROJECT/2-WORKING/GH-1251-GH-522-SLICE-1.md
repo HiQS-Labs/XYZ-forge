@@ -27,7 +27,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Promoted for marathon #1250 (lane L4) with plan, acceptance and contract | Codex plan QA, then build |
+| Built in marathon #1250 p3; smoke PASS (TESTS-RESULTS/2026-10-29+GH-1251/smoke.md); Codex post-build QA attested (marathon-system/gh1250-phase0-followups--p3/RELAY.md); full gate passed | PR ready; awaiting merge (Refs #522, which stays open) |
 
 ## Observed (development 93f41cb8, `utils/py/_marathon_plan.py`)
 
@@ -60,6 +60,15 @@ Write-set:
 This doc (Phase 0 findings copied from `smoke.md`, and the Status row) is updated by the orchestrator.
 
 Full route.
+
+## Phase 0 findings (copied from TESTS-RESULTS/2026-10-29+GH-1251/smoke.md by the orchestrator)
+
+1. **Planner fixtures grep (`test/marathon-plan.sh`, `test/gh418-planner-ledger-source.sh`, `test/gh362-marathon-plan-link-bullets.sh`, `test/gh423-roadmap-render.sh`):**
+   - `test/marathon-plan.sh` Scenario A (`:117`) tests a ready dependency (`GH-104` after `GH-100`, both in the ledger).
+   - `test/marathon-plan.sh` Scenario G (`:234-250`) tests a dependency on a **present-but-held** ledger item (`GH-701` depends on `GH-710`, which is in the ledger and unrated), not a missing ledger row.
+   - `test/marathon-plan.sh` Scenario H (`:255-272`) tests Oxford-comma dependencies (`GH-802` depends on `GH-800`, `GH-801`, `GH-803`, all present in the ledger).
+   - `test/marathon-plan.sh` Scenario T (`:629-725`) has neither a dependency cycle, a missing dependency, nor `--deep` delegation, so cross-lane parity (`70 passed, 0 failed, 2 skipped`) is unaffected; the GH-698 rendered-table skip (`:688-697`) is untouched.
+   - None of the existing planner suites (`test/marathon-plan.sh`, `test/gh418-planner-ledger-source.sh`, `test/gh362-marathon-plan-link-bullets.sh`, `test/gh423-roadmap-render.sh`) pin the old advisory behaviour on missing dependencies, unknown `--deep` preflight exits, or unplaceable wave cycles. Zero test files required edits.
 
 ## Acceptance
 

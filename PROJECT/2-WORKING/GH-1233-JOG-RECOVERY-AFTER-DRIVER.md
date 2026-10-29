@@ -25,7 +25,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Promoted for marathon #1250 (lane L1) with plan, acceptance and contract | Codex plan QA, then build |
+| Built in marathon #1250 p1; Codex post-build QA attested (marathon-system/gh1250-phase0-followups--p1/RELAY.md); full gate passed | PR ready; awaiting merge |
 
 ## Observed (GH-1175 Phase 0, 2026-10-26)
 
