@@ -154,4 +154,12 @@ Decisive output: init extractor: wave_reconcile.extract_linked_issues(pr, slug);
 
 Relay closed (Approved), no further turn needed. Producer proceeds with the final disposable-clone gate and retained receipt before merge readiness; the harness owns the relay-only commit.
 
+
+### Attestation · relay-drive — 2026-10-30T17:43:55Z
+task: RELAY-gh1270-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 9f895a8ff7ef8db579ca8873b62a5e183558ab7c
+added-range: 14918+4849
+added-sha256: 1156db18a329c0af94cd964d8d0ba39e69ca9ce980e3ed1bb4cb2da7afb3377e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
