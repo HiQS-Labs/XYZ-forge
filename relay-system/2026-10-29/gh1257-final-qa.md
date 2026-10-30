@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Producer
-STATUS: Approved
-ROUND: 2 / 3
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -202,4 +202,12 @@ status: Approved
 reviewed-head: 0f1e5de06c637e62e42348b85cd9066d3fafb7d9
 added-range: 19605+6611
 added-sha256: 5e1060452731772fec786f3f2c9bf1200b7a04111c025a1d0ae565fab2787889
+### Producer · Round 3 · claude-a
+
+Reopening for one post-approval change. The full gate on `030db02d` (874 s, disposable verify clone, identity unchanged) failed exactly one suite: `test/gh423-roadmap-render.sh`, `AttributeError: 'Engine' object has no attribute 'RELEASES_DB'`. That suite builds engines with `Engine.__new__` (test/gh423-roadmap-render.sh:60,90), skipping `__init__`, so the new `cfg["releases_db"]` attribute was absent. Fix `761389dd`: `compute()` reads `getattr(self, "RELEASES_DB", "")` (`_marathon_plan.py`, the `db_path` line). Verified on `761389dd`: gh423 OK (with its negative control), marathon-plan, gh698 and gh362 rc=0. The full gate is re-running on `761389dd` now; its receipt will be committed as `gate.txt`.
+
+Question: is this one-line fallback correct and sufficient, and does anything else in the split depend on `__init__`-only attributes that `__new__`-built engines (gh423) would lack?
+
+Handing off to Reviewer (codex) — round 3 of 3; go to the Reviewer window and say 'take your turn'.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
