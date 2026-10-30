@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -69,5 +69,62 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The replay limitation, recovery ordering and QA corrections are appropriate, but the roadmap status edit also erases the existing four ratings. Restore that unrelated data loss before approval. Round cap reached; return to Producer for the bounded correction.
+swept file: yes
+
+Read the entire 1,846-line seeded packet: complete INSTALL, tailer, both project documents, prior publication review/attestation, and both scoped deltas. No additional material pre-existing defect found within the reviewed documentation/capture contract. All packet citations below refer to `.relay-artifacts/gh1255-prelanding-packet.md`; unchanged runtime was inspected, not executed.
+
+- [Should] Preserve GH-1255's existing ratings while updating status. Packet :1829 has `rating_pri/rating_sev/rating_appeal/rating_effort = 85/85/50/65`; :1830 replaces all four with `NULL`, although the current plan still records `rated 85/85/50/65` at :1423. This is an unintended loss of queryable prioritization data, not a QA-status correction. Use the existing RELEASES CLI to retain the new status while restoring `(rated 85/85/50/65)` and the canonical document/issue links in `raw_text`; regenerate through the CLI, never hand-edit the dump. The structured `doc_path` and `issue_url` remain present, so this is not a claim that the underlying pointers were deleted.
+  Observed input: The removed and added GH-1255 INSERT rows at packet :1829-1830; the replacement raw_text omits both the rating token and Markdown links.
+  Affected scope: Only GH-1255's status-update row and its CLI-generated ledger representation; no runtime or general ledger behavior change requested.
+  Falsifier: A revised exported GH-1255 row retaining the new QA/pending-acceptance wording, existing document/issue pointers, and numeric ratings `85,85,50,65` would resolve this finding. NULL ratings while the plan retains those values do not.
+- [Pass] The per-file limitation is explicit and matches the implementation: packet :715 says "Only files reached by that invocation have durable replay intent"; :780-783 requires repeating the flag for unvisited files after interruption. The checkpoint is inside the file loop at :1223-1227, before delivery. Keep this bounded disposition; no global replay journal is required by the approved per-file contract.
+- [Pass] Recovery follows the scheduling block at packet :740-765 and requires exclusive execution at :769-776. The restoration instruction at :778-783 preserves the previously loaded/unloaded state on success and failure. Per-session SQLite checks and a new submission within 120 seconds remain explicit at :785-791. Retain these instructions; no schedule or lock implementation change requested.
+- [Pass] Canonical receipt ownership and pending deployment are stated honestly: packet :1374 and :1378 replace local upstream transcript references with Forge links; :1390 names the superseding pinned publication receipt. The embedded publication review says `STATUS: Approved` at :1508 and includes its driver attestation at :1637-1643. Current plan text at :1474 and :1482 separates Approved QA from pending deployment. These are packet-level consistency findings, not fresh remote-link or attestation validation.
+- [Pass] The CHANGELOG delta at packet :1757-1760 replaces the descriptive heading with `## 2026-10-29` and retains its description as prose, matching `PROJECT/PDDA.md:1005`. Preserve this correction.
+- [Unverified — needs clone run] No suites, executable fixtures, Git commands, deployment or live database probes ran in this turn. Runtime equivalence to the prior tested revision is a producer assertion supported by the scoped documentation-only diff, not a fresh byte comparison. The harness owns the commit and post-turn gate; remote PR state, remote receipt availability and scheduled target-device acceptance are not established by this review.
+
+Read-only probe for the rating finding (exit 0; parses packet text only, executes no artifact code):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+import csv, re
+from pathlib import Path
+p=Path('.relay-artifacts/gh1255-prelanding-packet.md')
+s=p.read_text()
+rows={}
+for n,line in enumerate(s.splitlines(),1):
+    if line[:1] in ('-','+') and line[1:].startswith('INSERT INTO roadmap_items(') and "'1255'" in line:
+        m=re.fullmatch(r"[+-]INSERT INTO roadmap_items\((.*?)\) VALUES\((.*)\);",line)
+        assert m
+        row=dict(zip(m[1].split(', '),next(csv.reader([m[2]],delimiter=',',quotechar="'",skipinitialspace=True))))
+        rows[line[0]]=row
+        print(f'packet:{n} {line[0]} ratings=' + '/'.join(row[k] for k in ('rating_pri','rating_sev','rating_appeal','rating_effort')))
+        print('doc_path='+row['doc_path'])
+        print('raw_text='+row['raw_text'])
+assert set(rows)=={'-','+'}
+assert [rows['-'][k] for k in ('rating_pri','rating_sev','rating_appeal','rating_effort')]==['85','85','50','65']
+assert all(rows['+'][k]=='NULL' for k in ('rating_pri','rating_sev','rating_appeal','rating_effort'))
+print('Observed regression: all four previously populated ratings become NULL.')
+print('Packet lines='+str(len(s.splitlines())))
+PY
+```
+
+Decisive output:
+
+```text
+packet:1829 - ratings=85/85/50/65
+packet:1830 + ratings=NULL/NULL/NULL/NULL
+Observed regression: all four previously populated ratings become NULL.
+Packet lines=1846
+```
+
+Handing off to Producer (codex-producer) — restore the existing ratings through the RELEASES CLI and submit the corrected packet for review. Go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
