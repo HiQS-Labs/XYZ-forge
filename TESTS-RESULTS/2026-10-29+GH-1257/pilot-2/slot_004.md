@@ -29,7 +29,7 @@ _Source: PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md:L65 (Phase 0 — Diagnos
 
 _Source: PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md:L21 (frontmatter goal)_
 
->
+marathon-plan.sh's ledger parser either accepts link-style ROADMAP.md bullets (this repo's actual format) or the required bold-bullet / "Deferred · vision" format is documented as a hard constraint on consuming repos before they rely on the reconciler.
 
 ## Acceptance criteria
 

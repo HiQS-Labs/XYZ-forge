@@ -14,7 +14,7 @@
 
 _Source: PROJECT/2-WORKING/GH-478-ATE-RUNAWAY-GUARD.md:L16 (frontmatter goal)_
 
->
+No ATE invocation can hang past a bounded timeout inside a suite, and no ATE child's process group — including a leader-less one — can outlive its suite unnoticed. One shared Python runner (utils/py/proc_group.py) owns bounded process-group launching and killing for the ATE callers and the suite-layer guard alike; a standalone Python sweep finds and (only on an explicit flag) stops orphaned ATE leaders machine-wide.
 
 ## Acceptance criteria
 

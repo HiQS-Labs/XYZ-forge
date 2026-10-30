@@ -32,7 +32,7 @@ cp "$doc" "$TMPDIR/gh1257-doc.bak"; printf '\nedited after init\n' >> "$doc"
 t1=$($H --run-root temp/factory-primitive/$R tick --slot 1 2>&1); cp "$TMPDIR/gh1257-doc.bak" "$doc"
 echo "CONTROL doc-changed-after-init ($doc) | slot1=$t1 | error=$(sqlite3 "temp/factory-primitive/$R/instances/C/state.db" "select error from ticks where slot=1" | cut -c1-120) | quarantined=$($H --run-root temp/factory-primitive/$R status | J "['quarantined_ids']")"
 
-R=pilot-1
+R=pilot-2
 before=$(ls temp/factory-primitive/$R/instances/C/out/plan-draft | wc -l | tr -d ' ')
 t3=$($H --run-root temp/factory-primitive/$R tick --slot 3 2>&1)
 after=$(ls temp/factory-primitive/$R/instances/C/out/plan-draft | wc -l | tr -d ' ')

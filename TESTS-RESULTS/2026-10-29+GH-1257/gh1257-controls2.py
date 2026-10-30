@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.insert(0, "utils/py")
 import harness as h  # noqa: E402
 
-pilot = Path("temp/factory-primitive/pilot-1/instances/C")
+pilot = Path("temp/factory-primitive/pilot-2/instances/C")
 
 # 1. _validate rejects an unknown id and an already-consumed id.
 snap = {"inbox": [{"id": "gh-1-aaaaaaaaaaaa", "kind": "plan-request", "target": "1"}], "recent": [], "probe_targets": []}
