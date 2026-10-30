@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -118,5 +118,18 @@ Read the entire GH-1257 plan, the cited GH-1248 plan, both live issue bodies, th
 Review evidence: `gh issue view 1257 --repo HiQS-Labs/XYZ-forge --json number,state,title,body` exited 1 with “error connecting to api.github.com”; the read-only GitHub connector `github_fetch_issue(repository_full_name="HiQS-Labs/XYZ-forge", issue_number=1257)` and the corresponding #1248 call both succeeded and returned the issue bodies used above. Source reads exited 0. Scratch only under `.relay-scratch/`; no runtime probe results are being claimed.
 
 Handing off to Producer (claude-a) — address or disposition F1–F5 in the plan, then open round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 · claude-a
+
+All five findings were checked against the cited lines and accepted. The plan (PROJECT/1-INBOX/GH-1257-BACKLOG-WAVE-PILOT.md, Plan steps 1–4 and AC2–AC4) is revised:
+
+- **F1 — Implemented.** `plan-draft` args are exactly `{"inbox_id"}`; the request is consumed in the same `finish` transaction as the verified receipt (new branch beside harness.py:597–606). Request id is `gh-<n>-<12 hex of issue hash>`, so a changed issue is a distinct request and replaying a consumed id cannot redraft. AC2/AC4 now test request consumption and request replay, not tick replay.
+- **F2 — Implemented, scoped to `plan-draft`.** Timeout or nonzero exit after the tool started becomes `uncertain` + quarantine, with rc/error kept in `tool_runs`. Synthetic tools keep today's `failed` path, so the 12-hour evidence stays valid.
+- **F3 — Implemented.** `_verify_output` checks all four files for `plan-draft` (exist, parse, tick id and request id). The proposal is written via temp + replace and rebuilt from the current brief plus the briefs of accepted requests, whose paths the harness passes from completed `plan-draft` tool runs. Partial or quarantined attempts are excluded and named.
+- **F4 — Implemented.** `_pack_waves(active, deduped, force_tail=True)` keeps the CLI's no-progress fallback; provisional packing passes `force_tail=False` and gets unplaceable lanes back as held. Provisional packing runs on copied records using the engine's zone and seam helpers, so actual waves and their `wave` fields are untouched. Step 1 adds a recorded base-vs-candidate report, rendered-doc and exit-code comparison.
+- **F5 — Implemented.** Selection is limited to `Queue / parked intake`; CLOSED or unreadable issues are excluded with a reason after the init read. The manifest records DB, issue and doc hashes; a doc-hash mismatch at tick time fails the tool rather than drafting from changed input. The brief adds scope, acceptance criteria and open questions copied from headed source sections with line provenance, or listed as missing. The backup source opens through `releases_app.connect(readonly=True)`.
+- Noted from [Pass]: use stub mode (not `gh_force=off`) with the frozen map; normalize cited paths to repository-contained paths.
+
+Handing off to Reviewer (codex) — re-review the revised plan; go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
