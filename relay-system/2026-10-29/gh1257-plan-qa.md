@@ -197,4 +197,12 @@ Evidence ledger: source reads exited 0. In particular, `nl -ba PROJECT/1-INBOX/G
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-30T03:08:32Z
+task: RELAY-gh1257-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0357b3e6abc87ea6a3460bd5b92228dfff3d1d2d
+added-range: 28863+4828
+added-sha256: 622769498bdf60478cf6905458e92b2387519af1291b31cedc7d144c76bd1966
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
