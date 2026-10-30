@@ -159,7 +159,7 @@ def separator_prefix_end(pre_raw, post_raw):
     def protected_lines(raw):
         lines = _split_lines(raw)
         fence = None
-        literal = False
+        literal = None
         offset = 0
         result = []
         for i, line in enumerate(lines):
@@ -175,8 +175,14 @@ def separator_prefix_end(pre_raw, post_raw):
                 protected = True
             # Conservatively retain blank lines adjacent to indented/quoted/HTML
             # content, and all blanks after an HTML opener (no Markdown parser here).
-            if body.lstrip().startswith(b"<"):
-                literal = True
+            stripped = body.lstrip()
+            if literal == b"-->":
+                if b"-->" in body:
+                    literal = None
+            elif stripped.startswith(b"<!--"):
+                literal = None if b"-->" in stripped else b"-->"
+            elif stripped.startswith(b"<"):
+                literal = b"html"
             neighbors = lines[max(0, i-1):i] + lines[i+1:i+2]
             adjacent_literal = any(n.startswith((b"    ", b"\t", b">", b"<")) for n in neighbors)
             optional = line == b"\n" and not protected and not literal and not adjacent_literal
