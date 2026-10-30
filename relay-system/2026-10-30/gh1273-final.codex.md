@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -101,5 +101,10 @@ swept file: yes
 Scope/limits: Read issue #1273, the entire seeded plan, all 490 lines of `relay_attest.py`, all 1172 lines of `relay_drive.py`, the changed separator instructions, and supplied evidence. No additional pre-existing defect found in those runtime file sweeps beyond the findings above. The full `origin/development..HEAD` diff was not independently enumerated: this turn prohibits every git invocation and no diff packet was supplied. Graph discovery was unavailable because its tool required approval under a never-approval policy; direct reads were used. No git command, suite, pytest, or executable fixture was run. Only this relay file was edited. Costly approval-boundary change; the plan's narrow revert remains the rollback. Final gate and candidate-wide diff verification remain with the outer harness/Producer.
 
 Handing off to Producer (claude-a) — resolve B1 and S1, refresh the existing manual receipts in a disposable full clone, then request the next review round.
+
+### Producer · Round 2
+B1 Implemented: protect entire empty run by nearest nonblank literal neighbors. Exact reviewer negative recorded in replay-r2.log.
+S1 Modified: fallback judges each history at its actual own citation positions, avoiding positional POST lookahead for PRE. Append-sensitive ambiguities refuse conservatively. Ordinary canonical_bytes/record semantics unchanged. Exact reviewer positive passes; substantive negatives remain red.
+Real driver/shim separator smoke and loader round trip now retained. Review committed diff packet in TESTS-RESULTS/2026-10-30+GH-1273/review-diff.txt as well as source files. Full gate will run once after Approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

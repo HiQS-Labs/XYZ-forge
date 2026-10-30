@@ -1,0 +1,130 @@
+diff --git a/relay-automation/new-relay.sh b/relay-automation/new-relay.sh
+index efd7ec98..2fa633ec 100755
+--- a/relay-automation/new-relay.sh
++++ b/relay-automation/new-relay.sh
+@@ -102,7 +102,7 @@ ROUND: 1 / $ROUND_CAP
+    - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why,
+      including \`Declined — unproven generalization\` for a behaviour-change request that carries no
+      \`Observed input:\` / \`Affected scope:\` / \`Falsifier:\`), make the change, then add new work.
+-4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns.
++4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
+    Reviewer headings may be \`### Reviewer · Round N\`, \`### Round N · Reviewer · <agent>\`, \`### Reviewer (<agent>)\` (optionally followed by \`— rN\`), or \`### Reviewer — Round N\` (optionally followed by \`(<agent>)\`); follow the heading with a non-empty review body.
+ 5. **Update the header:** flip \`NEXT\`; set \`STATUS\` (\`Approved\` closes — Reviewer only; else \`Open\`);
+    the Producer bumps \`ROUND\` when opening a new cycle. If the max \`ROUND\` ends without \`Approved\`,
+@@ -150,7 +150,7 @@ EOF
+ ## Ground rules
+ 1. This file is the single source of truth. The agents never share memory — read the whole file.
+ 2. Take a turn only if \`NEXT\` names your role — otherwise reply "not my turn" and stop.
+-3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns.
++3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
+ 4. Stay tight — findings are bullets, not essays. Grade every finding.
+ 5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
+ 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
+diff --git a/utils/py/relay_attest.py b/utils/py/relay_attest.py
+index 15821745..e121c53c 100644
+--- a/utils/py/relay_attest.py
++++ b/utils/py/relay_attest.py
+@@ -149,6 +149,66 @@ def canonical_prefix(pre_raw, post_raw):
+     return canonical_bytes(pre_raw, context_raw=post_raw)
+ 
+ 
++def separator_prefix_end(pre_raw, post_raw):
++    """Return the ordinary canonical post offset for separator-only history drift.
++
++    Canonical bytes and persisted records retain their original interpretation. Only
++    empty LF lines outside fenced/indented literal content are optional. Whitespace-only
++    lines, blockquotes and HTML/literal-looking contexts remain exact. Ambiguity refuses.
++    """
++    def protected_lines(raw):
++        lines = _split_lines(raw)
++        fence = None
++        literal = None
++        offset = 0
++        result = []
++        for i, line in enumerate(lines):
++            body = line[:-1]
++            match = re.match(rb" {0,3}(`{3,}|~{3,})(.*)$", body)
++            protected = fence is not None or literal
++            if match:
++                run, rest = match.groups()
++                if fence is None:
++                    fence = (run[:1], len(run))
++                elif run[:1] == fence[0] and len(run) >= fence[1] and not rest.strip():
++                    fence = None
++                protected = True
++            # Conservatively retain blank lines adjacent to indented/quoted/HTML
++            # content, and all blanks after an HTML opener (no Markdown parser here).
++            stripped = body.lstrip()
++            if literal == b"-->":
++                if b"-->" in body:
++                    literal = None
++            elif stripped.startswith(b"<!--"):
++                literal = None if b"-->" in stripped else b"-->"
++            elif stripped.startswith(b"<"):
++                literal = b"html"
++            left, right = i - 1, i + 1
++            while left >= 0 and lines[left] == b"\n":
++                left -= 1
++            while right < len(lines) and lines[right] == b"\n":
++                right += 1
++            neighbors = ([lines[left]] if left >= 0 else []) + ([lines[right]] if right < len(lines) else [])
++            adjacent_literal = any(n.startswith((b"    ", b"\t", b">", b"<")) for n in neighbors)
++            optional = line == b"\n" and not protected and not literal and not adjacent_literal
++            offset += len(line)
++            if not optional:
++                result.append((line, offset))
++        return result
++
++    # Separator edits invalidate positional POST look-ahead for PRE. Judge each
++    # history at its own actual line positions in this fallback; append-sensitive
++    # ambiguous citation changes refuse rather than inventing a mapped citation.
++    pre = canonical_bytes(pre_raw)
++    post = canonical_bytes(post_raw)
++    before, after = protected_lines(pre), protected_lines(post)
++    if not before or len(after) < len(before):
++        return None
++    if any(a[0] != b[0] for a, b in zip(before, after)):
++        return None
++    return after[len(before)-1][1]
++
++
+ def append_before_marker(path, text):
+     """Append harness-owned text while keeping the scaffold sentinel as the final line."""
+     payload = text.encode("utf-8")
+diff --git a/utils/py/relay_drive.py b/utils/py/relay_drive.py
+index cbd2d8dc..d448508c 100644
+--- a/utils/py/relay_drive.py
++++ b/utils/py/relay_drive.py
+@@ -718,14 +718,22 @@ def main():
+             post_raw = f.read()
+         post_canon = relay_attest.canonical_bytes(post_raw)
+         pre["canon"] = relay_attest.canonical_prefix(pre["raw"], post_raw)
++        added_start = len(pre["canon"])
+         if not post_canon.startswith(pre["canon"]):
++            separator_end = relay_attest.separator_prefix_end(pre["raw"], post_raw)
++            if separator_end is not None:
++                added_start = separator_end
++                eprint("relay-drive: WARNING — harmless blank separators changed in review history; raw transcript retained")
++            else:
++                added_start = None
++        if added_start is None:
+             pre_c = pre["canon"]
+             i = next((k for k in range(min(len(pre_c), len(post_canon))) if pre_c[k] != post_canon[k]), min(len(pre_c), len(post_canon)))
+             eprint(f"relay-drive: review body was REWRITTEN above the reviewer's own block (first divergence at byte {i}):")
+             eprint(f"  before: {pre_c[max(0, i-60):i+60]!r}")
+             eprint(f"  after:  {post_canon[max(0, i-60):i+60]!r}")
+             return ("refused", "review-body-rewritten")
+-        added = post_canon[len(pre["canon"]):]
++        added = post_canon[added_start:]
+         if not added.strip():
+             return ("refused", "empty-approval")
+         tstat, tactor = token_state()
+@@ -744,7 +752,7 @@ def main():
+             "isolated": pre["isolated"],
+             "reviewed_head": pre["reviewed_head"],
+             "artifact_sha256": pre["artifact_sha256"],
+-            "added_start": len(pre["canon"]),
++            "added_start": added_start,
+             "added_len": len(added),
+             "added_sha256": relay_attest.sha256(added),
+             "attested_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
