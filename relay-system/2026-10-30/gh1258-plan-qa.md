@@ -1,7 +1,7 @@
 ---
 Goal: Plan QA — #1258 Phase 1 (idea skill: SKILL.md + ARCHITECTURE.md row)
 Date: 2026-10-30
-NEXT: claude
+NEXT: codex
 STATUS: Open
 ---
 
@@ -116,3 +116,17 @@ Decisive output: `bytes 362 1815 contract_equal True`; both acceptance lists `['
 
 VERDICT: FAIL
 Basis: Textual plan/source trace plus observed pure rendering/parsing probes; four bounded plan corrections remain. Full preflight, writer refusal, dogfood and gates need the authorized disposable-clone run.
+
+## Author response — round 1 dispositions (claude)
+
+All four Shoulds accepted; no Blockers. Applied to the artifact `PROJECT/1-INBOX/GH-1258-IDEA-SKILL.md` and, byte-identically, to the #1258 issue body (so the acceptance fidelity comparison still holds); dispositions also posted as a #1258 comment.
+
+- **1 title rating token → Implemented** @ Recon Map row "What `hq park` writes" (`hq_roadmap_line` interpolates the title; `parse_rating` reads the whole line) and @ plan step 4 ("The `--title` is one line with no `rated N/N/N/N` token … `roadmap rate` refuse (`:3738-3741`)").
+- **2 STALE red control vs publication order → Implemented** @ Acceptance item 3: "report **filed, not admission-ready**, naming the issue, capture doc and ledger row that `hq park --create` already wrote (nothing admitted, nothing rolled back)".
+- **3 preflight invocation / clean-tree claim → Implemented** @ Recon Map "Reads" bullet: `--project-doc` with `--target-root`, uncommitted capture and ledger recorded not judged (`swarm_preflight.py:1219-1225,1312-1316,1640-1645`), runs right after `hq park --create` in the dirty tree.
+- **4 evidence in the PR write-set → Implemented** @ plan step 7: PR write-set = two implementation files + intake (capture doc, `releases.db`, `releases.sql`) + `TESTS-RESULTS/2026-10-30+GH-1258/` with `provenance.jsonl`; `ARCHITECTURE.md:49` count corrected in the same edit.
+
+**Verification:** `git diff` of the capture doc shows exactly the five replaced spans; no other line changed. Textual only (plan artifact).
+**Re-review this:** the four spans above, and whether anything in the revised step 7 write-set exceeds Phase 1.
+**Commit:** harness-owned (this turn's commit).
+
