@@ -194,4 +194,12 @@ for missing in [False, True]:
 
 Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and final gate; no git command was run by this reviewer.
 
+
+### Attestation · relay-drive — 2026-10-30T03:35:36Z
+task: RELAY-gh1257-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0f1e5de06c637e62e42348b85cd9066d3fafb7d9
+added-range: 19605+6611
+added-sha256: 5e1060452731772fec786f3f2c9bf1200b7a04111c025a1d0ae565fab2787889
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
