@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -75,5 +75,48 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+**VERDICT: FAIL**
+
+**Basis:** Revise the plan before implementation. Reusing `Engine` and the existing executive is the right bounded approach, but the proposed integration omits consumption and complete output verification, and provisional packing inherits a dependency fallback that is unsafe to describe as disjoint waves. These are plan findings from source inspection, not claimed runtime reproductions.
+
+swept file: yes
+
+Read the entire GH-1257 plan, the cited GH-1248 plan, both live issue bodies, the planner engine/wrapper and the relevant executive paths. Pre-existing defects relevant to the new tool are included below. Graph tools were unavailable; direct source reads were used. No git commands, suites, executable fixtures or harness runs were performed.
+
+- **[Should] F1 — Complete the plan-request lifecycle and revision identity (plan steps 2–3; `utils/py/harness.py:597`).** Adding the four named dispatch/validation hooks leaves `consumed=[]` for `plan-draft`: only note, summarize and probe populate it. Thus the oldest successful request remains eligible at the next slot, starving later candidates. Specify `inbox_id` as the intent argument (so existing reconciliation can recover it), and consume it in the same `finish` transaction as the verified receipt. Define request identity from issue number plus frozen revision/hash; AC4 currently checks completed *tick* replay whereas issue #1257 requires completed *issue revision* replay.
+  Observed input: the exhaustive consumption branch at `harness.py:597–606`, together with plan line 79's new `plan-draft` tool and oldest-pending rule.
+  Affected scope: successful plan-request completion and repeat delivery of the same frozen issue revision within an instance.
+  Falsifier: in the disposable clone, seed two requests; slots 1 and 2 must consume different IDs, slot 3 must not draft either again, and replaying the same revision must create no second brief. Distinct revisions must remain distinguishable.
+
+- **[Should] F2 — Close the other ambiguous-attempt retry path (plan step 4; `utils/py/harness.py:584`).** The proposed fix covers rc=0 followed by bad verification, but timeout/nonzero returns bypass verification and finish `failed` without quarantining. With the new multi-file tool, a process can write its brief and then time out or fail while refreshing the proposal. The input is then selectable again. Specify conservative `uncertain` plus quarantine for such ambiguous `plan-draft` attempts; retain the original rc/error in the tool-run record. This can be scoped to the new tool without changing proven no-effect failures of the synthetic tools.
+  Observed input: `completed.timed_out or completed.rc != 0` at `harness.py:584–590` records `failed`; `rules_decide` permits another attempt until two failures (`harness.py:158–185`). The proposed writer at plan lines 81–82 writes four files sequentially.
+  Affected scope: plan-draft attempts that may have published any output before a timeout or nonzero termination.
+  Falsifier: a clone control that writes the brief and then terminates unsuccessfully must leave the input quarantined and absent from later decisions; a documented provably pre-launch rejection need not become uncertain.
+
+- **[Should] F3 — Define verification and cumulative-publication semantics for all four outputs (plan steps 3–4).** `_verify_output` currently validates only `<tick>.json` for a non-note tool and only checks tick/status (`utils/py/harness.py:476–489`). A missing Markdown brief or corrupt proposal therefore does not fail it. Extend this existing verifier for the new tool, bind outputs to the requested issue/revision and source hashes, and record hashes covering all required artifacts. State how subsequent proposals select completed, verified drafts and exclude partial/quarantined attempts; do not treat every file in `out/plan-draft` as accepted evidence. Publishing the cumulative pair through temporary files and replacement is sufficient for this single-operator pilot; no new store or gate is needed.
+  Observed input: the four required output paths at plan lines 81–82 versus the one-path verifier at `harness.py:477`; the schema `{"tick_id":"slot_001","status":"ok"}` satisfies the current non-note checks without any brief content or proposal.
+  Affected scope: plan-draft verification, receipts, and rebuilding a proposal after an interrupted attempt.
+  Falsifier: clone controls deleting each required file or corrupting its identity/content must prevent completion; after a crash, a later proposal must contain only accepted revisions and explicitly account for excluded attempts.
+
+- **[Should] F4 — Bound the extracted packer's existing mutation and no-progress behavior (plan lines 72, 82).** The current packer assigns `r["wave"]` in place (`_marathon_plan.py:1175–1177`), and on no progress it appends **all deferred lanes as one wave** (`:1164–1169`), even when dependency checks prevented placement. Merely adding drafted records to `active` does not rerun blocked-dependency propagation or calculate their zones/seams from their draft paths. Specify a separate copied provisional record set, reuse the existing classification/zone/seam helpers, and hold unresolved/cyclic candidates out rather than inheriting that fallback into the proposal. Keep the normal CLI's behavior-preserving extraction separate from this provisional admission policy; do not silently change CLI semantics in this refactor.
+  Observed input: the actual no-progress branch `if len(wave) == 0: waves.append(deferred)` and in-place wave assignment, plus plan line 82's instruction to add every sourced draft to `_pack_waves`.
+  Affected scope: provisional packing when dependencies cannot be placed, and actual/provisional records shared by reference.
+  Falsifier: clone controls with a held prerequisite or a two-lane cycle must yield held reasons, never a forced same-wave placement; provisional packing must leave actual waves and their wave fields unchanged, and a newly introduced shared spine must appear in provisional seams.
+
+- **[Should] F5 — Restore the issue's brief and seed contract explicitly (plan steps 2–3 and AC2).** Issue #1257 Scope 2 requires “scope, acceptance criteria, existing plan refs, proposed lanes, declared write sets, dependencies and open questions”; the planned field list at line 81 omits scope/acceptance/open questions. Copy those from cited source spans, or mark missing evidence explicitly, without inventing steps. Scope 1 also says open **queued** candidates and source hashes/timestamps frozen into the manifest: line 75 admits both ready/needs-contract regardless of ledger section before GitHub state is known, and line 81 records `updatedAt` without specifying an issue-content hash. Restrict selection to Queue / parked intake; classify CLOSED/failed snapshot candidates honestly after the init read rather than calling them open. Specify issue-content hashes and the source revision/doc hashes in the manifest, with mismatch handling if live docs change. Use the canonical read-only gateway for the backup source as requested by the issue.
+  Observed input: plan lines 75–77 and 81, contrasted with live issue #1257 Scope 1–2 and AC2 (“each with source hashes”); the engine retains `section` separately from `state` (`_marathon_plan.py:902`).
+  Affected scope: seeded plan requests and the evidence-linked brief schema for the at-most-ten-candidate pilot.
+  Falsifier: an in-progress row must not be seeded as queued; a CLOSED snapshot must be excluded with a reason; changing source body/doc bytes must change the recorded fingerprint or stop a mismatched draft; a source lacking acceptance criteria must visibly report that absence.
+
+- **[Pass] Reuse and scope are proportionate.** The plan's “No new module, writer or suite” (line 70), rules-only decider and deferred adapters/watchdog match this pilot. A compute/render split is justified because the current JSON report emits findings and a summary, not the full classified records (`_marathon_plan.py:1251`). The three named existing suites cover sequencing/caps/dependencies, DB ratings, and ledger grammar (`test/marathon-plan.sh:101`, `test/gh698-planner-db-ratings.sh:160`, `test/gh362-marathon-plan-link-bullets.sh:61`). Their future passing result alone will not establish complete equivalence; retain a fixed-input base/candidate report, rendered-doc and exit-code comparison in the planned manual evidence, with no new suite.
+- **[Pass] Offline design and slot manifest fit the existing seams by inspection.** `router_audit.py:41` only reads `.pdda-mode`; `_load_ledger_from_db` uses `mode=ro` (`_marathon_plan.py:770`); gh stub avoids live calls (`:441`, `:470`), and `deep=False` skips preflight (`:1022`). `gh_force="off"` takes precedence over a stub, so use stub mode with a valid frozen map when snapshot state is intended. `_snapshot` hashes all available IDs regardless of consumption (`harness.py:369`), so a per-instance slots manifest is compatible. The sandbox permits only output/tmp writes (`harness.py:464`). **[Unverified — needs clone run]** actual Seatbelt/Python/git-read compatibility, byte-identical repository evidence and all suite results remain implementation gates. No runtime success is asserted.
+- **[Pass] Draft heuristic, rollback and rating are reasonable at this scope.** The explicit warning that sourced paths “can be incomplete” (plan line 101), mandatory draft label (line 83), no dispatch (frontmatter non-goals), and branch abandonment rollback (line 104) bound this experiment. `60/35/50/45` has a coherent medium-effort rationale (line 108). Preserve those limits; add an explicit Easy reversibility label if desired. Normalize cited paths to repository-contained paths and retain line provenance when implementing the existing heuristic; the issue's path-escape control remains required.
+
+Review evidence: `gh issue view 1257 --repo HiQS-Labs/XYZ-forge --json number,state,title,body` exited 1 with “error connecting to api.github.com”; the read-only GitHub connector `github_fetch_issue(repository_full_name="HiQS-Labs/XYZ-forge", issue_number=1257)` and the corresponding #1248 call both succeeded and returned the issue bodies used above. Source reads exited 0. Scratch only under `.relay-scratch/`; no runtime probe results are being claimed.
+
+Handing off to Producer (claude-a) — address or disposition F1–F5 in the plan, then open round 2; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
