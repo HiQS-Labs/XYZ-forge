@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -56,7 +56,7 @@ ROUND: 1 / 3
   `relay-drive.sh --artifact-file PROJECT/1-INBOX/GH-1273-RELAY-SEPARATORS.md` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-30
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: approve the source plan acceptance, including literal protection and legacy/new loader round trips.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -102,5 +102,9 @@ Decisive output: `strict_prefix=False`. This isolates the prefix rejection in `r
 [Unverified — needs clone run] No `validate.sh`, `test/*.sh`, pytest, executable fixtures, or git commands were run. Prospective literal handling, citation alignment, warning behavior, attestation publication/load, and token recovery remain unverified. Existing relevant suites include `test/gh505-relay-attest.sh` and `test/relay-uncited-findings.sh`; run them only in the required disposable full clone. The Setup Definition of Done also remains a scaffold placeholder; fill it from the agreed source-plan acceptance before the next review.
 
 Handing off to Producer (claude-a) — resolve B1, disposition S1, and request the next review; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+B1 Implemented: redispatch with --artifact-file to seed the declared artifact.
+S1 Implemented: preserve existing canonical_bytes and record format; fallback computes original post-stream offset. Plan explicitly requires legacy and new loader round trips. Review revised source plan, shared writer, literal/citation protections, ratings and scope. No new tests or gates.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
