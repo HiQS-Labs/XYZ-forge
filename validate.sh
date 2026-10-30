@@ -1586,10 +1586,11 @@ if [ "${#FAILED[@]}" -gt 0 ]; then
   for t in "${FAILED[@]}"; do echo "  - $t"; done
   exit 1
 fi
-if [ "${TIER:-3}" -eq 3 ] && [ -z "${SUBSYSTEM:-}" ] && [ -z "$(git status --porcelain 2>/dev/null)" ]; then
-  _val_sha="$(git rev-parse --verify HEAD 2>/dev/null || true)"
+if [ "${TIER:-3}" -eq 3 ] && [ -z "${SUBSYSTEM:-}" ] && [ "${#SKIPPED_SUITES[@]}" -eq 0 ] && [ -z "${XYZ_ENV_FAULTS:-}" ] \
+  && _val_dirty="$(git -C "$HERE" status --porcelain 2>/dev/null)" && [ -z "$_val_dirty" ]; then
+  _val_sha="$(git -C "$HERE" rev-parse --verify HEAD 2>/dev/null || true)"
   if [ -n "$_val_sha" ] && [ -f "$HERE/utils/py/gate_receipt.py" ]; then
-    python3 "$HERE/utils/py/gate_receipt.py" write --repo "$HERE" --sha "$_val_sha" --gate "validate.sh" --mode "parallel" --exit-code 0 --passed "${#PASSED[@]}" --total "$TOTAL" >/dev/null 2>&1 || true
+    python3 "$HERE/utils/py/gate_receipt.py" write --repo "$HERE" --sha "$_val_sha" --gate "validate.sh" --mode "parallel" --scope full --exit-code 0 --passed "${#PASSED[@]}" --total "$TOTAL" >/dev/null 2>&1 || true
   fi
 fi
 exit 0
