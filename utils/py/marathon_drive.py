@@ -156,6 +156,51 @@ def _result_cmd_out(cmd, cwd=None):
     return out or None
 
 
+def _write_marathon_gate_receipt(root, head_sha, pre_advance_cmd, xyz_harness):
+    """GH-1236: keep an existing validate.sh full-gate receipt for head_sha; otherwise write the
+    marathon receipt (replacing any absent, corrupt, failed, wrong-SHA, or weaker file)."""
+    receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
+    if not os.path.isfile(receipt_py):
+        return False
+    # Judge and write with the SAME implementation: the resolved harness's gate_receipt.py, loaded
+    # lazily from that path. A module-level import broke partial utils/py layouts (suite fixtures),
+    # and the driver's own utils/py need not be the harness that writes (XYZ_HARNESS).
+    is_full, receipt_path = None, None
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("_gate_receipt_resolved", receipt_py)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        is_full = getattr(mod, "is_full_gate_receipt", None)
+        receipt_path = mod.get_receipt_path(root, head_sha)
+    except Exception:
+        is_full, receipt_path = None, None
+    if receipt_path is None:
+        receipt_path = os.path.join(root, ".xyz", "receipts", f"{head_sha}.json")
+    if os.path.isfile(receipt_path):
+        try:
+            with open(receipt_path, "r", encoding="utf-8") as f:
+                existing = json.load(f)
+        except Exception:
+            existing = None
+        if is_full:
+            if is_full(existing, head_sha):
+                return False
+        elif (isinstance(existing, dict) and existing.get("sha") == head_sha
+              and not isinstance(existing.get("exit_code"), bool) and existing.get("exit_code") == 0):
+            # The writer cannot judge eligibility (older harness, or it failed to load): never
+            # downgrade a passing receipt for this SHA — it may carry a newer validator's scope=full.
+            # Absent, corrupt, failed and wrong-SHA files are still replaced, as closeout needs.
+            return False
+    subprocess.run(
+        ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
+         "--gate", pre_advance_cmd or "pre-advance-gate", "--mode", "marathon",
+         "--exit-code", "0"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
+    )
+    return True
+
+
 def write_terminal_result(code):
     """The single terminal writer. Registered once via _ON_EXIT; never raises, never changes
     the process's real exit code — the receipt is a record, not a verdict override."""
@@ -2819,14 +2864,7 @@ relay-file: {rel_relay}
         head_sha = candidate
         if head_sha and not historical:
             try:
-                receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
-                if os.path.isfile(receipt_py):
-                    subprocess.run(
-                        ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
-                         "--gate", pre_advance_cmd or "pre-advance-gate", "--mode", "marathon",
-                         "--exit-code", "0"],
-                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
-                    )
+                _write_marathon_gate_receipt(root, head_sha, pre_advance_cmd, xyz_harness)
             except Exception:
                 pass
             marathon_emit_phase_qa_attestation(head_sha, pre_advance_cmd)

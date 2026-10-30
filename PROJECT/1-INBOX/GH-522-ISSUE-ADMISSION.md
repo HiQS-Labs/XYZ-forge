@@ -121,3 +121,7 @@ removal of only unstarted watcher-owned memberships form the rollback; retain re
 ## Merge evidence
 
 - PR #1176 merged 2026-10-22 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1253 merged 2026-10-30 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

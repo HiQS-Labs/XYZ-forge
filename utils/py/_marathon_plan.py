@@ -811,15 +811,14 @@ class Engine:
 
     def _pack_waves(self, active, deduped, force_tail=True):
         """Greedy write-set/zone/dependency wave packing over ``active`` (in order).
-        Returns ``(waves, unplaced)``. With ``force_tail`` (the CLI's behaviour) a pass that
-        places nothing appends every remaining lane as one final wave; without it those
-        lanes are returned as ``unplaced`` instead (GH-1257 provisional packing)."""
+        Returns ``(waves, unplaced)``: lanes a pass cannot place (dependency cycle, zero zone
+        cap) are never co-waved. With ``force_tail`` (the CLI's behaviour; the name predates
+        the hold rule) they are also marked ``unplaceable`` and flagged; without it they are
+        returned untouched for GH-1257 provisional packing over copied records."""
         waves = []
         placed_issue = {}
         pending = active[:]
-        guard = 0
-        while pending and guard < 100:
-            guard += 1
+        while pending:
             wave = []
             wave_writeset = set()
             wave_zone_counts = {}
@@ -846,19 +845,19 @@ class Engine:
                     wave_writeset.add(p)
                 wave_zone_counts[r["zone"]] = wave_zone_counts.get(r["zone"], 0) + 1
             if len(wave) == 0:
-                if not force_tail:
-                    return waves, deferred
-                waves.append(deferred)
-                for r in deferred:
-                    if r["gh"] is not None:
-                        placed_issue[r["gh"]] = len(waves) - 1
-                break
+                if force_tail:
+                    for r in deferred:
+                        r["state"] = "unplaceable"
+                        self._flag("warn", "unplaceable", r,
+                                   "could not be placed in any wave (dependency cycle / zero zone cap) — hold, do not co-wave",
+                                   "break the dependency cycle or raise the zone cap")
+                return waves, deferred
             waves.append(wave)
             for r in wave:
                 if r["gh"] is not None:
                     placed_issue[r["gh"]] = len(waves) - 1
             pending = deferred
-        return waves, ([] if force_tail else pending)
+        return waves, []
 
     def _contract_seams(self, waves):
         """Same-wave lane pairs sharing a write-set spine (GH-5); flags each as coupled-lanes."""
@@ -1102,7 +1101,12 @@ class Engine:
                     code = e.returncode or 1
                 except OSError:
                     code = 1
-                if code == 4:
+                if code == 3:
+                    r["state"] = "needs-contract"
+                    self._flag("info", "needs-contract", r,
+                               "swarm-preflight --dry-run → invalid contract (exit 3)",
+                               "fix the ## Swarm Preflight Contract json block")
+                elif code == 4:
                     r["state"] = "already-landed"
                     self._flag("warn", "already-landed", r,
                                "swarm-preflight --dry-run → stale (exit 4)",
@@ -1118,6 +1122,11 @@ class Engine:
                                "swarm-preflight --dry-run → %s (exit %d)"
                                % ("blocked" if code == 6 else "ambiguous", code),
                                "resolve target/contract before sequencing")
+                elif code != 0:
+                    r["state"] = "preflight-error"
+                    self._flag("warn", "preflight-error", r,
+                               "unknown/failed preflight exit %d — hold; rerun swarm-preflight directly" % code,
+                               "rerun swarm-preflight directly")
 
         # ── dependency resolution ──────────────────────────────────────────────
         for r in deduped:
@@ -1136,7 +1145,7 @@ class Engine:
                 blocked_by = []
                 for d in r["deps"]:
                     dep = self._find_by_gh(deduped, d)
-                    if not dep or dep["state"] in DEP_RESOLVED or dep["state"] == "ready":
+                    if dep and (dep["state"] in DEP_RESOLVED or dep["state"] == "ready"):
                         continue
                     blocked_by.append(d)
                 if blocked_by:
@@ -1204,6 +1213,7 @@ class Engine:
         for i, w in enumerate(waves):
             for r in w:
                 r["wave"] = i + 1
+        active = [r for w in waves for r in w]
 
         # GH-5 contract seams
         contract_seams = self._contract_seams(waves)
@@ -1211,7 +1221,8 @@ class Engine:
         # ── exit code ───────────────────────────────────────────────────────────
         has_drift = any(r["state"] in ("already-landed", "already-closed") for r in deduped)
         held = [r for r in deduped if r["state"] in
-                ("unrated", "needs-doc", "needs-contract", "note-only", "not-ready", "blocked", "blocked-dep")]
+                ("unrated", "needs-doc", "needs-contract", "note-only", "not-ready", "blocked", "blocked-dep",
+                 "preflight-error", "unplaceable")]
         exit_code = 0
         if has_drift:
             exit_code = 4
@@ -1454,7 +1465,7 @@ class Engine:
             ("\U0001F527 Reconcile — undocumented partial completion", ["partial"]),
             ("⏸️ Gated on operator GO", ["gated"]),
             ("⚠️ Not yet sequenceable — rate / add doc / add contract",
-             ["unrated", "needs-doc", "needs-contract", "not-ready", "blocked"]),
+             ["unrated", "needs-doc", "needs-contract", "not-ready", "blocked", "preflight-error", "unplaceable"]),
             ("⛔ Blocked on a held dependency", ["blocked-dep"]),
             ("\U0001F6AB Rating-exempt (completed / hub / superseded)", ["exempt"]),
             ("\U0001F5D2️ Notes (no issue, no doc)", ["note-only"]),

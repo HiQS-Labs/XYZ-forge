@@ -1,0 +1,50 @@
+# MARATHON.yaml — GH-1250 GH-1175 Phase 0 follow-ups, one chain of four lanes.
+# Umbrella/tracking issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1250
+# Members: #1233 (p1), #1235 (p2), #1251 (p3, slice 1 of #522; Refs #522), #1236 (p4).
+#
+# Phases run STRICTLY ONE AT A TIME in this chain order (depends_on constrains, never parallelizes).
+# Write-sets are pairwise disjoint (plan QA r3, relay-system/2026-10-29/gh1250-plan-qa.md).
+# CHANGELOG.md, the ledger, lane-doc Status rows and generated plan files are the orchestrator's.
+# p4 (#1236) edits githooks/pre-push and utils/py/marathon_drive.py — code the driver and the lane push
+# themselves run — so it goes last.
+# Builder: agy (pass --builder agy). Reviewer (post-build QA): codex on every phase.
+#
+# Fire ONLY from the marathon clone on branch feat/marathon-gh-1250-phase0-followups, after the
+# operator confirms this exact plan and order. ALWAYS --dry-run first:
+#   relay-automation/marathon.sh --plan PROJECT/2-WORKING/GH-1250-PHASE0-FOLLOWUPS/MARATHON.yaml --builder agy --dry-run
+name: gh1250-phase0-followups
+phases:
+  - id: p1
+    name: "L1 #1233 — jog Recovery Verbs: crash leftovers and the fresh-clone rule"
+    reviewer: codex
+    brief: PROJECT/2-WORKING/GH-1233-JOG-RECOVERY-AFTER-DRIVER.md
+    artifact: skills/2-daily/jog/SKILL.md
+    turn_timeout_s: 900
+    max_review_rounds: 2
+
+  - id: p2
+    name: "L2 #1235 — merge-cleanup makes reconcile writes durable on a Jog-hook refusal"
+    reviewer: codex
+    brief: PROJECT/2-WORKING/GH-1235-MERGE-CLEANUP-JOG-LAND.md
+    artifact: skills/2-daily/merge-cleanup/scripts/merge_cleanup.py, TESTS-RESULTS/2026-10-29+GH-1235/smoke.md, TESTS-RESULTS/2026-10-29+GH-1235/provenance.jsonl
+    turn_timeout_s: 1500
+    depends_on: p1
+    max_review_rounds: 2
+
+  - id: p3
+    name: "L3 #1251 — marathon planner fails closed (GH-522 slice 1)"
+    reviewer: codex
+    brief: PROJECT/2-WORKING/GH-1251-GH-522-SLICE-1.md
+    artifact: utils/py/_marathon_plan.py, TESTS-RESULTS/2026-10-29+GH-1251/smoke.md, TESTS-RESULTS/2026-10-29+GH-1251/provenance.jsonl
+    turn_timeout_s: 1500
+    depends_on: p2
+    max_review_rounds: 2
+
+  - id: p4
+    name: "L4 #1236 — pre-push reuses a scope=full validate.sh receipt for the exact pushed SHA"
+    reviewer: codex
+    brief: PROJECT/2-WORKING/GH-1236-JOG-MARATHON-LANE-RUNS.md
+    artifact: validate.sh, githooks/pre-push, utils/py/gate_receipt.py, utils/py/marathon_drive.py, TESTS-RESULTS/2026-10-29+GH-1236/smoke.md, TESTS-RESULTS/2026-10-29+GH-1236/provenance.jsonl
+    turn_timeout_s: 1800
+    depends_on: p3
+    max_review_rounds: 2
