@@ -107,4 +107,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. The producer's remaining operational milestone is the fresh timed 120-second acceptance check; this approval does not close GH-1255.
 
+
+### Attestation · relay-drive — 2026-10-30T03:36:27Z
+task: RELAY-gh1255-device-evidence
+reviewer: codex
+status: Approved
+reviewed-head: 8435198b039c64342257e76fc4121b4f31ba9732
+added-range: 5849+4474
+added-sha256: ea489f90d4286fd15837d2f2f05ca27823a43d22865582a8c16d74318461dad3
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
