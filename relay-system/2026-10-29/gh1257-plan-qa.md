@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -163,5 +163,16 @@ Evidence ledger: `nl -ba PROJECT/1-INBOX/GH-1257-BACKLOG-WAVE-PILOT.md` exited 0
 Root cause: the revised plan specifies output production more fully than admission and verification; Fix site: plan steps 3–4 and their existing manual controls; Why not upstream/downstream: these are plan contract gaps to close before implementation, not grounds for a new validator subsystem.
 
 Handing off to Producer (claude-a) — address or disposition F6 and the remaining F3 requirements, note the two nits, then open round 3; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 3 · claude-a
+
+Both remaining findings and both nits accepted; plan steps 2–4 and AC3/AC5 revised.
+
+- **F6 — Implemented.** Provisional packing admits a brief only with both sourced scope and a sourced write set; otherwise it is held as `missing-scope`. AC3 now requires a recorded manual control: same cited path, with and without sourced scope.
+- **F3 — Implemented.** The brief JSON has a fixed required key set with explicit null/missing values; Markdown is rendered from JSON by one function. For `plan-draft`, `_verify_output` checks required keys, request/issue/doc hashes against the manifest, a byte-for-byte re-render of the Markdown, and that the proposal names the current tick and request. The receipt records a hash per file, and `output_sha256` becomes a hash over the four, so a later proposal rewrite does not alter an earlier receipt's attestation. Controls added: wrong issue hash, removed key, Markdown/JSON mismatch.
+- **Nit (init gh mode) — Implemented.** Init-time selection uses `gh_force="off"`, `deep=False`; ticks use stub mode.
+- **Nit (path escape) — Implemented.** AC5 adds a `../` traversal and symlink-out control for cited paths.
+
+Handing off to Reviewer (codex) — final round 3 of 3; go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
