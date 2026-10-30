@@ -1,0 +1,89 @@
+{
+  "timestamp": "2026-10-30T03:31:49.612021+00:00",
+  "result": "deployment and requested recovery PASS; timed fresh-submission acceptance pending",
+  "source_revision": "f0819314c078f58e9d51b6ccd698c76b700ec1cc",
+  "rebalance_pr": 369,
+  "forge_pr": 1256,
+  "standalone_pr": 23,
+  "standalone_merge": "a6c81213c8cf429913ca4664662e5aeca8621152",
+  "hq_payload_commit": "0e4f234fd",
+  "hq_payload_digest": "b2e5f702da0657c328fbe9ed356bd415aa7f9a4def18840c0a8feeaecb48a771",
+  "whole_folder_parity_files": 9,
+  "published_byte_mode_parity_files": 15,
+  "receipts": "current",
+  "links": [
+    "claude",
+    "antigravity",
+    "codex-compat"
+  ],
+  "app_discovery": "Codex skill catalog contains clio-capture; SKILL.md unchanged. Other app UIs not exercised.",
+  "runtime_status": "all managed paths ok; receipt current; both tailer jobs loaded; exporter present and unmanaged",
+  "active_scan": {
+    "source_files": 153,
+    "exit": 0,
+    "elapsed_seconds": 32.779,
+    "writer_acceptances": 162,
+    "deferred_files": 0,
+    "incomplete_source_files": 0,
+    "requested_source_prefixes_unchanged": true
+  },
+  "archive_scan": {
+    "source_files": 2,
+    "exit": 0,
+    "elapsed_seconds": 0.508,
+    "writer_acceptances": 3,
+    "deferred_files": 0,
+    "incomplete_source_files": 0,
+    "archived_originals_unchanged": true,
+    "restored_loaded": true
+  },
+  "requested_sessions": {
+    "01a188ca": {
+      "submitted_events": 4,
+      "stored_rows": 4,
+      "matched_source_ids": 4,
+      "missing_source_ids": 0
+    },
+    "01a1892e": {
+      "submitted_events": 3,
+      "stored_rows": 3,
+      "matched_source_ids": 3,
+      "missing_source_ids": 0
+    },
+    "01a18930": {
+      "submitted_events": 0,
+      "stored_rows": 0,
+      "matched_source_ids": 0,
+      "missing_source_ids": 0
+    }
+  },
+  "ordinary_schedule_observations": [
+    {
+      "submitted_at": "2026-10-30T03:18:18.340000+00:00",
+      "present_by": "2026-10-30T03:20:25.368850+00:00",
+      "latency_upper_bound_seconds": 127.029,
+      "matched_source_event": true
+    },
+    {
+      "submitted_at": "2026-10-30T03:17:38.695000+00:00",
+      "present_by": "2026-10-30T03:20:25.368850+00:00",
+      "latency_upper_bound_seconds": 166.674,
+      "matched_source_event": true
+    }
+  ],
+  "strict_120_second_acceptance": "pending fresh timed submission",
+  "core_storage_config_unchanged": true,
+  "client_registrations_and_plists_unchanged": true,
+  "concurrent_fleet_metadata_fields": [
+    "last_result"
+  ],
+  "preexisting_hq_drifts": [
+    "handsfree",
+    "express",
+    "merge-cleanup",
+    "todo-list"
+  ],
+  "backup": "private online SQLite backups integrity_check=ok; scripts/config/state/plists and pending receipts preserved",
+  "unrecoverable": "01a18930 has zero modern/legacy submitted events; no response_item fallback",
+  "lessons": "Two requested files moved into archived_sessions during work. Replay exact private copies through installed tailer with explicit CODEX_HOME; retain originals and stable source IDs. No runtime scope expansion."
+}

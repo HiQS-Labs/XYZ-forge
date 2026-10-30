@@ -2,7 +2,7 @@
 gh_issue: 1255
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1255
 title: "Restore CLIO Codex Desktop prompt capture"
-status: PR ready — upstream landing and target acceptance pending
+status: Deployed — fresh timed acceptance pending
 created: 2026-10-29
 updated: 2026-10-29
 owner: Codex
@@ -32,7 +32,7 @@ Accept event_msg/item_completed/UserMessage text parts alongside legacy user_mes
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved in round 2; upstream implementation passes focused Codex suite. | Publish reviewed upstream and tracking PRs; merge/publication/deployment acceptance remain outstanding. |
+| Upstream, Forge and standalone PRs merged; device deployed; seven requested submissions verified. | Fresh timed submission for strict 120-second acceptance; preserve unrecoverable-session disposition. |
 
 ## Recon map
 
@@ -106,3 +106,7 @@ Corrected the current QA/roadmap status and upstream PR pointer. Rebalance’s i
 ## Merge evidence
 
 - PR #1256 merged 2026-10-30 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Device deployment and recovery
+
+The user authorized merging, publication, this-device deployment and recovery. Rebalance #369, Forge #1256 and standalone #23 are merged. HQ and installed-runtime receipts are current; whole-folder and published byte/mode parity pass. Exclusive active and archived-source replay verified all seven recoverable source events. 01a18930 has zero submitted events and remains unrecoverable. The original schedule is restored, and normal-interval capture was observed. Strict 120-second acceptance remains pending a fresh timed submission. [Deployment receipt](../../TESTS-RESULTS/2026-10-29+GH-1255/DEVICE-DEPLOYMENT.md). Historical pre-deployment sections above describe their recorded state. Keep this issue open until the final timing check is measured.
