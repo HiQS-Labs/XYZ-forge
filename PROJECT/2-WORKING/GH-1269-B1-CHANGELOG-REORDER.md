@@ -29,7 +29,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Promoted; root cause reproduced in the intake repo (`TESTS-RESULTS/2026-10-30+GH-1269/red-control-prefix.log`); plan written | Codex plan QA, then the one-function fix |
+| Plan QA Approved (`relay-system/2026-10-30/gh1269-plan-qa.md`); fix 72be48e2; smoke 5/5, red control 4 FAIL; GH-789 matrix no regression (`TESTS-RESULTS/2026-10-30+GH-1269/smoke.md`) | Final Codex QA, full gate, PR |
 
 ## Symptom
 
