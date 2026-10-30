@@ -82,3 +82,7 @@ Plan QA round 1 requested durable replay intent and exclusive scheduling; both i
 ## Implementation state
 
 Upstream implementation at rebalanceOS a18664a extends the existing parser, durable per-file replay checkpoint and state-comment warning. Existing fixture now includes one legacy and one modern submitted event. Existing Codex suite proves nonempty SQLite rows, pending replay after a failed second write, normal retry, stable replay IDs, live IDE request and diagnostic reset/threshold. No live acceptance or deployment claimed. Plan QA receipt copied below; final review and remaining checks pending.
+
+## Verification handoff
+
+All six existing upstream CLIO suites now pass, including 17 store cases. Three negative controls fail as expected. The unchanged base has a stale September fixture failure in one store projection case; a one-line timestamp correction preserves the five-row assertion and makes the existing suite truthful. No production store change or new suite. Upstream receipts live in `TESTS-RESULTS/2026-10-29+GH-368/`; final Codex review covers the implementation, that fixture correction, and this Forge tracking/parity record. Final review pending; no merge, standalone publication, installed repair or target-device acceptance claimed.
