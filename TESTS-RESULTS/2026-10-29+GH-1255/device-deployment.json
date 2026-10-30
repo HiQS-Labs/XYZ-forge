@@ -1,6 +1,6 @@
 {
   "timestamp": "2026-10-30T03:31:49.612021+00:00",
-  "result": "deployment and requested recovery PASS; timed fresh-submission acceptance pending",
+  "result": "PASS: publication, deployment, requested recovery and scheduled capture",
   "source_revision": "f0819314c078f58e9d51b6ccd698c76b700ec1cc",
   "rebalance_pr": 369,
   "forge_pr": 1256,
@@ -71,7 +71,7 @@
       "matched_source_event": true
     }
   ],
-  "strict_120_second_acceptance": "pending fresh timed submission",
+  "strict_120_second_acceptance": "PASS",
   "core_storage_config_unchanged": true,
   "client_registrations_and_plists_unchanged": true,
   "concurrent_fleet_metadata_fields": [
@@ -97,5 +97,37 @@
     "global_capture_cutoff_unchanged": true,
     "sqlite_schema_version_unchanged": true,
     "sqlite_integrity": "ok"
+  },
+  "scheduled_verification": {
+    "result": "PASS",
+    "submitted_at": "2026-10-30T03:40:52.674000+00:00",
+    "observed_at": "2026-10-30T03:41:43.977085+00:00",
+    "latency_upper_bound_seconds": 51.303,
+    "agent": "codex",
+    "baseline_job": {
+      "runs": "20",
+      "state": "not running",
+      "last exit code": "0"
+    },
+    "observed_job": {
+      "runs": "21",
+      "state": "running",
+      "last exit code": "0"
+    },
+    "foreground_tailer_or_kickstart": false,
+    "normal_activated_store": true,
+    "installed_helper_query_rows": 1,
+    "completed_job_observation": {
+      "runs": "23",
+      "state": "not running",
+      "last exit code": "0"
+    },
+    "matched_submitted_source_event": true
+  },
+  "publication_setup": {
+    "aborted_full_gate": "stale/absent integration tracking refs triggered the conservative fallback; no registry result used",
+    "original_task_clone_identity": "intact, clean at recorded head; no source mutation",
+    "closeout_clone": "fresh full clone; concurrent development landing merged with existing semantic ledger resolver",
+    "isolated_push": "final publication uses a separate disposable full clone; refs refreshed before native hook"
   }
 }

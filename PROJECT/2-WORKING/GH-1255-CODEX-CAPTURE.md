@@ -2,7 +2,7 @@
 gh_issue: 1255
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1255
 title: "Restore CLIO Codex Desktop prompt capture"
-status: Deployed — fresh timed acceptance pending
+status: PR ready — device acceptance verified
 created: 2026-10-29
 updated: 2026-10-29
 owner: Codex
@@ -32,9 +32,11 @@ Accept event_msg/item_completed/UserMessage text parts alongside legacy user_mes
 
 | What was just completed | What's next |
 |---|---|
-| Upstream, Forge and standalone PRs merged; device deployed; seven requested submissions verified. | Fresh timed submission for strict 120-second acceptance; preserve unrecoverable-session disposition. |
+| Upstream, Forge and standalone PRs merged; device deployed; seven requested submissions verified; scheduled capture measured at 51.303 seconds. | Land the verification receipt and reconcile issue completion; retain the zero-event unrecoverable-session disposition. |
 
 ## Recon map
+
+Initial recon snapshot; subsequent deployment acceptance is recorded below.
 
 Base Forge `835254712a0696c08d3dae94054bc62a09f3fde6`; Rebalance `f10764f6db909b9c3b770a05213bd43285452589`; standalone `83af59668c2e1ad58c56ef2c9db1794dcc4891b2`.
 Grep-only trace, one bounded serial lane across the capture seam; no graph service available.
@@ -97,7 +99,7 @@ The cross-repository final peer review was Approved, but its driver returned 4 b
 
 ## Manual live-device check
 
-A foreground trial using the current real Codex submission passed without deployment: source event → reviewed tailer → shared writer → isolated SQLite → query/JSONL/Markdown. Base captured zero; candidate captured one; ordinary rerun and explicit backfill kept the current record ID/count stable. Installed helpers were unchanged. [Sanitized receipt](../../TESTS-RESULTS/2026-10-29+GH-1255/LIVE-DEVICE-TRIAL.md). Scheduled normal-store delivery and live acceptance remain outstanding.
+A foreground trial using the current real Codex submission passed without deployment: source event → reviewed tailer → shared writer → isolated SQLite → query/JSONL/Markdown. Base captured zero; candidate captured one; ordinary rerun and explicit backfill kept the current record ID/count stable. Installed helpers were unchanged. [Sanitized receipt](../../TESTS-RESULTS/2026-10-29+GH-1255/LIVE-DEVICE-TRIAL.md). That isolated trial did not establish scheduled delivery; later device acceptance below does.
 
 ## Pre-landing review disposition
 
@@ -109,4 +111,4 @@ Corrected the current QA/roadmap status and upstream PR pointer. Rebalance’s i
 
 ## Device deployment and recovery
 
-The user authorized merging, publication, this-device deployment and recovery. Rebalance #369, Forge #1256 and standalone #23 are merged. HQ and installed-runtime receipts are current; whole-folder and published byte/mode parity pass. Exclusive active and archived-source replay verified all seven recoverable source events. 01a18930 has zero submitted events and remains unrecoverable. The original schedule is restored, and normal-interval capture was observed. Strict 120-second acceptance remains pending a fresh timed submission. [Deployment receipt](../../TESTS-RESULTS/2026-10-29+GH-1255/DEVICE-DEPLOYMENT.md). Historical pre-deployment sections above describe their recorded state. Keep this issue open until the final timing check is measured.
+The user authorized merging, publication, this-device deployment and recovery. Rebalance #369, Forge #1256 and standalone #23 are merged. HQ and installed-runtime receipts are current; whole-folder and published byte/mode parity pass. Exclusive active and archived-source replay verified all seven recoverable source events. 01a18930 has zero submitted events and remains unrecoverable. The original schedule is restored. A fresh user submission reached the normal SQLite store through scheduled capture in 51.303 seconds, with matching source-event identity and installed-helper query. Strict 120-second acceptance passes. [Deployment receipt](../../TESTS-RESULTS/2026-10-29+GH-1255/DEVICE-DEPLOYMENT.md). Historical pre-deployment sections above describe their recorded state. The final timing check is measured; this closeout records the passed acceptance and unrecoverable-source disposition.
