@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -78,5 +78,38 @@ Plan ready for review: `PROJECT/2-WORKING/GH-1261-PLAN-DRAFT-PHASE-2B.md` (commi
 3. For unregistered issues: is a synthesized planner record (state `unregistered`, deps from `Engine._deps_of` over title + body, no contract) enough for `_pack_waves`, and does adding those lanes to the dependency view behave correctly?
 4. Does `--unregistered` defaulting to 0 preserve Phase 2A behaviour exactly?
 5. Are the acceptance checks and the red control sufficient to detect the actual failure?
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: the extension points and rating are reasonable, but the plan relaxes the issue's ambiguity contract and does not yet preserve dependency or write-set conservatism in the cases below.
+swept file: yes
+
+Reviewed the entire plan, the cited harness/planner paths, Phase 2A SUMMARY, and live issues #1261/#216. No additional plan defects found beyond the findings below. Verify-tier discovery attempted against `XYZ-forge`; graph generation `2026-09-01T15:54:30Z` is from another checkout, symbol search returned zero, and coverage flags the planner metadata changed. Findings therefore use this worktree's source, not graph completeness claims. No git commands, suites, executable fixtures, or artifact edits performed. Full implementation/gate results remain [Unverified — needs clone run].
+
+Probe receipt for R1–R3: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 .relay-scratch/gh1261-review-probes.py` exited **0**. The scratch probe AST-extracted only `_pack_waves`, `_find_by_gh`, `DEP_RESOLVED`, `_cited_paths`, and `PATH_RE`; no module entry points ran. For the cap case it explicitly models successful new resolutions, then applies the unchanged admission loop; this is a plan counterexample, not a run of an implemented Phase 2B parser. Decisive output is quoted in each finding. An earlier exploratory probe exited 1 because fewer than 25 underscore-prefixed Python files existed; it produced no cap evidence and was corrected to select the first 25 Python files.
+
+- **[Should] R1 — Remove the non-test tie-break or obtain an explicit change to the issue's scope.** Plan lines 63/80 resolve some names with multiple tracked matches, while [#1261](https://github.com/HiQS-Labs/XYZ-forge/issues/1261) explicitly requires “An ambiguous bare name (matches 2+ tracked files) is not resolved”. The probe found `actual duplicate paths: utils/marathon-plan.sh test/marathon-plan.sh`; the planned rule chooses the former even when the intended target is the latter. Showing a source line does not establish the intended path. Keep ambiguous names unresolved; #216 can still gain the unique Python planner/reconciler paths via `.xyz/` normalization. Revise its exact write-set expectation accordingly.
+  Observed input: #216 names `marathon-plan.sh`; both paths above exist, as the plan itself also records at line 46. A scoped issue saying `Fix marathon-plan.sh` supplies no evidence selecting either target.
+  Affected scope: bare names with multiple tracked matches and exactly one match outside test/fixtures.
+  Falsifier: a frozen listing containing only `utils/marathon-plan.sh` should resolve it; a listing containing both paths should report ambiguity and choose neither. Record both manual controls under the planned evidence directory.
+
+- **[Should] R2 — Include every seeded unregistered issue in the dependency lookup, including held and pending requests.** Plan line 72 adds “those lanes” to the view, which only covers admitted drafts. `_pack_waves` at `utils/py/_marathon_plan.py:830–835` treats an absent record as a satisfied dependency. The actual extracted method returned `draft lanes only waves= [[1262]] unplaced= []`; with the held prerequisite present it returned `all seeded records waves= [] unplaced= [1262]`. Build lookup-only synthesized records from all frozen unregistered requests, overlay admitted lanes, and keep non-admitted records non-resolved. This extends `harness.py` without changing the planner.
+  Observed input: seeded #1262 has scope and `utils/py/harness.py`, with `depends on #1263`; seeded #1263 has no sourced file/scope and is held (or has not had its tick yet). The packing probe used `a={gh:1262,state:ready,deps:[1263],writeset:[utils/py/harness.py],zone:x,zoneRule:null,zoneInferred:false}` and `b={gh:1263,state:unregistered,deps:[]}`.
+  Affected scope: dependencies on another seeded unregistered request before it is admitted, whether the dependent is a ledger or unregistered draft.
+  Falsifier: #1262 must stay unplaced while #1263 is held/pending; after #1263 becomes an admitted draft it must be in an earlier wave than #1262. A two-draft happy-path pair alone cannot detect this bug. Add these expected outcomes and a red control to Acceptance.
+
+- **[Should] R3 — Account for the existing 25-path truncation before claiming greater conservatism.** `utils/py/harness.py:477–480` processes issue citations before capture-doc citations and silently caps the combined set at 25. Adding successfully resolved bare issue names can evict a previously sourced capture path. The probe returned `Phase 2A count= 1 PDDA retained= True` versus `step 1 additions before capture count= 25 PDDA retained= False`. Specify that new extraction preserves every previously admitted path and never packs a silently incomplete expanded set: remove the cap, or hold on overflow while retaining complete evidence. Do not change the planner.
+  Observed input: no-contract ledger request with bare issue-body names `_marathon_plan.py active_explorer.py adaptive_ate.py agy-turn.py aider-turn.py ate_runaway_sweep.py backfill_source_url.py board_sync.py calibrate_tier1.py claude-turn.py claude_cli.py codex-turn.py commandcode-turn.py consult.py deepseek-turn.py device_config.py differential_oracle.py domain_oracles.py express.py fuzz_engine.py fuzz_inputs.py gate_env.py gate_inventory.py gate_receipt.py gen4_campaign.py`, and capture doc supplying scope plus `PROJECT/PDDA.md`. The probe models these 25 names resolving successfully to their `utils/py/` paths. Phase 2A retains PDDA; the unchanged loop drops it after the additions, losing its collision with another PDDA lane.
+  Affected scope: no-contract drafts whose newly resolved citations exhaust the combined path budget before old issue/doc citations.
+  Falsifier: replay this input with successful resolutions and a competing PDDA lane; the expanded result must retain PDDA or hold the draft, and cannot co-pack them on an incomplete set. Disabling new resolution is the red control for the set-preservation check. Record this manual case under `TESTS-RESULTS/2026-10-30+GH-1261/`.
+
+- **[Nit] Clarify zero-mode and brief verification wiring.** Plan lines 66–68 should say `gh issue list` runs only when N > 0; otherwise the new failure mode changes unflagged init behaviour. Lines 64/74 should explicitly wire `unresolved_names` into `BRIEF_KEYS` and the existing drop-key/Markdown consistency controls (`harness.py:35–38,519–543`). Candidate-set parity at line 82 is supportable; exact output-shape parity is incompatible with unconditional new source/key fields, so say which comparison is intended.
+- **[Pass] Reuse and bounded scope.** Plan steps 1–3 extend `_cited_paths`, init, `plan_draft`, and `_build_proposal`; `_planner` already uses the frozen DB/listings (`harness.py:251–266`), and `_deps_of` is static (`_marathon_plan.py:686–700`). Synthesized records are sufficient if they also provide the brief reader's `flags`, `signals`, `contract`, and `deps` keys (`harness.py:472–496`). No second planner/writer/suite is needed. For `.xyz/`, reuse the existing realpath/containment/file checks (`harness.py:318–335`) and require the stripped target in the frozen listing; prefix text alone is not evidence of an existing target.
+- **[Pass] Rating is proportionate.** Plan line 93's `55/40/50/60` fits a reversible local advisory experiment whose severity is limited by the absence of dispatch; the stated fixes remain bounded to the existing harness. The Phase 2A evidence explicitly reports the unsafe #216 under-count in its “Hand inspection” section. The resolution red control at plan line 83 is meaningful, but does not cover R2/R3.
+
+Root cause: incomplete evidence extraction and omitted dependency records make a provisional proposal appear more complete than its inputs justify; fix sites: the existing harness extraction/admission and proposal view; why not upstream/downstream: the frozen issue text already contains the evidence and the existing planner correctly holds a prerequisite when its record is supplied.
+
+Handing off to Producer (claude-a) — revise the plan and disposition R1–R3, then go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
