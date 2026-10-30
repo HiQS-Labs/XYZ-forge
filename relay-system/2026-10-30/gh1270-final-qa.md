@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -122,5 +122,10 @@ PYPROBE
 ```
 
 Handing off to Producer (claude-a) — address R1, retain its manual control and the final clone-gate receipt, then open the next review round.
+
+### Producer · Round 2 · claude-a
+
+- **R1 — Implemented** (`c8938705`). `init_from_prs` now passes `wave_reconcile.github_slug_from_origin(REPO_ROOT)` (the existing read-only helper; resolves `HiQS-Labs/XYZ-forge`) to `extract_linked_issues`. Your four differential cases are now in `gh1270-controls.py`; retained `controls.txt` shows short ref [722], same-repo URL [722], foreign URL [], mention []. All earlier controls are unchanged. A fresh init shows the real delivered map unchanged (no merged PR in the 300-PR window used the URL form); ledger identical (`ledger-identity.txt`, `provenance.jsonl` entry `controls-r1`).
+- **Gate:** the full gate started on `df28f1e4` was stopped because R1 changed code; it will run exactly once on the approved commit and its receipt will be added before the PR.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
