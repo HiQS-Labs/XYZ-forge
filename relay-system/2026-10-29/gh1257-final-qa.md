@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -209,5 +209,59 @@ Reopening for one post-approval change. The full gate on `030db02d` (874 s, disp
 Question: is this one-line fallback correct and sufficient, and does anything else in the split depend on `__init__`-only attributes that `__new__`-built engines (gh423) would lack?
 
 Handing off to Reviewer (codex) — round 3 of 3; go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 3 · codex
+
+**VERDICT: PASS**
+
+**Basis:** Approve the one-line compatibility correction. It restores the default database path for the existing gh423 reader seam without changing configured planner behavior. Final full-gate readiness remains outstanding.
+
+swept file: yes
+
+Re-read both complete source files, the approved plan, retained SUMMARY/checks/parity/provenance and the entire gh423 suite as read-only specifications. No additional material pre-existing defect found beyond the previously recorded rating-rendering nit. Project enumeration (84 entries, no further page) has no index for this worktree; the nearest XYZ-forge index belongs to another checkout, generation 2026-09-01T15:54:30Z. Its coverage metadata marks the planner changed and gh423 untracked. Used direct source fallback throughout; no current-generation graph claim. No git, suite, executable control script or fixture was run.
+
+- **[Pass] The fallback is correct and sufficient for the observed regression.** `utils/py/_marathon_plan.py:885` now uses `getattr(self, "RELEASES_DB", "") or os.path.join(self.ROOT, "releases.db")`. Missing and empty attributes select the old default; a nonempty override still selects the frozen database supplied by `harness.py:255–260`. The pure expression probe below exited 0, with the old direct access raising the expected AttributeError as its red control. No broader defaulting mechanism is needed.
+- **[Pass] No other new initialization dependency reaches the gh423 stopping point.** `test/gh423-roadmap-render.sh:90–106` supplies ROOT, ROADMAP and QUEUE_DIR, sets the explicit-roadmap environment seam and raises ReaderComplete from the first `_gh_issue_of` call. `_marathon_plan.py:885–917` reaches that call using those supplied attributes; SOURCE_NAME and SOURCE_LINK are assigned along the way. The intervening parser helpers (`:490–575`) read no instance data attributes. The suite's other `__new__` uses call only `_parse_ledger` (`test/gh423-roadmap-render.sh:60–71,171–173,186`). This establishes the existing partial-engine seam by inspection; arbitrary uninitialized engines are not promised to complete scheduling or rendering.
+- **[Pass] The approved split and pilot remain unchanged apart from this correction.** Replacing only the new expression with the former direct attribute expression **in memory** yields SHA-256 `f0bd823394151379756a0f4c0148e816e474d78a1e41183436f499b0f2aaa226`, exactly the round-2 approved planner hash. Current harness hash is still `adb1986c4a5a348c3eea37993d305a3a165e359d26f334ced7d6ab603309bef0`. Current planner hash is `aea2ce335ba1da89b552892570e133794a3a67e63d808fa89eb24fa616c73819`. This corroborates the bounded correction without claiming a git diff check. The earlier plan/evidence dispositions, including the #216 under-count and 60/35/50/45 rating, still apply (plan “Findings” / “Rating rationale”; SUMMARY “Hand inspection”).
+
+Reproduction command for the expression and one-line attribution probes (both executed probes exited 0; combined reproduction below; no source imports, fixtures or file writes):
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import ast, hashlib, os
+from pathlib import Path
+from types import SimpleNamespace
+raw = Path('utils/py/_marathon_plan.py').read_bytes()
+tree = ast.parse(raw)
+engine = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Engine')
+compute = next(n for n in engine.body if isinstance(n, ast.FunctionDef) and n.name == 'compute')
+expr = next(n.value for n in compute.body if isinstance(n, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == 'db_path' for t in n.targets))
+code = compile(ast.Expression(expr), '<db_path>', 'eval')
+for label, attrs in [('missing', {}), ('empty', {'RELEASES_DB': ''}),
+                     ('override', {'RELEASES_DB': '/frozen/releases.db'})]:
+    value = eval(code, {'os': os, 'self': SimpleNamespace(ROOT='/probe', **attrs)})
+    assert value == ('/frozen/releases.db' if label == 'override' else '/probe/releases.db')
+    print(label, '->', value)
+try:
+    eval('self.RELEASES_DB or os.path.join(self.ROOT, "releases.db")',
+         {'os': os, 'self': SimpleNamespace(ROOT='/probe')})
+except AttributeError as exc:
+    print('red control ->', type(exc).__name__, str(exc))
+else:
+    raise AssertionError('red control did not fail')
+new = b'getattr(self, "RELEASES_DB", "") or os.path.join(self.ROOT, "releases.db")'
+assert raw.count(new) == 1
+digest = hashlib.sha256(raw.replace(
+    new, b'self.RELEASES_DB or os.path.join(self.ROOT, "releases.db")')).hexdigest()
+assert digest == 'f0bd823394151379756a0f4c0148e816e474d78a1e41183436f499b0f2aaa226'
+print('one-line reversal matches round-2 approved planner sha256:', digest)
+PY
+```
+Decisive output from the executed probes: `missing -> /probe/releases.db`; `empty -> /probe/releases.db`; `override -> /frozen/releases.db`; `red control -> AttributeError 'types.SimpleNamespace' object has no attribute 'RELEASES_DB'`; one-line reversal matched the hash above.
+
+- **[Unverified — needs clone run] Final gate and corrective suite receipts.** `TESTS-RESULTS/2026-10-29+GH-1257/gate.txt` is absent in this seeded tree. Retained provenance still ends with evidence attributed to `030db02d`; it does not contain the newly reported `761389dd` focused reruns or the completed full rerun. The Producer's round-3 report is acknowledged, not independently attested here. The outer harness must complete the disposable-clone gate and retain exact-revision logs/provenance before asserting readiness. SUMMARY's forward reference to gate.txt remains a pending evidence obligation, not proof of a green gate.
+
+Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and final gate; this reviewer changed only this relay file and closes the token with `done`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
