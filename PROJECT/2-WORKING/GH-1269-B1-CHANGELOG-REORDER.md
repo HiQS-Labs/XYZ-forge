@@ -2,6 +2,7 @@
 title: merge-cleanup B1 CHANGELOG repair reorders existing same-date sections
 status: Active (2-WORKING)
 created: 2026-10-30
+updated: 2026-10-30
 owner: noelsaw1
 gh_issue: 1269
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1269
