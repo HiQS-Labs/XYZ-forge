@@ -25,7 +25,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Fix `311b47b9`: both Bash fallbacks answer `--help`/`-h` like their Python twins, under a `Frozen-twin-exception` trailer; checks in `TESTS-RESULTS/2026-10-30+GH-445/` | Final Codex QA and the PR |
+| Fix `311b47b9` + package/doc fixes `ca7bc009`; final Codex QA approved (r3); full gate 408/409 at `ca7bc009` (agy quota only) (`TESTS-RESULTS/2026-10-30+GH-445/`) | PR against development; awaiting review |
 
 ## Why
 
