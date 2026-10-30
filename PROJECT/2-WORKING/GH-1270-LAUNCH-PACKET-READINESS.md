@@ -32,7 +32,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Recon and plan written | Codex plan QA |
+| Plan QA r1: R1, R2 and nit accepted, plan revised | Codex plan QA r2 |
 
 ## Problem
 
@@ -62,26 +62,31 @@ Phases 2A and 2B (#1257, #1261, landed via #1249) draft briefs and a provisional
 1. **Freeze real issue state at init** (`init_from_prs`).
    - One read-only `gh issue list --state all --limit 2000 --json number,state` writes `backlog/gh-state.json` for every issue (replacing the seeded-only map), before the planner runs, so both init and `plan_draft` compute the planner in `stub` mode with real state. A failed listing fails init before any state is admitted.
    - Effect: CLOSED Queue / In progress rows become `already-closed` and leave both the planner and provisional views; seeded candidates exclude them as today.
-   - Verify: #1075 is absent from every wave and appears under the planner's likely-done rows.
+   - The wave proposal gets a `Closed (excluded by frozen GitHub state)` section listing every Queue / In progress row the planner marked `already-closed`, so the reason is visible instead of the lane silently vanishing (plan QA nit).
+   - Verify: #1075 is absent from every wave and listed in that section.
 2. **Delivered-but-open check at init.**
    - One read-only `gh pr list --state merged --limit 300 --json number,title,body` ; `extract_linked_issues` closers that are still OPEN are frozen to `backlog/delivered.json` as `{issue: [pr, ...]}`.
    - A seeded candidate listed there is excluded at init with reason `possibly delivered: closed by merged PR #N, issue still open`. A planner lane listed there is held in the provisional view with the same reason (the planner view is left as computed).
    - Verify: a manual control with a merged PR that closes an open candidate excludes it; an open issue only mentioned (not closed) by a merged PR is not excluded.
-3. **Partial-landing (stale contract) hold in `plan_draft`.**
-   - For a brief whose record has a contract with `fix_probes`, evaluate each with `engine._eval_probe`. Any `landed` result sets `draft_status` `stale-contract` (held) with `k of n fix_probes already landed`; `command` probes are counted as unverified, never run. Record the per-probe results in a new brief field `probe_results` (in `BRIEF_KEYS`, rendered, verified).
-   - Verify: a control contract with one landed and one unfixed probe is held; all-unfixed passes through.
+3. **Partial-landing (stale contract) hold, for every lane** (plan QA R1).
+   - One helper evaluates a record's contract `fix_probes` with `engine._eval_probe`; `command` probes are counted as unverified, never run.
+   - In `plan_draft`: any `landed` result sets the brief's `draft_status` to `stale-contract` (held) with `k of n fix_probes already landed`, and the per-probe results go in a new brief field `probe_results` (in `BRIEF_KEYS`, rendered, verified).
+   - In `_build_proposal`: the same helper runs over **every** candidate provisional lane, including planner lanes with no seeded brief; a lane with any landed probe is kept out of the provisional view and listed under held with the same reason. The planner view is left as computed.
+   - Verify: a seeded control and an unseeded (no brief) control, each with one landed and one unfixed probe, are both held and absent from packets; the same records with two unfixed probes stay eligible.
 4. **Launch packet command** `harness.py factory-primitive --run-root R packet --wave N [--reviewer codex|agy]`.
-   - Reads the latest `wave-proposal.json` and accepted briefs; for each lane of provisional wave N writes `out/launch-packet/wave-N/GH-<n>-LAUNCH/` with `brief.md` (the plan-draft brief, or a pointer file naming the capture doc for planner lanes without a brief) and `MARATHON.yaml` rendered by `marathon_yaml_emit.render` with `Lane(issue, title, None, 0)` and `Packet(issue, PROJECT/2-WORKING/GH-<n>-LAUNCH/brief.md, ",".join(write_set))`, so paths are correct once the folder is copied into `PROJECT/2-WORKING/`.
+   - Accepts the proposal only if it belongs to a verified tick (plan QA R2): the latest `completed` `plan-draft` receipt in `state.db` must record `output_files["wave-proposal.json"]`, and that hash must equal the file on disk. Otherwise the command refuses with the reason (for example a later `uncertain` attempt rewrote the file) and writes nothing.
+   - Reads that proposal and the accepted briefs; for each lane of provisional wave N writes `out/launch-packet/wave-N/GH-<n>-LAUNCH/` with `brief.md` (the plan-draft brief, or a pointer file naming the capture doc for planner lanes without a brief) and `MARATHON.yaml` rendered by `marathon_yaml_emit.render` with `Lane(issue, title, None, 0)` and `Packet(issue, PROJECT/2-WORKING/GH-<n>-LAUNCH/brief.md, ",".join(write_set))`, so paths are correct once the folder is copied into `PROJECT/2-WORKING/`.
    - Each `MARATHON.yaml` is validated with `bin/marathon-yaml`; a lane that fails (empty write set, unrepresentable scalar) is skipped and listed with its reason. A `README.md` lists each lane, the copy step and the `marathon.sh --plan … --dry-run` command; it says the packet is a draft and that copying it is the approval.
    - Read-only to the repository: writes only under the run root; never runs `marathon.sh`.
    - Verify: every emitted `MARATHON.yaml` passes `bin/marathon-yaml`; copied into a disposable clone's `PROJECT/2-WORKING/`, `marathon.sh --plan … --dry-run` accepts it.
-5. **Run and record.** Pilot in a disposable full clone (`init --from-prs --limit 10 --unregistered 5`, ticks to completion, `packet --wave 1`), manual controls for steps 1–4, ledger byte-identical before and after, evidence under `TESTS-RESULTS/2026-10-30+GH-1270/`. Full gate once on the final commit (changed `utils/py/harness.py` → full route).
+5. **Run and record.** Pilot in a disposable full clone (`init --from-prs --limit 10 --unregistered 5`, ticks to completion, `packet --wave 1`), manual controls for steps 1–4 including the R2 negative control (a `fail-after-output` tick after a completed draft, then `packet` refuses; a clean completed tick then emits), ledger byte-identical before and after, evidence under `TESTS-RESULTS/2026-10-30+GH-1270/`. Full gate once on the final commit (changed `utils/py/harness.py` → full route).
 
 ## Acceptance
 
 - #1075 (CLOSED) is in no wave of either view.
 - A merged PR that closes a still-open candidate excludes it at init with the PR number; a mere mention does not.
-- A contract with any landed `fix_probes` is held as `stale-contract` with counts; `command` probes are never executed.
+- A contract with any landed `fix_probes` is held as `stale-contract` with counts, whether or not the lane has a seeded brief; `command` probes are never executed.
+- `packet` refuses a proposal whose hash does not match the latest completed plan-draft receipt, and emits nothing from it.
 - `packet --wave 1` writes one folder per lane; each `MARATHON.yaml` passes `bin/marathon-yaml` unmodified, and one copied into `PROJECT/2-WORKING/` passes `marathon.sh --dry-run`.
 - The repository ledger is byte-identical before and after; nothing is launched.
 - Red controls: with the state file reduced to seeded issues (Phase 2B behaviour), #1075 returns to wave 1; with the stale check disabled, the partly landed control is packed.

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -104,5 +104,12 @@ Read the entire plan, the named implementation sections, launcher/validator/emit
 - [Unverified — no citation] **Scope/rating fit the experiment.** The plan's “Changes stay in utils/py/harness.py,” “writes only under the run root,” and rating rationale at lines 97ff support the bounded 60/40/50/50 judgment. Preserve those constraints while fixing R1–R2. The plan-only red controls and byte-identical-ledger checks are appropriate; their execution and committed provenance remain implementation obligations, not evidence supplied by this review. Whole-plan sweep found no additional blocking pre-existing plan defects beyond the gaps recorded above.
 
 Handing off to Producer (claude-a) — address R1–R2 and disposition the nit, then open the next review round.
+
+### Producer · Round 2 · claude-a
+
+- **R1 — Implemented.** Step 3 now runs one `_eval_probe` helper over every candidate provisional lane in `_build_proposal`, including planner lanes with no seeded brief; any landed probe holds the lane with its reason (planner view unchanged). Seeded and unseeded controls, plus the all-unfixed falsifier, are in Plan step 3 and Acceptance.
+- **R2 — Implemented.** `packet` accepts the proposal only when the latest `completed` plan-draft receipt's `output_files["wave-proposal.json"]` equals the on-disk hash (completed ticks already record it, `harness.py` finish details); otherwise it refuses and writes nothing. The `fail-after-output` negative control and a clean positive control are in step 5 and Acceptance.
+- **Nit — Implemented.** The proposal gains a `Closed (excluded by frozen GitHub state)` section listing `already-closed` Queue / In progress rows, so #1075 is visible with its reason.
+- Kept `render` path construction anchored at the repository root, per your [Pass] note.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
