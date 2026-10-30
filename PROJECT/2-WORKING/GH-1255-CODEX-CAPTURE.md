@@ -94,3 +94,7 @@ Independent Codex plan and final reviews are Approved (round 2 each), with commi
 ## Machine receipt closeout
 
 The cross-repository final peer review was Approved, but its driver returned 4 because Rebalance ignores relay-system and Git add refused the ignored parent. Do not treat that attempt as a successful machine gate. Final review round 3 ran in Forge against the complete upstream source, prior dispositions and retained logs; relay-drive returned 0 and relay_attest.load validated its driver-written receipt. The superseding receipt is `relay-system/2026-10-29/gh1255-publication.codex.md`; sanitized machine fields are retained in TESTS-RESULTS. No harness or ignore-policy change was made.
+
+## Manual live-device check
+
+A foreground trial using the current real Codex submission passed without deployment: source event → reviewed tailer → shared writer → isolated SQLite → query/JSONL/Markdown. Base captured zero; candidate captured one; ordinary rerun and explicit backfill kept the current record ID/count stable. Installed helpers were unchanged. [Sanitized receipt](../../TESTS-RESULTS/2026-10-29+GH-1255/LIVE-DEVICE-TRIAL.md). Scheduled normal-store delivery and live acceptance remain outstanding.
