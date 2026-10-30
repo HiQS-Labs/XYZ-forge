@@ -14,7 +14,7 @@ issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1273
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved at 51860e59; accepted-start admitted | Implement narrow fallback and verify |
+| Plan QA Approved at 51860e59; accepted-start admitted | Final QA and classified gate |
 
 Plan receipt reconciliation: reviewer consumed seeded plan from 51860e59. Concurrent 6a079035 changed only relay Setup and duplicate Producer text, not the plan or runtime. Both inputs remain in git history. Driver preserved concurrent commit then committed its reviewed snapshot; the approval applies to unchanged source plan, not the unseen duplicate. No production approval inferred.
 
@@ -46,3 +46,7 @@ Operational envelope: existing local relay harness. Commensurate complexity only
 ## Lessons Learned
 
 Pending verification; NO_ENTRY until observed controls support a lesson.
+
+## Execution evidence
+
+Focused suites and manual receipts: TESTS-RESULTS/2026-10-30+GH-1273/. Canonical byte stream and record layout unchanged. Done-state trace: judge_terminal requires done after valid body; startup refuses spent done tokens; no automatic reset/recovery implemented. Wider mechanical verdict repair split from this separator delivery. Conservative HTML contexts may still refuse format drift rather than risk literal loss.

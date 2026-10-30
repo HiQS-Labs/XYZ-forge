@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-30 — GH-1273 harmless relay separators
+
+- The reviewer-history check retains strict canonical comparison first, then tolerates empty separator-line count changes outside protected literal content with a warning. Canonical record coordinates and loader semantics are unchanged; substantive history and invalid approvals remain refused. Raw transcript remains intact. Reversibility: Costly shared approval boundary; rollback by reverting this change.
+- Mechanical verdict repair is deferred: a done token is spent on driver restart, so safe recovery needs separately reviewed state work. No recovery or approval bypass is introduced.
+
 ## 2026-10-30 — GH-1261 outer loop drafts unregistered issues and resolves bare file names
 
 - `harness.py factory-primitive init --from-prs --unregistered N` adds N open issues that have no ledger row, read once at init. `plan-draft` gives them a planner-shaped record, and every seeded unregistered issue is visible to dependency lookup, so a dependent waits for its prerequisite.
