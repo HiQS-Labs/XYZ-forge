@@ -1,6 +1,6 @@
 ---
 title: merge-cleanup B1 CHANGELOG repair reorders existing same-date sections
-status: Active (2-WORKING)
+status: Complete
 created: 2026-10-30
 updated: 2026-10-30
 owner: noelsaw1
