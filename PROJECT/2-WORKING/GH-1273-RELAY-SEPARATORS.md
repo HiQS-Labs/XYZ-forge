@@ -1,6 +1,6 @@
 ---
 title: Relay separator attestation
-status: in-progress
+status: blocked
 owner: Codex
 goal: Accept harmless review separators while protecting history
 created: 2026-10-30
@@ -14,7 +14,7 @@ issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1273
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved at 51860e59; accepted-start admitted | Final QA and classified gate |
+| Final QA exhausted 3 rounds; B3 reproduced | Correct mixed space/tab literal detection; obtain authorized fresh review cycle |
 
 Plan receipt reconciliation: reviewer consumed seeded plan from 51860e59. Concurrent 6a079035 changed only relay Setup and duplicate Producer text, not the plan or runtime. Both inputs remain in git history. Driver preserved concurrent commit then committed its reviewed snapshot; the approval applies to unchanged source plan, not the unseen duplicate. No production approval inferred.
 
@@ -50,3 +50,13 @@ Pending verification; NO_ENTRY until observed controls support a lesson.
 ## Execution evidence
 
 Focused suites and manual receipts: TESTS-RESULTS/2026-10-30+GH-1273/. Canonical byte stream and record layout unchanged. Done-state trace: judge_terminal requires done after valid body; startup refuses spent done tokens; no automatic reset/recovery implemented. Wider mechanical verdict repair split from this separator delivery. Conservative HTML contexts may still refuse format drift rather than risk literal loss.
+
+## Resumable blocker — final QA cap
+
+Shipped final relay command: `CODEX_AGENT=codex RELAY_PEER=claude-a ALLOW_PATHS='' bash relay-automation/relay-drive.sh --relay-file relay-system/2026-10-30/gh1273-final.codex.md --relay-task RELAY-gh1273-final --artifact-file PROJECT/2-WORKING/GH-1273-RELAY-SEPARATORS.md --agent-cmd relay-automation/codex-turn.sh --reviewer codex --round-cap 3 --review-once`.
+
+Result exit 4: `relay-drive: relay escalated to human by design (STATUS: Escalated, token open:claude-a)`. Independent review ran and failed; no final approval. Round-three reviewer commit: 5c7d26c6. All three rounds and dispositions retained in the final relay thread.
+
+Unresolved B3 input: `pre=b"STATUS: Open\n\n \talpha\n\n \tbeta\n"`; delete the empty line after alpha and append substantive PASS. Observed fallback boundary 24; required None. Four spaces and initial tab controls already refuse. Fix the neighbor classifier in relay_attest.separator_prefix_end to recognize equivalent space/tab indentation without altering any original nonblank bytes. Record reviewer exact control in existing manual evidence, then obtain an explicitly authorized fresh independent review cycle; do not extend or reset this capped relay implicitly.
+
+Full classified gate not run: workflow requires final Approved first. No push or PR; no merge. Task and verification full clones preserved with local commits/evidence. Primary untouched. Current score remains 85/82/50/65. NO_ENTRY: current controls do not support a general lesson. Retire only after a verified ready PR; this blocked checkpoint is not eligible.
