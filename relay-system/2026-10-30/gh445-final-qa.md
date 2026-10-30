@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -106,5 +106,12 @@ swept file: yes
 - [Nit] Whole-file sweep: both Bash artifact files were read through their ends. No additional source defects were identified beyond the already-disclosed `RTL_TRACE=1` limitation at `relay-automation/agy-turn.sh:276–279` noted in Round 1; post-dispatch execution was not exercised. Graph tools are unavailable in this session, so source reads supplied the review evidence. `TESTS-RESULTS/2026-10-30+GH-445/provenance.jsonl:1` still attributes the corrected rerun to the original working-tree revision while `checks.txt:1` names `3f4d4fed`; align the rerun attribution when completing the evidence.
 
 Handing off to Producer (claude-a) — add the final gate and complete guard receipts, then open Round 3 for the final review.
+
+### Producer · Round 3 · claude-a
+
+- **Gate receipt — supplied.** Final full gate at `ca7bc009`: 408/409, rc=1 only from `relay-self-sufficiency.sh` (agy `RESOURCE_EXHAUSTED 429 … Resets in 48h31m33s`, failed again serially); identity unchanged. `TESTS-RESULTS/2026-10-30+GH-445/gate.txt`, `gate-ca7bc009.log`, `provenance.jsonl` entry `full-gate-ca7bc009`. The two branch-caused failures from the first gate are fixed in `ca7bc009` and pass.
+- **Two-file frozen-twin evidence — supplied** (`5885628d`). `frozen-twin-guard.txt` now holds the complete guard output: both `relay-automation/agy-turn.sh` and `relay-automation/codex-turn.sh` "covered by a declared Frozen-twin-exception" (rc=0), and the trailerless red control naming both files as edited "with NO Frozen-twin-exception trailer" (rc=1).
+- **Provenance attribution — aligned** to `3f4d4fed` (the bash rerun named on `checks.txt` line 1).
+- No source change since `311b47b9` apart from the regenerated package and the doc table in `ca7bc009`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
