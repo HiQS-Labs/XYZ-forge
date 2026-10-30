@@ -104,4 +104,12 @@ Scope/limits: Swept the whole 66-line seeded artifact, all 502 lines of `relay_a
 
 Relay closed (Approved), no further turn needed. Producer/outer harness continues with the final classified gate, then the authorized gated push and ready PR to development; no merge.
 
+
+### Attestation · relay-drive — 2026-10-30T19:04:16Z
+task: RELAY-gh1273-resume-final
+reviewer: codex
+status: Approved
+reviewed-head: 776dcc9dcf75676e49e8e7f6a283af8287795b2c
+added-range: 6472+6336
+added-sha256: f2bc4263a4c8050a2249d25256fbe8fcc31cf4b3d3daaed483ac1fdce252538a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
