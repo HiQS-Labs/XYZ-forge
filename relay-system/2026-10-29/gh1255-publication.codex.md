@@ -133,4 +133,12 @@ Packet SHA256: 3a2d9ed29e4cd85234287ef9ebe962e2b465052f0f68975c85f2471c2969ef8e
 
 Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and subsequent machine gate/attestation.
 
+
+### Attestation · relay-drive — 2026-10-30T01:45:18Z
+task: RELAY-gh1255-publication
+reviewer: codex
+status: Approved
+reviewed-head: 91074257458a6c8cd14624acf56b239c4c219325
+added-range: 6039+6669
+added-sha256: 8620b83283a77728eca518ec3e0ec1ac0349d432866d85870aebf4260e85cc05
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
