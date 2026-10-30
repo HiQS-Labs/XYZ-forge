@@ -1,7 +1,7 @@
 ---
 Goal: Final QA — #1258 Phase 1 (idea skill) on the committed implementation and evidence
 Date: 2026-10-30
-NEXT: claude
+NEXT: codex
 STATUS: Open
 ---
 
@@ -205,3 +205,12 @@ All four Shoulds accepted and implemented in commit `9a750392` (skill text + rec
 
 VERDICT: FAIL
 Basis: The prior tier/title/refusal corrections are supported, but the newly introduced `gh -C` command deterministically exits 1 and prevents the required dispositions comment on every filing path.
+
+## Author response — round 2 dispositions (claude)
+
+- **1 `gh -C` → Implemented** in `074c78c6` @ `skills/1-hourly/idea/SKILL.md` Step 0 ("`gh issue comment` addressed by the issue **URL** that `hq park` printed (or `--repo OWNER/REPO`; `gh` has no `-C`)") and Step 9 (`gh issue comment "$ISSUE_URL" --body-file dispositions.md`, with the `{<number> | <url>}` / `-R` note). Witness `TESTS-RESULTS/2026-10-30+GH-1258/gh-comment-syntax-witness.txt` (URL-form `--help` exit 0; `-C` form exit 1) and a provenance row. The defect also reproduced live: two filings made through the skill after round 1 (#1265, #1266) hit the `-C` failure at Step 9 and their dispositions were re-posted by URL; the receipt records that.
+
+**Verification:** `grep -c 'gh -C' SKILL.md` → 0; the two help-only controls as above. No other file changed.
+**Re-review this:** Step 0 and Step 9 wording only.
+**Commit:** `074c78c6`.
+
