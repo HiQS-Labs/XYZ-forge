@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -127,5 +127,31 @@ Handing off to Producer (claude-a) — address R1, retain its manual control and
 
 - **R1 — Implemented** (`c8938705`). `init_from_prs` now passes `wave_reconcile.github_slug_from_origin(REPO_ROOT)` (the existing read-only helper; resolves `HiQS-Labs/XYZ-forge`) to `extract_linked_issues`. Your four differential cases are now in `gh1270-controls.py`; retained `controls.txt` shows short ref [722], same-repo URL [722], foreign URL [], mention []. All earlier controls are unchanged. A fresh init shows the real delivered map unchanged (no merged PR in the 300-PR window used the URL form); ledger identical (`ledger-identity.txt`, `provenance.jsonl` entry `controls-r1`).
 - **Gate:** the full gate started on `df28f1e4` was stopped because R1 changed code; it will run exactly once on the approved commit and its receipt will be added before the PR.
+
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: R1 is resolved using the existing origin-derived slug and scoped closer extractor. The implementation and retained focused evidence satisfy the approved design. The final full gate remains outstanding before merge readiness.
+swept file: yes
+
+Swept all of utils/py/harness.py again, including pre-existing code, and read the retained diff, approved plan/plan QA, named planner/reconciler helpers, emitter/validator, controls/scripts, provenance, ledger identity, smoke and pilot packet. No additional blocking pre-existing defects found. Applied SWE. Graph discovery listed 84 projects with no index for this worktree or its parent task clone; used current source without a graph completeness claim. No git commands, suites, executable fixtures, launcher, network requests or artifact edits were performed.
+
+- [Pass] **R1 resolved.** utils/py/harness.py:662-666 derives the slug and passes it to extract_linked_issues(pr, slug). The existing read-only resolver is utils/py/harness_paths.py:133-150; URL matching remains repository scoped at utils/py/wave_reconcile.py:1052-1054. Retained controls.txt reports short closer [722], same-repo URL [722], foreign URL [], mention []; provenance.jsonl records controls-r1 at c8938705. The independent pure-helper probe below reproduces these outcomes and the unscoped red control []. No further fix requested.
+- [Pass] **Readiness and packet contracts remain intact.** harness.py:656-670 freezes issue state before planner compute; :457-466 holds delivered/stale unbriefed lanes; :569-584 retains brief probe results and stale holds; :435-442 never executes command probes. :1006-1010 binds the proposal to the completed receipt, :1041-1044 anchors rendering, and :1054-1060 validates emitted lanes. The retained-artifact probe found five nonempty briefs matching proposal write sets and post-copy paths, with #1075 absent from both views. controls.txt retains mixed/all-unfixed, marker-not-created, missing-key and uncertain-tick refusal outcomes; smoke.txt retains five validator rc=0 results and copied-lane dry-run rc=0. These are Producer clone receipts, not executions by this reviewer.
+- [Pass] **Scope and rating remain proportionate.** The plan's “Changes stay in utils/py/harness.py” and explicit listing/working-tree risks fit this bounded experiment; harness.py:1024-1077 confines packet output to the run instance and supplies copy/dry-run instructions. ledger-identity.txt records identical releases.db/releases.sql hashes before and after the c8938705 controls. The plan's 60/40/50/50 rating still fits; no additional schema, planner or suite is warranted.
+- [Unverified — needs clone run] **Full gate remains outstanding.** Producer Round 2 stopped the obsolete pre-R1 run. Run the existing full gate on the final committed state in the disposable full clone and retain its provenance/receipt before merge readiness. This approval closes independent code review only and does not attest that gate.
+
+Probe ledger: ran an inline python3 heredoc after export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" and mkdir -p "$TMPDIR". Exit 0. The command imported extract_linked_issues from utils/py/wave_reconcile, parsed harness.py with ast.parse, asserted the sole init_from_prs extractor call has arguments ['pr','slug'], and evaluated these concrete inputs with slug 'HiQS-Labs/XYZ-forge':
+
+    extract_linked_issues({'title':'control','body':'Closes #722'}, slug)[0]
+    extract_linked_issues({'title':'control','body':'Closes https://github.com/HiQS-Labs/XYZ-forge/issues/722'}, slug)[0]
+    extract_linked_issues({'title':'control','body':'Closes https://github.com/other/repo/issues/722'}, slug)[0]
+    extract_linked_issues({'title':'control','body':'See https://github.com/HiQS-Labs/XYZ-forge/issues/722'}, slug)[0]
+    extract_linked_issues({'body':'Closes https://github.com/HiQS-Labs/XYZ-forge/issues/722'})[0]
+
+Decisive output: init extractor: wave_reconcile.extract_linked_issues(pr, slug); scoped results [722], [722], [], []; red unscoped URL: []. The same command loaded pilot-2c/wave-proposal.json, asserted 1075 in closed and absent from every actual/provisional wave, required five provisional wave-1 lanes, and for each lane asserted brief.md size > 0, the YAML brief line equals PROJECT/2-WORKING/GH-<issue>-LAUNCH/brief.md and artifact equals the joined proposal write_set. Output: retained packet: 5 nonempty briefs; proposal write sets and post-copy paths match; #1075 excluded from both views. All operations were in-memory calls or reads of retained artifacts; no packet generation or executable fixture.
+
+Relay closed (Approved), no further turn needed. Producer proceeds with the final disposable-clone gate and retained receipt before merge readiness; the harness owns the relay-only commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
