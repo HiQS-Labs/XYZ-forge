@@ -2,9 +2,9 @@
 gh_issue: 418
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/418
 title: "GH-418: the marathon planner reads the frozen ROADMAP.md — adopt the releases DB"
-status: 2-WORKING
+status: Complete
 created: 2026-09-03
-updated: 2026-09-08
+updated: 2026-10-30
 owner: unassigned
 goal: "marathon-plan ranks lanes from releases.db (via the rendered ledger), with zero DB-parked items invisible"
 doc_type: bugfix

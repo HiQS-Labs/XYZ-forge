@@ -1,0 +1,15 @@
+./validate.sh (route=full) at 9f895a8f in the verify clone: rc=1 in 886s, passed 408 / 409.
+HEAD and origin identical before and after.
+
+Only failure: relay-self-sufficiency.sh. It makes one live agy call, and agy returned
+"RESOURCE_EXHAUSTED (code 429): Individual quota reached ... Resets in 51h19m23s". It failed the
+same way on the gate's serial rerun. Nothing in the diff (utils/py/harness.py only) touches
+relay-automation/, test/, bin/ or src/, and the pre-push gate, CI and hosted reconcile skip this
+suite by design (GH-836). The same agy quota error broke the same suite in the GH-1261 sync gate
+earlier today.
+
+Working-tree note (operator error, disclosed): the verify clone had 19 tracked files deleted
+during this run. All were under TESTS-RESULTS/2026-10-30+GH-1270/ (evidence copies): a folder
+removal before the pull deleted them. No code or test file was affected, and no gate suite
+reads that folder. The files were restored afterwards with `git checkout -- TESTS-RESULTS`. The
+code under test equals the committed HEAD.
