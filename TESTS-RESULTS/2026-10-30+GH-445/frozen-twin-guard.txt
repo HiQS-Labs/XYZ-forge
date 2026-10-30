@@ -1,0 +1,8 @@
+# frozen-twin guard (GH-308/GH-321) on 311b47b9
+with trailer: bash test/gh308-frozen-twin-guard.sh --check --base origin/development --allow-exceptions -> rc=0
+gh308 guard: relay-automation/codex-turn.sh — covered by a declared Frozen-twin-exception
+gh308 guard: every frozen-twin edit in this range is accounted for — declared, or the freeze itself
+red control (same edit, no trailer, throwaway worktree): rc=1
+gh308 guard: put the fix in the Python twin, or declare the exception per file:
+  Frozen-twin-exception: <path> — <reason>
+guard self-suite: 38 pass, 0 fail
