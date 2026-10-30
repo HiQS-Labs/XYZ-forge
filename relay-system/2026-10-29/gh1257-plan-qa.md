@@ -52,7 +52,8 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: `PROJECT/1-INBOX/GH-1257-BACKLOG-WAVE-PILOT.md` (the plan). Read it in full, plus the code it cites: `utils/py/harness.py` (factory-primitive: `TOOLS`, `rules_decide`, `execute_tool`, `init_instance`, `_snapshot`, `_validate`, `_run_tool`, `_verify_output`, `run_tick`, `status`), `utils/py/_marathon_plan.py` (`Engine.__init__`, `_resolve_gh`, `_gh_state`, `_file_existed_at_base_ref`, `_branches`, `_load_ledger_from_db`, `run`), `utils/py/marathon_plan.py`, `PROJECT/2-WORKING/GH-1248-OUTER-LOOP-PRIMITIVE.md`, issues #1248 and #1257.
+- Artifact under review: `PROJECT/1-INBOX/GH-1257-BACKLOG-WAVE-PILOT.md`
+- Also read (the code the plan cites): utils/py/harness.py (factory-primitive: TOOLS, rules_decide, execute_tool, init_instance, _snapshot, _validate, _run_tool, _verify_output, run_tick, status); utils/py/_marathon_plan.py (Engine init, _resolve_gh, _gh_state, _file_existed_at_base_ref, _branches, _load_ledger_from_db, run); utils/py/marathon_plan.py; PROJECT/2-WORKING/GH-1248-OUTER-LOOP-PRIMITIVE.md; issues #1248 and #1257.
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-29
 - Operational envelope: a local, single-operator, read-only experiment on an unmerged spike branch. Grade against the plan's stated requirements and commensurate complexity; do not demand multi-tenant or enterprise machinery. XYZ-forge forbids new test suites (AGENTS.md, GH-831): verification is existing suites plus manual controls under `TESTS-RESULTS/`.
