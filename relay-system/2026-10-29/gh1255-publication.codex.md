@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -67,5 +67,70 @@ ROUND: 3 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: Approve the seeded implementation/publication packet against the local capture contract. The recovery-command correction and prior plan dispositions are present; the retained clone receipts support the scoped implementation. This approval does not attest a machine gate that has not yet completed, authorize merge/deployment, or establish live recovery.
+swept file: yes
+
+Read the entire 4,268-line packet, including the complete tailer, both changed suites, INSTALL, fixture/version diffs, tracking/parity evidence, prior turns and retained logs. No additional material pre-existing defect found in the reviewed capture/replay paths. The known age-only lock limitation remains explicitly bounded by exclusive replay instructions. All citations below refer to `.relay-artifacts/gh1255-publication-packet.md`.
+
+- [Pass] Submitted-event provenance and retry behavior remain aligned with the plan: packet :1013 establishes first-file provenance; :1062 excludes children and non-event messages; :1068 accepts legacy text or modern UserMessage string text parts; :1087 applies timestamp eligibility. The replay checkpoint at :1159 precedes delivery, and :1228 advances only successful chunks. Existing-suite assertions at :1575 require a pending zero-offset/history checkpoint after the second-write failure, then ordinary retry, two stored rows, stable IDs and unchanged source/cutoff. Preserve these paths; no behavior change requested.
+- [Pass] The warning remains diagnostic: packet :1238 caps/reset-checks the existing state comment, warns only at the third active zero-acceptance tick, and explicitly says activity alone does not prove lost prompts. Existing threshold/reset assertions are at :1595; the disabled-canary receipt at :4248 fails with "canary must warn once at three active ticks". No new infrastructure or suite is warranted.
+- [Pass] Prior dispositions are satisfied: durable replay and exclusive scheduling were required at :3824 and :3829 and accepted at :3857-3858. The complete INSTALL recovery instruction at :3419 contains one balanced span, `CLIO_TAIL_BACKFILL=1 "$HOME/.claude/hooks/clio-codex-tail.sh"`; :3416 requires stopping/draining invocations and :3422 restores the identical previously loaded job on success or failure. The earlier malformed command remains only as historical review evidence. Retain the corrected current instruction.
+- [Pass] Producer clone evidence is internally consistent: all 11 embedded hashed logs match their provenance records at :3698. The modern-shape red control at :4244 reports delivered=1 instead of two; :4256 reports "replay intent lost on writer failure". Corrected Codex output at :4110 records the modern/replay/SQLite/canary pass, and :4154 records "Ran 17 tests" followed by "OK". The fixture correction at :2613 uses `store.utc()` while retaining the five-row assertions; the unchanged-base failure at :4090 is "4 != 5". These are reviewed clone receipts, not a reviewer suite rerun.
+- [Unverified — no citation] Forge parity stays baseline evidence: packet :727 pins the upstream/standalone/Forge revisions, and :877-887 separates source parity, pending live acceptance, existing PDDA findings and the failed cross-repo machine publication. The 15 embedded digest/mode records agree; an altered digest and empty input are rejected by the read-only comparison below. This is internal receipt consistency, not a fresh comparison against remote repositories. Keep Forge #1255 open through actual acceptance as required at :79.
+- [Unverified — needs clone run] No suites, executable fixtures, Git commands, deployment or live DB probes were run in this turn. The enclosing Forge harness must commit this relay and successfully produce its actual gate/attestation; the historical approval/attestation text at :4053 does not establish successful cross-repo machine publication, which :887 explicitly disclaims. Final-push checks, merge, standalone publication, deployment, requested-session recovery and the 120-second target observation remain separate pending work.
+
+Read-only probe command (exit 0; reads packet text and hashes only; no artifact code executed):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+import hashlib, json, re
+from pathlib import Path
+p=Path('.relay-artifacts/gh1255-publication-packet.md')
+s=p.read_text()
+assert len(s.splitlines()) == 4268
+section=s.split('## Complete upstream file: TESTS-RESULTS/2026-10-29+GH-368/provenance.jsonl\n\n',1)[1].split('\n## Complete upstream file:',1)[0]
+receipts=[json.loads(line) for line in section.splitlines() if line.strip()]
+logs=s.split('## Upstream captured logs\n\n',1)[1]
+checked=[r for r in receipts if 'log_sha256' in r]
+assert len(checked)==11
+for r in checked:
+    body=logs.split('### '+r['log']+'\n\n',1)[1].split('\n### ',1)[0].rstrip('\n')+'\n'
+    assert hashlib.sha256(body.encode()).hexdigest()==r['log_sha256'],r['log']
+print('11 embedded log SHA256 values match provenance')
+install=s.split('## Complete upstream file: utils/clio-capture/INSTALL.md\n\n',1)[1].split('\n## Complete upstream file:',1)[0]
+needle='`CLIO_TAIL_BACKFILL=1 "$HOME/.claude/hooks/clio-codex-tail.sh"`'
+hits=[line for line in install.splitlines() if needle in line]
+assert len(hits)==1 and hits[0].count('`')==2
+print('Recovery command: one balanced span with quoted HOME executable')
+parity=s.split('+++ b/TESTS-RESULTS/2026-10-29+GH-1255/parity.json\n',1)[1].split('\ndiff --git ',1)[0]
+parity=json.loads('\n'.join(line[1:] for line in parity.splitlines() if line.startswith('+')))
+def matches(rows):
+    return bool(rows) and all(r['manifest_sha256']==r['standalone_sha256']==r['upstream_sha256'] and r['standalone_mode']==r['upstream_mode'] for r in rows)
+assert len(parity['files'])==15 and matches(parity['files'])
+changed=[dict(r) for r in parity['files']]; changed[0]['upstream_sha256']='0'*64
+assert not matches(changed)
+assert not matches([])
+assert needle.replace('$HOME/','/') not in install
+print('Baseline parity: 15 matching digest/mode records; altered digest and empty input rejected')
+print('Packet SHA256: '+hashlib.sha256(p.read_bytes()).hexdigest())
+PYPROBE
+```
+
+Decisive output:
+
+```text
+11 embedded log SHA256 values match provenance
+Recovery command: one balanced span with quoted HOME executable
+Baseline parity: 15 matching digest/mode records; altered digest and empty input rejected
+Packet SHA256: 3a2d9ed29e4cd85234287ef9ebe962e2b465052f0f68975c85f2471c2969ef8e
+```
+
+Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and subsequent machine gate/attestation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
