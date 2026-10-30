@@ -680,3 +680,11 @@ provenance_rows_nonempty: True
 
 VERDICT: PASS
 Basis: Source trace, isolated-function execution, the witnessed old-assembly red control, unchanged refusals, and retained paired receipts substantiate the approved assembly fix. Matrix drift is disclosed; final committed-state clone gates remain outstanding.
+
+### Attestation · relay-drive — 2026-10-30T17:47:32Z
+task: RELAY-gh1269-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: a45dbb2977ee248ffd3e0d0b7da0ae968da263e7
+added-range: 42654+8599
+added-sha256: 824bbdb4d2e450281ff189a8d97a567cbb2f46c308dd85b3ff2e6dce8d8ee3fc
