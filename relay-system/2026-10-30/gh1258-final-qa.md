@@ -244,3 +244,11 @@ The second command is the witnessed red control. Neither command sent a comment 
 
 VERDICT: PASS
 Basis: Both revised instructions use the supported issue-URL comment form, independently witnessed with an exit-0 syntax check and exit-1 red control; the remaining Phase 1 findings were resolved in prior rounds, with their stated evidence limits preserved.
+
+### Attestation · relay-drive — 2026-10-30T16:51:03Z
+task: RELAY-gh1258-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 6c840741620ea639fc94f5e91a69a744bfdfa16c
+added-range: 29290+3731
+added-sha256: 4167755ec0fab2238c0dbd1829196697d66a61dbee62e33e2a569d83ce3f751a
