@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -174,5 +174,27 @@ Both remaining findings and both nits accepted; plan steps 2–4 and AC3/AC5 rev
 - **Nit (path escape) — Implemented.** AC5 adds a `../` traversal and symlink-out control for cited paths.
 
 Handing off to Reviewer (codex) — final round 3 of 3; go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 3
+
+**VERDICT: PASS**
+
+**Basis:** Approve the plan for implementation in the stated local, read-only spike envelope. F1–F6 and both round-2 nits are addressed at plan level. The engine/executive reuse, bounded seed, explicit provisional admission and scoped ambiguity handling are proportionate. This is plan approval, not an implementation, sandbox or gate attestation.
+
+swept file: yes
+
+Re-read the entire GH-1257 plan, the GH-1248 plan, both live issue bodies, and the cited executive/planner/wrapper paths. Relevant pre-existing weaknesses (single-output verification, retry after ambiguous failure, consumption omission for a new tool, forced-tail packing and in-place wave mutation) remain explicitly covered by the plan; no additional material pre-existing defect was found in the reviewed scope. Graph tools are unavailable in this session; direct source reads provide the evidence, without a graph completeness claim.
+
+- **[Pass] F6 closes missing-scope admission.** Plan `PROJECT/1-INBOX/GH-1257-BACKLOG-WAVE-PILOT.md:83` requires “both sourced scope and a sourced write set” and holds missing scope even with existing paths. AC3 at `:95` specifies the paired same-path control with and without scope. This directly addresses issue #1257's “unknown scope never enters a parallel wave.”
+- **[Pass] F3 now binds production, verification and receipts together.** Plan `:85` specifies required brief keys with explicit missing evidence, manifest-matched request/issue/doc fingerprints, byte-for-byte Markdown re-rendering, proposal identity, and per-file plus aggregate hashes. Its corruption controls cover wrong hashes, removed keys and Markdown disagreement. This extends the existing `_verify_output` and receipt seams (`utils/py/harness.py:474–486,591–606`) without a second validator subsystem. A later cumulative proposal is a new version; the earlier receipt attests its recorded hashes, not the current bytes at that shared path. Runtime enforcement remains to be measured.
+- **[Pass] The remaining lifecycle and planner corrections remain intact.** Plan `:77–79,85` specifies revision identity, transactional request consumption and uncertain/quarantine for ambiguous attempts; `_reconcile` already reads `inbox_id` (`utils/py/harness.py:435–441`) and `finish` owns transactional consumption (`:113–125`). Plan `:72,83` preserves normal CLI forced-tail behavior while using copied provisional records, existing zone/seam logic and a non-forcing packer. This addresses the current forced-tail and mutation branches (`utils/py/_marathon_plan.py:1164–1189`).
+- **[Pass] Init and tick boundaries are sufficiently specified.** Plan `:74–81` uses the read-only gateway backup, Queue-only candidates, init `gh_force="off"`, tick stub mode and `deep=False`, CLOSED/unreadable exclusions, source fingerprints and doc mismatch rejection. These match `releases_app.py:432–446`, `_marathon_plan.py:435–470,766–807,1022–1030` and the slot digest seam at `harness.py:367–377`. AC5 (`plan:97`) now includes traversal and symlink escape controls. No new network or write authority is requested.
+- **[Pass] Verification, scope and rating are commensurate.** Plan `:72,87,91–98` retains existing suites and recorded manual controls, including fixed-input base/candidate report/render/exit-code comparison. Existing coverage is visible at `test/marathon-plan.sh:101–128`, `test/gh698-planner-db-ratings.sh:160–168` and `test/gh362-marathon-plan-link-bullets.sh:55–81`; it is not complete equivalence proof. No new planner/module/suite (`plan:70`), deferred adapters/watchdog (`:64`), draft limitations (`:102`), branch abandonment (`:105`) and the 60/35/50/45 rationale (`:109`) remain appropriate.
+
+Evidence ledger: source reads exited 0. In particular, `nl -ba PROJECT/1-INBOX/GH-1257-BACKLOG-WAVE-PILOT.md` showed `:83`'s “both sourced scope and a sourced write set” and `:85`'s “receipt records a hash per file”; `nl -ba utils/py/harness.py | sed -n '45,240p;285,379p'` showed consumption and receipt writes inside the same `with conn` at `:117–124`. Read-only connector calls `github_fetch_issue(repository_full_name="HiQS-Labs/XYZ-forge", issue_number=1257)` and the corresponding #1248 call both succeeded. Inspected `LESSONS-LEARNED.md:38–43`; the tightened verifier and its producer are planned together. No git command, suite, executable fixture or harness was run, and no runtime probe success is claimed.
+
+**[Unverified — needs clone run]** Actual compute/render parity, Seatbelt/Python/git compatibility, byte-identical repository evidence, all negative controls and required gates remain implementation acceptance work in a disposable full clone. Approval does not discharge those checks.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
