@@ -148,4 +148,12 @@ This measures current comparison behavior, not prospective fallback correctness.
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-30T18:13:45Z
+task: RELAY-gh1273-plan
+reviewer: codex
+status: Approved
+reviewed-head: 51860e590ff21fb5b35014a8873c85560d2a6e44
+added-range: 11593+3934
+added-sha256: 463a98ab6dafe3e25c07c6bda05ab0d01c232c634f20754991bc6525b4fff12e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
