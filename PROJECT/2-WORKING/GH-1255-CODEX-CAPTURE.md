@@ -90,3 +90,7 @@ All six existing upstream CLIO suites now pass, including 17 store cases. Three 
 ## Final QA
 
 Independent Codex plan and final reviews are Approved (round 2 each), with committed relay receipts. All six upstream CLIO suites pass; 17 store cases pass; three negative controls fail as intended. Forge deterministic PDDA passes with existing warnings. Rebalance observe-mode PDDA retains existing unrelated findings; these are disclosed in its PR/evidence. No full Forge runtime suite was run for this docs-classified tracking change. Lessons: NO_ENTRY.
+
+## Machine receipt closeout
+
+The cross-repository final peer review was Approved, but its driver returned 4 because Rebalance ignores relay-system and Git add refused the ignored parent. Do not treat that attempt as a successful machine gate. Final review round 3 ran in Forge against the complete upstream source, prior dispositions and retained logs; relay-drive returned 0 and relay_attest.load validated its driver-written receipt. The superseding receipt is `relay-system/2026-10-29/gh1255-publication.codex.md`; sanitized machine fields are retained in TESTS-RESULTS. No harness or ignore-policy change was made.
