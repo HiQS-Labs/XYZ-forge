@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -106,5 +106,30 @@ Handing off to Producer (claude-a) — resolve B1 and S1, refresh the existing m
 B1 Implemented: protect entire empty run by nearest nonblank literal neighbors. Exact reviewer negative recorded in replay-r2.log.
 S1 Modified: fallback judges each history at its actual own citation positions, avoiding positional POST lookahead for PRE. Append-sensitive ambiguities refuse conservatively. Ordinary canonical_bytes/record semantics unchanged. Exact reviewer positive passes; substantive negatives remain red.
 Real driver/shim separator smoke and loader round trip now retained. Review committed diff packet in TESTS-RESULTS/2026-10-30+GH-1273/review-diff.txt as well as source files. Full gate will run once after Approved.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: B1 and S1 are resolved on their exact inputs, but a measured HTML literal-history bypass remains in the separator fallback. Approval must wait for B2 below.
+swept file: yes
+
+- [Blocker] **B2 — an inner comment clears protection for an enclosing HTML literal** (`utils/py/relay_attest.py:178-193`). After `<pre>` sets `literal = b"html"`, the `<!-- note -->` branch overwrites it with `None`. A later empty line inside that same `<pre>` becomes optional, so deleting a literal byte is accepted as separator drift. The identical deletion without the inner comment is correctly refused. Keep the enclosing conservative HTML protection when processing comments; no full Markdown parser is needed. Add this negative control to the existing manual evidence in a disposable full clone, without a new suite or gate.
+  Observed input: `pre=b"STATUS: Open\n\n<pre>\n<!-- note -->\nalpha\n\nbeta\n</pre>\n"`; POST deletes only the blank between `alpha` and `beta` and appends a substantive PASS review. This blank is inside `<pre>`, not between review sections.
+  Affected scope: separator fallback on HTML literal histories containing an inner HTML comment, after which literal empty lines occur between ordinary text lines.
+  Falsifier: the exact probe must return fallback `None`, as its without-comment control already does; ordinary prose separator edits must remain accepted and fenced/indented negatives refused. If this candidate already refuses the exact input, B2 is unnecessary.
+  Probe command (in-memory helper query only):
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  PYTHONPATH=utils/py python3 -c 'import relay_attest as a; p=b"STATUS: Open\n\n<pre>\n<!-- note -->\nalpha\n\nbeta\n</pre>\n"; r=b"\n### Reviewer (codex)\nVERDICT: PASS\nBasis: source.py:1\n"; q=p.replace(b"alpha\n\nbeta",b"alpha\nbeta")+r; print("strict=",a.canonical_bytes(q).startswith(a.canonical_prefix(p,q)),"fallback=",a.separator_prefix_end(p,q)); c=p.replace(b"<!-- note -->\n",b""); print("without-comment=",a.separator_prefix_end(c,c.replace(b"alpha\n\nbeta",b"alpha\nbeta")+r))'
+  ```
+  Exit status: **0**. Decisive output: `strict= False fallback= 47` and `without-comment= None`. Expected first fallback: `None`. Root cause: comment handling overwrites the active enclosing HTML state; fix site: the literal-state transition in `separator_prefix_end`; downstream offset/writer changes would merely hide the misclassification. The driver accepts a returned offset and emits its harmless-separator warning before the nonempty-body/done checks (`utils/py/relay_drive.py:722-741`); that consequence is source-traced, not an end-to-end execution here.
+
+- [Pass] **R1 B1 and S1 resolved on the reported inputs.** The exact long-indented-run input now returns `None`; the exact citation-position input returns boundary `56` (`utils/py/relay_attest.py:186-209`). Same in-memory probe, exit **0**: `B1 None`, `S1 56`, ordinary prose deletion `strict=False fallback=20`, fenced deletion `fallback=None`, historical FAIL-to-PASS rewrite and sentence deletion both `None`. These results support the bounded fixes, not blanket literal preservation in light of B2.
+- [Pass] **Writer, loader and refusal contracts remain shared.** The strict comparison remains first and fallback changes only the selected start offset (`utils/py/relay_drive.py:719-759`); record/trailer publication remains on the existing path (`utils/py/relay_drive.py:767-782`), and load retains range/digest/trailer checks (`utils/py/relay_attest.py:363-378`). Builder-role and failed turns are rejected before fallback (`utils/py/relay_drive.py:706-717`); empty appended bytes and a non-done token still refuse (`utils/py/relay_drive.py:736-741`). This is source inspection; final candidate execution remains **[Unverified — needs clone run]**.
+- [Pass] **Supplied receipts are nonempty and internally intact.** Read-only Python parsed every row of `TESTS-RESULTS/2026-10-30+GH-1273/provenance.jsonl`, read each `artifact`, and asserted nonempty bytes plus SHA-256 equality; exit **0**, `entries= 11`, all eleven `hash-match= True`. The two driver logs retain the warning, terminal approval and `driver separator approval and real loader PASS` (`TESTS-RESULTS/2026-10-30+GH-1273/driver-smoke-r2.log:24`, `TESTS-RESULTS/2026-10-30+GH-1273/driver-adjacent.log:24`). `replay-r2.log` records both loader round trips and B1/S1 controls; it does not cover B2. Existing suite logs are supplied producer evidence, not independently rerun gates for the revised helper.
+
+Scope/limits: Read the whole seeded plan, the supplied runtime/instruction diff packet, all 498 lines of `relay_attest.py`, all 1172 lines of `relay_drive.py`, the whole `new-relay.sh`, and the supplied evidence/scripts as text. No additional pre-existing defect found in those full-file sweeps. The packet contains three runtime/instruction diffs; complete branch-wide path enumeration is not independently established under the prohibition on git. Issue #1273 could not be refreshed (`gh issue view 1273 --json title,body,url`, exit **1**, `error connecting to api.github.com`); this round uses the local plan and prior relay context. Graph access returned `MCP tool call requires approval, but approval policy is never`, so direct reads were used. No git, suite, pytest, executable fixture or model turn was run. Only this relay file was edited. Costly approval-boundary change; the plan's narrow revert remains the rollback. Final gate and complete diff accounting remain with the outer harness/Producer.
+
+Handing off to Producer (claude-a) — resolve B2, record the negative and ordinary-separator controls in the existing manual receipts from a disposable full clone, then request round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
