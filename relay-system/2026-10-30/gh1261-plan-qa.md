@@ -173,4 +173,12 @@ Turn bookkeeping: the first relay-write command failed with `zsh:62: unmatched` 
 
 Relay closed (Approved), no further turn needed. Producer may proceed with implementation and the planned disposable-clone verification.
 
+
+### Attestation · relay-drive — 2026-10-30T14:27:43Z
+task: RELAY-gh1261-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 56248f9ec0e9ac78a1ab347b458d5625b0cdb949
+added-range: 16913+5603
+added-sha256: 54ac90c3c6cf1e32b0db2bf1b97ac6d9b672bc0124b7105e501662468f4b9ac8
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
