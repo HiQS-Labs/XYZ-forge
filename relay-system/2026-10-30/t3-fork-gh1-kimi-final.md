@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -72,5 +72,23 @@ ROUND: 1 / 3
 Implementation and verification are complete for independent review. No full browser/account session is claimed.
 VERDICT: PASS
 Basis: Required check:changed gate and runtime login-command smoke pass; final approval belongs to reviewer.
+
+### Reviewer · Round 1
+Ship within the packet's stated compatibility and verification scope.
+
+VERDICT: PASS
+Basis: The complete supplied diff and all five full source files implement the bounded plan without a concrete blocking finding. Source review supports legacy terminal routing, modern precedence, environment ordering, PTY filtering and session verification before success. Execution results below remain producer-reported evidence, not a reviewer rerun.
+swept file: yes
+
+- [Pass] Legacy resolution is bounded and shared: `probe.ts:102` decodes a nonempty command, optional string-array argv and optional string-record env; `probe.ts:125`–`127` returns the legacy command and replacement argv. `auth.ts:121` and `auth.ts:280` use that same resolver for discovery and execution. No provider-specific branch or new transport is introduced. No fix requested.
+- [Pass] Modern precedence is preserved: `probe.ts:114`–`121` selects modern terminal spawn plus appended method args first, then rejects legacy fallback for any explicit type. Malformed legacy metadata returns no terminal recipe (`probe.ts:122`–`123`); explicit agent and malformed examples are present in `apps/server/src/provider/AcpRegistryProbe.test.ts:159`–`175`. The source also preserves explicit env_var precedence through the same early return. No fix requested.
+- [Pass] Runtime behavior preserves the existing boundary: `auth.ts:177` merges base -> resolved spawn -> login env; `auth.ts:123` filters terminal discovery without a PTY and `auth.ts:162`–`166` rejects terminal execution without one. `auth.ts:282` closes the original ACP scope before PTY login; `auth.ts:286`–`301` reconnects and awaits session start before `auth.ts:327` calls `onChanged(true)`. Existing cancellation and failed-verification cases remain in `auth.test.ts:348`–`384`. No fix requested.
+- [Pass] The Vite prerequisite is minimal: `apps/web/vite.config.ts:328` uses `NodeURL.fileURLToPath(new URL(...))` for the existing alias, correctly decoding a spaced file path without changing its destination. No fix requested.
+- [Pass] Packet consistency probe: command `PYTHONDONTWRITEBYTECODE=1 python3 .relay-scratch/check-packet.py`, exit 0. Decisive output: `PASS: 20 new-side hunks match 5 nonempty full files`; sensitivity output: `RED CONTROL: in-memory resolver mutation rejected at ('packages/provider-acp-registry/src/server/probe.ts', 99)`. The stdlib parser compares each new-side diff hunk with its full-file line range; changing only the in-memory legacy command schema to `Schema.String` makes the comparison fail. The seeded artifact was untouched. Evidence location: `.relay-artifacts/final-packet.md`, “Committed diff” and all five “Full file” sections. This checks packet consistency, not runtime behavior. No fix requested.
+- [Unverified — needs clone run] The packet's “Verification receipt” reports a pre-fix red regression, 8 auth / 12 probe passes, and `vp run check:changed` passing on revision `cf236c223c2945e8b7a741266b69af8851c642af`. Its runtime transcript reports device-login prompts for 1.52.0 and 2.3.1, explicitly says “account completion not attempted,” and leaves independent current-home credential verification pending. These claims were assessed against the supplied assertions and transcript; no suite, fixture, browser/account login, or paid turn was executed here. Harness verification remains separate; this approval does not attest a completed integrated account login.
+
+Full sweep included pre-existing normalization, probe/management, browser/env-var authentication, PTY cleanup, tests and Vite configuration. No additional concrete pre-existing defect was found in the supplied files. Reversibility: Easy for the bounded resolver/caller and alias changes; the packet's rollback requires no schema migration.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
