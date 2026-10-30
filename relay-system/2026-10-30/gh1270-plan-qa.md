@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -78,5 +78,31 @@ Plan ready: `PROJECT/2-WORKING/GH-1270-LAUNCH-PACKET-READINESS.md`. Specific que
 3. Is a partial `fix_probes` landing via `_eval_probe` (working tree) a sound stale-contract hold, with `command` probes never executed?
 4. One `MARATHON.yaml` per lane (because phases run serially) — correct reading of marathon.sh? Is reusing `render` with brief paths pointing at the post-copy `PROJECT/2-WORKING/GH-<n>-LAUNCH/brief.md` location sound?
 5. Are acceptance checks and red controls sufficient?
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: the reuse choices fit this local experiment, but readiness does not cover every emitted lane and the packet input is not tied to a successful tick. Resolve R1–R2 before implementation.
+swept file: yes
+
+Read the entire plan, the named implementation sections, launcher/validator/emitter and evidence note; read live issues #1270 and #1075. Graph Verify attempt: nearest indexed project `XYZ-forge` is another checkout, generation `2026-09-01T15:54:30Z`; symbol lookup returned zero and coverage reported changed metadata, excluded `bin/`, and partial marathon.sh line 351. Used current worktree source instead; no completeness claim rests on that graph. Applied debug-mantra and SWE review principles. No source edits, git commands, suites or launcher runs.
+
+- [Should] **R1 — apply stale-contract holds to planner lanes without briefs too.** Plan step 3 (line 71) evaluates only “For a brief”; step 4 (line 74) explicitly emits planner lanes without briefs. `harness.py:440-445` copies every active record unless refused by a brief. A partially landed contract is still active because `_marathon_plan.py:1003-1011` removes only all-landed contracts. Consequently a lane outside the limited seed set bypasses this new check and is packed. Fix: evaluate the same read-only predicate for all candidate provisional lanes before packing, using `_eval_probe`, preserving the actual planner view; retain a reason for unbriefed lanes. Add an unseeded-lane manual control alongside the seeded control.
+  Observed input: a ready active record `gh=99999`, writeset `['utils/py/harness.py']`, no accepted briefs, contract probes `{'type':'path_absent','path':'utils/py/harness.py'}` and `{'type':'grep_absent','path':'utils/py/harness.py','pattern':'GH1270_NEVER_PRESENT_CONTROL'}`. Narrow Python probe invoked `Engine._eval_probe` and `_build_proposal` with packing/seam methods stubbed only to return supplied lanes: exit 0, decisive output `probe verdicts: ['landed', 'unfixed']`, `no-brief partial-landed provisional: [[{'issue': 99999, 'provisional': False, 'write_set': ['utils/py/harness.py']}]]`, `held: []`. This isolates admission, not planner packing correctness.
+  Affected scope: provisional planner lanes with any landed contract probe, including lanes with no seeded/accepted brief; leave unrelated all-unfixed lanes eligible.
+  Falsifier: the same no-brief record with two unfixed probes must remain eligible; the mixed landed/unfixed record must be held and absent from emitted packets even when it lies outside `--limit`.
+
+- [Should] **R2 — define accepted-proposal selection before consuming “latest wave-proposal.json.”** Plan line 74 names the mutable latest file plus accepted briefs but gives no rule for a latest proposal belonging to an unsuccessful tick. `harness.py:562-572` writes the proposal before the existing `fail-after-output` raises; `harness.py:1083-1093` then quarantines that attempt. Reading only accepted briefs does not remove an unaccepted lane already present in that proposal. Fix: use the existing completed/verified tick and receipt evidence to require the proposal itself belongs to an accepted tick and matches its recorded output hashes; simplest is to refuse packet generation when the latest proposal is unverified or mismatched, with a clear reason. No new gate or journal is needed. Specify a manual negative control and evidence destination.
+  Observed input: the existing literal fault `fail-after-output` at `utils/py/harness.py:571`, after `_atomic_write(out_dir / 'wave-proposal.json', ...)` at line 566; an unsuccessful tool can leave the newest proposal containing its own brief, while `_accepted_briefs` (`harness.py:928-933`) excludes its tick. This is a source-observed failure path; it was not run as a harness fixture here.
+  Affected scope: packet consumption of latest proposals from uncertain, failed, incomplete or output-mismatched attempts, while allowing successful verified proposals.
+  Falsifier: in a disposable clone, run the existing `fail-after-output` control after a completed draft, then request a packet: it must refuse the unverified latest proposal and emit no packet from it; a completed tick with matching receipt hashes must emit normally. Record under `TESTS-RESULTS/2026-10-30+GH-1270/` with provenance. [Unverified — needs clone run].
+
+- [Pass] **Reuse and packet shape are sound.** `_gh_state` consumes string-keyed frozen states (`_marathon_plan.py:463-473`), CLOSED Queue/In progress takes `already-closed` (`:994-997`), and readiness preserves existing state (`:1042-1045`). `extract_linked_issues` explicitly distinguishes closers from mentions (`wave_reconcile.py:1026-1065`). `_eval_probe` falls through to `blocked` for command probes (`_marathon_plan.py:362-386`). A narrow command `PYTHONDONTWRITEBYTECODE=1 python3` importing `marathon_yaml_emit` and calling `render([Lane(99999,'control',None,0)], {99999: Packet(99999,Path('PROJECT/2-WORKING/GH-99999-LAUNCH/brief.md'),'utils/py/harness.py')}, 'codex', Path('GH-99999-LAUNCH'))` from the repository root exited 0 and emitted `brief: PROJECT/2-WORKING/GH-99999-LAUNCH/brief.md` and `artifact: utils/py/harness.py`. Keep path construction anchored to the repository root because `brief_value` uses caller CWD (`marathon_yaml_emit.py:208-214`). One packet per lane agrees with the example's “phases run STRICTLY ONE AT A TIME” comment. Actual validator/copied-clone launcher acceptance is [Unverified — needs clone run].
+
+- [Nit] **Expose closed exclusions in the proposal/report.** Issue #1270 Acceptance says “#1075 ... listed as excluded with its reason,” whereas plan line 65 asks only for the planner's likely-done row. With the new early planner filter, #1075 never enters the candidate pool and therefore need not reach `manifest.excluded` (`harness.py:620-627`, `:472-486`). State where its already-closed reason is surfaced to the operator; carry it into the existing report rather than silently disappearing.
+
+- [Unverified — no citation] **Scope/rating fit the experiment.** The plan's “Changes stay in utils/py/harness.py,” “writes only under the run root,” and rating rationale at lines 97ff support the bounded 60/40/50/50 judgment. Preserve those constraints while fixing R1–R2. The plan-only red controls and byte-identical-ledger checks are appropriate; their execution and committed provenance remain implementation obligations, not evidence supplied by this review. Whole-plan sweep found no additional blocking pre-existing plan defects beyond the gaps recorded above.
+
+Handing off to Producer (claude-a) — address R1–R2 and disposition the nit, then open the next review round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
