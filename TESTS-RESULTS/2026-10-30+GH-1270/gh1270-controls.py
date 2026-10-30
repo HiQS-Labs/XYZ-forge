@@ -78,3 +78,10 @@ with tempfile.TemporaryDirectory() as tmp:
         show("verify-drop-probe-results", "accepted (BUG)")
     except (ValueError, KeyError) as exc:
         show("verify-drop-probe-results", f"refused: {exc}")
+
+# Final QA R1: closers are scoped to this repository's slug, as init_from_prs now passes it.
+slug = wave_reconcile.github_slug_from_origin(str(h.REPO_ROOT))
+for body in ("Closes #722", f"Closes https://github.com/{slug}/issues/722",
+             "Closes https://github.com/other/repo/issues/722", f"See https://github.com/{slug}/issues/722"):
+    show(f"closer-scoped {body.split()[0]} {body.split()[1][:30]}",
+         wave_reconcile.extract_linked_issues({"title": "control", "body": body}, slug)[0])

@@ -657,10 +657,12 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
         ["gh", "issue", "list", "--state", "all", "--limit", "2000", "--json", "number,state"], "issue state list")}
     (backlog / "gh-state.json").write_text(canonical(states) + "\n", encoding="utf-8")
     import wave_reconcile
+    # The slug lets the extractor count `Closes https://github.com/<this repo>/issues/N` (final QA R1).
+    slug = wave_reconcile.github_slug_from_origin(str(REPO_ROOT))
     delivered = {}
     for pr in gh_json(["gh", "pr", "list", "--state", "merged", "--limit", "300", "--json", "number,title,body"],
                       "merged PR list"):
-        for n in wave_reconcile.extract_linked_issues(pr)[0]:
+        for n in wave_reconcile.extract_linked_issues(pr, slug)[0]:
             if states.get(str(n)) == "OPEN":
                 delivered.setdefault(str(n), []).append(pr["number"])
     delivered = {n: sorted(set(prs)) for n, prs in sorted(delivered.items())}
