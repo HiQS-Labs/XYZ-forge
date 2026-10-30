@@ -1,7 +1,7 @@
 ---
 Goal: Final QA — #1258 Phase 1 (idea skill) on the committed implementation and evidence
 Date: 2026-10-30
-NEXT: codex
+NEXT: claude
 STATUS: Open
 ---
 
@@ -182,3 +182,26 @@ All four Shoulds accepted and implemented in commit `9a750392` (skill text + rec
 **Re-review this:** Steps 0, 2, 5, 7, 10 of the skill; `smoke.md` sections "Step 5 body check", "Rating: second write refused", "Trivial and spike tiers", "Title token rule"; acceptance accounting for items 2, 5, 7.
 **Commit:** `9a750392` (this turn's thread commit follows).
 
+
+### Round 2 · Reviewer · codex · 2026-10-30
+
+**Changes requested — 0 Blockers, 1 Should.** Round-1 findings 2–4 are addressed by the revised instructions and retained manual receipts. Finding 1 is substantially addressed, but its new comment command uses an unsupported CLI option and cannot complete Step 9. Reversibility: **Easy**; the remaining correction is confined to skill text. The relevant assumption is that GitHub CLI accepts Git's directory-selection flag; the help-only negative control disproves it.
+
+1. **[Should] Replace `gh -C` with a supported repository selector.** `skills/1-hourly/idea/SKILL.md:47-48,188-189` instructs `gh -C "$TARGET" issue comment N --body-file dispositions.md`. GitHub CLI does not support `-C`: the command fails during option parsing, before the dispositions comment can be posted. Both standard and spike paths reach Step 9 after filing and rating, leaving their required dispositions record unwritten. The historical main-path comment receipt used `gh issue comment`, not this revised command (`TESTS-RESULTS/2026-10-30+GH-1258/smoke.md:17`), so it cannot validate the new spelling.
+   - Use the issue URL returned by `hq park` directly, e.g. `gh issue comment "$ISSUE_URL" --body-file dispositions.md`, or use `--repo <resolved owner/repo>`. Remove the `-C` advice in Step 0 as well. The URL form keeps the resolved target explicit and requires no additional locator, writer or directory change. A help-only syntax witness is sufficient for this correction; do not post a duplicate comment just to test it.
+   - **Root cause:** target pinning was expressed using a Git option on `gh`; **fix site:** the two new skill instructions above; **why here:** the existing CLI already accepts an issue URL and `--repo`.
+   - **Exact negative probe:** `gh -C "$PWD" issue comment --help` → **exit 1**, decisive output `unknown shorthand flag: 'C' in -C`.
+   - **Exact positive syntax control:** `gh issue comment https://github.com/HiQS-Labs/XYZ-forge/issues/1263 --help` → **exit 0**, decisive output `gh issue comment {<number> | <url>} [flags]` and inherited `-R, --repo [HOST/]OWNER/REPO`. Both calls were help-only; neither sent a comment or exercised authentication.
+
+**Round-1 dispositions and acceptance accounting:**
+
+- **[Pass] Targeted ledger and preflight operations.** `skills/1-hourly/idea/SKILL.md:27-52,175-196` now resolves HQ's REPO_PATH, explains the task-clone/primary difference, pins rating/read-back with `--root "$TARGET"`, and pins capture/preflight with the target path. The GitHub comment operation is the sole remaining Should above. Recon must resolve in the target. Smoke `:9` explicitly records the differing caller and target.
+- **[Pass] Tier branch instructions.** Skill `:59-67,191-193,227` now stops trivial intake with the issue-first exemption and routes spike intake through filing/rating/commenting before reporting NEEDS-SPIKE without contract-dependent preflight. Retained `trivial-tier-witness.txt:1-5` supplies the no-write receipt. `spike-tier-preview.log:1-6` supplies preview rendering and the NEEDS-SPIKE report; `smoke.md:52` correctly calls this **preview only**, not an executed spike publication. Actual spike `--create` remains unverified by that receipt; the existing standard dogfood witnesses the shared HQ writer. No additional public spike is requested for the command correction above.
+- **[Pass] Title-token exclusion.** Skill `:158-170` rejects rated/ovr token-presence forms before preview, including truncated ratings and orphan overrides. This addresses the parser failure traced in round 1; the case-insensitive grep is conservatively broader than the parser's lowercase rule. No runtime fix for #1263 is assumed present.
+- **[Pass] Required refusal evidence and receipt correction.** Skill `:104-130` explicitly refuses the malformed draft before publication. `body-check/witnesses.txt:1-5` records the positive standard/spike inputs and empty-heading, boilerplate-PRS and prose-Acceptance red controls. The extracted checker matches the embedded block. `roadmap-rate-second-write-refused.log:1`, `provenance.jsonl:12` and `smoke.md:47` retain the already-rated refusal, exit 3, with unchanged-rating read-back. `red-controls/stale-report-replay.txt:1` now names issue, doc, row, STALE exit 4 and the deliberately wrong satisfied probe. `smoke.md:61` corrects the index check to fixed-string grep and acknowledges the original false receipt. These close round-1 finding 4 without adding a suite or registry entry.
+- **[Pass] Other Phase 1 claims remain supported within the prior verification boundary.** `ARCHITECTURE.md:49,60` has the hourly count and skill row; the main body retains eleven headings, four extractable Acceptance items, contract and matching footer hash. The read-only #1258 row remains 80/55/50/65 with null override, and its capture retains `ratings_provisional: true`. The 16-record provenance file and retained READY/STALE/NOT-READY, write-set and gh660 receipts remain author evidence. No admission marker, forced rerating, new ledger table, new test suite or change to a runtime writer is called for by the revision. Acceptance items 1–6 and 8 otherwise retain round 1's supported conclusions; item 7 now has the intended textual branches with the preview qualification above.
+
+**Verification boundary:** This turn used source/receipt reads, pure parser/hash/string inspection, read-only SQLite, and the two help-only CLI controls. It did not execute the retained checker/fixtures, any git command, a live writer, preflight, validate.sh, test/*.sh or pytest. Final-commit gate qualification remains **[Unverified — needs clone run]**, owned by the harness. The lesson at `LESSONS-LEARNED.md:38-83` was inspected; this revision does not tighten an existing hosted receipt gate. Only this relay file was edited; scratch remained under .relay-scratch/. Return to claude for the bounded command correction and syntax receipt.
+
+VERDICT: FAIL
+Basis: The prior tier/title/refusal corrections are supported, but the newly introduced `gh -C` command deterministically exits 1 and prevents the required dispositions comment on every filing path.
