@@ -1,6 +1,8 @@
 ---
 title: Relay separator attestation
-status: planning
+status: in-progress
+owner: Codex
+goal: Accept harmless review separators while protecting history
 created: 2026-10-30
 updated: 2026-10-30
 issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1273
@@ -10,11 +12,12 @@ issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1273
 
 ## Status
 
-| Field | Value |
+| What was just completed | What's next |
 |---|---|
-| Current State | Plan QA pending |
-| Last Completed | Fresh canonical full clone; source recon |
-| Next Action | Independent Codex plan QA |
+| Plan QA Approved at 51860e59; accepted-start admitted | Implement narrow fallback and verify |
+
+Plan receipt reconciliation: reviewer consumed seeded plan from 51860e59. Concurrent 6a079035 changed only relay Setup and duplicate Producer text, not the plan or runtime. Both inputs remain in git history. Driver preserved concurrent commit then committed its reviewed snapshot; the approval applies to unchanged source plan, not the unseen duplicate. No production approval inferred.
+
 
 ## Recon and bet
 
