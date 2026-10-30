@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -67,5 +67,44 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: The complete 471-line seeded packet is internally consistent with the stated documentation-only Definition of Done. Approval covers the evidence report, not independently repeated deployment, historical suite execution, live-store recovery, or strict timed acceptance. No blocking or pre-existing defect found in the full artifact sweep.
+swept file: yes
+
+- [Unverified — no citation] Acceptance remains bounded. The current status says “Deployed — fresh timed acceptance pending”; the deployment narrative says “Do not describe timed acceptance or issue completion as passed.” The ledger remains “In progress.” The two timestamp differences are 127.029 and 166.674 seconds, matching the reported observation bounds; neither establishes actual latency or a failed/passed 120-second trial. Preserve the explicit pending check. Citations: packet lines 9, 132, 198–213, 455.
+- [Pass] Recovery counts and exclusions agree across prose and JSON: “01a188ca has 4/4, 01a1892e has 3/3,” while 01a18930 has zero submitted events and no response_item fallback. Writer acceptances are explicitly distinguished from new rows; the post-recovery record retains stable IDs, cutoff, schema and integrity claims. Citations: packet lines 128–130, 176–196, 227–243. No correction required.
+- [Pass] Source, publication, HQ deployment, runtime and app discovery are distinct: Rebalance source revision, standalone merge revision, 15 published files versus 9 HQ folder files, current installed receipt, and “Other app UIs not exercised.” No fleet-wide or all-app acceptance is asserted. Citations: packet lines 122–126, 140–157. No correction required.
+- [Pass] Failures and dispositions are retained: the archived-source miss and exact-copy replay, concurrent fleet.last_result hash drift, generic helper's absent-ledger failure and scoped native-publication disposition, and the earlier driver exit 4 with superseding receipt. The historical sections are explicitly identified as historical. Numeric ratings remain 85/85/50/65 in both removed and added ledger rows; canonical issue and plan links remain. Citations: packet lines 102, 117, 128, 134, 249–251, 429–430, 454–455. No correction required.
+- [Pass] Narrow packet-only measurement: the command below exited 0. Decisive output: `packet_lines 471`; session dictionaries yielded submitted/stored/matched counts `4/4/4`, `3/3/3`, `0/0/0`, all missing counts zero; `computed_seconds 127.029 reported 127.029`; `computed_seconds 166.674 reported 166.674`; `timing_status pending fresh timed submission`; `rating - True True` and `rating + True True`. This measures the packet, not the private source store. Probe output stayed under .relay-scratch/tmp.
+
+  Command (after exporting PYTHONDONTWRITEBYTECODE=1 and TMPDIR="$PWD/.relay-scratch/tmp"):
+
+  ```sh
+  python3 - <<'PYPROBE' > "$TMPDIR/packet-probe.txt"
+  import json
+  from pathlib import Path
+  from datetime import datetime
+  p = Path(".relay-artifacts/gh1255-device-evidence-packet.md").read_text()
+  marker = "## TESTS-RESULTS/2026-10-29+GH-1255/device-deployment.json\n"
+  d = json.JSONDecoder().raw_decode(p.split(marker, 1)[1])[0]
+  print("packet_lines", len(p.splitlines()))
+  for sid, row in d["requested_sessions"].items():
+      print(sid, row)
+  for row in d["ordinary_schedule_observations"]:
+      delta = (datetime.fromisoformat(row["present_by"]) - datetime.fromisoformat(row["submitted_at"])).total_seconds()
+      print("computed_seconds", round(delta, 3), "reported", row["latency_upper_bound_seconds"])
+  print("timing_status", d["strict_120_second_acceptance"])
+  for line in p.splitlines():
+      if line.startswith(("+INSERT INTO roadmap_items", "-INSERT INTO roadmap_items")) and "'1255'" in line:
+          print("rating", line[0], "85/85/50/65" in line, "'85', '85', '50', '65', NULL, 'in-progress'" in line)
+  PYPROBE
+  ```
+
+- [Unverified — needs clone run] Historical suite/publisher success is reviewed as retained reporting only; no suite, executable fixture, Git command, live history/database/job query, or runtime action was run this turn. The harness owns subsequent gates. The fresh timed submission remains outstanding as expressly allowed by this relay's Definition of Done.
+
+Relay closed (Approved), no further turn needed. The producer's remaining operational milestone is the fresh timed 120-second acceptance check; this approval does not close GH-1255.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
