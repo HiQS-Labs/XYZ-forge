@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -121,5 +121,56 @@ Dispositions (plan revised in `PROJECT/2-WORKING/GH-1261-PLAN-DRAFT-PHASE-2B.md`
 - **R3 — Implemented (remove the cap).** The 25-path cap is removed, so new resolutions cannot evict an earlier path. 25+ citation control added (capture-doc path kept, collides with a competing lane).
 - **Nit — Implemented.** `gh issue list` runs only when N > 0. `unresolved_names` joins `BRIEF_KEYS` and the existing verifier controls. Parity is candidate-set parity (same issues and order), stated explicitly.
 - `.xyz/` strip now requires the stripped target in the frozen listing and reuses the existing containment checks (from your [Pass] note).
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: approve the plan for implementation. R1–R3 and the nit are addressed; the changes remain bounded to the existing harness and planner interfaces, with falsifiable manual controls. This approves the design, not an implemented result.
+swept file: yes
+
+Swept the entire revised plan, re-read the cited harness extraction/init/admission/proposal/verifier paths, planner record/dependency/zone/packing paths, Phase 2A SUMMARY, and live issues #1261/#216. No additional defects found in the reviewed plan beyond the now-addressed Round 1 findings. Verify-tier graph lookup again returned zero matching harness symbols; `XYZ-forge` generation `2026-09-01T15:54:30Z` belongs to another checkout and planner coverage reports `metadata_changed`. Used this worktree's source for material claims; no graph completeness claim. No git commands, suites, executable fixtures, source edits, or artifact edits performed.
+
+- **[Pass] R1 closed.** Plan lines 62–66 require a frozen-listing target for `.xyz/` normalization and say “Two or more → unresolved; no tie-break”. Lines 80–81 supply the one-match/two-match and #216 expectations. This follows #1261's explicit ambiguity requirement and preserves the existing containment checks (`utils/py/harness.py:318–335`).
+- **[Pass] R2 closed.** Plan line 73 supplies lookup records for **every** frozen unregistered request, then overlays admitted lanes. That fits the actual `_pack_waves` predicate (`utils/py/_marathon_plan.py:830–835`). The narrow probe below observed: omitted prerequisite → dependent packed; held/pending prerequisite → dependent unplaced; admitted prerequisite → earlier wave. This measures the existing planner with proposed input shapes, not an implemented Phase 2B harness.
+- **[Pass] R3 closed.** Plan line 65 removes the truncation at `utils/py/harness.py:477–480`; lines 75/83 require retaining the capture-doc path and its collision in the 25+ citation case. The prior counterexample cannot be silently truncated under the specified design. Implementation still needs to demonstrate it.
+- **[Pass] Integration and scope.** Plan lines 64/68/71–76 cover the new brief key and rendering, zero-mode's absence of a list call, synthesized reader keys, frozen inputs, unchanged planner waves, and disposable-clone verification. These extend the existing owners (`harness.py:251–266,338–356,385–430,443–543,546–619,1095–1103,1139–1145`) without a second planner, writer, module or suite. The new required key and its producer are specified together, consistent with LESSONS-LEARNED's gate lesson. No Engine constructor change is proposed.
+- **[Pass] Acceptance and rating.** Plan lines 75–86 specify nonempty pilot outputs, preservation/collision cases, dependency negative control, list failure, zero-mode parity and ledger identity, with evidence under `TESTS-RESULTS/2026-10-30+GH-1261/`. The red controls at line 86 target the under-count and omitted-record failure. Line 96's `55/40/50/60` remains proportionate to the local advisory experiment with no dispatch.
+- **[Unverified — needs clone run]** Phase 2B execution, manual controls, offline/containment behavior of the implementation, byte-identical ledger, candidate parity and final gate remain future evidence. Run the planned pilot/controls and gate in a disposable full clone and retain provenance per repository policy.
+
+Probe receipt: the following command exited **0**, with no module entry point, fixture or suite executed. It AST-extracts only the existing dependency constant and two packing methods; temporary bytecode is disabled.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import ast, re
+from pathlib import Path
+p=Path('utils/py/_marathon_plan.py')
+t=ast.parse(p.read_text())
+c=next(n for n in t.body if isinstance(n,ast.ClassDef) and n.name=='Engine')
+c.body=[n for n in c.body if isinstance(n,ast.FunctionDef) and n.name in {'_pack_waves','_find_by_gh'}]
+m=ast.Module(body=[n for n in t.body if isinstance(n,ast.Assign) and any(isinstance(x,ast.Name) and x.id=='DEP_RESOLVED' for x in n.targets)]+[c],type_ignores=[])
+ns={}; exec(compile(ast.fix_missing_locations(m),str(p),'exec'),ns)
+e=ns['Engine']()
+a=dict(gh=1262,state='ready',deps=[1263],writeset=['utils/py/harness.py'],zone='x',zoneRule=None,zoneInferred=False)
+b=dict(a,gh=1263,state='unregistered',deps=[],writeset=['PROJECT/PDDA.md'])
+for label,lanes,view in [('red',[a],[a]),('held/pending',[a],[a,b]),('admitted',[a,dict(b,state='ready')],[a,dict(b,state='ready')])]:
+    waves,unplaced=e._pack_waves(lanes,view,force_tail=False)
+    print(label,[[r['gh'] for r in w] for w in waves],[r['gh'] for r in unplaced])
+PY
+```
+
+Decisive output (wave issue lists, then unplaced issue list):
+
+```text
+red [[1262]] []
+held/pending [] [1262]
+admitted [[1263], [1262]] []
+```
+
+Root cause: extraction lost cited files and the proposal omitted unresolved prerequisite records; fix sites: the existing harness extraction and provisional dependency view; why not upstream/downstream: issue text already provides the evidence and the existing planner honors dependencies when supplied their records.
+
+Turn bookkeeping: the first relay-write command failed with `zsh:62: unmatched` (exit 1) before changing the file; the token `done` command then succeeded. Corrected the relay with a file-scoped patch. Token is closed; no self-commit performed.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with implementation and the planned disposable-clone verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
