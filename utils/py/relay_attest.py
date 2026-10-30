@@ -179,6 +179,8 @@ def separator_prefix_end(pre_raw, post_raw):
             if literal == b"-->":
                 if b"-->" in body:
                     literal = None
+            elif literal == b"html":
+                pass  # An inner comment cannot end an enclosing literal block.
             elif stripped.startswith(b"<!--"):
                 literal = None if b"-->" in stripped else b"-->"
             elif stripped.startswith(b"<"):

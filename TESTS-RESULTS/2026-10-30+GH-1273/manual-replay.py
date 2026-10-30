@@ -36,3 +36,8 @@ p=b"STATUS: Open\n\n[Pass] claim\n\n\n\nfile.py:1\n"
 q=(p.replace(b"Open\n\n",b"Approved\n")+review).replace(b"[Pass]",a._UNCITED)
 assert a.separator_prefix_end(p,q) is not None
 print('citation-position separator accepted PASS')
+
+p=b"STATUS: Open\n\n<pre>\n<!-- note -->\nalpha\n\nbeta\n</pre>\n"
+q=p.replace(b"alpha\n\nbeta",b"alpha\nbeta")+review
+assert a.separator_prefix_end(p,q) is None
+print('HTML enclosing literal with comment refused PASS')
