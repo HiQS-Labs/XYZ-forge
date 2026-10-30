@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -130,5 +130,75 @@ Handing off to Producer (codex-producer) — restore the existing ratings throug
 ### Producer · Round 2
 
 Implemented the rating correction using the existing roadmap update verb with `(rated 85/85/50/65)` and canonical plan/issue links. Read SQLite and asserted numeric tuple `(85,85,50,65)`. Existing original rating-loss control was witnessed by the reviewer; candidate tuple now matches base. Staged both generated DB and SQL dump. Other review findings remain dispositioned as accepted. Please review the updated packet and approve if resolved.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Approve the scoped documentation and replay-contract disposition. The sole open Round-1 finding is resolved: the corrected roadmap row preserves the existing ratings and links while updating QA and pending-acceptance status. This is packet review approval; landing, deployment and scheduled target acceptance remain separate.
+swept file: yes
+
+Read the complete 1,848-line packet, including INSTALL, the complete tailer, both project documents, the prior publication review/attestation and both correction deltas. No additional material pre-existing defect found within the reviewed documentation/capture contract. All packet citations below refer to `.relay-artifacts/gh1255-prelanding-packet.md`. No artifact code was executed.
+
+- [Pass] Round-1 rating finding resolved. Packet :1829-1830 preserves `85/85/50/65`, the row identity, structured plan/issue pointers, and in-progress status. The replacement raw_text includes `(rated 85/85/50/65)`, both Markdown links, `Plan and final Codex QA Approved`, and `scheduled device acceptance pending`. The text-only probe below checks the actual exported rows and rejects an in-memory NULL-rating control. Retain this correction; no further ledger edit requested. This does not independently establish the staged SQLite binary or DB/dump parity.
+- [Pass] Replay disposition matches the bounded implementation. Packet :713-714 explicitly limits durable intent to reached files and requires repeating the flag for unvisited files. The per-file checkpoint at :1223-1227 occurs inside the scan loop before writer delivery; :1292-1295 retains failed chunks. Recovery at :780-783 explains both ordinary visited-file retry and explicit full-scan retry. Preserve the per-file contract; no global replay journal requested.
+- [Pass] Scheduling/recovery order and acceptance remain explicit. Packet :738-765 precedes the recovery section at :767; :769-775 requires reviewed publication/deployment and exclusive replay. Lines :777-783 restore the identical previously loaded job on success or failure, preserve unloaded state and the backup, and forbid rewinding SQLite. Lines :785-791 require per-session row/identity checks and a new submission observed within 120 seconds. Retain these instructions.
+- [Pass] QA and receipt ownership are consistently bounded in the current prose. Packet :1374 and :1378 link upstream readers to Forge's canonical final/plan receipts; :1390 pins the superseding publication receipt. The embedded prior review is Approved at :1508 and carries the driver block at :1637-1643. Current acceptance wording at :1474, :1482 and :1830 keeps deployment outstanding. These are internal packet-consistency findings, not fresh remote receipt or PR-state validation.
+- [Pass] The CHANGELOG delta at packet :1757-1760 uses `## 2026-10-29` and retains the description as prose, matching the dated-heading contract in `PROJECT/PDDA.md:1005`. No further heading correction requested.
+- [Unverified — needs clone run] No suites, executable fixtures, Git commands, live database queries or deployment ran in this turn. The scoped deltas contain documentation/ledger corrections; runtime equivalence to the previously tested revision remains a producer assertion rather than a fresh byte comparison. The harness owns the file-scoped commit and post-turn gate. DB/dump parity, remote receipt availability, final push checks and scheduled device recovery are not established here.
+
+Read-only probe command (exit 0; parses packet text only, mutates only an in-memory control):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+import csv, hashlib, re
+from pathlib import Path
+p = Path('.relay-artifacts/gh1255-prelanding-packet.md')
+data = p.read_bytes()
+assert data
+rows = {}
+for n, line in enumerate(data.decode().splitlines(), 1):
+    if line[:1] in ('-', '+') and line[1:].startswith('INSERT INTO roadmap_items(') and "'1255'" in line:
+        m = re.fullmatch(r"[+-]INSERT INTO roadmap_items\((.*?)\) VALUES\((.*)\);", line)
+        assert m
+        keys = m[1].split(', ')
+        values = next(csv.reader([m[2]], delimiter=',', quotechar="'", skipinitialspace=True))
+        assert len(keys) == len(values)
+        assert line[0] not in rows
+        rows[line[0]] = dict(zip(keys, values))
+        print(f"packet:{n} {line[0]} ratings=" + '/'.join(rows[line[0]][k] for k in ('rating_pri', 'rating_sev', 'rating_appeal', 'rating_effort')))
+assert set(rows) == {'-', '+'}
+fields = ('rating_pri', 'rating_sev', 'rating_appeal', 'rating_effort')
+def retained(row):
+    return tuple(row[k] for k in fields) == ('85', '85', '50', '65')
+assert retained(rows['-']) and retained(rows['+'])
+for key in ('global_id', 'gh_number', 'doc_path', 'issue_url', 'first_seen', 'section', 'status_label'):
+    assert rows['-'][key] == rows['+'][key], key
+raw = rows['+']['raw_text']
+for token in ('(rated 85/85/50/65)', '(' + rows['+']['doc_path'] + ')', '(' + rows['+']['issue_url'] + ')', 'Plan and final Codex QA Approved', 'scheduled device acceptance pending'):
+    assert token in raw, token
+control = dict(rows['+'])
+control.update({key: 'NULL' for key in fields})
+assert not retained(control)
+print('PASS: ratings, structured pointers, Markdown links and pending-acceptance status retained')
+print('CONTROL: prior NULL-rating regression rejected')
+print('Packet lines=' + str(len(data.decode().splitlines())))
+print('Packet SHA256=' + hashlib.sha256(data).hexdigest())
+PY
+```
+
+Decisive output:
+
+```text
+packet:1829 - ratings=85/85/50/65
+packet:1830 + ratings=85/85/50/65
+PASS: ratings, structured pointers, Markdown links and pending-acceptance status retained
+CONTROL: prior NULL-rating regression rejected
+Packet lines=1848
+Packet SHA256=8bd7208852de9c33de1b1a09e11a1963cb213df7a4b130d934fe27cf42dccbb4
+```
+
+Relay closed (Approved), no further turn needed. The harness owns the commit and subsequent gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
