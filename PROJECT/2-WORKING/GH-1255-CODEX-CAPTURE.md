@@ -17,7 +17,7 @@ goal: Restore submitted-prompt capture without importing injected context or los
 # Restore CLIO Codex Desktop prompt capture
 
 Canonical request: [Forge #1255](https://github.com/HiQS-Labs/XYZ-forge/issues/1255).
-Implementation owner: [rebalanceOS #368](https://github.com/HiQS-Labs/rebalanceOS/issues/368).
+Implementation owner: [rebalanceOS issue #368](https://github.com/HiQS-Labs/rebalanceOS/issues/368); landing vehicle: [PR #369](https://github.com/HiQS-Labs/rebalanceOS/pull/369).
 Standalone reports: [CLIO #14](https://github.com/HiQS-Labs/XYZ-CLIO/issues/14), [#22](https://github.com/HiQS-Labs/XYZ-CLIO/issues/22).
 
 ## Requirements
@@ -77,15 +77,15 @@ Affected users: Codex Desktop/CLI capture users; legacy capture, child exclusion
 
 All checks use the existing suites or manual receipts under TESTS-RESULTS; no new test file or registry entry. Red control: new-format submitted event and seen-file replay assertions must fail against unchanged upstream. Canary red control: candidate threshold assertion must fail if warning logic is disabled. SQLite verification must assert nonempty rows and stable record IDs after replay, not rely on delivered count. Legacy, partial line, provenance and busy-writer tests remain truthful. No live databases/prompts or machine paths enter committed artifacts.
 
-Plan QA round 1 requested durable replay intent and exclusive scheduling; both incorporated above. Independent final QA and all deployment acceptance remain outstanding. Lessons: NO_ENTRY (no observed intervention outcome yet).
+Plan QA round 1 requested durable replay intent and exclusive scheduling; both incorporated above. Independent final QA is Approved; deployment acceptance remains outstanding. Lessons: NO_ENTRY (no observed intervention outcome yet).
 
 ## Implementation state
 
-Upstream implementation at rebalanceOS a18664a extends the existing parser, durable per-file replay checkpoint and state-comment warning. Existing fixture now includes one legacy and one modern submitted event. Existing Codex suite proves nonempty SQLite rows, pending replay after a failed second write, normal retry, stable replay IDs, live IDE request and diagnostic reset/threshold. No live acceptance or deployment claimed. Plan QA receipt copied below; final review and remaining checks pending.
+Upstream implementation at rebalanceOS a18664a extends the existing parser, durable per-file replay checkpoint and state-comment warning. Existing fixture now includes one legacy and one modern submitted event. Existing Codex suite proves nonempty SQLite rows, pending replay after a failed second write, normal retry, stable replay IDs, live IDE request and diagnostic reset/threshold. No live acceptance or deployment claimed. Plan and final QA receipts are retained below; live deployment acceptance remains pending.
 
 ## Verification handoff
 
-All six existing upstream CLIO suites now pass, including 17 store cases. Three negative controls fail as expected. The unchanged base has a stale September fixture failure in one store projection case; a one-line timestamp correction preserves the five-row assertion and makes the existing suite truthful. No production store change or new suite. Upstream receipts live in `TESTS-RESULTS/2026-10-29+GH-368/`; final Codex review covers the implementation, that fixture correction, and this Forge tracking/parity record. Final review pending; no merge, standalone publication, installed repair or target-device acceptance claimed.
+All six existing upstream CLIO suites now pass, including 17 store cases. Three negative controls fail as expected. The unchanged base has a stale September fixture failure in one store projection case; a one-line timestamp correction preserves the five-row assertion and makes the existing suite truthful. No production store change or new suite. Upstream receipts live in `TESTS-RESULTS/2026-10-29+GH-368/`; final Codex review covers the implementation, that fixture correction, and this Forge tracking/parity record. Final QA Approved with the validated superseding receipt below; no merge, standalone publication, installed repair or target-device acceptance claimed.
 
 ## Final QA
 
@@ -98,3 +98,7 @@ The cross-repository final peer review was Approved, but its driver returned 4 b
 ## Manual live-device check
 
 A foreground trial using the current real Codex submission passed without deployment: source event → reviewed tailer → shared writer → isolated SQLite → query/JSONL/Markdown. Base captured zero; candidate captured one; ordinary rerun and explicit backfill kept the current record ID/count stable. Installed helpers were unchanged. [Sanitized receipt](../../TESTS-RESULTS/2026-10-29+GH-1255/LIVE-DEVICE-TRIAL.md). Scheduled normal-store delivery and live acceptance remain outstanding.
+
+## Pre-landing review disposition
+
+Corrected the current QA/roadmap status and upstream PR pointer. Rebalance’s ignored transcript copies are removed; Forge retains the canonical reviews. Recovery instructions now follow scheduling and explicitly distinguish visited-file retry from a full scan: an interrupted whole-history scan requires repeating the explicit flag. No run-wide replay journal is added to the approved per-file repair. The actual deployment will run exclusively to completion and verify requested session identities. No runtime change.
