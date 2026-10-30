@@ -159,4 +159,12 @@ Decisive output: `mixed probes: ['landed', 'unfixed']`; `command probe: blocked`
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-30T17:31:51Z
+task: RELAY-gh1270-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 48bf21d3aafa535185ba35d964fd224fc95a6048
+added-range: 15426+5375
+added-sha256: df776f27ee091bb6952022c65971784d5649e795e578359df10e85407afb68e1
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
