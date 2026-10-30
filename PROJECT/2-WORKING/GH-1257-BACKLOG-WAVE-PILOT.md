@@ -30,7 +30,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Codex plan QA approved in round 3 (`relay-system/2026-10-29/gh1257-plan-qa.md`); recon found 6 ready lanes and 63 `needs-contract` holds in the real backlog | Implement steps 1–5, then evidence and final QA |
+| Steps 1–5 built and run on 10 real issues: 3 ready, 3 drafts, 4 needs-recon; every control and the eight focused suites pass; ledger untouched (`TESTS-RESULTS/2026-10-29+GH-1257/SUMMARY.md`) | Final Codex QA, ready PR against the GH-1248 branch; then the follow-ups under Findings |
 
 ## Table of contents
 
@@ -103,6 +103,19 @@ Existing suites plus recorded manual controls; no new suite (GH-831).
 - **Hidden side effects in planner helpers.** Bound: gh stub from the frozen snapshot, `deep=False`, the frozen DB copy, and the sandbox denying writes and network.
 - **Planner regression from the split.** Bound: a pure move of existing code, verified by the three existing marathon-plan suites.
 - **Rollback:** abandon the branch; nothing outside `temp/` is written at run time.
+
+## Findings
+
+- **Built as planned.** On 10 real Queue issues the loop drafted one brief per tick, consumed each request once, kept the planner's own waves unchanged (6 lanes, 2 waves) and added a provisional packing (9 lanes, 4 waves, 4 held as needs-recon). All plan-QA controls behaved as specified.
+- **Cited paths under-count when issues name files without a directory.** #216's issue is about the `marathon-plan.sh` parser, but only `PROJECT/PDDA.md` was sourced, so the provisional proposal puts it in wave 1 beside planner lanes. That is the unsafe direction. Candidate fix: resolve a bare filename when it names exactly one file in the frozen `base-files.txt`.
+- **"Ready" is planner-ready only.** As in the GH-1175 Phase 0 spike, ledger readiness can be stale (#418 looks delivered but open). Preflight cannot run inside the read-only loop because it fetches and creates worktrees; a stale or delivered-but-open check at init needs its own design.
+- **Intake starts at the ledger.** The GH-1175 spike found 73% of open issues have no ledger row; this pilot never sees them.
+
+## Lessons Learned (For Future Agents)
+
+- Run planner reuse through `Engine.compute()` with the `releases_db`, `gh_state_file`, `branches_file` and `base_files_file` seams so the tool needs no git or network inside the sandbox.
+- In zsh, a mode string such as `"--dry-run --format json"` passed as `$mode` is one argument; use `${=mode}`, or a parity check silently compares two identical usage errors.
+- A Claude Code Bash call without the sandbox writes `$TMPDIR` files under `/var/folders/...`, not the sandbox temp dir; collect evidence from the same mode that wrote it.
 
 ## Rating rationale
 

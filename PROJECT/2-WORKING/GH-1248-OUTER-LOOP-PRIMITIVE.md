@@ -29,7 +29,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| 12-hour rules-only scheduled run (slots 1–144 at 300 s): 137 completed, 1 `uncertain` after the slot-37 crash, 6 injected scheduler misses, 0 failed, spend 0; the one-hour gate passed, which completes Phase 1 | Spread scenario inputs across all 288 slots, then build Phase 2 (watchdog, generator, report) and extend `status` to the §7 fields; agent adapters and the 24-hour soak remain unimplemented |
+| Phase 2A (#1257, stacked branch): the loop now runs over the real roadmap backlog with a read-only `plan-draft` tool, adds the §7 `status` fields and quarantines ambiguous plan-draft attempts; see `PROJECT/2-WORKING/GH-1257-BACKLOG-WAVE-PILOT.md` | After #1257 lands on this branch: the #1257 follow-ups, then agent adapters deciding over real snapshots; the synthetic 24-hour soak, watchdog and soak-v2 stay deferred |
 
 **2026-10-29 run.** At `9da920e4`, a gitignored driver fired `harness.py factory-primitive tick` every five minutes for 12 hours. Run 1 passed the one-hour gate but was stopped at slot 13 when the operator's shell wrote `.claude/` into the instance directory; it is kept as failed evidence. Run 2 completed all 144 slots. The slot-37 kill during act was reconciled to `uncertain` with no retry, and slot 91 resumed after the 85–90 stop without catching up. Gaps found: all 27 inputs arrive in slots 1–27, so quarantine and later fault windows see an empty inbox; there is no missed-tick record without a watchdog; `status` lacks heartbeat age and stage, lock state, last receipt or error, and quarantined IDs; and a verification failure after the tool runs is recorded as `failed` rather than quarantined. Evidence: `TESTS-RESULTS/2026-10-29+GH-1248/SUMMARY.md`.
 

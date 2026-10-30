@@ -1,0 +1,17 @@
+CONTROL fail-after-output | slot1={"status":"uncertain","tick_id":"slot_001"} | slot2={"status":"completed","tick_id":"slot_002"} | slot3={"status":"completed","tick_id":"slot_003"} | quarantined=["gh-418-dbaddb6ed93e"] | last_error=tool error: injected failure after plan-draft output was written
+CONTROL corrupt-issue-hash | slot1={"status":"uncertain","tick_id":"slot_001"} | slot2={"status":"completed","tick_id":"slot_002"} | slot3={"status":"completed","tick_id":"slot_003"} | quarantined=["gh-418-dbaddb6ed93e"] | last_error=plan-draft brief does not match its request or frozen sources
+CONTROL drop-key | slot1={"status":"uncertain","tick_id":"slot_001"} | slot2={"status":"completed","tick_id":"slot_002"} | slot3={"status":"completed","tick_id":"slot_003"} | quarantined=["gh-418-dbaddb6ed93e"] | last_error=plan-draft brief missing keys: scope
+CONTROL md-mismatch | slot1={"status":"uncertain","tick_id":"slot_001"} | slot2={"status":"completed","tick_id":"slot_002"} | slot3={"status":"completed","tick_id":"slot_003"} | quarantined=["gh-418-dbaddb6ed93e"] | last_error=plan-draft Markdown brief disagrees with its JSON
+CONTROL drop-file | slot1={"status":"uncertain","tick_id":"slot_001"} | slot2={"status":"completed","tick_id":"slot_002"} | slot3={"status":"completed","tick_id":"slot_003"} | quarantined=["gh-418-dbaddb6ed93e"] | last_error=plan-draft output missing or empty: wave-proposal.md
+CONTROL crash-after-output | slot1=rc=70  | slot2={"status":"completed","tick_id":"slot_002"} | ticks={"completed": 1, "uncertain": 1} | quarantined=["gh-418-dbaddb6ed93e"] | proposal.not_accepted=['gh-418-dbaddb6ed93e']
+CONTROL pause | slot1={"status":"paused","tick_id":"slot_001"} | drafts=0
+CONTROL doc-changed-after-init (PROJECT/2-WORKING/GH-418-MARATHON-ADOPT-RELEASES-DB.md) | slot1={"status":"uncertain","tick_id":"slot_001"} | error=tool error: capture doc changed since init; refusing to draft from changed input | quarantined=["gh-418-dbaddb6ed93e"]
+CONTROL replay-completed-slot | rerun slot3={"status":"completed","tick_id":"slot_003"} | files before=22 after=22
+CONTROL validate-unknown-id | plan-draft-id-not-eligible
+CONTROL validate-consumed-id | gh-1204-376b82298309 -> plan-draft-id-not-eligible
+CONTROL validate-extra-args | plan-draft-id-not-eligible
+CONTROL path-escape | ['utils/py/harness.py']
+CONTROL network-in-sandbox | rc=1 socket.gaierror: [Errno 8] nodename nor servname provided, or not known
+CONTROL scope-with-scope | #1201 draft_status=draft write_set=['utils/py/harness.py'] in_provisional_wave=True held=[]
+CONTROL scope-no-scope | #1201 draft_status=missing-scope write_set=['utils/py/harness.py'] in_provisional_wave=False held=['missing-scope: no sourced scope']
+CONTROL network-direct-ip | PermissionError: [Errno 1] Operation not permitted

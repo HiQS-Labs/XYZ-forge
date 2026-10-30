@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-29 — GH-1257 outer loop drafts marathon briefs from the real backlog, read-only
+
+- `harness.py factory-primitive init --from-prs` freezes a copy of `releases.db`, the git listings and one read-only issue read for up to N open Queue rows the planner classes ready or needs-contract. A new `plan-draft` tool then drafts one evidence-linked brief per tick (scope, acceptance, open questions and a write set, each with its source line, or marked missing) and refreshes a wave proposal that keeps the planner's waves unchanged and adds a provisional packing. Missing scope or write set holds an issue out of every wave. The tool runs offline inside the existing sandbox, and nothing is written to git, the ledger or GitHub. Reversibility: Easy.
+- `_marathon_plan.Engine.run` is split into `compute()` plus rendering, with `_pack_waves` and `_contract_seams` extracted; CLI output, JSON, `--check` and the rendered doc are byte-identical to before. `status` gains heartbeat age and stage, lock state, last receipt and quarantined IDs. A plan-draft attempt that fails, times out or fails verification after starting is `uncertain` and quarantined, never retried.
+- On 10 real issues: 3 ready, 3 drafts, 4 needs-recon; every control and eight focused existing suites pass. Hand inspection found one unsafe under-count (#216 names its file without a directory). Evidence: `TESTS-RESULTS/2026-10-29+GH-1257/`.
+
 ## 2026-10-29 — GH-1248 rules-only loop runs 12 hours at protocol cadence
 
 - Ran slots 1–144 of the §8 schedule at real five-minute spacing with the rules arm on `9da920e4`. All 144 slots completed: 137 ticks completed, the slot-37 kill during act was reconciled to `uncertain` with no retry, slots 85–90 were skipped as the injected scheduler stop, and slot 91 resumed without catching up. No tick failed, spend stayed 0, the canary was unchanged and nothing escaped the sandbox. The one-hour gate passed, which completes Phase 1. A first run was stopped at slot 13 after the operator's shell wrote into the instance directory; it is kept as failed evidence. Evidence and provenance are under `TESTS-RESULTS/2026-10-29+GH-1248/`. No code changed. Reversibility: Easy.
