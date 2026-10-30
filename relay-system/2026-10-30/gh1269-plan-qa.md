@@ -268,3 +268,11 @@ GH789_planned_equals_integration: True
 
 VERDICT: PASS
 Basis: Source trace and the pure-function probe confirm the producer-side reorder and retry refusal; preserving integration's validated suffix removes that failure class and matches the existing deduplication contract. Implementation verification remains due in disposable full clones, with committed provenance.
+
+### Attestation · relay-drive — 2026-10-30T17:41:06Z
+task: RELAY-gh1269-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 27ee57f05106d91dafeac80dcfecd30e673259a4
+added-range: 12818+6319
+added-sha256: 26f508e4471c60efece5e783165d3b9c76c02fa445a9d4fb54d3148a12a7b342
