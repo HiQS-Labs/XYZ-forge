@@ -91,3 +91,13 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: gate
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1257
 - **date**: 2026-10-29
+
+## Wave packing treats a missing dependency record as satisfied
+
+- **cue**: Adding lanes to `_marathon_plan.Engine._pack_waves` from a source the planner's own records do not cover (synthesized, seeded or provisional items).
+- **lesson**: Give every known item a lookup record in the dependency view, admitted or not, with a state outside `DEP_RESOLVED`; an absent record reads as a satisfied dependency and packs the dependent early. Check with a held-prerequisite control and a red control that limits lookup to admitted lanes.
+- **evidence**: TESTS-RESULTS/2026-10-30+GH-1261/controls.txt (`dep-prereq-held` and `dep-prereq-pending`: dependent unplaced; `red-dep-admitted-only-lookup`: dependent packed in wave 7), relay-system/2026-10-30/gh1261-plan-qa.md (R2, found at plan QA by probe before any code), https://github.com/HiQS-Labs/XYZ-forge/issues/1261
+- **confidence**: medium — one design, caught at plan review and confirmed by a red control; no production run yet.
+- **area**: marathon
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1261
+- **date**: 2026-10-30

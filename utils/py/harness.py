@@ -35,7 +35,7 @@ DRAFT_LABEL = "draft; preflight and independent plan QA outstanding"
 BRIEF_KEYS = ("schema", "tick_id", "status", "label", "request_id", "issue", "title", "issue_sha256",
               "issue_updated_at", "doc_path", "doc_sha256", "planner_state", "planner_flags", "rating",
               "existing_contract", "deps", "scope", "acceptance", "open_questions", "write_set",
-              "draft_status", "held_reason")
+              "draft_status", "held_reason", "unresolved_names")
 TERMINAL = {"completed", "paused", "uncertain", "unpersisted-intent-abort", "failed", "rejected"}
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -246,6 +246,8 @@ SECTION_KINDS = (("scope", ("scope", "goal", "outcome")),
                  ("acceptance", ("acceptance", "definition of done", "done when")),
                  ("open_questions", ("open question", "unknown")))
 PATH_RE = re.compile(r"(?<![\w/.:-])((?:\.{1,2}/)*(?:[\w.-]+/)+[\w.-]+)")
+# GH-1261: a file named without a directory, e.g. `wave_reconcile.py`.
+BARE_RE = re.compile(r"(?<![\w/.:-])([\w-][\w.-]*\.(?:py|sh|md|js|ts|json|ya?ml|sql|toml|txt))(?![\w/-]|\.\w)")
 
 
 def _planner(backlog: Path, gh: str):
@@ -315,22 +317,63 @@ def _frontmatter_goal(doc_text: str) -> tuple[int, str] | None:
     return None
 
 
-def _cited_paths(text: str, source: str, root: Path = REPO_ROOT) -> list[dict]:
-    """Existing repository files cited in text; anything resolving outside root is dropped."""
+def _file_index(listing: str) -> dict:
+    """Tracked paths from the frozen `git ls-tree` listing, plus a basename lookup."""
+    files = [p for p in listing.splitlines() if p]
+    names = {}
+    for p in files:
+        names.setdefault(p.rsplit("/", 1)[-1], []).append(p)
+    return {"files": set(files), "names": names}
+
+
+def _cited_paths(text: str, source: str, root: Path = REPO_ROOT, index: dict | None = None,
+                 unresolved: list | None = None) -> list[dict]:
+    """Existing repository files cited in text; anything resolving outside root is dropped.
+    With a frozen file index, a vendored `.xyz/` path maps to the same path here and a bare
+    file name resolves when exactly one tracked file has it; a name with several matches is
+    appended to `unresolved`, never guessed (GH-1261)."""
     out, seen = [], set()
     real_root = os.path.realpath(root)
-    for n, line in enumerate((text or "").splitlines(), 1):
-        for m in PATH_RE.finditer(re.sub(r"https?://\S+", " ", line)):
-            raw = m.group(1).rstrip(".,:;)")
-            rel = os.path.normpath(raw)
-            if os.path.isabs(raw) or rel.startswith("..") or rel in {".", ""} or rel in seen:
-                continue
-            real = os.path.realpath(os.path.join(root, rel))
-            if os.path.commonpath([real, real_root]) != real_root or not os.path.isfile(real):
-                continue
+
+    def exists(rel):
+        real = os.path.realpath(os.path.join(root, rel))
+        return os.path.commonpath([real, real_root]) == real_root and os.path.isfile(real)
+
+    def add(rel, n):
+        if rel not in seen:
             seen.add(rel)
             out.append({"path": rel, "source": f"{source}:L{n}"})
+    for n, line in enumerate((text or "").splitlines(), 1):
+        line = re.sub(r"https?://\S+", " ", line)
+        for m in PATH_RE.finditer(line):
+            raw = m.group(1).rstrip(".,:;)")
+            rel = os.path.normpath(raw)
+            if os.path.isabs(raw) or rel.startswith("..") or rel in {".", ""}:
+                continue
+            if index and rel.startswith(".xyz/") and not exists(rel) and rel[5:] in index["files"]:
+                rel = rel[5:]
+            if exists(rel):
+                add(rel, n)
+        if not index:
+            continue
+        for m in BARE_RE.finditer(line):
+            name = m.group(1)
+            hits = index["names"].get(name, [])
+            if len(hits) == 1 and exists(hits[0]):
+                add(hits[0], n)
+            elif len(hits) > 1 and unresolved is not None and all(u["name"] != name for u in unresolved):
+                unresolved.append({"name": name, "source": f"{source}:L{n}", "matches": len(hits)})
     return out
+
+
+def _unregistered_record(issue: int, title: str, body: str) -> dict:
+    """A planner-shaped record for an open issue with no ledger row (GH-1261). Its state is
+    not a resolved one, so a dependency on it stays unmet until it is placed in a wave."""
+    import _marathon_plan
+    return {"gh": issue, "title": title, "raw": "", "slug": f"gh-{issue}", "docRel": None,
+            "deps": _marathon_plan.Engine._deps_of({"raw": f"{title}\n{body}"}), "state": "unregistered",
+            "contract": None, "flags": [], "signals": [], "dbAxes": None, "writeset": [],
+            "zone": None, "zoneRule": None, "zoneInferred": False}
 
 
 def render_brief(b: dict) -> str:
@@ -352,6 +395,9 @@ def render_brief(b: dict) -> str:
     lines += block("Scope", b["scope"]) + block("Acceptance criteria", b["acceptance"])
     lines += block("Open questions", b["open_questions"]) + ["## Write set", ""]
     lines += [f"- `{w['path']}` ({w['source']})" for w in b["write_set"]] or ["_none sourced_"]
+    lines += ["", "## Unresolved file names", ""]
+    lines += [f"- `{u['name']}` ({u['source']}; {u['matches']} tracked files share this name)"
+              for u in b["unresolved_names"]] or ["- none"]
     if b["existing_contract"]:
         lines += ["", "## Existing preflight contract", "", "```json",
                   json.dumps(b["existing_contract"], indent=2, sort_keys=True), "```"]
@@ -387,6 +433,9 @@ def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, 
     by_gh = {r["gh"]: r for r in computed["deduped"] if r["gh"] is not None}
     # A reviewed brief that fails admission keeps a planner-ready lane out of the provisional view.
     refused = {b["issue"] for b in briefs if b["draft_status"] not in {"draft", "ready"}}
+    # Every seeded issue with no ledger row is visible to dependency lookup, admitted or not (GH-1261).
+    lookup = {q["issue"]: _unregistered_record(q["issue"], q["title"], "")
+              for q in manifest["requests"].values() if q.get("source") == "unregistered"}
     lanes, held = [], []
     for r in computed["active"]:
         if r["gh"] in refused:
@@ -396,7 +445,8 @@ def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, 
         lanes.append(lane)
     for b in briefs:
         if b["draft_status"] == "draft":
-            lane = copy.deepcopy(by_gh[b["issue"]])
+            base = by_gh.get(b["issue"]) or {**_unregistered_record(b["issue"], b["title"], ""), "deps": b["deps"]}
+            lane = copy.deepcopy(base)
             paths = [w["path"] for w in b["write_set"]]
             zone = engine._zone_of({"artifacts": paths}, lane)
             lane.update(state="ready", writeset=paths, zone=zone["zone"], zoneInferred=False,
@@ -405,7 +455,7 @@ def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, 
         elif b["draft_status"] != "ready":
             held.append({"issue": b["issue"], "reason": f"{b['draft_status']}: {b['held_reason']}"})
     placed = {lane["gh"]: lane for lane in lanes if lane["gh"] is not None}
-    view = [placed.get(r["gh"], r) for r in computed["deduped"]]
+    view = [placed.get(r["gh"], r) for r in computed["deduped"]] + [placed.get(n, r) for n, r in lookup.items()]
     waves, unplaced = engine._pack_waves(lanes, view, force_tail=False)
     for i, w in enumerate(waves, 1):
         for lane in w:
@@ -458,8 +508,12 @@ def plan_draft(tick_id: str, out_dir: Path, args: dict, accepted: list[str], fau
     engine = _planner(backlog, "stub")
     computed = engine.compute()
     rec = next((r for r in computed["deduped"] if r["gh"] == req["issue"]), None)
+    if rec is None and req.get("source") == "unregistered":
+        rec = _unregistered_record(req["issue"], issue["title"], issue.get("body") or "")
     if rec is None:
         raise ValueError("issue missing from the frozen ledger")
+    index = _file_index((backlog / "base-files.txt").read_text(encoding="utf-8"))
+    unresolved = []
     issue_src = f"issue#{req['issue']}"
     found = _sections(issue["body"], issue_src)
     if doc_text:
@@ -473,12 +527,14 @@ def plan_draft(tick_id: str, out_dir: Path, args: dict, accepted: list[str], fau
     if contract and isinstance(contract.get("artifacts"), list) and contract["artifacts"]:
         write_set = [{"path": a, "source": f"{req['doc_path']}:preflight-contract"} for a in contract["artifacts"]]
     else:
+        # Every sourced path is kept: a cap here could evict an earlier citation (GH-1261 plan QA R3).
         write_set, seen = [], set()
-        for entry in _cited_paths(issue["body"], issue_src) + _cited_paths(doc_text, req["doc_path"] or ""):
-            if entry["path"] not in seen and len(write_set) < 25:
+        for entry in _cited_paths(issue["body"], issue_src, index=index, unresolved=unresolved) + \
+                _cited_paths(doc_text, req["doc_path"] or "", index=index, unresolved=unresolved):
+            if entry["path"] not in seen:
                 seen.add(entry["path"])
                 write_set.append(entry)
-    if rec["state"] not in {"ready", "needs-contract"}:
+    if rec["state"] not in {"ready", "needs-contract", "unregistered"}:
         status, held = "held", f"planner state {rec['state']}"
     elif not write_set:
         status, held = "needs-recon", "no sourced write set"
@@ -495,7 +551,7 @@ def plan_draft(tick_id: str, out_dir: Path, args: dict, accepted: list[str], fau
              "rating": "/".join(str(a) for a in axes) if axes else None, "existing_contract": contract,
              "deps": rec["deps"], "scope": found["scope"], "acceptance": found["acceptance"],
              "open_questions": found["open_questions"], "write_set": write_set,
-             "draft_status": status, "held_reason": held}
+             "draft_status": status, "held_reason": held, "unresolved_names": unresolved}
     markdown = render_brief(brief)
     if fault == "corrupt-issue-hash":
         brief["issue_sha256"] = "0" * 64
@@ -543,8 +599,11 @@ def _verify_plan_draft(instance: Path, tick_id: str, args: dict) -> tuple[Path, 
     return out / names[0], sha_text(canonical(hashes)), hashes
 
 
-def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: float) -> dict:
-    """Freeze up to `limit` open Queue candidates: ledger copy, git listings, one issue read each."""
+def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: float,
+                  unregistered: int = 0) -> dict:
+    """Freeze up to `limit` open Queue candidates: ledger copy, git listings, one issue read each.
+    With `unregistered` > 0, one open-issue listing also adds that many open issues that have no
+    ledger row, most recently updated first (GH-1261)."""
     if (instance / "state.db").exists():
         raise ValueError("instance already initialized; use a new run root")
     backlog = instance / "backlog"
@@ -580,8 +639,27 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
         request_id = f"gh-{r['gh']}-{issue_sha[:12]}"
         requests[request_id] = {"issue": r["gh"], "title": data["title"], "doc_path": r["docRel"],
                                 "doc_sha256": hashlib.sha256(doc.read_bytes()).hexdigest() if doc and doc.is_file() else None,
-                                "issue_sha256": issue_sha, "planner_state": r["state"], "slot": len(requests) + 1}
+                                "issue_sha256": issue_sha, "planner_state": r["state"], "slot": len(requests) + 1,
+                                "source": "ledger"}
         issues[str(r["gh"])] = data
+    if unregistered:
+        try:
+            listed = json.loads(subprocess.run(
+                ["gh", "issue", "list", "--state", "open", "--limit", "500", "--json", "number,title,body,updatedAt"],
+                cwd=REPO_ROOT, capture_output=True, text=True, check=True, timeout=120).stdout)
+        except (subprocess.SubprocessError, OSError, ValueError) as exc:
+            raise ValueError(f"open issue list failed: {str(exc)[:120]}") from exc
+        registered = {r["gh"] for r in computed["deduped"] if r["gh"] is not None}
+        fresh = sorted((d for d in listed if d["number"] not in registered),
+                       key=lambda d: (d.get("updatedAt") or "", d["number"]), reverse=True)
+        for d in fresh[:unregistered]:
+            data = {**d, "state": "OPEN"}
+            issue_sha = sha_text(canonical({"title": data["title"], "body": data.get("body") or ""}))
+            requests[f"gh-{d['number']}-{issue_sha[:12]}"] = {
+                "issue": d["number"], "title": data["title"], "doc_path": None, "doc_sha256": None,
+                "issue_sha256": issue_sha, "planner_state": "unregistered", "slot": len(requests) + 1,
+                "source": "unregistered"}
+            issues[str(d["number"])] = data
     if not requests:
         raise ValueError("no eligible open Queue candidates to seed")
     (backlog / "issues.json").write_text(json.dumps(issues, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -1101,6 +1179,8 @@ def factory_parser() -> argparse.ArgumentParser:
     init.add_argument("--from-prs", action="store_true",
                       help="seed plan requests from open Queue rows in releases.db (GH-1257)")
     init.add_argument("--limit", type=int, default=10)
+    init.add_argument("--unregistered", type=int, default=0,
+                      help="with --from-prs, also seed N open issues that have no ledger row (GH-1261)")
     manifest = sub.add_parser("generate-manifest")
     manifest.add_argument("--scenario", type=Path, default=PACKAGE / "scenarios" / "soak-v1.jsonl")
     manifest.add_argument("--output", type=Path, default=PACKAGE / "scenarios" / "soak-v1.manifest.json")
@@ -1140,7 +1220,9 @@ def factory_main(argv: list[str]) -> int:
             if args.from_prs:
                 if not 1 <= args.limit <= 50:
                     raise ValueError("--limit must be in 1..50")
-                seeded = init_from_prs(instance, args.limit, args.daily_cap, args.max_call_cost)
+                if not 0 <= args.unregistered <= 50:
+                    raise ValueError("--unregistered must be in 0..50")
+                seeded = init_from_prs(instance, args.limit, args.daily_cap, args.max_call_cost, args.unregistered)
                 print(canonical({"status": "initialized", "instance": str(instance), **seeded}))
                 return 0
             init_instance(instance, args.scenario.resolve(), args.manifest.resolve(),
