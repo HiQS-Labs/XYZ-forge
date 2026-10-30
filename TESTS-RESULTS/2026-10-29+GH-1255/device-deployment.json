@@ -85,5 +85,17 @@
   ],
   "backup": "private online SQLite backups integrity_check=ok; scripts/config/state/plists and pending receipts preserved",
   "unrecoverable": "01a18930 has zero modern/legacy submitted events; no response_item fallback",
-  "lessons": "Two requested files moved into archived_sessions during work. Replay exact private copies through installed tailer with explicit CODEX_HOME; retain originals and stable source IDs. No runtime scope expansion."
+  "lessons": "Two requested files moved into archived_sessions during work. Replay exact private copies through installed tailer with explicit CODEX_HOME; retain originals and stable source IDs. No runtime scope expansion.",
+  "post_recovery": {
+    "timestamp": "2026-10-30T03:33:23.567296+00:00",
+    "requested_record_ids_stable_after_normal_ticks": true,
+    "requested_source_id_rows": {
+      "01a188ca": 4,
+      "01a1892e": 3,
+      "01a18930": 0
+    },
+    "global_capture_cutoff_unchanged": true,
+    "sqlite_schema_version_unchanged": true,
+    "sqlite_integrity": "ok"
+  }
 }
