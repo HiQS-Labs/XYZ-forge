@@ -1,9 +1,9 @@
 # GH-1257 — read-only backlog-to-wave pilot
 
-- **Source:** `030db02d` on `feat/XYZ-forge-gh1257-backlog-wave-pilot-2026-10-29`, stacked on the GH-1248 branch (`89e1af53`)
+- **Source:** `761389dd` (pilot and controls on `030db02d`; `761389dd` adds a one-line planner fix found by the full gate) on `feat/XYZ-forge-gh1257-backlog-wave-pilot-2026-10-29`, stacked on the GH-1248 branch (`89e1af53`)
 - **Where:** disposable full clone `XYZ-forge-gh1257-backlog-wave-pilot-2026-10-29-verify`; identity bracketed around the suites and the gate
 - **Platform:** macOS 15.6.1 arm64, Python 3.14.7, `/usr/bin/sandbox-exec`
-- **Result:** the outer loop ran over 10 real roadmap issues and produced a brief for each plus a wave proposal. All controls and the eight focused existing suites pass. The repository ledger stayed byte-identical. Hand inspection found one unsafe under-count (#216). The full gate result is in `gate.txt`.
+- **Result:** the outer loop ran over 10 real roadmap issues and produced a brief for each plus a wave proposal. All controls and the eight focused existing suites pass. The repository ledger stayed byte-identical. Hand inspection found one unsafe under-count (#216). The full gate passed 409/409 on `761389dd` after one self-inflicted failure on `030db02d` was fixed (`gate.txt`).
 
 ## What ran
 
