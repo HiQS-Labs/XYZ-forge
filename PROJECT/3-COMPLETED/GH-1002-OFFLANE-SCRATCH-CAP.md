@@ -2,8 +2,8 @@
 gh_issue: 1002
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1002
 title: "agy builder repeatedly writes probe scripts off-lane; one stray test_*.mjs discards a converging phase and burns the attempt cap"
-status: In Progress
-updated: 2026-10-08
+status: Complete
+updated: 2026-10-10
 owner: operator
 goal: "Incidental builder scratch costs a warning, not a phase; a capped lane parks without a commit."
 created: 2026-10-08
