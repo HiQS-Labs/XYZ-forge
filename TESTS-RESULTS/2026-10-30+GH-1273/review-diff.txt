@@ -21,10 +21,10 @@ index efd7ec98..2fa633ec 100755
  5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
  6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 diff --git a/utils/py/relay_attest.py b/utils/py/relay_attest.py
-index 15821745..e121c53c 100644
+index 15821745..85d38d1a 100644
 --- a/utils/py/relay_attest.py
 +++ b/utils/py/relay_attest.py
-@@ -149,6 +149,66 @@ def canonical_prefix(pre_raw, post_raw):
+@@ -149,6 +149,68 @@ def canonical_prefix(pre_raw, post_raw):
      return canonical_bytes(pre_raw, context_raw=post_raw)
  
  
@@ -58,6 +58,8 @@ index 15821745..e121c53c 100644
 +            if literal == b"-->":
 +                if b"-->" in body:
 +                    literal = None
++            elif literal == b"html":
++                pass  # An inner comment cannot end an enclosing literal block.
 +            elif stripped.startswith(b"<!--"):
 +                literal = None if b"-->" in stripped else b"-->"
 +            elif stripped.startswith(b"<"):

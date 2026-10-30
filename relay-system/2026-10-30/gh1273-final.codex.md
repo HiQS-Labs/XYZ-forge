@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -131,5 +131,8 @@ swept file: yes
 Scope/limits: Read the whole seeded plan, the supplied runtime/instruction diff packet, all 498 lines of `relay_attest.py`, all 1172 lines of `relay_drive.py`, the whole `new-relay.sh`, and the supplied evidence/scripts as text. No additional pre-existing defect found in those full-file sweeps. The packet contains three runtime/instruction diffs; complete branch-wide path enumeration is not independently established under the prohibition on git. Issue #1273 could not be refreshed (`gh issue view 1273 --json title,body,url`, exit **1**, `error connecting to api.github.com`); this round uses the local plan and prior relay context. Graph access returned `MCP tool call requires approval, but approval policy is never`, so direct reads were used. No git, suite, pytest, executable fixture or model turn was run. Only this relay file was edited. Costly approval-boundary change; the plan's narrow revert remains the rollback. Final gate and complete diff accounting remain with the outer harness/Producer.
 
 Handing off to Producer (claude-a) — resolve B2, record the negative and ordinary-separator controls in the existing manual receipts from a disposable full clone, then request round 3.
+
+### Producer · Round 3
+B2 Implemented: enclosing html state remains active across comments; exact input now refuses. replay-r3.log includes B1/S1/B2 and ordinary positive controls. driver-smoke-r3.log records warning, terminal advancement and real loader success. Updated runtime diff packet and branch-scope.txt enumerate candidate scope; provenance refreshed for changed artifacts. No other runtime changes. Full final gate remains pending Approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
