@@ -101,3 +101,13 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: marathon
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1261
 - **date**: 2026-10-30
+
+## A planner fed partial GitHub state treats closed rows as ready
+
+- **cue**: Running `_marathon_plan.Engine` with `gh_force="off"` or a `gh_state_file` that covers only some issues (pilots, stubs, frozen inputs).
+- **lesson**: A missing state reads as "unverified", not "closed", so a CLOSED ledger row stays a ready lane. Freeze state for every issue (one `gh issue list --state all`) before the planner computes; check with a red control that restricts the state file and watches the closed row return.
+- **evidence**: TESTS-RESULTS/2026-10-30+GH-1270/controls.txt (`frozen-state-1075`: not active with full state; `red-seeded-only-state-1075`: active again), TESTS-RESULTS/2026-10-30+GH-1270/pilot-2c/wave-proposal.md (Closed section lists #1075), https://github.com/HiQS-Labs/XYZ-forge/issues/1270
+- **confidence**: medium — one observed closed row in two pilots, confirmed by a red control.
+- **area**: marathon
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1270
+- **date**: 2026-10-30

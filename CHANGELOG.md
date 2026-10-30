@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-30 — GH-1270 outer loop writes marathon launch packets and stops packing closed or stale issues
+
+- `harness.py factory-primitive init --from-prs` now freezes real GitHub state for every issue, so the planner's own already-closed rule drops CLOSED rows (#1075 no longer sits in wave 1), and freezes merged PRs that close a still-open issue, which are excluded or held as possibly delivered.
+- A contract with any landed `fix_probes` is held as `stale-contract`, for briefed and unbriefed lanes alike; `command` probes are never run.
+- New `factory-primitive packet --wave N` writes one `MARATHON.yaml` + brief per lane under the run root, rendered by `marathon_yaml_emit` and validated by `bin/marathon-yaml`, only from a proposal that matches the last completed tick. Copying a folder into `PROJECT/2-WORKING/` is the approval; nothing launches. Evidence: `TESTS-RESULTS/2026-10-30+GH-1270/SUMMARY.md`.
+
 ## 2026-10-30 — GH-1269 merge-cleanup B1 CHANGELOG repair keeps development's history byte-for-byte
 
 - B1's additive CHANGELOG resolution used to re-sort every new section from both sides by heading, so development's own same-date sections were reordered. The next B1 attempt then refused that output ("changelog preamble or existing history changed") and spent the PR's second repair slot (LTVera PR #874). It now prepends the PR's new sections in their own order, drops any already on development, and copies development's text verbatim after the preamble. Every existing refusal is unchanged. Evidence: `TESTS-RESULTS/2026-10-30+GH-1269/smoke.md`. Reversibility: Easy.
