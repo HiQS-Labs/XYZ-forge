@@ -2,9 +2,9 @@
 gh_issue: 1257
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1257
 title: "GH-1248 Phase 2A: read-only backlog-to-wave pilot"
-status: Active
+status: Complete
 created: 2026-10-29
-updated: 2026-10-29
+updated: 2026-10-30
 owner: noelsaw1
 goal: "Point the GH-1248 outer loop at the real roadmap backlog, one issue per tick, and produce sourced draft briefs plus a parallel-wave proposal, without writing to the repository, the ledger or GitHub."
 doc_type: plan

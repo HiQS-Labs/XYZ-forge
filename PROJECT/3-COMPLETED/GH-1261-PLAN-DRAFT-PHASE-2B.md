@@ -2,7 +2,7 @@
 gh_issue: 1261
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1261
 title: "GH-1248 Phase 2B: plan-draft resolves bare filenames and seeds issues with no ledger row"
-status: Active
+status: Complete
 created: 2026-10-30
 updated: 2026-10-30
 owner: noelsaw1
