@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -93,5 +93,18 @@ Handing off to Producer (claude-a) — correct/clarify the receipt and add the p
 - **[Should] receipt — Implemented** (`9fd991a2`). The original rows came from a zsh run in which `"run --help"` was ONE literal argument (zsh does not word-split). `checks.txt` is replaced by a bash run that records exact argv: `[run][--help]` (2 args) → rc=0 usage on both runtimes and agents; `[run --help]` (1 literal arg) → rc=2 on both; plus `[--help]`, `[-h]` and the argv=[] red control. Provenance wording updated to match.
 - **[Nit] RTL_TRACE note — acknowledged, no change** (pre-existing, disclosed inline, outside the help path).
 - **First full gate (`66f7f9c7`): 406/409.** Two failures were caused by this branch and are fixed in `ca7bc009`: `relay-pkg-freshness` (the packaged `relay-pkg.tar.gz` held the old shims; regenerated with `skills/1-hourly/relay-automation/make-pkg.sh`, suite now 3/0) and `pdda-repo-contract` (the promoted doc lacked `## Status`; added, `pdda-check-status-table` now clean). The third, `relay-self-sufficiency`, is the external agy quota (`RESOURCE_EXHAUSTED 429 … Resets in 48h`). A fresh full gate is running on `ca7bc009`.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PARKED
+Basis: The receipt correction is accepted and the help implementation passes independent probes. Approval awaits the already-requested final clone-gate receipt and complete two-file frozen-twin evidence; no source behavior change is requested.
+swept file: yes
+
+- [Pass] The corrected argv evidence resolves Round 1: `TESTS-RESULTS/2026-10-30+GH-445/checks.txt:5` and `:10` now report `[run][--help]` as two arguments with rc=0; `:6` and `:11` explicitly show the one-literal-argument case with rc=2. Independent command form: `env -u RELAY_AGENT -u RELAY_FILE PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" AGY_TURN_ROOT="$PWD" CODEX_TURN_ROOT="$PWD" XYZ_PYTHON=<0 or 1> bash relay-automation/<agy or codex>-turn.sh <argv>`. A Python `subprocess.run(..., capture_output=True)` probe compared exact `(returncode, stdout, stderr)` tuples for each agent and argv `['--help']`, `['-h']`, `['run','--help']`, `['--','-h']`, `['run --help']`, and `[]`. Probe exit 0; decisive output: `PASS 12 exact (rc, stdout, stderr) Bash/Python comparisons; help rc=0; literal/no-flag rc=2`. Successful help stdout was exactly `Usage: <agent>-turn.py\nRequired environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK\n`, with empty stderr; the two non-help cases had empty stdout and `<agent>-turn: RELAY_AGENT required\n` on stderr. Source: `relay-automation/agy-turn.sh:135`, `relay-automation/codex-turn.sh:74`, `utils/py/agy-turn.py:333`, `utils/py/codex-turn.py:19`.
+- [Pass] Packaging fix independently checked without extracting/executing fixtures: Python `tarfile.open('skills/1-hourly/relay-automation/relay-pkg.tar.gz')`, then `extractfile('relay-automation/<agent>-turn.sh').read() == Path('relay-automation/<agent>-turn.sh').read_bytes()` for both agents. Probe exit 0; decisive output: `PASS skills/1-hourly/relay-automation/relay-pkg.tar.gz:relay-automation/agy-turn.sh matches source bytes` and the same for codex. `bash -n relay-automation/agy-turn.sh` and `bash -n relay-automation/codex-turn.sh` both exited 0.
+- [Unverified — needs clone run] Round 1's evidence request remains open. `TESTS-RESULTS/2026-10-30+GH-445/frozen-twin-guard.txt:3` still shows only codex coverage, and its trailer text is the generic `<path> — <reason>`, not the literal trailer from `311b47b9`. Supply that trailer and complete guard output naming both changed shims, including the rejection control, from a disposable full clone. Also supply the completed full-gate result against `ca7bc009` (or the final candidate), with command, exit status, decisive output and committed provenance. Producer Round 2 reports only `406/409` on the earlier candidate and says the replacement run is still running. If the external quota failure persists, record the failing suite/log and disposition explicitly; a pending run is not passing evidence. I did not run git, suites, executable fixtures, or the gate here.
+- [Nit] Whole-file sweep: both Bash artifact files were read through their ends. No additional source defects were identified beyond the already-disclosed `RTL_TRACE=1` limitation at `relay-automation/agy-turn.sh:276–279` noted in Round 1; post-dispatch execution was not exercised. Graph tools are unavailable in this session, so source reads supplied the review evidence. `TESTS-RESULTS/2026-10-30+GH-445/provenance.jsonl:1` still attributes the corrected rerun to the original working-tree revision while `checks.txt:1` names `3f4d4fed`; align the rerun attribution when completing the evidence.
+
+Handing off to Producer (claude-a) — add the final gate and complete guard receipts, then open Round 3 for the final review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
