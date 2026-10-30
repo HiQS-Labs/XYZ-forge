@@ -291,6 +291,30 @@ def _sections(text: str, source: str) -> dict:
     return found
 
 
+def _frontmatter_goal(doc_text: str) -> tuple[int, str] | None:
+    """(line, text) of the YAML frontmatter `goal:`, decoding folded/literal block scalars."""
+    lines = doc_text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None
+    for i, line in enumerate(lines[1:], 1):
+        if line.strip() == "---":
+            return None
+        m = re.match(r"^goal:\s*(.*)$", line)
+        if not m:
+            continue
+        value = m.group(1).strip()
+        if re.fullmatch(r"[>|][-+]?", value):
+            block = []
+            for nxt in lines[i + 1:]:
+                if nxt.strip() and not nxt.startswith((" ", "\t")):
+                    break
+                block.append(nxt.strip())
+            value = ("\n" if value.startswith("|") else " ").join(b for b in block if b).strip()
+        value = value.strip().strip('"\'').strip()
+        return (i + 1, value) if value else None
+    return None
+
+
 def _cited_paths(text: str, source: str, root: Path = REPO_ROOT) -> list[dict]:
     """Existing repository files cited in text; anything resolving outside root is dropped."""
     out, seen = [], set()
@@ -361,8 +385,12 @@ def render_proposal(p: dict) -> str:
 def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, tick_id: str, request_id: str) -> dict:
     """Planner waves as computed, plus provisional packing of copied records with sourced drafts."""
     by_gh = {r["gh"]: r for r in computed["deduped"] if r["gh"] is not None}
+    # A reviewed brief that fails admission keeps a planner-ready lane out of the provisional view.
+    refused = {b["issue"] for b in briefs if b["draft_status"] not in {"draft", "ready"}}
     lanes, held = [], []
     for r in computed["active"]:
+        if r["gh"] in refused:
+            continue
         lane = copy.deepcopy(r)
         lane.update(wave=None, provisional=False)
         lanes.append(lane)
@@ -437,11 +465,10 @@ def plan_draft(tick_id: str, out_dir: Path, args: dict, accepted: list[str], fau
     if doc_text:
         for kind, entries in _sections(doc_text, req["doc_path"]).items():
             found[kind] += entries
-        goal = re.search(r"^goal:\s*(.+)$", doc_text.split("\n---", 1)[0], re.M)
+        goal = _frontmatter_goal(doc_text)
         if goal:
-            line = doc_text[:goal.start()].count("\n") + 1
-            found["scope"].append({"heading": "frontmatter goal", "text": goal.group(1).strip().strip('"'),
-                                   "source": f"{req['doc_path']}:L{line}"})
+            found["scope"].append({"heading": "frontmatter goal", "text": goal[1],
+                                   "source": f"{req['doc_path']}:L{goal[0]}"})
     contract = rec["contract"]
     if contract and isinstance(contract.get("artifacts"), list) and contract["artifacts"]:
         write_set = [{"path": a, "source": f"{req['doc_path']}:preflight-contract"} for a in contract["artifacts"]]
@@ -451,16 +478,14 @@ def plan_draft(tick_id: str, out_dir: Path, args: dict, accepted: list[str], fau
             if entry["path"] not in seen and len(write_set) < 25:
                 seen.add(entry["path"])
                 write_set.append(entry)
-    if rec["state"] == "ready":
-        status, held = "ready", None
-    elif rec["state"] != "needs-contract":
+    if rec["state"] not in {"ready", "needs-contract"}:
         status, held = "held", f"planner state {rec['state']}"
     elif not write_set:
         status, held = "needs-recon", "no sourced write set"
     elif not found["scope"]:
         status, held = "missing-scope", "no sourced scope"
     else:
-        status, held = "draft", None
+        status, held = ("ready" if rec["state"] == "ready" else "draft"), None
     axes = rec.get("dbAxes")
     brief = {"schema": "factory-primitive/plan-brief@1", "tick_id": tick_id, "status": "ok", "label": DRAFT_LABEL,
              "request_id": request_id, "issue": req["issue"], "title": issue["title"],
