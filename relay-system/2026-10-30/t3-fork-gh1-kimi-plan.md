@@ -106,4 +106,12 @@ Basis: The plan meets the stated bounded ACP compatibility outcome with a shared
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-30T18:33:32Z
+task: T3-KIMI-GH1-PLAN
+reviewer: codex
+status: Approved
+reviewed-head: 32fe882e2a3b8e471b66dacd1ed7b380c721f267
+added-range: 6131+4390
+added-sha256: 32107b5a7b41213eb1345133c18811f8a06a1139d130a314de5c80fab0afedeb
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
