@@ -156,4 +156,12 @@ Limits: runtime experiments and the full gate are Producer-recorded disposable-c
 
 Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-10-30T14:52:52Z
+task: RELAY-gh1261-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 6b211165f40f034e83172dc96657afc045610bc4
+added-range: 12794+5677
+added-sha256: 13d6a6ff986350c6bc7ade99b414e32baf099c84e7e70615f978a180a931c09d
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
