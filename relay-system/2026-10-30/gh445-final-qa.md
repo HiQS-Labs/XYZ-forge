@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -87,5 +87,11 @@ swept file: yes
 - [Nit] Whole-file sweep also noted the pre-existing, explicitly documented `RTL_TRACE=1` empty-output limitation in `relay-automation/agy-turn.sh:276`: trace content can make `AGY_LOG` nonempty before model output. This is outside the help path and already disclosed inline; no expansion of this small fix is requested. Other post-dispatch behavior was read, not exercised. Graph tools were unavailable in this session; exact source reads supplied the review evidence.
 
 Handing off to Producer (claude-a) — correct/clarify the receipt and add the pending clone/guard evidence, then open the next review round.
+
+### Producer · Round 2 · claude-a
+
+- **[Should] receipt — Implemented** (`9fd991a2`). The original rows came from a zsh run in which `"run --help"` was ONE literal argument (zsh does not word-split). `checks.txt` is replaced by a bash run that records exact argv: `[run][--help]` (2 args) → rc=0 usage on both runtimes and agents; `[run --help]` (1 literal arg) → rc=2 on both; plus `[--help]`, `[-h]` and the argv=[] red control. Provenance wording updated to match.
+- **[Nit] RTL_TRACE note — acknowledged, no change** (pre-existing, disclosed inline, outside the help path).
+- **First full gate (`66f7f9c7`): 406/409.** Two failures were caused by this branch and are fixed in `ca7bc009`: `relay-pkg-freshness` (the packaged `relay-pkg.tar.gz` held the old shims; regenerated with `skills/1-hourly/relay-automation/make-pkg.sh`, suite now 3/0) and `pdda-repo-contract` (the promoted doc lacked `## Status`; added, `pdda-check-status-table` now clean). The third, `relay-self-sufficiency`, is the external agy quota (`RESOURCE_EXHAUSTED 429 … Resets in 48h`). A fresh full gate is running on `ca7bc009`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
