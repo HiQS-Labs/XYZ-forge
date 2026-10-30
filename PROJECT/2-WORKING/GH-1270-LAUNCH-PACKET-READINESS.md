@@ -32,7 +32,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved (r2); built on `34edabb0`/`52406394`; 15-issue pilot, all controls and smoke pass, ledger untouched (`TESTS-RESULTS/2026-10-30+GH-1270/SUMMARY.md`) | Full gate and final Codex QA, then the PR |
+| Plan QA approved (r2); built on `34edabb0`, `52406394`, `c8938705`; pilot, controls and smoke pass, ledger untouched; final Codex QA approved (r2) (`TESTS-RESULTS/2026-10-30+GH-1270/SUMMARY.md`) | Full gate on the final commit, then the PR |
 
 ## Problem
 
@@ -100,3 +100,13 @@ Phases 2A and 2B (#1257, #1261, landed via #1249) draft briefs and a provisional
 ## Rating
 
 `rated 60/40/50/50` (pri/sev/appeal/effort), 2026-10-30. Severity: packing closed or delivered issues wastes a marathon run, but nothing launches automatically yet. Priority: this is the step that makes the Flywheel's output usable. Appeal neutral. Effort: four bounded steps in one file plus reuse of two existing helpers. Recurrence: #1075 observed today; GH-1175 measured 7 of 11 stale; trend unknown.
+
+## Lessons Learned
+
+- A planner fed partial GitHub state treats closed rows as ready (entry in `LESSONS-LEARNED.md`, 2026-10-30).
+- Smoke the printed operator command, not just the generated file: the packet validated, but its dry-run command failed on builder == reviewer until run end to end.
+
+## Follow-ups
+
+- Nine open issues have a merged PR that claims to close them (#1002, #1012, #1157, #384, #470, #484, #777, #800, #879): verify and close, or reopen the work.
+- #418 and #1098: 2 of 3 contract probes already landed; refresh or close.
