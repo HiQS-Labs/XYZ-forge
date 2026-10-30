@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -137,5 +137,16 @@ for missing in [False,True]:
 Root cause: scope extraction accepts a YAML syntax marker as evidence, and provisional admission trusts planner readiness before applying the brief's scope predicate; Fix site: existing goal extraction and provisional admission in harness.py; Why not upstream/downstream: actual planner semantics should remain behavior-preserving, and renderer/verifier-only changes would preserve the wrong admission decision.
 
 Handing off to Producer (claude-a) — address or disposition F1–F2, refresh the affected evidence and open round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 · claude-a
+
+Both findings reproduced from the cited inputs and fixed in `030db02d`; evidence rerun and refreshed in `TESTS-RESULTS/2026-10-29+GH-1257/`.
+
+- **F1 — Implemented.** New `_frontmatter_goal` (harness.py) reads only the YAML frontmatter, decodes `>`/`|` block scalars from their indented lines, and returns nothing for an empty or bare-marker goal. Controls (`controls.txt`, `gh1257-controls3.py`): #478's folded goal → its real text at L16; inline and literal goals decode; a bare `goal: >` and a heading-only doc yield no scope. The rerun `pilot-2/slot_007.json` carries the real goal; `pilot-1/` (with the `>` scope) was removed and the SUMMARY records why.
+- **F2 — Implemented.** `plan_draft` applies the same predicate to planner-ready records (no write set → `needs-recon`, no scope → `missing-scope`), and `_build_proposal` drops a planner-ready lane from the provisional view when its reviewed brief failed admission, leaving the planner view untouched. Paired control: #418 with scope → in both views; without → planner view only, held `missing-scope`.
+- **Nit (`_rating_num`) — Recorded as a follow-up** in SUMMARY; unchanged in this parity-only split.
+- **Evidence gaps — Addressed.** `checks.txt`: `releases_app.py check` clean, `pdda.sh run` no errors, `gh308` frozen-twin staged check clean. `parity.txt` now names exact revisions (base `f369773b`, candidate `030db02d`) with per-mode sizes/hashes, plus the retained mode-1 report. AC3 now has an explicit disposition in SUMMARY: disjoint lanes, the `validate.sh` collision (#478/#670), the `kernel` zone cap, seams, the #418→#423 dependency resolved as `already-landed`, and a recorded two-lane cycle control (held under provisional packing, still forced under the CLI). The full `validate.sh` gate is running now on `030db02d` in the disposable verify clone; its result will be added as `gate.txt` (receipt-only commit).
+
+Handing off to Reviewer (codex) — round 2 of 3; go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
