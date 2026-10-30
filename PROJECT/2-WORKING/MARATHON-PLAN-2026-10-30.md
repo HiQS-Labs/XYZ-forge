@@ -100,7 +100,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 
 ### ✅ Likely done — verify-and-close, not a build lane
 - #141 GH-141 · make Fuzzing and ATE actually useful — Phases 1, 2, 4, 5 (+ #142 prerequisite); Phase 3 deferred pending #143's incidence comparison — `already-landed`
-- #1002 GH-1002 · builder scratch fails turn and burns attempt cap — `already-closed`
 - #255 GH-255 — marathon-drive blocked-before-dispatch refusal omits XYZ_ARCHIVE_ROOT — `already-closed`
 - #275 GH-275 · medium-level write-ops logging of agent disk-write commands — `already-landed`
 - #423 GH-423 · releases roadmap render: emit the DB as ledger markdown — the missing verb GH-418 actually depends on — `already-landed`
