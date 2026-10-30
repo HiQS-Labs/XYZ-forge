@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -131,5 +131,37 @@ All five findings were checked against the cited lines and accepted. The plan (P
 - Noted from [Pass]: use stub mode (not `gh_force=off`) with the frozen map; normalize cited paths to repository-contained paths.
 
 Handing off to Reviewer (codex) — re-review the revised plan; go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 2
+
+**VERDICT: FAIL**
+
+**Basis:** Two bounded plan corrections remain: make missing scope an admission failure, and finish F3's content verification and multi-artifact receipt contract. The design still fits the single-operator pilot; these changes require no new planner, suite or subsystem. This is plan QA, not an implementation or runtime verdict.
+
+swept file: yes
+
+Re-read the entire revised GH-1257 plan, GH-1248 plan, live issue bodies, the executive lifecycle and the cited planner/wrapper paths. The relevant pre-existing weak verifier remains covered by F3 below; no additional unrelated pre-existing defect is asserted. Graph tools are unavailable, so evidence is direct source inspection.
+
+- **[Should] F6 — Explicitly hold missing-scope drafts out of provisional waves (plan:82–83, AC2–AC3).** The brief now lists absent scope, but the admission rule only holds absent paths or unplaceable dependencies. A cited existing path does not establish scope. Issue #1257 Scope 2 says “unknown scope never enters a parallel wave,” and its AC3 requires a missing-scope control. Add that predicate before provisional packing; retain the brief and sourced paths as evidence, with a held reason. Specify a recorded manual control with a sourced path but no scope; do not discharge this control merely by saying the real sample lacked the case.
+  Observed input: plan:82 explicitly permits scope to be “listed as missing” while constructing a write set from cited existing paths; plan:83 packs those briefs and plan:95 only explicitly holds no-write-set/unplaceable/cyclic records. The observed omission is in this plan, not a claimed execution failure.
+  Affected scope: a candidate whose issue and capture doc provide no sourced scope, even if either mentions an existing repository path.
+  Falsifier: in the disposable clone, a missing-scope candidate mentioning `utils/py/harness.py` must remain held; a comparable candidate with sourced scope and the same path must remain eligible subject to normal conflicts/dependencies. If this distinction is already specified elsewhere, cite it.
+
+- **[Should] F3 — Partially addressed; specify content binding and hashes for the full output set (plan:82,85; `utils/py/harness.py:483–486,591–606`).** Four-file presence and matching tick/request IDs fix the missing-file case but still allow valid JSON with a wrong issue hash or omitted brief fields. The existing receipt stores one output hash, and the revised plan never says how all four artifacts are covered. Specify a small required schema tying the JSON brief to the frozen issue/doc fingerprints and required fields (including explicit missing values), agreement with the Markdown rendering, and a receipt containing each artifact's hash or an aggregate manifest hash covering all four. The cumulative pair is mutable: hash each verified version at completion, without later treating the current shared path as immutable evidence for an earlier receipt. Ship the writer and verifier contract together, scoped to this tool.
+  Observed input: plan:85's exhaustive stated checks are “exist, parse, and carry the tick id and request id”; plan:82 requires issue/source hashes and planning content, but no verifier comparison is stated. Current `harness.py:484` validates only tick/status, and `:486` returns one file hash.
+  Affected scope: accepting a plan-draft output set and recording evidence for its completion; existing synthetic tools retain their current contract.
+  Falsifier: clone controls that preserve tick/request IDs but change the issue fingerprint, remove required planning content, or make Markdown disagree with JSON must prevent completion and quarantine. A valid four-file set must complete with verifiable hash coverage of all four; the next proposal refresh must not invalidate the earlier receipt's attribution.
+
+- **[Pass] F1, F2 and F4 are addressed at plan level.** Plan:77,79 specifies revision-based request IDs and transactional consumption; plan:85 scopes timeout/nonzero/verification ambiguity to uncertain + quarantine; plan:72,83 preserves the CLI fallback while using copied provisional records and `force_tail=False`. Those directly cover `harness.py:597–606` and `_marathon_plan.py:1164–1177`. Plan:72 adds the fixed-input report/render/exit-code comparison needed beyond the three existing suites.
+- **[Pass] F5's main seed and brief corrections are present.** Plan:74–82 now specifies the read-only gateway backup, Queue-only selection, CLOSED/unreadable exclusions, issue/doc fingerprints, doc mismatch handling and sourced-or-explicitly-missing sections. `releases_app.py:432–448` supports the proposed read-only connection.
+- **[Nit] Pin the init-time engine's gh mode too (plan:75).** Before the frozen map exists, explicitly use `gh_force="off"`, `deep=False` for candidate selection. Otherwise Engine defaults to live and can call `gh issue view` for every ledger record before the intended one snapshot per selected candidate (`_marathon_plan.py:435–475`). The tick engine should keep the specified stub mode.
+- **[Nit] Restore an explicit path-escape control in AC5.** “Repository-contained paths” at plan:82 is the right requirement, but plan:97 omits issue #1257 AC5's path-escape rejection check. Record a manual traversal/symlink escape control alongside the existing sandbox controls in the disposable clone.
+- **[Pass] Scope and rating remain proportionate.** “No new module, writer or suite” (plan:70), no dispatch/adapters (plan:20–24), incomplete-write-set warning (plan:102), branch abandonment (plan:105) and the 60/35/50/45 rationale (plan:109) remain appropriate. Offline/read-only behavior still needs execution evidence; source inspection is not sandbox verification.
+
+Evidence ledger: `nl -ba PROJECT/1-INBOX/GH-1257-BACKLOG-WAVE-PILOT.md` exited 0 and showed the quoted admission/verifier rules at 82–85 and ACs at 94–97. `nl -ba utils/py/harness.py | sed -n '476,490p;580,611p'` exited 0 and showed the current tick/status-only check and single-hash receipt. `nl -ba utils/py/_marathon_plan.py | sed -n '435,482p;1120,1188p'` exited 0 and showed default-live gh and the forced-tail mutation. Read-only GitHub connector fetches for #1257 and #1248 succeeded. Inspected LESSONS-LEARNED.md:38–43 on shipping verifier requirements with their producer. No git commands, suites, fixtures, harness execution or runtime probes were run. **[Unverified — needs clone run]** suite parity, Seatbelt compatibility, repository byte identity and all proposed manual controls remain implementation gates.
+
+Root cause: the revised plan specifies output production more fully than admission and verification; Fix site: plan steps 3–4 and their existing manual controls; Why not upstream/downstream: these are plan contract gaps to close before implementation, not grounds for a new validator subsystem.
+
+Handing off to Producer (claude-a) — address or disposition F6 and the remaining F3 requirements, note the two nits, then open round 3; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
