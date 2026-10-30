@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -110,5 +110,50 @@ Handing off to Producer (claude-a) — retain E1 evidence, the base diff and fin
 - **E1 — Implemented** (`31fad5d9`). Added `TESTS-RESULTS/2026-10-30+GH-1261/provenance.jsonl` (5 receipts). `ledger-identity.txt` is a genuine rerun in the disposable clone at `7bc1742d` (init 3 ledger + 3 unregistered, 6 ticks, all rc=0) with `releases.db`/`releases.sql` sha256 before and after: identical. The pilot-3 digests were measured but not retained, so per your instruction I reran rather than reconstruct. `smoke.txt` retains the replay tree digests (79f59842… before = after).
 - **Base diff** retained: `harness-b1dd41a8..f0bb7db9.diff`. No source change since `f0bb7db9`.
 - **Gate:** `./validate.sh` (route=full) on `7bc1742d` in the verify clone, rc=0 in 894s, passed 409/409, identity unchanged (`gate.txt`, `gate-7bc1742d.log`). `7bc1742d` and `31fad5d9` differ from `f0bb7db9` only in evidence/docs.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: approve the implementation within the approved local advisory experiment. E1 is addressed by retained provenance, a genuine ledger-identity rerun, replay measurements and the disposable-clone gate receipt. No source change requested.
+swept file: yes
+
+Swept all 1,255 lines of `utils/py/harness.py`, including pre-existing code; reviewed the retained base diff, approved plan and plan-QA thread, planner dependency/zone/packing methods, manual control scripts/results, pilot manifest/proposal and #216 brief. No additional source defects found. Verify-tier graph lookup for `_cited_paths|_build_proposal|init_from_prs` returned zero symbols. Project listing (both pages) has no matching worktree; nearest `XYZ-forge` points at another checkout, generation `2026-09-01T15:54:30Z`; coverage reports planner `metadata_changed`. Used this worktree's source as fallback, without graph completeness claims. Only this relay file was edited; no git command, suite, executable fixture or module entry point ran.
+
+- **[Pass] E1 closed.** `TESTS-RESULTS/2026-10-30+GH-1261/provenance.jsonl:1–5` retains five receipts. `ledger-identity.txt:1–17` identifies the disposable-clone rerun at `7bc1742d`, init rc=0 and six completed ticks, with identical full before/after hashes for both ledger files. This supports the rerun, not a reconstructed historical pilot digest. `smoke.txt:2–6` retains identical replay digests, both completed slot responses and the free lock. No further evidence correction required.
+- **[Pass] Gate and source attribution.** `gate.txt:1–4` records `rc=0 in 894s, passed: 409 / 409` at `7bc1742d`, with matching HEAD/origin/clean-status identity; the nonempty raw `gate-7bc1742d.log:479` also contains `passed: 409 / 409`. The current source's Git blob hash, computed without git, is `fa1e1bfc2b037cc5ac483f2395917ccc7d11c778`, matching the candidate blob in the retained diff's `index a8f83e11..fa1e1bfc` header. A read-only comparison also matched all 14 candidate hunk spans. Accept the recorded clone run for this unchanged implementation; no rerun requested here.
+- **[Pass] Approved behavior remains intact.** `harness.py:338–365,527–543` preserves containment, listing-gated `.xyz/` stripping, no ambiguity tie-break and all sourced paths. `harness.py:369–376,437–466,509–513` supplies synthesized reader keys, body/title dependency extraction and every seeded unregistered lookup record, with admitted lanes overlaid. `harness.py:35–38,551–554,573–595` produces and checks the new key together. `controls.txt:6–20` retains ambiguity, prefix, cap/collision, held/pending/admitted dependency and verifier measurements, including both red controls. No further implementation change required.
+- **[Pass] Pilot, conservatism and integration.** `pilot-3/wave-proposal.json` records 20 accepted briefs, unchanged planner 6 lanes/2 waves, provisional 18 lanes/7 waves and held 5. Read-only JSON inspection found disjoint write sets in every wave of both views; #216 is in provisional wave 2 with both Python paths, the doc-sourced shell path and PDDA (`pilot-3/slot_004.md`, “Write set” and “Unresolved file names”). `harness.py:645–663` gates the one new read on N > 0 before admission; `controls.txt:1–5` records list failure without state.db, zero-mode without a list call, and candidate-order parity. `_run_tool` retains a sandbox profile without network permission and with constrained tool writes (`harness.py`, `profile = ("(version 1)(deny default)...`); source adds no planner, ledger writer or suite. `55/40/50/60` remains appropriate to the plan's advisory scope.
+
+Evidence-inspection probe (exit **0**; this reads retained results, it does not rerun their experiments):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+from pathlib import Path
+import hashlib,json,re
+r=Path('TESTS-RESULTS/2026-10-30+GH-1261')
+b=Path('utils/py/harness.py').read_bytes()
+h=hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
+assert h.startswith('fa1e1bfc')
+print('source blob:',h,'matches retained diff candidate fa1e1bfc')
+print('provenance receipts:',len([json.loads(x) for x in (r/'provenance.jsonl').read_text().splitlines()]))
+s=(r/'ledger-identity.txt').read_text()
+for name in ('releases.db','releases.sql'):
+ v=re.findall(r'([0-9a-f]{64})  '+re.escape(name),s)
+ assert len(v)==2 and v[0]==v[1]
+ print(name,'before=after:',v[0])
+s=(r/'smoke.txt').read_text(); v=re.findall(r'(?:before: |after:  )([0-9a-f]{64})',s)
+assert len(v)==2 and v[0]==v[1]
+print('replay before=after:',v[0])
+s=(r/'gate-7bc1742d.log').read_text(); assert 'passed: 409 / 409' in s
+print('gate log: passed: 409 / 409')
+PY
+```
+
+Decisive output: `source blob: fa1e1bfc2b037cc5ac483f2395917ccc7d11c778 matches retained diff candidate fa1e1bfc`; `provenance receipts: 5`; `releases.db before=after: a0c9a6d1b30a396448a03d6476514ae1dd8d890e6d8407e43e1a41254cc74588`; `releases.sql before=after: b6922bba94c3a1c609d2fbe44b3ebd0c37a083e5ed0f7e48a289c5f8b9a2c84b`; `replay before=after: 79f59842949cc78c08e1bfcca4c7d7e6f53d99e84cea2e53386aada49f92145b`; `gate log: passed: 409 / 409`.
+
+Limits: runtime experiments and the full gate are Producer-recorded disposable-clone evidence inspected here, not independently rerun in this reviewer worktree. Approval covers this experiment and source; it does not authorize dispatch or promotion. The first relay-write command failed shell parsing (exit 1) before making a change; this file-scoped patch completed the update.
+
+Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
