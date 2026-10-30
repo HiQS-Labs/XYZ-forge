@@ -201,4 +201,12 @@ Packet SHA256=8bd7208852de9c33de1b1a09e11a1963cb213df7a4b130d934fe27cf42dccbb4
 
 Relay closed (Approved), no further turn needed. The harness owns the commit and subsequent gate.
 
+
+### Attestation · relay-drive — 2026-10-30T02:56:43Z
+task: RELAY-gh1255-prelanding
+reviewer: codex
+status: Approved
+reviewed-head: d893dc8af5006d51e2eeb4193c2f388f9a694aff
+added-range: 11930+5956
+added-sha256: a4b55d051851a9f4f84ce7e6bb14b0ecc3a52ae70fc680b55192ea7192cf18f7
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
