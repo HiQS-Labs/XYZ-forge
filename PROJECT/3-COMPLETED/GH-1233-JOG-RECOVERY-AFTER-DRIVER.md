@@ -2,9 +2,9 @@
 gh_issue: 1233
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1233
 title: "jog recovery after a driver crash: guidance for leftovers before retry-build"
-status: Active
+status: Complete
 created: 2026-10-27
-updated: 2026-10-29
+updated: 2026-10-30
 owner: noelsaw1
 doc_type: bugfix
 complexity: 1

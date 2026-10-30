@@ -2,9 +2,9 @@
 gh_issue: 1251
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1251
 title: "GH-522 slice 1: marathon planner fails closed on unknown preflight exits, missing dependencies and unplaceable lanes"
-status: Active
+status: Complete
 created: 2026-10-29
-updated: 2026-10-29
+updated: 2026-10-30
 owner: noelsaw1
 doc_type: bugfix
 complexity: 2

@@ -2,9 +2,9 @@
 gh_issue: 1235
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1235
 title: "merge-cleanup: a Jog-hook jog land refusal still makes the reconcile writes durable"
-status: Active
+status: Complete
 created: 2026-10-27
-updated: 2026-10-29
+updated: 2026-10-30
 owner: noelsaw1
 doc_type: bugfix
 complexity: 2
