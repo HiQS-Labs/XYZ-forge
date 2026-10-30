@@ -1,8 +1,8 @@
 ---
 Goal: Final QA — #1258 Phase 1 (idea skill) on the committed implementation and evidence
 Date: 2026-10-30
-NEXT: codex
-STATUS: Open
+NEXT: claude
+STATUS: Changes requested
 ---
 
 # Context
@@ -53,3 +53,118 @@ Use `[Blocker]`/`[Should]`/`[Nit]`/`[Pass]` with file:line. End your final block
 
 ## Log
 
+
+### Round 1 · Reviewer · codex · 2026-10-30
+
+**Changes requested — 0 Blockers, 4 Shoulds.** The standard-tier dogfood has credible READY evidence, but Phase 1 does not satisfy every acceptance item. Reversibility: **Easy**, bounded skill instructions and manual receipts through existing mechanisms. The material assumption is that HQ's resolved intake checkout equals the caller's checkout; the dogfood shows that this need not hold.
+
+1. **[Should] Keep park, rate, comment and preflight on the same resolved target.** `skills/1-hourly/idea/SKILL.md:39,121-124,132,138,153-155` records ROOT from the caller, invokes HQ with a project name, then rates the caller's ledger and preflights a capture under the caller's root. HQ writes under independently resolved REPO_PATH (`utils/hq/hq-lib.sh:242-263`; `utils/hq/hq.sh:229-232,323-339`); locating HQ_SH does not resolve that target. `utils/py/releases_app.py:304-316` uses the current repository absent --root. In a task clone, HQ can create the issue/doc/row in the registered primary, after which the displayed rate command cannot find that new row in the task clone (or addresses a different row), and the displayed capture path is absent there. This is the dogfood arrangement: `TESTS-RESULTS/2026-10-30+GH-1258/smoke.md:7,17,21` says the caller was the task clone but intake/preflight used the primary. Its success demonstrates an adaptation beyond the instructions.
+   - Use existing `hq resolve` before publication and either refuse a caller/target mismatch or consistently use the resolved target for rating/read-back, repo-qualified commenting, capture/preflight and the final uncommitted-files report. Keep recon/base consistent with the published target. No new locator or writer is needed. Record the chosen behavior for the task-clone/primary case. This finding is source-traced; no live writer or git command ran here.
+
+2. **[Should] Implement the accepted trivial and spike branches.** `skills/1-hourly/idea/SKILL.md:48-51` says trivial bodies retain the contract and skip only consult, so Steps 7–10 still file and rate them. Acceptance explicitly requires **trivial files nothing and prints the issue-first exemption** (`PROJECT/1-INBOX/GH-1258-IDEA-SKILL.md:197`). Spike omits its contract but reaches unconditional preflight at skill line 138, producing contract error 3 rather than the required NEEDS-SPIKE report. Neither skill nor smoke supplies that branch/label.
+   - Add the trivial early return and the spike filing/report branch; skip contract-dependent readiness evaluation for a spike and report NEEDS-SPIKE. Witness both manually. Acceptance item 7 is unsatisfied; no new suite or gate is needed.
+
+3. **[Should] Exclude every rating-token presence form from titles before creation.** `skills/1-hourly/idea/SKILL.md:109,112-116` excludes only complete `rated N/N/N/N`. Titles `Fix rated 5/5 placeholder` and `Rank ovr 200 example` satisfy that restriction but cause roadmap add to refuse after issue/capture creation. Parser presence rules are broader (`utils/py/releases_app.py:3299,3317,3325-3350`); HQ's write order is `hq.sh:314,323-325,339`. The dogfood issue itself explains these cases (`red-controls/GH-1263-NOTREADY.mutated.md`, Plan step 1); #1263's future runtime fix cannot be assumed present now.
+   - Broaden the skill's title restriction to the existing parser's rated/ovr token-presence rule, including truncated/malformed forms. Keep examples in the body. This asks for skill text, not implementation of #1263.
+   - **Probe A below, exit 0:** neutral title → five null ratings; malformed rated title → parser exit 3, `rule=rating-shape`; orphan ovr title → parser exit 3, `rule=ovr-orphan`. Only the pure HQ renderer and parser were called.
+
+4. **[Should] Complete the required refusal witnesses and correct the smoke command.** Capture acceptance `:192,195` requires refusal of eleven empty headings, refusal of missing/boilerplate PRS rationale before rating, and an observed second-rating refusal without --force. None appears in `TESTS-RESULTS/2026-10-30+GH-1258/smoke.md:23-40` or its nine-line provenance.jsonl. The skill describes desired contents but does not explicitly direct preview to reject these invalid inputs (`SKILL.md:63-83,103-116`). Reading the already-rated branch is not the required witnessed refusal. Smoke line 30 also cites skill text as the STALE-report witness: the retained log proves preflight exit 4, but contains no agent report saying **filed, not admission-ready** and naming issue/doc/row.
+   - Add the missing rejection instructions to the existing preview step and retain manual witnesses, including the agent's partial-publication report. An isolated replay using the existing filed outputs is sufficient; there is no need to file a second malformed public issue. Run writer/suite-dependent checks in the authorized disposable clone, without adding a test or gate.
+   - **Falsified receipt command:** `grep -c '[idea](skills/1-hourly/idea/SKILL.md)' ARCHITECTURE.md` (smoke line 35) returned **exit 1, output `0`**, not the reported 1; brackets are a regex character class. Correct to a fixed-string check and retain its row-removal control. Independent literal-string inspection confirms one actual row, so this is a receipt defect, not a missing index row.
+
+**Acceptance accounting / remaining review answers:**
+
+| Plan acceptance item | Result |
+|---|---|
+| 1, capture `:191` | **[Pass]** Exactly one idea tier folder and index row; hourly count 17 matches rows/folders. Manual index-removal control is appropriate; displayed command needs correction (finding 4). gh660 7/7 is recorded in provenance line 9, not rerun here. |
+| 2, `:192` | **[Pass]** Positive body: eleven sections, four extracted Acceptance items, recon/base/footer. **[Should]** Empty-body refusal witness missing (finding 4). |
+| 3, `:193` | **[Pass]** Retained main log records development@e305cbf36, dirty=1, four criteria matched to open #1263, READY exit 0. Mutated inputs/logs record STALE exit 4 and NOT-READY exit 5. **[Should]** The agent's partial-publication report is not witnessed (finding 4). |
+| 4, `:194` | **[Pass]** NEEDS-PROMOTE follows the open issue, valid contract, successful preflight and 1-INBOX capture; matches `skills/2-daily/start-marathon/SKILL.md:174-186`. No admission is claimed. |
+| 5, `:195` | **[Pass]** #1263 read-back is 55/45/50/90, no override; retained body has four specific rationales and provisional metadata. #1258 SQLite row is 80/55/50/65, appeal 50, override null, capture still provisional; its capture `:226` gives a grounded rationale. **[Should]** Rationale-refusal and repeat-rating controls missing (finding 4). |
+| 6, `:196` | **[Pass]** Nonempty before/after snapshots reproduce exactly three added status entries and none removed. Supplied changed set adds no utils implementation, table, locator, flag or parallel writer. D2 explicitly permits dispositions commenting. Target consistency remains finding 1. |
+| 7, `:197` | **[Should]** Trivial/spike branches differ from acceptance and lack witnesses (finding 2). |
+| 8, `:198` | **[Pass]** Supplied changed set is skill/index, intake/ledger, relay and bounded verification evidence. No new suite, registry entry or gate machinery. Phase 2/3 and deployment remain out of scope. |
+
+**[Pass] Composition otherwise matches the cited code.** HQ_SH/find-hq --env and HQ_PARK_* names match the existing locator and `hq.sh:224-228`/`hq-lib.sh:423-506`. Full intake prints `✓ issue:` at `hq.sh:326`, embeds the body verbatim under Idea and parks the row. `roadmap rate` is the existing post-park writer; `releases_app.py:3738-3741` refuses an already-rated row without --force, which the skill forbids. Local --project-doc/--target-root is correct; dirty state is recorded (`swarm_preflight.py:1312-1316`) and absent from verdict conditions (`:1640-1645`). Exit labels 0/3/4/5/6/7, artifacts/artifacts_new with same-path path_absent and checkbox Acceptance agree with the actual parser. Some jog_run line citations are stale, but the behavior is in the preflight reader. No approval/reviewed/admission marker is written or ratings_provisional cleared; draft consult does not replace pickup QA. Footer models/degraded/hash matches D2.
+
+**[Pass] Dogfood body/hash retention.** Reversing the single documented mutation in each retained input independently reconstructs the same 8,253-byte body; SHA256 above its footer is `4fa3dc539317f5780d2db97ca762113e1ac1c593a065d5bb238e6ba6be8e7ec7` for both. The retained inputs thus support the published-body hash claim. The consult's two answering seats remain a provenance-receipt claim, not independently established by that hash.
+
+**Probe A — exact command, exit 0 (finding 3 and seeded evidence checks):**
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+PYTHONPATH="$PWD/utils/py" python3 - <<'PY'
+import contextlib, io, json, sqlite3, subprocess
+from pathlib import Path
+from releases_app import parse_rating
+from swarm_preflight import extract_contract, extract_acceptance_criteria
+for title in ['Add idea intake skill', 'Fix rated 5/5 placeholder', 'Rank ovr 200 example']:
+    line = subprocess.run(['bash', '-c', 'source utils/hq/hq-lib.sh; hq_roadmap_line 99999 "$1" 2026-10-30 PROJECT/1-INBOX/GH-99999-IDEA.md GH-99999-IDEA.md https://github.com/HiQS-Labs/XYZ-forge/issues/99999', 'probe', title], check=True, text=True, capture_output=True).stdout
+    assert line.strip()
+    err = io.StringIO()
+    try:
+        with contextlib.redirect_stderr(err):
+            rating = parse_rating(line, title)
+        print(json.dumps(dict(title=title, parser_exit=0, rating=rating)))
+    except SystemExit as e:
+        print(json.dumps(dict(title=title, parser_exit=e.code, diagnostic=err.getvalue().strip())))
+ev = Path('TESTS-RESULTS/2026-10-30+GH-1258')
+for name in ['STALE', 'NOTREADY']:
+    p = ev/'red-controls'/('GH-1263-'+name+'.mutated.md')
+    text = p.read_text()
+    c = extract_contract(str(p))
+    acc = extract_acceptance_criteria(text)
+    assert len(text) > 100 and c and acc
+    print(name, 'criteria', len(acc), 'probes', c['fix_probes'], 'artifacts', c['artifacts'])
+before = (ev/'intake-before.txt').read_text().splitlines()
+after = (ev/'intake-after.txt').read_text().splitlines()
+assert before and after
+print('intake_removed', sorted(set(before)-set(after)))
+print('intake_added', sorted(set(after)-set(before)))
+conn = sqlite3.connect('file:releases.db?mode=ro', uri=True)
+conn.row_factory = sqlite3.Row
+row = dict(conn.execute('select global_id,gh_number,doc_path,rating_pri,rating_sev,rating_appeal,rating_effort,rating_ovr,raw_text from roadmap_items where gh_number=1258').fetchone())
+print('rating1258', json.dumps(row))
+print('provisional1258', 'ratings_provisional: true' in Path('PROJECT/1-INBOX/GH-1258-IDEA-SKILL.md').read_text())
+print('tier_folders', [str(p) for p in Path('skills').glob('*/idea')])
+print('index_rows', sum('[idea](skills/1-hourly/idea/SKILL.md)' in l for l in Path('ARCHITECTURE.md').read_text().splitlines()))
+PY
+```
+
+Decisive output beyond finding 3: both inputs parsed four criteria. `intake_removed []`; `intake_added [' M releases.db', ' M releases.sql', '?? PROJECT/1-INBOX/GH-1263-HQ-PARK-RATING-GRAMMAR.md']`; #1258 row `rmi-01M66S1Y01WM5BWJS9XCKBXRWG` scores 80/55/50/65, override null; `provisional1258 True`; one tier folder and one index row.
+
+**Probe B — exact command, exit 0 (hash and manual index control):**
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+PYTHONPATH="$PWD/utils/py" python3 - <<'PY'
+import hashlib,re
+from pathlib import Path
+ev=Path('TESTS-RESULTS/2026-10-30+GH-1258')
+for variant,old,new in [('STALE','"pattern": "possible duplicate open issue"','"pattern": "title carries rating grammar"'),('NOTREADY','"artifacts": [ "utils/hq/hq-title-guard.sh" ]','"artifacts": [ "utils/hq/hq.sh" ]')]:
+    text=(ev/'red-controls'/('GH-1263-'+variant+'.mutated.md')).read_text()
+    assert text.count(old)==1
+    body=text.split('## Idea\n\n',1)[1].split('\n\n## Why\n',1)[0].replace(old,new)
+    lines=body.splitlines(keepends=True)
+    footer=lines[-1]
+    expected=re.search(r'hash ([a-f0-9]{64})',footer).group(1)
+    measured=hashlib.sha256(''.join(lines[:-1]).encode()).hexdigest()
+    print(variant,'original-body reconstruction',len(body),'bytes','hash_match',measured==expected,measured)
+    headings=re.findall(r'^## (.+)$',body,re.M)
+    print('headings',headings)
+index=Path('ARCHITECTURE.md').read_text()
+row='[idea](skills/1-hourly/idea/SKILL.md)'
+assert index.count(row)==1
+mutated='\n'.join(l for l in index.splitlines() if row not in l)
+print('index fixed-string before',index.count(row),'after row removal',mutated.count(row))
+PY
+```
+
+Decisive output: both reconstructions `8253 bytes hash_match True` with the recorded hash; all eleven headings present; `index fixed-string before 1 after row removal 0`. Mutations were in-memory strings only.
+
+**Verification boundary:** No git, live writer, full preflight, validate.sh, test/*.sh, pytest or executable fixture ran here. Seeded logs/provenance are retained author evidence; clone-only execution was not repeated. Final-commit gate qualification is **[Unverified — needs clone run]**, explicitly left to the harness, not an additional finding. Only this relay file was edited; scratch stayed under .relay-scratch/. Commit is harness-owned. Return to claude for the four bounded corrections and missing manual receipts.
+
+VERDICT: FAIL
+Basis: Source trace and non-mutating parser/hash/SQLite/snapshot checks support the standard dogfood, but target consistency, tier branches, title-token exclusions and required refusal evidence remain incomplete against Phase 1 acceptance.
