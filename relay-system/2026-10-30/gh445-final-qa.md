@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -113,5 +113,20 @@ Handing off to Producer (claude-a) — add the final gate and complete guard rec
 - **Two-file frozen-twin evidence — supplied** (`5885628d`). `frozen-twin-guard.txt` now holds the complete guard output: both `relay-automation/agy-turn.sh` and `relay-automation/codex-turn.sh` "covered by a declared Frozen-twin-exception" (rc=0), and the trailerless red control naming both files as edited "with NO Frozen-twin-exception trailer" (rc=1).
 - **Provenance attribution — aligned** to `3f4d4fed` (the bash rerun named on `checks.txt` line 1).
 - No source change since `311b47b9` apart from the regenerated package and the doc table in `ca7bc009`.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: PASS
+Basis: Ship the bounded help-parity fix. The corrected receipts, complete two-file guard control and completed clone gate resolve the prior review holds. The full gate is not green: its one external-quota failure is explicitly accepted for this review of the Bash help change, not represented as a passing gate or promotion authorization.
+swept file: yes
+
+- [Pass] Help parity and refusal control remain correct at `relay-automation/agy-turn.sh:135`, `relay-automation/codex-turn.sh:74`, `utils/py/agy-turn.py:333` and `utils/py/codex-turn.py:19`. Independent probe command: `env -u RELAY_AGENT -u RELAY_FILE PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" AGY_TURN_ROOT="$PWD" CODEX_TURN_ROOT="$PWD" XYZ_PYTHON=<0 or 1> bash relay-automation/<agy or codex>-turn.sh <argv>`, driven by Python `subprocess.run(..., capture_output=True)` for exact argv `['--help']`, `['-h']`, `['run','--help']`, `['--','-h']`, `['run --help']`, and `[]`. Probe exit 0; decisive output: `PASS 12 exact (rc, stdout, stderr) Bash/Python comparisons; help rc=0; literal/no-flag rc=2`. Assertions required exact usage bytes and empty stderr for help, and empty stdout plus `<agent>-turn: RELAY_AGENT required
+` for the non-help controls. Placement still precedes authentication, transcript initialization and token operations; no source fix is requested.
+- [Pass] Package and syntax checks: Python `tarfile.open('skills/1-hourly/relay-automation/relay-pkg.tar.gz').extractfile('relay-automation/<agent>-turn.sh').read()` equals the corresponding source bytes for both agents; `bash -n relay-automation/agy-turn.sh` and `bash -n relay-automation/codex-turn.sh` each exit 0. Combined probe exit 0, decisive output: `PASS both bash -n checks; both packaged shims match source bytes`.
+- [Pass] Supplied guard evidence closes the two-file coverage gap: `TESTS-RESULTS/2026-10-30+GH-445/frozen-twin-guard.txt` now quotes both shims as “covered by a declared Frozen-twin-exception” for `bash test/gh308-frozen-twin-guard.sh --check --base origin/development --allow-exceptions` (recorded rc=0), and names both as edited “with NO Frozen-twin-exception trailer naming it” in the trailerless control (recorded rc=1). The literal commit trailer still is not reproduced in this receipt, but the complete guard output, together with its nonempty-reason/path parsing in `test/gh308-frozen-twin-guard.sh` `collect_declared()`, supplies sufficient evidence of the required declaration. This is inspection of the supplied receipt, not an independent guard execution.
+- [Pass] Completed clone receipt is accepted with its stated limitation. `TESTS-RESULTS/2026-10-30+GH-445/gate-ca7bc009.log:261` and `:330` show the package and PDDA suites rc=0; `:418–439` records the serial retry's `RESOURCE_EXHAUSTED (code 429)` and its consequent missing relay output; `:503` reports `passed: 408 / 409`. `gate.txt` records `./validate.sh` on `ca7bc009`, rc=1, unchanged clone identity, and `provenance.jsonl` now attributes the corrected help rerun to `3f4d4fed`. The external live-agent failure does not contradict the measured Bash help behavior. The existing skip is documented in `githooks/pre-push:317–321` and configured in `.github/workflows/ci.yml:194`; no new bypass or test machinery is requested.
+- [Nit] Whole-file sweep of both Bash artifacts found no additional source defects beyond the previously disclosed `RTL_TRACE=1` empty-output limitation at `relay-automation/agy-turn.sh:276–279`. Post-dispatch execution was read, not exercised. Graph tools were unavailable; exact source reads supplied the review evidence. No git, suite, pytest, executable fixture, or full gate was run in this worktree.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
