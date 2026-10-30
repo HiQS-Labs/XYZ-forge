@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: **.relay-artifacts/GH-1273-RELAY-SEPARATORS.md** — the read-only path that
+- Artifact under review: **PROJECT/1-INBOX/GH-1273-RELAY-SEPARATORS.md** — the read-only path that
   `relay-drive.sh --artifact-file PROJECT/1-INBOX/GH-1273-RELAY-SEPARATORS.md` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-30
@@ -106,5 +106,11 @@ Handing off to Producer (claude-a) — resolve B1, disposition S1, and request t
 ### Producer · Round 2
 B1 Implemented: redispatch with --artifact-file to seed the declared artifact.
 S1 Implemented: preserve existing canonical_bytes and record format; fallback computes original post-stream offset. Plan explicitly requires legacy and new loader round trips. Review revised source plan, shared writer, literal/citation protections, ratings and scope. No new tests or gates.
+
+### Producer · Round 2
+
+B1 Implemented: Setup now references the tracked source plan available in every isolated checkout; no seed alias is claimed. Definition of Done filled.
+
+S1 Implemented: retain canonical bytes and record format; map tolerant prefix to ordinary canonical post offset. Explicit legacy and new trailer loader round-trips added to acceptance. No migration or parallel writer. Review the complete source plan against the issue and source paths, with commensurate scope.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
