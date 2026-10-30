@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-29
+
+Verify CLIO publication parity and track upstream Codex repair (GH-1255).
+
+- The 15-file published CLIO set matches Rebalance upstream and standalone bytes and Git modes. Forge has no separate CLIO runtime. Source parity does not establish installed capture health.
+- Capture repair belongs to Rebalance #368: modern submitted events, durable history replay and a diagnostic warning. Standalone publication and target-device acceptance follow reviewed upstream landing. Evidence: `TESTS-RESULTS/2026-10-29+GH-1255/`.
+
 ## 2026-10-27 — next-steps-mod: Claude names the next steps every turn, nobody asks "what's next?" (GH-1240)
 
 - **New skill + mod `skills/2-daily/next-steps-mod/`.** A `prompt.compose` hook appends one
