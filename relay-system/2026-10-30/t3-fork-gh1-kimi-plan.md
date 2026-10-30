@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -72,5 +72,38 @@ ROUND: 1 / 3
 Submitted the grounded plan and source snapshot in the read-only artifact packet. No production changes have been made. Request independent plan QA against the stated acceptance criteria.
 VERDICT: PASS
 Basis: Ready for review; this is an author submission, not independent approval.
+
+### Reviewer · Round 1
+Ship the bounded compatibility plan. This approves the plan, not an implemented fix or completed account login.
+
+swept file: yes
+
+- [Pass] **Failure origin is grounded.** (`.relay-artifacts/plan-packet.md:161`, `.relay-artifacts/plan-packet.md:1122`) The reported legacy input has no top-level `type` (packet line 7); normalization defaults it to `agent` (line 161), and execution calls `authenticate` for that shape (lines 1103–1126). The read-only source-expression probe below returned `{"normalizedType":"agent","terminalBranch":false,"authenticateBranch":true}` with exit status **0**. This measures the compatibility branch, not Kimi's live serialization failure.
+- [Pass] **One resolver is the right size.** (`.relay-artifacts/plan-packet.md:16`) Packet lines 16–19 specify shared classification/display/execution, explicit modern-type precedence, legacy replacement command/argv, validated metadata, and rollback without schema changes. This fixes the missing compatibility interpretation at its two consumers rather than adding another auth flow. Modern argv remains `resolved.args + method.args`; legacy argv must remain only the metadata args, including the empty default.
+- [Pass] **Environment and lifecycle contracts are preserved in the plan.** (`.relay-artifacts/plan-packet.md:17`, `.relay-artifacts/plan-packet.md:1000`, `.relay-artifacts/plan-packet.md:1103`) Packet line 17 retains base → resolved → auth-method environment precedence and missing-PTY filtering. The source currently merges in that order (line 1000), filters terminal methods at discovery (lines 944–947), closes the initial runtime before PTY launch, reconnects, and verifies before `onChanged(true)` (lines 1103–1149). Apply the helper's legacy env at the auth-method precedence position; retain the existing no-PTY execution guard (lines 986–990).
+- [Pass] **Verification is focused and falsifiable at plan level.** (`.relay-artifacts/plan-packet.md:22`, `.relay-artifacts/plan-packet.md:1467`, `.relay-artifacts/plan-packet.md:1503`) Packet lines 22–26 require legacy red-before-green behavior, modern/explicit-type/malformed normalization coverage, existing cancellation and verification assertions, focused checks and final independent review. Existing spawn assertions pin command, argv and environment (lines 1467–1474); cancellation and failed verification are covered in the supplied tests (lines 1503–1535). No new subsystem, suite or frontend machinery is warranted.
+- [Unverified — needs clone run] No tests, typechecks, executable fixtures or live login were run during this review. Implementation evidence must show the planned red and green results, including legacy env/argv, explicit-type precedence, malformed metadata and no-PTY filtering. The live runtime/version claims in packet line 7 remain author-reported; completed account login and client integration remain explicitly unverified (lines 12 and 26).
+
+Read-only probe command (exit 0; decisive output quoted above):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"
+node <<'JS'
+const fs = require('node:fs');
+const packet = fs.readFileSync('.relay-artifacts/plan-packet.md', 'utf8');
+const expr = packet.match(/const type = (method\.type \?\? "agent");/);
+if (!expr || !packet.includes('if (method.type === "terminal") {') || !packet.includes('if (method.type === undefined || method.type === "agent") {')) process.exit(2);
+const method = { id: 'login', name: 'Login', _meta: { 'terminal-auth': { command: '/managed/kimi', args: ['login'], env: {}, type: 'terminal' } } };
+const normalizedType = Function('method', `return (${expr[1]});`)(method);
+console.log(JSON.stringify({ normalizedType, terminalBranch: method.type === 'terminal', authenticateBranch: method.type === undefined || method.type === 'agent' }));
+if (normalizedType !== 'agent' || method.type === 'terminal') process.exit(1);
+JS
+```
+
+Reviewed all 1,965 lines of the packet, including all four complete source snapshots; no additional concrete pre-existing defect was found within the bounded review scope.
+
+VERDICT: PASS
+Basis: The plan meets the stated bounded ACP compatibility outcome with a shared resolver and focused verification. Implementation and runtime completion claims remain subject to the evidence above.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
