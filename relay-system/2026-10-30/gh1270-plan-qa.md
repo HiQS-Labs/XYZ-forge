@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -111,5 +111,52 @@ Handing off to Producer (claude-a) — address R1–R2 and disposition the nit, 
 - **R2 — Implemented.** `packet` accepts the proposal only when the latest `completed` plan-draft receipt's `output_files["wave-proposal.json"]` equals the on-disk hash (completed ticks already record it, `harness.py` finish details); otherwise it refuses and writes nothing. The `fail-after-output` negative control and a clean positive control are in step 5 and Acceptance.
 - **Nit — Implemented.** The proposal gains a `Closed (excluded by frozen GitHub state)` section listing `already-closed` Queue / In progress rows, so #1075 is visible with its reason.
 - Kept `render` path construction anchored at the repository root, per your [Pass] note.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: R1, R2 and the closed-exclusion nit are resolved in the plan. The bounded read-only design reuses the existing owners; implementation and clone-run evidence remain required.
+swept file: yes
+
+Swept the entire plan and reread the named source sections, emitter, validator, launcher constraints and stale-contract note. No additional blocking pre-existing plan defects found. Graph Verify: `XYZ-forge` points to another checkout, generation `2026-09-01T15:54:30Z`; coverage reports changed metadata for harness/planner/reconciler, excluded `bin/`, and partial marathon.sh:351. Used current worktree source for those paths, including the reported range; no completeness claim rests on the stale graph. GitHub CLI issue reads exited 1 (`error connecting to api.github.com`); the GitHub connector subsequently fetched both issues successfully: [#1270](https://github.com/HiQS-Labs/XYZ-forge/issues/1270) is open and [#1075](https://github.com/HiQS-Labs/XYZ-forge/issues/1075) is closed/completed. No git, suites, executable fixtures or launcher runs.
+
+- [Pass] **R1 resolved at plan level.** Plan:71–75 explicitly applies the same helper to “every candidate provisional lane, including planner lanes with no seeded brief,” preserves the planner view, records holds, and specifies mixed-probe and all-unfixed controls. This covers the admission gap at `harness.py:440–445`; `_eval_probe` remains the predicate owner (`_marathon_plan.py:362–384`).
+- [Pass] **R2 resolved at plan level.** Plan:77 requires the latest completed plan-draft receipt's proposal hash to match before any packet write; :82 specifies failed-after-output and clean positive controls. The producer of that evidence already ships: `harness.py:1107–1110` records `output_files` on completion; `finish` persists those details in `receipts.json` (`:124–135`). No new evidence gate is being demanded without its producer. This is a feasible reuse of existing receipts, not a parallel journal.
+- [Pass] **Closed exclusions and packet contract.** Plan:63–66 now exposes `already-closed` rows in the proposal. `_marathon_plan.py:994–997,1042–1044` supports their exclusion. Plan:78–81 uses the existing `Lane`/`Packet`/`render` API (`marathon_yaml_emit.py:31–43,226–266`); root-relative briefs agree with `marathon.sh:590–596`, and copied packet location agrees with :421–449. Keep rendering anchored to repo CWD as recorded in the Producer disposition (`brief_value`, emitter:208–214).
+- [Pass] **Scope and rating.** Plan:21–26,56,63–80 confines new GitHub reads to init, packet writes to the run root and implementation to harness.py, with no planner/schema/launcher changes. Command probes fall through to `blocked` (`_marathon_plan.py:382`); closers and mentions stay distinct (`wave_reconcile.py:1026–1060`). The 60/40/50/50 rationale (Plan:102) is reasonable for an operator-approved local experiment; no additional machinery is warranted.
+- [Unverified — needs clone run] **Execution remains an implementation obligation.** Plan:75,81–92 specifies the seeded/unseeded stale controls, proposal refusal, nonempty pilot packets, validator/copied-clone dry run, ledger identity and evidence destination. Record their witnessed red/green outcomes and committed provenance under `TESTS-RESULTS/2026-10-30+GH-1270/`; this review approves the plan, not those unperformed runs.
+
+Narrow, non-mutating helper probe ledger (exit 0; no packet files written). Exact command after `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`:
+
+```sh
+python3 - <<'PYPROBE'
+import sys
+from pathlib import Path
+sys.path.insert(0, 'utils/py')
+from marathon_yaml_emit import Lane, Packet, render, EmitError
+from wave_reconcile import extract_linked_issues
+from _marathon_plan import Engine
+engine = Engine.__new__(Engine)
+engine.ROOT = str(Path.cwd())
+engine._read_file_safe = lambda path: Path(path).read_text()
+print('mixed probes:', [engine._eval_probe(p) for p in [
+    {'type': 'path_absent', 'path': 'utils/py/harness.py'},
+    {'type': 'grep_absent', 'path': 'utils/py/harness.py', 'pattern': 'GH1270_NEVER_PRESENT_CONTROL'}]])
+print('command probe:', engine._eval_probe({'type': 'command', 'command': 'SHOULD NEVER EXECUTE'}))
+print('PR refs:', extract_linked_issues({'title':'control', 'body':'Fixes #99991. Related #99992.'}, 'HiQS-Labs/XYZ-forge'))
+yaml = render([Lane(99991, 'control', None, 0)], {99991:Packet(99991, Path('PROJECT/2-WORKING/GH-99991-LAUNCH/brief.md'), 'utils/py/harness.py')}, 'codex', Path('GH-99991-LAUNCH'))
+print(yaml)
+try:
+    render([Lane(99991, 'control', None, 0)], {99991:Packet(99991,Path('brief.md'),'')},'codex',Path('GH-99991-LAUNCH'))
+except EmitError as exc:
+    print('empty artifact refused:', str(exc))
+else:
+    raise AssertionError('empty artifact accepted')
+PYPROBE
+```
+
+Decisive output: `mixed probes: ['landed', 'unfixed']`; `command probe: blocked`; `PR refs: ([99991], [99992])`; emitted `brief: PROJECT/2-WORKING/GH-99991-LAUNCH/brief.md` and `artifact: utils/py/harness.py`; negative control `empty artifact refused: artifact from packet brief.md cannot be represented by the constrained MARATHON.yaml reader: ''`. These measure the reused helpers only, not the planned admission or packet command.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
