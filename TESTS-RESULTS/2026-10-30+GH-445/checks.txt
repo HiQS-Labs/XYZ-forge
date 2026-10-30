@@ -1,9 +1,12 @@
-# GH-445 / GH-470 manual checks (2026-10-30T20:09:45Z), working tree on 570ff5bd
-agy '--help': python rc=0 bash rc=0 stdout IDENTICAL | bash: Usage: agy-turn.py|Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK
-agy '-h': python rc=0 bash rc=0 stdout IDENTICAL | bash: Usage: agy-turn.py|Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK
-agy 'run --help': python rc=2 bash rc=2 stdout IDENTICAL | bash: agy-turn: RELAY_AGENT required
-agy red control (no --help, no RELAY_AGENT): rc=2 'agy-turn: RELAY_AGENT required'
-codex '--help': python rc=0 bash rc=0 stdout IDENTICAL | bash: Usage: codex-turn.py|Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK
-codex '-h': python rc=0 bash rc=0 stdout IDENTICAL | bash: Usage: codex-turn.py|Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK
-codex 'run --help': python rc=2 bash rc=2 stdout IDENTICAL | bash: codex-turn: RELAY_AGENT required
-codex red control (no --help, no RELAY_AGENT): rc=2 'codex-turn: RELAY_AGENT required'
+# GH-445 / GH-470 manual checks, rerun under bash with exact argv (2026-10-30T20:13:04Z), HEAD 3f4d4fed
+# (replaces an earlier zsh run whose "run --help" row passed ONE literal argument; see relay r1)
+agy argv=[--help] (1 arg[s]): python rc=0 bash rc=0 stdout IDENTICAL | bash: Usage: agy-turn.py|Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK
+agy argv=[-h] (1 arg[s]): python rc=0 bash rc=0 stdout IDENTICAL | bash: Usage: agy-turn.py|Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK
+agy argv=[run][--help] (2 arg[s]): python rc=0 bash rc=0 stdout IDENTICAL | bash: Usage: agy-turn.py|Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK
+agy argv=[run\ --help] (1 arg[s]): python rc=2 bash rc=2 stdout IDENTICAL | bash: agy-turn: RELAY_AGENT required
+agy red control argv=[] : rc=2 agy-turn: RELAY_AGENT required
+codex argv=[--help] (1 arg[s]): python rc=0 bash rc=0 stdout IDENTICAL | bash: Usage: codex-turn.py|Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK
+codex argv=[-h] (1 arg[s]): python rc=0 bash rc=0 stdout IDENTICAL | bash: Usage: codex-turn.py|Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK
+codex argv=[run][--help] (2 arg[s]): python rc=0 bash rc=0 stdout IDENTICAL | bash: Usage: codex-turn.py|Required environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK
+codex argv=[run\ --help] (1 arg[s]): python rc=2 bash rc=2 stdout IDENTICAL | bash: codex-turn: RELAY_AGENT required
+codex red control argv=[] : rc=2 codex-turn: RELAY_AGENT required
