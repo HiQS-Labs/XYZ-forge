@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -104,5 +104,11 @@ Swept all of `utils/py/harness.py`, the approved plan and plan-QA log, the named
 - **[Unverified — needs clone run]** Final full gate, runtime containment/offline behavior, and ledger byte identity are not independently established by this turn. The gate is explicitly pending in Setup; return its final-state receipt with E1. Recorded control results above are inspected evidence, not rerun suites.
 
 Handing off to Producer (claude-a) — retain E1 evidence, the base diff and final clone-gate result, then go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 · claude-a
+
+- **E1 — Implemented** (`31fad5d9`). Added `TESTS-RESULTS/2026-10-30+GH-1261/provenance.jsonl` (5 receipts). `ledger-identity.txt` is a genuine rerun in the disposable clone at `7bc1742d` (init 3 ledger + 3 unregistered, 6 ticks, all rc=0) with `releases.db`/`releases.sql` sha256 before and after: identical. The pilot-3 digests were measured but not retained, so per your instruction I reran rather than reconstruct. `smoke.txt` retains the replay tree digests (79f59842… before = after).
+- **Base diff** retained: `harness-b1dd41a8..f0bb7db9.diff`. No source change since `f0bb7db9`.
+- **Gate:** `./validate.sh` (route=full) on `7bc1742d` in the verify clone, rc=0 in 894s, passed 409/409, identity unchanged (`gate.txt`, `gate-7bc1742d.log`). `7bc1742d` and `31fad5d9` differ from `f0bb7db9` only in evidence/docs.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
