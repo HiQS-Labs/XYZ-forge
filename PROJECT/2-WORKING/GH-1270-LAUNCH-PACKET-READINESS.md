@@ -32,7 +32,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA r1: R1, R2 and nit accepted, plan revised | Codex plan QA r2 |
+| Plan QA approved (r2); built on `34edabb0`/`52406394`; 15-issue pilot, all controls and smoke pass, ledger untouched (`TESTS-RESULTS/2026-10-30+GH-1270/SUMMARY.md`) | Full gate and final Codex QA, then the PR |
 
 ## Problem
 

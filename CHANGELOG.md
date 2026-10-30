@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-30 — GH-1270 outer loop writes marathon launch packets and stops packing closed or stale issues
+
+- `harness.py factory-primitive init --from-prs` now freezes real GitHub state for every issue, so the planner's own already-closed rule drops CLOSED rows (#1075 no longer sits in wave 1), and freezes merged PRs that close a still-open issue, which are excluded or held as possibly delivered.
+- A contract with any landed `fix_probes` is held as `stale-contract`, for briefed and unbriefed lanes alike; `command` probes are never run.
+- New `factory-primitive packet --wave N` writes one `MARATHON.yaml` + brief per lane under the run root, rendered by `marathon_yaml_emit` and validated by `bin/marathon-yaml`, only from a proposal that matches the last completed tick. Copying a folder into `PROJECT/2-WORKING/` is the approval; nothing launches. Evidence: `TESTS-RESULTS/2026-10-30+GH-1270/SUMMARY.md`.
+
 ## 2026-10-30 — GH-1261 outer loop drafts unregistered issues and resolves bare file names
 
 - `harness.py factory-primitive init --from-prs --unregistered N` adds N open issues that have no ledger row, read once at init. `plan-draft` gives them a planner-shaped record, and every seeded unregistered issue is visible to dependency lookup, so a dependent waits for its prerequisite.
