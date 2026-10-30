@@ -1,8 +1,8 @@
 ---
 Goal: Final QA — #1258 Phase 1 (idea skill) on the committed implementation and evidence
 Date: 2026-10-30
-NEXT: codex
-STATUS: Open
+NEXT: claude
+STATUS: Approved
 ---
 
 # Context
@@ -214,3 +214,33 @@ Basis: The prior tier/title/refusal corrections are supported, but the newly int
 **Re-review this:** Step 0 and Step 9 wording only.
 **Commit:** `074c78c6`.
 
+
+### Round 3 · Reviewer · codex · 2026-10-30
+
+**Ship — 0 Blockers, 0 Shoulds.** The round-2 command correction resolves the last requested change. Reversibility: **Easy**, confined to skill wording and a manual syntax receipt. The relevant assumption is that addressing the returned issue URL selects the target independently of the caller's checkout; the installed CLI's accepted syntax supports that assumption.
+
+- **[Pass] Supported, target-pinned comment command.** `skills/1-hourly/idea/SKILL.md:47-50,188-191` now directs `gh issue comment "$ISSUE_URL" --body-file dispositions.md`, explicitly sourcing the URL from HQ's Step 8 output. Step 0 and Step 9 agree; neither instructs `gh -C`. Both standard and spike publication paths can reach the existing dispositions writer using supported syntax. No additional writer, locator, runtime flag or admission operation is introduced.
+- **[Pass] Retained receipt matches independent syntax checks.** `TESTS-RESULTS/2026-10-30+GH-1258/gh-comment-syntax-witness.txt:1-2` and `provenance.jsonl:17` record the accepted URL form and rejected directory flag. Independent help-only controls below reproduce both outcomes. The receipt's additional claim about live #1265/#1266 comments is author evidence; this approval does not depend on independently establishing those postings.
+- **[Pass] Prior acceptance accounting retained.** The round-1 and round-2 source/receipt findings remain applicable: target resolution, tier branches, rating-token exclusion, body/refusal controls, rating semantics, retained READY/STALE/NOT-READY evidence, bounded write-set and scope are addressed. The spike witness remains **preview only**, as explicitly qualified in round 2 and `smoke.md:52`; no new executed spike-publication claim is made. This round verifies the requested Step 0/Step 9 correction without reopening settled requirements.
+
+**Independent probes (outer Python probe exit 0):**
+
+Setup: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`. Python used `subprocess.run(..., text=True, capture_output=True)` for the following exact argument-equivalent commands and verified nonempty output:
+
+```bash
+gh issue comment https://github.com/HiQS-Labs/XYZ-forge/issues/1263 --help
+# exit 0
+# gh issue comment {<number> | <url>} [flags]
+# -R, --repo [HOST/]OWNER/REPO   Select another repository using the [HOST/]OWNER/REPO format
+
+gh -C "$PWD" issue comment --help
+# exit 1
+# unknown shorthand flag: 'C' in -C
+```
+
+The second command is the witnessed red control. Neither command sent a comment or exercised authentication. Non-mutating string/JSON inspection additionally reported `obsolete gh -C occurrences: 0`, `URL comment command occurrences: 1`, and `provenance_records: 17 latest_log: gh-comment-syntax-witness.txt`.
+
+**Verification boundary:** Only source/receipt reads, in-memory string/JSON checks and help-only CLI probes ran this turn. No git command, live writer, executable fixture, retained checker, preflight, validate.sh, test/*.sh or pytest ran. Final-commit gate qualification remains **[Unverified — needs clone run]**, owned by the harness after this turn; Approved records independent artifact QA, not that unexecuted gate. The applicable lesson in `LESSONS-LEARNED.md:38-83` was inspected; this correction does not tighten a hosted evidence gate. Only this relay file was edited, and scratch remained under .relay-scratch/. Commit remains harness-owned.
+
+VERDICT: PASS
+Basis: Both revised instructions use the supported issue-URL comment form, independently witnessed with an exit-0 syntax check and exit-1 red control; the remaining Phase 1 findings were resolved in prior rounds, with their stated evidence limits preserved.
