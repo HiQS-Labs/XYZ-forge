@@ -71,6 +71,11 @@ ROOT="${CODEX_TURN_ROOT:-"$(git rev-parse --show-toplevel 2>/dev/null || (cd "$H
 CODEX_BIN="${CODEX_BIN:-codex}"
 die() { printf 'codex-turn: %s\n' "$*" >&2; exit 2; }
 
+# GH-445: answer -h/--help before the environment checks, byte for byte as utils/py/codex-turn.py does.
+for _arg in "$@"; do
+  case "$_arg" in -h|--help) printf 'Usage: codex-turn.py\nRequired environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK\n'; exit 0 ;; esac
+done
+
 me="${RELAY_AGENT:-}"; f="${RELAY_FILE:-}"; t="${RELAY_TASK:-RELAY-TURN}"
 codex_agent="${CODEX_AGENT:-}"
 [[ -n "$me" ]] || die "RELAY_AGENT required"
