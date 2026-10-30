@@ -30,7 +30,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Recon and plan written | Codex plan QA |
+| Plan QA r1: R1-R3 and nit accepted, plan revised | Codex plan QA r2 |
 
 ## Problem
 
@@ -59,33 +59,36 @@ The Phase 2A pilot (#1257, PR #1260, merged into `feat/gh1248-outer-loop-primiti
 ## Plan
 
 1. **Bare-name and `.xyz/` resolution** in `_cited_paths`, with an optional `files` list (the frozen listing).
-   - Slash path that fails the existing check and starts with `.xyz/`: retry without the prefix.
-   - Bare name (no `/`, ends in a code/doc extension: `py sh md js ts json yml yaml sql toml txt`): match tracked basenames. One match → that path. Several → if exactly one is outside `test/` and any `fixtures/` segment, take it; else unresolved.
-   - Unresolved bare names are returned separately (name, source line, match count) and shown in the brief under a new `## Unresolved file names` section and a new `unresolved_names` key.
-   - Verify: #216 resolves to `utils/marathon-plan.sh`, `utils/py/wave_reconcile.py`, `utils/py/_marathon_plan.py`; `README.md` stays unresolved with its count.
+   - Slash path that fails the existing check and starts with `.xyz/`: retry without the prefix, through the same realpath/containment/file checks, and only when the stripped path is in the frozen listing.
+   - Bare name (no `/`, ends in a code/doc extension: `py sh md js ts json yml yaml sql toml txt`): match tracked basenames in the frozen listing. Exactly one match → that path. Two or more → unresolved; no tie-break (plan QA R1).
+   - Unresolved bare names are returned separately (name, source line, match count) and shown in the brief under a new `## Unresolved file names` section and a new `unresolved_names` key, added to `BRIEF_KEYS` so the existing drop-key and Markdown/JSON verifier controls cover it.
+   - Remove the silent 25-path cap on the cited write set (`harness.py:477-480`): every sourced path is kept, so new resolutions can never evict an earlier issue or capture-doc path (plan QA R3). A larger write set only serializes the lane, the conservative direction.
+   - Verify: #216 resolves `utils/py/wave_reconcile.py` and `utils/py/_marathon_plan.py` (the latter via `.xyz/` strip); `marathon-plan.sh` stays unresolved with match count 2; `README.md` stays unresolved with its count.
 2. **Seed unregistered issues** with `init --from-prs --unregistered N` (default 0, range 0..50).
-   - One read-only `gh issue list --state open --limit 500 --json number,title,body,updatedAt` at init; drop every number that has any ledger row (all sections); newest `updatedAt` first; take N. Freeze into `issues.json`/`gh-state.json` like ledger candidates; requests carry `"source": "unregistered"` (ledger requests get `"source": "ledger"`).
+   - Only when N > 0: one read-only `gh issue list --state open --limit 500 --json number,title,body,updatedAt` at init (N = 0 makes no new call and adds no failure mode); drop every number that has any ledger row (all sections); newest `updatedAt` first; take N. Freeze into `issues.json`/`gh-state.json` like ledger candidates; requests carry `"source": "unregistered"` (ledger requests get `"source": "ledger"`).
    - A failed list call fails init with a clear error (nothing is admitted).
 3. **Draft unregistered issues** in `plan_draft` and `_build_proposal`.
    - Synthesized record: `state` `unregistered`, `deps` from `Engine._deps_of` over title + body, no contract, no doc, no rating.
    - Admission treats `unregistered` like `needs-contract`: sourced write set + sourced scope → `draft`; else `needs-recon` / `missing-scope` (held).
-   - `_build_proposal` builds the lane from the brief when the issue is not in the planner records, and adds those lanes to the dependency view so a dependency between two seeded issues is honoured.
+   - `_build_proposal` builds the lane from the brief when the issue is not in the planner records. The dependency view gets a lookup-only synthesized record for **every** frozen unregistered request (state `unregistered`, which is not in `DEP_RESOLVED`), overlaid by admitted lanes, so a dependency on a held or not-yet-drafted seeded issue stays unmet and the dependent is held, never packed early (plan QA R2). Synthesized records carry the keys the brief reader uses (`flags`, `signals`, `contract`, `deps`).
    - Verify: planner waves unchanged; unregistered drafts appear only in the provisional view, marked provisional.
-4. **Run and record.** Pilot in a disposable full clone: `init --from-prs --limit 10 --unregistered 10`, 22 ticks. Manual controls: ambiguous bare name, `.xyz/` prefix, unregistered dependency pair, failed issue list, `--unregistered 0` parity with Phase 2A output shape. Ledger byte-identical before and after. Evidence under `TESTS-RESULTS/2026-10-30+GH-1261/`.
+4. **Run and record.** Pilot in a disposable full clone: `init --from-prs --limit 10 --unregistered 10`, 22 ticks. Manual controls: bare name with one match vs two matches (resolved vs unresolved); `.xyz/` prefix with and without the stripped target in the listing; unregistered dependency pair with the prerequisite held/pending (dependent unplaced) and then admitted (prerequisite in an earlier wave); a 25+ citation draft keeps its capture-doc path and collides with a competing lane on it; failed issue list with N > 0; `--unregistered 0` candidate-set parity with Phase 2A (same request issues and order; new `source` field aside). Ledger byte-identical before and after. Evidence under `TESTS-RESULTS/2026-10-30+GH-1261/`.
 5. **Gate.** Changed path is `utils/py/harness.py` → full route per `utils/ci-route.sh`; run once on the final approved commit in the disposable clone.
 
 ## Acceptance
 
-- #216's brief cites `utils/marathon-plan.sh`, `utils/py/wave_reconcile.py` and `utils/py/_marathon_plan.py`, and #216 no longer shares a provisional wave with a lane writing any of them.
-- A bare name with several non-test matches is not resolved and is listed with its match count.
+- #216's brief cites `utils/py/wave_reconcile.py` and `utils/py/_marathon_plan.py`, lists `marathon-plan.sh` as unresolved (2 matches), and #216 no longer shares a provisional wave with a lane writing either cited path.
+- A bare name with two or more tracked matches is never resolved and is listed with its match count; with a single match it is resolved.
+- A seeded issue that depends on a held or pending seeded issue is held as unplaceable; once the prerequisite is an admitted draft, it packs in an earlier wave.
+- Newly resolved citations never remove a path Phase 2A would have sourced for the same input.
 - A pilot run with `--unregistered 10` produces a brief for each seeded unregistered issue; the ledger is byte-identical before and after.
 - `--unregistered 0` seeds exactly the Phase 2A candidate set.
-- Red control: with resolution disabled (reverting step 1), #216's write set falls back to `PROJECT/PDDA.md` only.
+- Red controls: with resolution disabled, #216's write set falls back to `PROJECT/PDDA.md` only; with lookup records limited to admitted lanes, the held-prerequisite case wrongly packs the dependent (shows the R2 check detects the bug).
 
 ## Risks
 
 - **More collisions:** widely named files such as `CHANGELOG.md` will serialize lanes that mention them. That is the conservative direction and is visible in the proposal.
-- **Wrong pick among duplicates:** the test/fixture tie-break can still choose wrong when a real write target lives under `test/`. The brief shows the chosen path and its source line.
+- **Ambiguous names stay unresolved:** a duplicate basename (e.g. `marathon-plan.sh`) still under-counts. It is listed in the brief, so a reviewer sees the gap instead of a guessed path.
 - **Unregistered noise:** umbrella, radar and plan issues will mostly land as `needs-recon`. They are held, never packed.
 
 ## Rating

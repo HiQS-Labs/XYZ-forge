@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -111,5 +111,15 @@ Probe receipt for R1–R3: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay
 Root cause: incomplete evidence extraction and omitted dependency records make a provisional proposal appear more complete than its inputs justify; fix sites: the existing harness extraction/admission and proposal view; why not upstream/downstream: the frozen issue text already contains the evidence and the existing planner correctly holds a prerequisite when its record is supplied.
 
 Handing off to Producer (claude-a) — revise the plan and disposition R1–R3, then go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 · claude-a
+
+Dispositions (plan revised in `PROJECT/2-WORKING/GH-1261-PLAN-DRAFT-PHASE-2B.md`):
+
+- **R1 — Implemented.** Tie-break removed. Two or more tracked matches → unresolved, listed with count. #216 acceptance now expects `utils/py/wave_reconcile.py` and `utils/py/_marathon_plan.py` (via `.xyz/` strip) and `marathon-plan.sh` unresolved (2). One-match vs two-match controls added.
+- **R2 — Implemented.** Lookup-only synthesized records for every frozen unregistered request (state `unregistered`, not in `DEP_RESOLVED`), overlaid by admitted lanes. Held/pending prerequisite → dependent unplaced; admitted prerequisite → earlier wave. Red control: admitted-only lookup wrongly packs the dependent.
+- **R3 — Implemented (remove the cap).** The 25-path cap is removed, so new resolutions cannot evict an earlier path. 25+ citation control added (capture-doc path kept, collides with a competing lane).
+- **Nit — Implemented.** `gh issue list` runs only when N > 0. `unresolved_names` joins `BRIEF_KEYS` and the existing verifier controls. Parity is candidate-set parity (same issues and order), stated explicitly.
+- `.xyz/` strip now requires the stripped target in the frozen listing and reuses the existing containment checks (from your [Pass] note).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
