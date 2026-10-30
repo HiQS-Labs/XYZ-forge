@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -148,5 +148,50 @@ Both findings reproduced from the cited inputs and fixed in `030db02d`; evidence
 - **Evidence gaps — Addressed.** `checks.txt`: `releases_app.py check` clean, `pdda.sh run` no errors, `gh308` frozen-twin staged check clean. `parity.txt` now names exact revisions (base `f369773b`, candidate `030db02d`) with per-mode sizes/hashes, plus the retained mode-1 report. AC3 now has an explicit disposition in SUMMARY: disjoint lanes, the `validate.sh` collision (#478/#670), the `kernel` zone cap, seams, the #418→#423 dependency resolved as `already-landed`, and a recorded two-lane cycle control (held under provisional packing, still forced under the CLI). The full `validate.sh` gate is running now on `030db02d` in the disposable verify clone; its result will be added as `gate.txt` (receipt-only commit).
 
 Handing off to Reviewer (codex) — round 2 of 3; go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 2 · codex
+
+**VERDICT: PASS**
+
+**Basis:** Approve the implementation for the stated read-only pilot. Round-1 F1 and F2 are addressed, and the refreshed evidence supports the approved plan within its documented limits. This closes code QA; it does not attest the outstanding full gate or authorize landing.
+
+swept file: yes
+
+Re-read both complete source files (`utils/py/harness.py`, `utils/py/_marathon_plan.py`), the approved plan and plan-QA dispositions, retained evidence and all three control scripts. Fetched live issue #1257 read-only. No additional material pre-existing defect found beyond round 1's recorded rating-rendering nit. Graph tools are unavailable in this session, so direct source reads are the fallback; no indexed completeness claim. The only tracked edit this turn is this relay file.
+
+- **[Pass] F1 — real goal content replaces the YAML marker.** `harness.py:294–315,468–471` decodes the folded/literal scalar before adding scope. A non-mutating in-memory probe exited 0: retained #478's goal equals the freshly extracted doc goal, at line 16, beginning `No ATE invocation can hang past a bounded timeout inside a suite`. Empty `goal: >` returned `None`; inline and literal controls returned their text. The refreshed `pilot-2/slot_007.json` carries that goal, consistent with `controls.txt`'s `CONTROL goal-folded (#478 doc)`.
+- **[Pass] F2 — admission now covers ready briefs.** `harness.py:481–488` applies the same scope/write-set predicate to ready and needs-contract records; `:388–406` omits refused ready lanes from provisional packing and records their held reason. Paired in-memory query on retained #418 exited 0: with scope, actual/provisional lane counts `1/1`; marked missing-scope, `1/0`, held `missing-scope: no sourced scope`; the computed input remained equal to its deep copy. This query exercises packing admission, while the classification branch is source-inspected; it is not a new end-to-end tick run.
+- **[Pass] Planner reuse and lifecycle remain consistent with the approved contract.** `_marathon_plan.py:812–861,863–879,1203–1232` retains default forced-tail packing and one-based seams, while `harness.py:394–413` packs copied provisional records with `force_tail=False`. `parity.txt` identifies base `f369773b` and candidate `030db02d277d40ede69f5644b211337c047d67ce`, with five report comparisons, equal exit codes and matching rendered-doc hash. This is recorded sample parity, not exhaustive equivalence proof. Consumption remains in `finish`'s transaction (`harness.py:128–135,1023–1035`); accepted paths require completed ticks (`:852–856`); ambiguity stays scoped to plan-draft (`:994–1017`). The brief producer and verifier ship together (`:490–543`), consistent with `LESSONS-LEARNED.md:38–43`.
+- **[Pass] Retained output attribution matches the rerun.** Non-mutating render/SHA queries exited 0 for all **four retained** brief pairs (#418/#1201/#216/#478) and the final proposal pair, matching their receipts in `pilot-2/run.txt`. Final counts are `requests=10`, `accepted_briefs=10`, statuses `ready=3,draft=3,needs-recon=4`, actual `6/2`, provisional `9/4`, held `4` (`pilot-2/wave-proposal.json`). The ten completions and two idles are recorded in `run.txt`; six brief bodies and historical cumulative proposals are not retained, so their present bytes were not independently checked. My first query asserted ten retained briefs and exited 1; correcting that erroneous retention assumption yielded the four-pair result above.
+- **[Pass] Evidence limitations and scope are now explicit.** SUMMARY's “AC3 cases on real data” identifies the #478/#670 `validate.sh` collision, kernel cap, seams and resolved #418→#423 dependency; `controls.txt` records the cycle held with `False` and forced with `True`. SUMMARY states CLOSED/unreadable exclusions were absent. `checks.txt` records clean releases, no PDDA errors (39 warnings), and frozen-twin checks; `suites.txt` and provenance correctly attribute focused suites to the earlier revision. SUMMARY's “Hand inspection” preserves the unsafe #216 under-count, and its follow-up section records the rating nit. No broader writer, planner, dispatch system or suite is warranted; the 60/35/50/45 rating still fits the plan's “Rating rationale”.
+
+Probe reproduction for the corrective admission measurement (exit 0; stdout `False 1 1 []`, then `True 1 0 [{'issue': 418, 'reason': 'missing-scope: no sourced scope'}]`; computed-input equality checked in the executed combined query):
+```python
+# Run via PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY' ... PY; no files written.
+import copy, json, sys
+from pathlib import Path
+sys.path.insert(0, 'utils/py')
+import harness as h
+from _marathon_plan import Engine
+p = Path('TESTS-RESULTS/2026-10-29+GH-1257/pilot-2')
+b = json.loads((p/'slot_001.json').read_text())
+m = json.loads((p/'backlog-manifest.json').read_text())
+r = dict(gh=418, title=b['title'], docRel=b['doc_path'], deps=[], state='ready',
+         writeset=[x['path'] for x in b['write_set']], zone='probe',
+         zoneRule=dict(maxPerWave=None, conservativeWhenInferred=False), zoneInferred=False, wave=1)
+c = dict(active=[r], deduped=[r], waves=[[r]], contract_seams=[])
+e = Engine.__new__(Engine); e.findings = []
+for missing in [False, True]:
+    brief = copy.deepcopy(b)
+    if missing:
+        brief.update(scope=[], draft_status='missing-scope', held_reason='no sourced scope')
+    o = h._build_proposal(e, c, [brief], m, 'probe', b['request_id'])
+    print(missing, sum(map(len, o['actual']['waves'])),
+          sum(map(len, o['provisional']['waves'])), o['held'])
+```
+
+**[Unverified — needs clone run]** `gate.txt` is absent in this seeded review tree, despite SUMMARY's forward reference. No validate, suite, executable control script or fixture was run here. The outer harness/disposable-clone final gate must complete and retain its exact-revision receipt before readiness is asserted. The connector comparison `89e1af53..030db02d277d40ede69f5644b211337c047d67ce` again returned HTTP 404, so the requested baseline diff could not be independently inspected; approval relies on whole-file source review, prior dispositions and the recorded parity evidence, not a claimed baseline diff check. Current source SHA-256: harness `adb1986c4a5a348c3eea37993d305a3a165e359d26f334ced7d6ab603309bef0`; planner `f0bd823394151379756a0f4c0148e816e474d78a1e41183436f499b0f2aaa226`.
+
+Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and final gate; no git command was run by this reviewer.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
