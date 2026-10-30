@@ -1,8 +1,8 @@
 ---
 Goal: Final QA — GH-1269 B1 CHANGELOG union keeps the integration side verbatim
 Date: 2026-10-30
-NEXT: codex
-STATUS: In Review
+NEXT: Producer
+STATUS: Approved
 ---
 
 # Context
@@ -547,3 +547,136 @@ index 0614af3f..7da34b68 100644
 ```
 
 # Turns
+
+
+## Codex reviewer — 2026-10-30
+
+Ship within this final-QA scope. No blocking findings. Reversibility: **Easy**, a single-function assembly revert; no persisted-format or repair-budget change.
+
+- **[Pass] Assembly and call contract.** merge_cleanup.py:548-553 checks out the PR head and merges origin/integration into it; ledger_merge.py:500-511 supplies (merge-base, HEAD, MERGE_HEAD). At ledger_merge.py:449-497, both inputs undergo every existing validation before assembly. The added lists retain parsed blocks in encounter order. The return prepends PR blocks absent by exact string equality from integration additions, then copies theirs[len(preamble):] verbatim. The cross-side heading/body check still rejects divergent bodies before deduplication.
+- **[Unverified — no citation] Root cause and retry.** Root cause: sorting both sides' additions rewrote integration history; fix site: union_changelog assembly; why not upstream/downstream: the input revisions and history refusal are correct, while this resolver produced the invalid ordering. The probe below preserves multiple PR blocks, shared blocks, UTF-8/CRLF history, unchanged-tip retries, and advanced-tip retries. Restoring the old assembly in memory reproduces the changed suffix and next-attempt refusal. All 12 invalid inputs reject with identical exception messages under both assemblies.
+- **[Unverified — no citation] Evidence and matrix disposition.** All seven evidence files are nonempty. Four provenance rows parse and reference nonempty logs. Smoke receipts record pre-fix exit 1 (four failures; divergence guard passes) and candidate exit 0 (five passes). The paired matrix logs each record 27 cases and eight failures; provenance records exit 1 for each. Extracted failing names and assertion messages match exactly: five DraftCases, three ChangelogMergeCases, no ChangelogUnitCases failures. This supports **no observed regression**, not a green matrix or proof that every landing path succeeds. The matrix logs and provenance are present in the seeded index (direct read of v2 entries; no git command).
+- **[Unverified — no citation] Scope and rating.** The supplied diff extends the existing resolver without a duplicate writer, new test/ file, registered suite, registry entry, or gate machinery. The TESTS-RESULTS smoke script is permitted recorded manual evidence. Rating **65/60/50/85** remains proportionate to a recoverable landing interruption consuming the two-repair budget and a small fix. Issue-search recurrence counts were not independently established this turn.
+
+**[Unverified — needs clone run]** The final committed-state full gate and required doc checks remain for the enclosing harness. The plan's “all cases green” matrix expectation was not achieved; the paired baseline disposition above explicitly limits the verification claim. No validate.sh, test/*.sh, pytest, executable fixture, or git command was run here.
+
+### Pure-function probe receipt
+
+Command (exit **0**): export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; python3 "$TMPDIR/gh1269-review-probe.py"
+
+The scratch script was exactly:
+
+```python
+import ast
+import re
+from datetime import date
+from pathlib import Path
+p = Path("skills/2-daily/merge-cleanup/scripts/ledger_merge.py")
+tree = ast.parse(p.read_text())
+node = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "union_changelog")
+source = ast.get_source_segment(p.read_text(), node)
+env = {"re": re, "date": date}
+exec(compile(ast.Module(body=[node], type_ignores=[]), str(p), "exec"), env)
+u = env["union_changelog"]
+old = source.replace("    ordered = []\n", "").replace("        ordered.append([])\n", "").replace("            ordered[-1].append(block)\n", "").replace('return preamble + "".join(b for b in ordered[0] if b not in ordered[1]) + theirs[len(preamble):]', 'return preamble + "".join(blocks[h] for h in sorted(blocks, reverse=True)) + history')
+old_env = {"re": re, "date": date}
+exec(old, old_env)
+pre = "# Changelog\n\nIntro.\n\n"
+hist = "## 2026-10-28 — history\r\n\r\nExact café bytes.\r\n"
+def sec(name, body="body"):
+    return f"## 2026-10-29 — {name}\n\n{body}\n\n"
+a, z, pr, pr2 = map(sec, ("A", "Z", "PR", "PR2"))
+base = pre + hist
+ours = pre + pr + pr2 + a + hist
+theirs = pre + a + z + hist
+expected = pre + pr + pr2 + a + z + hist
+assert all((base, ours, theirs))
+out = u(base, ours, theirs)
+assert out.encode() == expected.encode()
+assert out.endswith(theirs[len(pre):])
+assert u(theirs, out, theirs) == out
+theirs2 = pre + sec("NEW") + a + z + hist
+assert u(theirs, out, theirs2) == pre + pr + pr2 + theirs2[len(pre):]
+assert u(base, base, theirs) == theirs
+assert u(base, pre + pr + hist, base) == pre + pr + hist
+assert u(base, pre + z + a + hist, theirs) == theirs
+print("candidate: PR order, integration UTF-8/CRLF bytes, dedup, retry, advanced-tip retry, one-sided additions PASS")
+old_out = old_env["union_changelog"](base, ours, theirs)
+assert old_out != expected and not old_out.endswith(theirs[len(pre):])
+try:
+    old_env["union_changelog"](theirs, old_out, theirs)
+except ValueError as e:
+    assert str(e) == "changelog preamble or existing history changed"
+    print("red control (old sorted assembly): changed integration suffix; retry refused:", e)
+else:
+    raise AssertionError("red control did not refuse")
+bad = [
+    ("empty", "", ours, theirs),
+    ("marker", base, pre + "<<<<<<< ours\n" + hist, theirs),
+    ("history-edit", base, ours.replace("Exact", "Changed"), theirs),
+    ("preamble-edit", base, ours.replace("Intro.", "Changed."), theirs),
+    ("fence", base, pre + sec("F", "```\n## fake\n```") + hist, theirs),
+    ("html", base, pre + sec("H", "<!-- hidden -->") + hist, theirs),
+    ("incomplete", base, pre + "loose\n" + pr + hist, theirs),
+    ("bad-date", base, pre + pr.replace("2026-10-29", "2026-02-30") + hist, theirs),
+    ("duplicate", base, pre + pr + pr + hist, theirs),
+    ("same-heading-different-body", base, pre + sec("A", "changed") + hist, theirs),
+    ("historical-heading", base, pre + hist + hist, theirs),
+    ("no-additions", base, base, base),
+]
+for label, b, o, t in bad:
+    messages = []
+    for fn in (u, old_env["union_changelog"]):
+        try:
+            fn(b, o, t)
+        except ValueError as e:
+            messages.append(str(e))
+        else:
+            raise AssertionError(label + " was accepted")
+    assert messages[0] == messages[1], (label, messages)
+print("refusals: 12/12 reject identically under candidate and old assembly")
+```
+
+Decisive output:
+
+```text
+candidate: PR order, integration UTF-8/CRLF bytes, dedup, retry, advanced-tip retry, one-sided additions PASS
+red control (old sorted assembly): changed integration suffix; retry refused: changelog preamble or existing history changed
+refusals: 12/12 reject identically under candidate and old assembly
+```
+
+### Receipt-comparison probe
+
+The following narrow extraction was run with PYTHONDONTWRITEBYTECODE=1 (exit **0**); it reads the two existing logs and JSONL only:
+
+```python
+from pathlib import Path
+import re, json
+d=Path('TESTS-RESULTS/2026-10-30+GH-1269')
+print('artifact_sizes:', {p.name:p.stat().st_size for p in sorted(d.iterdir()) if p.is_file()})
+failures=[]
+for side in ('candidate','baseline'):
+    s=(d/f'gh789-matrix-{side}.log').read_text()
+    names=re.findall(r'^FAIL: (.+)$',s,re.M)
+    assertions=re.findall(r'^AssertionError: (.+)$',s,re.M)
+    print(side, 'failures=',len(names), 'summary=',re.findall(r'^(?:Ran \d+ tests.*|FAILED.*)$',s,re.M))
+    print(side, 'names=',names)
+    print(side, 'assertions=',assertions)
+    failures.append((names,assertions))
+print('identical_failure_names_and_assertions:',failures[0]==failures[1])
+rows=[json.loads(l) for l in (d/'provenance.jsonl').read_text().splitlines()]
+print('provenance:',[(r['case'],r['rc'],(d/r['log']).is_file()) for r in rows])
+print('provenance_rows_nonempty:',len(rows)==4 and all((d/r['log']).stat().st_size for r in rows))
+```
+
+Command: python3 - <<'PY' followed by the snippet above and its PY terminator. Decisive output:
+
+```text
+candidate failures= 8 summary= ['Ran 27 tests in 39.541s', 'FAILED (failures=8)']
+baseline failures= 8 summary= ['Ran 27 tests in 37.992s', 'FAILED (failures=8)']
+identical_failure_names_and_assertions: True
+provenance_rows_nonempty: True
+```
+
+VERDICT: PASS
+Basis: Source trace, isolated-function execution, the witnessed old-assembly red control, unchanged refusals, and retained paired receipts substantiate the approved assembly fix. Matrix drift is disclosed; final committed-state clone gates remain outstanding.
