@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -134,5 +134,45 @@ Handing off to Producer (claude-a) — resolve B2, record the negative and ordin
 
 ### Producer · Round 3
 B2 Implemented: enclosing html state remains active across comments; exact input now refuses. replay-r3.log includes B1/S1/B2 and ordinary positive controls. driver-smoke-r3.log records warning, terminal advancement and real loader success. Updated runtime diff packet and branch-scope.txt enumerate candidate scope; provenance refreshed for changed artifacts. No other runtime changes. Full final gate remains pending Approved.
+
+### Reviewer · Round 3
+
+VERDICT: FAIL
+Basis: B1, S1 and B2 resolve on their exact inputs, but the fallback still accepts deletion of a literal blank inside mixed space/tab indented code. Round cap reached; escalating with B3 unresolved. Final gate remains pending.
+swept file: yes
+
+- [Blocker] **B3 — mixed space/tab indentation bypasses literal protection** (`utils/py/relay_attest.py:188-195`). The neighbor predicate recognizes four leading spaces or an initial tab, but misses a space followed by a tab. Those bytes reach column four and form indented code under [CommonMark's tab rule](https://spec.commonmark.org/0.31.2/#tabs). Deleting an internal blank is therefore accepted as harmless separator drift. The four-space and initial-tab controls reject the same deletion. Recognize equivalent leading space/tab indentation when classifying literal neighbors, or conservatively refuse that ambiguity; preserve the original bytes and ordinary prose tolerance. Record the exact negative alongside the existing manual controls in a disposable full clone; no new suite or gate.
+  Observed input: `pre=b"STATUS: Open\n\n \talpha\n\n \tbeta\n"`; POST deletes only the blank after `alpha` and appends the review below. This is an internal blank between two indented code lines, not a review-section separator.
+  Affected scope: separator fallback when nearest nonblank literal neighbors use one to three spaces followed by a tab to reach at least four indentation columns; no permission to normalize nonblank whitespace.
+  Falsifier: the mixed-indent probe must return `None`, matching the four-space and tab-only controls; ordinary prose deletion must still return a boundary. If the exact candidate already refuses mixed indentation, B3 is unnecessary.
+  Probe command (in-memory helper only):
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  PYTHONPATH=utils/py python3 - <<'PYPROBE'
+  import relay_attest as a
+  r=b'\n### Reviewer (codex)\nVERDICT: PASS\nBasis: source.py:1\n'
+  for label,p in [('B2',b'STATUS: Open\n\n<pre>\n<!-- note -->\nalpha\n\nbeta\n</pre>\n'),('mixed-indent',b'STATUS: Open\n\n \talpha\n\n \tbeta\n'),('spaces-control',b'STATUS: Open\n\n    alpha\n\n    beta\n'),('tab-control',b'STATUS: Open\n\n\talpha\n\n\tbeta\n'),('prose',b'STATUS: Open\n\nalpha\n\nbeta\n')]:
+      q=p.replace(b'alpha\n\n',b'alpha\n')+r
+      print(label,'strict=',a.canonical_bytes(q).startswith(a.canonical_prefix(p,q)),'fallback=',a.separator_prefix_end(p,q))
+  PYPROBE
+  ```
+  Exit status: **0**. Decisive output:
+  ```text
+  B2 strict= False fallback= None
+  mixed-indent strict= False fallback= 24
+  spaces-control strict= False fallback= None
+  tab-control strict= False fallback= None
+  prose strict= False fallback= 20
+  ```
+  Expected mixed-indent fallback: `None`. The driver consumes a non-None boundary and emits the harmless-separator warning (`utils/py/relay_drive.py:722-738`), then can attest after the existing done-token check. This downstream consequence is source-traced, not an executed driver run here. Fix the neighbor classification rather than downstream coordinates or the writer.
+
+- [Pass] **Earlier exact findings resolve.** B2 now returns `None` in the command above; the enclosing HTML state survives comments (`utils/py/relay_attest.py:179-187`). Separate in-memory probes of the exact R1 inputs returned `B1 None` and `S1 56`, exit **0**. Their commands are the R1 commands already retained above. Historical `FAIL` to `PASS`, deleted sentence and fenced-blank controls also returned `None`; separator-only history with no appended review left `nonempty-added=False`. These bounded controls do not establish preservation for B3.
+- [Pass] **Canonical coordinates, loader and refusal contracts stay shared.** Strict prefix comparison remains first; fallback changes only `added_start` (`utils/py/relay_drive.py:719-738`). The record, trailer and existing writer follow the same path (`utils/py/relay_drive.py:742-782`), and the loader still checks range, digest and immediate trailer (`utils/py/relay_attest.py:369-379`). Wrong-role/failed turns refuse before fallback (`utils/py/relay_drive.py:706-717`); empty appended bytes and missing done token still refuse (`utils/py/relay_drive.py:736-741`). No raw transcript rewrite is introduced by this fallback. Final runtime/gate execution is **[Unverified — needs clone run]** in this reviewer turn.
+- [Pass] **Supplied evidence is nonempty and internally intact.** Read-only Python parsed every JSONL row, read each named artifact and asserted nonempty bytes plus SHA-256 equality; exit **0**, `entries= 14`, fourteen `hash-match= True` results (`TESTS-RESULTS/2026-10-30+GH-1273/provenance.jsonl:1`). The R3 replay retains `HTML enclosing literal with comment refused PASS` (`replay-r3.log:11`); the R3 driver log retains the separator warning and `driver separator approval and real loader PASS` (`driver-smoke-r3.log:11`, `driver-smoke-r3.log:24`). These are supplied clone receipts, not independently rerun suites; B3 is absent. Read-only tar inspection also found the packaged `relay-automation/new-relay.sh` byte-identical to the reviewed source.
+- [Pass] **Scope and ratings remain bounded.** The plan's Ratings states incident counts are not established and `trend unknown`; its Execution evidence explicitly splits mechanical recovery from this delivery. The supplied `branch-scope.txt` enumerates runtime, scaffold, plan, ledger, package, transcripts and evidence, with no new suite or gate path. Complete branch-diff fidelity cannot be independently established under this turn's git prohibition.
+
+Scope/limits: Read the whole seeded plan, supplied diff and branch-scope packets, all 500 lines of `relay_attest.py`, all 1172 lines of `relay_drive.py`, all of `new-relay.sh`, and supplied manual replay/smoke source and receipts as text. No additional pre-existing defect found in those file sweeps beyond B3. Issue refresh (`gh issue view 1273 --repo HiQS-Labs/XYZ-forge --json title,body,url`) exited **1**, `error connecting to api.github.com`; local plan and prior relay context were used. Graph lookup returned `MCP tool call requires approval, but approval policy is never`; direct reads were used. No git command, suite, pytest, executable fixture or model turn was run. Only this relay file was edited. The shared approval boundary remains Costly; the plan's narrow revert is the rollback. Final gate and complete branch-wide accounting remain with the outer harness/Producer.
+
+Handing off to Producer (claude-a) — round cap reached, relay Escalated; resolve B3 and obtain a fresh authorized review cycle before approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
