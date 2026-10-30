@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -67,5 +67,40 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The Setup artifact is absent, so this turn cannot approve the claimed seeded input. The source capture was available and read in full for a provisional plan review; its acceptance also needs an explicit persisted-attestation compatibility check.
+swept file: no
+The designated `.relay-artifacts/GH-1273-RELAY-SEPARATORS.md` could not be swept. All 45 lines of `PROJECT/1-INBOX/GH-1273-RELAY-SEPARATORS.md` were read as a fallback, alongside all of `utils/py/relay_attest.py` and relevant driver/consumer sections. This is not a whole-runtime audit. Graph discovery was unavailable: `list_projects` returned “MCP tool call requires approval, but approval policy is never”; source reads were used.
+
+- [Blocker] **B1 — Setup does not name an available review artifact.** The declared `.relay-artifacts/GH-1273-RELAY-SEPARATORS.md` is missing; the directory contains only `gh182-claim-guards.md`. The source capture exists, but this does not establish the seeded input's identity. Fix the seed/Setup mapping before redispatch, or accurately repoint Setup to the intended available input; do not substitute the unrelated artifact.
+  Observed input: Setup's artifact path, with the following read-only probe returning exit **1**:
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 -c 'from pathlib import Path; p=Path(".relay-artifacts/GH-1273-RELAY-SEPARATORS.md"); print(str(p) + ": is_file=" + str(p.is_file())); raise SystemExit(0 if p.is_file() else 1)'
+  ```
+  Decisive output: `.relay-artifacts/GH-1273-RELAY-SEPARATORS.md: is_file=False`.
+  Affected scope: This relay's artifact binding and any approval of the intended GH-1273 plan, not general seeding behavior.
+  Falsifier: Redispatch with the exact Setup path containing the intended GH-1273 plan; the probe must exit 0 and the file must be readable in full.
+
+- [Should] **S1 — Pin loader round-trip and legacy-record acceptance before changing canonical bytes.** The source plan promises “Attestation load must use the same canonical range semantics” (source capture:23), but step 4 (source capture:36) does not explicitly exercise old records or the newly published trailer. `relay_drive.py:745` persists canonical offsets/length and `relay_drive.py:757` hashes a raw trailer; `relay_attest.py:304` re-canonicalizes the file, then checks the stored slice and the raw trailer at `relay_attest.py:307–317`. `trailer_text` itself begins with a blank line (`relay_attest.py:208`). A separator transform therefore reaches persisted coordinates and the trailer boundary, beyond prefix acceptance. Specify whether the fallback leaves existing canonicalization untouched or how records select compatible semantics. Add acceptance to the existing suite/manual replay: an unchanged pre-change `relay-drive/attest@1` record still loads; a new separator-tolerant approval publishes and loads successfully with its trailer; substantive edits still refuse. This requests concrete acceptance, not a new suite or gate.
+  Observed input: Existing `relay-drive/attest@1` record fields `added_start`, `added_len`, `added_sha256`, and `trailer_sha256` (`relay_attest.py:26,261–264`), and the leading `\n` in `trailer_text` (`relay_attest.py:208`). The current loader compares these against its canonical stream without a canonicalization-version selector.
+  Affected scope: Persisted approval records consumed through `relay_attest.load`, including marathon recovery (`marathon_drive.py:2593`) and Jog legacy lookup (`jog_run.py:1768`).
+  Falsifier: Demonstrate that the chosen fallback preserves legacy record interpretation and that a freshly written fallback record passes the real loader, including trailer positioning. If canonical bytes never change, document that design and show both round-trips; no format migration is necessary merely for ceremony.
+
+- [Pass] **The narrow source plan has a sensible safety boundary.** Source capture:23–25 preserves raw evidence, nonblank bytes and literal contexts; keeps strict comparison first; emits a fallback warning; and rejects inferred approval. Source capture:36 requires disposable-clone verification, substantive negative controls, and no new suites/gates. These are plan properties, not implementation results. No other pre-existing defect was identified in the fully read source capture beyond the acceptance gap above; the seeded artifact remains unavailable.
+
+Current-behavior probe (read-only; exit **0**):
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 -c 'import sys; sys.path.insert(0, "utils/py"); import relay_attest as a; pre=b"STATUS: Open\n\n## Log\n\nOld paragraph.\n\nOther paragraph.\n"; post=pre.replace(b"Old paragraph.\n\nOther",b"Old paragraph.\nOther")+b"\n### Reviewer\nVERDICT: PASS\n"; print("strict_prefix=" + str(a.canonical_bytes(post).startswith(a.canonical_prefix(pre, post))))'
+```
+Decisive output: `strict_prefix=False`. This isolates the prefix rejection in `relay_drive.py:721`; it does not establish end-to-end approval or recovery.
+
+[Unverified — needs clone run] No `validate.sh`, `test/*.sh`, pytest, executable fixtures, or git commands were run. Prospective literal handling, citation alignment, warning behavior, attestation publication/load, and token recovery remain unverified. Existing relevant suites include `test/gh505-relay-attest.sh` and `test/relay-uncited-findings.sh`; run them only in the required disposable full clone. The Setup Definition of Done also remains a scaffold placeholder; fill it from the agreed source-plan acceptance before the next review.
+
+Handing off to Producer (claude-a) — resolve B1, disposition S1, and request the next review; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
