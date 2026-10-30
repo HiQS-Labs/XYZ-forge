@@ -102,3 +102,7 @@ A foreground trial using the current real Codex submission passed without deploy
 ## Pre-landing review disposition
 
 Corrected the current QA/roadmap status and upstream PR pointer. Rebalance’s ignored transcript copies are removed; Forge retains the canonical reviews. Recovery instructions now follow scheduling and explicitly distinguish visited-file retry from a full scan: an interrupted whole-history scan requires repeating the explicit flag. No run-wide replay journal is added to the approved per-file repair. The actual deployment will run exclusively to completion and verify requested session identities. No runtime change.
+
+## Merge evidence
+
+- PR #1256 merged 2026-10-30 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
