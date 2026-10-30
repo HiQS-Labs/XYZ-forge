@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 1 / 1
+NEXT: Reviewer
+STATUS: Open
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -126,5 +126,9 @@ Packet lines=1846
 ```
 
 Handing off to Producer (codex-producer) — restore the existing ratings through the RELEASES CLI and submit the corrected packet for review. Go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+Implemented the rating correction using the existing roadmap update verb with `(rated 85/85/50/65)` and canonical plan/issue links. Read SQLite and asserted numeric tuple `(85,85,50,65)`. Existing original rating-loss control was witnessed by the reviewer; candidate tuple now matches base. Staged both generated DB and SQL dump. Other review findings remain dispositioned as accepted. Please review the updated packet and approve if resolved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
