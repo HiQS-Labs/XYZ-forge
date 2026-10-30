@@ -2,7 +2,7 @@
 gh_issue: 1257
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1257
 title: "GH-1248 Phase 2A: read-only backlog-to-wave pilot"
-status: Planned
+status: Active
 created: 2026-10-29
 updated: 2026-10-29
 owner: noelsaw1
@@ -30,7 +30,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Recon: the real backlog has 79 open roadmap rows; the existing planner finds 6 ready across 2 waves and holds 63 for `needs-contract` | Codex plan QA, then implement on the GH-1248 branch |
+| Codex plan QA approved in round 3 (`relay-system/2026-10-29/gh1257-plan-qa.md`); recon found 6 ready lanes and 63 `needs-contract` holds in the real backlog | Implement steps 1–5, then evidence and final QA |
 
 ## Table of contents
 
