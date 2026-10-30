@@ -41,3 +41,8 @@ p=b"STATUS: Open\n\n<pre>\n<!-- note -->\nalpha\n\nbeta\n</pre>\n"
 q=p.replace(b"alpha\n\nbeta",b"alpha\nbeta")+review
 assert a.separator_prefix_end(p,q) is None
 print('HTML enclosing literal with comment refused PASS')
+
+for indent in (b' \t',b'  \t',b'   \t',b'    ',b'\t'):
+ p=b'STATUS: Open\n\n'+indent+b'alpha\n\n'+indent+b'beta\n'
+ assert a.separator_prefix_end(p,p.replace(b'alpha\n\n',b'alpha\n')+review) is None
+ print('mixed-indent',repr(indent),'refused PASS')

@@ -1,6 +1,6 @@
 ---
 title: Relay separator attestation
-status: blocked
+status: in-progress
 owner: Codex
 goal: Accept harmless review separators while protecting history
 created: 2026-10-30
@@ -60,3 +60,7 @@ Result exit 4: `relay-drive: relay escalated to human by design (STATUS: Escalat
 Unresolved B3 input: `pre=b"STATUS: Open\n\n \talpha\n\n \tbeta\n"`; delete the empty line after alpha and append substantive PASS. Observed fallback boundary 24; required None. Four spaces and initial tab controls already refuse. Fix the neighbor classifier in relay_attest.separator_prefix_end to recognize equivalent space/tab indentation without altering any original nonblank bytes. Record reviewer exact control in existing manual evidence, then obtain an explicitly authorized fresh independent review cycle; do not extend or reset this capped relay implicitly.
 
 Full classified gate not run: workflow requires final Approved first. No push or PR; no merge. Task and verification full clones preserved with local commits/evidence. Primary untouched. Current score remains 85/82/50/65. NO_ENTRY: current controls do not support a general lesson. Retire only after a verified ready PR; this blocked checkpoint is not eligible.
+
+## Authorized resume 2026-10-30
+
+User authorizes fresh independent final QA cycle, maximum five rounds, and evidence-based adjudication. Earlier capped FAIL remains historical evidence, never reused as approval. Parent supplied narrow expandtabs(4) literal-neighbor fix; preserve original bytes and canonical coordinates. Record exact B3 red/candidate controls in disposable full clone, then new review, final classified gate once, gated push and ready PR development; no merge. Existing parent watchdog owns timing; no duplicate scheduler.

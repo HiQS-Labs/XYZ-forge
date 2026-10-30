@@ -191,7 +191,9 @@ def separator_prefix_end(pre_raw, post_raw):
             while right < len(lines) and lines[right] == b"\n":
                 right += 1
             neighbors = ([lines[left]] if left >= 0 else []) + ([lines[right]] if right < len(lines) else [])
-            adjacent_literal = any(n.startswith((b"    ", b"\t", b">", b"<")) for n in neighbors)
+            adjacent_literal = any(
+                n.expandtabs(4).startswith((b"    ", b">", b"<")) for n in neighbors
+            )
             optional = line == b"\n" and not protected and not literal and not adjacent_literal
             offset += len(line)
             if not optional:
