@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Labs/XYZ-forge/issues/1248
 title: "Outer-loop primitive: tracked agent-agnostic control-plane spike"
 status: Active
 created: 2026-10-28
-updated: 2026-10-28
+updated: 2026-10-29
 owner: noelsaw1
 goal: "Build and measure a deterministic outer loop whose decision adapters are replaceable without changing scheduling, validation, containment, recovery, or receipt semantics, while keeping all production Jog and repository execution disabled."
 doc_type: plan
@@ -29,7 +29,9 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| `checkpoint2`: 17/17 manual controls passed behind `utils/py/harness.py factory-primitive`; five focused existing suites passed on `833c87c8`, including registry compatibility and sequential `agy-turn` | Run the outstanding one-hour rules-only gate; watchdog, report generator, agent adapters, multi-arm runs, and 24-hour soak remain unimplemented |
+| 12-hour rules-only scheduled run (slots 1–144 at 300 s): 137 completed, 1 `uncertain` after the slot-37 crash, 6 injected scheduler misses, 0 failed, spend 0; the one-hour gate passed, which completes Phase 1 | Spread scenario inputs across all 288 slots, then build Phase 2 (watchdog, generator, report) and extend `status` to the §7 fields; agent adapters and the 24-hour soak remain unimplemented |
+
+**2026-10-29 run.** At `9da920e4`, a gitignored driver fired `harness.py factory-primitive tick` every five minutes for 12 hours. Run 1 passed the one-hour gate but was stopped at slot 13 when the operator's shell wrote `.claude/` into the instance directory; it is kept as failed evidence. Run 2 completed all 144 slots. The slot-37 kill during act was reconciled to `uncertain` with no retry, and slot 91 resumed after the 85–90 stop without catching up. Gaps found: all 27 inputs arrive in slots 1–27, so quarantine and later fault windows see an empty inbox; there is no missed-tick record without a watchdog; `status` lacks heartbeat age and stage, lock state, last receipt or error, and quarantined IDs; and a verification failure after the tool runs is recorded as `failed` rather than quarantined. Evidence: `TESTS-RESULTS/2026-10-29+GH-1248/SUMMARY.md`.
 
 The full experiment contract and acceptance criteria live in issue #1248. This document is the execution surface and build record. The initial full gate at `503a1ca5` did not complete: it reported the now-corrected GH-777 layout errors and 11 GH-666 `agy-turn` model-probe failures. Those model-probe tests and all 65 `agy-turn` checks subsequently passed sequentially on both base and `833c87c8`, but this does not complete or clear the full gate. See `TESTS-RESULTS/2026-10-28+GH-1248/SUMMARY.md` for retained output and comparison results.
 
@@ -67,7 +69,7 @@ Invoke the experiment as `python3 utils/py/harness.py factory-primitive ...`. Mu
 
 Implement the CLI, slot-indexed scenarios, SQLite snapshots/decisions/intents/receipts, rules adapter, four logical tools, heartbeat, lock, pause, budget reservations, macOS filesystem sandbox, reconciliation, and `status`. Exercise the issue's manual negative controls without adding a test suite or gate registration.
 
-**QA gate:** recorded controls under `TESTS-RESULTS/2026-10-28+GH-1248/` show unsafe decisions are rejected, new/existing-file escapes are blocked, crashes leave classified recoverable state, ambiguous attempts never repeat, and unknown billing is not converted to zero. A one-hour rules-only run remains required before this phase is complete.
+**QA gate:** recorded controls under `TESTS-RESULTS/2026-10-28+GH-1248/` show unsafe decisions are rejected, new/existing-file escapes are blocked, crashes leave classified recoverable state, ambiguous attempts never repeat, and unknown billing is not converted to zero. A one-hour rules-only run is required before this phase is complete. **Met 2026-10-29:** the one-hour gate passed in both scheduled runs, and run 2 continued cleanly for 12 hours (`TESTS-RESULTS/2026-10-29+GH-1248/`).
 
 ### Phase 2 — Scenario synchronization and observability
 

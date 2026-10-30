@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-29 — GH-1248 rules-only loop runs 12 hours at protocol cadence
+
+- Ran slots 1–144 of the §8 schedule at real five-minute spacing with the rules arm on `9da920e4`. All 144 slots completed: 137 ticks completed, the slot-37 kill during act was reconciled to `uncertain` with no retry, slots 85–90 were skipped as the injected scheduler stop, and slot 91 resumed without catching up. No tick failed, spend stayed 0, the canary was unchanged and nothing escaped the sandbox. The one-hour gate passed, which completes Phase 1. A first run was stopped at slot 13 after the operator's shell wrote into the instance directory; it is kept as failed evidence. Evidence and provenance are under `TESTS-RESULTS/2026-10-29+GH-1248/`. No code changed. Reversibility: Easy.
+- This is not the 24-hour soak. The PAUSE, tool-failure and malformed-output windows (slots 145+) did not run, and quarantine was not exercised because all 27 scenario inputs arrive in slots 1–27. There is still no watchdog, so missed ticks appear only in the driver log, and `status` lacks several §7 fields.
+
 ## 2026-10-28 — GH-1248 rules-only outer-loop checkpoint stays local and unmerged
 
 - Added the deterministic four-tool experiment behind `utils/py/harness.py factory-primitive`, preserving the registry fallback and using `releases_app.connect` for state. Prompts, schemas, and slot-indexed scenarios are tracked under `utils/py/factory_primitive/`; mutable state stays under gitignored `temp/factory-primitive/`. No Jog, scheduler, repository-execution, GitHub-write, deployment, or multi-repo behavior was added. Reversibility: Easy — retain or abandon the branch.
