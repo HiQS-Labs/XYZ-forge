@@ -30,7 +30,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA r1: R1-R3 and nit accepted, plan revised | Codex plan QA r2 |
+| Plan QA approved (r2); steps 1–4 built on `f0bb7db9` and run on 20 real issues, all controls pass, ledger untouched (`TESTS-RESULTS/2026-10-30+GH-1261/SUMMARY.md`) | Full gate and final Codex QA, then the stacked PR |
 
 ## Problem
 

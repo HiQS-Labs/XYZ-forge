@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-30 — GH-1261 outer loop drafts unregistered issues and resolves bare file names
+
+- `harness.py factory-primitive init --from-prs --unregistered N` adds N open issues that have no ledger row, read once at init. `plan-draft` gives them a planner-shaped record, and every seeded unregistered issue is visible to dependency lookup, so a dependent waits for its prerequisite.
+- Cited paths now map a vendored `.xyz/` path to the forge path and resolve a bare file name when exactly one tracked file has it; names with several matches are listed under a new `unresolved_names` brief field, never guessed. The 25-path write-set cap is gone.
+- On 20 real issues (10 ledger, 10 unregistered): every request produced a brief, the planner's waves are unchanged and the ledger is byte-identical; #216 now cites its real files and left wave 1. Evidence: `TESTS-RESULTS/2026-10-30+GH-1261/SUMMARY.md`.
+
 ## 2026-10-29 — GH-1257 outer loop drafts marathon briefs from the real backlog, read-only
 
 - `harness.py factory-primitive init --from-prs` freezes a copy of `releases.db`, the git listings and one read-only issue read for up to N open Queue rows the planner classes ready or needs-contract. A new `plan-draft` tool then drafts one evidence-linked brief per tick (scope, acceptance, open questions and a write set, each with its source line, or marked missing) and refreshes a wave proposal that keeps the planner's waves unchanged and adds a provisional packing. Missing scope or write set holds an issue out of every wave. The tool runs offline inside the existing sandbox, and nothing is written to git, the ledger or GitHub. Reversibility: Easy.
