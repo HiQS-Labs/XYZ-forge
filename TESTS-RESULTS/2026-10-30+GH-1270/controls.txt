@@ -6,6 +6,10 @@ CONTROL stale-unbriefed-mixed | provisional=False held=['stale-contract: 1 of 2 
 CONTROL stale-unbriefed-all-unfixed | provisional=True held=[]
 CONTROL command-probe | results=[{'type': 'command', 'path': '', 'result': 'unverified'}] landed=0 marker_created=False
 CONTROL verify-drop-probe-results | refused: plan-draft brief missing keys: probe_results
+CONTROL closer-scoped Closes #722 | [722]
+CONTROL closer-scoped Closes https://github.com/HiQS-Labs/X | [722]
+CONTROL closer-scoped Closes https://github.com/other/repo/ | []
+CONTROL closer-scoped See https://github.com/HiQS-Labs/X | []
 CONTROL delivered-at-init | target #418 excluded=[{'issue': 418, 'reason': 'possibly delivered: closed by merged PR #99999; issue still open'}]
 CONTROL tick1 | {"status":"completed","tick_id":"slot_001"}
 CONTROL packet-after-clean-tick | {"dir":"<repos>/XYZ-forge-gh1270-launch-packet-readiness-2026-10-30-verify/temp/factory-primitive/ctl-packet/instances/C/out/launch-pa
