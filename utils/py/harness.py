@@ -1054,14 +1054,18 @@ def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
             skipped.append({"issue": n, "reason": f"bin/marathon-yaml rejected it: {check.stderr.strip()[:160]}"})
             continue
         emitted.append({"issue": n, "folder": slug, "provisional": lane["provisional"]})
+    builder = "agy" if reviewer == "codex" else "codex"  # marathon-drive refuses builder == reviewer
     readme = [f"# Launch packet: wave {wave} ({proposal['tick_id']})", "", f"> {DRAFT_LABEL}", "",
               "Nothing here has been launched. Each folder is one marathon for one lane; lanes in a wave are",
               "write-disjoint, so each can run in its own clone at the same time. Copying a folder into",
-              "`PROJECT/2-WORKING/` of a clone is the approval step.", "", "## Lanes", ""]
+              "`PROJECT/2-WORKING/` of a clone is the approval step.",
+              f"The builder must differ from the reviewer (`{reviewer}`), so the commands pass `--builder {builder}`.",
+              "", "## Lanes", ""]
     for e in emitted:
         readme += [f"- #{e['issue']}" + (" (provisional)" if e["provisional"] else "") + f": `{e['folder']}/`",
                    f"  - `cp -R {e['folder']} <clone>/PROJECT/2-WORKING/`",
-                   f"  - `relay-automation/marathon.sh --plan PROJECT/2-WORKING/{e['folder']}/MARATHON.yaml --dry-run`"]
+                   f"  - `relay-automation/marathon.sh --plan PROJECT/2-WORKING/{e['folder']}/MARATHON.yaml "
+                   f"--builder {builder} --dry-run`"]
     readme += ["", "## Skipped", ""] + ([f"- #{s['issue']}: {s['reason']}" for s in skipped] or ["- none"])
     (staging / "README.md").write_text("\n".join(readme) + "\n", encoding="utf-8")
     shutil.rmtree(dest, ignore_errors=True)
