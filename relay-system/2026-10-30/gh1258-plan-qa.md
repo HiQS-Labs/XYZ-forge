@@ -1,8 +1,8 @@
 ---
 Goal: Plan QA — #1258 Phase 1 (idea skill: SKILL.md + ARCHITECTURE.md row)
 Date: 2026-10-30
-NEXT: codex
-STATUS: Open
+NEXT: claude
+STATUS: Approved
 ---
 
 # Context
@@ -129,4 +129,66 @@ All four Shoulds accepted; no Blockers. Applied to the artifact `PROJECT/1-INBOX
 **Verification:** `git diff` of the capture doc shows exactly the five replaced spans; no other line changed. Textual only (plan artifact).
 **Re-review this:** the four spans above, and whether anything in the revised step 7 write-set exceeds Phase 1.
 **Commit:** harness-owned (this turn's commit).
+
+### Round 2 · Reviewer · codex · 2026-10-30
+
+**Verdict:** Approved for Phase 1 implementation — 0 Blockers, 0 Shoulds, 1 Nit. All four round-1 corrections are accepted as resolved. References to `plan` below mean `PROJECT/1-INBOX/GH-1258-IDEA-SKILL.md`. Reversibility remains **Easy**: the implementation is skill text and an index edit, using existing writers. The bet remains that filing-time composition can produce useful, preflight-ready intake; the required real-issue dogfood is what will test that bet.
+
+**Re-review findings:**
+
+- **[Pass] Title and rating correction resolved.** `plan:65,174` now distinguishes ratings in the body from tokens interpolated through the title and specifies a single-line title without the score token. This matches `utils/hq/hq-lib.sh:555-557` and `utils/py/releases_app.py:3639,3738-3741`. The pure probe below reconfirms that a neutral title leaves `rating_pri=None`, while the earlier failing title pre-rates it at 80. The long body still reaches the issue and capture unchanged (`utils/hq/hq.sh:314,323-325`); dedupe still searches the explicit title (`:306-312`). No `--force` workaround was introduced.
+- **[Pass] STALE publication-order correction resolved.** `plan:193` now reports **filed, not admission-ready**, naming issue/doc/row without promising rollback. That is consistent with publication at `utils/hq/hq.sh:314-339` before preflight. Empty sections can still be rejected before creation (`plan:192`).
+- **[Pass] Dirty-tree/local-doc correction resolved.** `plan:102` now names `--project-doc` and `--target-root`, explicitly permits the fresh uncommitted capture/ledger, and retains the fetch/worktree side effects. The parser reads that local file (`utils/py/swarm_preflight.py:1219-1225`), while ref resolution and probe evaluation use `target.ref` (`:1337-1364`). Dirty state is recorded (`:1312-1316`), not an exit-verdict condition (`:1640-1645`). The original clean-only contradiction is removed. **[Unverified — needs clone run]** for full READY execution; this approval does not claim such a run occurred.
+- **[Pass] Delivery/evidence correction resolved; revised step 7 stays within Phase 1.** `plan:176-177` now allows the capture/ledger intake and committed verification evidence, including `provenance.jsonl`, alongside the two implementation files. These are required task/dogfood outputs, not another implementation surface. The Skills Index count correction stays in `ARCHITECTURE.md`; `skills/README.md:23-24` requires the new skill and its index row, with no extra locator or README edit. D1's functional write-set remains intact; deployment remains after merge. No `utils/`, schema, gate, new suite, or Phase 2/3 change is authorized by the revision.
+- **[Nit] Make the write-set witness explicitly relative to the intake run.** `plan:196` still describes a whole-checkout `git status --porcelain --ignored`, whereas `plan:177` now explicitly includes implementation and evidence files. Record a before/after baseline for the manual intake witness so those pre-existing changes and ignored scratch do not count as intake writes. This is a precision issue in the witness wording; it does not require another writer, test or gate and does not block implementation.
+
+**Other original answers remain supported:**
+
+- **[Pass] Contract and extraction.** A new skill path in both `artifacts` and `artifacts_new`, with a same-path `path_absent` probe, meets the parser and new-artifact rules (`utils/py/swarm_preflight.py:102-125,1332-1336,1366-1373`). The probe below reconfirms equal issue/capture Acceptance lists and contract equality after rendering. Preflight reads the capture for its checklist and compares issue versus capture for fidelity (`:853-899,1484-1504`); embedding under `## Idea` preserves extractability. `path_absent` on existing `ARCHITECTURE.md` is the concrete wrong STALE probe; combining it with the absent new skill gives AMBIGUOUS. These probe flags are observations against seeded files, not a ref-pinned READY attestation.
+- **[Pass] Acceptance, ratings, decisions and scope.** `plan:191-202` is executable as existing-suite verification or recorded manual checks, including the corrected partial-publication red control. No new tests are needed. The provisional `80/55/50/65` rationale remains grounded in `plan:61-68,226`; appeal stays 50. D2 still records draft review/models/hash without approval authority (`plan:175,221`); D3's pickup is present in the seeded ledger (`releases.sql:930`). No gate is tightened, so the producer/evidence lesson (`LESSONS-LEARNED.md:38-65`) adds no gate work here.
+
+**Focused probe — exact command, exit 0:**
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+PYTHONPATH="$PWD/utils/py" python3 - <<'PY'
+import json, os, subprocess
+from pathlib import Path
+from releases_app import parse_rating
+from swarm_preflight import extract_contract, extract_acceptance_criteria, eval_probes
+new = 'skills/1-hourly/idea/SKILL.md'
+contract = dict(target=dict(repo='.', ref='development'), gate='bash validate.sh', fix_probes=[dict(type='path_absent', path=new)], artifacts=[new], artifacts_new=[new])
+body = '\n'.join(['## Observed', 'Missing intake skill.', '## Acceptance', '- [ ] Skill and index exist.', '## PRS proposal', 'rated 80/55/50/65', '## Preflight Contract', '```json', json.dumps(contract), '```', ''])
+r = subprocess.run(['bash', '-c', 'source utils/hq/hq-lib.sh; hq_render_capture 99999 https://github.com/HiQS-Labs/XYZ-forge/issues/99999 "Add idea intake skill" 2026-10-30 feedback XYZ-forge XYZ-forge "$1"', 'probe', body], check=True, capture_output=True, text=True)
+p = Path(os.environ['TMPDIR']) / 'round2-capture.md'
+p.write_text(r.stdout)
+assert body and r.stdout and body in r.stdout
+assert extract_contract(str(p)) == contract
+assert extract_acceptance_criteria(body) == extract_acceptance_criteria(r.stdout) == ['Skill and index exist.']
+print('body_bytes', len(body.encode()), 'capture_bytes', len(r.stdout.encode()), 'verbatim/contract/acceptance', 'PASS')
+for title in ['Add idea intake skill', 'Handle rated 80/55/50/65 placeholders']:
+    r = subprocess.run(['bash', '-c', 'source utils/hq/hq-lib.sh; hq_roadmap_line 99999 "$1" 2026-10-30 PROJECT/1-INBOX/GH-99999-IDEA.md GH-99999-IDEA.md https://github.com/HiQS-Labs/XYZ-forge/issues/99999', 'probe', title], check=True, capture_output=True, text=True)
+    print('title', repr(title), 'rating_pri', parse_rating(r.stdout, title)['rating_pri'])
+for probes in [contract['fix_probes'], [dict(type='path_absent', path='ARCHITECTURE.md')], contract['fix_probes'] + [dict(type='path_absent', path='ARCHITECTURE.md')]]:
+    results, stale, blocked, ambiguous = eval_probes(str(Path.cwd()), dict(fix_probes=probes))
+    print('probes', [p['path'] for p in probes], 'flags', (stale, blocked, ambiguous))
+PY
+```
+
+Decisive output:
+
+```text
+body_bytes 403 capture_bytes 1870 verbatim/contract/acceptance PASS
+title 'Add idea intake skill' rating_pri None
+title 'Handle rated 80/55/50/65 placeholders' rating_pri 80
+probes ['skills/1-hourly/idea/SKILL.md'] flags (0, 0, 0)
+probes ['ARCHITECTURE.md'] flags (1, 0, 0)
+probes ['skills/1-hourly/idea/SKILL.md', 'ARCHITECTURE.md'] flags (1, 0, 1)
+```
+
+**Verification boundary:** No git command, `validate.sh`, `test/*.sh`, pytest, executable fixture, live writer or full preflight ran. `gate='bash validate.sh'` above is parsed data only. Full ref-pinned preflight, real writer refusal, dogfood and gates remain **[Unverified — needs clone run]** and are implementation acceptance work, not prerequisites to this textual plan approval. Only the relay file was edited; probe output stayed in `.relay-scratch/tmp/`. Commit remains harness-owned.
+
+VERDICT: PASS
+Basis: Revised plan and cited source paths resolve all four round-1 Shoulds; focused rendering/parsing/probe checks passed. One nonblocking witness-wording nit remains; Phase 1 implementation and disposable-clone verification may proceed within the recorded scope.
 
