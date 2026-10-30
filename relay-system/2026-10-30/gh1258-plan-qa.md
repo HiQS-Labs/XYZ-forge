@@ -1,7 +1,7 @@
 ---
 Goal: Plan QA — #1258 Phase 1 (idea skill: SKILL.md + ARCHITECTURE.md row)
 Date: 2026-10-30
-NEXT: codex
+NEXT: claude
 STATUS: Open
 ---
 
@@ -37,3 +37,82 @@ Use `[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`, citing file:line; every `[Blocker]`
 
 ## Log
 
+
+### Round 1 · Reviewer · codex · 2026-10-30
+
+**Verdict:** Changes requested — 0 Blockers, 4 Shoulds. The approach fits the existing writers; all requested corrections are plan/skill text. Reversibility: **Easy**, since the functional change is markdown and its index entry. References below to `plan` mean `PROJECT/1-INBOX/GH-1258-IDEA-SKILL.md`.
+
+**Findings & proposals:**
+
+1. **[Should] Keep rating grammar out of the explicit issue title.** `plan:65,174` assumes HQ's rendered roadmap line cannot carry a rating. The template adds none itself but interpolates the title verbatim (`utils/hq/hq-lib.sh:555-557`). `roadmap add` parses the entire line (`utils/py/releases_app.py:3639`); `roadmap rate` then refuses an already-rated row even if the requested score is identical (`:3738-3741`).
+   - **Observed input:** title `Handle rated 80/55/50/65 placeholders`, a plausible issue about the #1177 rating defects. Probe A below exited 0: the neutral-title control returned all rating columns `None`; this title returned `80/55/50/65`. No DB writer ran.
+   - **Affected scope:** Phase 1 title preparation and the post-park rating step, not D3's completed pickup of #1258.
+   - **Falsifier:** render the chosen title with `hq_roadmap_line` and pass it to the existing `parse_rating`; it should remain unrated before `roadmap rate`. Specify a concise, single-line `--title` without rating tokens, preserving literal score examples in the body. Do not use `--force` to evade the refusal. Witness the real writer sequence in the later disposable-clone dogfood.
+
+2. **[Should] Make the STALE red control agree with publication order.** `plan:169,173-174` runs preflight after `hq park --create` and `roadmap rate`, but `:193` promises a STALE probe "files nothing." HQ has already created the GitHub issue (`utils/hq/hq.sh:314`), capture (`:323-325`) and ledger row (`:339`) before that verdict. Refusing success does not undo publication.
+   - **Observed input:** the `plan:193` red control, with an already-satisfied probe, following the stated `:169` sequence. Source order establishes the earlier publication; no live issue was created during this review.
+   - **Affected scope:** standard-tier failure reporting and acceptance criterion 3.
+   - **Falsifier:** run that negative control in the authorized dogfood environment and inspect the issue/doc/row after exit 4. The minimal correction is to expect a failed/partial intake report naming those existing outputs and no admission, rather than "files nothing." Empty-section validation can still refuse publication at preview. No transaction, rollback automation, new writer or gate is needed.
+
+3. **[Should] Define the local-doc preflight invocation and reconcile the clean-tree precondition.** `plan:102` says preflight runs against the primary only when clean, while `:169,173-174` runs it immediately after writers that leave capture and ledger uncommitted (`utils/hq/hq.sh:366`). Following both has no defined next step. This is a plan contradiction; the implementation does not reject dirty trees merely for being dirty.
+   - **Observed input:** a clean checkout before `/idea`, then successful HQ creation/rating with a new untracked `PROJECT/1-INBOX/GH-<n>-*.md` and modified ledger files, with no commit step before preflight.
+   - **Affected scope:** every standard-tier filing and Phase 1 dogfood.
+   - **Falsifier:** state the checkout and source-doc state explicitly. The existing invocation is `bash "$HARNESS/utils/swarm-preflight.sh" --project-doc "$ABS_CAPTURE" --target-root "$TARGET_ROOT" --dry-run`: read the fresh local doc directly, evaluate probes at resolved `development`. `--project-doc` accepts a local file (`utils/py/swarm_preflight.py:1219-1225`); `--gh-issue` instead searches only `2-WORKING` (`:1232-1238`). Dirty state is recorded (`:1312-1316,1619`) and absent from exit-verdict conditions (`:1640-1645`), so the uncommitted capture can reach READY; no commit/promotion requirement needs inventing. Remove or qualify the contradictory clean-only claim and retain the fetch/detached-worktree side-effect warning (`:1299,1359,1379`). Full runtime result: **[Unverified — needs clone run]**.
+
+4. **[Should] Separate the two implementation files from mandatory committed verification evidence.** The functional write-set at `plan:177,220` is complete, but `:176,191-202` also requires dogfood/red-control evidence under `TESTS-RESULTS/<date>+GH-1258/` with `provenance.jsonl`. `AGENTS.md:114-116` requires cited run provenance committed in the same PR. A literal two-file-only PR cannot satisfy that contract.
+   - **Observed input:** a PR containing only SKILL.md and ARCHITECTURE.md, with the `plan:176` dogfood receipt uncommitted: it has no committed `TESTS-RESULTS/<date>+GH-1258/provenance.jsonl` despite claiming the required run.
+   - **Affected scope:** Phase 1 delivery/write-set and review containment; no additional functional subsystem and no reopening of D1's name decision.
+   - **Falsifier:** explicitly allow the bounded verification report/transcript and `provenance.jsonl` alongside the two implementation files, and identify where the real dogfood capture/ledger outputs are retained. Evaluate `plan:196` as a before/after delta for the intake operation, separately from implementation and verification files. No new suite or registry entry is requested.
+
+**Confirmed passes / answers:**
+
+- **[Pass] Packaging.** `skills/README.md:3,8,23-24` requires one tier folder and the Skills Index row. `skills/1-hourly/idea/SKILL.md` plus `ARCHITECTURE.md` is the complete minimal functional write-set. No README, locator, manifest, code or test-file change is required by that contract. Adjust the hourly count at `ARCHITECTURE.md:49` in the same file; deployment remains after merge (`plan:177`). Evidence is addressed in finding 4.
+- **[Pass] Long body, title and dedupe.** With the explicit `--title T` at `plan:97`, HQ uses T for title/slug (`utils/hq/hq.sh:252-254`) and duplicate search (`:306-312`). The long body stays the request argument and reaches `gh issue create --body` (`:314`) and the capture's `## Idea` verbatim (`hq-lib.sh:492-494`). A duplicate refusal is an expected stop, not grounds to bypass the writer. Ordinary titles produce an unrated row; finding 1 covers the exception. `roadmap rate --help` exited 0 and confirmed the planned selectors, `--rated`, and deliberate `--force` semantics.
+- **[Pass] Acceptance extraction.** Probe B rendered a nonempty 362-byte body into a 1,815-byte capture, verified verbatim body inclusion, equal one-item issue/capture acceptance lists and contract equality. Preflight reads the local capture for its inline packet checklist (`swarm_preflight.py:716-750,1498-1504`), and also extracts Acceptance from both fetched issue and capture for fidelity comparison (`:853-899,1484-1488`). Thus it reads both, for different purposes. The `## Idea` embed does not hide the heading; checkbox-only criteria are supported (`:506-556`).
+- **[Pass] New-file contract and wrong-probe controls.** The Probe B contract below has required target/gate/probes/artifacts, lists the new skill in both `artifacts` and `artifacts_new`, and supplies its same-path `path_absent` probe (`swarm_preflight.py:102-125,1332-1336`). New artifacts bypass the existing-path requirement (`:1366-1373`). The missing-skill probe evaluated `unfixed`, flags `(stale,blocked,ambiguous)=(0,0,0)`. A mistaken `path_absent` probe on existing `ARCHITECTURE.md` evaluated `landed` / STALE; combined with the missing-skill probe it became AMBIGUOUS. `grep_absent` on the existing index for `Skills Index` also evaluated `landed` / STALE. Use a feature-specific absent pattern for the index edit. Jog recognizes the heading and these probe types (`utils/py/jog_run.py:1382-1435`). Probe B evaluated seeded files, not a git ref: complete ref-pinned READY/NOT-READY exits are **[Unverified — needs clone run]**.
+- **[Pass] Acceptance and GH-831.** Apart from finding 2, missing row, empty sections, lost checkbox/footer, wrong rating/rationale, unintended write paths, tier output and added test/gate machinery are observable through existing checks or recorded manual inspection. `test/gh660-skill-drift.sh:10-19` uses synthetic fixtures; the plan correctly requires a separate manual row-removal control for the real index. No new tests, scripts, schemas or gates are needed. Full preflight, writer-refusal witnessing, existing suites and dogfood remain **[Unverified — needs clone run]**. No git, gate, pytest or executable fixture ran here.
+- **[Pass] Ratings and decisions.** Provisional `80/55/50/65` is reasonably grounded in `plan:61-68,226`: measured intake blockage supports priority 80; wasted lane time without data loss supports severity 55; unset appeal remains 50; composing markdown and existing writers with dogfood supports moderate effort-cheapness 65. The intake bottleneck is corroborated by `TESTS-RESULTS/2026-10-25+GH-1175-phase0/SUMMARY.md:15`; this is rationale review, not a fresh GitHub census. D1 name/tier, D2 draft-only consult with models/degraded/hash footer, D3 pickup ledger row, and GH-831 remain intact. The producer/evidence lesson (`LESSONS-LEARNED.md:38-65`) calls for no gate change here: this phase creates an upstream producer and explicitly excludes gate changes.
+
+**Probe A — exact command, exit 0:**
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+PYTHONPATH="$PWD/utils/py" python3 - <<'PY'
+import subprocess
+from releases_app import parse_rating
+for title in ('Add idea intake skill', 'Handle rated 80/55/50/65 placeholders'):
+    r = subprocess.run(['bash', '-c', 'source utils/hq/hq-lib.sh; hq_roadmap_line 99999 "$1" 2026-10-30 PROJECT/1-INBOX/GH-99999-IDEA.md GH-99999-IDEA.md https://github.com/HiQS-Labs/XYZ-forge/issues/99999', 'probe', title], check=True, text=True, capture_output=True)
+    print(title, '=>', parse_rating(r.stdout, title))
+PY
+```
+
+Decisive output: neutral title → all five columns `None`; rating-example title → `{'rating_pri': 80, 'rating_sev': 55, 'rating_appeal': 50, 'rating_effort': 65, 'rating_ovr': None}`. Separate command `PYTHONPATH="$PWD/utils/py" python3 utils/py/releases_app.py roadmap rate --help`: exit 0.
+
+**Probe B — exact command, exit 0:**
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+PYTHONPATH="$PWD/utils/py" python3 - <<'PY'
+import json, os, subprocess
+from pathlib import Path
+from swarm_preflight import extract_contract, extract_acceptance_criteria, eval_probes
+new = 'skills/1-hourly/idea/SKILL.md'
+c = dict(target=dict(repo='.', ref='development'), gate='bash validate.sh', fix_probes=[dict(type='path_absent', path=new)], artifacts=[new], artifacts_new=[new])
+body = chr(10).join(['## Observed', 'Missing skill.', '## Acceptance', '- [ ] Skill and index exist.', '## Preflight Contract', '```json', json.dumps(c), '```', ''])
+r = subprocess.run(['bash', '-c', 'source utils/hq/hq-lib.sh; hq_render_capture 99999 https://github.com/HiQS-Labs/XYZ-forge/issues/99999 "Add idea skill" 2026-10-30 feedback XYZ-forge XYZ-forge "$1"', 'probe', body], check=True, capture_output=True, text=True)
+assert r.stdout.strip() and body in r.stdout
+p = Path(os.environ['TMPDIR'])/'capture.md'
+p.write_text(r.stdout)
+print('bytes', len(body.encode()), len(r.stdout.encode()), 'contract_equal', extract_contract(str(p)) == c)
+print('acceptance', extract_acceptance_criteria(body), extract_acceptance_criteria(r.stdout))
+for probes in [c['fix_probes'], [dict(type='path_absent', path='ARCHITECTURE.md')], [dict(type='path_absent', path='ARCHITECTURE.md')] + c['fix_probes'], [dict(type='grep_absent', path='ARCHITECTURE.md', pattern='Skills Index')]]:
+    print(eval_probes(str(Path.cwd()), dict(fix_probes=probes)))
+PY
+```
+
+Decisive output: `bytes 362 1815 contract_equal True`; both acceptance lists `['Skill and index exist.']`; probe verdicts respectively `unfixed (0,0,0)`, `landed (1,0,0)`, `landed,unfixed (1,0,1)`, `landed (1,0,0)`. Output capture stayed under `.relay-scratch/tmp/`; no gate was executed.
+
+**Commit:** Harness-owned; reviewer did not run git or edit the seeded artifact.
+
+VERDICT: FAIL
+Basis: Textual plan/source trace plus observed pure rendering/parsing probes; four bounded plan corrections remain. Full preflight, writer refusal, dogfood and gates need the authorized disposable-clone run.
