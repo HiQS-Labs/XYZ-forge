@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-30 — GH-1269 merge-cleanup B1 CHANGELOG repair keeps development's history byte-for-byte
+
+- B1's additive CHANGELOG resolution used to re-sort every new section from both sides by heading, so development's own same-date sections were reordered. The next B1 attempt then refused that output ("changelog preamble or existing history changed") and spent the PR's second repair slot (LTVera PR #874). It now prepends the PR's new sections in their own order, drops any already on development, and copies development's text verbatim after the preamble. Every existing refusal is unchanged. Evidence: `TESTS-RESULTS/2026-10-30+GH-1269/smoke.md`. Reversibility: Easy.
+
 ## 2026-10-30 — GH-1261 outer loop drafts unregistered issues and resolves bare file names
 
 - `harness.py factory-primitive init --from-prs --unregistered N` adds N open issues that have no ledger row, read once at init. `plan-draft` gives them a planner-shaped record, and every seeded unregistered issue is visible to dependency lookup, so a dependent waits for its prerequisite.
