@@ -45,8 +45,8 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
    ```
 
    From here on **every write and read uses `$TARGET`**: the capture path, `releases_app.py --root
-   "$TARGET"`, `gh` run with `-C "$TARGET"` or `--repo <slug>`, preflight `--target-root "$TARGET"`,
-   and the final report. The recon in Step 4 is done in the caller; its `Recon: <sha>` must resolve
+   "$TARGET"`, `gh issue comment` addressed by the issue **URL** that `hq park` printed (or `--repo
+   OWNER/REPO`; `gh` has no `-C`), preflight `--target-root "$TARGET"`, and the final report. The recon in Step 4 is done in the caller; its `Recon: <sha>` must resolve
    in the target (`git -C "$TARGET" cat-file -e <sha>`), or redo the recon there. These exports do
    not survive to the next Bash call (see `file-xyz-bug` Step 0); re-resolve in each command that
    needs them.
@@ -185,8 +185,10 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
    doc embeds the body verbatim under `## Idea`, so the Acceptance checkboxes and the Preflight
    Contract reach the doc with no HQ change.
 
-9. **Post the dispositions:** `gh -C "$TARGET" issue comment N --body-file dispositions.md` with
-   the consult run dir, each finding and its disposition, and the hash from Step 6.
+9. **Post the dispositions:** `gh issue comment "$ISSUE_URL" --body-file dispositions.md`, where
+   `$ISSUE_URL` is the `✓ issue:` URL from Step 8 (the URL pins the target repo; `gh` accepts
+   `{<number> | <url>}` and `-R OWNER/REPO`, never `-C`), with the consult run dir, each finding and
+   its disposition, and the hash from Step 6.
 
 10. **Preflight the capture, refuse on any nonzero.** Spike tier: print
     `NEEDS-SPIKE: issue <url>, doc <path>, row <gid>; no contract by design, not a build candidate`
