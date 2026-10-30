@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -67,5 +67,39 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: One observed literal-history bypass and one observed separator-only false rejection in the new fallback. Full seeded plan and both runtime files swept; source-only review and in-memory probes, not a suite rerun. Changes required before approval.
+swept file: yes
+
+- [Blocker] **B1 — blank runs inside indented literals are not preserved** (`utils/py/relay_attest.py:176-188`; consumed at `utils/py/relay_drive.py:722-738`). Only immediate neighbors protect an empty line. An interior blank in a longer run between two indented code lines becomes optional, so deleting that literal byte is accepted as harmless history drift. The driver then takes the returned offset, emits the harmless-separator warning and proceeds toward attestation. Protect the entire blank run inside an indented literal context (or conservatively refuse this ambiguity), retaining ordinary separator tolerance. Record this negative control in the existing manual evidence; no new suite/gate.
+  Observed input: `pre=b"STATUS: Open\n\n    x\n\n\n\n    y\n"`; post deletes one of the three blank lines between `    x` and `    y`, then appends a substantive PASS review. These are literal blank lines between indented code lines, not section separators.
+  Affected scope: separator fallback for blank runs bounded by indented code/literal lines; this request does not broaden normalization to other whitespace.
+  Falsifier: the exact input below must return `None`; an ordinary prose separator deletion must still return a post-stream boundary, and a fenced literal deletion must remain refused. If that first input already returns `None` on the candidate, this finding is resolved.
+  Probe command (with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`):
+  ```sh
+  PYTHONPATH=utils/py python3 -c 'import relay_attest as a; p=b"STATUS: Open\n\n    x\n\n\n\n    y\n"; q=p.replace(b"\n\n\n\n",b"\n\n\n")+b"\n### Reviewer (codex)\nVERDICT: PASS\nBasis: source.py:1\n"; print("strict=",a.canonical_bytes(q).startswith(a.canonical_prefix(p,q)),"fallback=",a.separator_prefix_end(p,q))'
+  ```
+  Exit status: **0**. Decisive output: `strict= False fallback= 23` (expected fallback `None`). This is an observed helper failure; the driver consequence is source-traced, not an end-to-end run.
+
+- [Should] **S1 — citation context remains positionally misaligned after a separator edit** (`utils/py/relay_attest.py:146-149,194-199`). The fallback canonicalizes PRE using POST line indices before matching separator-normalized history. Removing an earlier ordinary blank shifts the citation window: PRE retains an old `[Pass]`, while POST carries the harness's legitimate downgrade, so the fallback still refuses harmless drift. Align the citation context to corresponding historical lines within the fallback while keeping ordinary canonical bytes and persisted coordinates unchanged, as the plan's Recon and bet requires. Record the control in the existing manual evidence.
+  Observed input: `pre=b"STATUS: Open\n\n[Pass] claim\n\n\n\nfile.py:1\n"`; post changes STATUS, removes only the blank immediately after STATUS, appends a valid review and carries the expected uncited-claim downgrade. The citation is four lines after the historical claim, outside the default three-line window in both actual histories. PRE's shifted context incorrectly sees it within three.
+  Affected scope: separator-only edits before citation-sensitive historical lines, with the default citation window; not unrelated citation-policy changes.
+  Falsifier: the exact input below must return a boundary and retain the substantive appended review; a historical `FAIL`→`PASS` rewrite or deleted sentence must still return `None`. If it already accepts this separator-only input without relaxing those negative controls, the request is unnecessary.
+  Probe command (same environment):
+  ```sh
+  PYTHONPATH=utils/py python3 -c 'import relay_attest as a; p=b"STATUS: Open\n\n[Pass] claim\n\n\n\nfile.py:1\n"; q=(p.replace(b"Open\n\n",b"Approved\n")+b"\n### Reviewer (codex)\nVERDICT: PASS\nBasis: source.py:1\n").replace(b"[Pass]",a._UNCITED); print("strict=",a.canonical_bytes(q).startswith(a.canonical_prefix(p,q)),"fallback=",a.separator_prefix_end(p,q)); print("pre=",repr(a.canonical_prefix(p,q))); print("post=",repr(a.canonical_bytes(q)))'
+  ```
+  Exit status: **0**. Decisive output: `strict= False fallback= None`; PRE contains `[Pass] claim`, POST contains `[Unverified \xe2\x80\x94 no citation] claim`. No substantive history edit caused the mismatch.
+
+- [Pass] **Existing writer and record layout are reused.** Strict comparison remains first; fallback supplies only `added_start`; the same canonical post bytes, digest, trailer and writer are used (`utils/py/relay_drive.py:719-777`). `load` still checks that byte range, digest and immediate trailer (`utils/py/relay_attest.py:363-380`). Raw relay text is not rewritten by the fallback. This is source inspection; fallback driver execution and final gate remain **[Unverified — needs clone run]** in this turn.
+- [Pass] **Supplied evidence is nonempty and matches its manifest.** A read-only Python probe parsed all six entries in `TESTS-RESULTS/2026-10-30+GH-1273/provenance.jsonl`, read each named artifact and compared `hashlib.sha256(data).hexdigest()` to `sha256`; exit **0**, six `hash-match= True` results. Artifact sizes: `gh505.log` 5682, identities 534 each, `manual-replay.py` 2190, `replay.log` 367, `uncited.log` 1403 bytes. `replay.log` records `separator-delete PASS strict=False offset=60`, both loader round trips and the substantive/fenced negatives. These are supplied clone receipts, not independently rerun suite results; they omit B1 and S1.
+- [Pass] **Mechanical recovery deferral is bounded and honest.** The plan explicitly defers it; the driver requires a done token after nonempty review bytes (`utils/py/relay_drive.py:736-741`) and refuses a spent token at startup (`utils/py/relay_drive.py:808-824`). No recovery bypass is inferred. The plan's ratings explicitly call recurrence unknown rather than claiming a measured trend (`.relay-artifacts/GH-1273-RELAY-SEPARATORS.md`, Ratings).
+
+Scope/limits: Read issue #1273, the entire seeded plan, all 490 lines of `relay_attest.py`, all 1172 lines of `relay_drive.py`, the changed separator instructions, and supplied evidence. No additional pre-existing defect found in those runtime file sweeps beyond the findings above. The full `origin/development..HEAD` diff was not independently enumerated: this turn prohibits every git invocation and no diff packet was supplied. Graph discovery was unavailable because its tool required approval under a never-approval policy; direct reads were used. No git command, suite, pytest, or executable fixture was run. Only this relay file was edited. Costly approval-boundary change; the plan's narrow revert remains the rollback. Final gate and candidate-wide diff verification remain with the outer harness/Producer.
+
+Handing off to Producer (claude-a) — resolve B1 and S1, refresh the existing manual receipts in a disposable full clone, then request the next review round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
