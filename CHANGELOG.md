@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-10-30 — GH-1261 outer loop drafts unregistered issues and resolves bare file names
+
+- `harness.py factory-primitive init --from-prs --unregistered N` adds N open issues that have no ledger row, read once at init. `plan-draft` gives them a planner-shaped record, and every seeded unregistered issue is visible to dependency lookup, so a dependent waits for its prerequisite.
+- Cited paths now map a vendored `.xyz/` path to the forge path and resolve a bare file name when exactly one tracked file has it; names with several matches are listed under a new `unresolved_names` brief field, never guessed. The 25-path write-set cap is gone.
+- On 20 real issues (10 ledger, 10 unregistered): every request produced a brief, the planner's waves are unchanged and the ledger is byte-identical; #216 now cites its real files and left wave 1. Evidence: `TESTS-RESULTS/2026-10-30+GH-1261/SUMMARY.md`.
+
+## 2026-10-29 — GH-1257 outer loop drafts marathon briefs from the real backlog, read-only
+
+- `harness.py factory-primitive init --from-prs` freezes a copy of `releases.db`, the git listings and one read-only issue read for up to N open Queue rows the planner classes ready or needs-contract. A new `plan-draft` tool then drafts one evidence-linked brief per tick (scope, acceptance, open questions and a write set, each with its source line, or marked missing) and refreshes a wave proposal that keeps the planner's waves unchanged and adds a provisional packing. Missing scope or write set holds an issue out of every wave. The tool runs offline inside the existing sandbox, and nothing is written to git, the ledger or GitHub. Reversibility: Easy.
+- `_marathon_plan.Engine.run` is split into `compute()` plus rendering, with `_pack_waves` and `_contract_seams` extracted; CLI output, JSON, `--check` and the rendered doc are byte-identical to before. `status` gains heartbeat age and stage, lock state, last receipt and quarantined IDs. A plan-draft attempt that fails, times out or fails verification after starting is `uncertain` and quarantined, never retried.
+- On 10 real issues: 3 ready, 3 drafts, 4 needs-recon; every control and eight focused existing suites pass. Hand inspection found one unsafe under-count (#216 names its file without a directory). Evidence: `TESTS-RESULTS/2026-10-29+GH-1257/`.
+
+## 2026-10-29 — GH-1248 rules-only loop runs 12 hours at protocol cadence
+
+- Ran slots 1–144 of the §8 schedule at real five-minute spacing with the rules arm on `9da920e4`. All 144 slots completed: 137 ticks completed, the slot-37 kill during act was reconciled to `uncertain` with no retry, slots 85–90 were skipped as the injected scheduler stop, and slot 91 resumed without catching up. No tick failed, spend stayed 0, the canary was unchanged and nothing escaped the sandbox. The one-hour gate passed, which completes Phase 1. A first run was stopped at slot 13 after the operator's shell wrote into the instance directory; it is kept as failed evidence. Evidence and provenance are under `TESTS-RESULTS/2026-10-29+GH-1248/`. No code changed. Reversibility: Easy.
+- This is not the 24-hour soak. The PAUSE, tool-failure and malformed-output windows (slots 145+) did not run, and quarantine was not exercised because all 27 scenario inputs arrive in slots 1–27. There is still no watchdog, so missed ticks appear only in the driver log, and `status` lacks several §7 fields.
+
+## 2026-10-28 — GH-1248 rules-only outer-loop checkpoint stays local and unmerged
+
+- Added the deterministic four-tool experiment behind `utils/py/harness.py factory-primitive`, preserving the registry fallback and using `releases_app.connect` for state. Prompts, schemas, and slot-indexed scenarios are tracked under `utils/py/factory_primitive/`; mutable state stays under gitignored `temp/factory-primitive/`. No Jog, scheduler, repository-execution, GitHub-write, deployment, or multi-repo behavior was added. Reversibility: Easy — retain or abandon the branch.
+- `checkpoint2` passed 17/17 recorded manual controls. Five focused existing suites passed on `833c87c8`: GH-777 inventory enforcement, GH-174 registry (8), GH-496 telemetry isolation (15), GH-788 path-space handling (11), and `agy-turn` (65). Evidence and provenance are under `TESTS-RESULTS/2026-10-28+GH-1248/`.
+- The initial full gate at `503a1ca5` was interrupted and remains incomplete; its layout failures were corrected, and the model-probe failure set passed sequentially on base and candidate. The active Python lacks `pytest`. The one-hour rules-only gate has not run, and watchdog/reporting, agent adapters, multi-arm runs, the 24-hour soak, and independent review remain unimplemented.
+
 ## 2026-10-29
 
 Verify CLIO publication parity and track upstream Codex repair (GH-1255).

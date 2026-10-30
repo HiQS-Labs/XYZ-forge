@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["tick_id", "status"],
+  "properties": {
+    "tick_id": {"type": "string"},
+    "status": {"enum": ["ok", "already-done"]}
+  }
+}
