@@ -183,7 +183,12 @@ def separator_prefix_end(pre_raw, post_raw):
                 literal = None if b"-->" in stripped else b"-->"
             elif stripped.startswith(b"<"):
                 literal = b"html"
-            neighbors = lines[max(0, i-1):i] + lines[i+1:i+2]
+            left, right = i - 1, i + 1
+            while left >= 0 and lines[left] == b"\n":
+                left -= 1
+            while right < len(lines) and lines[right] == b"\n":
+                right += 1
+            neighbors = ([lines[left]] if left >= 0 else []) + ([lines[right]] if right < len(lines) else [])
             adjacent_literal = any(n.startswith((b"    ", b"\t", b">", b"<")) for n in neighbors)
             optional = line == b"\n" and not protected and not literal and not adjacent_literal
             offset += len(line)
@@ -191,7 +196,10 @@ def separator_prefix_end(pre_raw, post_raw):
                 result.append((line, offset))
         return result
 
-    pre = canonical_prefix(pre_raw, post_raw)
+    # Separator edits invalidate positional POST look-ahead for PRE. Judge each
+    # history at its own actual line positions in this fallback; append-sensitive
+    # ambiguous citation changes refuse rather than inventing a mapped citation.
+    pre = canonical_bytes(pre_raw)
     post = canonical_bytes(post_raw)
     before, after = protected_lines(pre), protected_lines(post)
     if not before or len(after) < len(before):

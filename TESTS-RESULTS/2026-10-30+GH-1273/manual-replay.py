@@ -27,3 +27,12 @@ for name,history in [('legacy',pre),('fallback',pre.replace(b'\n\nOther',b'\nOth
   assert a.load('replay',expected_reviewer='codex',relay_file=str(f),target_repo=d,path=str(r))[1] is None
   assert a.load('replay',expected_reviewer='wrong',relay_file=str(f),target_repo=d,path=str(r))[0] is None
  print(name,'loader-roundtrip PASS; wrong reviewer refused')
+
+p=b"STATUS: Open\n\n    x\n\n\n\n    y\n"
+q=p.replace(b"\n\n\n\n",b"\n\n\n")+review
+assert a.separator_prefix_end(p,q) is None
+print('long-indented-run refused PASS')
+p=b"STATUS: Open\n\n[Pass] claim\n\n\n\nfile.py:1\n"
+q=(p.replace(b"Open\n\n",b"Approved\n")+review).replace(b"[Pass]",a._UNCITED)
+assert a.separator_prefix_end(p,q) is not None
+print('citation-position separator accepted PASS')
