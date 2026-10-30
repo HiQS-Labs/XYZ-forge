@@ -51,6 +51,10 @@ Ran `init --from-prs --limit 10 --unregistered 5`, then slots 1–15 (all comple
   - A lane copied into `PROJECT/2-WORKING/` passes `marathon.sh --plan … --builder agy --dry-run`, reporting "1 phase(s) would run in order".
 - **One defect found and fixed here:** without `--builder`, `marathon-drive` refuses builder == reviewer (both default codex). The README command now names the other agent (`52406394`).
 
+## Gate
+
+`./validate.sh` (route=full) at `9f895a8f`, whose code equals the final commit: **408/409**. The only failure is `relay-self-sufficiency.sh`, from agy's quota (429 `Individual quota reached … Resets in 51h`). It is external and skipped by pre-push and CI by design (GH-836). A working-tree slip during the run (19 evidence files deleted, no code) is disclosed in `gate.txt`.
+
 ## Limits
 
 - Probes read the working tree of a clean clone. A dirty tree would skew them.
