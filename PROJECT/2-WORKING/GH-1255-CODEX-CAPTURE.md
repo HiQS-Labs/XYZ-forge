@@ -2,7 +2,7 @@
 gh_issue: 1255
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1255
 title: "Restore CLIO Codex Desktop prompt capture"
-status: Active — plan QA pending
+status: Active — upstream implementation verified, final QA pending
 created: 2026-10-29
 updated: 2026-10-29
 owner: Codex
@@ -32,7 +32,7 @@ Accept event_msg/item_completed/UserMessage text parts alongside legacy user_mes
 
 | What was just completed | What's next |
 |---|---|
-| Verified published-set parity; observed modern submitted-event schema; upstream #368 opened. | Independent Codex plan review before production edits. |
+| Plan QA Approved in round 2; upstream implementation passes focused Codex suite. | Red controls, adjacent CLIO suites and final Codex QA before ready PRs. |
 
 ## Recon map
 
@@ -78,3 +78,7 @@ Affected users: Codex Desktop/CLI capture users; legacy capture, child exclusion
 All checks use the existing suites or manual receipts under TESTS-RESULTS; no new test file or registry entry. Red control: new-format submitted event and seen-file replay assertions must fail against unchanged upstream. Canary red control: candidate threshold assertion must fail if warning logic is disabled. SQLite verification must assert nonempty rows and stable record IDs after replay, not rely on delivered count. Legacy, partial line, provenance and busy-writer tests remain truthful. No live databases/prompts or machine paths enter committed artifacts.
 
 Plan QA round 1 requested durable replay intent and exclusive scheduling; both incorporated above. Independent final QA and all deployment acceptance remain outstanding. Lessons: NO_ENTRY (no observed intervention outcome yet).
+
+## Implementation state
+
+Upstream implementation at rebalanceOS a18664a extends the existing parser, durable per-file replay checkpoint and state-comment warning. Existing fixture now includes one legacy and one modern submitted event. Existing Codex suite proves nonempty SQLite rows, pending replay after a failed second write, normal retry, stable replay IDs, live IDE request and diagnostic reset/threshold. No live acceptance or deployment claimed. Plan QA receipt copied below; final review and remaining checks pending.
