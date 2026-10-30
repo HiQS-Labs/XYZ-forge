@@ -264,4 +264,12 @@ Decisive output from the executed probes: `missing -> /probe/releases.db`; `empt
 
 Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and final gate; this reviewer changed only this relay file and closes the token with `done`.
 
+
+### Attestation · relay-drive — 2026-10-30T03:47:33Z
+task: RELAY-gh1257-final-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: 9f0d0a4197b7d4b2e01e29518c753cbc2fa478e1
+added-range: 27526+5916
+added-sha256: 9709093c11202c23c08035eabd80aa6872463771a188b8cb15c1cb7d337e2061
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
