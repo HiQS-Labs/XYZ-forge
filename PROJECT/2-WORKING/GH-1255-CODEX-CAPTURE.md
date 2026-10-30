@@ -2,7 +2,7 @@
 gh_issue: 1255
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1255
 title: "Restore CLIO Codex Desktop prompt capture"
-status: Active — upstream implementation verified, final QA pending
+status: PR ready — upstream landing and target acceptance pending
 created: 2026-10-29
 updated: 2026-10-29
 owner: Codex
@@ -32,7 +32,7 @@ Accept event_msg/item_completed/UserMessage text parts alongside legacy user_mes
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved in round 2; upstream implementation passes focused Codex suite. | Red controls, adjacent CLIO suites and final Codex QA before ready PRs. |
+| Plan QA Approved in round 2; upstream implementation passes focused Codex suite. | Publish reviewed upstream and tracking PRs; merge/publication/deployment acceptance remain outstanding. |
 
 ## Recon map
 
@@ -86,3 +86,7 @@ Upstream implementation at rebalanceOS a18664a extends the existing parser, dura
 ## Verification handoff
 
 All six existing upstream CLIO suites now pass, including 17 store cases. Three negative controls fail as expected. The unchanged base has a stale September fixture failure in one store projection case; a one-line timestamp correction preserves the five-row assertion and makes the existing suite truthful. No production store change or new suite. Upstream receipts live in `TESTS-RESULTS/2026-10-29+GH-368/`; final Codex review covers the implementation, that fixture correction, and this Forge tracking/parity record. Final review pending; no merge, standalone publication, installed repair or target-device acceptance claimed.
+
+## Final QA
+
+Independent Codex plan and final reviews are Approved (round 2 each), with committed relay receipts. All six upstream CLIO suites pass; 17 store cases pass; three negative controls fail as intended. Forge deterministic PDDA passes with existing warnings. Rebalance observe-mode PDDA retains existing unrelated findings; these are disclosed in its PR/evidence. No full Forge runtime suite was run for this docs-classified tracking change. Lessons: NO_ENTRY.
