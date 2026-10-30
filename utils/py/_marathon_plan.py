@@ -142,6 +142,7 @@ class Engine:
         self.BRANCH_ENV = cfg.get("branch_env", "")  # GH-346: QUEUE_PLAN_BRANCH override / test seam
         self.GH_FORCE = cfg.get("gh_force", "")
         self.ZONES_FILE_ENV = cfg.get("zones_file_env", "")  # QUEUE_PLAN_ZONES_FILE
+        self.RELEASES_DB = cfg.get("releases_db", "")  # GH-1257: frozen copy; default ROOT/releases.db
 
         self.findings = []
         self._base_files = None
@@ -808,11 +809,80 @@ class Engine:
         except sqlite3.Error as exc:
             raise EngineExit(3, "marathon-plan: cannot read releases.db roadmap_items: %s" % exc) from exc
 
+    def _pack_waves(self, active, deduped, force_tail=True):
+        """Greedy write-set/zone/dependency wave packing over ``active`` (in order).
+        Returns ``(waves, unplaced)``. With ``force_tail`` (the CLI's behaviour) a pass that
+        places nothing appends every remaining lane as one final wave; without it those
+        lanes are returned as ``unplaced`` instead (GH-1257 provisional packing)."""
+        waves = []
+        placed_issue = {}
+        pending = active[:]
+        guard = 0
+        while pending and guard < 100:
+            guard += 1
+            wave = []
+            wave_writeset = set()
+            wave_zone_counts = {}
+            deferred = []
+            for r in pending:
+                dep_unmet = False
+                for d in r["deps"]:
+                    dep = self._find_by_gh(deduped, d)
+                    if not dep or dep["state"] in DEP_RESOLVED:
+                        continue
+                    if d not in placed_issue:
+                        dep_unmet = True
+                        break
+                collides = any(p in wave_writeset for p in r["writeset"])
+                cap = r["zoneRule"]["maxPerWave"] if (r["zoneRule"] and isinstance(r["zoneRule"]["maxPerWave"], int)) else None
+                zone_cap_clash = cap is not None and wave_zone_counts.get(r["zone"], 0) >= cap
+                inferred_zone_clash = bool(r["zoneRule"] and r["zoneRule"]["conservativeWhenInferred"]
+                                           and r["zoneInferred"] and any(w["zone"] == r["zone"] for w in wave))
+                if dep_unmet or collides or zone_cap_clash or inferred_zone_clash:
+                    deferred.append(r)
+                    continue
+                wave.append(r)
+                for p in r["writeset"]:
+                    wave_writeset.add(p)
+                wave_zone_counts[r["zone"]] = wave_zone_counts.get(r["zone"], 0) + 1
+            if len(wave) == 0:
+                if not force_tail:
+                    return waves, deferred
+                waves.append(deferred)
+                for r in deferred:
+                    if r["gh"] is not None:
+                        placed_issue[r["gh"]] = len(waves) - 1
+                break
+            waves.append(wave)
+            for r in wave:
+                if r["gh"] is not None:
+                    placed_issue[r["gh"]] = len(waves) - 1
+            pending = deferred
+        return waves, ([] if force_tail else pending)
+
+    def _contract_seams(self, waves):
+        """Same-wave lane pairs sharing a write-set spine (GH-5); flags each as coupled-lanes."""
+        contract_seams = []
+        for wi, w in enumerate(waves):
+            for i in range(len(w)):
+                for j in range(i + 1, len(w)):
+                    a, b = w[i], w[j]
+                    if not a["writeset"] or not b["writeset"]:
+                        continue
+                    spine = self._shared_spine(a["writeset"], b["writeset"])
+                    if spine:
+                        contract_seams.append({"wave": a.get("wave") or wi + 1, "a": a, "b": b, "spine": spine})
+                        self._flag("warn", "coupled-lanes", a,
+                                   "same-wave lane shares the `%s/` spine with %s — write-disjoint but likely a shared contract seam"
+                                   % (spine, ("#" + str(b["gh"])) if b["gh"] else b["slug"]),
+                                   "pin a CONTRACT.md for the %s/ interface and point both lane prompts at it before launching" % spine)
+        return contract_seams
+
     # ── main compute ────────────────────────────────────────────────────────────
-    def run(self, render_out):
-        """Parse → resolve → score → wave-pack → render. Prints the report to stdout,
-        writes the rendered doc to ``render_out``, returns the exit code."""
-        db_path = os.path.join(self.ROOT, "releases.db")
+    def compute(self):
+        """Parse → resolve → score → wave-pack. Returns the classified records and waves
+        without rendering (GH-1257 reuses this read-only; ``run`` renders it)."""
+        db_path = getattr(self, "RELEASES_DB", "") or os.path.join(self.ROOT, "releases.db")
         explicit_roadmap_env = os.environ.get("QUEUE_PLAN_ROADMAP")
         is_releases_mode, mode_error = parse_pdda_mode(self.ROOT)
         if mode_error:
@@ -1130,67 +1200,13 @@ class Engine:
         active = sorted([r for r in deduped if r["state"] == "ready"],
                         key=functools.cmp_to_key(active_cmp))
 
-        waves = []
-        placed_issue = {}
-        pending = active[:]
-        guard = 0
-        while pending and guard < 100:
-            guard += 1
-            wave = []
-            wave_writeset = set()
-            wave_zone_counts = {}
-            deferred = []
-            for r in pending:
-                dep_unmet = False
-                for d in r["deps"]:
-                    dep = self._find_by_gh(deduped, d)
-                    if not dep or dep["state"] in DEP_RESOLVED:
-                        continue
-                    if d not in placed_issue:
-                        dep_unmet = True
-                        break
-                collides = any(p in wave_writeset for p in r["writeset"])
-                cap = r["zoneRule"]["maxPerWave"] if (r["zoneRule"] and isinstance(r["zoneRule"]["maxPerWave"], int)) else None
-                zone_cap_clash = cap is not None and wave_zone_counts.get(r["zone"], 0) >= cap
-                inferred_zone_clash = bool(r["zoneRule"] and r["zoneRule"]["conservativeWhenInferred"]
-                                           and r["zoneInferred"] and any(w["zone"] == r["zone"] for w in wave))
-                if dep_unmet or collides or zone_cap_clash or inferred_zone_clash:
-                    deferred.append(r)
-                    continue
-                wave.append(r)
-                for p in r["writeset"]:
-                    wave_writeset.add(p)
-                wave_zone_counts[r["zone"]] = wave_zone_counts.get(r["zone"], 0) + 1
-            if len(wave) == 0:
-                waves.append(deferred)
-                for r in deferred:
-                    if r["gh"] is not None:
-                        placed_issue[r["gh"]] = len(waves) - 1
-                break
-            waves.append(wave)
-            for r in wave:
-                if r["gh"] is not None:
-                    placed_issue[r["gh"]] = len(waves) - 1
-            pending = deferred
+        waves, _ = self._pack_waves(active, deduped)
         for i, w in enumerate(waves):
             for r in w:
                 r["wave"] = i + 1
 
         # GH-5 contract seams
-        contract_seams = []
-        for w in waves:
-            for i in range(len(w)):
-                for j in range(i + 1, len(w)):
-                    a, b = w[i], w[j]
-                    if not a["writeset"] or not b["writeset"]:
-                        continue
-                    spine = self._shared_spine(a["writeset"], b["writeset"])
-                    if spine:
-                        contract_seams.append({"wave": a["wave"], "a": a, "b": b, "spine": spine})
-                        self._flag("warn", "coupled-lanes", a,
-                                   "same-wave lane shares the `%s/` spine with %s — write-disjoint but likely a shared contract seam"
-                                   % (spine, ("#" + str(b["gh"])) if b["gh"] else b["slug"]),
-                                   "pin a CONTRACT.md for the %s/ interface and point both lane prompts at it before launching" % spine)
+        contract_seams = self._contract_seams(waves)
 
         # ── exit code ───────────────────────────────────────────────────────────
         has_drift = any(r["state"] in ("already-landed", "already-closed") for r in deduped)
@@ -1212,6 +1228,17 @@ class Engine:
         }
         weight_str = "eff:%d,cx:%d,risk:%d%s,dep:%d,zone:%d" % (
             W["eff"], W["cx"], risk_w, "(−)" if risk_sign < 0 else "", W["dep"], W["zone"])
+        return {"deduped": deduped, "active": active, "waves": waves, "held": held,
+                "contract_seams": contract_seams, "has_drift": has_drift, "exit_code": exit_code,
+                "counts": counts, "weight_str": weight_str}
+
+    def run(self, render_out):
+        """Parse → resolve → score → wave-pack → render. Prints the report to stdout,
+        writes the rendered doc to ``render_out``, returns the exit code."""
+        c = self.compute()
+        deduped, active, waves, held = c["deduped"], c["active"], c["waves"], c["held"]
+        contract_seams, has_drift, exit_code = c["contract_seams"], c["has_drift"], c["exit_code"]
+        counts, weight_str = c["counts"], c["weight_str"]
 
         report = self._render_report(deduped, active, waves, held, has_drift,
                                      exit_code, counts, weight_str)

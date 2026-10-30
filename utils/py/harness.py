@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import fcntl
 import hashlib
 import json
 import os
+import re
 import shutil
+import subprocess
 import sys
 import threading
+from contextlib import closing
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from proc_group import run_bounded
@@ -21,10 +25,17 @@ PACKAGE = Path(__file__).resolve().parent / "factory_primitive"
 ENTRYPOINT = Path(__file__).resolve()
 REPO_ROOT = PACKAGE.parents[2]
 DEFAULT_RUN_ROOT = REPO_ROOT / "temp" / "factory-primitive"
-TOOLS = {"note", "summarize", "probe", "idle"}
+TOOLS = {"note", "summarize", "probe", "idle", "plan-draft"}
 FAULTS = {"", "malformed-decision", "disallowed-decision", "escape-create", "escape-modify",
           "escape-external", "crash-intent", "crash-act", "crash-before-snapshot", "unbilled-error",
-          "timeout-unknown", "tool-failure", "missing-receipt"}
+          "timeout-unknown", "tool-failure", "missing-receipt",
+          # GH-1257 plan-draft output controls (each must end the tick uncertain + quarantined)
+          "fail-after-output", "corrupt-issue-hash", "drop-key", "md-mismatch", "drop-file"}
+DRAFT_LABEL = "draft; preflight and independent plan QA outstanding"
+BRIEF_KEYS = ("schema", "tick_id", "status", "label", "request_id", "issue", "title", "issue_sha256",
+              "issue_updated_at", "doc_path", "doc_sha256", "planner_state", "planner_flags", "rating",
+              "existing_contract", "deps", "scope", "acceptance", "open_questions", "write_set",
+              "draft_status", "held_reason")
 TERMINAL = {"completed", "paused", "uncertain", "unpersisted-intent-abort", "failed", "rejected"}
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -165,6 +176,8 @@ def rules_decide(snapshot: dict) -> AdapterResult:
                 candidate = _decision("summarize", {"inbox_ids": ids}, "oldest summarize request")
             elif item["kind"] == "probe":
                 candidate = _decision("probe", {"target": item["target"]}, "oldest probe request")
+            elif item["kind"] == "plan-request":
+                candidate = _decision("plan-draft", {"inbox_id": item["id"]}, "oldest plan request")
             else:
                 continue
             fingerprint = sha_text(canonical({"tool": candidate["tool"], "args": candidate["args"]}))
@@ -188,9 +201,14 @@ def _write(path: Path, content: str) -> str:
     return "ok"
 
 
-def execute_tool(tool: str, tick_id: str, out_dir: Path, args: dict, items: list[dict]) -> int:
+def execute_tool(tool: str, tick_id: str, out_dir: Path, args: dict, items: list[dict],
+                 context: dict | None = None) -> int:
     fault = os.environ.get("FACTORY_FAULT", "")
     try:
+        if tool == "plan-draft":
+            plan_draft(tick_id, out_dir, args, (context or {}).get("accepted", []), fault)
+            print(canonical({"status": "ok", "output": str(out_dir / f"{tick_id}.json")}))
+            return 0
         if fault:
             if fault == "escape-create":
                 (out_dir.parent / "unauthorized.txt").write_text("escape", encoding="utf-8")
@@ -221,6 +239,380 @@ def execute_tool(tool: str, tick_id: str, out_dir: Path, args: dict, items: list
     except Exception as exc:
         print(f"tool error: {exc}", file=sys.stderr)
         return 1
+
+
+# ── GH-1257: read-only backlog-to-wave pilot (plan-draft) ───────────────────────────────────
+SECTION_KINDS = (("scope", ("scope", "goal", "outcome")),
+                 ("acceptance", ("acceptance", "definition of done", "done when")),
+                 ("open_questions", ("open question", "unknown")))
+PATH_RE = re.compile(r"(?<![\w/.:-])((?:\.{1,2}/)*(?:[\w.-]+/)+[\w.-]+)")
+
+
+def _planner(backlog: Path, gh: str):
+    """The existing marathon planner over the instance's frozen ledger copy, never live state."""
+    import _marathon_plan
+    now = utcnow()
+    cfg = {"root": str(REPO_ROOT), "roadmap": str(REPO_ROOT / "ROADMAP.md"),
+           "queue_dir": str(REPO_ROOT / "PROJECT" / "2-WORKING"), "today": now[:10], "now": now,
+           "policy": "quick-wins", "format": "text", "deep": False, "require_gh": False,
+           "utils_dir": str(REPO_ROOT / "utils"), "releases_db": str(backlog / "releases.db"),
+           "branches_file": str(backlog / "branches.txt"), "base_files_file": str(backlog / "base-files.txt")}
+    if gh == "off":
+        cfg["gh_force"] = "off"
+    else:
+        cfg["gh_state_file"] = str(backlog / "gh-state.json")
+    return _marathon_plan.Engine(cfg)
+
+
+def _sections(text: str, source: str) -> dict:
+    """Headed scope / acceptance / open-question sections, each with its source line."""
+    found = {kind: [] for kind, _ in SECTION_KINDS}
+    lines = (text or "").splitlines()
+    for i, line in enumerate(lines):
+        m = re.match(r"^(#{1,6})\s+(.*)$", line)
+        if not m:
+            continue
+        heading = m.group(2).strip().lower()
+        if "non-goal" in heading or "non goal" in heading:
+            continue
+        kind = next((k for k, words in SECTION_KINDS if any(w in heading for w in words)), None)
+        if not kind:
+            continue
+        body = []
+        for nxt in lines[i + 1:]:
+            n = re.match(r"^(#{1,6})\s", nxt)
+            if n and len(n.group(1)) <= len(m.group(1)):
+                break
+            body.append(nxt)
+        content = "\n".join(body).strip()
+        if content:
+            found[kind].append({"heading": m.group(2).strip(), "text": content[:1500],
+                                "source": f"{source}:L{i + 1}"})
+    return found
+
+
+def _frontmatter_goal(doc_text: str) -> tuple[int, str] | None:
+    """(line, text) of the YAML frontmatter `goal:`, decoding folded/literal block scalars."""
+    lines = doc_text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None
+    for i, line in enumerate(lines[1:], 1):
+        if line.strip() == "---":
+            return None
+        m = re.match(r"^goal:\s*(.*)$", line)
+        if not m:
+            continue
+        value = m.group(1).strip()
+        if re.fullmatch(r"[>|][-+]?", value):
+            block = []
+            for nxt in lines[i + 1:]:
+                if nxt.strip() and not nxt.startswith((" ", "\t")):
+                    break
+                block.append(nxt.strip())
+            value = ("\n" if value.startswith("|") else " ").join(b for b in block if b).strip()
+        value = value.strip().strip('"\'').strip()
+        return (i + 1, value) if value else None
+    return None
+
+
+def _cited_paths(text: str, source: str, root: Path = REPO_ROOT) -> list[dict]:
+    """Existing repository files cited in text; anything resolving outside root is dropped."""
+    out, seen = [], set()
+    real_root = os.path.realpath(root)
+    for n, line in enumerate((text or "").splitlines(), 1):
+        for m in PATH_RE.finditer(re.sub(r"https?://\S+", " ", line)):
+            raw = m.group(1).rstrip(".,:;)")
+            rel = os.path.normpath(raw)
+            if os.path.isabs(raw) or rel.startswith("..") or rel in {".", ""} or rel in seen:
+                continue
+            real = os.path.realpath(os.path.join(root, rel))
+            if os.path.commonpath([real, real_root]) != real_root or not os.path.isfile(real):
+                continue
+            seen.add(rel)
+            out.append({"path": rel, "source": f"{source}:L{n}"})
+    return out
+
+
+def render_brief(b: dict) -> str:
+    def block(title, entries):
+        out = [f"## {title}", ""]
+        if not entries:
+            return out + ["_missing_", ""]
+        for e in entries:
+            out += [f"_Source: {e['source']} ({e['heading']})_", "", e["text"], ""]
+        return out
+    lines = [f"# Plan draft: #{b['issue']} {b['title']}", "", f"> {b['label']}", "",
+             f"- Request: `{b['request_id']}` (tick `{b['tick_id']}`)",
+             f"- Draft status: **{b['draft_status']}**" + (f" (held: {b['held_reason']})" if b["held_reason"] else ""),
+             f"- Planner state: {b['planner_state']}; flags: {', '.join(b['planner_flags']) or 'none'}",
+             f"- Rating: {b['rating'] or 'none'}",
+             f"- Capture doc: {b['doc_path'] or 'none'} (sha256 {b['doc_sha256'] or 'none'})",
+             f"- Issue sha256: {b['issue_sha256']} (updated {b['issue_updated_at']})",
+             f"- Dependencies: {', '.join('#' + str(d) for d in b['deps']) or 'none'}", ""]
+    lines += block("Scope", b["scope"]) + block("Acceptance criteria", b["acceptance"])
+    lines += block("Open questions", b["open_questions"]) + ["## Write set", ""]
+    lines += [f"- `{w['path']}` ({w['source']})" for w in b["write_set"]] or ["_none sourced_"]
+    if b["existing_contract"]:
+        lines += ["", "## Existing preflight contract", "", "```json",
+                  json.dumps(b["existing_contract"], indent=2, sort_keys=True), "```"]
+    return "\n".join(lines) + "\n"
+
+
+def render_proposal(p: dict) -> str:
+    def waves(ws):
+        return [f"- Wave {i}: " + ", ".join(f"#{lane['issue']}" + (" (provisional)" if lane.get("provisional") else "")
+                                         for lane in w) for i, w in enumerate(ws, 1)] or ["- none"]
+    c = p["counts"]
+    lines = [f"# Wave proposal ({p['tick_id']}, request `{p['request_id']}`)", "", f"> {p['label']}", "",
+             f"- Requests seeded: {c['requests']}; excluded at init: {c['excluded_at_init']}",
+             f"- Accepted briefs: {c['accepted_briefs']} of {c['requests']} "
+             f"({', '.join(f'{k} {v}' for k, v in sorted(c['by_status'].items())) or 'none'})",
+             f"- Planner waves: {c['actual_lanes']} lanes in {c['actual_waves']} waves",
+             f"- Provisional waves: {c['provisional_lanes']} lanes in {c['provisional_waves']} waves; held {c['held']}",
+             "", "## Planner waves (unchanged)", ""] + waves(p["actual"]["waves"])
+    lines += ["", "## Provisional waves (planner lanes + sourced drafts)", ""] + waves(p["provisional"]["waves"])
+    lines += ["", "## Seams", ""]
+    lines += [f"- {s['kind']} wave {s['wave']}: #{s['a']} and #{s['b']} share `{s['spine']}/`"
+              for s in p["actual"]["seams"] + p["provisional"]["seams"]] or ["- none"]
+    lines += ["", "## Held", ""]
+    lines += [f"- #{h['issue']}: {h['reason']}" for h in p["held"]] or ["- none"]
+    lines += ["", "## Not in this proposal", ""]
+    lines += [f"- #{e['issue']}: excluded at init ({e['reason']})" for e in p["excluded"]]
+    lines += [f"- `{r}`: not accepted yet (pending, uncertain or quarantined)" for r in p["not_accepted"]]
+    return "\n".join(lines) + "\n"
+
+
+def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, tick_id: str, request_id: str) -> dict:
+    """Planner waves as computed, plus provisional packing of copied records with sourced drafts."""
+    by_gh = {r["gh"]: r for r in computed["deduped"] if r["gh"] is not None}
+    # A reviewed brief that fails admission keeps a planner-ready lane out of the provisional view.
+    refused = {b["issue"] for b in briefs if b["draft_status"] not in {"draft", "ready"}}
+    lanes, held = [], []
+    for r in computed["active"]:
+        if r["gh"] in refused:
+            continue
+        lane = copy.deepcopy(r)
+        lane.update(wave=None, provisional=False)
+        lanes.append(lane)
+    for b in briefs:
+        if b["draft_status"] == "draft":
+            lane = copy.deepcopy(by_gh[b["issue"]])
+            paths = [w["path"] for w in b["write_set"]]
+            zone = engine._zone_of({"artifacts": paths}, lane)
+            lane.update(state="ready", writeset=paths, zone=zone["zone"], zoneInferred=False,
+                        zoneRule=zone["zoneRule"], wave=None, provisional=True)
+            lanes.append(lane)
+        elif b["draft_status"] != "ready":
+            held.append({"issue": b["issue"], "reason": f"{b['draft_status']}: {b['held_reason']}"})
+    placed = {lane["gh"]: lane for lane in lanes if lane["gh"] is not None}
+    view = [placed.get(r["gh"], r) for r in computed["deduped"]]
+    waves, unplaced = engine._pack_waves(lanes, view, force_tail=False)
+    for i, w in enumerate(waves, 1):
+        for lane in w:
+            lane["wave"] = i
+    seams = engine._contract_seams(waves)
+    held += [{"issue": lane["gh"], "reason": "unplaceable: unmet dependency, collision or zone cap"} for lane in unplaced]
+
+    def lanes_of(ws):
+        return [[{"issue": r["gh"], "provisional": bool(r.get("provisional")), "write_set": r["writeset"]} for r in w]
+                for w in ws]
+
+    def seams_of(items, kind):
+        return [{"kind": kind, "wave": s["wave"], "a": s["a"]["gh"], "b": s["b"]["gh"], "spine": s["spine"]} for s in items]
+    by_status = {}
+    for b in briefs:
+        by_status[b["draft_status"]] = by_status.get(b["draft_status"], 0) + 1
+    return {"schema": "factory-primitive/wave-proposal@1", "tick_id": tick_id, "request_id": request_id,
+            "label": DRAFT_LABEL,
+            "counts": {"requests": len(manifest["requests"]), "excluded_at_init": len(manifest["excluded"]),
+                       "accepted_briefs": len(briefs), "by_status": by_status,
+                       "actual_lanes": len(computed["active"]), "actual_waves": len(computed["waves"]),
+                       "provisional_lanes": sum(len(w) for w in waves), "provisional_waves": len(waves),
+                       "held": len(held)},
+            "actual": {"waves": lanes_of(computed["waves"]), "seams": seams_of(computed["contract_seams"], "planner")},
+            "provisional": {"waves": lanes_of(waves), "seams": seams_of(seams, "provisional")},
+            "held": held, "excluded": manifest["excluded"],
+            "not_accepted": sorted(set(manifest["requests"]) - {b["request_id"] for b in briefs})}
+
+
+def _atomic_write(path: Path, text: str) -> None:
+    temp = path.with_name(path.name + ".tmp")
+    temp.write_text(text, encoding="utf-8")
+    os.replace(temp, path)
+
+
+def plan_draft(tick_id: str, out_dir: Path, args: dict, accepted: list[str], fault: str) -> None:
+    """Runs inside the sandbox: one evidence-linked brief plus a refreshed wave proposal."""
+    instance = out_dir.parents[1]
+    backlog = instance / "backlog"
+    manifest = json.loads((backlog / "manifest.json").read_text(encoding="utf-8"))
+    request_id = args["inbox_id"]
+    req = manifest["requests"][request_id]
+    issue = json.loads((backlog / "issues.json").read_text(encoding="utf-8"))[str(req["issue"])]
+    doc_text, doc_sha = "", None
+    if req["doc_path"] and (REPO_ROOT / req["doc_path"]).is_file():
+        raw = (REPO_ROOT / req["doc_path"]).read_bytes()
+        doc_text, doc_sha = raw.decode("utf-8", "replace"), hashlib.sha256(raw).hexdigest()
+    if doc_sha != req["doc_sha256"]:
+        raise ValueError("capture doc changed since init; refusing to draft from changed input")
+    engine = _planner(backlog, "stub")
+    computed = engine.compute()
+    rec = next((r for r in computed["deduped"] if r["gh"] == req["issue"]), None)
+    if rec is None:
+        raise ValueError("issue missing from the frozen ledger")
+    issue_src = f"issue#{req['issue']}"
+    found = _sections(issue["body"], issue_src)
+    if doc_text:
+        for kind, entries in _sections(doc_text, req["doc_path"]).items():
+            found[kind] += entries
+        goal = _frontmatter_goal(doc_text)
+        if goal:
+            found["scope"].append({"heading": "frontmatter goal", "text": goal[1],
+                                   "source": f"{req['doc_path']}:L{goal[0]}"})
+    contract = rec["contract"]
+    if contract and isinstance(contract.get("artifacts"), list) and contract["artifacts"]:
+        write_set = [{"path": a, "source": f"{req['doc_path']}:preflight-contract"} for a in contract["artifacts"]]
+    else:
+        write_set, seen = [], set()
+        for entry in _cited_paths(issue["body"], issue_src) + _cited_paths(doc_text, req["doc_path"] or ""):
+            if entry["path"] not in seen and len(write_set) < 25:
+                seen.add(entry["path"])
+                write_set.append(entry)
+    if rec["state"] not in {"ready", "needs-contract"}:
+        status, held = "held", f"planner state {rec['state']}"
+    elif not write_set:
+        status, held = "needs-recon", "no sourced write set"
+    elif not found["scope"]:
+        status, held = "missing-scope", "no sourced scope"
+    else:
+        status, held = ("ready" if rec["state"] == "ready" else "draft"), None
+    axes = rec.get("dbAxes")
+    brief = {"schema": "factory-primitive/plan-brief@1", "tick_id": tick_id, "status": "ok", "label": DRAFT_LABEL,
+             "request_id": request_id, "issue": req["issue"], "title": issue["title"],
+             "issue_sha256": req["issue_sha256"], "issue_updated_at": issue.get("updatedAt"),
+             "doc_path": req["doc_path"], "doc_sha256": doc_sha, "planner_state": rec["state"],
+             "planner_flags": sorted(set(rec["flags"] + rec["signals"])),
+             "rating": "/".join(str(a) for a in axes) if axes else None, "existing_contract": contract,
+             "deps": rec["deps"], "scope": found["scope"], "acceptance": found["acceptance"],
+             "open_questions": found["open_questions"], "write_set": write_set,
+             "draft_status": status, "held_reason": held}
+    markdown = render_brief(brief)
+    if fault == "corrupt-issue-hash":
+        brief["issue_sha256"] = "0" * 64
+    elif fault == "drop-key":
+        del brief["scope"]
+    elif fault == "md-mismatch":
+        markdown += "tampered\n"
+    _atomic_write(out_dir / f"{tick_id}.json", canonical(brief))
+    _atomic_write(out_dir / f"{tick_id}.md", markdown)
+    briefs = [json.loads(Path(p).read_text(encoding="utf-8")) for p in accepted]
+    proposal = _build_proposal(engine, computed, briefs + [brief], manifest, tick_id, request_id)
+    _atomic_write(out_dir / "wave-proposal.json", canonical(proposal))
+    if fault != "drop-file":
+        _atomic_write(out_dir / "wave-proposal.md", render_proposal(proposal))
+    elif (out_dir / "wave-proposal.md").exists():
+        (out_dir / "wave-proposal.md").unlink()
+    if fault == "fail-after-output":
+        raise RuntimeError("injected failure after plan-draft output was written")
+
+
+def _verify_plan_draft(instance: Path, tick_id: str, args: dict) -> tuple[Path, str, dict]:
+    out = instance / "out" / "plan-draft"
+    names = (f"{tick_id}.json", f"{tick_id}.md", "wave-proposal.json", "wave-proposal.md")
+    hashes = {}
+    for name in names:
+        if not (out / name).is_file() or (out / name).stat().st_size == 0:
+            raise ValueError(f"plan-draft output missing or empty: {name}")
+        hashes[name] = hashlib.sha256((out / name).read_bytes()).hexdigest()
+    brief = json.loads((out / names[0]).read_text(encoding="utf-8"))
+    missing = [key for key in BRIEF_KEYS if key not in brief]
+    if missing:
+        raise ValueError(f"plan-draft brief missing keys: {', '.join(missing)}")
+    manifest = json.loads((instance / "backlog" / "manifest.json").read_text(encoding="utf-8"))
+    req = manifest["requests"].get(args.get("inbox_id"), {})
+    if (brief["tick_id"], brief["request_id"], brief["status"]) != (tick_id, args.get("inbox_id"), "ok") \
+            or (brief["issue"], brief["issue_sha256"], brief["doc_sha256"]) != \
+            (req.get("issue"), req.get("issue_sha256"), req.get("doc_sha256")):
+        raise ValueError("plan-draft brief does not match its request or frozen sources")
+    if render_brief(brief) != (out / names[1]).read_text(encoding="utf-8"):
+        raise ValueError("plan-draft Markdown brief disagrees with its JSON")
+    proposal = json.loads((out / names[2]).read_text(encoding="utf-8"))
+    if (proposal.get("tick_id"), proposal.get("request_id")) != (tick_id, args.get("inbox_id")) \
+            or render_proposal(proposal) != (out / names[3]).read_text(encoding="utf-8"):
+        raise ValueError("wave proposal does not match this tick")
+    return out / names[0], sha_text(canonical(hashes)), hashes
+
+
+def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: float) -> dict:
+    """Freeze up to `limit` open Queue candidates: ledger copy, git listings, one issue read each."""
+    if (instance / "state.db").exists():
+        raise ValueError("instance already initialized; use a new run root")
+    backlog = instance / "backlog"
+    backlog.mkdir(parents=True, exist_ok=True)
+    with closing(gateway_connect(REPO_ROOT / "releases.db", readonly=True)) as src, \
+            closing(gateway_connect(backlog / "releases.db", must_exist=False)) as dst:
+        src.backup(dst)
+
+    def git(*argv):
+        return subprocess.run(["git", *argv], cwd=REPO_ROOT, capture_output=True, text=True, check=True).stdout
+    (backlog / "branches.txt").write_text(git("branch", "-a", "--format=%(refname:short)"), encoding="utf-8")
+    (backlog / "base-files.txt").write_text(git("ls-tree", "-r", "--name-only", "HEAD"), encoding="utf-8")
+    computed = _planner(backlog, "off").compute()
+    pool = sorted((r for r in computed["deduped"] if r["section"] == "Queue / parked intake"
+                   and r["state"] in {"ready", "needs-contract"} and r["gh"] is not None),
+                  key=lambda r: (-(r["dbRank"] or 0), r["gh"]))
+    requests, excluded, issues = {}, [], {}
+    for r in pool[:limit * 3]:
+        if len(requests) >= limit:
+            break
+        try:
+            data = json.loads(subprocess.run(
+                ["gh", "issue", "view", str(r["gh"]), "--json", "number,state,title,body,updatedAt"],
+                cwd=REPO_ROOT, capture_output=True, text=True, check=True, timeout=60).stdout)
+        except (subprocess.SubprocessError, OSError, ValueError) as exc:
+            excluded.append({"issue": r["gh"], "reason": f"issue read failed: {str(exc)[:120]}"})
+            continue
+        if data.get("state") != "OPEN":
+            excluded.append({"issue": r["gh"], "reason": f"issue is {data.get('state')}"})
+            continue
+        issue_sha = sha_text(canonical({"title": data["title"], "body": data.get("body") or ""}))
+        doc = REPO_ROOT / r["docRel"] if r["docRel"] else None
+        request_id = f"gh-{r['gh']}-{issue_sha[:12]}"
+        requests[request_id] = {"issue": r["gh"], "title": data["title"], "doc_path": r["docRel"],
+                                "doc_sha256": hashlib.sha256(doc.read_bytes()).hexdigest() if doc and doc.is_file() else None,
+                                "issue_sha256": issue_sha, "planner_state": r["state"], "slot": len(requests) + 1}
+        issues[str(r["gh"])] = data
+    if not requests:
+        raise ValueError("no eligible open Queue candidates to seed")
+    (backlog / "issues.json").write_text(json.dumps(issues, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (backlog / "gh-state.json").write_text(canonical({n: "OPEN" for n in issues}) + "\n", encoding="utf-8")
+    manifest = {"schema": "factory-primitive/backlog-manifest@1", "created_at": utcnow(),
+                "source_head": git("rev-parse", "HEAD").strip(),
+                "releases_db_sha256": hashlib.sha256((backlog / "releases.db").read_bytes()).hexdigest(),
+                "scenario_sha256": sha_text(canonical(requests)), "probe_targets": [],
+                "requests": requests, "excluded": excluded,
+                "slots": {str(s): available_digest([k for k, q in requests.items() if q["slot"] <= s])
+                          for s in range(1, 289)}}
+    manifest_path = backlog / "manifest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    base = datetime.now(timezone.utc)
+    conn = connect(instance / "state.db")
+    try:
+        with conn:
+            conn.executemany(
+                "INSERT INTO inbox_items(id,available_at_slot,created_at,kind,body,target) VALUES(?,?,?,?,?,?)",
+                [(k, q["slot"], (base + timedelta(microseconds=q["slot"])).isoformat(), "plan-request",
+                  canonical({"issue": q["issue"], "title": q["title"]}), str(q["issue"])) for k, q in requests.items()])
+        (instance / "canary.txt").write_text("do-not-modify\n", encoding="utf-8")
+        config = {"daily_cap": daily_cap, "max_call_cost": max_call_cost, "probe_targets": [], "source": "prs",
+                  "scenario_sha256": manifest["scenario_sha256"], "scenario_path": None,
+                  "manifest_path": str(manifest_path),
+                  "prompt_sha256": sha_text((PACKAGE / "prompts" / "evaluator.v1.md").read_text(encoding="utf-8"))}
+        (instance / "config.json").write_text(json.dumps(config, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        emit(conn, instance, None, "init", "ok", items=len(requests), excluded=len(excluded), source="prs")
+    finally:
+        conn.close()
+    return {"requests": len(requests), "excluded": len(excluded)}
 
 
 def load_scenario(path: Path) -> tuple[str, list[dict]]:
@@ -355,6 +747,9 @@ def _validate(decision: dict, snapshot: dict) -> str | None:
         targets = set(snapshot["probe_targets"]) | {item["target"] for item in snapshot["inbox"] if item["kind"] == "probe"}
         if set(args) != {"target"} or args.get("target") not in targets:
             return "probe-target-not-eligible"
+    elif tool == "plan-draft":
+        if set(args) != {"inbox_id"} or pending.get(args.get("inbox_id"), {}).get("kind") != "plan-request":
+            return "plan-draft-id-not-eligible"
     elif args:
         return "idle-args"
     fingerprint = _decision_fingerprint(decision)
@@ -452,7 +847,15 @@ def _reconcile(conn, instance: Path, exclude_tick_id: str = "") -> None:
         emit(conn, instance, tick_id, "reconcile", "unpersisted-intent-abort")
 
 
-def _run_tool(instance: Path, tick_id: str, decision: dict, items: list[dict], fault: str):
+def _accepted_briefs(conn) -> list[str]:
+    """Brief paths of plan-draft ticks that completed with a verified tool run."""
+    return [row["output_path"] for row in conn.execute(
+        "SELECT r.output_path FROM tool_runs r JOIN intents i USING(tick_id) JOIN ticks t USING(tick_id) "
+        "WHERE i.tool='plan-draft' AND r.status='ok' AND t.status='completed' ORDER BY t.slot")]
+
+
+def _run_tool(instance: Path, tick_id: str, decision: dict, items: list[dict], fault: str,
+              context: dict | None = None):
     tool = decision["tool"]
     out_dir = instance / "out" / tool
     tmp_dir = instance / "tmp" / tool
@@ -465,7 +868,8 @@ def _run_tool(instance: Path, tick_id: str, decision: dict, items: list[dict], f
                f"(allow file-write* (subpath \"{out_dir.resolve()}\")(subpath \"{tmp_dir.resolve()}\"))")
     argv = [sandbox, "-p", profile, sys.executable, str(ENTRYPOINT), "factory-primitive", "tool",
             "--tool", tool, "--tick-id", tick_id, "--out-dir", str(out_dir),
-            "--args-json", canonical(decision["args"]), "--items-json", canonical(items)]
+            "--args-json", canonical(decision["args"]), "--items-json", canonical(items),
+            "--context-json", canonical(context or {})]
     env = {"PATH": "/usr/bin:/bin", "OUT_DIR": str(out_dir), "FACTORY_FAULT": fault,
            "PYTHONDONTWRITEBYTECODE": "1", "TMPDIR": str(tmp_dir)}
     return run_bounded(argv, cwd=str(instance), env=env, timeout=60, grace=1)
@@ -580,30 +984,52 @@ def run_tick(instance: Path, slot: int, fault: str = "") -> str:
                 conn.execute("UPDATE intents SET tool_started_at=? WHERE tick_id=?", (utcnow(), tick_id))
             if fault == "crash-act":
                 os._exit(70)
-            completed = _run_tool(instance, tick_id, decision, snapshot["inbox"], fault)
-            if completed.timed_out or completed.rc != 0:
-                error = "tool-timeout" if completed.timed_out else (completed.stderr.strip() or "tool-failure")
+            drafting = decision["tool"] == "plan-draft"
+            context = {"accepted": _accepted_briefs(conn)} if drafting else None
+            completed = _run_tool(instance, tick_id, decision, snapshot["inbox"], fault, context)
+            output_files = None
+            try:
+                if completed.timed_out or completed.rc != 0:
+                    error = "tool-timeout" if completed.timed_out else (completed.stderr.strip() or "tool-failure")
+                    if not drafting:
+                        with conn:
+                            conn.execute("INSERT INTO tool_runs(tick_id,rc,status,error) VALUES(?,?,?,?)",
+                                         (tick_id, completed.rc, "failed", error))
+                        finish(conn, instance, tick_id, "failed", {"error": error, "decision_status": decision_status})
+                        return "failed"
+                    raise RuntimeError(error)
+                if drafting:
+                    output, output_sha, output_files = _verify_plan_draft(instance, tick_id, decision["args"])
+                else:
+                    output, output_sha = _verify_output(instance, tick_id, decision["tool"])
+            except Exception as exc:
+                if not drafting:
+                    raise
+                # GH-1257: the tool may have published drafts before failing, so the attempt is
+                # ambiguous: keep its rc and error, quarantine the request, never retry it.
                 with conn:
                     conn.execute("INSERT INTO tool_runs(tick_id,rc,status,error) VALUES(?,?,?,?)",
-                                 (tick_id, completed.rc, "failed", error))
-                finish(conn, instance, tick_id, "failed", {"error": error, "decision_status": decision_status})
-                return "failed"
-            output, output_sha = _verify_output(instance, tick_id, decision["tool"])
+                                 (tick_id, completed.rc, "unverified", str(exc)[:500]))
+                quarantine(conn, [decision["args"]["inbox_id"]])
+                finish(conn, instance, tick_id, "uncertain", {"error": str(exc)[:500], "decision_status": decision_status})
+                return "uncertain"
             with conn:
                 conn.execute("INSERT INTO tool_runs(tick_id,rc,status,output_path,sha256) VALUES(?,?,?,?,?)",
                              (tick_id, completed.rc, "ok", str(output), output_sha))
             if fault == "missing-receipt":
                 os._exit(70)
             consumed = []
-            if decision["tool"] == "note":
+            if decision["tool"] in {"note", "plan-draft"}:
                 consumed = [decision["args"]["inbox_id"]]
             elif decision["tool"] == "summarize":
                 consumed = decision["args"]["inbox_ids"]
             elif decision["tool"] == "probe":
                 consumed = [item["id"] for item in snapshot["inbox"]
                             if item["kind"] == "probe" and item["target"] == decision["args"]["target"]]
-            finish(conn, instance, tick_id, "completed", {
-                "tool": decision["tool"], "decision_status": decision_status, "output_sha256": output_sha}, consumed)
+            details = {"tool": decision["tool"], "decision_status": decision_status, "output_sha256": output_sha}
+            if output_files:
+                details["output_files"] = output_files
+            finish(conn, instance, tick_id, "completed", details, consumed)
             return "completed"
         except Exception as exc:
             emit(conn, instance, tick_id, "error", "failed", error=str(exc))
@@ -626,9 +1052,28 @@ def status(instance: Path) -> dict:
         quarantined = conn.execute("SELECT COUNT(*) n FROM inbox_items WHERE status='quarantined'").fetchone()["n"]
         reservations = [dict(row) for row in conn.execute("SELECT * FROM reservations ORDER BY rowid")]
         spent = sum(row["amount"] if row["billing_status"] == "unknown" else (row["actual_cost"] or 0) for row in reservations)
+        quarantined_ids = [row["id"] for row in conn.execute(
+            "SELECT id FROM inbox_items WHERE status='quarantined' ORDER BY id")]
+        last = conn.execute("SELECT r.tick_id,r.status,t.error FROM receipts r JOIN ticks t USING(tick_id) "
+                            "ORDER BY r.created_at DESC LIMIT 1").fetchone()
+        heartbeat = None
+        if (instance / "heartbeat.json").is_file():
+            beat = json.loads((instance / "heartbeat.json").read_text(encoding="utf-8"))
+            age = (datetime.now(timezone.utc) - datetime.fromisoformat(beat["updated_at"])).total_seconds()
+            heartbeat = {"tick_id": beat.get("tick_id"), "stage": beat.get("stage"), "age_s": round(age, 1)}
+        lock = "free"
+        if (instance / "lock").exists():
+            with (instance / "lock").open("a+") as fh:
+                try:
+                    fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    fcntl.flock(fh, fcntl.LOCK_UN)
+                except BlockingIOError:
+                    lock = "held"
         return {"ticks": counts, "pending": pending, "quarantined": quarantined,
                 "paused": (instance / "PAUSE").exists(), "spent_or_reserved": spent,
-                "unknown_cost": any(row["billing_status"] == "unknown" for row in reservations)}
+                "unknown_cost": any(row["billing_status"] == "unknown" for row in reservations),
+                "quarantined_ids": quarantined_ids, "heartbeat": heartbeat, "lock": lock,
+                "last_receipt": dict(last) if last else None}
     finally:
         conn.close()
 
@@ -653,6 +1098,9 @@ def factory_parser() -> argparse.ArgumentParser:
     init.add_argument("--manifest", type=Path, default=PACKAGE / "scenarios" / "soak-v1.manifest.json")
     init.add_argument("--daily-cap", type=float, default=1.0)
     init.add_argument("--max-call-cost", type=float, default=0.0)
+    init.add_argument("--from-prs", action="store_true",
+                      help="seed plan requests from open Queue rows in releases.db (GH-1257)")
+    init.add_argument("--limit", type=int, default=10)
     manifest = sub.add_parser("generate-manifest")
     manifest.add_argument("--scenario", type=Path, default=PACKAGE / "scenarios" / "soak-v1.jsonl")
     manifest.add_argument("--output", type=Path, default=PACKAGE / "scenarios" / "soak-v1.manifest.json")
@@ -668,6 +1116,7 @@ def factory_parser() -> argparse.ArgumentParser:
     tool.add_argument("--out-dir", type=Path, required=True)
     tool.add_argument("--args-json", required=True)
     tool.add_argument("--items-json", required=True)
+    tool.add_argument("--context-json", default="{}")
     return p
 
 
@@ -675,8 +1124,8 @@ def factory_main(argv: list[str]) -> int:
     args = factory_parser().parse_args(argv)
     try:
         if args.command == "tool":
-            return execute_tool(args.tool, args.tick_id, args.out_dir,
-                                json.loads(args.args_json), json.loads(args.items_json))
+            return execute_tool(args.tool, args.tick_id, args.out_dir, json.loads(args.args_json),
+                                json.loads(args.items_json), json.loads(args.context_json))
         if args.command == "generate-manifest":
             generate_manifest(args.scenario, args.output)
             return 0
@@ -688,6 +1137,12 @@ def factory_main(argv: list[str]) -> int:
         if args.command == "init":
             if args.daily_cap <= 0 or args.max_call_cost < 0 or args.max_call_cost > args.daily_cap:
                 raise ValueError("invalid daily cap or maximum call cost")
+            if args.from_prs:
+                if not 1 <= args.limit <= 50:
+                    raise ValueError("--limit must be in 1..50")
+                seeded = init_from_prs(instance, args.limit, args.daily_cap, args.max_call_cost)
+                print(canonical({"status": "initialized", "instance": str(instance), **seeded}))
+                return 0
             init_instance(instance, args.scenario.resolve(), args.manifest.resolve(),
                           args.daily_cap, args.max_call_cost)
             print(canonical({"status": "initialized", "instance": str(instance)}))
