@@ -81,3 +81,13 @@ evidence, tightens a match condition, removes a fallback), trace every caller
 that will hit the tightened path and confirm each one already produces what
 will now be demanded. If any caller doesn't, the producer change ships in the
 *same* PR as the gate change — not as a follow-up issue.
+
+## Engine refactors must survive suites that build objects with __new__
+
+- **cue**: Adding a constructor-set attribute to `utils/py/_marathon_plan.py` `Engine` (or any class a suite instantiates with `Class.__new__` to reach one method).
+- **lesson**: Before relying on a new `__init__` attribute inside an existing method, grep `test/` for `Engine.__new__` and read the new attribute with `getattr(self, NAME, default)`, then run `test/gh423-roadmap-render.sh` with the planner suites.
+- **evidence**: TESTS-RESULTS/2026-10-29+GH-1257/gate.txt (gh423 failed on 030db02d with `AttributeError: 'Engine' object has no attribute 'RELEASES_DB'`; 409/409 after the getattr fix on 761389dd), https://github.com/HiQS-Labs/XYZ-forge/issues/1257
+- **confidence**: medium — one observed failure; the three planner suites and a byte-for-byte parity check all passed and missed it, only the full gate caught it.
+- **area**: gate
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1257
+- **date**: 2026-10-29
