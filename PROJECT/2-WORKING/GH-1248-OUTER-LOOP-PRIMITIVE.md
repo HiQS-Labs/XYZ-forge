@@ -98,3 +98,7 @@ Review control-plane and decision-quality evidence independently.
 ## Verification policy
 
 No new tests under GH-831. Use applicable existing checks plus recorded manual controls with committed `provenance.jsonl`. Before branch publication, run the frozen-twin staged check, PDDA checks, `releases check`, and the gate selected by `utils/ci-route.sh`; do not claim the one-hour or 24-hour runs until they actually occur.
+
+## Merge evidence
+
+- PR #1249 merged 2026-10-30 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
