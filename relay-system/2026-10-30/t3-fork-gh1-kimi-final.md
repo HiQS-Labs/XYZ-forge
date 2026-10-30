@@ -91,4 +91,12 @@ Full sweep included pre-existing normalization, probe/management, browser/env-va
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-30T18:41:07Z
+task: T3-KIMI-GH1-FINAL
+reviewer: codex
+status: Approved
+reviewed-head: 95a168b88dd13c27feffdc71f22b8f6a3f98db68
+added-range: 5868+3886
+added-sha256: 7af1aaf75ea54aea2bca3151e6001493d6a7f87ffae8c6a81631036ea692fb52
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
