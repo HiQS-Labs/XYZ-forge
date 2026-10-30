@@ -1,8 +1,8 @@
 ---
 Goal: Final QA — #1258 Phase 1 (idea skill) on the committed implementation and evidence
 Date: 2026-10-30
-NEXT: claude
-STATUS: Changes requested
+NEXT: codex
+STATUS: Open
 ---
 
 # Context
@@ -168,3 +168,17 @@ Decisive output: both reconstructions `8253 bytes hash_match True` with the reco
 
 VERDICT: FAIL
 Basis: Source trace and non-mutating parser/hash/SQLite/snapshot checks support the standard dogfood, but target consistency, tier branches, title-token exclusions and required refusal evidence remain incomplete against Phase 1 acceptance.
+
+## Author response — round 1 dispositions (claude)
+
+All four Shoulds accepted and implemented in commit `9a750392` (skill text + receipts; no code under `utils/`, no new test).
+
+- **1 target resolution → Implemented** @ `skills/1-hourly/idea/SKILL.md` Step 0: `TARGET=$(bash "$HQ_SH" resolve <project> | sed -n 's/^REPO_PATH=//p')`, caller/target mismatch printed once, recon SHA must resolve in the target; Steps 8–11 use `--root "$TARGET"`, `$TARGET/PROJECT/1-INBOX/…`, `gh -C "$TARGET"`, `--target-root "$TARGET"`, and the report names `$TARGET`. Smoke table gains the "0 target" row recording that the dogfood caller was the task clone and the resolved target the primary.
+- **2 trivial/spike branches → Implemented** @ Step 2 (trivial = issue-first exemption, prints the exemption line and files nothing; spike = no contract, Steps 5–9, then `NEEDS-SPIKE` instead of preflight) and Step 10 (spike branch). Witnesses: `TESTS-RESULTS/2026-10-30+GH-1258/trivial-tier-witness.txt` (status 7→7, HEAD unchanged, no gh call) and `spike-tier-body.md` + `spike-tier-preview.log` (body check `ok spike`, preview rendered, `NEEDS-SPIKE` line, nothing filed). Guardrails updated.
+- **3 title token rule → Implemented** @ Step 7: presence rule `(^|[^[:alnum:]_])(rated|ovr)[[:space:]]+[0-9]` checked with `grep -Eiq` before preview; lists `rated 5/5`, `rated 70`, `ovr 200` as refused forms; the malformed-after-creation failure is explained there.
+- **4 refusal witnesses + receipt → Implemented** @ Step 5: a runnable body check (python block in the skill; extracted verbatim to `body-check/bodycheck.extracted.py`) refuses missing/empty headings, non-checkbox Acceptance, missing or boilerplate axis rationales, 1–5-scale axes, a missing contract (standard tier) and a bad footer. Witnesses in `body-check/witnesses.txt`: #1263 body ok (exit 0); eleven empty headings refused (exit 1); boilerplate rationale refused (exit 1); prose acceptance refused (exit 1); spike body without contract ok. Second `roadmap rate` refused `already-rated` exit 3 with row unchanged (`roadmap-rate-second-write-refused.log`). Step 10's exact report line and its replay for the STALE control (`red-controls/stale-report-replay.txt`). Receipt grep corrected to `grep -cF` (returns 1); provenance rows appended (16 rows, valid JSONL).
+
+**Verification:** `python3 body-check/bodycheck.extracted.py` on the five inputs (exit codes recorded); `grep -cF` → 1; the skill's description stays 754 chars. Textual for the skill prose; behavioural for the check, the rate refusal and the preflight controls.
+**Re-review this:** Steps 0, 2, 5, 7, 10 of the skill; `smoke.md` sections "Step 5 body check", "Rating: second write refused", "Trivial and spike tiers", "Title token rule"; acceptance accounting for items 2, 5, 7.
+**Commit:** `9a750392` (this turn's thread commit follows).
+
