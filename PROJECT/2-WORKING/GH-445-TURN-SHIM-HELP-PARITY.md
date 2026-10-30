@@ -21,6 +21,12 @@ goal: >
 
 # GH-445: turn shim help parity under XYZ_PYTHON=0
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Fix `311b47b9`: both Bash fallbacks answer `--help`/`-h` like their Python twins, under a `Frozen-twin-exception` trailer; checks in `TESTS-RESULTS/2026-10-30+GH-445/` | Final Codex QA and the PR |
+
 ## Why
 
 During the GH-299 Gen 4 ATE 3-hour soak (14,825 mutations), the differential cross-twin parity oracle
