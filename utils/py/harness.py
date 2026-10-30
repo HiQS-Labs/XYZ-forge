@@ -35,7 +35,7 @@ DRAFT_LABEL = "draft; preflight and independent plan QA outstanding"
 BRIEF_KEYS = ("schema", "tick_id", "status", "label", "request_id", "issue", "title", "issue_sha256",
               "issue_updated_at", "doc_path", "doc_sha256", "planner_state", "planner_flags", "rating",
               "existing_contract", "deps", "scope", "acceptance", "open_questions", "write_set",
-              "draft_status", "held_reason", "unresolved_names")
+              "draft_status", "held_reason", "unresolved_names", "probe_results")
 TERMINAL = {"completed", "paused", "uncertain", "unpersisted-intent-abort", "failed", "rejected"}
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -398,6 +398,8 @@ def render_brief(b: dict) -> str:
     lines += ["", "## Unresolved file names", ""]
     lines += [f"- `{u['name']}` ({u['source']}; {u['matches']} tracked files share this name)"
               for u in b["unresolved_names"]] or ["- none"]
+    lines += ["", "## Contract probes", ""]
+    lines += [f"- {p['type']} `{p['path']}`: {p['result']}" for p in b["probe_results"]] or ["- none"]
     if b["existing_contract"]:
         lines += ["", "## Existing preflight contract", "", "```json",
                   json.dumps(b["existing_contract"], indent=2, sort_keys=True), "```"]
@@ -422,15 +424,27 @@ def render_proposal(p: dict) -> str:
               for s in p["actual"]["seams"] + p["provisional"]["seams"]] or ["- none"]
     lines += ["", "## Held", ""]
     lines += [f"- #{h['issue']}: {h['reason']}" for h in p["held"]] or ["- none"]
+    lines += ["", "## Closed (excluded by frozen GitHub state)", ""]
+    lines += [f"- #{n}: issue is CLOSED; planner state already-closed" for n in p["closed"]] or ["- none"]
     lines += ["", "## Not in this proposal", ""]
     lines += [f"- #{e['issue']}: excluded at init ({e['reason']})" for e in p["excluded"]]
     lines += [f"- `{r}`: not accepted yet (pending, uncertain or quarantined)" for r in p["not_accepted"]]
     return "\n".join(lines) + "\n"
 
 
+def _probe_landing(engine, rec: dict) -> tuple[list[dict], int]:
+    """Read-only check of a record's contract fix_probes against the working tree (GH-1270).
+    `command` probes are never executed; they are reported as unverified."""
+    probes = [p for p in ((rec.get("contract") or {}).get("fix_probes") or []) if isinstance(p, dict)]
+    results = [{"type": p.get("type"), "path": p.get("path") or "",
+                "result": "unverified" if p.get("type") == "command" else engine._eval_probe(p)} for p in probes]
+    return results, sum(r["result"] == "landed" for r in results)
+
+
 def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, tick_id: str, request_id: str) -> dict:
     """Planner waves as computed, plus provisional packing of copied records with sourced drafts."""
     by_gh = {r["gh"]: r for r in computed["deduped"] if r["gh"] is not None}
+    delivered = manifest.get("delivered", {})
     # A reviewed brief that fails admission keeps a planner-ready lane out of the provisional view.
     refused = {b["issue"] for b in briefs if b["draft_status"] not in {"draft", "ready"}}
     # Every seeded issue with no ledger row is visible to dependency lookup, admitted or not (GH-1261).
@@ -439,6 +453,15 @@ def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, 
     lanes, held = [], []
     for r in computed["active"]:
         if r["gh"] in refused:
+            continue
+        # GH-1270: every provisional lane gets the read-only readiness checks, briefed or not.
+        if str(r["gh"]) in delivered:
+            held.append({"issue": r["gh"], "reason": "possibly delivered: closed by merged PR "
+                         + ", ".join(f"#{n}" for n in delivered[str(r["gh"])]) + "; issue still open"})
+            continue
+        results, landed = _probe_landing(engine, r)
+        if landed:
+            held.append({"issue": r["gh"], "reason": f"stale-contract: {landed} of {len(results)} fix_probes already landed"})
             continue
         lane = copy.deepcopy(r)
         lane.update(wave=None, provisional=False)
@@ -482,6 +505,7 @@ def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, 
             "actual": {"waves": lanes_of(computed["waves"]), "seams": seams_of(computed["contract_seams"], "planner")},
             "provisional": {"waves": lanes_of(waves), "seams": seams_of(seams, "provisional")},
             "held": held, "excluded": manifest["excluded"],
+            "closed": sorted(r["gh"] for r in computed["deduped"] if r["state"] == "already-closed" and r["gh"] is not None),
             "not_accepted": sorted(set(manifest["requests"]) - {b["request_id"] for b in briefs})}
 
 
@@ -542,6 +566,9 @@ def plan_draft(tick_id: str, out_dir: Path, args: dict, accepted: list[str], fau
         status, held = "missing-scope", "no sourced scope"
     else:
         status, held = ("ready" if rec["state"] == "ready" else "draft"), None
+    probe_results, landed = _probe_landing(engine, rec)
+    if landed and status in {"ready", "draft"}:
+        status, held = "stale-contract", f"{landed} of {len(probe_results)} fix_probes already landed"
     axes = rec.get("dbAxes")
     brief = {"schema": "factory-primitive/plan-brief@1", "tick_id": tick_id, "status": "ok", "label": DRAFT_LABEL,
              "request_id": request_id, "issue": req["issue"], "title": issue["title"],
@@ -551,7 +578,8 @@ def plan_draft(tick_id: str, out_dir: Path, args: dict, accepted: list[str], fau
              "rating": "/".join(str(a) for a in axes) if axes else None, "existing_contract": contract,
              "deps": rec["deps"], "scope": found["scope"], "acceptance": found["acceptance"],
              "open_questions": found["open_questions"], "write_set": write_set,
-             "draft_status": status, "held_reason": held, "unresolved_names": unresolved}
+             "draft_status": status, "held_reason": held, "unresolved_names": unresolved,
+             "probe_results": probe_results}
     markdown = render_brief(brief)
     if fault == "corrupt-issue-hash":
         brief["issue_sha256"] = "0" * 64
@@ -616,7 +644,31 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
         return subprocess.run(["git", *argv], cwd=REPO_ROOT, capture_output=True, text=True, check=True).stdout
     (backlog / "branches.txt").write_text(git("branch", "-a", "--format=%(refname:short)"), encoding="utf-8")
     (backlog / "base-files.txt").write_text(git("ls-tree", "-r", "--name-only", "HEAD"), encoding="utf-8")
-    computed = _planner(backlog, "off").compute()
+
+    def gh_json(argv, what):
+        try:
+            return json.loads(subprocess.run(argv, cwd=REPO_ROOT, capture_output=True, text=True,
+                                             check=True, timeout=120).stdout)
+        except (subprocess.SubprocessError, OSError, ValueError) as exc:
+            raise ValueError(f"{what} failed: {str(exc)[:120]}") from exc
+    # GH-1270: freeze real issue state for every issue, so the planner's own already-closed rule
+    # removes CLOSED rows; and freeze merged PRs that close a still-open issue.
+    states = {str(d["number"]): d["state"] for d in gh_json(
+        ["gh", "issue", "list", "--state", "all", "--limit", "2000", "--json", "number,state"], "issue state list")}
+    (backlog / "gh-state.json").write_text(canonical(states) + "\n", encoding="utf-8")
+    import wave_reconcile
+    delivered = {}
+    for pr in gh_json(["gh", "pr", "list", "--state", "merged", "--limit", "300", "--json", "number,title,body"],
+                      "merged PR list"):
+        for n in wave_reconcile.extract_linked_issues(pr)[0]:
+            if states.get(str(n)) == "OPEN":
+                delivered.setdefault(str(n), []).append(pr["number"])
+    delivered = {n: sorted(set(prs)) for n, prs in sorted(delivered.items())}
+
+    def delivered_reason(n):
+        return ("possibly delivered: closed by merged PR " + ", ".join(f"#{p}" for p in delivered[str(n)])
+                + "; issue still open")
+    computed = _planner(backlog, "stub").compute()
     pool = sorted((r for r in computed["deduped"] if r["section"] == "Queue / parked intake"
                    and r["state"] in {"ready", "needs-contract"} and r["gh"] is not None),
                   key=lambda r: (-(r["dbRank"] or 0), r["gh"]))
@@ -624,6 +676,9 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
     for r in pool[:limit * 3]:
         if len(requests) >= limit:
             break
+        if str(r["gh"]) in delivered:
+            excluded.append({"issue": r["gh"], "reason": delivered_reason(r["gh"])})
+            continue
         try:
             data = json.loads(subprocess.run(
                 ["gh", "issue", "view", str(r["gh"]), "--json", "number,state,title,body,updatedAt"],
@@ -652,7 +707,9 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
         registered = {r["gh"] for r in computed["deduped"] if r["gh"] is not None}
         fresh = sorted((d for d in listed if d["number"] not in registered),
                        key=lambda d: (d.get("updatedAt") or "", d["number"]), reverse=True)
-        for d in fresh[:unregistered]:
+        excluded += [{"issue": d["number"], "reason": delivered_reason(d["number"])}
+                     for d in fresh[:unregistered] if str(d["number"]) in delivered]
+        for d in [d for d in fresh if str(d["number"]) not in delivered][:unregistered]:
             data = {**d, "state": "OPEN"}
             issue_sha = sha_text(canonical({"title": data["title"], "body": data.get("body") or ""}))
             requests[f"gh-{d['number']}-{issue_sha[:12]}"] = {
@@ -663,12 +720,11 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
     if not requests:
         raise ValueError("no eligible open Queue candidates to seed")
     (backlog / "issues.json").write_text(json.dumps(issues, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    (backlog / "gh-state.json").write_text(canonical({n: "OPEN" for n in issues}) + "\n", encoding="utf-8")
     manifest = {"schema": "factory-primitive/backlog-manifest@1", "created_at": utcnow(),
                 "source_head": git("rev-parse", "HEAD").strip(),
                 "releases_db_sha256": hashlib.sha256((backlog / "releases.db").read_bytes()).hexdigest(),
                 "scenario_sha256": sha_text(canonical(requests)), "probe_targets": [],
-                "requests": requests, "excluded": excluded,
+                "requests": requests, "excluded": excluded, "delivered": delivered,
                 "slots": {str(s): available_digest([k for k, q in requests.items() if q["slot"] <= s])
                           for s in range(1, 289)}}
     manifest_path = backlog / "manifest.json"
@@ -932,6 +988,87 @@ def _accepted_briefs(conn) -> list[str]:
         "WHERE i.tool='plan-draft' AND r.status='ok' AND t.status='completed' ORDER BY t.slot")]
 
 
+def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
+    """GH-1270: one MARATHON.yaml + brief per lane of provisional wave `wave`, under the run root only.
+    Copying a lane folder into PROJECT/2-WORKING/ is the operator's approval; nothing is launched."""
+    import contextlib
+    from marathon_yaml_emit import EmitError, Lane, Packet, render
+    out = instance / "out" / "plan-draft"
+    conn = connect(instance / "state.db")
+    try:
+        receipt = next((json.loads(row["json"]) for row in conn.execute(
+            "SELECT json FROM receipts WHERE status='completed' ORDER BY created_at DESC")
+            if json.loads(row["json"]).get("tool") == "plan-draft"), None)
+        brief_paths = _accepted_briefs(conn)
+    finally:
+        conn.close()
+    expected = ((receipt or {}).get("output_files") or {}).get("wave-proposal.json")
+    proposal_path = out / "wave-proposal.json"
+    if not expected or not proposal_path.is_file() \
+            or hashlib.sha256(proposal_path.read_bytes()).hexdigest() != expected:
+        raise ValueError("wave-proposal.json is not the verified output of the latest completed plan-draft tick; "
+                         "refusing to build a packet from it")
+    proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
+    waves = proposal["provisional"]["waves"]
+    if not 1 <= wave <= len(waves):
+        raise ValueError(f"--wave must be in 1..{len(waves)}")
+    briefs = {}
+    for p in brief_paths:
+        b = json.loads(Path(p).read_text(encoding="utf-8"))
+        briefs[b["issue"]] = (b, Path(p).with_suffix(".md"))
+    records = {r["gh"]: r for r in _planner(instance / "backlog", "stub").compute()["deduped"] if r["gh"] is not None}
+    dest = out.parent / "launch-packet" / f"wave-{wave}"
+    staging = dest.with_name(dest.name + ".tmp")
+    shutil.rmtree(staging, ignore_errors=True)
+    staging.mkdir(parents=True)
+    emitted, skipped = [], []
+    for lane in waves[wave - 1]:
+        n, slug = lane["issue"], f"GH-{lane['issue']}-LAUNCH"
+        brief, brief_md = briefs.get(n, (None, None))
+        rec = records.get(n, {})
+        title = (brief or {}).get("title") or rec.get("title") or f"GH-{n}"
+        if brief_md:
+            text = brief_md.read_text(encoding="utf-8")
+        elif rec.get("docRel"):
+            text = f"# Launch brief: #{n} {title}\n\n> {DRAFT_LABEL}\n\nPlanner lane with no plan-draft brief. " \
+                   f"Build from the capture doc `{rec['docRel']}`.\n"
+        else:
+            skipped.append({"issue": n, "reason": "no plan-draft brief and no capture doc"})
+            continue
+        try:
+            with contextlib.chdir(REPO_ROOT):
+                yaml = render([Lane(n, title, None, 0.0)],
+                              {n: Packet(n, REPO_ROOT / "PROJECT" / "2-WORKING" / slug / "brief.md",
+                                         ",".join(lane["write_set"]))}, reviewer, Path(slug))
+        except EmitError as exc:
+            skipped.append({"issue": n, "reason": f"MARATHON.yaml not representable: {exc}"})
+            continue
+        lane_dir = staging / slug
+        lane_dir.mkdir()
+        (lane_dir / "brief.md").write_text(text, encoding="utf-8")
+        (lane_dir / "MARATHON.yaml").write_text(yaml, encoding="utf-8")
+        check = subprocess.run(["node", str(REPO_ROOT / "bin" / "marathon-yaml"), str(lane_dir / "MARATHON.yaml")],
+                               capture_output=True, text=True)
+        if check.returncode != 0:
+            shutil.rmtree(lane_dir)
+            skipped.append({"issue": n, "reason": f"bin/marathon-yaml rejected it: {check.stderr.strip()[:160]}"})
+            continue
+        emitted.append({"issue": n, "folder": slug, "provisional": lane["provisional"]})
+    readme = [f"# Launch packet: wave {wave} ({proposal['tick_id']})", "", f"> {DRAFT_LABEL}", "",
+              "Nothing here has been launched. Each folder is one marathon for one lane; lanes in a wave are",
+              "write-disjoint, so each can run in its own clone at the same time. Copying a folder into",
+              "`PROJECT/2-WORKING/` of a clone is the approval step.", "", "## Lanes", ""]
+    for e in emitted:
+        readme += [f"- #{e['issue']}" + (" (provisional)" if e["provisional"] else "") + f": `{e['folder']}/`",
+                   f"  - `cp -R {e['folder']} <clone>/PROJECT/2-WORKING/`",
+                   f"  - `relay-automation/marathon.sh --plan PROJECT/2-WORKING/{e['folder']}/MARATHON.yaml --dry-run`"]
+    readme += ["", "## Skipped", ""] + ([f"- #{s['issue']}: {s['reason']}" for s in skipped] or ["- none"])
+    (staging / "README.md").write_text("\n".join(readme) + "\n", encoding="utf-8")
+    shutil.rmtree(dest, ignore_errors=True)
+    os.replace(staging, dest)
+    return {"wave": wave, "dir": str(dest), "emitted": [e["issue"] for e in emitted], "skipped": skipped}
+
+
 def _run_tool(instance: Path, tick_id: str, decision: dict, items: list[dict], fault: str,
               context: dict | None = None):
     tool = decision["tool"]
@@ -1190,6 +1327,10 @@ def factory_parser() -> argparse.ArgumentParser:
     tick.add_argument("--fault", choices=sorted(FAULTS), default="")
     stat = sub.add_parser("status")
     stat.add_argument("--instance", default="C")
+    packet = sub.add_parser("packet", help="write marathon launch packets for one provisional wave (GH-1270)")
+    packet.add_argument("--instance", default="C")
+    packet.add_argument("--wave", type=int, required=True)
+    packet.add_argument("--reviewer", choices=["codex", "agy"], default="codex")
     tool = sub.add_parser("tool")
     tool.add_argument("--tool", required=True, choices=sorted(TOOLS))
     tool.add_argument("--tick-id", required=True)
@@ -1237,6 +1378,9 @@ def factory_main(argv: list[str]) -> int:
             return 0 if outcome in {"completed", "paused", "uncertain", "unpersisted-intent-abort"} else 1
         if args.command == "status":
             print(json.dumps(status(instance), indent=2, sort_keys=True))
+            return 0
+        if args.command == "packet":
+            print(canonical(make_packet(instance, args.wave, args.reviewer)))
             return 0
         raise ValueError("unknown command")
     except (ValueError, OSError, json.JSONDecodeError) as exc:
