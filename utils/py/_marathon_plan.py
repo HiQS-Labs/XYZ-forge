@@ -882,7 +882,7 @@ class Engine:
     def compute(self):
         """Parse → resolve → score → wave-pack. Returns the classified records and waves
         without rendering (GH-1257 reuses this read-only; ``run`` renders it)."""
-        db_path = self.RELEASES_DB or os.path.join(self.ROOT, "releases.db")
+        db_path = getattr(self, "RELEASES_DB", "") or os.path.join(self.ROOT, "releases.db")
         explicit_roadmap_env = os.environ.get("QUEUE_PLAN_ROADMAP")
         is_releases_mode, mode_error = parse_pdda_mode(self.ROOT)
         if mode_error:
