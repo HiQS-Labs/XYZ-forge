@@ -14,7 +14,7 @@ issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1273
 
 | What was just completed | What's next |
 |---|---|
-| Fresh final QA Approved at 776dcc9d; B3 controls pass | Classified full gate, ready PR and safe retirement |
+| Final QA Approved; integrated gate passed; gated push published | PR ready for review; awaiting merge |
 
 Plan receipt reconciliation: reviewer consumed seeded plan from 51860e59. Concurrent 6a079035 changed only relay Setup and duplicate Producer text, not the plan or runtime. Both inputs remain in git history. Driver preserved concurrent commit then committed its reviewed snapshot; the approval applies to unchanged source plan, not the unseen duplicate. No production approval inferred.
 
@@ -68,3 +68,5 @@ User authorizes fresh independent final QA cycle, maximum five rounds, and evide
 Fresh cycle result: Approved on first round, driver exit0; receipt relay-system/2026-10-30/gh1273-resume-final.codex.md. Earlier capped failure retained as historical evidence. Current implementation reviewed at 776dcc9d; only reviewer transcript commits follow. NO_ENTRY: no general lesson inferred beyond retained bounded controls. Full gate pending; PR not yet published.
 
 Integration: development advanced to 73ac994a; existing ledger_merge resolver replayed disjoint GH-1273 row through CLI and unioned prefix-additive CHANGELOG, merge55878cee. Rating85/82/50/65 read back; admitted via supported accepted-start replay. Runtime relay diff identical to approved state. Full gate on195c253c passed with unchanged clone identity; retained final-gate.log. It is superseded for integrated-head qualification; one final integrated candidate gate is required by the push boundary. No merge/promotion authorized.
+
+Integrated final gate0a87a136 passed exit0, identity unchanged; hook reused exact-SHA full receipt without bypass. This follow-up changes only retained evidence, status prose and removes routine generated LEADERBOARD churn; verify via documentation gate. Mechanical verdict repair remains separate. NO_ENTRY.
