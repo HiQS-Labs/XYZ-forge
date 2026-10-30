@@ -30,7 +30,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved (r2); steps 1–4 built on `f0bb7db9` and run on 20 real issues, all controls pass, ledger untouched (`TESTS-RESULTS/2026-10-30+GH-1261/SUMMARY.md`) | Full gate and final Codex QA, then the stacked PR |
+| Plan QA approved (r2); built on `f0bb7db9`; 20-issue pilot and all controls pass, ledger untouched; full gate 409/409 on `7bc1742d`; final Codex QA approved (r2) (`TESTS-RESULTS/2026-10-30+GH-1261/SUMMARY.md`) | Stacked PR against `feat/gh1248-outer-loop-primitive`; awaiting review |
 
 ## Problem
 
@@ -94,3 +94,13 @@ The Phase 2A pilot (#1257, PR #1260, merged into `feat/gh1248-outer-loop-primiti
 ## Rating
 
 `rated 55/40/50/60` (pri/sev/appeal/effort), 2026-10-30. Severity: wrong parallel advice is the unsafe direction, but nothing dispatches from this proposal yet. Priority: it unblocks the Flywheel seeing its actual backlog. Appeal neutral. Effort: two bounded edits in one file. Recurrence: not a recurring defect class; unknown trend.
+
+## Lessons Learned
+
+- Wave packing reads a missing dependency record as satisfied; every seeded item needs a lookup record (entry in `LESSONS-LEARNED.md`, 2026-10-30).
+- Retain before/after digests in the evidence directory when they are measured; final QA r1 failed on a ledger claim whose digests lived only in a temp file.
+
+## Follow-ups
+
+- Stale-contract / delivered-but-open check at init (needs a read-only preflight design).
+- Ambiguous bare names (e.g. `marathon-plan.sh`) still under-count; a capture-doc path or contract is the fix today.
