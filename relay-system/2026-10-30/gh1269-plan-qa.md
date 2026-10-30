@@ -1,8 +1,8 @@
 ---
 Goal: Plan QA — GH-1269 merge-cleanup B1 CHANGELOG repair keeps development's history byte-for-byte
 Date: 2026-10-30
-NEXT: codex
-STATUS: In Review
+NEXT: Producer
+STATUS: Approved
 ---
 
 # Context
@@ -202,3 +202,69 @@ result: FAIL (4)
 ```
 
 # Turns
+
+## Turn 1 — codex — reviewer — 2026-10-30
+
+Ship the plan. No blocking design findings. This approves implementation of the bounded assembly change, not an implementation or merge-readiness claim. Reversibility: **Easy** — one function, existing validation and handoff paths retained, single-function revert.
+
+1. **Root cause and orientation confirmed.** `merge_cleanup.py:548` checks out the pinned PR head detached, then `:553` merges `origin/<integration>` into it; `:1396` supplies that clone to B1 at `:1454`. `read_changelog_union` reads one merge base, HEAD, MERGE_HEAD, in that order. The only production `union_changelog` caller is that reader, whose only production caller is `resolve_ledger_conflict`. Reverse heading sorting at `ledger_merge.py:490` changes integration additions' order, and the next attempt's suffix validation rejects it. Root cause: assembly re-sorts integration additions; Fix site: `union_changelog`; Why not upstream/downstream: orientation is correct and the history validator correctly refuses changed history, so repair the producer rather than relax the validator or expand the retry budget.
+2. **Proposed assembly satisfies the contract.** Validate both sides completely before constructing output. Keep the existing cross-side heading/body dictionary and every refusal; retain each side's parsed order for assembly. Identical shared additions belong once in the verbatim integration suffix. GH-789's `test_same_date_additions_preserve_history_and_deduplicate` has ours=Alpha and theirs=Beta+Alpha: the filtered PR prefix is empty and output is exactly theirs, as the assertion requires. Its merge cases assert presence/history preservation rather than a competing global sort. No new parser, writer, dependency or gate is needed.
+3. **Prepending is the explicit goal.** The canonical plan's frontmatter says to prepend PR sections while preserving integration history byte-for-byte. Preserving a globally descending date order would require changing that goal or refusing older PR additions; neither is required here. The plan already names the older-date placement tradeoff. Copying the validated integration suffix also preserves its whitespace and CRLF through the existing binary-read/UTF-8/write-bytes path. The proof concerns history preservation, not a promise that all other B1 eligibility conditions pass.
+4. **Verification scope is sufficient for this plan.** The seeded smoke checks exact output, same-tip retry, moved-tip retry, shared-block deduplication and divergent-body refusal; the main assertion and captured red control detect the actual reorder. The existing GH-789 matrix supplies the other refusal and end-to-end paths. Run the matrix and final full gate only in disposable full clones. **[Unverified — needs clone run]** Those runs and the candidate smoke remain implementation obligations; none ran here. Retain their nonempty logs and commit `TESTS-RESULTS/2026-10-30+GH-1269/provenance.jsonl` with the implementation per AGENTS.md/GH-430. That file is absent from the seed, so its existing red-control log alone is not a completed provenance receipt.
+5. **Rating is reasonable, with an evidence limit.** `65/60/50/85` fits a recoverable, deterministic repair failure with operator intervention, neutral appeal and a small fix. Determinism applies when integration's additions are not already reverse-heading-sorted, not every multiple-section input. One reported incident supports exposure, not a measured recurrence rate. The claimed issue search/incident history was not independently verified: `gh issue view 1269 --repo HiQS-Labs/XYZ-forge --json number,state,title,body` exited **1**, decisive output `error connecting to api.github.com`. This does not undermine the locally reproduced failure or require changing the proposed fix.
+
+### Narrow probe receipt
+
+Read the actual function with AST and executed only that pure function on nonempty strings; no repository module import, executable fixture, test suite or git command. The planned expression below is a design calculation, not an implemented candidate.
+
+Command (exit **0**):
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+import ast, re
+from datetime import date
+from pathlib import Path
+p = Path('skills/2-daily/merge-cleanup/scripts/ledger_merge.py')
+f = next(n for n in ast.parse(p.read_text()).body if isinstance(n, ast.FunctionDef) and n.name == 'union_changelog')
+ns = {'re': re, 'date': date}
+exec(compile(ast.Module(body=[f], type_ignores=[]), str(p), 'exec'), ns)
+u = ns['union_changelog']
+pre = '# Changelog\n\n'
+def sec(name):
+    return f'## 2026-10-29 — {name}\n\n{name} body.\n\n'
+history = '## 2026-10-28 — base\n\nHistorical bytes.\n'
+a, z, pr = sec('A'), sec('Z'), sec('PR')
+base, ours, theirs = pre + history, pre + pr + history, pre + a + z + history
+old = u(base, ours, theirs)
+print('nonempty_inputs:', all((base, ours, theirs)))
+print('current_preserves_integration_suffix:', old.endswith(theirs[len(pre):]))
+try:
+    u(theirs, old, theirs)
+except ValueError as exc:
+    print('current_retry_refusal:', str(exc))
+else:
+    raise AssertionError('expected retry refusal')
+planned = pre + pr + theirs[len(pre):]
+print('planned_preserves_integration_suffix:', planned.endswith(theirs[len(pre):]))
+print('planned_output_passes_existing_retry_validation:', u(theirs, planned, theirs) == planned)
+print('GH789_shared_only_PR_prefix_is_empty:', a in (z, a))
+print('GH789_planned_equals_integration:', pre + ''.join(b for b in (a,) if b not in (z, a)) + (pre + z + a + history)[len(pre):] == pre + z + a + history)
+PY
+```
+
+Decisive output:
+
+```text
+nonempty_inputs: True
+current_preserves_integration_suffix: False
+current_retry_refusal: changelog preamble or existing history changed
+planned_preserves_integration_suffix: True
+planned_output_passes_existing_retry_validation: True
+GH789_shared_only_PR_prefix_is_empty: True
+GH789_planned_equals_integration: True
+```
+
+VERDICT: PASS
+Basis: Source trace and the pure-function probe confirm the producer-side reorder and retry refusal; preserving integration's validated suffix removes that failure class and matches the existing deduplication contract. Implementation verification remains due in disposable full clones, with committed provenance.
