@@ -68,3 +68,16 @@ The skill's own refusal is the python block in Step 5, extracted verbatim to `bo
 ## Not run here
 
 Full gate (`validate.sh`) and the push-hook qualification run on the final approved commit in a disposable `-gate` clone and are recorded in `provenance.jsonl` when they run. Phase 2 (start-task delta re-recon) and Phase 3 (retrofit) are out of scope.
+
+## Further filings through the skill (same day, after final QA round 1)
+
+Four more real issues were filed with the revised skill, each with a draft-review consult, the Step 5 body check, `hq park --create` (or hq's own manual fallback), `releases roadmap rate`, a dispositions comment and a preflight dry-run:
+
+| Issue | Subject | Consult seats | Rated | Preflight | Notes |
+|---|---|---|---|---|---|
+| [#1264](https://github.com/HiQS-Labs/XYZ-forge/issues/1264) | `HQ_PARK_GOAL` passthrough | codex, agy (run after filing: first filed under the skill's original `trivial` wording, re-tiered `standard` when final QA round 1 corrected the tier rule; body and capture updated identically, acceptance fidelity 3/3) | 35/25/50/95 | READY (exit 0) | |
+| [#1265](https://github.com/HiQS-Labs/XYZ-forge/issues/1265) | consult: kimi and cmd seats | codex only (agy failed; footer `models=codex, degraded`) | 50/40/50/70 | READY (exit 0) | the `gh -C` defect of final QA round 2 hit Step 9 here; comment re-posted by URL |
+| [#1266](https://github.com/HiQS-Labs/XYZ-forge/issues/1266) | Skills Index drift (weekly-planner row, tier counts) | codex, agy | 30/20/50/95 | READY (exit 0) | same `gh -C` re-post |
+| [#1267](https://github.com/HiQS-Labs/XYZ-forge/issues/1267) | `hq park --gh-issue` adopt an existing issue | codex, agy | 70/50/50/75 | READY (exit 0) | `hq park --create` refused it twice as a "possible duplicate" of #1175: the dedupe runs `gh issue list --search "<title>"`, a full-text search over bodies (`hq.sh:306`), and four distinct titles all matched something. Per the refusal text ("file manually if this is genuinely new") the same writes were run by hand: `gh issue create`, `hq_render_capture`, `releases roadmap add`, then `roadmap rate`. The over-broad dedupe (`in:title` would fix it) is a follow-up to file. |
+
+Observed on these runs, beyond the acceptance items: the Step 7 title rule passed all five titles; the Step 5 check refused nothing on the final drafts and had refused each draft's earlier wording at least once during revision; one consult degraded to a single seat and the footer says so.
