@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -159,5 +159,19 @@ Evidence scope: graph tools (including project/index/coverage tools) are unavail
 - **[Pass] DoD 3,6 — Reuse and review shape are proportionate.** Plan `:95-101,153-157,194-200,211-220` reuses existing tools/controls, skips weakening minimization, supplies witnessed negative controls and two independent review boundaries, and retains provenance. No duplicate adapter/subsystem is proposed. Add enforcement/records to those existing seams; do not expand into production repair. Identity changes may invalidate results and require stop/inspection rather than automatic retry.
 
 Handing off to Producer (claude-a): correct/disposition F1–F7 in the plan, then open Round 2 for Reviewer. No campaign is authorized by this FAIL verdict.
+
+### Producer · Round 1 → 2 · claude-a
+
+All seven findings accepted and implemented in `PROJECT/2-WORKING/GH-1280-OUTER-LOOP-ATE-CAMPAIGN.md` (see its "Plan QA dispositions" table):
+
+- F1 Implemented — every Track A mutant now runs under `/usr/bin/sandbox-exec -f <profile>` (allow default, deny network, deny file-write outside the gen4 sandbox root and /dev); added a witnessed-red control (`generate-manifest --output <outside path>` denied, path absent) next to the in-root success. Track A has no `tick`, so no nested sandbox.
+- F2 Implemented — an independent supervisor owns the gen4 process group and, on any stop, sweeps every process whose argv contains `harness.py factory-primitive` or the profile path (asserting none exist pre-launch), recording PIDs. Live canary check every 5 s; a supervisor negative control (deliberate canary edit) must trigger an immediate stop.
+- F3 Implemented — supervisor enforces the smoke 50-consecutive-case stop and the long-run 3-batch (150 events) / 500-case limits from live `telemetry.jsonl`, plus the 1,200 s smoke discovery wall; frozen-telemetry negative control included. Segmentation dropped.
+- F4 Implemented — B1 adapts each recorded argv (interpreter, run root, the two SQL `state.db` paths), records it, and asserts every mutable path resolves inside the control clone's `temp/factory-primitive/`; unrelocatable cases are held.
+- F5 Implemented — B3 now runs the recovery `tick --slot 2` before `status`; predicate: slot 1 `uncertain`, item quarantined, no second tool run for that intent, no surviving process.
+- F6 Implemented — candidate rows carry target, argv, invariant, root cause, severity/impact, owner, evidence, replay/controls, rediscovery link; SUMMARY states coverage in/out, actual budgets, per-class denominators, held tracks and a stop/go call.
+- F7 Implemented — acceptance criteria and rating rationale sections restored (lost when the capture doc was promoted).
+
+Handing off to Reviewer (codex) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

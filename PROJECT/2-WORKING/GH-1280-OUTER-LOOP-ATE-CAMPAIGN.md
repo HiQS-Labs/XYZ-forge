@@ -35,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake parked (`rmi-01M67SH0DNCK9GA383FQNXZDHW`, `rated 55/40/50/35`); recon of the target CLI and the ATE/Gen 4 tools; this plan | Codex plan review, then Phase 1 smoke |
+| Plan QA round 1 (Codex FAIL, 6 Should + 1 Nit) — all seven findings implemented in this revision | Codex plan review round 2, then Phase 1 smoke |
 
 The issue body is the experiment contract. This document is the execution record; it does
 not restate the issue's bounds except where recon changes how they are enforced.
@@ -107,13 +107,29 @@ Gen 4 tools:
 
 - Gen 4 runs with `--repo <task clone>` and `--sandbox-root $TMPDIR/gh1280-sb-<phase>`, so
   every mutant's cwd is a disposable clone of the task clone, never the task clone itself.
-- Sanitized target environment: `PATH=/usr/bin:/bin`, the absolute interpreter path
-  `/opt/homebrew/bin/python3` in the target, `HOME=$TMPDIR/gh1280-home`, no
-  `GH_TOKEN`/`GITHUB_TOKEN`/model keys. With `gh` and `node` absent from `PATH`, a mutant that
-  synthesizes `--from-prs` or `packet` fails closed instead of reaching the network.
+- **OS sandbox around every mutant (review F1).** Each Track A target is
+  `/usr/bin/sandbox-exec -f <profile> /opt/homebrew/bin/python3 utils/py/harness.py
+  factory-primitive {mutant}`. The profile (the same `sandbox-exec` mechanism `harness.py`
+  already uses for its tool child, `:1085-1096`) is `(allow default)` plus
+  `(deny network*)` and `(deny file-write*)` except `(subpath "<gen4 sandbox root>")` and
+  `/dev`. A mutant such as `generate-manifest --output ../../etc/passwd` is therefore denied
+  by the kernel before any write outside the disposable clone. Track A excludes `tick`, so the
+  nested-sandbox case never arises; Track B commands are fixed (not mutated) and run unwrapped
+  inside their own disposable clone.
+- Sanitized environment: gen4 is launched under `env -i` with only `PATH=/usr/bin:/bin`,
+  `HOME=<sandbox root>/home`, `TMPDIR=<sandbox root>/tmp`, `PYTHONDONTWRITEBYTECODE=1` and
+  `LANG=C.UTF-8`. No `GH_TOKEN`/`GITHUB_TOKEN`/model keys are inherited; `gh` and `node` are not
+  on `PATH`, so a mutant that reaches `--from-prs` or `packet` fails closed.
 - Base argv never includes `--from-prs`, `packet` or `tool`.
-- Hard wall cap: `proc_group.run_bounded` wraps the whole gen4 invocation (own process group,
-  killed with descendants on timeout). After each run, `pgrep -f gh1280-sb` must be empty.
+- **Independent supervisor (review F2, F3).** A short Python supervisor in the scratchpad (a
+  copy is committed with the evidence; it is not a suite, gate or adapter) launches gen4 in
+  its own process group and every 5 s: reads new `telemetry.jsonl` lines, checks the canaries,
+  checks elapsed time. On any stop condition it sends SIGTERM then SIGKILL to the gen4 group,
+  then kills every process whose argv contains `harness.py factory-primitive` or the profile
+  path (each mutant runs in its own session via `run_bounded`, so a group kill alone is not
+  enough), and records the PIDs it found. Before launch it asserts that no such process
+  exists on the host, so the pattern matches only campaign processes. It exits with a
+  recorded stop reason.
 - Identity canaries recorded before and after each phase: for the primary checkout and the
   task clone, `git rev-parse HEAD`, `git status --porcelain | shasum`, `git config --list
   --local | shasum`, `core.bare`, remotes; plus `shasum releases.db` in the primary and a
@@ -138,100 +154,165 @@ Anything else — a Python traceback, rc not in {0,1,2,70}, a signal, a timeout,
 produced a file outside the clone's `temp/`, or a write to a tracked file — is a candidate.
 Before Phase 1 runs, each listed message is confirmed verbatim against `harness.py`.
 
+
 ## Ordered plan
 
-### Phase 1 — Smoke (≤20 min discovery + ≤10 min replay/cleanup)
+### Phase 1 — Smoke (≤20 min discovery + ≤10 min replay/cleanup, all tracks together)
 
 1. **Pin and inspect.** Verify task-clone identity (origin, `core.bare=false`, HEAD), Python,
-   `sandbox-exec`; `pgrep` shows no `harness.py factory-primitive` or `gen4_campaign`
-   processes; take the identity canaries. → no peer or primary state involved.
-2. **Freeze the smoke contract** to `$SCRATCH/smoke/contract.json`: targets, env, seeds,
-   bounds, expected-refusal table hash, stop conditions.
-3. **Controls.** In a disposable clone (`$TMPDIR/gh1280-ctl`, full clone of the task clone):
+   `sandbox-exec`; no `harness.py factory-primitive` or `gen4_campaign` process exists on the
+   host; take the identity canaries. → no peer or primary state involved.
+2. **Freeze the smoke contract** to `smoke/contract.json` (scratchpad, later committed): targets,
+   sandbox profile, env, seeds, bounds, expected-refusal patterns, stop conditions, and their
+   sha256.
+3. **Controls** in a disposable full clone of the task clone (`<ctl clone>`):
    - known-good: `init --daily-cap 1 --max-call-cost 0` then `tick --slot 1` → rc 0;
    - known-invalid: `--run-root ../outside status` → rc 2 run-root refusal;
-   - negative control (witnessed red): `domain_oracles.py --mode idempotence` on a command
-     that appends to a receipt file must FAIL, then the same oracle on a repeated completed
-     `tick --slot 1` must PASS;
-   - containment negative control: `--mode containment` on a command that touches the
-     host canary must FAIL, then on `status` must PASS.
-4. **Track A** — `gen4_campaign.py --mode run --no-synth --targets smoke-targets.json
-   --max-mutations 200 --batch 25 --corpus-cap 100 --seed 1280 --duration 1200 --keep-sandbox`
-   under a `run_bounded` hard cap of 1,500 s. Targets (each `timeout: 30`):
+   - idempotence negative control (witnessed red): `domain_oracles.py --mode idempotence` on a
+     command that appends to a receipt file must FAIL, then the same oracle on a repeated
+     completed `tick --slot 1` must PASS;
+   - sandbox negative control (witnessed red): the Track A wrapper running
+     `generate-manifest --output <outside path>` must be denied and the outside path must not
+     exist afterwards, while `--output temp/factory-primitive/ate-smoke/manifest.json` succeeds;
+   - supervisor negative controls: a frozen telemetry replay of 50 expected-refusal events
+     triggers the smoke streak stop at case 50, and a novel event resets the streak; a
+     deliberate canary edit during a short dummy run triggers an immediate stop and the
+     process sweep finds no survivor.
+4. **Track A** — the supervisor launches `gen4_campaign.py --mode run --no-synth --targets
+   smoke-targets.json --max-mutations 200 --batch 25 --corpus-cap 100 --seed 1280
+   --duration 1200 --keep-sandbox --sandbox-root <sb>` with discovery hard-stopped by the
+   supervisor at 1,200 s from launch. Targets (each `timeout: 30`, all sandbox-wrapped):
    `fp-help` (`--help`), `fp-genman` (`generate-manifest --output
    temp/factory-primitive/ate-smoke/manifest.json`), `fp-status`
    (`--run-root temp/factory-primitive/fz status`), `fp-init`
    (`--run-root temp/factory-primitive/fz init --daily-cap 1 --max-call-cost 0`).
    `tick` stays out of Track A: within a batch there is no initialized instance, and seeding
-   one would need a new wrapper. → telemetry nonempty; per-target invocation count > 0
-   (zero for any target fails the smoke).
+   one would need a new wrapper. Track A state is reset per batch, not per case, so `init`
+   observations are not labelled independent per-case fixtures.
+   Stop when, across all targets in telemetry order, 50 consecutive cases produce only
+   signatures already seen and matching the expected-refusal table.
+   → telemetry nonempty; per-target invocation count > 0 (zero for any target fails the smoke).
 5. **Track B** — stateful checks only where an existing command and predicate express them,
-   each in its own fresh run root inside `$TMPDIR/gh1280-ctl`:
-   - B1: re-run the 17 GH-1248 checkpoint2 control cases with their recorded commands and
-     compare final `status` and exit codes to the recorded `detail`/log;
+   each in its own fresh run root inside `<ctl clone>`:
+   - B1: re-run the 17 GH-1248 checkpoint2 control cases. The recorded command strings are
+     **not** executed verbatim (review F4): the interpreter is replaced by the pinned
+     `/opt/homebrew/bin/python3`, the historical run root by
+     `temp/factory-primitive/gh1280/b1/<case>`, and the absolute `state.db` argument of the
+     two SQL controls (`missing-decision`, `missing-snapshot`) by the new case's
+     `instances/C/state.db`. Each adapted argv is recorded, and every mutable path is resolved
+     and asserted to lie inside `<ctl clone>/temp/factory-primitive/` before it runs; a case
+     that cannot be relocated is held. Each case's exit codes and final `status` are compared
+     against its recorded log;
    - B2: idempotence — after one completed `tick --slot 1`, `domain_oracles.py --mode
      idempotence --repetitions 3` on the same tick; also assert the `receipts`/`decisions`
      row counts in `state.db` are unchanged;
-   - B3: crash — `tick --slot 1 --fault crash-act` → rc 70, then `status` shows the
-     classified `uncertain` state with no retry, then `pgrep -f gh1280-ctl` is empty.
-   The GH-1248 tool sandbox profile is the reset boundary for writes; a fresh run root per
-   case is the fixture reset. If any of B1–B3 cannot show reset, predicate, replay and
-   cleanup, Track B is **held** and reported as such.
-6. **Classify and replay** every Track A candidate: dedupe by target + violated invariant;
-   replay with `fuzz_engine.py --mode replay` in the kept sandbox; then a semantic re-check
-   (the same argv run once in a fresh clone, with the outcome compared against the
-   expected-refusal table and a `git status --porcelain` / out-of-`temp/` file check). A
-   clean control (the base argv) and the failing mutant are recorded side by side.
-7. **Cleanup and canaries.** Identity canaries unchanged; no surviving process; sandbox and
+   - B3: crash (review F5) — `init`, `tick --slot 1 --fault crash-act` → rc 70, then the
+     recovery `tick --slot 2`, then `status`. Predicate: slot 1 is reconciled `uncertain`, its
+     item quarantined, slot 1's tool did not run a second time (one tool output for that
+     intent), and no process matching the case's run root survives.
+   A fresh run root per case is the fixture reset; the clone is discarded afterwards. If any
+   of B1–B3 cannot show reset, predicate, replay and cleanup, that check is **held** and
+   reported as such.
+6. **Classify and replay** every Track A candidate: dedupe by target + violated invariant +
+   suspected root cause; replay with `fuzz_engine.py --mode replay` in the kept sandbox; then
+   a semantic re-check (the same argv run once in a fresh clone under the same wrapper, with
+   the outcome compared against the expected-refusal table plus a `git status --porcelain` and
+   outside-`temp/` file check). A clean control (the base argv) and the failing mutant are
+   recorded side by side. No minimization (it weakens the predicate).
+7. **Cleanup and canaries.** Identity canaries unchanged; process sweep empty; sandbox and
    control clones trashed after evidence is copied out.
 
-Smoke passes only if: controls behave as stated (including both witnessed reds), every
+Smoke passes only if: controls behave as stated (including every witnessed red), every
 Track A target has >0 invocations, telemetry is valid, canaries are unchanged and no process
 survives. Zero defects is acceptable; zero relevant cases is a fail.
 
 ### Phase 2 — Contract review and long window
 
 8. **Freeze the long-run contract** from the smoke result: only the tracks that passed;
-   targets, env and seeds fixed; bounds ≤ 6 h discovery, 10,000 mutations, 50 per batch,
-   30 s per command, corpus 500; postprocessing ≤ 2 h; external hard cap 8 h.
+   targets, profile, env and seeds fixed; bounds ≤ 6 h discovery, 10,000 mutations, 50 per
+   batch, 30 s per command, corpus 500; postprocessing ≤ 2 h; supervisor hard cap 8 h total.
 9. **Codex review** (`relay-xyz`, review-only, `ALLOW_PATHS=""`, after `find-harness.sh
    --check`) of the frozen contract and smoke evidence, bound to their sha256. No long window
    without an Approved verdict; if review cannot run, record **Independent review did not
    run** and stop.
-10. **Run** in segments, because gen4 has no no-new-signal stop: each segment is one gen4
-    invocation of 500 mutations (10 batches of 50) with seed `1280 + 1000·k`, a fresh
-    sandbox, and the same targets. Between segments the supervisor loop checks: elapsed
-    discovery < 6 h, total mutations < 10,000, canaries unchanged, no surviving process,
-    telemetry valid, and whether the segment produced any signature not already in the
-    expected-refusal table or a prior segment. A segment with no new signature (500 cases)
-    stops discovery — this is the issue's "500 cases with no new signature" limit; the
-    3-batch variant is not separately enforceable without changing gen4 and is recorded as a
-    limit. Any safety stop condition ends the run immediately.
+10. **Run** one gen4 invocation under the same supervisor (review F3). The supervisor
+    enforces, from live telemetry: stop after 3 consecutive batches (a batch = 50 consecutive
+    telemetry events of one target) **or** 500 consecutive cases with no new signature beyond
+    expected refusals, whichever comes first; stop at 6 h discovery or 10,000 mutations; stop
+    immediately on a canary/identity change, a write outside the sandbox root, invalid
+    telemetry, a missing dependency or a surviving process after a sweep. Changing any frozen
+    value starts a new run.
 
 ### Phase 3 — Disposition, review, evidence
 
 11. **Replay and classify** every candidate as new defect / known rediscovery / expected
-    refusal / flaky-inconclusive / faulty oracle, with clean and failing controls.
+    refusal / flaky-inconclusive / faulty oracle, with clean and failing controls. Each
+    candidate row records (review F6): target, mutant argv, violated invariant, suspected root
+    cause, severity/impact, owner (the GH-1248 outer-loop code), evidence paths, replay result
+    and controls, and any existing issue it rediscovers.
 12. **Codex review** (`relay-xyz`) of dispositions and the report, bound to hashes.
-13. **Evidence** under `TESTS-RESULTS/2026-10-30+GH-1280/`: contracts, target lists,
-    telemetry, campaign reports, control outputs, replay outputs, canary diffs, review
-    receipts, `SUMMARY.md`, `provenance.jsonl`. Commit after the campaign ends, push, open a
-    PR against `development`. A new defect is reported to the operator for normal issue-first
-    triage; nothing is filed automatically and nothing is fixed.
+13. **Evidence** under `TESTS-RESULTS/2026-10-30+GH-1280/`: contracts, profile, target lists,
+    supervisor copy, telemetry, campaign reports, control outputs, replay outputs, canary
+    diffs, review receipts, `SUMMARY.md`, `provenance.jsonl`. `SUMMARY.md` states exercised and
+    excluded coverage, actual budgets used (time, mutations, batches), classification
+    denominators (cases per class per target), held tracks, and a stop/go recommendation for a
+    later stateful campaign. Commit after the campaign ends, push, open a PR against
+    `development`. A new defect is reported to the operator for normal issue-first triage;
+    nothing is filed automatically and nothing is fixed.
+
+## Acceptance criteria (from the issue)
+
+- Exact source, target, fixture, seed/corpus, environment and driver identities recorded;
+  telemetry proves relevant outer-loop invocations.
+- Smoke controls, including a witnessed negative control and cleanup, passed before the long
+  window; the `relay-xyz` Codex contract review is recorded.
+- Discovery stayed within all bounds and stopped at the no-new-signal limit or earlier.
+- Host/git/ledger identity and canaries unchanged; no unauthorized write or surviving
+  descendant process.
+- Expected refusals separated from candidate defects; every candidate has a semantic replay
+  and an accountable disposition with clean/failing controls.
+- Stateful coverage claimed only where reset, operation sequence and semantic predicate were
+  actually exercised.
+- No synthesis, healing, model-per-mutant, automatic filing, production execution, commit or
+  push during the campaign.
+- Report includes exercised/excluded coverage and actual budgets; every cited result has
+  committed `provenance.jsonl`.
+
+## Rating rationale (2026-10-30)
+
+`rated 55/40/50/35`. Severity 40: no defect has been observed; the campaign looks for latent
+robustness defects in a new, not-yet-production outer loop, so the consequence is bounded.
+Priority 55: the operator asked for it now and it gates trust in #1248 before wider use.
+Appeal 50: neutral, no operator score given. Effort 35: a multi-hour supervised campaign with
+two Codex reviews and an evidence package, but no production code. Recurrence: not applicable
+(an experiment, not an incident report); trend unknown.
+
+## Plan QA dispositions (relay `relay-system/2026-10-30/gh1280-plan-qa.md`)
+
+| Finding | Disposition |
+|---|---|
+| F1 outer write containment | Implemented — `sandbox-exec` profile wraps every Track A mutant; witnessed-red control |
+| F2 descendant kill | Implemented — supervisor sweeps by argv pattern after asserting none pre-exist |
+| F3 no-new-signal limits | Implemented — supervisor enforces 50-case smoke streak and 3-batch / 500-case long limits from live telemetry |
+| F4 historical SQL paths | Implemented — adapted argv, resolved-path assertion, hold on failure |
+| F5 B3 recovery | Implemented — recovery `tick --slot 2` and explicit predicate |
+| F6 report fields | Implemented — candidate row fields and SUMMARY contents named |
+| F7 rating rationale | Implemented — section restored |
 
 ## Verification route
 
-Changed paths are this doc, the ledger row and `TESTS-RESULTS/**` evidence. The gate is the
-one `utils/ci-route.sh` selects for those paths (expected: documentation route,
-`utils/pdda/pdda.sh run`). No new tests (GH-831).
+Changed paths are this doc, the ledger row, the relay thread and `TESTS-RESULTS/**` evidence.
+The gate is the one `utils/ci-route.sh` selects for those paths (expected: documentation
+route, `utils/pdda/pdda.sh run`). No new tests (GH-831).
 
 ## Risks
 
 - **Candidate flood** from keyword-less refusals → handled by the expected-refusal table;
   each table row is verified against source before use.
-- **Duration overshoot** because gen4 checks time between batches → external `run_bounded`
-  cap and 30 s per-mutant timeouts bound one batch to ~25 min worst case at 50 × 30 s.
-- **Mutant reaches network** → `gh`/`node` absent from `PATH`; `HOME` sandboxed.
+- **Duration overshoot** because gen4 checks time between batches → the supervisor stops on
+  wall time, not gen4.
+- **Mutant reaches network or writes outside** → `sandbox-exec` denies both; `gh`/`node`
+  absent from `PATH`.
 - **Tracked-file overwrite** by `generate-manifest` without `--output` → inside the
   disposable gen4 clone only; recorded by gen4's contamination check and treated as a
-  candidate for disposition (likely "known behaviour": unguarded output path).
+  candidate for disposition.
