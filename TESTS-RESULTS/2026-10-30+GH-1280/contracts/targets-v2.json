@@ -1,0 +1,44 @@
+[
+ {
+  "name": "fp-help",
+  "target": "/usr/bin/sandbox-exec -f /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-v2.sb /opt/homebrew/bin/python3 /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py --gate /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-v2.json -- utils/py/harness.py factory-primitive {mutant}",
+  "base": [
+   "--help"
+  ],
+  "timeout": 30
+ },
+ {
+  "name": "fp-genman",
+  "target": "/usr/bin/sandbox-exec -f /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-v2.sb /opt/homebrew/bin/python3 /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py --gate /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-v2.json -- utils/py/harness.py factory-primitive {mutant}",
+  "base": [
+   "generate-manifest",
+   "--output",
+   "temp/factory-primitive/ate-smoke/manifest.json"
+  ],
+  "timeout": 30
+ },
+ {
+  "name": "fp-status",
+  "target": "/usr/bin/sandbox-exec -f /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-v2.sb /opt/homebrew/bin/python3 /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py --gate /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-v2.json -- utils/py/harness.py factory-primitive {mutant}",
+  "base": [
+   "--run-root",
+   "temp/factory-primitive/fz",
+   "status"
+  ],
+  "timeout": 30
+ },
+ {
+  "name": "fp-init",
+  "target": "/usr/bin/sandbox-exec -f /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-v2.sb /opt/homebrew/bin/python3 /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py --gate /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-v2.json -- utils/py/harness.py factory-primitive {mutant}",
+  "base": [
+   "--run-root",
+   "temp/factory-primitive/fz",
+   "init",
+   "--daily-cap",
+   "1",
+   "--max-call-cost",
+   "0"
+  ],
+  "timeout": 30
+ }
+]

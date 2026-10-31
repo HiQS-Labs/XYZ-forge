@@ -98,6 +98,12 @@ def connect(path: Path):
     return conn
 
 
+def _require_instance(instance: Path) -> None:
+    """GH-1284: connect() creates state.db, so only init may open a root that has none."""
+    if not (instance / "state.db").is_file():
+        raise ValueError("instance not initialized; run init first")
+
+
 def emit(conn, instance: Path, tick_id: str | None, stage: str, status: str, **fields) -> None:
     record = {"ts": utcnow(), "tick_id": tick_id, "stage": stage, "status": status, **fields}
     payload = canonical(record)
@@ -1249,6 +1255,7 @@ def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
     import contextlib
     from marathon_yaml_emit import EmitError, Lane, Packet, render
     out = instance / "out" / "plan-draft"
+    _require_instance(instance)
     conn = connect(instance / "state.db")
     try:
         receipt = next((json.loads(row["json"]) for row in conn.execute(
@@ -1366,6 +1373,7 @@ def _verify_output(instance: Path, tick_id: str, tool: str) -> tuple[Path, str]:
 
 def run_tick(instance: Path, slot: int, fault: str = "") -> str:
     tick_id = f"slot_{slot:03d}"
+    _require_instance(instance)
     instance.mkdir(parents=True, exist_ok=True)
     with (instance / "lock").open("a+") as lock:
         try:
@@ -1524,6 +1532,7 @@ def run_tick(instance: Path, slot: int, fault: str = "") -> str:
 
 
 def status(instance: Path) -> dict:
+    _require_instance(instance)
     conn = connect(instance / "state.db")
     try:
         counts = {row["status"]: row["n"] for row in conn.execute("SELECT status,COUNT(*) n FROM ticks GROUP BY status")}
