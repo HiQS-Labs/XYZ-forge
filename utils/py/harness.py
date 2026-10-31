@@ -244,8 +244,7 @@ def codex_decide(snapshot: dict, config: dict) -> AdapterResult:
         if res.timed_out:
             return AdapterResult((res.stdout or "")[-2000:], "timeout", None, None, "unknown")
         text = (res.stdout or "") + (res.stderr or "")
-        rc = getattr(res, "returncode", res.rc)
-        if rc != 0:
+        if res.rc != 0:
             normalized = "rate-limited" if re.search(r"429|rate.?limit|usage.?limit|quota", text, re.I) else "adapter-error"
             return AdapterResult(text[-2000:], normalized, None, None, "unknown")
         for line in (res.stdout or "").splitlines():
