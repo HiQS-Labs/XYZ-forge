@@ -1,0 +1,1 @@
+{"stop_reason": "gen4 exited rc=0", "elapsed_s": 45.8, "events": 100, "counts": {"usage": 76, "pass": 14, "run-root-guard": 9, "state-guard": 1}, "swept_pids": [], "survivors_after_sweep": [], "canaries_moved": []}

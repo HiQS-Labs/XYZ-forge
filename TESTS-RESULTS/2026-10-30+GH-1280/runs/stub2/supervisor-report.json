@@ -1,0 +1,29 @@
+{
+ "contract_sha256": "ab4e96ca0fdfeb89e67a40da558dd5a14638d03845e7e77ae9f6098b84bd71b9",
+ "gen4_pid": 9677,
+ "started": "2026-10-30T19:08:19-0700",
+ "stop_reason": "CANARY VIOLATION: ['canary_file']",
+ "elapsed_s": 7.8,
+ "gen4_rc": -15,
+ "events": 5,
+ "gated_events": 4,
+ "streak_at_stop": 4,
+ "quiet_batches_at_stop": 0,
+ "counts": {
+  "run-root-guard": 5
+ },
+ "per_target": {
+  "stub": {
+   "run-root-guard": 5
+  }
+ },
+ "signatures": [
+  "stub|2|run-root-guard|factory-primitive: run root must stay under STUB"
+ ],
+ "candidates": [],
+ "swept_pids": [],
+ "survivors_after_sweep": [],
+ "canaries_moved": [
+  "canary_file"
+ ]
+}
