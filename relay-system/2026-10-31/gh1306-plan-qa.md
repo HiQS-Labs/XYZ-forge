@@ -181,4 +181,12 @@ names its source.
 
 **[Unverified — needs clone run]** No suite, CLI fixture, git command, or runtime recovery experiment ran in this reviewer worktree. The planned suite, smoke red/green controls and final gate remain outstanding and must run in a disposable full clone; preserve the run commands, exit statuses, decisive output and `provenance.jsonl` with the committed evidence. The wrapper's explicit SKIPPED result when pytest is unavailable is not a green suite. Review evidence here is direct reading of the seeded plan, source and existing checks; the preferred graph tool was unavailable under this turn's approval policy.
 
+
+### Attestation · relay-drive — 2026-10-31T20:42:30Z
+task: RELAY-gh1306-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 17662bdadec8c8967d1972522970156e69c5c7ef
+added-range: 10210+4293
+added-sha256: 4a4d6f139028ffb12d6d87d234baeff7cceb68604de2487ea750fedc4d7878ee
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
