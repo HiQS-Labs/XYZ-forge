@@ -261,16 +261,27 @@ def driver_controls(prepared: str) -> None:
     stops = [e for e in log if e.get("event") == "STOP"]
     record("driver-stop-file-prevents-next-tick", p.returncode == 3 and stops and stops[-1]["reason"] == "STOP file present" and not any(e.get("event") == "tick" for e in log), f"rc={p.returncode}")
 
-    fp = clone_pair(freeze, "final-drift")
-    f2 = json.loads(fp.read_text())
-    p, log = run_driver(fp, "38-39", stub, "drift_last", {"STUB_LAST": "39", "STUB_BACKLOG": str(prep.instance_of(ROOT, f2["roots"]["codex"]) / "backlog")})
-    stops = [e for e in log if e.get("event") == "STOP"]
-    record("driver-final-tick-drift-blocks-identity-claim", p.returncode == 3 and stops and stops[-1]["slot"] == "final" and not any(e.get("final_identity_ok") for e in log),
-           f"rc={p.returncode} stop_slot={stops[-1]['slot'] if stops else None}")
+    driver_final_drift(prepared, stub, freeze)
 
     fp = clone_pair(freeze, "wrongrepo")
     p, log = run_driver(fp, "36-37", stub, repo=ROOT / "TESTS-RESULTS")
     record("driver-wrong-repo-path-fails", p.returncode != 0 and not any(e.get("event") == "tick" for e in log), f"rc={p.returncode} {p.stderr.strip()[-90:]!r}")
+
+
+def driver_final_drift(prepared: str, stub: Path | None = None, freeze: dict | None = None) -> None:
+    if stub is None:
+        stub = Path(tempfile.mkdtemp(prefix="sb-drv-")) / "codex-stub"
+        stub.write_text(STUB)
+        stub.chmod(0o755)
+    freeze = freeze or json.loads((RUNS / f"{prepared}-freeze.json").read_text())
+    fp = clone_pair(freeze, "final-drift")
+    f2 = json.loads(fp.read_text())
+    # slots 37-39: the crash at 37 is reconciled at 38, then the stub drifts a frozen backlog file during the final tick (39)
+    p, log = run_driver(fp, "37-39", stub, "drift_last", {"STUB_LAST": "39", "STUB_BACKLOG": str(prep.instance_of(ROOT, f2["roots"]["codex"]) / "backlog")})
+    stops = [e for e in log if e.get("event") == "STOP"]
+    record("driver-final-tick-drift-blocks-identity-claim", p.returncode == 3 and stops and stops[-1]["slot"] == "final" and not any(e.get("final_identity_ok") for e in log)
+           and any(e.get("event") == "recovery-check" and e["ok"] for e in log),
+           f"rc={p.returncode} stop_slot={stops[-1]['slot'] if stops else None} reason={stops[-1]['reason'] if stops else None}")
 
 
 # ---------------------------------------------------------------------------------------------------- round trip
@@ -309,6 +320,10 @@ def roundtrip(prepared: str) -> None:
 
 def main() -> int:
     which = sys.argv[1] if len(sys.argv) > 1 else "all"
+    if which == "final-drift":
+        driver_final_drift("sb-ctl-parity")
+        (HERE / "stageb-controls-final-drift.json").write_text(json.dumps(results, indent=2) + "\n")
+        return 0 if all(r["result"] == "PASS" for r in results) else 1
     if which in ("all", "layout"):
         layout_controls()
     prepared = None
