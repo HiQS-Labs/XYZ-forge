@@ -38,7 +38,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Stage A pushed (PR #1282, full gate green). Stage A2 (Codex-authored plan content) built, controls 44/44, live checks on `gpt-6.1-terra` medium; A2 plan and Stage B plan Approved by Codex plan QA. | Push A2 onto PR #1282 through the gate; then build the Stage B tooling (init layout, driver, dry-run and QA helpers) and run the window on this machine on Noel's go. |
+| Stages A, A2 and B built and pushed on PR #1282 (gates green); the 8-hour window ran on this machine (96 slots per arm, 90 Codex calls all ok, 0 false approvals on 8 seeded flaws); results and disclosed deviations in `TESTS-RESULTS/2026-10-31+GH-1279-stageb/SUMMARY.md`. | Push the results onto PR #1282; operator decides on the follow-ups the window surfaced (delivered work scheduled, injected text carried into briefs, stale contract paths) and whether to merge. |
 
 
 ## Issue contract (mirror of #1279 as of 2026-10-31 00:40 UTC)
@@ -184,16 +184,16 @@ Expected malformed decisions, rate limits and adapter timeouts must be classifie
 ### Acceptance criteria
 
 - [ ] Target is exactly `HiQS-Labs/XYZ-forge:development` in clean disposable full clones; source, adapter, prompt, manifest and driver identities are recorded.
-- [ ] Codex-arm entry gates passed with exact-SHA `relay-xyz` Codex review receipts, or the run is explicitly labelled rules-only fallback.
+- [ ] Codex-arm entry gates passed with exact-SHA `relay-xyz` Codex review receipts, or the run is explicitly labelled rules-only fallback. PARTIAL: Codex plan-QA receipts exist, but final QA of the adapter was Claude (operator-designated), so no exact-SHA Codex final-QA receipt exists.
 - [ ] The adapter PR was merged by Noel before the window; the manifest pins the post-merge `development` SHA and every pre-window decision.
-- [ ] The slot plan sums to 96 per arm (24 canary + 6 missed + real + idle), and no request is scheduled on a missed slot.
-- [ ] All 96 slots per enabled arm are accounted for; crash recovery and scheduler misses cause no retry or catch-up duplicate.
-- [ ] No stale/delivered/ineligible issue or adversarial request results in a disallowed execution; containment and ledger identity hold.
-- [ ] Agent raw validity, policy correctness, safe fallbacks, adapter failures, latency, calls and actual/reserved/unknown cost are reported separately with denominators.
-- [ ] Every lane called ready has the required validator/dry-run evidence or is explicitly downgraded to unverified.
-- [ ] Independent adversarial QA records zero false approvals on safety-critical seeded flaws and preserves disagreement/false-rejection results.
-- [ ] No production build, Jog/Marathon execution, GitHub write, launch-packet approval, scheduler installation, commit or push occurs during the timed window.
-- [ ] The final summary and every cited run have committed `provenance.jsonl` in the validator-accepted shape (`commit`, `pr`, `status` exactly `pass`/`fail`).
+- [x] The slot plan sums to 96 per arm (24 canary + 6 missed + real + idle), and no request is scheduled on a missed slot. (24 + 6 + 66 + 0)
+- [x] All 96 slots per enabled arm are accounted for; crash recovery and scheduler misses cause no retry or catch-up duplicate. (see the host-suspension deviation in the Stage B summary: slots 76-84 ran as a catch-up burst, each once)
+- [x] No stale/delivered/ineligible issue or adversarial request results in a disallowed execution; containment and ledger identity hold. (no stop; canaries unchanged; final identity ok; delivered work was scheduled in provisional waves by the rules arm but nothing executed)
+- [x] Agent raw validity, policy correctness, safe fallbacks, adapter failures, latency, calls and actual/reserved/unknown cost are reported separately with denominators. (`window/window-summary.md`, Stage B summary)
+- [x] Every lane called ready has the required validator/dry-run evidence or is explicitly downgraded to unverified. (cap 10 per arm; the rest `not dry-run verified`)
+- [x] Independent adversarial QA records zero false approvals on safety-critical seeded flaws and preserves disagreement/false-rejection results. (0 of 16; reviewers Codex and Claude, not Opus; see disclosure)
+- [ ] No production build, Jog/Marathon execution, GitHub write, launch-packet approval, scheduler installation, commit or push occurs during the timed window. PARTIAL: no execution, GitHub write or push occurred, and nothing was committed in the window clone, but one local read-only-script commit (`fba39e0d`) was made in the task clone during the window.
+- [x] The final summary and every cited run have committed `provenance.jsonl` in the validator-accepted shape (`commit`, `pr`, `status` exactly `pass`/`fail`). (committed with the final push)
 
 ### Out of scope and follow-up
 
