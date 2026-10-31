@@ -77,12 +77,17 @@
   {
     "control": "timeout-no-retry",
     "pass": true,
-    "detail": "norm=timeout stub_calls=1 elapsed=2.3s billing=unknown"
+    "detail": "norm=timeout stub_calls=1 elapsed=2.4s billing=unknown"
   },
   {
     "control": "prompt-transport-positional",
     "pass": true,
     "detail": "prompt_head='# Evaluator v2\\n\\nReturn exactly one JSON ' snapshot_present=True"
+  },
+  {
+    "control": "effort-reaches-cli",
+    "pass": true,
+    "detail": "argv effort=['model_reasoning_effort=medium']"
   },
   {
     "control": "fault-name-codex-arm",

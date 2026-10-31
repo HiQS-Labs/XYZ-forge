@@ -13,8 +13,9 @@ PASS nonzero-exit :: rc=0 tick=completed norm=adapter-error decision=adapter-err
 PASS transport-not-stdin-red-control :: rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown
 PASS replay-hardened-stream :: rc=0 tick=completed norm=ok decision=raw-valid/None tool=idle stub_calls=1 billing=unknown
 PASS replay-baseline-stream-tool-events :: rc=0 tick=completed norm=adapter-error decision=adapter-error/None tool=idle stub_calls=1 billing=unknown
-PASS timeout-no-retry :: norm=timeout stub_calls=1 elapsed=2.3s billing=unknown
+PASS timeout-no-retry :: norm=timeout stub_calls=1 elapsed=2.4s billing=unknown
 PASS prompt-transport-positional :: prompt_head='# Evaluator v2\n\nReturn exactly one JSON ' snapshot_present=True
+PASS effort-reaches-cli :: argv effort=['model_reasoning_effort=medium']
 PASS fault-name-codex-arm :: norm=invalid-output stub_calls=0 agent_called=True (synthetic)
 PASS empty-inbox-no-call :: stub_calls=0 agent_called=False reservation={'status': 'released', 'billing_status': 'unbilled', 'actual_cost': 0.0}
 PASS call-cap-90-then-pause :: stub_calls=90 held_unknown=90 PAUSE=True slot91=paused rcs_nonzero=0
@@ -23,4 +24,4 @@ PASS config-freezes-route :: flags=25 refused_rc=2
 PASS validate-red-control :: old=[None, 'TypeError', 'TypeError', 'TypeError'] new=[None, 'tool-or-args-not-allowlisted', 'plan-draft-id-not-eligible', 'summarize-args']
 PASS ledger-files-unchanged :: releases.db/releases.sql hashes identical before and after
 
-24/24 controls passed
+25/25 controls passed
