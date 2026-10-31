@@ -321,7 +321,7 @@ def roundtrip(prepared: str) -> None:
 def main() -> int:
     which = sys.argv[1] if len(sys.argv) > 1 else "all"
     if which == "final-drift":
-        driver_final_drift("sb-ctl-parity")
+        driver_final_drift(parity_controls())   # a fresh freeze: the driver (correctly) refuses one taken at another commit
         (HERE / "stageb-controls-final-drift.json").write_text(json.dumps(results, indent=2) + "\n")
         return 0 if all(r["result"] == "PASS" for r in results) else 1
     if which in ("all", "layout"):
