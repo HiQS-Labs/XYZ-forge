@@ -76,3 +76,11 @@ snapshot metadata/comment: present; provenance statuses: fail fail fail pass fai
 ```
 
 These are archival observations, not a rerun or proof of historical input identity. Graph tools were unavailable; review used direct Markdown/JSONL reads. No network, git, suites, pytest, executable fixtures or subagents ran. Historical commit ancestry, the ledger write and PR disclosure were not independently inspected. Final-state gate execution remains **[Unverified — needs clone run]**, assigned to the harness after this turn. Only this relay file was edited. The first attempt to write this verdict failed with a shell quoting error; the relay-only patch corrected it. The token was closed successfully with `done`.
+
+### Attestation · relay-drive — 2026-10-31T14:09:50Z
+task: RELAY-gh1286-final-qa-r2c-070817
+reviewer: codex
+status: Approved
+reviewed-head: 18e5de4d2ae9a7c96835da65baa9a8f7bb4285b5
+added-range: 1734+4128
+added-sha256: e1e37c02299439ccdde75c001a408dc6b0064f41bceb8eada0836f1dd8dd2139
