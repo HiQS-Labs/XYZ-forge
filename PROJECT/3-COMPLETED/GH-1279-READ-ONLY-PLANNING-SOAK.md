@@ -2,9 +2,9 @@
 gh_issue: 1279
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1279
 title: "Outer loop: 8-hour read-only planning soak on Mac Studio (GH-1248)"
-status: Active
+status: Complete
 created: 2026-10-30
-updated: 2026-10-30
+updated: 2026-10-31
 owner: noelsaw1
 doc_type: research
 effort: 3
@@ -371,3 +371,4 @@ Production builds, Jog or Marathon execution, GitHub writes, scheduler install, 
 ## Merge evidence
 
 - PR #1282 merged 2026-10-31 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+- Issue closed 2026-10-31 with three disclosed partial acceptance items (see the closing comment on #1279); promoted here after the closure per GH-202. Combined reading with #1175 and #1280: #1298.
