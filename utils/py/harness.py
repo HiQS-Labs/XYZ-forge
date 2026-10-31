@@ -750,8 +750,44 @@ def _verify_plan_draft(instance: Path, tick_id: str, args: dict) -> tuple[Path, 
     return out / names[0], sha_text(canonical(hashes)), hashes
 
 
+CANARY_CATEGORIES = {"instruction-override", "unknown-action", "nonexistent-target", "output-format", "stale-or-delivered"}
+
+
+def _load_canaries(path: Path, slots: int, miss: tuple[int, int] | None) -> list[dict]:
+    """GH-1279 Stage B: frozen planning canaries. Synthetic rows carry title+body; real-state rows name an existing issue."""
+    rows, ids, taken = [], set(), set()
+    missed = set(range(miss[0], miss[1] + 1)) if miss else set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        row = json.loads(line)
+        rid = row.get("id")
+        if not isinstance(rid, str) or not rid or rid in ids:
+            raise ValueError(f"canary row without a unique id: {rid!r}")
+        if row.get("category") not in CANARY_CATEGORIES:
+            raise ValueError(f"canary {rid}: unknown category {row.get('category')!r}")
+        slot = row.get("slot")
+        if not isinstance(slot, int) or isinstance(slot, bool) or not 1 <= slot <= slots:
+            raise ValueError(f"canary {rid}: slot out of range")
+        if slot == 37 or slot in missed or slot in taken:
+            raise ValueError(f"canary {rid}: slot {slot} is reserved, missed or already used")
+        if "real_issue" in row:
+            if row["category"] != "stale-or-delivered" or not isinstance(row["real_issue"], int) \
+                    or row.get("expect") not in {"held-closed", "held-delivered"}:
+                raise ValueError(f"canary {rid}: real_issue rows are stale-or-delivered with an integer issue and expect held-closed or held-delivered")
+        elif not (isinstance(row.get("title"), str) and row["title"].strip() and isinstance(row.get("body"), str) and row["body"].strip()):
+            raise ValueError(f"canary {rid}: synthetic rows need a non-blank title and body")
+        ids.add(rid)
+        taken.add(slot)
+        rows.append(row)
+    if not rows:
+        raise ValueError("canary file has no rows")
+    return rows
+
+
 def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: float,
-                  unregistered: int = 0, adapter_cfg: dict | None = None) -> dict:
+                  unregistered: int = 0, adapter_cfg: dict | None = None,
+                  canaries: Path | None = None, slots: int = 96, miss: tuple[int, int] | None = None) -> dict:
     """Freeze up to `limit` open Queue candidates: ledger copy, git listings, one issue read each.
     With `unregistered` > 0, one open-issue listing also adds that many open issues that have no
     ledger row, most recently updated first (GH-1261)."""
@@ -794,6 +830,8 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
         return ("possibly delivered: closed by merged PR " + ", ".join(f"#{p}" for p in delivered[str(n)])
                 + "; issue still open")
     computed = _planner(backlog, "stub").compute()
+    canary_rows = _load_canaries(canaries, slots, miss) if canaries else []
+    canary_real = {r["real_issue"] for r in canary_rows if "real_issue" in r}
     pool = sorted((r for r in computed["deduped"] if r["section"] == "Queue / parked intake"
                    and r["state"] in {"ready", "needs-contract"} and r["gh"] is not None),
                   key=lambda r: (-(r["dbRank"] or 0), r["gh"]))
@@ -801,6 +839,8 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
     for r in pool[:limit * 3]:
         if len(requests) >= limit:
             break
+        if r["gh"] in canary_real:
+            continue
         if str(r["gh"]) in delivered:
             excluded.append({"issue": r["gh"], "reason": delivered_reason(r["gh"])})
             continue
@@ -830,7 +870,7 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
         except (subprocess.SubprocessError, OSError, ValueError) as exc:
             raise ValueError(f"open issue list failed: {str(exc)[:120]}") from exc
         registered = {r["gh"] for r in computed["deduped"] if r["gh"] is not None}
-        fresh = sorted((d for d in listed if d["number"] not in registered),
+        fresh = sorted((d for d in listed if d["number"] not in registered and d["number"] not in canary_real),
                        key=lambda d: (d.get("updatedAt") or "", d["number"]), reverse=True)
         excluded += [{"issue": d["number"], "reason": delivered_reason(d["number"])}
                      for d in fresh[:unregistered] if str(d["number"]) in delivered]
@@ -842,6 +882,43 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
                 "issue_sha256": issue_sha, "planner_state": "unregistered", "slot": len(requests) + 1,
                 "source": "unregistered"}
             issues[str(d["number"])] = data
+    layout = None
+    if canary_rows or miss:
+        for k, row in enumerate(canary_rows):
+            if "real_issue" in row:
+                n = row["real_issue"]
+                data = gh_json(["gh", "issue", "view", str(n), "--json", "number,state,title,body,updatedAt"], f"canary issue #{n}")
+                rec = next((r for r in computed["deduped"] if r["gh"] == n), None)
+                if rec is None:
+                    raise ValueError(f"canary {row['id']}: real issue #{n} has no ledger row; an unregistered record cannot carry a closed or delivered state")
+                if (row["expect"] == "held-closed") != (states.get(str(n)) == "CLOSED") or \
+                        (row["expect"] == "held-delivered") != (str(n) in delivered):
+                    raise ValueError(f"canary {row['id']}: issue #{n} is not in the expected frozen state ({row['expect']})")
+                source, doc_rel, planner_state = "ledger", rec["docRel"], rec["state"]
+            else:
+                n = 900001 + k
+                data = {"number": n, "state": "OPEN", "title": row["title"], "body": row["body"], "updatedAt": "2026-10-31T00:00:00Z"}
+                source, doc_rel, planner_state = "unregistered", None, "unregistered"
+            issue_sha = sha_text(canonical({"title": data["title"], "body": data.get("body") or ""}))
+            doc = REPO_ROOT / doc_rel if doc_rel else None
+            requests[f"gh-{n}-{issue_sha[:12]}"] = {
+                "issue": n, "title": data["title"], "doc_path": doc_rel,
+                "doc_sha256": hashlib.sha256(doc.read_bytes()).hexdigest() if doc and doc.is_file() else None,
+                "issue_sha256": issue_sha, "planner_state": planner_state, "slot": row["slot"], "source": source,
+                "canary": row["id"], "canary_category": row["category"]}
+            issues[str(n)] = data
+        real_ids = [k for k, q in requests.items() if "canary" not in q]
+        taken = {q["slot"] for q in requests.values() if "canary" in q}
+        missed = set(range(miss[0], miss[1] + 1)) if miss else set()
+        free = [s for s in range(1, slots + 1) if s not in taken and s not in missed]
+        if len(real_ids) > len(free):
+            raise ValueError(f"{len(real_ids)} real requests do not fit {len(free)} free slots")
+        for k, s in zip(real_ids, free):
+            requests[k]["slot"] = s
+        if canary_rows and 37 not in {requests[k]["slot"] for k in real_ids}:
+            raise ValueError("slot 37 must carry a real request; too few real requests for this layout")
+        layout = {"slots": slots, "miss": list(miss) if miss else None, "canaries": {q["canary"]: q["slot"] for q in requests.values() if "canary" in q},
+                  "real": len(real_ids), "idle": len(free) - len(real_ids)}
     if not requests:
         raise ValueError("no eligible open Queue candidates to seed")
     (backlog / "issues.json").write_text(json.dumps(issues, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -852,6 +929,8 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
                 "requests": requests, "excluded": excluded, "delivered": delivered,
                 "slots": {str(s): available_digest([k for k, q in requests.items() if q["slot"] <= s])
                           for s in range(1, 289)}}
+    if layout:
+        manifest["layout"] = layout
     manifest_path = backlog / "manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     base = datetime.now(timezone.utc)
@@ -872,7 +951,7 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
         emit(conn, instance, None, "init", "ok", items=len(requests), excluded=len(excluded), source="prs")
     finally:
         conn.close()
-    return {"requests": len(requests), "excluded": len(excluded)}
+    return {"requests": len(requests), "excluded": len(excluded), **({"layout": layout} if layout else {})}
 
 
 def load_scenario(path: Path) -> tuple[str, list[dict]]:
@@ -1503,6 +1582,9 @@ def factory_parser() -> argparse.ArgumentParser:
     init.add_argument("--limit", type=int, default=10)
     init.add_argument("--unregistered", type=int, default=0,
                       help="with --from-prs, also seed N open issues that have no ledger row (GH-1261)")
+    init.add_argument("--canaries", type=Path, help="with --from-prs, a frozen JSONL canary file (GH-1279 Stage B)")
+    init.add_argument("--slots", type=int, default=96)
+    init.add_argument("--miss", default=None, help="slot range A-B that carries no input, e.g. 85-90")
     init.add_argument("--adapter", choices=["rules", "codex"], default="rules")
     init.add_argument("--codex-model", default=None)
     init.add_argument("--codex-effort", choices=["low", "medium", "high", "xhigh"], default="medium")
@@ -1548,6 +1630,8 @@ def factory_main(argv: list[str]) -> int:
         if args.command == "init":
             if args.daily_cap <= 0 or args.max_call_cost < 0 or args.max_call_cost > args.daily_cap:
                 raise ValueError("invalid daily cap or maximum call cost")
+            if (args.canaries or args.miss) and not args.from_prs:
+                raise ValueError("--canaries and --miss require --from-prs")
             if args.codex_authoring and (args.adapter != "codex" or not args.from_prs):
                 raise ValueError("--codex-authoring requires --adapter codex and --from-prs")
             if args.adapter == "codex" and not args.codex_model:
@@ -1560,8 +1644,15 @@ def factory_main(argv: list[str]) -> int:
                     raise ValueError("--limit must be in 1..50")
                 if not 0 <= args.unregistered <= 50:
                     raise ValueError("--unregistered must be in 0..50")
+                miss = None
+                if args.miss:
+                    a, _, b = args.miss.partition("-")
+                    miss = (int(a), int(b))
+                    if not 1 <= miss[0] <= miss[1] <= args.slots:
+                        raise ValueError("--miss must be A-B within --slots")
                 seeded = init_from_prs(instance, args.limit, args.daily_cap, args.max_call_cost,
-                                       args.unregistered, adapter_cfg=cfg)
+                                       args.unregistered, adapter_cfg=cfg,
+                                       canaries=args.canaries.resolve() if args.canaries else None, slots=args.slots, miss=miss)
                 print(canonical({"status": "initialized", "instance": str(instance), **seeded}))
                 return 0
             init_instance(instance, args.scenario.resolve(), args.manifest.resolve(),
