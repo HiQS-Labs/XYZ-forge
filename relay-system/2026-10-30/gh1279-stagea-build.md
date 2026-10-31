@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -120,5 +120,28 @@ Implemented the Stage A adapter spec in full:
 Verification:
 - Compiled cleanly with `python3 -m py_compile utils/py/harness.py`.
 - Verified type guards, `codex_decide` mock outcomes (tool detection, rate-limit, timeout, OSError, valid dict, empty idle), `AdapterResult.called`, and CLI parsing via inline test harnesses.
+
+### Reviewer · Round 1 (Claude, operator-designated final QA)
+
+**VERDICT: PASS**
+**Basis:** The diff implements the Codex-approved Stage A plan through the existing adapter seam with no second loop, writer or test file, and the plan's acceptance items are evidenced. Findings below are non-blocking.
+swept file: yes
+
+**Independence disclosure.** The operator named Claude as final reviewer after agy (builder) and Codex (plan QA) were in play. The same Claude session authored the plan and the controls script and applied two post-build nit fixes (`res.rc`, prompt title), so this review is not independent of the design; the independent check on the design is Codex plan QA (`gh1279-stagea-plan-qa.md`, Approved round 3). Reviewed code: `fc93c890a6fb64d86a144480c5250a5fd2da079e`; `git diff fc93c890 HEAD -- utils test validate.sh` is empty at head, so docs and evidence are the only later changes. No relay-drive attestation exists for this turn.
+
+Read the full diff against `origin/development` (`utils/py/harness.py`, `evaluator.v2.md`, `decision.schema.json`) plus the plan's Stage A section.
+
+- **[Pass] Plan fidelity.** `codex_decide` harness.py:218-278 matches the build spec: empty-idle fast path (`called=False`, `unbilled`), positional prompt, eight `--disable` flags (`CODEX_FLAGS` 164-178), `OPENAI_API_KEY` removed, `run_bounded` unchanged, classification order timeout, nonzero exit, tool item, empty, non-JSON, non-object. `_adapter` keeps the four fault branches first (1031-1041). `agent_called=result.called` at the evaluate emit (1269). Both config writers `config.update(adapter_cfg or adapter_config("rules", None, 90.0))`; v1 hash path unchanged.
+- **[Pass] QA r1 B2.** `_validate` guards (959-993) reject the three TypeError shapes; control `validate-red-control` shows `old=[None, TypeError, TypeError, TypeError]` against `new=[None, tool-or-args-not-allowlisted, plan-draft-id-not-eligible, summarize-args]` using `origin/development`'s file.
+- **[Pass] Evidence matches claims.** 24/24 controls (`controls-run.txt`), exact-argv live probe with zero tool items (`live/exact-argv-probe.txt`), two-arm smoke with equal digests and unknown-cost holds (`live/two-arm-smoke.json`); each is a row in `provenance.jsonl` with the code SHA.
+- **[Pass] No new tests or gate machinery.** The diff adds no `test/` file and no `validate.sh` entry; `gh1279-controls.py` lives under `TESTS-RESULTS/` as a manual check (GH-831).
+- **[Nit] N1 — `rate-limited` regex is broad.** `429|rate.?limit|usage.?limit|quota` (harness.py:248) can label an unrelated failure whose stderr contains "429" or "quota". Both outcomes are failures that end in a safe idle with unknown cost, so only the label is affected. Observed input: none; this is a code reading, not a failing case. No change requested.
+- **[Nit] N2 — Fail-closed on unknown item types.** Any `item.*` event other than `agent_message`/`reasoning` becomes `adapter-error`. This is the intended containment; a new benign item type in a later CLI would surface as errors rather than as silent tool use. The summary says to re-run the exact-argv probe on a CLI change.
+- **[Nit] N3 — Prompt in argv; no token usage.** The snapshot is visible in the local process list during a call, and token counts are not recorded, so the report's "cost" is calls plus `unknown`. Acceptable for a single-operator local experiment; stated in `SUMMARY.md`.
+- **[Pass] Pre-existing defects in the touched file.** The `_validate` TypeError and the unconditional `agent_called=True` were the two I found, both fixed in scope. I did not audit the rest of `harness.py`.
+
+**Not shown by this review:** eight-hour behaviour, Stage B, plan quality (the planner is deterministic), or the classified gate on the final SHA (run separately).
+
+Relay closed (Approved). Stage B stays gated on Noel's merge of this PR, the four pre-window decisions and an explicit go.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
