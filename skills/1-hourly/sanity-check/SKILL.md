@@ -6,7 +6,11 @@ description: >-
   stops producing evidence, or when asked whether a feature, CI test, or other
   machinery is necessary. Ground the decision with recon, debug-mantra, and
   ponytail; defer low-risk work through PRS-rated GitHub intake and propose
-  feature retirement or required-gate changes for operator decision.
+  feature retirement or required-gate changes for operator decision. Plan mode
+  audits a whole plan for ceremony, labelling each step progress, proof, safety
+  or ceremony: use it on "no ceremony", "is this meaningful progress", "are we
+  just building machinery", "audit this plan for ceremony", or when a plan's
+  verification sections outgrow its delivery sections.
 ---
 
 # Sanity-check
@@ -234,3 +238,38 @@ Deferred issue / revisit trigger: <URL and condition, or not applicable>
 
 Use only the fields that matter. The output must make it clear whether the
 problem is real, whether it blocks this goal, and what happens next.
+
+## Plan mode — audit a whole plan for ceremony
+
+The ladder above judges one blocker or mechanism. Plan mode asks the same question of every step
+in a plan: **does it change goal state, or only produce activity?** Run it when the operator says
+"no ceremony", "is this meaningful progress", "are we just building machinery" or "audit this plan
+for ceremony", or when a plan's verification, soak or harness sections outgrow its delivery. Skip
+it for a plan of one or two obvious steps.
+
+1. **Goal and open question.** Goal: the end-user or operator outcome in one line. If any clause
+   names a component the plan itself builds (an adapter, an arm, a harness), drop it and state the
+   outcome that component is for, usually the parent issue's goal. Open question: the one
+   load-bearing thing nobody has shown yet, citing the evidence (run, receipt, merged PR, plan line)
+   that the rest is shown. Without cited evidence, treat it as open. If two are open, say which one
+   the next decision hangs on.
+2. **Label every step** exactly once. *progress*: changes goal state. *proof*: answers the open
+   question. *safety*: protects data, security, reversibility or a required gate; never cut.
+   *ceremony*: re-proves something shown, or adds machinery no decision depends on. Test: **if this
+   step were deleted, would the outcome or the next decision change?** Judge the step, not its topic.
+   - Machinery built only so the plan can test itself (adapter, harness, staged handoff, fault
+     injector) is ceremony unless the goal still needs it after the test.
+   - A check that gates the next action (before push, merge or launch) is not ceremony, even if a
+     later run repeats it.
+   - A control showing a check catches a known-bad input (planted flaw, red branch) is proof when
+     the plan relies on that check, unless it is already shown to catch that kind of flaw.
+   - Cut only what costs real time or attention; never list a seconds-long or finished step.
+3. **Real run over proxy.** Name each proxy (soak, dry run, simulated failure, validator, synthetic
+   data) and the real run it stands in for. Keep it only if the real run is unsafe, irreversible or
+   unavailable now, and say which; otherwise propose the real run, smallest first. A real run that
+   needs approval is still the next step, gated on that approval.
+4. **Verdict**, plain English, no scores: goal / open question; **Cut** (each with what it
+   re-proves or that nothing reads it); **Kept** (each with its label and reason); **Next step**,
+   the smallest one that changes goal state, with its gate in the same line; **Parked** as a count.
+   Scheduling, stop and approval calls are questions for the operator, never decisions. "Nothing to
+   cut" is a valid verdict.
