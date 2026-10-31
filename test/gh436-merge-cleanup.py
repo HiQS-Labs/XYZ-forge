@@ -708,7 +708,8 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
              "--allow-unready-primary"],
             landing_ready=False, checkouts=[candidate])
         self.assertEqual(rc, 0)
-        teardown.assert_called_once_with(candidate, dry_run=False)
+        teardown.assert_called_once_with(candidate, dry_run=False,
+                                         safe_roots=merge_cleanup.primary_safe_roots(self.primary))
         self.pruner.assert_called_once_with(dry_run=False)
 
     def test_merging_execute_without_prs_refuses_before_any_mutation(self):

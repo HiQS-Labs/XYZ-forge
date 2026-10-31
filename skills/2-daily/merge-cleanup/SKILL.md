@@ -197,7 +197,7 @@ Parking preserves work for later review; it never qualifies it for integration o
    Include the overview in the final chat and qualifying batch issue even on a stopped run.
 
 ### Phase 1: Discover & Inventory
-- Always includes the primary checkout from Phase 0, then locates further candidate repositories under `SAFE_ROOTS` — `~/Documents/GH Repos`, `~/agent-workspaces`, `~/Documents/agent-workspaces`, `~/marathon-clones` (where `/jog`, marathon flows and older `/start-task` runs create task clones; task clones that follow the GH-970 location decision are siblings of the primary, found with `--root "$(dirname <primary>)"`). The list in `scan_clones.py` is the list in `WORKTREE-SAFETY.md` §16.1; a test pins the parity (GH-534 A.1).
+- Always includes the primary checkout from Phase 0, then locates further candidate repositories under `SAFE_ROOTS` — `~/Documents/GH Repos`, `~/agent-workspaces`, `~/Documents/agent-workspaces`, `~/marathon-clones` (where `/jog`, marathon flows and older `/start-task` runs create task clones). Without `--root`, the scan also walks the primary's parent folder, where GH-970 task clones sit beside the primary, unless that folder is a `NEVER_DELETE` root (GH-722). From that folder it inspects only checkouts whose `origin` matches the primary's, and only those become removable there; an unreadable origin never matches. When that folder is itself one of the listed roots, it is scanned exactly as before. The Phase 1 header prints the roots scanned. The fixed list in `scan_clones.py` is the list in `WORKTREE-SAFETY.md` §16.1; a test pins the parity (GH-534 A.1).
 - Evaluates component-aware containment (`_within(child, parent)`) and refuses `NEVER_DELETE` protected roots (`$HOME`, `~/Documents`, `~/Desktop`, `/`).
 - Distinguishes **Linked Worktrees** (`.git` is a file with pointer `gitdir: ...`) from **Standalone Clones** (`.git` is a directory).
 - Uses `git worktree list --porcelain` to determine parent-child relationships.
@@ -583,6 +583,7 @@ python3 /path/to/merge-cleanup/scripts/merge_cleanup.py --primary "$PRIMARY_REPO
 
 This mode accepts checkouts under `SAFE_ROOTS` or directly beside the primary (its parent
 folder, start-task's GH-970 location), unless that parent is a `NEVER_DELETE` root (GH-1193).
+The default scan and Phase 6 accept the same folder for same-origin checkouts (GH-722).
 Repeat `--checkout` only for explicit paths created by this workflow. Do not infer
 the primary from the task clone: `--primary` must be an explicit absolute path;
 empty/relative values refuse instead of inferring the current directory. Do not
