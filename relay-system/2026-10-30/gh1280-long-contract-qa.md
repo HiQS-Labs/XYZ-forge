@@ -199,4 +199,12 @@ Evidence limits: Verify-tier graph discovery found no indexed project for this w
 
 Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with the exact reviewed supervised contract; final campaign evidence and dispositions still require their separate review.
 
+
+### Attestation · relay-drive — 2026-10-31T02:24:55Z
+task: RELAY-gh1280-long-contract-qa
+reviewer: codex
+status: Approved
+reviewed-head: ee33263fbb919ee7513d1ee341f93e255c78501e
+added-range: 17272+7578
+added-sha256: 3c592c49ba53a90dc741159d73f915a6ae016ce832bf28c011a8cf6b6f0cca99
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
