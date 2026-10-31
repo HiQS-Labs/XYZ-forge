@@ -77,7 +77,7 @@ elif mode.startswith("a_"):
         "a_not_list": {"scope": "text"},
         "a_empty": {},
         "a_invented_path": {"write_set": ["utils/py/does_not_exist_gh1279.py"]},
-        "a_new_file": {"write_set": ["utils/py/factory_primitive/prompts/evaluator.v3.md"]},
+        "a_new_file": {"write_set": ["utils/py/factory_primitive/prompts/evaluator.v9-never-exists.md"]},
         "a_ws": {"write_set": [shared], "scope": ["Authored scope with a path."]},
     }[mode]
     say(json.dumps({"tool": "plan-draft", "args": {"inbox_id": target, "authored": A}, "reason": "stub", "confidence": 1}))
@@ -164,7 +164,7 @@ def case(name: str, mode: str, want_norm: str, want_status: str, want_tool: str 
 
 
 def a2_case(name, mode, want_status, want_reason=None, *, authoring=True, limit=3, unreg=0, slot=1, pick=0, pre=None,
-            env_extra=None):
+            env_extra=None, early="ok"):
     """init (codex, authoring on/off) -> optional pre-hook on the instance -> tick `slot` -> inspect."""
     rr = f"temp/factory-primitive/{TAG}-{name}"
     shutil.rmtree(ROOT / rr, ignore_errors=True)
@@ -179,7 +179,7 @@ def a2_case(name, mode, want_status, want_reason=None, *, authoring=True, limit=
     log.unlink(missing_ok=True)
     env = {"CODEX_BIN": str(STUBFILE), "STUB_MODE": mode, "STUB_LOG": str(log), "STUB_PICK": str(pick), **(env_extra or {})}
     for s in range(1, slot + 1):  # earlier slots tick with a plain, valid response so their requests are consumed
-        e = dict(env, STUB_MODE="ok") if s < slot else env
+        e = dict(env, STUB_MODE=early) if s < slot else env
         pr = run(["--run-root", rr, "tick", "--slot", str(s)], e)
     i = inspect(inst, slot)
     d = i["decision"] or {}
@@ -247,11 +247,54 @@ def a2_controls():
            f"draft briefs checked={len(seen_states.get('draft', []))}")
     record("a2-write-set-ready-branch", (not seen_states.get("ready")) or all(seen_states["ready"]),
            f"ready briefs checked={len(seen_states.get('ready', []))}" + ("" if seen_states.get("ready") else " (not exercised: no planner-ready request in this backlog)"))
+    # R1 collision: two draft lanes whose briefs share an authored path never share a wave
+    rr = f"temp/factory-primitive/{TAG}-a2-collide"; shutil.rmtree(ROOT / rr, ignore_errors=True)
+    p = run(["--run-root", rr, "init", "--from-prs", "--limit", "4", "--unregistered", "2", "--daily-cap", "0.9", "--max-call-cost", "0.01",
+             "--adapter", "codex", "--codex-model", "stub-model", "--adapter-timeout", "5", "--codex-authoring"]); assert p.returncode == 0, p.stderr
+    inst = ROOT / rr / "instances" / "C"; log = ROOT / "temp" / f"{TAG}-a2-collide.stub.log"; log.unlink(missing_ok=True)
+    for sl in (1, 2):
+        run(["--run-root", rr, "tick", "--slot", str(sl)], {"CODEX_BIN": str(STUBFILE), "STUB_MODE": "a_ws", "STUB_LOG": str(log), "STUB_PATH": "utils/py/proc_group.py"})
+    b = [json.loads((inst / "out" / "plan-draft" / f"slot_00{sl}.json").read_text()) for sl in (1, 2)]
+    prop = json.loads((inst / "out" / "plan-draft" / "wave-proposal.json").read_text())
+    where = {}
+    for wi, wave in enumerate(prop["provisional"]["waves"], 1):
+        for lane in wave:
+            where[lane["issue"]] = (wi, lane["write_set"])
+    lanes = [where.get(x["issue"]) for x in b]
+    both = all(lanes) and all("utils/py/proc_group.py" in l[1] for l in lanes)
+    record("a2-collision-draft-lanes-separated", both and lanes[0][0] != lanes[1][0],
+           f"issues={[x['issue'] for x in b]} waves={[l and l[0] for l in lanes]} both_claim_shared_path={both}")
+    # R1 ready branch, forced in-process: a planner-ready record keeps its contract write set and records authored_ignored
+    spec2 = importlib.util.spec_from_file_location("harness_ready", HARNESS); hm = importlib.util.module_from_spec(spec2); sys.modules["harness_ready"] = hm; spec2.loader.exec_module(hm)
+    rr = f"temp/factory-primitive/{TAG}-a2-ready"; shutil.rmtree(ROOT / rr, ignore_errors=True)
+    p = run(["--run-root", rr, "init", "--from-prs", "--limit", "2", "--daily-cap", "0.9", "--max-call-cost", "0.01",
+             "--adapter", "codex", "--codex-model", "stub-model", "--codex-authoring"]); assert p.returncode == 0, p.stderr
+    inst = ROOT / rr / "instances" / "C"; man = json.loads((inst / "backlog" / "manifest.json").read_text())
+    rid, req = next(iter(man["requests"].items()))
+    real_planner = hm._planner
+    class Proxy:
+        def __init__(self, eng): self._e = eng
+        def __getattr__(self, n): return getattr(self._e, n)
+        def compute(self):
+            comp = self._e.compute()
+            for r in comp["deduped"]:
+                if r["gh"] == req["issue"]:
+                    r["state"] = "ready"; r["contract"] = {"artifacts": ["utils/py/harness.py"], "fix_probes": []}
+            return comp
+    hm._planner = lambda backlog, mode: Proxy(real_planner(backlog, mode))
+    out = inst / "out" / "plan-draft"; out.mkdir(parents=True, exist_ok=True)
+    hm.plan_draft("slot_001", out, {"inbox_id": rid, "authored": {"write_set": ["utils/py/proc_group.py"], "scope": ["Authored scope."]}}, [], "")
+    rb = json.loads((out / "slot_001.json").read_text()); rp = json.loads((out / "wave-proposal.json").read_text())
+    lane_paths = [l["write_set"] for w in rp["actual"]["waves"] + rp["provisional"]["waves"] for l in w if l["issue"] == req["issue"]]
+    record("a2-ready-brief-ignores-authored-paths", rb["planner_state"] == "ready" and [w["path"] for w in rb["write_set"]] == ["utils/py/harness.py"]
+           and rb.get("authored_ignored") == ["write_set"] and rb.get("authored") is True and all("utils/py/proc_group.py" not in lp for lp in lane_paths),
+           f"state={rb['planner_state']} write_set={[w['path'] for w in rb['write_set']]} ignored={rb.get('authored_ignored')} lane_paths={lane_paths}")
     # full prompt transport with 12 pending requests: one positional argument, size recorded
-    rr, inst, i, d, brief, pr = a2_case("a2-prompt12", "ok", "raw-valid", authoring=True, limit=12)
-    seen = json.loads((ROOT / "temp" / f"{TAG}-a2-prompt12.stub.log").read_text().splitlines()[0])
-    record("a2-prompt-12-requests-single-argv", seen["argv_len"] > 0 and seen["prompt_has_snapshot"] and seen["prompt_len"] < 700_000,
-           f"prompt_bytes={seen['prompt_len']} (ARG_MAX={os.sysconf('SC_ARG_MAX')})")
+    rr, inst, i, d, brief, pr = a2_case("a2-prompt12", "ok", "raw-valid", authoring=True, limit=12, slot=12, early="malformed")
+    seen = json.loads((ROOT / "temp" / f"{TAG}-a2-prompt12.stub.log").read_text().splitlines()[-1])
+    _c = sqlite3.connect(inst / "state.db"); pending12 = len(json.loads(_c.execute("SELECT json FROM snapshots WHERE tick_id='slot_012'").fetchone()[0])["inbox"]); _c.close()
+    record("a2-prompt-12-requests-single-argv", pending12 == 12 and seen["prompt_has_snapshot"] and 50_000 < seen["prompt_len"] < 700_000,
+           f"pending_requests={pending12} prompt_bytes={seen['prompt_len']} (ARG_MAX={os.sysconf('SC_ARG_MAX')})")
     # off-mode brief is byte-identical to Stage A's: old harness (Stage A commit) vs new, rules arm, same frozen inputs
     old = ROOT / "utils" / "py" / "harness_stagea.py"
     old.write_bytes(subprocess.run(["git", "show", "4eb4dce8e3bee399eac3ee1dadd20f05cc715c62:utils/py/harness.py"], cwd=ROOT, capture_output=True, check=True).stdout)
@@ -289,6 +332,11 @@ def main() -> int:
     STUBFILE.write_text(STUB)
     STUBFILE.chmod(0o755)
 
+    if len(sys.argv) > 1 and sys.argv[1] == "a2":
+        a2_controls()
+        bad = [r for r in results if not r["pass"]]
+        print(f"\n{len(results) - len(bad)}/{len(results)} a2 controls passed")
+        return 1 if bad else 0
     case("valid-plan-draft", "ok", "ok", "raw-valid", "plan-draft")
     case("malformed-json", "malformed", "invalid-output", "invalid-output", "idle")
     case("json-non-object", "nonobject", "invalid-output", "invalid-output", "idle")
