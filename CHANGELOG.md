@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-30 — GH-1273 harmless relay separators
+
+- The reviewer-history check retains strict canonical comparison first, then tolerates empty separator-line count changes outside protected literal content with a warning. Canonical record coordinates and loader semantics are unchanged; substantive history and invalid approvals remain refused. Raw transcript remains intact. Reversibility: Costly shared approval boundary; rollback by reverting this change.
+- Mechanical verdict repair is deferred: a done token is spent on driver restart, so safe recovery needs separately reviewed state work. No recovery or approval bypass is introduced.
+
 ## 2026-10-30 — GH-1270 outer loop writes marathon launch packets and stops packing closed or stale issues
 
 - `harness.py factory-primitive init --from-prs` now freezes real GitHub state for every issue, so the planner's own already-closed rule drops CLOSED rows (#1075 no longer sits in wave 1), and freezes merged PRs that close a still-open issue, which are excluded or held as possibly delivered.

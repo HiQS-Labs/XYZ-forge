@@ -149,6 +149,70 @@ def canonical_prefix(pre_raw, post_raw):
     return canonical_bytes(pre_raw, context_raw=post_raw)
 
 
+def separator_prefix_end(pre_raw, post_raw):
+    """Return the ordinary canonical post offset for separator-only history drift.
+
+    Canonical bytes and persisted records retain their original interpretation. Only
+    empty LF lines outside fenced/indented literal content are optional. Whitespace-only
+    lines, blockquotes and HTML/literal-looking contexts remain exact. Ambiguity refuses.
+    """
+    def protected_lines(raw):
+        lines = _split_lines(raw)
+        fence = None
+        literal = None
+        offset = 0
+        result = []
+        for i, line in enumerate(lines):
+            body = line[:-1]
+            match = re.match(rb" {0,3}(`{3,}|~{3,})(.*)$", body)
+            protected = fence is not None or literal
+            if match:
+                run, rest = match.groups()
+                if fence is None:
+                    fence = (run[:1], len(run))
+                elif run[:1] == fence[0] and len(run) >= fence[1] and not rest.strip():
+                    fence = None
+                protected = True
+            # Conservatively retain blank lines adjacent to indented/quoted/HTML
+            # content, and all blanks after an HTML opener (no Markdown parser here).
+            stripped = body.lstrip()
+            if literal == b"-->":
+                if b"-->" in body:
+                    literal = None
+            elif literal == b"html":
+                pass  # An inner comment cannot end an enclosing literal block.
+            elif stripped.startswith(b"<!--"):
+                literal = None if b"-->" in stripped else b"-->"
+            elif stripped.startswith(b"<"):
+                literal = b"html"
+            left, right = i - 1, i + 1
+            while left >= 0 and lines[left] == b"\n":
+                left -= 1
+            while right < len(lines) and lines[right] == b"\n":
+                right += 1
+            neighbors = ([lines[left]] if left >= 0 else []) + ([lines[right]] if right < len(lines) else [])
+            adjacent_literal = any(
+                n.expandtabs(4).startswith((b"    ", b">", b"<")) for n in neighbors
+            )
+            optional = line == b"\n" and not protected and not literal and not adjacent_literal
+            offset += len(line)
+            if not optional:
+                result.append((line, offset))
+        return result
+
+    # Separator edits invalidate positional POST look-ahead for PRE. Judge each
+    # history at its own actual line positions in this fallback; append-sensitive
+    # ambiguous citation changes refuse rather than inventing a mapped citation.
+    pre = canonical_bytes(pre_raw)
+    post = canonical_bytes(post_raw)
+    before, after = protected_lines(pre), protected_lines(post)
+    if not before or len(after) < len(before):
+        return None
+    if any(a[0] != b[0] for a, b in zip(before, after)):
+        return None
+    return after[len(before)-1][1]
+
+
 def append_before_marker(path, text):
     """Append harness-owned text while keeping the scaffold sentinel as the final line."""
     payload = text.encode("utf-8")
