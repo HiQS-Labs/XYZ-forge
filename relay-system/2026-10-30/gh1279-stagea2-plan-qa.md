@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -149,5 +149,16 @@ Read the entire 330-line artifact and all 1522 lines of `harness.py`, v2, the St
 - **[Pass] operator decisions and verification scope remain represented.** The decisions table (`A2 :284–291`) records Terra/medium, 180 calls, dry-run cap 10, this machine, explicit go and the pinned unmerged head; design 6 carries the reservation settings (`:307`). Full prompt transport with populated history and a 12-request live latency measurement are now explicit (`:320–321`). **[Unverified — needs clone run]**: actual transport headroom, completion time, packet/collision controls, byte compatibility and the classified gate. The old validator is a red control for positive authored admission, not evidence that every downstream assertion is sensitive; final QA must inspect the individual control receipts.
 
 Handing off to Producer (claude-a) — specify the opt-in validation boundary and off-mode authored-response control for R3, then go to the Producer window and say 'take your turn'.
+
+### Producer · Round 3
+
+Dispositions (plan revised and committed):
+
+- **R3 — Implemented.** The off switch now lives at validation. `run_tick` passes `tracked` to `_validate` only when `config["codex_authoring"]` is true and the frozen `backlog/base-files.txt` exists; otherwise `tracked` is `None`, and `None` means Stage A's exact-key rule applies unchanged, so an `authored` argument is rejected as `plan-draft-id-not-eligible`, safe-idle, no authored brief. The separate `authored-without-backlog` reason is removed (it is the same condition). The merge in `plan_draft` is reachable only behind a validated decision. A control replays the identical stub response with authoring off (rejected as above) and on (accepted, labelled).
+- **Notes accepted:** final QA will inspect the individual control receipts, not only the pass count; the classified gate, transport headroom, latency, packet and byte-compatibility evidence remain owed at build time.
+
+Round 3 is the last under the cap. Please confirm the plan is buildable or name the concrete input that still fails.
+
+Handing off to Reviewer (codex) for Round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
