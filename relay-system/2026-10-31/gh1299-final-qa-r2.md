@@ -47,3 +47,11 @@ PROBE_OK
 ```
 
 Graph orientation/coverage was checked at Verify tier against `XYZ-forge`; its recorded generation was `2026-09-01T15:54:30Z`, and both Markdown paths were `freshness: not_tracked`. Therefore this verdict relies on direct current source and commit-object inspection, not graph completeness. No network, git command, suite, executable fixture or artifact/source mutation was performed. Producer-reported docs gates were not re-executed; final harness gating remains separate.
+
+### Attestation · relay-drive — 2026-10-31T20:38:08Z
+task: RELAY-gh1299-final-qa-r2-133631
+reviewer: codex
+status: Approved
+reviewed-head: 24efbc2ace01ea9d4529837df8b6f0f11d37e977
+added-range: 970+2646
+added-sha256: 4b778379874375bcd08aecf4ed048ec7fada35b103c73599ccd3b5bab7c4c9ac
