@@ -1,0 +1,122 @@
+[
+  {
+    "control": "valid-plan-draft",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=raw-valid/None tool=plan-draft stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "malformed-json",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "json-non-object",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "empty-output",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "qa-r1-tool-is-list",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=rejected/tool-or-args-not-allowlisted tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "qa-r1-inbox-id-is-list",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=rejected/plan-draft-id-not-eligible tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "qa-r1-inbox-ids-has-dict",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=rejected/summarize-args tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "disallowed-tool",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=rejected/tool-or-args-not-allowlisted tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "injection-nonexistent-id",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=rejected/plan-draft-id-not-eligible tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "tool-event-is-adapter-error",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=adapter-error decision=adapter-error/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "rate-limited",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=rate-limited decision=rate-limited/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "nonzero-exit",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=adapter-error decision=adapter-error/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "transport-not-stdin-red-control",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "replay-hardened-stream",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=ok decision=raw-valid/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "replay-baseline-stream-tool-events",
+    "pass": true,
+    "detail": "rc=0 tick=completed norm=adapter-error decision=adapter-error/None tool=idle stub_calls=1 billing=unknown"
+  },
+  {
+    "control": "timeout-no-retry",
+    "pass": true,
+    "detail": "norm=timeout stub_calls=1 elapsed=2.3s billing=unknown"
+  },
+  {
+    "control": "prompt-transport-positional",
+    "pass": true,
+    "detail": "prompt_head='# Evaluator v2\\n\\nReturn exactly one JSON ' snapshot_present=True"
+  },
+  {
+    "control": "fault-name-codex-arm",
+    "pass": true,
+    "detail": "norm=invalid-output stub_calls=0 agent_called=True (synthetic)"
+  },
+  {
+    "control": "empty-inbox-no-call",
+    "pass": true,
+    "detail": "stub_calls=0 agent_called=False reservation={'status': 'released', 'billing_status': 'unbilled', 'actual_cost': 0.0}"
+  },
+  {
+    "control": "call-cap-90-then-pause",
+    "pass": true,
+    "detail": "stub_calls=90 held_unknown=90 PAUSE=True slot91=paused rcs_nonzero=0"
+  },
+  {
+    "control": "rules-arm-unchanged",
+    "pass": true,
+    "detail": "norm=ok stub_calls=0 adapter=rules prompt_sha=dcca67813bb1"
+  },
+  {
+    "control": "config-freezes-route",
+    "pass": true,
+    "detail": "flags=25 refused_rc=2"
+  },
+  {
+    "control": "validate-red-control",
+    "pass": true,
+    "detail": "old=[None, 'TypeError', 'TypeError', 'TypeError'] new=[None, 'tool-or-args-not-allowlisted', 'plan-draft-id-not-eligible', 'summarize-args']"
+  },
+  {
+    "control": "ledger-files-unchanged",
+    "pass": true,
+    "detail": "releases.db/releases.sql hashes identical before and after"
+  }
+]

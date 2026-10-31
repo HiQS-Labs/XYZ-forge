@@ -229,7 +229,7 @@ def main() -> int:
     old.write_bytes(subprocess.run(["git", "show", "origin/development:utils/py/harness.py"], cwd=ROOT, capture_output=True, check=True).stdout)
     sys.path.insert(0, str(ROOT / "utils" / "py"))
     def load(path: Path, name: str):
-        spec = importlib.util.spec_from_file_location(name, path); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); return m
+        spec = importlib.util.spec_from_file_location(name, path); m = importlib.util.module_from_spec(spec); sys.modules[name] = m; spec.loader.exec_module(m); return m
     old_m, new_m = load(old, "harness_old"), load(HARNESS, "harness_new")
     snap = {"inbox": [{"id": "x", "kind": "plan-request"}], "recent": [], "probe_targets": []}
     shapes = [("plan-draft", {"inbox_id": "x"}), ([], {}), ("plan-draft", {"inbox_id": []}), ("summarize", {"inbox_ids": [{}]})]

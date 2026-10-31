@@ -1,0 +1,26 @@
+PASS valid-plan-draft :: rc=0 tick=completed norm=ok decision=raw-valid/None tool=plan-draft stub_calls=1 billing=unknown
+PASS malformed-json :: rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown
+PASS json-non-object :: rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown
+PASS empty-output :: rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown
+PASS qa-r1-tool-is-list :: rc=0 tick=completed norm=ok decision=rejected/tool-or-args-not-allowlisted tool=idle stub_calls=1 billing=unknown
+PASS qa-r1-inbox-id-is-list :: rc=0 tick=completed norm=ok decision=rejected/plan-draft-id-not-eligible tool=idle stub_calls=1 billing=unknown
+PASS qa-r1-inbox-ids-has-dict :: rc=0 tick=completed norm=ok decision=rejected/summarize-args tool=idle stub_calls=1 billing=unknown
+PASS disallowed-tool :: rc=0 tick=completed norm=ok decision=rejected/tool-or-args-not-allowlisted tool=idle stub_calls=1 billing=unknown
+PASS injection-nonexistent-id :: rc=0 tick=completed norm=ok decision=rejected/plan-draft-id-not-eligible tool=idle stub_calls=1 billing=unknown
+PASS tool-event-is-adapter-error :: rc=0 tick=completed norm=adapter-error decision=adapter-error/None tool=idle stub_calls=1 billing=unknown
+PASS rate-limited :: rc=0 tick=completed norm=rate-limited decision=rate-limited/None tool=idle stub_calls=1 billing=unknown
+PASS nonzero-exit :: rc=0 tick=completed norm=adapter-error decision=adapter-error/None tool=idle stub_calls=1 billing=unknown
+PASS transport-not-stdin-red-control :: rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown
+PASS replay-hardened-stream :: rc=0 tick=completed norm=ok decision=raw-valid/None tool=idle stub_calls=1 billing=unknown
+PASS replay-baseline-stream-tool-events :: rc=0 tick=completed norm=adapter-error decision=adapter-error/None tool=idle stub_calls=1 billing=unknown
+PASS timeout-no-retry :: norm=timeout stub_calls=1 elapsed=2.3s billing=unknown
+PASS prompt-transport-positional :: prompt_head='# Evaluator v2\n\nReturn exactly one JSON ' snapshot_present=True
+PASS fault-name-codex-arm :: norm=invalid-output stub_calls=0 agent_called=True (synthetic)
+PASS empty-inbox-no-call :: stub_calls=0 agent_called=False reservation={'status': 'released', 'billing_status': 'unbilled', 'actual_cost': 0.0}
+PASS call-cap-90-then-pause :: stub_calls=90 held_unknown=90 PAUSE=True slot91=paused rcs_nonzero=0
+PASS rules-arm-unchanged :: norm=ok stub_calls=0 adapter=rules prompt_sha=dcca67813bb1
+PASS config-freezes-route :: flags=25 refused_rc=2
+PASS validate-red-control :: old=[None, 'TypeError', 'TypeError', 'TypeError'] new=[None, 'tool-or-args-not-allowlisted', 'plan-draft-id-not-eligible', 'summarize-args']
+PASS ledger-files-unchanged :: releases.db/releases.sql hashes identical before and after
+
+24/24 controls passed
