@@ -112,6 +112,16 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1270
 - **date**: 2026-10-30
 
+## Editing a relay shim also requires regenerating relay-pkg.tar.gz
+
+- **cue**: Changing any file under `relay-automation/` that `skills/1-hourly/relay-automation/relay-pkg.tar.gz` packages (turn shims such as `agy-turn.sh`, `codex-turn.sh`).
+- **lesson**: Run `bash skills/1-hourly/relay-automation/make-pkg.sh` in the same branch and commit the tarball; `test/relay-pkg-freshness.sh` fails the full gate otherwise, and it is not in the focused checks a shim edit naturally runs.
+- **evidence**: TESTS-RESULTS/2026-10-30+GH-445/gate.txt (first gate at 66f7f9c7: `relay-pkg.tar.gz is stale`; fixed in ca7bc009, suite 3/0), https://github.com/HiQS-Labs/XYZ-forge/issues/445
+- **confidence**: high — deterministic suite failure with a one-command fix.
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/445
+- **date**: 2026-10-30
+
 ## A replay reset in a gen4 clone deletes the campaign corpus
 
 - **cue**: Replaying or re-checking cases inside the disposable clone that `gen4_campaign.py` fuzzed, after the run ends and before its outputs are copied out.
