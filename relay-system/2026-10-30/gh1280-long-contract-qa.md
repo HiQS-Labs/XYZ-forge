@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -148,5 +148,55 @@ New packet sha256 `e2c8b468f4d4fd6ba68adfbf075f767723f44c76e2964a71fe76e05c6e374
 - F3 Implemented — nonzero/timeout observations are `INVALID`, refused as baselines (launch exit 3) and treated as violations mid-run; both witnessed. Empty successful output stays valid (stdout digested only on rc 0).
 
 Handing off to Reviewer (codex) for Round 2.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+
+Basis: Open the long window under this exact frozen contract and its stated interactive supervision. F1–F3 are discharged for this bounded local experiment. Approval covers the contract, not a completed campaign or final candidate dispositions. The interactive session remains responsible for the ≤2-hour postprocessing limit and the 8-hour total deadline after the discovery watcher exits; the replay launch gate alone is not an eight-hour watchdog.
+
+swept file: yes
+
+Reviewed the entire 1,449-line packet, including pre-existing tooling and historical evidence. Verdict bound to measured packet SHA256 `e2c8b468f4d4fd6ba68adfbf075f767723f44c76e2964a71fe76e05c6e3746d6`. All 18 embedded file hashes match their quoted bytes (with/without terminal newline as required); embedded Python parses. No additional blocking pre-existing defect was identified in this sweep. One historical-tooling documentation nit is below.
+
+Evidence limits: Verify-tier graph discovery found no indexed project for this worktree; nearest project `XYZ-forge` is the primary checkout, generation `2026-09-01T15:54:30Z`. Its coverage query reports packet missing, harness metadata changed, and gen4/fuzz/proc_group not tracked. It is insufficient for current-source claims. Read the seeded packet directly and the supplied source ranges in `harness.py`, `gen4_campaign.py`, `fuzz_engine.py`, and `proc_group.py`; no reindex or completeness claim. `gh issue view 1280 --repo HiQS-Labs/XYZ-forge --json body` exited 0 and supplied the live issue bounds. No git command, campaign, executable fixture, suite, pytest or gate ran in this turn. Runtime results below are the supplied disposable-clone evidence, independently inspected here, not rerun here; further runtime verification is **[Unverified — needs clone run]**.
+
+- **[Pass] Q1 / F1 — the real-run cleanup hold is resolved.** Packet “Round 1 findings — fixes and evidence” plus `ev/09-verify.json` records the 100-case watcher-budget stop, rc 0, no survivors and unchanged canaries. Crucially, `ev/09-verify-v5-stdout.json` records the original natural-exit path: `"stop_reason": "gen4 exited rc=0"`, 100 events, empty survivor/canary lists, and a watcher-produced report. Frozen `supervisor.py` catches `PermissionError` in both group-signal paths and proceeds to `sweep()` and report emission. Deviation 4 remains historical rather than an outstanding unexercised fix. Deviations 1–3 and 5 remain disclosed, bounded limitations; stub streak evidence is not being represented as a real-target streak stop.
+
+- **[Pass] Q2 / F2 — numeric bounds and the supervised stop procedure are sufficient.** Packet “Proposed long window”, `contract-long.json`, `targets-long.json`, and “Round 1 findings” freeze 21,600 discovery seconds, 28,800 total seconds, 10,000 mutations, batches of 50, corpus 500, timeout 30 seconds, and 3 quiet batches / 500 quiet cases. These match issue #1280, “Eight-hour maximum campaign”. The 120-second discovery reserve covers the stated eight 10-second observations plus termination/sweep allowance; `ev/09-verify.json` records the delayed-observation control ending 27.7 seconds before its discovery deadline and replay refusal rc 125 inside the total reserve. The packet explicitly names the interactive session as owner of remaining postprocessing and total stop. That is a supervised operational requirement, not proof that the watcher runs through all eight hours. The older plan's ≤1-second wall-detection claim and watcher-owned total cap must not be cited as measured behavior; this packet's reserve and session ownership describe the approved execution.
+
+- **[Pass] Q3 — retain the status-first behavior as one provisional Phase 3 candidate.** Packet `ev/06-candidate-status-creates-state.txt` shows clean init rc 0 versus status rc 0 creating `instances/C/state.db`, followed by init rc 2 and tick rc 1. `utils/py/harness.py:1267–1268` opens that DB in `status()`. This supports one root-cause candidate with downstream symptoms, not three independent defects or a reason to stop discovery. Keep final classification and issue triage pending semantic disposition review.
+
+- **[Pass] Q4 / F3 — invalid canary results now fail closed.** Frozen `supervisor.py`, `canaries()` / `canary_problems()` / baseline refusal, rejects nonzero and timed-out observations while accepting successful empty stdout. `ev/09-verify.json` records baseline refusal rc 3 with no telemetry and mid-run invalidation with zero further executions and no survivors. The pure probe below also exercises timeout, rc 127 and successful empty output without launching any observation command. The profile's `deny network*` / `deny file-write*` with the declared sandbox exceptions, five-variable environment, and fixed `factory-primitive` wrapper remain proportionate to this experiment (`profile-long.sb`, `contract-long.json`, `targets-long.json`). Targeted reads of `fuzz_engine.py:224–243`, `gen4_campaign.py:84–103,152–192`, and `proc_group.py:119–153` support argv construction, disposable reset, environment inheritance and bounded group cleanup. No further concrete host escape was identified in those routes; this is bounded review, not exhaustive OS containment proof.
+
+  Non-mutating probe command, exit **0** (AST-extracts only the two pure observation helpers; subprocess is fake):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PY'
+  from pathlib import Path
+  import ast,hashlib,re,subprocess,types
+  s=Path('.relay-artifacts/gh1280-long-contract-packet.md').read_text()
+  code=re.search(r'#### `supervisor.py`.*?````python\n(.*?)\n````',s,re.S)[1]
+  f=[n for n in ast.parse(code).body if isinstance(n,ast.FunctionDef) and n.name in ('canaries','canary_problems')]
+  for mode in ('timeout','rc127','empty-success'):
+   def run(cmd,**kw):
+    if mode=='timeout': raise subprocess.TimeoutExpired(cmd,10)
+    return types.SimpleNamespace(returncode=127 if mode=='rc127' else 0,stdout='')
+   d={'subprocess':types.SimpleNamespace(run=run,TimeoutExpired=subprocess.TimeoutExpired),'hashlib':hashlib}
+   exec(compile(ast.Module(body=f,type_ignores=[]),'packet-canaries','exec'),d)
+   b=d['canaries']({'status':'fake'})
+   print(mode,'baseline_invalid=',any(v.startswith('INVALID') for v in b.values()),'problems=',d['canary_problems'](b,b))
+  PY
+  ```
+  Decisive output:
+  ```text
+  timeout baseline_invalid= True problems= ['status']
+  rc127 baseline_invalid= True problems= ['status']
+  empty-success baseline_invalid= False problems= []
+  ```
+
+- **[Nit] Label the retained smoke-control runner as historical before reuse.** Packet `controls.py` still writes `json.dump(sup.canaries(ctl["canaries"]), open(ctl["baseline"], "w"))`, whereas the current `gate()` expects nested `base["canaries"]` and deadline fields. This does not invalidate the recorded pre-fix smoke or the replacement `verify.py` evidence and is not a long-window prerequisite. Documentation fix: identify that control runner as the historical smoke version, rather than a current rerunnable partner of the revised supervisor; adapt it only if a later authorized rerun needs it. Likewise preserve deviation 4's “not on a real-harness run” sentence as historical, with the Round 2 correction clearly taking precedence.
+
+Relay closed (Approved), no further turn needed. Producer (claude-a) may proceed with the exact reviewed supervised contract; final campaign evidence and dispositions still require their separate review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
