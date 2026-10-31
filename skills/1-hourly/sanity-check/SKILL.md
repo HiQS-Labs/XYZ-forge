@@ -318,3 +318,5 @@ Scheduling, stop and approval calls belong to the operator. Write them as questi
 lane now, or after the review?"), never as decisions the skill has made.
 
 An empty cut list is a valid result. Say "nothing to cut" and give the next step.
+
+A kept step that is right but over-built: shrink it with [`ponytail`](../ponytail/SKILL.md).
