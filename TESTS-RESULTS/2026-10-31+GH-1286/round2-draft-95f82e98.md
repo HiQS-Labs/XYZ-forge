@@ -1,7 +1,8 @@
 # GH-1286 acceptance — round 2 (draft 95f82e98)
 
 Same runner, prompt and input snapshots as round 1 (`round1-draft-2bccfb9c.md`); two fresh
-subagents (Claude Opus 5.5); skill at commit `95f82e98` (118 lines).
+subagents (Claude Opus 5.5); skill at commit `95f82e98` (118 lines). Verbatim verdicts:
+[`raw/r2-1186.md`](raw/r2-1186.md), [`raw/r2-1279.md`](raw/r2-1279.md); inputs unchanged in [`inputs/`](inputs/).
 
 ## Counter-example control — PR #1186: PASS
 

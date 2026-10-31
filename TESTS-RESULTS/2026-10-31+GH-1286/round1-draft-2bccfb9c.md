@@ -35,7 +35,7 @@ Diagnosis: the run took the plan's own mechanism as the goal ("whether an agent 
 `plan-draft`) can produce … plans"), so the adapter looked necessary; and the skill let a proxy stand
 when the real run needed approval instead of proposing the real run gated on that approval.
 
-Raw verdict (abridged to its headings and decisions; full text retained in the session transcript):
+Raw verdict: verbatim in [`raw/r1-1279.md`](raw/r1-1279.md); the exact input is [`inputs/input-1279.md`](inputs/input-1279.md) (one snapshot, used unchanged in all three rounds). Summary:
 
 - Goal: find out whether an agent decision arm (Codex `plan-draft`) can produce safe, well-grounded
   plans that are mechanically ready to run, on the real XYZ-forge backlog.
@@ -56,6 +56,8 @@ Raw verdict (abridged to its headings and decisions; full text retained in the s
 ## Counter-example control — PR #1186: FAIL
 
 Acceptance rule (plan step 4): cut list empty.
+
+Raw verdict: [`raw/r1-1186.md`](raw/r1-1186.md); input [`inputs/input-1186.md`](inputs/input-1186.md).
 
 Result: cut one step, the local `check_inventory_ratchet.py --check` on the head, as a repeat of the
 hosted run. That check ran before pushing and gated the push, so deleting it would change the next

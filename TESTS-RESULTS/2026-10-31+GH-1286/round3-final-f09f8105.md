@@ -1,7 +1,8 @@
 # GH-1286 acceptance — round 3, final (skill at f09f8105, 119 lines)
 
 Same runner, prompt and input snapshots as rounds 1 and 2; two fresh subagents (Claude Opus 5.5).
-Round 3 is the last round allowed by the plan's three-round cap.
+Verbatim verdicts: [`raw/r3-1186.md`](raw/r3-1186.md), [`raw/r3-1279.md`](raw/r3-1279.md); inputs
+unchanged in [`inputs/`](inputs/). Round 3 is the last round run (see the stop decision below).
 
 ## Counter-example control — PR #1186: PASS
 
@@ -45,5 +46,6 @@ planted-flaw plan review. Two parts of the operator's expected answer are not re
    still the next step, gated on that approval") was applied to the red branch in #1186 but not to the
    marathon lane in #1279, where the plan calls a real build out of scope and separately authorized.
 
-Further rounds were not run: the plan caps them at three, and tuning the text until a known answer
-appears would fit the skill to one case. Both gaps are disclosed in the PR for the operator to judge.
+Further rounds were not run. The approved plan sets no cap on acceptance rounds; stopping after
+three is the producer's judgment (Claude), made because each further round tunes the text toward one
+known answer and so weakens what a pass would show. The two unmet parts stay recorded as unmet. Both gaps are disclosed in the PR for the operator to judge.
