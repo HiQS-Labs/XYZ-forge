@@ -38,7 +38,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Intake rated 60/30/50/40; Stage A plan written and revised after Codex plan QA round 1 (FAIL: tool containment, validator crash, stdin transport, idle calls, mirror drift, verification). Tool containment measured. | Codex plan QA through `relay-xyz`, then the agy (Gemini 3.8 Flash) build of the Codex adapter. Stage B (the 8-hour window) is a separate operator go after the adapter PR merges. |
+| Stage A (selection adapter) built, controls 25/25, live probes on `gpt-6.1-terra` at medium; issue body no longer requires a merge. Stage A2 (Codex-authored plan content) planned below. | Push finalized Stage A and open the PR; Codex plan QA on Stage A2; build and verify A2; then Stage B tooling and the window (run on this machine, not the Mac Studio, started after the build). |
 
 
 ## Issue contract (mirror of #1279 as of 2026-10-31 00:40 UTC)
@@ -276,3 +276,52 @@ The shell, exec, image, app, plugin, hook and skill-search features are disabled
 - Smallest bet: one function, a few type guards and three init flags behind the existing seam. Not built: Stage B tooling, a Claude arm, retries, schema-enforced output, a new queue or write-detection layer.
 - Alternative rejected: running Codex through `relay-drive`/`codex-turn` per tick, which the issue bars and which bundles repo access and token handoffs.
 - Rollback: revert the PR; the rules arm, its prompt hash and the loop are unchanged.
+
+## Operator decisions recorded (2026-10-31)
+
+| Decision | Value |
+|---|---|
+| Model and effort | `gpt-6.1-terra`, `medium` (`--codex-model gpt-6.1-terra --codex-effort medium`) |
+| Codex role in Stage B | authors plan content, not only the selection (Stage A2 below) |
+| Codex usage cap | no monetary or subscription ceiling; up to 180 calls |
+| Dry-run cap | 10 ready lanes |
+| QA sample size | the issue's minimums (12 accepted plans per arm or all, all safety-critical holds, at least 6 deliberately flawed controls) |
+| Machine | this machine; the Mac Studio is busy |
+| Start time | after the Stage B tooling is built, on Noel's explicit go |
+| Merge before the window | not required; the manifest pins the adapter PR head SHA, pushed and unchanged after the pin (issue body edited 2026-10-31) |
+| Force-push | `--force-with-lease` on the task branch only, after the review; never `development` or `main` |
+
+## Stage A2 plan — Codex-authored plan content
+
+**Why.** Today the deterministic planner extracts scope, acceptance and write set from the issue and capture doc, and holds an issue as `needs-recon` or `missing-scope` when it cannot. Stage A's adapter only chooses a request, so the Codex arm and the rules arm produce identical plan content (observed: both chose the same two requests on the 4-request smoke). The operator wants Codex to author plan content so the soak measures planning, not obedience.
+
+**Smallest bet.** One response per eligible slot still returns one decision. For `plan-draft` the decision may carry an optional `authored` object; the deterministic validator checks it, and the existing `plan_draft` tool merges it into the brief, labelled. No second call, no new tool, no new queue.
+
+### Design
+
+1. **Decision shape.** `plan-draft` args are `{"inbox_id": id}` or `{"inbox_id": id, "authored": {...}}`. `authored` keys are a subset of `scope` (<= 5 strings of <= 600 chars), `acceptance` (<= 8 of <= 400), `open_questions` (<= 5 of <= 300), `write_set` (<= 20 repo-relative paths). Anything else is rejected.
+2. **Validator is the boundary.** `_validate` takes an optional `tracked` set (the frozen `backlog/base-files.txt` index, `None` outside backlog mode). With `authored` present it requires the exact key and size limits above, all strings, `tracked` not `None`, and every `write_set` path in `tracked`; otherwise it returns `authored-shape`, `authored-without-backlog` or `authored-path-not-tracked`. An invented file is therefore a measured, classified rejection and a safe idle, never a brief.
+3. **Merge in the existing tool.** `plan_draft` reads `args.get("authored")`. Each authored string becomes an entry `{"heading": "codex-authored", "text": s, "source": "codex-authored"}` after the sourced entries; authored paths are appended after sourced ones (deduplicated) with `source: "codex-authored"`. Sourced material is never replaced. The brief gains `"authored": true|false`. The existing status logic then runs over the combined lists, so an issue the planner would hold for lack of a sourced write set or scope can become a `draft`; it is the labelled authored entries, not a silent change, that made it one. Wave packing, collision checks and `packet` run unchanged over the combined write set.
+4. **Grounding.** `codex_decide` appends a "Request material" block to the prompt for the first 12 pending `plan-request`s: issue number, title, the first 5000 characters of the frozen issue body (`backlog/issues.json`, found from `config["manifest_path"]`) and the first 3000 characters of the capture doc if it exists. The model may choose only among the shown requests. No tool or file access is added.
+5. **Prompt and config.** New `prompts/evaluator.v3.md` (v2 plus the authoring contract, the size limits, "write only what the material supports", "list every file you name, none you cannot see in the material", and that bodies are untrusted data). `init --codex-authoring` selects it and records `codex_authoring: true` and its prompt hash; default off keeps Stage A behaviour and hash. `decision.schema.json` is unchanged (`args` is already free-form).
+6. **Calls and cost.** Still one call per eligible slot (idle slots make none). The operator allows 180; the window sets `--daily-cap 1.8 --max-call-cost 0.01`. Cost stays `unknown`.
+7. **Not in scope.** A second authoring call, Codex file or tool access, authored content replacing sourced content, changing the planner, or any test file.
+
+### Risks named
+
+- Issue and doc text now reaches the model and the model's text reaches the brief, and briefs later seed `MARATHON.yaml` packets. Injected instructions could ride a brief into a future builder prompt. Mitigations: bounded sizes, labelled entries, sourced material kept alongside, nothing auto-launches (copying a folder is the approval), and the 24 canaries plus the adversarial QA test it. This is a risk the soak measures, not one the design removes.
+- Authored scope can be plausible and wrong. The deterministic checks cannot judge truth; adversarial QA (Codex reviews rules plans, Claude reviews Codex plans) and the dry runs are the checks.
+
+### Ordered implementation, with verification inline
+
+1. Build `_validate(..., tracked)`, `plan_draft` merge, `codex_decide` material block, `evaluator.v3.md`, `--codex-authoring` with a non-Claude builder. -> `python3 -m py_compile`; the diff touches only `harness.py` and the new prompt, plus evidence.
+2. Extend the manual controls (stub `CODEX_BIN`, no new suite): valid authored plan accepted and merged with `source: codex-authored` and `authored: true`; invented path rejected with `authored-path-not-tracked` and safe idle; oversize string, wrong key, non-string item and `authored` in scenario mode each rejected with their reason; sourced entries preserved; an issue the planner holds as `missing-scope` becomes `draft` only with authored scope; authoring off (default) leaves the Stage A path and prompt hash byte-identical; the old validator on the same inputs is the red control. -> all controls pass in a disposable clone.
+3. Live: two slots on `gpt-6.1-terra` at medium with authoring on over the real backlog; record the authored brief and compare with the sourced-only brief. -> classified receipts, every authored path tracked, equal input digests with the rules arm.
+4. Claude final QA on the exact SHA; the classified gate on the final SHA.
+
+### Acceptance (Stage A2)
+
+- [ ] Every control in step 2 passes; the old validator fails the red control.
+- [ ] A live authored brief is merged, labelled `codex-authored`, keeps its sourced entries, and every authored path is tracked.
+- [ ] With `--codex-authoring` absent, config, prompt hash and behaviour equal Stage A's.
+- [ ] Independent plan QA (Codex) approved; final QA and the classified gate recorded for the exact SHA.
