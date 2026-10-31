@@ -1,7 +1,7 @@
 ============================= test session starts ==============================
-platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- /Users/noelsaw/.cache/xyz-forge-test-venv/bin/python3
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- ~/.cache/xyz-forge-test-venv/bin/python3
 cachedir: .pytest_cache
-rootdir: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1306-hq-unchanged-source-receipt-2026-10-31
+rootdir: <task clone>/XYZ-forge-gh1306-hq-unchanged-source-receipt-2026-10-31
 configfile: pytest.ini
 collecting ... collected 33 items
 
