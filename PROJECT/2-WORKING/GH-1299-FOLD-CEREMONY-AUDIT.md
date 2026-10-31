@@ -14,7 +14,7 @@ issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1299
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed, capture doc written | Rate, promote, edit |
+| Folded into sanity-check Plan mode (tested wording); README rule; fold runs f1–f2 recorded; docs gate green | Final Codex QA, then ready PR |
 
 ## Why
 
