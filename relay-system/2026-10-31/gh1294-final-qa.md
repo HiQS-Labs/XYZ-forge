@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-31.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -173,5 +173,85 @@ Out of scope on purpose: #1295 (injected text) and the empty-`reason` check, def
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Ship within the stated single-operator envelope. The delivered-draft omission is fixed in the existing admission loop; planner-lane behavior is preserved. No blocking or should-fix finding.
+swept file: yes
+
+- [Pass] Admission: `utils/py/harness.py:574-603` has exactly two lane-append paths. Planner records pass the delivered guard at lines 578-581; draft briefs now pass it at lines 591-594. A `ready` brief outside `computed["active"]` reaches neither append. The read-only probe below observes the expected delivered/ordinary draft and active/inactive ready outcomes. No correction required.
+- [Pass] Size and reason: `utils/py/harness.py:557-561` centralizes the existing membership check and identical reason expression used in the embedded old diff. Multiple PRs retain comma-space formatting, and an absent issue returns `None` (probe below). This is a bounded local helper, with no new subsystem. No correction required.
+- [Pass] Evidence honesty: `TESTS-RESULTS/2026-10-31+GH-1294/gh1294-check.py:15-18` supplies nonempty delivered/draft inputs and prints observable scheduling; `gh1294-check-output.txt:1-4` records the claimed baseline/fixed difference. The independent in-memory guard-removal control below reproduces the failure. `SUMMARY.md` explicitly states “the original canary round trip ... is not reproducible today”; `roundtrip-attempt-output.txt` reports “issue #384 is not in the expected frozen state (held-delivered)”. No claim of a successful live round trip is made. No correction required.
+- [Pass] Scope and sweep: read all of `utils/py/harness.py:1-1708`, including brief generation/admission (642-740), verification (743-767), and the provisional-wave packet consumer (1263-1346), plus all five listed evidence files and this relay. No additional pre-existing defect found within this review's stated envelope, beyond the explicitly deferred topics. The Setup's declared changed-file list contains no new `test/` suite or registry change; the manual script is evidence under `TESTS-RESULTS/`. No correction required. A repository-wide diff inventory was not independently queried because this turn forbids Git.
+- [Unverified — needs clone run] Full harness/real packer execution, exact baseline `b81f4205` replay, and the live canary round trip were not independently run here. The probe substitutes packing/zone selection and executes only the three extracted, non-mutating source functions; it proves admission decisions, not dependency packing or end-to-end behavior. Full gate attestation remains with the harness after this turn.
+
+Narrow probe command (exit 0; no source-module imports, fixtures, Git, suite, database, or runtime writes; mutation exists only in memory):
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PY'
+import ast, copy, json
+from pathlib import Path
+from types import SimpleNamespace
+tree = ast.parse(Path("utils/py/harness.py").read_text())
+names = {"_delivered_hold", "_build_proposal", "_probe_landing"}
+nodes = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in names]
+assert len(nodes) == 3
+def load(ns_nodes):
+    ns = {"copy": copy, "DRAFT_LABEL": "draft"}
+    exec(compile(ast.Module(body=ns_nodes, type_ignores=[]), "<source-probe>", "exec"), ns)
+    return ns
+ns = load(nodes)
+engine = SimpleNamespace(_zone_of=lambda *_: {"zone": "z", "zoneRule": "r"},
+    _pack_waves=lambda lanes, view, **kw: ([lanes] if lanes else [], []),
+    _contract_seams=lambda _: [])
+def measure(space, status, active, delivered):
+    r = {"gh": 384, "state": "ready" if active else "needs-contract",
+         "writeset": ["utils/py/x.py"], "contract": None}
+    b = {"issue": 384, "draft_status": status, "title": "t", "deps": [],
+         "write_set": [{"path": "utils/py/x.py"}], "request_id": "r"}
+    c = {"active": [r] if active else [], "deduped": [r], "waves": [], "contract_seams": []}
+    m = {"delivered": {"384": [386]} if delivered else {}, "requests": {"r": {}}, "excluded": []}
+    p = space["_build_proposal"](engine, c, [b], m, "t", "r")
+    return {"scheduled": [l["issue"] for w in p["provisional"]["waves"] for l in w], "held": p["held"]}
+for label, args in [
+    ("delivered draft", ("draft", False, True)),
+    ("ordinary draft", ("draft", False, False)),
+    ("delivered ready active", ("ready", True, True)),
+    ("ordinary ready active", ("ready", True, False)),
+    ("delivered ready inactive", ("ready", False, True)),
+    ("ordinary ready inactive", ("ready", False, False))]:
+    print(label + ": " + json.dumps(measure(ns, *args)))
+mutated = copy.deepcopy(nodes)
+fn = next(n for n in mutated if n.name == "_build_proposal")
+loop = next(n for n in fn.body if isinstance(n, ast.For) and isinstance(n.target, ast.Name) and n.target.id == "b")
+assert isinstance(loop.body[0], ast.If)
+loop.body[0].body = loop.body[0].body[2:]
+red = measure(load(mutated), "draft", False, True)
+assert red["scheduled"] == [384] and not red["held"]
+print("guard-removed control: " + json.dumps(red))
+reason = "possibly delivered: closed by merged PR #386, #400; issue still open"
+assert ns["_delivered_hold"]({"384": [386, 400]}, 384) == reason
+assert ns["_delivered_hold"]({}, 384) is None
+print("reason bytes and absent key: OK")
+PY
+```
+
+Decisive output:
+
+```text
+delivered draft: {"scheduled": [], "held": [{"issue": 384, "reason": "possibly delivered: closed by merged PR #386; issue still open"}]}
+ordinary draft: {"scheduled": [384], "held": []}
+delivered ready active: {"scheduled": [], "held": [{"issue": 384, "reason": "possibly delivered: closed by merged PR #386; issue still open"}]}
+ordinary ready active: {"scheduled": [384], "held": []}
+delivered ready inactive: {"scheduled": [], "held": []}
+ordinary ready inactive: {"scheduled": [], "held": []}
+guard-removed control: {"scheduled": [384], "held": []}
+reason bytes and absent key: OK
+```
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
