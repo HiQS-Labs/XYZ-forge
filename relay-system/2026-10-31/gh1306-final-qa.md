@@ -328,4 +328,12 @@ intake.py: AST parses
 
 **[Unverified — needs clone run]** I did not rerun the supplied runtime evidence, recovery experiments or full gate in this reviewer worktree. The full gate against the final committed state remains for the harness in a disposable full clone; approval here is not merge or promotion readiness. The preferred graph tool was unavailable under this turn's approval policy, so source review used direct reads. Only this relay file was edited; no source, evidence artifact or executable fixture was created or changed.
 
+
+### Attestation · relay-drive — 2026-10-31T20:46:14Z
+task: RELAY-gh1306-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 4b1210ccec2e7a2f3d8e1873bfae642f56c6b409
+added-range: 16763+5395
+added-sha256: d15abdcbe9134ec8c4b05b24477c5c3668cb1def96d6bac471b92e37614703b9
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
