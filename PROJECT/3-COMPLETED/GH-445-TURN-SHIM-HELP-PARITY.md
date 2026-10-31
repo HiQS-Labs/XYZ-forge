@@ -1,8 +1,8 @@
 ---
 title: "GH-445: runtime:parity — turn shims reject --help when RELAY_AGENT is unset under XYZ_PYTHON=0"
-status: Active
+status: Complete
 created: 2026-09-05
-updated: 2026-10-30
+updated: 2026-10-31
 owner: orchestrator (Claude Code)
 gh_issue: 445
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/445
