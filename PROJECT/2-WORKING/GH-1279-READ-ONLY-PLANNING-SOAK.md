@@ -367,3 +367,7 @@ Production builds, Jog or Marathon execution, GitHub writes, scheduler install, 
 - [x] The compressed driver run exercises both arms, the crash at 37 and the skips, and stops on a planted fault.
 - [x] Dry-run and QA scripts produce their records on a one-lane / three-plan trial.
 - [ ] Plan QA Approved; gate and final QA recorded for the exact SHA. (Plan QA Approved; final QA written; the gate is the pre-push run on the pushed head.)
+
+## Merge evidence
+
+- PR #1282 merged 2026-10-31 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
