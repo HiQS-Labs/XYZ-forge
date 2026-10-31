@@ -36,7 +36,7 @@ with open(os.environ["STUB_LOG"], "a") as fh:
                          "effort": [a for a in sys.argv if a.startswith("model_reasoning_effort=")]}) + "\n")
 out = sys.argv[sys.argv.index("-o") + 1]
 prompt = sys.argv[-1]
-snap = json.loads(prompt.split("Snapshot (JSON):\n", 1)[1])
+snap, _ = json.JSONDecoder().raw_decode(prompt.split("Snapshot (JSON):\n", 1)[1])
 first = snap["inbox"][0]["id"] if snap["inbox"] else "none"
 def say(text, events=None):
     for e in (events or [{"type": "thread.started"}, {"type": "turn.started"},
