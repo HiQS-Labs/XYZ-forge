@@ -2,7 +2,7 @@
 Goal: Final QA — GH-1306 intake.py update records a missing source receipt for an identical payload
 Date: 2026-10-31
 NEXT: codex
-STATUS: In Review
+STATUS: Approved
 ---
 
 # Context
@@ -285,5 +285,47 @@ sys.exit(1 if fails else 0)
 
 
 # Log
+
+## Turn 1 — codex (Reviewer) — 2026-10-31
+
+**Approved.** No blocking findings in the changed branch or its transaction/commit integration. This approves the implementation review; the final harness gate remains outstanding. Reversibility: **Easy**. The change extends the existing receipt writer with no payload migration, new writer, dependency, or registry entry.
+
+1. **[Pass — source review] Goal and predicate.** The seeded `intake.py` matches the embedded diff. Under equal deployed/source digests, only a held receipt with both the same resolved source and the deployed digest returns `Unchanged`. Catalog receipts without a source, adopt-existing self-sources and stale held digests proceed to assign the fresh `source_record()` result. Prerequisites remain preserved by the existing assignment. `add` cannot encounter an already deployed equal payload because its existing-name guard runs first.
+2. **[Pass — source review] No copy or duplicate writer.** The receipt-only arm sets the details flag and bypasses both `archive()` and `stage_payload()`, leaving the initialized actions list empty. The normal changed-payload arm still archives/stages as before. Apply reaches the existing `transact()`/`finish()` path; `validate_receipt()` accepts an empty actions list and recovery uses the same pending receipt/checksum mechanism. Preview assigns only in-memory state and never calls `transact()`. The RECORD message is restricted to preview.
+3. **[Pass — source review] Commit suppression and surrounding behavior.** The post-apply guard skips `commit_skill()` only when this arm sets `receipt_only`; ordinary add/update/remove commits retain their previous path. No new link action is introduced. As already qualified in plan QA, `finish()` still performs its existing generated-document refresh, including the root README; the no-tracked-change rationale assumes a consistent collection README. Refreshing commit/dirty metadata when source and digest already match remains outside the approved adoption goal.
+4. **[Pass — supplied execution evidence] Acceptance and red control.** I read the actual smoke script, both smoke logs, provenance and existing-suite log, rather than relying only on their embedded summaries. The candidate log records source/commit persistence for the catalog shape, preview RECORD/untouched receipt, unchanged sampled payload bytes, no backup/WARN/Pulse commit, adopt-existing repointing, identical rerun and changed-payload copying. The pre-fix log has four failures at adoption/receipt persistence, with provenance rc 1; candidate provenance has rc 0. The existing suite log collected 33 items and reports `33 passed, 4 subtests passed`, rather than the wrapper's pytest-unavailable skip. These support the planned functional acceptance. The manual payload check samples `run.py`; the stronger no-copy conclusion also rests on the inspected branch bypassing all payload actions.
+5. **[Pass — scope/rating]** `rated 40/35/50/85` is consistent with the documented operational consequence and implemented scope: missing provenance/drift visibility with correct payloads, one bounded branch change, existing transaction ownership. The reported eight-device-skill incident count and recurrence history are supplied context, not independently measured here. No larger mechanism or additional suite is justified by this fix.
+
+**[Low — evidence count only]** The summary's `19/19` is a counting error: the actual candidate log contains **18 PASS, 0 FAIL**, ending `ALL PASS`. This does not remove any planned acceptance case or affect approval. Correct future summaries to 18 rather than repeating 19. The narrower reviewer probe below reads seeded files only; it runs no CLI fixture, git command or suite. Exit status **0**.
+
+```sh
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 -B - <<'PY'
+import ast, json
+from pathlib import Path
+root = Path("TESTS-RESULTS/2026-10-31+GH-1306")
+for name in ("smoke-candidate.log", "red-control-prefix.log"):
+    lines = (root/name).read_text().splitlines()
+    assert lines, f"empty evidence: {name}"
+    print(f"{name}: PASS={sum(s.startswith('PASS ') for s in lines)} FAIL={sum(s.startswith('FAIL ') for s in lines)} terminal={lines[-1]}")
+entries = [json.loads(line) for line in (root/"provenance.jsonl").read_text().splitlines() if line]
+assert len(entries) == 3
+print("provenance rc:", [(entry["case"], entry["rc"]) for entry in entries])
+ast.parse(Path("skills/3-weekly/skills-army-hq/scripts/intake.py").read_text())
+print("intake.py: AST parses")
+PY
+```
+
+Decisive output:
+
+```text
+smoke-candidate.log: PASS=18 FAIL=0 terminal=ALL PASS
+red-control-prefix.log: PASS=13 FAIL=4 terminal=4 FAIL
+provenance rc: [('red-control-prefix-smoke', 1), ('candidate-smoke-main-and-adjacent', 0), ('test/skills-army-hq.sh', 0)]
+intake.py: AST parses
+```
+
+**[Unverified — needs clone run]** I did not rerun the supplied runtime evidence, recovery experiments or full gate in this reviewer worktree. The full gate against the final committed state remains for the harness in a disposable full clone; approval here is not merge or promotion readiness. The preferred graph tool was unavailable under this turn's approval policy, so source review used direct reads. Only this relay file was edited; no source, evidence artifact or executable fixture was created or changed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
