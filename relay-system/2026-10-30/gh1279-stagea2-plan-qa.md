@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -160,5 +160,27 @@ Dispositions (plan revised and committed):
 Round 3 is the last under the cap. Please confirm the plan is buildable or name the concrete input that still fails.
 
 Handing off to Reviewer (codex) for Round 3.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: PASS
+
+Basis: Approve the A2 plan for implementation. R3 now closes the remaining opt-in boundary gap; R1/R2 remain resolved. The acceptance criteria are achievable and falsifiable through the existing seam and the specified disposable-clone controls. This approves the plan, not the implementation or the timed window.
+
+swept file: yes
+
+Read the entire 330-line artifact and all 1522 lines of `utils/py/harness.py`, evaluator v2, the Stage A summary, the relevant wave-packing code and GH-831 policy. Findings remain scoped to A2 and its recorded operator decisions. No additional pre-existing defect requiring separate repair was established. Graph discovery returned “MCP tool call requires approval, but approval policy is never”; direct source reads supplied the evidence. No git, suite, executable fixture, adapter call or tool writer ran. Only this relay file was edited.
+
+- **[Pass] R3 closed at the plan level.** Design 2 (`PROJECT/2-WORKING/GH-1279-READ-ONLY-PLANNING-SOAK.md:303`) explicitly gives `tracked=None` the unchanged Stage A exact-key semantics unless authoring is enabled and the frozen index exists. That preserves rejection of the round-2 authored response while off (`utils/py/harness.py:991–993`). The single production call is at `:1289`; rejection becomes safe idle before intent persistence (`:1290–1308`), so the existing tool cannot receive that rejected authored response. Step 2 (`A2 :320`) now replays the identical response off/on and checks the rejection reason, safe idle/no authored brief versus accepted labelled content. No extra boundary or writer is needed.
+
+- **[Pass] R1/R2 and downstream contracts remain buildable.** A2 `:302–304` requires nonblank entries, preserves sourced entries, omits new metadata on the off path, and drops ready-lane authored paths with `authored_ignored`. This fits the actual status order (`harness.py:645–655`), ready-lane copy (`:550–552`) and draft-path substitution (`:554–560`). Draft paths feed exact collision checks (`utils/py/_marathon_plan.py:835`) and packet claims (`harness.py:1150–1151`). Required-key verification permits extra metadata and rerenders the full brief (`:696–705`). Persisted full args already travel through `--args-json` to `plan_draft` (`:1307–1317`, `:1199`, `:1465–1466`, `:293`); fingerprints include authored content (`:952–953`) and ambiguous drafting is quarantined by request ID (`:1336–1342`).
+
+- **[Pass] grounding, compatibility and risks are stated at the right scope.** A2 `:305–306` guards both material loading and prompt selection; the shared `adapter_config` remains the place to preserve both config writers (`harness.py:831`, `:873–884`, `:913`). PRS `manifest_path` points at the backlog manifest (`:816–829`), with sibling issue material read at `:609`; pending order is oldest-first (`:1011`). The first 12 remain a rolling prompt window, with shown-only selection honestly described as a prompt rule (`A2 :305`). The frozen tracked-file restriction and legitimate-new-file/rename false-reject are explicit (`A2 :313`; index producer `harness.py:730`). Raw Markdown and label spoofing remain acknowledged (`A2 :312–315`), consistent with rendering/copying at `harness.py:469`, `:1140`, `:1157`. Labels do not establish truth or sanitize instructions. No second call, tool, queue, planner modification or new suite is warranted.
+
+- **[Pass] acceptance has an implementation and evidence path.** A2 `:319–330` specifies manual controls in a disposable clone, the old-validator red control, default-off byte comparison, draft-to-packet/collision checks, live authorship, populated-history full-prompt transport and a 12-request latency measurement. This follows the existing manual-evidence route (`A2 :248`, `:171`) and GH-831 (`AGENTS.md:156–165`). The recorded operator decisions (`A2 :284–291`) retain Terra/medium, up to 180 calls, dry-run cap 10, this machine, explicit go and a pinned unmerged head; reservation settings are carried at `:307`. Those decisions govern the older mirrored Stage B text. The Stage A summary explicitly limits its evidence to selection, supporting the need for A2 rather than claiming authorship already exists (`TESTS-RESULTS/2026-10-30+GH-1279/SUMMARY.md`, “The Codex arm only chooses which eligible request to draft”).
+
+**[Unverified — needs clone run]** All A2 runtime controls, individual red-control sensitivity, byte compatibility, packet/collision results, full argv/environment headroom, live latency and the final classified gate remain owed at build time. Inspect the individual receipts as well as their pass count. No new implementation result is claimed by this approval.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
