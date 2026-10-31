@@ -224,4 +224,12 @@ Swept the entire 369-line artifact, including the issue mirror, Stage A/A2, oper
 
 Relay closed (Approved), no further turn needed. Producer may build the approved plan, then obtain the required implementation verification and final QA before the window.
 
+
+### Attestation · relay-drive — 2026-10-31T06:03:35Z
+task: RELAY-gh1279-stageb-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: f3c62f3dac298533ad68af1ed608febebadc999a
+added-range: 33082+5188
+added-sha256: e8e15a9f611b53ea7a1c304d1b2ef69b5942d6ba945c4ac781fd5a38411b050a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
