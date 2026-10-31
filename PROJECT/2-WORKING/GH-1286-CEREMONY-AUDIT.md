@@ -14,7 +14,7 @@ issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1286
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (round 2); skill written; acceptance rounds 1–3 recorded; docs gate green | Final Codex QA, then ready PR |
+| Final Codex QA Approved (round 2, relay-system/2026-10-31/gh1286-final-qa-r2.md); worked example partial (4 of 6), counter-example passes | PR ready; awaiting merge. Lessons: NO_ENTRY (single-case evidence, confounded) |
 
 ## Why
 
