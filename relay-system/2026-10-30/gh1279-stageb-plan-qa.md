@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -191,5 +191,37 @@ Plan revised and committed (Design items 2, 3, 4). Dispositions:
 Requesting Round 3 (last under the cap). Please confirm the plan is buildable or name the concrete input that still fails.
 
 Handing off to Reviewer (codex) for Round 3.
+
+### Reviewer · Round 3 · codex
+
+VERDICT: PASS
+Basis: The Stage B plan is buildable and its acceptance is falsifiable. R2 and R5 are resolved; R1, R3, R4, R6 and N1 are closed at the plan level. Approval covers the plan, not implemented tooling or permission to start the window.
+swept file: yes
+
+Swept the entire 369-line artifact, including the issue mirror, Stage A/A2, operator overrides and Stage B acceptance, and re-read the relevant source paths. The already-identified delivered-draft admission defect remains explicitly in scope as a measurement; no additional pre-existing defect requiring a plan change was established. Read-only queries and source inspection only; no git command, executable fixture, suite or gate. Graph discovery returned `MCP tool call requires approval, but approval policy is never`; cited source was read directly.
+
+- **[Pass] R2 — Canary eligibility and expected outcomes now match the downstream seam.** `PROJECT/2-WORKING/GH-1279-READ-ONLY-PLANNING-SOAK.md:347–349` specifies complete synthetic records, matching issue material, real ledger identities, freeze-time state checks and duplicate exclusion. Closed Queue/In-progress records become `already-closed` (`utils/py/_marathon_plan.py:994–998`) and remain held even with authored content (`utils/py/harness.py:680–687`). The plan now explicitly measures delivered-draft scheduling as a defect, matching the active-lane hold at `harness.py:561–568` and independent draft admission at `:576–584`; missing scope cannot masquerade as a delivery check. Producer Round 3's authored-scope/tracked-write-set control remains part of the required all-24 clone round trip. Current ledger membership/section was checked, not current live GitHub state:
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PY'
+  import sqlite3
+  from pathlib import Path
+  c=sqlite3.connect(Path("releases.db").resolve().as_uri()+"?mode=ro&immutable=1")
+  for row in c.execute("SELECT gh_number,section FROM roadmap_items WHERE gh_number IN (255,1075,1087,1098,384,484) ORDER BY gh_number"):
+      print(*row, sep=" | ")
+  c.close()
+  PY
+  ```
+  Exit **0**; decisive output: `255 | Queue / parked intake`, `384 | Queue / parked intake`, `484 | Queue / parked intake`, `1075 | Queue / parked intake`, `1087 | Queue / parked intake`, `1098 | In progress`. Freeze-time CLOSED/delivered eligibility still must pass; no live-state claim is made here.
+
+- **[Pass] R5 — Source identity and the final tick are covered.** Artifact:351 now includes `<repo>/releases.db`, `source_head`, frozen backlog, config and prompts, checks before every tick, and repeats the comparison after the last invoked tick before reporting containment. This covers the source/copy distinction at `harness.py:762–764`. Producer Round 3 explicitly retains source-only drift, final-tick drift and unchanged-input controls; those must be witnessed in the disposable-clone compressed run, not inferred from this approval.
+
+- **[Pass] R1/N1, R3 and R4 — Parity, paths and recovery remain bounded and concrete.** Artifact:350 compares non-manifest backlog bytes and separately normalized manifest fields, avoiding `created_at` at `harness.py:848`; artifact:351–352,361–362 specifies the pinned harness path, STOP handling, unknown-cost continuation and recovery by persisted intent. Exact affected-ID quarantine matches `harness.py:1137–1146`; idle does not falsely imply that slot 37's newly available request was selected. Complete input parity remains a preparation check, not a new snapshot-import subsystem.
+
+- **[Pass] Slot accounting, QA and dry-run scope meet the governing contract.** Artifact:345–350 preserves 24 canaries + 6 misses + N real + (66−N) idle, refusal when 37 lacks real input, and all 288 digests; this matches `harness.py:853–864,1071–1078`. Artifact:353–354 keeps cap 10, unsupported/no-ready reporting under the issue's explicit nonempty-or-explain rule (:142), seven flawed controls including collisions, withheld expected answers and paired hashed controls for disagreement. Packet paths and distinct builder/reviewer arguments are supported by `harness.py:1217–1244` and `relay-automation/marathon.sh:595–621`. Operator overrides at artifact:284–291 retain this machine, Terra medium with authoring, up to 180 calls and the pinned unmerged PR head. Only init layout changes production behavior; three run-specific helpers remain commensurate. No additional subsystem, suite, gate or scheduler is warranted.
+
+- **[Unverified — needs clone run] Implementation and window readiness.** Artifact:360–369 still requires all-24 canary round trips, layout/parity red controls, compressed two-arm driver controls (including the Round 3 source-only and final-tick mutations), one-lane/three-plan trials and exact-SHA gate/final QA. No such runtime result is attested in this turn. Evidence must be retained with provenance, and Noel's explicit go remains required (artifact:290,334).
+
+Relay closed (Approved), no further turn needed. Producer may build the approved plan, then obtain the required implementation verification and final QA before the window.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
