@@ -204,4 +204,12 @@ An earlier exploratory probe exited 1 because it assumed a nonexistent target_id
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-31T03:52:34Z
+task: RELAY-gh1280-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: a73a772ff2d14f829b3b9fb224eddd5f487d0b77
+added-range: 16917+6293
+added-sha256: c23bfe22fd0a04b85da9ac1aa329fb89f2d6c568e72bb048c8358ce28a5e7371
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
