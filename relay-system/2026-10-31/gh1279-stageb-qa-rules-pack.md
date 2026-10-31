@@ -2806,4 +2806,12 @@ Result: 19 APPROVE (including explicit holds), 25 REJECT. No artifact or source 
 
 relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-31T15:08:05Z
+task: RELAY-gh1279-stageb-qa-rules-pack
+reviewer: codex
+status: Approved
+reviewed-head: de14e045aa889988e1a352d3c42b077a21774639
+added-range: 95324+23653
+added-sha256: 25a756a76d252213bd9bf93d422019be119af8cea46ec35bb595bc91cd29d54d
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
