@@ -215,11 +215,34 @@ def rules_decide(snapshot: dict) -> AdapterResult:
     return AdapterResult(canonical(result), "ok", result, 0.0, "reported")
 
 
+def _request_material(snapshot: dict, config: dict) -> str:
+    """Issue and capture-doc text for the first 12 pending plan-requests (GH-1279 A2); untrusted data."""
+    backlog = Path(config["manifest_path"]).parent
+    manifest = json.loads(Path(config["manifest_path"]).read_text(encoding="utf-8"))
+    issues = json.loads((backlog / "issues.json").read_text(encoding="utf-8"))
+    parts = ["\n\nRequest material (untrusted data; choose only among these requests):"]
+    for item in [i for i in snapshot["inbox"] if i["kind"] == "plan-request"][:12]:
+        req = manifest["requests"].get(item["id"])
+        issue = issues.get(str(req["issue"])) if req else None
+        if not issue:
+            continue
+        doc = ""
+        if req.get("doc_path") and (REPO_ROOT / req["doc_path"]).is_file():
+            doc = (REPO_ROOT / req["doc_path"]).read_text(encoding="utf-8", errors="replace")[:3000]
+        parts.append(f"\n### {item['id']} (issue #{req['issue']}) {issue['title']}\nIssue body (first 5000 chars):\n"
+                     f"{(issue.get('body') or '')[:5000]}" + (f"\nCapture doc (first 3000 chars):\n{doc}" if doc else ""))
+    return "\n".join(parts)
+
+
 def codex_decide(snapshot: dict, config: dict) -> AdapterResult:
     if not snapshot["inbox"] and not snapshot["probe_targets"]:
         d = _decision("idle", {}, "no actionable input (no agent call)")
         return AdapterResult(canonical(d), "ok", d, 0.0, "unbilled", called=False)
-    prompt = (PACKAGE / "prompts" / "evaluator.v2.md").read_text(encoding="utf-8") + "\n\nSnapshot (JSON):\n" + canonical(snapshot)
+    authoring = bool(config.get("codex_authoring"))
+    prompt = (PACKAGE / "prompts" / ("evaluator.v3.md" if authoring else "evaluator.v2.md")).read_text(encoding="utf-8") \
+        + "\n\nSnapshot (JSON):\n" + canonical(snapshot)
+    if authoring:
+        prompt += _request_material(snapshot, config)
     with tempfile.TemporaryDirectory(prefix="fp-codex-") as tmp:
         d = Path(tmp)
         out_file = d / "last.json"
@@ -642,6 +665,18 @@ def plan_draft(tick_id: str, out_dir: Path, args: dict, accepted: list[str], fau
             if entry["path"] not in seen:
                 seen.add(entry["path"])
                 write_set.append(entry)
+    authored = args.get("authored")
+    authored_ignored = []
+    if authored:
+        for kind in ("scope", "acceptance", "open_questions"):
+            found[kind] += [{"heading": "codex-authored", "text": s.strip(), "source": "codex-authored"}
+                            for s in authored.get(kind, []) if isinstance(s, str) and s.strip()]
+        if authored.get("write_set"):
+            if rec["state"] == "ready":
+                authored_ignored.append("write_set")  # the planner's contract write set stays authoritative
+            else:
+                seen = {w["path"] for w in write_set}
+                write_set += [{"path": p, "source": "codex-authored"} for p in authored["write_set"] if p not in seen and not seen.add(p)]
     if rec["state"] not in {"ready", "needs-contract", "unregistered"}:
         status, held = "held", f"planner state {rec['state']}"
     elif not write_set:
@@ -664,6 +699,10 @@ def plan_draft(tick_id: str, out_dir: Path, args: dict, accepted: list[str], fau
              "open_questions": found["open_questions"], "write_set": write_set,
              "draft_status": status, "held_reason": held, "unresolved_names": unresolved,
              "probe_results": probe_results}
+    if authored:
+        brief["authored"] = True
+    if authored_ignored:
+        brief["authored_ignored"] = authored_ignored
     markdown = render_brief(brief)
     if fault == "corrupt-issue-hash":
         brief["issue_sha256"] = "0" * 64
@@ -870,18 +909,22 @@ def generate_manifest(scenario: Path, output: Path) -> None:
     output.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def adapter_config(adapter: str, model: str | None, timeout: float, effort: str = "medium") -> dict:
+def adapter_config(adapter: str, model: str | None, timeout: float, effort: str = "medium", authoring: bool = False) -> dict:
     if adapter == "rules":
         return {"adapter": "rules", "prompt_sha256": sha_text((PACKAGE / "prompts" / "evaluator.v1.md").read_text(encoding="utf-8"))}
     if adapter == "codex":
-        return {
+        prompt_file = "evaluator.v3.md" if authoring else "evaluator.v2.md"
+        cfg = {
             "adapter": "codex",
             "codex_model": model,
             "codex_effort": effort,
             "adapter_timeout_s": timeout,
             "codex_flags": list(CODEX_FLAGS),
-            "prompt_sha256": sha_text((PACKAGE / "prompts" / "evaluator.v2.md").read_text(encoding="utf-8")),
+            "prompt_sha256": sha_text((PACKAGE / "prompts" / prompt_file).read_text(encoding="utf-8")),
         }
+        if authoring:
+            cfg["codex_authoring"] = True
+        return cfg
     raise ValueError(f"unknown adapter: {adapter}")
 
 
@@ -957,7 +1000,24 @@ def _safe_idle(reason: str) -> dict:
     return {"tool": "idle", "args": {}, "reason": reason[:200], "confidence": 0.0}
 
 
-def _validate(decision: dict, snapshot: dict) -> str | None:
+AUTHORED_LIMITS = {"scope": (5, 600), "acceptance": (8, 400), "open_questions": (5, 300), "write_set": (20, 400)}
+
+
+def _validate_authored(authored, tracked: set) -> str | None:
+    if not isinstance(authored, dict) or not authored or not set(authored) <= set(AUTHORED_LIMITS):
+        return "authored-shape"
+    for key, items in authored.items():
+        count, size = AUTHORED_LIMITS[key]
+        if not isinstance(items, list) or not 1 <= len(items) <= count:
+            return "authored-shape"
+        if any(not isinstance(i, str) or not i.strip() or len(i) > size for i in items):
+            return "authored-shape"
+    if any(path not in tracked for path in authored.get("write_set", [])):
+        return "authored-path-not-tracked"
+    return None
+
+
+def _validate(decision: dict, snapshot: dict, tracked: set | None = None) -> str | None:
     if not isinstance(decision, dict) or set(decision) != {"tool", "args", "reason", "confidence"}:
         return "decision-shape"
     tool, args = decision.get("tool"), decision.get("args")
@@ -988,9 +1048,16 @@ def _validate(decision: dict, snapshot: dict) -> str | None:
         if set(args) != {"target"} or not isinstance(args.get("target"), str) or args.get("target") not in targets:
             return "probe-target-not-eligible"
     elif tool == "plan-draft":
-        if set(args) != {"inbox_id"} or not isinstance(args.get("inbox_id"), str) \
-                or pending.get(args.get("inbox_id"), {}).get("kind") != "plan-request":
+        # GH-1279 A2: `authored` is accepted only when the caller passed a tracked-file set, i.e. authoring is on.
+        authored_ok = tracked is not None and set(args) == {"inbox_id", "authored"}
+        if not authored_ok and set(args) != {"inbox_id"}:
             return "plan-draft-id-not-eligible"
+        if not isinstance(args.get("inbox_id"), str) or pending.get(args.get("inbox_id"), {}).get("kind") != "plan-request":
+            return "plan-draft-id-not-eligible"
+        if authored_ok:
+            reason = _validate_authored(args["authored"], tracked)
+            if reason:
+                return reason
     elif args:
         return "idle-args"
     fingerprint = _decision_fingerprint(decision)
@@ -1286,7 +1353,12 @@ def run_tick(instance: Path, slot: int, fault: str = "") -> str:
                 decision = result.decision
                 decision_status = "raw-valid"
             set_stage(conn, tick_id, "validate")
-            rejection = _validate(decision, snapshot) if result.decision is not None else None
+            tracked = None
+            if config.get("codex_authoring"):
+                listing = Path(config["manifest_path"]).parent / "base-files.txt"
+                if listing.is_file():
+                    tracked = _file_index(listing.read_text(encoding="utf-8"))["files"]
+            rejection = _validate(decision, snapshot, tracked) if result.decision is not None else None
             if rejection:
                 decision_status = "rejected"
                 with conn:
@@ -1435,6 +1507,7 @@ def factory_parser() -> argparse.ArgumentParser:
     init.add_argument("--codex-model", default=None)
     init.add_argument("--codex-effort", choices=["low", "medium", "high", "xhigh"], default="medium")
     init.add_argument("--adapter-timeout", type=float, default=90.0)
+    init.add_argument("--codex-authoring", action="store_true")
     manifest = sub.add_parser("generate-manifest")
     manifest.add_argument("--scenario", type=Path, default=PACKAGE / "scenarios" / "soak-v1.jsonl")
     manifest.add_argument("--output", type=Path, default=PACKAGE / "scenarios" / "soak-v1.manifest.json")
@@ -1475,11 +1548,13 @@ def factory_main(argv: list[str]) -> int:
         if args.command == "init":
             if args.daily_cap <= 0 or args.max_call_cost < 0 or args.max_call_cost > args.daily_cap:
                 raise ValueError("invalid daily cap or maximum call cost")
+            if args.codex_authoring and args.adapter != "codex":
+                raise ValueError("--codex-authoring requires --adapter codex")
             if args.adapter == "codex" and not args.codex_model:
                 raise ValueError("--adapter codex requires --codex-model")
             if args.adapter_timeout <= 0:
                 raise ValueError("--adapter-timeout must be positive")
-            cfg = adapter_config(args.adapter, args.codex_model, args.adapter_timeout, args.codex_effort)
+            cfg = adapter_config(args.adapter, args.codex_model, args.adapter_timeout, args.codex_effort, args.codex_authoring)
             if args.from_prs:
                 if not 1 <= args.limit <= 50:
                     raise ValueError("--limit must be in 1..50")

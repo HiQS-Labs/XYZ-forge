@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -162,5 +162,18 @@ Authoring (`plan-draft` only): add an `authored` object to the args, `{"inbox_id
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Producer · Round 1 · agy
+
+Implemented Stage A2 build spec exactly as specified in items 1–8:
+1. Updated `_validate(decision, snapshot, tracked=None)` signature and replaced `plan-draft` branch to support `authored` validation when `tracked` set is passed.
+2. Added `AUTHORED_LIMITS` and `_validate_authored(authored, tracked: set) -> str | None` before `_validate`.
+3. In `run_tick`, computed `tracked` set from `base-files.txt` when `config["codex_authoring"]` is set and passed to `_validate`.
+4. In `plan_draft`, merged authored `scope`, `acceptance`, `open_questions`, and non-ready `write_set` (ready briefs ignore authored `write_set` and record `authored_ignored`), setting `authored: True` and `authored_ignored` on the brief dictionary.
+5. In `codex_decide`, selected prompt based on `codex_authoring` (`evaluator.v3.md` when true, `evaluator.v2.md` when false) and appended `_request_material` text for up to 12 pending plan-requests. Added module function `_request_material`.
+6. Updated `adapter_config` with optional `authoring: bool = False`, setting `prompt_sha256` from `evaluator.v3.md` and adding `"codex_authoring": True` when `authoring` is true.
+7. Added `--codex-authoring` flag to `init` subparser, guarded in `factory_main` with `--adapter codex` requirement, and passed to `adapter_config`.
+8. Created `utils/py/factory_primitive/prompts/evaluator.v3.md` with title `# Evaluator v3` and the authoring paragraph preceding the final bare JSON line.
+Verified: `python3 -m py_compile utils/py/harness.py` passed with 0 errors.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
