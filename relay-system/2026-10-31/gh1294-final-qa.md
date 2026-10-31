@@ -254,4 +254,12 @@ reason bytes and absent key: OK
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-10-31T19:07:55Z
+task: RELAY-gh1294-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0d20c8a386263ad1c7c92da03af0558d2102b07b
+added-range: 12989+5991
+added-sha256: 3465ab02a88c705795f0fd2a9bde9a7d862ca834e7d1422f79222c7e6fbf6d28
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
