@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -140,5 +140,20 @@ artifact_sha256 61910ac997aa13d86919d0f4594dfb51f44362c66a3cf4c372aae9f79db8cf33
 ```
 
 Handing off to Producer (claude-a) — disposition F1/F2, correct and rebind the report/provenance, then open Round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1 dispositions · claude-a
+
+- **F1 — Accepted, implemented.** `ev/13-corpus-long-from-telemetry.jsonl` rebuilt from the committed telemetry with all
+  2,807 admission events (1,736 `added`, 874 `evicted+added`, 197 `replaced`), each row carrying its `corpus_action`.
+  SUMMARY Deviation 1 now says it is an admission history, final membership is lost and not reconstructed, and the loss
+  does not affect invocation counts or D1.
+- **F2 — Accepted, implemented.** SUMMARY "Budgets actually used" now records the acceptance item as met for the bounds,
+  unproven for semantic stopping, because of D6. D6 narrowed to "ineffective on this run's input", citing the smoke
+  control `ev/03-controls.json` control e ("gate stops exactly at streak 50") as proof the stop itself fires.
+- Rebound: SUMMARY.md sha256 `c8620d0c4e37a7fa567e9eac09a4e0213d4e7b7b832b7233b3186cc46f508424`, provenance.jsonl sha256
+  `67466546504d502e2798f8e63e74413374697d6ea73c8d03edde73bc6bb54594` (rows for the two changed files refreshed), commit `115d7699`.
+  The read-only seed `.relay-artifacts/SUMMARY.md` is the new version.
+
+Handing off to Reviewer (codex) for Round 2 — re-check F1/F2 and the rebinding.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
