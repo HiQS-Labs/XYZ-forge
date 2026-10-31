@@ -1,0 +1,244 @@
+[19:25:15] sandbox clone at /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-long/clone (repo /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30)
+[19:25:15] sandbox baseline: clean tree at 9483bad07525
+[19:25:35] round 1 fp-help: 50 mutants {'pass': 11, 'fail': 39, 'anomaly': 0} cex=0 parity=0 corpus=4 total=50
+[19:25:54] round 2 fp-genman: CONTAMINATION — ['?? " "']; resetting sandbox
+[19:25:55] round 2 fp-genman: 50 mutants {'pass': 3, 'fail': 47, 'anomaly': 0} cex=0 parity=0 corpus=24 total=100
+[19:26:14] round 3 fp-status: 50 mutants {'pass': 0, 'fail': 48, 'anomaly': 2} cex=2 parity=0 corpus=12 total=150
+[19:26:34] round 4 fp-init: 50 mutants {'pass': 1, 'fail': 47, 'anomaly': 2} cex=2 parity=0 corpus=26 total=200
+[19:26:54] round 5 fp-help: 50 mutants {'pass': 17, 'fail': 33, 'anomaly': 0} cex=0 parity=0 corpus=5 total=250
+[19:27:14] round 6 fp-genman: CONTAMINATION — ['?? -1', '?? [1,2']; resetting sandbox
+[19:27:14] round 6 fp-genman: 50 mutants {'pass': 2, 'fail': 48, 'anomaly': 0} cex=0 parity=0 corpus=45 total=300
+[19:27:33] round 7 fp-status: 50 mutants {'pass': 3, 'fail': 44, 'anomaly': 3} cex=3 parity=0 corpus=21 total=350
+[19:27:53] round 8 fp-init: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=37 total=400
+[19:28:12] round 9 fp-help: 50 mutants {'pass': 12, 'fail': 38, 'anomaly': 0} cex=0 parity=0 corpus=5 total=450
+[19:28:31] round 10 fp-genman: CONTAMINATION — ['?? NaN']; resetting sandbox
+[19:28:32] round 10 fp-genman: 50 mutants {'pass': 2, 'fail': 48, 'anomaly': 0} cex=0 parity=0 corpus=65 total=500
+[19:28:51] round 11 fp-status: 50 mutants {'pass': 0, 'fail': 45, 'anomaly': 5} cex=5 parity=0 corpus=25 total=550
+[19:29:11] round 12 fp-init: 50 mutants {'pass': 1, 'fail': 46, 'anomaly': 3} cex=3 parity=0 corpus=50 total=600
+[19:29:30] round 13 fp-help: 50 mutants {'pass': 11, 'fail': 39, 'anomaly': 0} cex=0 parity=0 corpus=5 total=650
+[19:29:50] round 14 fp-genman: CONTAMINATION — ['?? -1', '?? 0x7fffffff']; resetting sandbox
+[19:29:50] round 14 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=87 total=700
+[19:30:10] round 15 fp-status: 50 mutants {'pass': 0, 'fail': 48, 'anomaly': 2} cex=2 parity=0 corpus=38 total=750
+[19:30:29] round 16 fp-init: 50 mutants {'pass': 0, 'fail': 47, 'anomaly': 3} cex=3 parity=0 corpus=68 total=800
+[19:30:49] round 17 fp-help: 50 mutants {'pass': 10, 'fail': 40, 'anomaly': 0} cex=0 parity=0 corpus=6 total=850
+[19:31:07] round 18 fp-genman: CONTAMINATION — ['?? tabcemp/']; resetting sandbox
+[19:31:08] round 18 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=104 total=900
+[19:31:27] round 19 fp-status: 50 mutants {'pass': 1, 'fail': 46, 'anomaly': 3} cex=3 parity=0 corpus=46 total=950
+[19:31:47] round 20 fp-init: 50 mutants {'pass': 1, 'fail': 46, 'anomaly': 3} cex=3 parity=0 corpus=81 total=1000
+[19:32:06] round 21 fp-help: 50 mutants {'pass': 9, 'fail': 41, 'anomaly': 0} cex=0 parity=0 corpus=8 total=1050
+[19:32:25] round 22 fp-genman: CONTAMINATION — ['?? 9999999999999999999999999999999999999999999999999999999999999999', '?? "temp\\342\\200\\213/"']; resetting sandbox
+[19:32:25] round 22 fp-genman: 50 mutants {'pass': 4, 'fail': 45, 'anomaly': 1} cex=1 parity=0 corpus=120 total=1100
+[19:32:45] round 23 fp-status: 50 mutants {'pass': 4, 'fail': 40, 'anomaly': 6} cex=6 parity=0 corpus=52 total=1150
+[19:33:05] round 24 fp-init: 50 mutants {'pass': 2, 'fail': 46, 'anomaly': 2} cex=2 parity=0 corpus=100 total=1200
+[19:33:24] round 25 fp-help: 50 mutants {'pass': 7, 'fail': 43, 'anomaly': 0} cex=0 parity=0 corpus=10 total=1250
+[19:33:43] round 26 fp-genman: CONTAMINATION — ['?? ?']; resetting sandbox
+[19:33:44] round 26 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=137 total=1300
+[19:34:04] round 27 fp-status: 50 mutants {'pass': 1, 'fail': 47, 'anomaly': 2} cex=2 parity=0 corpus=61 total=1350
+[19:34:25] round 28 fp-init: 50 mutants {'pass': 0, 'fail': 47, 'anomaly': 3} cex=3 parity=0 corpus=118 total=1400
+[19:34:46] round 29 fp-help: 50 mutants {'pass': 10, 'fail': 40, 'anomaly': 0} cex=0 parity=0 corpus=13 total=1450
+[19:35:05] round 30 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=151 total=1500
+[19:35:25] round 31 fp-status: 50 mutants {'pass': 3, 'fail': 44, 'anomaly': 3} cex=3 parity=0 corpus=70 total=1550
+[19:35:45] round 32 fp-init: 50 mutants {'pass': 1, 'fail': 46, 'anomaly': 3} cex=3 parity=0 corpus=129 total=1600
+[19:36:05] round 33 fp-help: 50 mutants {'pass': 8, 'fail': 42, 'anomaly': 0} cex=0 parity=0 corpus=14 total=1650
+[19:36:24] round 34 fp-genman: CONTAMINATION — ['?? "\'\\""', '?? 0', '?? "\\303\\251\'"']; resetting sandbox
+[19:36:25] round 34 fp-genman: 50 mutants {'pass': 6, 'fail': 44, 'anomaly': 0} cex=0 parity=0 corpus=163 total=1700
+[19:36:44] round 35 fp-status: 50 mutants {'pass': 0, 'fail': 47, 'anomaly': 3} cex=3 parity=0 corpus=77 total=1750
+[19:37:05] round 36 fp-init: 50 mutants {'pass': 0, 'fail': 47, 'anomaly': 3} cex=3 parity=0 corpus=138 total=1800
+[19:37:25] round 37 fp-help: 50 mutants {'pass': 10, 'fail': 40, 'anomaly': 0} cex=0 parity=0 corpus=18 total=1850
+[19:37:45] round 38 fp-genman: CONTAMINATION — ['?? -1', '?? `true`']; resetting sandbox
+[19:37:45] round 38 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=177 total=1900
+[19:38:05] round 39 fp-status: 50 mutants {'pass': 0, 'fail': 47, 'anomaly': 3} cex=3 parity=0 corpus=89 total=1950
+[19:38:26] round 40 fp-init: 50 mutants {'pass': 1, 'fail': 49, 'anomaly': 0} cex=0 parity=0 corpus=159 total=2000
+[19:38:46] round 41 fp-help: 50 mutants {'pass': 7, 'fail': 43, 'anomaly': 0} cex=0 parity=0 corpus=21 total=2050
+[19:39:06] round 42 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=193 total=2100
+[19:39:26] round 43 fp-status: 50 mutants {'pass': 4, 'fail': 42, 'anomaly': 4} cex=4 parity=0 corpus=98 total=2150
+[19:39:47] round 44 fp-init: 50 mutants {'pass': 2, 'fail': 46, 'anomaly': 2} cex=2 parity=0 corpus=179 total=2200
+[19:40:07] round 45 fp-help: 50 mutants {'pass': 12, 'fail': 38, 'anomaly': 0} cex=0 parity=0 corpus=27 total=2250
+[19:40:27] round 46 fp-genman: CONTAMINATION — ['?? 2147483647', '?? `true`']; resetting sandbox
+[19:40:27] round 46 fp-genman: 50 mutants {'pass': 4, 'fail': 45, 'anomaly': 1} cex=1 parity=0 corpus=212 total=2300
+[19:40:47] round 47 fp-status: 50 mutants {'pass': 1, 'fail': 44, 'anomaly': 5} cex=5 parity=0 corpus=104 total=2350
+[19:41:08] round 48 fp-init: 50 mutants {'pass': 3, 'fail': 47, 'anomaly': 0} cex=0 parity=0 corpus=198 total=2400
+[19:41:29] round 49 fp-help: 50 mutants {'pass': 11, 'fail': 39, 'anomaly': 0} cex=0 parity=0 corpus=31 total=2450
+[19:41:49] round 50 fp-genman: CONTAMINATION — ['?? 9999999999999999999999999999999999999999999999999999999999999999', '?? "{\\"a\\":"']; resetting sandbox
+[19:41:49] round 50 fp-genman: 50 mutants {'pass': 3, 'fail': 47, 'anomaly': 0} cex=0 parity=0 corpus=234 total=2500
+[19:42:10] round 51 fp-status: 50 mutants {'pass': 0, 'fail': 48, 'anomaly': 2} cex=2 parity=0 corpus=114 total=2550
+[19:42:32] round 52 fp-init: 50 mutants {'pass': 2, 'fail': 46, 'anomaly': 2} cex=2 parity=0 corpus=207 total=2600
+[19:42:53] round 53 fp-help: 50 mutants {'pass': 3, 'fail': 47, 'anomaly': 0} cex=0 parity=0 corpus=36 total=2650
+[19:43:13] round 54 fp-genman: CONTAMINATION — ['?? -', '?? ~']; resetting sandbox
+[19:43:14] round 54 fp-genman: 50 mutants {'pass': 6, 'fail': 44, 'anomaly': 0} cex=0 parity=0 corpus=251 total=2700
+[19:43:35] round 55 fp-status: 50 mutants {'pass': 2, 'fail': 46, 'anomaly': 2} cex=2 parity=0 corpus=121 total=2750
+[19:43:56] round 56 fp-init: 50 mutants {'pass': 1, 'fail': 46, 'anomaly': 3} cex=3 parity=0 corpus=222 total=2800
+[19:44:17] round 57 fp-help: 50 mutants {'pass': 6, 'fail': 44, 'anomaly': 0} cex=0 parity=0 corpus=38 total=2850
+[19:44:37] round 58 fp-genman: CONTAMINATION — ['?? -', '?? a=b=c']; resetting sandbox
+[19:44:38] round 58 fp-genman: 50 mutants {'pass': 6, 'fail': 44, 'anomaly': 0} cex=0 parity=0 corpus=272 total=2900
+[19:44:59] round 59 fp-status: 50 mutants {'pass': 0, 'fail': 45, 'anomaly': 5} cex=5 parity=0 corpus=137 total=2950
+[19:45:21] round 60 fp-init: 50 mutants {'pass': 0, 'fail': 47, 'anomaly': 3} cex=3 parity=0 corpus=233 total=3000
+[19:45:43] round 61 fp-help: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=43 total=3050
+[19:46:04] round 62 fp-genman: 50 mutants {'pass': 3, 'fail': 47, 'anomaly': 0} cex=0 parity=0 corpus=289 total=3100
+[19:46:26] round 63 fp-status: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=152 total=3150
+[19:46:47] round 64 fp-init: 50 mutants {'pass': 0, 'fail': 47, 'anomaly': 3} cex=3 parity=0 corpus=243 total=3200
+[19:47:08] round 65 fp-help: 50 mutants {'pass': 14, 'fail': 36, 'anomaly': 0} cex=0 parity=0 corpus=49 total=3250
+[19:47:30] round 66 fp-genman: CONTAMINATION — ['?? -', '?? 2147483647', '?? NaN']; resetting sandbox
+[19:47:30] round 66 fp-genman: 50 mutants {'pass': 4, 'fail': 45, 'anomaly': 1} cex=1 parity=0 corpus=310 total=3300
+[19:47:52] round 67 fp-status: 50 mutants {'pass': 0, 'fail': 46, 'anomaly': 4} cex=4 parity=0 corpus=160 total=3350
+[19:48:14] round 68 fp-init: 50 mutants {'pass': 1, 'fail': 47, 'anomaly': 2} cex=2 parity=0 corpus=257 total=3400
+[19:48:35] round 69 fp-help: 50 mutants {'pass': 11, 'fail': 39, 'anomaly': 0} cex=0 parity=0 corpus=55 total=3450
+[19:48:56] round 70 fp-genman: CONTAMINATION — ['?? 1']; resetting sandbox
+[19:48:56] round 70 fp-genman: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=323 total=3500
+[19:49:18] round 71 fp-status: 50 mutants {'pass': 1, 'fail': 46, 'anomaly': 3} cex=3 parity=0 corpus=179 total=3550
+[19:49:40] round 72 fp-init: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=271 total=3600
+[19:50:01] round 73 fp-help: 50 mutants {'pass': 10, 'fail': 40, 'anomaly': 0} cex=0 parity=0 corpus=63 total=3650
+[19:50:23] round 74 fp-genman: CONTAMINATION — ['?? " "', '?? $(true)', '?? 1']; resetting sandbox
+[19:50:23] round 74 fp-genman: 50 mutants {'pass': 6, 'fail': 44, 'anomaly': 0} cex=0 parity=0 corpus=342 total=3700
+[19:50:46] round 75 fp-status: 50 mutants {'pass': 1, 'fail': 44, 'anomaly': 5} cex=5 parity=0 corpus=192 total=3750
+[19:51:08] round 76 fp-init: 50 mutants {'pass': 1, 'fail': 43, 'anomaly': 6} cex=6 parity=0 corpus=286 total=3800
+[19:51:30] round 77 fp-help: 50 mutants {'pass': 7, 'fail': 43, 'anomaly': 0} cex=0 parity=0 corpus=69 total=3850
+[19:51:51] round 78 fp-genman: CONTAMINATION — ['?? -', '?? "t\\342\\200\\250emp/"']; resetting sandbox
+[19:51:52] round 78 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=359 total=3900
+[19:52:14] round 79 fp-status: 50 mutants {'pass': 0, 'fail': 47, 'anomaly': 3} cex=3 parity=0 corpus=201 total=3950
+[19:52:35] round 80 fp-init: 50 mutants {'pass': 1, 'fail': 49, 'anomaly': 0} cex=0 parity=0 corpus=299 total=4000
+[19:52:57] round 81 fp-help: 50 mutants {'pass': 8, 'fail': 42, 'anomaly': 0} cex=0 parity=0 corpus=75 total=4050
+[19:53:19] round 82 fp-genman: CONTAMINATION — ['?? "path with spaces/"', '?? "te\\342\\200\\250mp/"']; resetting sandbox
+[19:53:19] round 82 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=376 total=4100
+[19:53:41] round 83 fp-status: 50 mutants {'pass': 2, 'fail': 45, 'anomaly': 3} cex=3 parity=0 corpus=217 total=4150
+[19:54:03] round 84 fp-init: 50 mutants {'pass': 1, 'fail': 47, 'anomaly': 2} cex=2 parity=0 corpus=311 total=4200
+[19:54:25] round 85 fp-help: 50 mutants {'pass': 3, 'fail': 47, 'anomaly': 0} cex=0 parity=0 corpus=80 total=4250
+[19:54:47] round 86 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=391 total=4300
+[19:55:09] round 87 fp-status: 50 mutants {'pass': 2, 'fail': 46, 'anomaly': 2} cex=2 parity=0 corpus=232 total=4350
+[19:55:31] round 88 fp-init: 50 mutants {'pass': 1, 'fail': 47, 'anomaly': 2} cex=2 parity=0 corpus=324 total=4400
+[19:55:53] round 89 fp-help: 50 mutants {'pass': 7, 'fail': 43, 'anomaly': 0} cex=0 parity=0 corpus=86 total=4450
+[19:56:14] round 90 fp-genman: CONTAMINATION — ['?? `true`']; resetting sandbox
+[19:56:15] round 90 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=401 total=4500
+[19:56:37] round 91 fp-status: 50 mutants {'pass': 0, 'fail': 45, 'anomaly': 5} cex=5 parity=0 corpus=248 total=4550
+[19:57:00] round 92 fp-init: 50 mutants {'pass': 1, 'fail': 45, 'anomaly': 4} cex=4 parity=0 corpus=337 total=4600
+[19:57:22] round 93 fp-help: 50 mutants {'pass': 13, 'fail': 37, 'anomaly': 0} cex=0 parity=0 corpus=90 total=4650
+[19:57:44] round 94 fp-genman: CONTAMINATION — ['?? 2147483647', '?? 2147483648']; resetting sandbox
+[19:57:44] round 94 fp-genman: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=416 total=4700
+[19:58:06] round 95 fp-status: 50 mutants {'pass': 0, 'fail': 47, 'anomaly': 3} cex=3 parity=0 corpus=264 total=4750
+[19:58:29] round 96 fp-init: 50 mutants {'pass': 1, 'fail': 47, 'anomaly': 2} cex=2 parity=0 corpus=347 total=4800
+[19:58:51] round 97 fp-help: 50 mutants {'pass': 10, 'fail': 40, 'anomaly': 0} cex=0 parity=0 corpus=98 total=4850
+[19:59:13] round 98 fp-genman: CONTAMINATION — ['?? " "', '?? "temp\\341\\232\\200/"']; resetting sandbox
+[19:59:13] round 98 fp-genman: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=438 total=4900
+[19:59:36] round 99 fp-status: 50 mutants {'pass': 0, 'fail': 43, 'anomaly': 7} cex=7 parity=0 corpus=278 total=4950
+[19:59:59] round 100 fp-init: 50 mutants {'pass': 1, 'fail': 47, 'anomaly': 2} cex=2 parity=0 corpus=362 total=5000
+[20:00:21] round 101 fp-help: 50 mutants {'pass': 13, 'fail': 37, 'anomaly': 0} cex=0 parity=0 corpus=101 total=5050
+[20:00:43] round 102 fp-genman: CONTAMINATION — ['?? []']; resetting sandbox
+[20:00:43] round 102 fp-genman: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=452 total=5100
+[20:01:07] round 103 fp-status: 50 mutants {'pass': 3, 'fail': 41, 'anomaly': 6} cex=6 parity=0 corpus=289 total=5150
+[20:01:29] round 104 fp-init: 50 mutants {'pass': 1, 'fail': 44, 'anomaly': 5} cex=5 parity=0 corpus=375 total=5200
+[20:01:52] round 105 fp-help: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=108 total=5250
+[20:02:15] round 106 fp-genman: 50 mutants {'pass': 3, 'fail': 47, 'anomaly': 0} cex=0 parity=0 corpus=468 total=5300
+[20:02:37] round 107 fp-status: 50 mutants {'pass': 2, 'fail': 48, 'anomaly': 0} cex=0 parity=0 corpus=306 total=5350
+[20:03:00] round 108 fp-init: 50 mutants {'pass': 2, 'fail': 44, 'anomaly': 4} cex=4 parity=0 corpus=391 total=5400
+[20:03:22] round 109 fp-help: 50 mutants {'pass': 8, 'fail': 42, 'anomaly': 0} cex=0 parity=0 corpus=109 total=5450
+[20:03:45] round 110 fp-genman: 50 mutants {'pass': 3, 'fail': 47, 'anomaly': 0} cex=0 parity=0 corpus=496 total=5500
+[20:04:08] round 111 fp-status: 50 mutants {'pass': 1, 'fail': 46, 'anomaly': 3} cex=3 parity=0 corpus=327 total=5550
+[20:04:30] round 112 fp-init: 50 mutants {'pass': 2, 'fail': 44, 'anomaly': 4} cex=4 parity=0 corpus=409 total=5600
+[20:04:53] round 113 fp-help: 50 mutants {'pass': 7, 'fail': 43, 'anomaly': 0} cex=0 parity=0 corpus=115 total=5650
+[20:05:16] round 114 fp-genman: CONTAMINATION — ['?? 0x7fffffff', '?? `true`', '?? null']; resetting sandbox
+[20:05:17] round 114 fp-genman: 50 mutants {'pass': 6, 'fail': 44, 'anomaly': 0} cex=0 parity=0 corpus=500 total=5700
+[20:05:39] round 115 fp-status: 50 mutants {'pass': 0, 'fail': 48, 'anomaly': 2} cex=2 parity=0 corpus=345 total=5750
+[20:06:02] round 116 fp-init: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=420 total=5800
+[20:06:25] round 117 fp-help: 50 mutants {'pass': 10, 'fail': 40, 'anomaly': 0} cex=0 parity=0 corpus=122 total=5850
+[20:06:48] round 118 fp-genman: CONTAMINATION — ['?? -9223372036854775808']; resetting sandbox
+[20:06:48] round 118 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=500 total=5900
+[20:07:11] round 119 fp-status: 50 mutants {'pass': 2, 'fail': 45, 'anomaly': 3} cex=3 parity=0 corpus=359 total=5950
+[20:07:34] round 120 fp-init: 50 mutants {'pass': 0, 'fail': 49, 'anomaly': 1} cex=1 parity=0 corpus=437 total=6000
+[20:07:57] round 121 fp-help: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=129 total=6050
+[20:08:20] round 122 fp-genman: CONTAMINATION — ['?? 9999999999999999999999999999999999999999999999999999999999999999', '?? NaN']; resetting sandbox
+[20:08:21] round 122 fp-genman: 50 mutants {'pass': 6, 'fail': 44, 'anomaly': 0} cex=0 parity=0 corpus=500 total=6100
+[20:08:43] round 123 fp-status: 50 mutants {'pass': 0, 'fail': 46, 'anomaly': 4} cex=4 parity=0 corpus=372 total=6150
+[20:09:07] round 124 fp-init: 50 mutants {'pass': 2, 'fail': 48, 'anomaly': 0} cex=0 parity=0 corpus=448 total=6200
+[20:09:30] round 125 fp-help: 50 mutants {'pass': 7, 'fail': 43, 'anomaly': 0} cex=0 parity=0 corpus=134 total=6250
+[20:09:52] round 126 fp-genman: CONTAMINATION — ["?? '", '?? 2147483648', '?? "tem\\341\\271\\225/"']; resetting sandbox
+[20:09:53] round 126 fp-genman: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=500 total=6300
+[20:10:16] round 127 fp-status: 50 mutants {'pass': 0, 'fail': 46, 'anomaly': 4} cex=4 parity=0 corpus=393 total=6350
+[20:10:40] round 128 fp-init: 50 mutants {'pass': 0, 'fail': 49, 'anomaly': 1} cex=1 parity=0 corpus=464 total=6400
+[20:11:03] round 129 fp-help: 50 mutants {'pass': 10, 'fail': 40, 'anomaly': 0} cex=0 parity=0 corpus=140 total=6450
+[20:11:26] round 130 fp-genman: CONTAMINATION — ['?? %s%s%n', '?? 1', '?? 9999999999999999999999999999999999999999999999999999999999999999']; resetting sandbox
+[20:11:26] round 130 fp-genman: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=500 total=6500
+[20:11:50] round 131 fp-status: 50 mutants {'pass': 0, 'fail': 47, 'anomaly': 3} cex=3 parity=0 corpus=413 total=6550
+[20:12:14] round 132 fp-init: 50 mutants {'pass': 0, 'fail': 49, 'anomaly': 1} cex=1 parity=0 corpus=482 total=6600
+[20:12:37] round 133 fp-help: 50 mutants {'pass': 9, 'fail': 41, 'anomaly': 0} cex=0 parity=0 corpus=144 total=6650
+[20:13:01] round 134 fp-genman: 50 mutants {'pass': 6, 'fail': 44, 'anomaly': 0} cex=0 parity=0 corpus=500 total=6700
+[20:13:25] round 135 fp-status: 50 mutants {'pass': 3, 'fail': 44, 'anomaly': 3} cex=3 parity=0 corpus=430 total=6750
+[20:13:48] round 136 fp-init: 50 mutants {'pass': 3, 'fail': 45, 'anomaly': 2} cex=2 parity=0 corpus=498 total=6800
+[20:14:11] round 137 fp-help: 50 mutants {'pass': 6, 'fail': 44, 'anomaly': 0} cex=0 parity=0 corpus=151 total=6850
+[20:14:35] round 138 fp-genman: CONTAMINATION — ['?? `true`']; resetting sandbox
+[20:14:35] round 138 fp-genman: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=500 total=6900
+[20:14:59] round 139 fp-status: 50 mutants {'pass': 3, 'fail': 41, 'anomaly': 6} cex=6 parity=0 corpus=443 total=6950
+[20:15:23] round 140 fp-init: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=500 total=7000
+[20:15:48] round 141 fp-help: 50 mutants {'pass': 11, 'fail': 39, 'anomaly': 0} cex=0 parity=0 corpus=156 total=7050
+[20:16:12] round 142 fp-genman: CONTAMINATION — ['?? ?']; resetting sandbox
+[20:16:13] round 142 fp-genman: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=500 total=7100
+[20:16:36] round 143 fp-status: 50 mutants {'pass': 0, 'fail': 46, 'anomaly': 4} cex=4 parity=0 corpus=463 total=7150
+[20:17:00] round 144 fp-init: 50 mutants {'pass': 1, 'fail': 49, 'anomaly': 0} cex=0 parity=0 corpus=500 total=7200
+[20:17:24] round 145 fp-help: 50 mutants {'pass': 8, 'fail': 42, 'anomaly': 0} cex=0 parity=0 corpus=163 total=7250
+[20:17:48] round 146 fp-genman: CONTAMINATION — ['?? -', '?? 0', '?? {}']; resetting sandbox
+[20:17:48] round 146 fp-genman: 50 mutants {'pass': 6, 'fail': 44, 'anomaly': 0} cex=0 parity=0 corpus=500 total=7300
+[20:18:12] round 147 fp-status: 50 mutants {'pass': 0, 'fail': 48, 'anomaly': 2} cex=2 parity=0 corpus=480 total=7350
+[20:18:36] round 148 fp-init: 50 mutants {'pass': 2, 'fail': 46, 'anomaly': 2} cex=2 parity=0 corpus=500 total=7400
+[20:19:02] round 149 fp-help: 50 mutants {'pass': 3, 'fail': 47, 'anomaly': 0} cex=0 parity=0 corpus=172 total=7450
+[20:19:25] round 150 fp-genman: CONTAMINATION — ['?? "\\t"']; resetting sandbox
+[20:19:25] round 150 fp-genman: 50 mutants {'pass': 6, 'fail': 44, 'anomaly': 0} cex=0 parity=0 corpus=500 total=7500
+[20:19:50] round 151 fp-status: 50 mutants {'pass': 0, 'fail': 48, 'anomaly': 2} cex=2 parity=0 corpus=500 total=7550
+[20:20:14] round 152 fp-init: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=500 total=7600
+[20:20:38] round 153 fp-help: 50 mutants {'pass': 7, 'fail': 43, 'anomaly': 0} cex=0 parity=0 corpus=174 total=7650
+[20:21:02] round 154 fp-genman: CONTAMINATION — ['?? temabcp/']; resetting sandbox
+[20:21:02] round 154 fp-genman: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=500 total=7700
+[20:21:27] round 155 fp-status: 50 mutants {'pass': 2, 'fail': 46, 'anomaly': 2} cex=2 parity=0 corpus=500 total=7750
+[20:21:51] round 156 fp-init: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=500 total=7800
+[20:22:15] round 157 fp-help: 50 mutants {'pass': 14, 'fail': 36, 'anomaly': 0} cex=0 parity=0 corpus=180 total=7850
+[20:22:39] round 158 fp-genman: CONTAMINATION — ['?? %s%s%n']; resetting sandbox
+[20:22:39] round 158 fp-genman: 50 mutants {'pass': 3, 'fail': 47, 'anomaly': 0} cex=0 parity=0 corpus=500 total=7900
+[20:23:03] round 159 fp-status: 50 mutants {'pass': 2, 'fail': 43, 'anomaly': 5} cex=5 parity=0 corpus=500 total=7950
+[20:23:27] round 160 fp-init: 50 mutants {'pass': 1, 'fail': 47, 'anomaly': 2} cex=2 parity=0 corpus=500 total=8000
+[20:23:52] round 161 fp-help: 50 mutants {'pass': 7, 'fail': 43, 'anomaly': 0} cex=0 parity=0 corpus=187 total=8050
+[20:24:15] round 162 fp-genman: CONTAMINATION — ['?? " "', '?? `true`', '?? "path with spaces/"']; resetting sandbox
+[20:24:16] round 162 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=500 total=8100
+[20:24:40] round 163 fp-status: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=500 total=8150
+[20:25:04] round 164 fp-init: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=500 total=8200
+[20:25:29] round 165 fp-help: 50 mutants {'pass': 7, 'fail': 43, 'anomaly': 0} cex=0 parity=0 corpus=193 total=8250
+[20:25:57] round 166 fp-genman: CONTAMINATION — ['?? 0']; resetting sandbox
+[20:25:57] round 166 fp-genman: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=500 total=8300
+[20:26:24] round 167 fp-status: 50 mutants {'pass': 1, 'fail': 46, 'anomaly': 3} cex=3 parity=0 corpus=500 total=8350
+[20:26:48] round 168 fp-init: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=500 total=8400
+[20:27:12] round 169 fp-help: 50 mutants {'pass': 6, 'fail': 44, 'anomaly': 0} cex=0 parity=0 corpus=203 total=8450
+[20:27:37] round 170 fp-genman: CONTAMINATION — ['?? 1', '?? 2147483647', '?? ~']; resetting sandbox
+[20:27:38] round 170 fp-genman: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=500 total=8500
+[20:28:03] round 171 fp-status: 50 mutants {'pass': 4, 'fail': 43, 'anomaly': 3} cex=3 parity=0 corpus=500 total=8550
+[20:28:27] round 172 fp-init: 50 mutants {'pass': 0, 'fail': 44, 'anomaly': 6} cex=6 parity=0 corpus=500 total=8600
+[20:28:51] round 173 fp-help: 50 mutants {'pass': 9, 'fail': 41, 'anomaly': 0} cex=0 parity=0 corpus=209 total=8650
+[20:29:16] round 174 fp-genman: CONTAMINATION — ['?? 2147483647']; resetting sandbox
+[20:29:16] round 174 fp-genman: 50 mutants {'pass': 4, 'fail': 46, 'anomaly': 0} cex=0 parity=0 corpus=500 total=8700
+[20:29:41] round 175 fp-status: 50 mutants {'pass': 0, 'fail': 45, 'anomaly': 5} cex=5 parity=0 corpus=500 total=8750
+[20:30:05] round 176 fp-init: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=500 total=8800
+[20:30:31] round 177 fp-help: 50 mutants {'pass': 11, 'fail': 39, 'anomaly': 0} cex=0 parity=0 corpus=211 total=8850
+[20:30:55] round 178 fp-genman: CONTAMINATION — ['?? %s%s%n', '?? -', '?? {}']; resetting sandbox
+[20:30:56] round 178 fp-genman: 50 mutants {'pass': 8, 'fail': 42, 'anomaly': 0} cex=0 parity=0 corpus=500 total=8900
+[20:31:20] round 179 fp-status: 50 mutants {'pass': 1, 'fail': 45, 'anomaly': 4} cex=4 parity=0 corpus=500 total=8950
+[20:31:45] round 180 fp-init: 50 mutants {'pass': 0, 'fail': 50, 'anomaly': 0} cex=0 parity=0 corpus=500 total=9000
+[20:32:10] round 181 fp-help: 50 mutants {'pass': 8, 'fail': 42, 'anomaly': 0} cex=0 parity=0 corpus=218 total=9050
+[20:32:35] round 182 fp-genman: 50 mutants {'pass': 3, 'fail': 47, 'anomaly': 0} cex=0 parity=0 corpus=500 total=9100
+[20:33:00] round 183 fp-status: 50 mutants {'pass': 3, 'fail': 43, 'anomaly': 4} cex=4 parity=0 corpus=500 total=9150
+[20:33:25] round 184 fp-init: 50 mutants {'pass': 2, 'fail': 45, 'anomaly': 3} cex=3 parity=0 corpus=500 total=9200
+[20:33:50] round 185 fp-help: 50 mutants {'pass': 10, 'fail': 40, 'anomaly': 0} cex=0 parity=0 corpus=222 total=9250
+[20:34:14] round 186 fp-genman: CONTAMINATION — ['?? "\'\\""', '?? -9223372036854775808', '?? 0']; resetting sandbox
+[20:34:14] round 186 fp-genman: 50 mutants {'pass': 11, 'fail': 39, 'anomaly': 0} cex=0 parity=0 corpus=500 total=9300
+[20:34:40] round 187 fp-status: 50 mutants {'pass': 1, 'fail': 45, 'anomaly': 4} cex=4 parity=0 corpus=500 total=9350
+[20:35:05] round 188 fp-init: 50 mutants {'pass': 1, 'fail': 47, 'anomaly': 2} cex=2 parity=0 corpus=500 total=9400
+[20:35:30] round 189 fp-help: 50 mutants {'pass': 8, 'fail': 42, 'anomaly': 0} cex=0 parity=0 corpus=226 total=9450
+[20:35:55] round 190 fp-genman: 50 mutants {'pass': 3, 'fail': 47, 'anomaly': 0} cex=0 parity=0 corpus=500 total=9500
+[20:36:20] round 191 fp-status: 50 mutants {'pass': 1, 'fail': 47, 'anomaly': 2} cex=2 parity=0 corpus=500 total=9550
+[20:36:45] round 192 fp-init: 50 mutants {'pass': 1, 'fail': 48, 'anomaly': 1} cex=1 parity=0 corpus=500 total=9600
+[20:37:10] round 193 fp-help: 50 mutants {'pass': 9, 'fail': 41, 'anomaly': 0} cex=0 parity=0 corpus=231 total=9650
+[20:37:35] round 194 fp-genman: CONTAMINATION — ['?? %s%s%n', '?? =', '?? t']; resetting sandbox
+[20:37:35] round 194 fp-genman: 50 mutants {'pass': 4, 'fail': 45, 'anomaly': 1} cex=1 parity=0 corpus=500 total=9700
+[20:38:00] round 195 fp-status: 50 mutants {'pass': 3, 'fail': 43, 'anomaly': 4} cex=4 parity=0 corpus=500 total=9750
+[20:38:26] round 196 fp-init: 50 mutants {'pass': 0, 'fail': 50, 'anomaly': 0} cex=0 parity=0 corpus=500 total=9800
+[20:38:51] round 197 fp-help: 50 mutants {'pass': 8, 'fail': 42, 'anomaly': 0} cex=0 parity=0 corpus=236 total=9850
+[20:39:16] round 198 fp-genman: CONTAMINATION — ['?? 0x7fffffff', '?? "{\\"a\\":"']; resetting sandbox
+[20:39:16] round 198 fp-genman: 50 mutants {'pass': 5, 'fail': 45, 'anomaly': 0} cex=0 parity=0 corpus=500 total=9900
+[20:39:41] round 199 fp-status: 50 mutants {'pass': 0, 'fail': 44, 'anomaly': 6} cex=6 parity=0 corpus=500 total=9950
+[20:40:07] round 200 fp-init: 50 mutants {'pass': 1, 'fail': 45, 'anomaly': 4} cex=4 parity=0 corpus=500 total=10000
+[20:40:08] report -> /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/out-long/campaign-report.json

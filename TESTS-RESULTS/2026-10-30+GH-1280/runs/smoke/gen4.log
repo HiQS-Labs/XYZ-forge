@@ -1,0 +1,31 @@
+[19:10:54] sandbox clone at /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-smoke/clone (repo /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30)
+[19:10:54] sandbox baseline: clean tree at 623ba2c72925
+[19:11:04] round 1 fp-help: 25 mutants {'pass': 8, 'fail': 17, 'anomaly': 0} cex=0 parity=0 corpus=3 total=25
+[19:11:13] round 2 fp-genman: CONTAMINATION — ['?? " "']; resetting sandbox
+[19:11:14] round 2 fp-genman: 25 mutants {'pass': 3, 'fail': 22, 'anomaly': 0} cex=0 parity=0 corpus=12 total=50
+[19:11:23] round 3 fp-status: 25 mutants {'pass': 0, 'fail': 19, 'anomaly': 6} cex=6 parity=0 corpus=10 total=75
+[19:11:33] round 4 fp-init: 25 mutants {'pass': 3, 'fail': 18, 'anomaly': 4} cex=4 parity=0 corpus=14 total=100
+[19:11:43] round 5 fp-help: 25 mutants {'pass': 0, 'fail': 25, 'anomaly': 0} cex=0 parity=0 corpus=3 total=125
+[19:11:52] round 6 fp-genman: CONTAMINATION — ['?? 0']; resetting sandbox
+[19:11:53] round 6 fp-genman: 25 mutants {'pass': 5, 'fail': 20, 'anomaly': 0} cex=0 parity=0 corpus=18 total=150
+[19:12:03] round 7 fp-status: 25 mutants {'pass': 1, 'fail': 22, 'anomaly': 2} cex=2 parity=0 corpus=15 total=175
+[19:12:12] round 8 fp-init: 25 mutants {'pass': 1, 'fail': 23, 'anomaly': 1} cex=1 parity=0 corpus=24 total=200
+[19:12:12] report -> /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/out-smoke/campaign-report.json
+{
+  "mutations": 200,
+  "counts": {
+    "pass": 21,
+    "fail": 166,
+    "anomaly": 13
+  },
+  "counterexamples": 13,
+  "parity_divergences": 0,
+  "verdict": {
+    "zero_host_violations": true,
+    "zero_sandbox_contamination": false,
+    "zero_host_contamination": false,
+    "zero_false_positives": false,
+    "telemetry_line_valid": true
+  },
+  "elapsed_s": 78.5
+}

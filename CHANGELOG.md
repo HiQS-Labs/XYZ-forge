@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-31 — GH-1284 outer loop: status no longer creates state on an uninitialized root
+
+- `harness.py factory-primitive status`, `tick` and `packet` now refuse a run root that was never initialized (rc 2, `instance not initialized; run init first`) instead of creating `state.db`, which made a later `init` refuse. Found by the GH-1280 ATE campaign (D1). Init paths are unchanged. Evidence: `TESTS-RESULTS/2026-10-31+GH-1284/SUMMARY.md`. Reversibility: Easy.
+
+## 2026-10-31 — GH-1286 ceremony-audit skill
+
+- New `skills/1-hourly/ceremony-audit/SKILL.md` (120 lines or fewer, no scripts, no tests). It names the goal and the one open question with the evidence that the rest is proven, labels every planned step progress / proof / safety / ceremony by asking whether deleting it would change the outcome or the next decision, prefers one real run over proxies, and returns a cut list, kept list, next step with its gate, and a parked count. Links `sanity-check`, `ponytail` and `worth-it` instead of restating them. `ARCHITECTURE.md` index row added; the `1-hourly` count now matches its rows (17). Evidence: `TESTS-RESULTS/2026-10-31+GH-1286/`. Reversibility: Easy.
+
+## 2026-10-30 — GH-1273 harmless relay separators
+
+- The reviewer-history check retains strict canonical comparison first, then tolerates empty separator-line count changes outside protected literal content with a warning. Canonical record coordinates and loader semantics are unchanged; substantive history and invalid approvals remain refused. Raw transcript remains intact. Reversibility: Costly shared approval boundary; rollback by reverting this change.
+- Mechanical verdict repair is deferred: a done token is spent on driver restart, so safe recovery needs separately reviewed state work. No recovery or approval bypass is introduced.
+
 ## 2026-10-30 — GH-1270 outer loop writes marathon launch packets and stops packing closed or stale issues
 
 - `harness.py factory-primitive init --from-prs` now freezes real GitHub state for every issue, so the planner's own already-closed rule drops CLOSED rows (#1075 no longer sits in wave 1), and freezes merged PRs that close a still-open issue, which are excluded or held as possibly delivered.

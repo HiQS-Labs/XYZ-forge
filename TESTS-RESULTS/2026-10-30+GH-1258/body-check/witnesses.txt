@@ -1,0 +1,5 @@
+gh1263-body          exit=0  body check: ok standard
+empty-headings       exit=1  refuse: empty section ## Observed
+boilerplate-prs      exit=1  refuse: each axis needs an issue-specific rationale line
+prose-acceptance     exit=1  refuse: Acceptance must be `- [ ]` items only, at least one
+spike-no-contract    exit=0  body check: ok spike
