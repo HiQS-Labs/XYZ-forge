@@ -22,7 +22,7 @@ mode itself. Acceptance rules unchanged (GH-1286 plan steps 3–4).
   as before: cutting the adapter / driver derivative, and proposing one real marathon lane.
 - **The #1186 counter-example fails in both fold runs, on one call:** both agents cut the optional red
   branch, arguing #1176 already showed the ratchet catches a new loose script and only the YAML wiring
-  is new. The standalone skill kept it in its two later runs. The text is the same, so this is
-  run-to-run variance on a borderline step, not a wording regression; with one sample per cell the
-  difference cannot be attributed to the fold. Recorded as fail; no further rounds run, by the
+  is new. The standalone skill kept it in its two later runs. The procedure wording is the same but
+  its surrounding skill changed, and there is one sample per cell, so the cause is unresolved and
+  parity with the standalone skill is unproven. Recorded as fail; no further rounds run, by the
   producer's judgment, to avoid tuning toward a known answer.
