@@ -1,0 +1,11 @@
+5d18dbc9418fa520081d166474942ac3207c2582
+core.repositoryformatversion=0
+core.filemode=true
+core.bare=false
+core.logallrefupdates=true
+core.ignorecase=true
+core.precomposeunicode=true
+remote.origin.url=/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1273-relay-separators-2026-10-30/.
+remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+branch.fix/XYZ-forge-gh1273-relay-separators-2026-10-30.remote=origin
+branch.fix/XYZ-forge-gh1273-relay-separators-2026-10-30.merge=refs/heads/fix/XYZ-forge-gh1273-relay-separators-2026-10-30

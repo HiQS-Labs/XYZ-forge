@@ -2,9 +2,9 @@
 gh_issue: 1255
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1255
 title: "Restore CLIO Codex Desktop prompt capture"
-status: PR ready — device acceptance verified
+status: Complete
 created: 2026-10-29
-updated: 2026-10-29
+updated: 2026-10-31
 owner: Codex
 doc_type: bugfix
 complexity: 2

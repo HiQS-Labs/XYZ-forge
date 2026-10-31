@@ -5,7 +5,13 @@
 - `harness.py factory-primitive init --adapter codex --codex-model M [--adapter-timeout S]` freezes the route (model, timeout, flag list, prompt hash) in the instance config; the default stays `rules` and its prompt hash is unchanged. The adapter runs one tool-disabled, read-only, ephemeral `codex exec` per eligible slot with a 90 s process-group cap, no retry, raw output retained, and classifies `ok`, `invalid-output`, `timeout`, `rate-limited` or `adapter-error`; every real call is billed `unknown`, never zero, and an empty inbox makes no call (`agent_called=false`).
 - `_validate` no longer raises `TypeError` on non-string tool or ID values (a model can emit them; the rules arm cannot), so they end as a rejected decision and a safe idle instead of a failed tick.
 - `init --codex-authoring` (Stage A2) lets the Codex decision carry an `authored` object (scope, acceptance, open questions, write set) that the validator bounds and checks against the frozen tracked-file index; `plan_draft` merges it as labelled `codex-authored` entries after the sourced ones, never replacing them, and drops authored paths for planner-ready briefs. With the flag off, the validator rejects `authored` as before and briefs are byte-identical.
-- This is the adapter only: it leaves the 8-hour window (#1279 Stage B) unrun. The deterministic planner still writes the plan content, so a Codex arm shows decision compliance and containment, not planning skill. Evidence: `TESTS-RESULTS/2026-10-30+GH-1279/SUMMARY.md`.
+- `init --canaries/--slots/--miss` (Stage B tooling) lays out frozen planning canaries, the missed slots and the real requests over a 96-slot budget, with a two-arm prepare, driver, dry-run and QA-pack helpers under `TESTS-RESULTS/2026-10-31+GH-1279-stageb/`; default `init` output is unchanged. Evidence: `TESTS-RESULTS/2026-10-31+GH-1279-stageb/SUMMARY.md`.
+- This is the adapter and its tooling only: it leaves the 8-hour window (#1279 Stage B) unrun. The deterministic planner still writes the plan content, so a Codex arm shows decision compliance and containment, not planning skill. Evidence: `TESTS-RESULTS/2026-10-30+GH-1279/SUMMARY.md`.
+
+## 2026-10-30 — GH-1273 harmless relay separators
+
+- The reviewer-history check retains strict canonical comparison first, then tolerates empty separator-line count changes outside protected literal content with a warning. Canonical record coordinates and loader semantics are unchanged; substantive history and invalid approvals remain refused. Raw transcript remains intact. Reversibility: Costly shared approval boundary; rollback by reverting this change.
+- Mechanical verdict repair is deferred: a done token is spent on driver restart, so safe recovery needs separately reviewed state work. No recovery or approval bypass is introduced.
 
 ## 2026-10-30 — GH-1270 outer loop writes marathon launch packets and stops packing closed or stale issues
 

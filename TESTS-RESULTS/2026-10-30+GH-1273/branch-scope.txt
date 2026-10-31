@@ -1,0 +1,24 @@
+ CHANGELOG.md                                       |   5 +
+ PROJECT/2-WORKING/GH-1273-RELAY-SEPARATORS.md      |  52 +++++++
+ TESTS-RESULTS/2026-10-30+GH-1273/SUMMARY.md        |   7 +
+ .../2026-10-30+GH-1273/driver-adjacent.log         |  24 ++++
+ .../2026-10-30+GH-1273/driver-smoke-r2.log         |  24 ++++
+ TESTS-RESULTS/2026-10-30+GH-1273/driver-smoke.txt  | 149 +++++++++++++++++++
+ TESTS-RESULTS/2026-10-30+GH-1273/gh505.log         |  89 ++++++++++++
+ TESTS-RESULTS/2026-10-30+GH-1273/identity-after    |  11 ++
+ TESTS-RESULTS/2026-10-30+GH-1273/identity-before   |  11 ++
+ TESTS-RESULTS/2026-10-30+GH-1273/manual-replay.py  |  43 ++++++
+ TESTS-RESULTS/2026-10-30+GH-1273/provenance.jsonl  |  11 ++
+ TESTS-RESULTS/2026-10-30+GH-1273/replay-r2.log     |  10 ++
+ TESTS-RESULTS/2026-10-30+GH-1273/replay.log        |   8 ++
+ TESTS-RESULTS/2026-10-30+GH-1273/review-diff.txt   | 130 +++++++++++++++++
+ TESTS-RESULTS/2026-10-30+GH-1273/uncited.log       |  19 +++
+ relay-automation/new-relay.sh                      |   4 +-
+ relay-system/2026-10-30/gh1273-final.codex.md      | 135 +++++++++++++++++
+ relay-system/2026-10-30/gh1273-plan.codex.md       | 159 +++++++++++++++++++++
+ releases.db                                        | Bin 1585152 -> 1585152 bytes
+ releases.sql                                       |  14 +-
+ skills/1-hourly/relay-automation/relay-pkg.tar.gz  | Bin 123078 -> 123240 bytes
+ utils/py/relay_attest.py                           |  62 ++++++++
+ utils/py/relay_drive.py                            |  12 +-
+ 23 files changed, 973 insertions(+), 6 deletions(-)
