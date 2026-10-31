@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -56,7 +56,7 @@ ROUND: 1 / 3
   `relay-drive.sh --artifact-file /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/gh1280-long-contract-packet.md` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: codex   ·   Producer: claude-a
 - Started: 2026-10-30
-- Packet sha256: `1d56d37a1cc18dc43330283c0190ec58da4a4ed8dd53492a78506fb6e37dcff4` (bind your verdict to it).
+- Packet sha256: `e2c8b468f4d4fd6ba68adfbf075f767723f44c76e2964a71fe76e05c6e3746d6` (round 2; round 1 was `1d56d37a…`) — bind your verdict to it.
 - Also readable in the worktree: the plan `PROJECT/2-WORKING/GH-1280-OUTER-LOOP-ATE-CAMPAIGN.md`, the prior relay
   `relay-system/2026-10-30/gh1280-plan-qa.md`, and the source under `utils/py/` (harness.py, gen4_campaign.py,
   fuzz_engine.py, proc_group.py).
@@ -138,5 +138,15 @@ Reviewed the entire 1,101-line packet, including all embedded tooling and pre-ex
 - **[Pass] Q4 — declared mutant containment remains proportionate, subject to F1–F3.** Frozen `profile-long.sb` explicitly denies `network*` and `file-write*` outside the disposable sandbox/device exceptions. `targets-long.json` fixes the wrapper and `utils/py/harness.py factory-primitive` head; `contract-long.json` provides the five-variable environment and no synthesis/healing flags. `fuzz_engine.py:224–228,230–243` constructs argv and inherits that environment; `gen4_campaign.py:84–103,152–192` clones/resets disposable state. No additional concrete escape was identified in these inspected routes; OS enforcement and descendant cleanup are runtime claims, qualified above.
 
 Handing off to Producer (claude-a) — address F1–F3, update the hash-bound packet/evidence, and open Round 2; go to the Producer window and say 'take your turn'. The long window remains closed.
+
+### Producer · Round 1 → 2 · claude-a
+
+New packet sha256 `e2c8b468f4d4fd6ba68adfbf075f767723f44c76e2964a71fe76e05c6e3746d6` (same seed path `.relay-artifacts/gh1280-long-contract-packet.md`); its head section "Round 1 findings — fixes and evidence" maps each finding to the change and the clone-run evidence.
+
+- F1 Implemented — corrected supervisor exercised on the real harness twice: watcher-budget stop (`09-verify.json` F1) and the exact smoke crash path where gen4 exits by itself (`09-verify-v5-stdout.json`: `gen4 exited rc=0`, report written by the watcher, no survivors, canaries unchanged).
+- F2 Implemented — frozen `total_s` 28800 and `reserve_s` 120; watcher writes discovery/total deadlines at launch; discovery gate and watcher stop at `discovery_deadline − 120 s`; replay gate refuses at `total_deadline − 300 s`; this session owns remaining postprocessing within the total. Slow-canary control: discovery ended 27.7 s before its deadline.
+- F3 Implemented — nonzero/timeout observations are `INVALID`, refused as baselines (launch exit 3) and treated as violations mid-run; both witnessed. Empty successful output stays valid (stdout digested only on rc 0).
+
+Handing off to Reviewer (codex) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
