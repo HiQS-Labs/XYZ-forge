@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -79,5 +79,53 @@ Write the verdict (PASS / FAIL / PARKED) with a Basis; set `STATUS: Approved` on
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: Changes requested. The small init-layout change is a sound direction, but the parity comparison does not cover the planner's frozen inputs, the canary specification contradicts itself, and the driver/QA acceptance checks can miss required failures. These are plan corrections, not requests for a new production subsystem, suite, registry entry or watchdog.
+swept file: yes
+
+Read the entire 365-line artifact, including the older issue mirror and Stage A/A2 text; operator decisions at lines 280–292 govern their stated overrides. The pre-existing driver path defect below is in scope; no other pre-existing defect requiring a separate production change was established. Runtime execution and mutation-heavy checks were deliberately not run in this review worktree.
+
+- **[Should] R1 — Compare the complete frozen planning input, not only request IDs (artifact:347).** `scenario_sha256` hashes only `requests`; the slot digests hash only available IDs (`utils/py/harness.py:851`, `:853`, `:895`). The planner separately consumes `gh-state.json`, the ledger and git listings (`:364–372`), and delivery checks consume `manifest.delivered` (`:554–567`). Thus two inits can pass the proposed comparison while planning different waves. Keep the bounded retry/abort approach if desired; compare the frozen backlog files and the relevant manifest fields, including delivered/excluded/source identity, before either arm starts. No new production writer or instance-copy facility is necessary.
+  Observed input: retained control `TESTS-RESULTS/2026-10-30+GH-1270/controls.txt:1–2` shows #1075 switching from absent to active solely with frozen-state coverage. A pair with identical selected requests but differing state for that unselected ledger row passes the proposed hashes; `_marathon_plan.py:994` changes its classification.
+  Affected scope: two-arm initialization parity, including unselected ledger rows that enter computed proposals.
+  Falsifier: hold requests/layout fixed and change only #1075's frozen state in one arm; preparation must reject the pair. Identical frozen inputs with the intended rules/Codex config differences must pass. Record this manual control with Stage B provenance.
+
+- **[Should] R2 — Resolve the stale/delivered canary representation before building (artifact:345–346).** Item 1 makes every canary a synthetic 900001+ unregistered issue; item 2 requires real closed/possibly-delivered issues with no synthetic body, yet its row shape has no real issue reference. Re-numbering closed #1075 as a synthetic issue removes the ledger/state lookup that made it closed. Choose and specify the actual row variant and its expected outcome; preserve real identity/state/body for real stale/delivered controls, exclude duplicate real selections, and count those controls among the 24. For synthetic rows explicitly populate the normal request fields (`doc_path`/`doc_sha256` null, canonical issue hash, matching issues entry) rather than adding planner special cases.
+  Observed input: the contradictory row contract at artifact:345–346; `plan_draft` indexes `issues[str(req["issue"])]` at `harness.py:632` and uses an unregistered fallback at `:642–643`. An absent issues entry raises before drafting; a synthetic replacement has state `unregistered` (`:476–483`), not the original closed state. A missing `doc_path` also fails at `:634`; `doc_sha256` and `issue_sha256` are required at `:637` and `:694`.
+  Affected scope: the 24 canary records and their init conversion, especially real stale/delivered controls.
+  Falsifier: round-trip all 24 rows through init → draft → proposal in a disposable clone; show a real closed control stays held, the retained possibly-delivered case stays excluded/held, synthetic rows neither crash nor lose their material, and no real issue is scheduled twice. Invalid row/missing-entry controls must fail explicitly. This is manual evidence, not a new suite.
+
+- **[Should] R3 — Correct the inherited driver's repository depth (artifact:348).** The cited driver sets `REPO = RUN_ROOT.parents[2]` at `TESTS-RESULTS/2026-10-29+GH-1248/driver.py:19`. At both its checked-in location and the proposed Stage B location that resolves to the directory above the repository. Specify `parents[1]` for this layout, or pass an explicit repository root, and include path resolution in the compressed smoke. This is a correction in the run-specific derivative only.
+  Observed input: narrow read-only probe, exit **0**: `python3 -c 'from pathlib import Path; r=Path("TESTS-RESULTS/2026-10-29+GH-1248/driver.py").resolve().parent; print("inherited harness exists:", (r.parents[2]/"utils/py/harness.py").is_file()); print("correct-depth harness exists:", (r.parents[1]/"utils/py/harness.py").is_file())'` → `inherited harness exists: False`; `correct-depth harness exists: True`.
+  Affected scope: the derivative's harness executable and subprocess cwd, before any timed slot.
+  Falsifier: from the planned evidence directory, resolve the pinned clone's actual `utils/py/harness.py` and demonstrate both arms' smoke calls use it; the inherited parent depth must fail this check.
+
+- **[Should] R4 — Verify recovery by selected input, not uncertainty count alone (artifact:348,358).** Specify a per-arm slot-38 check of slot-37's persisted intent and the exact affected IDs, their quarantine, and absence of later consumption/re-fire. The inherited driver checks only aggregate uncertainty/nonterminal counts (`driver.py:102–110`). `_reconcile` quarantines IDs from the chosen intent, not all inputs available at slot 37 (`harness.py:1139–1146`). Codex can choose an older request or safe-idle; merely scheduling a real request at 37 does not establish that it was quarantined. Record an idle intent as having no affected IDs rather than claiming that scheduled input was quarantined.
+  Observed input: accepted `idle` with `{}` args (`harness.py:1061`) or an older eligible `plan-draft` ID (`:1055`) at crash-act; reconciliation still produces one `uncertain`, but the IDs differ or are empty.
+  Affected scope: both arms' crash recovery and the no-retry/no-duplicate claim, without constraining Codex's selection policy.
+  Falsifier: the compressed manual control must detect a recovery with correct uncertainty count but a missing/wrong quarantine. Include a clean selected-request case and an idle/older-selection case; preserve the per-arm intent/quarantine evidence.
+
+- **[Should] R5 — Make frozen-identity stop checks explicit in the derivative (artifact:348).** The required hard stops include ledger modification and prompt/model drift (artifact:177–179), but neither the inherited containment check (`driver.py:53–61`) nor the listed new stops checks those identities. Adding `backlog` to the allowlist allows its contents to change unnoticed by that check, and the harness's slot check sees only IDs. Reuse the manifest's frozen hashes: compare the source/frozen ledgers and immutable input/config/prompt identities around ticks, stopping before further evaluation on drift. Also explicitly add STOP handling: the cited driver contains no STOP-file implementation to “keep.” No scheduler or generalized write-monitor is needed.
+  Observed input: a changed `backlog/releases.db` or config `codex_model` leaves all allowed top-level names and the available-ID digest unchanged (`harness.py:1071–1076`); the proposed stop list accepts this state. The original driver has no PAUSE/STOP polling beyond accepting a `paused` outcome (`driver.py:100`).
+  Affected scope: required frozen identities and operator stop handling in this foreground run.
+  Falsifier: compressed manual controls changing one frozen ledger/config identity must stop before the next evaluation; an unchanged run with expected Codex `unknown_cost` must continue. A STOP file must prevent the next tick. Record these alongside the planted-escape red control; no new test file.
+
+- **[Should] R6 — Cover collisions and define the disagreement denominator (artifact:350,364).** The issue expressly requires unsafe parallel-lane collisions (`artifact:155`); the six named controls omit them. Add a shared-write-set collision to an existing flawed control or add a seventh. Freeze an expected-result key with the rubric, keep it out of review packets, and name what “disagreement” compares: separate arm packs alone provide no paired plan verdicts. The same seeded controls can supply a small common comparison set; alternatively report plan-level reviewer disagreement as unmeasured. Keep the cross-model routing and Opus authority from the issue contract. The three-plan trial should assert expected classifications and a deliberately wrong verdict's nonzero false-approval count, not merely file creation.
+  Observed input: the six enumerated controls at artifact:350 contain no collision; the two reviewers receive different arm packs there, while artifact:157 requires disagreement results.
+  Affected scope: QA rubric/control coverage and scorer denominators, not additional model arms or a second review pipeline.
+  Falsifier: a seeded same-wave pair writing the same path must be rejected; a seeded unsafe approval must increment false approvals and prevent a zero-false-approval claim. Disagreement is computed only for identical hashed items reviewed twice, or explicitly marked unmeasured.
+
+- **[Pass] Slot availability design and budget are compatible with the current seam.** For 24 distinct canary slots outside 37/85–90, six misses and `0 <= N <= 66`, free real/idle capacity is 66 and `24 + 6 + N + (66-N) = 96` (artifact:345). Slot assignment must feed both inbox insertion and all 288 manifest entries (`harness.py:853–864`); `_snapshot` includes consumed/quarantined IDs in its availability digest (`:1071–1078`), so consumption does not invalidate that check. No request may first become available in 85–90. Availability is not consumption: pending work may survive across those misses. Preserve the planned refusal when a short backlog leaves 37 empty.
+
+- **[Pass] Synthetic issue numbers have no intrinsic numeric-range barrier on the cited downstream path.** With R2's complete records, `plan_draft` has the unregistered fallback (`harness.py:642–643`), proposal dependency lookup includes unadmitted unregistered requests (`:558–559`, `:588–589`), and packet generation tolerates a missing planner record when an accepted brief exists (`:1203–1212`). YAML emission uses integer-derived `gh{issue}` IDs (`utils/py/marathon_yaml_emit.py:253–260`); `bin/marathon-yaml:92–100` requires an ID and supported reviewer, not a live issue-number range. This is a source-path review, not a completed end-to-end canary run.
+
+- **[Unverified — needs clone run] Dry-run execution and tooling gates.** The packet's emitted brief path matches copying its folder under `PROJECT/2-WORKING/` (`harness.py:1217`, `:1242–1244`); Marathon resolves that path at `relay-automation/marathon.sh:590–596`. Preflight needs the original capture doc/contract (`utils/py/swarm_preflight.py:1219–1263`), not an assumption that every generated brief supports it. Preserve non-supported/no-ready reasons and all real outcomes, including `NOT-READY` (`:1645`). Run the planned one-lane trial and exact-SHA gates in a disposable full clone. No runtime success is attested here.
+
+Scope/cut: three run-specific helpers and canary data are commensurate with this local experiment. Retain the bounded two-init approach with R1's complete comparison; do not build snapshot import, retries during ticks, a scheduler or a new gate. Clarify that “byte-identical” default behavior compares controlled outputs with timestamps/absolute instance paths accounted for (`harness.py:848`, `:857–869`), not two independently timestamped databases.
+
+Handing off to Producer (claude-a) — disposition R1–R6, revise the plan, then return it for Round 2; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
