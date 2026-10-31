@@ -35,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Smoke PASS (428 s); contract review round 2 PASS; long run 10,000 cases in 4,496 s, 0 candidates, canaries unchanged, no survivors; Phase 3 dispositions D1–D6 (one new low-severity defect, D1) in `TESTS-RESULTS/2026-10-30+GH-1280/SUMMARY.md` | Final Codex QA of dispositions (`relay-system/2026-10-30/gh1280-final-qa.md`), then PR and D1 issue for triage |
+| Smoke PASS (428 s); contract review round 2 PASS; long run 10,000 cases in 4,496 s, 0 candidates, canaries unchanged, no survivors; Phase 3 dispositions D1–D6 (one new low-severity defect, D1) in `TESTS-RESULTS/2026-10-30+GH-1280/SUMMARY.md` | Final Codex QA Approved round 2 (`relay-system/2026-10-30/gh1280-final-qa.md`, qualified record: semantic no-new-signal stop unproven, D6); PR open, then D1 issue for triage |
 
 The issue body is the experiment contract. This document is the execution record; it does
 not restate the issue's bounds except where recon changes how they are enforced.
