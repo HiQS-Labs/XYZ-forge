@@ -14,7 +14,7 @@ issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1286
 
 | What was just completed | What's next |
 |---|---|
-| Parked, rated, promoted to In progress; plan written | Codex plan QA |
+| Plan QA Approved (round 2); skill written; acceptance rounds 1–3 recorded; docs gate green | Final Codex QA, then ready PR |
 
 ## Why
 
