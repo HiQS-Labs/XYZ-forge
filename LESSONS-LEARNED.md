@@ -81,3 +81,33 @@ evidence, tightens a match condition, removes a fallback), trace every caller
 that will hit the tightened path and confirm each one already produces what
 will now be demanded. If any caller doesn't, the producer change ships in the
 *same* PR as the gate change — not as a follow-up issue.
+
+## Engine refactors must survive suites that build objects with __new__
+
+- **cue**: Adding a constructor-set attribute to `utils/py/_marathon_plan.py` `Engine` (or any class a suite instantiates with `Class.__new__` to reach one method).
+- **lesson**: Before relying on a new `__init__` attribute inside an existing method, grep `test/` for `Engine.__new__` and read the new attribute with `getattr(self, NAME, default)`, then run `test/gh423-roadmap-render.sh` with the planner suites.
+- **evidence**: TESTS-RESULTS/2026-10-29+GH-1257/gate.txt (gh423 failed on 030db02d with `AttributeError: 'Engine' object has no attribute 'RELEASES_DB'`; 409/409 after the getattr fix on 761389dd), https://github.com/HiQS-Labs/XYZ-forge/issues/1257
+- **confidence**: medium — one observed failure; the three planner suites and a byte-for-byte parity check all passed and missed it, only the full gate caught it.
+- **area**: gate
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1257
+- **date**: 2026-10-29
+
+## Wave packing treats a missing dependency record as satisfied
+
+- **cue**: Adding lanes to `_marathon_plan.Engine._pack_waves` from a source the planner's own records do not cover (synthesized, seeded or provisional items).
+- **lesson**: Give every known item a lookup record in the dependency view, admitted or not, with a state outside `DEP_RESOLVED`; an absent record reads as a satisfied dependency and packs the dependent early. Check with a held-prerequisite control and a red control that limits lookup to admitted lanes.
+- **evidence**: TESTS-RESULTS/2026-10-30+GH-1261/controls.txt (`dep-prereq-held` and `dep-prereq-pending`: dependent unplaced; `red-dep-admitted-only-lookup`: dependent packed in wave 7), relay-system/2026-10-30/gh1261-plan-qa.md (R2, found at plan QA by probe before any code), https://github.com/HiQS-Labs/XYZ-forge/issues/1261
+- **confidence**: medium — one design, caught at plan review and confirmed by a red control; no production run yet.
+- **area**: marathon
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1261
+- **date**: 2026-10-30
+
+## A planner fed partial GitHub state treats closed rows as ready
+
+- **cue**: Running `_marathon_plan.Engine` with `gh_force="off"` or a `gh_state_file` that covers only some issues (pilots, stubs, frozen inputs).
+- **lesson**: A missing state reads as "unverified", not "closed", so a CLOSED ledger row stays a ready lane. Freeze state for every issue (one `gh issue list --state all`) before the planner computes; check with a red control that restricts the state file and watches the closed row return.
+- **evidence**: TESTS-RESULTS/2026-10-30+GH-1270/controls.txt (`frozen-state-1075`: not active with full state; `red-seeded-only-state-1075`: active again), TESTS-RESULTS/2026-10-30+GH-1270/pilot-2c/wave-proposal.md (Closed section lists #1075), https://github.com/HiQS-Labs/XYZ-forge/issues/1270
+- **confidence**: medium — one observed closed row in two pilots, confirmed by a red control.
+- **area**: marathon
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1270
+- **date**: 2026-10-30
