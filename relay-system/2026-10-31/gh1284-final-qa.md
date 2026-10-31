@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-31.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -67,5 +67,21 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The runtime fix meets the scoped requirement on source inspection and recorded smoke evidence. One shipped evidence script needs a containment correction before approval.
+swept file: yes
+
+- [Pass] The guard precedes database creation in all three non-init entry points (`utils/py/harness.py:1005`, `:1123`, `:1277`). The only five `connect(instance / "state.db")` callers are `init_from_prs` (:741), `init_instance` (:807), `make_packet` (:1006), `run_tick` (:1131), and `status` (:1278). Guarding packet/tick prevents the same init-poisoning failure and is in scope. Read all 1,414 lines; no additional initialization-path defect identified. Init bodies are unchanged in the supplied diff.
+- [Pass] Recorded main/adjacent/red evidence is sufficient for the targeted runtime change: `TESTS-RESULTS/2026-10-31+GH-1284/smoke.txt:3`–11 shows status refusal, absent database, successful init/status/tick; :13–23 covers tick/packet refusal and repeated initialized tick; :25–29 reproduces the old failure. A non-mutating Python `hashlib.sha256` comparison of harness.py and each artifact against `provenance.jsonl` exited 0 and printed `nonempty; sha256 matches receipt` for all four files. No executable fixtures or suites were run here. Full gate remains [Unverified — needs clone run], as required by this relay's containment rules.
+- [Pass] Caller review found no legitimate pre-init dependency in the inspected repo sources. `TESTS-RESULTS/2026-10-29+GH-1248/driver.py:63` reads the initialized canary before ticking; `TESTS-RESULTS/2026-10-29+GH-1257/gh1257-controls.sh:7` seeds with init; `TESTS-RESULTS/2026-10-30+GH-1270/gh1270-controls.sh:25` initializes before tick/packet. Repo literal searches covered runtime, tests, hidden workflow files and recorded controls. Graph project `XYZ-forge` is a different checkout with generation `2026-09-01T15:54:30Z`; coverage reports `metadata_changed` for harness.py, so conclusions use current direct source rather than the stale graph. The packet's code diff adds no suite or gate.
+- [Should] Make the recorded smoke script fail closed before cleanup. `TESTS-RESULTS/2026-10-31+GH-1284/smoke.sh:2` uses `cd "$1"; rm -rf temp/factory-primitive`; a missing/mistyped clone argument continues in the caller's checkout and deletes its runtime tree. Line 22 repeats the relative recursive deletion. This violates the repository's proven-target cleanup rail even though the successful receipt used a disposable clone. Fix: require and resolve an existing disposable clone, stop on failed cd, and validate an absolute cleanup target at each use (prefer an exclusively owned run subtree). Keep this a manual evidence script; add no suite. Update artifact hashes if the script changes; historical output can remain labeled as the original run.
+  Observed input: `smoke.sh:2`, clone argument `/__gh1284_missing_clone__`. Safe control-flow probe replacing deletion with printing: `bash -c 'cd /__gh1284_missing_clone__; printf "cleanup would continue in: %s\n" "$PWD"'`; exit 0, output `cd: /__gh1284_missing_clone__: No such file or directory` followed by `cleanup would continue in: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.fovLk9`. No deletion was executed.
+  Affected scope: Invocations of this evidence script with an absent, invalid or unintended clone directory, and both cleanup sites.
+  Falsifier: An invalid clone argument must exit nonzero before reaching cleanup; a valid disposable clone must constrain cleanup to its resolved, explicitly owned runtime subtree. If both properties already held at line 2, this finding would be unnecessary; the safe probe demonstrates they do not.
+
+Handing off to Producer (claude-a) — correct the smoke-script cleanup containment, disposition the finding, and reopen review. Go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
