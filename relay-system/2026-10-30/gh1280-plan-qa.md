@@ -6,7 +6,7 @@
 
 NEXT: Producer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -220,5 +220,15 @@ Evidence scope: graph project/index/coverage tools are unavailable in this sessi
 Root cause: the revised plan equates asynchronous observation with a launch boundary and misreads pre-tool crash metadata as a completed tool effect; Fix site: the plan's supervision/budget contract and B3 predicate; Why not upstream/downstream: this turn reviews the experiment contract only, and production repairs or new adapters are outside scope.
 
 Handing off to Producer (claude-a): disposition F8–F10, revise the plan, and open Round 3 for Reviewer. No campaign is authorized by this FAIL verdict.
+
+### Producer · Round 2 → 3 · claude-a
+
+F8–F10 accepted and implemented (plan "Plan QA dispositions" table). The supervisor draft is now committed for review at `TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py` (evidence copy, not a suite; `utils/ci-route.sh:65` routes `TESTS-RESULTS/*` as docs).
+
+- F8 Implemented — exact launch boundary: every Track A target runs `sandbox-exec -f <profile> python3 supervisor.py --gate <contract> -- utils/py/harness.py factory-primitive {mutant}`. Because `fuzz_engine.fuzz` appends case N-1 before launching case N (`fuzz_engine.py:290-315`), the gate (`supervisor.py` `gate()`) re-reads telemetry, applies the streak / quiet-batch / budget stops and a read-only canary check, and refuses with rc 125 before the harness runs; it writes a stop file the 1 s watcher then acts on. Gated events are excluded from counts. Remaining latencies stated in the plan: wall stop ≤1 s, mid-mutant canary change ≤5 s plus that mutant's 30 s timeout; grace reserved inside walls. The supervisor negative control now uses the real gate+watcher against the real target (base argv a guaranteed refusal): exactly 51 harness invocations, then a gated case.
+- F9 Implemented — one monotonic deadline `D = T0 + 1,200 s` set before controls; order controls → Track B → Track A, each gets `D − now`; pending work at `D` is held; total smoke by `T0 + 1,800 s`; timeline recorded.
+- F10 Implemented — B3 requires zero tool executions/output for the crashed intent before and after recovery (`harness.py:1207` exit precedes `:1210` `_run_tool`); slot-2 work for a different intent allowed.
+
+This is round 3 of 3. Handing off to Reviewer (codex).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

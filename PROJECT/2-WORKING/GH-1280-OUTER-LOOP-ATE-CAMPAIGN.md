@@ -35,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA round 1 (Codex FAIL, 6 Should + 1 Nit) — all seven findings implemented in this revision | Codex plan review round 2, then Phase 1 smoke |
+| Plan QA rounds 1–2 (Codex FAIL; F1–F10) — all findings implemented in this revision; supervisor draft at `TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py` | Codex plan review round 3, then Phase 1 smoke |
 
 The issue body is the experiment contract. This document is the execution record; it does
 not restate the issue's bounds except where recon changes how they are enforced.
@@ -121,15 +121,28 @@ Gen 4 tools:
   `LANG=C.UTF-8`. No `GH_TOKEN`/`GITHUB_TOKEN`/model keys are inherited; `gh` and `node` are not
   on `PATH`, so a mutant that reaches `--from-prs` or `packet` fails closed.
 - Base argv never includes `--from-prs`, `packet` or `tool`.
-- **Independent supervisor (review F2, F3).** A short Python supervisor in the scratchpad (a
-  copy is committed with the evidence; it is not a suite, gate or adapter) launches gen4 in
-  its own process group and every 5 s: reads new `telemetry.jsonl` lines, checks the canaries,
-  checks elapsed time. On any stop condition it sends SIGTERM then SIGKILL to the gen4 group,
-  then kills every process whose argv contains `harness.py factory-primitive` or the profile
-  path (each mutant runs in its own session via `run_bounded`, so a group kill alone is not
-  enough), and records the PIDs it found. Before launch it asserts that no such process
-  exists on the host, so the pattern matches only campaign processes. It exits with a
-  recorded stop reason.
+- **Independent supervisor (review F2, F3, F8).** One short Python script in the scratchpad
+  (a copy is committed with the evidence; it is not a suite, repo gate or adapter) has two
+  modes:
+  - **Launch gate (exact boundary).** Every Track A target is
+    `sandbox-exec -f <profile> python3 supervisor.py --gate <contract> -- utils/py/harness.py
+    factory-primitive {mutant}`. `fuzz_engine.fuzz` appends case N-1's telemetry before it
+    launches case N (`fuzz_engine.py:290-315`), so the gate, reading the whole telemetry file
+    first, sees every prior case. It refuses the launch (rc 125, `gh1280-gate: stopped`, the
+    harness never runs) when the no-new-signal limit or mutation budget is reached, or when a
+    read-only canary has moved since the recorded baseline; it writes the reason to a stop file
+    inside the sandbox root. Otherwise it `execv`s the harness in the same process. A gated
+    event is excluded from every count.
+  - **Watcher.** Launches gen4 in its own process group and polls every 1 s for the stop file,
+    the discovery wall and gen4 exit; canaries every 5 s. On stop it sends SIGTERM then
+    SIGKILL to the gen4 group, then kills every process whose argv contains
+    `harness.py factory-primitive` or the profile path (each mutant runs in its own session via
+    `run_bounded`, so a group kill alone is not enough), and records the PIDs. Before launch it
+    asserts that no such process exists on the host.
+  - **Latency, stated.** The no-new-signal, budget and canary stops are exact at the launch
+    boundary. The discovery wall and a canary change that happens *during* a running mutant
+    are detected within 1 s / 5 s; the mutant then in flight is killed, bounded by its 30 s
+    timeout. Termination grace (10 s + sweep) is reserved inside each hard wall.
 - Identity canaries recorded before and after each phase: for the primary checkout and the
   task clone, `git rev-parse HEAD`, `git status --porcelain | shasum`, `git config --list
   --local | shasum`, `core.bare`, remotes; plus `shasum releases.db` in the primary and a
@@ -159,6 +172,13 @@ Before Phase 1 runs, each listed message is confirmed verbatim against `harness.
 
 ### Phase 1 — Smoke (≤20 min discovery + ≤10 min replay/cleanup, all tracks together)
 
+**One smoke clock (review F9).** A monotonic discovery deadline `D = T0 + 1,200 s` is set
+immediately before step 3, and the whole smoke must finish by `T0 + 1,800 s`. Order: step 3 (controls), step 5
+(Track B), then step 4 (Track A); each receives only `D − now`, Track A's watcher
+wall is `D − now` at its launch, and anything still pending at `D` is held, not extended. The
+200-mutation cap is cumulative. Replay and cleanup (steps 6–7) use the remaining time to
+`T0 + 1,800 s`. The recorded timeline (start/end of each step) is part of the evidence.
+
 1. **Pin and inspect.** Verify task-clone identity (origin, `core.bare=false`, HEAD), Python,
    `sandbox-exec`; no `harness.py factory-primitive` or `gen4_campaign` process exists on the
    host; take the identity canaries. → no peer or primary state involved.
@@ -174,14 +194,17 @@ Before Phase 1 runs, each listed message is confirmed verbatim against `harness.
    - sandbox negative control (witnessed red): the Track A wrapper running
      `generate-manifest --output <outside path>` must be denied and the outside path must not
      exist afterwards, while `--output temp/factory-primitive/ate-smoke/manifest.json` succeeds;
-   - supervisor negative controls: a frozen telemetry replay of 50 expected-refusal events
-     triggers the smoke streak stop at case 50, and a novel event resets the streak; a
-     deliberate canary edit during a short dummy run triggers an immediate stop and the
-     process sweep finds no survivor.
+   - supervisor negative controls, using the real watcher and gate against the real target in
+     a throwaway sandbox (not a file replay): (a) a run whose base argv is a guaranteed
+     expected refusal (`--run-root ../outside status`) must launch exactly 51 harness
+     invocations — 1 new signature plus 50 already-seen — and the next case must be gated
+     (rc 125);
+     (b) touching the canary file mid-run must make the next launch gated and the watcher stop
+     with `CANARY VIOLATION`; (c) after each, the sweep finds no surviving process.
 4. **Track A** — the supervisor launches `gen4_campaign.py --mode run --no-synth --targets
    smoke-targets.json --max-mutations 200 --batch 25 --corpus-cap 100 --seed 1280
-   --duration 1200 --keep-sandbox --sandbox-root <sb>` with discovery hard-stopped by the
-   supervisor at 1,200 s from launch. Targets (each `timeout: 30`, all sandbox-wrapped):
+   --duration <D − now> --keep-sandbox --sandbox-root <sb>` with discovery hard-stopped by the
+   watcher at `D`. Targets (each `timeout: 30`, all sandbox-wrapped and gated):
    `fp-help` (`--help`), `fp-genman` (`generate-manifest --output
    temp/factory-primitive/ate-smoke/manifest.json`), `fp-status`
    (`--run-root temp/factory-primitive/fz status`), `fp-init`
@@ -207,9 +230,12 @@ Before Phase 1 runs, each listed message is confirmed verbatim against `harness.
      idempotence --repetitions 3` on the same tick; also assert the `receipts`/`decisions`
      row counts in `state.db` are unchanged;
    - B3: crash (review F5) — `init`, `tick --slot 1 --fault crash-act` → rc 70, then the
-     recovery `tick --slot 2`, then `status`. Predicate: slot 1 is reconciled `uncertain`, its
-     item quarantined, slot 1's tool did not run a second time (one tool output for that
-     intent), and no process matching the case's run root survives.
+     recovery `tick --slot 2`, then `status`. Predicate (review F10): slot 1 is reconciled
+     `uncertain` and its item quarantined; the crashed intent has **zero** tool executions and
+     zero tool output both before and after recovery (`crash-act` exits at `harness.py:1207`,
+     before `_run_tool` at `:1210`; `tool_started_at` metadata alone is not an execution);
+     legitimate slot-2 work for a different intent is allowed; no process matching the case's
+     run root survives.
    A fresh run root per case is the fixture reset; the clone is discarded afterwards. If any
    of B1–B3 cannot show reset, predicate, replay and cleanup, that check is **held** and
    reported as such.
@@ -235,13 +261,13 @@ survives. Zero defects is acceptable; zero relevant cases is a fail.
    --check`) of the frozen contract and smoke evidence, bound to their sha256. No long window
    without an Approved verdict; if review cannot run, record **Independent review did not
    run** and stop.
-10. **Run** one gen4 invocation under the same supervisor (review F3). The supervisor
-    enforces, from live telemetry: stop after 3 consecutive batches (a batch = 50 consecutive
-    telemetry events of one target) **or** 500 consecutive cases with no new signature beyond
-    expected refusals, whichever comes first; stop at 6 h discovery or 10,000 mutations; stop
-    immediately on a canary/identity change, a write outside the sandbox root, invalid
-    telemetry, a missing dependency or a surviving process after a sweep. Changing any frozen
-    value starts a new run.
+10. **Run** one gen4 invocation under the same watcher and launch gate (review F3, F8). The
+    gate enforces exactly, before each launch: 3 consecutive batches (a batch = one gen4 round:
+    one target, one seed) **or** 500 consecutive cases with no new signature beyond expected
+    refusals, whichever comes first; 10,000 mutations; any canary change. The watcher enforces
+    the 6 h discovery wall (≤1 s latency) and the 8 h total cap, and stops on invalid telemetry,
+    a missing dependency or a surviving process after a sweep. Changing any frozen value starts
+    a new run.
 
 ### Phase 3 — Disposition, review, evidence
 
@@ -298,6 +324,9 @@ two Codex reviews and an evidence package, but no production code. Recurrence: n
 | F5 B3 recovery | Implemented — recovery `tick --slot 2` and explicit predicate |
 | F6 report fields | Implemented — candidate row fields and SUMMARY contents named |
 | F7 rating rationale | Implemented — section restored |
+| F8 stop boundary | Implemented — launch gate inside each mutant decides before case N runs; watcher latency stated |
+| F9 one smoke clock | Implemented — shared deadline `D` set before controls; each step gets `D − now` |
+| F10 B3 zero executions | Implemented — crashed intent must have zero tool executions/output |
 
 ## Verification route
 
