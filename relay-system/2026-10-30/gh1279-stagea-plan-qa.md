@@ -279,4 +279,12 @@ All adapter execution, transport, cancellation, safe-idle and full-loop accounti
 
 Relay closed (Approved), no further turn needed. Producer proceeds to the agy build and the already-required controls and final QA; this is not authorization for Stage B.
 
+
+### Attestation · relay-drive — 2026-10-31T01:14:02Z
+task: RELAY-gh1279-stagea-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 62a337b6b6940dc2adf58cde3f86c98d06da327b
+added-range: 34448+5636
+added-sha256: 94caf94589c3e956699024cb93ad351852e46ce9e1315183e85d1a708e5a7d88
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
