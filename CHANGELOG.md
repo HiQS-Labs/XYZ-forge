@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-31 — GH-1286 ceremony-audit skill
+
+- New `skills/1-hourly/ceremony-audit/SKILL.md` (120 lines or fewer, no scripts, no tests). It names the goal and the one open question with the evidence that the rest is proven, labels every planned step progress / proof / safety / ceremony by asking whether deleting it would change the outcome or the next decision, prefers one real run over proxies, and returns a cut list, kept list, next step with its gate, and a parked count. Links `sanity-check`, `ponytail` and `worth-it` instead of restating them. `ARCHITECTURE.md` index row added; the `1-hourly` count now matches its rows (17). Evidence: `TESTS-RESULTS/2026-10-31+GH-1286/`. Reversibility: Easy.
+
 ## 2026-10-30 — GH-1273 harmless relay separators
 
 - The reviewer-history check retains strict canonical comparison first, then tolerates empty separator-line count changes outside protected literal content with a warning. Canonical record coordinates and loader semantics are unchanged; substantive history and invalid approvals remain refused. Raw transcript remains intact. Reversibility: Costly shared approval boundary; rollback by reverting this change.
