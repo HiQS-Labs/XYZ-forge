@@ -23,8 +23,13 @@ campaign: **go, after two changes** (see the end).
 | Postprocessing (Phase 3 replays) | under 10 min of 2 h | 28 R1 + 8 R2 + 1 R3 + 6 R3b + 3 D1 | — |
 
 Launch 1793413513, discovery processes ended 1793418008 (17,105 s before the discovery deadline),
-total deadline 1793442313. Times in `ev/timeline.txt`. The 6 h wall and the no-new-signal stop
-were not reached; the 10,000 budget stopped first, as the contract predicted.
+total deadline 1793442313. Times in `ev/timeline.txt`. The 10,000 budget stopped discovery, as the
+contract predicted; the 6 h wall was not reached.
+
+**Acceptance "stopped at the no-new-signal limit or earlier": met for the bounds, unproven for the
+meaning.** Every bound held (budget, deadlines, reserve). But this run's novelty measure was
+ineffective (D6), so the record cannot show that new *semantic* signals had stopped appearing when
+the budget ended discovery. Treat this campaign as a bounded experiment, not as proof of saturation.
 
 ## Classification denominators (long run, cases per class per target)
 
@@ -85,9 +90,11 @@ exactly rc 2 with the recorded message. Not flaky; my replay reset was wrong.
 (`{"status":"failed"}`) under `profile-long.sb`. `tick` was excluded from fuzzing by design, so this
 changes no result; it limits any future sandboxed stateful campaign (see below).
 
-**D6 — the no-new-signal stop could never fire.** Argparse usage errors echo the mutated tokens in
-their last line, so almost every usage case looked new (streak at stop: 4). The stop came from the
-budget, which is why the run stayed bounded. Campaign-tooling fix for next time: give `usage` cases
+**D6 — the no-new-signal stop was ineffective on this run's input.** Argparse usage errors echo the
+mutated tokens in their last line, so almost every usage case looked new (2,302 of 2,313 signatures;
+streak at stop 4, quiet batches 0). The stop itself works: the smoke's repeated-signature control
+fired it at the exact boundary (`ev/03-controls.json` control e). The budget ended discovery, which is
+why the run stayed bounded. Campaign-tooling fix for next time: give `usage` cases
 a signature based on the argparse error kind only.
 
 ## Coverage, honestly
@@ -108,8 +115,10 @@ Since then:
 1. **Long-run corpus deleted by my replay reset.** `phase3.py` ran `git clean -fdq` in the long clone,
    which removed gen4's untracked `.fuzz_corpus/` before it was copied. The complete telemetry is
    kept (`runs/long/telemetry.jsonl.gz`, sha256 of the uncompressed file in `provenance.jsonl`) and
-   records every corpus decision; `ev/13-corpus-long-from-telemetry.jsonl` lists the 1,736 admissions
-   (it is not the final membership, because 874 admissions evicted an older entry).
+   records every corpus decision and every replay input. `ev/13-corpus-long-from-telemetry.jsonl`
+   lists all 2,807 admission events (1,736 `added`, 874 `evicted+added`, 197 `replaced`; the 7,193
+   `dropped` cases are not admissions). It is an admission history, not the final corpus: the final
+   membership is lost and was not reconstructed. The loss does not affect the invocation counts or D1.
 2. **D4 replay setup fault**, above.
 3. **`controls.py` is historical:** it writes the smoke-era flat baseline format; the long run used
    the watcher's `{discovery_deadline, total_deadline, canaries}` baseline.
