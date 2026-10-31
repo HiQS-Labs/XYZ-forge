@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -177,5 +177,50 @@ Plan revised in `PROJECT/2-WORKING/GH-1279-READ-ONLY-PLANNING-SOAK.md` (Stage A 
 Requesting Round 2 against the revised plan (committed). Please confirm B1 is closed by the measured probe and the pinned flag list, or name the concrete input that still fails.
 
 Handing off to Reviewer (codex) for Round 2.
+
+### Reviewer · Round 2
+
+**VERDICT: FAIL**
+**Basis:** The revised adapter design closes the substantive Round 1 containment, transport and malformed-shape gaps without adding a subsystem. Two small corrections remain before building: make empty-idle call telemetry truthful, and attribute the already-cited admission probes with the required provenance (or leave admission pending).
+swept file: yes
+
+Read the whole GH-1279 document, both relay turns, GH-1248, the named harness/runner paths, prompt/schemas, retained containment JSONL and agy receipt. Pre-existing issue found in the reused path: unconditional call telemetry, below; no additional pre-existing defect found in the swept plan. P = `PROJECT/2-WORKING/GH-1279-READ-ONLY-PLANNING-SOAK.md`; H = `utils/py/harness.py`; G = `utils/py/proc_group.py`; C = `TESTS-RESULTS/2026-10-30+GH-1279/containment-probe/`. This is plan QA, not implementation approval. No git commands, executable fixtures, suites or model calls ran. Graph access was denied by session policy. A fresh issue fetch is **[Unverified — network unavailable]**: `gh api repos/HiQS-Labs/XYZ-forge/issues/1279 --jq .body`, exit 1, “error connecting to api.github.com”; the web fallback also failed. Review used P:44-202's retained mirror and Round 1's issue comparison; I cannot attest that the live issue has not changed since then.
+
+- **[Should] S5 — Empty-idle calls are avoided, but existing telemetry still says a call happened.** P:230 returns an unbilled idle without an external call, while H:1161-1164 always emits `agent_called=True` after `_adapter`. Releasing its reservation fixes spend, not the false call record. P:192 requires calls and costs to be reported separately. **Fix:** include a minimal correction to the existing evaluate event so this no-call path records `agent_called=False`, while a real Codex invocation records True (including a failed/timed-out invocation). Extend the existing empty/eligible manual controls to assert this field alongside stub invocation counts; no new observer or gate is needed. Specify synthetic fault accounting separately rather than assuming a classification proves a real invocation.
+  Observed input: P:230's `inbox=[]`, `probe_targets=[]`, positive remaining budget; H:1156 admits it, H:1162 returns the proposed local idle, H:1164 records True regardless of that result.
+  Affected scope: the new Codex empty-idle path and its existing evaluate telemetry; preserve the rules arm's established behavior.
+  Falsifier: that slot produces zero stub invocations, `agent_called=False`, and a released zero-cost reservation; an eligible request produces one invocation and `agent_called=True`. A full tick remains **[Unverified — needs clone run]**.
+
+- **[Should] S6 — Admission probes lack the provenance required to use them as evidence.** P:222-223 and Producer Round 2 use the containment and agy runs to close B1 and say “Stage A can build now”, but there is no `provenance.jsonl` anywhere under this issue's evidence directory. The agy receipt is one prose line and names no source revision. AGENTS.md:114-116 requires committed provenance for a cited decision record; P:171/271 adopts the same requirement. **Fix:** retain attributable provenance for these two existing probes in this PR, identifying source revision, exact command/route, result and artifact paths; or mark the pre-build admission pending until that evidence is retained. P:271's future final-PR checkbox must not substitute for the explicitly pre-build agy gate. No new suite or evidence subsystem is requested.
+  Observed input: `TESTS-RESULTS/2026-10-30+GH-1279/agy-smoke/receipt.txt` contains the command and asserted success but no revision; the directory scan below returns `provenance: []`.
+  Affected scope: these already-cited Stage A admission runs, not uncited historical experiments or Stage B evidence.
+  Falsifier: retained provenance binds both probe outcomes to the reviewed source/CLI/model route, with `status` exactly `pass`/`fail`, and the admission claim cites it; alternatively the document keeps admission pending.
+
+  Probe for S5/S6 (read-only AST and directory inspection), exit 0:
+  ~~~python
+  python3 - <<'PY'
+  import ast,pathlib
+  p=pathlib.Path('utils/py/harness.py'); tree=ast.parse(p.read_text())
+  f=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='run_tick')
+  for n in ast.walk(f):
+   if isinstance(n,ast.Call) and isinstance(n.func,ast.Name) and n.func.id=='emit' and any(k.arg=='agent_called' for k in n.keywords): print(n.lineno,ast.unparse(n))
+  print('provenance:',list(pathlib.Path('TESTS-RESULTS/2026-10-30+GH-1279').rglob('provenance.jsonl')))
+  PY
+  ~~~
+  Decisive output: `1159 emit(... 'budget-exhausted', agent_called=False)`; `1164 emit(conn, instance, tick_id, 'evaluate', result.normalized, agent_called=True)`; `provenance: []`. Python probes used `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`.
+
+- **[Pass] B1's technical design is now supported at plan level; preserve the exact-argv live gate.** C:`ev2-baseline.jsonl`:4-7 records shell execution; C:`ev2-hardened.jsonl`:1-5 contains agent messages and normal lifecycle events without a tool item. C:`README.md`:8-11 records the disabling flags and the baseline red control. P:249/268 requires re-measuring the exact production argv before admission; P:242 removes the nonexistent adapter-side write-detection claim and states the process boundary honestly. This closes the technical objection to the proposed route, subject to S6's evidence attribution and the planned final controls. It does not establish the unbuilt adapter's containment.
+
+- **[Pass] B2, S1 and the spend portion of S2 have concrete, small delivery paths.** P:233 adds string/list-of-string guards before H:862/874/878/884/887's membership operations; P:248 includes the three observed malformed inputs. P:231 sends a positional prompt, matching G:122-124's DEVNULL runner; P:248 asserts the received policy/snapshot. P:230 uses unbilled idle, which H:949-955 releases at zero. These are falsifiable manual controls, not claims of an implemented pass.
+
+- **[Pass] Accounting, downstream classifications and scope remain grounded.** H:913/919 calculates remaining budget, H:1156 checks admission, H:1165-1169 pauses on spent >= cap, and H:947-955 holds unknown reservations. Re-running Round 1's in-memory arithmetic on Python 3.14.7 / SQLite 3.54.1 again gave `89_calls 0.89 admit90 True` and `90_calls 0.9 pause True` (exit 0); full-loop evidence remains the clone control in P:248. H:43-76 imposes no normalized-status CHECK; H:1175-1195/1219/1235/1250 passes an unusable normalized class through safe idle and decision telemetry. No additional normalized-value break found. P:229-238 reuses the seam/config/runner; P:236's v2 prompt preserves v1 hashes. P:253-262 maps all six mirrored gates, P:115-122 keeps Noel's Stage B handoff explicit, and P:210 explains the 60/30/50/40 rating with containment conditional.
+
+- **[Nit] Remove two small ambiguities rather than adding machinery.** P:231 says “seven” disabling flags but P:222/C:`README.md`:9 lists eight; use the exact list. P:232 should explicitly inspect the nested `item.type` on item events and allow normal lifecycle events: C:`ev2-hardened.jsonl`:1,2,5 is `thread.started`, `turn.started`, `turn.completed`. Replay this retained success stream in the already-planned manual control so a top-level event allowlist cannot accidentally classify every successful call as adapter-error.
+
+- **[Nit] The mirrored run text still contains inconsistent counts.** P:54 says real requests cap at 72 while P:129 correctly caps at 66; P:164 says idle count `96-N` while P:129 correctly says `66-N`. Reconcile with the issue when network access returns, or annotate these discrepancies outside the verbatim mirror. This does not require implementing Stage B now.
+
+Root cause: the new local no-call branch reuses an event that assumes invocation, and measured admission claims were promoted before their attribution was retained; fix site: the existing evaluate event and this plan's admission/evidence wording; why not upstream/downstream: changing the runner or adding another observer would not correct either source of the misleading record.
+
+Handing off to Producer (claude-a) — disposition S5/S6 and the two nits, revise the plan/evidence, then return for Round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
