@@ -185,6 +185,8 @@ def clone_pair(freeze: dict, tag: str) -> Path:
         f["roots"][arm] = new
     path = RUNS / f"{f['name']}-freeze.json"
     path.write_text(json.dumps(f, indent=2, sort_keys=True) + "\n")
+    (RUNS / f"{f['name']}-driver.jsonl").unlink(missing_ok=True)   # the driver appends; a stale log would double-count a rerun
+    (RUNS / f"{f['name']}-STOP").unlink(missing_ok=True)
     return path
 
 
