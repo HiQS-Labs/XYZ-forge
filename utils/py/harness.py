@@ -229,6 +229,8 @@ def codex_decide(snapshot: dict, config: dict) -> AdapterResult:
             *CODEX_FLAGS,
             "-m",
             config["codex_model"],
+            "-c",
+            f"model_reasoning_effort={config['codex_effort']}",
             "-C",
             str(d),
             "-o",
@@ -868,13 +870,14 @@ def generate_manifest(scenario: Path, output: Path) -> None:
     output.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def adapter_config(adapter: str, model: str | None, timeout: float) -> dict:
+def adapter_config(adapter: str, model: str | None, timeout: float, effort: str = "medium") -> dict:
     if adapter == "rules":
         return {"adapter": "rules", "prompt_sha256": sha_text((PACKAGE / "prompts" / "evaluator.v1.md").read_text(encoding="utf-8"))}
     if adapter == "codex":
         return {
             "adapter": "codex",
             "codex_model": model,
+            "codex_effort": effort,
             "adapter_timeout_s": timeout,
             "codex_flags": list(CODEX_FLAGS),
             "prompt_sha256": sha_text((PACKAGE / "prompts" / "evaluator.v2.md").read_text(encoding="utf-8")),
@@ -1430,6 +1433,7 @@ def factory_parser() -> argparse.ArgumentParser:
                       help="with --from-prs, also seed N open issues that have no ledger row (GH-1261)")
     init.add_argument("--adapter", choices=["rules", "codex"], default="rules")
     init.add_argument("--codex-model", default=None)
+    init.add_argument("--codex-effort", choices=["low", "medium", "high", "xhigh"], default="medium")
     init.add_argument("--adapter-timeout", type=float, default=90.0)
     manifest = sub.add_parser("generate-manifest")
     manifest.add_argument("--scenario", type=Path, default=PACKAGE / "scenarios" / "soak-v1.jsonl")
@@ -1475,7 +1479,7 @@ def factory_main(argv: list[str]) -> int:
                 raise ValueError("--adapter codex requires --codex-model")
             if args.adapter_timeout <= 0:
                 raise ValueError("--adapter-timeout must be positive")
-            cfg = adapter_config(args.adapter, args.codex_model, args.adapter_timeout)
+            cfg = adapter_config(args.adapter, args.codex_model, args.adapter_timeout, args.codex_effort)
             if args.from_prs:
                 if not 1 <= args.limit <= 50:
                     raise ValueError("--limit must be in 1..50")

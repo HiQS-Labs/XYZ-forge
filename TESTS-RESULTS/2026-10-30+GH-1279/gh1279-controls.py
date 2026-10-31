@@ -31,7 +31,8 @@ import json, os, select, sys, time
 mode = os.environ["STUB_MODE"]
 with open(os.environ["STUB_LOG"], "a") as fh:
     fh.write(json.dumps({"mode": mode, "argv_len": len(sys.argv), "prompt_head": sys.argv[-1][:40],
-                         "prompt_has_snapshot": "Snapshot (JSON):" in sys.argv[-1]}) + "\n")
+                         "prompt_has_snapshot": "Snapshot (JSON):" in sys.argv[-1],
+                         "effort": [a for a in sys.argv if a.startswith("model_reasoning_effort=")]}) + "\n")
 out = sys.argv[sys.argv.index("-o") + 1]
 prompt = sys.argv[-1]
 snap = json.loads(prompt.split("Snapshot (JSON):\n", 1)[1])
@@ -182,6 +183,7 @@ def main() -> int:
     seen = json.loads(log.read_text().splitlines()[0])
     record("prompt-transport-positional", seen["prompt_has_snapshot"] and seen["prompt_head"].startswith("# Evaluator v2"),
            f"prompt_head={seen['prompt_head']!r} snapshot_present={seen['prompt_has_snapshot']}")
+    record("effort-reaches-cli", seen["effort"] == ["model_reasoning_effort=medium"], f"argv effort={seen['effort']}")
 
     # fault names still apply on the codex arm and make no real call
     rr, inst = fresh("fault"); log = ROOT / "temp" / f"{TAG}-fault.stub.log"; log.unlink(missing_ok=True)
@@ -220,7 +222,7 @@ def main() -> int:
     rr, inst = fresh("config"); cfg = json.loads((inst / "config.json").read_text())
     refused = run(["--run-root", f"temp/factory-primitive/{TAG}-nomodel", "init", "--from-prs", "--limit", "1", "--adapter", "codex"])
     record("config-freezes-route", cfg.get("adapter") == "codex" and cfg.get("codex_model") == "stub-model"
-           and cfg.get("adapter_timeout_s") == 3.0 and len(cfg.get("codex_flags", [])) > 10 and "shell_tool" in cfg["codex_flags"]
+           and cfg.get("codex_effort") == "medium" and cfg.get("adapter_timeout_s") == 3.0 and len(cfg.get("codex_flags", [])) > 10 and "shell_tool" in cfg["codex_flags"]
            and refused.returncode != 0 and "requires --codex-model" in refused.stderr,
            f"flags={len(cfg.get('codex_flags', []))} refused_rc={refused.returncode}")
 
