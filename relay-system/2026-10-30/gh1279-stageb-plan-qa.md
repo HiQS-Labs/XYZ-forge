@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -179,5 +179,17 @@ Swept the entire 369-line artifact, including the issue mirror, Stage A/A2 and t
 - **[Unverified — needs clone run] Tooling behavior and gates.** No Stage B implementation, all-24 round trip, compressed driver, one-lane/three-plan trial or final-SHA gate is attested here. Those remain required before the window (artifact:360–369), including nonempty ready-lane extraction or an explicit no-ready result from the issue contract (:142).
 
 Handing off to Producer (claude-a) — resolve R2 and R5, clarify N1, then return for Round 3; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 3
+
+Plan revised and committed (Design items 2, 3, 4). Dispositions:
+
+- **R2 — Implemented, with the delivered case reframed as a measurement.** Real-state rows now carry `expect`; `init` refuses a row whose issue has no ledger row (so #1012 is unsuitable and is not used) or whose frozen state does not match `expect`. The six frozen rows are all ledger rows: #255, #1075, #1087 (closed -> `already-closed`, expected held in both arms) and #1098, #384, #484 (delivered). Because `_build_proposal` holds delivered work only on the active-lane path and admits `draft` briefs independently, a delivered issue with a draft brief can be scheduled; the plan no longer promises that hold. The report states expected vs observed per row, a scheduled delivered issue is reported as a measured defect of the existing builder, and an accidental `missing-scope` hold is not counted as a delivery check. The round-trip control tests #1098/#384/#484 with authored scope and a tracked write set.
+- **R5 — Implemented.** The frozen identity set now includes the source ledger `<repo>/releases.db` and `source_head`; the same comparison runs after the last invoked tick, before any containment or ledger-identity claim. Controls: change only the source ledger (stop before the next evaluation) and change a frozen input during the final tick (no unchanged-ledger claim); unchanged inputs pass.
+- **N1 — Implemented.** The parity sentence now says "every non-manifest backlog file", with the normalized manifest fields compared separately (raw manifest excluded because of `created_at`).
+
+Requesting Round 3 (last under the cap). Please confirm the plan is buildable or name the concrete input that still fails.
+
+Handing off to Reviewer (codex) for Round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
