@@ -1,4 +1,4 @@
-{"kind": "manual_check", "name": "worked-example-1279", "run": "f1", "commit": "f86b1933", "pr": null, "status": "fail", "qualification": "partial: 2-3 of 6", "receipt": "fold-acceptance.md"}
-{"kind": "manual_check", "name": "counter-example-1186", "run": "f1", "commit": "f86b1933", "pr": null, "status": "fail", "receipt": "fold-acceptance.md"}
-{"kind": "manual_check", "name": "worked-example-1279", "run": "f2", "commit": "93920fe4", "pr": null, "status": "fail", "qualification": "partial: 4 of 6", "receipt": "fold-acceptance.md"}
-{"kind": "manual_check", "name": "counter-example-1186", "run": "f2", "commit": "93920fe4", "pr": null, "status": "fail", "qualification": "cut the optional red control", "receipt": "fold-acceptance.md"}
+{"kind": "manual_check", "name": "worked-example-1279", "run": "f1", "commit": "f86b1933", "pr": 1300, "status": "fail", "qualification": "partial: 2-3 of 6", "receipt": "fold-acceptance.md"}
+{"kind": "manual_check", "name": "counter-example-1186", "run": "f1", "commit": "f86b1933", "pr": 1300, "status": "fail", "receipt": "fold-acceptance.md"}
+{"kind": "manual_check", "name": "worked-example-1279", "run": "f2", "commit": "93920fe4", "pr": 1300, "status": "fail", "qualification": "partial: 4 of 6", "receipt": "fold-acceptance.md"}
+{"kind": "manual_check", "name": "counter-example-1186", "run": "f2", "commit": "93920fe4", "pr": 1300, "status": "fail", "qualification": "cut the optional red control", "receipt": "fold-acceptance.md"}
