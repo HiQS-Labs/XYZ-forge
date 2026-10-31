@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-31.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -269,5 +269,88 @@ Write the verdict (PASS / FAIL / PARKED) with a Basis; PASS only if the draft ne
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: the synthesis is useful, but factual counts, coverage boundaries and the proposed dependency order need correction before replacing #1298. This is a documentation verdict, not a request to implement any system. Reversibility: Easy (revise the draft). No Blocker-grade runtime failure is alleged.
+swept file: yes
+
+Reviewed the entire embedded draft, Appendix A and all six questions, including pre-existing assertions. Evidence below uses committed files, not reruns of the experiments. No suites, fixtures, git commands or production CLI verbs were run. Graph discovery was unavailable (tool refused under the approval policy); source reads were the fallback. No additional defects in the embedded text beyond those listed below were found.
+
+- **[Should] R1 — Correct the output count and distinguish adapter validity from decision validity.** In “Operator attention,” replace “#1279 produced 90 briefs unattended” with “#1279 made 90 Codex calls and produced 86 Codex briefs (89 rules briefs).” The table's “90 Codex calls all valid” should be “90 adapter outcomes `ok`; 87 decisions raw-valid, 3 validator-rejected → safe idle.” Evidence: `TESTS-RESULTS/2026-10-31+GH-1279-stageb/SUMMARY.md:45-54` and `window/window-summary.json` (`briefs`, `decision_status`). The QA rejection totals 25/44 and 18/42 are arithmetically right **including the eight deliberately flawed controls per pack**; call them that. For the ordinary non-control items use 17/36 and 10/34, without comparing reviewer strictness as arm quality (`SUMMARY.md:76-78`, `window/qa/qa-score.json`). Neither review time nor operator effort saved was measured; rewrite the final clause as “This establishes a substantial rejected-item count, not a measured attention saving.”
+  Observed input: draft says “90 briefs”; committed `arms.codex.briefs` is 86 and `arms.rules.briefs` is 89.
+  Affected scope: the summary table and shared finding 5; distinguish calls, decisions, briefs and QA controls throughout.
+  Falsifier: 90 completed Codex `plan-draft` receipts, or a recorded timed operator-effort comparison, would support the corresponding original claims; the retained receipts/report do not.
+
+- **[Should] R2 — Fix the census and dry-run coverage wording.** Replace “passed every lane through” with “checked the first ten emitted wave-1 lanes per arm; all ten passed structure/Marathon dry run, but only four rules lanes and three Codex lanes also passed preflight.” Seven rules and ten Codex emitted lanes were unchecked; #1265 in the Codex ten had no capture doc, so it was not preflight-verified. Evidence: Stage B `SUMMARY.md:63-72` and both `window/dryrun-*/dryrun.json`. Separate the Phase 0 snapshots: initial 0/280, 202 missing rows, 64 missing contracts; final 0/281, 204 missing rows (~73%). Its execution dates should be 2026-10-26–27: the source records start `2026-10-26 02:51Z` and end `2026-10-27 04:41Z` (`Phase 0/SUMMARY.md:4`); October 25 is the ranking/comment date, not the recorded cycle start. “7 of the 11 with contracts” should be “7 of 11 contracts checked at final selection were STALE”: `step6/preflight-summary.log` lists eleven checks, whereas `step6/survey.json` also lists #544 with a doc and without a missing-contract flag. Finally, say “none of the five field-complete candidates qualified: three STALE, one AMBIGUOUS, one already had a PR,” rather than calling all five preflight failures. #418 already has `open-PR#1211` in `step1-survey.log:7`; the four others have empty missing-field lists at lines 3-6.
+  Observed input: emitted counts 17/20 versus checked counts 10/10; two different Phase 0 snapshots and #544's contract-bearing survey row.
+  Affected scope: run table, shared finding 1, and any “whole backlog” comparison; keep field checks, live checks and PR exclusion distinct.
+  Falsifier: live-preflight receipts for every emitted lane, or evidence that the final census contained only eleven contract-bearing issues, would justify the broader wording.
+  Narrow read-only probe (exit 0; the same command also independently checks R1):
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'CHECK'
+  import json
+  from pathlib import Path
+  p=Path('TESTS-RESULTS/2026-10-31+GH-1279-stageb/window')
+  for arm in ('rules','codex'):
+      q=json.loads((p/f'dryrun-{arm}/dryrun.json').read_text())
+      print(arm, 'emitted',len(q['emitted']),'checked',len(q['lanes']),'ready',q['ready_lane_set'],'unchecked',len(q['not_dry_run_verified']))  [Unverified — no citation]
+      q=json.loads((p/arm/'tables.json').read_text())
+      print(arm,'completed plan-draft receipts',sum(x['status']=='completed' and json.loads(x['json']).get('tool')=='plan-draft' for x in q['receipts']))
+  CHECK
+  ```
+  Decisive output: `rules emitted 17 checked 10 ready [670, 1267, 1265, 1266] unchecked 7`; `rules completed plan-draft receipts 89`; `codex emitted 20 checked 10 ready [670, 1267, 1266] unchecked 10`; `codex completed plan-draft receipts 86`.
+
+- **[Should] R3 — Narrow “what they agree on” to shared failure classes, with inference labels.** Replace “The constraint is the supply of admissible work, not the model” with “Both runs exposed admission defects; this window did not show authoring increasing the checked ready-lane count.” Phase 0 directly measured admission starvation; Stage B's selected ten and unpaired QA do not establish the dominant factory bottleneck or rule out model quality as a constraint (`Phase 0/SUMMARY.md:11-15`; Stage B `SUMMARY.md:67-85`). Replace “only a live preflight dry run tells the two apart” with “live preflight catches stale/missing contract and artifact problems that structure checks miss; independent content review remains necessary.” Injection-canary lanes themselves passed the dry run (`Stage B/SUMMARY.md:72`). For item 3 replace “found it independently / Two independent observations” with “reproduced the delivered-but-open class on deliberately seeded real issues, exposing a proposal-builder bypass.” #384/#484 were explicit held-delivered canaries (`utils/py/factory_primitive/scenarios/gh1279-canaries.jsonl:23-24`), and already present in #1270's delivered map (`TESTS-RESULTS/2026-10-30+GH-1270/SUMMARY.md:24`). This supports recurrence across paths, not independent blind discovery. Rules scheduled both; Codex never reached them, so its omission is not a successful delivered-work filter (Stage B `SUMMARY.md:61`).
+  Observed input: drafted injection lanes pass structure checks, and the two “independent” delivered examples are preselected held-delivered canaries.
+  Affected scope: shared findings 1-3 and the claimed convergence on a bottleneck; preserve the draft's useful denominator caveat.
+  Falsifier: a paired end-to-end throughput comparison identifying the limiting stage, or evidence of blind sampling rather than seeded delivered cases, would support the stronger conclusions.
+
+- **[Should] R4 — Present the primitive as a reusable executive pattern, not a supplied production reconciler.** Replace “Convergent: the reconciler … is that shape” with “Convergent at the control-loop pattern: #1248 prototypes decision/validation/intent/receipt mechanics; #1175's production Jog reconciler remains a separate integration.” The primitive's actual five tools are correctly listed (`utils/py/harness.py:29`), but none admits, runs or lands Jog work. The owning plan explicitly excludes Jog/repository execution and a competing queue, and requires a separately planned read-only Jog observation spike (`PROJECT/2-WORKING/GH-1248-OUTER-LOOP-PRIMITIVE.md:9-23,60,94-96`). Split the combined promote/pre-run row: Stage B pinned one window clone and frozen inputs, not a fresh execution clone per attempt or published-clean primary enforcement (Phase 0 `SUMMARY.md:52-53`; Stage B `SUMMARY.md:38-39`; `stageb_prepare.py:39-56`). Replace “opposite requirement” in the ledger row with “production mutation/persistence policy remains unresolved; evaluate #1224 before introducing new git-backed state writes.” Immutable input evidence and off-git operational state are compatible (Phase 0 `SUMMARY.md:74-77`). Retain the landing row as unsupplied. The six table rows combine two of the spike's seven requirements; preserve their separate coverage. Also qualify “named reason”: a reason field exists, but `_validate` allows an empty string (`harness.py:1111-1112`), so a meaningful named production reason is not established.
+  Observed input: the production verbs are absent from `TOOLS`; the cited window only checks frozen identity; `reason=""` satisfies the visible reason-shape condition.
+  Affected scope: convergence heading/table and step 4; this requests corrected claims, not changes to the primitive.
+  Falsifier: an existing Jog state reader/production-verb adapter, per-attempt execution-clone receipts, or a nonempty-reason contract would establish the corresponding supplied requirements.
+
+- **[Should] R5 — Separate crash recovery evidence from fuzz containment evidence.** Replace shared finding 4 with “Phase 0 and Stage B demonstrated park/quarantine after their particular crash injections; #1280 separately demonstrated bounded host/process containment.” In the convergence table replace “verified in #1279, fuzzed in #1280” with “observed in #1279 and exercised by #1280's fixed Track B controls; not sequence-fuzzed.” #1280 `SUMMARY.md:100-108` explicitly excludes fuzzed `tick`/state sequences and attributes repeated-tick/crash recovery to fixed Track B controls. No surviving process is containment evidence, not a receipt-recovery experiment. Keep the #1188 liveness gap: Phase 0 observed heartbeat `finished` after SIGKILL (`SUMMARY.md:45,76`); #1248's local heartbeat/status (`harness.py:1534-1564`) does not supply an independent watchdog or fix Jog's driver-heartbeat semantics.
+  Observed input: the draft labels receipt recovery “fuzzed,” but the campaign's coverage excludes tick/state sequences.
+  Affected scope: shared finding 4, crash row and next-step prerequisites; distinguish historical observations from broader crash guarantees.
+  Falsifier: retained randomized crash/state-sequence inputs with receipt/no-refire outcomes would support the fuzzed-recovery wording.
+
+- **[Should] R6 — Reconcile the proposed arc with landed work and remove unsupported sequencing dependencies.** Steps 1-2 should be one bounded admission experiment under #522/#1022, reusing #1251 and the Stage B helper, not an unnamed second gate. The committed ledger records D1 promotion fixed by #1232/PR #1237, D6 closing keyword by #1234/PR #1238, D3 recovery guidance by #1233, D7 durable reconcile on Jog refusal by #1235, and D8 duplicate-gate reuse by #1236 (last three in PR #1253); #1251 is already the fail-closed admission slice (`releases.sql:909-910,927-930`). Historical Phase 0 results remain valid, but include this short disposition map rather than presenting all surrounding work as absent. D2 belongs with #1188; D4 continues under #522/#1022/#1294/#1296. D5's present status is not established by the historical draft; do not silently claim it fixed. The absence of a landing approval/evidence surface remains the relevant new gap. For #1287/#1288, “resolved” requires evidence, not a merged PR merely mentioning them: their capture docs have #1290 merge evidence while retaining OPEN status. The status-state D1 fix attribution to #1290 is supported by the #1284 ledger row (`releases.sql:944`) and its manual before/after report; no correction to that attribution is needed.
+  Observed input: steps propose a new deterministic gate without #1251's landed slice, and defer stateful ATE until a new shadow reconciler exists, although #1280 already names stateful primitive sequences as its target (`SUMMARY.md:126-131`).
+  Affected scope: next-step ownership/dependencies and a short current-state note; no duplicate implementation, new suite or gate machinery requested.
+  Falsifier: an identified missing admission contract that existing readers/#1251 cannot cover, or a stateful-campaign question that requires real Jog observations, would justify a separate mechanism or that added dependency.
+
+- **[Should] R7 — Make exits genuinely decision-bearing and distinguish priority judgement from measured effect.** “Compared … over N days” has no fixed N or acceptance rule; step 5 proposes a fraction without a control or go/no-go threshold; step 6 has prerequisites but no campaign exit. “Those classes gone” over an evolving whole backlog is unbounded; restrict step 2's exit to a frozen, named affected set and report residuals. The claims “do not scale before steps 1-3” and “raises the number … faster than approval and landing capacity” are labelled inference, but the specific rate inequality is unmeasured: the reports contain approval latency and rejected-item counts, not capacity rates (Phase 0 `SUMMARY.md:19-34`; Stage B `SUMMARY.md:74-85`). Replace with “Defer another scale-up pending a measured admission/landing benefit; these runs did not measure either capacity.” “Point the model at the bottleneck” is already labelled an untested hypothesis; retain it as optional contract-repair research, subordinate to reviewed scope/acceptance edits (#522 capture, Hard eligibility boundary), not a prerequisite for landing or ATE. The first-25 selection match supports only that observed prefix, not the broader value of model selection; retain the explicit 25-slot qualifier.
+  Observed input: literal “N days,” fraction without threshold, and a required future shadow target for a campaign already scoped over primitive operations.
+  Affected scope: the claim of six falsifiable exits and the priority recommendation; this is planning feedback, not authorization to run experiments.
+  Falsifier: fixed window/decision thresholds and recorded throughput/capacity measurements would support those stronger promises.
+
+- **[Pass] Remaining numeric checks and attribution.** Phase 0's approximate 23.5 h approval latency, 28 min unattended, 6 touches/~140 commands match `TESTS-RESULTS/2026-10-25+GH-1175-phase0/SUMMARY.md:19-34`; its final zero-admission census and initial 202/64 counts are supported when separated as R2 requests. #1280's 10,000/zero candidates, one smoke-found low-severity defect, containment, novelty limitation, sandbox limitation and qualified stateful go match `TESTS-RESULTS/2026-10-30+GH-1280/SUMMARY.md:10-14,22,42-56,100-107,126-131`. Stage B's 90 calls, 7.57 s mean, three path rejections, 20→0 missing-scope, 4-vs-3 ready counts and zero false approvals in 16 judgements of eight shared seeded items match its `SUMMARY.md:45-55,67-78` and raw summary/QA JSON. The “one machine / read-only / unpaired real-item QA / suspension” limits are appropriate (`SUMMARY.md:85-93`).
+
+- **[Pass] Slot-26 claim, narrowly checked.** Read-only probe, exit 0:
+  ```sh
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'CHECK'
+  import json
+  from pathlib import Path
+  w=Path('TESTS-RESULTS/2026-10-31+GH-1279-stageb/window')
+  c=json.loads((w/'codex/tables.json').read_text())['decisions']
+  r={d['tick_id']:json.loads(d['raw']) for d in json.loads((w/'rules/tables.json').read_text())['decisions']}
+  print('same request in slots 1-25:',sum(json.loads(d['raw'])['args'].get('inbox_id')==r[d['tick_id']]['args'].get('inbox_id') for d in c[:25]))
+  d=c[25]; print('slot 26:',d['status'],d['rejected_reason'],json.loads(d['raw'])['args']['inbox_id'])
+  CHECK
+  ```
+  Decisive output: `same request in slots 1-25: 25`; `slot 26: rejected authored-path-not-tracked gh-256-0e2251ddd357`. This validates the observed prefix and the first rejected request; it is not a paired causal evaluation of later selection quality.
+
+- **[Nit] Shorten by retaining the three-run table, one qualified shared-findings paragraph, the integration-gap table and one next experiment; move the longer future menu and existing-work map into related links.** Suggested replacement for the six-step sequence (recommendation, not a measured ordering result):
+  1. Fold the census and named input repairs into #522/#1022 using #1251 and the existing helper; freeze the target set/ref, report every rejection and unknown, and require zero known delivered admissions. This reports admission readiness, not automatic membership authority.
+  2. **Single next experiment: on the next real `awaiting-landing` item, manually assemble the proposed landing-desk packet using existing #1213/merge-cleanup paths.** Predeclare a bound approval tied to the candidate/head, attestation and gate evidence; record approval-preparation minutes, touches, wait, land result, issue closure, ledger reconciliation and primary cleanliness. Exit: one approved item becomes landed-and-closed with durable evidence and one bound approval, or the exact blocking predicate is named. Do not claim an attention saving from this one item; idle if no genuine eligible item exists.
+  3. Only then decide whether a separately planned read-only Jog shadow adapter is useful. Fix the observation window and mismatch tolerance before running, keep all six verbs descriptive only, and carry #1188 and #1224 as explicit production-integration decisions. No ledger writes or new queue.
+  4. Keep optional model contract-repair and the bounded stateful primitive campaign as separate follow-ups, with predeclared success/stop criteria; ATE needs evidenced #1287/#1288 resolution, not completion of an unrelated shadow integration.
+
+Handing off to Producer (claude-a) — go to the Producer window and say 'take your turn'; apply or disposition R1-R7, update the draft, and reopen Reviewer round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
