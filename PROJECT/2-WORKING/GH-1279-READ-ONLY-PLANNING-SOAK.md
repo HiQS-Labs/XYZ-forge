@@ -207,7 +207,7 @@ This PR delivers Stage A only: the bounded Codex `plan-draft` adapter and its en
 
 ### Rating (2026-10-30)
 
-`rated 60/30/50/40`, no `ovr`. Severity 30: an experiment with no data-loss path, provided the tool-free containment below holds (it is measured, not assumed); the cost of being wrong is a wasted overnight window. Priority 60: the next named step of GH-1248, scheduled by the operator. Appeal 50: neutral, none supplied. Effort 40: Stage A is a small adapter, but the whole issue includes an 8-hour run, dry runs and cross-model QA. Recurrence: a feature, not a defect; trend unknown.
+`rated 60/30/50/40`, no `ovr`. Severity 30: an experiment with no data-loss path, provided the tool-free containment below holds (it is measured, not assumed); the cost of being wrong is a wasted overnight window. Priority 60: the next named step of GH-1248, scheduled by the operator. Appeal 50: neutral, none supplied. Effort 40: Stage A is a small adapter, but the whole issue includes an 8-hour run, dry runs and cross-model QA. Recurrence: a feature, not a defect; trend unknown. **Note (2026-10-31):** the promotion step's `roadmap update --raw-text` cleared these scores (the text had no `rated` token); they were re-applied with `roadmap rate` and read back. See the LESSONS-LEARNED entry.
 
 ### Recon (base `6147b988a`)
 
