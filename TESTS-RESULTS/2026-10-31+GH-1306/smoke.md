@@ -3,7 +3,7 @@
 | Check | Revision | Result | Log |
 |---|---|---|---|
 | Red control: `smoke.py` on the pre-fix bundle | 19fe0e6b | 4 FAIL: `update --source` prints `Unchanged` for a `catalog` receipt (no source) and an `adopt-existing` receipt (source = the collection's own folder); nothing recorded | `red-control-prefix.log` |
-| Smoke main path + adjacent paths | 6426356f | 19/19 PASS | `smoke-candidate.log` |
+| Smoke main path + adjacent paths | 6426356f | 18/18 PASS | `smoke-candidate.log` |
 | Existing suite `bash test/skills-army-hq.sh` | 6426356f | 33 passed, 4 subtests passed | `skills-army-hq-suite.log` |
 
 **Fixture:** a disposable Pulse-shaped collection in its own temp git repo, adopted with

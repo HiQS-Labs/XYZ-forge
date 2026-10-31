@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (`relay-system/2026-10-31/gh1306-plan-qa.md`); fix 6426356f; smoke 19/19, red control 4 FAIL; existing suite 33 passed (`TESTS-RESULTS/2026-10-31+GH-1306/smoke.md`) | Final Codex QA, full gate, PR |
+| Plan and final QA Approved (`relay-system/2026-10-31/gh1306-plan-qa.md`, `gh1306-final-qa.md`); fix 6426356f; smoke 18/18, red control 4 FAIL; existing suite 33 passed | Full gate, PR, then refresh the deployed manager and adopt the 8 skills |
 
 ## Symptom
 
