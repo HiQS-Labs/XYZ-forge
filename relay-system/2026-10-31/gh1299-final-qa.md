@@ -52,3 +52,11 @@ Write your verdict below. Set STATUS to Approved if the change can ship as commi
 No git command, network call, suite, executable fixture or source/artifact edit was performed. Graph tools were unavailable; inspection used Markdown/source reads and bounded non-mutating probes. The base-object probe was invoked as `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` (inline standard-library pack/tree reader); exit 0, decisive output: `original sanity-check body retained: True`, `hourly files: 17 idea: True`, `deleted folder absent: True`, `same nonempty input 1186 True`, `same nonempty input 1279 True`, `PROBE_OK`. Its procedure diff contained only deletion of the trailing sections identified above. An initial loose-object-only probe could not read the packed base; the successful probe handled packed objects.
 
 Existing gate results are producer receipts, not fresh reviewer executions: `TESTS-RESULTS/2026-10-31+GH-1299/gates.md:1–8` records docs route, PDDA exit 0 and skill-viewer 8/8 at `031a39bd`. Final-state harness gating remains separate; no full-suite or promotion qualification is claimed here.
+
+### Attestation · relay-drive — 2026-10-31T16:55:33Z
+task: RELAY-gh1299-final-qa-095313
+reviewer: codex
+status: Approved
+reviewed-head: 9245bac29b62597fea89d9e7a57aa789b746ebdf
+added-range: 2128+5145
+added-sha256: 42f80287624f26cd8780b5319af727d63fea0b087e75c8f0e78f092c329de52c
