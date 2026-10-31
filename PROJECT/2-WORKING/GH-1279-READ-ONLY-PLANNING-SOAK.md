@@ -363,7 +363,7 @@ Production builds, Jog or Marathon execution, GitHub writes, scheduler install, 
 - The classified gate on the final SHA; Codex plan QA approved; Claude final QA.
 
 ### Acceptance (Stage B tooling)
-- [ ] `init` with the canary file produces 24 canary slots, 6 missed, `N` real, `66 - N` idle (sum 96), refuses the bad layouts, and is byte-identical to Stage A without the flags.
-- [ ] The compressed driver run exercises both arms, the crash at 37 and the skips, and stops on a planted fault.
-- [ ] Dry-run and QA scripts produce their records on a one-lane / three-plan trial.
-- [ ] Plan QA Approved; gate and final QA recorded for the exact SHA.
+- [x] `init` with the canary file produces 24 canary slots, 6 missed, `N` real, `66 - N` idle (sum 96), refuses the bad layouts, and is byte-identical to Stage A without the flags.
+- [x] The compressed driver run exercises both arms, the crash at 37 and the skips, and stops on a planted fault.
+- [x] Dry-run and QA scripts produce their records on a one-lane / three-plan trial.
+- [ ] Plan QA Approved; gate and final QA recorded for the exact SHA. (Plan QA Approved; final QA written; the gate is the pre-push run on the pushed head.)
