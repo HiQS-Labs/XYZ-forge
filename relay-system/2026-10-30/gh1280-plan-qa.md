@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -173,5 +173,52 @@ All seven findings accepted and implemented in `PROJECT/2-WORKING/GH-1280-OUTER-
 - F7 Implemented — acceptance criteria and rating rationale sections restored (lost when the capture doc was promoted).
 
 Handing off to Reviewer (codex) for Round 2.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: FAIL
+
+Basis: The revised plan substantially addresses F1–F7, but the stopping mechanism, shared smoke budget and crash oracle still need the corrections below before execution. Swept the entire 318-line plan, including pre-existing content; no additional pre-existing plan defects found beyond the findings and limitations recorded here. This is plan QA, not runtime qualification.
+
+swept file: yes
+
+Evidence scope: graph project/index/coverage tools are unavailable in this session; used direct numbered source reads. `gh issue view 1280 --repo HiQS-Labs/XYZ-forge` exited 0 and returned the OPEN issue, including the 20-minute discovery budget and both no-new-signal limits. No git command, suite, pytest, executable fixture or campaign was run. Sandbox enforcement, supervisor cancellation and all stateful outcomes remain **[Unverified — needs clone run]**; planned controls are not witnessed results.
+
+- **[Should] F8 — Five-second observation cannot enforce the stated case boundary (DoD 3,5).** Plan `:124-132,192-193,238-244` polls telemetry every 5 seconds and then kills the driver. In `fuzz_engine.py:290-315`, appending an event is immediately followed by the next iteration; there is no supervisor acknowledgement. If event 50 arrives just after a poll, case 51 can launch before the next poll. The same problem affects the third long-run batch. A frozen-file classification check (`plan:177-180`) only proves counting; it does not prove that execution stops at that boundary. The plan also promises an immediate stop while explicitly allowing five seconds of observation delay.
+  Observed input: the written 5-second supervisor loop at `plan:126`, combined with the real event-append/next-execution path at `fuzz_engine.py:290-315`; case 50 is visible but the producer is free to start case 51 before the next observation.
+  Affected scope: smoke 50-case streak, long-run three-batch/500-case streak, and safety cancellation latency.
+  Falsifier: a disposable-clone control with the actual launching supervisor records case 50 as the last launched case (and no case 51) when the streak is reached just after a poll; likewise no fourth batch after three no-signal batches. A reader stopping after consuming an already-produced file is insufficient.
+  Fix: specify a launch boundary that waits for the stop decision, or bounded invocations that cannot launch beyond the remaining allowance; preserve target rotation and cumulative streaks. If existing mechanisms cannot supply it within scope, hold execution or obtain an explicit issue-contract change rather than claim exact enforcement. State the actual safety detection latency and reserve termination grace inside hard walls. No production driver change or new suite is requested.
+
+- **[Should] F9 — Start one smoke clock before controls (DoD 3).** The phase heading promises all tracks within 20 minutes discovery, but `plan:168-184` runs controls first and grants Track A another 1,200 seconds from its own launch; Track B follows at `:195-215`. Positive-duration controls + the allowed full Track A window already exceed the total. This leaves F3 partially unresolved despite the restored heading.
+  Observed input: the ordered controls → Track A (1,200 seconds from launch) → Track B sequence at `plan:168-215`.
+  Affected scope: all smoke control/Track A/Track B discovery and automatic replay, followed by the ten-minute replay/cleanup reserve.
+  Falsifier: a recorded timeline with deliberately time-consuming controls shows Track A receiving only the remaining discovery time, Track B held if none remains, and cleanup complete within the total 30 minutes.
+  Fix: set a shared monotonic discovery deadline before step 3, pass only remaining time to each operation (including fixed Track B commands), stop discovery at that deadline, and reserve cleanup within the total wall. Keep the 200 mutation cap cumulative. This is a contract clarification, not a new timer framework.
+
+- **[Should] F10 — B3 must expect zero tool executions for the crashed intent (DoD 4).** Recovery is now present, but `plan:211-212` defines no retry as “one tool output for that intent”. `harness.py:1204-1210` records tool-start metadata, then `os._exit(70)` executes before `_run_tool`. Reconciliation quarantines the intent and finishes it uncertain (`:965-972`); it does not execute that tool. One output would therefore fail a correct crash-act control, or accept an erroneous retry.
+  Observed input: fresh init → slot 1 `--fault crash-act` → slot 2 recovery, with the plan's one-output predicate.
+  Affected scope: B3 crash-act replay only; outputs for a different intent at slot 2 are separate.
+  Falsifier: the disposable-clone control shows zero tool executions/output for the original tick/intent, its uncertain receipt and quarantined item, and no surviving process; a deliberate retry/output attributed to that original intent must fail the predicate.
+  Fix: require zero original-intent tool executions/output before and after recovery; separately permit legitimate slot-2 work. Do not infer execution from `tool_started_at` alone.
+  Read-only AST probe (no import/execution of target), exit **0**:
+  ```python
+  import ast
+  from pathlib import Path
+  t = ast.parse(Path('utils/py/harness.py').read_text())
+  crash = next(n for n in ast.walk(t) if isinstance(n, ast.If) and ast.unparse(n.test) == "fault == 'crash-act'")
+  f = next(n for n in t.body if isinstance(n, ast.FunctionDef) and n.lineno <= crash.lineno <= n.end_lineno)
+  tool = next(n for n in ast.walk(f) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == '_run_tool')
+  print(f'function={f.name}; crash-act exit={crash.body[0].lineno}; _run_tool={tool.lineno}; exit precedes tool={crash.body[0].lineno < tool.lineno}')
+  ```
+  Command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` with the body above. Decisive output: `function=run_tick; crash-act exit=1207; _run_tool=1210; exit precedes tool=True`. An initial AST lookup assumed a function named `tick` and exited **1**, `StopIteration`; the corrected lookup finds the enclosing function structurally. Neither probe launched a target.
+
+- **[Pass] DoD 1 — Recon remains source-grounded.** Guard/output/PRS/tool paths match `harness.py:639-657,784-785,1085-1096,1302-1358`; immutable target head assembly is `fuzz_engine.py:224-228`; per-batch clone/reset and absent streak enforcement are `gen4_campaign.py:84-103,152-192`. Refusal and replay qualifications match `adaptive_ate.py:297-337` and `fuzz_engine.py:440-449`. No route from the declared fixed-head argv to the registry/gate entry points was found in this source trace.
+- **[Pass] DoD 2,4 — F1/F4 have concrete planned controls; B2 retains a real predicate.** The outer sandbox specification and external-path refusal control are now `plan:110-118,174-176`; historical SQL paths are explicitly relocated/validated at `:197-205`. These discharge the plan omissions, subject to clone-run proof. B2's completed-tick early return and digest checks are `harness.py:1126-1130` and `domain_oracles.py:369-387`, with SQL counts at `plan:206-208`. Per-case reset/cleanup and hold language is `plan:213-215`. B3 needs F10. Track A init remains batch-reset coverage only (`plan:189-191`), so it cannot establish independent per-case init semantics; do not expand that claim at contract review.
+- **[Pass] DoD 3,6,7 — Reporting, review and rating corrections are proportionate.** `plan:231-237,248-279` names hash-bound review, accountable dispositions, actual totals/denominators, exclusions and committed provenance. `plan:283-288` grounds 55/40/50/35 and neutral appeal. The temporary supervisor at `:124-132` fills an existing enforcement gap without proposing a new adapter or permanent subsystem; F8/F9 concern whether its contract works, not a request to build a framework. Segmentation has been dropped (`:238`), so DoD 5 now concerns live supervision and is unresolved by F8. F6/F7 are discharged at plan level; F2 still requires actual nested-process cancellation evidence before smoke can pass.
+
+Root cause: the revised plan equates asynchronous observation with a launch boundary and misreads pre-tool crash metadata as a completed tool effect; Fix site: the plan's supervision/budget contract and B3 predicate; Why not upstream/downstream: this turn reviews the experiment contract only, and production repairs or new adapters are outside scope.
+
+Handing off to Producer (claude-a): disposition F8–F10, revise the plan, and open Round 3 for Reviewer. No campaign is authorized by this FAIL verdict.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
