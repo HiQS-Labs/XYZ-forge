@@ -328,3 +328,38 @@ The shell, exec, image, app, plugin, hook and skill-search features are disabled
 - [ ] With `--codex-authoring` absent, config, prompt hash, brief JSON and behaviour equal Stage A's.
 - [ ] Ready briefs ignore authored paths and record it; draft briefs' authored paths reach the proposal lane and the packet claims; blank entries are rejected.
 - [ ] Independent plan QA (Codex) approved; final QA and the classified gate recorded for the exact SHA.
+
+## Stage B plan — tooling and the window (this machine)
+
+**Scope.** Everything the issue's steps 2-10 need that does not exist yet, and then the run. The window runs on this machine (Mac Studio busy), started after the tooling is built, on Noel's explicit go. One interactive Claude Code session supervises; nothing is launched per tick except the driver's own `harness.py` calls. The rules arm is the deterministic reference; the Codex arm is `gpt-6.1-terra` at `medium` with `--codex-authoring`.
+
+### Recon (base: the Stage A + A2 branch head)
+
+- `init_from_prs` assigns `slot = len(requests) + 1` (consecutive), writes `backlog/manifest.json` (per-slot available-id digests for slots 1..288) and `state.db`. The loop consumes the oldest pending request per slot, so a request's slot is when it becomes available. Placing canaries and leaving slots 85-90 empty is therefore data, not a loop change.
+- The 12-hour driver (`TESTS-RESULTS/2026-10-29+GH-1248/driver.py`) fires `tick` at `t0 + 300*(slot-1)`, injects `crash-act` at 37 and skips 85-90, and stops on any unexpected outcome, an unexplained `uncertain`, a failed tick, `unknown_cost`, a changed canary or an unexpected top-level instance file. Its `unknown_cost` stop is wrong for a Codex arm (every call is `unknown` by design).
+- `plan_draft` already treats `source == "unregistered"` requests as issue-text-only records, which is the shape a synthetic canary issue needs.
+- `make_packet` (GH-1270) writes one `MARATHON.yaml` + brief per lane from a completed tick's proposal and validates it with `bin/marathon-yaml`. `marathon.sh --dry-run` and the preflight dry run exist and run in a disposable clone.
+
+### Design (smallest set that meets the issue)
+
+1. **Layout in `init`** (`harness.py`, the only production-file change): `--canaries FILE` (JSON lines: `id`, `category`, `slot`, `title`, `body`) and `--slots N` (default 96) and `--miss A-B` (default none). After the real requests are collected, `_assign_slots` gives each real request the next free slot in order, skipping canary slots and the missed range; canaries are added as `source: "unregistered"` requests with `canary` set, a synthetic issue number (900001+) and an `issues.json` entry; leftover free slots stay empty. `init` refuses when slot 37 would carry no real request, a canary lands on 37 or 85-90, or canary slots collide. The manifest records `layout` (canary slot map, missed range, `N` real, `66 - N` idle) so the denominator is explicit. Without the flags, behaviour is unchanged (consecutive slots).
+2. **Canary data** `utils/py/factory_primitive/scenarios/gh1279-canaries.jsonl`: exactly 24 entries across instruction override, unknown action, nonexistent ID/target, stale/delivered work (real closed or possibly-delivered issues, so no synthetic body) and output-format manipulation. Frozen by hash in the manifest.
+3. **Two arms, identical inputs.** Two `init` calls back to back (rules, then codex) with the same layout flags. Observed 2026-10-31: two inits a minute apart already differed (the second excluded one issue because live GitHub state moved), so the prepare script compares `scenario_sha256` and every per-slot digest, retries both inits (fresh run roots) up to three times, and aborts rather than proceed on unequal manifests. No instance copying and no new write path. The codex arm is `--adapter codex --codex-model gpt-6.1-terra --codex-effort medium --codex-authoring --adapter-timeout 90 --daily-cap 1.8 --max-call-cost 0.01` (180 calls); the rules arm uses the defaults.
+4. **Driver** `TESTS-RESULTS/<date>+GH-1279/stageb_driver.py`, derived from the 12-hour driver: per slot, rules tick then codex tick; `crash-act` at 37 on both; both skip 85-90. Stops on: canary changed, unexpected top-level instance file (allowlist now includes `backlog`), an unclassified adapter outcome, a `failed` tick, `uncertain` differing from injected crashes, a tick `paused` on the codex arm before the cap, call count above 180, or either arm's per-slot manifest digest mismatch (the harness raises). Unknown cost is expected on the codex arm and recorded, never stopped on. PAUSE and STOP-file handling kept. Runs under temporary `caffeinate`.
+5. **Dry runs** `stageb_dryrun.py`: from the final accepted briefs, `packet` writes packets; for up to 10 ready lanes it validates `MARATHON.yaml`, copies the folder into a separate disposable full clone and runs `marathon.sh --dry-run` with distinct builder/reviewer, then the preflight dry run where supported; records ready/STALE/AMBIGUOUS/BLOCKED verbatim; lanes past the cap are `not dry-run verified`.
+6. **Adversarial QA** `stageb_qa_pack.py`: freezes the sample (>= 12 accepted plans per arm or all, every safety-critical hold) and the rubric before any verdict, adds 6 deliberately flawed controls (invented file, unsupported scope, criteria/artifact mismatch, missing verification, prohibited new test, stale marked ready), strips arm labels and records source hashes. Codex reviews the rules-arm pack and Claude reviews the codex-arm pack, each through its own relay thread, neither rewriting the artifact; the scorer reports false approvals, false rejections, grounding defects and disagreement, with zero false approvals on seeded flaws as the target.
+7. **Report** `SUMMARY.md` plus `provenance.jsonl` rows (`commit`, `pr`, `status` pass/fail) under `TESTS-RESULTS/<date>+GH-1279-stageb/`, committed before any result is cited.
+
+### Not in scope
+Production builds, Jog or Marathon execution, GitHub writes, scheduler install, a watchdog, relay per tick, a third arm, refreshing the backlog mid-run, and any inference that eight hours proves Marathon readiness.
+
+### Verification before the window
+- `py_compile`; `init` layout controls with a stub (slot map exact, 24 + 6 + N + (66-N) = 96, refusals for the bad layouts, default behaviour unchanged, manifests equal across two inits).
+- A compressed dry run of the driver (a few slots, short interval, stub Codex) showing both arms tick, the crash at 37 reconciles at 38, 85-90 are skipped, and a planted escape file stops the run.
+- The classified gate on the final SHA; Codex plan QA approved; Claude final QA.
+
+### Acceptance (Stage B tooling)
+- [ ] `init` with the canary file produces 24 canary slots, 6 missed, `N` real, `66 - N` idle (sum 96), refuses the bad layouts, and is byte-identical to Stage A without the flags.
+- [ ] The compressed driver run exercises both arms, the crash at 37 and the skips, and stops on a planted fault.
+- [ ] Dry-run and QA scripts produce their records on a one-lane / three-plan trial.
+- [ ] Plan QA Approved; gate and final QA recorded for the exact SHA.
