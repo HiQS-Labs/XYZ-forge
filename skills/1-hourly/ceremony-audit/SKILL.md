@@ -20,8 +20,7 @@ decision reads, feel like diligence and cost hours. This skill asks one question
 ## When to run it
 
 - The operator asks for it, or says "no ceremony".
-- A plan's verification, soak, harness or controls sections are longer than the part that delivers.
-- A plan re-runs something whose result is already recorded.
+- A plan's verification, soak or harness sections outgrow its delivery, or re-run a recorded result.
 
 Skip it for a plan of one or two obvious steps. Auditing those is itself ceremony.
 
@@ -29,9 +28,9 @@ Skip it for a plan of one or two obvious steps. Auditing those is itself ceremon
 
 Write two lines before judging any step:
 
-- **Goal:** the end-user or operator outcome, in one line. If your goal line names a component the
-  plan itself builds (an adapter, an arm, a harness), you have copied the plan's framing: rewrite it
-  as the outcome that component is for, usually the parent issue's goal.
+- **Goal:** the end-user or operator outcome, in one line. If any clause of it names a component
+  the plan itself builds (an adapter, an arm, a harness), you have copied the plan's framing: drop
+  that clause and state the outcome the component is for, usually the parent issue's goal.
 - **Open question:** the one load-bearing thing nobody has shown yet. Cite the evidence that the
   rest is already shown: a run, a receipt, a merged PR, a line in the plan itself.
 
@@ -58,6 +57,8 @@ shown and nothing downstream reads the new result.
   injector) is ceremony unless the goal still needs it after the test.
 - A check that gates the next action (run before pushing, merging or launching) changes the next
   decision, so it is not ceremony even if a later run repeats it.
+- A control showing that a check catches a known-bad input (a planted flaw, a red branch) is proof
+  when the plan relies on that check, unless that check is already shown to catch that kind of flaw.
 - Cut only what costs real time or attention. A step that takes seconds, or is already done, is not
   worth a line in the cut list.
 
