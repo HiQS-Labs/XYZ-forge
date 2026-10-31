@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-31 — GH-1284 outer loop: status no longer creates state on an uninitialized root
+
+- `harness.py factory-primitive status`, `tick` and `packet` now refuse a run root that was never initialized (rc 2, `instance not initialized; run init first`) instead of creating `state.db`, which made a later `init` refuse. Found by the GH-1280 ATE campaign (D1). Init paths are unchanged. Evidence: `TESTS-RESULTS/2026-10-31+GH-1284/SUMMARY.md`. Reversibility: Easy.
+
 ## 2026-10-30 — GH-1273 harmless relay separators
 
 - The reviewer-history check retains strict canonical comparison first, then tolerates empty separator-line count changes outside protected literal content with a warning. Canonical record coordinates and loader semantics are unchanged; substantive history and invalid approvals remain refused. Raw transcript remains intact. Reversibility: Costly shared approval boundary; rollback by reverting this change.
