@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -80,5 +80,37 @@ Write the verdict (PASS / FAIL / PARKED) with a Basis; set `STATUS: Approved` on
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+
+Basis: The existing seam is the right size, but the combined write-set promise fails for `ready` briefs, and blank authored scope can manufacture readiness. Correct those two plan contracts before building. This is plan QA, not implementation approval.
+
+swept file: yes
+
+Read the entire 327-line artifact, with findings scoped to the operator decisions and A2; read all of `harness.py`, v2, the Stage A summary, and the relevant planner packing code. No additional pre-existing defect requiring a separate repair was established. Graph discovery was attempted but returned “MCP tool call requires approval, but approval policy is never”; source reads supplied the evidence. No git, suite, executable fixture, adapter call, or tool writer ran.
+
+- **[Should] R1 — combined paths disappear for planner-ready issues.** A2 design 3 (`PROJECT/2-WORKING/GH-1279-READ-ONLY-PLANNING-SOAK.md:304`) promises collision checks and packets over the combined write set. In `harness.py:550` the ready record is copied unchanged; only `draft` briefs replace `writeset` (`:554–562`). `make_packet` uses that lane's paths (`:1151`) while copying the authored Markdown (`:1140`). A ready brief can therefore instruct work outside the packet's claims and collision set. Fix: explicitly extend `_build_proposal` to overlay the combined paths on the existing ready lane once, preserving its readiness checks and leaving the actual planner view unchanged; alternatively prohibit additions for ready lanes and state that restriction. Extend the existing manual controls with ready-brief → proposal → packet path agreement and a shared-path collision case; the unchanged proposal builder is the red control. Dynamic packet evidence is **[Unverified — needs clone run]**.
+  - Observed input: the plan's permitted authored `write_set` addition at `:302–304` with the `draft_status == "ready"` value produced by `harness.py:652`; concretely a ready lane with `writeset=["utils/py/harness.py"]` and an accepted brief also adding tracked `utils/py/_marathon_plan.py`. The unchanged `ready` branch never reads that addition.
+  - Affected scope: ready briefs whose combined paths contain at least one path absent from the computed lane; draft briefs already take the combined paths.
+  - Falsifier: in the disposable-clone manual control, that added path must appear in the provisional lane and emitted packet claims, and prevent co-waving with another lane writing it. A ready brief with no addition must retain one lane and the original paths.
+
+- **[Should] R2 — empty strings can lift the missing-scope hold.** Design 1–3 allows `scope:[""]` or `scope:["   "]` (strings below the upper bound). Merging either makes `found["scope"]` truthy, so `harness.py:649–652` no longer reports missing scope. Sourced extraction deliberately omits empty content (`:373–376`). Fix: require nonblank authored entries (or discard them before evaluating presence), and add this input to the existing manual controls. Preserve the distinction between structural validation and judging whether nonblank scope is true.
+  - Observed input: `authored={"scope":["   "]}` under A2 `:302`, on the missing-scope case explicitly required by step 2 (`:318`), with an existing nonempty write set and planner state `needs-contract` or `unregistered`.
+  - Affected scope: authored scope entries containing no non-whitespace content that would otherwise satisfy the list-presence check.
+  - Falsifier: the whitespace input must remain held or be rejected; replacing it with a supported nonblank scope must permit `draft` while preserving sourced entries. Run this in the disposable clone; no runtime control was executed here.
+
+- **[Nit] N1 — specify off-mode output compatibility.** A2 `:304` unconditionally adds `authored: true|false`, while `:318`/`:326` require Stage A equivalence with authoring absent. Adding `authored:false` changes brief JSON and receipt hashes even though `render_brief` ignores it. Cheapest resolution: omit the new field on the off path, or explicitly narrow the promised equivalence to decision/status semantics and retain the exact config/prompt requirement. Keep prompt selection in `adapter_config` (`harness.py:873–884`), already shared by both config writers (`:831`, `:913`), and guard material loading as well as prompt selection with the flag.
+
+- **[Nit] N2 — tracked is an admissibility policy, not a truth test for invention.** `base-files.txt` is exactly the tracked HEAD tree at init (`harness.py:730`, manifest head `:810`); `_file_index` supplies its set (`:404–410`). A legitimate plan creating `utils/py/factory_primitive/prompts/evaluator.v3.md`, the new file this very plan requires (`A2 :306`, `:317`), fails membership against a base without it. Renames likewise have an absent destination. Keep the conservative restriction if intended, but name the false-reject risk in Risks and include a legitimate-new-file control/QA label; do not count all such rejections as hallucination detection. No new-file support mechanism is requested.
+
+- **[Pass] integration and persistence, subject to R1/R2.** The status order is state hold → missing write set → missing scope → ready/draft (`harness.py:645–655`); acceptance and questions do not gate readiness. Authored entries can lift the two content holds, not arbitrary planner-state or landed-probe holds. There is one `_validate` call (`:1289`), and loading the frozen file set there in PRS mode needs no new subsystem. Intents store full args as TEXT (`:55–57`, `:1307–1308`); `--args-json` reaches `execute_tool` and `plan_draft` (`:1199`, `:1465–1466`, `:293`). Extra brief keys are allowed by the required-key check (`:696`); Markdown verification rerenders entries (`:705`). Fingerprints include all args (`:952–953`), so changing author text changes identity, but ambiguous plan attempts are quarantined by inbox ID, not retried (`:1336–1342`, `:1073–1079`). Do not describe failure suppression as invariant under author-text edits.
+
+- **[Pass] grounding, ordering and transport are feasible; full-load timing remains unverified.** PRS config points at `backlog/manifest.json` (`harness.py:816–829`), whose request map supplies issue/doc references; sibling `issues.json` is correct (`:609`). Pending requests are ordered by `created_at,id` (`:1011`), matching rules iteration (`:190–201`); first 12 is a rolling material window, not a 12-request limit on the 66-request run. The shown-only restriction is a prompt rule unless explicitly added to validation; today's validator admits any eligible snapshot ID (`:990–993`). Narrow non-mutating probe (exit 0): `python3 -c 'import os,subprocess; s="界"*(12*(5000+3000)); print("bytes",len(s.encode()),"ARG_MAX",os.sysconf("SC_ARG_MAX")); print("rc",subprocess.run(["/usr/bin/true",s]).returncode)'` → `bytes 288000 ARG_MAX 1048576` / `rc 0`. This disproves an assumed 256-KiB limit on this machine, but measures only the material block. Add a full-prompt transport check including populated recent authored args to the existing manual controls and exercise the 12-request case in the planned live smoke. **[Unverified — needs clone run]**: full argv/environment headroom and Terra-medium completion within 90 s; two early slots alone do not measure maximum pending material/history (`A2 :319`; `harness.py:1014–1016`, `:243`).
+
+- **[Pass] risk and scope are commensurate.** The explicit injection risk at A2 `:312–313` is real: authored text is rendered as raw Markdown (`harness.py:469`) and copied into packet briefs (`:1140`, `:1157`); labels can themselves be visually spoofed and are attribution, not sanitization. Paths reach YAML via `Packet` (`:1150–1151`). The plan honestly says the design does not remove this risk; bounded lists, retained sources and no auto-launch are real, limited mitigations. Step 2 keeps controls in a disposable clone with no new suite/registry (`A2 :318`; `AGENTS.md:156`); the old validator rejects the positive authored input (`harness.py:991`), a useful red control for that positive assertion, not proof of every downstream check. Decisions `:284–291` supply Terra/medium, up to 180 calls, dry-run cap 10, this machine, explicit go and pinned unmerged head. A2 `:307` carries the cap; these recorded overrides govern the older mirrored Stage B text. No second tool/call/writer/queue is needed; fix the existing proposal seam rather than introducing one.
+
+Handing off to Producer (claude-a) — address R1/R2 and disposition the notes, then go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
