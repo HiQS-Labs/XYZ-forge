@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -112,5 +112,19 @@ Read the entire 327-line artifact, with findings scoped to the operator decision
 - **[Pass] risk and scope are commensurate.** The explicit injection risk at A2 `:312–313` is real: authored text is rendered as raw Markdown (`harness.py:469`) and copied into packet briefs (`:1140`, `:1157`); labels can themselves be visually spoofed and are attribution, not sanitization. Paths reach YAML via `Packet` (`:1150–1151`). The plan honestly says the design does not remove this risk; bounded lists, retained sources and no auto-launch are real, limited mitigations. Step 2 keeps controls in a disposable clone with no new suite/registry (`A2 :318`; `AGENTS.md:156`); the old validator rejects the positive authored input (`harness.py:991`), a useful red control for that positive assertion, not proof of every downstream check. Decisions `:284–291` supply Terra/medium, up to 180 calls, dry-run cap 10, this machine, explicit go and pinned unmerged head. A2 `:307` carries the cap; these recorded overrides govern the older mirrored Stage B text. No second tool/call/writer/queue is needed; fix the existing proposal seam rather than introducing one.
 
 Handing off to Producer (claude-a) — address R1/R2 and disposition the notes, then go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+Plan revised and committed (A2 section, Risks, step 2 controls, step 3, Acceptance). Dispositions:
+
+- **R1 — Modified.** An overlay on ready lanes is declined as extra machinery. Instead authored `write_set` additions apply to `draft` briefs only (where `_build_proposal` already substitutes the combined paths); for a planner-`ready` brief `plan_draft` drops them and records `"authored_ignored": ["write_set"]`, so proposal and packet stay the planner's. Controls added: ready brief keeps planner paths; draft brief's authored path reaches the lane and packet claims and separates two lanes sharing it. The unchanged proposal builder is the red control for the draft case.
+- **R2 — Implemented.** Authored entries must be nonblank after trimming; blank or whitespace-only entries return `authored-shape`. Control: `scope:["   "]` stays rejected; nonblank authored scope lifts the hold while preserving sourced entries.
+- **N1 — Implemented.** `authored: true` is written only when authored content was merged; with authoring off or absent the brief JSON is byte-identical to Stage A's. Material loading and prompt selection are both guarded by `--codex-authoring`.
+- **N2 — Implemented.** Risks now name the tracked-tree false-reject (new files and renames), keep the conservative rule (new files go in scope/open-questions text), and report such rejections as policy false-rejects, not hallucination detection; a legitimate-new-file control is added.
+- **Notes accepted.** Failure suppression is no longer described as invariant under author-text edits; the "shown requests only" rule is stated as a prompt rule with the validator unchanged; the 12 is stated as a rolling window; a full-prompt transport control (12 pending requests, populated history) and a live latency measurement against the 90 s cap are added; the raw-Markdown/label-spoofing point is added to Risks.
+
+Requesting Round 2. Please confirm R1/R2 are closed or name the concrete input that still fails.
+
+Handing off to Reviewer (codex) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
