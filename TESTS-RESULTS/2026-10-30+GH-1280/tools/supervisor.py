@@ -43,8 +43,11 @@ def signature(target, rc, cls, stderr):
 def canaries(spec):
     out = {}
     for name, cmd in spec.items():
-        r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        out[name] = hashlib.sha256((str(r.returncode) + r.stdout).encode()).hexdigest()[:16]
+        try:
+            r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
+            out[name] = hashlib.sha256((str(r.returncode) + r.stdout).encode()).hexdigest()[:16]
+        except subprocess.TimeoutExpired:
+            out[name] = "timeout"  # never equals a baseline digest, so it stops the run
     return out
 
 
@@ -90,18 +93,21 @@ class Tracker:
             self.candidates.append({"target": tgt, "class": cls, "rc": rc, "mutant": x.get("mutant"),
                                     "seed": x["seed"], "index": x.get("index"), "signature": sig,
                                     "stderr_tail": stderr[-600:], "corpus_id": x.get("corpus_id")})
-        self.streak = 0 if (new or cls.startswith("CANDIDATE")) else self.streak + 1
+        # Novelty is the signature's first occurrence only; a repeated candidate is captured
+        # above but is not new signal (review F11).
+        self.streak = 0 if new else self.streak + 1
         key = (tgt, x["seed"])
         if key != self.batch_key:
-            if self.batch_key is not None:
-                self.quiet_batches = 0 if self.batch_new else self.quiet_batches + 1
-            self.batch_key, self.batch_new = key, False
-        self.batch_new |= new or cls.startswith("CANDIDATE")
+            self.batch_key, self.batch_new, self.batch_n = key, False, 0
+        self.batch_new |= new
+        self.batch_n += 1
+        if self.batch_n == self.c["batch"]:  # close the batch at its last case, not the next one
+            self.quiet_batches = 0 if self.batch_new else self.quiet_batches + 1
 
     def stop_reason(self):
         c = self.c
         if c.get("streak_stop") and self.streak >= c["streak_stop"]:
-            return "no-new-signal: %d consecutive already-seen non-candidate cases" % self.streak
+            return "no-new-signal: %d consecutive cases with no new signature" % self.streak
         if c.get("quiet_batch_stop") and self.quiet_batches >= c["quiet_batch_stop"]:
             return "no-new-signal: %d consecutive batches without a new signature" % self.quiet_batches
         if self.events >= c["max_mutations"]:
@@ -122,7 +128,10 @@ def read_new(path, pos):
 
 def gate(c, argv):
     """Launch boundary: runs (inside the mutant's sandbox) before every mutant. Telemetry for
-    case N-1 is appended before case N launches, so the decision here is exact."""
+    case N-1 is appended before case N launches, so the decision here is exact.
+
+    Replay uses its own contract (separate stop file, no discovery telemetry), so an exhausted
+    discovery run never blocks a replay; the canary check still applies (review F12)."""
     stopfile = c["stopfile"]
     if os.path.exists(stopfile):
         print("gh1280-gate: stopped: %s" % open(stopfile).read().strip(), file=sys.stderr)

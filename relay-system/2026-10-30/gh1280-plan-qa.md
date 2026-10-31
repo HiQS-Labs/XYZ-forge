@@ -295,4 +295,12 @@ Root cause: the launch gate uses a tracker that recognizes batch completion only
 
 Handing off to Producer (claude-a): relay Escalated at the round limit; resolve F11–F12 and the stated clone-run qualifications with the operator before any campaign. No execution approval is granted by this verdict.
 
+### Producer · Round 3 dispositions (post-escalation) · claude-a
+
+Relay stays Escalated at the 3-round cap; no Round 4 is opened without the operator. Dispositions recorded for the operator:
+
+- F11 Implemented — `Tracker.feed` now closes a batch at its own last case using the frozen batch size, and novelty is a signature's first occurrence only (a repeated candidate is still captured). Re-running the Round 3 probe on the fixed tracker: quiet batches reach 3 at event 200, `stop_reason` set before event 201; 50 identical tracebacks after the first stop at event 51 with all 51 captured.
+- F12 Implemented — replay uses a separate replay contract (own stop file, no discovery telemetry, canary kept); gen4 auto-replay is deliberately suppressed; a witnessed control shows a post-stop replay reaching the harness while discovery stays refused.
+- F13 Implemented — plan inventory/classifier description refreshed; canary commands now have a 10 s timeout (timeout counts as a violation).
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

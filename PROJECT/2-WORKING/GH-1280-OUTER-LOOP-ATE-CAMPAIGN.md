@@ -35,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA rounds 1–2 (Codex FAIL; F1–F10) — all findings implemented in this revision; supervisor draft at `TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py` | Codex plan review round 3, then Phase 1 smoke |
+| Plan QA rounds 1–3 (Codex FAIL each round; F1–F13, relay Escalated at the 3-round cap) — all findings implemented in this revision | Operator decision on the escalated plan review, then Phase 1 smoke |
 
 The issue body is the experiment contract. This document is the execution record; it does
 not restate the issue's bounds except where recon changes how they are enforced.
@@ -44,7 +44,8 @@ not restate the issue's bounds except where recon changes how they are enforced.
 
 - Source: `HiQS-Labs/XYZ-forge` `development` @ `6147b988ac902f0f54d990256c876c474f68f760`
   (task clone base). The campaign runs against the committed task-branch HEAD, whose only
-  delta from that SHA is this doc and the ledger row (no code change).
+  delta from that SHA is this doc, the ledger row, the plan-QA relay thread and the evidence
+  copy of the campaign supervisor (no production code change).
 - Host: Mac Studio (`Mac13,1`), Python 3.14.7, `/usr/bin/sandbox-exec` present.
 - Task clone: `XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30` (sibling of the primary).
   The primary checkout is never a cwd for any campaign command.
@@ -92,11 +93,14 @@ Gen 4 tools:
 
 - **Outcome sought:** evidence of whether the outer loop has replayable robustness defects
   that the 17 recorded controls missed, on a stated surface, with containment proven.
-- **Built:** nothing in production code. Campaign inputs (target list, environment, bounds)
-  and a short supervisor shell loop live in the session scratchpad; the copies that evidence
-  needs are committed under `TESTS-RESULTS/2026-10-30+GH-1280/` after the campaign.
-- **Not built:** a state-machine adapter, a gen4 no-new-signal feature, a classifier, a new
-  suite or registry entry, any fix.
+- **Built:** nothing in production code. Campaign inputs (target list, sandbox profile,
+  environment, bounds) and a ~260-line Python campaign supervisor live in the session scratchpad;
+  the supervisor's evidence copy is `TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py`, and
+  the rest is committed there after the campaign. The supervisor carries a small temporary
+  stderr classification (`EXPECTED`/`classify`) used only to decide the no-new-signal stop and
+  to pre-sort candidates for the manual disposition in step 11; it is not a defect verdict.
+- **Not built:** a state-machine adapter, a production gen4 no-new-signal feature, a new suite
+  or registry entry, any fix.
 - **Alternative rejected:** running `gen4_campaign.py` with its nine defaults — they do not
   include `factory-primitive`, so it would exercise zero relevant cases.
 - **Rollback / containment:** all writes land in disposable clones under `$TMPDIR` and the
@@ -241,10 +245,18 @@ wall is `D − now` at its launch, and anything still pending at `D` is held, no
    reported as such.
 6. **Classify and replay** every Track A candidate: dedupe by target + violated invariant +
    suspected root cause; replay with `fuzz_engine.py --mode replay` in the kept sandbox; then
-   a semantic re-check (the same argv run once in a fresh clone under the same wrapper, with
+   a semantic re-check (the same argv run once in a fresh clone under the same OS sandbox, with
    the outcome compared against the expected-refusal table plus a `git status --porcelain` and
    outside-`temp/` file check). A clean control (the base argv) and the failing mutant are
    recorded side by side. No minimization (it weakens the predicate).
+   **Replay has its own contract (review F12):** replay targets use the same sandbox profile
+   and gate but a separate `replay-contract.json` (own stop file, no discovery telemetry,
+   canary check kept), so an exhausted discovery run never blocks a replay, while a further
+   discovery launch stays refused. Gen 4's automatic post-discovery replay
+   (`gen4_campaign.py:203-219`) is deliberately suppressed, because the watcher stops gen4 as
+   soon as discovery stops; replays are run by hand within the replay reserve, at most one per
+   deduplicated candidate plus its clean control, each with the 30 s timeout. A witnessed
+   control shows one replay reaching the harness after a discovery stop.
 7. **Cleanup and canaries.** Identity canaries unchanged; process sweep empty; sandbox and
    control clones trashed after evidence is copied out.
 
@@ -327,6 +339,9 @@ two Codex reviews and an evidence package, but no production code. Recurrence: n
 | F8 stop boundary | Implemented — launch gate inside each mutant decides before case N runs; watcher latency stated |
 | F9 one smoke clock | Implemented — shared deadline `D` set before controls; each step gets `D − now` |
 | F10 B3 zero executions | Implemented — crashed intent must have zero tool executions/output |
+| F11 tracker boundary | Implemented — batch closes at its own last case (frozen batch size); novelty = first occurrence of a signature only; the reviewer's probe now stops before event 201 |
+| F12 replay blocked | Implemented — separate replay contract; gen4 auto-replay suppressed; witnessed post-stop replay control |
+| F13 stale descriptions | Implemented — inventory and classifier description refreshed; canary commands now carry a 10 s timeout |
 
 ## Verification route
 
