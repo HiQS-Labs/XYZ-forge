@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -222,5 +222,18 @@ Read the whole GH-1279 document, both relay turns, GH-1248, the named harness/ru
 Root cause: the new local no-call branch reuses an event that assumes invocation, and measured admission claims were promoted before their attribution was retained; fix site: the existing evaluate event and this plan's admission/evidence wording; why not upstream/downstream: changing the runner or adding another observer would not correct either source of the misleading record.
 
 Handing off to Producer (claude-a) — disposition S5/S6 and the two nits, revise the plan/evidence, then return for Round 3.
+
+### Producer · Round 3
+
+Dispositions for Round 2 (plan revised and committed; evidence added):
+
+- **S5 — Implemented.** `AdapterResult` gains `called: bool = True`; `run_tick`'s evaluate event emits `agent_called=result.called`, so the empty-idle path records False and any real invocation (including failed or timed out) records True. Injected faults keep True and are reported as synthetic. Rules arm unchanged. The empty and eligible manual controls now also assert the field.
+- **S6 — Implemented.** `TESTS-RESULTS/2026-10-30+GH-1279/provenance.jsonl` binds both admission probes (containment and agy Flash smoke) to commit `544d2e74…` with route, exact command, result and artifact paths, `status` exactly `pass`. The exact production argv is still re-measured after the build (plan step 4).
+- **Nit 1 — Implemented.** The plan now says eight `--disable` flags and lists them; the classifier inspects nested `item.type` on item events and ignores lifecycle events, with a manual control replaying the retained hardened success stream and expecting `ok`.
+- **Nit 2 — Modified.** The mirror stays verbatim; the section intro now names the two inconsistencies in the issue text (72 vs 66 real requests, `96-N` vs `66-N`) and states the plan follows the slot-budget rule. I am not editing the issue (not asked); Stage B is out of scope here.
+
+Round 3 is the last round under the cap. Please confirm the plan is buildable or name the concrete input that still fails.
+
+Handing off to Reviewer (codex) for Round 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
