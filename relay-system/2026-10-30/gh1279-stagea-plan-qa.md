@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -235,5 +235,48 @@ Dispositions for Round 2 (plan revised and committed; evidence added):
 Round 3 is the last round under the cap. Please confirm the plan is buildable or name the concrete input that still fails.
 
 Handing off to Reviewer (codex) for Round 3.
+
+### Reviewer · Round 3
+
+**VERDICT: PASS**
+**Basis:** The Stage A plan is buildable through the existing adapter seam, with falsifiable acceptance and all six mirrored entry gates accounted for. S5/S6 and both Round 2 nits are closed at plan level. This approves the plan, not the unbuilt adapter or the timed window.
+swept file: yes
+
+Read the whole GH-1279 document and relay, GH-1248, the named harness/runner paths, prompt/schemas, and retained admission evidence. No additional pre-existing defect found in the swept plan or reviewed paths beyond the validator and telemetry defects already explicitly scheduled for correction. P = `PROJECT/2-WORKING/GH-1279-READ-ONLY-PLANNING-SOAK.md`; H = `utils/py/harness.py`; G = `utils/py/proc_group.py`; E = `TESTS-RESULTS/2026-10-30+GH-1279/`. Graph access was denied by session policy, so named sources were read directly. No git commands, suites, executable fixtures or live model calls ran. A fresh issue fetch remains **[Unverified — network unavailable]**: `gh api repos/HiQS-Labs/XYZ-forge/issues/1279 --jq .body`, exit 1, `error connecting to api.github.com`. Review uses P:44-202's retained mirror; live issue freshness is not attested.
+
+- **[Pass] S5 — The proposed telemetry correction matches the no-call branch.** P:230 specifies `called: bool = True`, `agent_called=result.called`, False for empty idle, True for real invocations including failures/timeouts, and separate synthetic-fault reporting. This directly replaces H:1164's constant without changing the rules default. P:248 asserts both invocation counts and the evaluate field; H:949-955 already releases an unbilled reservation at zero. This is a concrete implementation and verification path, not an implemented result.
+
+- **[Pass] S6 — Admission evidence now has attribution.** E:`provenance.jsonl`:1-2 supplies full source SHA `544d2e743d6f48d2ab2738e172925f889297c39e`, command, CLI/model route, `status: pass` and nonempty artifact paths for both probes. P:223 cites it and preserves the post-build exact-argv remeasurement at P:249. The inspection below establishes retained attribution and artifact consistency; it does not independently rerun the historical agy turn or establish the future adapter's containment.
+
+- **[Pass] Both nits are resolved without more machinery.** P:231 lists all eight disabling flags. P:232 inspects nested `item.type` for item events and ignores lifecycle events; P:248 replays the hardened stream expecting `ok`. E:`containment-probe/ev2-hardened.jsonl`:1-5 contains normal lifecycle events and a final JSON idle decision; the baseline has tool events at lines 4-7. P:46 explicitly identifies the mirror's 72/66 and `96-N`/`66-N` inconsistencies and adopts P:129's 24+6+66 slot budget. Stage B remains separately gated.
+
+- **[Pass] The whole delivery path remains small and grounded.** P:229-237 extends H:147-152's result, H:927-937's dispatch and H:743-747/808-812's existing config writers; P:233 scopes the malformed-value guards to H:862/874/878/884/887. Positional prompt transport at P:231 fits G:122-124's DEVNULL runner; G:131-138 exposes timeout after process-group cleanup. H:1156-1195 reserves, settles, retains raw and safely substitutes idle; its normalized-status consumers and H:43-76's tables impose no conflicting enum. The 90-call boundary remains supported by the Round 1 arithmetic probe and is explicitly owed as a clone control at P:248. P:253-262 maps all six gates; P:266-271 requires their outcomes, independent final QA and final-SHA gate evidence. P:210's rating remains conditional on containment. No second loop, writer, new suite or gate is proposed.
+
+Read-only evidence inspection, exit 0 (with `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"`):
+
+~~~python
+python3 - <<'PY'
+import json, pathlib, re
+root = pathlib.Path('TESTS-RESULTS/2026-10-30+GH-1279')
+rows = [json.loads(x) for x in (root/'provenance.jsonl').read_text().splitlines() if x.strip()]
+print('provenance_rows', len(rows))
+for r in rows:
+    print(r['id'], bool(re.fullmatch('[0-9a-f]{40}', r['commit'])), r['status'],
+          bool(r['route']), bool(r['command']),
+          all(pathlib.Path(p).is_file() and pathlib.Path(p).stat().st_size for p in r['artifacts']))
+for name in ('ev2-baseline.jsonl', 'ev2-hardened.jsonl'):
+    es = [json.loads(x) for x in (root/'containment-probe'/name).read_text().splitlines() if x.strip()]
+    items = [e['item'] for e in es if e['type'] in ('item.started', 'item.completed')]
+    tools = [i for i in items if i['type'] not in ('agent_message', 'reasoning')]
+    final = json.loads([i['text'] for i in items if i['type'] == 'agent_message'][-1])
+    print(name, len(es), len(tools), final['tool'])
+PY
+~~~
+
+Decisive output: `provenance_rows 2`; both rows yield `True pass True True True`; baseline `9 4 idle` (two started/completed tool pairs), hardened `5 0 idle`. An accompanying read-only AST inspection reports the existing evaluate constants at H:1159 (`False`) and H:1164 (`True`), confirming the proposed S5 fix site rather than claiming it is already changed.
+
+All adapter execution, transport, cancellation, safe-idle and full-loop accounting results remain **[Unverified — needs clone run]** until the planned controls execute. Reversibility: **Easy** for this plan; the implementation's bounded blast radius is the existing experiment adapter/config/validation/telemetry and prompt/schema paths, with rollback by reverting the PR (P:278).
+
+Relay closed (Approved), no further turn needed. Producer proceeds to the agy build and the already-required controls and final QA; this is not authorization for Stage B.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
