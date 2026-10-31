@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -126,5 +126,28 @@ Plan revised and committed (A2 section, Risks, step 2 controls, step 3, Acceptan
 Requesting Round 2. Please confirm R1/R2 are closed or name the concrete input that still fails.
 
 Handing off to Reviewer (codex) for Round 2.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: FAIL
+
+Basis: R1 and R2 are closed at the plan level. One remaining contract gap prevents approval: default-off compatibility is promised, but authoring is gated only in prompt construction, not at the deterministic decision boundary. This needs a small clarification in the existing seam, not new machinery. This is plan QA, not implementation or run approval.
+
+swept file: yes
+
+Read the entire 330-line artifact and all 1522 lines of `harness.py`, v2, the Stage A summary, and the relevant wave-packing code. Findings concern A2 and its operator decisions; no additional pre-existing defect requiring separate repair was established. Graph discovery returned “MCP tool call requires approval, but approval policy is never”; direct source reads supplied the evidence. No git, suite, executable fixture, adapter call, or tool writer ran. Only this relay file was edited.
+
+- **[Should] R3 — enforce the off switch at validation, not only in the prompt.** A2 design 4–5 gates material loading and prompt selection (`PROJECT/2-WORKING/GH-1279-READ-ONLY-PLANNING-SOAK.md:305–306`), but design 2 admits `authored` whenever `tracked` exists (`:303`), and design 3 unconditionally reads and merges it (`:304`). Neither names the authoring flag at the validator/merge boundary. Stage A rejects every extended argument set (`utils/py/harness.py:991–993`); the proposed rule instead accepts this nonblank, path-free extension in backlog mode and changes the brief, even with the flag absent. v2's instruction to return only `inbox_id` (`utils/py/factory_primitive/prompts/evaluator.v2.md:10`) cannot establish the compatibility promise at A2 `:328`. Fix: explicitly require authoring to be enabled before accepting authored args in the existing validation path, preserve Stage A rejection when disabled, and include an off-mode authored-response control in step 2. Keep the merge behind that validated decision; no second validator or writer is needed.
+  - Observed input: replay the retained eligible request `gh-1201-794fcf69ac2c` from `TESTS-RESULTS/2026-10-30+GH-1279/live/two-arm-smoke-terra-medium.json`, with its pending snapshot, no recent failures, PRS `tracked` loaded, and authoring absent/false. Adapter response: `{"tool":"plan-draft","args":{"inbox_id":"gh-1201-794fcf69ac2c","authored":{"scope":["Review the supplied issue scope."]}},"reason":"oldest plan request","confidence":1}`. The current exact-key rule rejects it; A2's stated shape/backlog rules admit it and append scope. This is a source-derived counterexample, not an executed adapter result.
+  - Affected scope: otherwise-valid authored responses in backlog instances with `--codex-authoring` absent or disabled. Ordinary sourced-only decisions and enabled authoring should retain their respective paths.
+  - Falsifier: replay identical stub output with the flag off and on in the disposable-clone controls. Off must reject with Stage A's `plan-draft-id-not-eligible`, safe-idle and emit no authored brief; on must accept and label the added scope. An existing specified flag check that already produces these results would close this finding. Runtime evidence is **[Unverified — needs clone run]**.
+
+- **[Pass] R1/R2 closed by the revised contracts.** Design 3 explicitly drops authored paths for planner-ready records and records `authored_ignored` (`A2 :304`, acceptance `:329`), so the unchanged ready lane (`harness.py:550–552`) cannot disagree with added authored paths. Draft lanes already take brief paths (`:554–560`), packing checks exact overlaps (`utils/py/_marathon_plan.py:835`), and packet YAML takes the resulting lane paths (`harness.py:1150–1151`). Nonblank validation (`A2 :302–303`) closes the whitespace-presence bug at `harness.py:649`. Step 2 (`A2 :320`) names both controls. These are grounded plan resolutions; execution remains outstanding.
+
+- **[Pass] the remaining design stays within the existing seam.** Required-key verification permits added brief metadata (`harness.py:696–705`); persisted full args flow through the existing tool invocation (`:1307–1317`, `:1199`, `:1465–1466`). The one production validation call remains `:1289`. Both config writers share `adapter_config` (`:831`, `:913`), so default-off config/prompt compatibility is feasible without another config path. Risks now explicitly retain the legitimate-new-file/rename false-reject and raw-Markdown/label-spoofing limitations (`A2 :313–314`); authored text still reaches packet briefs (`harness.py:1140`, `:1157`). No additional tool, call, queue, planner change or test suite is warranted.
+
+- **[Pass] operator decisions and verification scope remain represented.** The decisions table (`A2 :284–291`) records Terra/medium, 180 calls, dry-run cap 10, this machine, explicit go and the pinned unmerged head; design 6 carries the reservation settings (`:307`). Full prompt transport with populated history and a 12-request live latency measurement are now explicit (`:320–321`). **[Unverified — needs clone run]**: actual transport headroom, completion time, packet/collision controls, byte compatibility and the classified gate. The old validator is a red control for positive authored admission, not evidence that every downstream assertion is sensitive; final QA must inspect the individual control receipts.
+
+Handing off to Producer (claude-a) — specify the opt-in validation boundary and off-mode authored-response control for R3, then go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
