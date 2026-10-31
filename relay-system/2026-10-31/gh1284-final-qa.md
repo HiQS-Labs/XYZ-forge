@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-31.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -93,5 +93,18 @@ Handing off to Producer (claude-a) — correct the smoke-script cleanup containm
 - Full gate: runs on push via the pre-push hook (classified full route for `utils/py/harness.py`).
 
 Handing off to Reviewer (codex) for Round 2 — re-check the smoke-script fix.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Ship within the packet's single-operator envelope. The Round 1 cleanup finding is resolved; the targeted source change and recorded main/adjacent/red evidence meet the review contract. Full gate execution remains outstanding.
+swept file: yes
+
+- [Pass] Round 1 containment correction accepted. `TESTS-RESULTS/2026-10-31+GH-1284/smoke.sh:4` resolves the clone and exits on failed resolution; :5–7 reject a non-verify/missing-harness directory and failed cd; :8–10 constrain cleanup to the absolute clone runtime target. Both cleanup sites call that function (:10, :29). Safe guard-only probe (no cleanup or fixture body executed): `lines = Path("TESTS-RESULTS/2026-10-31+GH-1284/smoke.sh").read_text().splitlines(); prefix = "\n".join(lines[2:7]) + '\nprintf "guard accepted\\n"\n'; subprocess.run(["bash", "-c", prefix, "guard-probe", arg], capture_output=True, text=True)`, for `arg="/__gh1284_missing_clone__"` and this worktree's absolute path. Probe driver exited 0; both subprocesses exited 2. Decisive output: `cd: /__gh1284_missing_clone__: No such file or directory` and `refused: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.GtK51R is not a disposable *-verify clone`.
+- [Pass] Read the entire packet and all 1,414 lines of `utils/py/harness.py` again; no additional pre-existing defect identified in this sweep. The only instance database connection sites remain :741, :807 (init), :1006, :1131 and :1278; the latter three have guards at :1005, :1123 and :1277 before any database creation. The guard's quoted failure is `instance not initialized; run init first` (:103). The packet's diff changes no init body and adds no suite/gate. No new legitimate pre-init dependency was identified in the caller search; the driver reads its initialized canary (`TESTS-RESULTS/2026-10-29+GH-1248/driver.py:63`), while the adjacent controls seed first (`TESTS-RESULTS/2026-10-29+GH-1257/gh1257-controls.sh:7`, `TESTS-RESULTS/2026-10-30+GH-1270/gh1270-controls.sh:25`). Graph tools are unavailable in this turn; current direct source and literal searches provide the evidence.
+- [Pass] Evidence integrity: non-mutating Python check `assert data and hashlib.sha256(data).hexdigest() == digest`, using the latest per-artifact hashes from `TESTS-RESULTS/2026-10-31+GH-1284/provenance.jsonl:1`–2, exited 0 and printed `nonempty; sha256 matches latest receipt` for harness.py, smoke.sh, smoke.txt and SUMMARY.md. Row 2 explicitly labels the original script hash as pre-hardening. Recorded `smoke.txt:3`–11 shows refusal without state creation followed by successful init/status/tick; :13–23 covers adjacent refusal and repeated tick; :25–29 supplies the failing unpatched control.
+- [Unverified — needs clone run] No full gate, suite, executable fixture or runtime smoke was run in this reviewer worktree. The harness must obtain final-state gate evidence in a disposable full clone; relay approval does not attest that pending run.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
