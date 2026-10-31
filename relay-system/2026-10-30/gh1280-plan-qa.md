@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -230,5 +230,69 @@ F8–F10 accepted and implemented (plan "Plan QA dispositions" table). The super
 - F10 Implemented — B3 requires zero tool executions/output for the crashed intent before and after recovery (`harness.py:1207` exit precedes `:1210` `_run_tool`); slot-2 work for a different intent allowed.
 
 This is round 3 of 3. Handing off to Reviewer (codex).
+
+### Reviewer · Round 3 · codex
+
+VERDICT: FAIL
+
+Basis: Block execution under this revision. F9 and F10 are corrected at plan level, and the launch gate addresses the asynchronous observation gap in principle, but its supplied tracker still violates the no-new-signal boundary and the same gate prevents the required post-stop replay. Round 3 of 3 ends Escalated; Producer/operator must resolve these findings before execution. This is plan QA, not campaign qualification.
+
+swept file: yes
+
+Evidence scope: swept the entire 347-line plan and the entire 244-line supervisor evidence copy, including pre-existing content; the findings below are the remaining material defects found in that scope. Graph project/index/coverage tools are unavailable in this session (tool inventory returned no matching tools), so claims use numbered source reads and one pure, in-memory AST-extracted tracker probe. `gh issue view 1280 --repo HiQS-Labs/XYZ-forge` exited **1**, `error connecting to api.github.com`; live issue state could not be refreshed. Requirements were checked against the plan's Acceptance criteria and the earlier issue observations quoted in this relay, not represented as a fresh live read. No git command, suite, pytest, executable fixture, sandbox control or campaign was run. Runtime containment, cancellation, controls and stateful outcomes remain **[Unverified — needs clone run]**.
+
+- **[Should] F11 — The supplied tracker does not enforce the promised no-new-signal limits (DoD 3,5).** Plan `PROJECT/2-WORKING/GH-1280-OUTER-LOOP-ATE-CAMPAIGN.md:264-269` promises an exact stop before a fourth quiet batch. `TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py:94-99` closes the previous batch only when it consumes the first event of the next batch. At the launch gate before that next case, that event does not yet exist. The probe below shows a warm-up batch plus three quiet 50-case batches (200 events) still yields no stop; event 201, already an extra harness execution, is required to recognize quiet batch 3. Separately, `:93,99` treats **every** candidate occurrence as new signal, even when its normalized signature is already in `seen`: 501 identical tracebacks leave both counters at zero. Repeated rediscovery can therefore run to the wall/mutation cap instead of the no-new-signal stop. This keeps F8 partially unresolved.
+  Observed input: one target, seeds 1281–1284, 50 identical expected-refusal events per seed; then seed 1285's first identical event. Separately, 501 identical rc-1 tracebacks, with one unique signature. Exact input and output are below.
+  Affected scope: smoke's consecutive-case counter and the long-run three-batch/500-case counters, including repeated candidate signatures; not a request to change Gen 4 production code.
+  Falsifier: before launching event 201 in the four-batch sequence, the real gate refuses; a repeated candidate signature resets novelty only on its first occurrence and then reaches the configured no-new-signature threshold. A genuinely new signature resets the applicable counter. Record these as manual controls in the existing evidence package, without adding a suite.
+  Fix: close/count a completed batch at its actual launch boundary using the frozen batch size or explicit batch identity/completion information, and distinguish candidate capture from signature novelty. Preserve the independent case and batch limits. If that cannot be expressed within this experiment, hold the long run rather than claim exact enforcement.
+
+  Probe command (pure tracker computation; no subprocess, target import, fixture or filesystem mutation), exit **0**:
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PY'
+  import ast, pathlib, re
+  p=pathlib.Path('TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py')
+  t=ast.parse(p.read_text())
+  nodes=[n for n in t.body if isinstance(n,(ast.FunctionDef,ast.ClassDef)) and n.name in {'classify','signature','Tracker'} or isinstance(n,ast.Assign) and any(getattr(a,'id',None)=='EXPECTED' for a in n.targets)]
+  d={'re':re}; exec(compile(ast.Module(body=nodes,type_ignores=[]),str(p),'exec'),d)
+  c={'target_names':['refusal'],'seed':1280,'quiet_batch_stop':3,'streak_stop':500,'max_mutations':10000}
+  def event(seed, rc=2, stderr='factory-primitive: run root must stay under temp/factory-primitive'):
+   return {'exit_code':rc,'extra':{'seed':seed,'stderr_sample':stderr}}
+  x=d['Tracker'](c)
+  for seed in range(1281,1285):
+   for _ in range(50): x.feed(event(seed))
+   print('batch_end',seed-1280,'events',x.events,'quiet_batches',x.quiet_batches,'stop',x.stop_reason())
+  x.feed(event(1285)); print('first_case_batch5','events',x.events,'quiet_batches',x.quiet_batches,'stop',x.stop_reason())
+  y=d['Tracker']({**c,'streak_stop':50})
+  for i in range(501): y.feed(event(1281+i//50,1,'Traceback (most recent call last)\nValueError: same defect'))
+  print('identical_candidates','events',y.events,'unique_signatures',len(y.seen),'streak',y.streak,'quiet_batches',y.quiet_batches,'stop',y.stop_reason())
+  PY
+  ```
+  Decisive output:
+  ```text
+  batch_end 1 events 50 quiet_batches 0 stop None
+  batch_end 2 events 100 quiet_batches 0 stop None
+  batch_end 3 events 150 quiet_batches 1 stop None
+  batch_end 4 events 200 quiet_batches 2 stop None
+  first_case_batch5 events 201 quiet_batches 3 stop no-new-signal: 3 consecutive batches without a new signature
+  identical_candidates events 501 unique_signatures 1 streak 0 quiet_batches 0 stop None
+  ```
+
+- **[Should] F12 — Give replay a separate bounded contract; the discovery gate refuses it (DoD 1,3,4).** Plan `:242-247` requires replay in the kept sandbox and a semantic re-check “under the same wrapper”. The wrapper now includes the discovery gate (`:127-135`). After a normal gate stop, `supervisor.py:127-129` returns 125 for every subsequent invocation because the stop file persists. Even deleting that file does not solve it: `:130-144` reads the exhausted discovery telemetry and recreates the stop before `execv`. `fuzz_engine.py:446-449` faithfully executes that wrapped target and compares its result to the original observation, so this yields a gate refusal instead of the candidate's replay. Gen 4's automatic post-discovery replay at `gen4_campaign.py:203-219` also retains the gate. Thus the revision blocks the semantic evidence that must qualify candidates, rather than merely restricting new discovery.
+  Observed input: the planned post-stop replay with an existing stop file containing `no-new-signal: ...`, or with that file removed but telemetry still at `streak_stop`; replay target is the plan's same sandbox/gate/harness wrapper.
+  Affected scope: automatic Gen 4 replay, explicit fuzz replay and the clean/failing semantic controls after a discovery stop. Discovery limits must remain in force for discovery.
+  Falsifier: after a witnessed discovery stop, one selected candidate and its clean control actually reach the harness under the same OS sandbox, with explicit replay time/case bounds; candidate outcome matches its semantic predicate, while another discovery launch remains refused. Merely clearing the stop file or observing rc 125 is insufficient.
+  Fix: explicitly separate replay accounting/state from exhausted discovery state while retaining the sandbox, canary checks, per-command cap and cleanup. Name which automatic replays are deliberately suppressed and perform the required manual semantic replays within the reserved replay budget. No production replay-engine change is required.
+
+- **[Pass] DoD 1 — Recon remains grounded, with replay integration qualified by F12.** Fixed-head assembly and dispatch are `fuzz_engine.py:224-228` and `harness.py:1397-1401`; run-root/output/PRS/tool behavior is `harness.py:639-657,784-785,1085-1096,1302-1358`. Gen 4 clone/reset and between-batch duration checks are `gen4_campaign.py:84-103,152-192`; no streak stop exists on that path. Error classification is `adaptive_ate.py:297-337`; replay compares the stored vector at `fuzz_engine.py:446-449`. These are source observations, not witnessed runtime results.
+- **[Pass] DoD 2 — The plan retains concrete containment controls; enforcement remains conditional.** Plan `:110-149,194-203` specifies the outer write/network sandbox, sanitized environment, fixed target head, identity canaries and process sweep, with negative controls. No additional concrete argv route to the primary ledger, network or gate scripts was found in the inspected fixed-head dispatch. The important remaining boundary limitation is operational: `supervisor.py:43-47` runs canary commands without a timeout, so its 1 s / 5 s watcher latency at plan `:142-145` is not established by source alone. The frozen contract/clone controls must demonstrate bounded canary commands and actual nested-session cleanup; hold if they cannot. No runtime containment PASS is claimed.
+- **[Pass] DoD 3,4 — F9/F10 are discharged at plan level.** Plan `:175-180` sets one clock before controls and assigns only remaining discovery time to controls, Track B and Track A. Plan `:232-241` requires recovery, zero original-intent tool executions/output, quarantine and per-case reset/cleanup; this matches the pre-tool crash exit at `harness.py:1204-1210` and recovery at `:958-972,1135-1141`. B1 relocates interpreter/SQL paths at plan `:220-228`; B2 adds row-count checks at `:229-231` to the existing terminal early return (`harness.py:1126-1130`) and digest oracle (`domain_oracles.py:369-387`). B1–B3 remain conditional/held until exercised; this review does not count planned checks as stateful coverage.
+- **[Pass] DoD 3,6,7 — Report fields, review gates and rating remain proportionate.** Plan `:257-263,274-305` requires frozen hash-bound review, accountable dispositions, actual budgets/denominators, coverage exclusions and committed provenance. Plan `:307-314` grounds `55/40/50/35` and neutral appeal. No new state adapter or duplicate production subsystem is proposed (`:95-101`); the temporary supervisor is campaign tooling whose supplied implementation must still meet its own stated contract. DoD 5 is unresolved by F11, rather than discharged by the introduction of a gate.
+- **[Nit] F13 — Refresh stale descriptions.** Plan `:46-47` says the task branch changes only the doc and ledger, and `:95-99` describes a short shell loop and no classifier. This revision also supplies a 244-line Python supervisor with `EXPECTED`/`classify` at `supervisor.py:13-33`. Update the artifact/source inventory and describe the temporary classification used for stopping accurately; no new mechanism is requested.
+
+Root cause: the launch gate uses a tracker that recognizes batch completion only from the next completed case, treats candidate status as perpetual novelty, and shares exhausted discovery state with replay; Fix site: the temporary supervisor and the plan's replay contract; Why not upstream/downstream: these are experiment orchestration defects, and changing production Gen 4/fuzz engines or accepting unexecuted replay results would expand scope or hide them.
+
+Handing off to Producer (claude-a): relay Escalated at the round limit; resolve F11–F12 and the stated clone-run qualifications with the operator before any campaign. No execution approval is granted by this verdict.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
