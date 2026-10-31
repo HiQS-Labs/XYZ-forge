@@ -25,3 +25,7 @@ goal: >
 ## Key concepts
 
 - GH-1280 disposition D5: clean `init` → `tick` is rc 0 unsandboxed, rc 1 under `profile-long.sb`.
+
+## Merge evidence
+
+- PR #1290 merged 2026-10-31 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

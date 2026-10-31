@@ -26,3 +26,7 @@ goal: >
 
 - GH-1280 disposition D6; 2,302 of 2,313 signatures were usage lines.
 - Campaign tooling only (`TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py`).
+
+## Merge evidence
+
+- PR #1290 merged 2026-10-31 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
