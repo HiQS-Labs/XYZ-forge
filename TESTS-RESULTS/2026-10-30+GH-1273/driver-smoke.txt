@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+# GH-505 / GH-509 / GH-510 — driver-attested terminal status.
+#
+# The relay driver is the only process in a relay the party under review does not run. These
+# cases drive the REAL relay_drive.py through the REAL codex-turn.sh shim (worktree isolation on,
+# containment on, file-scoped commit on) with a stub `codex` binary that plays builder or reviewer,
+# and assert that:
+#   A   a builder-role turn that writes STATUS: Approved is reverted, committed as reverted, and
+#       escalated `forged-terminal` (exit 4) — RED at base: the base driver exits 0
+#   A2  the same behind a containment failure keeps the shim's exit 6
+#   B   a reviewer-role approval is attested: trailer + record, reviewed_head = HEAD BEFORE dispatch
+#       = the parent of the shim's commit, digest = sha256 of exactly the appended bytes
+#   B4  a parent commit landing DURING the turn does not move reviewed_head (worktree cut at the pin)
+#       and the candidate check refuses the drifted HEAD
+#   C   a file that is already terminal at startup is refused `unattested-terminal` — RED at base
+#   D1  STATUS-only change by the reviewer → empty-approval;  D3 rewritten body → review-body-rewritten
+#   E2  no --reviewer → exit 2 before any tick mutation;  E3 builder == reviewer → exit 2
+#   K   reviewer leaves the token claimed → close-mismatch, no record
+#   L   the reader refuses a changed reviewer / STATUS / review text / truncated record
+#   F   RELAY_ROLE outranks the in-file directive under RELAY_DRIVER_LOCKED=1, through rtl.py
+#   G   the builder prompt no longer says "set STATUS: Approved"; the reviewer prompt does
+#   S1  RELAY_WORKTREE_ISOLATION other than 0/1 is refused before dispatch
+#   I   jog's landing parks on a refused merge, a missing PR, and a drifted candidate (GH-510);
+#       merges with --match-head-commit <candidate> otherwise
+#   J   jog no longer overrides a non-zero driver exit
+source "$PWD/test/_setup.sh" gh505-separator-smoke
+export TICK_BIN="$TICK"
+REPO="$PWD"
+BASE_SHA="${GH505_BASE_SHA:-a6441b9b}"
+tick_a init >/dev/null
+
+# ---- fixture harness: a copy of the shipped scripts, so .relay-scratch and locks land in $WORK ----
+MAIN="$WORK/harness"; mkdir -p "$MAIN"
+cp -R "$REPO/relay-automation" "$REPO/utils" "$REPO/bin" "$REPO/src" "$MAIN/" 2>/dev/null
+git init -q "$MAIN"; git -C "$MAIN" add -A >/dev/null 2>&1; git -C "$MAIN" commit -qm seed >/dev/null 2>&1
+DRIVER="$MAIN/utils/py/relay_drive.py"
+
+# ---- target repo $A: tracked relay file, .tick/bin gitignored ----
+mkdir -p "$A/bin"; ln -sf "$TICK" "$A/bin/tick"
+printf '.tick/\nbin/\n' >"$A/.gitignore"
+printf '# RELAY · fixture\n\nNEXT: bld\nSTATUS: Open\nROUND: 1 / 2\n\n## Body\n\nseeded body line one\n' >"$A/relay.md"
+printf 'v1\n' >"$A/src.txt"
+git -C "$A" add .gitignore relay.md src.txt >/dev/null 2>&1; git -C "$A" commit -qm "seed relay" >/dev/null 2>&1
+
+# ---- stub codex: plays the role the driver dispatched; edits cwd-relative relay.md (the worktree) ----
+STUB="$WORK/codex"
+cat >"$STUB" <<STUB_EOF
+#!/usr/bin/env bash
+set -u
+export TICK_REPO_ROOT="$A"
+T="$TICK"
+touch "$WORK/ran-\${RELAY_AGENT}-\${RELAY_TASK}"
+printf '%s\n' "\$(git -C "$A" rev-parse HEAD)" >"$WORK/head-at-turn-\${RELAY_TASK}"
+printf '%s\n' "\$(git rev-parse HEAD 2>/dev/null)" >"$WORK/wt-cut-\${RELAY_TASK}"
+f="\$PWD/relay.md"
+mode="\${STUB_MODE:-approve}"
+"\$T" claim "\$RELAY_TASK" --agent "\$RELAY_AGENT" --paths "relay.md" >/dev/null 2>&1
+case "\$mode" in
+  handoff)
+    printf '\n### Round 1 · Builder · %s\nbuilt it\n' "\$RELAY_AGENT" >>"\$f"
+    "\$T" release "\$RELAY_TASK" --agent "\$RELAY_AGENT" --to "\${STUB_HANDOFF_TO:-rev}" >/dev/null 2>&1 ;;
+  statusonly)
+    perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f"
+    "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
+  rewrite)
+    perl -pi -e 's/^seeded body line one/REWRITTEN/' "\$f"
+    printf '\n### Round 1 · Reviewer · %s\nlooks fine\n' "\$RELAY_AGENT" >>"\$f"
+    perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f"
+    "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
+  markerapprove)
+    awk '
+      /^<!-- ↓↓↓ NEXT TURN goes here/ {
+        print ""
+        print "### Round 1 · Reviewer · " ENVIRON["RELAY_AGENT"]
+        print "VERDICT: PASS"
+        print "Basis: \`src.txt:1\`"
+      }
+      { print }
+    ' "\$f" >"\$f.new" && mv "\$f.new" "\$f"
+    perl -pi -e 's/^STATUS:.*/STATUS: Approved/; s/^NEXT:.*/NEXT: done/' "\$f"
+    "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
+  uncited)
+    printf '\n### Round 1 · Reviewer · %s\n- [Pass] verified the thing works\n**Verdict:** Approved\n' "\$RELAY_AGENT" >>"\$f"
+    perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f"
+    "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
+  keepclaimed)
+    printf '\n### Round 1 · Reviewer · %s\nlooks fine\n' "\$RELAY_AGENT" >>"\$f"
+    perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f" ;;
+  citeafter)
+    printf '\n### Round 1 · Reviewer · %s\nsee \`src.txt\`\n**Verdict:** Approved\n' "\$RELAY_AGENT" >>"\$f"
+    perl -pi -e 's/^STATUS:.*/STATUS: Approved/' "\$f"
+    "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
+  separator)
+    perl -0777 -pi -e 's/## Body\\n\\n/## Body\\n/' "\$f"
+    printf '\\n### Reviewer · Round 1\\nVERDICT: PASS\\nBasis: src.txt:1\\n' >>"\$f"
+    perl -pi -e 's/^STATUS:.*/STATUS: Approved/; s/^NEXT:.*/NEXT: done/' "\$f"
+    "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 ;;
+  parentcommit|approve|failafter)
+    printf '\n### Round 1 · Reviewer · %s\n**Verdict:** Approved\n' "\$RELAY_AGENT" >>"\$f"
+    perl -pi -e 's/^STATUS:.*/STATUS: Approved/; s/^NEXT:.*/NEXT: done/' "\$f"
+    "\$T" done "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1
+    [ "\$mode" = failafter ] && exit 1 ;;
+esac
+exit 0
+STUB_EOF
+chmod +x "$STUB"
+
+# ---- agent-cmd: every actor goes through the REAL codex-turn.sh with the stub binary ----
+DISPATCH="$WORK/dispatch.sh"
+cat >"$DISPATCH" <<EOF
+#!/usr/bin/env bash
+export CODEX_AGENT="\$RELAY_AGENT" CODEX_BIN="$STUB" CODEX_TURN_ROOT="$A" CODEX_LOG="$WORK/codex-\$RELAY_TASK.log"
+# B4: a peer commit that lands AFTER the driver pinned the revision and BEFORE the shim cuts its worktree
+if [ "\${STUB_MODE:-}" = parentcommit ]; then printf 'v2\n' >"$A/src.txt"; git -C "$A" commit -qam "peer commit between pin and cut" >/dev/null 2>&1; fi
+exec bash "$MAIN/relay-automation/codex-turn.sh"
+EOF
+chmod +x "$DISPATCH"
+
+seed_to(){ # <task> <agent>
+  tick_a log task.created "$1" --agent claude-a >/dev/null
+  tick_a claim "$1" --agent claude-a --paths relay.md >/dev/null
+  tick_a release "$1" --agent claude-a --to "$2" >/dev/null
+}
+reset_repo(){ git -C "$A" reset -q --hard "$SEED" >/dev/null 2>&1; git -C "$A" clean -qfd >/dev/null 2>&1; rm -rf "$MAIN/.relay-scratch"; rm -f "$(git -C "$A" rev-parse --absolute-git-dir)"/relay-attest/*.json 2>/dev/null; }
+SEED="$(git -C "$A" rev-parse HEAD)"
+run_driver(){ # <driver.py> <task> <stub-mode> [extra driver args…]  — stderr+stdout to $WORK/out-<task>
+  local drv="$1" task="$2" mode="$3"; shift 3
+  env -u RELAY_DRIVER_LOCKED RELAY_TARGET_ROOT="$A" TICK_REPO_ROOT="$A" TICK_BIN="$TICK" XYZ_ROOT="$MAIN" \
+    RELAY_WORKTREE_ISOLATION="${ISO:-1}" STUB_MODE="$mode" \
+    python3 "$drv" --relay-file "$A/relay.md" --relay-task "$task" --agent-cmd "$DISPATCH" --round-cap 2 "$@" \
+    >"$WORK/out-$task" 2>&1
+}
+reason(){ cat "$MAIN/.relay-scratch/escalation-reason" 2>/dev/null; }
+record_path(){ echo "$(git -C "$A" rev-parse --absolute-git-dir)/relay-attest/$1.json"; }
+
+
+seed_to T-SEP rev
+run_driver "$DRIVER" T-SEP separator --reviewer rev --builder bld
+rc=$?
+cat "$WORK/out-T-SEP"
+[ "$rc" -eq 0 ] || exit 1
+grep -q 'harmless blank separators' "$WORK/out-T-SEP" || exit 1
+python3 - "$MAIN" "$A" "$(record_path T-SEP)" <<'CHECK'
+import sys
+sys.path.insert(0,sys.argv[1]+'/utils/py')
+import relay_attest as a
+r,e=a.load('T-SEP',expected_reviewer='rev',relay_file=sys.argv[2]+'/relay.md',target_repo=sys.argv[2],path=sys.argv[3]);assert r,e
+print('driver separator approval and real loader PASS')
+CHECK
