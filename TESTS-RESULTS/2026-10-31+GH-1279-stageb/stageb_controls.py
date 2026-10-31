@@ -107,12 +107,12 @@ def layout_controls() -> None:
         ("real-issue-without-ledger-row", lambda rs: with_row(rs, real_issue=1012, expect="held-delivered"), ["--limit", "33", "--unregistered", "33"], "no ledger row"),
         ("real-issue-expect-mismatch", lambda rs: with_row(rs, real_issue=1075, expect="held-delivered"), ["--limit", "33", "--unregistered", "33"], "expected frozen state"),
         ("slot-37-without-real-request", lambda rs: None, ["--limit", "1"], "slot 37 must carry a real request"),
-        ("real-requests-do-not-fit", lambda rs: None, ["--limit", "10", "--slots", "30"], "do not fit"),
+        ("real-requests-do-not-fit", lambda rs: [r.update(slot=i + 1) for i, r in enumerate(rs)], ["--limit", "10", "--slots", "30"], "do not fit"),
     ]
     for nm, mut, extra, want in cases:
         rs = copy.deepcopy(base)
         mut(rs)
-        p = init("sb-ctl-" + nm, "--canaries", str(write_rows(td / f"{nm}.jsonl", rs)), "--miss", "85-90" if "--slots" not in extra else "25-26", *extra)
+        p = init("sb-ctl-" + nm, "--canaries", str(write_rows(td / f"{nm}.jsonl", rs)), "--miss", "85-90" if "--slots" not in extra else "29-30", *extra)
         record("layout-refuses-" + nm, p.returncode != 0 and want in p.stderr, f"rc={p.returncode} stderr={p.stderr.strip()[-110:]!r}")
     # default behaviour unchanged: controlled brief and manifest outputs equal the Stage A harness's
     stagea = ROOT / "utils" / "py" / "harness_stagea_ref.py"
