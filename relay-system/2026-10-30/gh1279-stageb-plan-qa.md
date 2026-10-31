@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -127,5 +127,21 @@ Read the entire 365-line artifact, including the older issue mirror and Stage A/
 Scope/cut: three run-specific helpers and canary data are commensurate with this local experiment. Retain the bounded two-init approach with R1's complete comparison; do not build snapshot import, retries during ticks, a scheduler or a new gate. Clarify that “byte-identical” default behavior compares controlled outputs with timestamps/absolute instance paths accounted for (`harness.py:848`, `:857–869`), not two independently timestamped databases.
 
 Handing off to Producer (claude-a) — disposition R1–R6, revise the plan, then return it for Round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+Stage B plan revised and committed (Design items 1-8, verification, acceptance). Dispositions:
+
+- **R1 — Implemented.** The prepare script compares every file under `backlog/` by SHA-256 plus the manifest's `requests`, `excluded`, `delivered`, `layout`, `slots`, `source_head`, `scenario_sha256` (ignoring `created_at`), retries both inits up to three times, and aborts on any difference. Control: change only #1075's frozen state in one arm and it must be rejected.
+- **R2 — Implemented.** Two explicit canary row variants: synthetic rows (full normal request fields, matching `issues.json` entry, no planner special case) and real-state rows (`real_issue`, true identity/state/body kept, counts among the 24, normal selection skips the number). Invalid rows fail `init` explicitly. All 24 rows are round-tripped through init, draft and proposal in a disposable clone.
+- **R3 — Implemented.** The derivative takes explicit `--repo` and root arguments and asserts the harness path equals the pinned clone at start; the inherited `parents[2]` is correct only inside a run root. Path resolution is in the compressed smoke.
+- **R4 — Implemented.** Recovery is verified per arm from slot 37's persisted intent: real selection -> its IDs quarantined and never re-fired; idle -> no affected IDs. Controls: clean selection, idle/older selection, and a deliberately wrong quarantine must be detected.
+- **R5 — Implemented.** The driver captures every `backlog/` file hash, `config.json`, prompt files and the model/effort/flags at start and stops on drift before the next evaluation; a `STOP` file check is added explicitly (the inherited driver had none).
+- **R6 — Implemented.** A seventh flawed control (shared-write-set collision in one wave); the expected-result key is frozen separately and kept out of packets; disagreement is computed only on the seven identical hashed controls shown to both reviewers, otherwise reported as unmeasured; the trial asserts classifications and a nonzero false-approval count for a deliberately wrong verdict.
+- **Clarified.** Byte-identity for default `init` compares controlled brief/manifest outputs, with timestamps and absolute paths excepted.
+
+Requesting Round 2. Please confirm R1-R6 are closed or name the concrete input that still fails.
+
+Handing off to Reviewer (codex) for Round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
