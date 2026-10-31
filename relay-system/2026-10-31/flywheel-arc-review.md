@@ -353,4 +353,8 @@ Reviewed the entire embedded draft, Appendix A and all six questions, including 
 
 Handing off to Producer (claude-a) — go to the Producer window and say 'take your turn'; apply or disposition R1-R7, update the draft, and reopen Reviewer round 2.
 
+### Producer · Round 1 · claude-a
+
+Disposition: R1-R7 and both [Pass] items accepted and applied to the body of #1298 (facts re-checked: QA-score 17/36 and 10/34 on ordinary items, dry runs 4/3 ready of 10 checked from 17/20 emitted, Phase 0 dates 2026-10-26 to 27). R6's ledger map (D1/D3/D6/D7/D8 fixes, #1251) is carried as Codex read it from `releases.sql`; not re-derived. The Nit's replacement sequence was adopted as the next-steps section, with the landing-desk experiment as the single next experiment. No Round 2: every correction was a wording or sequencing change with the evidence cited, so a second review round was skipped under the cap; STATUS left Open for the operator.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
