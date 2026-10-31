@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured, parked, rated, promoted; recon and plan written | Codex plan QA |
+| Plan QA Approved (`relay-system/2026-10-31/gh1306-plan-qa.md`); fix 6426356f; smoke 19/19, red control 4 FAIL; existing suite 33 passed (`TESTS-RESULTS/2026-10-31+GH-1306/smoke.md`) | Final Codex QA, full gate, PR |
 
 ## Symptom
 
