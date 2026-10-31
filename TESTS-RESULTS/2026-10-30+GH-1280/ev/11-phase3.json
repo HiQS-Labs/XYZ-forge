@@ -1,0 +1,603 @@
+{
+ "R1": [
+  {
+   "target": "fp-help",
+   "class": "usage",
+   "seed": 12801,
+   "index": 0,
+   "mutant": [
+    "--he\ufefflp"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "usage",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-help",
+   "class": "usage",
+   "seed": 12997,
+   "index": 49,
+   "mutant": [
+    "-",
+    "--help"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "usage",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-help",
+   "class": "pass",
+   "seed": 12801,
+   "index": 1,
+   "mutant": [
+    "--help",
+    "-"
+   ],
+   "recorded_rc": 0,
+   "rc": 0,
+   "class_replayed": "pass",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-help",
+   "class": "pass",
+   "seed": 12997,
+   "index": 44,
+   "mutant": [
+    "--help",
+    "\ufeff"
+   ],
+   "recorded_rc": 0,
+   "rc": 0,
+   "class_replayed": "pass",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-genman",
+   "class": "usage",
+   "seed": 12802,
+   "index": 0,
+   "mutant": [
+    "generate-manifest",
+    "generate-manifest",
+    "--output",
+    "temp/factory-primitive/ate-smoke/manifest.json"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "usage",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-genman",
+   "class": "usage",
+   "seed": 12998,
+   "index": 49,
+   "mutant": [
+    " ",
+    "null",
+    " [1,2",
+    "temp/factory-primitive/ate-smoke/manifest.json",
+    "`true`",
+    "--",
+    "1e309",
+    "9223372036854775808",
+    "\u00e9'",
+    "{}",
+    "1e309"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "usage",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-genman",
+   "class": "pass",
+   "seed": 12802,
+   "index": 13,
+   "mutant": [
+    "generate-manifest",
+    "--output",
+    "temp/fac\ud83d\udc0dtory-primitive/ate-smoke/manifest.json"
+   ],
+   "recorded_rc": 0,
+   "rc": 0,
+   "class_replayed": "pass",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-genman",
+   "class": "pass",
+   "seed": 12998,
+   "index": 48,
+   "mutant": [
+    "generate-manifest",
+    "--output",
+    "temp/factory-primitive/ate-smok"
+   ],
+   "recorded_rc": 0,
+   "rc": 0,
+   "class_replayed": "pass",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-status",
+   "class": "usage",
+   "seed": 12803,
+   "index": 0,
+   "mutant": [
+    "--run-root",
+    "temp/factory-primitive/fz",
+    "status",
+    "path with spaces/x"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "usage",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-status",
+   "class": "usage",
+   "seed": 12999,
+   "index": 49,
+   "mutant": [
+    "temp/factory-primitive/fz",
+    "--run-root",
+    "status"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "usage",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-status",
+   "class": "run-root-guard",
+   "seed": 12803,
+   "index": 34,
+   "mutant": [
+    "--run-root",
+    "temp\ud800\udf30/factory-primitive/fz",
+    "status"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "run-root-guard",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-status",
+   "class": "run-root-guard",
+   "seed": 12999,
+   "index": 45,
+   "mutant": [
+    "--run-root",
+    "{}",
+    "status"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "run-root-guard",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-init",
+   "class": "usage",
+   "seed": 12804,
+   "index": 0,
+   "mutant": [
+    "--run-root[]",
+    "temp/factory-primitive/fz",
+    "init",
+    "--daily-cap",
+    "1",
+    "--max-call-cost",
+    "0"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "usage",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-init",
+   "class": "usage",
+   "seed": 13000,
+   "index": 49,
+   "mutant": [
+    "--run-root",
+    "temp/factory-primitive/fz",
+    "init",
+    "1",
+    "--max-call-cost",
+    "0"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "usage",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-init",
+   "class": "pass",
+   "seed": 12804,
+   "index": 39,
+   "mutant": [
+    "--run-root",
+    "temp/factory-primitive/fz",
+    "init",
+    "--daily-cap",
+    "1",
+    "--max-call-cost",
+    "1"
+   ],
+   "recorded_rc": 0,
+   "rc": 0,
+   "class_replayed": "pass",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-init",
+   "class": "pass",
+   "seed": 13000,
+   "index": 5,
+   "mutant": [
+    "--run-root",
+    "temp/factory-primitive/fz",
+    "init",
+    "--daily-cap",
+    "NaN",
+    "--max-call-cost",
+    "0"
+   ],
+   "recorded_rc": 0,
+   "rc": 0,
+   "class_replayed": "pass",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-init",
+   "class": "run-root-guard",
+   "seed": 12804,
+   "index": 45,
+   "mutant": [
+    "--run-root",
+    "temp/factory-\u1680primitive/fz",
+    "init",
+    "--daily-cap",
+    "1",
+    "--max-call-cost",
+    "0"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "run-root-guard",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-init",
+   "class": "run-root-guard",
+   "seed": 12992,
+   "index": 35,
+   "mutant": [
+    "--run-root",
+    "9223372036854775808",
+    "init",
+    "--daily-cap",
+    "1",
+    "--max-call-cost",
+    "0"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "run-root-guard",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-init",
+   "class": "cap-guard",
+   "seed": 12804,
+   "index": 48,
+   "mutant": [
+    "--run-root",
+    "temp/factory-primitive/fz",
+    "init",
+    "--daily-cap",
+    "0",
+    "--max-call-cost",
+    "0"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "cap-guard",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-init",
+   "class": "cap-guard",
+   "seed": 13000,
+   "index": 48,
+   "mutant": [
+    "--run-root",
+    "temp/factory-primitive/fz",
+    "init",
+    "--daily-cap",
+    "1",
+    "--max-call-cost",
+    "1e309"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "cap-guard",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-status",
+   "class": "pass",
+   "seed": 12807,
+   "index": 6,
+   "mutant": [
+    "--run-root",
+    "temp/factory-primitive/fz",
+    "status"
+   ],
+   "recorded_rc": 0,
+   "rc": 0,
+   "class_replayed": "pass",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-status",
+   "class": "pass",
+   "seed": 12995,
+   "index": 36,
+   "mutant": [
+    "--run-root",
+    "",
+    "status"
+   ],
+   "recorded_rc": 0,
+   "rc": 0,
+   "class_replayed": "pass",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-init",
+   "class": "state-guard",
+   "seed": 12812,
+   "index": 39,
+   "mutant": [
+    "--run-ro",
+    "temp/factory-primitive/fz",
+    "init",
+    "--daily-cap",
+    "1",
+    "--max-call-cost",
+    "0"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "state-guard",
+   "sig_match": true,
+   "with_prefix": true,
+   "match": true
+  },
+  {
+   "target": "fp-init",
+   "class": "state-guard",
+   "seed": 13000,
+   "index": 47,
+   "mutant": [
+    "--run-root",
+    "temp/factory-primitive/fz",
+    "init",
+    "--daily-ca",
+    "1",
+    "--max-call-cost",
+    "0"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "state-guard",
+   "sig_match": true,
+   "with_prefix": true,
+   "match": true
+  },
+  {
+   "target": "fp-genman",
+   "class": "sandbox-denied",
+   "seed": 12822,
+   "index": 43,
+   "mutant": [
+    "generate-manifest",
+    "--output",
+    "../../etc/passwd"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "sandbox-denied",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-genman",
+   "class": "sandbox-denied",
+   "seed": 12866,
+   "index": 2,
+   "mutant": [
+    "generate-manifest",
+    "--output",
+    "../../etc/passwd"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "sandbox-denied",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-genman",
+   "class": "input-error",
+   "seed": 12846,
+   "index": 13,
+   "mutant": [
+    "generate-manifest",
+    "--output",
+    "temp/"
+   ],
+   "recorded_rc": 2,
+   "rc": 2,
+   "class_replayed": "input-error",
+   "sig_match": true,
+   "with_prefix": false,
+   "match": true
+  },
+  {
+   "target": "fp-genman",
+   "class": "input-error",
+   "seed": 12994,
+   "index": 1,
+   "mutant": [
+    "generate-manifest",
+    "--output",
+    "temp/factory-primitive/ate-smoke/man\u2028ifest.json"
+   ],
+   "recorded_rc": 2,
+   "rc": 0,
+   "class_replayed": "pass",
+   "sig_match": false,
+   "with_prefix": true,
+   "match": false
+  }
+ ],
+ "R2": {
+  "sequences": [
+   {
+    "label": "status-first #1",
+    "steps": [
+     {
+      "step": "status",
+      "rc": 0,
+      "stderr_tail": ""
+     },
+     {
+      "step": "init",
+      "rc": 2,
+      "stderr_tail": "factory-primitive: instance already initialized; use a new run root"
+     },
+     {
+      "step": "tick",
+      "rc": 1,
+      "stderr_tail": ""
+     }
+    ]
+   },
+   {
+    "label": "status-first #2",
+    "steps": [
+     {
+      "step": "status",
+      "rc": 0,
+      "stderr_tail": ""
+     },
+     {
+      "step": "init",
+      "rc": 2,
+      "stderr_tail": "factory-primitive: instance already initialized; use a new run root"
+     },
+     {
+      "step": "tick",
+      "rc": 1,
+      "stderr_tail": ""
+     }
+    ]
+   },
+   {
+    "label": "clean control",
+    "steps": [
+     {
+      "step": "init",
+      "rc": 0,
+      "stderr_tail": ""
+     },
+     {
+      "step": "tick",
+      "rc": 1,
+      "stderr_tail": ""
+     }
+    ]
+   }
+  ],
+  "reproduced": false,
+  "state_db_created_by_status": true
+ },
+ "R3": {
+  "mutant": [
+   "generate-manifest",
+   "--output",
+   "NaN"
+  ],
+  "rc": 0,
+  "porcelain": [
+   "?? NaN"
+  ],
+  "stderr_tail": ""
+ },
+ "R4": {
+  "run_root_guard_events": 234,
+  "gen4_cluster_members": 234,
+  "all_match_rule": true
+ },
+ "elapsed_s": 51.4
+}

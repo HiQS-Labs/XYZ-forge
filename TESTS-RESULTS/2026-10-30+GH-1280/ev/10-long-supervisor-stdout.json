@@ -1,0 +1,1 @@
+{"stop_reason": "mutation budget reached (10000)", "elapsed_s": 4496.3, "events": 10000, "counts": {"usage": 8949, "pass": 773, "run-root-guard": 234, "cap-guard": 21, "state-guard": 18, "sandbox-denied": 2, "input-error": 3}, "swept_pids": [], "survivors_after_sweep": [], "canaries_moved": []}
