@@ -1,0 +1,125 @@
+{
+ "digests_equal": true,
+ "rules": {
+  "config": {
+   "adapter": "rules",
+   "prompt_sha256": "dcca67813bb107cbc3435d0c7c0de256cf73853042c8ebf8790805bbc0f3f1c3",
+   "daily_cap": 0.9,
+   "max_call_cost": 0.01
+  },
+  "slots": [
+   {
+    "slot": 1,
+    "tick": "completed",
+    "normalized": "ok",
+    "decision": {
+     "status": "raw-valid",
+     "rejected_reason": null,
+     "validated_json": "{\"args\":{\"inbox_id\":\"gh-1201-794fcf69ac2c\"},\"confidence\":1.0,\"reason\":\"oldest plan request\",\"tool\":\"plan-draft\"}"
+    },
+    "reservation": {
+     "status": "reported",
+     "billing_status": "reported",
+     "actual_cost": 0.0
+    },
+    "agent_called": true,
+    "raw": "{\"args\":{\"inbox_id\":\"gh-1201-794fcf69ac2c\"},\"confidence\":1.0,\"reason\":\"oldest plan request\",\"tool\":\"plan-draft\"}"
+   },
+   {
+    "slot": 2,
+    "tick": "completed",
+    "normalized": "ok",
+    "decision": {
+     "status": "raw-valid",
+     "rejected_reason": null,
+     "validated_json": "{\"args\":{\"inbox_id\":\"gh-1204-376b82298309\"},\"confidence\":1.0,\"reason\":\"oldest plan request\",\"tool\":\"plan-draft\"}"
+    },
+    "reservation": {
+     "status": "reported",
+     "billing_status": "reported",
+     "actual_cost": 0.0
+    },
+    "agent_called": true,
+    "raw": "{\"args\":{\"inbox_id\":\"gh-1204-376b82298309\"},\"confidence\":1.0,\"reason\":\"oldest plan request\",\"tool\":\"plan-draft\"}"
+   }
+  ],
+  "digest_slot1": "9400e0f9a0e94048938fdc163c2939993160e2a3109fa8600444d83cfbcdac77",
+  "digest_slot2": "b645a3effc56e36cfab14068d4b54fc8af4b6420f141c123aea38182b06d11c6",
+  "canary": "do-not-modify\n",
+  "top_level": [
+   "backlog",
+   "canary.txt",
+   "config.json",
+   "heartbeat.json",
+   "lock",
+   "out",
+   "state.db",
+   "state.db-shm",
+   "state.db-wal",
+   "telemetry",
+   "tmp"
+  ]
+ },
+ "codex": {
+  "config": {
+   "adapter": "codex",
+   "codex_model": "gpt-6.1-sol",
+   "adapter_timeout_s": 90.0,
+   "prompt_sha256": "1fe517ef45b840192daddfd0e5c38b8b952e85e7d07ddf561f33f6526e7f31c5",
+   "daily_cap": 0.9,
+   "max_call_cost": 0.01
+  },
+  "slots": [
+   {
+    "slot": 1,
+    "tick": "completed",
+    "normalized": "ok",
+    "decision": {
+     "status": "raw-valid",
+     "rejected_reason": null,
+     "validated_json": "{\"args\":{\"inbox_id\":\"gh-1201-794fcf69ac2c\"},\"confidence\":1.0,\"reason\":\"The oldest actionable item is an eligible plan-request.\",\"tool\":\"plan-draft\"}"
+    },
+    "reservation": {
+     "status": "held",
+     "billing_status": "unknown",
+     "actual_cost": null
+    },
+    "agent_called": true,
+    "raw": "{\"tool\":\"plan-draft\",\"args\":{\"inbox_id\":\"gh-1201-794fcf69ac2c\"},\"reason\":\"The oldest actionable item is an eligible plan-request.\",\"confidence\":1.0}"
+   },
+   {
+    "slot": 2,
+    "tick": "completed",
+    "normalized": "ok",
+    "decision": {
+     "status": "raw-valid",
+     "rejected_reason": null,
+     "validated_json": "{\"args\":{\"inbox_id\":\"gh-1204-376b82298309\"},\"confidence\":0.99,\"reason\":\"Oldest eligible plan-request; budget is sufficient, flags are clear, and no failure suppression applies.\",\"tool\":\"plan-draft\"}"
+    },
+    "reservation": {
+     "status": "held",
+     "billing_status": "unknown",
+     "actual_cost": null
+    },
+    "agent_called": true,
+    "raw": "{\"tool\":\"plan-draft\",\"args\":{\"inbox_id\":\"gh-1204-376b82298309\"},\"reason\":\"Oldest eligible plan-request; budget is sufficient, flags are clear, and no failure suppression applies.\",\"confidence\":0.99}"
+   }
+  ],
+  "digest_slot1": "9400e0f9a0e94048938fdc163c2939993160e2a3109fa8600444d83cfbcdac77",
+  "digest_slot2": "b645a3effc56e36cfab14068d4b54fc8af4b6420f141c123aea38182b06d11c6",
+  "canary": "do-not-modify\n",
+  "top_level": [
+   "backlog",
+   "canary.txt",
+   "config.json",
+   "heartbeat.json",
+   "lock",
+   "out",
+   "state.db",
+   "state.db-shm",
+   "state.db-wal",
+   "telemetry",
+   "tmp"
+  ]
+ }
+}

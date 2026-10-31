@@ -1,0 +1,146 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-10-31T15:01:15Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-722-merge-cleanup-safe-roots-parent"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun/PROJECT/2-WORKING/GH-722-MERGE-CLEANUP-SAFE-ROOTS-PARENT.md"
+    ],
+    "issues": [],
+    "target_root": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun",
+    "branch": "(detached)",
+    "commit": "28ebacd02d972d24f9e1ae07415dee2643702aec",
+    "suggested_branch": "marathon/gh-722-merge-cleanup-safe-roots-parent-2026-10-31",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash validate.sh",
+    "fix_probes": [
+      {
+        "type": "grep_present",
+        "path": "skills/merge-cleanup/scripts/merge_cleanup.py",
+        "pattern": "if args\\.root else DEFAULT_SAFE_ROOTS"
+      },
+      {
+        "type": "grep_absent",
+        "path": "skills/merge-cleanup/scripts/merge_cleanup.py",
+        "pattern": "primary_repo\\.parent"
+      }
+    ],
+    "artifacts": [
+      "skills/merge-cleanup/scripts/merge_cleanup.py",
+      "skills/merge-cleanup/scripts/scan_clones.py",
+      "WORKTREE-SAFETY.md",
+      "test/gh534_phase_a_tests.py",
+      "skills/merge-cleanup/SKILL.md"
+    ],
+    "artifacts_new": [],
+    "remediation": {
+      "source": "issue#722",
+      "criteria": "Add dirname(primary) to merge-cleanup's scan roots under NEVER_DELETE, print scanned roots, keep \u00a716.1 parity honest"
+    },
+    "lanes": {
+      "agy_safe": [
+        "skills/merge-cleanup/scripts/merge_cleanup.py",
+        "skills/merge-cleanup/scripts/scan_clones.py",
+        "WORKTREE-SAFETY.md",
+        "test/gh534_phase_a_tests.py",
+        "skills/merge-cleanup/SKILL.md"
+      ],
+      "orchestrator_only": []
+    }
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": null,
+    "ahead": 0,
+    "behind": 0,
+    "dirty": true,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "7cd97db47679c90d26610d3eb15450406f41428a",
+    "checkout_matches_ref": false,
+    "head_behind_ref": 0,
+    "candidate_state": "blocked",
+    "probes": [
+      {
+        "type": "grep_present",
+        "path": "skills/merge-cleanup/scripts/merge_cleanup.py",
+        "verdict": "blocked"
+      },
+      {
+        "type": "grep_absent",
+        "path": "skills/merge-cleanup/scripts/merge_cleanup.py",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": false,
+    "next_action": "artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py \u2014 fix the contract artifacts[] or push the file",
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #722 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "unknown",
+      "cause": "no-issue-section",
+      "detail": "issue #722 has no '## Acceptance' section \u2014 nothing to copy from",
+      "issue": "722",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #722 (https://github.com/HiQS-Labs/XYZ-forge/issues/722)",
+      "issue": "722",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/722",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 6,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [],
+    "agy_lane": [
+      "skills/merge-cleanup/scripts/merge_cleanup.py",
+      "skills/merge-cleanup/scripts/scan_clones.py",
+      "WORKTREE-SAFETY.md",
+      "test/gh534_phase_a_tests.py",
+      "skills/merge-cleanup/SKILL.md"
+    ],
+    "effective_artifacts": [
+      "skills/merge-cleanup/scripts/merge_cleanup.py",
+      "skills/merge-cleanup/scripts/scan_clones.py",
+      "WORKTREE-SAFETY.md",
+      "test/gh534_phase_a_tests.py",
+      "skills/merge-cleanup/SKILL.md"
+    ],
+    "inferred_test_artifacts": [],
+    "inferred_test_helpers": [],
+    "fs_touching_tests": [],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

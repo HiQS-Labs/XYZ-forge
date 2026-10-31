@@ -1,0 +1,47 @@
+case=budget-cap
+started_at=2026-10-29T03:07:56.818689+00:00
+repo=/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/temp/XYZ-forge-gh1248-outer-loop-2026-10-28
+run_root=temp/factory-primitive/evidence/checkpoint1/budget-cap
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/budget-cap init --daily-cap 0.1 --max-call-cost 0.1
+exit_code=0
+stdout:
+{"instance":"/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/temp/XYZ-forge-gh1248-outer-loop-2026-10-28/temp/factory-primitive/evidence/checkpoint1/budget-cap/instances/C","status":"initialized"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/budget-cap tick --slot 1 --fault timeout-unknown
+exit_code=0
+stdout:
+{"status":"completed","tick_id":"slot_001"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/budget-cap tick --slot 2
+exit_code=0
+stdout:
+{"status":"paused","tick_id":"slot_002"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/factory-primitive.py --run-root temp/factory-primitive/evidence/checkpoint1/budget-cap status
+exit_code=0
+stdout:
+{
+  "paused": true,
+  "pending": 27,
+  "quarantined": 0,
+  "spent_or_reserved": 0.1,
+  "ticks": {
+    "completed": 1,
+    "paused": 1
+  },
+  "unknown_cost": true
+}
+
+stderr:
+
+query=SELECT json FROM events WHERE stage='evaluate'
+[{"json": "{\"agent_called\":true,\"stage\":\"evaluate\",\"status\":\"timeout\",\"tick_id\":\"slot_001\",\"ts\":\"2026-10-29T03:07:56.881684+00:00\"}"}]
+finished_at=2026-10-29T03:07:56.989323+00:00
+verdict=PASS
+detail=second tick paused before snapshot or agent evaluation

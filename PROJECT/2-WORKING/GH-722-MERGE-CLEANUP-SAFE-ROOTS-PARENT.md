@@ -136,3 +136,6 @@ Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet
 - (d) NEVER_DELETE: a primary placed directly in the scratch HOME reports the parent as skipped and scans only the default roots.
 
 **Rollback.** Revert the single PR; behaviour returns to the fixed list.
+## Merge evidence
+
+- PR #1282 merged 2026-10-31 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

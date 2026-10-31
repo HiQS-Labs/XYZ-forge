@@ -1692,6 +1692,7 @@ def marathon_plan_findings(output, returncode):
     held_types = {
         "unrated", "needs-doc", "needs-contract", "note-only",
         "not-ready", "blocked", "blocked-dep",
+        "preflight-error", "unplaceable",  # GH-1251: planner fail-closed held states
     }
     relevant_types = drift_types if returncode == 4 else held_types
     findings = []

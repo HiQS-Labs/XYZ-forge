@@ -718,14 +718,22 @@ def main():
             post_raw = f.read()
         post_canon = relay_attest.canonical_bytes(post_raw)
         pre["canon"] = relay_attest.canonical_prefix(pre["raw"], post_raw)
+        added_start = len(pre["canon"])
         if not post_canon.startswith(pre["canon"]):
+            separator_end = relay_attest.separator_prefix_end(pre["raw"], post_raw)
+            if separator_end is not None:
+                added_start = separator_end
+                eprint("relay-drive: WARNING — harmless blank separators changed in review history; raw transcript retained")
+            else:
+                added_start = None
+        if added_start is None:
             pre_c = pre["canon"]
             i = next((k for k in range(min(len(pre_c), len(post_canon))) if pre_c[k] != post_canon[k]), min(len(pre_c), len(post_canon)))
             eprint(f"relay-drive: review body was REWRITTEN above the reviewer's own block (first divergence at byte {i}):")
             eprint(f"  before: {pre_c[max(0, i-60):i+60]!r}")
             eprint(f"  after:  {post_canon[max(0, i-60):i+60]!r}")
             return ("refused", "review-body-rewritten")
-        added = post_canon[len(pre["canon"]):]
+        added = post_canon[added_start:]
         if not added.strip():
             return ("refused", "empty-approval")
         tstat, tactor = token_state()
@@ -744,7 +752,7 @@ def main():
             "isolated": pre["isolated"],
             "reviewed_head": pre["reviewed_head"],
             "artifact_sha256": pre["artifact_sha256"],
-            "added_start": len(pre["canon"]),
+            "added_start": added_start,
             "added_len": len(added),
             "added_sha256": relay_attest.sha256(added),
             "attested_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),

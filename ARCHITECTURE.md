@@ -46,17 +46,19 @@ and usage; this index exists so a task can be routed to the right skill without 
 Re-tiering a skill is a `git mv` plus its row here; nothing in the harness depends on which tier a
 skill sits in, only on the two-level depth (see `skills/README.md`).
 
-### `1-hourly` — Every hour (15)
+### `1-hourly` — Every hour (17)
 
 _the in-task loop: intake, recon, planning discipline, review relays, the ledger._
 
 | Skill | Purpose |
 |---|---|
 | [better-options](skills/1-hourly/better-options/SKILL.md) | Falsify the apparent option set, then surface smaller viable alternatives. |
+| [ceremony-audit](skills/1-hourly/ceremony-audit/SKILL.md) | Label each step of a plan progress, proof, safety or ceremony; cut steps that re-prove known results. |
 | [consult](skills/1-hourly/consult/SKILL.md) | One-shot cross-model second opinion (Codex + agy in parallel), reconciled. |
 | [debug-mantra](skills/1-hourly/debug-mantra/SKILL.md) | Debug by reproducing, tracing the fail path, falsifying, and cross-referencing evidence. |
 | [five](skills/1-hourly/five/SKILL.md) | 5-and-5 decision checksum over a plan/feature/fix — five load-bearing decisions + five explicit non-goals, each cited. |
 | [handsfree](skills/1-hourly/handsfree/SKILL.md) | Wake the current agent every 10 minutes to advance an authorized task, with a 3-hour deadline and native scheduler cleanup. |
+| [idea](skills/1-hourly/idea/SKILL.md) | File an admission-ready GitHub issue from the current repo: recon-lite and the debug-mantra plan, checkbox Acceptance, PRS proposal and Preflight Contract in the body, landed through `hq park` and `releases roadmap rate`. |
 | [ponytail](skills/1-hourly/ponytail/SKILL.md) | Forces the simplest/minimal solution (YAGNI lens) for a given change. |
 | [recon](skills/1-hourly/recon/SKILL.md) | Trace an existing system end to end before planning a change. |
 | [relay](skills/1-hourly/relay/SKILL.md) | Scaffold and run the portable file-based Producer/Reviewer protocol. |

@@ -1,0 +1,17 @@
+CONTROL frozen-state-1075 | in planner active=False; closed list has 1075=True
+CONTROL red-seeded-only-state-1075 | in planner active=True
+CONTROL closer-vs-mention | ([722], [])
+CONTROL delivered-planner-lane | #418 provisional=False held=['possibly delivered: closed by merged PR #99999; issue still open']
+CONTROL stale-unbriefed-mixed | provisional=False held=['stale-contract: 1 of 2 fix_probes already landed']
+CONTROL stale-unbriefed-all-unfixed | provisional=True held=[]
+CONTROL command-probe | results=[{'type': 'command', 'path': '', 'result': 'unverified'}] landed=0 marker_created=False
+CONTROL verify-drop-probe-results | refused: plan-draft brief missing keys: probe_results
+CONTROL closer-scoped Closes #722 | [722]
+CONTROL closer-scoped Closes https://github.com/HiQS-Labs/X | [722]
+CONTROL closer-scoped Closes https://github.com/other/repo/ | []
+CONTROL closer-scoped See https://github.com/HiQS-Labs/X | []
+CONTROL delivered-at-init | target #418 excluded=[{'issue': 418, 'reason': 'possibly delivered: closed by merged PR #99999; issue still open'}]
+CONTROL tick1 | {"status":"completed","tick_id":"slot_001"}
+CONTROL packet-after-clean-tick | {"dir":"<repos>/XYZ-forge-gh1270-launch-packet-readiness-2026-10-30-verify/temp/factory-primitive/ctl-packet/instances/C/out/launch-pa
+CONTROL tick2-fail-after-output | {"status":"uncertain","tick_id":"slot_002"}
+CONTROL packet-after-uncertain-tick | rc=2 | factory-primitive: wave-proposal.json is not the verified output of the latest completed plan-draft tick; refusing to build a packet from it

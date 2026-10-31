@@ -1,0 +1,18 @@
+# ledger identity, pilot-2c and controls (verify clone)
+before pilot:
+f2158932dd0088b441cb1e5a2a4a10467fe085a783bda8289aaf396239787312  releases.db
+ce6a40976b916ceec83e9933081c0db4c996bbac481e911520362561ce3100fd  releases.sql
+before controls:
+f2158932dd0088b441cb1e5a2a4a10467fe085a783bda8289aaf396239787312  releases.db
+ce6a40976b916ceec83e9933081c0db4c996bbac481e911520362561ce3100fd  releases.sql
+after controls:
+f2158932dd0088b441cb1e5a2a4a10467fe085a783bda8289aaf396239787312  releases.db
+ce6a40976b916ceec83e9933081c0db4c996bbac481e911520362561ce3100fd  releases.sql
+
+# rerun at c8938705 (final QA R1 fix): controls
+f2158932dd0088b441cb1e5a2a4a10467fe085a783bda8289aaf396239787312  releases.db
+ce6a40976b916ceec83e9933081c0db4c996bbac481e911520362561ce3100fd  releases.sql
+after controls and r1-delivered init:
+f2158932dd0088b441cb1e5a2a4a10467fe085a783bda8289aaf396239787312  releases.db
+ce6a40976b916ceec83e9933081c0db4c996bbac481e911520362561ce3100fd  releases.sql
+slug-scoped delivered map from a fresh init: {'1002': [1004], '1012': [1036, 1039], '1157': [1161], '384': [386], '470': [638], '484': [486], '777': [783], '800': [803], '879': [895]} (unchanged: no merged PR in the window used the URL form)

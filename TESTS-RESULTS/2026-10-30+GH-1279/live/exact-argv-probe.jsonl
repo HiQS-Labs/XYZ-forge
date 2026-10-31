@@ -1,0 +1,5 @@
+{"type":"thread.started","thread_id":"01a18fa0-6cd0-7912-947f-7fdfcc3befe7"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"I’ll run the exact command and report its output.\n"}}
+{"type":"item.completed","item":{"id":"item_1","type":"agent_message","text":"{\"tool\":\"idle\",\"args\":{},\"reason\":\"NO TOOL\",\"confidence\":1}"}}
+{"type":"turn.completed","usage":{"input_tokens":55947,"cached_input_tokens":45312,"cache_write_input_tokens":0,"output_tokens":117,"reasoning_output_tokens":9}}

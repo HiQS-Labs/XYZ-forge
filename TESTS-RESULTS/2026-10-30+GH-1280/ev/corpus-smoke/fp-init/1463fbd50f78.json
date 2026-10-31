@@ -1,0 +1,1 @@
+{"added_at": 1793412687.274941, "added_tick": 8, "argv": ["--run-root", "temp/factory-primitive/fz", "init", "--daily-cap", "1", "--max-call-cost", "=", "0"], "env": {}, "family": "boundary", "id": "1463fbd50f78", "signature": "f61cc3aad757a676", "size": 76, "vector": [2, 0, "6fbda92966fb3d93", "fast_<1s"], "verdict": "fail"}

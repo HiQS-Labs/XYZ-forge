@@ -1,0 +1,44 @@
+{
+ "slot1": {
+  "issue": 1201,
+  "rules_status": "draft",
+  "authored_status": "draft",
+  "authored": true,
+  "authored_ignored": null,
+  "sourced_entries_kept": true,
+  "authored_entries": 9,
+  "authored_write_paths": [],
+  "all_authored_paths_tracked": true,
+  "reservation": {
+   "status": "held",
+   "billing_status": "unknown",
+   "actual_cost": null
+  },
+  "sample": [
+   "Coordinate the five evidence-backed follow-up plans in issues #1202\u2013#1206, preserving their separate scope and safety contracts.",
+   "Use the existing audits in #768 and #769 to guide module decomposition; stage any runtime migration and preserve event and CLI compatibility.",
+   "Keep documentation review focused on duplicated active guidance and source commentary; protect historical evidence and incident rationale."
+  ]
+ },
+ "slot2": {
+  "issue": 1204,
+  "rules_status": "draft",
+  "authored_status": "draft",
+  "authored": true,
+  "authored_ignored": null,
+  "sourced_entries_kept": true,
+  "authored_entries": 12,
+  "authored_write_paths": [],
+  "all_authored_paths_tracked": true,
+  "reservation": {
+   "status": "held",
+   "billing_status": "unknown",
+   "actual_cost": null
+  },
+  "sample": [
+   "Extend the existing PRS CLI with a read-only hygiene report covering document paths, duplicate issue identities, lifecycle consistency, ratings, derived views, ",
+   "Review stale and blank pointers through existing receipted verbs; repoint them to canonical documents or record explicit exemptions, and classify the #111 pair.",
+   "Integrate reporting into existing reconciliation and document-hygiene workflows while retaining preview-first lifecycle reconciliation."
+  ]
+ }
+}

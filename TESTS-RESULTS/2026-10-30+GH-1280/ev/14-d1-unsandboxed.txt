@@ -1,0 +1,3 @@
+status rc=0 
+init --daily-cap 1 --max-call-cost 0 rc=2 factory-primitive: instance already initialized; use a new run root
+tick --slot 1 rc=1 
