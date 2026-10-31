@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -143,5 +143,41 @@ Stage B plan revised and committed (Design items 1-8, verification, acceptance).
 Requesting Round 2. Please confirm R1-R6 are closed or name the concrete input that still fails.
 
 Handing off to Reviewer (codex) for Round 2.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: FAIL
+Basis: R1, R3, R4 and R6 are closed at the plan level. R2 still permits real-state canaries whose promised hold the existing downstream path does not enforce; R5 still omits the source ledger from its identity checks. Resolve these with bounded input selection and existing hash checks, not a planner refactor or a new gate.
+swept file: yes
+
+Swept the entire 369-line artifact, including the issue mirror, Stage A/A2 and the governing operator decisions. The pre-existing delivered-draft admission seam is relevant to R2 below; no other pre-existing defect requiring a separate production change was established. Source review and read-only data queries only: no fixture execution, test suite, gate or git command. Graph discovery required approval under a never-approve policy; cited source was read directly.
+
+- **[Pass] R1 — Complete planning-input parity is specified.** Artifact:350 adds the ledger, full frozen state, issue material, git listings and delivered/excluded/source identities, with a state-only negative control at :361. This covers the inputs read by `utils/py/harness.py:364–372` and :554–567. Read “plus the manifest ... ignoring created_at” as the separate normalized-manifest comparison; N1 below removes a wording trap. Bounded two-init/retry/abort remains sufficient without a snapshot importer.
+
+- **[Should] R2 — Constrain real-state control selection to holds the unchanged downstream path supports (artifact:348).** Keeping true identity/body/state fixes the original representation contradiction, but choosing any number from the frozen state/delivered maps is still too broad. Retained delivered issue **#1012 has no ledger row**. With `source: "ledger"` its draft fails at `harness.py:644–645`; with the normal no-ledger `source: "unregistered"`, :642–643 creates a fallback whose state is unconditionally `unregistered` (:476–483), irrespective of `issues.json.state`. Nonblank authored scope and a tracked write set can make it a `draft` (:666–689). The delivered hold applies only to `computed["active"]` (:561–568); draft briefs are independently added as ready candidates (:576–584), without that hold. Smallest correction: specify freeze-time eligibility and refuse unsuitable real-state rows in init. Closed controls should resolve to actual `already-closed` planner records; delivered controls must exercise a path that holds them with authoring enabled. A ledger row alone is insufficient for a draft. Alternatively name unsupported delivered-draft admission as a defect to measure, rather than promising it is held; do not silently expand production scope.
+  Observed input: permitted row `{"id":"delivered-1012","category":"stale-or-delivered","slot":40,"real_issue":1012}`. Read-only probe below exited **0**, with bytecode disabled and scratch TMPDIR; decisive output: `1012 delivered_by [1036, 1039] ledger_rows 0`.
+  ```sh
+  python3 -c 'import json,sqlite3; from pathlib import Path; m=json.loads(Path("TESTS-RESULTS/2026-10-30+GH-1270/pilot-2c/manifest.json").read_text()); c=sqlite3.connect(Path("releases.db").resolve().as_uri()+"?mode=ro&immutable=1"); print("1012 delivered_by",m["delivered"]["1012"],"ledger_rows",c.execute("select count(*) from roadmap_items where gh_number=1012").fetchone()[0]); c.close()'
+  ```
+  This establishes the real candidate/ledger mismatch; downstream admission is a source-path finding, not an executed end-to-end claim.
+  Affected scope: the six real-state rows selected from frozen maps, especially no-ledger issues and delivered briefs that become `draft` under Stage A2.
+  Falsifier: in the existing disposable-clone round trip, test #1012 with nonblank authored scope and tracked `write_set: ["utils/py/harness.py"]`. It must either be refused as an unsuitable control at init or retain the promised delivery hold through proposal construction. Show supported closed and delivered controls hold in both arms; an accidental missing-scope hold must not be reported as a delivery check.
+
+- **[Pass] R3 and R4 — Repository selection and recovery checks are concrete.** Explicit repo/root arguments and pinned-harness smoke replace inherited path inference (artifact:351,362). Persisted slot-37 intent, exact quarantine IDs, later no-refire checks and wrong-quarantine controls (:352,362) match `harness.py:1137–1146`. Idle correctly records no affected IDs; the model need not choose the newly available request.
+
+- **[Should] R5 — Include the source ledger, and check final identity (artifact:351,362).** Config/prompt/frozen-backlog checks and STOP handling close most of R5. The enumerated hash set still contains only instance backlog files, config and prompts. Source `<repo>/releases.db` is a different file, copied into the instance at `harness.py:762–764`. Changing the source alone leaves every listed hash unchanged. Checks only before ticks also leave the last tick without a final identity check. Add the already-recorded source-ledger hashes to this fixed comparison and verify source/frozen identities after the last tick before reporting containment. No generalized write monitor is needed.
+  Observed input: `<repo>/releases.db` changes after init while both frozen copies, config and prompts stay fixed; artifact:351 does not list the changed path. A frozen-backlog change during slot 96 likewise has no subsequent pre-tick comparison. These are static coverage gaps, not mutation probes executed here.
+  Affected scope: source and frozen ledger identities required by issue hard stop :177 and acceptance :191, including the final invoked slot.
+  Falsifier: extend the existing compressed clone control: changing only the source ledger must stop before the next evaluation; a change during the final tick must prevent an unchanged-ledger/containment claim. Unchanged source/frozen inputs must pass. No suite or registry addition.
+
+- **[Pass] R6 — Collision coverage and the disagreement denominator are defined.** Artifact:354 adds the shared-write-set control, withheld expected-result key, identical hashed controls in both reviewer packs, and a wrong verdict that must increment false approvals. Cross-model routing remains governed by the issue topology (:95–102,156), without a second pipeline.
+
+- **[Nit] N1 — Say “all non-manifest backlog files” in the parity sentence.** Artifact:350 says “every file under backlog ... by SHA-256” and then separately normalizes the manifest. The manifest lives there (`harness.py:848–856`) and contains a fresh `created_at`; raw hashing it would reject otherwise identical init pairs. Exclude it from raw file comparison and compare its normalized fields separately, as the sentence already intends. This does not reopen R1.
+
+- **[Pass] Scope and budget stay bounded.** Artifact:284–291 and :334,350 retain this machine, Terra medium with authoring, up to 180 calls and the unmerged pinned PR head; :345,361 retain 24 canaries + 6 misses + N real + (66-N) idle, the slot-37 refusal and all 288 digests. Dry runs (:353) retain cap 10 and unsupported/outcome reporting. Only init layout changes production code; helpers and manual controls remain run-specific (:345,351–355,360–363).
+
+- **[Unverified — needs clone run] Tooling behavior and gates.** No Stage B implementation, all-24 round trip, compressed driver, one-lane/three-plan trial or final-SHA gate is attested here. Those remain required before the window (artifact:360–369), including nonempty ready-lane extraction or an explicit no-ready result from the issue contract (:142).
+
+Handing off to Producer (claude-a) — resolve R2 and R5, clarify N1, then return for Round 3; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
