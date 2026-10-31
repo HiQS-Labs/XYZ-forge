@@ -554,6 +554,13 @@ def _probe_landing(engine, rec: dict) -> tuple[list[dict], int]:
     return results, sum(r["result"] == "landed" for r in results)
 
 
+def _delivered_hold(delivered: dict, issue) -> str | None:
+    """Held reason when a merged PR closed `issue` but the issue is still open (GH-1294)."""
+    if str(issue) not in delivered:
+        return None
+    return "possibly delivered: closed by merged PR " + ", ".join(f"#{n}" for n in delivered[str(issue)]) + "; issue still open"
+
+
 def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, tick_id: str, request_id: str) -> dict:
     """Planner waves as computed, plus provisional packing of copied records with sourced drafts."""
     by_gh = {r["gh"]: r for r in computed["deduped"] if r["gh"] is not None}
@@ -568,9 +575,9 @@ def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, 
         if r["gh"] in refused:
             continue
         # GH-1270: every provisional lane gets the read-only readiness checks, briefed or not.
-        if str(r["gh"]) in delivered:
-            held.append({"issue": r["gh"], "reason": "possibly delivered: closed by merged PR "
-                         + ", ".join(f"#{n}" for n in delivered[str(r["gh"])]) + "; issue still open"})
+        reason = _delivered_hold(delivered, r["gh"])
+        if reason:
+            held.append({"issue": r["gh"], "reason": reason})
             continue
         results, landed = _probe_landing(engine, r)
         if landed:
@@ -581,6 +588,10 @@ def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, 
         lanes.append(lane)
     for b in briefs:
         if b["draft_status"] == "draft":
+            reason = _delivered_hold(delivered, b["issue"])
+            if reason:  # GH-1294: the second loop must hold delivered work too
+                held.append({"issue": b["issue"], "reason": reason})
+                continue
             base = by_gh.get(b["issue"]) or {**_unregistered_record(b["issue"], b["title"], ""), "deps": b["deps"]}
             lane = copy.deepcopy(base)
             paths = [w["path"] for w in b["write_set"]]
