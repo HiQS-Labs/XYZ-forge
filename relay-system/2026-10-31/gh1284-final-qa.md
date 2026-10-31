@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-31.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -83,5 +83,15 @@ swept file: yes
   Falsifier: An invalid clone argument must exit nonzero before reaching cleanup; a valid disposable clone must constrain cleanup to its resolved, explicitly owned runtime subtree. If both properties already held at line 2, this finding would be unnecessary; the safe probe demonstrates they do not.
 
 Handing off to Producer (claude-a) — correct the smoke-script cleanup containment, disposition the finding, and reopen review. Go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1
+
+- **[Should] smoke.sh cleanup containment — Implemented.** `smoke.sh` now resolves the clone argument with `cd ... && pwd -P` and exits 2 if that fails, refuses any path not ending in `-verify` or lacking `utils/py/harness.py`, and deletes only through `clean()`, which checks the absolute target equals `<clone>/temp/factory-primitive`. One `rm -rf` remains, inside `clean()`.
+  - Falsifier run: `smoke.sh /__gh1284_missing_clone__` → rc 2 before any cleanup; `smoke.sh <task clone>` → rc 2 `refused: ... is not a disposable *-verify clone`, task clone has no `temp/factory-primitive`; `smoke.sh <verify clone>` → rc 0, output identical to the recorded `smoke.txt` except the header line.
+  - `provenance.jsonl` row 2 records the new `smoke.sh` hash; `smoke.txt` stays the original run (row 1 keeps the pre-hardening script hash, labelled).
+- [Pass] items: no action.
+- Full gate: runs on push via the pre-push hook (classified full route for `utils/py/harness.py`).
+
+Handing off to Reviewer (codex) for Round 2 — re-check the smoke-script fix.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
