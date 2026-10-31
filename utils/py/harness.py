@@ -12,6 +12,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import threading
 from contextlib import closing
 from dataclasses import dataclass
@@ -150,10 +151,30 @@ class AdapterResult:
     decision: dict | None
     actual_cost: float | None
     billing_status: str
+    called: bool = True
 
 
 def _decision(tool: str, args: dict, reason: str) -> dict:
     return {"tool": tool, "args": args, "reason": reason, "confidence": 1.0}
+
+
+CODEX_FLAGS = (
+    "-s", "read-only",
+    "--ephemeral",
+    "--ignore-user-config",
+    "--ignore-rules",
+    "--skip-git-repo-check",
+    "--disable", "shell_tool",
+    "--disable", "unified_exec",
+    "--disable", "view_image",
+    "--disable", "image_generation",
+    "--disable", "apps",
+    "--disable", "plugins",
+    "--disable", "hooks",
+    "--disable", "skill_search",
+    "-c", "web_search=disabled",
+    "--json",
+)
 
 
 def rules_decide(snapshot: dict) -> AdapterResult:
@@ -192,6 +213,68 @@ def rules_decide(snapshot: dict) -> AdapterResult:
         if result is None:
             result = _decision("idle", {}, "no actionable input")
     return AdapterResult(canonical(result), "ok", result, 0.0, "reported")
+
+
+def codex_decide(snapshot: dict, config: dict) -> AdapterResult:
+    if not snapshot["inbox"] and not snapshot["probe_targets"]:
+        d = _decision("idle", {}, "no actionable input (no agent call)")
+        return AdapterResult(canonical(d), "ok", d, 0.0, "unbilled", called=False)
+    prompt = (PACKAGE / "prompts" / "evaluator.v2.md").read_text(encoding="utf-8") + "\n\nSnapshot (JSON):\n" + canonical(snapshot)
+    with tempfile.TemporaryDirectory(prefix="fp-codex-") as tmp:
+        d = Path(tmp)
+        out_file = d / "last.json"
+        argv = [
+            os.environ.get("CODEX_BIN", "codex"),
+            "exec",
+            *CODEX_FLAGS,
+            "-m",
+            config["codex_model"],
+            "-C",
+            str(d),
+            "-o",
+            str(out_file),
+            prompt,
+        ]
+        env = dict(os.environ)
+        env.pop("OPENAI_API_KEY", None)
+        try:
+            res = run_bounded(argv, cwd=str(d), env=env, timeout=config["adapter_timeout_s"])
+        except OSError:
+            return AdapterResult("", "adapter-error", None, 0.0, "unbilled", called=False)
+        if res.timed_out:
+            return AdapterResult((res.stdout or "")[-2000:], "timeout", None, None, "unknown")
+        text = (res.stdout or "") + (res.stderr or "")
+        rc = getattr(res, "returncode", res.rc)
+        if rc != 0:
+            normalized = "rate-limited" if re.search(r"429|rate.?limit|usage.?limit|quota", text, re.I) else "adapter-error"
+            return AdapterResult(text[-2000:], normalized, None, None, "unknown")
+        for line in (res.stdout or "").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                ev = json.loads(line)
+            except Exception:
+                continue
+            if isinstance(ev, dict) and ev.get("type") in ("item.started", "item.completed"):
+                item = ev.get("item")
+                if not isinstance(item, dict) or item.get("type") not in ("agent_message", "reasoning"):
+                    return AdapterResult((res.stdout or "")[-2000:], "adapter-error", None, None, "unknown")
+        raw = ""
+        if out_file.exists():
+            try:
+                raw = out_file.read_text(encoding="utf-8").strip()
+            except Exception:
+                raw = ""
+        if not raw:
+            return AdapterResult(raw, "invalid-output", None, None, "unknown")
+        try:
+            parsed = json.loads(raw)
+        except Exception:
+            return AdapterResult(raw, "invalid-output", None, None, "unknown")
+        if not isinstance(parsed, dict):
+            return AdapterResult(raw, "invalid-output", None, None, "unknown")
+        return AdapterResult(raw, "ok", parsed, None, "unknown")
 
 
 def _write(path: Path, content: str) -> str:
@@ -628,7 +711,7 @@ def _verify_plan_draft(instance: Path, tick_id: str, args: dict) -> tuple[Path, 
 
 
 def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: float,
-                  unregistered: int = 0) -> dict:
+                  unregistered: int = 0, adapter_cfg: dict | None = None) -> dict:
     """Freeze up to `limit` open Queue candidates: ledger copy, git listings, one issue read each.
     With `unregistered` > 0, one open-issue listing also adds that many open issues that have no
     ledger row, most recently updated first (GH-1261)."""
@@ -744,6 +827,7 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
                   "scenario_sha256": manifest["scenario_sha256"], "scenario_path": None,
                   "manifest_path": str(manifest_path),
                   "prompt_sha256": sha_text((PACKAGE / "prompts" / "evaluator.v1.md").read_text(encoding="utf-8"))}
+        config.update(adapter_cfg or adapter_config("rules", None, 90.0))
         (instance / "config.json").write_text(json.dumps(config, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         emit(conn, instance, None, "init", "ok", items=len(requests), excluded=len(excluded), source="prs")
     finally:
@@ -785,12 +869,27 @@ def generate_manifest(scenario: Path, output: Path) -> None:
     output.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def adapter_config(adapter: str, model: str | None, timeout: float) -> dict:
+    if adapter == "rules":
+        return {"adapter": "rules", "prompt_sha256": sha_text((PACKAGE / "prompts" / "evaluator.v1.md").read_text(encoding="utf-8"))}
+    if adapter == "codex":
+        return {
+            "adapter": "codex",
+            "codex_model": model,
+            "adapter_timeout_s": timeout,
+            "codex_flags": list(CODEX_FLAGS),
+            "prompt_sha256": sha_text((PACKAGE / "prompts" / "evaluator.v2.md").read_text(encoding="utf-8")),
+        }
+    raise ValueError(f"unknown adapter: {adapter}")
+
+
 def _config(instance: Path) -> dict:
     return json.loads((instance / "config.json").read_text(encoding="utf-8"))
 
 
 def init_instance(instance: Path, scenario: Path, manifest_path: Path,
-                  daily_cap: float, max_call_cost: float) -> None:
+                  daily_cap: float, max_call_cost: float,
+                  adapter_cfg: dict | None = None) -> None:
     if (instance / "state.db").exists():
         raise ValueError("instance already initialized; use a new run root")
     instance.mkdir(parents=True, exist_ok=True)
@@ -809,6 +908,7 @@ def init_instance(instance: Path, scenario: Path, manifest_path: Path,
         config = {"daily_cap": daily_cap, "max_call_cost": max_call_cost,
                   "probe_targets": manifest["probe_targets"], "scenario_sha256": scenario_sha,
                   "scenario_path": str(scenario), "manifest_path": str(manifest_path), "prompt_sha256": prompt_sha}
+        config.update(adapter_cfg or adapter_config("rules", None, 90.0))
         (instance / "config.json").write_text(json.dumps(config, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         emit(conn, instance, None, "init", "ok", items=len(items), scenario_sha256=scenario_sha)
     finally:
@@ -859,7 +959,7 @@ def _validate(decision: dict, snapshot: dict) -> str | None:
     if not isinstance(decision, dict) or set(decision) != {"tool", "args", "reason", "confidence"}:
         return "decision-shape"
     tool, args = decision.get("tool"), decision.get("args")
-    if tool not in TOOLS or not isinstance(args, dict):
+    if not isinstance(tool, str) or tool not in TOOLS or not isinstance(args, dict):
         return "tool-or-args-not-allowlisted"
     if not isinstance(decision["reason"], str) or len(decision["reason"]) > 200:
         return "reason-shape"
@@ -868,23 +968,26 @@ def _validate(decision: dict, snapshot: dict) -> str | None:
         return "confidence-shape"
     pending = {item["id"]: item for item in snapshot["inbox"]}
     if tool == "note":
-        if set(args) != {"inbox_id", "text"} or not isinstance(args.get("text"), str) \
-                or not 1 <= len(args["text"]) <= 200:
+        if set(args) != {"inbox_id", "text"} or not isinstance(args.get("inbox_id"), str) \
+                or not isinstance(args.get("text"), str) or not 1 <= len(args["text"]) <= 200:
             return "note-args"
         if pending.get(args.get("inbox_id"), {}).get("kind") != "note-request":
             return "note-id-not-eligible"
     elif tool == "summarize":
         if set(args) != {"inbox_ids"} or not isinstance(args.get("inbox_ids"), list) \
-                or not 1 <= len(args["inbox_ids"]) <= 5 or len(set(args["inbox_ids"])) != len(args["inbox_ids"]):
+                or not 1 <= len(args["inbox_ids"]) <= 5 \
+                or any(not isinstance(item_id, str) for item_id in args["inbox_ids"]) \
+                or len(set(args["inbox_ids"])) != len(args["inbox_ids"]):
             return "summarize-args"
         if any(pending.get(item_id, {}).get("kind") != "summarize" for item_id in args["inbox_ids"]):
             return "summarize-id-not-eligible"
     elif tool == "probe":
         targets = set(snapshot["probe_targets"]) | {item["target"] for item in snapshot["inbox"] if item["kind"] == "probe"}
-        if set(args) != {"target"} or args.get("target") not in targets:
+        if set(args) != {"target"} or not isinstance(args.get("target"), str) or args.get("target") not in targets:
             return "probe-target-not-eligible"
     elif tool == "plan-draft":
-        if set(args) != {"inbox_id"} or pending.get(args.get("inbox_id"), {}).get("kind") != "plan-request":
+        if set(args) != {"inbox_id"} or not isinstance(args.get("inbox_id"), str) \
+                or pending.get(args.get("inbox_id"), {}).get("kind") != "plan-request":
             return "plan-draft-id-not-eligible"
     elif args:
         return "idle-args"
@@ -924,7 +1027,7 @@ def _snapshot(conn, config: dict, slot: int) -> tuple[dict, str]:
     return snapshot, payload
 
 
-def _adapter(snapshot: dict, fault: str) -> AdapterResult:
+def _adapter(snapshot: dict, fault: str, config: dict) -> AdapterResult:
     if fault == "malformed-decision":
         return AdapterResult("{not-json", "invalid-output", None, 0.0, "reported")
     if fault == "disallowed-decision":
@@ -934,6 +1037,8 @@ def _adapter(snapshot: dict, fault: str) -> AdapterResult:
         return AdapterResult("", "adapter-error", None, 0.0, "unbilled")
     if fault == "timeout-unknown":
         return AdapterResult("", "timeout", None, None, "unknown")
+    if config.get("adapter") == "codex":
+        return codex_decide(snapshot, config)
     return rules_decide(snapshot)
 
 
@@ -1159,9 +1264,9 @@ def run_tick(instance: Path, slot: int, fault: str = "") -> str:
                 emit(conn, instance, tick_id, "evaluate", "budget-exhausted", agent_called=False)
             else:
                 _reserve(conn, tick_id, config["max_call_cost"])
-                result = _adapter(snapshot, fault)
+                result = _adapter(snapshot, fault, config)
                 _settle(conn, tick_id, result)
-                emit(conn, instance, tick_id, "evaluate", result.normalized, agent_called=True)
+                emit(conn, instance, tick_id, "evaluate", result.normalized, agent_called=result.called)
                 spent = conn.execute(
                     "SELECT COALESCE(SUM(CASE WHEN billing_status='unknown' THEN amount ELSE actual_cost END),0) "
                     "FROM reservations").fetchone()[0]
@@ -1324,6 +1429,9 @@ def factory_parser() -> argparse.ArgumentParser:
     init.add_argument("--limit", type=int, default=10)
     init.add_argument("--unregistered", type=int, default=0,
                       help="with --from-prs, also seed N open issues that have no ledger row (GH-1261)")
+    init.add_argument("--adapter", choices=["rules", "codex"], default="rules")
+    init.add_argument("--codex-model", default=None)
+    init.add_argument("--adapter-timeout", type=float, default=90.0)
     manifest = sub.add_parser("generate-manifest")
     manifest.add_argument("--scenario", type=Path, default=PACKAGE / "scenarios" / "soak-v1.jsonl")
     manifest.add_argument("--output", type=Path, default=PACKAGE / "scenarios" / "soak-v1.manifest.json")
@@ -1364,16 +1472,22 @@ def factory_main(argv: list[str]) -> int:
         if args.command == "init":
             if args.daily_cap <= 0 or args.max_call_cost < 0 or args.max_call_cost > args.daily_cap:
                 raise ValueError("invalid daily cap or maximum call cost")
+            if args.adapter == "codex" and not args.codex_model:
+                raise ValueError("--adapter codex requires --codex-model")
+            if args.adapter_timeout <= 0:
+                raise ValueError("--adapter-timeout must be positive")
+            cfg = adapter_config(args.adapter, args.codex_model, args.adapter_timeout)
             if args.from_prs:
                 if not 1 <= args.limit <= 50:
                     raise ValueError("--limit must be in 1..50")
                 if not 0 <= args.unregistered <= 50:
                     raise ValueError("--unregistered must be in 0..50")
-                seeded = init_from_prs(instance, args.limit, args.daily_cap, args.max_call_cost, args.unregistered)
+                seeded = init_from_prs(instance, args.limit, args.daily_cap, args.max_call_cost,
+                                       args.unregistered, adapter_cfg=cfg)
                 print(canonical({"status": "initialized", "instance": str(instance), **seeded}))
                 return 0
             init_instance(instance, args.scenario.resolve(), args.manifest.resolve(),
-                          args.daily_cap, args.max_call_cost)
+                          args.daily_cap, args.max_call_cost, adapter_cfg=cfg)
             print(canonical({"status": "initialized", "instance": str(instance)}))
             return 0
         if args.command == "tick":

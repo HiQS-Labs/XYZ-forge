@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -89,5 +89,36 @@ Read the plan section first. You may edit ONLY: `utils/py/harness.py`, `utils/py
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Producer · Round 1 (agy)
+
+Implemented the Stage A adapter spec in full:
+1. `AdapterResult` (`utils/py/harness.py`): added `called: bool = True`. Updated evaluate event emission in `run_tick` to `agent_called=result.called` while preserving `budget-exhausted` (`agent_called=False`).
+2. Added `import tempfile` to imports in `utils/py/harness.py`.
+3. Added `CODEX_FLAGS` tuple near `rules_decide` with `-s read-only --ephemeral --ignore-user-config --ignore-rules --skip-git-repo-check`, the 8 `--disable` flags (`shell_tool`, `unified_exec`, `view_image`, `image_generation`, `apps`, `plugins`, `hooks`, `skill_search`), `-c web_search=disabled`, and `--json`.
+4. Added `codex_decide(snapshot: dict, config: dict) -> AdapterResult` after `rules_decide`:
+   - Empty-idle fast path: if `not snapshot["inbox"] and not snapshot["probe_targets"]`, returns canonical `idle` decision with `unbilled`, `0.0`, and `called=False`.
+   - Assembles prompt from `evaluator.v2.md` + snapshot JSON.
+   - Runs `run_bounded` in `tempfile.TemporaryDirectory` with `OPENAI_API_KEY` scrubbed from env.
+   - Handles `OSError` -> `adapter-error` with `unbilled` and `called=False`.
+   - Handles `timed_out` -> `timeout` with `unknown`.
+   - Classifies non-zero exits as `rate-limited` (regex match for 429/rate-limit/usage-limit/quota) or `adapter-error` with `unknown`.
+   - Detects tool execution: any JSON line in `stdout` with `item.started`/`item.completed` whose item is not `agent_message` or `reasoning` returns `adapter-error` with `unknown`. Lifecycle events without item are ignored.
+   - Reads output JSON from file, validates dict structure, classifies empty/malformed as `invalid-output`.
+5. Updated `_adapter(snapshot, fault, config)` to accept `config`, dispatching to `codex_decide` when `config.get("adapter") == "codex"` and falling back to `rules_decide`. Updated the call site in `run_tick`.
+6. Hardened `_validate` type guards:
+   - Tool and args shape: requires `isinstance(tool, str)`, `tool in TOOLS`, and `isinstance(args, dict)` else returns `"tool-or-args-not-allowlisted"`.
+   - `note`: requires `isinstance(args.get("inbox_id"), str)` else `"note-args"`.
+   - `summarize`: requires all items in `args["inbox_ids"]` to be `str` before dedupe and membership checks, else `"summarize-args"`.
+   - `probe`: requires `isinstance(args.get("target"), str)` before target set lookup, else `"probe-target-not-eligible"`.
+   - `plan-draft`: requires `isinstance(args.get("inbox_id"), str)` before pending map lookup, else `"plan-draft-id-not-eligible"`.
+7. Added `adapter_config(adapter, model, timeout)` generating config for `rules` and `codex` (with prompt hashes and flags). Updated `init_instance` and `init_from_prs` with `adapter_cfg: dict | None = None` keyword argument.
+8. Added CLI arguments to `factory_parser` init subparser (`--adapter`, `--codex-model`, `--adapter-timeout`). Updated `factory_main` init handler to validate arguments, build config, and pass `adapter_cfg` to initializers.
+9. Created `utils/py/factory_primitive/prompts/evaluator.v2.md` matching `evaluator.v1.md` plus the `plan-draft` bullet and the final bare JSON instruction. Left `evaluator.v1.md` untouched.
+10. Added `"plan-draft"` to the `tool` enum in `utils/py/factory_primitive/schemas/decision.schema.json`.
+
+Verification:
+- Compiled cleanly with `python3 -m py_compile utils/py/harness.py`.
+- Verified type guards, `codex_decide` mock outcomes (tool detection, rate-limit, timeout, OSError, valid dict, empty idle), `AdapterResult.called`, and CLI parsing via inline test harnesses.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
