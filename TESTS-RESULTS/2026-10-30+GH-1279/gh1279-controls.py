@@ -32,6 +32,7 @@ mode = os.environ["STUB_MODE"]
 with open(os.environ["STUB_LOG"], "a") as fh:
     fh.write(json.dumps({"mode": mode, "argv_len": len(sys.argv), "prompt_head": sys.argv[-1][:40],
                          "prompt_has_snapshot": "Snapshot (JSON):" in sys.argv[-1],
+                         "prompt_len": len(sys.argv[-1].encode()),
                          "effort": [a for a in sys.argv if a.startswith("model_reasoning_effort=")]}) + "\n")
 out = sys.argv[sys.argv.index("-o") + 1]
 prompt = sys.argv[-1]
@@ -61,6 +62,25 @@ elif mode == "stdin":
     ready = select.select([sys.stdin], [], [], 0.5)[0]
     data = sys.stdin.read() if ready else ""
     say(json.dumps(good) if data.strip() else "")
+elif mode.startswith("a_"):
+    pick = int(os.environ.get("STUB_PICK", "0"))
+    target = snap["inbox"][pick]["id"] if len(snap["inbox"]) > pick else "none"
+    shared = os.environ.get("STUB_PATH", "utils/py/proc_group.py")
+    A = {
+        "a_ok": {"scope": ["Authored scope line one."], "acceptance": ["Authored acceptance line."], "open_questions": ["Authored question?"]},
+        "a_scope_only": {"scope": ["Authored scope lifts the hold."]},
+        "a_scope_blank": {"scope": ["   "]},
+        "a_bad_key": {"scope": ["x"], "evil": ["y"]},
+        "a_oversize": {"scope": ["z" * 601]},
+        "a_too_many": {"scope": ["s"] * 6},
+        "a_nonstr": {"scope": [1]},
+        "a_not_list": {"scope": "text"},
+        "a_empty": {},
+        "a_invented_path": {"write_set": ["utils/py/does_not_exist_gh1279.py"]},
+        "a_new_file": {"write_set": ["utils/py/factory_primitive/prompts/evaluator.v3.md"]},
+        "a_ws": {"write_set": [shared], "scope": ["Authored scope with a path."]},
+    }[mode]
+    say(json.dumps({"tool": "plan-draft", "args": {"inbox_id": target, "authored": A}, "reason": "stub", "confidence": 1}))
 elif mode.startswith("replay:"):
     lines = open(mode.split(":", 1)[1]).read().splitlines()
     msgs = [json.loads(l)["item"]["text"] for l in lines if '"agent_message"' in l]
@@ -141,6 +161,123 @@ def case(name: str, mode: str, want_norm: str, want_status: str, want_tool: str 
     record(name, ok, f"rc={p.returncode} tick={i['tick']} norm={i['normalized']} decision={d.get('status')}"
                      f"/{d.get('rejected_reason')} tool={tool} stub_calls={calls(log)} "
                      f"billing={i['reservation']['billing_status'] if i['reservation'] else None}")
+
+
+def a2_case(name, mode, want_status, want_reason=None, *, authoring=True, limit=3, unreg=0, slot=1, pick=0, pre=None,
+            env_extra=None):
+    """init (codex, authoring on/off) -> optional pre-hook on the instance -> tick `slot` -> inspect."""
+    rr = f"temp/factory-primitive/{TAG}-{name}"
+    shutil.rmtree(ROOT / rr, ignore_errors=True)
+    extra = ["--adapter", "codex", "--codex-model", "stub-model", "--adapter-timeout", "5"] + (["--codex-authoring"] if authoring else [])
+    p = run(["--run-root", rr, "init", "--from-prs", "--limit", str(limit), "--unregistered", str(unreg), "--daily-cap", "0.9",
+             "--max-call-cost", "0.01", *extra])
+    assert p.returncode == 0, p.stderr
+    inst = ROOT / rr / "instances" / "C"
+    if pre:
+        pre(inst)
+    log = ROOT / "temp" / f"{TAG}-{name}.stub.log"
+    log.unlink(missing_ok=True)
+    env = {"CODEX_BIN": str(STUBFILE), "STUB_MODE": mode, "STUB_LOG": str(log), "STUB_PICK": str(pick), **(env_extra or {})}
+    for s in range(1, slot + 1):  # earlier slots tick with a plain, valid response so their requests are consumed
+        e = dict(env, STUB_MODE="ok") if s < slot else env
+        pr = run(["--run-root", rr, "tick", "--slot", str(s)], e)
+    i = inspect(inst, slot)
+    d = i["decision"] or {}
+    brief_path = inst / "out" / "plan-draft" / f"slot_{slot:03d}.json"
+    brief = json.loads(brief_path.read_text()) if brief_path.exists() else None
+    return rr, inst, i, d, brief, pr
+
+
+def a2_controls():
+    # authoring ON: valid authored content is accepted, merged, labelled, sourced entries kept
+    rr, inst, i, d, brief, pr = a2_case("a2-valid", "a_ok", "raw-valid")
+    srcs = [e["source"] for e in (brief or {}).get("scope", [])] if brief else []
+    record("a2-valid-authored-merged", d.get("status") == "raw-valid" and brief and brief.get("authored") is True
+           and any(s == "codex-authored" for s in srcs) and any(s != "codex-authored" for s in srcs + ["x"])
+           and all(e.get("heading") for e in brief["scope"]),
+           f"decision={d.get('status')} authored={brief and brief.get('authored')} scope_sources={sorted(set(srcs))}")
+    # rejections: each returns its reason, safe idle, no brief, one stub call
+    for nm, mode, reason in [("blank-scope", "a_scope_blank", "authored-shape"), ("unknown-key", "a_bad_key", "authored-shape"),
+                             ("oversize-string", "a_oversize", "authored-shape"), ("too-many-items", "a_too_many", "authored-shape"),
+                             ("non-string-item", "a_nonstr", "authored-shape"), ("scope-not-list", "a_not_list", "authored-shape"),
+                             ("empty-authored", "a_empty", "authored-shape"),
+                             ("invented-path", "a_invented_path", "authored-path-not-tracked"),
+                             ("legit-new-file-policy-false-reject", "a_new_file", "authored-path-not-tracked")]:
+        rr, inst, i, d, brief, pr = a2_case("a2-" + nm, mode, "rejected")
+        tool = json.loads(d["validated_json"])["tool"] if d.get("validated_json") else None
+        record("a2-reject-" + nm, d.get("status") == "rejected" and d.get("rejected_reason") == reason and tool == "idle" and brief is None
+               and i["tick"] in {"completed", "uncertain"},
+               f"decision={d.get('status')}/{d.get('rejected_reason')} tool={tool} brief={'yes' if brief else 'none'}")
+    # authoring OFF: the identical authored response is rejected exactly as in Stage A
+    rr, inst, i, d, brief, pr = a2_case("a2-off", "a_ok", "rejected", authoring=False)
+    cfg = json.loads((inst / "config.json").read_text())
+    record("a2-off-mode-rejects-authored", d.get("status") == "rejected" and d.get("rejected_reason") == "plan-draft-id-not-eligible"
+           and brief is None and "codex_authoring" not in cfg,
+           f"decision={d.get('status')}/{d.get('rejected_reason')} brief={'yes' if brief else 'none'} codex_authoring_in_cfg={'codex_authoring' in cfg}")
+    # old validator is the red control: a validator that ignores `tracked` admits invented paths
+    # (checked in the loaded-module section below)
+    # missing-scope lift: an unregistered issue with a cited path and no headed sections is held without authoring
+    def plain_body(inst):
+        iss = json.loads((inst / "backlog" / "issues.json").read_text())
+        num = [k for k, v in json.loads((inst / "backlog" / "manifest.json").read_text())["requests"].items() if v["source"] == "unregistered"]
+        man = json.loads((inst / "backlog" / "manifest.json").read_text())
+        n = str(man["requests"][num[0]]["issue"])
+        iss[n]["body"] = "Plain paragraph with no headings. It concerns utils/py/proc_group.py only."
+        (inst / "backlog" / "issues.json").write_text(json.dumps(iss))
+    rr, inst, i, d, held, pr = a2_case("a2-hold", "ok", "raw-valid", authoring=True, limit=1, unreg=1, slot=2, pre=plain_body)
+    rr, inst, i, d, lift, pr = a2_case("a2-lift", "a_scope_only", "raw-valid", authoring=True, limit=1, unreg=1, slot=2, pre=plain_body)
+    record("a2-authored-scope-lifts-missing-scope", held and held["draft_status"] == "missing-scope" and lift and lift["draft_status"] in {"draft", "ready"}
+           and any(e["source"] == "codex-authored" for e in lift["scope"]) and lift.get("authored") is True and "authored" not in held,
+           f"without={held and held['draft_status']} with={lift and lift['draft_status']} sourced_scope_kept={bool(lift and [e for e in lift['scope'] if e['source'] != 'codex-authored'])}")
+    # write_set: draft briefs take authored paths; ready briefs drop them and record it; branch is data-driven
+    seen_states = {}
+    for pick_slot in range(1, 6):
+        rr, inst, i, d, brief, pr = a2_case(f"a2-ws-{pick_slot}", "a_ws", "raw-valid", authoring=True, limit=6, unreg=2, slot=pick_slot)
+        if not brief:
+            continue
+        state = brief["planner_state"]
+        paths = [w["path"] for w in brief["write_set"]]
+        added = "utils/py/proc_group.py" in paths and any(w["source"] == "codex-authored" and w["path"] == "utils/py/proc_group.py" for w in brief["write_set"])
+        if state == "ready":
+            ok = ("utils/py/proc_group.py" not in paths or not added) and brief.get("authored_ignored") == ["write_set"]
+        else:
+            ok = added or "utils/py/proc_group.py" in paths  # already sourced counts as present, not added
+        seen_states.setdefault("ready" if state == "ready" else "draft", []).append(ok)
+    record("a2-write-set-draft-branch", bool(seen_states.get("draft")) and all(seen_states["draft"]),
+           f"draft briefs checked={len(seen_states.get('draft', []))}")
+    record("a2-write-set-ready-branch", (not seen_states.get("ready")) or all(seen_states["ready"]),
+           f"ready briefs checked={len(seen_states.get('ready', []))}" + ("" if seen_states.get("ready") else " (not exercised: no planner-ready request in this backlog)"))
+    # full prompt transport with 12 pending requests: one positional argument, size recorded
+    rr, inst, i, d, brief, pr = a2_case("a2-prompt12", "ok", "raw-valid", authoring=True, limit=12)
+    seen = json.loads((ROOT / "temp" / f"{TAG}-a2-prompt12.stub.log").read_text().splitlines()[0])
+    record("a2-prompt-12-requests-single-argv", seen["argv_len"] > 0 and seen["prompt_has_snapshot"] and seen["prompt_len"] < 700_000,
+           f"prompt_bytes={seen['prompt_len']} (ARG_MAX={os.sysconf('SC_ARG_MAX')})")
+    # off-mode brief is byte-identical to Stage A's: old harness (Stage A commit) vs new, rules arm, same frozen inputs
+    old = ROOT / "utils" / "py" / "harness_stagea.py"
+    old.write_bytes(subprocess.run(["git", "show", "4eb4dce8e3bee399eac3ee1dadd20f05cc715c62:utils/py/harness.py"], cwd=ROOT, capture_output=True, check=True).stdout)
+    try:
+        briefs = {}
+        for tag, script in (("new", HARNESS), ("old", old)):
+            rr = f"temp/factory-primitive/{TAG}-a2-bytes-{tag}"
+            shutil.rmtree(ROOT / rr, ignore_errors=True)
+            e = dict(os.environ, PYTHONDONTWRITEBYTECODE="1")
+            subprocess.run([sys.executable, str(script), "factory-primitive", "--run-root", rr, "init", "--from-prs", "--limit", "2"], cwd=ROOT, env=e, capture_output=True, text=True, check=True)
+            subprocess.run([sys.executable, str(script), "factory-primitive", "--run-root", rr, "tick", "--slot", "1"], cwd=ROOT, env=e, capture_output=True, text=True, check=True)
+            briefs[tag] = (ROOT / rr / "instances" / "C" / "out" / "plan-draft" / "slot_001.json").read_bytes()
+    finally:
+        old.unlink(missing_ok=True)
+    record("a2-off-mode-brief-byte-identical", briefs["old"] == briefs["new"], f"bytes old={len(briefs['old'])} new={len(briefs['new'])} equal={briefs['old'] == briefs['new']}")
+    # red control: the Stage A validator (no `tracked`) rejects every authored decision; a validator that skips the
+    # path test would admit the invented path. Exercise the new one directly.
+    import importlib.util as _u
+    spec = _u.spec_from_file_location("harness_new_a2", HARNESS); m = _u.module_from_spec(spec); sys.modules["harness_new_a2"] = m; spec.loader.exec_module(m)
+    snap = {"inbox": [{"id": "x", "kind": "plan-request"}], "recent": [], "probe_targets": []}
+    def v(authored, tracked):
+        return m._validate({"tool": "plan-draft", "args": {"inbox_id": "x", "authored": authored}, "reason": "r", "confidence": 1}, snap, tracked)
+    tracked = {"utils/py/proc_group.py"}
+    got = [v({"scope": ["ok"]}, tracked), v({"write_set": ["utils/py/proc_group.py"]}, tracked), v({"write_set": ["nope.py"]}, tracked),
+           v({"scope": ["ok"]}, None), v({"scope": [" "]}, tracked)]
+    record("a2-validator-direct", got == [None, None, "authored-path-not-tracked", "plan-draft-id-not-eligible", "authored-shape"], f"got={got}")
 
 
 def main() -> int:
@@ -245,6 +382,8 @@ def main() -> int:
     o, n = verdicts(old_m), verdicts(new_m)
     record("validate-red-control", o == [None, "TypeError", "TypeError", "TypeError"] and n[0] is None and all(isinstance(x, str) for x in n[1:]),
            f"old={o} new={n}")
+
+    a2_controls()
 
     after = {str(p): sha(p) for p in keep}
     record("ledger-files-unchanged", before == after, "releases.db/releases.sql hashes identical before and after")

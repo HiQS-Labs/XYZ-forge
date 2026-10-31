@@ -1548,8 +1548,8 @@ def factory_main(argv: list[str]) -> int:
         if args.command == "init":
             if args.daily_cap <= 0 or args.max_call_cost < 0 or args.max_call_cost > args.daily_cap:
                 raise ValueError("invalid daily cap or maximum call cost")
-            if args.codex_authoring and args.adapter != "codex":
-                raise ValueError("--codex-authoring requires --adapter codex")
+            if args.codex_authoring and (args.adapter != "codex" or not args.from_prs):
+                raise ValueError("--codex-authoring requires --adapter codex and --from-prs")
             if args.adapter == "codex" and not args.codex_model:
                 raise ValueError("--adapter codex requires --codex-model")
             if args.adapter_timeout <= 0:
