@@ -1,0 +1,39 @@
+case=malformed-decision
+started_at=2026-10-29T04:06:48.250079+00:00
+repo=/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/temp/XYZ-forge-gh1248-outer-loop-2026-10-28
+run_root=temp/factory-primitive/evidence/checkpoint2/malformed-decision
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/harness.py factory-primitive --run-root temp/factory-primitive/evidence/checkpoint2/malformed-decision init --daily-cap 1 --max-call-cost 0
+exit_code=0
+stdout:
+{"instance":"/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/temp/XYZ-forge-gh1248-outer-loop-2026-10-28/temp/factory-primitive/evidence/checkpoint2/malformed-decision/instances/C","status":"initialized"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/harness.py factory-primitive --run-root temp/factory-primitive/evidence/checkpoint2/malformed-decision tick --slot 1 --fault malformed-decision
+exit_code=0
+stdout:
+{"status":"completed","tick_id":"slot_001"}
+
+stderr:
+
+$ '/Users/noelsaw/Library/Application Support/kimi-desktop/daimon-share/daimon/runtime/python/.venv/bin/python3' utils/py/harness.py factory-primitive --run-root temp/factory-primitive/evidence/checkpoint2/malformed-decision status
+exit_code=0
+stdout:
+{
+  "paused": false,
+  "pending": 27,
+  "quarantined": 0,
+  "spent_or_reserved": 0,
+  "ticks": {
+    "completed": 1
+  },
+  "unknown_cost": false
+}
+
+stderr:
+
+query=SELECT status,rejected_reason FROM decisions
+[{"rejected_reason": null, "status": "invalid-output"}]
+finished_at=2026-10-29T04:06:48.389734+00:00
+verdict=PASS
+detail=unsafe decision classified invalid-output; safe idle executed

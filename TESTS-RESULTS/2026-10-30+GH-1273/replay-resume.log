@@ -1,0 +1,16 @@
+separator-delete PASS strict=False offset=60
+separator-add PASS strict=False offset=62
+rewrite PASS strict=False offset=None
+delete-sentence PASS strict=False offset=None
+fenced-blank PASS strict=False offset=None
+indented-blank PASS strict=False offset=None
+legacy loader-roundtrip PASS; wrong reviewer refused
+fallback loader-roundtrip PASS; wrong reviewer refused
+long-indented-run refused PASS
+citation-position separator accepted PASS
+HTML enclosing literal with comment refused PASS
+mixed-indent b' \t' refused PASS
+mixed-indent b'  \t' refused PASS
+mixed-indent b'   \t' refused PASS
+mixed-indent b'    ' refused PASS
+mixed-indent b'\t' refused PASS

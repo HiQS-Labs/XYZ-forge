@@ -1,0 +1,10 @@
+== test: gh174-harness-registry ==
+  PASS: All GH-174 Python executables and alias entry points exist and are executable
+  PASS: harness.py check verifies foreign_keys and SQLite integrity
+  PASS: device_config.py resolves 3-tier config hierarchy correctly
+  PASS: HarnessTurnLogger logs telemetry and records evaluation successfully
+  PASS: harness_app.py blog gen synthesizes publishable Markdown case study
+  PASS: Negative control: Invalid evaluation grade correctly rejected by SQLite CHECK constraint
+  PASS: harness_app.py log automatically derives lab name for novel model IDs
+  PASS: Negative control: tracked harnesses.db, harnesses.sql, and docs remain 100% byte-unchanged
+gh174-harness-registry: 8 pass, 0 fail

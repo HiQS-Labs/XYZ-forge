@@ -219,3 +219,7 @@ device-agnostic) — 2. Steady, not rising. Coverage limit: incidents tracked ou
 ## Merge evidence
 
 - PR #1161 merged 2026-10-18 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1274 merged 2026-10-30 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

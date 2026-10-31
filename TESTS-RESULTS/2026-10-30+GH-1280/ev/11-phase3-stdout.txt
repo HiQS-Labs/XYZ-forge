@@ -1,0 +1,32 @@
+OK   fp-help usage seed 12801 idx 0
+OK   fp-help usage seed 12997 idx 49
+OK   fp-help pass seed 12801 idx 1
+OK   fp-help pass seed 12997 idx 44
+OK   fp-genman usage seed 12802 idx 0
+OK   fp-genman usage seed 12998 idx 49
+OK   fp-genman pass seed 12802 idx 13
+OK   fp-genman pass seed 12998 idx 48
+OK   fp-status usage seed 12803 idx 0
+OK   fp-status usage seed 12999 idx 49
+OK   fp-status run-root-guard seed 12803 idx 34
+OK   fp-status run-root-guard seed 12999 idx 45
+OK   fp-init usage seed 12804 idx 0
+OK   fp-init usage seed 13000 idx 49
+OK   fp-init pass seed 12804 idx 39
+OK   fp-init pass seed 13000 idx 5
+OK   fp-init run-root-guard seed 12804 idx 45
+OK   fp-init run-root-guard seed 12992 idx 35
+OK   fp-init cap-guard seed 12804 idx 48
+OK   fp-init cap-guard seed 13000 idx 48
+OK   fp-status pass seed 12807 idx 6
+OK   fp-status pass seed 12995 idx 36
+OK   fp-init state-guard seed 12812 idx 39 (prefix)
+OK   fp-init state-guard seed 13000 idx 47 (prefix)
+OK   fp-genman sandbox-denied seed 12822 idx 43
+OK   fp-genman sandbox-denied seed 12866 idx 2
+OK   fp-genman input-error seed 12846 idx 13
+DIFF fp-genman input-error seed 12994 idx 1 (prefix)
+R2 reproduced=False db_created=True
+R3 rc=0 porcelain=['?? NaN']
+R4 {'run_root_guard_events': 234, 'gen4_cluster_members': 234, 'all_match_rule': True}
+R1 27/28 match

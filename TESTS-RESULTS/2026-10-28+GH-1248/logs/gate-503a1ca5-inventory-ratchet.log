@@ -1,0 +1,9 @@
+Testing inventory ratchet on live tree...
+inventory_ratchet: ERROR: NEW script added (utils/py/factory-primitive.py) — loose scripts prohibited (GH-777).
+inventory_ratchet: ERROR: NEW script added (utils/py/factory_primitive/__init__.py) — loose scripts prohibited (GH-777).
+inventory_ratchet: ERROR: NEW script added (utils/py/factory_primitive/adapters.py) — loose scripts prohibited (GH-777).
+inventory_ratchet: ERROR: NEW script added (utils/py/factory_primitive/cli.py) — loose scripts prohibited (GH-777).
+inventory_ratchet: ERROR: NEW script added (utils/py/factory_primitive/loop.py) — loose scripts prohibited (GH-777).
+inventory_ratchet: ERROR: NEW script added (utils/py/factory_primitive/state.py) — loose scripts prohibited (GH-777).
+inventory_ratchet: ERROR: NEW script added (utils/py/factory_primitive/tools.py) — loose scripts prohibited (GH-777).
+inventory_ratchet: ERROR: NEW SQLite connect file added (utils/py/factory_primitive/state.py) — must use canonical gateway (GH-777).
