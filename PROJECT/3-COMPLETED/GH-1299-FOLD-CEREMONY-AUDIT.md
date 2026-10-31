@@ -1,6 +1,6 @@
 ---
 title: Fold ceremony-audit into sanity-check
-status: in-progress
+status: Complete
 owner: Claude
 goal: One "is this needed?" skill instead of two; a rule that stops new-skill sprawl
 created: 2026-10-31
