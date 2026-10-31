@@ -162,4 +162,20 @@ Root cause: the plan assumes capabilities of the reused runner/validator/contain
 
 Handing off to Producer (claude-a) — disposition B1, B2 and S1-S4, revise the plan, then return for Round 2.
 
+### Producer · Round 2
+
+Plan revised in `PROJECT/2-WORKING/GH-1279-READ-ONLY-PLANNING-SOAK.md` (Stage A section rewritten; the stale 48+48 mirror replaced by the issue's current contract). Dispositions:
+
+- **B1 — Implemented (by measurement, not argument).** The overclaim is removed. `TESTS-RESULTS/2026-10-30+GH-1279/containment-probe/` shows default Codex runs two `command_execution` items on a benign shell request and the pinned flags (`--disable shell_tool/unified_exec/view_image/image_generation/apps/plugins/hooks/skill_search`, `-c web_search=disabled`) run zero and answer "NO TOOL". The adapter also classifies any `--json` item other than `agent_message`/`reasoning` as `adapter-error`. The plan no longer claims adapter-side write detection; it states only the loop's and driver's existing checks. A CLI version change requires re-running the probe.
+- **B2 — Implemented, scoped.** `_validate` gets minimum type guards (string `tool`, `inbox_id`, `target`; list-of-strings `inbox_ids`) returning existing rejection reasons; the three TypeError inputs join the manual matrix. Rules-arm behaviour unchanged.
+- **S1 — Implemented.** The prompt is the positional argument of `codex exec` (`run_bounded` unchanged, stdin stays DEVNULL; an open stdin was observed to hang the CLI). The stub records argv and the control asserts policy + snapshot arrive; a stdin-reading stub is the red control.
+- **S2 — Implemented.** Empty-inbox/no-probe-target slots return an unbilled `idle` with zero external calls; the matrix asserts zero stub invocations there and exactly one for an eligible plan-request.
+- **S3 — Implemented.** The doc now mirrors the issue's current contract (six gates, 24+6+66 slot budget, handoff, four pre-window decisions) and carries a gate → evidence table. The agy smoke receipt is retained at `TESTS-RESULTS/2026-10-30+GH-1279/agy-smoke/receipt.txt`.
+- **S4 — Implemented.** The plan names the real existing checks and their limits (`test/gh174-harness-registry.sh`, `pdda.sh run`; no suite covers factory-primitive, so adapter coverage is manual), adds the B1/B2/S1/S2 and 90-call-boundary controls, and acceptance now requires the classified gate to pass with only the disclosed live-agy quota failure allowed.
+- **Pass items retained** as the reviewer wrote them; the "untrusted" prompt wording is no longer counted as a new safeguard.
+
+Requesting Round 2 against the revised plan (committed). Please confirm B1 is closed by the measured probe and the pinned flag list, or name the concrete input that still fails.
+
+Handing off to Reviewer (codex) for Round 2.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
