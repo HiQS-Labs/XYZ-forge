@@ -112,6 +112,22 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1270
 - **date**: 2026-10-30
 
+## Promoting a rated capture with `roadmap update --raw-text` clears its rating
+- **cue**: promoting a parked, already-rated roadmap row from 1-INBOX to 2-WORKING by following SOP Step 1b (repoint, then `roadmap update --issue-num N --raw-text ...`)
+- **lesson**: `releases roadmap update --raw-text` re-parses the row text and replaces the stored rating; unless the new text carries the `rated P/S/A/E` token the four rating columns become NULL. Re-run `roadmap rate --issue-num N --rated P/S/A/E` (or include the token in `--raw-text`) after every raw-text update, and read the rating back with `roadmap list --json` before plan QA.
+- **evidence**: the row's `releases.sql` INSERT for #1279 shows NULL rating columns at https://github.com/HiQS-Labs/XYZ-forge/commit/1e08c23bba5886614644564922b78afa281a99a7 (the commit right after the rate-then-update sequence), and the rating was restored by `roadmap rate` on PR https://github.com/HiQS-Labs/XYZ-forge/pull/1282
+- **confidence**: high that the update call dropped the rating (rated and read back as 60/30/50/40 before the update, NULL in the committed dump after); not yet reproduced in isolation
+- **area**: releases
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1279
+- **date**: 2026-10-31
+
+### Edit verdicts
+
+| Component | Verdict |
+|---|---|
+| `roadmap update --raw-text` without a `rated` token | hurt (cleared the rating) |
+| `roadmap rate` re-applied after the update | helped (restored 60/30/50/40, status label kept) |
+
 ## Editing a relay shim also requires regenerating relay-pkg.tar.gz
 
 - **cue**: Changing any file under `relay-automation/` that `skills/1-hourly/relay-automation/relay-pkg.tar.gz` packages (turn shims such as `agy-turn.sh`, `codex-turn.sh`).

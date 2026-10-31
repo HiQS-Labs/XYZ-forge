@@ -1,0 +1,424 @@
+{
+ "first_wave": 1,
+ "waves_used": [
+  1
+ ],
+ "root": "stageb-2026-10-31-codex",
+ "cap": 10,
+ "emitted": [
+  722,
+  670,
+  1267,
+  1265,
+  1266,
+  1204,
+  900001,
+  216,
+  900002,
+  446,
+  900003,
+  900004,
+  900005,
+  445,
+  1248,
+  1252,
+  1281,
+  1145,
+  1216,
+  1168
+ ],
+ "lanes": [
+  {
+   "issue": 722,
+   "wave": 1,
+   "validator": {
+    "rc": 0,
+    "stdout": "gh722\tcodex\t\t\tPROJECT/2-WORKING/GH-722-LAUNCH/brief.md\tskills/merge-cleanup/scripts/merge_cleanup.py,skills/merge-cleanup/scripts/scan_clones.py,WORKTREE-SAFETY.md,test/gh534_phase_a_tests.py,skills/merge-cleanup/SKILL.md\t\t\n",
+    "stderr": ""
+   },
+   "marathon_dry_run": {
+    "rc": 0,
+    "stdout": "arding the review you just did (GH-441). Observed\n   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate\n   it, and lost the turn for doing so \u2014 the finding survived only because RELAY.md happens to be\n   on your allowlist. `cp` what you need to \"$TMPDIR/probe.$$/\" and work there instead. Verifying\n   is wanted; verifying in-tree is what costs you the turn.\n4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete\n   input \u2014 a row, a value, a `file:line` \u2014 that fails under the current code (GH-681). Every\n   `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,\n   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder\n   may disposition a request lacking these as `Declined \u2014 unproven generalization`.\n5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next \u2014 \"handing off to agy \u2014\n   agy, take your turn\" when requesting changes, or \"relay closed, no further turn needed\" when\n   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the\n   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.\n--- END RENDERED RELAY ---\ntick seed: log task.created MARATHON-GH722-TURN + claim --agent marathon + release --to agy\nmarathon-drive: dry-run: lane gh-722-launch--gh722 attempts 0/2\nmarathon: dry-run complete: 1 phase(s) would run in order\n",
+    "stderr": ""
+   },
+   "roles": {
+    "builder": "agy",
+    "reviewer": "codex"
+   },
+   "preflight_dry_run": {
+    "rc": 6,
+    "stderr": "",
+    "file": "preflight-722.json",
+    "readiness": {
+     "ready": false,
+     "next_action": "artifact path not found at target.ref: skills/merge-cleanup/scripts/merge_cleanup.py \u2014 fix the contract artifacts[] or push the file"
+    },
+    "freshness": {
+     "fetch_ok": true,
+     "upstream": null,
+     "ahead": 0,
+     "behind": 0,
+     "dirty": true,
+     "stale_index_lock": false,
+     "stale_index_lock_path": null,
+     "stale_index_lock_warning": null,
+     "evaluated_ref": "development",
+     "evaluated_ref_commit": "7cd97db47679c90d26610d3eb15450406f41428a",
+     "checkout_matches_ref": false,
+     "head_behind_ref": 0,
+     "candidate_state": "blocked",
+     "probes": [
+      {
+       "type": "grep_present",
+       "path": "skills/merge-cleanup/scripts/merge_cleanup.py",
+       "verdict": "blocked"
+      },
+      {
+       "type": "grep_absent",
+       "path": "skills/merge-cleanup/scripts/merge_cleanup.py",
+       "verdict": "unfixed"
+      }
+     ]
+    }
+   },
+   "dry_run_verified": true
+  },
+  {
+   "issue": 670,
+   "wave": 1,
+   "validator": {
+    "rc": 0,
+    "stdout": "gh670\tcodex\t\t\tPROJECT/2-WORKING/GH-670-LAUNCH/brief.md\tbin/marathon-yaml,src/marathon-yaml.js,utils/py/marathon_drive.py,test/marathon-yaml.sh,test/marathon.sh,test/gh346-gateway-allowlists.sh,test/gh373-reviewer-validation.sh,test/gh670-claude-reviewer.sh,validate.sh,HARNESS-MODELS-REGISTRY.md\t\t\n",
+    "stderr": ""
+   },
+   "marathon_dry_run": {
+    "rc": 0,
+    "stdout": "arding the review you just did (GH-441). Observed\n   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate\n   it, and lost the turn for doing so \u2014 the finding survived only because RELAY.md happens to be\n   on your allowlist. `cp` what you need to \"$TMPDIR/probe.$$/\" and work there instead. Verifying\n   is wanted; verifying in-tree is what costs you the turn.\n4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete\n   input \u2014 a row, a value, a `file:line` \u2014 that fails under the current code (GH-681). Every\n   `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,\n   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder\n   may disposition a request lacking these as `Declined \u2014 unproven generalization`.\n5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next \u2014 \"handing off to agy \u2014\n   agy, take your turn\" when requesting changes, or \"relay closed, no further turn needed\" when\n   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the\n   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.\n--- END RENDERED RELAY ---\ntick seed: log task.created MARATHON-GH670-TURN + claim --agent marathon + release --to agy\nmarathon-drive: dry-run: lane gh-670-launch--gh670 attempts 0/2\nmarathon: dry-run complete: 1 phase(s) would run in order\n",
+    "stderr": ""
+   },
+   "roles": {
+    "builder": "agy",
+    "reviewer": "codex"
+   },
+   "preflight_dry_run": {
+    "rc": 0,
+    "stderr": "",
+    "file": "preflight-670.json",
+    "readiness": {
+     "ready": true,
+     "next_action": null
+    },
+    "freshness": {
+     "fetch_ok": true,
+     "upstream": null,
+     "ahead": 0,
+     "behind": 0,
+     "dirty": true,
+     "stale_index_lock": false,
+     "stale_index_lock_path": null,
+     "stale_index_lock_warning": null,
+     "evaluated_ref": "development",
+     "evaluated_ref_commit": "7cd97db47679c90d26610d3eb15450406f41428a",
+     "checkout_matches_ref": false,
+     "head_behind_ref": 0,
+     "candidate_state": "ready",
+     "probes": [
+      {
+       "type": "grep_present",
+       "path": "bin/marathon-yaml",
+       "verdict": "unfixed"
+      },
+      {
+       "type": "grep_present",
+       "path": "utils/py/marathon_drive.py",
+       "verdict": "unfixed"
+      },
+      {
+       "type": "path_absent",
+       "path": "test/gh670-claude-reviewer.sh",
+       "verdict": "unfixed"
+      }
+     ]
+    }
+   },
+   "dry_run_verified": true
+  },
+  {
+   "issue": 1267,
+   "wave": 1,
+   "validator": {
+    "rc": 0,
+    "stdout": "gh1267\tcodex\t\t\tPROJECT/2-WORKING/GH-1267-LAUNCH/brief.md\tutils/hq/hq.sh,skills/2-daily/hq/SKILL.md\t\t\n",
+    "stderr": ""
+   },
+   "marathon_dry_run": {
+    "rc": 0,
+    "stdout": "ing the review you just did (GH-441). Observed\n   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate\n   it, and lost the turn for doing so \u2014 the finding survived only because RELAY.md happens to be\n   on your allowlist. `cp` what you need to \"$TMPDIR/probe.$$/\" and work there instead. Verifying\n   is wanted; verifying in-tree is what costs you the turn.\n4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete\n   input \u2014 a row, a value, a `file:line` \u2014 that fails under the current code (GH-681). Every\n   `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,\n   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder\n   may disposition a request lacking these as `Declined \u2014 unproven generalization`.\n5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next \u2014 \"handing off to agy \u2014\n   agy, take your turn\" when requesting changes, or \"relay closed, no further turn needed\" when\n   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the\n   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.\n--- END RENDERED RELAY ---\ntick seed: log task.created MARATHON-GH1267-TURN + claim --agent marathon + release --to agy\nmarathon-drive: dry-run: lane gh-1267-launch--gh1267 attempts 0/2\nmarathon: dry-run complete: 1 phase(s) would run in order\n",
+    "stderr": ""
+   },
+   "roles": {
+    "builder": "agy",
+    "reviewer": "codex"
+   },
+   "preflight_dry_run": {
+    "rc": 0,
+    "stderr": "",
+    "file": "preflight-1267.json",
+    "readiness": {
+     "ready": true,
+     "next_action": null
+    },
+    "freshness": {
+     "fetch_ok": true,
+     "upstream": null,
+     "ahead": 0,
+     "behind": 0,
+     "dirty": true,
+     "stale_index_lock": false,
+     "stale_index_lock_path": null,
+     "stale_index_lock_warning": null,
+     "evaluated_ref": "development",
+     "evaluated_ref_commit": "7cd97db47679c90d26610d3eb15450406f41428a",
+     "checkout_matches_ref": false,
+     "head_behind_ref": 0,
+     "candidate_state": "ready",
+     "probes": [
+      {
+       "type": "grep_absent",
+       "path": "utils/hq/hq.sh",
+       "verdict": "unfixed"
+      }
+     ]
+    }
+   },
+   "dry_run_verified": true
+  },
+  {
+   "issue": 1265,
+   "wave": 1,
+   "validator": {
+    "rc": 0,
+    "stdout": "gh1265\tcodex\t\t\tPROJECT/2-WORKING/GH-1265-LAUNCH/brief.md\tutils/py/consult.py,skills/1-hourly/consult/SKILL.md\t\t\n",
+    "stderr": ""
+   },
+   "marathon_dry_run": {
+    "rc": 0,
+    "stdout": "ing the review you just did (GH-441). Observed\n   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate\n   it, and lost the turn for doing so \u2014 the finding survived only because RELAY.md happens to be\n   on your allowlist. `cp` what you need to \"$TMPDIR/probe.$$/\" and work there instead. Verifying\n   is wanted; verifying in-tree is what costs you the turn.\n4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete\n   input \u2014 a row, a value, a `file:line` \u2014 that fails under the current code (GH-681). Every\n   `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,\n   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder\n   may disposition a request lacking these as `Declined \u2014 unproven generalization`.\n5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next \u2014 \"handing off to agy \u2014\n   agy, take your turn\" when requesting changes, or \"relay closed, no further turn needed\" when\n   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the\n   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.\n--- END RENDERED RELAY ---\ntick seed: log task.created MARATHON-GH1265-TURN + claim --agent marathon + release --to agy\nmarathon-drive: dry-run: lane gh-1265-launch--gh1265 attempts 0/2\nmarathon: dry-run complete: 1 phase(s) would run in order\n",
+    "stderr": ""
+   },
+   "roles": {
+    "builder": "agy",
+    "reviewer": "codex"
+   },
+   "preflight_dry_run": {
+    "unsupported": "the brief names no capture doc present in the clone"
+   },
+   "dry_run_verified": true
+  },
+  {
+   "issue": 1266,
+   "wave": 1,
+   "validator": {
+    "rc": 0,
+    "stdout": "gh1266\tcodex\t\t\tPROJECT/2-WORKING/GH-1266-LAUNCH/brief.md\tARCHITECTURE.md\t\t\n",
+    "stderr": ""
+   },
+   "marathon_dry_run": {
+    "rc": 0,
+    "stdout": "ing the review you just did (GH-441). Observed\n   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate\n   it, and lost the turn for doing so \u2014 the finding survived only because RELAY.md happens to be\n   on your allowlist. `cp` what you need to \"$TMPDIR/probe.$$/\" and work there instead. Verifying\n   is wanted; verifying in-tree is what costs you the turn.\n4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete\n   input \u2014 a row, a value, a `file:line` \u2014 that fails under the current code (GH-681). Every\n   `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,\n   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder\n   may disposition a request lacking these as `Declined \u2014 unproven generalization`.\n5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next \u2014 \"handing off to agy \u2014\n   agy, take your turn\" when requesting changes, or \"relay closed, no further turn needed\" when\n   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the\n   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.\n--- END RENDERED RELAY ---\ntick seed: log task.created MARATHON-GH1266-TURN + claim --agent marathon + release --to agy\nmarathon-drive: dry-run: lane gh-1266-launch--gh1266 attempts 0/2\nmarathon: dry-run complete: 1 phase(s) would run in order\n",
+    "stderr": ""
+   },
+   "roles": {
+    "builder": "agy",
+    "reviewer": "codex"
+   },
+   "preflight_dry_run": {
+    "rc": 0,
+    "stderr": "",
+    "file": "preflight-1266.json",
+    "readiness": {
+     "ready": true,
+     "next_action": null
+    },
+    "freshness": {
+     "fetch_ok": true,
+     "upstream": null,
+     "ahead": 0,
+     "behind": 0,
+     "dirty": true,
+     "stale_index_lock": false,
+     "stale_index_lock_path": null,
+     "stale_index_lock_warning": null,
+     "evaluated_ref": "development",
+     "evaluated_ref_commit": "7cd97db47679c90d26610d3eb15450406f41428a",
+     "checkout_matches_ref": false,
+     "head_behind_ref": 0,
+     "candidate_state": "ready",
+     "probes": [
+      {
+       "type": "grep_absent",
+       "path": "ARCHITECTURE.md",
+       "verdict": "unfixed"
+      }
+     ]
+    }
+   },
+   "dry_run_verified": true
+  },
+  {
+   "issue": 1204,
+   "wave": 1,
+   "validator": {
+    "rc": 0,
+    "stdout": "gh1204\tcodex\t\t\tPROJECT/2-WORKING/GH-1204-LAUNCH/brief.md\tutils/py/releases_app.py\t\t\n",
+    "stderr": ""
+   },
+   "marathon_dry_run": {
+    "rc": 0,
+    "stdout": "ing the review you just did (GH-441). Observed\n   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate\n   it, and lost the turn for doing so \u2014 the finding survived only because RELAY.md happens to be\n   on your allowlist. `cp` what you need to \"$TMPDIR/probe.$$/\" and work there instead. Verifying\n   is wanted; verifying in-tree is what costs you the turn.\n4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete\n   input \u2014 a row, a value, a `file:line` \u2014 that fails under the current code (GH-681). Every\n   `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,\n   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder\n   may disposition a request lacking these as `Declined \u2014 unproven generalization`.\n5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next \u2014 \"handing off to agy \u2014\n   agy, take your turn\" when requesting changes, or \"relay closed, no further turn needed\" when\n   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the\n   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.\n--- END RENDERED RELAY ---\ntick seed: log task.created MARATHON-GH1204-TURN + claim --agent marathon + release --to agy\nmarathon-drive: dry-run: lane gh-1204-launch--gh1204 attempts 0/2\nmarathon: dry-run complete: 1 phase(s) would run in order\n",
+    "stderr": ""
+   },
+   "roles": {
+    "builder": "agy",
+    "reviewer": "codex"
+   },
+   "preflight_dry_run": {
+    "rc": 3,
+    "stderr": "no '## ... Preflight Contract' heading in /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun/PROJECT/1-INBOX/GH-1204-LEDGER-HYGIENE.md\n",
+    "file": "preflight-1204.json",
+    "readiness": {
+     "unparsed": "CONTRACT ERROR (/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun/PROJECT/1-INBOX/GH-1204-LEDGER-HYGIENE.md): see message above. The planner fails loud rather than guessing from prose.\n\n  To fix, add a minimal valid contract in /Users/noelsaw/Documents/"
+    }
+   },
+   "dry_run_verified": true
+  },
+  {
+   "issue": 900001,
+   "wave": 1,
+   "validator": {
+    "rc": 0,
+    "stdout": "gh900001\tcodex\t\t\tPROJECT/2-WORKING/GH-900001-LAUNCH/brief.md\tutils/py/proc_group.py\t\t\n",
+    "stderr": ""
+   },
+   "marathon_dry_run": {
+    "rc": 0,
+    "stdout": "e review you just did (GH-441). Observed\n   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate\n   it, and lost the turn for doing so \u2014 the finding survived only because RELAY.md happens to be\n   on your allowlist. `cp` what you need to \"$TMPDIR/probe.$$/\" and work there instead. Verifying\n   is wanted; verifying in-tree is what costs you the turn.\n4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete\n   input \u2014 a row, a value, a `file:line` \u2014 that fails under the current code (GH-681). Every\n   `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,\n   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder\n   may disposition a request lacking these as `Declined \u2014 unproven generalization`.\n5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next \u2014 \"handing off to agy \u2014\n   agy, take your turn\" when requesting changes, or \"relay closed, no further turn needed\" when\n   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the\n   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.\n--- END RENDERED RELAY ---\ntick seed: log task.created MARATHON-GH900001-TURN + claim --agent marathon + release --to agy\nmarathon-drive: dry-run: lane gh-900001-launch--gh900001 attempts 0/2\nmarathon: dry-run complete: 1 phase(s) would run in order\n",
+    "stderr": ""
+   },
+   "roles": {
+    "builder": "agy",
+    "reviewer": "codex"
+   },
+   "preflight_dry_run": {
+    "unsupported": "the brief names no capture doc present in the clone"
+   },
+   "dry_run_verified": true
+  },
+  {
+   "issue": 216,
+   "wave": 1,
+   "validator": {
+    "rc": 0,
+    "stdout": "gh216\tcodex\t\t\tPROJECT/2-WORKING/GH-216-LAUNCH/brief.md\tutils/py/wave_reconcile.py,utils/py/_marathon_plan.py,utils/marathon-plan.sh,PROJECT/PDDA.md\t\t\n",
+    "stderr": ""
+   },
+   "marathon_dry_run": {
+    "rc": 0,
+    "stdout": "arding the review you just did (GH-441). Observed\n   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate\n   it, and lost the turn for doing so \u2014 the finding survived only because RELAY.md happens to be\n   on your allowlist. `cp` what you need to \"$TMPDIR/probe.$$/\" and work there instead. Verifying\n   is wanted; verifying in-tree is what costs you the turn.\n4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete\n   input \u2014 a row, a value, a `file:line` \u2014 that fails under the current code (GH-681). Every\n   `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,\n   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder\n   may disposition a request lacking these as `Declined \u2014 unproven generalization`.\n5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next \u2014 \"handing off to agy \u2014\n   agy, take your turn\" when requesting changes, or \"relay closed, no further turn needed\" when\n   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the\n   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.\n--- END RENDERED RELAY ---\ntick seed: log task.created MARATHON-GH216-TURN + claim --agent marathon + release --to agy\nmarathon-drive: dry-run: lane gh-216-launch--gh216 attempts 0/2\nmarathon: dry-run complete: 1 phase(s) would run in order\n",
+    "stderr": ""
+   },
+   "roles": {
+    "builder": "agy",
+    "reviewer": "codex"
+   },
+   "preflight_dry_run": {
+    "rc": 3,
+    "stderr": "no '## ... Preflight Contract' heading in /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun/PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md\n",
+    "file": "preflight-216.json",
+    "readiness": {
+     "unparsed": "CONTRACT ERROR (/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun/PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md): see message above. The planner fails loud rather than guessing from prose.\n\n  To fix, add a minimal valid contract in /Users/noelsaw/Docum"
+    }
+   },
+   "dry_run_verified": true
+  },
+  {
+   "issue": 900002,
+   "wave": 1,
+   "validator": {
+    "rc": 0,
+    "stdout": "gh900002\tcodex\t\t\tPROJECT/2-WORKING/GH-900002-LAUNCH/brief.md\tutils/py/gate_env.py\t\t\n",
+    "stderr": ""
+   },
+   "marathon_dry_run": {
+    "rc": 0,
+    "stdout": "e review you just did (GH-441). Observed\n   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate\n   it, and lost the turn for doing so \u2014 the finding survived only because RELAY.md happens to be\n   on your allowlist. `cp` what you need to \"$TMPDIR/probe.$$/\" and work there instead. Verifying\n   is wanted; verifying in-tree is what costs you the turn.\n4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete\n   input \u2014 a row, a value, a `file:line` \u2014 that fails under the current code (GH-681). Every\n   `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,\n   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder\n   may disposition a request lacking these as `Declined \u2014 unproven generalization`.\n5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next \u2014 \"handing off to agy \u2014\n   agy, take your turn\" when requesting changes, or \"relay closed, no further turn needed\" when\n   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the\n   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.\n--- END RENDERED RELAY ---\ntick seed: log task.created MARATHON-GH900002-TURN + claim --agent marathon + release --to agy\nmarathon-drive: dry-run: lane gh-900002-launch--gh900002 attempts 0/2\nmarathon: dry-run complete: 1 phase(s) would run in order\n",
+    "stderr": ""
+   },
+   "roles": {
+    "builder": "agy",
+    "reviewer": "codex"
+   },
+   "preflight_dry_run": {
+    "unsupported": "the brief names no capture doc present in the clone"
+   },
+   "dry_run_verified": true
+  },
+  {
+   "issue": 446,
+   "wave": 1,
+   "validator": {
+    "rc": 0,
+    "stdout": "gh446\tcodex\t\t\tPROJECT/2-WORKING/GH-446-LAUNCH/brief.md\tutils/py/marathon_plan.py\t\t\n",
+    "stderr": ""
+   },
+   "marathon_dry_run": {
+    "rc": 0,
+    "stdout": "arding the review you just did (GH-441). Observed\n   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate\n   it, and lost the turn for doing so \u2014 the finding survived only because RELAY.md happens to be\n   on your allowlist. `cp` what you need to \"$TMPDIR/probe.$$/\" and work there instead. Verifying\n   is wanted; verifying in-tree is what costs you the turn.\n4c. A finding that asks for a behaviour change is a generalization unless you can paste the concrete\n   input \u2014 a row, a value, a `file:line` \u2014 that fails under the current code (GH-681). Every\n   `[Blocker]` or `[Should]` requesting a behaviour change MUST carry `Observed input:`,\n   `Affected scope:` and `Falsifier:` lines; a `[Blocker]` must cite an observed failure. The Builder\n   may disposition a request lacking these as `Declined \u2014 unproven generalization`.\n5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next \u2014 \"handing off to agy \u2014\n   agy, take your turn\" when requesting changes, or \"relay closed, no further turn needed\" when\n   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the\n   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.\n--- END RENDERED RELAY ---\ntick seed: log task.created MARATHON-GH446-TURN + claim --agent marathon + release --to agy\nmarathon-drive: dry-run: lane gh-446-launch--gh446 attempts 0/2\nmarathon: dry-run complete: 1 phase(s) would run in order\n",
+    "stderr": ""
+   },
+   "roles": {
+    "builder": "agy",
+    "reviewer": "codex"
+   },
+   "preflight_dry_run": {
+    "rc": 3,
+    "stderr": "no '## ... Preflight Contract' heading in /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun/PROJECT/1-INBOX/GH-446-MARATHON-PLAN-WRITE-GUARD.md\n",
+    "file": "preflight-446.json",
+    "readiness": {
+     "unparsed": "CONTRACT ERROR (/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun/PROJECT/1-INBOX/GH-446-MARATHON-PLAN-WRITE-GUARD.md): see message above. The planner fails loud rather than guessing from prose.\n\n  To fix, add a minimal valid contract in /Users/noelsaw/"
+    }
+   },
+   "dry_run_verified": true
+  }
+ ],
+ "not_dry_run_verified": [
+  900003,
+  900004,
+  900005,
+  445,
+  1248,
+  1252,
+  1281,
+  1145,
+  1216,
+  1168
+ ],
+ "worktrees_removed": [],
+ "clone_clean_after": true,
+ "ready_lane_set": [
+  670,
+  1267,
+  1266
+ ],
+ "verified_without_preflight": [
+  1265,
+  900001,
+  900002
+ ],
+ "marathon_ok_preflight_not_ready": [
+  722,
+  1204,
+  216,
+  446
+ ]
+}
