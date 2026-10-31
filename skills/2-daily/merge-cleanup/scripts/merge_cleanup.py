@@ -22,10 +22,10 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional, Set, Tuple
 
 from scan_clones import (
-    DEFAULT_SAFE_ROOTS,
     DEFAULT_NEVER_DELETE,
     is_safe_deletable_path,
-    published_retirement_roots,
+    default_scan_roots,
+    primary_safe_roots,
     scan_directories,
     inspect_checkout,
     inspect_primary_landing,
@@ -1030,8 +1030,9 @@ def teardown_checkout(checkout: Dict[str, Any], dry_run: bool = True,
     """Safely tears down a worktree or standalone clone in strict compliance with WORKTREE-SAFETY.md.
 
     `checkout` must be a FRESH inspection from refresh_for_teardown(); a scan-time record is
-    refused so a stale SAFE_REMOVE_* can never be acted on (A.5). `safe_roots` is passed only by
-    published retirement (GH-1193); every other caller keeps DEFAULT_SAFE_ROOTS.
+    refused so a stale SAFE_REMOVE_* can never be acted on (A.5). Phase 6 and published retirement
+    pass primary_safe_roots(primary) (GH-1193/GH-722); the fresh inspection already limited the
+    primary's parent folder to same-origin checkouts. Omitted, it is DEFAULT_SAFE_ROOTS.
     """
     path = Path(checkout["path"]).resolve()
     c_type = checkout["checkout_type"]
@@ -1697,7 +1698,7 @@ def retire_published_checkouts(primary: Path, paths: List[str], number: int,
     if primary_origin.returncode or not primary_origin.stdout.strip():
         log_err("Cannot verify the protected primary's origin; preserving all checkouts")
         return 2
-    safe_roots = published_retirement_roots(primary)
+    safe_roots = primary_safe_roots(primary)
     candidates = []
     try:
         for raw in paths:
@@ -1825,7 +1826,11 @@ def main():
         return 0
     log(f"Merge policy: preserve_commit_history={policy['preserve_commit_history']}; "
         f"strategy={policy['strategy']}; source={policy['source']}")
-    search_roots = [Path(r).expanduser().resolve() for r in args.root] if args.root else DEFAULT_SAFE_ROOTS
+    if args.root:
+        search_roots, sibling = [Path(r).expanduser().resolve() for r in args.root], None
+        roots_line = "Scanned roots: " + ", ".join(str(r) for r in search_roots)
+    else:
+        search_roots, sibling, roots_line = default_scan_roots(primary_repo)
     dry_run = not args.execute
 
     log(f"Operating on primary repo: {primary_repo}")
@@ -1954,10 +1959,11 @@ def main():
         return 0
 
     # Phase 1..3: Scan & Audit checkouts
-    checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude, integration_branch=args.integration_branch)
+    checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude, integration_branch=args.integration_branch, sibling_root=sibling)
     print("\n" + "=" * 80)
     print(f"PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS ({len(checkouts)} found)")
     print("=" * 80 + "\n")
+    print(roots_line + "\n")
     print(format_scan_table(checkouts) + "\n")
 
     summary = format_completion_and_followup_summary(checkouts)
@@ -2185,7 +2191,7 @@ def main():
             log(f"Backup complete: {len(removable)} checkout(s) verified safe for teardown. Run dir: {backup_res['run_dir']}")
 
         for c in removable:
-            ok = teardown_checkout(c, dry_run=dry_run)
+            ok = teardown_checkout(c, dry_run=dry_run, safe_roots=primary_safe_roots(primary_repo))
             if not ok:
                 phase6_failures += 1
 

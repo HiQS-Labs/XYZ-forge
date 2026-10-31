@@ -65,6 +65,23 @@ Verify CLIO publication parity and track upstream Codex repair (GH-1255).
 - The 15-file published CLIO set matches Rebalance upstream and standalone bytes and Git modes. Forge has no separate CLIO runtime. Source parity does not establish installed capture health.
 - Capture repair belongs to Rebalance #368: modern submitted events, durable history replay and a diagnostic warning. Standalone publication and target-device acceptance follow reviewed upstream landing. Evidence: `TESTS-RESULTS/2026-10-29+GH-1255/`.
 
+## 2026-10-29 — merge-cleanup finds and retires the task clones beside the primary (GH-722)
+
+- **Default scan and Phase 6 accept the primary's parent folder.** Start-task puts task clones
+  beside the primary (GH-970); the default scan only walked the fixed `SAFE_ROOTS`, so on a Mac
+  whose repos live in `~/Documents/GitHub Repos` those clones were never listed or removed. Without
+  `--root`, the scan now also walks that folder, and Phase 6 accepts it as a safe root. #1198 had
+  done this for `--retire-published-pr` only.
+- **Same origin only.** The folder counts only for checkouts whose `origin` names the primary's
+  repository; a failed or empty origin lookup never matches. Other projects' checkouts there are
+  neither inspected by the default scan nor removable. A `NEVER_DELETE` parent (`~`, `~/Documents`,
+  `~/Desktop`) is never used and is reported as skipped. Checkouts inside a listed root are
+  unaffected, and `--root` scans walk exactly the roots given.
+- The Phase 1 header prints the roots scanned (on stderr with `scan_clones.py --json`).
+- `published_retirement_roots` is renamed `primary_safe_roots`. Two existing test doubles were
+  updated for the Phase 6 call; no new test (GH-831). Manual check under
+  `TESTS-RESULTS/2026-10-29+GH-722/`.
+
 ## 2026-10-27 — next-steps-mod: Claude names the next steps every turn, nobody asks "what's next?" (GH-1240)
 
 - **New skill + mod `skills/2-daily/next-steps-mod/`.** A `prompt.compose` hook appends one

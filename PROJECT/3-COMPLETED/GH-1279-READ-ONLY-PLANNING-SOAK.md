@@ -2,9 +2,9 @@
 gh_issue: 1279
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1279
 title: "Outer loop: 8-hour read-only planning soak on Mac Studio (GH-1248)"
-status: Active
+status: Complete
 created: 2026-10-30
-updated: 2026-10-30
+updated: 2026-10-31
 owner: noelsaw1
 doc_type: research
 effort: 3
@@ -263,12 +263,12 @@ The shell, exec, image, app, plugin, hook and skill-search features are disabled
 
 ### Acceptance (Stage A)
 
-- [ ] `init --adapter codex` records adapter, model, timeout, prompt hash and flag list; a missing model is refused.
-- [ ] Every control in step 3 gives its expected result, raw retained, one invocation per eligible slot, none for an empty one, no retry; the red controls fail as stated.
-- [ ] The pinned argv shows no tool item on the benign probe, and the two-arm smoke has classified receipts and equal per-slot input digests.
-- [ ] Codex plan and final QA receipts bind to the exact adapter SHA; the builder is an agy lane.
-- [ ] The classified gate passes on the final SHA, except the disclosed live-agy quota failure.
-- [ ] No new test file or registry entry; `provenance.jsonl` committed in the validator shape (`commit`, `pr`, `status` exactly `pass`/`fail`).
+- [x] `init --adapter codex` records adapter, model, timeout, prompt hash and flag list; a missing model is refused. (closed out 2026-10-31: Stage A controls, `TESTS-RESULTS/2026-10-30+GH-1279/controls-run.txt` 25/25, A2 44/44)
+- [x] Every control in step 3 gives its expected result, raw retained, one invocation per eligible slot, none for an empty one, no retry; the red controls fail as stated. (controls-run.txt; 90-call boundary and empty-inbox rows in the Stage A SUMMARY)
+- [x] The pinned argv shows no tool item on the benign probe, and the two-arm smoke has classified receipts and equal per-slot input digests. (`live/exact-argv-probe-terra-medium.*`, `live/two-arm-smoke-terra-medium.json`)
+- [ ] Codex plan and final QA receipts bind to the exact adapter SHA; the builder is an agy lane. PARTIAL at closeout (2026-10-31): Codex plan QA is bound to the plan SHA; final QA was by Claude, as the operator designated, so no exact-SHA Codex final-QA receipt exists. Accepted as a disclosed deviation.
+- [x] The classified gate passes on the final SHA, except the disclosed live-agy quota failure. (pre-push full gate GREEN in 616s on `28ebacd0`, `gate-28ebacd0.log`; the later PR head went through the same pre-push gate)
+- [x] No new test file or registry entry; `provenance.jsonl` committed in the validator shape (`commit`, `pr`, `status` exactly `pass`/`fail`). (`provenance.jsonl` committed; no test file added)
 
 ### Preflight bet check
 
@@ -366,8 +366,9 @@ Production builds, Jog or Marathon execution, GitHub writes, scheduler install, 
 - [x] `init` with the canary file produces 24 canary slots, 6 missed, `N` real, `66 - N` idle (sum 96), refuses the bad layouts, and is byte-identical to Stage A without the flags.
 - [x] The compressed driver run exercises both arms, the crash at 37 and the skips, and stops on a planted fault.
 - [x] Dry-run and QA scripts produce their records on a one-lane / three-plan trial.
-- [ ] Plan QA Approved; gate and final QA recorded for the exact SHA. (Plan QA Approved; final QA written; the gate is the pre-push run on the pushed head.)
+- [x] Plan QA Approved; gate and final QA recorded for the exact SHA. (Plan QA Approved; final QA written; the gate is the pre-push run on the pushed head.) (Codex plan QA approved; Claude final QA receipt `relay-system/2026-10-31/gh1279-stageb-tooling-final-qa.claude.md`; gate GREEN on the pushed head)
 
 ## Merge evidence
 
 - PR #1282 merged 2026-10-31 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+- Issue closed 2026-10-31 with three disclosed partial acceptance items (see the closing comment on #1279); promoted here after the closure per GH-202. Combined reading with #1175 and #1280: #1298.
