@@ -41,31 +41,35 @@ def main() -> int:
     assert clone != repo and (clone / ".git").is_dir(), "the dry-run clone must be a separate full clone"
     assert not sh(["git", "status", "--porcelain"], clone)["stdout"].strip(), "dry-run clone must start clean"
     out.mkdir(parents=True, exist_ok=True)
-    p = subprocess.run([sys.executable, str(repo / "utils" / "py" / "harness.py"), "factory-primitive", "--run-root",
-                        f"temp/factory-primitive/{a.root}", "packet", "--wave", str(a.wave)], cwd=repo, capture_output=True, text=True)
-    if p.returncode != 0:
-        print(json.dumps({"status": "no packet", "rc": p.returncode, "stderr": p.stderr[-300:]}))
-        (out / "dryrun.json").write_text(json.dumps({"ready_lane_set": [], "reason": f"packet failed rc={p.returncode}: {p.stderr[-200:]}"}, indent=1))
-        return 1
-    packet = json.loads(p.stdout.strip().splitlines()[-1])
-    wave_dir = Path(packet["dir"])
-    lanes = packet["emitted"]
+    # collect launch packets wave by wave until the cap is reached (a wave may hold fewer lanes than the cap)
+    lanes, wave_of, wave_dirs, failed = [], {}, {}, None
+    for wave in range(a.wave, a.wave + 40):
+        p = subprocess.run([sys.executable, str(repo / "utils" / "py" / "harness.py"), "factory-primitive", "--run-root",
+                            f"temp/factory-primitive/{a.root}", "packet", "--wave", str(wave)], cwd=repo, capture_output=True, text=True)
+        if p.returncode != 0:
+            failed = f"wave {wave}: rc={p.returncode} {p.stderr[-160:]}"
+            break
+        packet = json.loads(p.stdout.strip().splitlines()[-1])
+        for issue in packet["emitted"]:
+            lanes.append(issue); wave_of[issue] = wave; wave_dirs[issue] = Path(packet["dir"])
+        if len(lanes) >= a.cap:
+            break
     if not lanes:
-        (out / "dryrun.json").write_text(json.dumps({"ready_lane_set": [], "reason": "the wave emitted no launch packets"}, indent=1))
-        print("no ready lanes: the wave emitted no launch packets")
+        (out / "dryrun.json").write_text(json.dumps({"ready_lane_set": [], "reason": failed or "no wave emitted launch packets"}, indent=1))
+        print("no ready lanes:", failed or "no wave emitted launch packets")
         return 0
-    report = {"wave": a.wave, "root": a.root, "cap": a.cap, "emitted": lanes, "lanes": [], "not_dry_run_verified": lanes[a.cap:]}
+    report = {"first_wave": a.wave, "waves_used": sorted(set(wave_of.values())), "root": a.root, "cap": a.cap, "emitted": lanes, "lanes": [], "not_dry_run_verified": lanes[a.cap:]}
     # the preflight contract resolves target.ref against a local branch; create it in the disposable clone (no checkout)
     if sh(["git", "rev-parse", "--verify", "--quiet", "development"], clone)["rc"] != 0:
         sh(["git", "branch", "development", "origin/development"], clone)
     worktrees_before = set(sh(["git", "worktree", "list", "--porcelain"], clone)["stdout"].splitlines())
     for issue in lanes[:a.cap]:
-        folder = wave_dir / f"GH-{issue}-LAUNCH"
+        folder = wave_dirs[issue] / f"GH-{issue}-LAUNCH"
         yaml = folder / "MARATHON.yaml"
         brief = (folder / "brief.md").read_text(encoding="utf-8")
         doc = re.search(r"^- Capture doc: (\S+)", brief, re.M)
         doc_path = doc.group(1) if doc and doc.group(1) != "none" else None
-        lane = {"issue": issue, "validator": sh([str(repo / "bin" / "marathon-yaml"), str(yaml)], repo)}
+        lane = {"issue": issue, "wave": wave_of[issue], "validator": sh([str(repo / "bin" / "marathon-yaml"), str(yaml)], repo)}
         dest = clone / "PROJECT" / "2-WORKING" / folder.name
         shutil.rmtree(dest, ignore_errors=True)
         shutil.copytree(folder, dest)
