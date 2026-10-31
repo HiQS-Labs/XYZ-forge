@@ -1,0 +1,87 @@
+{
+ "contract_sha256": "771e80ff45949e5fb92c9cafcd2a3d86d6f9c73c9042e3864f50292568661f8c",
+ "launch_epoch": 1793413168.6459498,
+ "discovery_deadline": 1793413468.6459498,
+ "total_deadline": 1793413468.6459498,
+ "watcher_stop_epoch": 1793413468.6459498,
+ "gen4_pid": 59060,
+ "started": "2026-10-30T19:19:28-0700",
+ "discovery_processes_ended_epoch": 1793413211.9048479,
+ "stop_reason": "mutation budget reached (100)",
+ "elapsed_s": 44.5,
+ "gen4_rc": -15,
+ "events": 100,
+ "gated_events": 0,
+ "streak_at_stop": 1,
+ "quiet_batches_at_stop": 0,
+ "counts": {
+  "usage": 76,
+  "pass": 14,
+  "run-root-guard": 9,
+  "state-guard": 1
+ },
+ "per_target": {
+  "fp-help": {
+   "usage": 17,
+   "pass": 8
+  },
+  "fp-genman": {
+   "usage": 22,
+   "pass": 3
+  },
+  "fp-status": {
+   "usage": 19,
+   "run-root-guard": 6
+  },
+  "fp-init": {
+   "pass": 3,
+   "usage": 18,
+   "run-root-guard": 3,
+   "state-guard": 1
+  }
+ },
+ "signatures": [
+  "fp-genman|0|pass|",
+  "fp-genman|2|usage|harness.py factory-primitive: error: argument command: invalid choice: P (choose from P, P, P, P, P, P)",
+  "fp-genman|2|usage|harness.py factory-primitive: error: unrecognized arguments: $(true) tempP",
+  "fp-genman|2|usage|harness.py factory-primitive: error: unrecognized arguments: --oe\u0301utput tempP",
+  "fp-genman|2|usage|harness.py factory-primitive: error: unrecognized arguments: --output tempP",
+  "fp-genman|2|usage|harness.py factory-primitive: error: unrecognized arguments: --out\u0301put tempP",
+  "fp-genman|2|usage|harness.py factory-primitive: error: unrecognized arguments: N",
+  "fp-genman|2|usage|harness.py factory-primitive: error: unrecognized arguments: N tempP",
+  "fp-genman|2|usage|harness.py factory-primitive: error: unrecognized arguments: [N,N",
+  "fp-genman|2|usage|harness.py factory-primitive: error: unrecognized arguments: generate-manifest",
+  "fp-genman|2|usage|harness.py factory-primitive: error: unrecognized arguments: tempP",
+  "fp-genman|2|usage|harness.py factory-primitive: error: unrecognized arguments: \u202e",
+  "fp-help|0|pass|",
+  "fp-help|2|usage|harness.py factory-primitive: error: argument command: invalid choice: P (choose from P, P, P, P, P, P)",
+  "fp-help|2|usage|harness.py factory-primitive: error: the following arguments are required: command",
+  "fp-init|0|pass|",
+  "fp-init|2|run-root-guard|factory-primitive: run root must stay under P",
+  "fp-init|2|state-guard|factory-primitive: instance already initialized; use a new run root",
+  "fp-init|2|usage|harness.py factory-primitive init: error: argument --daily-cap: expected one argument",
+  "fp-init|2|usage|harness.py factory-primitive init: error: argument --daily-cap: invalid float value: P",
+  "fp-init|2|usage|harness.py factory-primitive init: error: argument --max-call-cost: invalid float value: P",
+  "fp-init|2|usage|harness.py factory-primitive: error: argument command: invalid choice: P (choose from P, P, P, P, P, P)",
+  "fp-init|2|usage|harness.py factory-primitive: error: unrecognized arguments:",
+  "fp-init|2|usage|harness.py factory-primitive: error: unrecognized arguments: --flag=P",
+  "fp-init|2|usage|harness.py factory-primitive: error: unrecognized arguments: --\ufeffdaily-cap N",
+  "fp-init|2|usage|harness.py factory-primitive: error: unrecognized arguments: -N",
+  "fp-init|2|usage|harness.py factory-primitive: error: unrecognized arguments: `true`",
+  "fp-init|2|usage|harness.py factory-primitive: error: unrecognized arguments: ~",
+  "fp-status|2|run-root-guard|factory-primitive: run root must stay under P",
+  "fp-status|2|usage|harness.py factory-primitive: error: ambiguous option: --= could match --help, --run-root",
+  "fp-status|2|usage|harness.py factory-primitive: error: argument --run-root: expected one argument",
+  "fp-status|2|usage|harness.py factory-primitive: error: argument command: invalid choice: P (choose from P, P, P, P, P, P)",
+  "fp-status|2|usage|harness.py factory-primitive: error: unrecognized arguments:",
+  "fp-status|2|usage|harness.py factory-primitive: error: unrecognized arguments: --run-root tempP",
+  "fp-status|2|usage|harness.py factory-primitive: error: unrecognized arguments: key: [",
+  "fp-status|2|usage|harness.py factory-primitive: error: unrecognized arguments: status",
+  "fp-status|2|usage|harness.py factory-primitive: error: unrecognized arguments: tempP --run-root",
+  "fp-status|2|usage|harness.py factory-primitive: error: unrecognized arguments: \u00e9"
+ ],
+ "candidates": [],
+ "swept_pids": [],
+ "survivors_after_sweep": [],
+ "canaries_moved": []
+}

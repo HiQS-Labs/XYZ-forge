@@ -35,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA rounds 1–3 (Codex FAIL each round; F1–F13, relay Escalated at the 3-round cap) — all findings implemented in this revision | Operator decision on the escalated plan review, then Phase 1 smoke |
+| Smoke PASS (428 s); contract review round 2 PASS; long run 10,000 cases in 4,496 s, 0 candidates, canaries unchanged, no survivors; Phase 3 dispositions D1–D6 (one new low-severity defect, D1) in `TESTS-RESULTS/2026-10-30+GH-1280/SUMMARY.md` | Final Codex QA of dispositions (`relay-system/2026-10-30/gh1280-final-qa.md`), then PR and D1 issue for triage |
 
 The issue body is the experiment contract. This document is the execution record; it does
 not restate the issue's bounds except where recon changes how they are enforced.

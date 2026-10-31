@@ -41,14 +41,21 @@ def signature(target, rc, cls, stderr):
 
 
 def canaries(spec):
+    """Digest each read-only observation. A failed or timed-out command is INVALID, never a
+    value to compare: an unavailable observation must stop the run (contract review F3)."""
     out = {}
     for name, cmd in spec.items():
         try:
             r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=10)
-            out[name] = hashlib.sha256((str(r.returncode) + r.stdout).encode()).hexdigest()[:16]
+            out[name] = (hashlib.sha256(r.stdout.encode()).hexdigest()[:16] if r.returncode == 0
+                         else "INVALID:rc=%d" % r.returncode)
         except subprocess.TimeoutExpired:
-            out[name] = "timeout"  # never equals a baseline digest, so it stops the run
+            out[name] = "INVALID:timeout"
     return out
+
+
+def canary_problems(base, now):
+    return [k for k in base if base[k] != now.get(k) or str(now.get(k)).startswith("INVALID")]
 
 
 def sweep(patterns):
@@ -142,9 +149,15 @@ def gate(c, argv):
             if l.strip():
                 t.feed(json.loads(l))
     reason = t.stop_reason()
+    base = json.load(open(c["baseline"]))
+    if reason is None:  # exact deadline at the launch boundary (contract review F2)
+        if c.get("mode") == "replay":
+            if time.time() >= base["total_deadline"] - c.get("replay_reserve_s", 300):
+                reason = "total deadline reserve reached (replay)"
+        elif time.time() >= base["discovery_deadline"] - c.get("reserve_s", 0):
+            reason = "discovery deadline reserve reached"
     if reason is None:
-        base = json.load(open(c["baseline"]))
-        moved = [k for k, v in canaries(c["canaries"]).items() if base.get(k) != v]
+        moved = canary_problems(base["canaries"], canaries(c["canaries"]))
         reason = "CANARY VIOLATION: %s" % moved if moved else None
     if reason:
         with open(stopfile, "w") as fh:
@@ -173,7 +186,8 @@ def main():
             if r:
                 report.update(stop_reason=r, stopped_at_event=i + 1)
                 break
-        report.update(events=t.events, counts=t.counts)
+        report.update(events=t.events, counts=t.counts, per_target=t.per_target, signatures=sorted(t.seen),
+                      candidates=t.candidates, streak_at_end=t.streak, gated_events=getattr(t, "gated", 0))
         print(json.dumps(report, indent=1))
         return 0
 
@@ -183,7 +197,15 @@ def main():
         print("refusing: campaign-pattern processes already running: %s" % pre, file=sys.stderr)
         return 3
     base = canaries(c["canaries"])
-    json.dump(base, open(c["baseline"], "w"))
+    bad_base = [k for k, v in base.items() if v.startswith("INVALID")]
+    if bad_base:
+        print("refusing: invalid canary baseline: %s" % {k: base[k] for k in bad_base}, file=sys.stderr)
+        return 3
+    launch = time.time()
+    dl = {"discovery_deadline": launch + c["wall_s"], "total_deadline": launch + c.get("total_s", c["wall_s"])}
+    stop_at = dl["discovery_deadline"] - c.get("reserve_s", 0)  # leave room for canary + kill + sweep
+    json.dump(dict(dl, canaries=base), open(c["baseline"], "w"))
+    report.update(launch_epoch=launch, **dl, watcher_stop_epoch=stop_at)
     if os.path.exists(c["stopfile"]):
         os.remove(c["stopfile"])
     t0 = time.monotonic()
@@ -209,12 +231,11 @@ def main():
             break
         if os.path.exists(c["stopfile"]):
             reason = "gate: " + open(c["stopfile"]).read().strip()
-        elif time.monotonic() - t0 >= c["wall_s"]:
-            reason = "wall time reached (%ds)" % c["wall_s"]
+        elif time.time() >= stop_at:
+            reason = "discovery deadline reserve reached (wall %ds, reserve %ds)" % (c["wall_s"], c.get("reserve_s", 0))
         elif time.monotonic() - last_canary >= 5:
             last_canary = time.monotonic()
-            now = canaries(c["canaries"])
-            moved = [k for k in base if base[k] != now[k]]
+            moved = canary_problems(base, canaries(c["canaries"]))
             if moved:
                 reason = "CANARY VIOLATION: %s" % moved
         if reason is None and proc.poll() is not None:
@@ -222,10 +243,11 @@ def main():
     try:
         os.killpg(proc.pid, signal.SIGTERM)
         proc.wait(timeout=10)
-    except (ProcessLookupError, subprocess.TimeoutExpired):
+    except (ProcessLookupError, PermissionError, subprocess.TimeoutExpired):
+        # PermissionError: macOS refuses killpg once the group leader has exited (smoke run 1)
         try:
             os.killpg(proc.pid, signal.SIGKILL)
-        except ProcessLookupError:
+        except (ProcessLookupError, PermissionError):
             pass
     try:  # pick up the last lines the run wrote
         for ev in read_new(c["telemetry"], pos)[0]:
@@ -233,6 +255,7 @@ def main():
     except Exception:
         pass
     killed = sweep(c["sweep_patterns"])
+    report["discovery_processes_ended_epoch"] = time.time()
     time.sleep(1)
     survivors = subprocess.run(["/usr/bin/pgrep", "-f", "|".join(c["sweep_patterns"])],
                                capture_output=True, text=True).stdout.split()
@@ -241,7 +264,7 @@ def main():
                   events=t.events, gated_events=getattr(t, "gated", 0), streak_at_stop=t.streak, quiet_batches_at_stop=t.quiet_batches,
                   counts=t.counts, per_target=t.per_target, signatures=sorted(t.seen),
                   candidates=t.candidates, swept_pids=killed, survivors_after_sweep=survivors,
-                  canaries_moved=[k for k in base if base[k] != final[k]])
+                  canaries_moved=canary_problems(base, final))
     json.dump(report, open(c["report"], "w"), indent=1)
     print(json.dumps({k: report[k] for k in ("stop_reason", "elapsed_s", "events", "counts",
                                              "swept_pids", "survivors_after_sweep", "canaries_moved")}))
