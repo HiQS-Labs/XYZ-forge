@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -75,5 +75,68 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+
+Basis: Hold the long window under this exact contract. The smoke establishes useful CLI and fixed stateful coverage, but its real-run supervisor failed before cleanup/reporting; the corrected path remains unexercised. The frozen supervisor also lacks the required total-window enforcement and accepts failed baseline observations. These are bounded campaign-tooling corrections, not requests for production changes or new suites.
+
+swept file: yes
+
+Reviewed the entire 1,101-line packet, including all embedded tooling and pre-existing content. Verdict bound to packet SHA256 `1d56d37a1cc18dc43330283c0190ec58da4a4ed8dd53492a78506fb6e37dcff4` (measured match). All embedded file hashes match their quoted bytes; JSON files omit a terminal newline, which must be preserved when reconstructing them. No graph project/index/coverage tools are available in this session; targeted source reads supplement the packet. Live `gh issue view 1280 --repo HiQS-Labs/XYZ-forge --json body` exited 0; bounds below were checked against that issue, not inferred solely from the plan. No git command, executable fixture, suite, pytest or campaign ran. Runtime corrections remain **[Unverified — needs clone run]**.
+
+- **[Blocker] F1 — Q1: real-run cleanup qualification is incomplete.** Packet “Deviations and corrections”, item 4, explicitly records `PermissionError`, no supervisor report and no sweep on the real Track A run; the report was reconstructed afterwards. `ev/07-final-checks.txt` supports absence of survivors after manual inspection, but does not exercise the frozen correction at packet:709–733. The stub sweep is useful evidence, yet it predates the failing real-run exit path. This observed instrumentation failure is a reason to hold; deviations 1–3 and 5 alone are not.
+  Observed input: the 200-case real Track A run whose gen4 leader exited before `os.killpg`; the supervisor crashed before `sweep()` and report emission (packet deviation 4).
+  Affected scope: this experiment's corrected supervisor on natural real-gen4 completion and its cleanup/report path; no demand for broad process infrastructure.
+  Falsifier: a short disposable-full-clone real-harness run with the exact corrected supervisor naturally reaches its budget, emits its own report, preserves canaries and leaves no matching process. That would discharge this hold without repeating a long campaign.
+  Fix: record that narrow clone-run evidence and bind it to the corrected supervisor hash before reopening the long window. Retain the original crash and reconstructed report as historical evidence.
+
+- **[Should] F2 — Q2: freeze an actual total deadline and make the discovery wall account for blocking checks and cleanup.** Numeric discovery/mutation/batch/timeout/corpus settings match issue #1280's “Eight-hour maximum campaign” (21,600 / 10,000 / 50 / 30 / 500; packet “Proposed long window” and `contract-long.json`). However, the issue requires an externally supervised eight-hour hard cap, and plan Phase 2 steps 8/10 promise it. The supplied watcher only enforces `wall_s=21600` and exits before manual replay/review; there is no frozen launch/postprocessing procedure enforcing 28,800 seconds total. Also, packet:699–703 checks the wall before synchronously running eight canaries, each permitting 10 seconds (packet:529–537), then allows 10 seconds termination grace plus sweep/final checks. That does not establish the plan's ≤1-second discovery-wall latency or its promise to reserve cleanup inside the hard wall.
+  Observed input: frozen `contract-long.json` has eight canary commands and `wall_s: 21600`; watcher calls `canaries()` inline after its wall check; replay contract has the same 21,600 value but is not governed by a total-window owner.
+  Affected scope: discovery, replay/review and cleanup within this one supervised campaign; not a request for a permanent scheduler.
+  Falsifier: a frozen operational launch/stop recipe records one start/deadline across all phases, and a short clone control with a deliberately delayed canary demonstrates termination/cleanup within the stated phase/total caps.
+  Fix: specify the one total deadline and its owner/action, bound observation time by remaining discovery time, and reserve termination/cleanup time. Use the existing supervisor/interactive supervision rather than introducing another subsystem. If a looser latency is intended, state it honestly and schedule the stop early enough to retain the hard bounds.
+
+- **[Should] F3 — Q4: invalid baseline observations can qualify the canary gate.** Packet:529–537 hashes nonzero exit statuses and converts a timeout to the ordinary string `timeout`. At :671–672 those values become the baseline; gate :635–637 and watcher :703–706 only compare equality. A consistently unavailable observation therefore produces no violation. The comment “never equals a baseline digest” is false when the baseline itself timed out. The pure probe below observes both timeout and missing-command baselines accepted as unchanged; issue #1280 requires stopping on invalid observation or missing dependency.
+  Observed input: baseline and next observation both raise `TimeoutExpired`, or both return rc 127 with empty stdout, for a required identity command; probe output has `moved []` and `gate_reason None` in both cases.
+  Affected scope: required canary commands during baseline collection and subsequent checks; valid rc-0 observations must continue to compare normally, including legitimately empty status output.
+  Falsifier: either invalid baseline prevents launch, and either invalid subsequent observation stops an otherwise healthy run; a successful empty `status --porcelain` remains valid.
+  Fix: reject unsuccessful/timed-out observations explicitly before accepting a baseline or comparing it; do not require nonempty stdout from every command. Record a narrow manual negative control in a disposable clone.
+
+  Probe command (AST-extracted `canaries()` only; fake subprocess results, no processes launched), exit **0**:
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PY'
+  from pathlib import Path
+  import ast,re,hashlib,types,subprocess
+  s=Path('.relay-artifacts/gh1280-long-contract-packet.md').read_text()
+  code=re.search(r'#### `supervisor.py`.*?````python\n(.*?)\n````',s,re.S)[1]
+  f=next(n for n in ast.parse(code).body if isinstance(n,ast.FunctionDef) and n.name=='canaries')
+  for mode in ['timeout','missing-command']:
+   calls=[]
+   def run(cmd,**kw):
+    calls.append(cmd)
+    if mode=='timeout': raise subprocess.TimeoutExpired(cmd,kw['timeout'])
+    return types.SimpleNamespace(returncode=127,stdout='',stderr='command not found')
+   fake=types.SimpleNamespace(run=run,TimeoutExpired=subprocess.TimeoutExpired)
+   d={'subprocess':fake,'hashlib':hashlib};exec(compile(ast.Module(body=[f],type_ignores=[]),'packet-canaries','exec'),d)
+   spec={'head':'unavailable-head-command','status':'unavailable-status-command'}
+   base=d['canaries'](spec); now=d['canaries'](spec)
+   moved=[k for k in base if base[k]!=now[k]]
+   print(mode,'baseline',base,'moved',moved,'gate_reason',('CANARY VIOLATION' if moved else None),'calls',len(calls))
+  PY
+  ```
+  Decisive output:
+  ```text
+  timeout baseline {'head': 'timeout', 'status': 'timeout'} moved [] gate_reason None calls 4
+  missing-command baseline {'head': '922c7954216ccfe7', 'status': '922c7954216ccfe7'} moved [] gate_reason None calls 4
+  ```
+
+- **[Pass] Q3 — retain one provisional candidate for Phase 3, without stopping discovery for it.** Packet `ev/06-candidate-status-creates-state.txt` records the clean init rc 0 versus status rc 0 → init rc 2 (`instance already initialized`) → tick rc 1. `utils/py/harness.py:1267–1268` opens the state DB from `status()`. This supports one status-first initialization candidate; the later init/tick failures are consequences to disposition together. It is not host contamination or proof of production impact. Keep the “provisional” qualifier until final semantic review and normal issue triage.
+- **[Pass] Q1/Q2 — useful smoke evidence and corrected tracker, with limited coverage.** Packet “Smoke results” records nonzero counts for all four targets, 17 B1 cases plus B2/B3 and controls; “Coverage, honestly” expressly excludes fuzzed state sequences and reports 166/200 usage outcomes. Packet:578–598 closes batches at their own last case and counts first-occurrence signatures, addressing prior F11 at source level. Stub controls are proportionate for an exact streak count, and status-key/timestamp comparator corrections are narrowly disclosed. These observations do not replace F1's corrected runtime evidence.
+- **[Pass] Q4 — declared mutant containment remains proportionate, subject to F1–F3.** Frozen `profile-long.sb` explicitly denies `network*` and `file-write*` outside the disposable sandbox/device exceptions. `targets-long.json` fixes the wrapper and `utils/py/harness.py factory-primitive` head; `contract-long.json` provides the five-variable environment and no synthesis/healing flags. `fuzz_engine.py:224–228,230–243` constructs argv and inherits that environment; `gen4_campaign.py:84–103,152–192` clones/resets disposable state. No additional concrete escape was identified in these inspected routes; OS enforcement and descendant cleanup are runtime claims, qualified above.
+
+Handing off to Producer (claude-a) — address F1–F3, update the hash-bound packet/evidence, and open Round 2; go to the Producer window and say 'take your turn'. The long window remains closed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
