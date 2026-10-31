@@ -38,7 +38,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Stage A (selection adapter) built, controls 25/25, live probes on `gpt-6.1-terra` at medium; issue body no longer requires a merge. Stage A2 (Codex-authored plan content) planned below. | Push finalized Stage A and open the PR; Codex plan QA on Stage A2; build and verify A2; then Stage B tooling and the window (run on this machine, not the Mac Studio, started after the build). |
+| Stage A pushed (PR #1282, full gate green). Stage A2 (Codex-authored plan content) built, controls 44/44, live checks on `gpt-6.1-terra` medium; A2 plan and Stage B plan Approved by Codex plan QA. | Push A2 onto PR #1282 through the gate; then build the Stage B tooling (init layout, driver, dry-run and QA helpers) and run the window on this machine on Noel's go. |
 
 
 ## Issue contract (mirror of #1279 as of 2026-10-31 00:40 UTC)
@@ -323,11 +323,11 @@ The shell, exec, image, app, plugin, hook and skill-search features are disabled
 
 ### Acceptance (Stage A2)
 
-- [ ] Every control in step 2 passes; the old validator fails the red control.
-- [ ] A live authored brief is merged, labelled `codex-authored`, keeps its sourced entries, and every authored path is tracked.
-- [ ] With `--codex-authoring` absent, config, prompt hash, brief JSON and behaviour equal Stage A's.
-- [ ] Ready briefs ignore authored paths and record it; draft briefs' authored paths reach the proposal lane and the packet claims; blank entries are rejected.
-- [ ] Independent plan QA (Codex) approved; final QA and the classified gate recorded for the exact SHA.
+- [x] Every control in step 2 passes; the old validator fails the red control.
+- [x] A live authored brief is merged, labelled `codex-authored`, keeps its sourced entries, and every authored path is tracked.
+- [x] With `--codex-authoring` absent, config, prompt hash, brief JSON and behaviour equal Stage A's.
+- [x] Ready briefs ignore authored paths and record it; draft briefs' authored paths reach the proposal lane and the packet claims; blank entries are rejected.
+- [x] Independent plan QA (Codex) approved; final QA and the classified gate recorded for the exact SHA.
 
 ## Stage B plan — tooling and the window (this machine)
 

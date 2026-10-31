@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -175,5 +175,27 @@ Implemented Stage A2 build spec exactly as specified in items 1–8:
 7. Added `--codex-authoring` flag to `init` subparser, guarded in `factory_main` with `--adapter codex` requirement, and passed to `adapter_config`.
 8. Created `utils/py/factory_primitive/prompts/evaluator.v3.md` with title `# Evaluator v3` and the authoring paragraph preceding the final bare JSON line.
 Verified: `python3 -m py_compile utils/py/harness.py` passed with 0 errors.
+
+### Reviewer · Round 1 (Claude, operator-designated final QA)
+
+**VERDICT: PASS**
+**Basis:** The A2 diff implements the Codex-approved plan through the existing seam (decision, validator, `plan_draft` tool, brief) with no second call, tool, writer or test file, and the acceptance list is evidenced by 44/44 controls and live runs. Findings are non-blocking.
+swept file: yes
+
+**Independence disclosure.** Same as Stage A: the operator named Claude as final reviewer; this Claude session wrote the A2 plan and the controls, and added one init guard line after the agy build, so this review is not independent of the design. The independent checks are Codex plan QA (`gh1279-stagea2-plan-qa.md`, Approved round 3, attested) and the agy builder. Reviewed code: `fb6fc16d47ed096b3c78e0aa045c043e2a4d945d`; `utils/py/harness.py` has no later change. No relay-drive attestation exists for this review.
+
+Read the full diff against `483016ca` (Stage A head) in `utils/py/harness.py` and `evaluator.v3.md`.
+
+- **[Pass] Plan fidelity.** `_validate_authored` and the plan-draft branch (`harness.py` ~1003-1060): `authored` is accepted only when `tracked is not None`; otherwise the Stage A exact-key rule rejects it. `run_tick` passes `tracked` only when `config["codex_authoring"]` and `base-files.txt` exists. `plan_draft` appends labelled entries after sourced ones, drops authored paths for `ready` records with `authored_ignored`, and sets `authored` only when authored content was merged. `adapter_config` adds the key and the v3 prompt hash only when authoring is on. All match the approved plan.
+- **[Pass] Evidence matches claims.** Individual receipts inspected, not only the count: `a2-reject-*` each show their reason, safe idle and no brief; `a2-off-mode-rejects-authored` shows Stage A's `plan-draft-id-not-eligible`; `a2-off-mode-brief-byte-identical` compares the Stage A harness (`4eb4dce8`) against the new code on the same frozen inputs; `a2-collision-draft-lanes-separated` shows issues 1201 and 1204 in waves 3 and 1 with both claiming the shared path; `a2-prompt-12-requests-single-argv` shows 12 pending requests and ~80 KB in one argv.
+- **[Nit] N1 - the ready branch is thin evidence.** No planner-ready request exists in this backlog, so the control forces one in-process; it proves the brief-level behaviour (`write_set` unchanged, `authored_ignored`), but its proposal-lane assertion is vacuous (`lane_paths=[]`). The code path is a straight `if rec["state"] == "ready"` branch, so I accept it; Stage B should exercise a real ready lane if one exists.
+- **[Nit] N2 - `p not in seen and not seen.add(p)`.** A side-effecting comprehension to dedupe authored paths. Correct, but obscure; leave unless the code is touched again.
+- **[Nit] N3 - authored text is not sanitized.** Authored strings reach `render_brief` Markdown and packet briefs. The `codex-authored` label is attribution only. This is the stated plan risk, measured by Stage B's 24 canaries and adversarial QA; no change asked.
+- **[Observation] The delivered-draft seam.** While reading `_build_proposal` for the collision control I confirmed that delivered work is held only on the active-lane path while `draft` briefs are admitted independently, which Codex also flagged in Stage B plan QA r2. It is pre-existing and out of scope here; Stage B measures it.
+- **[Pass] No new tests or gate machinery.** The diff adds no `test/` file and no `validate.sh` entry.
+
+**Not shown by this review:** quality or truth of authored content, behaviour over the 8-hour window, or the classified gate on the final pushed SHA (the pre-push hook runs it).
+
+Relay closed (Approved). Stage B stays gated on Noel's explicit go after the tooling is built.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

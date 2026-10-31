@@ -23,3 +23,10 @@
 - The prompt is the positional `codex exec` argument, so it is visible in the local process list for the call's duration.
 
 Provenance: `provenance.jsonl` (containment probe, agy smoke, then controls, exact-argv probe and two-arm smoke for both `fc93c890` and the final `4eb4dce8`) plus the gate row added with the gate log.
+
+## Stage A2: Codex-authored plan content (same branch)
+
+- **Code under test:** `fb6fc16d47ed096b3c78e0aa045c043e2a4d945d` (agy Gemini 3.8 Flash build of the Codex-approved A2 plan; the orchestrator added one init guard, `--codex-authoring` requires `--adapter codex --from-prs`, and the controls).
+- **What it adds:** with `init --codex-authoring`, a `plan-draft` decision may carry an `authored` object (`scope`, `acceptance`, `open_questions`, `write_set`). The validator accepts it only when authoring is on and the frozen file index exists, with bounded nonblank strings and every `write_set` path tracked; otherwise Stage A's exact-key rule rejects it. `plan_draft` appends the entries labelled `codex-authored` after the sourced ones, never replaces sourced material, drops authored paths for planner-ready briefs (recording `authored_ignored`), and the brief JSON is byte-identical to Stage A's when no authored argument is present.
+- **Results:** 44/44 controls (`controls-run.txt`); live: 12 pending requests (~78k characters) in 6.1 s against the 90 s cap, and two end-to-end authored briefs with equal frozen inputs, equal statuses and all sourced entries kept (`live/authoring-*.json`).
+- **Limits:** authored text is raw Markdown copied into briefs and packet briefs, so the `codex-authored` label is attribution, not sanitization; "tracked" is an admissibility rule, so a legitimate new file is a policy false-reject; no planner-ready request exists in this backlog, so the ready branch is forced in-process; authored accuracy was not judged (that is Stage B's adversarial QA).

@@ -77,7 +77,7 @@
   {
     "control": "timeout-no-retry",
     "pass": true,
-    "detail": "norm=timeout stub_calls=1 elapsed=2.4s billing=unknown"
+    "detail": "norm=timeout stub_calls=1 elapsed=2.3s billing=unknown"
   },
   {
     "control": "prompt-transport-positional",
@@ -118,6 +118,101 @@
     "control": "validate-red-control",
     "pass": true,
     "detail": "old=[None, 'TypeError', 'TypeError', 'TypeError'] new=[None, 'tool-or-args-not-allowlisted', 'plan-draft-id-not-eligible', 'summarize-args']"
+  },
+  {
+    "control": "a2-valid-authored-merged",
+    "pass": true,
+    "detail": "decision=raw-valid authored=True scope_sources=['PROJECT/1-INBOX/GH-1201-CODE-AUDIT.md:L21', 'codex-authored']"
+  },
+  {
+    "control": "a2-reject-blank-scope",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-unknown-key",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-oversize-string",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-too-many-items",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-non-string-item",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-scope-not-list",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-empty-authored",
+    "pass": true,
+    "detail": "decision=rejected/authored-shape tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-invented-path",
+    "pass": true,
+    "detail": "decision=rejected/authored-path-not-tracked tool=idle brief=none"
+  },
+  {
+    "control": "a2-reject-legit-new-file-policy-false-reject",
+    "pass": true,
+    "detail": "decision=rejected/authored-path-not-tracked tool=idle brief=none"
+  },
+  {
+    "control": "a2-off-mode-rejects-authored",
+    "pass": true,
+    "detail": "decision=rejected/plan-draft-id-not-eligible brief=none codex_authoring_in_cfg=False"
+  },
+  {
+    "control": "a2-authored-scope-lifts-missing-scope",
+    "pass": true,
+    "detail": "without=missing-scope with=draft sourced_scope_kept=False"
+  },
+  {
+    "control": "a2-write-set-draft-branch",
+    "pass": true,
+    "detail": "draft briefs checked=5"
+  },
+  {
+    "control": "a2-write-set-ready-branch",
+    "pass": true,
+    "detail": "ready briefs checked=0 (not exercised: no planner-ready request in this backlog)"
+  },
+  {
+    "control": "a2-collision-draft-lanes-separated",
+    "pass": true,
+    "detail": "issues=[1201, 1204] waves=[3, 1] both_claim_shared_path=True"
+  },
+  {
+    "control": "a2-ready-brief-ignores-authored-paths",
+    "pass": true,
+    "detail": "state=ready write_set=['utils/py/harness.py'] ignored=['write_set'] lane_paths=[]"
+  },
+  {
+    "control": "a2-prompt-12-requests-single-argv",
+    "pass": true,
+    "detail": "pending_requests=12 prompt_bytes=80269 (ARG_MAX=1048576)"
+  },
+  {
+    "control": "a2-off-mode-brief-byte-identical",
+    "pass": true,
+    "detail": "bytes old=1887 new=1887 equal=True"
+  },
+  {
+    "control": "a2-validator-direct",
+    "pass": true,
+    "detail": "got=[None, None, 'authored-path-not-tracked', 'plan-draft-id-not-eligible', 'authored-shape']"
   },
   {
     "control": "ledger-files-unchanged",

@@ -13,7 +13,7 @@ PASS nonzero-exit :: rc=0 tick=completed norm=adapter-error decision=adapter-err
 PASS transport-not-stdin-red-control :: rc=0 tick=completed norm=invalid-output decision=invalid-output/None tool=idle stub_calls=1 billing=unknown
 PASS replay-hardened-stream :: rc=0 tick=completed norm=ok decision=raw-valid/None tool=idle stub_calls=1 billing=unknown
 PASS replay-baseline-stream-tool-events :: rc=0 tick=completed norm=adapter-error decision=adapter-error/None tool=idle stub_calls=1 billing=unknown
-PASS timeout-no-retry :: norm=timeout stub_calls=1 elapsed=2.4s billing=unknown
+PASS timeout-no-retry :: norm=timeout stub_calls=1 elapsed=2.3s billing=unknown
 PASS prompt-transport-positional :: prompt_head='# Evaluator v2\n\nReturn exactly one JSON ' snapshot_present=True
 PASS effort-reaches-cli :: argv effort=['model_reasoning_effort=medium']
 PASS fault-name-codex-arm :: norm=invalid-output stub_calls=0 agent_called=True (synthetic)
@@ -22,6 +22,26 @@ PASS call-cap-90-then-pause :: stub_calls=90 held_unknown=90 PAUSE=True slot91=p
 PASS rules-arm-unchanged :: norm=ok stub_calls=0 adapter=rules prompt_sha=dcca67813bb1
 PASS config-freezes-route :: flags=25 refused_rc=2
 PASS validate-red-control :: old=[None, 'TypeError', 'TypeError', 'TypeError'] new=[None, 'tool-or-args-not-allowlisted', 'plan-draft-id-not-eligible', 'summarize-args']
+PASS a2-valid-authored-merged :: decision=raw-valid authored=True scope_sources=['PROJECT/1-INBOX/GH-1201-CODE-AUDIT.md:L21', 'codex-authored']
+PASS a2-reject-blank-scope :: decision=rejected/authored-shape tool=idle brief=none
+PASS a2-reject-unknown-key :: decision=rejected/authored-shape tool=idle brief=none
+PASS a2-reject-oversize-string :: decision=rejected/authored-shape tool=idle brief=none
+PASS a2-reject-too-many-items :: decision=rejected/authored-shape tool=idle brief=none
+PASS a2-reject-non-string-item :: decision=rejected/authored-shape tool=idle brief=none
+PASS a2-reject-scope-not-list :: decision=rejected/authored-shape tool=idle brief=none
+PASS a2-reject-empty-authored :: decision=rejected/authored-shape tool=idle brief=none
+PASS a2-reject-invented-path :: decision=rejected/authored-path-not-tracked tool=idle brief=none
+PASS a2-reject-legit-new-file-policy-false-reject :: decision=rejected/authored-path-not-tracked tool=idle brief=none
+PASS a2-off-mode-rejects-authored :: decision=rejected/plan-draft-id-not-eligible brief=none codex_authoring_in_cfg=False
+PASS a2-authored-scope-lifts-missing-scope :: without=missing-scope with=draft sourced_scope_kept=False
+PASS a2-write-set-draft-branch :: draft briefs checked=5
+PASS a2-write-set-ready-branch :: ready briefs checked=0 (not exercised: no planner-ready request in this backlog)
+PASS a2-collision-draft-lanes-separated :: issues=[1201, 1204] waves=[3, 1] both_claim_shared_path=True
+PASS a2-ready-brief-ignores-authored-paths :: state=ready write_set=['utils/py/harness.py'] ignored=['write_set'] lane_paths=[]
+PASS a2-prompt-12-requests-single-argv :: pending_requests=12 prompt_bytes=80269 (ARG_MAX=1048576)
+PASS a2-off-mode-brief-byte-identical :: bytes old=1887 new=1887 equal=True
+PASS a2-validator-direct :: got=[None, None, 'authored-path-not-tracked', 'plan-draft-id-not-eligible', 'authored-shape']
 PASS ledger-files-unchanged :: releases.db/releases.sql hashes identical before and after
 
-25/25 controls passed
+44/44 controls passed
+CTL_EXIT 0
