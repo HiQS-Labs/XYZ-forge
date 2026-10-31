@@ -3,8 +3,8 @@ Goal: Final QA re-check for GH-1299 after one added line
 Date: 2026-10-31
 ---
 
-NEXT: codex
-STATUS: In review
+NEXT: none
+STATUS: Approved
 
 # Context
 
@@ -18,3 +18,32 @@ Set STATUS to Approved if it can ship.
 ▶ TAKE YOUR TURN (codex)
 <!-- △ RELAY AUTOMATION: DO NOT MODIFY THIS BLOCK △ -->
 
+
+
+## Codex re-check — 2026-10-31
+
+**Ship. Approved for the one-line delta at b47ec0a63f33743c97b9b72875b0b7bf4d49810e.** No Blocker or Should findings. Reversibility: Easy; Markdown instruction only.
+
+- **Correct hand-off:** `skills/1-hourly/sanity-check/SKILL.md:322` applies to an already-kept, valid step whose implementation is excessive. Ponytail explicitly minimizes implementation rather than explicit requirements (`skills/1-hourly/ponytail/SKILL.md:27–28,54–59`), and its “When NOT to be lazy” section preserves safety, security, validation and required recovery controls. This is consistent with Plan mode's retained safety category, proof rules and operator authority; it grants no exception to them.
+- **Link resolves:** `../ponytail/SKILL.md` resolves from the sanity-check directory to the nonempty `skills/1-hourly/ponytail/SKILL.md`. Both inspected working files match their blobs in the reviewed commit.
+- **No other rule changed:** A read-only standard-library Git-object comparison (no git command) of `93271239b39ec660a3970a524fda11835c5073d7..b47ec0a63f33743c97b9b72875b0b7bf4d49810e` found exactly one changed path. Its entire content change is a blank line plus the requested sentence appended after the empty-cut-list rule; all prior bytes remain identical. This approval covers that delta, retaining the preceding QA's disclosed behavioral limits.
+
+### Verification
+
+Command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` (inline, non-mutating standard-library loose/packed object reader; compare both commit trees and blobs, assert exact append, resolve link and compare working bytes). Exit **0**. Decisive output:
+
+```text
+changed paths: ['skills/1-hourly/sanity-check/SKILL.md']
+@@ -318,3 +318,5 @@
+ lane now, or after the review?"), never as decisions the skill has made.
+ 
+ An empty cut list is a valid result. Say "nothing to cut" and give the next step.
++
++A kept step that is right but over-built: shrink it with [`ponytail`](../ponytail/SKILL.md).
+link resolves: skills/1-hourly/ponytail/SKILL.md (nonempty, matches reviewed commit)
+exact append only: True; working source matches reviewed commit: True
+line: 322
+PROBE_OK
+```
+
+Graph orientation/coverage was checked at Verify tier against `XYZ-forge`; its recorded generation was `2026-09-01T15:54:30Z`, and both Markdown paths were `freshness: not_tracked`. Therefore this verdict relies on direct current source and commit-object inspection, not graph completeness. No network, git command, suite, executable fixture or artifact/source mutation was performed. Producer-reported docs gates were not re-executed; final harness gating remains separate.
