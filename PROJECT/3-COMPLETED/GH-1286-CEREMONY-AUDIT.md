@@ -1,6 +1,6 @@
 ---
 title: Ceremony audit skill
-status: in-progress
+status: Complete
 owner: Claude
 goal: Cut plan steps that re-prove known results; keep the steps that change goal state
 created: 2026-10-31
