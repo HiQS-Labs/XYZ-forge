@@ -17,6 +17,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -103,8 +104,14 @@ def sha(path: Path) -> str:
 
 def run(args: list[str], env: dict | None = None) -> subprocess.CompletedProcess:
     e = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", **(env or {}))
-    return subprocess.run([sys.executable, str(HARNESS), "factory-primitive", *args], cwd=ROOT, env=e,
-                          capture_output=True, text=True, timeout=300)
+    # `init --from-prs` reads GitHub (issue list, 300 merged PRs); a transient network error is retried, never masked
+    for attempt in range(3):
+        p = subprocess.run([sys.executable, str(HARNESS), "factory-primitive", *args], cwd=ROOT, env=e,
+                           capture_output=True, text=True, timeout=300)
+        if p.returncode == 0 or "--from-prs" not in args or " failed" not in p.stderr or attempt == 2:
+            return p
+        time.sleep(20)
+    return p
 
 
 def fresh(name: str, limit: int = 3, *, adapter: str = "codex", timeout: str = "3", cap: str = "0.9",
