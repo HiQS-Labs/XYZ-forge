@@ -29,7 +29,9 @@ Skip it for a plan of one or two obvious steps. Auditing those is itself ceremon
 
 Write two lines before judging any step:
 
-- **Goal:** the end-user or operator outcome, in one line. Not the plan's mechanism.
+- **Goal:** the end-user or operator outcome, in one line. If your goal line names a component the
+  plan itself builds (an adapter, an arm, a harness), you have copied the plan's framing: rewrite it
+  as the outcome that component is for, usually the parent issue's goal.
 - **Open question:** the one load-bearing thing nobody has shown yet. Cite the evidence that the
   rest is already shown: a run, a receipt, a merged PR, a line in the plan itself.
 
@@ -52,6 +54,13 @@ If neither changes, it is ceremony. Apply it to the step, not to its topic: a cr
 when crash recovery is unproven and the plan depends on it, and ceremony when recovery is already
 shown and nothing downstream reads the new result.
 
+- Machinery built only so the plan can test itself (an adapter, harness, staged handoff, fault
+  injector) is ceremony unless the goal still needs it after the test.
+- A check that gates the next action (run before pushing, merging or launching) changes the next
+  decision, so it is not ceremony even if a later run repeats it.
+- Cut only what costs real time or attention. A step that takes seconds, or is already done, is not
+  worth a line in the cut list.
+
 Group small sub-steps that stand or fall together. Do not invent steps the plan does not contain.
 
 ## Step 3 — Real run over proxy
@@ -62,7 +71,8 @@ failure, a validator, a synthetic dataset, an adapter built only to feed a test.
 
 When it is a proxy, name it and name the real run it stands in for. Keep the proxy only if the real
 run is unsafe, irreversible or unavailable right now, and say which. Otherwise propose the real run,
-smallest first: one item, one lane, one tenant.
+smallest first: one item, one lane, one tenant. A real run that needs the operator's approval is
+still the next step, gated on that approval; a pending approval never makes the proxy the end point.
 
 ## Step 4 — Verdict
 
