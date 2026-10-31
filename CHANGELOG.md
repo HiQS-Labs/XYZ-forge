@@ -2,7 +2,7 @@
 
 ## 2026-10-31 — GH-1299 ceremony audit folded into sanity-check; mode-before-skill rule
 
-- The plan-wide ceremony audit from GH-1286 (PR #1289) is now `sanity-check` **Plan mode**: same procedure (goal and open question with evidence, progress / proof / safety / ceremony labels with the deletion test and its qualifiers, real run over proxy, short verdict), with its triggers added to the `sanity-check` description. `skills/1-hourly/ceremony-audit/` and its Skills Index row are removed (the `1-hourly` heading now matches its 17 rows, which include `idea`). `skills/README.md` gains a **mode before skill** rule: a new skill needs a trigger and unit no existing skill can carry as a mode, and its plan names the skills checked. Evidence: `TESTS-RESULTS/2026-10-31+GH-1299/`. Reversibility: Easy.
+- The plan-wide ceremony audit from GH-1286 (PR #1289) is now `sanity-check` **Plan mode**, carried over with its tested wording (a 35-line compression lost behaviour in a blind rerun; evidence below): same procedure (goal and open question with evidence, progress / proof / safety / ceremony labels with the deletion test and its qualifiers, real run over proxy, short verdict), with its triggers added to the `sanity-check` description. `skills/1-hourly/ceremony-audit/` and its Skills Index row are removed (the `1-hourly` heading now matches its 17 rows, which include `idea`). `skills/README.md` gains a **mode before skill** rule: a new skill needs a trigger and unit no existing skill can carry as a mode, and its plan names the skills checked. Evidence: `TESTS-RESULTS/2026-10-31+GH-1299/`. Reversibility: Easy.
 
 ## 2026-10-31 — GH-1279 outer loop gains a bounded Codex decision adapter and Codex-authored plan content (Stages A and A2 of the planning soak)
 
