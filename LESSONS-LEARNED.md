@@ -111,3 +111,13 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: marathon
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1270
 - **date**: 2026-10-30
+
+## A replay reset in a gen4 clone deletes the campaign corpus
+
+- **cue**: Replaying or re-checking cases inside the disposable clone that `gen4_campaign.py` fuzzed, after the run ends and before its outputs are copied out.
+- **lesson**: gen4 keeps its corpus as untracked `.fuzz_corpus/` inside that clone and spares it only with `git clean -e .fuzz_corpus`; any plain `git clean -fd`/`-fdx` reset deletes it. Copy `.fuzz_corpus/` out first, or replay in a separate clone. Reset with gen4's own exclusion, and remove ignored dirs such as `temp/` too, or a replay starts from a different state than the campaign did.
+- **evidence**: TESTS-RESULTS/2026-10-30+GH-1280/SUMMARY.md (Deviations 1 and D4), TESTS-RESULTS/2026-10-30+GH-1280/ev/12-phase3b.json, https://github.com/HiQS-Labs/XYZ-forge/issues/1280
+- **confidence**: high — observed once, and the mechanism is in `utils/py/gen4_campaign.py:103`.
+- **area**: ate
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1280
+- **date**: 2026-10-30

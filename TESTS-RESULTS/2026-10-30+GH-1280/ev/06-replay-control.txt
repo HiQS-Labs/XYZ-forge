@@ -1,0 +1,70 @@
+== replay (replay contract) of fp-status corpus 07b6a970364e
+{
+  "id": "07b6a970364e",
+  "argv": [
+    "--run-root",
+    "temp/factory-primitive/fz",
+    "status",
+    "étrue"
+  ],
+  "recorded": [
+    2,
+    0,
+    "e115aff343c5d3b3",
+    "fast_<1s"
+  ],
+  "observed": [
+    2,
+    0,
+    "e115aff343c5d3b3",
+    "fast_<1s"
+  ],
+  "reproduced": true
+}
+rc=0
+== same replay under the exhausted DISCOVERY contract (must be gated)
+{
+  "id": "07b6a970364e",
+  "argv": [
+    "--run-root",
+    "temp/factory-primitive/fz",
+    "status",
+    "étrue"
+  ],
+  "recorded": [
+    2,
+    0,
+    "e115aff343c5d3b3",
+    "fast_<1s"
+  ],
+  "observed": [
+    125,
+    0,
+    "c1914b11624463e3",
+    "fast_<100ms"
+  ],
+  "reproduced": false
+}
+rc=1
+== semantic re-check in control clone (clean control = base argv, then mutant)
+gh1280-gate: stopped: CANARY VIOLATION: ['canary_file']
+argv=[--run-root temp/factory-primitive/fz status] rc=125
+gh1280-gate: stopped: CANARY VIOLATION: ['canary_file'] (decided before event 1)
+argv=[--run-root temp/factory-primitive/fz status étrue] rc=125
+git status lines:        0
+== semantic re-check (refreshed ctl baseline)
+                                    {init,generate-manifest,tick,status,packet,tool} ...
+harness.py factory-primitive: error: argument command: invalid choice: '--run-root temp/factory-primitive/fz status' (choose from 'init', 'generate-manifest', 'tick', 'status', 'packet', 'tool')
+argv=[--run-root temp/factory-primitive/fz status] rc=2
+                                    {init,generate-manifest,tick,status,packet,tool} ...
+harness.py factory-primitive: error: argument command: invalid choice: '--run-root temp/factory-primitive/fz status étrue' (choose from 'init', 'generate-manifest', 'tick', 'status', 'packet', 'tool')
+argv=[--run-root temp/factory-primitive/fz status étrue] rc=2
+git status lines:        0
+== semantic re-check (word-split argv)
+  "unknown_cost": false
+}
+argv=[--run-root temp/factory-primitive/fz status] rc=0
+                                    {init,generate-manifest,tick,status,packet,tool} ...
+harness.py factory-primitive: error: unrecognized arguments: étrue
+argv=[--run-root temp/factory-primitive/fz status étrue] rc=2
+git status lines:        0

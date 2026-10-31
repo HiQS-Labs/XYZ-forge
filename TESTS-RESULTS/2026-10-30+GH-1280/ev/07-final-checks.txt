@@ -1,0 +1,6 @@
+== final smoke checks 2026-10-31T02:14:15Z epoch 1793412855
+processes: none
+task HEAD 623ba2c729259c1148d0b4e3fd9735ce4c53784d status-lines        0
+primary HEAD 73ac994adc4037c20dc025745d69f0dde730eb63 status-lines        0 core.bare false
+outside-probe exists: no
+sb-ctl/outside exists: no

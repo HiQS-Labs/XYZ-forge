@@ -1,0 +1,782 @@
+{
+  "started_at": "2026-10-30T19:25:15-0700",
+  "repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30",
+  "sandbox": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-long/clone",
+  "duration_s": 21600.0,
+  "targets": [
+    "fp-help",
+    "fp-genman",
+    "fp-status",
+    "fp-init"
+  ],
+  "batches": 200,
+  "mutations": 10000,
+  "counts": {
+    "pass": 773,
+    "fail": 8949,
+    "anomaly": 278
+  },
+  "handled_rejections": 8949,
+  "counterexamples": 278,
+  "parity_divergences": 0,
+  "contamination_events": [
+    {
+      "round": 2,
+      "target": "fp-genman",
+      "seed": 12802,
+      "changed": [
+        "?? \" \""
+      ]
+    },
+    {
+      "round": 6,
+      "target": "fp-genman",
+      "seed": 12806,
+      "changed": [
+        "?? -1",
+        "?? [1,2"
+      ]
+    },
+    {
+      "round": 10,
+      "target": "fp-genman",
+      "seed": 12810,
+      "changed": [
+        "?? NaN"
+      ]
+    },
+    {
+      "round": 14,
+      "target": "fp-genman",
+      "seed": 12814,
+      "changed": [
+        "?? -1",
+        "?? 0x7fffffff"
+      ]
+    },
+    {
+      "round": 18,
+      "target": "fp-genman",
+      "seed": 12818,
+      "changed": [
+        "?? tabcemp/"
+      ]
+    },
+    {
+      "round": 22,
+      "target": "fp-genman",
+      "seed": 12822,
+      "changed": [
+        "?? 9999999999999999999999999999999999999999999999999999999999999999",
+        "?? \"temp\\342\\200\\213/\""
+      ]
+    },
+    {
+      "round": 26,
+      "target": "fp-genman",
+      "seed": 12826,
+      "changed": [
+        "?? ?"
+      ]
+    },
+    {
+      "round": 34,
+      "target": "fp-genman",
+      "seed": 12834,
+      "changed": [
+        "?? \"'\\\"\"",
+        "?? 0",
+        "?? \"\\303\\251'\""
+      ]
+    },
+    {
+      "round": 38,
+      "target": "fp-genman",
+      "seed": 12838,
+      "changed": [
+        "?? -1",
+        "?? `true`"
+      ]
+    },
+    {
+      "round": 46,
+      "target": "fp-genman",
+      "seed": 12846,
+      "changed": [
+        "?? 2147483647",
+        "?? `true`"
+      ]
+    },
+    {
+      "round": 50,
+      "target": "fp-genman",
+      "seed": 12850,
+      "changed": [
+        "?? 9999999999999999999999999999999999999999999999999999999999999999",
+        "?? \"{\\\"a\\\":\""
+      ]
+    },
+    {
+      "round": 54,
+      "target": "fp-genman",
+      "seed": 12854,
+      "changed": [
+        "?? -",
+        "?? ~"
+      ]
+    },
+    {
+      "round": 58,
+      "target": "fp-genman",
+      "seed": 12858,
+      "changed": [
+        "?? -",
+        "?? a=b=c"
+      ]
+    },
+    {
+      "round": 66,
+      "target": "fp-genman",
+      "seed": 12866,
+      "changed": [
+        "?? -",
+        "?? 2147483647",
+        "?? NaN",
+        "?? \"key: [\""
+      ]
+    },
+    {
+      "round": 70,
+      "target": "fp-genman",
+      "seed": 12870,
+      "changed": [
+        "?? 1"
+      ]
+    },
+    {
+      "round": 74,
+      "target": "fp-genman",
+      "seed": 12874,
+      "changed": [
+        "?? \" \"",
+        "?? $(true)",
+        "?? 1",
+        "?? 2147483647"
+      ]
+    },
+    {
+      "round": 78,
+      "target": "fp-genman",
+      "seed": 12878,
+      "changed": [
+        "?? -",
+        "?? \"t\\342\\200\\250emp/\""
+      ]
+    },
+    {
+      "round": 82,
+      "target": "fp-genman",
+      "seed": 12882,
+      "changed": [
+        "?? \"path with spaces/\"",
+        "?? \"te\\342\\200\\250mp/\""
+      ]
+    },
+    {
+      "round": 90,
+      "target": "fp-genman",
+      "seed": 12890,
+      "changed": [
+        "?? `true`"
+      ]
+    },
+    {
+      "round": 94,
+      "target": "fp-genman",
+      "seed": 12894,
+      "changed": [
+        "?? 2147483647",
+        "?? 2147483648"
+      ]
+    },
+    {
+      "round": 98,
+      "target": "fp-genman",
+      "seed": 12898,
+      "changed": [
+        "?? \" \"",
+        "?? \"temp\\341\\232\\200/\""
+      ]
+    },
+    {
+      "round": 102,
+      "target": "fp-genman",
+      "seed": 12902,
+      "changed": [
+        "?? []"
+      ]
+    },
+    {
+      "round": 114,
+      "target": "fp-genman",
+      "seed": 12914,
+      "changed": [
+        "?? 0x7fffffff",
+        "?? `true`",
+        "?? null"
+      ]
+    },
+    {
+      "round": 118,
+      "target": "fp-genman",
+      "seed": 12918,
+      "changed": [
+        "?? -9223372036854775808"
+      ]
+    },
+    {
+      "round": 122,
+      "target": "fp-genman",
+      "seed": 12922,
+      "changed": [
+        "?? 9999999999999999999999999999999999999999999999999999999999999999",
+        "?? NaN"
+      ]
+    },
+    {
+      "round": 126,
+      "target": "fp-genman",
+      "seed": 12926,
+      "changed": [
+        "?? '",
+        "?? 2147483648",
+        "?? \"tem\\341\\271\\225/\""
+      ]
+    },
+    {
+      "round": 130,
+      "target": "fp-genman",
+      "seed": 12930,
+      "changed": [
+        "?? %s%s%n",
+        "?? 1",
+        "?? 9999999999999999999999999999999999999999999999999999999999999999",
+        "?? \"temp\\341\\232\\200/\""
+      ]
+    },
+    {
+      "round": 138,
+      "target": "fp-genman",
+      "seed": 12938,
+      "changed": [
+        "?? `true`"
+      ]
+    },
+    {
+      "round": 142,
+      "target": "fp-genman",
+      "seed": 12942,
+      "changed": [
+        "?? ?"
+      ]
+    },
+    {
+      "round": 146,
+      "target": "fp-genman",
+      "seed": 12946,
+      "changed": [
+        "?? -",
+        "?? 0",
+        "?? {}"
+      ]
+    },
+    {
+      "round": 150,
+      "target": "fp-genman",
+      "seed": 12950,
+      "changed": [
+        "?? \"\\t\""
+      ]
+    },
+    {
+      "round": 154,
+      "target": "fp-genman",
+      "seed": 12954,
+      "changed": [
+        "?? temabcp/"
+      ]
+    },
+    {
+      "round": 158,
+      "target": "fp-genman",
+      "seed": 12958,
+      "changed": [
+        "?? %s%s%n"
+      ]
+    },
+    {
+      "round": 162,
+      "target": "fp-genman",
+      "seed": 12962,
+      "changed": [
+        "?? \" \"",
+        "?? `true`",
+        "?? \"path with spaces/\""
+      ]
+    },
+    {
+      "round": 166,
+      "target": "fp-genman",
+      "seed": 12966,
+      "changed": [
+        "?? 0"
+      ]
+    },
+    {
+      "round": 170,
+      "target": "fp-genman",
+      "seed": 12970,
+      "changed": [
+        "?? 1",
+        "?? 2147483647",
+        "?? ~"
+      ]
+    },
+    {
+      "round": 174,
+      "target": "fp-genman",
+      "seed": 12974,
+      "changed": [
+        "?? 2147483647"
+      ]
+    },
+    {
+      "round": 178,
+      "target": "fp-genman",
+      "seed": 12978,
+      "changed": [
+        "?? %s%s%n",
+        "?? -",
+        "?? {}"
+      ]
+    },
+    {
+      "round": 186,
+      "target": "fp-genman",
+      "seed": 12986,
+      "changed": [
+        "?? \"'\\\"\"",
+        "?? -9223372036854775808",
+        "?? 0"
+      ]
+    },
+    {
+      "round": 194,
+      "target": "fp-genman",
+      "seed": 12994,
+      "changed": [
+        "?? %s%s%n",
+        "?? =",
+        "?? t",
+        "?? temp"
+      ]
+    },
+    {
+      "round": 198,
+      "target": "fp-genman",
+      "seed": 12998,
+      "changed": [
+        "?? 0x7fffffff",
+        "?? \"{\\\"a\\\":\""
+      ]
+    }
+  ],
+  "host_violations": [],
+  "per_target": {
+    "fp-help": {
+      "batches": 50,
+      "mutations": 2500,
+      "counterexamples": 0,
+      "parity_divergences": 0
+    },
+    "fp-genman": {
+      "batches": 50,
+      "mutations": 2500,
+      "counterexamples": 5,
+      "parity_divergences": 0
+    },
+    "fp-status": {
+      "batches": 50,
+      "mutations": 2500,
+      "counterexamples": 171,
+      "parity_divergences": 0
+    },
+    "fp-init": {
+      "batches": 50,
+      "mutations": 2500,
+      "counterexamples": 102,
+      "parity_divergences": 0
+    }
+  },
+  "errors": [],
+  "elapsed_s": 4491.9,
+  "mutations_per_min": 133.6,
+  "telemetry": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/out-long/telemetry.jsonl",
+  "telemetry_valid": true,
+  "clusters": [
+    {
+      "digest": "c0cfa89b249b9917",
+      "members": 234,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "anomaly"
+      ],
+      "reasons": [
+        "rc=2 with unclassified stderr"
+      ],
+      "representative": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-long.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-long.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "--run-root",
+        "~",
+        "status"
+      ],
+      "rep_size": 537,
+      "exit_code": 2,
+      "signal": 0,
+      "cwd": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-long/clone",
+      "stderr_head": "factory-primitive: run root must stay under /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-long/clone/temp/factory-primit"
+    },
+    {
+      "digest": "30b5c54c6ea7ea7a",
+      "members": 21,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "anomaly"
+      ],
+      "reasons": [
+        "rc=2 with unclassified stderr"
+      ],
+      "representative": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-long.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-long.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "--run-root",
+        "temp/factory-primitive/fz",
+        "init",
+        "--daily-cap",
+        "0",
+        "--max-call-cost",
+        "0"
+      ],
+      "rep_size": 591,
+      "exit_code": 2,
+      "signal": 0,
+      "cwd": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-long/clone",
+      "stderr_head": "factory-primitive: invalid daily cap or maximum call cost\n"
+    },
+    {
+      "digest": "21aaae4bb9057c38",
+      "members": 18,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "anomaly"
+      ],
+      "reasons": [
+        "rc=2 with unclassified stderr"
+      ],
+      "representative": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-long.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-long.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "--run-root",
+        "temp/factory-primitive/fz",
+        "init",
+        "--daily-cap",
+        "1",
+        "--max",
+        "0"
+      ],
+      "rep_size": 581,
+      "exit_code": 2,
+      "signal": 0,
+      "cwd": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-long/clone",
+      "stderr_head": "factory-primitive: instance already initialized; use a new run root\n"
+    },
+    {
+      "digest": "321cec116e1953ab",
+      "members": 2,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "anomaly"
+      ],
+      "reasons": [
+        "rc=2 with unclassified stderr"
+      ],
+      "representative": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-long.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-long.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "generate-manifest",
+        "--output",
+        ""
+      ],
+      "rep_size": 545,
+      "exit_code": 2,
+      "signal": 0,
+      "cwd": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-long/clone",
+      "stderr_head": "factory-primitive: [Errno 21] Is a directory: '.'\n"
+    },
+    {
+      "digest": "a28272a437ce022f",
+      "members": 2,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "anomaly"
+      ],
+      "reasons": [
+        "rc=2 with unclassified stderr"
+      ],
+      "representative": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-long.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-long.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "generate-manifest",
+        "--output",
+        "../../etc/passwd"
+      ],
+      "rep_size": 561,
+      "exit_code": 2,
+      "signal": 0,
+      "cwd": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-long/clone",
+      "stderr_head": "factory-primitive: [Errno 1] Operation not permitted: '../../etc'\n"
+    },
+    {
+      "digest": "668fd9ab3c65838c",
+      "members": 1,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "anomaly"
+      ],
+      "reasons": [
+        "rc=2 with unclassified stderr"
+      ],
+      "representative": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-long.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-long.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "generate-manifest",
+        "--output",
+        "temp/factory-primitive/ate-smoke/man ifest.json"
+      ],
+      "rep_size": 592,
+      "exit_code": 2,
+      "signal": 0,
+      "cwd": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-long/clone",
+      "stderr_head": "factory-primitive: [Errno 20] Not a directory: 'temp/factory-primitive/ate-smoke'\n"
+    }
+  ],
+  "false_positives": [
+    {
+      "digest": "c0cfa89b249b9917",
+      "members": 234,
+      "argv": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-long.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-long.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "--run-root",
+        "~",
+        "status"
+      ],
+      "replay_rc": 125,
+      "recorded_rc": 2
+    },
+    {
+      "digest": "30b5c54c6ea7ea7a",
+      "members": 21,
+      "argv": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-long.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-long.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "--run-root",
+        "temp/factory-primitive/fz",
+        "init",
+        "--daily-cap",
+        "0",
+        "--max-call-cost",
+        "0"
+      ],
+      "replay_rc": 125,
+      "recorded_rc": 2
+    },
+    {
+      "digest": "21aaae4bb9057c38",
+      "members": 18,
+      "argv": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-long.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-long.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "--run-root",
+        "temp/factory-primitive/fz",
+        "init",
+        "--daily-cap",
+        "1",
+        "--max",
+        "0"
+      ],
+      "replay_rc": 125,
+      "recorded_rc": 2
+    },
+    {
+      "digest": "321cec116e1953ab",
+      "members": 2,
+      "argv": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-long.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-long.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "generate-manifest",
+        "--output",
+        ""
+      ],
+      "replay_rc": 125,
+      "recorded_rc": 2
+    },
+    {
+      "digest": "a28272a437ce022f",
+      "members": 2,
+      "argv": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-long.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-long.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "generate-manifest",
+        "--output",
+        "../../etc/passwd"
+      ],
+      "replay_rc": 125,
+      "recorded_rc": 2
+    },
+    {
+      "digest": "668fd9ab3c65838c",
+      "members": 1,
+      "argv": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-long.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-long.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "generate-manifest",
+        "--output",
+        "temp/factory-primitive/ate-smoke/man ifest.json"
+      ],
+      "replay_rc": 125,
+      "recorded_rc": 2
+    }
+  ],
+  "synthesized": {
+    "emitted": [],
+    "skipped": []
+  },
+  "verdict": {
+    "zero_host_violations": true,
+    "zero_sandbox_contamination": false,
+    "zero_host_contamination": false,
+    "zero_false_positives": false,
+    "telemetry_line_valid": true
+  },
+  "finished_at": "2026-10-30T20:40:08-0700"
+}
