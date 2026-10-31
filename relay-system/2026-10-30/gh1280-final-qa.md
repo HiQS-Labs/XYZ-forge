@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-10-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -155,5 +155,53 @@ Handing off to Producer (claude-a) — disposition F1/F2, correct and rebind the
   The read-only seed `.relay-artifacts/SUMMARY.md` is the new version.
 
 Handing off to Reviewer (codex) for Round 2 — re-check F1/F2 and the rebinding.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+
+Basis: F1 and F2 are resolved. The report and dispositions may ship as a qualified campaign record: budget and containment evidence are retained, semantic saturation remains unproven, and the future stateful campaign remains conditional on D5/D6. Approval does not assert that every original experiment acceptance criterion passed.
+
+swept file: yes
+
+Read the entire revised seeded SUMMARY.md, not only the corrections, against the plan Acceptance criteria and Phase 3 steps 11/13 and the retained replay/control reports. No additional blocking defect found in the report, including its pre-existing content. This is evidence review, not a fresh runtime qualification: no git command, campaign, executable fixture, validate.sh, test/*.sh or pytest was run. Any new runtime qualification is [Unverified — needs clone run]. The graph inventory and coverage check identify the nearest XYZ-forge index at generation 2026-09-01T15:54:30Z, in another checkout; current campaign files are unavailable there and harness metadata is changed. Current document/evidence reads supply the evidence; no graph-completeness claim is made.
+
+- **[Pass] F1 / DoD 3 — corrected corpus accounting.** SUMMARY.md:115–121 explicitly says “admission history, not the final corpus” and “final membership is lost and was not reconstructed.” The revised extract exactly projects all 2,807 non-dropped telemetry events, including 1,736 added, 874 evicted+added and 197 replaced. This resolves the earlier understatement without claiming recovered final membership. Complete telemetry and independent D1 replays remain available; the disclosed loss does not invalidate their counts or outcome.
+- **[Pass] F2 / DoD 4 — qualified acceptance and stopping claim.** SUMMARY.md:28–32 states “met for the bounds, unproven for the meaning” and disclaims proof of saturation. SUMMARY.md:93–98 narrows D6 to this run's input and cites the repeated-signature control. In ev/03-controls.json, control “gate stops exactly at streak 50” records 51 executed, first_gated_index 51 and no survivors; supervisor-report.json instead records mutation-budget stop, streak 4 and quiet batches 0. These support the corrected distinction. SUMMARY.md:128–131 makes future stateful work conditional on D6 correction and D5 resolution; this is a supported recommendation, not launch authorization.
+- **[Unverified — no citation] DoD 1 — dispositions remain accountable.** SUMMARY.md Dispositions and D1–D6 sections retain target/input, cause/owner, impact, replay and controls where applicable. ev/11-phase3.json R2's status-first sequences give 0/2/1 and state_db_created_by_status=true, whereas its sandboxed clean tick also fails; SUMMARY D1 explicitly limits tick attribution to the unsandboxed pair. ev/12-phase3b.json records clean init/tick 0/0 unsandboxed versus 0/1 sandboxed; ev/14-d1-unsandboxed.txt records status/init/tick 0/2/1. R3 records rc 0 and “?? NaN”, R4 records 234 matching run-root refusals, and phase3b's prefix-write replay gives rc 0 then Errno 20 rc 2. These preserve the grounds for D2 expected output, D3 oracle gap, D4 setup fault and D5 environment limitation. D6 belongs to campaign tooling. No production repair is requested by this verdict.
+- **[Unverified — no citation] DoD 2 — evidence rebinding and numerical record.** The full report and seeded copy both hash to c8620d0c4e37a7fa567e9eac09a4e0213d4e7b7b832b7233b3186cc46f508424; provenance.jsonl hashes to 67466546504d502e2798f8e63e74413374697d6ea73c8d03edde73bc6bb54594, matching the Producer's rebinding. All 175 hashed files exist and match. supervisor-report.json per_target/counts agree with SUMMARY's classification table and the Round 1 full telemetry accounting: 8,949 usage, 773 pass and 278 expected refusals, 10,000 events, zero candidates. Its launch/end epochs 1793413513.190052/1793418008.246591 precede discovery/total deadlines 1793435113.190052/1793442313.190052; survivors_after_sweep and canaries_moved are empty. campaign-report.json records 41 contamination events and no host violations. These are retained recorded observations, not a new exhaustive host audit.
+
+Decisive read-only probe (exit **0**; no fixture imported or executed):
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PROBE'
+import collections,gzip,hashlib,json,pathlib
+p=pathlib.Path('TESTS-RESULTS/2026-10-30+GH-1280')
+events=[json.loads(s) for s in gzip.open(p/'runs/long/telemetry.jsonl.gz','rt')]
+rows=[json.loads(s) for s in (p/'ev/13-corpus-long-from-telemetry.jsonl').read_text().splitlines()]
+names=['fp-help','fp-genman','fp-status','fp-init']
+expected=[dict(target=names[(e['extra']['seed']-12801)%4],corpus_action=e['extra']['corpus_action'],corpus_id=e['extra']['corpus_id'],seed=e['extra']['seed'],index=e['extra']['index'],mutant=e['extra']['mutant'],exit_code=e['exit_code']) for e in events if e['extra']['corpus_action']!='dropped']
+print('events',len(events),'admissions',len(rows),'exact_projection',rows==expected)
+print('actions',dict(collections.Counter(r['corpus_action'] for r in rows)))
+checked=0;bad=[]
+for s in (p/'provenance.jsonl').read_text().splitlines():
+ r=json.loads(s)
+ if 'sha256' not in r: continue
+ f=p/r['path'];checked+=1
+ if not f.is_file() or hashlib.sha256(f.read_bytes()).hexdigest()!=r['sha256']:bad.append(r['path'])
+print('provenance_rows_checked',checked,'bad_or_missing',bad)
+print('seed_equals_report',pathlib.Path('.relay-artifacts/SUMMARY.md').read_bytes()==(p/'SUMMARY.md').read_bytes())
+PROBE
+```
+Output:
+```text
+events 10000 admissions 2807 exact_projection True
+actions {'added': 1736, 'replaced': 197, 'evicted+added': 874}
+provenance_rows_checked 175 bad_or_missing []
+seed_equals_report True
+```
+An earlier exploratory probe exited 1 because it assumed a nonexistent target_id field; corrected mapping follows supervisor.py Tracker.target_of. Another exploratory comparison returned false because gen4 tier_1_reason uses a coarser taxonomy than the supervisor (e.g. “rc in pass set”, “rc=2 with unclassified stderr”); it was not a numerical discrepancy and is not used as evidence of a passing independent classification.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
