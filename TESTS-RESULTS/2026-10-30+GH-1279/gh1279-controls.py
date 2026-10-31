@@ -25,6 +25,7 @@ HARNESS = ROOT / "utils" / "py" / "harness.py"
 RUNS = ROOT / "temp" / "factory-primitive"
 PROBE = HERE / "containment-probe"
 TAG = "gh1279-ctl"
+sys.path.insert(0, str(ROOT / "utils" / "py"))
 
 STUB = r'''#!/usr/bin/env python3
 import json, os, select, sys, time
