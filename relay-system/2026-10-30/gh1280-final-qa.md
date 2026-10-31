@@ -52,7 +52,7 @@ ROUND: 1 / 3
    was merely waiting looked stalled. A turn that ends without this line is not finished.
 
 ## Setup
-- Artifact under review: **`TESTS-RESULTS/2026-10-30+GH-1280/SUMMARY.md`** (sha256
+- Artifact under review: `TESTS-RESULTS/2026-10-30+GH-1280/SUMMARY.md` (sha256
   `61910ac997aa13d86919d0f4594dfb51f44362c66a3cf4c372aae9f79db8cf33`) and the evidence it cites, all committed at
   `6e60dd4a` on `chore/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30`. `provenance.jsonl` (sha256
   `6a5dc903bf941d15da050126f5655ce4640e8d3e4d82943d4e6798f164bfdde9`) hashes every evidence file. A read-only copy of
