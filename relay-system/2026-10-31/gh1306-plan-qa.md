@@ -2,7 +2,7 @@
 Goal: Plan QA — GH-1306 intake.py update records a missing source receipt for an identical payload
 Date: 2026-10-31
 NEXT: codex
-STATUS: In Review
+STATUS: Approved
 ---
 
 # Context
@@ -166,5 +166,19 @@ names its source.
 ```
 
 # Log
+
+## Turn 1 — codex (Reviewer) — 2026-10-31
+
+**Ship — plan approved.** No blocking findings. This is approval to implement the plan, not an implementation or gate attestation. Reversibility: **Easy**; the change stays in the existing update branch and transaction writer, with no payload migration or new machinery.
+
+1. **[Pass — source review] Root cause.** `skills/3-weekly/skills-army-hq/scripts/intake.py:796–798` compares the inventory digest with the new source digest and returns before either the receipt assignment at `:807–808` or `transact()` at `:846`. A catalog receipt without `source` therefore cannot acquire provenance when those digests match. `add` cannot enter this case for an existing skill because of `:795`.
+2. **[Pass — source review] Unchanged predicate.** Under the outer equal-payload condition, compare the held receipt's source with `str(source)` and its digest with `before`, using the existing empty-dict fallback for a missing receipt. `source_record()` resolves the supplied source at `:201` and stores that absolute string at `:215`, so this matches the writer's representation. A missing source, a different source checkout, or a stale held digest must reach the receipt-only transaction. An already matching source/digest may retain the early return; refreshing commit/dirty metadata after an unrelated source-repository commit is outside this adoption fix.
+3. **[Pass — source review] Commit suppression.** `commit_skill()` returns `nothing to commit` at `:472–473`, and the caller turns that into the blocked-pulse warning at `:855–857`. Skipping that block for `details.get("receipt_only")` is appropriate; leave ordinary add/update/remove behavior intact. Qualifier: `finish()` also refreshes the collection README at `:598–601`. In a consistent collection this writes identical bytes; it is an existing installer-managed refresh, documented in the manager README, rather than part of the skill-copy action. The plan's “nothing tracked changed” rationale assumes that normal consistent state, not arbitrary pre-existing README drift.
+4. **[Pass — source review] Transaction and recovery.** `validate_receipt()` requires a list at `:562` and validates its members; it has no nonempty requirement. `finish()` skips the action loop for `[]`, then publishes state, targets, catalog, README and the deduplicated history event before deleting the pending receipt (`:590–603`). `transact()` already validates and persists the same checksummed pending form (`:607–615`). `adopt_existing()` supplies `[]` at `:684`; catalog also uses the initialized empty list. No new recovery mechanism is needed. Ordinary pending-receipt recovery remains the relevant failure path.
+5. **[Pass — verification design] Falsifiable coverage.** The pre-fix red control targets the exact early return; the candidate adoption, identical rerun and changed-payload cases distinguish receipt persistence, idempotency and normal copying. The existing suite covers preview immutability (`test/test_deploy_skills.py:319`), payload updates/backups (`:259`), manager self-update (`:312`) and recovery (`:502`). Use the existing suite and manual evidence; no new suite or gate is warranted.
+
+**[Note — optional manual coverage]** The same smoke setup can cheaply exercise the predicate's other two inputs: same source with a stale held digest, and a different source path with identical payload. Both should record a receipt without copying. A preview before apply can also pin the promised RECORD message and unchanged state. These are useful additions to the manual run, not additional machinery or blockers to this issue's adoption goal.
+
+**[Unverified — needs clone run]** No suite, CLI fixture, git command, or runtime recovery experiment ran in this reviewer worktree. The planned suite, smoke red/green controls and final gate remain outstanding and must run in a disposable full clone; preserve the run commands, exit statuses, decisive output and `provenance.jsonl` with the committed evidence. The wrapper's explicit SKIPPED result when pytest is unavailable is not a green suite. Review evidence here is direct reading of the seeded plan, source and existing checks; the preferred graph tool was unavailable under this turn's approval policy.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
