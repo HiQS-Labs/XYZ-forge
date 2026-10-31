@@ -183,9 +183,9 @@ Expected malformed decisions, rate limits and adapter timeouts must be classifie
 
 ### Acceptance criteria
 
-- [ ] Target is exactly `HiQS-Labs/XYZ-forge:development` in clean disposable full clones; source, adapter, prompt, manifest and driver identities are recorded.
+- [x] Target is exactly `HiQS-Labs/XYZ-forge` at the pinned adapter PR head SHA in clean disposable full clones; source, adapter, prompt, manifest and driver identities are recorded. (Issue text edited by the operator on 2026-10-31: no merge is required first. Window clone at `28ebacd0`, clean at start and end; `window/freeze.json`.)
 - [ ] Codex-arm entry gates passed with exact-SHA `relay-xyz` Codex review receipts, or the run is explicitly labelled rules-only fallback. PARTIAL: Codex plan-QA receipts exist, but final QA of the adapter was Claude (operator-designated), so no exact-SHA Codex final-QA receipt exists.
-- [ ] The adapter PR was merged by Noel before the window; the manifest pins the post-merge `development` SHA and every pre-window decision.
+- [x] The manifest pins the adapter PR head SHA (pushed to `origin`, unchanged since the pin) and every pre-window decision. (Replaces the earlier merge requirement per the operator's edit of the issue on 2026-10-31; `window/freeze.json`, `window/decisions.json`.)
 - [x] The slot plan sums to 96 per arm (24 canary + 6 missed + real + idle), and no request is scheduled on a missed slot. (24 + 6 + 66 + 0)
 - [x] All 96 slots per enabled arm are accounted for; crash recovery and scheduler misses cause no retry or catch-up duplicate. (see the host-suspension deviation in the Stage B summary: slots 76-84 ran as a catch-up burst, each once)
 - [x] No stale/delivered/ineligible issue or adversarial request results in a disallowed execution; containment and ledger identity hold. (no stop; canaries unchanged; final identity ok; delivered work was scheduled in provisional waves by the rules arm but nothing executed)
