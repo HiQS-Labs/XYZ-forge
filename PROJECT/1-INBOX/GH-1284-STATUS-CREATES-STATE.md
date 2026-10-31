@@ -2,7 +2,7 @@
 gh_issue: 1284
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1284
 title: "factory-primitive: status on an uninitialized run root creates state.db, then init refuses"
-status: Active (fix done, awaiting final QA, 2026-10-31)
+status: Active (final QA approved, PR pending, 2026-10-31)
 created: 2026-10-31
 updated: 2026-10-31
 owner: agent-b
