@@ -86,4 +86,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Supervisor owns draft publication with the documented focused-evidence/bypass disclosure and any later merge qualification.
 
+
+### Attestation · relay-drive — 2026-11-01T22:18:28Z
+task: RELAY-gh1317-final
+reviewer: codex
+status: Approved
+reviewed-head: 2ce6cfd6ee648b125415ec0ca6e58d9cd0b86bdd
+added-range: 7267+4828
+added-sha256: 4e0c754d554f6cb434ea6b6502b2236b47675aca35a0be38ef8822a4da16f729
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
