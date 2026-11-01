@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -69,5 +69,21 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: Ship the scoped two-defect repair and supervised pilot evidence. Approval is not merge readiness, full-gate qualification, or a general autonomy claim.
+swept file: yes
+
+- [Pass] Whole-file review of utils/py/harness.py found no additional concrete production defect requiring expansion of this repair. The change extends the existing adapter and settlement owner: one due predicate at harness.py:186–190 is used by rules at :221 and Codex at :248; selected prompt identity is checked at :251–254 before snapshot/request composition and subprocess dispatch. Initialization uses the same text/hash convention at :1016–1034. The no-call result is unbilled, cost zero, called=False; _settle at :1256–1267 releases that reservation. No new framework or source correction requested.
+- [Pass] Strictly >3600 is preserved. Narrow source-function probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 -B - <<'PY'`, parse harness.py with ast, compile only _probe_due with datetime, and call it with last=2026-11-01T00:00:00+00:00 and now=01:00:00 / 01:00:00.000001 (UTC), plus absent-history and empty-target inputs. Exit 0; decisive output: equality => False, one microsecond above => True, absent history with ['x'] => True, absent history with [] => False. This measures the extracted predicate, not a CLI equality case.
+- [Pass] Independently inspected retained raw commands, call records, evaluate events, decisions, reservations, tool_runs and receipts across baseline-v3/, candidate/ and mutation/ under TESTS-RESULTS/2026-11-01+GH-1317/pilot/. Read-only probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 -B - <<'PY'`, using pathlib/json/hashlib to recompute frozen.v3.sha256 entries, parse each results.json/commands.json/calls.jsonl and every *-state.json, and assert tool_runs[0].sha256 equals the completed receipt's output_sha256. Exit 0; decisive output: CONTRACT.md MATCH; manual-check.v3.py.txt MATCH; each run has 21 commands, nonzero []; call counts baseline=7, candidate=4, mutation=6. Current source's computed Git-blob SHA1 is 721858cd469a8bda4c70fcbe56275d018c8c5f44, matching the candidate source_blob prefix in pilot/provenance.jsonl. No Git command was invoked.
+- [Pass] Evidence detects the concrete faults rather than accepting exit zero: baseline-v3/results.json fails not-due/mutated-v2/mutated-v3 while its four controls pass. Candidate results pass all seven; candidate/not-due-state.json has evaluate agent_called=false and released/0.0 reservation, and candidate/mutated-v2-state.json plus mutated-v3-state.json have evaluate status prompt-mismatch, agent_called=false and released/0.0 reservations. Their results retain spent_before=0, spent_after=0.0, and completed ticks/receipts/tool runs. The four positive cases each record one external fake call and the expected probe/note/note/idle tool (candidate/results.json); v3 is an idle-call control, not plan-authoring acceptance.
+- [Pass] The unchanged frozen oracle is sensitive to deliberate bypass: mutation/change.txt names removal of exactly the prompt comparison/refusal, and mutation/results.json fails exactly mutated-v2/mutated-v3, with one call each, evaluate ok/true and held reservations in their raw state files. Five controls still pass. The earlier baseline also supplies the red control for not-due call suppression. Contract/manual hashes still match; pilot/provenance.jsonl retains run-specific base/candidate/mutation receipts. Existing focused output ends "codex-turn: 43 pass, 0 fail" (pilot/codex-turn-check.txt); this is retained evidence, not a new run in this turn.
+- [Nit] Evidence retention limit: the supplied raw state preserves output paths and matching output hashes, while manual-check.v3.py.txt records the runtime nonempty-file/hash check. The actual generated tool-output bytes are not included in these retained directories, so this turn cannot independently rehash them; approval relies on the frozen evaluator's recorded output check for that part.
+- [Unverified — needs clone run] No CLI case, executable fixture, suite, pytest or full gate ran here. Full gate/promotion/merge remain outstanding, as Setup requires. The project document explicitly discloses admission after actor execution; it is a process deviation, not proof of correct admission order. Source repair used one actor attempt; this review does not erase that deviation or infer immutable containment, provider quality, reliability calibration or productivity gains from the fake-call pilot.
+
+Relay closed (Approved), no further turn needed. Supervisor owns draft publication with the documented focused-evidence/bypass disclosure and any later merge qualification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
