@@ -1,8 +1,8 @@
 ---
 title: skills-army-hq intake.py update cannot adopt a skill whose payload already matches its source
-status: Working
+status: Complete
 created: 2026-10-31
-updated: 2026-10-31
+updated: 2026-11-01
 owner: noelsaw1
 gh_issue: 1306
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1306
