@@ -2,7 +2,7 @@
 gh_issue: 1317
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1317
 title: "Codex adapter repair pilot: due probes and frozen prompts"
-status: Proposed (1-INBOX — not yet active)
+status: In progress
 created: 2026-11-01
 updated: 2026-11-01
 owner: operator / start-task session
@@ -14,12 +14,18 @@ risk: 2
 phases: 3
 ---
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Approved all eight cases; independent plan QA approved corrected protocol in round 3; base reproduced both defects. | One bounded Codex actor repair, followed by frozen evaluation and mutation control. |
+
 ## Current state and authorized scope
 
 Operator approved all eight cases and bounded repair execution on 2026-11-01.
 Frozen contract and manual checks are under TESTS-RESULTS/2026-11-01+GH-1317/pilot/.
 Plan QA precedes implementation; absolute execution stop 22:37:47Z.
-The queued state is intentional; registration/rating are not accepted-start.
+Accepted-start is recorded only now, after independent plan approval.
 
 Keep [#1314](https://github.com/HiQS-Labs/XYZ-forge/issues/1314) and
 [PR #1316](https://github.com/HiQS-Labs/XYZ-forge/pull/1316) unchanged. Reuse their
@@ -125,7 +131,7 @@ Select the narrowest existing supervised seam in plan QA. If minimum connection
 work is required, specify that surgical change before approval, never another
 framework. Same-user paths/hashes detect observed drift; do not claim immutability.
 
-Proposed ceiling, not execution authorization: two actor attempts, 30 minutes total
+Operator-approved ceiling: two actor attempts, 30 minutes total
 including setup, 60 seconds per CLI command and zero provider spend; final ten
 minutes reserved for independent evaluation, retention and shutdown. Track actual
 attempts, elapsed time and every human intervention. Stop on bounds, repeated
