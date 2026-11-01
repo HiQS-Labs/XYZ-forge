@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-01.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -69,5 +69,53 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: the six runtime/documentation fixes are consistent with the requested changes on source review, but finding 7 is incomplete and the retained verification does not yet satisfy the repository evidence contract. The announced full gate is still pending. Return to Producer for the bounded closeout below; no expansion into #1308 items 9–13.
+
+swept file: yes
+
+Swept all four Setup artifacts in full, including pre-existing code. No additional actionable pre-existing runtime defect found in this bounded review. Applied the relay and SWE review standards. Graph attempt: `XYZ-forge` generation `2026-09-01T15:54:30Z` belongs to the primary checkout, not this seeded worktree; harness symbol search returned zero and coverage reported changed/untracked metadata for these paths. Direct source was therefore authoritative. No suites, executable fixtures, or git commands were run by this reviewer.
+
+- [Should] F1 — Complete the missing #1250 document promotion required by #1308 finding 7 and the task plan, item 7. `PROJECT/2-WORKING/GH-1250-PHASE0-FOLLOWUPS/CAPTURE.md:3` still says `status: Active`, and its status table at line 21 still asks to open the PR. The folder remains under 2-WORKING; the corresponding completed capture does not exist. The #1273/#1280 moves alone do not complete the promised three-document cleanup. Fix: reconcile #1250's outcome/status and move its completed bundle under 3-COMPLETED using the established lifecycle procedure; retain historical evidence and update live references as needed. Record the issue-doc-sync result for all three issues.
+  Observed input: `PROJECT/2-WORKING/GH-1250-PHASE0-FOLLOWUPS/CAPTURE.md` exists; `PROJECT/3-COMPLETED/GH-1250-PHASE0-FOLLOWUPS/CAPTURE.md` does not (probe below, exit 0).
+  Affected scope: only the closed #1250 umbrella's document bundle promised in finding 7; no new roadmap row is requested for its exempt umbrella.
+  Falsifier: evidence that #1250 remains active and must stay in 2-WORKING, together with an explicit correction to the task's promise; otherwise expect the completed capture to exist and the active copy to be absent.
+
+- [Should] F2 — Retain attributable verification before claiming the fixes verified. `TESTS-RESULTS/2026-11-01+GH-1308/` has seven text files and no `provenance.jsonl` (probe below, exit 0). `checks.txt:1-4` names 324bd483, then records only `rc=0` and `delivered files: []`; `delivered-map.txt` contains one map, not the independent all-PR comparison required by DoD 1. `suites.txt:1-4` contains extracted OK/count lines without commands, revision or clone identity. There is also no retained `releases_app check`/issue-doc-sync result for DoD 7. Fix: retain the actual commands, source revision, environment/disposable-clone identity, exit codes and decisive outputs in the existing evidence directory with its required provenance. Include the successful Stage B init output/nonempty manifest and independently recomputed map equality, plus the governance checks. Reuse existing/manual checks; no new suite or gate machinery. Do not reconstruct missing observations as if they had been captured; rerun in a disposable full clone where necessary.
+
+- [Unverified — needs clone run] F3 — Final classified gate remains outstanding, as Setup explicitly says it is running on 324bd483 and will be added next round. Supply its final result and attributable receipt on the final candidate revision (and identify any intervening source changes). This reviewer did not run it in the linked worktree. The two extracted focused-suite results in `suites.txt:1-4` do not attest the classified gate.
+
+- [Pass] Source review — `utils/py/harness.py:831-852` appends `--limit 10000`, refuses `len(rows) >= limit`, and uses this helper for both the all-issue state snapshot and merged-PR delivered lookup. The existing closing-issue extractor is reused. `utils/py/harness.py:1669-1671` rejects the zero Codex reservation before initialization; the adapter-specific predicate leaves rules defaults alone. `utils/py/harness.py:1406-1412` re-reads the existing tick after `_reconcile`, while terminal ticks return without reconciliation. These are appropriately local fixes; end-to-end completion remains subject to F2/F3.
+
+- [Pass] Source review — `skills/1-hourly/idea/SKILL.md:40-45` checks the resolved TARGET before the target git/ledger operations; lines 70, 178–180 and 199 resolve the four tool surfaces through HQ_ROOT. `scan_clones.py:53-61` rejects an equal or ancestor parent using the existing component-aware `_within` helper (`:86-94`); normal GH Repos is below Documents, so it is not rejected by this ancestor check. `merge_cleanup.py:955-959` now says “Jog rows that were not landed are left as they are”, accurately accommodating partial success without altering the landing path.
+
+- [Pass] Retained ledger state — read-only SQLite inspection (`sqlite3.connect('file:'+str(Path.cwd()/'releases.db')+'?mode=ro', uri=True)` followed by `SELECT * FROM roadmap_items WHERE gh_number IN (1273,1280)`, exit 0) returned both sections `Completed`, markers `✅` and paths under `PROJECT/3-COMPLETED/`. `releases.sql:4747-4748` records their `completed` events with `source: roadmap-update`; this supports supported-writer use, but is not a substitute for the missing check output in F2.
+
+Read-only presence probe (exit 0; no artifacts created):
+
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+mkdir -p "$TMPDIR"
+python3 - <<'PYPROBE'
+from pathlib import Path
+for p in ('PROJECT/2-WORKING/GH-1250-PHASE0-FOLLOWUPS/CAPTURE.md','PROJECT/3-COMPLETED/GH-1250-PHASE0-FOLLOWUPS/CAPTURE.md','TESTS-RESULTS/2026-11-01+GH-1308/provenance.jsonl'):
+ print(p, Path(p).exists())
+print('evidence files:', ', '.join(sorted(p.name for p in Path('TESTS-RESULTS/2026-11-01+GH-1308').iterdir())))
+PYPROBE
+```
+
+Decisive output:
+
+```text
+PROJECT/2-WORKING/GH-1250-PHASE0-FOLLOWUPS/CAPTURE.md True
+PROJECT/3-COMPLETED/GH-1250-PHASE0-FOLLOWUPS/CAPTURE.md False
+TESTS-RESULTS/2026-11-01+GH-1308/provenance.jsonl False
+evidence files: checks.txt, delivered-map.txt, idea-check.txt, red-control-init-cb1bf933.txt, sibling-probe-after.txt, suites.txt, tick-check.txt
+```
+
+Handing off to Producer (claude-a) — resolve F1/F2, attach the final gate outcome for F3, log dispositions and open Round 2. Go to the Producer window and say 'take your turn'. No self-commit: the harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
