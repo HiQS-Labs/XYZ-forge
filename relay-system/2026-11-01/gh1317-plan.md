@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -120,14 +120,28 @@ Handing off to Producer (supervisor) — correct the owned ledger setup, disposi
 
 ### Producer · Round 3
 
-Implemented the verified fixture-only blocker in manual-check.v3.py.txt: an explicit
+Implemented the verified fixture-only blocker in manual-check.v3.py.txt: an explicit  [Unverified — no citation]
 /usr/bin/git init -q creates the owned ledger Git root before releases init/add.
 Verification: real v3 base CLI run completed, reproduced non-due and both prompt
 mutation failures, and passed all four positive controls; all ticks had completed
-receipts and verified nonempty output. Retained baseline-v3/ contains raw sanitized
+receipts and verified nonempty output. Retained baseline-v3/ contains raw sanitized  [Unverified — no citation]
 commands, call records, DB-derived state and results. No actor edits yet. The new
 frozen.v3.sha256 binds current contract and v3 protocol. Review those as the final
 plan input; earlier protocol versions are preserved history, not current acceptance.
 No time or attempt extension. Final review round 3 of 3.
+
+### Reviewer · Round 3
+
+VERDICT: PASS
+Basis: The v3 fixture correction resolves the last observed plan blocker. Approve the frozen narrow plan, not a repaired candidate or completed pilot. No cases, executable fixtures, suites or Git commands ran in this review worktree.
+swept file: yes
+
+- [Pass] The owned fixture now acquires its own Git repository before the existing releases writer (`manual-check.v3.py.txt:37–44`); retained `baseline-v3/ledger-setup.json` records both writer commands exiting 0. Synthetic v3 admission still requires exactly issue 9001317 (`:59–61`), and the fake issue-view refuses another ID (`:22–23`). This closes Round 2's fixture blocker without a production change.
+- [Pass] Frozen identities and retained baseline are internally consistent. Read-only probe command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 -B - <<'PY'` with pathlib/hashlib/json: recompute each `frozen.v3.sha256` entry, parse `baseline-v3/{results,commands,ledger-setup}.json`, and count calls.jsonl lines. Exit 0; decisive output: `CONTRACT.md MATCH`, `manual-check.v3.py.txt MATCH`, `commands 21 nonzero []`, `ledger_rcs [0, 0]`, `call_count 7`. `baseline-v3/results.json` records false for not-due/mutated-v2/mutated-v3 and true for due/inbox/unchanged-v2/unchanged-v3; all seven have `completed_with_verified_output: true`. This is inspection of supplied evidence, not an independently rerun baseline.
+- [Pass] Acceptance requires completed tick/receipt and nonempty hash-verified output before semantic success (`manual-check.v3.py.txt:84–91`); no-call cases additionally require released zero-cost reservation and unchanged aggregate spending (`:69–80`). The fake uses the existing external `-o` response seam (`:6–15`), preserving the real sandbox/tool path in `harness.py:1355–1395`. Source claims and the surgical due-predicate/prompt-identity repair remain supported by `harness.py:214–218`, `:243–249`, `:1016–1028`, and `:1443–1446`. Whole-file sweep found no additional production defect requiring expansion of this narrow repair.
+- [Nit] Retain a run-specific provenance receipt alongside the baseline before citing it as qualifying runtime evidence: the supplied `TESTS-RESULTS/2026-11-01+GH-1317/provenance.jsonl` currently records intake/doc checks only. Existing final-retention requirements already cover this; no new runner, suite or acceptance behavior is requested.
+- [Unverified — needs clone run] Candidate cases, independent bypass mutation (CONTRACT.md, “Case 8”), focused checks and final QA are still outstanding. Approval does not restart the clock, extend the two-attempt ceiling, or authorize execution after 22:37:47Z. If the window is exhausted, preserve budget-exhausted/unavailable and stop under the existing contract.
+
+Relay closed (Approved), no further turn needed. Supervisor owns any bounded continuation and evidence retention under the unchanged contract.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
