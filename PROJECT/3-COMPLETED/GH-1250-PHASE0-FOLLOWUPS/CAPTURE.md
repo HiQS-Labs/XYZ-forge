@@ -1,8 +1,8 @@
 ---
 title: "GH-1250: marathon — GH-1175 Phase 0 follow-ups"
-status: Active
+status: Complete
 created: 2026-10-29
-updated: 2026-10-29
+updated: 2026-11-01
 owner: noelsaw1
 gh_issue: 1250
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1250
@@ -18,16 +18,16 @@ goal: "Land the four reviewed Phase 0 follow-up lanes (#1233, #1235, #1251, #123
 
 | What was just completed | What's next |
 |---|---|
-| Marathon fired 2026-10-29 14:36Z, complete 16:43Z: all 4 phases approved (Codex, attested) with full gate green | Open the PR; CodeRabbit / peer review; merge only on operator approval |
+| Marathon complete 2026-10-29; landed as PR #1253 (merge `2fc3f0be`, 2026-10-30); #1250 and all four members closed. Promoted to 3-COMPLETED by GH-1308 | Nothing; closed |
 
 ## Members
 
 | Phase | Issue | Doc | Write-set |
 |---|---|---|---|
-| p1 | #1233 | `PROJECT/2-WORKING/GH-1233-JOG-RECOVERY-AFTER-DRIVER.md` | `skills/2-daily/jog/SKILL.md` |
-| p2 | #1235 | `PROJECT/2-WORKING/GH-1235-MERGE-CLEANUP-JOG-LAND.md` | `merge_cleanup.py` + evidence |
-| p3 | #1251 (Refs #522) | `PROJECT/2-WORKING/GH-1251-GH-522-SLICE-1.md` | `utils/py/_marathon_plan.py` + evidence |
-| p4 | #1236 | `PROJECT/2-WORKING/GH-1236-JOG-MARATHON-LANE-RUNS.md` | `validate.sh`, `githooks/pre-push`, `gate_receipt.py`, `marathon_drive.py` + evidence |
+| p1 | #1233 | `PROJECT/3-COMPLETED/GH-1233-JOG-RECOVERY-AFTER-DRIVER.md` | `skills/2-daily/jog/SKILL.md` |
+| p2 | #1235 | `PROJECT/3-COMPLETED/GH-1235-MERGE-CLEANUP-JOG-LAND.md` | `merge_cleanup.py` + evidence |
+| p3 | #1251 (Refs #522) | `PROJECT/3-COMPLETED/GH-1251-GH-522-SLICE-1.md` | `utils/py/_marathon_plan.py` + evidence |
+| p4 | #1236 | `PROJECT/3-COMPLETED/GH-1236-JOG-MARATHON-LANE-RUNS.md` | `validate.sh`, `githooks/pre-push`, `gate_receipt.py`, `marathon_drive.py` + evidence |
 
 Plan QA: `relay-system/2026-10-29/gh1250-plan-qa.md` (r1 FAIL → r2 FAIL on write allowances → r3 PASS, attested).
 
