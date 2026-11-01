@@ -1,6 +1,6 @@
 ---
 title: Skills Army HQ migrate-legacy
-status: in-progress
+status: Complete
 owner: Claude
 goal: One explicit, archived path to replace a real legacy folder in an app root with the managed link
 created: 2026-11-01
