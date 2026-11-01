@@ -1,0 +1,4 @@
+gh534.txt:10:Ran 42 tests in 45.045s
+gh534.txt:12:OK
+gh436.txt:3853:Ran 201 tests in 294.468s
+gh436.txt:3855:OK

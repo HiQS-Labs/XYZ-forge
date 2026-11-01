@@ -1,0 +1,8 @@
+/Users/XYZ-forge -> None
+/Users/noelsaw/Documents/GH Repos/XYZ-forge -> /Users/noelsaw/Documents/GH Repos
+/Users/noelsaw/Documents/XYZ-forge -> None
+/XYZ-forge -> None
+/Users/noelsaw/XYZ-forge -> None
+/opt/work/XYZ-forge -> /opt/work
+/Users/noelsaw/Desktop/XYZ-forge -> None
+deletable under /Users: (False, 'Refusing: path is not strictly within SAFE_ROOTS (/Users/someone/Desktop/old/XYZ-forge-task)')
