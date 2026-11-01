@@ -62,8 +62,6 @@ Rollback: revert the PR. Every change is local.
 
 ## Status
 
-| Item | State |
+| What was just completed | What's next |
 |---|---|
-| 1–7 | pending |
-| Gate | pending |
-| Final QA | pending |
+| Fixes 1–7 in `324bd483`, the #1250 bundle promoted in `23f8f2ac`, and retained checks (`TESTS-RESULTS/2026-11-01+GH-1308/checks-run.txt`) all passing. Full gate at `324bd483`: 407/409. The two failures were this table's header (fixed here) and the external agy quota. | Codex final QA round 2; then the full gate on the final commit; then a ready PR. No merge. |
