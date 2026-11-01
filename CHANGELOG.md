@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-01 — GH-1317 Codex adapter repair pilot intake
+
+- Opened separate issue/capture and queued, rated PRS intake for due-probe and frozen-prompt repairs through a bounded actor–verifier pilot. Refreshed current source; #1311 already owns the positive reservation-cap fix. Existing #1314/PR #1316 remain unchanged and are references, not prerequisites.
+- Draft preparation only: all eight proposed CLI verification cases await individual operator approval; no runtime changes, oracle implementation, actor repair, mutation, new tests or paid calls. Plan/final independent review and runtime verification remain pending. Documentation/intake checks are retained under `TESTS-RESULTS/2026-11-01+GH-1317/`.
+
 ## 2026-11-01 — GH-1309 skills-army-hq replaces a real legacy folder in an app root with the managed link
 
 - New `sync.py --migrate-legacy SKILL --archive-legacy` (preview first, then `--apply`). Until now `--adopt`, `--migrate` and `--migrate-from` refused any real directory in an app root, and `--archive-legacy` worked only for `--retire-trinity` with a matching source, so an installer-created folder (for example a stale `~/.claude/skills/xyz`) kept `sync.py --status` at exit 2 with no supported fix. For each enabled target holding such a folder it now requires a valid skill folder of that name, takes a verified ZIP, moves the folder to retained `.staging/<op>/retired`, and creates the owned link in one transaction. Its content may differ from the managed copy; the preview reports `matches_managed`. A run with nothing to migrate, an unknown skill, or no `--archive-legacy` refuses. Opt-in: no existing flow changes.
