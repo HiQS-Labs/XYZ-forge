@@ -65,3 +65,7 @@ Each fix below is verified as listed.
 8. **Gate.** Run the classified route on the final commit in a disposable clone, then a Codex final QA through `relay-xyz`.
 
 Rollback: revert the PR. Every change is local.
+
+## Merge evidence
+
+- PR #1311 merged 2026-11-01 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

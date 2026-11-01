@@ -213,3 +213,7 @@ Jog is **not** a parallel pipeline or separate unindexed state store. It re-uses
 ## Merge evidence
 
 - PR #1187 merged 2026-10-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1311 merged 2026-11-01 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
