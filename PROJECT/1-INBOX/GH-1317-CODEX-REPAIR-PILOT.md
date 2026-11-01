@@ -16,9 +16,9 @@ phases: 3
 
 ## Current state and authorized scope
 
-New issue and draft PR preparation only. No implementation, new verification cases,
-assertions, parameterizations, mutation or actor repair has run. Independent review
-did not run. Plan QA and explicit per-case operator approval precede implementation.
+Operator approved all eight cases and bounded repair execution on 2026-11-01.
+Frozen contract and manual checks are under TESTS-RESULTS/2026-11-01+GH-1317/pilot/.
+Plan QA precedes implementation; absolute execution stop 22:37:47Z.
 The queued state is intentional; registration/rating are not accepted-start.
 
 Keep [#1314](https://github.com/HiQS-Labs/XYZ-forge/issues/1314) and
@@ -139,14 +139,14 @@ constraint before dispatch; availability is not yet established.
 
 | ID | CLI/state case | Required observation | Approval |
 |---|---|---|---|
-| 1 | Empty inbox, configured target not due | Zero provider calls; agent_called=false; reservation released; no net budget consumption | Pending |
-| 2 | Same target due | Exactly one call and normal probe action; retain strictly >3600 seconds | Pending |
-| 3 | Actionable inbox | Normal call/action still succeeds | Pending |
-| 4 | v2 prompt mutated after init | Explicit refusal before call; called=false; released reservation/no net charge | Pending |
-| 5 | v3 prompt mutated after init | Same refusal/no-call/settlement | Pending |
-| 6 | Unchanged v2 | Positive call/action succeeds | Pending |
-| 7 | Unchanged v3 | Positive call/action succeeds | Pending |
-| 8 | Independently controlled bypass mutation | Same semantic verifier rejects the deliberately broken candidate | Pending |
+| 1 | Empty inbox, configured target not due | Zero provider calls; agent_called=false; reservation released; no net budget consumption | Approved 2026-11-01 |
+| 2 | Same target due | Exactly one call and normal probe action; retain strictly >3600 seconds | Approved 2026-11-01 |
+| 3 | Actionable inbox | Normal call/action still succeeds | Approved 2026-11-01 |
+| 4 | v2 prompt mutated after init | Explicit refusal before call; called=false; released reservation/no net charge | Approved 2026-11-01 |
+| 5 | v3 prompt mutated after init | Same refusal/no-call/settlement | Approved 2026-11-01 |
+| 6 | Unchanged v2 | Positive call/action succeeds | Approved 2026-11-01 |
+| 7 | Unchanged v3 | Positive call/action succeeds | Approved 2026-11-01 |
+| 8 | Independently controlled bypass mutation | Same semantic verifier rejects the deliberately broken candidate | Approved 2026-11-01 |
 
 No new case/assertion/parameterization is added or run by publishing this table.
 The evaluator owns fresh final roots and the separately controlled mutation copy.
