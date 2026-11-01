@@ -36,8 +36,9 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
      [ -n "$L" ] && [ -x "$L" ] && break
    done
    [ -x "$L" ] || { echo "idea: hq locator not found — install the hq skill"; exit 1; }
-   eval "$("$L" --env)" && "$L" --check                       # HQ_SH
+   eval "$("$L" --env)" && "$L" --check                       # HQ_ROOT, HQ_SH
    TARGET=$(bash "$HQ_SH" resolve <project> | sed -n 's/^REPO_PATH=//p')   # where park will write
+   [ -n "$TARGET" ] || { echo "idea: project '<project>' did not resolve — check it with hq.sh resolve"; exit 1; }
    CALLER=$(git rev-parse --show-toplevel)
    [ "$TARGET" = "$CALLER" ] || echo "idea: intake lands in $TARGET, not in this checkout ($CALLER)"
    git -C "$TARGET" fetch origin development --quiet
@@ -66,7 +67,7 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
      (there is no fix to probe), Steps 5–9 run, Step 10 is replaced by the `NEEDS-SPIKE` report.
    - `standard` = everything else: all steps.
 
-3. **Prior art.** `python3 utils/py/prior_art_recon.py --query "<seam>"`. An `existing_fix_candidates`
+3. **Prior art.** `python3 "$HQ_ROOT/utils/py/prior_art_recon.py" --query "<seam>"`. An `existing_fix_candidates`
    hit stops the skill: confirm with the operator whether the ask is already fixed. A matching open
    issue means no new issue: say which one and stop (retrofitting it is Phase 3 of #1258, not this skill).
 
@@ -174,9 +175,9 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
 
    ```bash
    … bash "$HQ_SH" park --create --title "<title>" <project> "$(cat body.md)"     # prints "✓ issue: <url>"; N is its trailing number
-   python3 utils/py/releases_app.py --root "$TARGET" roadmap rate --issue-num N --rated P/S/A/E --dry-run
-   python3 utils/py/releases_app.py --root "$TARGET" roadmap rate --issue-num N --rated P/S/A/E
-   python3 utils/py/releases_app.py --root "$TARGET" roadmap list --json | python3 -c 'import json,sys;print([r for r in json.load(sys.stdin) if r.get("gh_number")==N])'
+   python3 "$HQ_ROOT/utils/py/releases_app.py" --root "$TARGET" roadmap rate --issue-num N --rated P/S/A/E --dry-run
+   python3 "$HQ_ROOT/utils/py/releases_app.py" --root "$TARGET" roadmap rate --issue-num N --rated P/S/A/E
+   python3 "$HQ_ROOT/utils/py/releases_app.py" --root "$TARGET" roadmap list --json | python3 -c 'import json,sys;print([r for r in json.load(sys.stdin) if r.get("gh_number")==N])'
    ```
 
    `hq park` drops the rating (`hq_roadmap_line` carries no `rated` token), so `roadmap rate` is the
@@ -195,7 +196,7 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
     and skip to Step 11. Otherwise:
 
     ```bash
-    bash utils/swarm-preflight.sh --project-doc "$TARGET/PROJECT/1-INBOX/GH-N-<SLUG>.md" --target-root "$TARGET" --dry-run; echo "exit=$?"
+    bash "$HQ_ROOT/utils/swarm-preflight.sh" --project-doc "$TARGET/PROJECT/1-INBOX/GH-N-<SLUG>.md" --target-root "$TARGET" --dry-run; echo "exit=$?"
     ```
 
     `--project-doc` reads the fresh local capture directly (`--gh-issue` searches only `2-WORKING`);

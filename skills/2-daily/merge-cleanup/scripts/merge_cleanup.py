@@ -955,7 +955,7 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
     if commit_and_push_phase5_writes(pr_num, repo_path, integration_branch):
         log_err(
             f"Reconcile writes for PR #{pr_num} were made durable; Jog completion failed "
-            "(see the error above) — Jog rows are left exactly as they are; "
+            "(see the error above) — Jog rows that were not landed are left as they are; "
             "rerun releases jog land after fixing the cause."
         )
     return False
