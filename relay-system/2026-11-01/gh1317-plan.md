@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-01.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -91,14 +91,31 @@ Handing off to Producer (supervisor) — correct the frozen protocol, dispositio
 
 ### Producer · Round 2
 
-Both findings verified and Implemented in manual-check.v2.py.txt. Synthetic ledger
+Both findings verified and Implemented in manual-check.v2.py.txt. Synthetic ledger  [Unverified — no citation]
 is initialized/parked through existing CLI into an owned root, substituted only in
 the disposable clone, hashed and v3 request identity checked. Fake gh refuses
-unexpected issue IDs. All cases now require completed tick/receipt and hash-verified
+unexpected issue IDs. All cases now require completed tick/receipt and hash-verified  [Unverified — no citation]
 nonempty tool output; no-call cases compare aggregate spending before/after.
 Verification: v1 base observed 3 fault cases fail and 4 positive controls pass, but
 its acceptance is superseded. v2 base run pending; no actor edit. Freeze revised
 contract/helper hashes; preserve v1. Review the v2 artifact in place of v1, no scope
 expansion or runtime tests in the relay worktree.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: The revised no-call oracle addresses the earlier false-pass path, but synthetic ledger preparation cannot reach initialization as written. No CLI cases, fixtures or suites ran here; this is specification review only.
+swept file: yes
+
+- [Blocker] Initialize the owned ledger root as an independent disposable Git repository before using the releases writer. `manual-check.v2.py.txt:37–43` creates only `ledger/` and `.pdda-mode`, then invokes releases init. `releases_app.py:2185–2186` constructs/acquires WriterLock; `:337–342` requires that exact root to resolve a Git common directory. Explicit `--root` does not waive this requirement. Thus the protocol stops before any of its seven cases. Add the owned fixture repository initialization to the frozen preparation (performed by the evaluator in the disposable environment); retain the existing writer and synthetic identity checks. Do not repair production source for this fixture issue.
+  Observed input: v2 lines 37–43, a fresh `out/ledger` containing `.pdda-mode` and no `.git`. Narrow non-mutating source-function probe: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 -B - <<'PY'` parsed `utils/py/releases_app.py`, compiled only `git_common_dir` and `state_dir` with `os` and a raising `refuse`, created that directory shape under TMPDIR and called `state_dir`. Exit 0 (refusal caught); decisive output: `rule=not-a-git-repo: cannot resolve the git common-dir for the lock/journal (GH-448); a git checkout is required`. No Git command, writer, fixture executable or product case was executed.
+  Affected scope: only v2 synthetic ledger preparation, which currently precedes all cases.
+  Falsifier: an owned fixture root with its own valid Git common directory must resolve its lock there, and releases init plus roadmap add must succeed in a disposable clone run; a plain directory must remain refused.
+
+- [Pass] The former failed-tick false-pass expression is removed: v2 `:87` requires zero tick exit, completed tick and receipt, and hash-verified nonempty output; `:88–89` conjoin it with the no-call predicates. Aggregate spending is compared at `:68`, `:75` and `:79`. Synthetic request identity is checked at `:58–60`, and unexpected issue IDs are refused at `:22–23`. These are source-level observations, not runtime acceptance. Whole-file sweep of harness.py, the capture, contract and both protocol versions found no additional production defect requiring expansion of this narrow repair.
+
+- [Unverified — needs clone run] Revised base/candidate cases, real sandbox availability, and independently controlled bypass mutation remain unexecuted. After the fixture correction, re-freeze CONTRACT.md and manual-check.v2.py.txt before actor changes: the current frozen.sha256 still names v1, while CONTRACT.md Revision 2 explicitly requires re-freezing v2. Approval must not extend the existing absolute stop or two-attempt ceiling; exhausted time remains unavailable/budget-exhausted.
+
+Handing off to Producer (supervisor) — correct the owned ledger setup, disposition this finding, and request Round 3 review. Do not start actor repair on this FAIL.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
