@@ -1,0 +1,4 @@
+red: crash tick rc=70
+red: re-tick rc=1 out={"status":"started","tick_id":"slot_001"}
+green: crash tick rc=70
+green: re-tick rc=0 out={"status":"uncertain","tick_id":"slot_001"}

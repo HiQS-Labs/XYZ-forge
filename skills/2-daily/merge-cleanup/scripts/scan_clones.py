@@ -52,9 +52,11 @@ DEFAULT_NEVER_DELETE = {
 
 def sibling_root(primary: Path) -> Optional[Path]:
     """GH-722: the primary's parent folder, where start-task's GH-970 rule puts task clones; None
-    when that parent is a NEVER_DELETE root, which must never become a scan or safe root."""
+    when that parent is a NEVER_DELETE root, or contains one (GH-1308: a primary at /Users/X made
+    /Users, and so all of $HOME, a safe root), which must never become a scan or safe root."""
     parent = primary.resolve().parent
-    if parent in {r.resolve() for r in DEFAULT_NEVER_DELETE if r.exists()}:
+    never = {r.resolve() for r in DEFAULT_NEVER_DELETE if r.exists()}
+    if parent in never or any(_within(r, parent) for r in never):
         return None
     return parent
 

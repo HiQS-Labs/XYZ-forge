@@ -11,7 +11,7 @@
 #
 # Fire ONLY from the marathon clone on branch feat/marathon-gh-1250-phase0-followups, after the
 # operator confirms this exact plan and order. ALWAYS --dry-run first:
-#   relay-automation/marathon.sh --plan PROJECT/2-WORKING/GH-1250-PHASE0-FOLLOWUPS/MARATHON.yaml --builder agy --dry-run
+#   relay-automation/marathon.sh --plan PROJECT/3-COMPLETED/GH-1250-PHASE0-FOLLOWUPS/MARATHON.yaml --builder agy --dry-run
 name: gh1250-phase0-followups
 phases:
   - id: p1

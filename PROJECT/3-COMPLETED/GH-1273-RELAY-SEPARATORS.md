@@ -1,6 +1,6 @@
 ---
 title: Relay separator attestation
-status: in-progress
+status: Complete
 owner: Codex
 goal: Accept harmless review separators while protecting history
 created: 2026-10-30
