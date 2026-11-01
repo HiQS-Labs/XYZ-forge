@@ -126,3 +126,11 @@ mkdir-fail: actions=[]; errors=['mkdir failed']
 success: actions=['retire-directory', 'link']; errors=[]
 No action_apply/transact called; archive/mkdir mocked; existing app/source bytes untouched.
 ```
+
+### Attestation · relay-drive — 2026-11-01T15:53:01Z
+task: RELAY-gh1309-final-qa-075004
+reviewer: codex
+status: Approved
+reviewed-head: 4017be270840851b69877f083ded1e8bcb35e90c
+added-range: 2790+9250
+added-sha256: a099b2007c1400bba4855e6af5666aa36c4674990d71acd62e2994f22af5ba07
