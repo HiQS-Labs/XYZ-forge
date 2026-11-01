@@ -1,6 +1,6 @@
 ---
 title: "Post-merge regression QA: development merges 2026-10-29 → 2026-11-01 (21 PRs)"
-status: Proposed (1-INBOX — not yet active)
+status: In progress
 created: 2026-11-01
 updated: 2026-11-01
 owner: noelsaw1
