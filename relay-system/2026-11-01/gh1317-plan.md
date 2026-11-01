@@ -144,4 +144,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Supervisor owns any bounded continuation and evidence retention under the unchanged contract.
 
+
+### Attestation · relay-drive — 2026-11-01T22:14:19Z
+task: RELAY-gh1317-plan
+reviewer: codex
+status: Approved
+reviewed-head: ec9f1595b1b83bfa992be2b8748cbfac9679ffca
+added-range: 15090+2984
+added-sha256: 8055c23fca87b863cef92ea8fa12f49346b018875070aeb00cef7992a9914ed9
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
