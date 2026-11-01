@@ -14,7 +14,7 @@ issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1309
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved; implemented; 36-check matrix and 33-test suite green | Tier-2 gate, final Codex QA, ready PR |
+| Final Codex QA Approved (relay-system/2026-11-01/gh1309-final-qa.md); tier-2 gate 6/6 green | PR ready; awaiting merge. Carry-over: update deployed manager, then migrate xyz. Lessons: NO_ENTRY |
 
 ## Why
 
