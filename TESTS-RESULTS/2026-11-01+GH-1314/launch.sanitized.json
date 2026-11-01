@@ -1,0 +1,90 @@
+{
+  "root": "<CALIBRATION_ROOT>",
+  "setup_start_epoch": 1793555673.936942,
+  "deadline_epoch": 1793556273.936942,
+  "approval": "Parent approved exact helper/protocol and once-only bounded calibration in delegation; draft PR only, no merge",
+  "helper_sha256": "e5f697d48d2d0ad5699b84a8991e9ffbc57a8b1d91cfc43ec49bd3cbd59db02b",
+  "protocol_sha256": "a960c0f9d9600a2e960d42534966403391a9f1a183ad3b2d80e6c60654df36ef",
+  "setup": [
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "clone",
+        "--no-hardlinks",
+        "--no-checkout",
+        "<READ_ONLY_SOURCE>",
+        "<CALIBRATION_ROOT>/bad"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "Cloning into '<CALIBRATION_ROOT>/bad'...\ndone.\n",
+      "finished_epoch": 1793555674.057413
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "-C",
+        "<CALIBRATION_ROOT>/bad",
+        "checkout",
+        "--detach",
+        "b78df4b93049498b19dd47fe6a90d006f9c42700"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "HEAD is now at b78df4b93 chore: reconcile after PR #1277\n",
+      "finished_epoch": 1793555674.680896
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "clone",
+        "--no-hardlinks",
+        "--no-checkout",
+        "<READ_ONLY_SOURCE>",
+        "<CALIBRATION_ROOT>/good"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "Cloning into '<CALIBRATION_ROOT>/good'...\ndone.\n",
+      "finished_epoch": 1793555674.7510872
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "-C",
+        "<CALIBRATION_ROOT>/good",
+        "checkout",
+        "--detach",
+        "47deab48b8c749d699c6b6c77c38dfdaa5682025"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "HEAD is now at 47deab48b fix(GH-1284): factory-primitive status/tick/packet refuse an uninitialized run root\n",
+      "finished_epoch": 1793555675.379529
+    },
+    {
+      "argv": [
+        "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/bin/python3.9",
+        "-B",
+        "<TASK_WORKSPACE>/gh1314-helper-review.txt",
+        "<TASK_WORKSPACE>/gh1314-run-config.json"
+      ],
+      "rc": 2,
+      "stdout": "",
+      "stderr": "{\"outcome\": \"inconclusive\", \"reason\": \"HOME/TMPDIR must start empty\", \"termination\": \"no active direct child\", \"completed_commands\": 0, \"retry\": false, \"invalidates\": [\"outcome.json\"], \"acceptance_rule\": \"inconclusive.json invalidates outcome.json; parent must reject calibration\"}\n",
+      "finished_epoch": 1793555675.446801
+    }
+  ],
+  "supervisor_outcome": "inconclusive",
+  "reason": "setup/supervisor nonzero; no retry",
+  "finished_epoch": 1793555675.44698,
+  "total_elapsed_s": 1.510037899017334
+}

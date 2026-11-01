@@ -1,0 +1,11 @@
+{
+  "daily_cap": 1.0,
+  "manifest_path": "<ATTEMPT02_ROOT>/good/utils/py/factory_primitive/scenarios/soak-v1.manifest.json",
+  "max_call_cost": 0.0,
+  "probe_targets": [
+    "local://health"
+  ],
+  "prompt_sha256": "dcca67813bb107cbc3435d0c7c0de256cf73853042c8ebf8790805bbc0f3f1c3",
+  "scenario_path": "<ATTEMPT02_ROOT>/good/utils/py/factory_primitive/scenarios/soak-v1.jsonl",
+  "scenario_sha256": "bed30bb1ac9ffe5f6ff5283b21b84eb2eb8630402ba78f13152157736963bf70"
+}
