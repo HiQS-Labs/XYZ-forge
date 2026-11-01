@@ -18,7 +18,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Approved all eight cases; independent plan QA approved corrected protocol in round 3; base reproduced both defects. | One bounded Codex actor repair, followed by frozen evaluation and mutation control. |
+| Approved all eight cases; independent plan QA approved corrected protocol in round 3; base reproduced both defects. | One actor attempt repaired both defects; seven frozen checks passed; controlled bypass rejected. Final independent review pending. |
 
 ## Current state and authorized scope
 
@@ -184,3 +184,26 @@ the oracle after observing failure. Requirement changes invalidate old evidence.
 NO_ENTRY: preparation alone supplies no observed repair outcome. Relevant existing
 lesson: LESSONS-LEARNED.md “Ship a gate's producer in the same change you ship the
 gate”; do not introduce a new required receipt without its existing producer.
+
+## Execution result (2026-11-01)
+
+Actor attempt 1 produced b3dd3e43, changing only harness.py plus its relay thread.
+Separate supervisor ran the frozen v3 checks in a fresh candidate full clone:
+7/7 passed. Base: 3 real fault cases failed and 4 controls passed. Evaluator-owned
+prompt-check bypass: exactly both mutated-prompt cases failed, 5 other cases passed.
+All seven ticks completed with receipts and hash-verified nonempty tool output.
+No-call/refusal cases released reservations with aggregate spending unchanged.
+Existing codex-turn check: 43 pass/0 fail in disposable full clone.
+
+Process deviations: first coordination dispatch found uninitialized local .tick;
+initialized only this task clone. v1 oracle had two real review findings; v2 fixture
+setup lacked Git initialization; both corrected/refrozen before actor code changes.
+PRS accepted-start initially refused --issue-num; correct --gid admission was
+recorded after the actor turn, so required admission ordering was missed. Do not
+rewrite that history or count registration as accepted-start. No actor retry,
+expectation weakening, human source patch or budget extension occurred.
+
+Source helper preserves strictly >3600 seconds; runtime cases cover recent/absent
+history, not an exact-equality timing case. V3 positive control completes idle
+after a real external fake call; it does not claim plan-authoring quality.
+No generalized autonomy or productivity-improvement claim from this single pilot.

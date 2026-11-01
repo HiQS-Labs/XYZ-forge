@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-01 — GH-1317 bounded actor repair
+
+- Separate Codex actor repaired both adapter defects in one attempt: configured probes now use the shared due predicate; v2/v3 prompt text must match its frozen hash before dispatch. No-call/refusal results use existing unbilled settlement.
+- Frozen real-CLI checks: base fails 3 defect cases/passes 4 controls; candidate passes all 7; independently removing prompt enforcement makes both prompt-mutation cases fail again. Existing worker checks: 43 pass/0 fail. Evidence and process deviations: `TESTS-RESULTS/2026-11-01+GH-1317/pilot/`. Final independent review and publication qualification remain separate.
+
 ## 2026-11-01 — GH-1317 Codex adapter repair pilot intake
 
 - Opened separate issue/capture and queued, rated PRS intake for due-probe and frozen-prompt repairs through a bounded actor–verifier pilot. Refreshed current source; #1311 already owns the positive reservation-cap fix. Existing #1314/PR #1316 remain unchanged and are references, not prerequisites.
