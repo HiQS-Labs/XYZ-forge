@@ -183,4 +183,12 @@ Decisive output: old #1250 bundle `False`, completed capture `True`; provenance 
 
 Relay closed (Approved), no further turn needed. Producer/harness continues with the final disposable-clone gate before PR readiness. No self-commit: the harness owns the file-scoped commit.
 
+
+### Attestation · relay-drive — 2026-11-01T15:22:48Z
+task: RELAY-gh1308-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: dc9e47c4291a9a1a190481a400e4617a5f46361a
+added-range: 17115+5092
+added-sha256: e3b6e7d146808ce9328b1bd29fd980c1e7f17a69e84d581785a59ce7fec552e2
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
