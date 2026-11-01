@@ -239,12 +239,37 @@ def drift_gate(root, state, config, found, explicit, apply, allow_drift, warning
     return drift
 
 
-def reconcile(root, state, config, found, adopt=(), migrate=(), migrate_from=None):
+def retire_legacy(root, path, parent, name, found, archive_directories, apply):
+    """A real folder where the managed link belongs (GH-1309): archive it, then the link takes its place.
+
+    Unlike --retire-trinity the content may differ from the managed copy, because a stale
+    installer copy is the case this exists for. The selection is explicit per skill, the folder
+    is always archived (verified ZIP plus retained staging), and the preview says whether it differs.
+    """
+    shared.require(archive_directories, f"Real legacy folder preserved; explicitly select --archive-legacy: {path}")
+    shared.require(shared.skill_info(path)["name"] == name, f"Legacy folder is not the {name} skill: {path}")
+    before = shared.digest(path)
+    change = {"migrate_legacy": str(path), "digest": before, "matches_managed": before == found["digest"]}
+    actions = []
+    if apply:
+        change["backup"] = shared.archive(root, path)
+        stage = shared.location(root / ".staging" / uuid.uuid4().hex)
+        stage.mkdir(parents=True)
+        shared.require(path.stat().st_dev == stage.stat().st_dev,
+                       "Legacy folder is on a different filesystem; archive retained, folder preserved")
+        actions.append({"kind": "retire-directory", "name": name, "root": str(parent),
+                        "op": stage.name, "before": before, "after": None})
+    return actions, change
+
+
+def reconcile(root, state, config, found, adopt=(), migrate=(), migrate_from=None,
+              legacy=(), archive_directories=False, apply=False):
     """Plan only; unexpected entries are errors, not implicit ownership grants."""
     targets = sorted({shared.location(t["path"]) for t in config["targets"] if t["enabled"]})
     desired = {str(target / name): (target, name) for target in targets for name in found}
     actions, errors, changes = [], [], []
     migrate_from = migrate_from or {}
+    matched = set()
     for key in sorted(set(desired) | set(state["links"])):
         receipt = state["links"].get(key)
         parent, name = desired.get(key, (Path(receipt["root"]), receipt["name"])) if receipt else desired[key]
@@ -252,7 +277,14 @@ def reconcile(root, state, config, found, adopt=(), migrate=(), migrate_from=Non
         wanted = str(root / name) if key in desired else None
         try:
             shared.location(parent)
-            current = shared.link_text(path)
+            retire = []
+            if name in legacy and key in desired and path.is_dir() and not path.is_symlink():
+                matched.add(name)
+                retire, change = retire_legacy(root, path, parent, name, found[name], archive_directories, apply)
+                changes.append(change)
+                current = None  # the retire action runs first, so the link sees a free path
+            else:
+                current = shared.link_text(path)
             if receipt:
                 shared.require(current in (None, receipt["text"]), f"Lost ownership; retargeted link preserved: {path}")
             elif current is not None:
@@ -270,6 +302,7 @@ def reconcile(root, state, config, found, adopt=(), migrate=(), migrate_from=Non
                                        f"Migration source differs from copied payload: {path}")
                     changes.append({"migrate": key, "previous": current})
             if current != wanted:
+                actions.extend(retire)
                 actions.append({"kind": "link", "root": str(parent), "name": name,
                                 "before": current, "after": wanted})
             if wanted is None:
@@ -281,6 +314,9 @@ def reconcile(root, state, config, found, adopt=(), migrate=(), migrate_from=Non
                 state["links"][key] = receipt or owned_record(root, state, parent, name, current)
         except (shared.DeployError, OSError, RuntimeError) as exc:
             errors.append({"path": key, "error": str(exc)})
+    for name in sorted(set(legacy) - matched):
+        errors.append({"path": name, "error": f"No real legacy folder named {name} in an enabled target; nothing to migrate"
+                       if name in found else f"Not a deployed skill: {name}"})
     return actions, errors, changes
 
 
@@ -335,7 +371,11 @@ def main(argv=None):
     p.add_argument("--migrate-from", action="append", default=[], metavar="SKILL=LOCAL_SOURCE",
                    help="Explicitly replace a selected alternative source link; preserve old link text")
     p.add_argument("--retire-trinity", metavar="LOCAL_SOURCE", help="Withdraw only the known replaced skill")
-    p.add_argument("--archive-legacy", action="store_true", help="Explicitly archive a matching real legacy folder")
+    p.add_argument("--migrate-legacy", action="append", default=[], metavar="SKILL",
+                   help="Replace a real legacy folder in an app root with the managed link; requires --archive-legacy")
+    p.add_argument("--archive-legacy", action="store_true",
+                   help="Explicitly archive a real legacy folder (--retire-trinity: must match the source; "
+                        "--migrate-legacy: may differ from the managed copy)")
     p.add_argument("--canonical", metavar="FORGE_ROOT",
                    help="XYZ-forge checkout whose skills/ is canonical (else XYZ_FORGE_ROOT, targets.json \"canonical\")")
     p.add_argument("--allow-drift", action="store_true",
@@ -344,7 +384,7 @@ def main(argv=None):
     try:
         root = shared.location(args.root)
         apply = args.apply and not args.dry_run and not args.status
-        for name in args.adopt + args.migrate:
+        for name in args.adopt + args.migrate + args.migrate_legacy:
             shared.safe_name(name)
         migrate_from = {}
         for selection in args.migrate_from:
@@ -368,12 +408,15 @@ def main(argv=None):
             found = shared.inventory(root, state)
             warnings, drift = [], None
             if args.retire_trinity:
+                shared.require(not args.migrate_legacy, "--migrate-legacy cannot be combined with --retire-trinity")
                 actions, errors, changes = retirement(root, state, config, args.retire_trinity,
                                                      args.archive_legacy, apply)
             else:
-                shared.require(not args.archive_legacy, "--archive-legacy requires --retire-trinity")
+                shared.require(not args.archive_legacy or args.migrate_legacy,
+                               "--archive-legacy requires --retire-trinity or --migrate-legacy")
                 drift = drift_gate(root, state, config, found, args.canonical, apply, args.allow_drift, warnings)
-                actions, errors, changes = reconcile(root, state, config, found, args.adopt, args.migrate, migrate_from)
+                actions, errors, changes = reconcile(root, state, config, found, args.adopt, args.migrate, migrate_from,
+                                                     args.migrate_legacy, args.archive_legacy, apply)
             repo = repo_health(root, warnings)
             result = {"apply": apply, "skills": sorted(found), "actions": actions, "changes": changes,
                       "errors": errors, "warnings": warnings, "drift": drift, "repo": repo,

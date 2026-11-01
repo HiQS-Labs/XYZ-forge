@@ -536,10 +536,12 @@ def action_apply(root, action):
             os.close(fd)
     elif kind == "retire-directory":
         parent = location(action["root"])
-        path = parent / "skills-sync-trinity"
+        path = parent / safe_name(action["name"])
         stage = location(root / ".staging" / action["op"])
         old = stage / "retired"
-        if not path.exists() and not path.is_symlink():
+        if path.is_symlink() or not path.exists():
+            # Already moved, or replaced by the owned link of a migration that finished (GH-1309):
+            # the staged copy is the proof, never the app entry.
             require(digest(old) == action["before"], "Missing retired directory and backup staging")
             return
         require(digest(path) == action["before"], "Legacy directory changed; preserved")
@@ -565,7 +567,11 @@ def validate_receipt(root, receipt):
         if kind in ("payload", "retire-directory"):
             require(re.fullmatch(r"[a-f0-9]{32}", action.get("op", "")), "Invalid staged operation")
             name = safe_name(action["name"])
-            require(kind != "retire-directory" or name == "skills-sync-trinity", "Invalid retirement")
+            if kind == "retire-directory":
+                require(name == "skills-sync-trinity" or name in receipt["state"]["skills"], "Invalid retirement")
+                retired = location(action["root"])
+                require(retired != root and not within(retired, root) and not within(root, retired),
+                        "Retirement root overlaps collection")
             for key in ("before", "after"):
                 value = action.get(key)
                 require(value is None or isinstance(value, str) and re.fullmatch(r"[a-f0-9]{64}", value),
