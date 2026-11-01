@@ -183,6 +183,13 @@ CODEX_FLAGS = (
 )
 
 
+def _probe_due(snapshot: dict) -> bool:
+    if not snapshot["probe_targets"]:
+        return False
+    last = snapshot.get("last_probe_at")
+    return last is None or (datetime.fromisoformat(snapshot["now"]) - datetime.fromisoformat(last)).total_seconds() > 3600
+
+
 def rules_decide(snapshot: dict) -> AdapterResult:
     budget = snapshot["budget"]
     flags = snapshot["flags"]
@@ -211,11 +218,8 @@ def rules_decide(snapshot: dict) -> AdapterResult:
             if failed.get(fingerprint, 0) < 2:
                 result = candidate
                 break
-        if result is None and not pending and snapshot["probe_targets"]:
-            last = snapshot.get("last_probe_at")
-            old = last is None or (datetime.fromisoformat(snapshot["now"]) - datetime.fromisoformat(last)).total_seconds() > 3600
-            if old:
-                result = _decision("probe", {"target": snapshot["probe_targets"][0]}, "periodic local probe")
+        if result is None and not pending and _probe_due(snapshot):
+            result = _decision("probe", {"target": snapshot["probe_targets"][0]}, "periodic local probe")
         if result is None:
             result = _decision("idle", {}, "no actionable input")
     return AdapterResult(canonical(result), "ok", result, 0.0, "reported")
@@ -241,12 +245,14 @@ def _request_material(snapshot: dict, config: dict) -> str:
 
 
 def codex_decide(snapshot: dict, config: dict) -> AdapterResult:
-    if not snapshot["inbox"] and not snapshot["probe_targets"]:
+    if not snapshot["inbox"] and not _probe_due(snapshot):
         d = _decision("idle", {}, "no actionable input (no agent call)")
         return AdapterResult(canonical(d), "ok", d, 0.0, "unbilled", called=False)
     authoring = bool(config.get("codex_authoring"))
-    prompt = (PACKAGE / "prompts" / ("evaluator.v3.md" if authoring else "evaluator.v2.md")).read_text(encoding="utf-8") \
-        + "\n\nSnapshot (JSON):\n" + canonical(snapshot)
+    prompt = (PACKAGE / "prompts" / ("evaluator.v3.md" if authoring else "evaluator.v2.md")).read_text(encoding="utf-8")
+    if sha_text(prompt) != config["prompt_sha256"]:
+        return AdapterResult("", "prompt-mismatch", None, 0.0, "unbilled", called=False)
+    prompt += "\n\nSnapshot (JSON):\n" + canonical(snapshot)
     if authoring:
         prompt += _request_material(snapshot, config)
     with tempfile.TemporaryDirectory(prefix="fp-codex-") as tmp:

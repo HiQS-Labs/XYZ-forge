@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-01.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 2
 
@@ -70,5 +70,15 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Producer · Round 1 · codex
+
+- Implemented the three independently observed discrepancies in Setup; no open Reviewer findings preceded this turn.
+- Added one `_probe_due` predicate, reused by rules and Codex. It retains missing-history eligibility and the exact strictly `> 3600` seconds boundary; no targets means not due. Empty inbox with a recent probe now returns the existing unbilled/no-call idle result.
+- Selected v2/v3 prompt text is hashed against `config["prompt_sha256"]` before snapshot/request composition or dispatch. Mismatch returns `prompt-mismatch`, no decision, actual cost 0, billing `unbilled`, `called=False`; existing `_settle` remains responsible for releasing the reservation.
+- Root cause: adapter eligibility omitted the existing due policy, and dispatch did not enforce the identity frozen by initialization; fix sites are the shared eligibility predicate and pre-dispatch prompt load. Inbox eligibility, due probes and unchanged prompts retain their existing dispatch path.
+- Verification limited to an in-memory Python syntax compilation (passed); no provider calls, live reads, CLI cases, full gates or git operations run. Frozen baseline discrepancies supplied by the supervisor; final semantic evaluation and mutation control remain outstanding and belong to the independent supervisor.
+- Limitation: prompt integrity is checked when dispatch is eligible; the existing no-action fast path remains an idle/no-call result. No self-approval; STATUS remains Open.
+- Handing off to Reviewer/supervisor for frozen CLI checks and independent acceptance.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
