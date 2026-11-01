@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-01.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -117,5 +117,30 @@ evidence files: checks.txt, delivered-map.txt, idea-check.txt, red-control-init-
 ```
 
 Handing off to Producer (claude-a) — resolve F1/F2, attach the final gate outcome for F3, log dispositions and open Round 2. Go to the Producer window and say 'take your turn'. No self-commit: the harness owns the file-scoped commit.
+
+### Producer · Round 2 · claude-a
+
+- **F1 (#1250 bundle): Implemented** in `23f8f2ac`.
+  - `PROJECT/2-WORKING/GH-1250-PHASE0-FOLLOWUPS/` moved to `PROJECT/3-COMPLETED/GH-1250-PHASE0-FOLLOWUPS/` with `git mv`.
+  - `CAPTURE.md`: `status: Complete`. Its status row now records the landing (PR #1253) and closure. The member doc paths point at `3-COMPLETED`, where all four already live.
+  - The `MARATHON.yaml` comment path is updated. No live reference remains to the old path (`git grep`, excluding evidence).
+  - I had first planned to leave the folder, on a supposed marathon-folder convention. The evidence did not support it: of the folders still in 2-WORKING, only #648 is closed, and its own status line is out of date. So I followed your fix.
+  - The issue-doc-sync result for all three issues is in `checks-run.txt` §7. The summary is `errors=0 warns=28`, and no line names #1250, #1273 or #1280.
+- **F2 (attributable verification): Implemented** in `e90ff2d0` (script) and `eb7d5ea4` (evidence).
+  - The retained script `TESTS-RESULTS/2026-11-01+GH-1308/gh1308-checks.sh` ran in fresh disposable clones of the branch (`e90ff2d0`) and of `cb1bf933` (red side). Its full output, with each command, rc and decisive lines, is `checks-run.txt`. Local paths are redacted.
+  - Highlights:
+    - The red init gives rc=2 `canary-stale-05`. The fixed init gives rc=0 (90 requests, 3 excluded).
+    - §1b is an **independent recomputation** over all 447 merged PRs and 812 issues, through `gh` plus `extract_linked_issues` and not through `harness.py`. It prints `EQUAL` to the manifest's delivered map (11 issues, including #384, #259 and #193).
+    - Codex cap: rc 2, 0, 0. Re-tick: red `started` rc=1, fixed `uncertain` rc=0.
+    - Idea skill: the unprefixed form gives rc=2 from a foreign repo, the prefixed forms give rc=0, and the empty-TARGET guard gives rc=1.
+    - `sibling_root`: red `/Users`, fixed `None`.
+    - gh534 42 OK, gh436 201 OK (fake HOME).
+    - `releases_app check` is clean, and the #1273 and #1280 rows read back as Completed.
+  - `provenance.jsonl` now has entries for the red control, the check run and the gate, each with `commit` and `status`.
+- **F3 (gate):** full `./validate.sh` at `324bd483` in a disposable clone gave rc=1, **407/409** (`gate.txt`, `gate-324bd483.log`).
+  - `pdda-repo-contract` was **caused by this branch**: my plan doc's status table header was `Item|State` (`pdda-repo-contract-324bd483.txt`). Fixed in `eb7d5ea4`, and `pdda-check-status-table` is now clean.
+  - `relay-self-sufficiency` is the external agy 429 quota, which GH-836 skips.
+  - No code changed after `324bd483`. Later commits touch only `PROJECT/`, `relay-system/` and `TESTS-RESULTS/`.
+  - A full gate on the final commit will follow approval, before the PR.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
