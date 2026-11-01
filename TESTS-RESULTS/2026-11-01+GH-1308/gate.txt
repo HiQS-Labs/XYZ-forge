@@ -8,3 +8,9 @@ HEAD and clean status were identical before and after. rc=1, passed 407 / 409.
   quota) from agy's service. The pre-push gate, CI and hosted reconcile skip it by design (GH-836).
 No code changed after 324bd483; later commits touch PROJECT/, relay-system/ and TESTS-RESULTS/ only.
 A full gate on the final commit follows final QA.
+
+Final full gate, ./validate.sh (route=full), at 00314c98 (the final reviewed commit) in the same
+disposable full clone, detached at that commit; HEAD and clean status identical before and after.
+rc=1, passed 408 / 409. Only failure: relay-self-sufficiency.sh, the external agy RESOURCE_EXHAUSTED
+(429) quota (gate-00314c98.log). pdda-repo-contract now passes. Commits after 00314c98 touch
+TESTS-RESULTS/ only.
