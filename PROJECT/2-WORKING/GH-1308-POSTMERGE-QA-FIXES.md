@@ -28,6 +28,12 @@ goal: >
 The full review, with a root cause and remediation for each finding, is in
 [#1308](https://github.com/HiQS-Labs/XYZ-forge/issues/1308). This doc tracks the fix PR only.
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Fixes 1–7 (`324bd483`) and the #1250 bundle promotion (`23f8f2ac`) are done, with retained checks passing (`checks-run.txt`). Codex final QA approved in round 2 (`relay-system/2026-11-01/gh1308-final-qa.md`). The full gate result on the final commit is in `TESTS-RESULTS/2026-11-01+GH-1308/gate.txt`. | Ready PR against development; merge only on Noel's go. Items 9–13 of #1308 await Noel's decisions. |
+
 ## Ratings
 
 `rated 60/55/50/75`.
@@ -59,9 +65,3 @@ Each fix below is verified as listed.
 8. **Gate.** Run the classified route on the final commit in a disposable clone, then a Codex final QA through `relay-xyz`.
 
 Rollback: revert the PR. Every change is local.
-
-## Status
-
-| What was just completed | What's next |
-|---|---|
-| Fixes 1–7 (`324bd483`) and the #1250 bundle promotion (`23f8f2ac`) are done, with retained checks passing (`checks-run.txt`). Codex final QA approved in round 2 (`relay-system/2026-11-01/gh1308-final-qa.md`). The full gate result on the final commit is in `TESTS-RESULTS/2026-11-01+GH-1308/gate.txt`. | Ready PR against development; merge only on Noel's go. Items 9–13 of #1308 await Noel's decisions. |

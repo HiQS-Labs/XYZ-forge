@@ -36,4 +36,4 @@ Plan QA: `relay-system/2026-10-29/gh1250-plan-qa.md` (r1 FAIL → r2 FAIL on wri
 ### Wave 1
 - [x] Wave 1 Proof of Done Test Suite Green (runnable command + test exit 0): `bash validate.sh` pre-advance gate passed on each of p1–p4 (local run log `relay-system/run-logs/2026-10-29/marathon-MARATHON_-093622-5022.log`, not committed; marathon exit 0)
 - [x] Wave 1 Post-Build Codex QA Relay executed: attested Approved per phase in `marathon-system/gh1250-phase0-followups--p1/RELAY.md`, `--p2/RELAY.md`, `--p3/RELAY.md`, `--p4/RELAY.md`
-- [ ] Wave 1 CodeRabbit / Peer Review findings adjudicated
+- [x] Wave 1 CodeRabbit / Peer Review findings adjudicated: both CodeRabbit review threads on PR #1253 were resolved before it merged on 2026-10-30 (recorded by GH-1308)

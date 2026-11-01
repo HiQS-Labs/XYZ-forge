@@ -5,15 +5,18 @@
 set -u
 RED="$1"; FAKEHOME="$2"
 H="python3 utils/py/harness.py factory-primitive"
+# Each run uses fresh run roots (unique suffix), so nothing is ever removed (AGENTS.md: no recursive
+# cleanup through relative paths).
+RUN="$(date +%s)-$$"
 run() { echo "\$ $*"; out=$(eval "$@" 2>&1); rc=$?; printf '%s\n' "$out" | tail -n "${TAIL:-3}"; echo "rc=$rc"; echo; }
 echo "# GH-1308 checks"; echo "head=$(git rev-parse HEAD) origin=$(git remote get-url origin) clean_files=$(git status --porcelain | wc -l | tr -d ' ')"
 echo "red=$(git -C "$RED" rev-parse HEAD) date=$(date -u +%FT%TZ) python=$(python3 -V 2>&1)"; echo
 
 echo "## 1. Stage B canary init: red control on cb1bf933, then this revision"
 INIT="init --from-prs --limit 33 --unregistered 33 --canaries utils/py/factory_primitive/scenarios/gh1279-canaries.jsonl --miss 85-90"
-run "cd '$RED' && rm -rf temp/factory-primitive/r1 && $H --run-root temp/factory-primitive/r1 $INIT"
-run "rm -rf temp/factory-primitive/g1 && $H --run-root temp/factory-primitive/g1 $INIT"
-M=temp/factory-primitive/g1/instances/C/backlog/manifest.json
+run "cd '$RED' && $H --run-root temp/factory-primitive/r1-$RUN $INIT"
+run "$H --run-root temp/factory-primitive/g1-$RUN $INIT"
+M=temp/factory-primitive/g1-$RUN/instances/C/backlog/manifest.json
 TAIL=20 run "python3 -c \"import json;m=json.load(open('$M'));print('requests',len(m['requests']),'excluded',len(m['excluded']));print('delivered',json.dumps(m['delivered'],sort_keys=True))\""
 echo "## 1b. independent all-PR recomputation of the delivered map (not via harness.py)"
 TAIL=20 run "python3 - '$M' <<'PY'
@@ -35,13 +38,13 @@ sys.exit(0 if d==m else 1)
 PY"
 
 echo "## 2. Codex call cap"
-run "$H --run-root temp/factory-primitive/c0 init --adapter codex --codex-model m"
-run "$H --run-root temp/factory-primitive/c1 init --adapter codex --codex-model m --max-call-cost 0.01"
-run "$H --run-root temp/factory-primitive/c2 init"
+run "$H --run-root temp/factory-primitive/c0-$RUN init --adapter codex --codex-model m"
+run "$H --run-root temp/factory-primitive/c1-$RUN init --adapter codex --codex-model m --max-call-cost 0.01"
+run "$H --run-root temp/factory-primitive/c2-$RUN init"
 
 echo "## 3. re-tick after crash-act: red then this revision"
 for side in "$RED" "$PWD"; do
-  run "cd '$side' && rm -rf temp/factory-primitive/tk && $H --run-root temp/factory-primitive/tk init >/dev/null && { $H --run-root temp/factory-primitive/tk tick --slot 1 --fault crash-act >/dev/null 2>&1; echo crash-rc=\$?; } && $H --run-root temp/factory-primitive/tk tick --slot 1"
+  run "cd '$side' && $H --run-root temp/factory-primitive/tk-$RUN init >/dev/null && { $H --run-root temp/factory-primitive/tk-$RUN tick --slot 1 --fault crash-act >/dev/null 2>&1; echo crash-rc=\$?; } && $H --run-root temp/factory-primitive/tk-$RUN tick --slot 1"
 done
 
 echo "## 4. idea skill tool paths from a foreign repo, and the empty-TARGET guard"

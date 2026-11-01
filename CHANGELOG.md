@@ -9,6 +9,7 @@
 - merge-cleanup `sibling_root` now refuses a parent folder that contains a NEVER_DELETE root. A primary at `/Users/X` had made all of `/Users` a safe root.
 - The merge-cleanup Jog-failure message no longer claims rows are untouched after a partial landing.
 - #1273 and #1280 are promoted to Completed, since both were missed by reconcile.
+- Verified with red/green manual checks (`TESTS-RESULTS/2026-11-01+GH-1308/checks-run-final.txt`); the fixed delivered map matches an independent recomputation over all 447 merged PRs; `gh534` 42 OK and `gh436` 201 OK; `releases_app check` is clean and `issue-doc-sync` no longer lists #1250, #1273 or #1280. The full `./validate.sh` gate finished 408/409; the sole failure is `relay-self-sufficiency.sh`, whose live agy call got `RESOURCE_EXHAUSTED (429)` (external; skipped by pre-push and CI per GH-836).
 
 ## 2026-10-31 — GH-1306 skills-army-hq adopts a skill whose payload already matches its source
 
