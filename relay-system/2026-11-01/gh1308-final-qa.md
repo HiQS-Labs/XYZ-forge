@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-01.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -142,5 +142,45 @@ Handing off to Producer (claude-a) — resolve F1/F2, attach the final gate outc
   - `relay-self-sufficiency` is the external agy 429 quota, which GH-836 skips.
   - No code changed after `324bd483`. Later commits touch only `PROJECT/`, `relay-system/` and `TESTS-RESULTS/`.
   - A full gate on the final commit will follow approval, before the PR.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: approve the bounded source/manual-evidence review for #1308 findings 1–8. F1 and F2 are resolved. F3 is explicitly still a final-candidate gate obligation, to be run by the harness after this turn as instructed; this approval does not attest a green final gate or authorize landing. No source correction is requested.
+
+swept file: yes
+
+Read all four Setup artifacts in full, including pre-existing code, the task plan, the live #1308 issue, the promoted #1250 capture and the retained verification script/logs. No additional actionable pre-existing defect found within this bounded review. Applied SWE. Graph tools are not exposed in this turn's tool inventory; used direct source, with no claim of graph coverage. No git command, suite, pytest or executable fixture was run by this reviewer; only the relay file was edited.
+
+- [Pass] F1 resolved — `PROJECT/3-COMPLETED/GH-1250-PHASE0-FOLLOWUPS/CAPTURE.md:3` now says `status: Complete`; its outcome at line 21 records PR #1253 and closure, and the member references at lines 27–30 point to completed captures. The old bundle is absent (read-only probe below). `TESTS-RESULTS/2026-11-01+GH-1308/checks-run.txt:127` retains the issue-doc-sync extraction: `errors=0 warns=28`, rc=0, with no #1250/#1273/#1280 warning.
+
+- [Pass] F2 resolved — `TESTS-RESULTS/2026-11-01+GH-1308/provenance.jsonl:1`–3 now attribute the red control, focused checks and failed gate to their revisions, with nonempty logs. `checks-run.txt:1` identifies e90ff2d0, origin, clean tree, red revision, date and Python. Sections 1/1b retain rc=2 on the old canary, rc=0 with 90 requests/3 excluded on the candidate, and `EQUAL` after an independent recomputation over 447 PRs/812 issues. Sections 2–5 retain the requested cap, re-tick, foreign-directory, empty-TARGET and sibling-parent results. Lines 104–112 retain `Ran 42 tests` / `OK` and `Ran 201 tests` / `OK`; these are Producer-run evidence, not reviewer reruns. Lines 115–129 retain `check: clean (0 failures, 10 warning(s))`, both Completed rows and issue-doc-sync. The manual script is retained evidence under TESTS-RESULTS, not a newly registered suite.
+
+- [Pass] Source requirements remain satisfied — `utils/py/harness.py:831` refuses a list reaching 10000 and both snapshot callers use it; `:1406` re-reads after reconciliation; `:1669` rejects the zero Codex reservation. `skills/1-hourly/idea/SKILL.md:43` stops empty TARGET before target git/ledger operations, and `:70`, `:178`–180, `:199` use HQ_ROOT for the specified tools. `skills/2-daily/merge-cleanup/scripts/scan_clones.py:53` rejects equal/ancestor protected parents using component containment; `merge_cleanup.py:955` accurately describes partial Jog completion. These match #1308's specified fixes without expanding into items 9–12.
+
+- [Unverified — needs clone run] F3 final gate remains outstanding, with an honest failed receipt rather than a green claim. `gate-324bd483.log:548` says `passed: 407 / 409`; lines 418–460 identify the plan table failure, and line 473 retains the agy `RESOURCE_EXHAUSTED` 429. The current plan's Status table has the required header; `githooks/pre-push:317`–322 documents and sets the existing live-agent skip default. Those facts explain the failures but do not prove the final gate passes. Run the existing full gate on the final candidate in a disposable full clone and retain its revision-bound result before treating the PR as ready. The harness owns that next operation; no additional review round is needed unless it exposes a new finding or requires substantive changes.
+
+Read-only closeout probe, exit 0 (command run with PYTHONDONTWRITEBYTECODE=1 and TMPDIR="$PWD/.relay-scratch/tmp"):
+
+```python
+from pathlib import Path
+import json, sqlite3
+root=Path.cwd()
+for p in ['PROJECT/2-WORKING/GH-1250-PHASE0-FOLLOWUPS','PROJECT/3-COMPLETED/GH-1250-PHASE0-FOLLOWUPS/CAPTURE.md']:
+ print(p, (root/p).exists())
+e=root/'TESTS-RESULTS/2026-11-01+GH-1308'
+for row in map(json.loads,(e/'provenance.jsonl').read_text().splitlines()):
+ print('provenance',row['id'],row['commit'],row['status'])
+ for name in row['log'].split(', '):
+  p=e/name
+  print('log',name,'bytes',p.stat().st_size)
+with sqlite3.connect('file:'+str(root/'releases.db')+'?mode=ro&immutable=1',uri=True) as db:
+ for row in db.execute('SELECT gh_number,section,status_marker,doc_path FROM roadmap_items WHERE gh_number IN (1273,1280) ORDER BY gh_number'):
+  print('ledger',row)
+```
+
+Decisive output: old #1250 bundle `False`, completed capture `True`; provenance statuses `pass`, `pass`, `fail` for red/checks/gate respectively; log sizes 8462, 112, 892 and 39751 bytes (all nonempty); ledger rows `(1273, 'Completed', '✅', 'PROJECT/3-COMPLETED/GH-1273-RELAY-SEPARATORS.md')` and `(1280, 'Completed', '✅', 'PROJECT/3-COMPLETED/GH-1280-OUTER-LOOP-ATE-CAMPAIGN.md')`.
+
+Relay closed (Approved), no further turn needed. Producer/harness continues with the final disposable-clone gate before PR readiness. No self-commit: the harness owns the file-scoped commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
