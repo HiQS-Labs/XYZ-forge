@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-01 — GH-1309 skills-army-hq replaces a real legacy folder in an app root with the managed link
+
+- New `sync.py --migrate-legacy SKILL --archive-legacy` (preview first, then `--apply`). Until now `--adopt`, `--migrate` and `--migrate-from` refused any real directory in an app root, and `--archive-legacy` worked only for `--retire-trinity` with a matching source, so an installer-created folder (for example a stale `~/.claude/skills/xyz`) kept `sync.py --status` at exit 2 with no supported fix. For each enabled target holding such a folder it now requires a valid skill folder of that name, takes a verified ZIP, moves the folder to retained `.staging/<op>/retired`, and creates the owned link in one transaction. Its content may differ from the managed copy; the preview reports `matches_managed`. A run with nothing to migrate, an unknown skill, or no `--archive-legacy` refuses. Opt-in: no existing flow changes.
+- The `retire-directory` recovery action is no longer hard-coded to `skills-sync-trinity`: it now accepts a deployed skill's name too, every retirement root must lie outside the collection, and replaying a finished retirement after its link exists is a no-op. A pending receipt written by this flow cannot be replayed by an older manager. Documented in `references/recovery.md` and `SKILL.md`. Evidence: `TESTS-RESULTS/2026-11-01+GH-1309/`. Reversibility: Costly (it moves folders in app roots outside the repo); every moved folder stays recoverable from its ZIP and `.staging`.
+
 ## 2026-11-01 — GH-1308 post-merge QA fixes for the 2026-10-29 → 11-01 merges
 
 - `harness.py factory-primitive init --from-prs` now reads every merged PR and issue (limit 10000) and refuses a snapshot that may be truncated. The old 300-PR window had dropped the delivered-holds for #384, #259 and #193, which broke the GH-1279 Stage B canary init (`canary-stale-05`).
