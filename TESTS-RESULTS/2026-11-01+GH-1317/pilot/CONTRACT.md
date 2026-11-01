@@ -33,3 +33,14 @@ state effects and nonempty JSON matter, not just exits/digests. No weakening aft
 base results. A script/fixture defect is unavailable evaluation and must be recorded,
 not a product pass. Same-user containment is supervised, not immutable. Stop on
 identity drift, disputed contract, invalid evidence, uncertain cleanup or exhaustion.
+
+## Revision 2 before actor changes
+
+Plan QA identified fixture/oracle gaps in v1. Supersede the executable protocol with
+manual-check.v2.py.txt: initialize an owned synthetic ledger through releases CLI,
+park only issue 9001317, substitute it only in the disposable clone, hash it and
+require v3 seed identity 9001317. Fake issue-view refuses other IDs. Require every
+case to complete a tick/receipt and hash-verified nonempty tool output; no-call
+cases additionally require unchanged aggregate spent/remaining budget. Original
+v1 baseline remains retained but is not acceptance evidence for v2. No actor edit
+has occurred. Re-freeze v2 with this correction; no expected behavior weakened.

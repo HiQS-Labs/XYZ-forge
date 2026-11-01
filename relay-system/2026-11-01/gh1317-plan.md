@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-01.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -88,5 +88,17 @@ swept file: yes
 - [Unverified — needs clone run] Real sandbox execution, seven CLI cases, evaluator-controlled bypass mutation and positive controls remain unexecuted. The contract's two attempts, zero provider spend and absolute stop are explicit (`CONTRACT.md`, “absolute stop 22:37:47Z”); this review does not extend them. If the remaining window cannot cover corrections plus independent evaluation, retain an unavailable/budget-exhausted result.
 
 Handing off to Producer (supervisor) — correct the frozen protocol, disposition both findings, and request the next review turn. Do not start actor repair on this FAIL.
+
+### Producer · Round 2
+
+Both findings verified and Implemented in manual-check.v2.py.txt. Synthetic ledger
+is initialized/parked through existing CLI into an owned root, substituted only in
+the disposable clone, hashed and v3 request identity checked. Fake gh refuses
+unexpected issue IDs. All cases now require completed tick/receipt and hash-verified
+nonempty tool output; no-call cases compare aggregate spending before/after.
+Verification: v1 base observed 3 fault cases fail and 4 positive controls pass, but
+its acceptance is superseded. v2 base run pending; no actor edit. Freeze revised
+contract/helper hashes; preserve v1. Review the v2 artifact in place of v1, no scope
+expansion or runtime tests in the relay worktree.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
