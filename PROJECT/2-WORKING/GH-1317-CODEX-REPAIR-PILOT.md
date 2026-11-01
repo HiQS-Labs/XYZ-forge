@@ -18,7 +18,7 @@ phases: 3
 
 | What was just completed | What's next |
 |---|---|
-| Approved all eight cases; independent plan QA approved corrected protocol in round 3; base reproduced both defects. | One actor attempt repaired both defects; seven frozen checks passed; controlled bypass rejected. Final independent review pending. |
+| Approved all eight cases; independent plan QA approved corrected protocol in round 3; base reproduced both defects. | One actor attempt repaired both defects; seven frozen checks passed; controlled bypass rejected. Final independent review Approved; publish updated draft with full-gate qualification outstanding. |
 
 ## Current state and authorized scope
 
@@ -30,8 +30,7 @@ Accepted-start is recorded only now, after independent plan approval.
 Keep [#1314](https://github.com/HiQS-Labs/XYZ-forge/issues/1314) and
 [PR #1316](https://github.com/HiQS-Labs/XYZ-forge/pull/1316) unchanged. Reuse their
 identity, raw-output, state-effect, replay and inconclusive-result procedures by
-reference; their merge is not a dependency. This draft contains no calibrated
-production repair or reliability claim.
+reference; their merge is not a dependency. This pilot makes no general reliability claim.
 
 ## Identities and intake
 
@@ -181,7 +180,7 @@ the oracle after observing failure. Requirement changes invalidate old evidence.
 
 ## Lessons Learned
 
-NO_ENTRY: preparation alone supplies no observed repair outcome. Relevant existing
+NO_ENTRY: this narrow pilot does not establish a new general lesson. Relevant existing
 lesson: LESSONS-LEARNED.md “Ship a gate's producer in the same change you ship the
 gate”; do not introduce a new required receipt without its existing producer.
 
@@ -207,3 +206,7 @@ Source helper preserves strictly >3600 seconds; runtime cases cover recent/absen
 history, not an exact-equality timing case. V3 positive control completes idle
 after a real external fake call; it does not claim plan-authoring quality.
 No generalized autonomy or productivity-improvement claim from this single pilot.
+
+Final independent review Approved in relay-system/2026-11-01/gh1317-final.md.
+See pilot/SUMMARY.md for results, bounds, process deviations and remaining full-gate
+qualification. All eight cases were approved/exercised (case 8 is controlled bypass).

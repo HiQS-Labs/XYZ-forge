@@ -136,4 +136,3 @@ INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-406-RADAR-CROSSWALK.md:1 r
 SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=110
 
 exit=0
-
