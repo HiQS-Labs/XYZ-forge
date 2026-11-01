@@ -14,7 +14,7 @@ issue: https://github.com/HiQS-Labs/XYZ-forge/issues/1309
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed, capture doc written | Rate, promote, plan, plan QA |
+| Plan QA Approved; implemented; 36-check matrix and 33-test suite green | Tier-2 gate, final Codex QA, ready PR |
 
 ## Why
 
