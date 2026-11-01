@@ -794,10 +794,18 @@ def main(argv=None):
                 require(not within(source, root) and not within(root, source) and source != root, "Source/collection overlap")
                 require(name not in found or args.command == "update", f"Skill already exists: {name}; use update")
                 before = found.get(name, {}).get("digest")
-                if before == record["digest"]:
+                held = state["skills"].get(name, {})
+                receipt_only = before == record["digest"]
+                if receipt_only and held.get("source") == record["source"] and held.get("digest") == before:
                     print(f"Unchanged: {name}"); return 0
                 details = {"name": name, "source": str(source), "before": before, "after": record["digest"], "commit": record["commit"]}
-                if apply:
+                if receipt_only:
+                    # GH-1306: identical bytes but no (or another) recorded source; record provenance, copy nothing.
+                    details["receipt_only"] = True
+                    if not apply:
+                        print(f"skills-army-hq: will RECORD source {source} @ {record['commit'][:12]} for {name} "
+                              "(payload already identical; nothing copied)", file=sys.stderr)
+                elif apply:
                     if before:
                         details["backup"] = archive(root, root / name)
                     actions.append(stage_payload(root, source, before, record["digest"], name, ignored))
@@ -844,7 +852,7 @@ def main(argv=None):
             print(json.dumps({"operation": args.command, "apply": apply, **details}, indent=2))
             if apply:
                 transact(root, state, config, actions, args.command, details)
-                if args.command in ("add", "update", "remove"):
+                if args.command in ("add", "update", "remove") and not details.get("receipt_only"):
                     origin = f" from {Path(details['source']).name}@{details['commit'][:12]}" if details.get("commit") else ""
                     if owned_paths and regular_bytes(root / "README.md") != regular_bytes(root / "skills-army-hq" / "README.md"):
                         owned_paths = ()

@@ -138,3 +138,7 @@ consult.py enumerates advisors by hand; kimi and cmd have relay shims but no con
 ### QA checklist — Phase 0
 
 - [ ] TODO: acceptance criteria for the Phase 0 pass above.
+
+## Merge evidence
+
+- PR #1268 merged 2026-10-31 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

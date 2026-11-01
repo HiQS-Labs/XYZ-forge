@@ -824,10 +824,12 @@ def assert_deletable(path: Path):
     log_action("file_delete", path=str(p))
 ```
 
-One per-run addition sits outside that list: merge-cleanup's published-PR retirement
-(`--retire-published-pr`) also accepts the `--primary` clone's parent folder, where start-task puts
-task clones (GH-970), unless that parent is a `NEVER_DELETE` root (GH-1193). The default scan and
-full sweep use the list alone.
+One per-run addition sits outside that list: merge-cleanup also accepts the `--primary` clone's
+parent folder, where start-task puts task clones (GH-970), unless that parent is a `NEVER_DELETE`
+root. It counts only for checkouts whose `origin` names the primary's repository, and a failed or
+empty origin lookup never matches, so another project's checkout in the same folder is neither
+scanned by default nor removable. This holds in every mode: the default scan and Phase 6 teardown
+(GH-722) and published-PR retirement (GH-1193). Checkouts inside a listed root are unaffected.
 
 Four things here are load-bearing, and three of them are defects this example had in an earlier draft:
 

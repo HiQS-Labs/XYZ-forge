@@ -50,14 +50,35 @@ DEFAULT_NEVER_DELETE = {
 }
 
 
-def published_retirement_roots(primary: Path) -> List[Path]:
-    """GH-1193: published-PR retirement (GH-1059) also accepts the primary's parent folder, where
-    start-task's GH-970 rule puts task clones, unless that parent is a NEVER_DELETE root. The
-    default scan and the full sweep keep DEFAULT_SAFE_ROOTS (#722 tracks widening those)."""
+def sibling_root(primary: Path) -> Optional[Path]:
+    """GH-722: the primary's parent folder, where start-task's GH-970 rule puts task clones; None
+    when that parent is a NEVER_DELETE root, which must never become a scan or safe root."""
     parent = primary.resolve().parent
     if parent in {r.resolve() for r in DEFAULT_NEVER_DELETE if r.exists()}:
-        return list(DEFAULT_SAFE_ROOTS)
-    return DEFAULT_SAFE_ROOTS + [parent]
+        return None
+    return parent
+
+
+def primary_safe_roots(primary: Path) -> List[Path]:
+    """GH-1193/GH-722: DEFAULT_SAFE_ROOTS plus the primary's parent folder (unless NEVER_DELETE).
+    inspect_checkout grants the parent only to checkouts with the primary's origin."""
+    parent = sibling_root(primary)
+    return DEFAULT_SAFE_ROOTS + [parent] if parent else list(DEFAULT_SAFE_ROOTS)
+
+
+def default_scan_roots(primary: Path) -> Tuple[List[Path], Optional[Path], str]:
+    """GH-722: roots for a scan without --root, the sibling root to origin-filter (None when it is
+    NEVER_DELETE or already a default root), and the header line naming what was scanned."""
+    parent = sibling_root(primary)
+    defaults = {r.resolve() for r in DEFAULT_SAFE_ROOTS if r.exists()}
+    sib = parent if parent and parent not in defaults else None
+    roots = DEFAULT_SAFE_ROOTS + ([sib] if sib else [])
+    line = "Scanned roots: " + ", ".join(str(r) for r in roots)
+    if sib:
+        line += f" (only checkouts with the primary's origin from {sib})"
+    elif parent is None:
+        line += f" (skipped {primary.resolve().parent}: NEVER_DELETE root)"
+    return roots, sib, line
 
 
 def _within(child: Path, parent: Path) -> bool:
@@ -391,6 +412,18 @@ def _normalize_remote(url: str) -> str:
         u = u[:-4]
     m = re.search(r"github\.com[:/]([^/]+/[^/]+)$", u)
     return m.group(1).lower() if m else u
+
+
+def same_origin(a: Path, b: Path) -> bool:
+    """GH-722: both checkouts report a non-empty origin URL naming the same repository. Any failed
+    or empty lookup is "not the same" — absence of identity is never proof of identity."""
+    urls = []
+    for repo in (a, b):
+        r = run_git(repo, ["remote", "get-url", "origin"])
+        if r.returncode != 0 or not r.stdout.strip():
+            return False
+        urls.append(_normalize_remote(r.stdout))
+    return urls[0] == urls[1]
 
 
 def merged_pr_index(repo_path: Path, integration_branch: str) -> Dict[str, Any]:
@@ -942,8 +975,9 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
         res["checkout_type"] = "unusual"
 
     # Check deletable boundary
-    retire_roots = published_retirement_roots(primary_repo_path) if published_pr and primary_repo_path else None
-    is_safe, safe_msg = is_safe_deletable_path(path, safe_roots=retire_roots)
+    # GH-722: the primary's parent folder counts only for a checkout of the primary's own repository.
+    roots = primary_safe_roots(primary_repo_path) if primary_repo_path and same_origin(path, primary_repo_path) else None
+    is_safe, safe_msg = is_safe_deletable_path(path, safe_roots=roots)
     res["safe_deletable"] = is_safe
     res["safe_deletable_reason"] = safe_msg
 
@@ -1130,8 +1164,9 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
     return res
 
 
-def scan_directories(search_roots: List[Path], prefix_filter: Optional[str] = None, primary_repo: Optional[Path] = None, excludes: Optional[List[str]] = None, integration_branch: str = "development") -> List[Dict[str, Any]]:
-    """Scans root directories for candidate git checkouts."""
+def scan_directories(search_roots: List[Path], prefix_filter: Optional[str] = None, primary_repo: Optional[Path] = None, excludes: Optional[List[str]] = None, integration_branch: str = "development", sibling_root: Optional[Path] = None) -> List[Dict[str, Any]]:
+    """Scans root directories for candidate git checkouts. Under `sibling_root` (GH-722) only
+    checkouts with the primary's origin are inspected, so unrelated repos are never fetched."""
     results = []
     seen = set()
 
@@ -1149,6 +1184,8 @@ def scan_directories(search_roots: List[Path], prefix_filter: Optional[str] = No
                 if resolved in seen:
                     continue
                 seen.add(resolved)
+                if sibling_root and root == sibling_root and not (primary_repo and same_origin(resolved, primary_repo)):
+                    continue
 
                 info = inspect_checkout(resolved, primary_repo_path=primary_repo, exclude_patterns=excludes, integration_branch=integration_branch)
                 if info.get("is_git"):
@@ -1418,15 +1455,21 @@ def main():
 
     args = parser.parse_args()
 
-    search_roots = [Path(r).expanduser() for r in args.root] if args.root else DEFAULT_SAFE_ROOTS
     primary_repo = Path(args.primary).expanduser() if args.primary else Path.cwd()
+    if args.root:
+        search_roots, sib = [Path(r).expanduser() for r in args.root], None
+        roots_line = "Scanned roots: " + ", ".join(str(r) for r in search_roots)
+    else:
+        search_roots, sib, roots_line = default_scan_roots(primary_repo)
 
-    checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude, integration_branch=args.integration_branch)
+    checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude, integration_branch=args.integration_branch, sibling_root=sib)
 
     if args.json:
+        print(roots_line, file=sys.stderr)  # stdout stays machine-readable
         print(json.dumps(checkouts, indent=2))
     else:
         print(f"### Git Checkout Audit ({len(checkouts)} found)\n")
+        print(roots_line + "\n")
         print(format_scan_table(checkouts) + "\n")
         summary = format_completion_and_followup_summary(checkouts)
         if summary:

@@ -1,0 +1,43 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- ~/.cache/xyz-forge-test-venv/bin/python3
+cachedir: .pytest_cache
+rootdir: <task clone>/XYZ-forge-gh1306-hq-unchanged-source-receipt-2026-10-31
+configfile: pytest.ini
+collecting ... collected 33 items
+
+test/test_deploy_skills.py::DeploySkillsTest::test_a10_old_discoverable_skill_is_absent PASSED [  3%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a10_retirement_is_explicit_and_recoverable PASSED [  6%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a1_copied_manager_and_no_source_dependency PASSED [  9%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a1_failed_init_preserved_then_retry_after_backup PASSED [ 12%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a1_incomplete_manager_refused PASSED [ 15%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a1_legacy_manager_activation_preserves_collection PASSED [ 18%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a1_readme_copied_updated_and_archived PASSED [ 21%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a2_archive_crc_and_copy_failure_preserve_live_payload PASSED [ 24%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a2_archives_round_trip_and_same_day_collisions PASSED [ 27%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a2_self_update_preserves_runnable_manager PASSED [ 30%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a3_names_malformed_sources_and_symlinks PASSED [ 33%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a3_overlap_alias_and_denied_scan PASSED [ 36%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a3_previews_write_nothing PASSED [ 39%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a4_adopt_and_selected_source_migration PASSED [ 42%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a4_alternative_source_requires_exact_explicit_selection PASSED [ 45%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a4_foreign_real_link_and_lost_ownership_preserved PASSED [ 48%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a4_owned_links_idempotence_removed_disabled_and_dedup PASSED [ 51%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a4_partial_sync_reports_failure_and_keeps_success PASSED [ 54%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_crash_each_publish_boundary_recovers_once 
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_crash_each_publish_boundary_recovers_once PASSED [ 57%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_link_crash_and_corrupt_pending_fail_closed PASSED [ 60%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_missing_payload_corrupt_state_and_history_refuse_prune PASSED [ 63%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a5_two_missing_payloads_do_not_deadlock_remove PASSED [ 66%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a6_shipped_consult_has_no_recursive_install_artifact PASSED [ 69%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a7_missing_manager_entry_blocks_usability PASSED [ 72%]
+test/test_deploy_skills.py::DeploySkillsTest::test_a7_swe_description_fits_zcode_discovery_limit PASSED [ 75%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_collection_only_skill_is_unrecognized_never_refused PASSED [ 78%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_drifted_deploy_refused_citing_canonical_then_allowed_loudly PASSED [ 81%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_explicit_bad_canonical_is_an_error PASSED [ 84%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_no_canonical_is_a_warning_not_a_pass PASSED [ 87%]
+test/test_deploy_skills.py::DeploySkillsTest::test_gh660_targets_json_canonical_key PASSED [ 90%]
+test/test_deploy_skills.py::DeploySkillsTest::test_pulse_adoption_refuses_unprotected_or_foreign_state PASSED [ 93%]
+test/test_deploy_skills.py::DeploySkillsTest::test_pulse_adoption_two_devices_and_pull_readthrough PASSED [ 96%]
+test/test_deploy_skills.py::DeploySkillsTest::test_pulse_default_root PASSED [100%]
+
+==================== 33 passed, 4 subtests passed in 21.28s ====================

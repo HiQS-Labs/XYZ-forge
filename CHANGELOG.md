@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-10-31 — GH-1306 skills-army-hq adopts a skill whose payload already matches its source
+
+- `intake.py update NAME --source PATH` no longer stops at `Unchanged` when the deployed bytes equal the source but the receipt has no source (a `catalog` entry), names another source (an `adopt-existing` self-reference) or carries a stale digest. It records the source receipt as a state-only transaction: preview prints `will RECORD source …`, nothing is copied or backed up, and no Pulse commit is attempted. `Unchanged` remains when the same source and digest are already recorded.
+
+## 2026-10-31 — GH-1299 ceremony audit folded into sanity-check; mode-before-skill rule
+
+- The plan-wide ceremony audit from GH-1286 (PR #1289) is now `sanity-check` **Plan mode**, carried over with its tested wording (a 35-line compression lost behaviour in a blind rerun; evidence below): same procedure (goal and open question with evidence, progress / proof / safety / ceremony labels with the deletion test and its qualifiers, real run over proxy, short verdict), with its triggers added to the `sanity-check` description. `skills/1-hourly/ceremony-audit/` and its Skills Index row are removed (the `1-hourly` heading now matches its 17 rows, which include `idea`). `skills/README.md` gains a **mode before skill** rule: a new skill needs a trigger and unit no existing skill can carry as a mode, and its plan names the skills checked. Evidence: `TESTS-RESULTS/2026-10-31+GH-1299/`. Reversibility: Easy.
+
+## 2026-10-31 — GH-1279 outer loop gains a bounded Codex decision adapter and Codex-authored plan content (Stages A and A2 of the planning soak)
+
+- `harness.py factory-primitive init --adapter codex --codex-model M [--adapter-timeout S]` freezes the route (model, timeout, flag list, prompt hash) in the instance config; the default stays `rules` and its prompt hash is unchanged. The adapter runs one tool-disabled, read-only, ephemeral `codex exec` per eligible slot with a 90 s process-group cap, no retry, raw output retained, and classifies `ok`, `invalid-output`, `timeout`, `rate-limited` or `adapter-error`; every real call is billed `unknown`, never zero, and an empty inbox makes no call (`agent_called=false`).
+- `_validate` no longer raises `TypeError` on non-string tool or ID values (a model can emit them; the rules arm cannot), so they end as a rejected decision and a safe idle instead of a failed tick.
+- `init --codex-authoring` (Stage A2) lets the Codex decision carry an `authored` object (scope, acceptance, open questions, write set) that the validator bounds and checks against the frozen tracked-file index; `plan_draft` merges it as labelled `codex-authored` entries after the sourced ones, never replacing them, and drops authored paths for planner-ready briefs. With the flag off, the validator rejects `authored` as before and briefs are byte-identical.
+- `init --canaries/--slots/--miss` (Stage B tooling) lays out frozen planning canaries, the missed slots and the real requests over a 96-slot budget, with a two-arm prepare, driver, dry-run and QA-pack helpers under `TESTS-RESULTS/2026-10-31+GH-1279-stageb/`; default `init` output is unchanged. Evidence: `TESTS-RESULTS/2026-10-31+GH-1279-stageb/SUMMARY.md`.
+- The 8-hour window ran on one machine (96 slots per arm): 90 Codex calls all classified ok at about 7.6 s, 3 validator rejections of untracked authored paths, crash recovery and identity checks held, 0 false approvals on 8 seeded flaws from two reviewers. It also measured existing behaviour: the proposal builder schedules delivered issues and the deterministic planner carries injected issue text into briefs and launch packets. An unplanned host suspension of about 71 minutes made slots 76-84 run as a catch-up. See `TESTS-RESULTS/2026-10-31+GH-1279-stageb/SUMMARY.md`. The deterministic planner still writes the plan content, so a Codex arm shows decision compliance and containment, not planning skill. Evidence: `TESTS-RESULTS/2026-10-30+GH-1279/SUMMARY.md`.
+
+## 2026-10-31 — GH-1284 outer loop: status no longer creates state on an uninitialized root
+
+- `harness.py factory-primitive status`, `tick` and `packet` now refuse a run root that was never initialized (rc 2, `instance not initialized; run init first`) instead of creating `state.db`, which made a later `init` refuse. Found by the GH-1280 ATE campaign (D1). Init paths are unchanged. Evidence: `TESTS-RESULTS/2026-10-31+GH-1284/SUMMARY.md`. Reversibility: Easy.
+
+## 2026-10-31 — GH-1286 ceremony-audit skill
+
+- New `skills/1-hourly/ceremony-audit/SKILL.md` (120 lines or fewer, no scripts, no tests). It names the goal and the one open question with the evidence that the rest is proven, labels every planned step progress / proof / safety / ceremony by asking whether deleting it would change the outcome or the next decision, prefers one real run over proxies, and returns a cut list, kept list, next step with its gate, and a parked count. Links `sanity-check`, `ponytail` and `worth-it` instead of restating them. `ARCHITECTURE.md` index row added; the `1-hourly` count now matches its rows (17). Evidence: `TESTS-RESULTS/2026-10-31+GH-1286/`. Reversibility: Easy.
+
 ## 2026-10-30 — GH-1273 harmless relay separators
 
 - The reviewer-history check retains strict canonical comparison first, then tolerates empty separator-line count changes outside protected literal content with a warning. Canonical record coordinates and loader semantics are unchanged; substantive history and invalid approvals remain refused. Raw transcript remains intact. Reversibility: Costly shared approval boundary; rollback by reverting this change.
@@ -44,6 +68,23 @@ Verify CLIO publication parity and track upstream Codex repair (GH-1255).
 
 - The 15-file published CLIO set matches Rebalance upstream and standalone bytes and Git modes. Forge has no separate CLIO runtime. Source parity does not establish installed capture health.
 - Capture repair belongs to Rebalance #368: modern submitted events, durable history replay and a diagnostic warning. Standalone publication and target-device acceptance follow reviewed upstream landing. Evidence: `TESTS-RESULTS/2026-10-29+GH-1255/`.
+
+## 2026-10-29 — merge-cleanup finds and retires the task clones beside the primary (GH-722)
+
+- **Default scan and Phase 6 accept the primary's parent folder.** Start-task puts task clones
+  beside the primary (GH-970); the default scan only walked the fixed `SAFE_ROOTS`, so on a Mac
+  whose repos live in `~/Documents/GitHub Repos` those clones were never listed or removed. Without
+  `--root`, the scan now also walks that folder, and Phase 6 accepts it as a safe root. #1198 had
+  done this for `--retire-published-pr` only.
+- **Same origin only.** The folder counts only for checkouts whose `origin` names the primary's
+  repository; a failed or empty origin lookup never matches. Other projects' checkouts there are
+  neither inspected by the default scan nor removable. A `NEVER_DELETE` parent (`~`, `~/Documents`,
+  `~/Desktop`) is never used and is reported as skipped. Checkouts inside a listed root are
+  unaffected, and `--root` scans walk exactly the roots given.
+- The Phase 1 header prints the roots scanned (on stderr with `scan_clones.py --json`).
+- `published_retirement_roots` is renamed `primary_safe_roots`. Two existing test doubles were
+  updated for the Phase 6 call; no new test (GH-831). Manual check under
+  `TESTS-RESULTS/2026-10-29+GH-722/`.
 
 ## 2026-10-27 — next-steps-mod: Claude names the next steps every turn, nobody asks "what's next?" (GH-1240)
 

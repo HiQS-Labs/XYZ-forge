@@ -566,7 +566,7 @@ class TestA5FreshInspection(unittest.TestCase):
                 on_merge()
             return True, "f" * 40  # GH-1140: execute_pr_merge returns (landed, verified_oid)
 
-        def fake_teardown(c, dry_run=True):
+        def fake_teardown(c, dry_run=True, safe_roots=None):
             removed.append((c["name"], c["disposition"], "scan_disposition" in c))
             return True
 

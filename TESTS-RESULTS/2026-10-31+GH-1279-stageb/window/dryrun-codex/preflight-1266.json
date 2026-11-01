@@ -1,0 +1,131 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-10-31T15:01:25Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-1266-architecture-md-skills-index"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun/PROJECT/1-INBOX/GH-1266-ARCHITECTURE-MD-SKILLS-INDEX.md"
+    ],
+    "issues": [],
+    "target_root": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun",
+    "branch": "(detached)",
+    "commit": "28ebacd02d972d24f9e1ae07415dee2643702aec",
+    "suggested_branch": "marathon/gh-1266-architecture-md-skills-index-2026-10-31",
+    "branch_ready": false,
+    "skip_branch_prompt": true
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash utils/pdda/pdda.sh run",
+    "fix_probes": [
+      {
+        "type": "grep_absent",
+        "path": "ARCHITECTURE.md",
+        "pattern": "skills/3-weekly/weekly-planner/SKILL.md",
+        "note": "pre-fix: no weekly-planner row; landed when the row exists"
+      }
+    ],
+    "artifacts": [
+      "ARCHITECTURE.md"
+    ],
+    "artifacts_new": [],
+    "remediation": {
+      "source": "issue#<this>",
+      "criteria": "Add the weekly-planner row before weekly-shipped; delete the four hand-maintained tier counts; ARCHITECTURE.md only; no generator, no new test (GH-831). Land after #1258 Phase 1 or rebase over it."
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": null,
+    "ahead": 0,
+    "behind": 0,
+    "dirty": true,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "7cd97db47679c90d26610d3eb15450406f41428a",
+    "checkout_matches_ref": false,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "grep_absent",
+        "path": "ARCHITECTURE.md",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1266 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "match",
+      "cause": null,
+      "detail": "4/4 criteria copied verbatim from issue #1266",
+      "issue": "1266",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1266 (https://github.com/HiQS-Labs/XYZ-forge/issues/1266)",
+      "issue": "1266",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1266",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 4,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "ARCHITECTURE.md",
+      "test/gh778-review-code-skill.sh",
+      "test/gh798-status-skill.sh",
+      "test/_setup.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "ARCHITECTURE.md",
+      "test/gh778-review-code-skill.sh",
+      "test/gh798-status-skill.sh",
+      "test/_setup.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/gh778-review-code-skill.sh",
+      "test/gh798-status-skill.sh"
+    ],
+    "inferred_test_helpers": [
+      "test/_setup.sh"
+    ],
+    "fs_touching_tests": [
+      "test/gh778-review-code-skill.sh",
+      "test/gh798-status-skill.sh",
+      "test/_setup.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

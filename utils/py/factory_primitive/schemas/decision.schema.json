@@ -4,7 +4,7 @@
   "required": ["tool", "args", "reason", "confidence"],
   "additionalProperties": false,
   "properties": {
-    "tool": {"enum": ["note", "summarize", "probe", "idle"]},
+    "tool": {"enum": ["note", "summarize", "probe", "idle", "plan-draft"]},
     "args": {"type": "object"},
     "reason": {"type": "string", "maxLength": 200},
     "confidence": {"type": "number", "minimum": 0, "maximum": 1}

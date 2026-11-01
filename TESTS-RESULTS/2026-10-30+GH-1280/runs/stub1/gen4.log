@@ -1,0 +1,4 @@
+[19:08:01] sandbox clone at /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-stub1/clone (repo /Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30)
+[19:08:02] sandbox baseline: clean tree at 623ba2c72925
+[19:08:09] round 1 stub: 25 mutants {'pass': 0, 'fail': 0, 'anomaly': 25} cex=25 parity=0 corpus=1 total=25
+[19:08:17] round 2 stub: 25 mutants {'pass': 0, 'fail': 0, 'anomaly': 25} cex=25 parity=0 corpus=1 total=50

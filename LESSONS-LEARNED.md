@@ -111,3 +111,39 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: marathon
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1270
 - **date**: 2026-10-30
+
+## Promoting a rated capture with `roadmap update --raw-text` clears its rating
+- **cue**: promoting a parked, already-rated roadmap row from 1-INBOX to 2-WORKING by following SOP Step 1b (repoint, then `roadmap update --issue-num N --raw-text ...`)
+- **lesson**: `releases roadmap update --raw-text` re-parses the row text and replaces the stored rating; unless the new text carries the `rated P/S/A/E` token the four rating columns become NULL. Re-run `roadmap rate --issue-num N --rated P/S/A/E` (or include the token in `--raw-text`) after every raw-text update, and read the rating back with `roadmap list --json` before plan QA.
+- **evidence**: the row's `releases.sql` INSERT for #1279 shows NULL rating columns at https://github.com/HiQS-Labs/XYZ-forge/commit/1e08c23bba5886614644564922b78afa281a99a7 (the commit right after the rate-then-update sequence), and the rating was restored by `roadmap rate` on PR https://github.com/HiQS-Labs/XYZ-forge/pull/1282
+- **confidence**: high that the update call dropped the rating (rated and read back as 60/30/50/40 before the update, NULL in the committed dump after); not yet reproduced in isolation
+- **area**: releases
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1279
+- **date**: 2026-10-31
+
+### Edit verdicts
+
+| Component | Verdict |
+|---|---|
+| `roadmap update --raw-text` without a `rated` token | hurt (cleared the rating) |
+| `roadmap rate` re-applied after the update | helped (restored 60/30/50/40, status label kept) |
+
+## Editing a relay shim also requires regenerating relay-pkg.tar.gz
+
+- **cue**: Changing any file under `relay-automation/` that `skills/1-hourly/relay-automation/relay-pkg.tar.gz` packages (turn shims such as `agy-turn.sh`, `codex-turn.sh`).
+- **lesson**: Run `bash skills/1-hourly/relay-automation/make-pkg.sh` in the same branch and commit the tarball; `test/relay-pkg-freshness.sh` fails the full gate otherwise, and it is not in the focused checks a shim edit naturally runs.
+- **evidence**: TESTS-RESULTS/2026-10-30+GH-445/gate.txt (first gate at 66f7f9c7: `relay-pkg.tar.gz is stale`; fixed in ca7bc009, suite 3/0), https://github.com/HiQS-Labs/XYZ-forge/issues/445
+- **confidence**: high — deterministic suite failure with a one-command fix.
+- **area**: relay
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/445
+- **date**: 2026-10-30
+
+## A replay reset in a gen4 clone deletes the campaign corpus
+
+- **cue**: Replaying or re-checking cases inside the disposable clone that `gen4_campaign.py` fuzzed, after the run ends and before its outputs are copied out.
+- **lesson**: gen4 keeps its corpus as untracked `.fuzz_corpus/` inside that clone and spares it only with `git clean -e .fuzz_corpus`; any plain `git clean -fd`/`-fdx` reset deletes it. Copy `.fuzz_corpus/` out first, or replay in a separate clone. Reset with gen4's own exclusion, and remove ignored dirs such as `temp/` too, or a replay starts from a different state than the campaign did.
+- **evidence**: TESTS-RESULTS/2026-10-30+GH-1280/SUMMARY.md (Deviations 1 and D4), TESTS-RESULTS/2026-10-30+GH-1280/ev/12-phase3b.json, https://github.com/HiQS-Labs/XYZ-forge/issues/1280
+- **confidence**: high — observed once, and the mechanism is in `utils/py/gen4_campaign.py:103`.
+- **area**: ate
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1280
+- **date**: 2026-10-30
