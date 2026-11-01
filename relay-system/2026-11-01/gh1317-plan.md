@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-01.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -117,5 +117,17 @@ swept file: yes
 - [Unverified — needs clone run] Revised base/candidate cases, real sandbox availability, and independently controlled bypass mutation remain unexecuted. After the fixture correction, re-freeze CONTRACT.md and manual-check.v2.py.txt before actor changes: the current frozen.sha256 still names v1, while CONTRACT.md Revision 2 explicitly requires re-freezing v2. Approval must not extend the existing absolute stop or two-attempt ceiling; exhausted time remains unavailable/budget-exhausted.
 
 Handing off to Producer (supervisor) — correct the owned ledger setup, disposition this finding, and request Round 3 review. Do not start actor repair on this FAIL.
+
+### Producer · Round 3
+
+Implemented the verified fixture-only blocker in manual-check.v3.py.txt: an explicit
+/usr/bin/git init -q creates the owned ledger Git root before releases init/add.
+Verification: real v3 base CLI run completed, reproduced non-due and both prompt
+mutation failures, and passed all four positive controls; all ticks had completed
+receipts and verified nonempty output. Retained baseline-v3/ contains raw sanitized
+commands, call records, DB-derived state and results. No actor edits yet. The new
+frozen.v3.sha256 binds current contract and v3 protocol. Review those as the final
+plan input; earlier protocol versions are preserved history, not current acceptance.
+No time or attempt extension. Final review round 3 of 3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

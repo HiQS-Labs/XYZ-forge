@@ -1,0 +1,94 @@
+import sys,os,json,subprocess,sqlite3,hashlib,datetime,time,shutil
+from pathlib import Path
+repo=Path(sys.argv[1]).resolve(); out=Path(sys.argv[2]).resolve(); out.mkdir(parents=True,exist_ok=False)
+py=sys.executable
+binp=out/'bin'; binp.mkdir(); log=out/'calls.jsonl'
+(binP:=binp/'codex-fake').write_text('#!'+py+'\n'+'''import sys,os,json
+from pathlib import Path
+args=sys.argv[1:]; prompt=args[-1]; s=json.loads(prompt.split("Snapshot (JSON):\\n",1)[1].split("\\n\\nRequest material",1)[0])
+with open(os.environ["CALL_LOG"],"a") as f:f.write(json.dumps({"argv":args,"snapshot":s})+"\\n")
+if s["inbox"] and s["inbox"][0]["kind"]=="note-request":
+ d={"tool":"note","args":{"inbox_id":s["inbox"][0]["id"],"text":"fixture note"}}
+elif not s["inbox"] and s["probe_targets"]:d={"tool":"probe","args":{"target":s["probe_targets"][0]}}
+else:d={"tool":"idle","args":{}}
+d.update(reason="recording external fixture",confidence=1)
+Path(args[args.index("-o")+1]).write_text(json.dumps(d))
+'''); binP.chmod(0o755)
+# Only synthetic issue state is exposed to seed_from_prs. No network executable is reachable here.
+gh=binp/'gh'; gh.write_text('#!'+py+'\n'+'''import sys,json
+args=sys.argv[1:]
+if args[:2]==["issue","list"]: x=[{"number":9001317,"state":"OPEN"}]
+elif args[:2]==["pr","list"]:x=[]
+elif args[:2]==["issue","view"] and args[2]=="9001317":x={"number":int(args[2]),"state":"OPEN","title":"Synthetic repair fixture","body":"Produce a local draft only.","updatedAt":"2026-11-01T00:00:00Z"}
+else:raise SystemExit("unexpected gh fixture argv")
+print(json.dumps(x))
+''');gh.chmod(0o755)
+env={'PATH':str(binp)+':/usr/bin:/bin','HOME':str(out/'home'),'TMPDIR':str(out/'tmp'),'PYTHONDONTWRITEBYTECODE':'1','CODEX_BIN':str(binP),'CALL_LOG':str(log)}
+Path(env['HOME']).mkdir();Path(env['TMPDIR']).mkdir()
+records=[]
+def run(args,label):
+ start=time.time(); r=subprocess.run([py,'-B',str(repo/'utils/py/harness.py'),'factory-primitive',*args],cwd=repo,env=env,text=True,capture_output=True,timeout=60)
+ records.append({'label':label,'argv':args,'rc':r.returncode,'stdout':r.stdout,'stderr':r.stderr,'duration_s':time.time()-start})
+ (out/'commands.json').write_text(json.dumps(records,indent=2))
+ return r
+
+def calls(): return len(log.read_text().splitlines()) if log.exists() else 0
+# Synthetic fixture ledger created solely through the supported writer in an owned root.
+ledger=out/'ledger';ledger.mkdir();(ledger/'.pdda-mode').write_text('ROADMAP_SOURCE=releases\n')
+subprocess.run(['/usr/bin/git','init','-q',str(ledger)],check=True,timeout=60)
+ledger_commands=[]
+for tail in [['init','--slug','HiQS-Labs/XYZ-forge'],['roadmap','add','--issue-num','9001317','--issue-url','https://github.com/HiQS-Labs/XYZ-forge/issues/9001317','--title','Synthetic repair fixture','--created','2026-11-01','--doc-path','PROJECT/1-INBOX/GH-9001317-FIXTURE.md']]:
+ argv=[py,str(repo/'utils/py/releases_app.py'),'--root',str(ledger),*tail]
+ r=subprocess.run(argv,cwd=repo,env=env,text=True,capture_output=True,timeout=60)
+ ledger_commands.append({'argv':argv,'rc':r.returncode,'stdout':r.stdout,'stderr':r.stderr})
+ if r.returncode: raise RuntimeError('fixture writer failed: '+r.stderr)
+(out/'ledger-setup.json').write_text(json.dumps(ledger_commands,indent=2))
+original_ledger=(repo/'releases.db').read_bytes();shutil.copyfile(ledger/'releases.db',repo/'releases.db')
+(out/'fixture-ledger.sha256').write_text(hashlib.sha256((repo/'releases.db').read_bytes()).hexdigest()+'\n')
+results=[]
+for name,kind,version,mutate in [('not-due','notdue',2,False),('due','due',2,False),('inbox','note',2,False),('mutated-v2','note',2,True),('mutated-v3','prs',3,True),('unchanged-v2','note',2,False),('unchanged-v3','prs',3,False)]:
+ root=repo/'temp/factory-primitive'/('gh1317-'+out.name+'-'+name); ins=root/'instances/C'
+ root.parent.mkdir(parents=True,exist_ok=True)
+ scenario=out/(name+'.jsonl'); manifest=out/(name+'.manifest.json')
+ scenario.write_text(json.dumps({'type':'inbox','id':'fixture','available_at_slot':1 if kind=='note' else 2,'created_at':'2026-11-01T00:00:00+00:00','kind':'note-request' if kind=='note' else 'probe','body':'fixture','target':'fixture-target'})+'\n')
+ m=run(['generate-manifest','--scenario',str(scenario),'--output',str(manifest)],name+'-manifest')
+ args=['--run-root',str(root),'init','--instance','C','--adapter','codex','--codex-model','fixture-no-provider','--daily-cap','1','--max-call-cost','0.01','--adapter-timeout','10']
+ args+=['--from-prs','--codex-authoring','--limit','1'] if version==3 else ['--scenario',str(scenario),'--manifest',str(manifest)]
+ init=run(args,name+'-init')
+ if init.returncode!=0:results.append({'case':name,'pass':False,'unavailable':True,'reason':'init failed'});continue
+ if version==3:
+  seeded=json.loads((ins/'backlog/manifest.json').read_text())['requests']
+  if len(seeded)!=1 or next(iter(seeded.values()))['issue']!=9001317:raise RuntimeError('unexpected seeded identity')
+ if kind=='notdue':
+  c=sqlite3.connect(ins/'state.db'); now=datetime.datetime.now(datetime.timezone.utc).isoformat()
+  c.execute("INSERT INTO ticks VALUES('prior',0,'completed','done',?,?,NULL)",(now,now))
+  c.execute("INSERT INTO intents VALUES('prior','probe','{}','fixture',?,NULL)",(now,))
+  c.execute("INSERT INTO tool_runs VALUES('prior',0,'ok',NULL,NULL,NULL)");c.commit();c.close()
+ prompt=repo/('utils/py/factory_primitive/prompts/evaluator.v%d.md'%version); old=prompt.read_bytes()
+ before=calls()
+ c=sqlite3.connect(ins/'state.db'); spent_before=c.execute("SELECT COALESCE(SUM(CASE WHEN billing_status='unknown' THEN amount ELSE actual_cost END),0) FROM reservations").fetchone()[0];c.close()
+ try:
+  if mutate:prompt.write_bytes(old+b'\nChanged policy fixture.\n')
+  tick=run(['--run-root',str(root),'tick','--instance','C','--slot','1'],name+'-tick')
+ finally:prompt.write_bytes(old)
+ n=calls()-before;c=sqlite3.connect(ins/'state.db');c.row_factory=sqlite3.Row
+ rows=lambda q:[dict(x) for x in c.execute(q)]
+ spent_after=c.execute("SELECT COALESCE(SUM(CASE WHEN billing_status='unknown' THEN amount ELSE actual_cost END),0) FROM reservations").fetchone()[0]
+ state={k:rows('SELECT * FROM '+k+" WHERE tick_id='slot_001'") for k in ['ticks','decisions','reservations','events','receipts','tool_runs']};c.close()
+ (out/(name+'-state.json')).write_text(json.dumps(state,indent=2))
+ ev=[json.loads(x['json']) for x in state['events'] if x['stage']=='evaluate']
+ reservation=state['reservations']; nocharge=spent_before==spent_after and bool(reservation) and reservation[0]['status']=='released' and reservation[0]['actual_cost']==0
+ called=ev[-1].get('agent_called') if ev else None
+ dec=state['decisions'][0] if state['decisions'] else {}
+ valid=json.loads(dec.get('validated_json') or '{}'); tool=valid.get('tool')
+ output_ok=False
+ if state['tool_runs']:
+  tr=state['tool_runs'][0]; op=Path(tr.get('output_path') or '/nonexistent')
+  output_ok=op.is_file() and op.stat().st_size>0 and hashlib.sha256(op.read_bytes()).hexdigest()==tr['sha256']
+ completed=tick.returncode==0 and bool(state['ticks']) and state['ticks'][0]['status']=='completed' and bool(state['receipts']) and state['receipts'][0]['status']=='completed' and output_ok
+ if mutate:ok=completed and n==0 and called is False and nocharge and dec.get('status')=='prompt-mismatch'
+ elif kind=='notdue':ok=completed and n==0 and called is False and nocharge and tool=='idle'
+ else:ok=completed and n==1 and called is True and tool==('probe' if kind=='due' else 'note' if kind=='note' else 'idle')
+ results.append({'case':name,'pass':ok,'calls':n,'agent_called':called,'released_nocharge':nocharge,'tool':tool,'decision_status':dec.get('status'),'tick_rc':tick.returncode,'completed_with_verified_output':completed,'spent_before':spent_before,'spent_after':spent_after})
+(repo/'releases.db').write_bytes(original_ledger)
+(out/'results.json').write_text(json.dumps(results,indent=2));print(json.dumps(results,indent=2));sys.exit(0 if all(x['pass'] for x in results) else 1)

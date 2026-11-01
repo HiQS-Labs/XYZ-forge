@@ -44,3 +44,11 @@ case to complete a tick/receipt and hash-verified nonempty tool output; no-call
 cases additionally require unchanged aggregate spent/remaining budget. Original
 v1 baseline remains retained but is not acceptance evidence for v2. No actor edit
 has occurred. Re-freeze v2 with this correction; no expected behavior weakened.
+
+## Revision 3 before actor changes
+
+manual-check.v3.py.txt adds /usr/bin/git init -q for the exclusively owned fixture
+ledger root before the existing releases writer; this is fixture setup, no product
+change. Its real base run completed all seven CLI cases with valid outputs: the
+three real fault cases failed, four positive controls passed. This v3 protocol and
+contract supersede v1/v2 for acceptance. Absolute stop/attempt budget unchanged.
