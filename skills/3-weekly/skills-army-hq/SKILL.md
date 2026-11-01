@@ -195,6 +195,8 @@ python3 "$ROOT/sync.py" --root "$ROOT" --status
 python3 "$ROOT/sync.py" --root "$ROOT" --apply
 python3 "$ROOT/sync.py" --root "$ROOT" --status --canonical /path/to/XYZ-forge   # drift report vs canonical
 python3 "$ROOT/sync.py" --root "$ROOT" --apply --allow-drift                    # loud, disclosed exception
+python3 "$ROOT/sync.py" --root "$ROOT" --migrate-legacy example --archive-legacy         # preview: real legacy folder -> managed link
+python3 "$ROOT/sync.py" --root "$ROOT" --apply --migrate-legacy example --archive-legacy # verified ZIP, retained staging, then link
 ```
 
 Both scripts accept `--root /chosen/collection` for redirected Documents or another
