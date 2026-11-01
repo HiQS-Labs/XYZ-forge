@@ -53,7 +53,6 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | Skill | Purpose |
 |---|---|
 | [better-options](skills/1-hourly/better-options/SKILL.md) | Falsify the apparent option set, then surface smaller viable alternatives. |
-| [ceremony-audit](skills/1-hourly/ceremony-audit/SKILL.md) | Label each step of a plan progress, proof, safety or ceremony; cut steps that re-prove known results. |
 | [consult](skills/1-hourly/consult/SKILL.md) | One-shot cross-model second opinion (Codex + agy in parallel), reconciled. |
 | [debug-mantra](skills/1-hourly/debug-mantra/SKILL.md) | Debug by reproducing, tracing the fail path, falsifying, and cross-referencing evidence. |
 | [five](skills/1-hourly/five/SKILL.md) | 5-and-5 decision checksum over a plan/feature/fix — five load-bearing decisions + five explicit non-goals, each cited. |
