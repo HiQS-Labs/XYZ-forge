@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-01.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -66,5 +66,27 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The surgical adapter plan is supported by source, but the frozen evaluation protocol needs two corrections before actor execution. This is plan review only; no CLI cases or suites ran here.
+swept file: yes
+
+- [Pass] Source claims match `utils/py/harness.py:214–218` (strictly `> 3600`), `:243–249` (configured targets bypass the idle shortcut and prompt is reread), `:1016–1028` (init records prompt hash), and `:1443–1446` (reserve, dispatch, settle). A shared due predicate plus an unbilled prompt-mismatch result fits the existing owner and settlement path. Whole-file sweep found no additional production defect requiring expansion of this narrow repair; the protocol defects below are in the seeded manual artifact.
+
+- [Should] Prepare the synthetic local ledger explicitly before v3 init. `manual-check.py.txt:18–25` supplies fake GitHub responses, but `:38–45` goes directly to `--from-prs` with no ledger fixture setup. `harness.py:819–821` copies the supplied repository's actual `releases.db`, and `:860–888` chooses its ranked queue rows and capture docs; fake `issue view` accepts any number. Thus the promised synthetic IDs/frozen local fixture are not established by this protocol. Specify the exact disposable-clone ledger preparation through existing supported mechanisms, hash it, assert the seeded issue/request identity, and reject unexpected fake-gh arguments/IDs. No production source change is needed for this finding.
+  Observed input: the v3 tuples at `manual-check.py.txt:37`, the `--from-prs --codex-authoring --limit 1` argv at `:44`, and the only three supplied pilot artifacts (CONTRACT.md, frozen.sha256, manual-check.py.txt); no fixture ledger or preparation command is supplied.
+  Affected scope: only v3 setup/cases 5 and 7 in this local pilot.
+  Falsifier: show a frozen setup command/fixture that replaces the disposable clone's ledger with the owned synthetic queue before this script runs; the resulting backlog must contain only the specified synthetic request, with no production capture-doc selection.
+
+- [Should] Make the no-call oracle reject unavailable tool execution. `manual-check.py.txt:67–68` ignores tick exit, tick completion, receipts and tool_runs. After settlement, `_run_tool` can fail because sandbox-exec is unavailable (`harness.py:1364–1366`); the persisted decision/event/reservation still satisfy these predicates. Require successful completed idle execution, a completed receipt and verified nonempty output for these cases, and classify infrastructure failure as unavailable. Also retain before/after budget observations promised by the contract rather than only a single reservation's actual_cost.
+  Observed input: narrow non-mutating AST-expression probe, command `python3 -B - <<'PY'` parsing manual-check.py.txt, selecting the `ok` expressions at lines 67/68 and evaluating with `n=0, called=False, nocharge=True, dec={'status':'prompt-mismatch'}, tool='idle', tick_rc=1, tick_status='failed', receipts=[], tool_runs=[]`. Exit 0; decisive output: `line 67: failed tick / empty tool_runs => ok=True` and `line 68: failed tick / empty tool_runs => ok=True`. This evaluates only the acceptance expressions; no fixture, CLI or product code was executed.
+  Affected scope: not-due and mutated-v2/v3 no-call acceptance, cases 1, 4 and 5.
+  Falsifier: the same failed/empty-tool state must produce unavailable/fail; an otherwise identical completed idle tick with valid receipt/output and unchanged spent/remaining must pass.
+
+- [Unverified — needs clone run] Real sandbox execution, seven CLI cases, evaluator-controlled bypass mutation and positive controls remain unexecuted. The contract's two attempts, zero provider spend and absolute stop are explicit (`CONTRACT.md`, “absolute stop 22:37:47Z”); this review does not extend them. If the remaining window cannot cover corrections plus independent evaluation, retain an unavailable/budget-exhausted result.
+
+Handing off to Producer (supervisor) — correct the frozen protocol, disposition both findings, and request the next review turn. Do not start actor repair on this FAIL.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
