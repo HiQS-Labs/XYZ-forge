@@ -1,0 +1,9 @@
+# GH-1308 checks at 324bd4830dae7e56d828fb8ee908682b3ad56da8 2026-11-01T14:51:49Z
+## 1. Stage B canary init (red control was rc=2 canary-stale-05 on cb1bf933)
+rc=0 
+delivered files: []
+## 2. codex cap
+factory-primitive: --adapter codex requires --max-call-cost > 0
+rc(defaults)=2
+rc(0.01)=0
+rc(rules defaults)=0

@@ -827,17 +827,25 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
                                              check=True, timeout=120).stdout)
         except (subprocess.SubprocessError, OSError, ValueError) as exc:
             raise ValueError(f"{what} failed: {str(exc)[:120]}") from exc
+
+    def gh_json_all(argv, what, limit=10000):
+        # GH-1308: a fixed --limit silently truncated the merged-PR list (300 of 447), dropping
+        # delivered-holds; refuse a snapshot that may be partial instead.
+        rows = gh_json([*argv, "--limit", str(limit)], what)
+        if len(rows) >= limit:
+            raise ValueError(f"{what} may be truncated at {limit} rows; refusing a partial snapshot")
+        return rows
     # GH-1270: freeze real issue state for every issue, so the planner's own already-closed rule
     # removes CLOSED rows; and freeze merged PRs that close a still-open issue.
-    states = {str(d["number"]): d["state"] for d in gh_json(
-        ["gh", "issue", "list", "--state", "all", "--limit", "2000", "--json", "number,state"], "issue state list")}
+    states = {str(d["number"]): d["state"] for d in gh_json_all(
+        ["gh", "issue", "list", "--state", "all", "--json", "number,state"], "issue state list")}
     (backlog / "gh-state.json").write_text(canonical(states) + "\n", encoding="utf-8")
     import wave_reconcile
     # The slug lets the extractor count `Closes https://github.com/<this repo>/issues/N` (final QA R1).
     slug = wave_reconcile.github_slug_from_origin(str(REPO_ROOT))
     delivered = {}
-    for pr in gh_json(["gh", "pr", "list", "--state", "merged", "--limit", "300", "--json", "number,title,body"],
-                      "merged PR list"):
+    for pr in gh_json_all(["gh", "pr", "list", "--state", "merged", "--json", "number,title,body"],
+                          "merged PR list"):
         for n in wave_reconcile.extract_linked_issues(pr, slug)[0]:
             if states.get(str(n)) == "OPEN":
                 delivered.setdefault(str(n), []).append(pr["number"])
@@ -1399,6 +1407,8 @@ def run_tick(instance: Path, slot: int, fault: str = "") -> str:
             if existing:
                 if existing["status"] not in TERMINAL:
                     _reconcile(conn, instance)
+                    # GH-1308: report the reconciled status, not the stale pre-reconcile one.
+                    existing = conn.execute("SELECT status FROM ticks WHERE tick_id=?", (tick_id,)).fetchone()
                 return existing["status"]
             if (instance / "PAUSE").exists():
                 new_tick(conn, tick_id, slot)
@@ -1656,6 +1666,9 @@ def factory_main(argv: list[str]) -> int:
                 raise ValueError("--codex-authoring requires --adapter codex and --from-prs")
             if args.adapter == "codex" and not args.codex_model:
                 raise ValueError("--adapter codex requires --codex-model")
+            if args.adapter == "codex" and args.max_call_cost <= 0:
+                # GH-1308: the per-call reservation is what bounds a Codex run; 0 meant no cap.
+                raise ValueError("--adapter codex requires --max-call-cost > 0")
             if args.adapter_timeout <= 0:
                 raise ValueError("--adapter-timeout must be positive")
             cfg = adapter_config(args.adapter, args.codex_model, args.adapter_timeout, args.codex_effort, args.codex_authoring)

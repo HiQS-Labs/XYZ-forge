@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-11-01 — GH-1308 post-merge QA fixes for the 2026-10-29 → 11-01 merges
+
+- `harness.py factory-primitive init --from-prs` now reads every merged PR and issue (limit 10000) and refuses a snapshot that may be truncated. The old 300-PR window had dropped the delivered-holds for #384, #259 and #193, which broke the GH-1279 Stage B canary init (`canary-stale-05`).
+- `init --adapter codex` now requires `--max-call-cost > 0`. With the old default of 0, the per-call reservation never grew, so a Codex run had no call cap.
+- Re-running an unfinished tick now reports its reconciled status (for example `uncertain`), not the stale `started`.
+- The idea skill calls its repo tools through `$HQ_ROOT`, so it works outside an XYZ-forge checkout. It also stops when the project name does not resolve.
+- merge-cleanup `sibling_root` now refuses a parent folder that contains a NEVER_DELETE root. A primary at `/Users/X` had made all of `/Users` a safe root.
+- The merge-cleanup Jog-failure message no longer claims rows are untouched after a partial landing.
+- #1273 and #1280 are promoted to Completed, since both were missed by reconcile.
+- Verified with red/green manual checks (`TESTS-RESULTS/2026-11-01+GH-1308/checks-run-final.txt`); the fixed delivered map matches an independent recomputation over all 447 merged PRs; `gh534` 42 OK and `gh436` 201 OK; `releases_app check` is clean and `issue-doc-sync` no longer lists #1250, #1273 or #1280. The full `./validate.sh` gate finished 408/409; the sole failure is `relay-self-sufficiency.sh`, whose live agy call got `RESOURCE_EXHAUSTED (429)` (external; skipped by pre-push and CI per GH-836).
+
 ## 2026-10-31 — GH-1306 skills-army-hq adopts a skill whose payload already matches its source
 
 - `intake.py update NAME --source PATH` no longer stops at `Unchanged` when the deployed bytes equal the source but the receipt has no source (a `catalog` entry), names another source (an `adopt-existing` self-reference) or carries a stale digest. It records the source receipt as a state-only transaction: preview prints `will RECORD source …`, nothing is copied or backed up, and no Pulse commit is attempted. `Unchanged` remains when the same source and digest are already recorded.

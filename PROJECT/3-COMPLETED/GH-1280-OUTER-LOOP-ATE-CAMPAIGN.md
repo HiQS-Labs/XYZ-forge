@@ -2,7 +2,7 @@
 gh_issue: 1280
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1280
 title: "ATE/fuzz the GH-1248 outer loop: smoke-first Mac Studio campaign"
-status: Active
+status: Complete
 created: 2026-10-30
 updated: 2026-10-30
 owner: claude
