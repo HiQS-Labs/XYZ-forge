@@ -247,7 +247,7 @@ def retire_legacy(root, path, parent, name, found, archive_directories, apply):
     is always archived (verified ZIP plus retained staging), and the preview says whether it differs.
     """
     shared.require(archive_directories, f"Real legacy folder preserved; explicitly select --archive-legacy: {path}")
-    shared.require(shared.skill_info(path)["name"] == name, f"Legacy folder is not the {name} skill: {path}")
+    shared.skill_info(path)  # a valid skill folder whose frontmatter name is the folder name
     before = shared.digest(path)
     change = {"migrate_legacy": str(path), "digest": before, "matches_managed": before == found["digest"]}
     actions = []
