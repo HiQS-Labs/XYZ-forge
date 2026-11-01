@@ -64,4 +64,4 @@ Rollback: revert the PR. Every change is local.
 
 | What was just completed | What's next |
 |---|---|
-| Fixes 1–7 in `324bd483`, the #1250 bundle promoted in `23f8f2ac`, and retained checks (`TESTS-RESULTS/2026-11-01+GH-1308/checks-run.txt`) all passing. Full gate at `324bd483`: 407/409. The two failures were this table's header (fixed here) and the external agy quota. | Codex final QA round 2; then the full gate on the final commit; then a ready PR. No merge. |
+| Fixes 1–7 (`324bd483`) and the #1250 bundle promotion (`23f8f2ac`) are done, with retained checks passing (`checks-run.txt`). Codex final QA approved in round 2 (`relay-system/2026-11-01/gh1308-final-qa.md`). The full gate result on the final commit is in `TESTS-RESULTS/2026-11-01+GH-1308/gate.txt`. | Ready PR against development; merge only on Noel's go. Items 9–13 of #1308 await Noel's decisions. |
