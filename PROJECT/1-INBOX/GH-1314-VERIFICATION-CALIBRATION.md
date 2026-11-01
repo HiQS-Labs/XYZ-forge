@@ -29,15 +29,16 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Approved run stopped inconclusive during preconditions (0/8 candidate commands); evidence retained. | Parent reviews the draft evidence/proposal; any replacement run needs new approval. |
+| Diagnosed toolchain scratch; reviewed attempt 02 matched both controls and reversed replay (8 calls, 12.15 s). | Parent independently reviews narrow calibration evidence and proposal in draft PR #1316. |
 
 ## Scope and hold
 
 This is a manual, supervised historical calibration, not an immutable sandbox or
-implementation of autonomous verification. The parent approved exact helper/protocol hashes before the single run. It stopped
-inconclusive on the empty HOME/TMPDIR precondition; no candidate command executed.
-Evidence: [summary](../../TESTS-RESULTS/2026-11-01+GH-1314/SUMMARY.md).
-Existing checkout remains untouched. No retry is authorized.
+implementation of autonomous verification. Attempt 01 stopped inconclusive before candidate execution. User authorized diagnosis
+and reversible continuation; parent reviewed exact attempt-02 correction and hashes.
+Attempt 02 matched the narrow historical matrix and reversed replay in eight calls.
+Evidence: [index](../../TESTS-RESULTS/2026-11-01+GH-1314/INDEX.md).
+Original checkout and attempt-01 evidence remain unchanged; parent acceptance pending.
 
 Known bad: `b78df4b93049498b19dd47fe6a90d006f9c42700`.
 Known good: `47deab48b8c749d699c6b6c77c38dfdaa5682025`.

@@ -1,0 +1,12 @@
+{
+  "heartbeat": null,
+  "last_receipt": null,
+  "lock": "free",
+  "paused": false,
+  "pending": 0,
+  "quarantined": 0,
+  "quarantined_ids": [],
+  "spent_or_reserved": 0,
+  "ticks": {},
+  "unknown_cost": false
+}
