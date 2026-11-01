@@ -53,3 +53,11 @@ Write your verdict below. Set STATUS to Approved if the plan can proceed as writ
 6. **Rating — Pass.** The tracked roadmap dump persists `45/30/50/60` (`releases.sql:958`), matching plan lines 120-123. A stale copy in one app with a status conflict supports modest severity; operator demand supports the priority; neutral appeal and moderately cheap effort are reasonable. Recurrence on other devices remains a hypothesis, correctly labeled unknown rather than measured incidence. The Mac Studio observations and prior-art search are supplied context, not independently reproduced in this offline review.
 
 Only this relay file was edited. Implementation and the specified disposable-clone/manual verification remain outstanding.
+
+### Attestation · relay-drive — 2026-11-01T15:40:02Z
+task: RELAY-gh1309-plan-qa-073805
+reviewer: codex
+status: Approved
+reviewed-head: b5fc5d25d24c4164836274c7aeb5dbc6aaeb1222
+added-range: 2953+5876
+added-sha256: 742ad25995e1c996d091591fe1d689d7ba360c7412e4ee03039aba6950b5dd1a
