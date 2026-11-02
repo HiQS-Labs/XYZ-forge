@@ -23,6 +23,9 @@ from typing import List, Dict, Any, Optional, Set, Tuple
 
 from scan_clones import (
     DEFAULT_NEVER_DELETE,
+    _within,
+    sibling_root,
+    same_origin,
     is_safe_deletable_path,
     default_scan_roots,
     primary_safe_roots,
@@ -43,6 +46,7 @@ from toposort_prs import (
     format_pr_table,
     FetchError,
 )
+import scan_clones
 from scan_clones import GH_BIN_ENV
 import attempt_record
 import batch_record
@@ -1026,13 +1030,17 @@ def refresh_for_teardown(checkouts: List[Dict[str, Any]], primary_repo: Path,
 
 
 def teardown_checkout(checkout: Dict[str, Any], dry_run: bool = True,
-                      safe_roots: Optional[List[Path]] = None) -> bool:
+                      safe_roots: Optional[List[Path]] = None,
+                      primary: Optional[Path] = None) -> bool:
     """Safely tears down a worktree or standalone clone in strict compliance with WORKTREE-SAFETY.md.
 
     `checkout` must be a FRESH inspection from refresh_for_teardown(); a scan-time record is
     refused so a stale SAFE_REMOVE_* can never be acted on (A.5). Phase 6 and published retirement
     pass primary_safe_roots(primary) (GH-1193/GH-722); the fresh inspection already limited the
     primary's parent folder to same-origin checkouts. Omitted, it is DEFAULT_SAFE_ROOTS.
+    When `primary` is given, a path that is under the primary's parent folder and outside the default
+    roots must also share the primary's origin here (GH-1308 #10): a second check, so teardown does not
+    rest on the scan-time disposition alone.
     """
     path = Path(checkout["path"]).resolve()
     c_type = checkout["checkout_type"]
@@ -1049,6 +1057,13 @@ def teardown_checkout(checkout: Dict[str, Any], dry_run: bool = True,
     is_safe, msg = is_safe_deletable_path(path, safe_roots=safe_roots)
     if not is_safe:
         log_err(f"Safety violation on {path}: {msg}")
+        return False
+
+    sib = sibling_root(primary) if primary else None
+    if sib and _within(path, sib.resolve()) \
+            and not any(_within(path, r.resolve()) for r in scan_clones.DEFAULT_SAFE_ROOTS if r.exists()) \
+            and not same_origin(path, primary):
+        log_err(f"Safety violation on {path}: not a checkout of the primary's repository")
         return False
 
     if c_type == "linked_worktree":
@@ -1731,7 +1746,7 @@ def retire_published_checkouts(primary: Path, paths: List[str], number: int,
                                      published_pr=number)
         info = fresh[0] if fresh else scanned
         print(format_scan_table([info]))
-        if not fresh or not teardown_checkout(info, dry_run=not execute, safe_roots=safe_roots):
+        if not fresh or not teardown_checkout(info, dry_run=not execute, safe_roots=safe_roots, primary=primary):
             failed = True
     return 1 if failed else 0
 
@@ -2191,7 +2206,7 @@ def main():
             log(f"Backup complete: {len(removable)} checkout(s) verified safe for teardown. Run dir: {backup_res['run_dir']}")
 
         for c in removable:
-            ok = teardown_checkout(c, dry_run=dry_run, safe_roots=primary_safe_roots(primary_repo))
+            ok = teardown_checkout(c, dry_run=dry_run, safe_roots=primary_safe_roots(primary_repo), primary=primary_repo)
             if not ok:
                 phase6_failures += 1
 

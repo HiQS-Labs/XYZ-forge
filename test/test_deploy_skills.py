@@ -309,6 +309,22 @@ class DeploySkillsTest(unittest.TestCase):
         self.assertEqual(os.readlink(self.target / "sample"), str(self.root / "sample"))
         self.assertFalse((self.root / intake.PENDING).exists())
 
+    def test_gh1306_identical_payload_update_records_receipt_only(self):
+        """GH-1308 #11: pins #1307's receipt-only path. Identical bytes with no recorded source records
+        the source and copies nothing; once recorded, the same update is `Unchanged`."""
+        source = self.source()
+        self.cli("--apply", "add", source)
+        state = self.state()
+        state["skills"]["sample"].pop("source")
+        intake.atomic_json(self.root / intake.STATE, state)
+        payload, backups = tree(self.root / "sample"), sorted((self.root / "backups").glob("sample-*"))
+        run = self.cli("--apply", "update", "sample", "--source", source)
+        self.assertEqual(json.loads(run.stdout)["receipt_only"], True)
+        self.assertEqual(self.state()["skills"]["sample"]["source"], str(source))
+        self.assertEqual(tree(self.root / "sample"), payload, "a receipt-only update must not touch the payload")
+        self.assertEqual(sorted((self.root / "backups").glob("sample-*")), backups, "and must not archive it")
+        self.assertIn("Unchanged: sample", self.cli("--apply", "update", "sample", "--source", source).stdout)
+
     def test_a2_self_update_preserves_runnable_manager(self):
         (self.bundle / "SKILL.md").write_text((self.bundle / "SKILL.md").read_text() + "\nFixture update.\n")
         self.cli("--apply", "update", "skills-army-hq")
