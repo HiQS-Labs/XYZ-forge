@@ -2,7 +2,7 @@
 gh_issue: 1294
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1294
 title: "factory-primitive proposal: delivered issues with a draft brief are scheduled into waves"
-status: Proposed (1-INBOX — not yet active)
+status: Complete
 created: 2026-10-31
 owner: noelsaw1
 doc_type: feedback
