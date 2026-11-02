@@ -2,9 +2,9 @@
 gh_issue: 722
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/722
 title: "merge-cleanup: SAFE_ROOTS never includes the primary's own parent, so the SOP's sibling task clones (../XYZ-forge-<topic>) are invisible to the default audit and teardown"
-status: Active (2-WORKING)
+status: Complete
 created: 2026-09-21
-updated: 2026-10-29
+updated: 2026-10-31
 owner: noelsaw1
 doc_type: capture
 complexity: 2
