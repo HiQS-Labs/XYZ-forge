@@ -1,0 +1,19 @@
+{
+  "added_len": 2984,
+  "added_sha256": "8055c23fca87b863cef92ea8fa12f49346b018875070aeb00cef7992a9914ed9",
+  "added_start": 15090,
+  "artifact_sha256": null,
+  "attested_at": "2026-11-01T22:14:19Z",
+  "driver_pid": 12146,
+  "isolated": true,
+  "relay_file": "<TASK_CHECKOUT>/relay-system/2026-11-01/gh1317-plan.md",
+  "relay_file_rel": "relay-system/2026-11-01/gh1317-plan.md",
+  "reviewed_head": "ec9f1595b1b83bfa992be2b8748cbfac9679ffca",
+  "reviewer": "codex",
+  "schema": "relay-drive/attest@1",
+  "status": "Approved",
+  "target_repo": "<TASK_CHECKOUT>",
+  "task": "RELAY-gh1317-plan",
+  "trailer_sha256": "a788faf481f2df838b8b62831ba057b8386c02a3efc60296fc52efb34448308e",
+  "transcript_repo": "<TASK_CHECKOUT>"
+}

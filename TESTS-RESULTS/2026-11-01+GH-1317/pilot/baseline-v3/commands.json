@@ -1,0 +1,408 @@
+[
+  {
+    "label": "not-due-manifest",
+    "argv": [
+      "generate-manifest",
+      "--scenario",
+      "/private<BASE_EVIDENCE>/not-due.jsonl",
+      "--output",
+      "/private<BASE_EVIDENCE>/not-due.manifest.json"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": "",
+    "duration_s": 0.11902594566345215
+  },
+  {
+    "label": "not-due-init",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-not-due",
+      "init",
+      "--instance",
+      "C",
+      "--adapter",
+      "codex",
+      "--codex-model",
+      "fixture-no-provider",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0.01",
+      "--adapter-timeout",
+      "10",
+      "--scenario",
+      "/private<BASE_EVIDENCE>/not-due.jsonl",
+      "--manifest",
+      "/private<BASE_EVIDENCE>/not-due.manifest.json"
+    ],
+    "rc": 0,
+    "stdout": "{\"instance\":\"<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-not-due/instances/C\",\"status\":\"initialized\"}\n",
+    "stderr": "",
+    "duration_s": 0.12330913543701172
+  },
+  {
+    "label": "not-due-tick",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-not-due",
+      "tick",
+      "--instance",
+      "C",
+      "--slot",
+      "1"
+    ],
+    "rc": 0,
+    "stdout": "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+    "stderr": "",
+    "duration_s": 0.3844127655029297
+  },
+  {
+    "label": "due-manifest",
+    "argv": [
+      "generate-manifest",
+      "--scenario",
+      "/private<BASE_EVIDENCE>/due.jsonl",
+      "--output",
+      "/private<BASE_EVIDENCE>/due.manifest.json"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": "",
+    "duration_s": 0.1199350357055664
+  },
+  {
+    "label": "due-init",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-due",
+      "init",
+      "--instance",
+      "C",
+      "--adapter",
+      "codex",
+      "--codex-model",
+      "fixture-no-provider",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0.01",
+      "--adapter-timeout",
+      "10",
+      "--scenario",
+      "/private<BASE_EVIDENCE>/due.jsonl",
+      "--manifest",
+      "/private<BASE_EVIDENCE>/due.manifest.json"
+    ],
+    "rc": 0,
+    "stdout": "{\"instance\":\"<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-due/instances/C\",\"status\":\"initialized\"}\n",
+    "stderr": "",
+    "duration_s": 0.12523174285888672
+  },
+  {
+    "label": "due-tick",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-due",
+      "tick",
+      "--instance",
+      "C",
+      "--slot",
+      "1"
+    ],
+    "rc": 0,
+    "stdout": "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+    "stderr": "",
+    "duration_s": 0.30528807640075684
+  },
+  {
+    "label": "inbox-manifest",
+    "argv": [
+      "generate-manifest",
+      "--scenario",
+      "/private<BASE_EVIDENCE>/inbox.jsonl",
+      "--output",
+      "/private<BASE_EVIDENCE>/inbox.manifest.json"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": "",
+    "duration_s": 0.12036824226379395
+  },
+  {
+    "label": "inbox-init",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-inbox",
+      "init",
+      "--instance",
+      "C",
+      "--adapter",
+      "codex",
+      "--codex-model",
+      "fixture-no-provider",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0.01",
+      "--adapter-timeout",
+      "10",
+      "--scenario",
+      "/private<BASE_EVIDENCE>/inbox.jsonl",
+      "--manifest",
+      "/private<BASE_EVIDENCE>/inbox.manifest.json"
+    ],
+    "rc": 0,
+    "stdout": "{\"instance\":\"<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-inbox/instances/C\",\"status\":\"initialized\"}\n",
+    "stderr": "",
+    "duration_s": 0.1271817684173584
+  },
+  {
+    "label": "inbox-tick",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-inbox",
+      "tick",
+      "--instance",
+      "C",
+      "--slot",
+      "1"
+    ],
+    "rc": 0,
+    "stdout": "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+    "stderr": "",
+    "duration_s": 0.3239130973815918
+  },
+  {
+    "label": "mutated-v2-manifest",
+    "argv": [
+      "generate-manifest",
+      "--scenario",
+      "/private<BASE_EVIDENCE>/mutated-v2.jsonl",
+      "--output",
+      "/private<BASE_EVIDENCE>/mutated-v2.manifest.json"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": "",
+    "duration_s": 0.12905073165893555
+  },
+  {
+    "label": "mutated-v2-init",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-mutated-v2",
+      "init",
+      "--instance",
+      "C",
+      "--adapter",
+      "codex",
+      "--codex-model",
+      "fixture-no-provider",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0.01",
+      "--adapter-timeout",
+      "10",
+      "--scenario",
+      "/private<BASE_EVIDENCE>/mutated-v2.jsonl",
+      "--manifest",
+      "/private<BASE_EVIDENCE>/mutated-v2.manifest.json"
+    ],
+    "rc": 0,
+    "stdout": "{\"instance\":\"<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-mutated-v2/instances/C\",\"status\":\"initialized\"}\n",
+    "stderr": "",
+    "duration_s": 0.13226103782653809
+  },
+  {
+    "label": "mutated-v2-tick",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-mutated-v2",
+      "tick",
+      "--instance",
+      "C",
+      "--slot",
+      "1"
+    ],
+    "rc": 0,
+    "stdout": "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+    "stderr": "",
+    "duration_s": 0.3144378662109375
+  },
+  {
+    "label": "mutated-v3-manifest",
+    "argv": [
+      "generate-manifest",
+      "--scenario",
+      "/private<BASE_EVIDENCE>/mutated-v3.jsonl",
+      "--output",
+      "/private<BASE_EVIDENCE>/mutated-v3.manifest.json"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": "",
+    "duration_s": 0.1262960433959961
+  },
+  {
+    "label": "mutated-v3-init",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-mutated-v3",
+      "init",
+      "--instance",
+      "C",
+      "--adapter",
+      "codex",
+      "--codex-model",
+      "fixture-no-provider",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0.01",
+      "--adapter-timeout",
+      "10",
+      "--from-prs",
+      "--codex-authoring",
+      "--limit",
+      "1"
+    ],
+    "rc": 0,
+    "stdout": "{\"excluded\":0,\"instance\":\"<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-mutated-v3/instances/C\",\"requests\":1,\"status\":\"initialized\"}\n",
+    "stderr": "",
+    "duration_s": 0.39504098892211914
+  },
+  {
+    "label": "mutated-v3-tick",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-mutated-v3",
+      "tick",
+      "--instance",
+      "C",
+      "--slot",
+      "1"
+    ],
+    "rc": 0,
+    "stdout": "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+    "stderr": "",
+    "duration_s": 0.3088059425354004
+  },
+  {
+    "label": "unchanged-v2-manifest",
+    "argv": [
+      "generate-manifest",
+      "--scenario",
+      "/private<BASE_EVIDENCE>/unchanged-v2.jsonl",
+      "--output",
+      "/private<BASE_EVIDENCE>/unchanged-v2.manifest.json"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": "",
+    "duration_s": 0.11880683898925781
+  },
+  {
+    "label": "unchanged-v2-init",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-unchanged-v2",
+      "init",
+      "--instance",
+      "C",
+      "--adapter",
+      "codex",
+      "--codex-model",
+      "fixture-no-provider",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0.01",
+      "--adapter-timeout",
+      "10",
+      "--scenario",
+      "/private<BASE_EVIDENCE>/unchanged-v2.jsonl",
+      "--manifest",
+      "/private<BASE_EVIDENCE>/unchanged-v2.manifest.json"
+    ],
+    "rc": 0,
+    "stdout": "{\"instance\":\"<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-unchanged-v2/instances/C\",\"status\":\"initialized\"}\n",
+    "stderr": "",
+    "duration_s": 0.12575387954711914
+  },
+  {
+    "label": "unchanged-v2-tick",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-unchanged-v2",
+      "tick",
+      "--instance",
+      "C",
+      "--slot",
+      "1"
+    ],
+    "rc": 0,
+    "stdout": "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+    "stderr": "",
+    "duration_s": 0.3057868480682373
+  },
+  {
+    "label": "unchanged-v3-manifest",
+    "argv": [
+      "generate-manifest",
+      "--scenario",
+      "/private<BASE_EVIDENCE>/unchanged-v3.jsonl",
+      "--output",
+      "/private<BASE_EVIDENCE>/unchanged-v3.manifest.json"
+    ],
+    "rc": 0,
+    "stdout": "",
+    "stderr": "",
+    "duration_s": 0.12294316291809082
+  },
+  {
+    "label": "unchanged-v3-init",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-unchanged-v3",
+      "init",
+      "--instance",
+      "C",
+      "--adapter",
+      "codex",
+      "--codex-model",
+      "fixture-no-provider",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0.01",
+      "--adapter-timeout",
+      "10",
+      "--from-prs",
+      "--codex-authoring",
+      "--limit",
+      "1"
+    ],
+    "rc": 0,
+    "stdout": "{\"excluded\":0,\"instance\":\"<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-unchanged-v3/instances/C\",\"requests\":1,\"status\":\"initialized\"}\n",
+    "stderr": "",
+    "duration_s": 0.3320319652557373
+  },
+  {
+    "label": "unchanged-v3-tick",
+    "argv": [
+      "--run-root",
+      "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-unchanged-v3",
+      "tick",
+      "--instance",
+      "C",
+      "--slot",
+      "1"
+    ],
+    "rc": 0,
+    "stdout": "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+    "stderr": "",
+    "duration_s": 0.3401479721069336
+  }
+]

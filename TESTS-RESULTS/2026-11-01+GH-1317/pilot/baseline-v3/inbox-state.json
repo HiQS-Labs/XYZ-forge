@@ -1,0 +1,83 @@
+{
+  "ticks": [
+    {
+      "tick_id": "slot_001",
+      "slot": 1,
+      "status": "completed",
+      "stage": "record",
+      "created_at": "2026-11-01T22:12:12.668990+00:00",
+      "updated_at": "2026-11-01T22:12:12.861424+00:00",
+      "error": null
+    }
+  ],
+  "decisions": [
+    {
+      "tick_id": "slot_001",
+      "raw": "{\"tool\": \"note\", \"args\": {\"inbox_id\": \"fixture\", \"text\": \"fixture note\"}, \"reason\": \"recording external fixture\", \"confidence\": 1}",
+      "validated_json": "{\"args\":{\"inbox_id\":\"fixture\",\"text\":\"fixture note\"},\"confidence\":1,\"reason\":\"recording external fixture\",\"tool\":\"note\"}",
+      "status": "raw-valid",
+      "rejected_reason": null
+    }
+  ],
+  "reservations": [
+    {
+      "tick_id": "slot_001",
+      "amount": 0.01,
+      "status": "held",
+      "billing_status": "unknown",
+      "actual_cost": null
+    }
+  ],
+  "events": [
+    {
+      "id": 2,
+      "ts": "2026-11-01T22:12:12.670251+00:00",
+      "tick_id": "slot_001",
+      "stage": "tick.started",
+      "status": "ok",
+      "json": "{\"fault\":null,\"slot\":1,\"stage\":\"tick.started\",\"status\":\"ok\",\"tick_id\":\"slot_001\",\"ts\":\"2026-11-01T22:12:12.670251+00:00\"}"
+    },
+    {
+      "id": 3,
+      "ts": "2026-11-01T22:12:12.719815+00:00",
+      "tick_id": "slot_001",
+      "stage": "evaluate",
+      "status": "ok",
+      "json": "{\"agent_called\":true,\"stage\":\"evaluate\",\"status\":\"ok\",\"tick_id\":\"slot_001\",\"ts\":\"2026-11-01T22:12:12.719815+00:00\"}"
+    },
+    {
+      "id": 4,
+      "ts": "2026-11-01T22:12:12.720395+00:00",
+      "tick_id": "slot_001",
+      "stage": "validate",
+      "status": "raw-valid",
+      "json": "{\"rejection\":null,\"stage\":\"validate\",\"status\":\"raw-valid\",\"tick_id\":\"slot_001\",\"ts\":\"2026-11-01T22:12:12.720395+00:00\"}"
+    },
+    {
+      "id": 5,
+      "ts": "2026-11-01T22:12:12.861725+00:00",
+      "tick_id": "slot_001",
+      "stage": "tick.completed",
+      "status": "completed",
+      "json": "{\"decision_status\":\"raw-valid\",\"output_sha256\":\"cf54e6cf6500dfa959d5e53f02f9f7626be712a0a0abcd74cb18a456dbc61762\",\"stage\":\"tick.completed\",\"status\":\"completed\",\"tick_id\":\"slot_001\",\"tool\":\"note\",\"ts\":\"2026-11-01T22:12:12.861725+00:00\"}"
+    }
+  ],
+  "receipts": [
+    {
+      "tick_id": "slot_001",
+      "status": "completed",
+      "json": "{\"decision_status\":\"raw-valid\",\"output_sha256\":\"cf54e6cf6500dfa959d5e53f02f9f7626be712a0a0abcd74cb18a456dbc61762\",\"tool\":\"note\"}",
+      "created_at": "2026-11-01T22:12:12.861424+00:00"
+    }
+  ],
+  "tool_runs": [
+    {
+      "tick_id": "slot_001",
+      "rc": 0,
+      "status": "ok",
+      "output_path": "<VERIFY_CLONE>/temp/factory-primitive/gh1317-gh1317-base-v3-eval-inbox/instances/C/out/note/slot_001.md",
+      "sha256": "cf54e6cf6500dfa959d5e53f02f9f7626be712a0a0abcd74cb18a456dbc61762",
+      "error": null
+    }
+  ]
+}
