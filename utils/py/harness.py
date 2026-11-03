@@ -1268,6 +1268,18 @@ def _accepted_briefs(conn) -> list[str]:
         "WHERE i.tool='plan-draft' AND r.status='ok' AND t.status='completed' ORDER BY t.slot")]
 
 
+def _preflight_blockers(rec: dict, files: set) -> list[str]:
+    """The two refusals swarm-preflight gave #1279's launch lanes, checked read-only (GH-1296): no
+    Preflight Contract, or a contract artifact that is not in the frozen file list
+    (artifacts_new are the lane's own creations, as in preflight)."""
+    contract = rec.get("contract")
+    if not contract:
+        return ["no Preflight Contract (the capture doc has none, or there is no capture doc)"]
+    new = set(contract.get("artifacts_new") or [])
+    return [f"artifact path not found at target.ref: {a}" for a in contract.get("artifacts") or []
+            if a not in new and a not in files and not any(f.startswith(a.rstrip("/") + "/") for f in files)]
+
+
 def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
     """GH-1270: one MARATHON.yaml + brief per lane of provisional wave `wave`, under the run root only.
     Copying a lane folder into PROJECT/2-WORKING/ is the operator's approval; nothing is launched."""
@@ -1298,6 +1310,7 @@ def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
         b = json.loads(Path(p).read_text(encoding="utf-8"))
         briefs[b["issue"]] = (b, Path(p).with_suffix(".md"))
     records = {r["gh"]: r for r in _planner(instance / "backlog", "stub").compute()["deduped"] if r["gh"] is not None}
+    files = _file_index((instance / "backlog" / "base-files.txt").read_text(encoding="utf-8"))["files"]
     dest = out.parent / "launch-packet" / f"wave-{wave}"
     staging = dest.with_name(dest.name + ".tmp")
     shutil.rmtree(staging, ignore_errors=True)
@@ -1334,7 +1347,8 @@ def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
             shutil.rmtree(lane_dir)
             skipped.append({"issue": n, "reason": f"bin/marathon-yaml rejected it: {check.stderr.strip()[:160]}"})
             continue
-        emitted.append({"issue": n, "folder": slug, "provisional": lane["provisional"]})
+        emitted.append({"issue": n, "folder": slug, "provisional": lane["provisional"],
+                        "blockers": _preflight_blockers(rec, files)})
     builder = "agy" if reviewer == "codex" else "codex"  # marathon-drive refuses builder == reviewer
     readme = [f"# Launch packet: wave {wave} ({proposal['tick_id']})", "", f"> {DRAFT_LABEL}", "",
               "Nothing here has been launched. Each folder is one marathon for one lane; lanes in a wave are",
@@ -1343,15 +1357,19 @@ def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
               f"The builder must differ from the reviewer (`{reviewer}`), so the commands pass `--builder {builder}`.",
               "", "## Lanes", ""]
     for e in emitted:
-        readme += [f"- #{e['issue']}" + (" (provisional)" if e["provisional"] else "") + f": `{e['folder']}/`",
-                   f"  - `cp -R {e['folder']} <clone>/PROJECT/2-WORKING/`",
+        readme += [f"- #{e['issue']}" + (" (provisional)" if e["provisional"] else "") + f": `{e['folder']}/`"]
+        if e["blockers"]:
+            readme += ["  - **Not launchable yet** (preflight would refuse it): " + "; ".join(e["blockers"])]
+            continue
+        readme += [f"  - `cp -R {e['folder']} <clone>/PROJECT/2-WORKING/`",
                    f"  - `relay-automation/marathon.sh --plan PROJECT/2-WORKING/{e['folder']}/MARATHON.yaml "
                    f"--builder {builder} --dry-run`"]
     readme += ["", "## Skipped", ""] + ([f"- #{s['issue']}: {s['reason']}" for s in skipped] or ["- none"])
     (staging / "README.md").write_text("\n".join(readme) + "\n", encoding="utf-8")
     shutil.rmtree(dest, ignore_errors=True)
     os.replace(staging, dest)
-    return {"wave": wave, "dir": str(dest), "emitted": [e["issue"] for e in emitted], "skipped": skipped}
+    return {"wave": wave, "dir": str(dest), "emitted": [e["issue"] for e in emitted], "skipped": skipped,
+            "not_launchable": {e["issue"]: e["blockers"] for e in emitted if e["blockers"]}}
 
 
 def _run_tool(instance: Path, tick_id: str, decision: dict, items: list[dict], fault: str,
