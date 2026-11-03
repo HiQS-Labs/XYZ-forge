@@ -2,9 +2,9 @@
 gh_issue: 1098
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1098
 title: "Shift outer loop — Phase 3: apply Phase 2 lessons and run one measured shift"
-status: Active
+status: Complete
 created: 2026-10-16
-updated: 2026-10-16
+updated: 2026-11-02
 owner: noelsaw1
 goal: "Unattended `jog run` invocations from a disposable clone take >= 2 of 3 contract-complete items to PR-ready across at most three invocations (one stop per landing boundary, zero operator edits between), with no wrong-tree preflight, no idle-killed builder, no promoted-doc frontmatter failure, and every pre-advance gate inside the guard cap when measured on a post-landing development baseline."
 doc_type: plan
@@ -24,7 +24,17 @@ fix_probes:
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (Codex, 3 rounds, `relay-system/2026-10-16/gh1098-plan-qa.md`); A1–A4 implemented (`4dc76a33`, `e358dd86`); manual checks A1–A4 witnessed on candidate and parent in the `-gate` clone (`TESTS-RESULTS/2026-10-16+GH-1098/`) | Focused suites + full `ci-local.sh` in the gate clone, final Codex QA, PR; Scope C after landing |
+| Scope A (A1–A4) delivered in PR #1099 (2026-10-16). Scope C (measured shift, 2026-10-16) ran: 1 of 3 PR-ready, **exit criterion 1 not met**. Issue closed as measured on 2026-11-02 (operator option (b)); #1100 fixed in #1104, #1101 and #1102 merged. | Nothing under this contract. No Phase 4 issue exists. Factory direction moved to the GH-1248 outer-loop and plan-draft work (#1257, #1261, #1270). |
+
+## Outcome (2026-11-02)
+
+Closed as measured, criterion 1 not met. Criteria 3, 4 and 5 were met; criterion 2 missed in the no-override run (#1100, since fixed in #1104). Proven: A2, A3, A4 (live in #1102) and the unattended promote → preflight → build → review → gate → PR path (#1101). Day report and closing comment: https://github.com/HiQS-Labs/XYZ-forge/issues/1098.
+
+## Lessons Learned (For Future Agents)
+
+- A contract's completion criteria and its probe scope must equal its artifact list; otherwise the reviewer is right to refuse (GH-942 first attempt).
+- A harness env var (`XYZ_HARNESS`) can silently re-root a dispatched lane even after the preflight root is pinned; check every hop, not only the first (#1100).
+- Jog stops at the landing boundary by design, so an "N of M from one invocation" criterion is unreachable without changing queue policy; write the criterion against the real boundary.
 
 ## Observed problem (from Phase 2, 2026-10-15/16, runner clone `XYZ-forge-gh1081-factory-manager-spike-2026-10-15-verify`)
 
