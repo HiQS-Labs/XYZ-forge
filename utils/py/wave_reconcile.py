@@ -1870,6 +1870,8 @@ def run_subprocesses(repo_root, dry_run=False, journal=None, reconciled_issues=N
     if dry_run:
         sync_cmd.append("--dry-run")
         plan_cmd.append("--dry-run")
+    else:
+        plan_cmd.append("--write")  # GH-446: the planner only writes its dated plan doc when asked
 
     steps = [
         ("releases roadmap sync", sync_cmd),

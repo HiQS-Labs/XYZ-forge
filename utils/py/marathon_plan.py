@@ -42,10 +42,11 @@ def print_usage():
     default lane while the Bash twin exited 2. Splitting print from exit is the whole fix: Bash's
     `usage()` (`utils/marathon-plan.sh:102`) also only prints, and its callers own the exit code.
     """
-    print("""Usage: utils/py/marathon_plan.py [--dry-run | --check] [--policy quick-wins|derisk-first]
+    print("""Usage: utils/py/marathon_plan.py [--write | --dry-run | --check] [--policy quick-wins|derisk-first]
                            [--deep] [--require-gh] [--format text|json]
 
-  (default)        Print the validation report and write PROJECT/2-WORKING/MARATHON-PLAN-<today>.md.
+  (default)        Print the validation report; write nothing (same as --dry-run).
+  --write          Also write PROJECT/2-WORKING/MARATHON-PLAN-<today>.md (GH-446: writing is opt-in).
   --dry-run        Print the report; write no marathon-plan doc.
   --check          Re-render and compare against today's marathon-plan doc; non-zero on drift. Writes nothing.
   --policy P       quick-wins (default; momentum, low-cost first) | derisk-first (high-risk first).
@@ -60,7 +61,7 @@ Exit: 0 clean · 2 usage · 3 ROADMAP unparseable · 4 drift present · 5 items 
 def main():
     policy = "quick-wins"
     out_format = "text"
-    run_mode = "write"
+    run_mode = "dry-run"  # GH-446: a bare run only reports; --write is what touches PROJECT/2-WORKING/
     deep = False
     require_gh = False
 
@@ -68,7 +69,10 @@ def main():
     i = 0
     while i < len(args):
         arg = args[i]
-        if arg == "--dry-run":
+        if arg == "--write":
+            run_mode = "write"
+            i += 1
+        elif arg == "--dry-run":
             run_mode = "dry-run"
             i += 1
         elif arg == "--check":
