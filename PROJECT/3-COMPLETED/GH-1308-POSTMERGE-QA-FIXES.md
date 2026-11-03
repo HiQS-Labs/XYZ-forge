@@ -1,8 +1,8 @@
 ---
 title: "Post-merge regression QA: development merges 2026-10-29 → 2026-11-01 (21 PRs)"
-status: In progress
+status: Complete
 created: 2026-11-01
-updated: 2026-11-02
+updated: 2026-11-03
 owner: noelsaw1
 gh_issue: 1308
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1308
