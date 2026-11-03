@@ -2,7 +2,7 @@
 title: "Post-merge regression QA: development merges 2026-10-29 → 2026-11-01 (21 PRs)"
 status: In progress
 created: 2026-11-01
-updated: 2026-11-01
+updated: 2026-11-02
 owner: noelsaw1
 gh_issue: 1308
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1308
@@ -12,7 +12,7 @@ risk: 2
 effort: 2
 phases: 1
 non_goals:
-  - Items 9-12 of #1308 (validate.sh receipt policy, teardown defence in depth, GH-831 test cases, relay render note), which need Noel's decision
+  - Items 9-13 of #1308 in the first PR; they follow in a second PR (see `## Decisions 9–13`), after Noel took the recommended default for each
   - Any new test suite or validate.sh registration (GH-831)
   - The pre-existing weekly-planner Skills Index gap (#936)
 related:
@@ -32,7 +32,7 @@ The full review, with a root cause and remediation for each finding, is in
 
 | What was just completed | What's next |
 |---|---|
-| Fixes 1–7 (`324bd483`) and the #1250 bundle promotion (`23f8f2ac`) are done, with retained checks passing (`checks-run.txt`). Codex final QA approved in round 2 (`relay-system/2026-11-01/gh1308-final-qa.md`). The full gate result on the final commit is in `TESTS-RESULTS/2026-11-01+GH-1308/gate.txt`. | Ready PR against development; merge only on Noel's go. Items 9–13 of #1308 await Noel's decisions. |
+| Fixes 1–7 (`324bd483`) and the #1250 bundle promotion (`23f8f2ac`) are done, with retained checks passing (`checks-run.txt`). Codex final QA approved in round 2 (`relay-system/2026-11-01/gh1308-final-qa.md`). The full gate result on the final commit is in `TESTS-RESULTS/2026-11-01+GH-1308/gate.txt`. | Second PR for items 9–13, which Noel decided on 2026-11-02 by taking each recommended default. Merge only on Noel's go; close #1308 after it lands. |
 
 ## Ratings
 
@@ -65,6 +65,18 @@ Each fix below is verified as listed.
 8. **Gate.** Run the classified route on the final commit in a disposable clone, then a Codex final QA through `relay-xyz`.
 
 Rollback: revert the PR. Every change is local.
+
+## Decisions 9–13
+
+Noel took the recommended default on each (2026-11-02). Evidence is in `TESTS-RESULTS/2026-11-02+GH-1308/`.
+
+| # | Decision | Done |
+|---|---|---|
+| 9 | Restore the unconditional receipt; `--scope full` only with no skips and no faults | `validate.sh`; the isolated block check under bash 3.2 is in `finding9-receipt-block.txt` |
+| 10 | Add the origin re-check at teardown | `teardown_checkout(..., primary=)`; both callers pass the primary |
+| 11 | Allow cases in existing suites for data-loss guards | `gh534_phase_a_tests.py` `TestSiblingRoot`; `test_deploy_skills.py` receipt-only case |
+| 12 | Document only | CHANGELOG states the byte-integrity guarantee; no code change |
+| 13 | Edit the #1274 body (outward change, done) | `gh pr edit 1274`; before/after bodies saved; extractor no longer lists #418 or #1098 as closed |
 
 ## Merge evidence
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-02 — GH-1308 decisions 9–13: receipt policy, teardown origin check, regression cases
+
+- `validate.sh` writes a gate receipt on every green tier-3 run of a clean tree again, as it did before #1253. Only a run with no skipped suite and no environment fault is stamped `--scope full`, which pre-push reuse still requires. `marathon-closeout.sh` therefore no longer refuses a host whose run skipped a suite.
+- merge-cleanup `teardown_checkout` takes the primary and re-checks origin itself for a path under the primary's parent folder and outside the default roots, so a forged or stale `SAFE_REMOVE` record cannot remove another project's checkout.
+- Existing suites gained cases: `gh534_phase_a_tests.py` `TestSiblingRoot` (sibling-root refusals, same-origin scan filter, teardown origin check) and `test_deploy_skills.py` (the GH-1306 receipt-only update). No new suite was registered.
+- The #1274 PR description no longer reads `refresh or close #418 and #1098`, which `wave_reconcile` took as a closing clause and so held #1098 as delivered. Finding 12 (relay separator rendering) is documentation only: the fallback guarantees byte integrity, not identical rendering.
+- Evidence: `TESTS-RESULTS/2026-11-02+GH-1308/`.
+
 ## 2026-11-01 — GH-1309 skills-army-hq replaces a real legacy folder in an app root with the managed link
 
 - New `sync.py --migrate-legacy SKILL --archive-legacy` (preview first, then `--apply`). Until now `--adopt`, `--migrate` and `--migrate-from` refused any real directory in an app root, and `--archive-legacy` worked only for `--retire-trinity` with a matching source, so an installer-created folder (for example a stale `~/.claude/skills/xyz`) kept `sync.py --status` at exit 2 with no supported fix. For each enabled target holding such a folder it now requires a valid skill folder of that name, takes a verified ZIP, moves the folder to retained `.staging/<op>/retired`, and creates the owned link in one transaction. Its content may differ from the managed copy; the preview reports `matches_managed`. A run with nothing to migrate, an unknown skill, or no `--archive-legacy` refuses. Opt-in: no existing flow changes.
