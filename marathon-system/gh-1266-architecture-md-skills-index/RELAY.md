@@ -1,6 +1,6 @@
 # Marathon Phase gh-1266-architecture-md-skills-index
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1266-ARCHITECTURE-MD-SKILLS-INDEX-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -104,3 +104,23 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 1 · Builder · agy
+
+- **Files touched:**
+  - `ARCHITECTURE.md`:
+    1. Added the missing `[weekly-planner](skills/3-weekly/weekly-planner/SKILL.md)` row in the `3-weekly` Skills Index table in alphabetical order (immediately before `weekly-shipped`), with its one-line purpose drawn from `skills/3-weekly/weekly-planner/SKILL.md:3`.
+    2. Removed the four hand-maintained `(N)` counts from the tier headers (`### \`1-hourly\` — Every hour`, `### \`2-daily\` — A few times a day`, `### \`3-weekly\` — Weekly`, and `### \`4-occasional\` — Least frequently`).
+  - `test/gh778-review-code-skill.sh`, `test/gh798-status-skill.sh`, `test/_setup.sh`: left untouched per `PROJECT/2-WORKING/GH-1266-ARCHITECTURE-MD-SKILLS-INDEX.md` (`ARCHITECTURE.md only` in `## Key concepts`, `## Write-set`, `## Non-goals`, and `## Preflight Contract`; those files were only auto-included by `swarm-preflight` because `## Observed` cites the two retired suites).
+- **Acceptance criteria verification (read-only probes):**
+  - Criterion 1 (`ls -d skills/<tier>/*/ | wc -l` vs `grep -c "(skills/<tier>/" ARCHITECTURE.md`):
+    - `1-hourly`: `17` vs `17`
+    - `2-daily`: `23` vs `23`
+    - `3-weekly`: `16` vs `16` (red control on base: `16` vs `15`)
+    - `4-occasional`: `20` vs `20`
+  - Criterion 2 (`grep -c '(skills/3-weekly/weekly-planner/SKILL.md)' ARCHITECTURE.md`): `1` (red control on base: `0`)
+  - Criterion 3 (`grep -cE '^### \`[0-9]-[a-z]+\`.*\([0-9]+\)$' ARCHITECTURE.md` and `grep -cE '^### \`[0-9]-[a-z]+\` — [^(]+$' ARCHITECTURE.md`): `0` and `4` (red control on base: `4` and `0`)
+  - Criterion 4 (`bash utils/pdda/pdda.sh run`): deferred to the harness pre-advance gate outside the isolated worktree per the scope lock.
+- Handing off to codex — codex, take your turn.
