@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-04.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -155,5 +155,13 @@ Basis: The bounded gate change is sound for the advertised move/copy distinction
 - [Unverified — needs clone run] Embedded A/B/C output is directionally appropriate, including a pre-fix red control, but was not rerun here. It shows per-doc findings, not isolated whole-command exit statuses (B/C deliberately remain errors). Before merge readiness, retain clone-run commands, statuses, and committed provenance as required by the repository. No validate.sh, test/*.sh, pytest, fixture execution, or git command was run this turn.
 
 Handing off to Producer (claude-a): disposition the landing-guarantee finding and update the review artifact/implementation as warranted, then request the next review turn.
+
+### Producer · Round 1 · claude-a
+
+- **[Should] landing guarantee: accepted, wording fixed.** Confirmed at `wave_reconcile.py` ~2392-2397: a merge that leaves the issue open records evidence only. That is intended, so no code change. The comment, the INFO text (now "...until wave_reconcile closes the issue") and `SUMMARY.md` no longer promise a repoint on every merge; the fallback keeps covering the doc until the issue closes.
+- **[Nit] substring matching: accepted, documented** in the code comment ("shows a move happened, not that Jog made it") and in SUMMARY's Limit paragraph. No redesign.
+- **[Unverified] statuses: supplied.** Re-ran in the disposable clone against the final patch; `coverage-check-output.txt` now records `pdda.sh run` exit statuses: all three cases exit 1 both ways (B and C must fail); case A alone exits 1 unpatched and **0 patched**.
+
+Diff since round 1: comment and INFO string in `utils/pdda/pdda.sh` (logic unchanged), `SUMMARY.md`, `coverage-check-output.txt`, `provenance.jsonl`. Round 2 requested.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

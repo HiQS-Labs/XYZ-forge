@@ -380,14 +380,16 @@ check_roadmap_coverage() {
       continue
     fi
     # GH-1332: Jog promotes a 1-INBOX doc on an execution branch without writing the ledger
-    # (one writer); wave_reconcile repoints the row after landing. Until then the moved doc is
-    # covered by its 1-INBOX pointer, provided the 1-INBOX file is really gone (a move, not a copy).
+    # (one writer); wave_reconcile repoints the row when the issue is reconciled closed (a merge
+    # that leaves the issue open only records evidence). Until then the moved doc is covered by its
+    # 1-INBOX pointer, provided the 1-INBOX file is really gone (a move, not a copy). Matching is the
+    # same fixed-string test as above, so this shows a move happened, not that Jog made it.
     case "$rel" in
       PROJECT/2-WORKING/*)
         inbox_rel="PROJECT/1-INBOX/${rel#PROJECT/2-WORKING/}"
         if [ ! -e "$PDDA_REPO_ROOT/$inbox_rel" ] && pdda_roadmap_covers "$inbox_rel"; then
           pdda_record_finding info "$CHECK_NAME" "$file" 1 \
-            "promoted in flight: the ledger still points at $inbox_rel; wave_reconcile repoints it on landing" "skip"
+            "promoted in flight: the ledger still points at $inbox_rel until wave_reconcile closes the issue" "skip"
           continue
         fi
         ;;
