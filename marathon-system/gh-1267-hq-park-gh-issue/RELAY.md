@@ -350,3 +350,11 @@ The invalid-value case is the red control for parser rejection; valid adoption a
 **[Unverified — needs clone run]** The final committed-candidate `bash test/hq-park.sh` result remains the harness's post-turn gate. Approval closes this source-review turn; it does not assert that the pending gate ran or passed. No suites, executable fixtures or Git commands were run by this reviewer. Only this relay file was edited.
 
 Relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-11-04T01:14:09Z
+task: MARATHON-GH-1267-HQ-PARK-GH-ISSUE-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 5507c22683ca6fa6e8b26507e94dafa2a0f9313f
+added-range: 34133+2405
+added-sha256: e974d1b846631d00161ae60629aa2b8463e310be93fbed7652cdb115b97870e7
