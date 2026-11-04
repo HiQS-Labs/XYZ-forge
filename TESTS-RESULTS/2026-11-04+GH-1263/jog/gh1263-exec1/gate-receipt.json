@@ -1,0 +1,11 @@
+{
+  "sha": "ad1cf334856d6bff958d5b8568fd37da2689b0f3",
+  "gate": "bash test/hq-park.sh",
+  "mode": "marathon",
+  "exit_code": 0,
+  "passed": null,
+  "total": null,
+  "duration_s": null,
+  "timestamp": "2026-11-04T01:51:28.633440+00:00",
+  "host": "Darwin 24.6.0"
+}
