@@ -261,8 +261,10 @@ An in-flight failing test or runner error is not automatically an urgent blocker
 3. **Reconciliation ownership and batching.** Local `wave_reconcile.py --pr <N>` is the landing
    writer on `development`; merge-cleanup runs it by default. Hosted `wave-reconcile.yml` has been
    dispatch-only since GH-1127 / #1131, so nothing reconciles docs, ledger, and views after a merge
-   unless someone runs it. Batch multiple PRs (`wave_reconcile.py --pr <N> <M>`) rather than
-   reconciling per merge. Never reconcile locally while a dispatched hosted run is in flight; pass
+   unless someone runs it. merge-cleanup reconciles each merged PR separately
+   (`merge_cleanup.py:784-797`). When you reconcile by hand, batch several PRs
+   (`wave_reconcile.py --pr <N> <M>`) rather than one run per merge. Never reconcile locally while a
+   dispatched hosted run is in flight; pass
    `--force-local-reconcile` only in emergencies. Task branches must not commit routine view updates
    (`ROADMAP-DASHBOARD.md`, `LEADERBOARD.md`).
 4. **Never write bare `#N` for another repo's issues in a PR body.** The reconciler

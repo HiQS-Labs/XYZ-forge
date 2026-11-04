@@ -298,9 +298,12 @@ Lifecycle:
   closed without work, the completion sweep (next item) moves the doc to `PROJECT/4-MISC` and removes its
   queue pointer from `ROADMAP.md`.
 - **Completion moves come from one sweep, keyed on current issue state** (GH-1333). The sweep reads the
-  issue state of every `GH-<n>-` doc in `1-INBOX` and `2-WORKING`:
-  - closed as completed: it moves the doc to `PROJECT/3-COMPLETED/`;
-  - closed as not planned: it moves the doc to `PROJECT/4-MISC/`.
+  issue state of every `GH-<n>-` doc in `1-INBOX` and `2-WORKING`. The destination comes from the
+  closed issue's GitHub `stateReason`:
+  - `COMPLETED`: it moves the doc to `PROJECT/3-COMPLETED/`;
+  - `NOT_PLANNED`: it moves the doc to `PROJECT/4-MISC/`;
+  - anything else (`DUPLICATE`, a missing reason on an older issue, or a value it does not know): it
+    leaves the doc where it is and reports it for a person to place, rather than guessing a folder.
 
   It repoints the ledger row's section and `doc_path` in the same commit. It is idempotent and reads
   state when it runs, not when a PR merges. That way a manual close, a bulk close, a `Refs`-only lane
@@ -484,8 +487,10 @@ Minimum behavior:
   or the `GH-<number>-` filename; silently skip docs that carry neither (they are not issue-tracked)
 - resolve each issue's state from the best available source (see gh-degrade below), then flag:
   - **(a)** issue **CLOSED** but the doc is still in `2-WORKING` -> `warn`, recommending the exact
-    `git mv` to `PROJECT/3-COMPLETED` (flag-only; once the GH-1333 completion sweep lands, that sweep makes
-    this move, including for `1-INBOX` docs, which this check does not yet scan)
+    `git mv` to `PROJECT/3-COMPLETED` (flag-only). The manual `git mv` is the fallback only **until the
+    GH-1333 completion sweep lands**, and needs a `releases roadmap repoint` in the same commit so the
+    ledger's `doc_path` does not go stale. Once the sweep exists, run the sweep instead, because it
+    repoints the ledger itself. It also covers `1-INBOX` docs, which this check does not yet scan.
   - **(b)** issue **OPEN** but the doc's `status:` lead word declares it done (`complete`, `done`,
     `shipped`, `fixed`, `closed`, `merged`, `resolved`, `landed`) -> `warn` to reconcile. Anchoring on the
     status **lead word** means a mid-status mention like `Active — Phase 0 complete` never false-flags.
