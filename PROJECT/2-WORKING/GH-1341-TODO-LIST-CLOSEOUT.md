@@ -18,7 +18,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed, capture parked and rated `55/35/50/90`, promoted; recon and plan below. | Codex plan QA, then the `SKILL.md` edit, docs gate and smoke read. |
+| Plan QA Approved (Codex r2). Both skills edited; docs gate 0 errors; manual checks in `TESTS-RESULTS/2026-11-04+GH-1341/` pass (lookup now `startswith`, after the smoke caught a `contains` false positive). | Codex final QA, then PR, start-task closeout on #1341, deploy after merge. |
 
 ## Rating
 
