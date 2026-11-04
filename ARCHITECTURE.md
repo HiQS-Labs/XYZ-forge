@@ -46,7 +46,7 @@ and usage; this index exists so a task can be routed to the right skill without 
 Re-tiering a skill is a `git mv` plus its row here; nothing in the harness depends on which tier a
 skill sits in, only on the two-level depth (see `skills/README.md`).
 
-### `1-hourly` — Every hour (17)
+### `1-hourly` — Every hour
 
 _the in-task loop: intake, recon, planning discipline, review relays, the ledger._
 
@@ -70,7 +70,7 @@ _the in-task loop: intake, recon, planning discipline, review relays, the ledger
 | [triangulate](skills/1-hourly/triangulate/SKILL.md) | Reconcile three independent probes into an evidence-ranked verdict. |
 | [unstuck](skills/1-hourly/unstuck/SKILL.md) | Interrupt a stalled AI session and restore movement toward the original outcome. |
 
-### `2-daily` — A few times a day (23)
+### `2-daily` — A few times a day
 
 _landing, queueing and driving work; multi-session and multi-repo coordination._
 
@@ -100,7 +100,7 @@ _landing, queueing and driving work; multi-session and multi-repo coordination._
 | [xyz-mod](skills/2-daily/xyz-mod/SKILL.md) | Read-only Claude Code mod: `/xyz-status` prints hosted runs, tick claims and marathon/relay drivers with no model turn. |
 | [next-steps-mod](skills/2-daily/next-steps-mod/SKILL.md) | Claude Code mod: every answer ends with a `Next:`/`Also:` block, drawn as one-press buttons above the prompt, the top one as the Tab suggestion, plus `/next-steps`; auto-loads from the Skills Army HQ link. |
 
-### `3-weekly` — Weekly (15)
+### `3-weekly` — Weekly
 
 _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 
@@ -118,11 +118,12 @@ _cadence reviews, cleanup sweeps, collection and publishing maintenance._
 | [skills-army-hq](skills/3-weekly/skills-army-hq/SKILL.md) | Manage durable local skill copies, a catalog, backups and owned global app symlinks. Canonical here; published to XYZ-skills-army-mini via `push-downstream` (GH-955). |
 | [sop](skills/3-weekly/sop/SKILL.md) | Catch SOP / runbook / lessons-learned docs up to recent events; recon, propose additive diffs, apply only on approval. |
 | [task-sync](skills/3-weekly/task-sync/SKILL.md) | Unified IDE task-list grooming (GH-896): one core + per-IDE adapters (ZCode, Antigravity, native Codex planner) date-stamp titles with last-activity mm-dd, write last-action descriptions, manage pins; dry-run default, doctor, one 15-minute heartbeat, Skills Army HQ-deployable. |
+| [weekly-planner](skills/3-weekly/weekly-planner/SKILL.md) | Dual-horizon weekly planning and team orchestration skill built around XYZ Forge PRS (releases.db) and PDDA, with zero-dependency markdown fallback, 2nd-pass adversarial conflict audit, and shared engine with daily-planner. |
 | [weekly-shipped](skills/3-weekly/weekly-shipped/SKILL.md) | Summarize what shipped to main over the last week, user-impact framed. |
 | [whack-a-mole](skills/3-weekly/whack-a-mole/SKILL.md) | Cluster 14 days of recurring bugs by churn and file one approved root-cause umbrella issue. |
 | [worth-it](skills/3-weekly/worth-it/SKILL.md) | Price initial or remaining value; `/worth-it continue` returns Continue / Pivot / Park / Stop, one bounded proof and approval-aware results capture. Pinned upstream source and update recipe: [NOTICE](skills/3-weekly/worth-it/NOTICE). |
 
-### `4-occasional` — Least frequently (20)
+### `4-occasional` — Least frequently
 
 _setup, audits, one-off tooling and specialist lenses._
 
