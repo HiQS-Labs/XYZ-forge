@@ -171,6 +171,11 @@ effort must **not** become auto-selectable on the strength of that guess. So a p
 out of auto-selection until a human confirms the ratings and clears the flag — the same "route to a
 human" posture as `risk >= 4`.
 
+**Not enforced today (GH-1333).** No planner code reads `ratings_provisional`. `marathon_plan`, `jog`
+and `swarm_preflight` ignore it; only the `sentinel-overlay/` scripts read it. Until #1333 Phase 4
+either implements the hold or retires it, the hold is manual. Whoever prepares a marathon must keep a
+provisional capture out of its waves.
+
 This keeps the raw ratings canonical and queryable while letting the "what's the easiest *safe* thing
 to grab" logic live in one place that can evolve. (See the resolved `priority` note under
 [Proposed extensions](#proposed-extensions-not-yet-locked).)

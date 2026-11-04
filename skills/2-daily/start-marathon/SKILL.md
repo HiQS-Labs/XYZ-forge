@@ -203,7 +203,8 @@ CREATED="$(gh issue view "$NUM" --json createdAt --jq '.createdAt[0:10]')"
 DOC="PROJECT/1-INBOX/GH-${NUM}-$(hq_slug "$TITLE" | tr '[:lower:]' '[:upper:]').md"
 
 # <num> <src> <title> <created> <doc_type> <project> <repo> <request> — ratings default to
-# ratings_provisional: true, which marathon-plan already parks out of active waves.
+# ratings_provisional: true. marathon-plan does not read that flag yet (GH-1333), so hold
+# provisional captures out of waves by hand.
 hq_render_capture "$NUM" "$URL" "$TITLE" "$CREATED" bugfix <project> <org>/<repo> "$BODY" > "$DOC"
 
 python3 "$HARNESS/utils/py/releases_app.py" roadmap add \
