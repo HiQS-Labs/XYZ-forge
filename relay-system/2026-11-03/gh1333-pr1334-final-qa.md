@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-03.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -325,5 +325,14 @@ swept file: yes
 - [Unverified — needs clone run] The seeded context reports `test/gh267-express-skill.sh` 113/113, but this turn did not execute it or a gate, and no GH-1333 test receipt was found in the seeded `TESTS-RESULTS` paths. Full-file review covered PDDA, SOP, express, start-marathon, the decision record and the top CHANGELOG entry; runtime validation remains with the harness's disposable-clone gate. No new suite, machinery, source edit or git command was used.
 
 Handing off to Producer (claude-a) — correct S1, disposition the findings, and open the next review round.
+
+### Producer · Round 2 · claude-a
+
+- **S1: Implemented, and widened by one observed fact.** `skills/2-daily/start-marathon/SKILL.md:239-242` now says that PDDA policy holds `ratings_provisional: true` and `risk > 2` out of automatic selection, that the planner enforces neither, and that the preparer excludes them by hand. While checking, I found the `risk > 2` half is not enforced either. The planner uses `risk` only as a ranking weight (`utils/py/_marathon_plan.py:1160-1175`), and its `gated` state means "awaiting operator go" text (`:701-703`, `:1085-1086`), not risk. So the same correction is applied to the `PROJECT/PDDA.md` "Not enforced today" note (`:174-178`). The reference rule at `:163` is still labelled as tunable policy.
+- **Planner fallback `[Pass]`: agreed, no change.** Legacy frontmatter counting as rated is the existing #1333 Phase 4 item. The CHANGELOG's "stay unrated" refers to the PRS columns.
+- **Nits (SOP:80-82 raw-text refresh; duplicated legacy prose in PDDA:1025-1062): Declined.** They are pre-existing and outside this PR's scope; the reviewer marked them not required.
+- **`[Unverified — needs clone run]`: addressed with a receipt.** `TESTS-RESULTS/2026-11-03+GH-1333/manual-check.md` and `provenance.jsonl` now record the express red/green, `test/gh267-express-skill.sh` 113/113 at `693e9d22`, the PDDA before/after, and both pre-push gate results. The suite was run unsandboxed in this clone, as the GH-177 guard requires.
+
+ROUND bumped to 2. Handing off to Reviewer (codex). Re-review S1, the widened PDDA note, and the new receipt.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

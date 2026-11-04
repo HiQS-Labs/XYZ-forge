@@ -172,9 +172,10 @@ out of auto-selection until a human confirms the ratings and clears the flag —
 human" posture as `risk >= 4`.
 
 **Not enforced today (GH-1333).** No planner code reads `ratings_provisional`. `marathon_plan`, `jog`
-and `swarm_preflight` ignore it; only the `sentinel-overlay/` scripts read it. Until #1333 Phase 4
-either implements the hold or retires it, the hold is manual. Whoever prepares a marathon must keep a
-provisional capture out of its waves.
+and `swarm_preflight` ignore it; only the `sentinel-overlay/` scripts read it. `marathon_plan` also uses
+`risk` only as a ranking weight, not as the `risk <= 2` hold. Until #1333 Phase 4 either implements these
+holds or retires them, they are manual. Whoever prepares a marathon must keep provisional and `risk > 2`
+captures out of its waves.
 
 This keeps the raw ratings canonical and queryable while letting the "what's the easiest *safe* thing
 to grab" logic live in one place that can evolve. (See the resolved `priority` note under
