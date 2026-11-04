@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-04.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -136,5 +136,24 @@ ERROR [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-99999-NO-ROW.md:1 activ
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+swept file: yes
+
+VERDICT: FAIL
+Basis: The bounded gate change is sound for the advertised move/copy distinction, but the unconditional landing guarantee in the artifact/DoD is not supported by the caller. Reviewed the entire embedded artifact and all of utils/pdda/pdda.sh, plus the relevant Jog and reconciliation paths. No additional concrete pre-existing defect identified in the pdda.sh sweep beyond the inherited matching limitation below. Graph discovery was unavailable (approval policy denied the tool); used source reads.
+
+- [Pass] Preserve one writer: utils/py/jog_run.py:524 (_execution_root) rejects lane ledger changes, and promote_contract_to_working returns from the separate-primary branch before the roadmap update. Accepting the stale pointer in coverage therefore fits the existing ownership contract. Easy to reverse: remove the bounded fallback; installed PDDA consumers also inherit this behavior.
+- [Pass] The new predicate at utils/pdda/pdda.sh:385-394 requires both an absent inbox source and inbox coverage; it leaves the inbox loop at :402-418 untouched. Thus a still-present source cannot take this fallback. Nothing unrelated appears in the embedded diff; it adds no test file.
+- [Should] Resolve the overbroad promise that wave_reconcile repoints every in-flight row on landing. At utils/py/wave_reconcile.py:2392-2397, an OPEN issue with a found doc and a merged landing only records merge evidence; the update_roadmap_entry call is in the mutually exclusive branch at :2417. This matters for partial issue landings (the artifact itself says #1332 item 2 stays open). The INFO text at pdda.sh:390 also promises repointing on landing. Concrete fix: correct the artifact/diagnostic and explicitly disposition the DoD as permitting a stale pointer until terminal reconciliation, OR provide the narrowly scoped primary-side repoint for open landings if immediate convergence is required. Do not terminalize an open issue.
+  Observed input: caller predicate doc_path truthy, issue_state="OPEN", is_merged=True, force_promote=False at wave_reconcile.py:2390-2397; it bypasses update_roadmap_entry and does not add a moved_docs entry.
+  Affected scope: merged partial landings whose promoted working doc exists while their issue remains open and their ledger still names the inbox path.
+  Falsifier: a disposable-clone reconciliation of that precise state which repoints the row to 2-WORKING while preserving its active section and OPEN issue would disprove the gap; the current branch predicts no repoint.
+- [Nit] Matching is inherited substring coverage, not issue ownership or exact-path identity (pdda.sh:357-360). A raw_text mention of PROJECT/1-INBOX/X.md, or doc_path PROJECT/1-INBOX/X.md.bak, matches X.md. The fallback consequently cannot prove a Jog move, and a manual move can pass indefinitely. This is acceptable for the stated single-operator coverage gate if documented; do not present the missing-source check as proof of provenance. No speculative matching redesign requested.
+- [Pass] Terminal reconciliation does repoint the owning row: wave_reconcile.py:1575-1588 substitutes the old path and invokes roadmap repoint when doc_path differs. find_active_doc_for_issue (:1070) locates docs by issue filename; missing/mismatched filenames provide no destination. repoint_moved_doc_rows (:1515) handles additional rows naming the source actually moved during reconciliation; a 2-WORKING→3-COMPLETED move does not itself match an additional row still naming 1-INBOX.
+- [Unverified — needs clone run] Embedded A/B/C output is directionally appropriate, including a pre-fix red control, but was not rerun here. It shows per-doc findings, not isolated whole-command exit statuses (B/C deliberately remain errors). Before merge readiness, retain clone-run commands, statuses, and committed provenance as required by the repository. No validate.sh, test/*.sh, pytest, fixture execution, or git command was run this turn.
+
+Handing off to Producer (claude-a): disposition the landing-guarantee finding and update the review artifact/implementation as warranted, then request the next review turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
