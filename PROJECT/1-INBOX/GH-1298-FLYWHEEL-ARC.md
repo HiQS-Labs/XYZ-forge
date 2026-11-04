@@ -61,3 +61,7 @@ Three runs were reported only inside their own issues. #1298 puts them side by s
 ### QA checklist — Phase 0
 
 - [ ] TODO: acceptance criteria for the Phase 0 pass above.
+
+## Merge evidence
+
+- PR #1334 merged 2026-11-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
