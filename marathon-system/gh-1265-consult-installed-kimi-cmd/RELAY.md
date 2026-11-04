@@ -1,6 +1,6 @@
 # Marathon Phase gh-1265-consult-installed-kimi-cmd
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1265-CONSULT-INSTALLED-KIMI-CMD-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -105,3 +105,27 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 1 · Builder · agy
+
+Implemented GH-1265 (`consult`: add the installed `kimi` and `cmd` seats so a degraded pair can be re-fired without API keys):
+
+1. **[utils/py/consult.py](file:///private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/rtl-wt.KC9PLF/utils/py/consult.py)**:
+   - Binary resolution (`:633-637`): resolved `kimi_bin` via `KIMI_BIN` -> `shutil.which("kimi")` -> `~/.kimi-code/bin/kimi` (mirroring `kimi-turn.py:45-50`) and `commandcode_bin` via `COMMANDCODE_BIN` -> `"cmd"` (mirroring `commandcode-turn.py:26`).
+   - Advisor dispatch (`:822-838`): added `elif m == "kimi":` (`[kimi_bin, "-p", full_prompt]` plus optional `-m KIMI_MODEL` and `KIMI_FLAGS`) and `elif m == "cmd":` (`[commandcode_bin] + cflags + (["--model", cmodel] if cmodel else []) + ["--print", full_prompt]`, defaulting `COMMANDCODE_FLAGS` to `--no-session --skip-onboarding --no-auto-update --yolo` per `commandcode-turn.py:13,86`), both launched via `guarded_with_timeout` and validated via `advisor_answer_ok`.
+   - Neutralizer & emptiness check (`:220-224`, `:242-251`, `:295-301`): added `kimi-[A-Za-z0-9._-]+`, `kimi`, `cmd`, `moonshot`, and `commandcode` to `token_re` in `_neutralize_answer_text`; also stripped `^kimi version\b` and `^To resume this session:\s*kimi\b` CLI banner/footer lines in `_NEUTRAL_BANNER_RE` and `advisor_answer_ok` so a bare CLI banner/footer neither leaks into neutral payloads nor false-greens an empty response.
+   - CLI `--help` (`:667-670`): added `Models: codex, agy, kimi, cmd, claude, aider, muse, gemini (default: codex,agy)` while keeping the `Usage:` line intact.
+2. **[skills/1-hourly/consult/SKILL.md](file:///private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/rtl-wt.KC9PLF/skills/1-hourly/consult/SKILL.md)**:
+   - Listed `kimi, cmd` alongside `claude` in the `--models` usage block (`:79`) and added `re-fire a degraded pair with \`--models <survivor>,kimi\` or \`--models <survivor>,cmd\`` under the degrade note (`:96-97`).
+3. **Verification (recorded in `.relay-scratch/gh1265-probes.log` via an isolated `$TMPDIR` git fixture)**:
+   - Red controls on base: `--models kimi` printed `unknown model 'kimi' — skipping` and exited `2`; `_neutralize_answer_text("I am kimi from Moonshot", "probe.kimi.md", "A", "kimi")` returned `'I am A from Moonshot\n'`.
+   - Post-fix live probes:
+     - `--models kimi --label probe --prompt "Reply with the single word OK."` exited `0` with non-empty `answer-A.md` containing `OK`.
+     - `--models cmd --label probe --prompt "Reply with the single word OK."` exited `5` with `[FAIL] cmd -> .../probe.cmd.md` (`Error: Authentication failed. Please run "cmd login" first.`, `consult: advisor failed with exit 3`).
+     - `--models kimi --label vendor --prompt "state your vendor"` exited `0`; raw `vendor.kimi.md` named `Moonshot AI` and `Kimi`, and neutral `answer-A.md` had zero matches for `\b(kimi|moonshot|cmd|commandcode)\b`. In-memory `_neutralize_answer_text` replays returned `'I am A from A\n'` for both `kimi/Moonshot` and `cmd/CommandCode`.
+     - `--models codex,agy` layout produced `answer-A.md`, `answer-B.md`, and `key.json` unchanged.
+   - Frozen Bash twin `relay-automation/consult.sh` untouched.
+
+Handing off to codex — codex, take your turn.
