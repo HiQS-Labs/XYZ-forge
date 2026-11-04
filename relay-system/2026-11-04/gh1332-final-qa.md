@@ -178,4 +178,12 @@ Basis: Ship for the bounded item-1 change, with the Producer's explicit disposit
 
 Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and subsequent gate.
 
+
+### Attestation · relay-drive — 2026-11-04T14:15:18Z
+task: RELAY-gh1332-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 910d740490065b2408cb0126d9ec7c42917dc79b
+added-range: 16977+2989
+added-sha256: a317861f177174d3ea61e119a021356c735be7fcc4fa3a0fa4547650f84739f7
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
