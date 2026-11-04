@@ -1,6 +1,6 @@
 # Marathon Phase gh-1267-hq-park-gh-issue
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-1267-HQ-PARK-GH-ISSUE-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -123,3 +123,48 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 3. **Skill documentation (`skills/2-daily/hq/SKILL.md`):** Added the `hq park [--create] --gh-issue N <project> [request…]` usage bullet documenting how to adopt an existing issue.
 4. **Full-file sweep (`utils/hq/hq.sh`, `skills/2-daily/hq/SKILL.md`):** Swept both files in full; guarded `--title` and `--gh-issue` shifts in `park)` when passed as a trailing flag without a value, and found no other pre-existing defects.
 5. **Verification:** Verified syntax (`bash -n utils/hq/hq.sh`) and ran an isolated `$TMPDIR` probe covering preview with `--gh-issue`, `--create --gh-issue` (confirming capture frontmatter/body, pointer insertion, and zero calls to `gh issue create`), refusal on existing `1-INBOX` and `2-WORKING` captures (naming the existing doc), Tier C refusal, non-numeric refusal, and empty-body handling. Per GH-831 and the phase brief, no test files were added or modified.
+
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Changes requested
+
+swept file: no
+
+Reviewed the park parser, adoption branch, existing capture/ledger writer and skill documentation, plus supporting suite source. The expanded packet-wide sweep is incomplete (some large concatenated reads were truncated); this is not a whole-packet approval. No pre-existing defect is asserted from the incomplete supporting-file sweep.
+
+**[Should] Explicit `--gh-issue -` selects new-issue creation instead of rejecting the invalid issue value.** In `utils/hq/hq.sh`, `park)` initializes `issue="-"` and also accepts that exact value from `--gh-issue`. Both argument-count selection and `cmd_park` interpret it as flag omission. The numeric validation is inside `if [ "$issue" != "-" ]`, so it never sees this supplied nonnumeric value. With `--create` and a request, `num` stays empty and the existing new-issue branch executes `gh issue create`. Preserve whether the flag was supplied (or validate its value in the parser) so explicit invalid values cannot select fresh intake.
+
+Observed input: `bash utils/hq/hq.sh park --create --gh-issue - XYZ-forge "fresh request"`.
+Affected scope: callers supplying the sentinel as an issue value; both Tier A/B and Tier C can reach fresh GitHub issue creation. Normal numeric adoption does not hit this collision.
+Falsifier: the same input rejects with a nonzero status before any issue-create call, while omission of `--gh-issue` still permits fresh intake.
+
+Narrow non-mutating measurement (no HQ invocation, executable fixture, Git operation or network call): extracted the **actual** `park)` case arm and replaced only its final `cmd_park` callee with a printer. Command, run via `python3 -`:
+
+```python
+from pathlib import Path
+import subprocess
+s = Path('utils/hq/hq.sh').read_text()
+start = s.index('case "${1:-}"')
+p = s[s.index('  park)\n', start):s.index('  queue)\n', start)]
+script = ('cmd_park(){ printf "create=%s title=%s issue=%s project=%s request=%s\\n" '
+          '"$1" "$2" "$3" "$4" "$5"; }\ncase "$1" in\n' + p + '\nesac\n')
+for issue in ('1267', '-'):
+    r = subprocess.run(['bash', '-c', script, 'probe', 'park', '--create',
+                        '--gh-issue', issue, 'XYZ-forge', 'fresh request'],
+                       capture_output=True, text=True)
+    print(r.returncode, r.stdout.strip())
+```
+
+Decisive measured output (both parser invocations exited 0):
+
+```text
+create=1 title= issue=1267 project=XYZ-forge request=fresh request
+create=1 title= issue=- project=XYZ-forge request=fresh request
+```
+
+The source trace establishes the subsequent branch selection; no real issue was created to demonstrate it. Root cause: explicit flag input and absence share the same sentinel; Fix site: park argument parser / adoption-presence decision; Why not downstream: the create writer must remain available for genuinely fresh requests.
+
+**Verification:** `bash -n utils/hq/hq.sh` exited 0 with no output. No suites or fixtures were executed, per turn containment. **[Unverified — needs clone run]** The builder summary contains no exact commands, exit statuses or decisive output for the required preview/no-write witness, releases-DB row and unchanged newest-GitHub-issue-number witness, registered-capture refusal, or byte-identical base preview. Record those acceptance receipts in the relay when obtained through the permitted harness/disposable-clone workflow; do not run mutation-heavy checks here. `test/hq-park.sh` must pass on the final committed candidate via the harness.
+
+Handing off to agy — agy, take your turn.
