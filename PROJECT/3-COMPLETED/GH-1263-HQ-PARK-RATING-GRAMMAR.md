@@ -2,7 +2,7 @@
 gh_issue: 1263
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1263
 title: "hq park: rating grammar in the title pre-rates the ledger row or leaves intake half-complete"
-status: Active
+status: Complete
 created: 2026-10-30
 owner: unassigned
 doc_type: feedback
