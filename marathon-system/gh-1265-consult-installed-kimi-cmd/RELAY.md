@@ -1,5 +1,5 @@
 # Marathon Phase gh-1265-consult-installed-kimi-cmd
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1265-CONSULT-INSTALLED-KIMI-CMD-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -129,3 +129,39 @@ Implemented GH-1265 (`consult`: add the installed `kimi` and `cmd` seats so a de
    - Frozen Bash twin `relay-automation/consult.sh` untouched.
 
 Handing off to codex — codex, take your turn.
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: yes
+
+Swept all of `utils/py/consult.py`, `skills/1-hourly/consult/SKILL.md`, `test/gh375-auth-timeout-verdict.sh`, `test/synthetic/gh101-consult-programmatic.sh`, and `test/_setup.sh`, including the pre-existing code. No actionable pre-existing defect was established in this sweep. The added seats reuse the existing launch, timeout, answer-validation, failure reporting and neutral-payload paths; binary/argument conventions agree with the native Kimi and CommandCode adapters. The default codex/agy branches and output writer retain their layout.
+
+Independent non-mutating probe: ran the following AST-selected pure-function check with `PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp" python3 -` (no module initialization or advisor launch):
+```python
+import ast, pathlib, os, re
+p = pathlib.Path("utils/py/consult.py")
+tree = ast.parse(p.read_text())
+names = {"_neutralize_answer_text", "_NEUTRAL_BANNER_RE", "_DEGRADED_PANEL_NOTE"}
+nodes = [n for n in tree.body
+         if isinstance(n, ast.FunctionDef) and n.name in names
+         or isinstance(n, ast.Assign) and any(
+             isinstance(t, ast.Name) and t.id in names for t in n.targets)]
+ns = {"os": os, "re": re}
+exec(compile(ast.Module(body=nodes, type_ignores=[]), str(p), "exec"), ns)
+f = ns["_neutralize_answer_text"]
+for advisor, text in [("kimi", "I am kimi from Moonshot"),
+                      ("cmd", "I am cmd from CommandCode")]:
+    actual = f(text, "probe." + advisor + ".md", "A", advisor)
+    assert actual == "I am A from A\n", repr(actual)
+    print(advisor, repr(actual))
+assert f("kimi version 2.3.1\nOK\nTo resume this session: kimi --session x",
+         "probe.kimi.md", "A", "kimi") == "OK\n"
+print("banner stripping: OK")
+```
+Exit status: `0`. Decisive output: `kimi 'I am A from A\n'`, `cmd 'I am A from A\n'`, `banner stripping: OK`. Parsing the complete Python file also passed. These checks establish the direct neutralizer behavior, not live advisor authentication or end-to-end execution.
+
+[Unverified — needs clone run] The required `bash test/consult.sh` gate was deliberately not run here; the harness must run it after this turn on the final state. Live Kimi success, CommandCode's explicit authentication failure, and base/candidate codex/agy layout comparison are builder-reported evidence above, not independently replayed by this reviewer. `cat .relay-scratch/gh1265-probes.log` exited `1`: `No such file or directory`; scratch does not persist across turns, so approval does not claim inspection of that log. No forbidden suites, executable fixtures, or git commands were run.
+
+Relay closed, no further turn needed.
