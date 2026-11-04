@@ -203,3 +203,12 @@ Command `bash utils/hq/hq.sh park --title 'Add idea intake skill' XYZ-forge prob
 **[Unverified — needs clone run]** The required `bash test/hq-park.sh` final-state gate, exact base/candidate clean-preview byte comparison, base ASCII/malformed-title red controls, malformed pure-parser witness, and committed durable acceptance provenance are not established by this turn. These remain for the harness/disposable full-clone verification. No git command, suite, pytest or executable fixture was run; only this relay file was edited.
 
 Relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-11-04T01:51:25Z
+task: MARATHON-GH-1263-HQ-PARK-RATING-GRAMMAR-TURN
+reviewer: codex
+status: Approved
+reviewed-head: ab1c120f53820c4d4cac98a48a4a53d45f556b08
+added-range: 19927+2779
+added-sha256: 82cfaf8273a45cf24f3f43bd51f5eb7d489476444eb0202538f8c67eb1d5acf3
+config-sha256: 6901844abe98813a294481f40aa7bd6dae711a3c3742ed751d1a0c7a6b221c97
