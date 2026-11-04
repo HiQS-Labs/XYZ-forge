@@ -1,6 +1,6 @@
 # Marathon Phase gh-1267-hq-park-gh-issue
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1267-HQ-PARK-GH-ISSUE-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -104,3 +104,22 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+**Files touched:**
+- `utils/hq/hq.sh`
+- `skills/2-daily/hq/SKILL.md`
+
+**Summary of changes & key decisions:**
+1. **`park` argument parser (`utils/hq/hq.sh`):** Added `--gh-issue N` and `--gh-issue=N` parsing mirrored from `queue`, making `<request...>` optional (`[ "${#pargs[@]}" -ge 1 ]`) when `--gh-issue` is passed while keeping `<request...>` required (`-ge 2`) when omitted.
+2. **`cmd_park` adopt branch (`utils/hq/hq.sh`):** Right after target resolution and before `title`/`slug`, Tier C, and preview:
+   - Refuses non-numeric issue numbers (`rc=1`).
+   - Refuses if `PROJECT/1-INBOX/GH-<N>-*.md` or `PROJECT/2-WORKING/GH-<N>-*.md` already exists in the target, naming the relative capture path (`rc=1`).
+   - Refuses on Tier C (`rc=1`) so it never falls through to `gh issue create`.
+   - Runs `"$HQ_GH_BIN" issue view "$issue" --json url,title,body` in `"$path"`, validates JSON and required `url`/`title` strings via `python3`, sets `src` to `url`, `title` to `${ptitle:-$fetched_title}`, `request` to the given CLI request or else the fetched `body` (allowing an empty body), and derives `slug` from `${ptitle:-$title}` (never from the fetched body).
+   - Preserves fetched `num`/`src` in preview mode instead of overwriting with `<N>` placeholders, while leaving no-`--gh-issue` preview byte-identical to base.
+   - In `--create` mode, skips the duplicate-issue search and `gh issue create` when `num` is already set, continuing directly into the unchanged `hq_render_capture` + `releases roadmap add` / `ROADMAP.md` registration path.
+3. **Skill documentation (`skills/2-daily/hq/SKILL.md`):** Added the `hq park [--create] --gh-issue N <project> [request…]` usage bullet documenting how to adopt an existing issue.
+4. **Full-file sweep (`utils/hq/hq.sh`, `skills/2-daily/hq/SKILL.md`):** Swept both files in full; guarded `--title` and `--gh-issue` shifts in `park)` when passed as a trailing flag without a value, and found no other pre-existing defects.
+5. **Verification:** Verified syntax (`bash -n utils/hq/hq.sh`) and ran an isolated `$TMPDIR` probe covering preview with `--gh-issue`, `--create --gh-issue` (confirming capture frontmatter/body, pointer insertion, and zero calls to `gh issue create`), refusal on existing `1-INBOX` and `2-WORKING` captures (naming the existing doc), Tier C refusal, non-numeric refusal, and empty-body handling. Per GH-831 and the phase brief, no test files were added or modified.

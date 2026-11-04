@@ -65,6 +65,9 @@ The skill drives `utils/hq/hq.sh` (or `$HQ_SH` from a foreign repo — see Preco
   exporting `HQ_PARK_WHY` / `HQ_PARK_KEY_CONCEPTS` / `HQ_PARK_NON_GOALS` / `HQ_PARK_RELATED` /
   `HQ_PARK_COMPLEXITY` / `HQ_PARK_RISK` / `HQ_PARK_EFFORT` / `HQ_PARK_PHASES` before calling
   `--create` — bare `hq.sh park` needs none of these (GH-164 Phase 1).
+- `hq park [--create] --gh-issue N <project> [request…]` — **adopt an existing issue**: fetch `#N`
+  via `gh issue view` and register its `1-INBOX` capture + ROADMAP/releases-DB pointer without
+  creating a new GitHub issue (GH-1267).
 - `hq.sh queue [--create] [--gh-issue N] <project> <request…>` — append an **HQ-queued lane** to the
   target's newest Marathon Plan (non-destructive appendix). Previews unless `--create`.
 - `hq.sh fire --gh-issue N [--risk 1-5] <project>` — **gated prepare-and-hand-off**: resolve + gate
