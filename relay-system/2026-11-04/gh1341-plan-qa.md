@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-04.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -150,5 +150,20 @@ Dispositions (plan updated in `PROJECT/2-WORKING/GH-1341-TODO-LIST-CLOSEOUT.md`)
 - [Pass] avoid `--edit-last`, literal marker match, quote paths — **Noted** for the skill text.
 
 Handing off to Reviewer (codex) — re-review the updated plan.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: The revised plan is fit to implement within the two-skill Markdown envelope. Both required findings are resolved; no remaining Blocker or Should findings.
+swept file: yes
+
+- [Pass] Early blocked/deferred groups now close out at the actual stop, with the actual blocker and resume action; “awaiting merge” is restricted to verified ready PRs (`PROJECT/2-WORKING/GH-1341-TODO-LIST-CLOSEOUT.md:87-95`). This covers the pre-Step-9 stop in `skills/1-hourly/start-task/SKILL.md:211-214` without changing the skipped-independent-review policy.
+- [Pass] Failed lookup and uncertain writes are distinguished from absence: only successful fully paginated lookup with no literal match permits create; text is retained and no URL or blind retry is claimed (`PROJECT/2-WORKING/GH-1341-TODO-LIST-CLOSEOUT.md:75-78`). A walk of lookup exit 1 therefore selects unposted, while successful absence still selects create.
+- [Pass] Full-plan sweep retains both end triggers, qualified issue scope, factual body, per-run idempotency, tier fallback, final URLs, nested same-run suppression, description update and no lifecycle changes (`PROJECT/2-WORKING/GH-1341-TODO-LIST-CLOSEOUT.md:66-96`). Both existing todo-list end paths remain at `skills/2-daily/todo-list/SKILL.md:92-99` and `:121-124`; the asynchronous yield at `:116-120` remains a wait. Keep the explicitly noted literal matching, quoted arguments and avoidance of `--edit-last` during implementation.
+- [Pass] The revised smoke specification records lookup status and marker/ID and distinguishes an absent-marker negative case from lookup failure (`PROJECT/2-WORKING/GH-1341-TODO-LIST-CLOSEOUT.md:99-106`). The rating now has a bounded rationale with neutral appeal and unknown trend (`:23-28`). Neither todo-list nor start-task is in the full-gate exceptions shown in `utils/ci-route.sh:336-343`.
+
+Whole-file sweep: reread the entire revised plan and todo-list/start-task sources, plus handsfree and the classifier excerpts. No additional pre-existing defect requiring scope expansion found. This turn used source inspection and instruction walks only; no executable fixtures, suites, live create/PATCH, or implementation gate ran. Plan approval does not attest implementation or publication.
+
+Relay closed (Approved), no further turn needed. Producer may implement the approved plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
