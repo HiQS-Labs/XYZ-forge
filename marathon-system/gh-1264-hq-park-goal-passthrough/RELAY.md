@@ -1,5 +1,5 @@
 # Marathon Phase gh-1264-hq-park-goal-passthrough
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1264-HQ-PARK-GOAL-PASSTHROUGH-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -118,3 +118,21 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   4. `test/hq-park-synthesis.sh`: Unset `HQ_PARK_GOAL` in the bare `--create` test case and verified multiline `HQ_PARK_GOAL` passthrough in the synthesis passthrough test case.
 - **Verification:** Verified preview output with `HQ_PARK_GOAL=$'Done means X.\nSecond line.'` and unset `HQ_PARK_GOAL` into `.relay-scratch/`.
 
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: yes
+
+Reviewed the listed artifact files on disk, including the existing resolver, intake/create, promotion, dispatch, documentation, and covering-suite code. No additional confirmed pre-existing defect requiring a change for this phase was found. The implementation extends the existing renderer without a parallel writer: both preview and create pass the quoted seventeenth argument; omitted/empty values retain the previous TODO text. The existing synthesis suite now checks multiline goal output and clears the new environment seam for its default case.  [Unverified — no citation]
+
+Narrow manual verification (no suites or executable fixtures run):
+
+- Command: `bash -n utils/hq/hq.sh utils/hq/hq-lib.sh test/hq-park-synthesis.sh`. Exit 0.
+- Command: `bash -c '. utils/hq/hq-lib.sh; hq_render_capture "$@"' _ 1264 https://example/issues/1264 probe 2026-11-03 feedback proj repo body "" "" "" "" "" "" "" "" $'Done means X.\nSecond line.'`. Exit 0; nonempty output, 1352 characters. Decisive output: `goal: >` followed by `  Done means X.` and `  Second line.`, with no TODO in that field. A Python comparison of the extracted field against the exact two indented lines returned `goal_assert= True`.
+- Same renderer command with the trailing arguments omitted, and separately with nine empty trailing arguments: both exit 0, both nonempty (1394 characters), byte-equal outputs (`omitted_equals_empty= True`). Decisive goal output: `  TODO: one-paragraph statement of what "done" looks like for this idea.` This also supplies a manual sensitivity control: omitting the supplied goal removes both expected goal lines and restores the stub.
+
+[Unverified — needs clone run] The exact CLI preview comparison against the base revision and the required `bash test/hq-park-synthesis.sh` / `bash test/hq-park.sh` final-commit runs were not executed here. The renderer probe is narrower than those acceptance checks; approval is the source-review verdict, not an assertion that the final harness gate has passed. The harness must retain its post-turn verification boundary.
+
+relay closed, no further turn needed
