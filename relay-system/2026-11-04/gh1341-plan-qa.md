@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-04.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -109,5 +109,32 @@ Approved if the plan is fit to implement.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The scope and shared procedure fit the issue; two small instruction gaps need correction before implementation. No new tooling or tests requested.
+swept file: yes
+
+- [Should] Make the start-task next step conditional. `PROJECT/2-WORKING/GH-1341-TODO-LIST-CLOSEOUT.md:78-82` applies the body to both ready PRs and blocked/deferred groups but fixes the next step to "awaiting merge". That is false for a group stopped at plan QA with no PR. Use awaiting merge only for a verified ready PR; otherwise state the actual blocker/decision and resumption action. Ensure early stops invoke this closeout before handoff rather than depending on reaching Step 9 normally.
+  Observed input: Plan lines 78-81 explicitly include "when a group ends blocked/deferred" and "next step: awaiting merge"; start-task lines 211-214 explicitly stop implementation when plan review is unavailable or unresolved.
+  Affected scope: Tracked start-task groups ending blocked/deferred before a ready PR exists.
+  Falsifier: Walk a group stopped at Step 6 with no PR through the proposed instructions; a closeout naming the actual review blocker and resume action, without claiming awaiting merge, disproves the concern.
+
+- [Should] Add one failure rule to the shared gh procedure: only a successful, fully paginated lookup with no exact marker match permits creation; failed lookup/post/edit must be reported as unposted/unknown, with rendered text retained for paste or retry. Do not claim a URL or blindly retry a possibly completed write. The plan currently defines only found/absent and a Tier B fallback (`PROJECT/2-WORKING/GH-1341-TODO-LIST-CLOSEOUT.md:68-71`).
+  Observed input: Read-only probe `gh issue view 1341 -R HiQS-Labs/XYZ-forge --json body,comments` exited 1 with "error connecting to api.github.com"; a subsequent `gh api repos/HiQS-Labs/XYZ-forge/issues/1341/comments --paginate` exited 0 with one non-closeout scope-addition comment. An unavailable lookup is an observed, distinct state from an absent marker.
+  Affected scope: A/B closeout operations when gh fails or a write outcome is uncertain.
+  Falsifier: A manual instruction walk with lookup exit 1 must produce no create attempt and an explicit unposted/unknown result; successful lookup with no matching marker must still select create.
+
+- [Pass] Both todo-list run-end definitions are covered: source `skills/2-daily/todo-list/SKILL.md:92-99` and `:121-124`; plan `:59-60` targets both. The asynchronous turn yield at source `:116-120` is a wait, not run completion. Preserve the wake prompt's user-stop case when editing. No additional independent run-end definition found in the full todo-list file.
+- [Pass] Plan `:62-76` covers qualified issue scope, no-issue outcome, factual content/evidence, per-run markers, tier behavior, URL reporting, description and no lifecycle mutations. Canonical todo-list section 4 plus start-task-specific timing/marker is the requested DRY split; the issue's scope-addition comment explicitly requires skipping the second nested comment (issue comment 6638233042, read via the paginated API probe above). Keep "same run" qualification from plan `:74-75` when implementing.
+- [Pass] Local `gh api --help` (exit 0) states that `-F` values beginning with `@` read a file and that pagination fetches successive pages; `gh issue comment --help` (exit 0) exposes `--body-file` and `-R`. These support plan `:46-49`. Quote filenames/arguments and match the marker as literal text; do not use `--edit-last`, which can target an unrelated comment. Live create/PATCH execution remains unverified and was not attempted.
+- [Pass] Docs routing is correct for these two files: `utils/ci-route.sh:63-65` recognizes Markdown; `:336-343` escalates merge-cleanup, relay-automation and relay-xyz, not todo-list/start-task. Plan `:83` overstates "only ... merge-cleanup"; remove "only" or qualify it to these candidates.
+- [Nit] The docs consumer read and read-only absent/present marker selection are proportionate (`plan:88-92`), but label the empty lookup a negative case, not proof that a check can fail. Record nonempty successful response plus exit status and the exact matched marker/ID for the present case; retain provenance as required. No clone suite was run in this turn.
+- [Nit] `55/35/50/90` is plausible for a small instruction change, but plan `:21` records only numbers. Add one brief rationale for priority above severity and high cheapness; unknown recurrence stays unknown. Appeal 50 follows `skills/1-hourly/start-task/SKILL.md:360` and must remain neutral.
+
+Whole-file sweep: read the entire plan and todo-list source, start-task source including skipped-review and blocked paths, handsfree, and the classifier excerpts. No further pre-existing defect requiring expansion of this task found. The issue body was independently read with `gh api repos/HiQS-Labs/XYZ-forge/issues/1341 --jq .body` (exit 0); it agrees with the packet's requirements. This is plan QA, not implementation or gate approval.
+
+Handing off to Producer (claude-a) — address the two Should findings, disposition the notes, then return for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
