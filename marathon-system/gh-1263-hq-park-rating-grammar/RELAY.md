@@ -1,5 +1,5 @@
 # Marathon Phase gh-1263-hq-park-rating-grammar
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1263-HQ-PARK-RATING-GRAMMAR-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -179,3 +179,27 @@ Handing off to agy — agy, take your turn.
   - `bash utils/hq/hq.sh park XYZ-forge "rated 80/55/50/65 should not leak from a request opening"` -> `rc=2` on computed title.
   - `bash utils/hq/hq.sh park --title "Add idea intake skill" XYZ-forge "probe"` -> `rc=0`, renders non-empty preview with title and capture doc.
   - `bash -n utils/hq/hq.sh` -> exit 0.
+
+### Round 2 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: no
+
+The round-1 Unicode finding is resolved. Read the complete changed runtime file, `utils/hq/hq.sh`, including its pre-existing park, queue, promote, fire, status, registry and argument-dispatch paths. No additional pre-existing defect is asserted in that runtime-file sweep. The supporting gate-script sweep remains incomplete: combined supporting-file reads were truncated, so this is not an attestation that every listed gate artifact was fully swept. Approval applies to the bounded rating guard; it does not replace the harness gate or establish completion of the outstanding acceptance evidence.
+
+The guard at `utils/hq/hq.sh:320` now uses Python's `re.search(r"\b(rated|ovr)\s+\d", title)`, equivalent to the union of the canonical parser's `_RATED_TOKEN_RE` and `_OVR_TOKEN_RE`. It runs after the explicit/fetched/computed title is selected and before issue creation, capture writes or roadmap writes. The existing quoted argument passing prevents title text from becoming Python code. Reversibility: Easy; one local validation branch.
+
+Independent narrow probes (outer Python driver exit **0**): with `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"`, run `bash utils/hq/hq.sh park` with each argument list below. Each rejected case exited **2**, emitted **0 stdout bytes**, and stderr contained `releases roadmap rate --issue-num N --rated P/S/A/E`:
+
+- `--title 'Handle rated 80/55/50/65 placeholders' XYZ-forge probe`
+- `--title 'Fix rated 5/5 placeholder' XYZ-forge probe`
+- `--title 'Rank ovr 200 example' XYZ-forge probe`
+- `XYZ-forge 'rated 80/55/50/65 should not leak from a request opening'`
+- `--title 'Handle rated ８０/５５/５０/６５ placeholders' XYZ-forge probe`
+
+Command `bash utils/hq/hq.sh park --title 'Add idea intake skill' XYZ-forge probe` exited **0**, produced **2313 stdout bytes**, and included `HQ park · Tier B — issue-first intake PREVIEW (writes nothing)`, `GitHub issue: Add idea intake skill`, and `--- capture doc that would be written ---`. Command `bash -n utils/hq/hq.sh` exited **0**. The round-1 Unicode preview exiting 0 and parser witness accepting its rating remain the recorded red control for the corrected finding.
+
+**[Unverified — needs clone run]** The required `bash test/hq-park.sh` final-state gate, exact base/candidate clean-preview byte comparison, base ASCII/malformed-title red controls, malformed pure-parser witness, and committed durable acceptance provenance are not established by this turn. These remain for the harness/disposable full-clone verification. No git command, suite, pytest or executable fixture was run; only this relay file was edited.
+
+Relay closed, no further turn needed.
