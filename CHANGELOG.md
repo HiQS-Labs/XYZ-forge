@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-04 — GH-1341 todo-list and start-task close the loop on GitHub issues
+
+- `todo-list` has a new section 4, "Close the loop on GitHub". When a run ends, including on a halt or the 100-minute / 10-wake cap, it posts one comment to each issue the run touched. The comment covers what was done, the evidence, the decisions and why, what stays open, and the next step. A marker line (`<!-- todo-list closeout: <note-path> -->`) makes a rerun edit that comment instead of adding another. Tier A and B post with `gh` and record the URLs in the note; Tier C renders the text in chat to paste. A failed lookup or write is reported `unposted` or `unknown`, with no URL claimed. The step never closes or relabels an issue. Both run ends call it: section 3 step 4 and the watchdog wake prompt.
+- `start-task` Step 9 reuses that procedure with its own marker (`<!-- start-task closeout: <branch> -->`). It says "awaiting merge" only for a verified ready PR. A group that stops at plan QA or a blocked gate posts its blocker and resume action at that stop (Step 6). A `todo-list` run that drove a `start-task` does not comment twice on the same issue.
+- Instruction text only, no new tests (GH-831). Docs gate: `utils/pdda/pdda.sh run`. Plan QA: Codex Approved in round 2 (`relay-system/2026-11-04/gh1341-plan-qa.md`). Receipts: `TESTS-RESULTS/2026-11-04+GH-1341/`.
+- Bet: later sessions resume from the issue comment instead of re-deriving findings. Revisit if comments duplicate on reruns or show up on issues a run did not touch. Reversible: revert the commit. Posted comments stay, and their marker identifies them.
+
 ## 2026-11-03 — GH-1333 decisions: issue state is the authority for "done"; docs found by number; one completion sweep
 
 - `PROJECT/PDDA.md` now says the GitHub issue's state is the only authority for "done". A doc's folder and its ledger section are views of that state. Readers find a `GH-<n>-` doc by its issue number, not a stored path.

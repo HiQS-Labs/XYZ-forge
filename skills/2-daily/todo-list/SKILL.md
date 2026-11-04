@@ -6,8 +6,9 @@ description: >-
   execute items serially right away, and arm a 10 x 10-minute (100-minute / 10-wake) watchdog
   timer via handsfree in case a running task does not wake the session. Degrades by tier:
   full in Claude Code; file note without timer in Claude Desktop Cowork; chat-only state block
-  in plain Claude Desktop chat. Use for /todo-list, "todo-list", or "make a numbered todo list
-  with the list you gave me above".
+  in plain Claude Desktop chat. At the end (or a halt) it leaves one idempotent closeout comment
+  on each GitHub issue the run touched (rendered for paste in plain chat). Use for /todo-list,
+  "todo-list", or "make a numbered todo list with the list you gave me above".
 ---
 
 # Todo-list
@@ -95,8 +96,8 @@ rules to [`handsfree`](https://github.com/HiQS-Labs/XYZ-forge/blob/development/s
    > its check passed, mark it `[x]` in the note and chat, then immediately start the next
    > `[ ]` item in recommended order. If all items are `[x]`, or a hard blocker / user decision
    > / user stop / `10 x 10m` cap is reached, cancel **this** scheduled job, verify it is
-   > inactive, and report the final checklist status. Never mark an item `[x]` on pending,
-   > empty, or unverified output.
+   > inactive, run section 4 (close the loop on GitHub), and report the final checklist status.
+   > Never mark an item `[x]` on pending, empty, or unverified output.
 
 If the current harness lacks a verified native same-conversation scheduler (per `handsfree`'s
 create/readback/cancel check; Tier B and C above), leave the wake unarmed, record
@@ -121,4 +122,33 @@ chat state block in Tier C.
 4. As soon as the final item `N` is verified `[x]` (or execution halts on a hard blocker,
    required user decision, or the earlier of 100 minutes / 10 wakes), **cancel the scheduled
    job** in the same conversation (Tier A only), verify readback confirms it is inactive/absent
-   per `handsfree`, update the note, and report the completed numbered checklist.
+   per `handsfree`, update the note, run section 4, and report the completed numbered checklist.
+
+## 4. Close the loop on GitHub
+
+Run this once whenever section 3 step 4 ends the run (all items `[x]`, a halt, or the cap), before
+the final report, so a later session resumes from the issue instead of re-arguing settled work.
+
+1. **Which issues:** only those the run touched: an item named it, or the work produced a PR or
+   commit for it. Write each as `owner/repo#N`. None touched: report `closeout: no issues touched`
+   and stop. An issue a `/start-task` in this run already closed out (its `start-task closeout`
+   marker) gets no second comment; list that comment's URL instead.
+2. **What to post:** one comment per issue. First line is the marker
+   `<!-- todo-list closeout: <note-path> -->`, with the note's repo-relative `temp/todo-list-...md`
+   path (Tier C: `chat <start timestamp>` in its place). Then short sections: **Done** (PR and commit links with SHAs), **Evidence** (test/CI
+   results, or manual checks and where their receipt lives), **Decisions** (what was decided and
+   why), **Still open**, **Next step**. State only what this run observed; label anything
+   unverified as unverified. No credentials, transcripts or absolute local paths.
+3. **Post once, edit on rerun (Tier A/B):** write the body to a temp file, then look for an
+   existing comment that starts with the exact marker (a comment merely quoting it does not count):
+   `gh api repos/OWNER/REPO/issues/N/comments --paginate --jq '.[] | select(.body | startswith("<marker>")) | .id'`.
+   If it returns an id, update it with
+   `gh api -X PATCH repos/OWNER/REPO/issues/comments/ID -F body=@FILE`; otherwise create one with
+   `gh issue comment N -R OWNER/REPO --body-file FILE`. Never use `--edit-last`. Only a lookup
+   that exits 0 with no match permits a create. A failed lookup, create or edit is `unposted` (or
+   `unknown` when the write may have landed): keep the rendered text for paste or a later rerun,
+   claim no URL, do not retry blindly. Record each comment URL in the note. Tier B without a
+   working, authenticated `gh` falls back to Tier C.
+4. **Tier C:** render each comment in chat under `paste to owner/repo#N`, ready to copy.
+5. Never close, reopen or relabel an issue here; merge-cleanup and reconcile own issue state. List
+   each comment URL (or `rendered for paste`) in the final checklist report.
