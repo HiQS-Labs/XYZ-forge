@@ -147,3 +147,13 @@ will now be demanded. If any caller doesn't, the producer change ships in the
 - **area**: ate
 - **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1280
 - **date**: 2026-10-30
+
+## A marker lookup on issue comments must anchor to the first line
+
+- **cue**: Writing an idempotent "find my earlier comment by marker, then edit it" step for GitHub issues or PRs.
+- **lesson**: Match the marker with `startswith`, not `contains`. Discussion comments quote marker templates, and a substring match then selects someone else's comment to overwrite. Put the marker on the first line of the comment you post, and treat only an exit-0 lookup with no match as permission to create.
+- **evidence**: TESTS-RESULTS/2026-11-04+GH-1341/SUMMARY.md (check 3), TESTS-RESULTS/2026-11-04+GH-1341/smoke-output.txt, https://github.com/HiQS-Labs/XYZ-forge/issues/1341
+- **confidence**: high. Direct control: on the same issue, `contains` matched a quoting comment and `startswith` did not.
+- **area**: skills
+- **source**: https://github.com/HiQS-Labs/XYZ-forge/issues/1341
+- **date**: 2026-11-04

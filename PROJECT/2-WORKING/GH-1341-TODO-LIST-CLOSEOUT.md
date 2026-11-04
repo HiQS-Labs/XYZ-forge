@@ -18,7 +18,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (Codex r2). Both skills edited; docs gate 0 errors; manual checks in `TESTS-RESULTS/2026-11-04+GH-1341/` pass (lookup now `startswith`, after the smoke caught a `contains` false positive). | Codex final QA, then PR, start-task closeout on #1341, deploy after merge. |
+| Plan QA Approved (Codex r2); final QA Approved (Codex r1, `relay-system/2026-11-04/gh1341-final-qa.md`). Both skills edited; docs gate 0 errors; manual checks in `TESTS-RESULTS/2026-11-04+GH-1341/` pass (lookup now `startswith`, after the smoke caught a `contains` false positive). PR open, awaiting merge. | Operator merge; then refresh `todo-list` and `start-task` via Skills Army HQ (`intake.py update`). |
 
 ## Rating
 
