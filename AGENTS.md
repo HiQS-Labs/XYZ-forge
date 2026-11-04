@@ -51,6 +51,11 @@ Ask only when the proposed destination, account or purpose falls outside this au
 Exclude credentials and unrelated private data. This permission does not override platform or
 organization restrictions, authorize bypassing a denial, or change the builder-role defaults.
 
+**Outer-loop and factory runs** follow [#1328](https://github.com/HiQS-Labs/XYZ-forge/issues/1328);
+read its "Updated notes" first. Check a milestone against its three gates, repair routine and
+reversible defects during the run without asking (at most three rounds per blocker, then file an
+issue), and report a run with agent repairs as agent-assisted, never as unattended.
+
 ## Runtime default
 
 Entry-point shims run their **Python** implementation by default (`XYZ_PYTHON` unset → Python). To
