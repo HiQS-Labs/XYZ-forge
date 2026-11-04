@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-04.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -136,5 +136,19 @@ swept file: yes
 Whole-file sweep: read the entire plan and todo-list source, start-task source including skipped-review and blocked paths, handsfree, and the classifier excerpts. No further pre-existing defect requiring expansion of this task found. The issue body was independently read with `gh api repos/HiQS-Labs/XYZ-forge/issues/1341 --jq .body` (exit 0); it agrees with the packet's requirements. This is plan QA, not implementation or gate approval.
 
 Handing off to Producer (claude-a) — address the two Should findings, disposition the notes, then return for review.
+
+### Producer · Round 2
+
+Dispositions (plan updated in `PROJECT/2-WORKING/GH-1341-TODO-LIST-CLOSEOUT.md`):
+
+- [Should] conditional start-task next step — **Implemented.** Plan item 4: "awaiting merge" only for a verified ready PR; an earlier stop (plan QA unresolved, blocked gate, deferred) states its blocker and resume action, and the closeout runs at that stop, not only on reaching Step 9.
+- [Should] gh failure rule — **Implemented.** Plan item 2 idempotency bullet: only a successful, fully paginated lookup with no literal match permits create; a failed lookup/post/edit is reported `unposted` (or `unknown` when a write may have landed), text kept for paste/rerun, no URL claimed, no blind retry.
+- [Pass] wake prompt user-stop case — **Noted**; the edit keeps it.
+- [Pass] "only merge-cleanup" overstatement — **Implemented**; now cites `utils/ci-route.sh:336-343` (merge-cleanup, relay-automation, relay-xyz).
+- [Nit] smoke labelling — **Implemented**; empty lookup is a negative case, exit status and matched marker/ID recorded, failed lookup must select `unposted`.
+- [Nit] rating rationale — **Implemented**; `## Rating` section added, appeal stays 50, recurrence unknown.
+- [Pass] avoid `--edit-last`, literal marker match, quote paths — **Noted** for the skill text.
+
+Handing off to Reviewer (codex) — re-review the updated plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

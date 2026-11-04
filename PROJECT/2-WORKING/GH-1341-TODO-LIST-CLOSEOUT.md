@@ -20,6 +20,13 @@ phases: 1
 |---|---|
 | Issue filed, capture parked and rated `55/35/50/90`, promoted; recon and plan below. | Codex plan QA, then the `SKILL.md` edit, docs gate and smoke read. |
 
+## Rating
+
+`rated 55/35/50/90` (2026-11-04). Priority above severity because the operator asked for it and every
+`/todo-list` and `/start-task` run that ends without it loses context; severity is moderate (lost
+context and re-argued decisions, no data loss or breakage); appeal neutral 50; cheapness high
+(~25 lines of instruction text, no code). Recurrence: unknown trend (no prior incidents filed).
+
 ## Problem
 
 `skills/2-daily/todo-list/SKILL.md` (base `2b72d715`) has sections 0–3. Run end is defined in two
@@ -65,7 +72,10 @@ without a PR, and has no access to the run's decisions.
      evidence (test/CI results or manual checks with receipt location; unverified said so),
      decisions and why, still open, next step. Facts only; no credentials or absolute local paths
      beyond the note's repo-relative path.
-   - Idempotency: look up a comment containing the marker; edit it if found, else create one.
+   - Idempotency: look up a comment containing the marker (literal match, fully paginated); edit
+     it if found, else create one. Only a successful lookup with no match permits a create. A failed
+     lookup, post or edit is reported as `unposted` (or `unknown` when a write may have landed), the
+     rendered text is kept for paste or a later rerun, and no URL is claimed; no blind retry.
    - Tier A/B: post with `gh` and record each comment URL in the note; Tier B without a working
      `gh` falls back to Tier C. Tier C: render each comment in chat, marked `(paste to owner/repo#N)`,
      with marker `chat <start timestamp>`.
@@ -78,9 +88,12 @@ without a PR, and has no access to the run's decisions.
    comment): after the PR is verified ready, or when a group ends blocked/deferred, post one
    closeout comment per tracked issue using todo-list §4's procedure with marker
    `<!-- start-task closeout: <branch> -->` (PR and head SHA, QA verdicts, gate results, plan
-   decisions, blockers, next step: "awaiting merge"). Defined once in todo-list §4; start-task only
-   names its marker and timing (DRY). Never closes or relabels. Report the URL in the handoff.
-   Gate route: docs (only `skills/*/merge-cleanup/SKILL.md` is a full-gate skill surface).
+   decisions, blockers). Next step is "awaiting merge" only for a verified ready PR; a group that
+   stopped earlier (plan QA unresolved, blocked gate, deferred) states its actual blocker and resume
+   action, and runs the closeout at that stop rather than only on reaching Step 9. Defined once in
+   todo-list §4; start-task only names its marker and timing (DRY). Never closes or relabels. Report
+   the URL in the handoff. Gate route: docs (`utils/ci-route.sh:336-343` escalates merge-cleanup,
+   relay-automation and relay-xyz, not these two files).
 5. CHANGELOG entry.
 
 ## Verification (no new tests, GH-831)
@@ -88,8 +101,9 @@ without a PR, and has no access to the run's decisions.
 - Docs gate: `utils/pdda/pdda.sh run` zero errors.
 - Smoke (manual, `TESTS-RESULTS/2026-11-04+GH-1341/`): read section 4 from the clone's `SKILL.md`
   and, read-only, run the marker lookup against this issue (main path: no marker → create branch),
-  then the same lookup after a closeout exists (adjacent path: rerun → edit branch). Red control:
-  the lookup on an issue with no marker returns empty, not an error.
+  then the same lookup after a closeout exists (adjacent path: rerun → edit branch), recording exit
+  status and the matched marker/ID. The empty lookup is a negative case (absent → create), not a red
+  control; a failed lookup (exit ≠ 0) must select `unposted`, never create.
 
 ## Rollback
 
