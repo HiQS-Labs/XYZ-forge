@@ -2,7 +2,7 @@
 gh_issue: 1266
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1266
 title: "ARCHITECTURE.md Skills Index drift: weekly-planner has no row and the hand-typed tier counts are stale"
-status: Active
+status: Complete
 created: 2026-10-30
 owner: unassigned
 doc_type: feedback
