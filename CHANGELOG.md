@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-11-03 — GH-1333 decisions: issue state is the authority for "done"; docs found by number; one completion sweep
+
+- `PROJECT/PDDA.md` now says the GitHub issue's state is the only authority for "done". A doc's folder and its ledger section are views of that state. Readers find a `GH-<n>-` doc by its issue number, not a stored path.
+- Completion moves are to come from one idempotent sweep, keyed on current issue state. It covers `1-INBOX` and `2-WORKING`, repoints the ledger row, runs from merge-cleanup and `start-marathon`, and never closes an issue. It replaces per-merge moves.
+- Policy only. The sweep and the reader changes are not built yet; until they land, `wave_reconcile.py --pr N` and `issue-doc-sync` behave as before. Decision record: `decisions/2026-11-03-gh1333-issue-state-authority.md`. #1333's other decisions (who closes issues, the appeal axis, when a ledger row is created) stay open.
+- #1333 Phase 1 fixes:
+  - `express` no longer writes `rated 2/2/2/2` into the rows it parks. That token put the 1-5 scale into the 1-100 grammar and ranked as a real score (#1177). Those rows now stay unrated until someone rates them.
+  - `PROJECT/PDDA.md` and the `start-marathon` skill no longer claim the planner enforces `ratings_provisional`. Only `sentinel-overlay/` reads it, so the hold is manual for now.
+  - `SOP.md` no longer says the hosted `wave-reconcile.yml` reconciles automatically. It has been dispatch-only since #1131, and local reconcile is the writer. The `AGENTS.md` copy is #1160, PR #1326.
+  - Neither the `ratings_provisional` hold nor the `risk > 2` hold is enforced by the planner, which uses risk only as a ranking weight. `PDDA.md` and `start-marathon` now say both holds are manual.
+- Verification:
+  - `express` red/green: `parse_rating` of the old line gives `2/2/2/2`; the new line gives all NULL.
+  - `test/gh267-express-skill.sh` passed 113/113.
+  - `utils/pdda/pdda.sh run`: 0 errors before and after. The CHANGELOG-freshness warning clears, and no warning comes from this diff.
+  - Pre-push gates were green: the documentation gate, then the full gate (6939 s).
+  - Codex (GPT-6 Astra, medium) QA was Approved in round 2: `relay-system/2026-11-03/gh1333-pr1334-final-qa.md`.
+  - Receipts: `TESTS-RESULTS/2026-11-03+GH-1333/`.
+- Bet:
+  - Expected signal: once the #1333 sweep runs, `issue-doc-sync` warning (a) stays at 0 across two merge-cleanup batches, and no ledger `doc_path` points at a missing file.
+  - Revisit if the sweep moves a doc whose issue was reopened, or if a reader still resolves by stored path.
+  - Reversible: the policy is text. Revert these commits; the `express` change is one line.
+
 ## 2026-11-02 — GH-1308 decisions 9–13: receipt policy, teardown origin check, regression cases
 
 - `validate.sh` writes a gate receipt on every green tier-3 run of a clean tree again, as it did before #1253. Only a run with no skipped suite and no environment fault is stamped `--scope full`, which pre-push reuse still requires. `marathon-closeout.sh` therefore no longer refuses a host whose run skipped a suite.

@@ -41,7 +41,14 @@ Within that model:
 
 - `ROADMAP.md` is the index of current, completed, attempted, and deferred work
 - project detail lives in the individual `PROJECT/**` documents
-- a working doc is the canonical source of truth for that effort until it is completed, deferred, or superseded
+- a working doc is the canonical source of truth for that effort's content until it is completed, deferred, or superseded; whether the work is done is not the doc's to say (next item)
+- **the GitHub issue's state is the only authority for "done"** (GH-1333, decided 2026-11-03,
+  [decision record](../decisions/2026-11-03-gh1333-issue-state-authority.md)). The folder a `GH-<n>-` doc
+  sits in and its ledger row's section are views of that state, not separate assertions. When they
+  disagree, the issue wins and the view is corrected.
+- **readers find a `GH-<n>-` doc by its issue number** (the `gh_issue` key, else the `GH-<n>-` filename
+  prefix), never by a stored path, so moving a doc cannot break a reference. A stored path, such as the
+  ledger's `doc_path`, is a cache that the completion sweep (see Lifecycle) repoints.
 - `blank.md` placeholders are scaffolding and should be ignored by PDDA checks
 
 ## Required contract for active docs
@@ -164,6 +171,12 @@ effort must **not** become auto-selectable on the strength of that guess. So a p
 out of auto-selection until a human confirms the ratings and clears the flag — the same "route to a
 human" posture as `risk >= 4`.
 
+**Not enforced today (GH-1333).** No planner code reads `ratings_provisional`. `marathon_plan`, `jog`
+and `swarm_preflight` ignore it; only the `sentinel-overlay/` scripts read it. `marathon_plan` also uses
+`risk` only as a ranking weight, not as the `risk <= 2` hold. Until #1333 Phase 4 either implements these
+holds or retires them, they are manual. Whoever prepares a marathon must keep provisional and `risk > 2`
+captures out of its waves.
+
 This keeps the raw ratings canonical and queryable while letting the "what's the easiest *safe* thing
 to grab" logic live in one place that can evolve. (See the resolved `priority` note under
 [Proposed extensions](#proposed-extensions-not-yet-locked).)
@@ -282,7 +295,22 @@ Lifecycle:
   This is the concrete mechanism behind "GitHub issues are not a substitute for the local active-work
   doc once execution starts" (bug-fix stance above).
 - If a captured issue is never actioned it ages out of `1-INBOX` like any other untriaged note; if it is
-  closed without work, move the doc to `PROJECT/4-MISC` and remove its queue pointer from `ROADMAP.md`.
+  closed without work, the completion sweep (next item) moves the doc to `PROJECT/4-MISC` and removes its
+  queue pointer from `ROADMAP.md`.
+- **Completion moves come from one sweep, keyed on current issue state** (GH-1333). The sweep reads the
+  issue state of every `GH-<n>-` doc in `1-INBOX` and `2-WORKING`. The destination comes from the
+  closed issue's GitHub `stateReason`:
+  - `COMPLETED`: it moves the doc to `PROJECT/3-COMPLETED/`;
+  - `NOT_PLANNED`: it moves the doc to `PROJECT/4-MISC/`;
+  - anything else (`DUPLICATE`, a missing reason on an older issue, or a value it does not know): it
+    leaves the doc where it is and reports it for a person to place, rather than guessing a folder.
+
+  It repoints the ledger row's section and `doc_path` in the same commit. It is idempotent and reads
+  state when it runs, not when a PR merges. That way a manual close, a bulk close, a `Refs`-only lane
+  PR, or a merge in the GitHub UI is caught on the next run. It replaces the per-merge moves in
+  `wave_reconcile.py --pr N`. It runs from the steps that already run: the merge-cleanup batch and
+  `start-marathon` Step 2. It never closes an issue. **Until it lands**, `wave_reconcile.py --pr N`
+  still moves docs on a closing-keyword merge, and `issue-doc-sync` (H) flags what that misses.
 
 A foreign-repo issue (not `origin`) is the rare exception: the `source:` URL disambiguates it, since the
 bare `GH-<number>` only guarantees uniqueness within the canonical repo.
@@ -459,7 +487,10 @@ Minimum behavior:
   or the `GH-<number>-` filename; silently skip docs that carry neither (they are not issue-tracked)
 - resolve each issue's state from the best available source (see gh-degrade below), then flag:
   - **(a)** issue **CLOSED** but the doc is still in `2-WORKING` -> `warn`, recommending the exact
-    `git mv` to `PROJECT/3-COMPLETED` (flag-only; a human runs the one reversible move)
+    `git mv` to `PROJECT/3-COMPLETED` (flag-only). The manual `git mv` is the fallback only **until the
+    GH-1333 completion sweep lands**, and needs a `releases roadmap repoint` in the same commit so the
+    ledger's `doc_path` does not go stale. Once the sweep exists, run the sweep instead, because it
+    repoints the ledger itself. It also covers `1-INBOX` docs, which this check does not yet scan.
   - **(b)** issue **OPEN** but the doc's `status:` lead word declares it done (`complete`, `done`,
     `shipped`, `fixed`, `closed`, `merged`, `resolved`, `landed`) -> `warn` to reconcile. Anchoring on the
     status **lead word** means a mid-status mention like `Active — Phase 0 complete` never false-flags.
@@ -469,12 +500,14 @@ Minimum behavior:
     every human reads that as done; the lead word is `active`. The phrase list stays short and literal —
     a general "does this prose mean done?" parse is the false-positive machine the lead-word anchor exists
     to avoid.
-  - **(c)** doc is in `3-COMPLETED` but the issue is **OPEN** -> `warn`, recommending `gh issue close <n>`.
-    The lifecycle bucket is a deterministic signal; the status prose is not. `3-COMPLETED/` *is* the
-    operator's assertion that the work is done, recorded in a path and verifiable with `test -f`.
+  - **(c)** doc is in `3-COMPLETED` but the issue is **OPEN** -> `warn`. Since GH-1333 the issue's state,
+    not the folder, says whether work is done. So (c) means either the doc moved early or the issue was
+    never closed after delivery. It is a prompt to whoever owns closing (still to be decided in #1333),
+    not evidence that the work is done; neither this check nor the sweep closes the issue.
     A doc in `3-COMPLETED` with a **CLOSED** issue is the fully reconciled end state: no finding.
 - `warn` (never `error` — does not block, even in `full`, mirroring `pdda.sh changelog`); **flag-only**,
-  never moves a file and never closes an issue
+  never moves a file and never closes an issue. The GH-1333 completion sweep (Lifecycle) is the one
+  mover; this check stays the detector.
 - gh-degrade: with `PDDA_ISSUE_SYNC_SOURCE=auto` (default) it uses live `gh` when that succeeds, else a
   cached state file (`PDDA_GH_STATE_CACHE`). `gh`/`cache` force one source. **A successful live lookup
   writes the cache** (best-effort, atomic), so the offline consumers — chiefly the `Stop` hook — have
