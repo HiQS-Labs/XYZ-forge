@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-03.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 2
 
@@ -248,7 +248,7 @@ index 00000000..d47a89d1
 +Status: **policy decided, not yet implemented.** Until the sweep and the reader changes land, `wave_reconcile.py --pr N` still moves docs on a closing-keyword merge, and `pdda.sh issue-doc-sync` flags what it misses. No code, ledger row or doc location changed with this record.
 +
 +Not decided here, and still open in #1333:
-+- who closes an issue after verified completion (decision 2);
++- who closes an issue after verified completion (decision 2);  [Unverified — no citation]
 +- the appeal axis, and when a ledger row is created (decision 3);
 +- whether to retire the folders entirely. That is to be decided about a month after the sweep runs, on whether anything but people browsing still reads them.
 +
@@ -296,5 +296,34 @@ index e439f8ae..93d4f05b 100644
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The placeholder removal is sound and the future sweep is explicitly policy-only, but one surviving skill instruction still presents the provisional hold as automatic. Correct that sentence before approval; no later-phase implementation is requested.
+swept file: yes
+
+- [Should] **S1 — finish the provisional-hold correction in Step 4.** `skills/2-daily/start-marathon/SKILL.md:239-242` still says "`ratings_provisional: true` and `risk > 2` prevent automatic selection." That is the operational instruction immediately before invoking the planner, and conflicts with the newly corrected manual-hold comment at lines 205-207 and `PROJECT/PDDA.md:174-177`. Change it to explicitly instruct the preparer to exclude provisional captures manually because the planner does not enforce that flag; retain risk policy without claiming enforcement not established here.
+  Observed input: the quoted Step 4 sentence survives in the full edited skill; the literal scan below finds no planner read of `ratings_provisional`.
+  Affected scope: the skill's description of current selection behavior, not planner implementation or Phase 4.
+  Falsifier: an actual planner admission read of `ratings_provisional` that holds a provisional, otherwise-ready item would make the manual-only correction unnecessary; none appears in the inspected runtime sources.
+
+- [Pass] **The runtime claim itself is accurate.** Read-only command `rg -n 'ratings_provisional' utils/ relay-automation/ bin/ src/ sentinel-overlay/` exited 0. Runtime hits outside the overlay are writers (`utils/hq/hq-lib.sh:468`, `utils/py/express.py:728`) and an example (`relay-automation/CONTRACT.example.md:44`); reads are `sentinel-overlay/morning-report.sh:54` and `sentinel-overlay/sentinel-nightly.sh:32`. No hits in marathon_plan, jog or swarm_preflight. "Only reads" does not mean "only mentions."
+
+- [Pass] **Express removes the fabricated PRS rating without breaking the row grammar.** `utils/py/express.py:848-853` keeps the same add arguments and markdown structure. `utils/py/releases_app.py:3325-3331` returns NULL fields for no tokens, and `:3639-3690` accepts and stores them. A read-only `python3` probe imported `parse_rating, validate_raw_text`, AST-extracted the actual `cmd_ledger` raw-format string, rendered issue 1333/title `Example`/doc `PROJECT/2-WORKING/GH-1333-EXAMPLE.md`, and compared it with `new.replace('🆕 —', '🆕 rated 2/2/2/2 —')`. Command assertions: `assert not all(v is None for v in parse_rating(old,'Example').values())` and `assert all(v is None for v in parse_rating(new,'Example').values())`; exit 0. Decisive output: old `{rating_pri: 2, rating_sev: 2, rating_appeal: 2, rating_effort: 2, rating_ovr: None}`, new all five fields `None`; `old all_null=False`, `new all_null=True`. Thus the old value is a witnessed red control for the unrated expectation. Express's subsequent manifest/landing flow does not require ratings (`express.py:858-869`, `:888-897`). The existing test uses `raw_text=None` already (`test/gh267-express-skill.sh:232-234`).
+
+- [Pass] **Planner fallback remains pre-existing Phase 4 scope.** NULL DB axes produce no DB rank (`utils/py/_marathon_plan.py:791-797`), and unrated records have an explicit path (`:1060-1078`). Express still emits legacy `complexity/risk/effort: 2` and `ratings_provisional: true` (`express.py:725-728`); the planner counts those fields as rated (`_marathon_plan.py:923-948`) and can fall back to their score (`:1172-1177`). Removing the fake DB score exposes that existing fallback, but does not introduce the ignored provisional flag. No planner fix is required in this PR. Interpret CHANGELOG's "rows now stay unrated" as PRS columns, not a promise of planner exclusion.
+
+- [Pass] **The three policy decisions are coherent and deferred.** `PROJECT/PDDA.md:45-51`, `:299-309`, `:497-504` make issue state authoritative, paths caches, and the sweep the planned mover; `:308` explicitly says "Until it lands." The decision record at lines 5-16 and CHANGELOG lines 5-7 preserve that boundary. Current `wave_reconcile.py:1067` already scans both active folders; `:2370-2374` selects closing-linked issues, and `:2390-2397` preserves positively OPEN issues absent force. `pdda.sh:603-671` scans WORKING and COMPLETED, not INBOX, and still recommends closing in case (c). Those are existing implementation limitations, not evidence the sweep has shipped. No additional folder-as-authority rule was found in the full PDDA prose sweep that overrides the new policy.
+
+- [Pass] **SOP's local-writer correction matches code.** `.github/workflows/wave-reconcile.yml:9-10` exposes only `workflow_dispatch`; `merge_cleanup.py:893-932` defaults to local reconcile unless `MERGE_CLEANUP_USE_HOSTED=1`; `wave_reconcile.py:135-148` blocks an in-flight hosted writer unless forced. `ROUTER.md:118-122` agrees. `AGENTS.md:73-77` still contradicts it, while AGENTS line 224 agrees; CHANGELOG line 11 explicitly tracks that stale copy under #1160 / PR #1326. Do not restore incorrect SOP text to match it.
+
+- [Pass] **Records and closing-clause safety.** Decision-record lines 6 and 14 repeat the supplied measurements exactly: 45 stale paths and 25 closed issues with active docs. This checks transcription, not a fresh recount. The record says policy-only at line 16; its "No code ... changed with this record" applies to the record, while CHANGELOG lines 8-11 separately describes Phase 1. Read-only `python3` probe loaded only the pure regex/extractor source span from `CLOSING_KEYWORD_CLAUSE =` through `extract_linked_issues`, extracted non-header `+` lines from the embedded diff, asserted nonempty input, and called `extract_linked_issues({'body': added}, 'HiQS-Labs/XYZ-forge')`. Exit 0; decisive output: `added lines: 81`, `added prose closers: []`. Control body `does not close #1333` yielded `[1333]`. This covers added artifact text, not an unseen live PR body or commit message.
+
+- [Nit] **Pre-existing full-file observations, not required scope expansion.** SOP lines 80-82 still recommend a raw-text refresh without preserving ratings; `LESSONS-LEARNED.md:115-122` already records that loss and its remedy. PDDA lines 1025-1028, 1047-1048 and 1059-1062 contain duplicated legacy CHANGELOG prose. Step 4's provisional claim above is the relevant unresolved defect; these older cleanup items need not expand this patch.
+
+- [Unverified — needs clone run] The seeded context reports `test/gh267-express-skill.sh` 113/113, but this turn did not execute it or a gate, and no GH-1333 test receipt was found in the seeded `TESTS-RESULTS` paths. Full-file review covered PDDA, SOP, express, start-marathon, the decision record and the top CHANGELOG entry; runtime validation remains with the harness's disposable-clone gate. No new suite, machinery, source edit or git command was used.
+
+Handing off to Producer (claude-a) — correct S1, disposition the findings, and open the next review round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
