@@ -1,6 +1,6 @@
 # Marathon Phase gh-1263-hq-park-rating-grammar
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1263-HQ-PARK-RATING-GRAMMAR-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -104,3 +104,18 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+- **Files touched:** `utils/hq/hq.sh`, `marathon-system/gh-1263-hq-park-rating-grammar/RELAY.md`
+- **Key decisions:**
+  - Added the rating-grammar guard in `cmd_park` (`utils/hq/hq.sh:320-323`) immediately after `$title` is computed (covering `--title`, computed `hq_issue_title` when `--title` is omitted, and `--gh-issue` adoption), ahead of Tier C (`:328`), preview (`:348`), and `--create` dup-guard/writes (`:371`).
+  - Matched `parse_rating`'s token-presence rule (`\b(rated|ovr)\s+\d` in `utils/py/releases_app.py:3299,3317`) via `printf '%s\n' "$title" | grep -Eq '(^|[^[:alnum:]_])(rated|ovr)[[:space:]]+[0-9]'`, printing `hq park: title carries rating grammar ("rated N/N/N/N" / "ovr N"); roadmap add would read it as the row's score. Move the example into the body and rate with: releases roadmap rate --issue-num N --rated P/S/A/E` to stderr and returning `2`.
+  - Left `parse_rating`, `hq_roadmap_line`, `roadmap add`, and existing test files untouched per the task plan and GH-831 (`non_goals: no new flag/script/test`).
+- **Verification (recorded in `.relay-scratch/verify.log`):**
+  - `bash utils/hq/hq.sh park --title "Handle rated 80/55/50/65 placeholders" XYZ-forge "probe"` -> `rc=2`, names `releases roadmap rate`, writes nothing.
+  - `bash utils/hq/hq.sh park --title "Fix rated 5/5 placeholder" XYZ-forge "probe"` and `... --title "Rank ovr 200 example" ...` -> `rc=2`, writes nothing.
+  - `bash utils/hq/hq.sh park XYZ-forge "rated 80/55/50/65 should not leak from a request opening"` -> `rc=2` on computed title.
+  - `bash utils/hq/hq.sh park --title "Add idea intake skill" XYZ-forge "probe"` -> `rc=0`, renders non-empty preview with title and capture doc.
+  - `bash -n utils/hq/hq.sh` -> exit 0.
+

@@ -317,6 +317,10 @@ sys.stdout.write(url + "\n" + title + "\n" + body)
     title="${ptitle:-$(hq_issue_title "$project" "$request")}"
     slug="$(hq_slug "${ptitle:-$request}")"
   fi
+  if printf '%s\n' "$title" | grep -Eq '(^|[^[:alnum:]_])(rated|ovr)[[:space:]]+[0-9]'; then
+    echo 'hq park: title carries rating grammar ("rated N/N/N/N" / "ovr N"); roadmap add would read it as the row'\''s score. Move the example into the body and rate with: releases roadmap rate --issue-num N --rated P/S/A/E' >&2
+    return 2
+  fi
   created="$(date +%F)"
   oslug="$(hq_target_slug "$path")"
 
