@@ -1,6 +1,6 @@
 # Marathon Phase gh-1263-hq-park-rating-grammar
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-1263-HQ-PARK-RATING-GRAMMAR-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -119,3 +119,50 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   - `bash utils/hq/hq.sh park --title "Add idea intake skill" XYZ-forge "probe"` -> `rc=0`, renders non-empty preview with title and capture doc.
   - `bash -n utils/hq/hq.sh` -> exit 0.
 
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Changes requested
+
+swept file: no
+
+Read the complete `utils/hq/hq.sh` and the HQ-focused supporting scripts; the wider gate-script sweep is incomplete (some combined reads were truncated). No additional pre-existing defect is asserted from this partial supporting-script sweep. The new guard is correctly positioned after title computation and ahead of writes. Reversibility: Easy; the change is a local validation branch.
+
+[Should] Match the canonical parser's digit semantics (`utils/hq/hq.sh:320`). The ASCII `[0-9]` guard lets a title supply a rating through Unicode decimal digits, recreating the score-leak problem this change addresses. Prefer the existing Python regex semantics rather than approximating them with a locale-dependent grep expression.
+
+Observed input: `Handle rated ８０/５５/５０/６５ placeholders`.
+
+Affected scope: `park --title` in releases-mode targets; the title reaches `hq_roadmap_line` and then `roadmap add --raw-text` unchanged. The canonical parser accepts these digits and converts them to integers.
+
+Falsifier: the preview below must exit 2 and name `releases roadmap rate`, while the clean-title preview still exits 0. If the downstream parser instead returns all-null ratings for the exact input, this finding is disproven.
+
+Probe command: `PYTHONDONTWRITEBYTECODE=1 bash utils/hq/hq.sh park --title 'Handle rated ８０/５５/５０/６５ placeholders' XYZ-forge probe`. Observed exit status: **0**. Decisive output: `HQ park · Tier B — issue-first intake PREVIEW (writes nothing)` and `GitHub issue: Handle rated ８０/５５/５０/６５ placeholders`.
+
+Parser witness command: `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` with the following body (exit status **0**):
+
+```python
+import ast, pathlib, re
+s = pathlib.Path('utils/py/releases_app.py').read_text()
+ns = {'re': re, 'RATING_COLUMNS': ['rating_pri', 'rating_sev', 'rating_appeal', 'rating_effort', 'rating_ovr']}
+def refuse(rule, message):
+    raise ValueError(rule)
+ns['refuse'] = refuse
+for n in ast.parse(s).body:
+    if isinstance(n, ast.Assign) and any(
+        isinstance(t, ast.Name) and (
+            t.id.startswith('_RATED') or t.id.startswith('_OVR')
+            or t.id in ('_LEGACY_CRE_RE', '_RATING_GRAMMAR'))
+        for t in n.targets
+    ):
+        exec(compile(ast.Module(body=[n], type_ignores=[]), '<parser-constants>', 'exec'), ns)
+    if isinstance(n, ast.FunctionDef) and n.name == 'parse_rating':
+        exec(compile(ast.Module(body=[n], type_ignores=[]), '<parser>', 'exec'), ns)
+t = 'Handle rated ８０/５５/５０/６５ placeholders'
+print(ns['parse_rating'](t, t))
+```
+
+Decisive output: `{'rating_pri': 80, 'rating_sev': 55, 'rating_appeal': 50, 'rating_effort': 65, 'rating_ovr': None}`. This extracts only parser constants and the pure function; it does not import or execute the CLI or write a DB.
+
+Other narrow checks: the three explicit ASCII titles in the acceptance criteria each exited **2** with the requested guidance; `Add idea intake skill` exited **0** with nonempty preview content; `bash -n utils/hq/hq.sh` exited **0**. These do not establish the required base/candidate byte comparison or red controls. **[Unverified — needs clone run]** `bash test/hq-park.sh` and durable acceptance evidence remain for the harness/disposable clone; no suite, executable fixture, or git command was run in this turn.
+
+Handing off to agy — agy, take your turn.
