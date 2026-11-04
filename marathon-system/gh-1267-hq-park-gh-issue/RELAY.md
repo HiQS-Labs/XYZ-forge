@@ -1,6 +1,6 @@
 # Marathon Phase gh-1267-hq-park-gh-issue
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH-1267-HQ-PARK-GH-ISSUE-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -200,3 +200,35 @@ Handing off to agy — agy, take your turn.
    - **Criterion 4 (No `--gh-issue` preview byte-identical to base):**
      - `bash utils/hq/hq.sh park --title "x" XYZ-forge "fresh request"` vs base → `base_rc=0 cand_rc=0 len=2200 byte_identical=True` (`diff` empty).
    - Per turn containment and the phase brief, `bash test/hq-park.sh` is not executed inside the worktree turn and runs via the harness after handoff.
+
+
+### Round 2 · Reviewer · codex
+
+**Verdict:** Changes requested
+
+swept file: no
+
+The prior sentinel finding is resolved. Independently extracted the actual `park)` case arm, replaced only `cmd_park` with the argument printer from Round 1, and ran it in memory via `python3 -` / `subprocess.run(['bash', '-c', script, 'probe', *args])`. No HQ writer, fixture, suite or Git command was executed. Decisive results:
+
+```text
+park --create --gh-issue - XYZ-forge "fresh request"
+  rc=1; stdout=''; stderr="hq park: --gh-issue requires a numeric issue number (got '-')."
+park --create --gh-issue=- XYZ-forge "fresh request"
+  rc=1; stdout=''; stderr="hq park: --gh-issue requires a numeric issue number (got '-')."
+park --create --gh-issue 1267 XYZ-forge "fresh request"
+  rc=0; stdout='create=1 title= issue=1267 project=XYZ-forge request=fresh request'; stderr=''
+park --create XYZ-forge "fresh request"
+  rc=0; stdout='create=1 title= issue=- project=XYZ-forge request=fresh request'; stderr=''
+bash -n utils/hq/hq.sh
+  rc=0; stdout=''; stderr=''
+```
+
+Read both changed files in full, including park's existing capture/ledger writer and adjacent command handlers; no additional pre-existing defect established in those two files. The 18-file packet-wide sweep remains incomplete: large concatenated supporting-suite reads were truncated. This is not a whole-packet approval.
+
+**[Unverified — needs clone run] Acceptance receipts are still insufficient to establish the required existing-GitHub-issue workflow.** Round 2's issue title/body (`Issue 1200 sample title`, `Known non-empty body substring for issue 1200`) and constant newest-issue response (`[{"number":1280}]`) appear to be synthetic fixture data. The relay does not include the stub configuration or complete reproduction command, and does not establish that the newest-issue query went to GitHub rather than the same stub. A constant stub response cannot prove absence of a real issue creation. Treat these as isolated logic witnesses, not completed live acceptance criteria. The unchanged `test/hq-park.sh`, read in full, has no `--gh-issue` invocation and its stub handles only `issue create` and `issue list`; the forthcoming existing gate therefore cannot by itself close this coverage gap.
+
+Required follow-up: clarify which Round 2 commands were mocked, retain the complete reproducible command/setup and decisive outputs for the isolated witnesses, and obtain the specified real-issue acceptance receipts through the permitted disposable-clone/harness workflow. Record a non-empty actual fetched body substring, preview no-write comparison, resulting capture and exactly-one ledger row, exact newest-issue query before/after, existing-capture refusal/no-write comparison, and base/candidate preview comparison. Record the existing gate result on the final committed candidate when the harness supplies it. No new tests or source changes are requested by this finding; do not run executable fixtures or mutation-heavy checks in this worktree.
+
+Independent read-only network probe: `gh issue view 01263 --repo HiQS-Labs/XYZ-forge --json number,url` printed `error connecting to api.github.com` / `check your internet connection or https://githubstatus.com`. Its individual status was not captured (the shell command continued to the syntax check); this provides no issue-state or CLI-normalization evidence. Network-dependent acceptance remains unverified.
+
+Handing off to agy — agy, take your turn.
