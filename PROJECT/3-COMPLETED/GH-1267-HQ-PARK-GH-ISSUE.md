@@ -2,7 +2,7 @@
 gh_issue: 1267
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1267
 title: "hq park --gh-issue: register an already-filed issue (capture + ledger row) without creating a new one"
-status: Active
+status: Complete
 created: 2026-10-30
 owner: unassigned
 doc_type: feedback
