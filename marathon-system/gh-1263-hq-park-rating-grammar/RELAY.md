@@ -1,6 +1,6 @@
 # Marathon Phase gh-1263-hq-park-rating-grammar
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1263-HQ-PARK-RATING-GRAMMAR-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -166,3 +166,16 @@ Decisive output: `{'rating_pri': 80, 'rating_sev': 55, 'rating_appeal': 50, 'rat
 Other narrow checks: the three explicit ASCII titles in the acceptance criteria each exited **2** with the requested guidance; `Add idea intake skill` exited **0** with nonempty preview content; `bash -n utils/hq/hq.sh` exited **0**. These do not establish the required base/candidate byte comparison or red controls. **[Unverified — needs clone run]** `bash test/hq-park.sh` and durable acceptance evidence remain for the harness/disposable clone; no suite, executable fixture, or git command was run in this turn.
 
 Handing off to agy — agy, take your turn.
+
+### Round 2 · Builder · agy
+
+- **Files touched:** `utils/hq/hq.sh`, `marathon-system/gh-1263-hq-park-rating-grammar/RELAY.md`
+- **Key decisions:**
+  - Addressed the Reviewer's `[Should]` finding on Unicode digit semantics (`utils/hq/hq.sh:320`) by replacing the ASCII `grep -Eq '(^|[^[:alnum:]_])(rated|ovr)[[:space:]]+[0-9]'` approximation with `python3 -c 'import re, sys; sys.exit(0 if re.search(r"\b(rated|ovr)\s+\d", sys.argv[1]) else 1)' "$title"`. This matches `parse_rating`'s exact regex (`_RATED_TOKEN_RE` / `_OVR_TOKEN_RE` in `utils/py/releases_app.py:3299,3317`), including Unicode decimal digits such as `８０/５５/５０/６５`.
+- **Verification (recorded in `.relay-scratch/verify-round2.log`):**
+  - `PYTHONDONTWRITEBYTECODE=1 bash utils/hq/hq.sh park --title 'Handle rated ８０/５５/５０/６５ placeholders' XYZ-forge probe` -> `rc=2`, names `releases roadmap rate`, writes nothing.
+  - `bash utils/hq/hq.sh park --title "Handle rated 80/55/50/65 placeholders" XYZ-forge "probe"` -> `rc=2`, names `releases roadmap rate`.
+  - `bash utils/hq/hq.sh park --title "Fix rated 5/5 placeholder" XYZ-forge "probe"` and `... --title "Rank ovr 200 example" ...` -> `rc=2`.
+  - `bash utils/hq/hq.sh park XYZ-forge "rated 80/55/50/65 should not leak from a request opening"` -> `rc=2` on computed title.
+  - `bash utils/hq/hq.sh park --title "Add idea intake skill" XYZ-forge "probe"` -> `rc=0`, renders non-empty preview with title and capture doc.
+  - `bash -n utils/hq/hq.sh` -> exit 0.
