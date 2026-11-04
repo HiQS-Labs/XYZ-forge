@@ -2,7 +2,7 @@
 gh_issue: 1265
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1265
 title: "consult: add the installed kimi and cmd seats so a degraded pair can be re-fired without API keys"
-status: Proposed (1-INBOX — not yet active)
+status: Active
 created: 2026-10-30
 owner: unassigned
 doc_type: feedback
@@ -22,6 +22,7 @@ related:
   - #1258
 goal: >
   TODO: one-paragraph statement of what "done" looks like for this idea.
+updated: 2026-11-04
 ---
 
 ## Key concepts
@@ -50,7 +51,7 @@ goal: >
 |---|---|---|
 | A consult can lose a seat to an external timeout | `relay-system/2026-10-29/gh1258-plan-223724/DEGRADED-SINGLE-MODEL.txt`; re-fire `relay-system/2026-10-29/gh1258-plan-agy-224323/` | agy killed at the idle threshold twice in one review episode on 2026-10-29 (`timeout-idle-in-flight`, both before the 599 s wall cap); the plan review of #1258 shipped as a single-model record |
 | Only codex, agy, aider, claude, muse can be seats | `grep -n 'elif m ==' utils/py/consult.py` (`:767-839`); `relay-automation/consult.sh:51-56` | `--models` branches exist for `claude`, `codex`, `agy`, `gemini` (alias), `aider` (needs `OPENROUTER_API_KEY`), `muse`; any other name hits `consult.sh:305` "unknown model — skipping" |
-| Two more seats are installed and already wired as relay workers | `find-harness.sh --check`; `ls relay-automation/*-turn.sh` | `kimi` (`/Users/<user>/.kimi-code/bin/kimi`, `kimi-turn.sh` → `utils/py/kimi-turn.py`, headless `kimi -p "<prompt>"`) and `cmd` (`commandcode-turn.sh`) are on PATH and have turn shims, but no consult branch |
+| Two more seats are installed and already wired as relay workers | `find-harness.sh --check`; `ls relay-automation/*-turn.sh` | `kimi` (`~/.kimi-code/bin/kimi`, `kimi-turn.sh` → `utils/py/kimi-turn.py`, headless `kimi -p "<prompt>"`) and `cmd` (`commandcode-turn.sh`) are on PATH and have turn shims, but no consult branch |
 | The neutralizer would leak a new seat's vendor words | `utils/py/consult.py:291-295` | the regex strips `re.escape(advisor)` (so a seat's own name is removed) plus `codex|agy|gemini|claude|aider|muse` and `openai|anthropic|openrouter|antigravity`; `Moonshot` and `Commandcode` are not in the list, so an in-memory replay of "I am kimi from Moonshot" leaves `Moonshot` in the neutral payload |
 
 ## Diagnosis / existing gap

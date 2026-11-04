@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1265-exec1",
+  "generated_at": "2026-11-04T04:09:39Z",
+  "outcome": "approved",
+  "reason": "approved, gate passed",
+  "exit_code": 0,
+  "approval_preserved": false,
+  "issue": "1265",
+  "phase": "gh-1265-consult-installed-kimi-cmd",
+  "lane": "gh-1265-consult-installed-kimi-cmd",
+  "token": "MARATHON-GH-1265-CONSULT-INSTALLED-KIMI-CMD-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "agy",
+  "reviewer": "codex",
+  "target_repo": {
+    "path": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-factory-batch1-2026-11-03",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1265-consult-installed-kimi-cmd-2026-11-03",
+  "head_sha": "059e797a4d831da7226ff287be440b859e17d631",
+  "reviewed_candidate": "059e797a4d831da7226ff287be440b859e17d631",
+  "reviewed_head": "096b481b9cec68583e67c69d19a45b6e33d21cfd",
+  "added_sha256": "adcb57d22c52285706fce7195b23a598c6a39e4d3a379bb87d4a9c9754f99e5a",
+  "attest_path": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-factory-batch1-2026-11-03/.git/relay-attest/MARATHON-GH-1265-CONSULT-INSTALLED-KIMI-CMD-TURN.json",
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash test/consult.sh",
+    "result": "green",
+    "exit": 0,
+    "receipt_path": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-factory-batch1-2026-11-03/.xyz/receipts/059e797a4d831da7226ff287be440b859e17d631.json"
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": "pr-publication-failed: closeout exited 3; the phase stays green and its commits are on 'marathon/gh-1265-consult-installed-kimi-cmd-2026-11-03' \u2014 open the PR by hand: gh pr create --base development --head marathon/gh-1265-consult-installed-kimi-cmd-2026-11-03",
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-11-04T01:57:41Z",
+    "finished_at": "2026-11-04T04:09:39Z"
+  }
+}

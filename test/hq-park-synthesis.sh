@@ -49,7 +49,7 @@ export HQ_GH_BIN="$STUB"
 REQ="add an idea intake pipeline"
 
 # ── (1) bare park --create, ZERO synthesis env vars: TODO-stub skeleton, valid + complete ─────────
-unset HQ_PARK_COMPLEXITY HQ_PARK_RISK HQ_PARK_EFFORT HQ_PARK_PHASES HQ_PARK_WHY HQ_PARK_KEY_CONCEPTS HQ_PARK_NON_GOALS HQ_PARK_RELATED
+unset HQ_PARK_COMPLEXITY HQ_PARK_RISK HQ_PARK_EFFORT HQ_PARK_PHASES HQ_PARK_WHY HQ_PARK_KEY_CONCEPTS HQ_PARK_NON_GOALS HQ_PARK_RELATED HQ_PARK_GOAL
 OUT="$(bash "$HQ" park --create beta-app "$REQ")"; rc=$?
 [ "$rc" = 0 ] && pass "bare --create (no synthesis env) rc=0" || fail "bare create rc=$rc: $OUT"
 DOC="$BETA/PROJECT/1-INBOX/GH-900-IDEA-INTAKE-PIPELINE.md"
@@ -102,6 +102,7 @@ export HQ_PARK_WHY="This closes a real gap found during GH-161-164 intake."
 export HQ_PARK_KEY_CONCEPTS="first bullet|second bullet|third bullet"
 export HQ_PARK_NON_GOALS="not a replacement for HQ|not auto-firing anything"
 export HQ_PARK_RELATED="utils/hq/hq.sh|utils/hq/hq-lib.sh"
+export HQ_PARK_GOAL=$'Done means X.\nSecond line.'
 OUT="$(bash "$HQ" park --create beta-app "synthesized idea via the skill" 2>&1)"; rc=$?
 [ "$rc" = 0 ] && pass "--create with full synthesis passthrough rc=0" || fail "synthesis create rc=$rc: $OUT"
 DOC2="$BETA/PROJECT/1-INBOX/GH-901-SYNTHESIZED-IDEA-VIA.md"
@@ -118,7 +119,9 @@ grep -q '^  - not a replacement for HQ$' "$DOC2" && grep -q '^  - not auto-firin
   && pass "pipe-delimited non_goals rendered as a real YAML list" || fail "non_goals passthrough failed"
 grep -q '^  - utils/hq/hq.sh$' "$DOC2" && grep -q '^  - utils/hq/hq-lib.sh$' "$DOC2" \
   && pass "pipe-delimited related rendered as a real YAML list" || fail "related passthrough failed"
-unset HQ_PARK_COMPLEXITY HQ_PARK_RISK HQ_PARK_EFFORT HQ_PARK_PHASES HQ_PARK_WHY HQ_PARK_KEY_CONCEPTS HQ_PARK_NON_GOALS HQ_PARK_RELATED
+grep -q '^goal: >$' "$DOC2" && grep -q '^  Done means X\.$' "$DOC2" && grep -q '^  Second line\.$' "$DOC2" && ! grep -q 'TODO.*done' "$DOC2" \
+  && pass "synthesized multiline HQ_PARK_GOAL rendered under goal: > with 2-space indent and no TODO stub" || fail "HQ_PARK_GOAL passthrough failed"
+unset HQ_PARK_COMPLEXITY HQ_PARK_RISK HQ_PARK_EFFORT HQ_PARK_PHASES HQ_PARK_WHY HQ_PARK_KEY_CONCEPTS HQ_PARK_NON_GOALS HQ_PARK_RELATED HQ_PARK_GOAL
 
 echo "== hq-park-synthesis: $PASS passed, $FAIL failed =="
 [ "$FAIL" = 0 ]

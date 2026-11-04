@@ -217,8 +217,11 @@ def advisor_answer_ok(out_path, model):
     body = text
     if body.startswith("> **ATTESTATION**"):
         body = body.split("\n\n", 1)[1] if "\n\n" in body else ""
-    # codex's raw provenance lines (model:/provider:/sandbox:) are metadata, not an answer
-    body = "\n".join(l for l in body.splitlines() if not re.match(r"^(model|provider|sandbox):", l))
+    # codex's raw provenance lines (model:/provider:/sandbox:) and kimi's CLI banner/footer are metadata, not an answer
+    body = "\n".join(
+        l for l in body.splitlines()
+        if not re.match(r"^(model|provider|sandbox):|^kimi version\b|^To resume this session:\s*kimi\b", l, re.IGNORECASE)
+    )
     is_json = out_path.endswith(".json")
     if is_json:  # gemini JSON mode: judge the decoded response text, not the envelope (preamble tolerated like src/cost.js)
         try:
@@ -241,6 +244,8 @@ _NEUTRAL_BANNER_RE = re.compile(
     r"|^--------$"
     r"|^OpenAI Codex\b"
     r"|^Aider v[0-9]"
+    r"|^kimi version\b"
+    r"|^To resume this session:\s*kimi\b"
     r"|^consult: (WARNING|NOTE) —",
     re.IGNORECASE,
 )
@@ -289,9 +294,9 @@ def _neutralize_answer_text(raw_text, out_path, neutral_id, advisor):
         body = body.replace(out_path, f"answer-{neutral_id}.md").replace(base_name, f"answer-{neutral_id}.md")
     token_re = re.compile(
         # Full model names first, so `claude-sonnet-5` is replaced whole rather than leaving `sonnet-5`.
-        r"\b(gpt-[A-Za-z0-9._-]+|claude-[A-Za-z0-9._-]+|gemini-[A-Za-z0-9._-]+|muse-[A-Za-z0-9._-]+"
-        r"|" + re.escape(advisor) + r"|codex|agy|gemini|claude|aider|muse"
-        r"|openai|anthropic|openrouter|antigravity)\b",
+        r"\b(gpt-[A-Za-z0-9._-]+|claude-[A-Za-z0-9._-]+|gemini-[A-Za-z0-9._-]+|muse-[A-Za-z0-9._-]+|kimi-[A-Za-z0-9._-]+"
+        r"|" + re.escape(advisor) + r"|codex|agy|gemini|claude|aider|muse|kimi|cmd"
+        r"|openai|anthropic|openrouter|antigravity|moonshot|commandcode)\b",
         re.IGNORECASE,
     )
     # Repository citations (paths, file.ext[:line]) are evidence, not identity: shield them.
@@ -625,6 +630,11 @@ def main():
     # GH-518: absolute default. muse was installed with MUSE_NO_MODIFY_PATH=1, so ~/.local/bin is
     # deliberately NOT on PATH and a bare "muse" would not resolve here any more than in the shim.
     muse_bin = os.environ.get("MUSE_BIN", os.path.expanduser("~/.local/bin/muse"))
+    # GH-1265: mirrors kimi-turn.py:45-50 (KIMI_BIN -> PATH -> ~/.kimi-code/bin/kimi) and commandcode-turn.py:26.
+    kimi_bin = (os.environ.get("KIMI_BIN", "").strip()
+                or shutil.which("kimi")
+                or os.path.expanduser(os.path.join("~", ".kimi-code", "bin", "kimi")))
+    commandcode_bin = os.environ.get("COMMANDCODE_BIN", "cmd")
     
     prompt_file = ""
     prompt_text = ""
@@ -657,6 +667,7 @@ def main():
             i += 2
         elif arg == "--help":
             print("Usage: consult.sh --prompt \"question\" [--out DIR] [--models codex,agy] [--label SLUG] [--tool-mode standard|programmatic]")
+            print("Models: codex, agy, kimi, cmd, claude, aider, muse, gemini (default: codex,agy)")
             sys.exit(0)
         else:
             die(f"unknown argument: {arg}")
@@ -807,6 +818,23 @@ def main():
                 cmd = [agy_bin, "--dangerously-skip-permissions", "--print-timeout", f"{timeout_s}s", "-p", full_prompt]
                 proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, dict(base_env))
                 procs.append((proc, "agy", f_out, time.time(), cmd))
+            elif m == "kimi":
+                f_out = os.path.join(run_dir, f"{label}.kimi.md")
+                kflags = shlex.split(os.environ.get("KIMI_FLAGS", ""))
+                kmodel = os.environ.get("KIMI_MODEL", "").strip()
+                cmd = [kimi_bin, "-p", full_prompt] + (["-m", kmodel] if kmodel else []) + kflags
+                proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, dict(base_env))
+                procs.append((proc, "kimi", f_out, time.time(), cmd))
+            elif m == "cmd":
+                f_out = os.path.join(run_dir, f"{label}.cmd.md")
+                cflags = shlex.split(os.environ.get(
+                    "COMMANDCODE_FLAGS",
+                    "--no-session --skip-onboarding --no-auto-update --yolo",
+                ))
+                cmodel = os.environ.get("COMMANDCODE_MODEL", "").strip()
+                cmd = [commandcode_bin] + cflags + (["--model", cmodel] if cmodel else []) + ["--print", full_prompt]
+                proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, dict(base_env))
+                procs.append((proc, "cmd", f_out, time.time(), cmd))
             elif m == "gemini":
                 ext = "json" if os.environ.get("CONSULT_GEMINI_JSON", "0") == "1" else "md"
                 f_out = os.path.join(run_dir, f"{label}.gemini.{ext}")
