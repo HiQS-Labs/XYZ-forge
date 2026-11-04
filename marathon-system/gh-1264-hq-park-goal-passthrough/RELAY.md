@@ -1,6 +1,6 @@
 # Marathon Phase gh-1264-hq-park-goal-passthrough
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1264-HQ-PARK-GOAL-PASSTHROUGH-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -107,3 +107,14 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+- **Files touched:** `utils/hq/hq-lib.sh`, `utils/hq/hq.sh`, `skills/2-daily/hq/SKILL.md`, `test/hq-park-synthesis.sh`, `marathon-system/gh-1264-hq-park-goal-passthrough/RELAY.md`
+- **Key decisions & changes:**
+  1. `utils/hq/hq-lib.sh`: Added optional 17th parameter `goal` (`${17:-}`) to `hq_render_capture` and updated its header doccomment ("9 trailing params"). When `goal` is non-empty, each line is indented by two spaces under `goal: >`; when empty/unset, it emits the existing `  TODO: one-paragraph statement of what "done" looks like for this idea.` stub byte-for-byte.
+  2. `utils/hq/hq.sh`: Updated `usage()` and `cmd_park` header comments to list `HQ_PARK_GOAL`. Read `p_goal="${HQ_PARK_GOAL:-}"` in `cmd_park` and passed `"$p_goal"` as the 17th argument to both `hq_render_capture` call sites (preview and `--create`).
+  3. `skills/2-daily/hq/SKILL.md`: Added `HQ_PARK_GOAL` to the documented `HQ_PARK_*` synthesis passthrough environment variables list.
+  4. `test/hq-park-synthesis.sh`: Unset `HQ_PARK_GOAL` in the bare `--create` test case and verified multiline `HQ_PARK_GOAL` passthrough in the synthesis passthrough test case.
+- **Verification:** Verified preview output with `HQ_PARK_GOAL=$'Done means X.\nSecond line.'` and unset `HQ_PARK_GOAL` into `.relay-scratch/`.
+
