@@ -143,3 +143,12 @@ Ship for the bounded documentation change. Read all four artifact files, includi
 [Unverified — needs clone run] `bash utils/pdda/pdda.sh run` on the final committed state remains the harness pre-advance obligation. No test suite, gate, executable fixture, or git command was run in this worktree. Review approval does not attest that outstanding gate.
 
 Relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-11-04T04:39:54Z
+task: MARATHON-GH-1266-ARCHITECTURE-MD-SKILLS-INDEX-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 366e492a7ea844d4958c7296810598157a97e24d
+added-range: 11984+2032
+added-sha256: 822c010ced7482760fa9c5f917e0122b0e52564b93b0d007b5b2e9be9fa7c9eb
+config-sha256: 1e6965e59b5ff95ef80c2cc1324e62286f3f925dd171ea00c4191fafb5cc1a4c
