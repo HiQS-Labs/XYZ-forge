@@ -2,7 +2,7 @@
 gh_issue: 1264
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1264
 title: "hq park: goal passthrough (HQ_PARK_GOAL), the one capture field a grounded filing still patches by hand"
-status: Active
+status: Complete
 created: 2026-10-30
 owner: unassigned
 doc_type: feedback

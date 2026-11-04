@@ -78,7 +78,6 @@ _None — no two same-wave lanes share a directory spine (deeper than a top-leve
 - #492 GH-492 · Nothing reconciles roadmap_items against issues closed outside a merged PR — `already-landed`
 - #1075 GH-1075 · merge-cleanup batch record keeps stale per-PR file lists on resume — `already-closed`
 - #1087 GH-1087 · docs: restore spacing in the GH-1051 work record — `already-closed`
-- #1264 GH-1264 · hq park: goal passthrough (HQ_PARK_GOAL), the one capture field a grounded filing still patches by hand — `already-closed`
 
 ### 🔧 Reconcile — undocumented partial completion
 - #14 GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files — `partial`
