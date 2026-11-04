@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-04.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -296,5 +296,22 @@ index 00e83ee8..3bc08875 100644
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Ship within the stated two-skill instruction envelope. The implementation satisfies the issue body, operator scope addition and approved plan; no Blocker or Should findings. Approval covers the reviewed instructions and supplied evidence, not an unexecuted live write or future publication gate.
+swept file: yes
+
+- [Pass] Both run-end definitions invoke closeout after cancellation/readback (`skills/2-daily/todo-list/SKILL.md:97-100`, `:122-130`). The wake prompt retains user stop; the synchronous path covers halts, decisions and the cap. The asynchronous yield at `:117-121` remains a wait rather than a premature closeout. Qualified touched-issue scope, no-issue outcome, same-run nested suppression, factual body sections, tier behavior, URL reporting and no issue-state mutation are present at `:132-154`; both skill descriptions mention closeout.
+- [Pass] Start-task reuses the canonical procedure with its branch marker, PR/head SHA, QA/gate/smoke results and decisions (`skills/1-hourly/start-task/SKILL.md:315-323`). Awaiting merge is conditional on a verified ready PR; earlier groups post their actual blocker/resume action. Step 6 explicitly invokes it at its stop (`:212-217`). This matches the operator scope-addition comment 6638233042, independently read with `gh api repos/HiQS-Labs/XYZ-forge/issues/1341/comments --paginate --jq '.[] | {id,body}'` (exit 0). The issue body was independently read with `gh api repos/HiQS-Labs/XYZ-forge/issues/1341 --jq .body` (initial exit 1, connection error; subsequent read exit 0). No external writes were attempted.
+- [Pass] The startswith deviation is justified: the procedure requires the marker as the first line (`skills/2-daily/todo-list/SKILL.md:136-144`). Read-only probes, all exit 0: `gh api repos/HiQS-Labs/XYZ-forge/issues/1341/comments --paginate --jq '.[] | select(.body | contains("<!-- start-task closeout: <branch> -->")) | .id'` returned `6638233042`; replacing `contains` with `startswith` returned no output; using `startswith("Scope addition (operator, 2026-11-04):")` returned `6638233042`. This supplies a nonempty positive control and reproduces the quoted-template false match without changing issue data. A real branch-marker startswith lookup also exited 0 with no output. Leading whitespace before the marker would violate the first-line contract; CRLF after the complete marker does not prevent a prefix match. No normalization machinery is warranted.
+- [Pass] The single-quoted jq filter keeps the marker's angle brackets, colon and slash literal; the prescribed marker values do not require shell expansion inside it (`skills/2-daily/todo-list/SKILL.md:144`). Local `gh api --help` and `gh issue comment --help` both exited 0: the former documents sequential pagination, explicit PATCH and `-F` file reads for values starting with `@`; the latter documents `--body-file` and `-R`. These support the primitives at `:144-147`. Only exit-0 absence permits create; failed/uncertain writes retain text and claim no URL (`:148-151`). Live create/PATCH remains unverified, not a passing write claim.
+- [Pass] The section heading `## 4. Close the loop on GitHub` (`skills/2-daily/todo-list/SKILL.md:127`) yields the linked GitHub anchor `#4-close-the-loop-on-github` (`skills/1-hourly/start-task/SKILL.md:317`). The shared owner and start-task pointer avoid a duplicate procedure. The CHANGELOG top entry accurately describes this scope and the posted-comment rollback limit.
+- [Pass] Receipts distinguish read-only branch selection from actual mutation and source inspection from deployment (`TESTS-RESULTS/2026-11-04+GH-1341/SUMMARY.md:9-20`; `smoke-output.txt`; `provenance.jsonl`). The supplied gate receipt reports exit 0 / zero errors; I did not rerun it. Source inspection and the independent lookups above substantiate the bounded lookup claims. The present-prefix control selects the edit branch but is not a real closeout PATCH, as the limits disclose. Deployment remains post-merge work. No new suite, helper or gate is introduced in the embedded diff.
+
+Whole-file sweep: read the entire embedded packet, both full skill files (including existing intake, resume, rating, review and retirement instructions), the approved plan and plan-QA history, the top CHANGELOG entry and all three receipt files. No additional pre-existing defect requiring expansion of this task found. Used the swe review rubric at commensurate scope. No git commands, executable fixtures, pytest, test/*.sh or validate.sh ran; only this relay file was edited. Gate execution after this turn remains the harness's responsibility.
+
+Relay closed (Approved), no further turn needed. Producer may continue the authorized PR workflow and record the actual closeout URL/write result without treating this review as proof of that future write.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
