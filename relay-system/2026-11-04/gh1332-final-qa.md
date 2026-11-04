@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-04.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -163,5 +163,19 @@ Handing off to Producer (claude-a): disposition the landing-guarantee finding an
 - **[Unverified] statuses: supplied.** Re-ran in the disposable clone against the final patch; `coverage-check-output.txt` now records `pdda.sh run` exit statuses: all three cases exit 1 both ways (B and C must fail); case A alone exits 1 unpatched and **0 patched**.
 
 Diff since round 1: comment and INFO string in `utils/pdda/pdda.sh` (logic unchanged), `SUMMARY.md`, `coverage-check-output.txt`, `provenance.jsonl`. Round 2 requested.
+
+### Reviewer · Round 2 · codex
+
+swept file: yes
+
+VERDICT: PASS
+Basis: Ship for the bounded item-1 change, with the Producer's explicit disposition that partial landings may retain the stale inbox pointer until terminal reconciliation. Read the entire embedded artifact and relay history, the revised source predicate, summary, output and provenance, and the relevant Jog/reconciliation branches. The original embedded snapshot remains historical; the Round 1 Producer disposition and current SUMMARY supersede its unconditional landing wording. No additional concrete pre-existing defect identified in this review beyond the already documented substring limitation. Graph lookup was denied by approval policy; source reads supplied the evidence. Reversibility: Easy, by removing the fallback; distributed PDDA consumers inherit the gate relaxation.
+
+- [Pass] Round 1 Should resolved without another ledger writer: `utils/pdda/pdda.sh:382-393` now says reconciliation occurs when the issue is reconciled closed, and the INFO says "until wave_reconcile closes the issue". `TESTS-RESULTS/2026-11-04+GH-1332/SUMMARY.md`, **Landing side**, explicitly permits an OPEN partial landing to retain the inbox pointer. This matches `wave_reconcile.py:2392-2397` (evidence only) versus the terminal update call at `:2417`; `update_roadmap_entry` at `:1575-1588` repoints the qualified owning row to the supplied destination. Approval adopts that disposition of the DoD, rather than promising immediate repointing on every merge.
+- [Pass] The bounded predicate still requires missing inbox source AND inbox coverage (`utils/pdda/pdda.sh:388-394`); the second inbox loop is unchanged (`:404-420`). `_execution_root` (`utils/py/jog_run.py:524-537`) rejects execution-ledger changes, and the separate-primary promotion branch (`:1525-1528`) returns before repointing. The fallback therefore preserves the existing one-writer design. The accepted matching/provenance limitation is documented in SUMMARY's **Limit** paragraph; it is not an exact identity or Jog-origin check.
+- [Pass] Evidence supplied for the previous status gap: `TESTS-RESULTS/2026-11-04+GH-1332/coverage-check-output.txt` records "patched: pdda.sh exit 0" and "unpatched: pdda.sh exit 1" for case A alone, plus exit 1 for both combined A/B/C runs and ERROR findings for B/C. `provenance.jsonl` names the command, base revision, artifacts and observed outcomes. This is inspected producer evidence, not an independently executed clone run; the post-turn harness gate still must attest the final state before merge readiness.
+- [Unverified — no citation] Scope remains the roadmap-coverage fallback and its documentation/evidence; the embedded diff adds no test file or unrelated implementation. No source/artifact edit, git command, suite, pytest or executable fixture was run this turn. Only this relay file was changed.
+
+Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and subsequent gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
