@@ -165,3 +165,12 @@ Exit status: `0`. Decisive output: `kimi 'I am A from A\n'`, `cmd 'I am A from A
 [Unverified — needs clone run] The required `bash test/consult.sh` gate was deliberately not run here; the harness must run it after this turn on the final state. Live Kimi success, CommandCode's explicit authentication failure, and base/candidate codex/agy layout comparison are builder-reported evidence above, not independently replayed by this reviewer. `cat .relay-scratch/gh1265-probes.log` exited `1`: `No such file or directory`; scratch does not persist across turns, so approval does not claim inspection of that log. No forbidden suites, executable fixtures, or git commands were run.
 
 Relay closed, no further turn needed.
+
+### Attestation · relay-drive — 2026-11-04T02:07:48Z
+task: MARATHON-GH-1265-CONSULT-INSTALLED-KIMI-CMD-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 096b481b9cec68583e67c69d19a45b6e33d21cfd
+added-range: 14283+2705
+added-sha256: adcb57d22c52285706fce7195b23a598c6a39e4d3a379bb87d4a9c9754f99e5a
+config-sha256: e9b61fc488ac133fc4589d29a176f46bc20740b09e40630ea6da53e2687385d6
