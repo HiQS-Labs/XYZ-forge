@@ -314,4 +314,12 @@ Whole-file sweep: read the entire embedded packet, both full skill files (includ
 
 Relay closed (Approved), no further turn needed. Producer may continue the authorized PR workflow and record the actual closeout URL/write result without treating this review as proof of that future write.
 
+
+### Attestation · relay-drive — 2026-11-04T18:17:36Z
+task: RELAY-gh1341-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 8b80e206c0a27a2ce7a501c914fa29db4b245c68
+added-range: 22471+4847
+added-sha256: 216f86d8f247678eb164524ebe36979b14c7e796e3767e20e6180210012e9215
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
