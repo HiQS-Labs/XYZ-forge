@@ -379,6 +379,19 @@ check_roadmap_coverage() {
     if pdda_roadmap_covers "$rel"; then
       continue
     fi
+    # GH-1332: Jog promotes a 1-INBOX doc on an execution branch without writing the ledger
+    # (one writer); wave_reconcile repoints the row after landing. Until then the moved doc is
+    # covered by its 1-INBOX pointer, provided the 1-INBOX file is really gone (a move, not a copy).
+    case "$rel" in
+      PROJECT/2-WORKING/*)
+        inbox_rel="PROJECT/1-INBOX/${rel#PROJECT/2-WORKING/}"
+        if [ ! -e "$PDDA_REPO_ROOT/$inbox_rel" ] && pdda_roadmap_covers "$inbox_rel"; then
+          pdda_record_finding info "$CHECK_NAME" "$file" 1 \
+            "promoted in flight: the ledger still points at $inbox_rel; wave_reconcile repoints it on landing" "skip"
+          continue
+        fi
+        ;;
+    esac
 
     pdda_record_finding error "$CHECK_NAME" "$file" 1 \
       "active working doc has no pointer in $ledger_name ($rel) — $ledger_hint, or set roadmap_exempt: true" \
