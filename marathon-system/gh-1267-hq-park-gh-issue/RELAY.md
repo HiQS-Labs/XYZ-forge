@@ -1,6 +1,6 @@
 # Marathon Phase gh-1267-hq-park-gh-issue
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1267-HQ-PARK-GH-ISSUE-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -232,3 +232,90 @@ Required follow-up: clarify which Round 2 commands were mocked, retain the compl
 Independent read-only network probe: `gh issue view 01263 --repo HiQS-Labs/XYZ-forge --json number,url` printed `error connecting to api.github.com` / `check your internet connection or https://githubstatus.com`. Its individual status was not captured (the shell command continued to the syntax check); this provides no issue-state or CLI-normalization evidence. Network-dependent acceptance remains unverified.
 
 Handing off to agy — agy, take your turn.
+
+
+### Round 3 · Builder · agy
+
+**Files touched:**
+- `marathon-system/gh-1267-hq-park-gh-issue/RELAY.md` (`utils/hq/hq.sh` and `skills/2-daily/hq/SKILL.md` unchanged from Round 2)
+
+**Summary of changes & key decisions:**
+1. **Clarification on Round 2 witnesses vs. Round 3 live GitHub witnesses:**
+   - Round 2's witnesses used a mocked `HQ_GH_BIN` stub (`Issue 1200 sample title` / `[{"number":1280}]`) inside a `$TMPDIR` sandbox.
+   - In Round 3, because live GitHub network access is available in this environment (`gh issue view` / `gh issue list` against `HiQS-Labs/XYZ-forge` succeed), we ran the complete acceptance witness suite against the **real `gh` CLI** (`HQ_GH_BIN` unset — no stub) inside an isolated `$TMPDIR` disposable copy of `XYZ-forge` (`origin` set to `https://github.com/HiQS-Labs/XYZ-forge.git`, with real `PROJECT/`, `releases.db`, `utils/`, and `.pdda-mode`), leaving the worktree completely clean (`0` in-tree writes; full log saved in `.relay-scratch/round3-live-witness.txt`).
+2. **Reproducible setup & commands for the live GitHub witnesses:**
+   ```python
+   # Run via `python3 -` using tempfile.TemporaryDirectory() outside the worktree:
+   # 1. Initialize $TMP/repos/XYZ-forge with git init + remote origin https://github.com/HiQS-Labs/XYZ-forge.git
+   # 2. Copy .pdda-mode, releases.db, releases.sql, utils/, PROJECT/, ROUTER.md, AGENTS.md, CHANGELOG.md into $TMP/repos/XYZ-forge
+   # 3. Extract `git show development:utils/hq/hq.sh` into $TMP/base_hq/hq.sh alongside utils/hq/hq-lib.sh
+   # 4. Set HQ_SEARCH_ROOTS=$TMP/repos, HQ_XYZ_REGISTRY=$TMP/none.tsv, HQ_REBALANCE_DB=$TMP/none.db, HQ_PDDA_REGISTRY_DIR=$TMP/none_pdda
+   #    (HQ_GH_BIN is UNSET -> uses real /opt/homebrew/bin/gh talking to api.github.com)
+   ```
+3. **Measured live GitHub acceptance receipts (against real open unregistered issue `#1328` and existing registered issues `#1263` / `#1258`):**
+   - **Criterion 1a — Red control on base (`development:utils/hq/hq.sh`):**
+     - Command: `bash "$TMP/base_hq/hq.sh" park --gh-issue 1328 XYZ-forge`
+     - Exit code: `rc=1`
+     - Stderr:
+       ```text
+       hq park: '--gh-issue' is UNRESOLVED — cannot file intake without a target repo.
+         find ~ -type d -name "--gh-issue" -exec test -d "{}/.git" \; -print
+       ```
+   - **Criterion 1b — Candidate preview on open unregistered issue `#1328` (real `gh issue view 1328 --json url,title,body`):**
+     - Command: `bash utils/hq/hq.sh park --gh-issue 1328 XYZ-forge`
+     - Exit code: `rc=0`
+     - No-write verification: `1-INBOX` file list before == after (`inbox_unchanged=True`), `releases.db` `roadmap_items` count before == after (`452` == `452`).
+     - Decisive output (prints existing issue URL, title, and capture preview containing the real fetched `## Idea` body substring `Review by the orchestrating session (Opus 5.5), applied while the six-issue landing batch from #1298 was running.`):
+       ```text
+       HQ park · Tier B — issue-first intake PREVIEW (writes nothing)
+         target repo:  XYZ-forge  →  XYZ-forge  (/var/folders/.../repos/XYZ-forge)
+         GitHub issue: Outer-loop execution rubric: three gates for meaningful progress and autonomous repair
+         capture doc:  PROJECT/1-INBOX/GH-1328-OUTER-LOOP-EXECUTION-RUBRIC.md
+         ROADMAP sink: releases roadmap add (DB row, not ROADMAP.md text)
+         ROADMAP line: - **GH-1328 · Outer-loop execution rubric: three gates for meaningful progress and autonomous repair** 🆕 **captured 2026-11-03 via HQ** — [GH-1328-OUTER-LOOP-EXECUTION-RUBRIC.md](PROJECT/1-INBOX/GH-1328-OUTER-LOOP-EXECUTION-RUBRIC.md) · [#1328](#)
+
+         --- capture doc that would be written ---
+         | ---
+         | gh_issue: 1328
+         | source: https://github.com/HiQS-Labs/XYZ-forge/issues/1328
+         | title: "Outer-loop execution rubric: three gates for meaningful progress and autonomous repair"
+         | status: Proposed (1-INBOX — not yet active)
+         | created: 2026-11-03
+       ...
+         | ## Idea
+         | 
+         | ## Updated notes (2026-11-04)
+         | 
+         | Review by the orchestrating session (Opus 5.5), applied while the six-issue landing batch from #1298 was running. The policy below stands; these notes adjust how it applies.
+       ```
+   - **Criterion 2 — Candidate `--create --gh-issue 1328` (real `gh` CLI + real `releases_app.py` + real `pdda.sh frontmatter`):**
+     - Pre-check newest GitHub issue on `HiQS-Labs/XYZ-forge`:
+       `gh issue list --repo HiQS-Labs/XYZ-forge --state all --limit 1 --json number --jq '.[0].number'` → `1328`
+     - Command: `bash utils/hq/hq.sh park --create --gh-issue 1328 XYZ-forge` → `rc=0`
+     - Post-check newest GitHub issue on `HiQS-Labs/XYZ-forge`:
+       `gh issue list --repo HiQS-Labs/XYZ-forge --state all --limit 1 --json number --jq '.[0].number'` → `1328` (`newest_issue_before=1328 newest_issue_after=1328 unchanged=True`)
+     - Stdout:
+       ```text
+       HQ park · Tier B — creating intake in XYZ-forge …
+         ✓ issue:   https://github.com/HiQS-Labs/XYZ-forge/issues/1328
+         ✓ capture: PROJECT/1-INBOX/GH-1328-OUTER-LOOP-EXECUTION-RUBRIC.md
+         ✓ DB: pointer added via releases CLI
+         ✓ pdda:    capture doc passes the target frontmatter check
+         (files written but NOT committed — review, then commit in the target repo)
+       ```
+     - Written capture doc check: `PROJECT/1-INBOX/GH-1328-OUTER-LOOP-EXECUTION-RUBRIC.md` exists, frontmatter has `gh_issue: 1328` and `source: https://github.com/HiQS-Labs/XYZ-forge/issues/1328`, and `## Idea` is non-empty (`len=14981`, starting with `## Updated notes (2026-11-04)`).
+     - Written ledger row check (`SELECT gh_number, issue_url, doc_path, section FROM roadmap_items WHERE gh_number = 1328`):
+       exactly 1 row added (`total_db_rows=453` vs `before=452`):
+       `[(1328, 'https://github.com/HiQS-Labs/XYZ-forge/issues/1328', 'PROJECT/1-INBOX/GH-1328-OUTER-LOOP-EXECUTION-RUBRIC.md', 'Queue / parked intake')]`.
+   - **Criterion 3 — Refusal on already-registered issue (`#1263` and `#1258`):**
+     - Command: `bash utils/hq/hq.sh park --create --gh-issue 1263 XYZ-forge` → `rc=1`
+       Stderr: `hq park: #1263 is already registered (PROJECT/1-INBOX/GH-1263-HQ-PARK-RATING-GRAMMAR.md) — refusing.`
+       No-write check: `inbox_unchanged=True`, `db_rows_unchanged=True` (`453` == `453`).
+     - Command: `bash utils/hq/hq.sh park --create --gh-issue 1258 XYZ-forge` → `rc=1`
+       Stderr: `hq park: #1258 is already registered (PROJECT/1-INBOX/GH-1258-IDEA-SKILL.md) — refusing.`
+       No-write check: `inbox_unchanged=True`, `db_rows_unchanged=True` (`453` == `453`).
+   - **Criterion 4 — Fresh preview without `--gh-issue` byte-identical to base:**
+     - Command: `bash utils/hq/hq.sh park --title "x" XYZ-forge "fresh request"` vs `bash "$TMP/base_hq/hq.sh" park --title "x" XYZ-forge "fresh request"`
+     - Result: `base_rc=0 cand_rc=0 len=2200 byte_identical=True` (`diff` empty).
+   - **Existing suite gate:** `bash test/hq-park.sh` runs via the marathon harness `--pre-advance-cmd` after turn handoff.
+
