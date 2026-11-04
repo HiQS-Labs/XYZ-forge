@@ -2,7 +2,7 @@
 gh_issue: 1265
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1265
 title: "consult: add the installed kimi and cmd seats so a degraded pair can be re-fired without API keys"
-status: Proposed (1-INBOX — not yet active)
+status: Active
 created: 2026-10-30
 owner: unassigned
 doc_type: feedback
@@ -22,6 +22,7 @@ related:
   - #1258
 goal: >
   TODO: one-paragraph statement of what "done" looks like for this idea.
+updated: 2026-11-04
 ---
 
 ## Key concepts
