@@ -166,4 +166,12 @@ Whole-file sweep: reread the entire revised plan and todo-list/start-task source
 
 Relay closed (Approved), no further turn needed. Producer may implement the approved plan.
 
+
+### Attestation · relay-drive — 2026-11-04T18:11:07Z
+task: RELAY-gh1341-plan-qa
+reviewer: codex
+status: Approved
+reviewed-head: 8b38d189b3ebb1f6cc03b1a7e4d61513feeec20b
+added-range: 14985+2377
+added-sha256: 50f545f7490a0bedd3660bd96657cd5d25a8d73b4717115cc9f98e2c5b7e0522
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
