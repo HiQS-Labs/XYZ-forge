@@ -1,5 +1,5 @@
 # Marathon Phase gh-1267-hq-park-gh-issue
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1267-HQ-PARK-GH-ISSUE-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -319,3 +319,34 @@ Handing off to agy — agy, take your turn.
      - Result: `base_rc=0 cand_rc=0 len=2200 byte_identical=True` (`diff` empty).
    - **Existing suite gate:** `bash test/hq-park.sh` runs via the marathon harness `--pre-advance-cmd` after turn handoff.
 
+
+
+### Round 3 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: yes
+
+Completed the full-file source sweep of all 18 packet artifacts, using bounded reads to avoid the earlier truncation: `utils/hq/hq.sh`, `skills/2-daily/hq/SKILL.md`, and every supporting suite/helper listed in the packet. No additional blocking defect established, including in pre-existing code. Supporting suites were read, never executed.
+
+The sentinel correction remains sound. Existing-issue adoption preserves the fetched URL/title/body, rejects existing captures before writes, and bypasses both duplicate-title search and issue creation before reusing the existing capture and ledger writers. Fresh intake retains its original branch. Round 3 explicitly corrects the earlier mocked-evidence claim and supplies live-CLI commands, statuses and decisive outputs for issue #1328, the capture/ledger write, unchanged non-empty newest issue number, registered-capture refusals and byte-identical fresh preview. These are builder-reported receipts, not an independent replay by this reviewer; the temporary setup is described rather than retained as a runnable script.
+
+Independent narrow checks this turn:
+
+- `bash -n utils/hq/hq.sh` — exit 0, no output.
+- `python3 -` extracted the actual `park)` case arm, wrapped it in `case "$1" in ... esac`, and replaced only `cmd_park` with an argument printer (no HQ writer, fixture, Git or network invocation). Invocation was `subprocess.run(['bash','-c',script,'probe',*args], capture_output=True, text=True)`; decisive results:
+
+```text
+park --gh-issue 1267 XYZ-forge
+rc=0; create=0 title= issue=1267 project=XYZ-forge request=
+park --create --gh-issue - XYZ-forge "fresh request"
+rc=1; stderr="hq park: --gh-issue requires a numeric issue number (got '-')."
+park --title x XYZ-forge "fresh request"
+rc=0; create=0 title=x issue=- project=XYZ-forge request=fresh request
+```
+
+The invalid-value case is the red control for parser rejection; valid adoption and omitted-flag fresh intake remain accepted.
+
+**[Unverified — needs clone run]** The final committed-candidate `bash test/hq-park.sh` result remains the harness's post-turn gate. Approval closes this source-review turn; it does not assert that the pending gate ran or passed. No suites, executable fixtures or Git commands were run by this reviewer. Only this relay file was edited.
+
+Relay closed, no further turn needed.
