@@ -136,3 +136,12 @@ Narrow manual verification (no suites or executable fixtures run):
 [Unverified — needs clone run] The exact CLI preview comparison against the base revision and the required `bash test/hq-park-synthesis.sh` / `bash test/hq-park.sh` final-commit runs were not executed here. The renderer probe is narrower than those acceptance checks; approval is the source-review verdict, not an assertion that the final harness gate has passed. The harness must retain its post-turn verification boundary.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-11-04T04:50:13Z
+task: MARATHON-GH-1264-HQ-PARK-GOAL-PASSTHROUGH-TURN
+reviewer: codex
+status: Approved
+reviewed-head: fefd0607f43d69c606d384a75a50d0d535ceb391
+added-range: 14645+2179
+added-sha256: 5de2e275081a685f7e9747edd6dccfae1716c2e1e71ecd112327cc57c29d5217
+config-sha256: bbc2ebcf65508d734440c5f8f0adeb3ba318920c8df5862db141011630593aed
