@@ -1,5 +1,5 @@
 # Marathon Phase gh-1266-architecture-md-skills-index
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1266-ARCHITECTURE-MD-SKILLS-INDEX-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -124,3 +124,22 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   - Criterion 3 (`grep -cE '^### \`[0-9]-[a-z]+\`.*\([0-9]+\)$' ARCHITECTURE.md` and `grep -cE '^### \`[0-9]-[a-z]+\` — [^(]+$' ARCHITECTURE.md`): `0` and `4` (red control on base: `4` and `0`)
   - Criterion 4 (`bash utils/pdda/pdda.sh run`): deferred to the harness pre-advance gate outside the isolated worktree per the scope lock.
 - Handing off to codex — codex, take your turn.
+
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: yes
+
+Ship for the bounded documentation change. Read all four artifact files, including pre-existing sections. No actionable pre-existing defect found in this sweep. The weekly-planner description matches its skill frontmatter; adding its row and removing four redundant counts satisfies the intended scope without new machinery.
+
+[Pass] Independent read-only checks: `for tier in 1-hourly 2-daily 3-weekly 4-occasional; do ls -d skills/"$tier"/*/ | wc -l; grep -c "(skills/$tier/" ARCHITECTURE.md; done` exited 0 and produced directory/link pairs **17/17, 23/23, 16/16, 20/20**. An additional Python pathlib/re probe checked exact directory-to-link set equality, not merely totals: all four missing/extra sets were empty, exit 0.
+
+[Pass] `grep -c '(skills/3-weekly/weekly-planner/SKILL.md)' ARCHITECTURE.md` returned **1**, exit 0. `grep -cE '^### `[0-9]-[a-z]+`.*\([0-9]+\)$' ARCHITECTURE.md` returned **0**, exit 1 (expected absence); `grep -cE '^### `[0-9]-[a-z]+` — [^(]+$' ARCHITECTURE.md` returned **4**, exit 0. Sensitivity control in an in-memory copy: replacing the weekly-planner link with `(removed)` made its presence false and the weekly tier link total **15 != 16**, confirmed by Python assertions, exit 0. This is a controlled mutation, not an independently measured base revision.
+
+[Pass] The retired gh778/gh798 count expectations remain unchanged intentionally. `rg -n 'gh778|gh798' validate.sh test/gh306-registry-bidirectional.sh` exited 0 and found only EXEMPT entries at lines 59–60 of the registry suite, both marked turned off by GH-831. The owning task explicitly excludes re-enabling or editing those retired suites.
+
+[Unverified — needs clone run] `bash utils/pdda/pdda.sh run` on the final committed state remains the harness pre-advance obligation. No test suite, gate, executable fixture, or git command was run in this worktree. Review approval does not attest that outstanding gate.
+
+Relay closed, no further turn needed.
