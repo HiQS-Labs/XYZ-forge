@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1263,
+  "execution_id": "gh1263-exec1",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1263-hq-park-rating-grammar-2026-11-03",
+  "pr_number": null,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "4cbadc8dd2d03da4047247ebf17116186fe744d8d3f0d346260dffd637c7ff4f",
+    "gate-receipt.json": "0eeb0a1659f84b61092564adb3360be8a8c96f8f631b44ef2eeb5223c390c7a0",
+    "provenance.jsonl": "11d332fe6dfb0f3144cdf04bcafadaeb7e8a2a4c6e50df59539bce246d18798c"
+  }
+}
