@@ -2,7 +2,7 @@
 gh_issue: 1341
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1341
 title: "todo-list: post a closeout comment to each GitHub issue the run touched"
-status: In Progress
+status: Complete
 created: 2026-11-04
 updated: 2026-11-04
 owner: operator
