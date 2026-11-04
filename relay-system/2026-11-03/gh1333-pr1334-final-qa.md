@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-03.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -334,5 +334,23 @@ Handing off to Producer (claude-a) — correct S1, disposition the findings, and
 - **`[Unverified — needs clone run]`: addressed with a receipt.** `TESTS-RESULTS/2026-11-03+GH-1333/manual-check.md` and `provenance.jsonl` now record the express red/green, `test/gh267-express-skill.sh` 113/113 at `693e9d22`, the PDDA before/after, and both pre-push gate results. The suite was run unsandboxed in this clone, as the GH-177 guard requires.
 
 ROUND bumped to 2. Handing off to Reviewer (codex). Re-review S1, the widened PDDA note, and the new receipt.
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: S1 is resolved. The widened risk note describes the current planner correctly, the express placeholder removal still parses as unrated, and the policy-only boundary remains explicit. No outstanding Blocker or Should. Approval is this artifact review, not an attestation that the final-state harness gate has run.
+swept file: yes
+
+- [Pass] **S1 resolved; the risk correction is supported.** `skills/2-daily/start-marathon/SKILL.md:239-244` now explicitly says to exclude provisional and high-risk items “by hand”; `PROJECT/PDDA.md:174-178` agrees. Read-only command `rg -n 'risk|ratings_provisional|gated' utils/py/_marathon_plan.py` exited 0: risk is read into ratings at line 924 and weighted at 1175; readiness at 1041-1088 has no risk threshold, and `goGated` comes from operator-go prose at 701-703. The canonical DB-rank branch at 1165-1171 bypasses legacy risk weighting altogether; neither path implements the policy hold. No implementation of Phase 4 is required here.
+
+- [Pass] **Express red/green repeated against the seeded source.** `utils/py/express.py:848-853` retains the row shape and add arguments. Command: `PYTHONDONTWRITEBYTECODE=1 python3 -` importing `parse_rating` from `utils/py/releases_app.py`, AST-selecting the `raw` assignment inside `cmd_ledger`, and rendering it with `(1333, 'Example', 'PROJECT/2-WORKING/GH-1333-EXAMPLE.md', 1333, 'https://github.com/HiQS-Labs/XYZ-forge/issues/1333')`. The control was `old = new.replace('🆕 —', '🆕 rated 2/2/2/2 —')`; assertions required nonempty distinct inputs and `all(v is None for v in parse_rating(raw, 'Example').values()) == (label == 'new')`. Exit 0; decisive output: old `{rating_pri: 2, rating_sev: 2, rating_appeal: 2, rating_effort: 2, rating_ovr: None}`, new all five fields `None`. Legacy doc ratings at express lines 725-728 and planner fallback at `_marathon_plan.py:1172-1177` remain the previously identified Phase 4 limitation, not a new eligibility guarantee.
+
+- [Pass] **Whole-file sweep preserves the policy boundary and local-writer correction.** Re-read all of PDDA, SOP, express, start-marathon, the decision record, and the top CHANGELOG entry. `PROJECT/PDDA.md:300-310` says “Until it lands”; decision-record line 16 says “policy decided, not yet implemented”; CHANGELOG line 7 explicitly defers sweep and reader implementation. `wave_reconcile.py:1067`, `:2370-2397`, and `utils/pdda/pdda.sh:603-671` retain the current scan/move limitations described in Round 1. SOP lines 261-267 match `wave-reconcile.yml:9-10`, `merge_cleanup.py:893-932`, and the in-flight guard at `wave_reconcile.py:135-148`. No additional blocking pre-existing defect or folder-as-done contradiction was found in the swept files; the Round 1 SOP rating-refresh and duplicated PDDA-prose nits remain deferred. The known stale AGENTS copy remains explicitly tracked by CHANGELOG line 11.
+
+- [Pass] **No accidental closing clause in the reviewed additions.** Command: `PYTHONDONTWRITEBYTECODE=1 python3 -`, loading only the pure `wave_reconcile.py` source span from `CLOSING_KEYWORD_CLAUSE =` through `extract_linked_issues`, then calling `extract_linked_issues({'body': text}, 'HiQS-Labs/XYZ-forge')`. Input was the 81 non-header added lines from the embedded diff, plus the current decision record, manual-check receipt, PDDA lines 174-178 and skill lines 239-244; extraction was asserted nonempty. Exit 0; decisive output: `added lines 81 closers [] negative-phrase control [1333]`. The control was `does not close #1333`. This checks artifact text, not an unseen live PR body or commit message. Decision-record lines 6 and 14 still transcribe the supplied measurements as 45 stale paths and 25 closed issues with active docs; no fresh recount is claimed.
+
+- [Unverified — needs clone run] **Receipts are now present; final-state gate remains outside this turn.** `TESTS-RESULTS/2026-11-03+GH-1333/manual-check.md:12-26` and `provenance.jsonl:1-3` record 113/113 and the full-gate result for `693e9d22`. They do not attest the later prose corrections or establish pre/post-run clone identity. The producer's “unsandboxed” wording alone is not proof of disposable-full-clone isolation. Accept these as reported historical evidence, not an independently witnessed final-state gate. The harness must perform its prescribed disposable-clone verification after this review; no suite, executable fixture, git command, or source mutation was run here. The graph inventory tool was unavailable under the session's approval policy, so source inspection used read-only file access.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
