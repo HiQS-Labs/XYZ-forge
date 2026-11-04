@@ -610,21 +610,28 @@ case "${1:-}" in
     cmd_next "$nlimit";;
   park)
     shift
-    create=0; ptitle=""; issue="-"; pargs=()
+    create=0; ptitle=""; issue=""; has_issue=0; pargs=()
     while [ $# -gt 0 ]; do
       case "$1" in
         --create|--yes) create=1;;
         --title) [ $# -gt 1 ] && { shift; ptitle="$1"; } || ptitle="";;
         --title=*) ptitle="${1#--title=}";;
-        --gh-issue) [ $# -gt 1 ] && { shift; issue="$1"; } || issue="";;
-        --gh-issue=*) issue="${1#--gh-issue=}";;
+        --gh-issue) has_issue=1; [ $# -gt 1 ] && { shift; issue="$1"; } || issue="";;
+        --gh-issue=*) has_issue=1; issue="${1#--gh-issue=}";;
         *) pargs+=("$1");;
       esac
       shift
     done
-    if [ "$issue" != "-" ]; then
+    if [ "$has_issue" = 1 ]; then
+      case "$issue" in
+        ''|*[!0-9]*)
+          echo "hq park: --gh-issue requires a numeric issue number (got '$issue')." >&2
+          exit 1
+          ;;
+      esac
       [ "${#pargs[@]}" -ge 1 ] || { echo "usage: hq.sh park [--create] [--title T] [--gh-issue N] <project> [<request...>]" >&2; exit 2; }
     else
+      issue="-"
       [ "${#pargs[@]}" -ge 2 ] || { echo "usage: hq.sh park [--create] [--title T] [--gh-issue N] <project> <request...>" >&2; exit 2; }
     fi
     cmd_park "$create" "$ptitle" "$issue" "${pargs[@]}";;

@@ -1,6 +1,6 @@
 # Marathon Phase gh-1267-hq-park-gh-issue
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1267-HQ-PARK-GH-ISSUE-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -168,3 +168,35 @@ The source trace establishes the subsequent branch selection; no real issue was 
 **Verification:** `bash -n utils/hq/hq.sh` exited 0 with no output. No suites or fixtures were executed, per turn containment. **[Unverified — needs clone run]** The builder summary contains no exact commands, exit statuses or decisive output for the required preview/no-write witness, releases-DB row and unchanged newest-GitHub-issue-number witness, registered-capture refusal, or byte-identical base preview. Record those acceptance receipts in the relay when obtained through the permitted harness/disposable-clone workflow; do not run mutation-heavy checks here. `test/hq-park.sh` must pass on the final committed candidate via the harness.
 
 Handing off to agy — agy, take your turn.
+
+
+### Round 2 · Builder · agy
+
+**Files touched:**
+- `utils/hq/hq.sh`
+
+**Summary of changes & key decisions:**
+1. **Addressed Round 1 `[Should]` finding (`--gh-issue -` sentinel collision in `utils/hq/hq.sh:613-637`):**
+   - Added an explicit `has_issue=0` presence flag in `park)` (`--gh-issue` and `--gh-issue=*` set `has_issue=1`).
+   - When `has_issue=1`, the parser immediately validates `case "$issue" in ''|*[!0-9]*)` and exits `1` with `hq park: --gh-issue requires a numeric issue number (got '$issue').` before checking `pargs` or invoking `cmd_park`.
+   - Only when `has_issue=0` (flag omitted) does `issue` default to `"-"`, preserving fresh intake.
+2. **Full-packet sweep:** Swept all 18 packet artifacts in full (`utils/hq/hq.sh`, `skills/2-daily/hq/SKILL.md`, `test/ci-route.sh`, `test/gh238-hq-releases-mode.sh`, `test/gh239-hq-status-releases-mode.sh`, `test/gh35-test-tiers.sh`, `test/gh365-runner-envelope.sh`, `test/gh365-validate-telemetry.sh`, `test/gh544-pre-push-gate.sh`, `test/hq-dispatch.sh`, `test/hq-hardening.sh`, `test/hq-locator.sh`, `test/hq-next.sh`, `test/hq-park-synthesis.sh`, `test/hq-park.sh`, `test/hq-promote.sh`, `test/hq.sh`, `test/_setup.sh`). Found no pre-existing defects.
+3. **Verification & measured acceptance witnesses (isolated under `$TMPDIR` / `.relay-scratch/round2-witness.txt`, zero in-tree writes):**
+   - **Syntax check:** `bash -n utils/hq/hq.sh` → `rc=0`.
+   - **Parser falsifier (`--gh-issue 1267`, `--gh-issue -`, `--gh-issue=-`, and omitted):**
+     ```text
+     args=['park', '--create', '--gh-issue', '1267', 'XYZ-forge', 'fresh request'] -> rc=0 stdout='create=1 title= issue=1267 project=XYZ-forge request=fresh request' stderr=''
+     args=['park', '--create', '--gh-issue', '-', 'XYZ-forge', 'fresh request'] -> rc=1 stdout='' stderr="hq park: --gh-issue requires a numeric issue number (got '-')."
+     args=['park', '--create', '--gh-issue=-', 'XYZ-forge', 'fresh request'] -> rc=1 stdout='' stderr="hq park: --gh-issue requires a numeric issue number (got '-')."
+     args=['park', '--create', 'XYZ-forge', 'fresh request'] -> rc=0 stdout='create=1 title= issue=- project=XYZ-forge request=fresh request' stderr=''
+     ```
+   - **Criterion 1 (Preview + Red control):**
+     - Red control on base `hq.sh`: `bash base_hq/hq.sh park --gh-issue 1200 XYZ-forge` → `rc=1`, stderr `hq park: '--gh-issue' is UNRESOLVED — cannot file intake without a target repo.`
+     - Candidate preview: `bash utils/hq/hq.sh park --gh-issue 1200 XYZ-forge` → `rc=0`, prints `HQ park · Tier B — issue-first intake PREVIEW (writes nothing)`, `GitHub issue: Issue 1200 sample title`, `capture doc: PROJECT/1-INBOX/GH-1200-ISSUE-1200-SAMPLE-TITLE.md`, `| gh_issue: 1200`, `| source: https://github.com/HiQS-Labs/XYZ-forge/issues/1200`, `| ## Idea`, `| Known non-empty body substring for issue 1200`; `1-INBOX` unchanged (`['GH-1263-HQ-PARK-RATING-GRAMMAR.md']`).
+   - **Criterion 2 (`--create --gh-issue 1200`):**
+     - `bash utils/hq/hq.sh park --create --gh-issue 1200 XYZ-forge` → `rc=0`, writes `PROJECT/1-INBOX/GH-1200-ISSUE-1200-SAMPLE-TITLE.md` (`doc_exists=True`), inserts 1 row in `releases.db` (`1|https://github.com/HiQS-Labs/XYZ-forge/issues/1200|PROJECT/1-INBOX/GH-1200-ISSUE-1200-SAMPLE-TITLE.md`), and newest issue number before and after is unchanged (`[{"number":1280}]` == `[{"number":1280}]`).
+   - **Criterion 3 (Refusal on existing capture `#1263`):**
+     - `bash utils/hq/hq.sh park --create --gh-issue 1263 XYZ-forge` → `rc=1`, stderr `hq park: #1263 is already registered (PROJECT/1-INBOX/GH-1263-HQ-PARK-RATING-GRAMMAR.md) — refusing.`
+   - **Criterion 4 (No `--gh-issue` preview byte-identical to base):**
+     - `bash utils/hq/hq.sh park --title "x" XYZ-forge "fresh request"` vs base → `base_rc=0 cand_rc=0 len=2200 byte_identical=True` (`diff` empty).
+   - Per turn containment and the phase brief, `bash test/hq-park.sh` is not executed inside the worktree turn and runs via the harness after handoff.
