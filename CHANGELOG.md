@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 — GH-1160 AGENTS.md startup paragraph: reconcile is local by default, the hosted lane is dispatch-only
+
+- `AGENTS.md` "What this file owns" no longer says the hosted `wave-reconcile.yml` reconciles automatically after a merge into `development`. It now says merge-cleanup reconciles locally with `wave_reconcile.py --pr <N>`, the hosted workflow is dispatch-only (once before each promotion), the local writer fails closed while a hosted run is active, and `--force-local-reconcile` is a manual recovery override. This matches the CI rail in `AGENTS.md` and `ROUTER.md` (GH-1127, decision #1131).
+- No other startup or router document makes the old claim (grep of `AGENTS.md`, `ROUTER.md`, `SOP.md`, `README.md`, `CLAUDE.md`, `HOW-TO-USE.md`).
+- Express refused this change (`docs-only`: `AGENTS.md` is not an ordinary documentation text/image update), so it went through the normal PR lane.
+
 ## 2026-11-02 — GH-1308 decisions 9–13: receipt policy, teardown origin check, regression cases
 
 - `validate.sh` writes a gate receipt on every green tier-3 run of a clean tree again, as it did before #1253. Only a run with no skipped suite and no environment fault is stamped `--scope full`, which pre-push reuse still requires. `marathon-closeout.sh` therefore no longer refuses a host whose run skipped a suite.
