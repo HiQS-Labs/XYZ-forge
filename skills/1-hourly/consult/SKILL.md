@@ -76,7 +76,7 @@ post-hoc revert that the skill's own first dogfood flagged as unsafe.
 ```
 consult.sh --prompt-file Q.md            # question is the file's contents (may reference repo paths)
 consult.sh --prompt "Is X sound?"        # inline question
-  [--models codex,agy]                   # default pair; claude is also supported (Python runtime)
+  [--models codex,agy]                   # default pair; kimi, cmd, claude are also supported (Python runtime)
   [--out DIR]                            # parent dir (default relay-system/<today>/)
   [--label SLUG]                         # run-subdir + transcript stem (default "consult")
 ```
@@ -93,7 +93,8 @@ graceful degrade, non-git refusal).
 
 Exit `0` = at least one advisor answered; `5` = all failed; `3` = not a git repo (isolation needs
 one); `2` = usage. Per-model failures are reported, not fatal — if Codex's backend is down, Gemini's
-answer still comes back (**graceful degrade**, and the degrade is stated, never silent).
+answer still comes back (**graceful degrade**, and the degrade is stated, never silent — re-fire a
+degraded pair with `--models <survivor>,kimi` or `--models <survivor>,cmd`).
 
 ## Steps (the coordinator's job)
 

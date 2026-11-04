@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1265,
+  "execution_id": "gh1265-exec1",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1265-consult-installed-kimi-cmd-2026-11-03",
+  "pr_number": null,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "2820dd49f41955622130ad17a0dc99139e2d1c1f4f1918a6bae0ae091a5aa2b9",
+    "gate-receipt.json": "e5e032a55613366659cddf7c5479d95ad83b79314717c3c974af6230d84d4681",
+    "provenance.jsonl": "c8a23805330769bbc8495264e8083b6feea56271474f717124e1909370f15398"
+  }
+}
