@@ -40,7 +40,7 @@ usage:
                                           Capture doc renders the full PDDA skeleton (TODO stubs by
                                           default); optional synthesis passthrough via env vars
                                           HQ_PARK_{WHY,KEY_CONCEPTS,NON_GOALS,RELATED,COMPLEXITY,
-                                          RISK,EFFORT,PHASES} (GH-164 Phase 1).
+                                          RISK,EFFORT,PHASES,GOAL} (GH-164 Phase 1, GH-1264).
   hq.sh queue [--create] [--gh-issue N] <project> <req…>
                                           append an HQ-queued lane to the target's Marathon Plan
                                           (PREVIEWS by default; --create appends, non-destructive)
@@ -222,12 +222,13 @@ cmd_registries(){
 #   HQ_PARK_COMPLEXITY / HQ_PARK_RISK / HQ_PARK_EFFORT / HQ_PARK_PHASES  — integers 1-5 / phase count
 #   HQ_PARK_WHY                                                          — the ## Why paragraph
 #   HQ_PARK_KEY_CONCEPTS / HQ_PARK_NON_GOALS / HQ_PARK_RELATED           — pipe ('|')-delimited lists
+#   HQ_PARK_GOAL                                                         — the frontmatter goal: > scalar (GH-1264)
 cmd_park(){
   local create="$1" ptitle="$2" issue="$3" project="$4"; shift 4; local request="$*"
   # GH-164 Phase 1: read the optional synthesis passthrough once; all unset -> hq_render_capture's
   # own TODO-stub defaults (empty strings here reproduce the pre-Phase-1 bare-call behavior exactly).
   local p_complexity="${HQ_PARK_COMPLEXITY:-}" p_risk="${HQ_PARK_RISK:-}" p_effort="${HQ_PARK_EFFORT:-}" p_phases="${HQ_PARK_PHASES:-}"
-  local p_why="${HQ_PARK_WHY:-}" p_kc="${HQ_PARK_KEY_CONCEPTS:-}" p_ng="${HQ_PARK_NON_GOALS:-}" p_rel="${HQ_PARK_RELATED:-}"
+  local p_why="${HQ_PARK_WHY:-}" p_kc="${HQ_PARK_KEY_CONCEPTS:-}" p_ng="${HQ_PARK_NON_GOALS:-}" p_rel="${HQ_PARK_RELATED:-}" p_goal="${HQ_PARK_GOAL:-}"
   local R rc; R="$(hq_resolve "$project")"; rc=$?
   local repo path tier has_pdda=0 has_xyz=0
   repo="$(printf '%s\n' "$R" | val REPO)"
@@ -361,7 +362,7 @@ sys.stdout.write(url + "\n" + title + "\n" + body)
     echo
     echo "  --- capture doc that would be written ---"
     hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
-      "$p_complexity" "$p_risk" "$p_effort" "$p_phases" "$p_why" "$p_kc" "$p_ng" "$p_rel" \
+      "$p_complexity" "$p_risk" "$p_effort" "$p_phases" "$p_why" "$p_kc" "$p_ng" "$p_rel" "$p_goal" \
       | sed 's/^/  | /'
     echo
     echo "  [preview only] re-run with --create to file the issue + write the two docs into the target."
@@ -393,7 +394,7 @@ sys.stdout.write(url + "\n" + title + "\n" + body)
 
   mkdir -p "$path/PROJECT/1-INBOX"
   hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
-    "$p_complexity" "$p_risk" "$p_effort" "$p_phases" "$p_why" "$p_kc" "$p_ng" "$p_rel" \
+    "$p_complexity" "$p_risk" "$p_effort" "$p_phases" "$p_why" "$p_kc" "$p_ng" "$p_rel" "$p_goal" \
     > "$path/$relpath"
   printf '  ✓ issue:   %s\n' "$url"
   printf '  ✓ capture: %s\n' "$relpath"
