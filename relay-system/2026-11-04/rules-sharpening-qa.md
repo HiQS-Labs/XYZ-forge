@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-04.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -124,5 +124,90 @@ Grade findings `[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`; a finding that asks for 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: The whole embedded artifact was reviewed, including unchanged rules. Remaining contradictions concern decided policy versus deployed behavior, closure prerequisites, ledger ownership, and incompatible retry counters; the replacements below preserve operator decisions rather than silently creating exceptions.
+swept file: yes
+
+Evidence boundary: static source/text inspection only; no git, suites, fixtures, or runtime mutation. Graph discovery was unavailable (`list_projects` returned "MCP tool call requires approval, but approval policy is never"), so the named source locations were read directly. Issue-only decisions are taken from the supplied summary, not independently authenticated against GitHub. Runtime consequences are [Unverified — needs clone run]; the textual contradictions below are directly observable.
+
+- [Should] **F1 — G2/G3 describe a completed rollout; the source explicitly says it is pending.** `decisions/2026-11-03-gh1333-issue-state-authority.md` says "policy decided, not yet implemented"; `PROJECT/PDDA.md:312` retains per-merge moves until the sweep lands. Moreover, `PROJECT/PDDA.md:297` sends any never-actioned closed capture to MISC and removes its pointer, contradicting its own stateReason rules at :300-308 and G3's repoint-only rule. Fix G2/G3 to distinguish binding destination policy from implementation status, and replace the older PDDA sentence at rollout with: "Closed captures follow the stateReason sweep below; existing pointers are repointed, not removed merely because work never started."
+  Observed input: PDDA :297-299's "closed without work" versus :303's `COMPLETED` destination and :308's repoint.
+  Affected scope: closed inbox captures and all readers/movers pending Tasks 1/9/10 rollout.
+  Falsifier: an untouched inbox capture closed COMPLETED must resolve to COMPLETED, not MISC or pointer deletion; NOT_PLANNED resolves to MISC; unknown reason remains reported in place.
+
+- [Should] **F2 — G2/G3 versus the in-flight fallback is a real implementation gap, not a reason to remove coverage.** `utils/pdda/pdda.sh:357-360` checks stored path substrings; :389-390 only accepts an absent inbox file with the identical basename. Renaming a moved doc while retaining its `gh_issue` defeats that fallback. `utils/py/jog_run.py:1524-1527` intentionally leaves the primary pointer alone, and `utils/py/wave_reconcile.py:2392-2397` records evidence without repointing an open issue; therefore even a merged partial delivery can retain a stale inbox pointer indefinitely, not just "until PR merge." G3's closed-issue sweep cannot repair an OPEN issue's promotion cache. Fix G2/C3 and carry explicit rollout wording: "Coverage resolves the doc and existing row by repository-qualified issue identity; an OPEN issue's landed promotion may refresh its cached path without marking it completed, while an in-flight move retains coverage through identity."
+  Observed input: working doc with unchanged `gh_issue`, changed basename, absent old inbox file, and row still naming the old inbox basename; literal lookup/fallback at :357-390 cannot identify it.
+  Affected scope: moved/renamed GH docs with existing rows, including open issues after partial PR merges; no-row inbox discovery remains a separate cutover concern.
+  Falsifier: that renamed doc with a matching issue row remains covered, while a different issue's row does not cover it; an OPEN issue remains active after cache refresh.
+
+- [Should] **F3 — C2 is not an authorized extension of G6a.** G6a freezes 69 existing proposals; C2 silently adds an unbounded new cohort. The incompatibility it identifies is real: `ROUTER.md:49`, `PROJECT/PDDA.md:288-294` and :1009 onward require intake rows; `utils/hq/hq.sh:412` writes one and `utils/pdda/pdda.sh:416-419` reports a missing row. Naming new rows "proposals" does not stop their creation or stored ratings. Correct C2 to report the implementation lag and avoid using a row-writing intake path for new unstarted work until cutover; do not weaken coverage or invent exemptions. P7's 209-issue preparation also cannot be described as currently compatible with every existing filing tool.
+  Observed input: C2's "extending G6a to the gap period" versus G6a's "69 existing" and G6's "not when the issue is filed."
+  Affected scope: new unstarted intake before the atomic cutover, not existing grandfathered rows or selected work.
+  Falsifier: pre-cutover filing of unstarted work that creates no row and still satisfies applicable intake checks would make the operational conflict disappear; merely relabeling a newly created row does not.
+
+- [Should] **F4 — G6b/C3 do not establish a usable dispatch boundary.** "Selection" could mean a ranked shortlist rather than commitment to execute; "before any batch PR opens" permits dispatch before the row/checkpoint exists. Jog rejects execution-clone ledger changes (`utils/py/jog_run.py:533-537`), so selection writes belong to the primary and must reach the disposable execution baseline before dispatch. Reuse existing proposal rows and preserve their ratings; do not create duplicates or recompute appeal. Replace G6b/C3, and replace C3's "again only" with lifecycle-boundary wording so it cannot prohibit necessary primary reconciliation.
+  Observed input: shortlist selection under G6b, or dispatch before PR opening under C3, while `_execution_root` rejects ledger drift.
+  Affected scope: committed batch/marathon selection and primary-to-execution handoff.
+  Falsifier: a proposed shortlist creates no row; committed selected work has exactly one primary row available in a clean execution baseline before dispatch, without lane ledger writes.
+
+- [Should] **F5 — C1 weakens G4, and R6 cannot bypass P5 or independent review.** "Covers the whole issue" in C1 omits G4's *reviewed assertion*; "every Acceptance item" omits the non-empty requirement. A PR can pass checks and cover its lane without satisfying the aggregate #1340/#1333/#1329 closure criteria in P5; `AGENTS.md:349` also forbids test-only review attestation. Correct C1 by referring to G4 and P5, preserve R6's batch-1-only scope, and name the orchestrator as closure actor after evidence review rather than treating the completion sweep as that actor. P1 is ownership, not advance permission to close.
+  Observed input: empty Acceptance checklist or a partial Task PR with green checks; C1/R6 alone could emit a closing keyword despite G4/P5.
+  Affected scope: each issue linked by a batch PR and the three aggregate closure decisions.
+  Falsifier: a partial PR merges without closing its still-incomplete issue and records the reason once; a whole-issue PR with a recorded independent review assertion qualifies under G4, with P5 additionally satisfied for its named issues.
+
+- [Should] **F6 — W1 conflates different counters and leaves bypass routes.** `utils/py/marathon_drive.py:1235` defaults the lane cap to 2, :1250-1267 parks at the prior-launch count, and :1271-1282 appends a fire; this is not a diagnosis/repair/verify round. :2834 resets the lane count on approved phase success, which cannot reset R2's unresolved-blocker history across sessions. Preserve both budgets independently and forbid counter/key resets or cap increases as substitutes for `--force` approval.
+  Observed input: a lane with two prior fires and an unresolved blocker with only one repair round; W1's "three rounds, or fewer" supplies no correct mapping.
+  Affected scope: launches, internal relay rounds, and outer blocker repairs across resumes.
+  Falsifier: a third fire remains parked despite spare outer repair rounds; a fresh lane identity does not grant a fourth repair round for the same unresolved blocker.
+
+- [Should] **F7 — R1 needs R3's exclusions, and W2 must cover strengthening as well as weakening.** A reversible edit to an acceptance predicate is still a design/check-policy change under W2, while R3 only explicitly says "weakening a check." R3's bare nouns "containment/sandbox/auth/credentials" can also be read as requiring renewed approval for ordinary use of already-authorized tools, contradicting `AGENTS.md`'s "Authorization persists across sessions." Define authorized repair as restoring already-agreed behavior, and require new approval for changing those boundaries, not ordinary authorized use.
+  Observed input: changing a check's accepted inputs during a routine repair, or asking again to use an already-authorized reviewer account.
+  Affected scope: runtime repairs and requests that change approval/security/design boundaries.
+  Falsifier: implementation repair against an unchanged acceptance contract proceeds under R1; either widening or narrowing the contract stops for R3, while already-authorized tool use does not require redundant approval.
+
+- [Should] **F8 — R7 is not approved and "reset" risks destructive interpretation.** `AGENTS.md:7` prohibits hard resets in a checkout whose state matters, and Jog :533-537 says preserve/reconcile ledger drift, not erase it. "Merge open PRs first" lacks eligibility/scope limits and "one at a time" is not a global prohibition on the repo's intended parallel marathons. Retain the lesson label, scope it to the proposed batch procedure, and require preserving unique work before refreshing/replacing a disposable execution clone; no fresh authority to merge arbitrary PRs or reset primary/peer work.
+  Observed input: an execution clone with unlanded work or ledger drift under the instruction "reset ... before each item."
+  Affected scope: batch execution clone refresh and ordering, not primary history or unrelated PRs.
+  Falsifier: dirty/unique work is preserved and reconciled before dispatch; an unrelated unreviewed PR is not merged merely because it is open.
+
+- [Should] **F9 — X3's trigger is underspecified, and X5's justification wrongly makes R7 require another host.** "Until the first run" can mean before dispatch, at dispatch, or after completion; the supplied decision does not resolve which, so this review must not invent a security gate or permission to run. Keep the deferral and require its owner to identify the intended trigger before using it to justify that first run. Retain X5's operator-approved retirement, but remove "the second host R7 needs": avoiding concurrent full suites on one host can be met by serialization and R7 remains unapproved.
+  Observed input: X3's "until the first run" and X5's "R7 needs" versus R7's "avoid two full-suite gates on one host at once."
+  Affected scope: scheduling #1295 against the first generated-plan execution and retirement rationale only.
+  Falsifier: the operator's original wording explicitly identifies the trigger event; use that wording directly instead of seeking clarification or guessing.
+
+- [Pass] **C1's separation of merge and closure is sound once tightened; C3's early primary checkpoint is sound once moved before dispatch.** G4 says "Otherwise it leaves the issue open" and G6b says "row is created at selection"; those are the controlling spans, not green CI or PR creation.
+- [Pass] **G5, P3/P6 and the X5 retirement decision need no reversal.** G5's "neutral 50 unless the operator supplies a value," P3's "one PR," P6's "waits for the cutover," and X5's "op approved retiring" are internally compatible. No additional pre-existing textual defect found in the unchanged IDs listed below; this is not runtime certification.
+- [Nit] **Reduce duplicate policy bodies.** C1 should refer to G4/P5, C3 should implement G6b, and W1/W2 should refer to R2/R3 rather than maintain rival thresholds. P4's "overridable" adds nothing beyond its agreed status; X1/X2 can share a line, but X2's completed re-rating remains historical evidence rather than another instruction to rate.
+
+Consolidated replacements (proposals for the Producer; operator decisions remain decided, agreements remain agreements, and R7 remains unapproved):
+
+- G2: Readers resolve a GH doc by repository-qualified issue identity (`gh_issue`, otherwise the GH filename prefix; `source` disambiguates a foreign repository); stored paths are caches. This is decided policy pending the reader rollout, not a claim that today's path-based readers comply.
+- G3: The planned single idempotent sweep reads current CLOSED issue state in both inbox and working folders, moves COMPLETED to `3-COMPLETED` and NOT_PLANNED to `4-MISC`, and leaves OPEN or unknown cases in place (reporting unknown cases); it repoints only existing rows and never closes issues. Until it lands, the documented per-merge mover and drift reporter remain the implementation, with their gaps explicit; remove the conflicting "closed without work" destination/removal text when implementing the sweep.
+- G4: For each issue, the orchestrator may close at merge only with a recorded independent review assertion that the delivered lane covers the whole issue, or a non-empty Acceptance checklist whose every item is checked, additionally satisfying P5 for its named issues. Otherwise leave it open with one delivery/reason comment; mention alone is never authority, and use `Refs #N` plus "leaves #N open" rather than negated closing keywords.
+- G6: The decided cutover policy creates a PRS row and stored rating when work starts, not at filing; until then the rating proposal belongs in the issue body. G6a is the bounded existing-row exception, and C2 describes current implementation lag without enlarging that exception.
+- G6b: Selection means committing an issue to the actual execution batch or marathon, not merely ranking or shortlisting it. At that point create its primary row, or reuse its existing proposal row and rating, before dispatch.
+- R1: During a run, repair routine reversible implementation defects without asking when the repair restores already-agreed behavior within the authorized scope. R2/W1 bound the attempts, and R3/W2 exclude changes to acceptance, design, safety, authority, or spending boundaries.
+- R2: Count at most three diagnosis/targeted-repair/verification rounds per unresolved blocker across sessions and wakes, retaining the count and evidence in existing run records. At exhaustion file/update the issue, keep the milestone visibly blocked, and continue only independent eligible work; W1 independently limits tool launches and retries.
+- R3: Obtain operator approval for force push, deletion of unlanded work, history rewrite, acceptance/check-policy changes or bypasses, changes to containment/sandbox/authentication/credential boundaries, ledger schema, merge policy, design/architecture, spending or access beyond existing authorization. Existing explicit authorization continues within its stated scope; routine use of an authorized tool/account is not a new boundary change.
+- R6: For batch 1 only, merge batch PRs automatically once required checks and independent review are satisfied within the approved merge scope. Merge permission does not authorize issue closure, which follows G4/P5, or automatically extend to batch 2.
+- R7: Unapproved batch lesson: execute items serially, first land eligible prerequisite PRs through normal review/merge rules, and refresh a disposable execution clone from current origin/development only after preserving and reconciling any unique state. Keep ledger writes/checkpoints on the primary under C3 and avoid overlapping full-suite gates on one host; this authorizes neither destructive reset nor merging unrelated PRs nor a global ban on parallel marathon lanes.
+- P1: This session owns delivery of #1340 Tasks 1-12 and evaluating closure of #1333, #1340 and #1329 under G4/P5. Ownership is not advance closure approval.
+- P4: Task 13 moves to its own dated issue under the current session agreement.
+- P5: After reviewed evidence establishes Tasks 1-12 merged with PR, merge SHA and a manual check under `TESTS-RESULTS/` with committed provenance, the orchestrator closes #1340 and then #1333 under G4. Close #1329 only after every batch-protocol idea is explicitly adopted or declined in #1298's batch 2 report; a partial task PR must not close these aggregate issues early.
+- P7: The earlier request to register the 209 no-row issues is superseded by Task 5's preparation of issue text, capture doc, contract and issue-body rating proposal, without creating rows merely for intake. Execute that preparation through the cutover-compatible intake path; C2 is not permission to bulk-register them meanwhile.
+- X3: #1295 remains deferred to the first execution of a plan or launch packet generated by `factory-primitive`. The summary does not establish whether action is due before dispatch, at start or after completion; resolve that timing from the operator's original instruction before relying on the deferral to schedule the first run.
+- X5: Retired by operator approval: the 2026-10-31 restriction on long Mac Studio runs pending admission/landing evidence. The recorded basis is census 6/298 and batch 1 landing 5/6; retirement does not depend on R7 requiring a second host and does not waive other run gates.
+- C1: Until Task 7 implements closure policy, write a closing keyword only when G4 and any applicable P5 criteria are met; otherwise use `Refs #N` and "leaves #N open" with the single reason comment. Batch-1 auto-merge remains governed by R6 independently of closure.
+- C2: Current intake tools and coverage rules still require/write rows at filing, so G6 is decided policy awaiting the atomic cutover; do not treat new gap-period rows as an approved expansion of G6a. Until a compatible intake path exists, defer affected new unstarted intake through those row-writing paths rather than create prohibited rows, invent exemptions, or weaken coverage; selected work may still obtain its row under G6b.
+- C3: On committed selection, write/reuse the rows on the primary and checkpoint them before dispatch, making that baseline available to the clean disposable execution clone; lanes do not write the ledger. After landing, reconcile and checkpoint on the primary, refreshing existing path caches for landed OPEN-issue promotions without completing them and leaving closed-issue terminal moves to G3's sweep once deployed.
+- W1: Enforce R2's blocker repair-round budget and each tool's configured launch/round budget independently, stopping when the next action would exceed either applicable limit; Marathon's default two lane fires are not two outer repair rounds. Do not bypass exhaustion with `--force`, increased caps, erased counters, or replacement identities without operator approval, and never reset an unresolved blocker's R2 count merely because a tool resets its own counter.
+- W2: Runtime repairs may restore a check's implementation to its already-agreed acceptance contract, but changing that contract in either direction requires R3 approval. A green result does not authorize changing what the check accepts.
+
+Unchanged IDs: G1, G5, G6a, R4, R5, P2, P3, P6, X1, X2, X4. C1/C3/W1/W2 are corrected; C2's extension of G6a is rejected and replaced with an implementation-gap rule.
+
+Handing off to Producer (claude-a) — disposition each finding and revise the embedded rule set; then return it for review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
