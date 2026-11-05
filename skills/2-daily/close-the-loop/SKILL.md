@@ -14,7 +14,7 @@ description: >-
 
 Find unfinished commitments and missing handoffs between what this session learned or decided,
 where it was recorded, and what the next execution step needs. A gap can exist even when nobody
-explicitly promised the missing update. Return candidates; do not execute them or create records.
+explicitly promised the missing update. Return candidates; do not execute them or create records by default (see `## Execute mode` below).
 
 ## Review
 

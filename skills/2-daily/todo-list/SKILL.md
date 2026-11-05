@@ -122,7 +122,7 @@ Below, "the note" means `temp/todo-list-YYYY-MM-DD-<session-token>.md` in Tier A
 chat state block in Tier C. Reuse the per-item execution and continuation rules from
 [`workhorse`](../workhorse/SKILL.md) (`skills/2-daily/workhorse/SKILL.md` Rung 0.4 + Fast-Track
 Rungs 1–6) and the two-turn stall tripwire from [`unstuck`](../../1-hourly/unstuck/SKILL.md)
-(`skills/1-hourly/unstuck/SKILL.md`).
+(`skills/1-hourly/unstuck/SKILL.md`). Note: `[-]` here means *in flight* (`todo-list` uses `[p]` for parked/deferred; do not carry across `workhorse`'s `[-]` deferred marker).
 
 1. Do **not** wait for the first 10-minute wake to start work. Immediately mark item `1` as
    `[-]` in the note and begin executing item `1` in the current turn.
