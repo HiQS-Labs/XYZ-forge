@@ -2,7 +2,7 @@
 gh_issue: 1346
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1346
 title: "feat(skills): chain close-the-loop and todo-list with non-blocking PARKED/blocker skip ladder"
-status: "Working — executing /relay-xyz QA"
+status: "Working — PR ready; /relay-xyz QA Approved"
 created: 2026-11-05
 updated: 2026-11-05
 owner: Antigravity
@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Updated `skills/2-daily/close-the-loop/SKILL.md` and `skills/2-daily/todo-list/SKILL.md` to chain discovery into a non-blocking skip-and-park execution loop. | Complete `/relay-xyz` QA with Claude Code Fable (`claude-fable-5-1`, `--effort low`), open PR into `development`, and merge. |
+| `/relay-xyz` QA with Claude Code Fable (`claude-fable-5-1`, `--effort low`) Approved in Round 2 (`c3db79ff9bf4`). | Open PR into `development`, merge, and reconcile. |
 
 ## Observed problem and bet
 
@@ -40,7 +40,7 @@ Previously, `/close-the-loop` stopped at a read-only report (`skills/2-daily/clo
 ## Acceptance
 
 - [x] `skills/2-daily/close-the-loop/SKILL.md` and `skills/2-daily/todo-list/SKILL.md` cross-link cleanly and all relative paths resolve.
-- [ ] `/relay-xyz` QA turn with Claude Code Fable (`claude-fable-5-1`, low effort) passes.
+- [x] `/relay-xyz` QA turn with Claude Code Fable (`claude-fable-5-1`, low effort) passes (`STATUS: Approved`, attested on `c3db79ff9bf4`).
 - [ ] PDDA and Small-tier checks pass; PR opened and merged into `development`.
 
 ## Lessons Learned (For Future Agents)
