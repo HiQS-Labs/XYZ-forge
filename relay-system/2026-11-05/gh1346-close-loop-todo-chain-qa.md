@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -73,4 +73,35 @@ ROUND: 1 / 4
 
 ## Log
 
+### Reviewer · Round 1 (claude)
+
+swept file: yes — both SKILL.md files read in full (close-the-loop 81 lines, todo-list 195 lines), plus `git diff HEAD~1 HEAD` to separate new from pre-existing text; pre-existing sections 0, 2, 4 of todo-list and `## Review`/`## Report` of close-the-loop were read, not just the diff. Pre-existing defects found: one semantic collision (Nit 2 below); nothing else.
+
+**DoD 1 — report-only default preserved + `## Execute mode`:** `[Pass]` `skills/2-daily/close-the-loop/SKILL.md:65-66` "Stop after the report by default. A bare `/close-the-loop` invocation does not authorize executing candidates"; `:68` `## Execute mode (--execute / chain into todo-list)`; `:73-80` runs Review+Report first, filters to `confirmed pending`, then "Immediately load and execute [`todo-list`](../todo-list/SKILL.md) ... as the input to its Section 1".
+
+**DoD 2 — chained discovery + non-blocking ladder:** `[Pass]` `skills/2-daily/todo-list/SKILL.md:63-67` chained discovery for `/todo-list --close-the-loop` / `/close-the-loop --execute`; `:129-133` `[x]` -> "advance immediately to the next available `[ ]` item"; `:139-144` `[p]` -> `<repo-root>/PARKED/YYYY-MM-DD-<scope>.md` per `PARKED/README.md` (matches `PARKED/README.md:11` "dated `PARKED/YYYY-MM-DD-<scope>.md` file") then "**immediately advance to the next `[ ]` item**"; `:145-151` `[!]` "keep it in the active checklist ... not hidden in `PARKED/`" — consistent with `PARKED/README.md:6` "A blocker to the current task stays in its active issue/plan and cannot be hidden here"; dependent items get `[!]` (`blocked by #k`), else advance. The wake prompt `:106-110` mirrors the same ladder, so the watchdog path and the synchronous path agree.
+
+**DoD 3 — end-of-sequence reminder:** `[Pass]` `skills/2-daily/todo-list/SKILL.md:158-164` "report the final checklist ending with a dedicated **Blocked (`[!]`) & Deferred (`[p]` in `PARKED/`) Reminder** listing every skipped item, its `PARKED/` file path or issue link, and the exact decision or action needed from the user"; wake prompt `:111` "report the final checklist status with the blocked/deferred reminder".
+
+**DoD 4 — links/paths resolve:** `[Pass]` probe (exit 0) resolved every `](...)` relative link and every backticked `skills/...`/`PARKED/...` path from each file's directory:
+```
+OK close-the-loop -> ../todo-list/SKILL.md
+OK todo-list -> ../../../PARKED/README.md, ../../1-hourly/sanity-check/SKILL.md,
+   ../../1-hourly/unstuck/SKILL.md, ../close-the-loop/SKILL.md, ../workhorse/SKILL.md
+OK path skills/1-hourly/{handsfree,sanity-check,unstuck}/SKILL.md, skills/2-daily/{close-the-loop,workhorse}/SKILL.md, PARKED/README.md
+MISS path PARKED/YYYY-MM-DD-<scope>.md   (template placeholder, expected)
+```
+Section anchors also exist: `sanity-check/SKILL.md:68` `## Decision ladder` and `:179` "After two investigation attempts" (matches "capped at 2 investigation attempts"); `workhorse/SKILL.md:66` Rung 0 with Triage Protocol steps 3 (`:75` Queue Segmentation incl. `PARKED/` first) and 4 (`:91` Serial Execution Loop) = the cited "Rung 0.3"/"Rung 0.4"; `:361` Fast-Track; `unstuck/SKILL.md:8` two-turn tripwire; `.gitignore:13` `/temp/` backs "`temp/` is gitignored here". The one `https://github.com/.../handsfree/SKILL.md` URL is pre-existing and paired with the in-repo path.
+
+- `[Nit]` `skills/2-daily/close-the-loop/SKILL.md:17` "Return candidates; do not execute them or create records." is now only true by default; `:65` already says "by default". Fix: append "by default (see `## Execute mode`)" to line 17. Cosmetic; not blocking.
+- `[Nit]` (pre-existing, surfaced by the new cross-reference) `skills/2-daily/todo-list/SKILL.md:71-72` defines `[-]` as *in flight*, while `workhorse/SKILL.md:82` uses `[-]` for *optional/deferred* — and `todo-list:122-124` now tells the agent to "Reuse the per-item execution and continuation rules from workhorse Rung 0.4". An agent reading both could misread a todo-list `[-]` item as deferred. Fix: one sentence after `todo-list:124` noting "`[-]` here means in flight; workhorse's run checklist uses `[-]` for deferred — do not carry that marker across." No behaviour change requested, so no Observed/Affected/Falsifier lines.
+
+**VERDICT: PASS**
+**Basis:** All four DoD items are satisfied with cited spans; every relative link and repo path resolves (probe above); the `[p]`/`[!]` split matches `PARKED/README.md`'s "blocker stays visible" rule; wake-prompt and synchronous ladders are consistent. The two nits are wording-only and do not affect the contract. Harness gate (`validate.sh`) runs after this turn — not run here per reviewer scope.
+
+Relay closed (Approved), no further turn needed. Producer: optional nits only; nothing required.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### System · relay-drive — 2026-11-05T21:32:15Z
+terminal STATUS Approved written by FAILED reviewer turn (claude; shim returned non-zero) — reverted
