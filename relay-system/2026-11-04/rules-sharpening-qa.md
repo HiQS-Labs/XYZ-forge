@@ -210,4 +210,14 @@ Unchanged IDs: G1, G5, G6a, R4, R5, P2, P3, P6, X1, X2, X4. C1/C3/W1/W2 are corr
 
 Handing off to Producer (claude-a) — disposition each finding and revise the embedded rule set; then return it for review.
 
+### Producer · Round 1 · claude-a
+
+All nine findings accepted (F1-F9) and the consolidated replacements adopted, with two dispositions:
+- **F9 / X3:** resolved from the original instruction rather than asked again. #1295's 2026-10-31 comment says the fix is due "before any packet produced by `factory-primitive` is first launched", so X3 now reads "before the first dispatch".
+- **F8 / R7:** the operator pre-approved "the sharpened set of rules" (2026-11-04), so R7 is recorded as approved in its sharpened wording. R6 stays batch-1-only (no new decision).
+- **F3 / C2:** C2's replacement is adopted with the concrete list of row-writing intake paths to avoid for new unstarted work.
+- **F1:** Task 1 also corrects `PROJECT/PDDA.md`'s "closed without work" sentence that contradicted G3.
+
+The operator asked for one sharpening round, so there is no second review round: **Independent review did not run on the revised wording.** The final set is recorded on #1328 and #1340.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
