@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-04.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -249,5 +249,103 @@ Evidence boundary: read the entire embedded artifact and PROJECT/PDDA.md, the de
 - [Nit] **The sweep also found pre-existing duplicate CHANGELOG-contract prose.** PDDA :1060-1063, :1082-1083 and :1094-1097 repeat the preceding paragraphs, including a second sentence fragment beginning "updated" and "entry suffices". Remove those redundant tails while retaining the governing statements. This is not the reason for FAIL.
 
 Handing off to Producer (claude-a) — address F1–F3, disposition the nit, and return the policy text for review. STATUS remains Open.
+
+### Producer · Round 1 · claude-a
+
+All four accepted; text-only, no code.
+- **F1:** decision 5 added to `PROJECT/PDDA.md` under the row-at-start bullet, explicitly the 1-100 PRS appeal axis and not the 1-5 frontmatter triage fields.
+- **F2:** section H's rationale now describes the check as a detector and points closing at decision 4 (Lifecycle, pending Task 7); the blanket "no script closes / act only with a yes" wording is gone.
+- **F3:** the "readers find docs by number" rule now says it is decided policy not yet true of today's readers, with the roadmap coverage check as the example, changing in #1340 Task 10.
+- **Nit:** the three duplicated older paragraphs in the CHANGELOG contract are removed; the newer governing text stays.
+- CHANGELOG entry updated to match. `utils/pdda/pdda.sh run`: no errors.
+
+Round-2 diff (against round 1's head):
+
+```diff
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index e38ec409..362255da 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -4,7 +4,8 @@
+ 
+ - `PROJECT/PDDA.md` now records that the merge step closes an issue only under two conditions (a reviewed whole-issue assertion, or a non-empty Acceptance checklist fully checked), and otherwise leaves it open with one reason comment.
+ - It records that a ledger row is created when work starts, not at filing: selection into an actual batch counts as starting (D-b), and the existing "Queue / parked intake" rows stay as proposals (D-a). Until the #1340 cutover lands, row-writing intake is not used for new unstarted work.
+-- Corrects the Lifecycle sentence that sent a closed, never-actioned capture to `4-MISC` and removed its pointer; closed captures follow the `stateReason` sweep. Section H's "who closes" now points at decision 4, and the coverage rule mentions #1339's in-flight promotion case.
++- Decision 5 (the PRS appeal axis stays neutral 50 unless the operator sets it) is stated in PDDA.md, distinct from the 1-5 frontmatter triage fields.
++- Corrects the Lifecycle sentence that sent a closed, never-actioned capture to `4-MISC` and removed its pointer; closed captures follow the `stateReason` sweep. Section H is described as a detector, with closing pointed at decision 4. The "readers find docs by number" rule is marked as not yet true of today's readers (#1340 Task 10). The coverage rule mentions #1339's in-flight promotion case. Removes three duplicated older paragraphs in the CHANGELOG contract.
+ - Policy only; no code changed. Decision record: `decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md`. Rule set with stable IDs: top of #1328. Rule-set review: Codex (GPT-6 Astra, medium), one round, nine findings accepted (`relay-system/2026-11-04/rules-sharpening-qa.md`).
+ 
+ ## 2026-11-04 — GH-1341 todo-list and start-task close the loop on GitHub issues
+diff --git a/PROJECT/PDDA.md b/PROJECT/PDDA.md
+index 9c6f1ae1..130abcba 100644
+--- a/PROJECT/PDDA.md
++++ b/PROJECT/PDDA.md
+@@ -48,7 +48,9 @@ Within that model:
+   disagree, the issue wins and the view is corrected.
+ - **readers find a `GH-<n>-` doc by its issue number** (the `gh_issue` key, else the `GH-<n>-` filename
+   prefix), never by a stored path, so moving a doc cannot break a reference. A stored path, such as the
+-  ledger's `doc_path`, is a cache that the completion sweep (see Lifecycle) repoints.
++  ledger's `doc_path`, is a cache that the completion sweep (see Lifecycle) repoints. **Decided policy,
++  not yet true of today's readers:** several still match stored paths (for example the roadmap coverage
++  check). They change in #1340 Task 10.
+ - `blank.md` placeholders are scaffolding and should be ignored by PDDA checks
+ 
+ ## Required contract for active docs
+@@ -293,6 +295,9 @@ Lifecycle:
+   2026-11-04). Filing an issue no longer means a row. The row, and the PRS rating stored on it, appear
+   at pickup: `jog add`, `start-task`, or promotion to `2-WORKING`. Until then the rating proposal lives
+   in the issue body.
++  - **The PRS appeal axis stays neutral 50 unless the operator supplies a value** (GH-1333 decision 5,
++    2026-11-04; unchanged practice). This is the 1-100 PRS rating stored on the ledger row
++    (`rated P/S/A/E`), not the 1-5 `effort` / `complexity` / `risk` / `phases` triage fields in frontmatter.
+   - **Selection counts as starting** (decision D-b): committing an issue to an actual execution batch or
+     marathon creates its row, on the primary checkout and before dispatch, or reuses an existing
+     proposal row and its rating. Ranking or shortlisting does not.
+@@ -543,9 +548,10 @@ Why warn-only + flag-only:
+ - every drift class here is mechanical, so the check carries zero false-judgment risk; a false flag is
+   one ignorable warn line and a missed flag just leaves today's manual reconciliation — both cheap, so
+   warn-only never-blocks is the right calibration (same stance as `pdda.sh stale` and `pdda.sh changelog`)
+-- closing an issue is a **human judgment** about whether the work is genuinely done, so no script does it.
+-  The `Stop` hook names the wrap (`/pdda-eod`) when this check reports reconciliation drift; the skill
+-  proposes, the operator confirms. Detect deterministically, act only with a yes.
++- this check is a **detector**: it never moves a file and never closes an issue. Closing belongs to the
++  merge step under the two conditions of GH-1333 decision 4 (see Lifecycle; not yet implemented, #1340
++  Task 7); anything outside those conditions stays a person's judgment. The `Stop` hook names the wrap
++  (`/pdda-eod`) when this check reports reconciliation drift, and the skill proposes what to reconcile.
+ 
+ #### I. `pdda.sh governance`
+ 
+@@ -1057,10 +1063,6 @@ updated **at the end of each iteration**. It is the one narrative/provenance log
+ prescribes — if an adopting repo kept its own ad hoc recap or run-observation notes before adopting
+ PDDA, `CHANGELOG.md` supersedes them; PDDA does not require or name any such file itself (Principle #4 —
+ one canonical place per fact). Durable Costly / one-way-door bets still earn a `decisions/` record.
+-updated **at the end of each iteration**. It supersedes the retired RECAP convention as the running
+-provenance/narrative log, and it also absorbs the run-specific compliance findings the retired
+-REAL-AGENT-OBSERVATIONS convention used to collect. Durable Costly / one-way-door bets still earn a
+-`decisions/` record.
+ 
+ It should contain:
+ 
+@@ -1079,8 +1081,6 @@ Maintained append-only:
+   recommendation** — *especially* not when it turned out wrong. Correct a past entry by appending a
+   dated correction, not by editing history. This append-only guarantee is the whole point of having one
+   canonical narrative log instead of scattered ad hoc notes.
+-  dated correction, not by editing history. This is the provenance guarantee the retired RECAP
+-  convention used to carry.
+ 
+ Recording a bet (when a change is consequential):
+ 
+@@ -1091,10 +1091,6 @@ Recording a bet (when a change is consequential):
+   separate run-specific compliance-observations doc if that's useful to it, but that's a local
+   convention this contract neither requires nor names. (`AGENTS.md` principle #7 supplies the
+   behavioral trigger — *record the bet*; this contract owns the *where and how*.)
+-  entry suffices. Durable bets also earn a `decisions/` record; run-specific compliance findings go in
+-  the iteration's own `CHANGELOG.md` entry. (`AGENTS.md` principle #7 supplies the behavioral trigger —
+-  *record the bet*; this contract owns the *where and how*, so governance is not fragmented across the
+-  two files.)
+ 
+ How this is enforced (a nudge, not a gate):
+ - **deterministic** — `pdda.sh changelog` **warns** (never `error`, so it never blocks —
+```
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

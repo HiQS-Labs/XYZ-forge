@@ -4,7 +4,8 @@
 
 - `PROJECT/PDDA.md` now records that the merge step closes an issue only under two conditions (a reviewed whole-issue assertion, or a non-empty Acceptance checklist fully checked), and otherwise leaves it open with one reason comment.
 - It records that a ledger row is created when work starts, not at filing: selection into an actual batch counts as starting (D-b), and the existing "Queue / parked intake" rows stay as proposals (D-a). Until the #1340 cutover lands, row-writing intake is not used for new unstarted work.
-- Corrects the Lifecycle sentence that sent a closed, never-actioned capture to `4-MISC` and removed its pointer; closed captures follow the `stateReason` sweep. Section H's "who closes" now points at decision 4, and the coverage rule mentions #1339's in-flight promotion case.
+- Decision 5 (the PRS appeal axis stays neutral 50 unless the operator sets it) is stated in PDDA.md, distinct from the 1-5 frontmatter triage fields.
+- Corrects the Lifecycle sentence that sent a closed, never-actioned capture to `4-MISC` and removed its pointer; closed captures follow the `stateReason` sweep. Section H is described as a detector, with closing pointed at decision 4. The "readers find docs by number" rule is marked as not yet true of today's readers (#1340 Task 10). The coverage rule mentions #1339's in-flight promotion case. Removes three duplicated older paragraphs in the CHANGELOG contract.
 - Policy only; no code changed. Decision record: `decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md`. Rule set with stable IDs: top of #1328. Rule-set review: Codex (GPT-6 Astra, medium), one round, nine findings accepted (`relay-system/2026-11-04/rules-sharpening-qa.md`).
 
 ## 2026-11-04 — GH-1341 todo-list and start-task close the loop on GitHub issues
