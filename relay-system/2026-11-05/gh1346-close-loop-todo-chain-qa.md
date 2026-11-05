@@ -124,4 +124,12 @@ swept file: yes — both artifacts re-read in full this round (close-the-loop 81
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-05T21:39:00Z
+task: RELAY-gh1346-close-loop-todo-chain-qa-r2
+reviewer: claude
+status: Approved
+reviewed-head: c3db79ff9bf4a14c55276a2f16f18422b148c632
+added-range: 12358+2055
+added-sha256: c59e59b58a0344e4278337906b0b76256a29e0b6adc61aed3f490594635eaa2b
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
