@@ -365,4 +365,12 @@ Evidence boundary: read the whole current PROJECT/PDDA.md, the complete embedded
 
 Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and subsequent gate.
 
+
+### Attestation · relay-drive — 2026-11-05T00:18:51Z
+task: RELAY-gh1340-task1-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: ac4c629b62f13bc8c553ff04384d2150ff0c1106
+added-range: 33701+3866
+added-sha256: 01e0ed50422534d3960e1c0f412b5a23b8d695f18ca9062195354883ee566647
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
