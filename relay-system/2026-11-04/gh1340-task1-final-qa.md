@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-04.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -218,5 +218,36 @@ index 00000000..d81df02f
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: Decision 5 is absent from the required canonical document, and the whole-file sweep found unresolved closure-policy and reader-rollout contradictions. The requested corrections are text-only; no runtime expansion is requested.
+swept file: yes
+
+Evidence boundary: read the entire embedded artifact and PROJECT/PDDA.md, the decision record, the new CHANGELOG entry, and the supplied rules relay including its Producer disposition. Inspected the four named implementation seams statically. Graph discovery returned "MCP tool call requires approval, but approval policy is never", so used direct source reads. No git, suites or executable fixtures ran. Runtime qualification is [Unverified — needs clone run]; the harness gate remains outstanding. The older CHANGELOG history was not audited as part of this task's embedded artifact.
+
+- [Should] **F1 — Put decision 5 in PDDA.md as required.** The decision record's item 5 says "neutral 50 unless the operator supplies a value", but PDDA contains no appeal rule. Its decision record also claims the canonical rule text is in PDDA, and the CHANGELOG title says decisions 4–6 are written into the rules. Add the unchanged appeal policy next to the PRS rating/pickup contract, explicitly distinguishing PRS appeal from the 1–5 frontmatter triage fields.
+  Observed input: `decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md:6` versus the missing decision in `PROJECT/PDDA.md`; read-only probe `rg -n -i 'appeal|neutral 50|decision 5|G5' PROJECT/PDDA.md` exited 1 with no output, corroborating the full-file read.
+  Affected scope: Task 1's explicit requirement that decisions 4–6 live in PDDA; no change to rating behavior.
+  Falsifier: a canonical PDDA sentence retaining appeal at neutral 50 unless the operator supplies a value would satisfy this finding; the decision record alone does not meet the stated DoD.
+
+- [Should] **F2 — Reconcile section H's old closure rationale with decision 4.** `PROJECT/PDDA.md:546-548` still says "closing an issue is a human judgment ... so no script does it" and "act only with a yes", while :329-336 assigns closure to the merge step under either of two conditions and :528-530 now points to that owner. Scope the rationale to the flag-only issue-doc-sync check; refer merge closure and its pending rollout to Lifecycle rather than retaining a blanket manual-approval requirement.
+  Observed input: the unconditional "no script does it" / "operator confirms" wording at :546-548 versus the new two-condition closure rule at :329-336.
+  Affected scope: readers deciding who may close an issue and whether an additional confirmation is required; preserve issue-doc-sync's no-close behavior.
+  Falsifier: H explicitly limits its no-action promise to the detector and delegates merge closure to decision 4, with no conflicting universal confirmation requirement.
+
+- [Should] **F3 — Mark the pre-existing identity-reader claim as pending.** `PROJECT/PDDA.md:49-51` promises readers resolve by issue identity, "never by a stored path, so moving a doc cannot break a reference". The new :1034-1037 fallback explicitly depends on the same basename. `utils/pdda/pdda.sh:357-360` matches stored path strings, and :389-390 requires the old inbox basename. Add the approved G2 qualification from the rules relay: this is decided policy pending reader rollout, not a statement that today's readers comply. Keep the accurate current fallback description.
+  Observed input: PDDA :49-51's universal claim versus the path-string coverage implementation at `utils/pdda/pdda.sh:357-360` and :389-390.
+  Affected scope: documentation of identity resolution during the pending rollout; no request to implement the reader fix in this policy-only task.
+  Falsifier: either an explicit pending-rollout qualification in the canonical identity rule or an identity-based implementation would remove this discrepancy; the latter belongs to the later implementation task.
+
+- [Pass] **The added current-behavior caveats and selection rules match the inspected seams.** PDDA :303-307 retains row-writing intake until cutover; `utils/hq/hq.sh:412` calls `roadmap add`, and `utils/pdda/pdda.sh:416-419` flags missing inbox coverage. PDDA :296-301 distinguishes actual batch commitment from shortlisting and preserves existing proposals/ratings, matching adopted G6b/G6a. PDDA :329-336 marks Task 7 pending and states the two alternatives without authorizing closure on mentions. No additional discrepancy found in these added rules; no fix requested.
+
+- [Pass] **The in-flight coverage addition describes the current implementation.** PDDA :1034-1037's same-name, absent-inbox condition matches `utils/pdda/pdda.sh:389-390`. `utils/py/jog_run.py:1524-1527` returns from the execution-clone branch before ledger repointing; `utils/py/wave_reconcile.py:2392-2397` preserves the open issue's active entry. This is source inspection, not runtime certification; no fix requested.
+
+- [Nit] **The sweep also found pre-existing duplicate CHANGELOG-contract prose.** PDDA :1060-1063, :1082-1083 and :1094-1097 repeat the preceding paragraphs, including a second sentence fragment beginning "updated" and "entry suffices". Remove those redundant tails while retaining the governing statements. This is not the reason for FAIL.
+
+Handing off to Producer (claude-a) — address F1–F3, disposition the nit, and return the policy text for review. STATUS remains Open.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
