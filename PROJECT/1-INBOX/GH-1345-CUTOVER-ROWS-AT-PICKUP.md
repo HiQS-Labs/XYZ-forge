@@ -46,7 +46,14 @@ One PR (P3), in #1340's order. Re-check every citation at the base where #1344 h
 
 ## Acceptance
 
-See #1345 (the checklist there is authoritative for G4).
+- [ ] No filing path inserts a `roadmap_items` row (red/green), and an inbox capture with no row passes coverage while an active doc without one fails.
+- [ ] A fresh pickup yields one genuinely rated row; a retried pickup changes nothing.
+- [ ] An unstarted, fully specified no-row issue is found and admitted through the normal path, and its row appears only at pickup.
+- [ ] A matching open issue is still surfaced before a new one is filed; repeated capture reuses the existing one; two pickups yield one row.
+- [ ] A valid proposal admits a no-row issue and becomes its stored rating at pickup; placeholders stay held.
+- [ ] #1298's supply step creates no rows.
+- [ ] `hq park --create` and `/file-xyz-bug` emit the `/idea` sections.
+- [ ] Existing suites pass on the final commit. No new test (GH-831).
 
 ## Risk and rollback
 

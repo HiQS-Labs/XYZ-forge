@@ -46,12 +46,12 @@ Build in #1340's order inside one PR. Extend existing code only; the citations b
 
 ## Acceptance
 
-- [ ] A doc moved between `PROJECT/` folders breaks none of the Task 10 readers (red on base, green on the PR), recorded.
-- [ ] One sweep run on a disposable clone clears stranded docs and stale `doc_path` values (before/after recorded); a closed, never-started capture moves without gaining a row.
+- [ ] A doc moved between `PROJECT/` folders breaks no reader that #1340 Task 10 lists (red on the base, green on the PR), recorded under `TESTS-RESULTS/`.
+- [ ] One sweep run on a disposable clone clears stranded docs and stale `doc_path` values (before/after recorded), and a closed, never-started capture moves without gaining a row.
 - [ ] A local Jog landing still finds its `SHIPPED … (PR #N)` badge after the sweep.
 - [ ] The sweep lists delivered-but-open candidates and closes nothing.
 - [ ] A one-phase partial delivery with neither proof stays open with one reason comment; either proof closes it (red/green).
-- [ ] The gate suites below pass on the final commit. No new test (GH-831).
+- [ ] Existing suites covering pdda, wave-reconcile and jog pass on the final commit. No new test (GH-831).
 
 ## Non-goals
 
