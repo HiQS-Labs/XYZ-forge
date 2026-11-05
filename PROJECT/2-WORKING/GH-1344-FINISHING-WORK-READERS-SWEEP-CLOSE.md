@@ -2,7 +2,7 @@
 gh_issue: 1344
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1344
 title: "GH-1340 item 1: finishing work (Tasks 10, 9, 8, 7)"
-status: proposed
+status: Active
 created: 2026-11-04
 owner: unassigned
 doc_type: feature
@@ -23,7 +23,7 @@ goal: >
   Docs are found by issue identity in every folder, one completion sweep files closed issues by
   stateReason without creating rows or closing issues, the sweep lists delivered-but-open
   candidates, and landing closes an issue only on a recorded whole-issue proof (G2, G3, G4).
-updated: 2026-11-04
+updated: 2026-11-05
 ---
 
 # GH-1340 item 1: finishing work (Tasks 10, 9, 8, 7)
