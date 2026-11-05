@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-04 — GH-1340 Task 1: GH-1333 decisions 4-6 written into the rules (policy only)
+
+- `PROJECT/PDDA.md` now records that the merge step closes an issue only under two conditions (a reviewed whole-issue assertion, or a non-empty Acceptance checklist fully checked), and otherwise leaves it open with one reason comment.
+- It records that a ledger row is created when work starts, not at filing: selection into an actual batch counts as starting (D-b), and the existing "Queue / parked intake" rows stay as proposals (D-a). Until the #1340 cutover lands, row-writing intake is not used for new unstarted work.
+- Corrects the Lifecycle sentence that sent a closed, never-actioned capture to `4-MISC` and removed its pointer; closed captures follow the `stateReason` sweep. Section H's "who closes" now points at decision 4, and the coverage rule mentions #1339's in-flight promotion case.
+- Policy only; no code changed. Decision record: `decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md`. Rule set with stable IDs: top of #1328. Rule-set review: Codex (GPT-6 Astra, medium), one round, nine findings accepted (`relay-system/2026-11-04/rules-sharpening-qa.md`).
+
 ## 2026-11-04 — GH-1341 todo-list and start-task close the loop on GitHub issues
 
 - `todo-list` has a new section 4, "Close the loop on GitHub". When a run ends, including on a halt or the 100-minute / 10-wake cap, it posts one comment to each issue the run touched. The comment covers what was done, the evidence, the decisions and why, what stays open, and the next step. A marker line (`<!-- todo-list closeout: <note-path> -->`) makes a rerun edit that comment instead of adding another. Tier A and B post with `gh` and record the URLs in the note; Tier C renders the text in chat to paste. A failed lookup or write is reported `unposted` or `unknown`, with no URL claimed. The step never closes or relabels an issue. Both run ends call it: section 3 step 4 and the watchdog wake prompt.
