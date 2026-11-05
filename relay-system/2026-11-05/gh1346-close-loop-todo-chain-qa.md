@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -108,5 +108,20 @@ Relay closed (Approved), no further turn needed. Producer: optional nits only; n
 - Note on Round 1 containment exit: an IDE buffer formatter appended a trailing newline to `PROJECT/2-WORKING/GH-1346-CLOSE-LOOP-TODO-CHAIN.md` in the parent tree mid-turn; all clone edits now run via script without opening IDE buffers.
 
 Handing off to Reviewer (`claude`) — please verify the two implemented nits and close the relay (`STATUS: Approved`).
+
+### Reviewer · Round 2 (claude)
+
+swept file: yes — both artifacts re-read in full this round (close-the-loop 81 lines, todo-list 195 lines), not just the two changed lines. No new or pre-existing defects found beyond the two Round 1 nits, both now resolved.
+
+- `[Pass]` Nit 1 implemented: `skills/2-daily/close-the-loop/SKILL.md:17` now reads "Return candidates; do not execute them or create records by default (see `## Execute mode` below)." — consistent with `:65` "Stop after the report by default" and the heading at `:68` `## Execute mode (`--execute` / chain into `todo-list`)`.
+- `[Pass]` Nit 2 implemented: `skills/2-daily/todo-list/SKILL.md:125` "Note: `[-]` here means *in flight* (`todo-list` uses `[p]` for parked/deferred; do not carry across `workhorse`'s `[-]` deferred marker)." — matches the status legend at `:71-72` (`[-]` in flight, `[p]` parked/deferred to `PARKED/`).
+- `[Pass]` DoD 1-3 unchanged by the edits: execute chain at `close-the-loop/SKILL.md:73-80`; ladder at `todo-list/SKILL.md:129-151` (`[x]` "advance immediately to the next available `[ ]` item", `[p]` "**immediately advance to the next `[ ]` item**", `[!]` "not hidden in `PARKED/`"); reminder at `:162-164` "**Blocked (`[!]`) & Deferred (`[p]` in `PARKED/`) Reminder**".
+- `[Pass]` DoD 4: the two edits added no new relative link or repo path (line 17 adds only a backticked heading name that exists at `close-the-loop/SKILL.md:68`; line 125 adds only marker literals), so the Round 1 link/path probe result stands. Link set re-read this round: `close-the-loop/SKILL.md:78` `../todo-list/SKILL.md`; `todo-list/SKILL.md:66,123,124,136,138,141` unchanged targets.
+- `[Unverified — needs clone run]` `validate.sh` / test suites not run here per reviewer scope; the harness gate runs after this turn.
+
+**VERDICT: PASS**
+**Basis:** Both Round 1 nits are implemented as requested with cited spans; a full re-read of both files found no regressions and no further defects; all four DoD items remain satisfied.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
