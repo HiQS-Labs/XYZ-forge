@@ -1068,18 +1068,111 @@ RECONCILE_FOLDERS = ("2-WORKING", "1-INBOX")
 
 
 def find_active_doc_for_issue(repo_root, issue_num):
-    """Find an issue's doc across the reconciled PROJECT folders (2-WORKING first)."""
-    for folder in RECONCILE_FOLDERS:
-        working_dir = os.path.join(repo_root, "PROJECT", folder)
-        if not os.path.isdir(working_dir):
+    """Resolve identity, not the ledger's cached path, across every lifecycle folder."""
+    candidates = []
+    for folder in ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC"):
+        directory = Path(repo_root, "PROJECT", folder)
+        if directory.is_dir():
+            candidates.extend(sorted(directory.glob("*.md")))
+    issue = str(int(issue_num))
+    for path in candidates:
+        if parse_doc_frontmatter(path).get("gh_issue", "").lstrip("#") == issue:
+            return str(path)
+    for path in candidates:
+        # An explicit different identity must not be overridden by a stale filename.
+        if parse_doc_frontmatter(path).get("gh_issue"):
             continue
-        for fname in sorted(os.listdir(working_dir)):
-            if not fname.endswith(".md"):
-                continue
-            # Match GH-123-*.md or 123-*.md
-            if re.match(rf"^(?:GH-)?{issue_num}-", fname, re.IGNORECASE):
-                return os.path.join(working_dir, fname)
+        if re.match(rf"^(?:GH-)?{issue}(?:-|\.md$)", path.name, re.IGNORECASE):
+            return str(path)
     return None
+
+
+def sweep_issue_docs(repo_root, apply=False, census=None):
+    journal = RollbackJournal(repo_root)
+    # Use the same common git directory lock as the normal reconciler.
+    dotgit = Path(repo_root, ".git")
+    gitdir = dotgit
+    if dotgit.is_file():
+        gitdir = (Path(repo_root) / dotgit.read_text().strip().removeprefix("gitdir: ")).resolve()
+        common = gitdir / "commondir"
+        if common.is_file():
+            gitdir = (gitdir / common.read_text().strip()).resolve()
+    try:
+        with ReconcilerLock(str(gitdir / "wave-reconcile.lock")):
+            _sweep_issue_docs(repo_root, apply, census, journal)
+    except Exception:
+        if apply and journal.changed():
+            journal.rollback()
+        raise
+    finally:
+        journal.cleanup()
+
+
+def _sweep_issue_docs(repo_root, apply=False, census=None, journal=None):
+    """File closed docs and refresh existing pointers; never create rows or close issues.
+
+    A census is harness.py's recorded manifest (its delivered map is report-only).
+    Unknown reasons and destination collisions are reported without moving the doc.
+    """
+    from releases_app import resolve_roadmap_identity, read_issue_closure_state
+    slug = github_slug_from_origin(repo_root)
+    if not slug:
+        die("Cannot qualify completion sweep against the root repository", code=6)
+    rows = ledger_rows(repo_root, "SELECT * FROM roadmap_items")
+    repos = {r["id"]: r["slug"] for r in ledger_rows(repo_root, "SELECT id,slug FROM repos")}
+    owned = [r for r in rows if (identity := resolve_roadmap_identity(r, repos, slug))["identity_valid"]
+             and identity["repo"] == slug]
+    documents = {}
+    for folder in ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC"):
+        for path in sorted(Path(repo_root, "PROJECT", folder).glob("*.md")):
+            num = parse_doc_frontmatter(path).get("gh_issue", "").lstrip("#")
+            if not num.isdigit():
+                match = re.match(r"^GH-(\d+)(?:-|\.md$)", path.name, re.I)
+                num = match[1] if match else ""
+            if num.isdigit():
+                documents.setdefault(int(num), []).append(path)
+    delivered = {}
+    if census:
+        data = json.loads(Path(census).read_text(encoding="utf-8"))
+        delivered = data["delivered"]
+        if not isinstance(delivered, dict):
+            die("Census delivered map must be an object")
+    for number in sorted(set(documents) | {int(n) for n in delivered}):
+        try:
+            issue = read_issue_closure_state(repo_root, f"https://github.com/{slug}/issues/{number}")
+        except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
+            die(f"Issue #{number} state unavailable: {exc}")
+        if issue["state"] == "OPEN" and str(number) in delivered:
+            log(f"delivered-but-open: GH-{number} PRs {delivered[str(number)]}; report only")
+        paths = documents.get(number, [])
+        if len(paths) != 1:
+            if paths:
+                log(f"SKIPPED GH-{number}: ambiguous issue documents")
+            continue
+        source = paths[0]
+        destination = source
+        if issue["state"] == "CLOSED":
+            folder = {"COMPLETED": "3-COMPLETED", "NOT_PLANNED": "4-MISC"}.get(issue.get("stateReason"))
+            if not folder:
+                log(f"SKIPPED GH-{number}: unknown closure reason {issue.get('stateReason')!r}")
+                continue
+            destination = Path(repo_root, "PROJECT", folder, source.name)
+        if source != destination:
+            if destination.exists():
+                log(f"SKIPPED GH-{number}: destination already exists")
+                continue
+            log(f"{'move' if apply else 'would move'}: {source.relative_to(repo_root)} -> {destination.relative_to(repo_root)}")
+            if apply:
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                journal.snapshot(source)
+                journal.track_created(destination)
+                source.rename(destination)
+        relative = str(destination.relative_to(repo_root))
+        for row in owned:
+            if row["gh_number"] == number and row["doc_path"] != relative:
+                # repoint preserves raw_text (including SHIPPED ... (PR #N)), ratings and section.
+                ledger_write(repo_root, ["roadmap", "repoint", "--gid", row["global_id"],
+                                        "--doc-path", relative], dry_run=not apply, journal=journal)
 
 
 def parse_doc_frontmatter(doc_path):
@@ -2221,7 +2314,16 @@ def main():
                              "run qualifies them); an explicit --pr/--commit without a receipt fails closed. "
                              "Requires --catch-up --qualify.")
 
+    parser.add_argument("--issue-doc-sweep", action="store_true", help="Preview completion filing and cached pointer repair")
+    parser.add_argument("--fix", action="store_true", help="Apply issue-doc sweep moves and existing-row repoints")
+    parser.add_argument("--census", help="Recorded harness census whose delivered map is reported, never closed")
     args = parser.parse_args()
+    if args.issue_doc_sweep:
+        sweep_issue_docs(os.path.abspath(args.root) if args.root else resolve_repo_root(),
+                         apply=args.fix, census=args.census)
+        return
+    if args.fix or args.census:
+        parser.error("--fix and --census require --issue-doc-sweep")
     if args.qualify and (not args.require_receipts or args.dry_run or args.offline or args.allow_dirty or args.pre_merge):
         parser.error("--qualify requires --gate and a live, clean, non-preview post-merge checkout")
     if args.promotion and not (args.catch_up and args.qualify):

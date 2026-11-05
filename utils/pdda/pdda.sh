@@ -358,6 +358,18 @@ check_roadmap_coverage() {
     [ "$releases_mode" -eq 0 ] && [ -f "$PDDA_ROADMAP" ] && grep -Fq "$1" "$PDDA_ROADMAP" && return 0
     [ -n "$db_doc_paths" ] && grep -Fq "$1" <<<"$db_doc_paths" && return 0
     [ -n "$db_raw_texts" ] && grep -Fq "$1" <<<"$db_raw_texts" && return 0
+    # doc_path is a cache: compare the issue identity after lifecycle moves/renames.
+    local issue cached resolved
+    issue="$(_pdda_doc_issue_number "$PDDA_REPO_ROOT/$1")"
+    if [ -n "$issue" ]; then
+      resolved="$(_pdda_find_doc_for_issue "$issue")" || return 1
+      [ "$resolved" = "$PDDA_REPO_ROOT/$1" ] || return 1
+      if [ "$db_ledger_ready" -eq 1 ] && sqlite3 -readonly "$PDDA_REPO_ROOT/releases.db" \
+          "SELECT 1 FROM roadmap_items WHERE gh_number=$issue LIMIT 1" | grep -qx 1; then return 0; fi
+      while IFS= read -r cached; do
+        case "$(basename "$cached")" in GH-"$issue"-*.md|GH-"$issue".md) return 0 ;; esac
+      done < <(printf '%s\n' "$db_doc_paths"; [ ! -f "$PDDA_ROADMAP" ] || grep -oE 'PROJECT/[^ )]+\.md' "$PDDA_ROADMAP")
+    fi
     return 1
   }
 
@@ -579,6 +591,27 @@ _pdda_doc_issue_number() {
     GH-[0-9]*) num="${base#GH-}"; num="${num%.md}"; num="${num%%-*}"   # strip .md first so a bare GH-<n>.md (no description) still resolves
       if printf '%s' "$num" | grep -Eq '^[0-9]+$'; then printf '%s' "$num"; fi ;;
   esac
+}
+
+# Resolve a cached PROJECT pointer by issue identity across all lifecycle folders.
+_pdda_find_doc_for_issue() {
+  local num="$1" folder file declared
+  for folder in 2-WORKING 1-INBOX 3-COMPLETED 4-MISC; do
+    for file in "$PDDA_REPO_ROOT/PROJECT/$folder/"*.md; do
+      [ -f "$file" ] || continue
+      declared="$(pdda_trim "$(pdda_frontmatter_value "$file" gh_issue)")"
+      declared="${declared//\"/}"; declared="${declared//\'/}"; declared="${declared#\#}"
+      if [ "$declared" = "$num" ]; then printf '%s\n' "$file"; return 0; fi
+    done
+  done
+  for folder in 2-WORKING 1-INBOX 3-COMPLETED 4-MISC; do
+    for file in "$PDDA_REPO_ROOT/PROJECT/$folder/"*.md; do
+      [ -f "$file" ] || continue
+      [ -z "$(pdda_frontmatter_value "$file" gh_issue)" ] || continue
+      if [ "$(_pdda_doc_issue_number "$file")" = "$num" ]; then printf '%s\n' "$file"; return 0; fi
+    done
+  done
+  return 1
 }
 
 # Leading alphabetic word of a doc's status (lowercased): "Active — Phase 0 complete" -> "active";
@@ -1775,7 +1808,7 @@ Commands:
   roadmap-coverage   nothing active goes MISSING from ROADMAP.md
   changelog          end-of-iteration changelog nudge (warn-only)
   stale              flag stale working docs (flag-only; never moves)
-  issue-doc-sync     flag 2-WORKING/GH-*.md docs drifted from their GitHub issue state (warn-only)
+  issue-doc-sync     report drift; --fix files COMPLETED/NOT_PLANNED docs; --census JSON reports delivered-but-open
   releases           validate RELEASES.md — the release-planning ledger (warn-only nudge)
   releases-current   read-only roll-up: active releases from releases.db (or legacy RELEASES.md) (rough, unvalidated)
   governance         repo-root governance-doc (ROUTER/AGENTS/CLAUDE/...) cross-reference + doc/code drift
@@ -1803,7 +1836,13 @@ case "$cmd" in
   roadmap-coverage) check_roadmap_coverage; exit "$?" ;;
   changelog)        check_changelog; exit "$?" ;;
   stale)            check_stale; exit "$?" ;;
-  issue-doc-sync)   check_issue_doc_sync; exit "$?" ;;
+  issue-doc-sync)
+    if [ "$#" -gt 0 ]; then
+      python3 -B "$HERE/../py/wave_reconcile.py" --root "$PDDA_REPO_ROOT" --issue-doc-sweep "$@"
+    else
+      check_issue_doc_sync
+    fi
+    exit "$?" ;;
   releases)         check_releases; exit "$?" ;;
   releases-current) cmd_releases_current; exit "$?" ;;
   governance)       check_governance; exit "$?" ;;

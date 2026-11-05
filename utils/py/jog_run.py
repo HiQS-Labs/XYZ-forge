@@ -504,9 +504,9 @@ def _marathon_argv_from_invocation(invocation, builder, reviewer):
         argv.remove("--require-clean")
     if "--phase-id" not in argv and invocation.get("phase"):
         argv += ["--phase-id", invocation["phase"]]
-    # GH-1234: a Jog item is one issue in one phase, so its lane PR closes the issue.
-    if invocation.get("issue") and "--lane-closes-issue" not in argv:
-        argv.append("--lane-closes-issue")
+    # A one-phase lane is not proof of whole-issue delivery (GH-1344).
+    while "--lane-closes-issue" in argv:
+        argv.remove("--lane-closes-issue")
     return argv
 
 
@@ -1137,6 +1137,48 @@ def _landing_tail_proof(root, approved, head, integration, bundle):
     return list(reversed(proof))
 
 
+def _close_delivered_issue(root, gh_num, pr_number, head, receipt):
+    """Close only with whole-issue proof; otherwise leave one stable reason comment."""
+    slug = github_slug_from_origin(root)
+    if not slug:
+        raise ContractError("cannot qualify landing issue repository")
+    command = ["gh", "issue", "view", str(gh_num), "--repo", slug,
+               "--json", "state,body,comments"]
+    result = subprocess.run(command, cwd=root, capture_output=True, text=True)
+    if result.returncode:
+        raise ContractError("could not read landing issue proof: " + result.stderr.strip())
+    issue = json.loads(result.stdout)
+    if issue.get("state") == "CLOSED":
+        return
+    if issue.get("state") != "OPEN":
+        raise ContractError("invalid landing issue state")
+    body = re.sub(r"```.*?```|~~~.*?~~~", "", issue.get("body") or "", flags=re.S)
+    body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
+    section = re.search(r"^## Acceptance[^\n]*\n(.*?)(?=^#{1,2} |\Z)", body, re.M | re.S)
+    checks = re.findall(r"^\s*[-*] \[([ xX])\]\s+\S", section[1], re.M) if section else []
+    complete = bool(checks) and all(c.lower() == "x" for c in checks)
+    # This assertion must be recorded by the independent review producer, tied to this head
+    # and issue. Lane-closing intent and an ordinary gate receipt are never coverage proof.
+    coverage = receipt.get("whole_issue_coverage") or {}
+    independent = (isinstance(coverage, dict) and coverage.get("issue") == gh_num
+                   and coverage.get("head_sha") == head and coverage.get("covers_whole_issue") is True
+                   and bool(coverage.get("reviewer")) and bool(coverage.get("evidence_path"))
+                   and coverage.get("reviewer") != receipt.get("builder"))
+    if complete or independent:
+        command = ["gh", "issue", "close", str(gh_num), "--repo", slug]
+    else:
+        marker = f"<!-- jog-delivered-open:{gh_num} -->"
+        if any((c.get("body") or "").splitlines()[:1] == [marker]
+               for c in issue.get("comments", [])):
+            return
+        reason = "Acceptance checklist is absent, empty or incomplete and no independent whole-issue coverage assertion is recorded"
+        command = ["gh", "issue", "comment", str(gh_num), "--repo", slug, "--body",
+                   f"{marker}\ndelivered, left open because {reason}. Delivery: PR #{pr_number}."]
+    result = subprocess.run(command, cwd=root, capture_output=True, text=True)
+    if result.returncode:
+        raise ContractError("could not record issue landing disposition: " + result.stderr.strip())
+
+
 def jog_land(root, gh_num, pr_arg=None):
     """Land committed evidence in the primary after hosted lifecycle reconciliation.
 
@@ -1226,6 +1268,7 @@ def jog_land(root, gh_num, pr_arg=None):
                 f"wave_reconcile.py --pr {pr_number} locally (GH-1127) or dispatch the hosted lane")
         if len(rows) != 1:
             raise ContractError("landing requires exactly one canonical Jog queue row")
+        _close_delivered_issue(root, gh_num, int(pr_number), head, receipt)
     except (ContractError, OSError, ValueError, KeyError, sqlite3.Error) as exc:
         print(f"jog: refusing to land GH-{gh_num}: {exc}", file=sys.stderr)
         return 2
@@ -1341,17 +1384,9 @@ def lint_probe(root, probe_cmd):
 
 
 def find_issue_doc(root, gh_num):
-    """Find the capture/working doc associated with an issue number."""
-    patterns = [
-        os.path.join(root, "PROJECT", "2-WORKING", f"GH-{gh_num}-*.md"),
-        os.path.join(root, "PROJECT", "1-INBOX", f"GH-{gh_num}-*.md"),
-        os.path.join(root, "PROJECT", "3-COMPLETED", f"GH-{gh_num}-*.md"),
-    ]
-    for pat in patterns:
-        matches = glob.glob(pat)
-        if matches:
-            return matches[0]
-    return None
+    """Use reconciliation's canonical issue identity resolver."""
+    from wave_reconcile import find_active_doc_for_issue
+    return find_active_doc_for_issue(root, gh_num)
 
 
 def extract_probes_from_doc(doc_path):

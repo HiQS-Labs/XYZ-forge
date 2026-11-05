@@ -1,6 +1,6 @@
 # Marathon Phase gh-1344-finishing-work-readers-sweep-close
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1344-FINISHING-WORK-READERS-SWEEP-CLOSE-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -110,3 +110,26 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+Implemented within the four runtime artifacts:
+
+- `wave_reconcile.py`: identity-first lookup across all four PROJECT folders, with filename fallback only when explicit frontmatter does not contradict it. Added completion sweep, destination-collision refusal, unknown-reason reporting, existing-row-only repoints, census delivered-map report, reconciler lock and rollback journal.
+- `releases_app.py`: extracted the existing live `state,stateReason` lookup so the ledger reconciler and completion sweep share it.
+- `pdda.sh`: added Bash identity resolution and identity-based coverage for cached pointers; `issue-doc-sync --fix` delegates filing to the reconciler, `--census <manifest>` reports delivered-but-open candidates. The old 1-INBOX fallback is logically subsumed by identity coverage but retained for unnumbered/legacy compatibility. No sweep path closes issues or rewrites shipping badges.
+- `jog_run.py`: uses the shared Python resolver, removes automatic lane-closing intent, and adds close disposition based on nonempty fully checked Acceptance or recorded `whole_issue_coverage` in the committed receipt (issue/head/independent reviewer/evidence path). Otherwise emits one first-line-marker reason comment. HTML comments and fenced code are excluded from checklist proof.
+
+Verification: Python AST parsing and Bash syntax passed. Isolated manual probes under `.relay-scratch/gh1344-probe.py` passed; output is `.relay-scratch/gh1344-probe.log`. The identity red control reconstructs the original active-folder/filename lookup and misses a moved/renamed doc; candidate and Jog resolve it. Mocked sweep checks COMPLETED routing, unknown-reason refusal, delivered reporting and no row creation. Mocked close checks incomplete vs checked Acceptance and independent coverage. No project suites/gates or git commands were run. These scratch probes are ephemeral, not committed acceptance evidence.
+
+**Not acceptance-complete; reviewer attention required:**
+
+1. The planner and path-integrity reader are outside the supplied artifact allowlist; they have not been routed through the resolver. `TESTS-RESULTS/` is also outside the allowlist, so the required committed acceptance/provenance witnesses could not be written.
+2. Jog's existing SHIPPED reconciliation prerequisite precedes the new close disposition. For an open issue without that badge, landing still refuses before it can close; end-to-end merge-cleanup ordering needs review rather than claiming the mocked close helper establishes landing success. The merge-cleanup consumer is outside this lane.
+3. The independent coverage assertion needs its producing review workflow to record the documented receipt fields; this turn adds the consumer only. Existing final-commit suites and actual landing/sweep witnesses remain for the harness/orchestrator.
+4. No incidental work, new tests, or test registry machinery was added. The graph tool was attempted but denied because it requires approval under a never-approval session; source reads were the fallback.
+
+Reversibility: Costly for lifecycle/closure behavior; moves are journaled on failure and existing ledger repoints preserve raw text and shipping badges. Roll back the runtime change if the gate or independent review finds lifecycle regressions. Do not mark the phase Approved from these focused mocks alone.
+
+Handing off to agy for review and concrete follow-up on the remaining integration limits.
