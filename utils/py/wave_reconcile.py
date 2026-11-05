@@ -1067,10 +1067,10 @@ def extract_linked_issues(pr_meta, repo_slug=None):
 RECONCILE_FOLDERS = ("2-WORKING", "1-INBOX")
 
 
-def find_active_doc_for_issue(repo_root, issue_num):
+def find_issue_doc(repo_root, issue_num, folders=None):
     """Resolve identity, not the ledger's cached path, across every lifecycle folder."""
     candidates = []
-    for folder in ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC"):
+    for folder in (folders if folders is not None else ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC")):
         directory = Path(repo_root, "PROJECT", folder)
         if directory.is_dir():
             candidates.extend(sorted(directory.glob("*.md")))
@@ -1080,11 +1080,17 @@ def find_active_doc_for_issue(repo_root, issue_num):
             return str(path)
     for path in candidates:
         # An explicit different identity must not be overridden by a stale filename.
-        if parse_doc_frontmatter(path).get("gh_issue"):
+        if "gh_issue" in parse_doc_frontmatter(path):
             continue
         if re.match(rf"^(?:GH-)?{issue}(?:-|\.md$)", path.name, re.IGNORECASE):
             return str(path)
     return None
+
+
+
+def find_active_doc_for_issue(repo_root, issue_num):
+    """Lifecycle writers may only mutate active documents."""
+    return find_issue_doc(repo_root, issue_num, RECONCILE_FOLDERS)
 
 
 def sweep_issue_docs(repo_root, apply=False, census=None):
@@ -1126,53 +1132,66 @@ def _sweep_issue_docs(repo_root, apply=False, census=None, journal=None):
     for folder in ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC"):
         for path in sorted(Path(repo_root, "PROJECT", folder).glob("*.md")):
             num = parse_doc_frontmatter(path).get("gh_issue", "").lstrip("#")
-            if not num.isdigit():
+            if not num and "gh_issue" not in parse_doc_frontmatter(path):
                 match = re.match(r"^GH-(\d+)(?:-|\.md$)", path.name, re.I)
                 num = match[1] if match else ""
             if num.isdigit():
                 documents.setdefault(int(num), []).append(path)
     delivered = {}
-    if census:
+    if census is True:
+        log("No census manifest supplied; delivered-but-open report has no candidates")
+    if census and census is not True:
         data = json.loads(Path(census).read_text(encoding="utf-8"))
         delivered = data["delivered"]
         if not isinstance(delivered, dict):
             die("Census delivered map must be an object")
     for number in sorted(set(documents) | {int(n) for n in delivered}):
-        try:
-            issue = read_issue_closure_state(repo_root, f"https://github.com/{slug}/issues/{number}")
-        except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
-            die(f"Issue #{number} state unavailable: {exc}")
-        if issue["state"] == "OPEN" and str(number) in delivered:
-            log(f"delivered-but-open: GH-{number} PRs {delivered[str(number)]}; report only")
         paths = documents.get(number, [])
-        if len(paths) != 1:
-            if paths:
-                log(f"SKIPPED GH-{number}: ambiguous issue documents")
+        if len(paths) > 1:
+            log(f"SKIPPED GH-{number}: ambiguous issue documents")
             continue
-        source = paths[0]
+        source = paths[0] if paths else None
+        archived = source is not None and source.parent.name in ("3-COMPLETED", "4-MISC")
+        # Archived pointers are a local cache repair; do not re-query hundreds of terminal docs.
+        issue = None
+        needs_section = any(row["gh_number"] == number and row["section"] not in
+                            ("Completed", "Deferred · vision") for row in owned)
+        if not archived or needs_section or str(number) in delivered:
+            try:
+                issue = read_issue_closure_state(repo_root, f"https://github.com/{slug}/issues/{number}")
+            except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
+                die(f"Issue #{number} state unavailable: {exc}")
+        if issue and issue["state"] == "OPEN" and str(number) in delivered:
+            log(f"delivered-but-open: GH-{number} PRs {delivered[str(number)]}; report only")
+        if source is None:
+            continue
         destination = source
-        if issue["state"] == "CLOSED":
+        terminal_section = None
+        if issue and issue["state"] == "CLOSED":
             folder = {"COMPLETED": "3-COMPLETED", "NOT_PLANNED": "4-MISC"}.get(issue.get("stateReason"))
             if not folder:
                 log(f"SKIPPED GH-{number}: unknown closure reason {issue.get('stateReason')!r}")
-                continue
-            destination = Path(repo_root, "PROJECT", folder, source.name)
+            else:
+                if not archived:
+                    destination = Path(repo_root, "PROJECT", folder, source.name)
+                terminal_section = "Completed" if folder == "3-COMPLETED" else "Deferred · vision"
         if source != destination:
             if destination.exists():
                 log(f"SKIPPED GH-{number}: destination already exists")
                 continue
             log(f"{'move' if apply else 'would move'}: {source.relative_to(repo_root)} -> {destination.relative_to(repo_root)}")
-            if apply:
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                journal.snapshot(source)
-                journal.track_created(destination)
-                source.rename(destination)
+            validate_and_update_doc(str(source), {}, is_merged=terminal_section == "Completed",
+                                    dry_run=not apply, journal=journal)
         relative = str(destination.relative_to(repo_root))
         for row in owned:
             if row["gh_number"] == number and row["doc_path"] != relative:
                 # repoint preserves raw_text (including SHIPPED ... (PR #N)), ratings and section.
                 ledger_write(repo_root, ["roadmap", "repoint", "--gid", row["global_id"],
                                         "--doc-path", relative], dry_run=not apply, journal=journal)
+            if row["gh_number"] == number and terminal_section and row["section"] != terminal_section:
+                # Section-only update preserves shipping badges, ratings and raw text.
+                ledger_write(repo_root, ["roadmap", "move", "--gid", row["global_id"],
+                                        "--section", terminal_section], dry_run=not apply, journal=journal)
 
 
 def parse_doc_frontmatter(doc_path):
@@ -2155,25 +2174,9 @@ def run_pre_merge(repo_root, args):
     errors = []
 
     for issue_num in closers:
-        working_dir = os.path.join(repo_root, "PROJECT", "2-WORKING")
-        matches = []
-        if os.path.isdir(working_dir):
-            for fname in sorted(os.listdir(working_dir)):
-                if fname.endswith(".md") and re.match(rf"^(?:GH-)?{issue_num}-", fname, re.IGNORECASE):
-                    matches.append(os.path.join(working_dir, fname))
-        if len(matches) > 1:
-            errors.append(f"Ambiguous active doc match for issue #{issue_num}: {', '.join(os.path.basename(m) for m in matches)}")
-        elif len(matches) == 1:
-            target_docs.add(matches[0])
-        else:
-            completed_dir = os.path.join(repo_root, "PROJECT", "3-COMPLETED")
-            comp_matches = [
-                os.path.join(completed_dir, f)
-                for f in sorted(os.listdir(completed_dir))
-                if f.endswith(".md") and re.match(rf"^(?:GH-)?{issue_num}-", f, re.IGNORECASE)
-            ] if os.path.isdir(completed_dir) else []
-            if comp_matches:
-                target_docs.add(comp_matches[0])
+        doc_path = find_issue_doc(repo_root, issue_num)
+        if doc_path:
+            target_docs.add(doc_path)
 
     for d in diff_docs:
         if os.path.isfile(d):
@@ -2221,6 +2224,42 @@ def run_pre_merge(repo_root, args):
     log("Pre-merge validation PASSED! ✅")
     sys.exit(0)
 
+
+
+def reconcile_delivered_issue(repo_root, issue_num, pr_number, base="development", dry_run=False):
+    """Finish one already-verified Jog delivery without re-running a whole wave.
+
+    The surrounding merge-cleanup batch owns uncommitted reconciliation writes. Snapshot
+    that state, use the normal reconciler lock and writers, and never pull over the batch.
+    A reference alone is insufficient: this path requires a positively CLOSED issue.
+    """
+    journal = RollbackJournal(repo_root)
+    try:
+        with ReconcilerLock(os.path.join(repo_root, ".git", "wave-reconcile.lock")):
+            slug = github_slug_from_origin(repo_root)
+            meta = fetch_pr_metadata(repo_root, str(pr_number))
+            closers, mentions = extract_linked_issues(meta, repo_slug=slug)
+            if (not slug or meta.get("state") != "MERGED" or meta.get("baseRefName") != base
+                    or issue_num not in closers + mentions
+                    or fetch_issue_state(repo_root, issue_num) != "CLOSED"):
+                die("Jog delivery closeout requires a merged PR referencing the CLOSED issue", code=6)
+            doc = find_active_doc_for_issue(repo_root, issue_num)
+            if doc:
+                doc, ship_date = validate_and_update_doc(doc, meta, dry_run=dry_run, journal=journal)
+            else:
+                doc = find_issue_doc(repo_root, issue_num)
+                ship_date = (meta.get("mergedAt") or datetime.now().isoformat())[:10]
+            ship_manifest_items(repo_root, issue_num, meta, slug, dry_run, journal)
+            update_roadmap_entry(repo_root, issue_num, landing_label(meta), ship_date,
+                                 dry_run=dry_run, journal=journal,
+                                 doc_path=os.path.relpath(doc, repo_root) if doc else None,
+                                 repo_slug=slug)
+    except BaseException:
+        if not dry_run and journal.changed():
+            journal.rollback()
+        raise
+    finally:
+        journal.cleanup()
 
 def main():
     parser = argparse.ArgumentParser(
@@ -2314,10 +2353,16 @@ def main():
                              "run qualifies them); an explicit --pr/--commit without a receipt fails closed. "
                              "Requires --catch-up --qualify.")
 
+    parser.add_argument("--delivered-issue", type=int,
+                        help="Jog post-proof closeout: reconcile one CLOSED issue referenced by the merged PR")
     parser.add_argument("--issue-doc-sweep", action="store_true", help="Preview completion filing and cached pointer repair")
     parser.add_argument("--fix", action="store_true", help="Apply issue-doc sweep moves and existing-row repoints")
-    parser.add_argument("--census", help="Recorded harness census whose delivered map is reported, never closed")
+    parser.add_argument("--census", nargs="?", const=True, help="Recorded harness census whose delivered map is reported, never closed")
     args = parser.parse_args()
+    if args.delivered_issue and (not args.pr or len(args.pr) != 1 or args.marathon or args.manifest
+                                 or args.catch_up or args.commit or args.pre_merge
+                                 or args.issue_doc_sweep or args.force_promote or args.offline):
+        parser.error("--delivered-issue requires a single live --pr post-merge reconciliation")
     if args.issue_doc_sweep:
         sweep_issue_docs(os.path.abspath(args.root) if args.root else resolve_repo_root(),
                          apply=args.fix, census=args.census)
@@ -2332,6 +2377,11 @@ def main():
         parser.error("--only-receipted requires --catch-up --qualify (it is the hosted publish step's bounded retry)")
 
     repo_root = os.path.abspath(args.root) if args.root else resolve_repo_root()
+
+    if args.delivered_issue:
+        reconcile_delivered_issue(repo_root, args.delivered_issue, args.pr[0], args.base,
+                                  dry_run=args.dry_run)
+        return
 
     if args.pre_merge:
         try:

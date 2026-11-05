@@ -586,6 +586,7 @@ _pdda_doc_issue_number() {
   case "$num" in \"*\") num="${num#\"}"; num="${num%\"}" ;; \'*\') num="${num#\'}"; num="${num%\'}" ;; esac
   num="${num#\#}"
   if printf '%s' "$num" | grep -Eq '^[0-9]+$'; then printf '%s' "$num"; return; fi
+  [ -z "$num" ] || return 0  # explicit nonnumeric identity opts out of filename fallback
   base="$(basename "$file")"
   case "$base" in
     GH-[0-9]*) num="${base#GH-}"; num="${num%.md}"; num="${num%%-*}"   # strip .md first so a bare GH-<n>.md (no description) still resolves
@@ -596,16 +597,16 @@ _pdda_doc_issue_number() {
 # Resolve a cached PROJECT pointer by issue identity across all lifecycle folders.
 _pdda_find_doc_for_issue() {
   local num="$1" folder file declared
-  for folder in 2-WORKING 1-INBOX 3-COMPLETED 4-MISC; do
-    for file in "$PDDA_REPO_ROOT/PROJECT/$folder/"*.md; do
+  for folder in "$PDDA_WORKING_DIR" "$PDDA_INBOX_DIR" "$PDDA_COMPLETED_DIR" "$PDDA_MISC_DIR"; do
+    for file in "$folder/"*.md; do
       [ -f "$file" ] || continue
       declared="$(pdda_trim "$(pdda_frontmatter_value "$file" gh_issue)")"
       declared="${declared//\"/}"; declared="${declared//\'/}"; declared="${declared#\#}"
       if [ "$declared" = "$num" ]; then printf '%s\n' "$file"; return 0; fi
     done
   done
-  for folder in 2-WORKING 1-INBOX 3-COMPLETED 4-MISC; do
-    for file in "$PDDA_REPO_ROOT/PROJECT/$folder/"*.md; do
+  for folder in "$PDDA_WORKING_DIR" "$PDDA_INBOX_DIR" "$PDDA_COMPLETED_DIR" "$PDDA_MISC_DIR"; do
+    for file in "$folder/"*.md; do
       [ -f "$file" ] || continue
       [ -z "$(pdda_frontmatter_value "$file" gh_issue)" ] || continue
       if [ "$(_pdda_doc_issue_number "$file")" = "$num" ]; then printf '%s\n' "$file"; return 0; fi
@@ -671,7 +672,7 @@ check_issue_doc_sync() {
       target="$PDDA_COMPLETED_DIR/$(basename "$file")"
       rel_target="$(pdda_relpath "$target")"
       pdda_record_finding warn "$CHECK_NAME" "$file" 1 \
-        "issue #$num is CLOSED but the doc is still in 2-WORKING — recommend: git mv $(pdda_relpath "$file") $rel_target" \
+        "issue #$num is CLOSED but the doc is still in an active folder — recommend: git mv $(pdda_relpath "$file") $rel_target" \
         "move-to-completed"
       continue                            # closed-issue drift dominates; skip the (b) test
     fi
@@ -691,7 +692,7 @@ check_issue_doc_sync() {
         "doc status declares it is ready to close but issue #$num is still OPEN — recommend: git mv to 3-COMPLETED, then gh issue close $num" \
         "reconcile-status"
     fi
-  done < <(pdda_list_working_docs)
+  done < <(pdda_list_working_docs; for file in "$PDDA_INBOX_DIR/"*.md; do [ ! -f "$file" ] || printf '%s\n' "$file"; done)
 
   # --- (2) completed plans: PROJECT/3-COMPLETED ----------------------------------------------------
   # A doc that reached 3-COMPLETED IS the operator's assertion that the work is done — recorded in a
@@ -744,6 +745,20 @@ check_issue_doc_sync() {
         fi
       done <<< "$roadmap_rows"
     fi
+  fi
+
+  if [ -f "$PDDA_REPO_ROOT/releases.db" ] && command -v sqlite3 >/dev/null 2>&1; then
+    local cached resolved
+    while IFS=$'\t' read -r num cached; do
+      [ -n "$num" ] || continue
+      resolved="$(_pdda_find_doc_for_issue "$num")" || continue
+      if [ "$cached" != "$(pdda_relpath "$resolved")" ]; then
+        pdda_record_finding warn "$CHECK_NAME" "$PDDA_REPO_ROOT/releases.db" 0 \
+          "issue #$num cached doc_path '$cached' differs from $(pdda_relpath "$resolved") — run: issue-doc-sync --fix" \
+          "repoint-doc-path"
+      fi
+    done < <(sqlite3 -readonly -separator $'\t' "$PDDA_REPO_ROOT/releases.db" \
+      "SELECT gh_number, COALESCE(doc_path,'') FROM roadmap_items WHERE gh_number IS NOT NULL" 2>/dev/null)
   fi
 
   pdda_emit_summary "$CHECK_NAME" "$rc"

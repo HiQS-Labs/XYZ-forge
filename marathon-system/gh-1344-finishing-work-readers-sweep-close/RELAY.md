@@ -174,3 +174,27 @@ Read `utils/pdda/pdda.sh` (1–1855), `utils/py/wave_reconcile.py` (1–2629), `
 **Verdict:** Changes requested
 
 handing off to codex — codex, take your turn
+
+### Round 2 · Builder · codex
+
+Addressed the five concrete review findings within `utils/py/jog_run.py`, `utils/py/wave_reconcile.py`, and `utils/pdda/pdda.sh`. No other artifact was edited this turn.
+
+- Checklist proof counts bullet and numbered checkboxes, including partial/declined/unknown states; every counted item must be checked and have text. `_close_delivered_issue` returns the resulting closed/open disposition. Partial Jog landings accept the reconciler's exact `PR #N merged` entry under `## Merge evidence` instead of requiring a terminal shipping badge before disposition. Proven closures without that PR's shipping badge call a bounded `--delivered-issue N` reconciliation and then require the badge. This path uses the existing mover, manifest shipper, ledger writer, lock, and rollback journal. It verifies a merged PR on the requested base referencing the positively CLOSED issue, touches only that issue, and does not pull, run a whole wave, or promote incidental mentions. This matters because merge-cleanup owns uncommitted post-merge writes at that point.
+- Execution-contract staging uses the identity-resolved basename, including the removed inbox side of a promotion, rather than a `GH-N-description.md` assumption.
+- Separated the all-folder Python `find_issue_doc` reader from the active-only `find_active_doc_for_issue` lifecycle writer. Jog reads all folders; ordinary reconciliation mutations use active docs only. Read-only pre-merge lookup uses frontmatter identity across all folders.
+- Sweep honors explicit nonnumeric frontmatter opt-outs. Archived pointer repairs need no GitHub lookup; an archived doc is queried only for a census candidate or an existing nonterminal ledger row needing state reconciliation. Active closed docs reuse the existing mover to update status/date. Existing rows are repointed and section-only moved without overwriting raw text, badges or ratings; a capture without a row still gains none. Unknown reasons are reported without filing.
+- Bare `--census` now parses; without a manifest it explicitly reports that no candidate map was supplied. Supplying a manifest retains delivered-but-open reporting. Bash lookup honors the configured lifecycle directories. The checker includes inbox captures and reports stale cached pointers. Bash issue-number extraction also respects explicit nonnumeric identity overrides.
+
+Root cause: lifecycle mutation and identity lookup shared an all-folder contract, while landing equated reconciliation with terminal issue completion; Fix site: separate readers from writers and qualify partial merge evidence before issue disposition, with exact-issue post-proof closeout; Why not upstream/downstream: restoring automatic lane-close intent would close partial issues without proof, and merely moving the disposition call ahead of verification would mutate GitHub before verifying a landing.
+
+Verification (manual probes only; no project suites/gates and no git commands executed):
+
+- `.relay-scratch/round2-probe.py` and `.relay-scratch/round2-probe.log`: PASS. Pre-edit snapshots reproduced premature closure for mixed checkboxes, archive leakage into lifecycle lookup, and partial-landing refusal before disposition. Candidate probes exercised mixed/numbered checklists, checked Acceptance and independent proof, renamed contract promotion, archived cache repair without queries, frontmatter opt-out, capture filing without row creation, status/date updates, partial and complete landing orchestration, mention-only exact-issue closeout, and optional census parsing. Git/network/ledger writers were mocked; scratch filesystem movements were real.
+- `.relay-scratch/bash-resolver.sh` and `.relay-scratch/bash-resolver.log`: PASS for overridden lifecycle directories and explicit identity opt-out.
+- Python AST parsing and `bash -n utils/pdda/pdda.sh`: PASS.
+
+These probes are ephemeral breadcrumbs, not committed acceptance evidence. The final-commit suites, real disposable-clone sweep/landing witness, planner/path-integrity consumers outside this allowlist, and required `TESTS-RESULTS/` provenance remain for the harness/orchestrator. No new tests or gate registry entries were added. Graph discovery was attempted but denied by the never-approval environment; targeted source reads were the fallback.
+
+Reversibility remains Costly: lifecycle writers are journaled, but a proven remote issue closure persists if subsequent reconciliation fails; Jog refuses to publish landing success and retries the closed-issue closeout. Stop on a failed final gate or review finding; revert the runtime change rather than accepting mocked evidence as full acceptance.
+
+Handing off to agy — agy, take your turn.
