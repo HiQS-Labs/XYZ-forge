@@ -2,7 +2,7 @@
 gh_issue: 1346
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1346
 title: "feat(skills): chain close-the-loop and todo-list with non-blocking PARKED/blocker skip ladder"
-status: "Working — PR ready; /relay-xyz QA Approved"
+status: Complete
 created: 2026-11-05
 updated: 2026-11-05
 owner: Antigravity
