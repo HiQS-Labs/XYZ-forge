@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-04.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -347,5 +347,22 @@ index 9c6f1ae1..130abcba 100644
  How this is enforced (a nudge, not a gate):
  - **deterministic** — `pdda.sh changelog` **warns** (never `error`, so it never blocks —
 ```
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: F1–F3 are resolved, and Task 1's policy-only definition of done is met. Decisions 4–6 and D-a/D-b are in PDDA, accompanied by the decision record and CHANGELOG entry. Implementation lag remains explicit. Two minor historical-prose inconsistencies below do not block this policy change.
+swept file: yes
+
+Evidence boundary: read the whole current PROJECT/PDDA.md, the complete embedded artifact and relay history, the decision record, the Task 1 CHANGELOG entry, and the supplied rules relay's rules and accepted replacements. Re-inspected the four named implementation seams statically. Graph search returned "MCP tool call requires approval, but approval policy is never"; used direct reads. No git, suites, executable fixtures, or runtime qualification ran. Runtime qualification is [Unverified — needs clone run]; the Producer's reported hygiene result is not independently reproduced here. Older CHANGELOG entries are outside this embedded artifact's review scope. This approval is for Task 1 text, not closure of aggregate #1340/#1333/#1329 or a distribution sync.
+
+- [Pass] **F1 resolved.** `PROJECT/PDDA.md:298-300` now states "The PRS appeal axis stays neutral 50 unless the operator supplies a value" and separates it from frontmatter triage. This matches G5 and decision-record item 5; no fix requested.
+- [Pass] **F2 and F3 resolved.** PDDA :551-554 limits the no-close promise to "this check" and points merge closure to decision 4, "not yet implemented, #1340 Task 7". PDDA :51-53 qualifies identity readers as "Decided policy, not yet true of today's readers". These remove the universal manual-approval and already-rolled-out claims; no fix requested.
+- [Pass] **Policy fidelity and current-behavior caveats retained.** PDDA :294-312 records pickup, actual batch commitment before dispatch, existing proposal reuse, and the interim avoidance of row-writing intake. PDDA :334-341 retains both independent-review and non-empty checked-Acceptance alternatives, the reason comment, and the interim closing-keyword restriction. The decision record's "policy decided, not yet implemented" and CHANGELOG's "Policy only; no code changed" keep the scope explicit. Source still writes intake rows (`utils/hq/hq.sh:412`) and requires inbox coverage (`utils/pdda/pdda.sh:416-419`); the same-basename fallback (:389-390), execution-branch return (`utils/py/jog_run.py:1524-1527`), and open-issue preservation (`utils/py/wave_reconcile.py:2392-2397`) support the documented current limitations. No fix requested.
+- [Pass] **Round-1 duplicate-prose nit resolved.** PDDA's CHANGELOG contract now retains one canonical narrative-log paragraph (:1062-1066), one append-only correction rule (:1080-1083), and one consequential-bet rule (:1087-1093). The supplied deletion diff removes redundant tails while preserving these obligations; no fix requested.
+- [Nit] **Residual historical note about the removed prose.** PDDA :619-623 still says its CHANGELOG section dead-references RECAP and REAL-AGENT-OBSERVATIONS and awaits a decision. That is stale after the duplicate-tail cleanup and conflicts with the earlier resolved explanation at :603-607. Replace this note with a pointer to that resolution or remove the stale note.
+- [Nit] **Pre-existing schedule rationale contradicts its own list.** PDDA :1145-1146 says issue-doc-sync runs last among deterministic checks and can yield an "info skip"; the numbered schedule places releases, governance and marathon-qa after it, and section H says unavailable state emits a warn. Update the rationale to match the list and H. This does not change the decisions under review. No other blocking pre-existing textual defect found in the full-file sweep.
+
+Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and subsequent gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
