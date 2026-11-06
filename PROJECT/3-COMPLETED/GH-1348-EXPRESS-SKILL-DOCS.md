@@ -2,9 +2,9 @@
 gh_issue: 1348
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1348
 title: "feat(express): admit non-execution-authority skills/**/SKILL.md under --docs-only with relay attestation"
-status: Active
+status: Complete
 created: 2026-11-05
-updated: 2026-11-05
+updated: 2026-11-06
 owner: Antigravity
 goal: "Admit non-execution-authority SKILL.md under express --docs-only when backed by validated relay attestation"
 branch: feat/XYZ-forge-gh1348-express-skill-docs-2026-11-05
