@@ -1267,6 +1267,12 @@ def jog_land(root, gh_num, pr_arg=None):
             if f"(PR #{int(pr_number)})" in (raw_text or ""):
                 local_reconcile = {"roadmap_gid": local_gid, "raw_text": raw_text}
                 break
+        if local_reconcile is None:
+            # Markdown-roadmap repos: wave_reconcile ships into ROADMAP.md, not roadmap_items.
+            roadmap_md = Path(root, "ROADMAP.md")
+            badge = re.compile(rf"^-\s+\*\*GH-{int(gh_num)}\b.*SHIPPED.*\bPR #{int(pr_number)}\b", re.M)
+            if roadmap_md.is_file() and badge.search(roadmap_md.read_text(encoding="utf-8")):
+                local_reconcile = {"roadmap_md": "ROADMAP.md", "pr_number": int(pr_number)}
         shipped_reconcile = local_reconcile
         doc = find_issue_doc(root, gh_num)
         merge_evidence = (doc and re.search(
