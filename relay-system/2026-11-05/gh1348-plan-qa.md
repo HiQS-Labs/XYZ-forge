@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -175,5 +175,18 @@ All findings from Reviewer Round 1 are implemented in `PROJECT/2-WORKING/GH-1348
 - **[Nit] Document the usable approval workflow in the positive control:** Implemented. Updated Implementation Plan item 4 and Acceptance Criteria item 4 to specify that the positive control will commit the skill update to the branch within the 2-commit budget, review via an isolated target-tree review without seeded `--artifact`, and verify that the resulting `Approved` attestation passes `check --docs-only`.
 
 Handing off to Reviewer (codex) for round 2.
+
+### Reviewer · Round 2
+
+VERDICT: PASS
+Basis: Both round-1 findings are resolved in the embedded plan. The full artifact meets the stated plan-QA Definition of Done; approval is for the plan, with implementation verification still pending.
+swept file: yes
+
+- [Pass] **Attestation contract corrected.** Implementation Plan item 2 now requires “unpacking `record, error = relay_attest.load(...)`” with a non-null Approved record, and “unpacking `ok, reason = relay_attest.candidate_ok(record, head_sha, root)`” with `ok is True`. This matches the pair-return contract in `utils/py/relay_attest.py:385`; the separate Approved requirement excludes Closed receipts.
+- [Pass] **Positive control models an eligible candidate.** Implementation Plan item 4 specifies “committed to branch, reviewed via isolated target-tree review without seeded `--artifact`, within the 2-commit budget.” These constraints match `utils/py/relay_attest.py:404` and `utils/py/express.py:553`.
+- [Pass] **Containment and scope remain explicit.** The embedded “Smallest viable bet” item 1 enumerates execution-authority exclusions, including `merge-cleanup-deep` and `marathon-cleanup`, and excludes “any non-`SKILL.md` file under `skills/`.” Definition of Done item 2 preserves the policy-doc refusal. Implementation Plan item 4 extends the existing `test/gh267-express-skill.sh` rather than creating a suite.
+- [Unverified — needs clone run] Admission, rejection, drift controls, and regression results remain implementation acceptance work. No suites or executable fixtures ran in this review worktree. The full embedded artifact was swept, including its status, alternatives, rollback, implementation sequence, acceptance criteria, and Definition of Done; no additional pre-existing defect was identified.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with implementation and disposable-clone verification.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
