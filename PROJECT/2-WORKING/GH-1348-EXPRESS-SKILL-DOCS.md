@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Implemented driver changes in `express.py`, policy in `express/SKILL.md`, and added regression controls in `test/gh267-express-skill.sh` (120/120 pass) | Final Codex Relay QA (`relay-system/2026-11-05/gh1348-final-qa.md`), smoke test receipt, push, PR, and clone retirement |
+| Implemented driver changes in `express.py`, policy in `express/SKILL.md`, and added regression controls in `test/gh267-express-skill.sh` (122/122 pass) | Final Codex Relay QA (`relay-system/2026-11-05/gh1348-final-qa.md`), smoke test receipt, push, PR, and clone retirement |
 
 ## Observed problem and bet
 

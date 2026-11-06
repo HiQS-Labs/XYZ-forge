@@ -383,7 +383,13 @@ python3 "$DRIVER" --root "$FX" check --issue 999 --suite test/gh999-demo.sh --al
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; printf 'doc edit\n' > "$FX/README.md"
 run_check > /dev/null 2> "$ERR" && bad "README must count against the file bound (finding 5)" || { check_rule too-many-files "$ERR" && ok "operator .md edits COUNT against the bound (finding 5)" || bad "README exempted: $(tail -1 "$ERR")"; }
 
-new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf 'entry\n' >> "$FX/CHANGELOG.md"; printf 'capture\n' > "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
+new_task_branch
+printf 'fixed\n' > "$FX/utils/py/foo.py"
+for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done
+mkdir -p "$FX/PROJECT/2-WORKING"
+printf 'capture\n' > "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
+[ -s "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md" ] || bad "capture doc setup failed"
+printf 'entry\n' >> "$FX/CHANGELOG.md"
 run_check > /dev/null 2> "$ERR" && ok "the lane's own capture doc + CHANGELOG stay exempt" || bad "lane paperwork counted against bounds: $(tail -1 "$ERR")"
 
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; mkdir -p "$FX/PROJECT/4-MISC"; printf 'unrelated\n' > "$FX/PROJECT/4-MISC/OTHER.md"
