@@ -38,7 +38,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured via HQ (`/hq park`) for project **XYZ-forge** → repo `XYZ-forge`. The GitHub issue is the signal stream; this doc is the in-repo capture and back-reference. | Fill in Why/Key Concepts, correct the provisional ratings above, and run a Phase 0 explore pass before promoting to `2-WORKING`. |
+| `make_packet` flags lanes preflight would refuse (no Preflight Contract, or a contract artifact missing at the frozen ref) and drops their launch commands; checked against live `swarm-preflight --dry-run` on wave 1 (`TESTS-RESULTS/2026-11-03+GH-1296/`). | The contracts for #1204, #216, #446 are not authored (owner decisions on their own issues; #722 is closed). Re-check the frozen set under the #522 admission experiment. |
 
 ## Idea
 
