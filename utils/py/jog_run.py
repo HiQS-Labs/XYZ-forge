@@ -263,11 +263,12 @@ def _ledger_rel_path(root, gid, path):
 
 def jog_commit_execution_contract(target, gh_num):
     """Protect only this clone's promoted contract from turn containment; never stage ledger."""
-    paths = [os.path.relpath(path, target) for bucket in ("1-INBOX", "2-WORKING")
-             for path in glob.glob(os.path.join(target, "PROJECT", bucket, f"GH-{gh_num}-*.md"))]
-    # git rm already staged the source side of a promotion.
+    resolved = find_issue_doc(target, gh_num)
+    paths = [os.path.relpath(resolved, target)] if resolved else []
+    # Include the removed inbox side of a promotion using the resolved identity's basename.
+    allowed = {f"PROJECT/{bucket}/{os.path.basename(resolved)}"
+               for bucket in ("1-INBOX", "2-WORKING") } if resolved else set()
     staged = set(_git(target, "diff", "--cached", "--name-only", "-z").decode().split("\0")) - {""}
-    allowed = {path for path in staged if re.fullmatch(rf"PROJECT/(?:1-INBOX|2-WORKING)/GH-{gh_num}-[^/]+\.md", path)} | set(paths)
     if staged - allowed:
         raise ContractError("unrelated staged changes before execution contract commit")
     if paths:
@@ -504,9 +505,9 @@ def _marathon_argv_from_invocation(invocation, builder, reviewer):
         argv.remove("--require-clean")
     if "--phase-id" not in argv and invocation.get("phase"):
         argv += ["--phase-id", invocation["phase"]]
-    # GH-1234: a Jog item is one issue in one phase, so its lane PR closes the issue.
-    if invocation.get("issue") and "--lane-closes-issue" not in argv:
-        argv.append("--lane-closes-issue")
+    # A one-phase lane is not proof of whole-issue delivery (GH-1344).
+    while "--lane-closes-issue" in argv:
+        argv.remove("--lane-closes-issue")
     return argv
 
 
@@ -1137,6 +1138,68 @@ def _landing_tail_proof(root, approved, head, integration, bundle):
     return list(reversed(proof))
 
 
+def _markdown_shipped(root, gh_num, pr_number):
+    """Markdown-roadmap repos only: wave_reconcile writes `SHIPPED <date> (PR #N)` into ROADMAP.md.
+
+    A releases-mode repo (.pdda-mode ROADMAP_SOURCE=releases) keeps its badge in roadmap_items, so a
+    leftover ROADMAP.md there is never evidence."""
+    mode = Path(root, ".pdda-mode")
+    if mode.is_file() and re.search(r"^\s*ROADMAP_SOURCE=releases\b", mode.read_text(encoding="utf-8"), re.M):
+        return False
+    roadmap_md = Path(root, "ROADMAP.md")
+    if not roadmap_md.is_file():
+        return False
+    badge = re.compile(rf"^-\s+\*\*GH-{int(gh_num)}\b.*\bSHIPPED \S+ \(PR #{int(pr_number)}\)", re.M)
+    return bool(badge.search(roadmap_md.read_text(encoding="utf-8")))
+
+
+def _close_delivered_issue(root, gh_num, pr_number, head, receipt):
+    """Close only with whole-issue proof; otherwise leave one stable reason comment."""
+    slug = github_slug_from_origin(root)
+    if not slug:
+        raise ContractError("cannot qualify landing issue repository")
+    command = ["gh", "issue", "view", str(gh_num), "--repo", slug,
+               "--json", "state,stateReason,body,comments"]
+    result = subprocess.run(command, cwd=root, capture_output=True, text=True)
+    if result.returncode:
+        raise ContractError("could not read landing issue proof: " + result.stderr.strip())
+    issue = json.loads(result.stdout)
+    if issue.get("state") == "CLOSED":
+        if issue.get("stateReason") != "COMPLETED":
+            raise ContractError("landing issue was closed without completion")
+        return True
+    if issue.get("state") != "OPEN":
+        raise ContractError("invalid landing issue state")
+    body = re.sub(r"```.*?```|~~~.*?~~~", "", issue.get("body") or "", flags=re.S)
+    body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
+    sections = re.findall(r"^## Acceptance[^\n]*\n(.*?)(?=^#{1,2} |\Z)", body, re.M | re.S)
+    checks = [check for section in sections for check in re.findall(
+        r"(?:^\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+|\|\s*)\[([^]\n]*)\][ \t]*([^|\n]*)", section, re.M)]
+    complete = bool(checks) and all(c.lower() == "x" and text.strip() for c, text in checks)
+    # This assertion must be recorded by the independent review producer, tied to the approved head
+    # and issue. Lane-closing intent and an ordinary gate receipt are never coverage proof.
+    coverage = receipt.get("whole_issue_coverage") or {}
+    independent = (isinstance(coverage, dict) and coverage.get("issue") == gh_num
+                   and bool(receipt.get("head_sha")) and coverage.get("head_sha") == receipt.get("head_sha")
+                   and coverage.get("covers_whole_issue") is True and bool(receipt.get("builder"))
+                   and bool(coverage.get("reviewer")) and bool(coverage.get("evidence_path"))
+                   and coverage.get("reviewer") != receipt.get("builder"))
+    if complete or independent:
+        command = ["gh", "issue", "close", str(gh_num), "--repo", slug]
+    else:
+        marker = f"<!-- jog-delivered-open:{gh_num} -->"
+        if any((c.get("body") or "").splitlines()[:1] == [marker]
+               for c in issue.get("comments", [])):
+            return False
+        reason = "Acceptance checklist is absent, empty or incomplete and no independent whole-issue coverage assertion is recorded"
+        command = ["gh", "issue", "comment", str(gh_num), "--repo", slug, "--body",
+                   f"{marker}\ndelivered, left open because {reason}. Delivery: PR #{pr_number}."]
+    result = subprocess.run(command, cwd=root, capture_output=True, text=True)
+    if result.returncode:
+        raise ContractError("could not record issue landing disposition: " + result.stderr.strip())
+    return bool(complete or independent)
+
+
 def jog_land(root, gh_num, pr_arg=None):
     """Land committed evidence in the primary after hosted lifecycle reconciliation.
 
@@ -1219,6 +1282,15 @@ def jog_land(root, gh_num, pr_arg=None):
             if f"(PR #{int(pr_number)})" in (raw_text or ""):
                 local_reconcile = {"roadmap_gid": local_gid, "raw_text": raw_text}
                 break
+        if local_reconcile is None and _markdown_shipped(root, gh_num, pr_number):
+            local_reconcile = {"roadmap_md": "ROADMAP.md", "pr_number": int(pr_number)}
+        shipped_reconcile = local_reconcile
+        doc = find_issue_doc(root, gh_num)
+        merge_evidence = (doc and re.search(
+            rf"^## Merge evidence\s*\n(?:(?!^## ).)*?^- PR \#{int(pr_number)} merged ",
+            Path(doc).read_text(encoding="utf-8"), re.M | re.S))
+        if merge_evidence and local_reconcile is None:
+            local_reconcile = {"doc_path": os.path.relpath(doc, root), "pr_number": int(pr_number)}
         if not hosted_green and local_reconcile is None:
             raise ContractError(
                 f"no reconciliation evidence for PR #{pr_number}: hosted wave-reconcile is not green for the "
@@ -1226,6 +1298,33 @@ def jog_land(root, gh_num, pr_arg=None):
                 f"wave_reconcile.py --pr {pr_number} locally (GH-1127) or dispatch the hosted lane")
         if len(rows) != 1:
             raise ContractError("landing requires exactly one canonical Jog queue row")
+        # Check the exact closeout contract before any remote issue closure.
+        from wave_reconcile import extract_linked_issues
+        closers, mentions = extract_linked_issues(pr, repo_slug=github_slug_from_origin(root))
+        if shipped_reconcile is None and gh_num not in closers + mentions:
+            raise ContractError("delivery closeout requires the merged PR to reference the issue")
+        closed = _close_delivered_issue(root, gh_num, int(pr_number), head, receipt)
+        if closed and shipped_reconcile is None:
+            reconciled = subprocess.run(
+                [sys.executable, resolve_tool(root, "utils/py/wave_reconcile.py"),
+                 "--root", root, "--pr", str(pr_number), "--base", base,
+                 "--delivered-issue", str(gh_num)],
+                cwd=root, capture_output=True, text=True)
+            if reconciled.returncode:
+                raise ContractError("closed issue requires reconciliation: " +
+                                    (reconciled.stderr or reconciled.stdout).strip())
+            conn = connect(os.path.join(root, "releases.db"), readonly=True)
+            try:
+                shipped = conn.execute("SELECT global_id,raw_text FROM roadmap_items WHERE gh_number=? "
+                                       "AND section='Completed'", (gh_num,)).fetchall()
+            finally:
+                conn.close()
+            local_reconcile = next(({"roadmap_gid": gid, "raw_text": raw} for gid, raw in shipped
+                                    if f"(PR #{int(pr_number)})" in (raw or "")), None)
+            if local_reconcile is None and _markdown_shipped(root, gh_num, pr_number):
+                local_reconcile = {"roadmap_md": "ROADMAP.md", "pr_number": int(pr_number)}
+            if local_reconcile is None:
+                raise ContractError("closed issue has no SHIPPED reconciliation badge for this PR")
     except (ContractError, OSError, ValueError, KeyError, sqlite3.Error) as exc:
         print(f"jog: refusing to land GH-{gh_num}: {exc}", file=sys.stderr)
         return 2
@@ -1341,17 +1440,9 @@ def lint_probe(root, probe_cmd):
 
 
 def find_issue_doc(root, gh_num):
-    """Find the capture/working doc associated with an issue number."""
-    patterns = [
-        os.path.join(root, "PROJECT", "2-WORKING", f"GH-{gh_num}-*.md"),
-        os.path.join(root, "PROJECT", "1-INBOX", f"GH-{gh_num}-*.md"),
-        os.path.join(root, "PROJECT", "3-COMPLETED", f"GH-{gh_num}-*.md"),
-    ]
-    for pat in patterns:
-        matches = glob.glob(pat)
-        if matches:
-            return matches[0]
-    return None
+    """Use reconciliation's canonical issue identity resolver."""
+    from wave_reconcile import find_issue_doc as resolve_issue_doc
+    return resolve_issue_doc(root, gh_num)
 
 
 def extract_probes_from_doc(doc_path):

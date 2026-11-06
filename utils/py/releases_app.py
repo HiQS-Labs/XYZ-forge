@@ -4058,6 +4058,20 @@ def cmd_roadmap_move(args):
     return cmd_roadmap_update(args)
 
 
+def read_issue_closure_state(root, issue_url):
+    """Shared live stateReason read for ledger reconciliation and completion filing."""
+    result = subprocess.run(
+        [os.environ.get("RELEASES_GH_BIN", "gh"), "issue", "view", issue_url,
+         "--json", "state,stateReason"], cwd=root, capture_output=True,
+        text=True, check=False, timeout=30)
+    if result.returncode:
+        raise ValueError(f"issue lookup failed (exit {result.returncode}): {result.stderr.strip()}")
+    issue = json.loads(result.stdout)
+    if not isinstance(issue, dict) or issue.get("state") not in ("OPEN", "CLOSED"):
+        raise ValueError("invalid issue state")
+    return issue
+
+
 def cmd_roadmap_reconcile_state(args):
     """GH-492: preview by default; apply only positively verified terminal issue states.
 
@@ -4096,22 +4110,10 @@ def cmd_roadmap_reconcile_state(args):
                 refuse("roadmap-issue-state", "%s native identity/state unavailable (%s); refusing to guess "
                        "issue state" % (url, exc))
             try:
-                result = subprocess.run(
-                    [os.environ.get("RELEASES_GH_BIN", "gh"), "issue", "view", url,
-                     "--json", "state,stateReason"], cwd=root,
-                    capture_output=True, text=True, check=False, timeout=30)
-            except (OSError, subprocess.TimeoutExpired) as exc:
+                issue = read_issue_closure_state(root, url)
+            except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
                 refuse("roadmap-issue-state", "%s could not be read (%s); refusing to guess issue state"
                        % (url, exc))
-            if result.returncode:
-                refuse("roadmap-issue-state", "%s failed (exit %d): %s; refusing to guess issue state"
-                       % (url, result.returncode, result.stderr.strip()))
-            try:
-                issue = json.loads(result.stdout)
-            except ValueError:
-                issue = None
-            if not isinstance(issue, dict) or issue.get("state") not in ("OPEN", "CLOSED"):
-                refuse("roadmap-issue-state", "%s returned invalid state; refusing to guess issue state" % url)
             if issue["state"] == "OPEN":
                 if native["state"] != "open":
                     refuse("roadmap-issue-state", "%s changed from native closed to open during lookup; retry "

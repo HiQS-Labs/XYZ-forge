@@ -52,6 +52,16 @@ if [ "${1:-}" = "pr" ] && [ "${2:-}" = "view" ]; then
   fi
   exit 1
 fi
+# GH-1344: jog land reads the issue for whole-issue proof before closing it. The fixture issue's
+# Acceptance is fully checked, so the proof holds; `issue close` flips the stub to CLOSED/COMPLETED.
+if [ "${1:-}" = "issue" ] && [ "${2:-}" = "view" ] && case " $* " in *" state,stateReason,body,comments "*|*" state "*|*" state,stateReason "*) true;; *) false;; esac; then
+  if [ -f "${GH_STUB_LOG}.issue-closed" ]; then state=CLOSED reason=COMPLETED; else state=OPEN reason=null; fi
+  [ "$reason" = null ] || reason="\"$reason\""
+  printf '{"state":"%s","stateReason":%s,"body":"## Acceptance\\n- [x] fixture delivered\\n","comments":[]}\n' "$state" "$reason"
+  exit 0
+fi
+if [ "${1:-}" = "issue" ] && [ "${2:-}" = "close" ]; then : > "${GH_STUB_LOG}.issue-closed"; exit 0; fi
+if [ "${1:-}" = "issue" ] && [ "${2:-}" = "comment" ]; then exit 0; fi
 if [ "${1:-}" = "pr" ] && [ "${2:-}" = "create" ]; then
   if [ "${GH_STUB_CREATE_FAIL:-0}" = "1" ]; then exit 1; fi
   echo "https://example.invalid/pr/created-by-stub"
