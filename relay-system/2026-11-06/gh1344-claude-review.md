@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -281,5 +281,25 @@ Basis: All 15 round 1 findings are fixed as dispositioned, and both round 1 Bloc
 - Still absent: `TESTS-RESULTS/` witnesses, and a producer for `whole_issue_coverage`.
 
 handing off to Producer (codex) — go to the codex window and say 'take your turn'.
+
+### Round 3 · Producer · codex
+
+Dispositions for Claude round 2:
+
+1. **Implemented.** Both lifecycle indexes consult existing ledger basenames only when multiple primary issue docs occupy the preferred folder. Exactly one matching candidate wins; no candidate is synthesized from the cache. Conflicting cached candidate names or no matching ledger name leave the ambiguity intact. A stale folder is harmless because only the basename participates. Real-data probes now select the ledger-named GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md and GH-406-RUSS-EXTERNAL-REVIEW.md. The full Python and standalone PDDA maps agree on 464 entries, with zero ambiguous entries on this checkout. A two-primary fixture without a ledger still stays unresolved. The ledger is read-only; no row or document was changed by verification.
+2. **Implemented.** Checklist text stops at a table cell delimiter or newline, allowing the regex to count each checkbox cell. The reported mixed row now leaves the issue open with a comment; the all-checked two-cell row still closes.
+3. **Implemented.** Ambiguity is reported after the census state read and delivered-but-open report. A census candidate with ambiguous documents is now reported and then skipped for filing; the sweep still closes nothing.
+4. **Implemented, narrowly.** Lowercase the Bash per-doc declared identity before opt-out/prefix parsing, matching both Python implementations for None and gh-12. Broader consolidation of the standalone PDDA map and Forge resolver would introduce a distribution dependency and is deferred.
+5. **Deferred.** The stale-pointer warning continues to describe a repairable cached-path difference, while roadmap coverage tolerates the in-flight promotion. No requested behavior change with an observed failing downstream operation was supplied. The orchestrator still owes the #1339 fallback decision in the PR.
+6. **Deferred.** The reference guard prevents a remote close before an impossible exact-issue reconciliation. Narrowing its timing requires distinguishing close proof before mutation; this round retains the conservative refusal rather than reordering the remote write. The unreferenced/incomplete landing limitation remains explicit.
+7. **Retained.** A CLOSED issue without positive COMPLETED evidence does not authorize a shipping closeout. Missing stateReason remains a refusal rather than guessed completion.
+8. **Deferred.** Unsupported sweep non-mode flags, the redundant terminal_section local, filename-only catch-up discovery and its explanatory docstring remain as noted. No full catch-up or qualification claim is made here.
+9. **Deferred.** The pre-existing mode substring check, missing-Python behavior, PDDA_ONLY_FILE handling and standalone fix-command availability are outside the three reproduced regressions repaired this round. They remain visible in the review record; no clearance is claimed.
+
+Verification: `.relay-scratch/r3-probe.py` and `.relay-scratch/r3-probe.log` record focused manual red/green checks using pre-edit snapshots. Before: both live captures returned None, the mixed table row closed, and the ambiguous census candidate lacked its delivered report. After: both captures resolve to the expected ledger basenames, the mixed table comments without closing, and the census candidate is reported. Controls: all-checked table closes, unnamed duplicate remains ambiguous, and the nonempty full 464-entry standalone PDDA/Python maps agree. Python AST parsing of all three Python artifacts and `bash -n utils/pdda/pdda.sh` passed. GitHub calls were mocked; the existing ledger was only read. No git command, full suite, remote mutation, new test/gate, or edit to releases_app.py ran. All probe files and snapshots are under .relay-scratch/.
+
+Reversibility: **Costly** at the lifecycle-writer boundary: the tie-break can select which existing doc gets filed. It is constrained to a unique ledger-named primary in the already preferred directory; conflicting names remain unresolved. Stop on a peer finding or failing harness gate; the existing sweep rollback journal remains the write rollback path. Final-commit suites, committed TESTS-RESULTS provenance, disposable-clone sweep/landing witnesses, out-of-allowlist Task 10 readers and the coverage-assertion producer remain outstanding for the harness/orchestrator. This turn does not approve the Definition of Done.
+
+handing off to Reviewer (claude) — go to the claude window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

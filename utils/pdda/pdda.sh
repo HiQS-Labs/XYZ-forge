@@ -584,8 +584,9 @@ _pdda_doc_issue_number() {
   local file="$1" num base
   num="$(pdda_trim "$(pdda_frontmatter_value "$file" gh_issue)")"
   case "$num" in \"*\") num="${num#\"}"; num="${num%\"}" ;; \'*\') num="${num#\'}"; num="${num%\'}" ;; esac
+  num="$(printf '%s' "$num" | tr '[:upper:]' '[:lower:]')"
   case "$num" in none|null|false|n/a|no|'~') return 0 ;; esac
-  case "$num" in https://github.com/*/*/issues/*) num="${num%/}"; num="${num##*/}" ;; GH-*) num="${num#GH-}" ;; esac
+  case "$num" in https://github.com/*/*/issues/*) num="${num%/}"; num="${num##*/}" ;; gh-*) num="${num#gh-}" ;; esac
   num="${num#\#}"
   if printf '%s' "$num" | grep -Eq '^[0-9]+$'; then printf '%s' "$num"; return; fi
   base="$(basename "$file")"
@@ -599,8 +600,15 @@ _pdda_doc_issue_number() {
 # identity/tie-break policy without importing Forge modules into standalone PDDA installs.
 _pdda_doc_map() {
   python3 -B - "$PDDA_WORKING_DIR" "$PDDA_INBOX_DIR" "$PDDA_COMPLETED_DIR" "$PDDA_MISC_DIR" <<'PYMAP'
-import re, sys
+import re, sys, sqlite3
 from pathlib import Path
+hints = {}
+db = Path(sys.argv[1]).parent.parent / "releases.db"
+if db.is_file() and db.stat().st_size:
+    with sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True) as conn:
+        for number, cached in conn.execute("SELECT gh_number, doc_path FROM roadmap_items"):
+            if number is not None and cached:
+                hints.setdefault(int(number), set()).add(Path(cached).name)
 candidates = {}
 for directory in sys.argv[1:]:
     for path in sorted(Path(directory).glob("*.md")):
@@ -628,6 +636,10 @@ for directory in sys.argv[1:]:
 for number, paths in candidates.items():
     primary = [p for p in paths if re.match(rf"^(?:GH-)?{number}(?:-|\.md$)", p.name, re.I)]
     preferred = [p for p in primary if p.parent == primary[0].parent] if primary else paths
+    if primary and len(preferred) > 1:
+        named = [p for p in preferred if p.name in hints.get(number, set())]
+        if len(named) == 1:
+            preferred = named
     path = preferred[0] if len(preferred) == 1 else "AMBIGUOUS"
     print(f"{number}\t{path}")
 PYMAP

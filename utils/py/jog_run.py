@@ -1159,7 +1159,7 @@ def _close_delivered_issue(root, gh_num, pr_number, head, receipt):
     body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
     sections = re.findall(r"^## Acceptance[^\n]*\n(.*?)(?=^#{1,2} |\Z)", body, re.M | re.S)
     checks = [check for section in sections for check in re.findall(
-        r"(?:^\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+|\|\s*)\[([^]\n]*)\][ \t]*(.*)$", section, re.M)]
+        r"(?:^\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+|\|\s*)\[([^]\n]*)\][ \t]*([^|\n]*)", section, re.M)]
     complete = bool(checks) and all(c.lower() == "x" and text.strip() for c, text in checks)
     # This assertion must be recorded by the independent review producer, tied to the approved head
     # and issue. Lane-closing intent and an ordinary gate receipt are never coverage proof.

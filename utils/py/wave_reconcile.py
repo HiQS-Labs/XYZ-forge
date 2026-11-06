@@ -1088,6 +1088,14 @@ def issue_doc_index(directories):
     Lifecycle directory order breaks ties between primary documents. Unnamed
     identity documents are usable only when unique; ambiguous ones stay unresolved.
     """
+    directories = [Path(d) for d in directories]
+    # The cache may choose among existing primary identities, never invent a path.
+    hints = {}
+    if directories:
+        for row in ledger_rows(directories[0].parent.parent,
+                               "SELECT gh_number, doc_path FROM roadmap_items"):
+            if row["gh_number"] is not None and row["doc_path"]:
+                hints.setdefault(int(row["gh_number"]), set()).add(Path(row["doc_path"]).name)
     candidates = {}
     for directory in directories:
         for path in sorted(Path(directory).glob("*.md")):
@@ -1100,12 +1108,16 @@ def issue_doc_index(directories):
     for number, paths in candidates.items():
         primary = [p for p in paths if re.match(rf"^(?:GH-)?{number}(?:-|\.md$)", p.name, re.I)]
         preferred = [p for p in primary if p.parent == primary[0].parent] if primary else paths
+        if primary and len(preferred) > 1:
+            named = [p for p in preferred if p.name in hints.get(number, set())]
+            if len(named) == 1:
+                preferred = named
         result[number] = preferred[0] if len(preferred) == 1 else None
     return result
 
 
 def find_issue_doc(repo_root, issue_num, folders=None):
-    """Resolve identity across lifecycle folders, never a cached ledger path."""
+    """Resolve lifecycle identity; cached basenames only disambiguate primary docs."""
     folders = folders if folders is not None else ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC")
     path = issue_doc_index(Path(repo_root, "PROJECT", f) for f in folders).get(int(issue_num))
     return str(path) if path else None
@@ -1169,9 +1181,6 @@ def _sweep_issue_docs(repo_root, apply=False, census=None, journal=None):
             die("Census delivered map must be an object")
     for number in sorted(set(documents) | {int(n) for n in delivered}):
         source = documents.get(number)
-        if number in documents and source is None:
-            log(f"SKIPPED GH-{number}: ambiguous issue documents")
-            continue
         archived = source is not None and source.parent.name in ("3-COMPLETED", "4-MISC")
         # Archived pointers are a local cache repair; section state belongs to reconciliation.
         issue = None
@@ -1183,6 +1192,8 @@ def _sweep_issue_docs(repo_root, apply=False, census=None, journal=None):
         if issue and issue["state"] == "OPEN" and str(number) in delivered:
             log(f"delivered-but-open: GH-{number} PRs {delivered[str(number)]}; report only")
         if source is None:
+            if number in documents:
+                log(f"SKIPPED GH-{number}: ambiguous issue documents")
             continue
         destination = source
         terminal_section = None
