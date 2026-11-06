@@ -3,7 +3,8 @@
 Evidence for the six Acceptance items of #1344, taken 2026-11-06 on branch `review/gh1344-claude-2026-11-06`.
 The code was built by Codex and reviewed by Claude (`claude-fable-5-1`, high effort). The relay
 (`relay-system/2026-11-06/gh1344-claude-review.md`) was approved and attested at `42cedac8`, after an Agy round-1 review
-in the marathon relay. The orchestrator's adapt commit `d5434fad` came after that approval; see item 6.
+in the marathon relay. The orchestrator's adapt commits `d5434fad` and `949d090a` came after that approval and were reviewed separately by
+Codex (FAIL, then PASS); see item 6.
 
 Disposable state only: the sweep ran in a throwaway full clone of this branch, with its origin pointed at
 `HiQS-Labs/XYZ-forge` for read-only `gh` calls. Nothing here wrote the primary ledger, and no GitHub issue was changed.
@@ -85,5 +86,14 @@ looked only in `roadmap_items`. Adapt `d5434fad` does two things:
 - `jog land` also accepts the `ROADMAP.md` `SHIPPED … PR #N` badge;
 - the suite's `gh` stub answers the landing's `issue view/close/comment` calls.
 
-After it, gh280 passes 223 to 0, and `jog-queue` (34/0) and `wave-reconcile` (23/0) were rerun green. No new test was
-added (GH-831).
+Codex's one-shot review of `d5434fad` returned FAIL with three Should findings:
+- the fallback also ran in releases-mode repos;
+- the check after the closeout stayed ledger-only;
+- the regex did not tie the PR number to the badge.
+
+`949d090a` adds one helper, `_markdown_shipped`, which fixes all three: it is skipped when `.pdda-mode` sets
+`ROADMAP_SOURCE=releases`, it matches the reconciler's own `SHIPPED <date> (PR #N)` badge, and both checks use it.
+Codex re-checked it and passed it.
+
+After that commit: gh280 223/0, `jog-queue` 34/0, `wave-reconcile` 23/0, `gh257-roadmap-ledger-fixes` all passed. No new
+test was added (GH-831).
