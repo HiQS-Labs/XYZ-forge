@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -201,5 +201,20 @@ Handing off to Producer (antigravity) — relay escalated at round 3/3; obtain t
   4. Updated `SUMMARY.md` and `provenance.jsonl` to record both red controls with artifacts and observations.
 
 Opening Round 4. Handing off to Reviewer (codex) for final attestation — go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 4
+
+VERDICT: PASS
+Basis: Ship the GH-1348 implementation. The earlier source and documentation findings are resolved, and the retained evidence now witnesses both requested paperwork red controls followed by the restored green run. This is source/evidence review approval; final-revision harness qualification remains separate.
+swept file: no
+Sweep scope: Read the entire express driver (including pre-existing receipt, qualification, landing and recovery paths), entire express skill and existing regression suite, GH-1348 working document, verification summary/provenance and both red-control logs. Reviewed the GH-1348 CHANGELOG entry, not the 1,120,026-byte historical CHANGELOG archive. No additional pre-existing defect was identified in the fully read source files. This approval does not attest the historical archive.
+
+- [Pass] **The previously hollow paperwork assertion now has sensitivity evidence.** `test/gh267-express-skill.sh:386–393` supplies four core files and a nonempty capture before checking exemptions. Both `TESTS-RESULTS/2026-11-05+GH-1348/red-control-capture-exemption.txt` and `red-control-changelog-exemption.txt` contain `FAIL: lane paperwork counted against bounds: express-refused: rule=too-many-files — 5 core files > bound 4` and end `gh267-express-skill: pass=121 fail=1`. The restored `smoke-output.txt` contains `pass: the lane's own capture doc + CHANGELOG stay exempt` and ends `gh267-express-skill: pass=122 fail=0`. Round 3's missing-red-control finding is resolved by retained evidence, not by a new suite run here.
+  Inspection command (exit **0**): `python3` read the three named logs with `Path.read_text()`, asserted each was nonempty, and printed lines containing `lane paperwork counted against bounds:`, `own capture doc + CHANGELOG stay exempt`, or `gh267-express-skill: pass=`. Decisive output is quoted above. This was a read-only evidence extraction, not execution of the fixture or suite.
+- [Pass] **Admission still uses the canonical validated receipt and protects skill bytes.** `utils/py/express.py:177–180` skips parsed non-objects; the following approval path explicitly unpacks `record, err = ra.load(...)` and `ok, reason = ra.candidate_ok(...)`, requires `Approved`, and checks each skill using `diff --quiet HEAD` plus porcelain status. The execution-authority set at `utils/py/express.py:103–114` retains all ten named exclusions. No alternative attestation subsystem was introduced.
+- [Pass] **Documentation and retained totals align.** The express skill's GH-1348 support paragraph says `The skill edits must already be committed to the task branch and clean versus HEAD`; its Bounds paragraph includes `review transcripts under relay-system/*.md`. `CHANGELOG.md:9` and the working document Status table report 122/122, matching the retained suite tail. The Setup's original 120/120 total is superseded by the two malformed-record assertions described in the earlier turns.
+- [Unverified — needs clone run] The retained frozen-twin log ends `gh308-frozen-twin-guard: 38 pass, 0 fail`; the retained PDDA log ends `PDDA run complete: no errors, 40 warning(s) to review`. `provenance.jsonl` pins the recorded checks to `3b29c5aa`. I did not independently resolve that revision or rerun gates: no Git command, validate.sh, test suite, pytest or executable fixture was run this turn. The harness must qualify the final committed state in its disposable full clone; this relay approval does not substitute for that gate.
+
+Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and subsequent gate.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
