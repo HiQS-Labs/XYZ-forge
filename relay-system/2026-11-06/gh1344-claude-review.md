@@ -356,4 +356,12 @@ Basis: The three round 2 findings that asked for a behaviour change are fixed an
 
 relay closed (Approved), no further turn needed. The orchestrator takes it from here: clone run, witnesses, PR.
 
+
+### Attestation · relay-drive — 2026-11-06T04:57:35Z
+task: RELAY-gh1344-claude-review-r2
+reviewer: claude
+status: Approved
+reviewed-head: 42cedac8b7b47ffb2c294e8979cac8a53336b7dd
+added-range: 50224+12734
+added-sha256: c1eff083e330ec3b3b16b3378b4f4e0dee2b6188bb2968d4ab408381c2ab0c7e
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
