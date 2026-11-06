@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -215,5 +215,71 @@ Verification: focused manual probes only; no git command, project suite, remote 
 Reversibility: **Costly**, because lifecycle writes and a valid remote closure span different stores. The sweep retains the rollback journal; stop on a failing final gate or peer finding. Durable TESTS-RESULTS provenance, final-commit existing suites, disposable-clone sweep and local Jog landing witnesses remain required from the harness/orchestrator. Scratch results are not committed acceptance evidence.
 
 handing off to Reviewer (claude) — go to the claude window and say 'take your turn'.
+
+### Round 2 · Reviewer · claude
+
+swept file: yes
+
+Coverage, stated exactly. Read end to end by me this round: `utils/pdda/pdda.sh` (1–1900), which closes the gap that made round 1 say no. Read by me this round: every round 2 hunk of `wave_reconcile.py` and `jog_run.py`, plus the functions they touch in full (`wave_reconcile.py` 40–129, 1020–1419, 2168–2457, 2555–2652; `jog_run.py` 255–290, 1120–1334, 1418–1450, 2060–2110). Carried from round 1 and not re-read end to end: `wave_reconcile.py` (my own full read), `jog_run.py` and `releases_app.py` (delegated subagent reads). `releases_app.py` has no round 2 change; I re-read `cmd_roadmap_repoint` (3774–3819) and `read_issue_closure_state` (4061–4072). Probes ran under `.relay-scratch/` only, against the real docs and a read-only ledger, or against a scratch copy with GitHub and ledger writes mocked. No `validate.sh`, `test/*.sh` or pytest ran.
+
+VERDICT: FAIL
+Basis: All 15 round 1 findings are fixed as dispositioned, and both round 1 Blockers are measured fixed on this repo's data. One regression introduced by the round 2 tie-break blocks: two live queue captures (#346, #406) that the base code and the round 1 code both resolved now resolve to nothing in the reconciler, the sweep, Jog and PDDA. Two smaller defects carry observed inputs (a false close on a two-box table row, and a census candidate dropped from the report).
+
+**Findings**
+
+1. `[Blocker]` Two `GH-<n>-` docs in one folder now resolve to nothing; the base found a doc. `utils/py/wave_reconcile.py:1101-1103`; `utils/pdda/pdda.sh:629-631`.
+   - Observed input: `python3 -B .relay-scratch/probe_data.py` (exit 0), base `3a563a9f` against HEAD over all 583 docs: `find_active_doc_for_issue base!=HEAD: 2`, `(346, 'PROJECT/1-INBOX/GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md', None)`, `(406, 'PROJECT/1-INBOX/GH-406-RADAR-CROSSWALK.md', None)`; `index entries 464 ambiguous 7`, `ambiguous numbers: [204, 346, 406, 411, 494, 736, 1010]`. Bash agrees (`bash .relay-scratch/p_bash.sh`, exit 0): `find 346 rc=1 out=[]`, `find 406 rc=1 out=[]`. Both rows are live: `346|Queue / parked intake|PROJECT/1-INBOX/GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md`, `406|Queue / parked intake|PROJECT/1-INBOX/GH-406-RUSS-EXTERNAL-REVIEW.md`. On HEAD a PR closing #346 reaches "No active doc" (`wave_reconcile.py:2613`), completes the row and leaves both docs in 1-INBOX; the sweep then prints `SKIPPED GH-346: ambiguous issue documents`; Jog gets `None` at `jog_run.py:2071` and promotes no contract. This is the stranding #1344 exists to remove. Not a round 1 regression: neither number was among that round's changed results.
+   - The ledger already names the canonical doc. For all seven numbers the row's `doc_path` is one of the two candidates (204 `…BSD-SED-IDIOM.md`, 346 `…HARNESS-GATEWAY-MODEL-RESOLUTION.md`, 406 `…RUSS-EXTERNAL-REVIEW.md`, 411 `…TICK-LOG-FOREIGN-CWD-GUARD.md`, 494 `…SESSION-CONTEXT-PLAN.md`, 736 `…EXCLUDE-UNKNOWN-STACKED.md`, 1010 `…MERGE-HISTORY-RECON.md`). For 406 the base picked the other doc, so "first sorted" is not the fix.
+   - Affected scope: issues with two or more `GH-<n>-` docs in the same preferred folder.
+   - Falsifier: on this repo `find_active_doc_for_issue(root, 346)` returns `…/GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md` and `(root, 406)` returns `…/GH-406-RUSS-EXTERNAL-REVIEW.md`; `_pdda_find_doc_for_issue` agrees; the stale-pointer block reports 0 `ambiguous-doc-path` here; and a fixture with two same-folder primaries that no ledger row names still resolves to nothing and still warns. Fix: when several primaries share the preferred folder, pick the one whose basename equals the basename of the ledger row's `doc_path` (basename survives folder moves, so the path stays a cache). If duplicates are meant to stay unresolved, decline and say who fixes the 346 and 406 docs in this PR.
+
+2. `[Should]` A table row with two checkboxes closes on the first one. `utils/py/jog_run.py:1161-1162`.
+   - Observed input: `python3 -B .relay-scratch/p_jog.py` (exit 0, `gh` mocked), body `## Acceptance\n| [x] built | [ ] verified |\n`: `returned=True gh=['view', 'close']`. The table alternative captures `(.*)$`, so the rest of the row, second box included, becomes the first box's text. Before round 2 table cells were not read and this body left the issue open.
+   - Affected scope: Acceptance table rows with more than one checkbox cell.
+   - Falsifier: that body returns `False` and comments, while `| [x] a | [x] b |` closes. Fix: count every `[ ]` cell in a row.
+
+3. `[Should]` A delivered census issue with ambiguous docs is dropped from the report. `utils/py/wave_reconcile.py:1172-1174` runs before `:1183-1184`.
+   - Observed input: `python3 -B .relay-scratch/p_census.py` (exit 0, scratch copy, every issue OPEN), census `{"delivered": {"346": [1201], "1292": [1300]}}`: output `SKIPPED GH-346: ambiguous issue documents` and `delivered-but-open: GH-1292 PRs [1300]; report only`; `346 queried: False`.
+   - Affected scope: census numbers whose docs are ambiguous (Definition of Done criterion 4).
+   - Falsifier: the same run prints a `delivered-but-open: GH-346` line. Fix: move the ambiguity skip below the report.
+
+4. `[Nit]` The Bash per-doc identity is case-sensitive and the two Python copies are not. `pdda.sh:587-588` against `pdda.sh:617` and `wave_reconcile.py:1075`, `:1228`. Fixture (`bash .relay-scratch/p_case.sh`, exit 0): `GH-602-X.md` with `gh_issue: None` gives `bash_doc_issue_number=[602]`, Python `None`; `gh_issue: gh-12` in `GH-604-Z.md` gives Bash `604`, Python `12`. No doc here uses an opt-out value (`opt-out / none: [] 0`), and real-data parity holds (`map parity: python 464 bash 464 differences 0`; per-doc `differences 0` over 583 docs). The policy now lives in three places (`pdda.sh:583-596`, `pdda.sh:600-634`, `wave_reconcile.py:1072-1104`); the plan asks for one resolver per language.
+5. `[Nit]` Two checks describe an in-flight Jog promotion differently. On this branch the stale-pointer check prints `issue #1344 cached doc_path 'PROJECT/1-INBOX/GH-1344-…' differs from PROJECT/2-WORKING/GH-1344-… — run: issue-doc-sync --fix`, while roadmap-coverage calls the same state expected (`pdda.sh:399-405`, "promoted in flight"). With the identity lookup at `pdda.sh:361-368` that fallback is reached only for docs without an identity. The plan asks for the #1339 fallback decision to be recorded in the PR.
+6. `[Nit]` By reading: the reference guard at `jog_run.py:1287` runs before it is known whether anything will be closed, so an unreferenced PR with hosted-green evidence and an incomplete checklist is refused where it used to land and leave the issue open with a comment.
+7. `[Nit]` A CLOSED issue without `COMPLETED` now refuses the landing on every retry (`jog_run.py:1153-1154`), including when `stateReason` is absent (`closed, reason absent: returned=ContractError: landing issue was closed without completion`). The message is clear; noted only.
+8. `[Nit]` `wave_reconcile.py`: `--issue-doc-sweep --fix --qualify` reaches the lock (`rc=8`) instead of a usage error, so non-mode flags are still ignored (`:2383`). `terminal_section` now only feeds `is_merged` (`:1188-1202`). Still open from round 1 and deferred by the Producer: `catch_up_prs` finds docs by filename, and the docstring at `:1646` says so.
+9. `[Nit]` Pre-existing in `pdda.sh`, from the full read. (a) `:749` enables the section check with an unanchored `grep -q "ROADMAP_SOURCE=releases"`, while `:340` and `:1386` use an anchored pattern, so a commented-out line turns it on; `wave_reconcile.py:1389` has the same substring test. (b) `python3` is called unguarded at `:601` and `:1631` but guarded at `:1191` and `:1325`; without it the stale-pointer block reports nothing, against the rule stated at `:687`. (c) The inbox glob at `:719` ignores `PDDA_ONLY_FILE`; no caller runs `issue-doc-sync` with it (`utils/pdda/pdda-edit-doc-hook.sh:49-52`). (d) `:787` recommends `issue-doc-sync --fix`, which `:1886` routes to `utils/py/wave_reconcile.py`, a file a standalone PDDA install may not have. No High-severity pre-existing defect found in `pdda.sh`.
+
+**Round 1 findings, re-checked**
+
+- 1 `[Pass]` URL and `GH-N` identities resolve; only none-style values opt out (`wave_reconcile.py:1075-1081`, `pdda.sh:587-590`). Probe: `find_issue_doc 1292 -> PROJECT/1-INBOX/GH-1292-HARNESS-RECAP-HOOKS.md`, `find_issue_doc 1293 -> PROJECT/1-INBOX/GH-1293-HQ-NATIVE-HOOK-REGISTRATION.md`, `find_issue_doc 661 -> PROJECT/3-COMPLETED/GH-661-662-682-RELAY-CONTAINMENT.md`; a `gh_issue: none` fixture was not queried (`99004 queried: False`). Of the twelve round 1 docs only 1010 is unresolved, for the reason in finding 1.
+- 2 `[Pass]` One map per run (`pdda.sh:776`). Measured: `doc_map rc=0 lines=464 ambiguous=7 secs=0.09`; the block at `pdda.sh:775-791` run verbatim against the real ledger: `stale-pointer block rc=0 secs=2.91 findings=53 ambiguous=7 repoint=46`. A full `issue-doc-sync` run is `[Unverified — needs clone run]`.
+- 3 `[Pass]` for what it asked: recon and plan docs are skipped (`wave_reconcile.py:1094`, `pdda.sh:607`), `find_issue_doc 494 -> None`, `496 -> PROJECT/3-COMPLETED/GH-496-SHARPEN-CICD.md`, and the checker reports ambiguity without recommending `--fix` (`pdda.sh:779-783`). The same-folder rule it added is finding 1.
+- 4 `[Pass]` No section move: the only ledger write left is `roadmap repoint` (`wave_reconcile.py:1205-1209`). Preview on a scratch copy of the real docs and ledger: `ledger intents {('roadmap', 'repoint'): 46}`, and after an apply run `roadmap move intents: []`.
+- 5 `[Pass]` `sweep empty root rc=8 traceback=0`; `delivered-issue empty root rc=8 traceback=0`; malformed census `ReconcileError: Census delivered map must be an object code=2` (`wave_reconcile.py:2388-2392`, `:2409-2413`).
+- 6 `[Pass]` by reading: `if doc_path and Path(doc_path).parent.name in ("2-WORKING", "3-COMPLETED")` (`wave_reconcile.py:2194`).
+- 7 `[Pass]` `7 no builder: returned=False gh=['view', 'comment']` (`jog_run.py:1169`).
+- 8 `[Pass]` `8 quoted: returned=False`, `8 table: returned=False`; the new table path is finding 2.
+- 9 `[Pass]` The sweep uses the shared index (`wave_reconcile.py:1160-1161`).
+- 10 `[Pass]` `reconciler_git_dir` is used by both paths (`wave_reconcile.py:1134`, `:2254`); on this worktree `reconciler_git_dir(worktree) is a dir: True`.
+- 11 `[Pass]` `apply=args.fix and not args.dry_run` (`wave_reconcile.py:2387`); `sweep --pr rc=2`, `--issue-doc-sweep cannot be combined with reconciliation modes`.
+- 12 `[Pass]` Body lines survive: moved fixture text ends `…gh_issue: 99001\n---\n\nBody\nstatus: example in body\nupdated: body line\n` with frontmatter `status: Complete` (`wave_reconcile.py:1354-1359`). Lock: `contended lock: ReconcileError code=8 | holder record intact: True` (`:65-68`). The remainder is in finding 8.
+- 13 `[Pass]` `13 two sections: returned=False gh=['view', 'comment']` (`jog_run.py:1160-1162`).
+- 14 `[Pass]` `14 coverage bound to approved sha, head differs: returned=True`; `14b coverage sha != receipt sha: returned=False`; `14c receipt without head_sha: returned=False` (`jog_run.py:1168`). Preservation of the approved SHA is checked at `jog_run.py:1232`.
+- 15 `[Pass]` by reading: the reference check precedes the close (`jog_run.py:1285-1289`) and `--base` is passed (`:1293`); `_gh_pr_view` fetches `title,body` (`:956`). Finding 6 is its side effect.
+- Fast path `[Pass]` `closed not planned: returned=ContractError: landing issue was closed without completion`; `closed completed: returned=True gh=['view']` (`jog_run.py:1152-1155`).
+- agy round 1, 1a, 4b and 5 still hold: `1a mixed: returned=False gh=['view', 'comment']`; archived docs are not queried unless in the census (`wave_reconcile.py:1178`); the map covers all four folders (`pdda.sh:601`).
+
+**Definition of Done, and what the orchestrator still owes**
+
+- Criterion 1: not met (finding 1). The planner, path integrity and preflight are still outside the resolver and outside the allowlist.
+- Criterion 2: shown with mocks only. A closed capture with no row moved and gained none (`exists 3-COMPLETED/GH-99001-NEVER-STARTED.md True`, `rows gained: (0,)`); a NOT_PLANNED one went to 4-MISC; `DUPLICATE` was skipped. Real-data preview with every issue mocked OPEN: 112 issue lookups, 46 repoints, 7 skipped, 0 moves. The checker's 46 `repoint-doc-path` rows equal the sweep's 46 repoint intents (46 distinct rows), so `--fix` should clear them. The before/after on a disposable clone is `[Unverified — needs clone run]`.
+- Criterion 3: `[Unverified — needs clone run]`. By reading, the sweep no longer touches section or badge.
+- Criterion 4: met by mock except finding 3 (`delivered-but-open: GH-1344 PRs [1350]; report only`; the sweep's only GitHub call is a read, `wave_reconcile.py:1180`).
+- Criterion 5: met by mock (rows 7, 13, 14 and 1a above; `marker present: returned=False gh=['view']`; `all checked: returned=True gh=['view', 'close']`).
+- Criterion 6: `[Unverified — needs clone run]`.
+- Still absent: `TESTS-RESULTS/` witnesses, and a producer for `whole_issue_coverage`.
+
+handing off to Producer (codex) — go to the codex window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
