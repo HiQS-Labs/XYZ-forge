@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -187,5 +187,33 @@ Basis: Two blocking regressions were reproduced on this repo's own data. The new
 - No `TESTS-RESULTS/2026-11-04+GH-1344/` witness exists. `whole_issue_coverage` has no producer in `utils/`, `relay-automation/`, `skills/` or `test/`, so proof (a) can be exercised only with a hand-written receipt. `utils/py/marathon_drive.py:1148` still accepts `--lane-closes-issue`.
 
 handing off to Producer (codex) — go to the codex window and say 'take your turn'.
+
+### Round 2 · Producer · codex
+
+Dispositions for Claude round 1:
+
+1. **Implemented.** `doc_issue_number` accepts N, #N, GH-N and issue URLs; only explicit none/null/false/n/a/no/~ values opt out. Unrecognized declarations fall back to the filename. The sweep and Python readers use the same identity index. The standalone PDDA resolver implements the same policy without depending on Forge's Python modules being installed beside PDDA.
+2. **Implemented.** `_pdda_doc_map` reads each configured lifecycle directory once. The cached-pointer checker builds the map once before iterating ledger rows; individual resolutions use that map rather than spawning frontmatter readers for every doc. The real checkout's Python index contains 464 issues and took 0.02–0.04 s in focused runs. This is index latency, not a measured full `issue-doc-sync` duration; no claim about the full check's base/candidate delta.
+3. **Modified.** Both indexes omit recon/MARATHON-PLAN supporting docs, prefer primary issue filenames, and use lifecycle priority between primary docs in different folders. Multiple primary docs in the same preferred folder, or multiple unnamed identity docs without a primary, remain ambiguous. The checker reports ambiguity without recommending `--fix`; the sweep skips it. This checkout has two GH-494 primary docs in 3-COMPLETED, so choosing either would still have been unsafe. Active lookup for 494 now returns None.
+4. **Implemented.** Removed sweep `roadmap move`. It files docs and repoints existing rows only, preserving section and shipping eligibility for catch-up. Archived pointer repair consequently needs no live closure query unless the issue appears in the census. Section drift remains the responsibility of `roadmap reconcile-state` / normal shipping reconciliation; a warning from that separate check is not a promise that sweep `--fix` will clear it. This deliberately supersedes agy round 1's section-move request.
+5. **Implemented.** Both early CLI modes handle `ReconcileError` with its original exit code; malformed census objects/keys and ordinary input I/O/value errors produce the existing ERROR format. Census `delivered` must be a numeric-keyed object. The missing-root lock probe changed from exit 1 plus traceback to exit 8 without traceback.
+6. **Implemented.** Identity resolution remains all-folder, but pre-merge adds closer docs to the contract set only in 2-WORKING/3-COMPLETED. Inbox and declined captures no longer acquire the working-doc schema contract through this lookup.
+7. **Implemented.** Independent coverage additionally requires a nonempty receipt builder.
+8. **Implemented.** Checklist parsing includes quoted bullet checkboxes and table-cell checkboxes. Focused controls show unchecked quoted/table entries keep the issue open.
+9. **Implemented.** Sweep uses the same index as the Python reader, including optional GH- filename prefixes.
+10. **Implemented.** Exact-issue closeout and sweep share `reconciler_git_dir`, including linked-worktree `commondir` resolution.
+11. **Modified.** `--dry-run` takes precedence over `--fix`; conflicting reconciliation modes (including `--pr`) are rejected for sweep mode instead of silently ignored. Qualifying/promotion options remain governed by the ordinary CLI and are not a supported sweep workflow.
+12. **Partly implemented; remainder deferred.** The mover now rewrites status/updated only inside the YAML frontmatter. Lock files open in append/read mode and are truncated only after lock acquisition. `repoint` comment now accurately says path references change while badges/ratings/section remain. The pre-existing filename-only catch-up scan and stale explanatory docstring are not a substitute for resolving all Task 10 consumers; the planner/path-integrity/preflight and final witness gaps remain explicitly outstanding for the orchestrator. No claim of whole-file sweep clearance is made by this Producer turn.
+13. **Implemented.** Gather checklist entries across every matching Acceptance section; the observed two-phase input now remains open.
+14. **Implemented.** Coverage binds to `receipt.head_sha`, whose preservation through the final PR head is already checked by `_landing_tail_proof` in `jog_land`. A receipt committed after its approved candidate can now provide proof without asserting its own containing commit's hash. Nonempty approved SHA remains mandatory.
+15. **Implemented.** Before calling the issue disposition helper, landing checks that a PR needing exact-issue closeout references the issue using the reconciler's own extractor. The PR base is already verified against the manifest and is now passed explicitly to `--delivered-issue`. These checks prevent the reported missing-reference/default-development failures from first closing the issue. Later filesystem/network/write failures can still occur after a legitimate remote closure; the existing refusal/retry behavior remains necessary, not an atomic GitHub/local transaction claim.
+
+Other delegated observations: **Modified** the CLOSED fast path to require `stateReason=COMPLETED`, so a declined issue cannot be shipped by that path. **Deferred** the pre-existing lock-reclaim window, command lint limitations, post-try Jog writes, releases ledger concurrency/schema/path-validation observations, and plain non-checkbox Acceptance prose interpretation; no corresponding new reproductions or broad behavior requests are established here. No edit to `releases_app.py` was needed. The no-producer coverage assertion and out-of-allowlist preflight/planner/path-integrity gaps remain with the orchestrator. This is not Definition-of-Done approval.
+
+Verification: focused manual probes only; no git command, project suite, remote mutation, or ledger write ran. `.relay-scratch/probe.py`, `extra-probe.py`, their logs, and `shell-probe.sh`/log contain the ephemeral commands/results. Pre-edit file snapshots provide red controls for URL identity, recon selection, missing builder, multiple Acceptance sections, coverage candidate SHA, premature roadmap section transition, and CLI traceback/exit code. Candidate results passed. Additional controls cover real scratch-file movement/status updates, body preservation, no-row/archive behavior, ambiguous identities, all-checked closure, quoted/table incompleteness, dry-run precedence, and exact full-map Bash/Python parity (464 nonempty entries). Python AST parsing for all three Python artifacts and `bash -n utils/pdda/pdda.sh` passed. GitHub/ledger calls were mocked; the full landing and pre-merge flows were not exercised end to end. No new suite or gate was added. Codebase graph tools were not exposed in this turn, so targeted source reads were the fallback.
+
+Reversibility: **Costly**, because lifecycle writes and a valid remote closure span different stores. The sweep retains the rollback journal; stop on a failing final gate or peer finding. Durable TESTS-RESULTS provenance, final-commit existing suites, disposable-clone sweep and local Jog landing witnesses remain required from the harness/orchestrator. Scratch results are not committed acceptance evidence.
+
+handing off to Reviewer (claude) — go to the claude window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

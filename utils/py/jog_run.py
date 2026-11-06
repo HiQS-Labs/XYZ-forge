@@ -1144,25 +1144,29 @@ def _close_delivered_issue(root, gh_num, pr_number, head, receipt):
     if not slug:
         raise ContractError("cannot qualify landing issue repository")
     command = ["gh", "issue", "view", str(gh_num), "--repo", slug,
-               "--json", "state,body,comments"]
+               "--json", "state,stateReason,body,comments"]
     result = subprocess.run(command, cwd=root, capture_output=True, text=True)
     if result.returncode:
         raise ContractError("could not read landing issue proof: " + result.stderr.strip())
     issue = json.loads(result.stdout)
     if issue.get("state") == "CLOSED":
+        if issue.get("stateReason") != "COMPLETED":
+            raise ContractError("landing issue was closed without completion")
         return True
     if issue.get("state") != "OPEN":
         raise ContractError("invalid landing issue state")
     body = re.sub(r"```.*?```|~~~.*?~~~", "", issue.get("body") or "", flags=re.S)
     body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
-    section = re.search(r"^## Acceptance[^\n]*\n(.*?)(?=^#{1,2} |\Z)", body, re.M | re.S)
-    checks = re.findall(r"^\s*(?:[-*+]|\d+[.)])\s+\[([^]\n]*)\][ \t]*(.*)$", section[1], re.M) if section else []
+    sections = re.findall(r"^## Acceptance[^\n]*\n(.*?)(?=^#{1,2} |\Z)", body, re.M | re.S)
+    checks = [check for section in sections for check in re.findall(
+        r"(?:^\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+|\|\s*)\[([^]\n]*)\][ \t]*(.*)$", section, re.M)]
     complete = bool(checks) and all(c.lower() == "x" and text.strip() for c, text in checks)
-    # This assertion must be recorded by the independent review producer, tied to this head
+    # This assertion must be recorded by the independent review producer, tied to the approved head
     # and issue. Lane-closing intent and an ordinary gate receipt are never coverage proof.
     coverage = receipt.get("whole_issue_coverage") or {}
     independent = (isinstance(coverage, dict) and coverage.get("issue") == gh_num
-                   and coverage.get("head_sha") == head and coverage.get("covers_whole_issue") is True
+                   and bool(receipt.get("head_sha")) and coverage.get("head_sha") == receipt.get("head_sha")
+                   and coverage.get("covers_whole_issue") is True and bool(receipt.get("builder"))
                    and bool(coverage.get("reviewer")) and bool(coverage.get("evidence_path"))
                    and coverage.get("reviewer") != receipt.get("builder"))
     if complete or independent:
@@ -1277,11 +1281,17 @@ def jog_land(root, gh_num, pr_arg=None):
                 f"wave_reconcile.py --pr {pr_number} locally (GH-1127) or dispatch the hosted lane")
         if len(rows) != 1:
             raise ContractError("landing requires exactly one canonical Jog queue row")
+        # Check the exact closeout contract before any remote issue closure.
+        from wave_reconcile import extract_linked_issues
+        closers, mentions = extract_linked_issues(pr, repo_slug=github_slug_from_origin(root))
+        if shipped_reconcile is None and gh_num not in closers + mentions:
+            raise ContractError("delivery closeout requires the merged PR to reference the issue")
         closed = _close_delivered_issue(root, gh_num, int(pr_number), head, receipt)
         if closed and shipped_reconcile is None:
             reconciled = subprocess.run(
                 [sys.executable, resolve_tool(root, "utils/py/wave_reconcile.py"),
-                 "--root", root, "--pr", str(pr_number), "--delivered-issue", str(gh_num)],
+                 "--root", root, "--pr", str(pr_number), "--base", base,
+                 "--delivered-issue", str(gh_num)],
                 cwd=root, capture_output=True, text=True)
             if reconciled.returncode:
                 raise ContractError("closed issue requires reconciliation: " +

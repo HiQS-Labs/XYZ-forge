@@ -62,8 +62,10 @@ class ReconcilerLock:
 
     def __enter__(self):
         try:
-            self.fd = open(self.lock_path, "w")
+            self.fd = open(self.lock_path, "a+")
             fcntl.flock(self.fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self.fd.seek(0)
+            self.fd.truncate()
             self.fd.write(f"pid={os.getpid()}\ntime={datetime.now().isoformat()}\n")
             self.fd.flush()
             return self
@@ -1067,24 +1069,46 @@ def extract_linked_issues(pr_meta, repo_slug=None):
 RECONCILE_FOLDERS = ("2-WORKING", "1-INBOX")
 
 
+def doc_issue_number(path):
+    """Read supported issue identities, preserving explicit no-issue opt-outs."""
+    declared = str(parse_doc_frontmatter(path).get("gh_issue", "")).strip()
+    if declared.lower() in ("none", "null", "false", "n/a", "no", "~"):
+        return None
+    match = re.fullmatch(r"(?:#|GH-)?(\d+)", declared, re.I)
+    if not match:
+        match = re.fullmatch(r"https://github\.com/[^/]+/[^/]+/issues/(\d+)/?", declared, re.I)
+    if not match:
+        match = re.match(r"^(?:GH-)?(\d+)(?:-|\.md$)", Path(path).name, re.I)
+    return int(match[1]) if match else None
+
+
+def issue_doc_index(directories):
+    """Index once; primary issue docs outrank supporting recon/phase documents.
+
+    Lifecycle directory order breaks ties between primary documents. Unnamed
+    identity documents are usable only when unique; ambiguous ones stay unresolved.
+    """
+    candidates = {}
+    for directory in directories:
+        for path in sorted(Path(directory).glob("*.md")):
+            if path.name.startswith(("recon-", "MARATHON-PLAN-")):
+                continue
+            number = doc_issue_number(path)
+            if number is not None:
+                candidates.setdefault(number, []).append(path)
+    result = {}
+    for number, paths in candidates.items():
+        primary = [p for p in paths if re.match(rf"^(?:GH-)?{number}(?:-|\.md$)", p.name, re.I)]
+        preferred = [p for p in primary if p.parent == primary[0].parent] if primary else paths
+        result[number] = preferred[0] if len(preferred) == 1 else None
+    return result
+
+
 def find_issue_doc(repo_root, issue_num, folders=None):
-    """Resolve identity, not the ledger's cached path, across every lifecycle folder."""
-    candidates = []
-    for folder in (folders if folders is not None else ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC")):
-        directory = Path(repo_root, "PROJECT", folder)
-        if directory.is_dir():
-            candidates.extend(sorted(directory.glob("*.md")))
-    issue = str(int(issue_num))
-    for path in candidates:
-        if parse_doc_frontmatter(path).get("gh_issue", "").lstrip("#") == issue:
-            return str(path)
-    for path in candidates:
-        # An explicit different identity must not be overridden by a stale filename.
-        if "gh_issue" in parse_doc_frontmatter(path):
-            continue
-        if re.match(rf"^(?:GH-)?{issue}(?:-|\.md$)", path.name, re.IGNORECASE):
-            return str(path)
-    return None
+    """Resolve identity across lifecycle folders, never a cached ledger path."""
+    folders = folders if folders is not None else ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC")
+    path = issue_doc_index(Path(repo_root, "PROJECT", f) for f in folders).get(int(issue_num))
+    return str(path) if path else None
 
 
 
@@ -1093,9 +1117,7 @@ def find_active_doc_for_issue(repo_root, issue_num):
     return find_issue_doc(repo_root, issue_num, RECONCILE_FOLDERS)
 
 
-def sweep_issue_docs(repo_root, apply=False, census=None):
-    journal = RollbackJournal(repo_root)
-    # Use the same common git directory lock as the normal reconciler.
+def reconciler_git_dir(repo_root):
     dotgit = Path(repo_root, ".git")
     gitdir = dotgit
     if dotgit.is_file():
@@ -1103,6 +1125,13 @@ def sweep_issue_docs(repo_root, apply=False, census=None):
         common = gitdir / "commondir"
         if common.is_file():
             gitdir = (gitdir / common.read_text().strip()).resolve()
+    return gitdir
+
+
+def sweep_issue_docs(repo_root, apply=False, census=None):
+    journal = RollbackJournal(repo_root)
+    # Use the same common git directory lock as the normal reconciler.
+    gitdir = reconciler_git_dir(repo_root)
     try:
         with ReconcilerLock(str(gitdir / "wave-reconcile.lock")):
             _sweep_issue_docs(repo_root, apply, census, journal)
@@ -1128,35 +1157,25 @@ def _sweep_issue_docs(repo_root, apply=False, census=None, journal=None):
     repos = {r["id"]: r["slug"] for r in ledger_rows(repo_root, "SELECT id,slug FROM repos")}
     owned = [r for r in rows if (identity := resolve_roadmap_identity(r, repos, slug))["identity_valid"]
              and identity["repo"] == slug]
-    documents = {}
-    for folder in ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC"):
-        for path in sorted(Path(repo_root, "PROJECT", folder).glob("*.md")):
-            num = parse_doc_frontmatter(path).get("gh_issue", "").lstrip("#")
-            if not num and "gh_issue" not in parse_doc_frontmatter(path):
-                match = re.match(r"^GH-(\d+)(?:-|\.md$)", path.name, re.I)
-                num = match[1] if match else ""
-            if num.isdigit():
-                documents.setdefault(int(num), []).append(path)
+    documents = issue_doc_index(Path(repo_root, "PROJECT", f) for f in
+                                ("2-WORKING", "1-INBOX", "3-COMPLETED", "4-MISC"))
     delivered = {}
     if census is True:
         log("No census manifest supplied; delivered-but-open report has no candidates")
     if census and census is not True:
         data = json.loads(Path(census).read_text(encoding="utf-8"))
-        delivered = data["delivered"]
-        if not isinstance(delivered, dict):
+        delivered = data.get("delivered") if isinstance(data, dict) else None
+        if not isinstance(delivered, dict) or any(not str(n).isdigit() for n in delivered):
             die("Census delivered map must be an object")
     for number in sorted(set(documents) | {int(n) for n in delivered}):
-        paths = documents.get(number, [])
-        if len(paths) > 1:
+        source = documents.get(number)
+        if number in documents and source is None:
             log(f"SKIPPED GH-{number}: ambiguous issue documents")
             continue
-        source = paths[0] if paths else None
         archived = source is not None and source.parent.name in ("3-COMPLETED", "4-MISC")
-        # Archived pointers are a local cache repair; do not re-query hundreds of terminal docs.
+        # Archived pointers are a local cache repair; section state belongs to reconciliation.
         issue = None
-        needs_section = any(row["gh_number"] == number and row["section"] not in
-                            ("Completed", "Deferred · vision") for row in owned)
-        if not archived or needs_section or str(number) in delivered:
+        if not archived or str(number) in delivered:
             try:
                 issue = read_issue_closure_state(repo_root, f"https://github.com/{slug}/issues/{number}")
             except (ValueError, OSError, subprocess.TimeoutExpired) as exc:
@@ -1185,13 +1204,10 @@ def _sweep_issue_docs(repo_root, apply=False, census=None, journal=None):
         relative = str(destination.relative_to(repo_root))
         for row in owned:
             if row["gh_number"] == number and row["doc_path"] != relative:
-                # repoint preserves raw_text (including SHIPPED ... (PR #N)), ratings and section.
+                # repoint updates path references while preserving shipping badges, ratings and section.
                 ledger_write(repo_root, ["roadmap", "repoint", "--gid", row["global_id"],
                                         "--doc-path", relative], dry_run=not apply, journal=journal)
-            if row["gh_number"] == number and terminal_section and row["section"] != terminal_section:
-                # Section-only update preserves shipping badges, ratings and raw text.
-                ledger_write(repo_root, ["roadmap", "move", "--gid", row["global_id"],
-                                        "--section", terminal_section], dry_run=not apply, journal=journal)
+
 
 
 def parse_doc_frontmatter(doc_path):
@@ -1334,13 +1350,13 @@ def validate_and_update_doc(doc_path, pr_meta, is_merged=True, dry_run=False, jo
         new_status = "Declined"
         dest_folder = "4-MISC"
 
-    # Update frontmatter status and updated date
-    new_content = re.sub(
-        r"^status:\s*.*$", f"status: {new_status}", content, flags=re.MULTILINE | re.IGNORECASE
-    )
-    new_content = re.sub(
-        r"^updated:\s*.*$", f"updated: {ship_date}", new_content, flags=re.MULTILINE | re.IGNORECASE
-    )
+    # Update only the YAML frontmatter, never status examples in the body.
+    match = re.match(r"\A---[^\S\n]*\n(.*?)^---[^\S\n]*(?:\n|$)", content, re.M | re.S)
+    new_content = content
+    if match:
+        frontmatter = re.sub(r"^status:[^\n]*$", f"status: {new_status}", match[1], flags=re.M | re.I)
+        frontmatter = re.sub(r"^updated:[^\n]*$", f"updated: {ship_date}", frontmatter, flags=re.M | re.I)
+        new_content = content[:match.start(1)] + frontmatter + content[match.end(1):]
 
     dest_dir = os.path.join(os.path.dirname(os.path.dirname(doc_path)), dest_folder)
     dest_path = os.path.join(dest_dir, os.path.basename(doc_path))
@@ -2175,7 +2191,7 @@ def run_pre_merge(repo_root, args):
 
     for issue_num in closers:
         doc_path = find_issue_doc(repo_root, issue_num)
-        if doc_path:
+        if doc_path and Path(doc_path).parent.name in ("2-WORKING", "3-COMPLETED"):
             target_docs.add(doc_path)
 
     for d in diff_docs:
@@ -2235,7 +2251,7 @@ def reconcile_delivered_issue(repo_root, issue_num, pr_number, base="development
     """
     journal = RollbackJournal(repo_root)
     try:
-        with ReconcilerLock(os.path.join(repo_root, ".git", "wave-reconcile.lock")):
+        with ReconcilerLock(str(reconciler_git_dir(repo_root) / "wave-reconcile.lock")):
             slug = github_slug_from_origin(repo_root)
             meta = fetch_pr_metadata(repo_root, str(pr_number))
             closers, mentions = extract_linked_issues(meta, repo_slug=slug)
@@ -2364,8 +2380,16 @@ def main():
                                  or args.issue_doc_sweep or args.force_promote or args.offline):
         parser.error("--delivered-issue requires a single live --pr post-merge reconciliation")
     if args.issue_doc_sweep:
-        sweep_issue_docs(os.path.abspath(args.root) if args.root else resolve_repo_root(),
-                         apply=args.fix, census=args.census)
+        if args.pr or args.catch_up or args.commit or args.pre_merge or args.delivered_issue or args.marathon or args.manifest:
+            parser.error("--issue-doc-sweep cannot be combined with reconciliation modes")
+        try:
+            sweep_issue_docs(os.path.abspath(args.root) if args.root else resolve_repo_root(),
+                             apply=args.fix and not args.dry_run, census=args.census)
+        except ReconcileError as exc:
+            sys.exit(exc.code)
+        except (ValueError, OSError, KeyError) as exc:
+            log_err(str(exc))
+            sys.exit(2)
         return
     if args.fix or args.census:
         parser.error("--fix and --census require --issue-doc-sweep")
@@ -2379,8 +2403,14 @@ def main():
     repo_root = os.path.abspath(args.root) if args.root else resolve_repo_root()
 
     if args.delivered_issue:
-        reconcile_delivered_issue(repo_root, args.delivered_issue, args.pr[0], args.base,
-                                  dry_run=args.dry_run)
+        try:
+            reconcile_delivered_issue(repo_root, args.delivered_issue, args.pr[0], args.base,
+                                      dry_run=args.dry_run)
+        except ReconcileError as exc:
+            sys.exit(exc.code)
+        except (ValueError, OSError, KeyError) as exc:
+            log_err(str(exc))
+            sys.exit(2)
         return
 
     if args.pre_merge:

@@ -584,9 +584,10 @@ _pdda_doc_issue_number() {
   local file="$1" num base
   num="$(pdda_trim "$(pdda_frontmatter_value "$file" gh_issue)")"
   case "$num" in \"*\") num="${num#\"}"; num="${num%\"}" ;; \'*\') num="${num#\'}"; num="${num%\'}" ;; esac
+  case "$num" in none|null|false|n/a|no|'~') return 0 ;; esac
+  case "$num" in https://github.com/*/*/issues/*) num="${num%/}"; num="${num##*/}" ;; GH-*) num="${num#GH-}" ;; esac
   num="${num#\#}"
   if printf '%s' "$num" | grep -Eq '^[0-9]+$'; then printf '%s' "$num"; return; fi
-  [ -z "$num" ] || return 0  # explicit nonnumeric identity opts out of filename fallback
   base="$(basename "$file")"
   case "$base" in
     GH-[0-9]*) num="${base#GH-}"; num="${num%.md}"; num="${num%%-*}"   # strip .md first so a bare GH-<n>.md (no description) still resolves
@@ -594,25 +595,48 @@ _pdda_doc_issue_number() {
   esac
 }
 
-# Resolve a cached PROJECT pointer by issue identity across all lifecycle folders.
+# Build one map for all cached-pointer checks. Match the Python lifecycle resolver's
+# identity/tie-break policy without importing Forge modules into standalone PDDA installs.
+_pdda_doc_map() {
+  python3 -B - "$PDDA_WORKING_DIR" "$PDDA_INBOX_DIR" "$PDDA_COMPLETED_DIR" "$PDDA_MISC_DIR" <<'PYMAP'
+import re, sys
+from pathlib import Path
+candidates = {}
+for directory in sys.argv[1:]:
+    for path in sorted(Path(directory).glob("*.md")):
+        if path.name.startswith(("recon-", "MARATHON-PLAN-")):
+            continue
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        declared = ""
+        if lines and lines[0].strip() == "---":
+            for line in lines[1:]:
+                if line.strip() == "---":
+                    break
+                key, sep, value = line.partition(":")
+                if sep and key.strip().lower() == "gh_issue":
+                    declared = value.strip().strip("\"'").lower()
+                    break
+        if declared in ("none", "null", "false", "n/a", "no", "~"):
+            continue
+        match = re.fullmatch(r"(?:#|GH-)?(\d+)", declared, re.I)
+        if not match:
+            match = re.fullmatch(r"https://github\.com/[^/]+/[^/]+/issues/(\d+)/?", declared, re.I)
+        if not match:
+            match = re.match(r"^(?:GH-)?(\d+)(?:-|\.md$)", path.name, re.I)
+        if match:
+            candidates.setdefault(int(match[1]), []).append(path)
+for number, paths in candidates.items():
+    primary = [p for p in paths if re.match(rf"^(?:GH-)?{number}(?:-|\.md$)", p.name, re.I)]
+    preferred = [p for p in primary if p.parent == primary[0].parent] if primary else paths
+    path = preferred[0] if len(preferred) == 1 else "AMBIGUOUS"
+    print(f"{number}\t{path}")
+PYMAP
+}
+
 _pdda_find_doc_for_issue() {
-  local num="$1" folder file declared
-  for folder in "$PDDA_WORKING_DIR" "$PDDA_INBOX_DIR" "$PDDA_COMPLETED_DIR" "$PDDA_MISC_DIR"; do
-    for file in "$folder/"*.md; do
-      [ -f "$file" ] || continue
-      declared="$(pdda_trim "$(pdda_frontmatter_value "$file" gh_issue)")"
-      declared="${declared//\"/}"; declared="${declared//\'/}"; declared="${declared#\#}"
-      if [ "$declared" = "$num" ]; then printf '%s\n' "$file"; return 0; fi
-    done
-  done
-  for folder in "$PDDA_WORKING_DIR" "$PDDA_INBOX_DIR" "$PDDA_COMPLETED_DIR" "$PDDA_MISC_DIR"; do
-    for file in "$folder/"*.md; do
-      [ -f "$file" ] || continue
-      [ -z "$(pdda_frontmatter_value "$file" gh_issue)" ] || continue
-      if [ "$(_pdda_doc_issue_number "$file")" = "$num" ]; then printf '%s\n' "$file"; return 0; fi
-    done
-  done
-  return 1
+  local num="$1" doc_map
+  doc_map="${PDDA_ISSUE_DOC_MAP:-$(_pdda_doc_map)}"
+  printf '%s\n' "$doc_map" | awk -F '\t' -v n="$num" '$1 == n && $2 != "AMBIGUOUS" {print $2; found=1; exit} END {if (!found) exit 1}'
 }
 
 # Leading alphabetic word of a doc's status (lowercased): "Active — Phase 0 complete" -> "active";
@@ -748,9 +772,15 @@ check_issue_doc_sync() {
   fi
 
   if [ -f "$PDDA_REPO_ROOT/releases.db" ] && command -v sqlite3 >/dev/null 2>&1; then
-    local cached resolved
+    local cached resolved PDDA_ISSUE_DOC_MAP
+    PDDA_ISSUE_DOC_MAP="$(_pdda_doc_map)"
     while IFS=$'\t' read -r num cached; do
       [ -n "$num" ] || continue
+      if printf '%s\n' "$PDDA_ISSUE_DOC_MAP" | awk -F '\t' -v n="$num" '$1 == n && $2 == "AMBIGUOUS" {found=1} END {exit !found}'; then
+        pdda_record_finding warn "$CHECK_NAME" "$PDDA_REPO_ROOT/releases.db" 0 \
+          "issue #$num has ambiguous identity documents — review duplicate issue documents" "ambiguous-doc-path"
+        continue
+      fi
       resolved="$(_pdda_find_doc_for_issue "$num")" || continue
       if [ "$cached" != "$(pdda_relpath "$resolved")" ]; then
         pdda_record_finding warn "$CHECK_NAME" "$PDDA_REPO_ROOT/releases.db" 0 \
