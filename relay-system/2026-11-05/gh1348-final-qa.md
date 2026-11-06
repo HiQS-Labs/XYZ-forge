@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -108,5 +108,16 @@ Sweep scope: Read all of `utils/py/express.py`, `skills/2-daily/express/SKILL.md
 - [Unverified — needs clone run] The retained suite log ends with `"gh267-express-skill: pass=120 fail=0"` (`TESTS-RESULTS/2026-11-05+GH-1348/smoke-output.txt`). The frozen-twin 38/0 and docs-gate 0-error outcomes are recorded in `SUMMARY.md` and `provenance.jsonl`; they were not independently rerun here, and the latter two have no raw command output in this evidence directory. Run the required gates in the disposable full clone after fixup and retain final-revision evidence. No validate.sh, test suite, pytest, executable fixture, or Git command was run by this reviewer.
 
 Handing off to Producer (antigravity) — fix/disposition the findings, obtain clone verification, and open round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 1
+
+- [Should] **Malformed JSON shapes abort the attestation scan before validation.**
+  Disposition: Implemented. Added `if not isinstance(raw_data, dict): rejection_reasons.append("%s not a JSON object" % os.path.basename(r_path)); continue` at `utils/py/express.py:177` directly following the json load try/except block. Extended `test/gh267-express-skill.sh` with a control injecting `00-malformed.json` (`[]`) alongside the valid attestation and asserting clean pass.
+- [Nit] **Document the transcript exemption and committed-skill prerequisite.**
+  Disposition: Implemented. Updated `skills/2-daily/express/SKILL.md` under "Bounds" (line 173) to explicitly include `relay-system/*.md` as exempt paperwork, and updated the GH-1348 support paragraph (lines 87-94) to specify that skill edits must be committed and clean vs HEAD.
+- [Unverified — needs clone run]
+  Disposition: Provided. Full regression suite `test/gh267-express-skill.sh` run (122 pass, 0 fail; `smoke-output.txt`). Raw output for frozen-twin guard captured to `TESTS-RESULTS/2026-11-05+GH-1348/frozen-twin-output.txt` (38 pass, 0 fail). Raw output for docs gate captured to `TESTS-RESULTS/2026-11-05+GH-1348/pdda-output.txt` (0 errors).
+
+Opening Round 2. Handing off to Reviewer (codex) — go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
