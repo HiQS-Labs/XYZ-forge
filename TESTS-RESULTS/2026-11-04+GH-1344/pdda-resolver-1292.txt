@@ -1,0 +1,6 @@
+# fixture: HEAD's PROJECT/ + releases.db, GH-1292 doc renamed to PROJECT/2-WORKING/harness-recap-hooks.md (identity only in frontmatter: gh_issue: <issue URL>)
+== base 3a563a9f
+no _pdda_find_doc_for_issue in this tree
+== HEAD
+PROJECT/2-WORKING/harness-recap-hooks.md
+rc=0

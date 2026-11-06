@@ -1,0 +1,21 @@
+## before
+rows=457 shipped=265 completed=360
+1-INBOX       85
+2-WORKING      137
+3-COMPLETED      357
+4-MISC        5
+## after first --fix
+rows=457 shipped=265 completed=360
+1-INBOX       77
+2-WORKING      121
+3-COMPLETED      379
+4-MISC        7
+## inbox captures moved (rows before / after)
+18 rows_before=1	18 rows_after=1 file=PROJECT/3-COMPLETED/GH-18-COMMANDCODE-EVAL.md
+215 rows_before=1	215 rows_after=1 file=PROJECT/3-COMPLETED/GH-215-RECONCILER-VENDOR-PATHS.md
+216 rows_before=1	216 rows_after=1 file=PROJECT/3-COMPLETED/GH-216-LEDGER-BULLET-FORMAT.md
+255 rows_before=1	255 rows_after=1 file=PROJECT/3-COMPLETED/GH-255-ARCHIVE-ROOT-REMEDY.md
+589 rows_before=1	589 rows_after=1 file=PROJECT/3-COMPLETED/GH-589-XYZ-MINI-SYNC.md
+644 rows_before=1	644 rows_after=1 file=PROJECT/3-COMPLETED/GH-644-VENDOR-IGNORE-STATE.md
+770 rows_before=1	770 rows_after=1 file=PROJECT/4-MISC/GH-770-RELEASES-JOG-RESUME-LAND.md
+771 rows_before=1	771 rows_after=1 file=PROJECT/4-MISC/GH-771-JOG-ACCEPTS-REMOVED-GEMINI.md
