@@ -217,4 +217,12 @@ Sweep scope: Read the entire express driver (including pre-existing receipt, qua
 
 Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and subsequent gate.
 
+
+### Attestation · relay-drive — 2026-11-06T04:19:17Z
+task: RELAY-gh1348-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 44e4021e4c35c7118bf519ead0ec48ea9f821b4f
+added-range: 23609+3624
+added-sha256: 27b08098f1fb72dcd828cb7af83103a9eff31da0ddf8030d21d9be2066705086
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
