@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -119,5 +119,52 @@ Handing off to Producer (antigravity) — fix/disposition the findings, obtain c
   Disposition: Provided. Full regression suite `test/gh267-express-skill.sh` run (122 pass, 0 fail; `smoke-output.txt`). Raw output for frozen-twin guard captured to `TESTS-RESULTS/2026-11-05+GH-1348/frozen-twin-output.txt` (38 pass, 0 fail). Raw output for docs gate captured to `TESTS-RESULTS/2026-11-05+GH-1348/pdda-output.txt` (0 errors).
 
 Opening Round 2. Handing off to Reviewer (codex) — go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 2
+
+VERDICT: FAIL
+Basis: The round-1 implementation and documentation fixes are satisfactory. One pre-existing assertion in the touched regression suite reports success without its claimed input and cannot establish the exemption it names; repair that existing check before relying on the zero-regression total.
+swept file: no
+Sweep scope: Read the complete express driver, express skill, existing regression suite, GH-1348 working doc and verification summary/provenance; inspected raw gate logs and the GH-1348 CHANGELOG entry. Historical CHANGELOG entries were not fully swept. The pre-existing suite defect below is in scope under the whole-file review rule; no additional driver defect was identified.
+
+- [Should] **The paperwork-exemption assertion passes after fixture creation fails, and is below the bound even with paperwork counted.** In the submitted raw run, `TESTS-RESULTS/2026-11-05+GH-1348/smoke-output.txt:41` says `line 386: .../PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md: No such file or directory`; line 42 nevertheless says `pass: the lane's own capture doc + CHANGELOG stay exempt`. At `test/gh267-express-skill.sh:386–387`, only one core file and two tiny paperwork files are attempted against the default four-file/150-insertion bounds. Even successful creation would therefore pass if both exemptions were removed. Fix this existing case: ensure and assert nonempty capture input, arrange the core input at a real bound so counting the paperwork would exceed it, and witness a red control with the exemption disabled in a disposable clone. Do not add a suite or gate. Retain the corrected run output.
+  Observed input: the submitted smoke log's missing capture-file error followed immediately by the exemption PASS; the existing case uses one core file plus CHANGELOG and a one-line capture, below both default bounds.
+  Affected scope: this existing paperwork-exemption regression case and its evidence; no driver behavior change is requested.
+  Falsifier: with a nonempty capture and core paths exactly at the selected bound, the actual exemption passes; disabling capture exemption (and separately CHANGELOG exemption if claiming both) makes this same assertion fail. Missing capture setup must fail rather than increment PASS.
+  Inspection command: `nl -ba test/gh267-express-skill.sh | sed -n '250,270p;378,394p'; nl -ba TESTS-RESULTS/2026-11-05+GH-1348/smoke-output.txt | sed -n '34,46p'`; exit **0**; decisive output quoted above. No suite was executed here.
+- [Pass] **Malformed non-object records now skip safely.** `utils/py/express.py:177–180` rejects non-dictionaries before accessing task fields. A narrow import-only probe (exit **0**) printed `only []: rejected without exception` and `newer [] plus older receipt: skipped malformed record and reached loader/candidate`. The loader/candidate were mocked, so this proves scanning control flow only. The prior round recorded the red result for this same malformed shape.
+  Probe command:
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  mkdir -p "$TMPDIR"
+  python3 - <<'PYPROBE'
+  import importlib.util, pathlib, tempfile, types, os
+  s=importlib.util.spec_from_file_location('express_review','utils/py/express.py')
+  m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+  root=pathlib.Path(tempfile.mkdtemp(prefix='gh1348-review-',dir=os.environ['TMPDIR']))
+  d=root/'relay-attest'; d.mkdir(); (d/'bad.json').write_text('[]')
+  calls=[]; record={'status':'Approved'}
+  def load(*a,**k):
+      calls.append(pathlib.Path(k['path']).name)
+      return record,None
+  m._relay_attest=lambda:types.SimpleNamespace(git_common_dir=lambda _:str(root),load=load,candidate_ok=lambda *a:(True,None))
+  m.git=lambda *a,**k:types.SimpleNamespace(returncode=0,stdout='a'*40+'\n' if a[1]=='rev-parse' else '',stderr='')
+  paths=['skills/2-daily/close-the-loop/SKILL.md']
+  r,e=m.find_valid_skill_attestation(str(root),paths)
+  assert r is None and 'not a JSON object' in e and not calls
+  print('only []: rejected without exception')
+  (d/'valid.json').write_text('{"task":"RELAY-valid"}')
+  os.utime(d/'valid.json',(1,1))
+  r,e=m.find_valid_skill_attestation(str(root),paths)
+  assert r is record and e is None and calls==['valid.json']
+  print('newer [] plus older receipt: skipped malformed record and reached loader/candidate')
+  print('scope: scan control only; loader/candidate mocked; no Git subprocess')
+  PYPROBE
+  ```
+- [Pass] **Documentation now states the two missing prerequisites.** `skills/2-daily/express/SKILL.md:90` requires skill edits to be committed and clean versus HEAD; the Bounds paragraph explicitly includes `review transcripts under relay-system/*.md` among exempt paperwork.
+- [Nit] Update stale 120/120 counts in the GH-1348 CHANGELOG entry and working-doc Status table when recording the corrected run; `smoke-output.txt` currently ends `gh267-express-skill: pass=122 fail=0`.
+- [Unverified — needs clone run] Retained logs now include `gh308-frozen-twin-guard: 38 pass, 0 fail` and `PDDA run complete: no errors, 40 warning(s)`. Provenance still identifies revisions as `"commit": "current"`, so it does not independently pin those runs to a SHA. The harness must run required gates against the final revision in its disposable clone. No Git command, validate.sh, test suite, pytest, or executable fixture was run by this reviewer.
+
+Handing off to Producer (antigravity) — repair the existing assertion, retain clone evidence and open round 3; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
