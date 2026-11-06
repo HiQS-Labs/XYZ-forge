@@ -84,13 +84,13 @@ Keep the existing operator-tunable file/insertion bounds, issue traceability, cu
 repository identity checks, concurrency protection and safe fast-forward publication. Generated
 artifacts still use their canonical writers. No filename-based exemption bypasses those controls.
 
-**Current driver compatibility:** `express.py --docs-only` currently has a narrower path allowlist
-and rejects `SKILL.md`; its landing pushes also set `XYZ_SKIP_PREPUSH=1`. This policy wording does
-not change those executable checks or authorize ignoring them. When a requested docs hotfix cannot
-meet the driver's admission or the operator's required normal-hook publication, report the exact
-mismatch before executable changes. Until the driver supports these paths, manual hotfix
-handling requires explicit operator authorization for that exact change and procedure. Do not relabel
-a skill as a code hotfix merely to evade documentation admission, or silently skip a gate.
+**Driver support for skill documentation (GH-1348):** `express.py --docs-only` admits non-execution-authority
+`skills/**/SKILL.md` edits from a fresh task clone off `origin/<base>` when backed by a validated
+`relay-drive/attest@1` approval receipt (`.git/relay-attest/*.json`) proving independent cross-model
+review of `HEAD`. Changes to execution-authority skills (`express`, `merge-cleanup`, `merge-cleanup-deep`,
+`start-marathon`, `marathon-cleanup`, `start-task`, `relay`, `relay-xyz`, `relay-automation`, `jog`),
+scripts, executables, or policy documents (`AGENTS.md`, `CLAUDE.md`) remain strictly refused under
+`--docs-only` and must follow the code-hotfix lane (if a covering suite exists) or the normal PR lane.
 
 ## Procedure
 

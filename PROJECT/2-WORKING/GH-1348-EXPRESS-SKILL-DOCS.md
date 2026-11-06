@@ -19,7 +19,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Issue #1348 created; task clone provisioned; capture doc created in 1-INBOX | Park and rate in releases.db, promote to 2-WORKING, and conduct pre-implementation plan QA with Codex via relay-xyz |
+| Implemented driver changes in `express.py`, policy in `express/SKILL.md`, and added regression controls in `test/gh267-express-skill.sh` (120/120 pass) | Final Codex Relay QA (`relay-system/2026-11-05/gh1348-final-qa.md`), smoke test receipt, push, PR, and clone retirement |
 
 ## Observed problem and bet
 
@@ -62,13 +62,16 @@ phases: 1
 
 ## Acceptance Criteria
 
-- [ ] `utils/py/express.py` refuses `skills/2-daily/express/SKILL.md` and other execution-authority skills under `--docs-only` with `rule=docs-only`.
-- [ ] `utils/py/express.py` refuses non-execution-authority `skills/**/SKILL.md` under `--docs-only` when no valid Approved `relay_attest` receipt exists with `rule=skill-unattested`.
-- [ ] `utils/py/express.py` refuses non-execution-authority `skills/**/SKILL.md` under `--docs-only` when the skill file has drifted from the attested revision with `rule=skill-unattested`.
-- [ ] `utils/py/express.py` passes `check --docs-only` when a non-execution-authority `skills/**/SKILL.md` is committed to branch within the 2-commit budget and accompanied by a valid Approved target-tree `relay_attest` receipt for `HEAD` (without seeded `--artifact`).
-- [ ] `test/gh267-express-skill.sh` passes green with zero regressions.
-- [ ] `skills/2-daily/express/SKILL.md` accurately documents the verified driver behavior.
+- [x] `utils/py/express.py` refuses `skills/2-daily/express/SKILL.md` and other execution-authority skills under `--docs-only` with `rule=docs-only`.
+- [x] `utils/py/express.py` refuses non-execution-authority `skills/**/SKILL.md` under `--docs-only` when no valid Approved `relay_attest` receipt exists with `rule=skill-unattested`.
+- [x] `utils/py/express.py` refuses non-execution-authority `skills/**/SKILL.md` under `--docs-only` when the skill file has drifted from the attested revision with `rule=skill-unattested`.
+- [x] `utils/py/express.py` passes `check --docs-only` when a non-execution-authority `skills/**/SKILL.md` is committed to branch within the 2-commit budget and accompanied by a valid Approved target-tree `relay_attest` receipt for `HEAD` (without seeded `--artifact`).
+- [x] `test/gh267-express-skill.sh` passes green with zero regressions.
+- [x] `skills/2-daily/express/SKILL.md` accurately documents the verified driver behavior.
 
 ## Lessons Learned (For Future Agents)
 
-- (To be recorded at closeout)
+- When verifying attestation records in `find_valid_skill_attestation`, `relay_attest.candidate_ok` returns a `(bool, reason)` tuple rather than a boolean scalar; always unpack the tuple and explicitly verify `ok is True`.
+- `relay_attest.load` accepts terminal statuses including `Closed`; the driver must explicitly enforce `record["status"] == "Approved"`.
+- `candidate_ok` excludes `relay-system/` paths by contract, allowing relay transcript commits to follow the reviewed code revision without invalidating candidate fitness.
+- For tests in `test/gh267-express-skill.sh`, creating `$FX/test/pdda-repo-contract.sh` and adding it to `$FX/validate.sh` `TESTS` ensures `--docs-only` check tests pass in hermetic fixtures.
