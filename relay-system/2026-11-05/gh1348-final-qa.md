@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -72,5 +72,41 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: Fix the observed malformed-record crash before approval. Suite execution remains for the disposable-clone harness; the source sweep also found a small documentation mismatch.
+swept file: no
+Sweep scope: Read all of `utils/py/express.py`, `skills/2-daily/express/SKILL.md`, `test/gh267-express-skill.sh`, the GH-1348 working doc and evidence files, and the GH-1348 CHANGELOG entry. The historical remainder of CHANGELOG.md was not fully swept. No additional pre-existing source defect was identified in the files fully read; this is not a whole-archive approval.
+
+- [Should] **Malformed JSON shapes abort the attestation scan before validation.** `utils/py/express.py:178` calls `raw_data.get("task")` outside the read/parse exception handler. A syntactically valid JSON list crashes instead of being rejected with `skill-unattested`; if encountered before a valid receipt it prevents that receipt from being considered. `relay_attest.load()` already rejects non-dictionaries, but this code never reaches it. Fix: reject non-dict `raw_data` with a recorded reason and continue before calling `.get`, preserving the existing validated loader.
+  Observed input: one `relay-attest/malformed.json` containing exactly `[]`; narrow probe returned exit 1 and decisive output `AttributeError: 'list' object has no attribute 'get'`.
+  Affected scope: parsed attestation JSON whose top-level value is not an object, including lists and null; no change to admission of valid objects.
+  Falsifier: with only `[]`, return `(None, diagnostic)` without raising; with a newer `[]` plus an older otherwise valid Approved receipt, continue and accept the valid receipt. A well-formed but invalid object must still be rejected by the existing loader.
+  Probe command (no Git subprocesses; only scratch writes; exit **1**):
+  ```bash
+  export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+  python3 - <<'PY'
+  import importlib.util, pathlib, tempfile, types, os
+  s=importlib.util.spec_from_file_location('express_review','utils/py/express.py')
+  m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+  root=pathlib.Path(tempfile.mkdtemp(prefix='gh1348-record-',dir=os.environ['TMPDIR']))
+  (root/'relay-attest').mkdir()
+  (root/'relay-attest'/'malformed.json').write_text('[]')
+  m._relay_attest=lambda: types.SimpleNamespace(git_common_dir=lambda _:str(root))
+  m.git=lambda *a,**k:types.SimpleNamespace(returncode=0,stdout='a'*40+'\n',stderr='')
+  try:
+      print(m.find_valid_skill_attestation(str(root),['skills/2-daily/close-the-loop/SKILL.md']))
+  except Exception as e:
+      print(type(e).__name__+': '+str(e))
+      raise SystemExit(1)
+  PY
+  ```
+- [Nit] **Document the transcript exemption and committed-skill prerequisite.** `skills/2-daily/express/SKILL.md:173` says only the changelog and issue capture are exempt, whereas `utils/py/express.py:604` also exempts `relay-system/*.md`. Its GH-1348 support paragraph should also state that skill edits must already be committed and clean versus HEAD (`utils/py/express.py:203`); the usual uncommitted-edit workflow otherwise refuses even with an older approval. Fix these statements without changing behavior.
+- [Pass] **The main approval checks use the existing attestation contract.** `utils/py/express.py:184` unpacks `record, err`, line 190 requires `Approved`, line 195 unpacks `ok, reason`, and lines 203–209 check skill dirt against HEAD. `utils/py/relay_attest.py:404` rejects non-isolated and seeded-artifact reviews. This is source inspection, not an end-to-end run.
+- [Unverified — needs clone run] The retained suite log ends with `"gh267-express-skill: pass=120 fail=0"` (`TESTS-RESULTS/2026-11-05+GH-1348/smoke-output.txt`). The frozen-twin 38/0 and docs-gate 0-error outcomes are recorded in `SUMMARY.md` and `provenance.jsonl`; they were not independently rerun here, and the latter two have no raw command output in this evidence directory. Run the required gates in the disposable full clone after fixup and retain final-revision evidence. No validate.sh, test suite, pytest, executable fixture, or Git command was run by this reviewer.
+
+Handing off to Producer (antigravity) — fix/disposition the findings, obtain clone verification, and open round 2; go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
