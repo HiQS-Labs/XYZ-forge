@@ -6,7 +6,7 @@
 - Changes to execution-authority skills (`express`, `merge-cleanup`, `merge-cleanup-deep`, `start-marathon`, `marathon-cleanup`, `start-task`, `relay`, `relay-xyz`, `relay-automation`, `jog`), scripts, executables, or policy documents (`AGENTS.md`, `CLAUDE.md`) remain strictly refused under `--docs-only`.
 - Unattested, unapproved, malformed, or post-review drifted skill files refuse with `rule=skill-unattested`.
 - `skills/2-daily/express/SKILL.md` updated to document active driver support for attested skill documentation.
-- Existing regression suite `test/gh267-express-skill.sh` extended with positive and negative controls (122/122 pass; zero new suites per GH-831).
+- Existing regression suite `test/gh267-express-skill.sh` extended with positive and negative controls (126/126 pass; zero new suites per GH-831).
 
 ## 2026-11-04 — GH-1340 Task 1: GH-1333 decisions 4-6 written into the rules (policy only)
 

@@ -15,8 +15,11 @@ Output: `smoke-output.txt`, `frozen-twin-output.txt`, `pdda-output.txt`, `red-co
 | 4 | Approved attestation record for `HEAD` | Passes `check --docs-only` (`express-check: PASS`, prints attestation) | pass |
 | 5 | Malformed non-dict JSON in `relay-attest/` alongside valid receipt | Passes `check --docs-only` without raising, accepts valid receipt | pass |
 | 6 | Modified skill in working tree after attested commit | Refuses with `rule=skill-unattested` | pass |
-| 7 | Full express suite `test/gh267-express-skill.sh` | 122 pass, 0 fail (`smoke-output.txt`) | pass |
+| 7 | Full express suite `test/gh267-express-skill.sh` | 126 pass, 0 fail (`smoke-output.txt`) | pass |
 | 8 | Frozen twin guard `test/gh308-frozen-twin-guard.sh --base origin/development` | 38 pass, 0 fail (`frozen-twin-output.txt`) | pass |
 | 9 | Documentation gate `utils/pdda/pdda.sh run` | 0 errors, 40 warnings none from this diff (`pdda-output.txt`) | pass |
 | 10 | Red control: capture doc exemption disabled | Refuses with `rule=too-many-files` (5 core files > 4) (`red-control-capture-exemption.txt`) | pass (falsified) |
 | 11 | Red control: CHANGELOG exemption disabled | Refuses with `rule=too-many-files` (5 core files > 4) (`red-control-changelog-exemption.txt`) | pass (falsified) |
+| 12 | End-to-end `run --docs-only` with attested skill | Lands cleanly to development, completes closeout (`smoke-output.txt`) | pass |
+| 13 | Paperwork bound: root relay-system doc | Refuses with `rule=too-many-files` (not exempt) (`smoke-output.txt`) | pass |
+| 14 | Paperwork bound: dated review transcript | Stays exempt outside bounds (`smoke-output.txt`) | pass |

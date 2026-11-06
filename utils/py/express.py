@@ -208,7 +208,7 @@ def find_valid_skill_attestation(root, skill_paths):
             if diff_res.returncode != 0:
                 dirty_skills.append("%s has uncommitted working-tree diff vs HEAD %s" % (sp, head_sha[:12]))
                 continue
-            status_res = git(root, "status", "--porcelain=v1", "--", sp, check=False).stdout.strip()
+            status_res = git(root, "status", "--porcelain=v1", "-uall", "--", sp, check=False).stdout.strip()
             if status_res:
                 dirty_skills.append("%s is dirty in working tree vs HEAD %s" % (sp, head_sha[:12]))
                 continue
@@ -627,9 +627,13 @@ def core_paths(root, issue, paths):
 
 def is_doc_path(root, issue, p):
     """Only express-owned paperwork for this issue is outside size bounds."""
-    return (p == "CHANGELOG.md"
-            or p == capture_doc_path(root, issue)
-            or (p.startswith("relay-system/") and p.endswith(".md")))
+    if p == "CHANGELOG.md" or p == capture_doc_path(root, issue):
+        return True
+    if p.startswith("relay-system/") and p.endswith(".md"):
+        # Match dated review transcripts (relay-system/YYYY-MM-DD/*.md), not root docs
+        rel = p[len("relay-system/"):]
+        return "/" in rel and not rel.startswith("/")
+    return False
 
 
 def insertions(root, issue, paths, expect_driver=frozenset(), docs_only=False):

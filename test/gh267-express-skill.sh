@@ -395,6 +395,12 @@ run_check > /dev/null 2> "$ERR" && ok "the lane's own capture doc + CHANGELOG st
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; mkdir -p "$FX/PROJECT/4-MISC"; printf 'unrelated\n' > "$FX/PROJECT/4-MISC/OTHER.md"
 run_check > /dev/null 2> "$ERR" && bad "unrelated PROJECT doc must count against bounds" || { check_rule too-many-files "$ERR" && ok "unrelated PROJECT doc counts against file bound" || bad "unrelated PROJECT doc hit wrong rule: $(tail -1 "$ERR")"; }
 
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; mkdir -p "$FX/relay-system"; printf 'root-doc\n' > "$FX/relay-system/README.md"
+run_check > /dev/null 2> "$ERR" && bad "root relay-system doc must count against bounds" || { check_rule too-many-files "$ERR" && ok "root relay-system doc counts against file bound (GH-1348)" || bad "root relay doc hit wrong rule: $(tail -1 "$ERR")"; }
+
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; mkdir -p "$FX/relay-system/2026-11-05"; printf 'review\n' > "$FX/relay-system/2026-11-05/review.md"
+run_check > /dev/null 2> "$ERR" && ok "dated review transcript under relay-system/ stays exempt (GH-1348)" || bad "dated review transcript counted against bounds: $(tail -1 "$ERR")"
+
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; mkdir -p "$FX/PROJECT/4-MISC"; python3 -c "print('\\n'.join('line %d' % i for i in range(151)))" > "$FX/PROJECT/4-MISC/OTHER.md"
 run_check > /dev/null 2> "$ERR" && bad "unrelated PROJECT doc must count against insertion bound" || { check_rule too-large "$ERR" && ok "unrelated PROJECT doc counts against insertion bound" || bad "unrelated PROJECT doc hit wrong rule: $(tail -1 "$ERR")"; }
 
@@ -496,6 +502,15 @@ python3 "$DRIVER" --root "$FX" check --issue 999 --docs-only >/dev/null 2>"$ERR"
   && bad "modified skill in working tree must refuse" \
   || { check_rule skill-unattested "$ERR" && ok "modified skill in working tree refuses with rule=skill-unattested (GH-1348)" || bad "dirty skill rule wrong: $(cat "$ERR")"; }
 git -C "$FX" reset -q --hard HEAD
+
+# (f) End-to-end run --docs-only completes landing for attested skill doc (GH-1348)
+RUNOUT="$(python3 "$DRIVER" --root "$FX" run --issue 999 --docs-only --suite test/pdda-repo-contract.sh --summary "attested skill" 2>"$ERR")"
+if grep -Eq "express-land: commit [0-9a-f]+ pushed to development" <<<"$RUNOUT"; then
+  ok "attested skill lands cleanly via run --docs-only (GH-1348)"
+else
+  bad "run --docs-only failed on attested skill: $(cat "$ERR")"
+fi
+[ "$(git -C "$FX" branch --show-current)" = development ] && ok "closeout left clone on development after attested skill landing (GH-1348)" || bad "clone not on development"
 
 echo "== docs born complete =="
 # GH-592 I8: docs without --suite must refuse BEFORE any write (no half-born doc, no CHANGELOG mutation)

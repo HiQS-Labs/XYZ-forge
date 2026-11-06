@@ -1,7 +1,7 @@
-initialized /tmp/gh267-express.9tVocL/repo/releases.db (slug 'H/H', enforcement=lenient, generation 1); canonical dump at /tmp/gh267-express.9tVocL/repo/releases.sql
-added roadmap entry rmi-01M6QH1Q0GZ4NRHKH5XVANRBMV for GH-999
-added roadmap entry rmi-01M6QH1Q0KMCNEC1QG8TNYRPVV for GH-998
-added roadmap entry rmi-01M6QH1Q0N673XXVN0F5QRQ5CQ for GH-997
+initialized /tmp/gh267-express.yYrepA/repo/releases.db (slug 'H/H', enforcement=lenient, generation 1); canonical dump at /tmp/gh267-express.yYrepA/repo/releases.sql
+added roadmap entry rmi-01M6RR2MBNEMTZ8BXTZRYPDM3G for GH-999
+added roadmap entry rmi-01M6RR2MBVEZZP82BEB3GRBQZ1 for GH-998
+added roadmap entry rmi-01M6RR2MC10FW4X9DH2B28SXQT for GH-997
 fixture ready
 == refusals ==
   pass: task-branch refusal
@@ -40,6 +40,8 @@ fixture ready
   pass: operator .md edits COUNT against the bound (finding 5)
   pass: the lane's own capture doc + CHANGELOG stay exempt
   pass: unrelated PROJECT doc counts against file bound
+  pass: root relay-system doc counts against file bound (GH-1348)
+  pass: dated review transcript under relay-system/ stays exempt (GH-1348)
   pass: unrelated PROJECT doc counts against insertion bound
 == GH-1348: skill documentation under --docs-only with relay attestation ==
   pass: unattested skill refuses with rule=skill-unattested (GH-1348)
@@ -51,6 +53,8 @@ fixture ready
   pass: attested skill passes check --docs-only even with malformed non-dict JSON present (GH-1348)
   pass: attested skill check reports PASS with malformed JSON present (GH-1348)
   pass: modified skill in working tree refuses with rule=skill-unattested (GH-1348)
+  pass: attested skill lands cleanly via run --docs-only (GH-1348)
+  pass: closeout left clone on development after attested skill landing (GH-1348)
 == docs born complete ==
   pass: docs refuses a missing --suite with an actionable message
   pass: docs without --suite wrote nothing
@@ -106,18 +110,18 @@ fixture ready
   pass: unrelated SHA error reported
   pass: auto-resolution for GH-99 does not match GH-999
   pass: neighboring issue 99 reported unresolved
-express-resume: resolved landing commit 5cf5f006d718 for GH-999
+express-resume: resolved landing commit fa25b7a1f6be for GH-999
   pass: control (iii): resume refuses a landing with no valid receipt
   pass: control (iii): refusal carries the recovery recipe incl. identity snapshot
   pass: control (iii): issue #999 still OPEN — refused before close
-express-resume: resolved landing commit 5cf5f006d718 for GH-999
+express-resume: resolved landing commit fa25b7a1f6be for GH-999
   pass: control (iv): rc=1 / wrong-suite / wrong-issue / malformed records are not evidence
   pass: control (vi): ignored receipt leaves porcelain clean (the guard alone would not catch it)
-express-resume: resolved landing commit 5cf5f006d718 for GH-999
+express-resume: resolved landing commit fa25b7a1f6be for GH-999
   pass: control (vi): uncommitted (ignored-path) valid receipt is refused — evidence is read from HEAD
-express-resume: resolved landing commit 5cf5f006d718 for GH-999
+express-resume: resolved landing commit fa25b7a1f6be for GH-999
   pass: control (vii): a record carrying an explicit pr field is not express evidence (matches the real matcher's conflict rule)
-express-resume: resolved landing commit 5cf5f006d718 for GH-999
+express-resume: resolved landing commit fa25b7a1f6be for GH-999
   pass: control (viii): a committed symlinked provenance.jsonl is not evidence for resume
 TESTS-RESULTS/2026-11-06+GH-999-express/provenance.jsonl
   pass: express resume exits 0 on valid landing
@@ -138,9 +142,9 @@ TESTS-RESULTS/2026-11-06+GH-998-express/provenance.jsonl
   pass: resume after ship commit succeeds without --sha
   pass: post-ship resume reconciled doc to 3-COMPLETED
 TESTS-RESULTS/2026-11-06+GH-997-express/provenance.jsonl
-express-resume: committed receipt TESTS-RESULTS/2026-11-06+GH-997-express/provenance.jsonl attributes commit d974359f383e
+express-resume: committed receipt TESTS-RESULTS/2026-11-06+GH-997-express/provenance.jsonl attributes commit 385af47c0b08
 express-resume: closed issue #997
-express-resume: manifest item already shipped for issue #997 against rel-01M6QH1Q0FR04X3NEK3F5FC1ZP
+express-resume: manifest item already shipped for issue #997 against rel-01M6RR2MBKW5SGM67C0J4BGGFR
   pass: resume fails when reconciliation fails (falsifiable)
   pass: central telemetry mirrored to ~/.config/xyz/events
 == source audit (direct landing) ==
@@ -149,4 +153,4 @@ express-resume: manifest item already shipped for issue #997 against rel-01M6QH1
   pass: cmd_resume implemented
   pass: retired roadmap dashboard is absent from express staging surfaces
 
-gh267-express-skill: pass=122 fail=0
+gh267-express-skill: pass=126 fail=0
