@@ -1,0 +1,40 @@
+== test: gh308-frozen-twin-guard ==
+  PASS: relay-automation/agy-turn.sh is frozen in favor of utils/py/agy-turn.py
+  PASS: relay-automation/aider-turn.sh is frozen in favor of utils/py/aider-turn.py
+  PASS: relay-automation/claude-turn.sh is frozen in favor of utils/py/claude-turn.py
+  PASS: relay-automation/codex-turn.sh is frozen in favor of utils/py/codex-turn.py
+  PASS: relay-automation/pi-turn.sh is frozen in favor of utils/py/pi-turn.py
+  PASS: relay-automation/poll.sh is frozen in favor of utils/py/poll.py
+  PASS: relay-automation/relay-loop.sh is frozen in favor of utils/py/relay_loop.py
+  PASS: relay-automation/relay-drive.sh is frozen in favor of utils/py/relay_drive.py
+  PASS: relay-automation/consult.sh is frozen in favor of utils/py/consult.py
+  PASS: relay-automation/marathon-drive.sh is frozen in favor of utils/py/marathon_drive.py
+  PASS: utils/swarm-preflight.sh is frozen in favor of utils/py/swarm_preflight.py
+  PASS: utils/marathon-plan.sh is frozen in favor of utils/py/marathon_plan.py
+  PASS: marathon-plan is frozen — the GH-308 exception is retired (GH-362)
+  PASS: relay-turn-lib remains the shared Bash dependency, not a twin
+  PASS: range guard blocks a committed frozen-twin edit in a throwaway repo
+  PASS: range guard permits a commit that does not touch a frozen twin
+  PASS: a declared exception for one twin does NOT excuse an undeclared edit to another
+  PASS: the failure names the uncovered file explicitly
+  PASS: fixture reproduces the defect: the old range-scoped rule would have allowed this PR
+  PASS: exceptions covering every edited twin still pass
+  PASS: a single trailer may name several twins
+  PASS: a trailer naming a non-twin path fails and names the bad token
+  PASS: the legacy path-less trailer no longer excuses anything
+  PASS: a trailer with no reason text is rejected
+  PASS: file names inside the reason text are not parsed as coverage claims
+  PASS: strict mode still blocks every frozen-twin edit, declared or not
+  PASS: --allow-exceptions --staged is rejected as a usage error (exit 2)
+  PASS: a range touching no frozen twin passes under --allow-exceptions
+  PASS: the commit that establishes a freeze is not itself a freeze violation [GH-362]
+  PASS: a post-freeze edit in the same range is still blocked [GH-362]
+  PASS: a legacy path-less trailer in the freeze commit does not fail the run [GH-362]
+  PASS: an indented continuation line is folded onto its trailer [GH-362]
+  PASS: a new .sh under utils/ is blocked and named [GH-551]
+  PASS: a declared New-bash-exception covers the added file [GH-551]
+  PASS: a declared exception does not excuse an unnamed second addition [GH-551]
+  PASS: a new .sh outside the guarded trees passes without a trailer [GH-551]
+  PASS: strict mode blocks a new .sh, declared or not [GH-551]
+  PASS: editing an existing non-twin .sh is not treated as an addition [GH-551]
+  gh308-frozen-twin-guard: 38 pass, 0 fail

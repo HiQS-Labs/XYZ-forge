@@ -87,10 +87,12 @@ artifacts still use their canonical writers. No filename-based exemption bypasse
 **Driver support for skill documentation (GH-1348):** `express.py --docs-only` admits non-execution-authority
 `skills/**/SKILL.md` edits from a fresh task clone off `origin/<base>` when backed by a validated
 `relay-drive/attest@1` approval receipt (`.git/relay-attest/*.json`) proving independent cross-model
-review of `HEAD`. Changes to execution-authority skills (`express`, `merge-cleanup`, `merge-cleanup-deep`,
-`start-marathon`, `marathon-cleanup`, `start-task`, `relay`, `relay-xyz`, `relay-automation`, `jog`),
-scripts, executables, or policy documents (`AGENTS.md`, `CLAUDE.md`) remain strictly refused under
-`--docs-only` and must follow the code-hotfix lane (if a covering suite exists) or the normal PR lane.
+review of `HEAD`. The skill edits must already be committed to the task branch and clean versus `HEAD`
+(uncommitted or post-review working-tree modifications refuse with `rule=skill-unattested`). Changes to
+execution-authority skills (`express`, `merge-cleanup`, `merge-cleanup-deep`, `start-marathon`,
+`marathon-cleanup`, `start-task`, `relay`, `relay-xyz`, `relay-automation`, `jog`), scripts, executables,
+or policy documents (`AGENTS.md`, `CLAUDE.md`) remain strictly refused under `--docs-only` and must
+follow the code-hotfix lane (if a covering suite exists) or the normal PR lane.
 
 ## Procedure
 
@@ -171,10 +173,10 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
 1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem for code hotfixes (unless
    `--allow-multi-subsystem` is passed, or micro-diff tolerance applies: $\le 30$
    insertions across $\le 2$ files auto-passes, GH-516). Only the lane's OWN
-   paperwork (`CHANGELOG.md` and the current issue's capture doc resolved by
-   `capture_doc_path(root, issue)`) is exempt. Every other `PROJECT/**` path and
-   operator .md edit (README, governance, skills) COUNTS (a gateless merge never
-   rewrites policy unbounded).
+   paperwork (`CHANGELOG.md`, the current issue's capture doc resolved by
+   `capture_doc_path(root, issue)`, and review transcripts under `relay-system/*.md`)
+   is exempt. Every other `PROJECT/**` path and operator .md edit (README, governance, skills)
+   COUNTS (a gateless merge never rewrites policy unbounded).
    Defaults are operator-tunable via `--max-files` / `--max-insertions`; the
    refusals are never optional.
 2. **Hard refusals** — frozen twins and shared Bash runtime (GH-308), any

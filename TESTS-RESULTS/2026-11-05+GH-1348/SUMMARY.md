@@ -2,7 +2,8 @@
 
 No new tests (GH-831). The existing regression suite `test/gh267-express-skill.sh` was extended with
 positive admission and negative refusal controls for non-execution-authority skill docs under `--docs-only`
-with relay attestation. Output: `smoke-output.txt`.
+with relay attestation, including malformed non-object JSON scanning tolerance. Output: `smoke-output.txt`,
+`frozen-twin-output.txt`, `pdda-output.txt`.
 
 | # | Check | Observed | Verdict |
 |---|---|---|---|
@@ -10,7 +11,8 @@ with relay attestation. Output: `smoke-output.txt`.
 | 2 | Execution-authority skill edit under `--docs-only` | Refuses with `rule=docs-only` | pass |
 | 3 | Non-`SKILL.md` under `skills/` under `--docs-only` | Refuses with `rule=docs-only` | pass |
 | 4 | Approved attestation record for `HEAD` | Passes `check --docs-only` (`express-check: PASS`, prints attestation) | pass |
-| 5 | Modified skill in working tree after attested commit | Refuses with `rule=skill-unattested` | pass |
-| 6 | Full express suite `test/gh267-express-skill.sh` | 120 pass, 0 fail | pass |
-| 7 | Frozen twin guard `test/gh308-frozen-twin-guard.sh --base origin/development` | 38 pass, 0 fail | pass |
-| 8 | Documentation gate `utils/pdda/pdda.sh run` | 0 errors, 40 warnings (none from this diff) | pass |
+| 5 | Malformed non-dict JSON in `relay-attest/` alongside valid receipt | Passes `check --docs-only` without raising, accepts valid receipt | pass |
+| 6 | Modified skill in working tree after attested commit | Refuses with `rule=skill-unattested` | pass |
+| 7 | Full express suite `test/gh267-express-skill.sh` | 122 pass, 0 fail | pass |
+| 8 | Frozen twin guard `test/gh308-frozen-twin-guard.sh --base origin/development` | 38 pass, 0 fail (`frozen-twin-output.txt`) | pass |
+| 9 | Documentation gate `utils/pdda/pdda.sh run` | 0 errors, 40 warnings none from this diff (`pdda-output.txt`) | pass |

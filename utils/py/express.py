@@ -175,6 +175,10 @@ def find_valid_skill_attestation(root, skill_paths):
             rejection_reasons.append("%s unreadable (%s)" % (os.path.basename(r_path), e))
             continue
 
+        if not isinstance(raw_data, dict):
+            rejection_reasons.append("%s not a JSON object" % os.path.basename(r_path))
+            continue
+
         task_id = raw_data.get("task")
         relay_file = raw_data.get("relay_file")
         if not task_id:

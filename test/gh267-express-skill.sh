@@ -476,6 +476,14 @@ OUT="$(python3 "$DRIVER" --root "$FX" check --issue 999 --docs-only 2>"$ERR")" \
 grep -q "express-check: PASS" <<<"$OUT" && ok "attested skill check reports PASS (GH-1348)" || bad "check PASS missing: $OUT"
 grep -q "attest  : Approved" <<<"$OUT" && ok "attested skill check prints attestation receipt (GH-1348)" || bad "attestation line missing: $OUT"
 
+# malformed non-object JSON in relay-attest does not crash scan and valid receipt is accepted
+printf '[]\n' > "$FX/.git/relay-attest/00-malformed.json"
+OUT="$(python3 "$DRIVER" --root "$FX" check --issue 999 --docs-only 2>"$ERR")" \
+  && ok "attested skill passes check --docs-only even with malformed non-dict JSON present (GH-1348)" \
+  || bad "attested skill crashed or refused on malformed JSON: $(cat "$ERR")"
+grep -q "express-check: PASS" <<<"$OUT" && ok "attested skill check reports PASS with malformed JSON present (GH-1348)" || bad "check PASS missing: $OUT"
+rm -f "$FX/.git/relay-attest/00-malformed.json"
+
 # (e) Uncommitted working-tree modification to SKILL.md after the attested commit refuses with rule=skill-unattested
 printf 'unreviewed edit\n' >> "$FX/skills/2-daily/close-the-loop/SKILL.md"
 python3 "$DRIVER" --root "$FX" check --issue 999 --docs-only >/dev/null 2>"$ERR" \
