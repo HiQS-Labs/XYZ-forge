@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-05 — GH-1348 express admits non-execution-authority skill docs under --docs-only with relay attestation
+
+- `utils/py/express.py` now admits non-execution-authority `skills/**/SKILL.md` files under `--docs-only` when accompanied by a validated `Approved` attestation receipt (`.git/relay-attest/*.json`) proving independent cross-model review of `HEAD`.
+- Changes to execution-authority skills (`express`, `merge-cleanup`, `merge-cleanup-deep`, `start-marathon`, `marathon-cleanup`, `start-task`, `relay`, `relay-xyz`, `relay-automation`, `jog`), scripts, executables, or policy documents (`AGENTS.md`, `CLAUDE.md`) remain strictly refused under `--docs-only`.
+- Unattested, unapproved, malformed, or post-review drifted skill files refuse with `rule=skill-unattested`.
+- `skills/2-daily/express/SKILL.md` updated to document active driver support for attested skill documentation.
+- Existing regression suite `test/gh267-express-skill.sh` extended with positive and negative controls (126/126 pass; zero new suites per GH-831).
+
 ## 2026-11-04 — GH-1340 Task 1: GH-1333 decisions 4-6 written into the rules (policy only)
 
 - `PROJECT/PDDA.md` now records that the merge step closes an issue only under two conditions (a reviewed whole-issue assertion, or a non-empty Acceptance checklist fully checked), and otherwise leaves it open with one reason comment.

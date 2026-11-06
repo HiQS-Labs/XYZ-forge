@@ -97,16 +97,143 @@ BRANCH_NAME = re.compile(r"^[A-Za-z0-9._/-]+$")
 DOCS_IMAGES = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")
 
 
+EXECUTION_AUTHORITY_SKILLS = frozenset({
+    "express",
+    "merge-cleanup",
+    "merge-cleanup-deep",
+    "start-marathon",
+    "marathon-cleanup",
+    "start-task",
+    "relay",
+    "relay-xyz",
+    "relay-automation",
+    "jog",
+})
+
+
+def is_skill_path(path):
+    p = Path(path)
+    return len(p.parts) >= 2 and p.parts[0] == "skills" and p.name == "SKILL.md"
+
+
+def skill_name(path):
+    p = Path(path)
+    if is_skill_path(path):
+        return p.parent.name
+    return None
+
+
+def is_execution_authority_skill(path):
+    name = skill_name(path)
+    return name is not None and name in EXECUTION_AUTHORITY_SKILLS
+
+
+def _relay_attest():
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import relay_attest
+    return relay_attest
+
+
+def find_valid_skill_attestation(root, skill_paths):
+    """Find and validate an Approved relay-drive/attest@1 record covering the skill changes.
+
+    Requirements:
+    1. An attestation record exists in <git-common-dir>/relay-attest/*.json.
+    2. record, error = relay_attest.load(...) returns a non-null record.
+    3. record["status"] == "Approved".
+    4. ok, reason = relay_attest.candidate_ok(record, head_sha, root) returns ok is True.
+    5. Each skill path has no uncommitted working-tree modifications vs HEAD.
+    """
+    ra = _relay_attest()
+    try:
+        attest_dir = os.path.join(ra.git_common_dir(root), "relay-attest")
+    except Exception as exc:
+        return None, "cannot resolve relay-attest directory: %s" % exc
+
+    if not os.path.isdir(attest_dir):
+        return None, "no relay-attest directory at %s (run /relay-xyz review first)" % attest_dir
+
+    records = [os.path.join(attest_dir, f) for f in os.listdir(attest_dir) if f.endswith(".json")]
+    if not records:
+        return None, "no attestation records found in %s (run /relay-xyz review first)" % attest_dir
+
+    head_res = git(root, "rev-parse", "HEAD", check=False)
+    if head_res.returncode != 0:
+        return None, "cannot resolve HEAD commit: %s" % head_res.stderr.strip()
+    head_sha = head_res.stdout.strip()
+
+    records.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+
+    rejection_reasons = []
+    for r_path in records:
+        try:
+            with open(r_path, "r", encoding="utf-8") as rf:
+                raw_data = json.load(rf)
+        except Exception as e:
+            rejection_reasons.append("%s unreadable (%s)" % (os.path.basename(r_path), e))
+            continue
+
+        if not isinstance(raw_data, dict):
+            rejection_reasons.append("%s not a JSON object" % os.path.basename(r_path))
+            continue
+
+        task_id = raw_data.get("task")
+        relay_file = raw_data.get("relay_file")
+        if not task_id:
+            rejection_reasons.append("%s missing task" % os.path.basename(r_path))
+            continue
+
+        record, err = ra.load(task_id, expected_reviewer=None, relay_file=relay_file,
+                              target_repo=root, path=r_path, any_reviewer=True)
+        if not record:
+            rejection_reasons.append("%s invalid: %s" % (os.path.basename(r_path), err))
+            continue
+
+        if record.get("status") != "Approved":
+            rejection_reasons.append("%s status is %s (must be Approved)" %
+                                     (os.path.basename(r_path), record.get("status")))
+            continue
+
+        ok, reason = ra.candidate_ok(record, head_sha, root)
+        if not ok:
+            rejection_reasons.append("%s candidate check failed for HEAD %s: %s" %
+                                     (os.path.basename(r_path), head_sha[:12], reason))
+            continue
+
+        dirty_skills = []
+        for sp in skill_paths:
+            diff_res = git(root, "diff", "--quiet", "HEAD", "--", sp, check=False)
+            if diff_res.returncode != 0:
+                dirty_skills.append("%s has uncommitted working-tree diff vs HEAD %s" % (sp, head_sha[:12]))
+                continue
+            status_res = git(root, "status", "--porcelain=v1", "-uall", "--", sp, check=False).stdout.strip()
+            if status_res:
+                dirty_skills.append("%s is dirty in working tree vs HEAD %s" % (sp, head_sha[:12]))
+                continue
+
+        if dirty_skills:
+            return None, "; ".join(dirty_skills)
+
+        return record, None
+
+    return None, "; ".join(rejection_reasons) or "no matching attestation record for HEAD %s" % head_sha[:12]
+
+
 def is_documentation_update(root, path):
     """Ordinary prose/assets, not executable policy or text-shaped runtime inputs."""
     p = Path(path)
     ordinary = (path in ("README.md", "CHANGELOG.md")
                 or path.startswith(("docs/", "PROJECT/1-INBOX/", "PROJECT/2-WORKING/",
-                                    "PROJECT/3-COMPLETED/", "PROJECT/4-MISC/"))
-                or (path.startswith("assets/") and p.suffix.lower() in DOCS_IMAGES))
+                                    "PROJECT/3-COMPLETED/", "PROJECT/4-MISC/", "relay-system/"))
+                or (path.startswith("assets/") and p.suffix.lower() in DOCS_IMAGES)
+                or (is_skill_path(path) and not is_execution_authority_skill(path)))
     if not ordinary or p.suffix.lower() not in (".md", ".txt", ".rst") + DOCS_IMAGES:
         return False
-    if p.name in ("AGENTS.md", "CLAUDE.md", "SKILL.md") or p.name.endswith(".generated.md"):
+    if p.name in ("AGENTS.md", "CLAUDE.md") or p.name.endswith(".generated.md"):
+        return False
+    if is_execution_authority_skill(path):
         return False
     full = Path(root, path)
     # Check the old mode too: deleting/renaming an executable is still a code change.
@@ -500,7 +627,13 @@ def core_paths(root, issue, paths):
 
 def is_doc_path(root, issue, p):
     """Only express-owned paperwork for this issue is outside size bounds."""
-    return p == "CHANGELOG.md" or p == capture_doc_path(root, issue)
+    if p == "CHANGELOG.md" or p == capture_doc_path(root, issue):
+        return True
+    if p.startswith("relay-system/") and p.endswith(".md"):
+        # Match dated review transcripts (relay-system/YYYY-MM-DD/*.md), not root docs
+        rel = p[len("relay-system/"):]
+        return "/" in rel and not rel.startswith("/")
+    return False
 
 
 def insertions(root, issue, paths, expect_driver=frozenset(), docs_only=False):
@@ -582,6 +715,7 @@ def cmd_check(args, expect_driver=frozenset()):
 
     core = [p for p in paths if not is_doc_path(root, args.issue, p) and p not in expect_driver]
     docs_only = getattr(args, "docs_only", False)
+    attest_rec = None
     if docs_only:
         # Paperwork is exempt from size bounds, not from docs eligibility.
         generated = set(expect_driver) & driver_projection_paths(root)
@@ -591,6 +725,15 @@ def cmd_check(args, expect_driver=frozenset()):
             if not is_documentation_update(root, p):
                 refuse(root, "docs-only", "%s is not an ordinary documentation text/image update; "
                        "use the normal PR or code hotfix lane" % p, issue=args.issue)
+        skill_paths = [p for p in core if is_skill_path(p)]
+        if skill_paths:
+            attest_rec, attest_err = find_valid_skill_attestation(root, skill_paths)
+            if not attest_rec:
+                refuse(root, "skill-unattested",
+                       "skill file(s) [%s] under --docs-only require an Approved relay attestation receipt "
+                       "in .git/relay-attest/ (run /relay-xyz QA first): %s" %
+                       (", ".join(skill_paths), attest_err),
+                       issue=args.issue)
 
     # Step 2 — hard refusals. Frozen twins, kernel surfaces, containment.
     for p in core:
@@ -674,6 +817,9 @@ def cmd_check(args, expect_driver=frozenset()):
     print("  files   : %d core, %d insertions (bounds %d/%d)" % (len(core), ins, args.max_files, args.max_insertions))
     print("  suite   : %s (%s)" % (suite, "host PDDA gate, PDDA_MODE=full; no runtime coverage claim" if host_docs
                                     else "registered docs gate; no runtime coverage claim" if docs_only else "registered"))
+    if docs_only and attest_rec is not None:
+        print("  attest  : Approved (%s by %s, reviewed %s)" %
+              (attest_rec["task"], attest_rec["reviewer"], attest_rec["reviewed_head"][:12]))
     if VENDORED:  # canonical output stays exactly as before GH-1169
         print("  gate    : %s" % gate_detail)
     print("  changes : %s" % ", ".join(paths))

@@ -113,7 +113,9 @@ git init -q "$FX"
 git -C "$FX" remote add origin "$REMOTE"
 git -C "$FX" config user.email t@t; git -C "$FX" config user.name t
 mkdir -p "$FX/utils/py" "$FX/utils" "$FX/test" "$FX/relay-automation" "$FX/src" "$FX/PROJECT/2-WORKING" "$FX/CHANGELOG.d" "$FX/githooks"
-printf '#!/usr/bin/env bash\nTESTS=(\n  "gh999-demo.sh"\n  "gh999-drift.sh"\n  "gh999-content-drift.sh"\n  "gh999-hook-drift.sh"\n  "other.sh"\n)\n' > "$FX/validate.sh"
+printf '#!/usr/bin/env bash\nTESTS=(\n  "gh999-demo.sh"\n  "gh999-drift.sh"\n  "gh999-content-drift.sh"\n  "gh999-hook-drift.sh"\n  "other.sh"\n  "pdda-repo-contract.sh"\n)\n' > "$FX/validate.sh"
+printf '#!/bin/sh\nexit 0\n' > "$FX/test/pdda-repo-contract.sh"
+chmod +x "$FX/test/pdda-repo-contract.sh"
 printf 'old\n' > "$FX/utils/py/foo.py"
 printf 'twin body\n' > "$FX/relay-automation/consult.sh"
 printf 'shared runtime\n' > "$FX/relay-automation/relay-turn-lib.sh"
@@ -381,14 +383,134 @@ python3 "$DRIVER" --root "$FX" check --issue 999 --suite test/gh999-demo.sh --al
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; printf 'doc edit\n' > "$FX/README.md"
 run_check > /dev/null 2> "$ERR" && bad "README must count against the file bound (finding 5)" || { check_rule too-many-files "$ERR" && ok "operator .md edits COUNT against the bound (finding 5)" || bad "README exempted: $(tail -1 "$ERR")"; }
 
-new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; printf 'entry\n' >> "$FX/CHANGELOG.md"; printf 'capture\n' > "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
+new_task_branch
+printf 'fixed\n' > "$FX/utils/py/foo.py"
+for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done
+mkdir -p "$FX/PROJECT/2-WORKING"
+printf 'capture\n' > "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"
+[ -s "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md" ] || bad "capture doc setup failed"
+printf 'entry\n' >> "$FX/CHANGELOG.md"
 run_check > /dev/null 2> "$ERR" && ok "the lane's own capture doc + CHANGELOG stay exempt" || bad "lane paperwork counted against bounds: $(tail -1 "$ERR")"
 
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; mkdir -p "$FX/PROJECT/4-MISC"; printf 'unrelated\n' > "$FX/PROJECT/4-MISC/OTHER.md"
 run_check > /dev/null 2> "$ERR" && bad "unrelated PROJECT doc must count against bounds" || { check_rule too-many-files "$ERR" && ok "unrelated PROJECT doc counts against file bound" || bad "unrelated PROJECT doc hit wrong rule: $(tail -1 "$ERR")"; }
 
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; mkdir -p "$FX/relay-system"; printf 'root-doc\n' > "$FX/relay-system/README.md"
+run_check > /dev/null 2> "$ERR" && bad "root relay-system doc must count against bounds" || { check_rule too-many-files "$ERR" && ok "root relay-system doc counts against file bound (GH-1348)" || bad "root relay doc hit wrong rule: $(tail -1 "$ERR")"; }
+
+new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; for i in 1 2 3; do printf 'x\n' > "$FX/utils/py/g$i.py"; done; mkdir -p "$FX/relay-system/2026-11-05"; printf 'review\n' > "$FX/relay-system/2026-11-05/review.md"
+run_check > /dev/null 2> "$ERR" && ok "dated review transcript under relay-system/ stays exempt (GH-1348)" || bad "dated review transcript counted against bounds: $(tail -1 "$ERR")"
+
 new_task_branch; printf 'fixed\n' > "$FX/utils/py/foo.py"; mkdir -p "$FX/PROJECT/4-MISC"; python3 -c "print('\\n'.join('line %d' % i for i in range(151)))" > "$FX/PROJECT/4-MISC/OTHER.md"
 run_check > /dev/null 2> "$ERR" && bad "unrelated PROJECT doc must count against insertion bound" || { check_rule too-large "$ERR" && ok "unrelated PROJECT doc counts against insertion bound" || bad "unrelated PROJECT doc hit wrong rule: $(tail -1 "$ERR")"; }
+
+echo "== GH-1348: skill documentation under --docs-only with relay attestation =="
+# (a) Unattested skill file under --docs-only refuses with rule=skill-unattested
+new_task_branch
+mkdir -p "$FX/skills/2-daily/close-the-loop"
+printf '# Close the loop\nDescription here\n' > "$FX/skills/2-daily/close-the-loop/SKILL.md"
+git -C "$FX" add -A && git -C "$FX" commit -qm "feat: add skill docs"
+python3 "$DRIVER" --root "$FX" check --issue 999 --docs-only >/dev/null 2>"$ERR" \
+  && bad "unattested skill must refuse under --docs-only" \
+  || { check_rule skill-unattested "$ERR" && ok "unattested skill refuses with rule=skill-unattested (GH-1348)" || bad "unattested skill rule wrong: $(cat "$ERR")"; }
+
+# (b) Execution-authority skill file under --docs-only refuses with rule=docs-only
+new_task_branch
+mkdir -p "$FX/skills/2-daily/express"
+printf '# Express\nDescription here\n' > "$FX/skills/2-daily/express/SKILL.md"
+git -C "$FX" add -A && git -C "$FX" commit -qm "feat: express skill update"
+python3 "$DRIVER" --root "$FX" check --issue 999 --docs-only >/dev/null 2>"$ERR" \
+  && bad "execution authority skill must refuse under --docs-only" \
+  || { check_rule docs-only "$ERR" && ok "execution authority skill refuses with rule=docs-only (GH-1348)" || bad "execution authority skill rule wrong: $(cat "$ERR")"; }
+
+# (c) Non-SKILL.md file under skills/ under --docs-only refuses with rule=docs-only
+new_task_branch
+mkdir -p "$FX/skills/2-daily/close-the-loop"
+printf 'print("helper")\n' > "$FX/skills/2-daily/close-the-loop/helper.py"
+git -C "$FX" add -A && git -C "$FX" commit -qm "feat: skill helper script"
+python3 "$DRIVER" --root "$FX" check --issue 999 --docs-only >/dev/null 2>"$ERR" \
+  && bad "non-SKILL.md in skills must refuse under --docs-only" \
+  || { check_rule docs-only "$ERR" && ok "non-SKILL.md under skills/ refuses with rule=docs-only (GH-1348)" || bad "non-SKILL.md rule wrong: $(cat "$ERR")"; }
+
+# (d) Approved attestation record for HEAD passes check --docs-only
+new_task_branch
+mkdir -p "$FX/skills/2-daily/close-the-loop"
+printf '# Close the loop\nDescription here\n' > "$FX/skills/2-daily/close-the-loop/SKILL.md"
+git -C "$FX" add -A && git -C "$FX" commit -qm "docs(close-the-loop): add skill doc"
+ATTEST_HEAD="$(git -C "$FX" rev-parse HEAD)"
+python3 - "$FX" "$ATTEST_HEAD" <<'PY'
+import os, sys, time
+sys.path.insert(0, os.environ["EXPRESS_CANONICAL_PY"])
+import relay_attest
+
+root = sys.argv[1]
+head_sha = sys.argv[2]
+relay_rel = "relay-system/2026-11-05/gh999-skill-review.md"
+relay_path = os.path.join(root, relay_rel)
+os.makedirs(os.path.dirname(relay_path), exist_ok=True)
+
+initial_raw = b"# RELAY\nSTATUS: Approved\n\nNEXT: reviewer\n"
+added = b"\n## Reviewer\nVERDICT: PASS\n"
+post_raw = initial_raw + added
+with open(relay_path, "wb") as f:
+    f.write(post_raw)
+
+pre_canon = relay_attest.canonical_prefix(initial_raw, post_raw)
+added_start = len(pre_canon)
+
+rec = {
+    "schema": relay_attest.SCHEMA,
+    "task": "RELAY-gh999-skill",
+    "transcript_repo": None,
+    "relay_file": os.path.abspath(relay_path),
+    "relay_file_rel": relay_rel,
+    "target_repo": root,
+    "reviewer": "codex",
+    "status": "Approved",
+    "isolated": True,
+    "reviewed_head": head_sha,
+    "artifact_sha256": None,
+    "added_start": added_start,
+    "added_len": len(added),
+    "added_sha256": relay_attest.sha256(added),
+    "attested_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    "driver_pid": os.getpid(),
+}
+trailer = relay_attest.trailer_text(rec)
+rec["trailer_sha256"] = relay_attest.sha256(trailer.encode("utf-8"))
+relay_attest.append_before_marker(relay_path, trailer)
+relay_attest.write(rec)
+PY
+git -C "$FX" add relay-system/ && git -C "$FX" commit -qm "chore(relay): skill review transcript"
+OUT="$(python3 "$DRIVER" --root "$FX" check --issue 999 --docs-only 2>"$ERR")" \
+  && ok "attested skill passes check --docs-only (GH-1348)" \
+  || bad "attested skill refused: $(cat "$ERR")"
+grep -q "express-check: PASS" <<<"$OUT" && ok "attested skill check reports PASS (GH-1348)" || bad "check PASS missing: $OUT"
+grep -q "attest  : Approved" <<<"$OUT" && ok "attested skill check prints attestation receipt (GH-1348)" || bad "attestation line missing: $OUT"
+
+# malformed non-object JSON in relay-attest does not crash scan and valid receipt is accepted
+printf '[]\n' > "$FX/.git/relay-attest/00-malformed.json"
+OUT="$(python3 "$DRIVER" --root "$FX" check --issue 999 --docs-only 2>"$ERR")" \
+  && ok "attested skill passes check --docs-only even with malformed non-dict JSON present (GH-1348)" \
+  || bad "attested skill crashed or refused on malformed JSON: $(cat "$ERR")"
+grep -q "express-check: PASS" <<<"$OUT" && ok "attested skill check reports PASS with malformed JSON present (GH-1348)" || bad "check PASS missing: $OUT"
+rm -f "$FX/.git/relay-attest/00-malformed.json"
+
+# (e) Uncommitted working-tree modification to SKILL.md after the attested commit refuses with rule=skill-unattested
+printf 'unreviewed edit\n' >> "$FX/skills/2-daily/close-the-loop/SKILL.md"
+python3 "$DRIVER" --root "$FX" check --issue 999 --docs-only >/dev/null 2>"$ERR" \
+  && bad "modified skill in working tree must refuse" \
+  || { check_rule skill-unattested "$ERR" && ok "modified skill in working tree refuses with rule=skill-unattested (GH-1348)" || bad "dirty skill rule wrong: $(cat "$ERR")"; }
+git -C "$FX" reset -q --hard HEAD
+
+# (f) End-to-end run --docs-only completes landing for attested skill doc (GH-1348)
+RUNOUT="$(python3 "$DRIVER" --root "$FX" run --issue 999 --docs-only --suite test/pdda-repo-contract.sh --summary "attested skill" 2>"$ERR")"
+if grep -Eq "express-land: commit [0-9a-f]+ pushed to development" <<<"$RUNOUT"; then
+  ok "attested skill lands cleanly via run --docs-only (GH-1348)"
+else
+  bad "run --docs-only failed on attested skill: $(cat "$ERR")"
+fi
+[ "$(git -C "$FX" branch --show-current)" = development ] && ok "closeout left clone on development after attested skill landing (GH-1348)" || bad "clone not on development"
 
 echo "== docs born complete =="
 # GH-592 I8: docs without --suite must refuse BEFORE any write (no half-born doc, no CHANGELOG mutation)
