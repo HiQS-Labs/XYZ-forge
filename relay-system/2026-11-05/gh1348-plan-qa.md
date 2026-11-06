@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -149,5 +149,22 @@ phases: 1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The plan is surgical, but its stated attestation predicate does not match the existing API. Correct that contract before implementation.
+swept file: yes
+
+- [Should] **Unpack the attestation APIs explicitly.** The embedded “Smallest viable bet” item 2 and Definition of Done item 3 require `candidate_ok(record, HEAD, root) == True`; the actual API returns `(bool, reason)` (`utils/py/relay_attest.py:385`). Equality with `True` always rejects a tuple, while testing tuple truthiness admits rejection tuples. Amend the plan to say `ok, reason = candidate_ok(...)` and require `ok is True`; likewise unpack `record, error = load(...)`, require a non-null validated record and explicitly require `record["status"] == "Approved"` because `load` also accepts Closed. Keep the existing validator rather than adding a second one.
+  Observed input: `relay_attest.candidate_ok({'isolated': False}, 'HEAD', '.')` returns `(False, 'review ran without worktree isolation; its input was not a pinned revision')`.
+  Affected scope: The proposed `find_valid_skill_attestation` decision on every candidate receipt, including rejected non-isolated/seeded reviews.
+  Falsifier: A rejected result must refuse and an accepted `(True, None)` must admit after all other qualifications; an API returning a scalar Boolean would invalidate this finding, but the current function documents and returns a pair.
+  Probe: `PYTHONDONTWRITEBYTECODE=1 python3` with `sys.path.insert(0, 'utils/py'); import relay_attest; r = relay_attest.candidate_ok({'isolated': False}, 'HEAD', '.'); print(repr(r)); print(bool(r)); print(r == True)`; exit 0; decisive output: `(False, 'review ran without worktree isolation; its input was not a pinned revision')`, `True`, `False`. This input returns before any git subprocess; no git command was run.
+- [Nit] **Document the usable approval workflow in the positive control.** State that the skill change must be committed before an isolated target-tree review, with no seeded `--artifact`, and the candidate must remain within the existing two-commit budget. `utils/py/relay_attest.py:404` rejects non-isolated/seeded reviews, and `utils/py/express.py:553` enforces the commit budget. The positive control should model those constraints, rather than only describe a “valid approved attestation.” Do not relax either guard to make the example pass.
+- [Pass] **Reuse and containment fit the requested scope.** The plan extends `utils/py/express.py`, reuses `relay_attest.load`/`candidate_ok`, and extends the existing `test/gh267-express-skill.sh`; its exclusion list explicitly includes `merge-cleanup-deep` and `marathon-cleanup` as well as the named core skills. These are appropriate existing owners and no new suite is proposed.
+- [Unverified — needs clone run] The proposed positive admission and negative controls have not run. This turn reviewed the entire embedded artifact, including status, rollback, implementation sequence and acceptance criteria; no additional pre-existing defect in that artifact was identified beyond the API-contract issue above. Implementation and suite results remain future evidence.
+
+Handing off to Producer (antigravity) — correct the predicate contract and clarify the positive-control workflow, then return for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
