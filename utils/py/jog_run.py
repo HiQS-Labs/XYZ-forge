@@ -1138,6 +1138,21 @@ def _landing_tail_proof(root, approved, head, integration, bundle):
     return list(reversed(proof))
 
 
+def _markdown_shipped(root, gh_num, pr_number):
+    """Markdown-roadmap repos only: wave_reconcile writes `SHIPPED <date> (PR #N)` into ROADMAP.md.
+
+    A releases-mode repo (.pdda-mode ROADMAP_SOURCE=releases) keeps its badge in roadmap_items, so a
+    leftover ROADMAP.md there is never evidence."""
+    mode = Path(root, ".pdda-mode")
+    if mode.is_file() and re.search(r"^\s*ROADMAP_SOURCE=releases\b", mode.read_text(encoding="utf-8"), re.M):
+        return False
+    roadmap_md = Path(root, "ROADMAP.md")
+    if not roadmap_md.is_file():
+        return False
+    badge = re.compile(rf"^-\s+\*\*GH-{int(gh_num)}\b.*\bSHIPPED \S+ \(PR #{int(pr_number)}\)", re.M)
+    return bool(badge.search(roadmap_md.read_text(encoding="utf-8")))
+
+
 def _close_delivered_issue(root, gh_num, pr_number, head, receipt):
     """Close only with whole-issue proof; otherwise leave one stable reason comment."""
     slug = github_slug_from_origin(root)
@@ -1267,12 +1282,8 @@ def jog_land(root, gh_num, pr_arg=None):
             if f"(PR #{int(pr_number)})" in (raw_text or ""):
                 local_reconcile = {"roadmap_gid": local_gid, "raw_text": raw_text}
                 break
-        if local_reconcile is None:
-            # Markdown-roadmap repos: wave_reconcile ships into ROADMAP.md, not roadmap_items.
-            roadmap_md = Path(root, "ROADMAP.md")
-            badge = re.compile(rf"^-\s+\*\*GH-{int(gh_num)}\b.*SHIPPED.*\bPR #{int(pr_number)}\b", re.M)
-            if roadmap_md.is_file() and badge.search(roadmap_md.read_text(encoding="utf-8")):
-                local_reconcile = {"roadmap_md": "ROADMAP.md", "pr_number": int(pr_number)}
+        if local_reconcile is None and _markdown_shipped(root, gh_num, pr_number):
+            local_reconcile = {"roadmap_md": "ROADMAP.md", "pr_number": int(pr_number)}
         shipped_reconcile = local_reconcile
         doc = find_issue_doc(root, gh_num)
         merge_evidence = (doc and re.search(
@@ -1310,6 +1321,8 @@ def jog_land(root, gh_num, pr_arg=None):
                 conn.close()
             local_reconcile = next(({"roadmap_gid": gid, "raw_text": raw} for gid, raw in shipped
                                     if f"(PR #{int(pr_number)})" in (raw or "")), None)
+            if local_reconcile is None and _markdown_shipped(root, gh_num, pr_number):
+                local_reconcile = {"roadmap_md": "ROADMAP.md", "pr_number": int(pr_number)}
             if local_reconcile is None:
                 raise ContractError("closed issue has no SHIPPED reconciliation badge for this PR")
     except (ContractError, OSError, ValueError, KeyError, sqlite3.Error) as exc:
