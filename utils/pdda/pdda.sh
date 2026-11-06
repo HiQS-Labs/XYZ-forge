@@ -599,16 +599,22 @@ _pdda_doc_issue_number() {
 # Build one map for all cached-pointer checks. Match the Python lifecycle resolver's
 # identity/tie-break policy without importing Forge modules into standalone PDDA installs.
 _pdda_doc_map() {
-  python3 -B - "$PDDA_WORKING_DIR" "$PDDA_INBOX_DIR" "$PDDA_COMPLETED_DIR" "$PDDA_MISC_DIR" <<'PYMAP'
-import re, sys, sqlite3
+  # Ledger hints come from the sqlite3 CLI (read-only, as the other ledger reads here do), so the
+  # map adds no direct connect site (GH-777). An unreadable ledger still fails the map.
+  local _db _hints=""
+  _db="$(dirname "$(dirname "$PDDA_WORKING_DIR")")/releases.db"
+  if [ -s "$_db" ]; then
+    command -v sqlite3 >/dev/null 2>&1 || { printf 'pdda: sqlite3 unavailable for the issue-doc map\n' >&2; return 1; }
+    _hints="$(sqlite3 -readonly -separator $'\t' "$_db" "SELECT gh_number, doc_path FROM roadmap_items")" || return 1
+  fi
+  PDDA_DOC_MAP_HINTS="$_hints" python3 -B - "$PDDA_WORKING_DIR" "$PDDA_INBOX_DIR" "$PDDA_COMPLETED_DIR" "$PDDA_MISC_DIR" <<'PYMAP'
+import os, re, sys
 from pathlib import Path
 hints = {}
-db = Path(sys.argv[1]).parent.parent / "releases.db"
-if db.is_file() and db.stat().st_size:
-    with sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True) as conn:
-        for number, cached in conn.execute("SELECT gh_number, doc_path FROM roadmap_items"):
-            if number is not None and cached:
-                hints.setdefault(int(number), set()).add(Path(cached).name)
+for row in os.environ.get("PDDA_DOC_MAP_HINTS", "").splitlines():
+    number, _, cached = row.partition("\t")
+    if number.strip() and cached:
+        hints.setdefault(int(number), set()).add(Path(cached).name)
 candidates = {}
 for directory in sys.argv[1:]:
     for path in sorted(Path(directory).glob("*.md")):
