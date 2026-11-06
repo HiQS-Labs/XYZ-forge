@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -87,7 +87,7 @@ phases: 1
 - **Outcome sought:** Allow non-execution-authority `skills/**/SKILL.md` files to be landed directly and safely via `/express --docs-only` from a fresh task clone off `origin/<base>`, provided the update is attested by an approved `relay-drive` review (`.git/relay-attest/*.json`), while maintaining strict hard refusals for execution-authority skills, scripts, and unstaged/post-review drift.
 - **Smallest viable bet:**
   1. Update `is_documentation_update()` in `utils/py/express.py` to recognize `skills/**/SKILL.md` and `relay-system/*.md` as documentation, while strictly excluding `EXECUTION_AUTHORITY_SKILLS` (`express`, `merge-cleanup`, `merge-cleanup-deep`, `start-marathon`, `marathon-cleanup`, `start-task`, `relay`, `relay-xyz`, `relay-automation`, `jog`) and any non-`SKILL.md` file under `skills/`.
-  2. In `cmd_check`, when `docs_only` is true and core paths include `skills/**/SKILL.md`, verify a valid `relay_attest` record (`.git/relay-attest/*.json`) with `status == "Approved"`, `candidate_ok(record, HEAD, root) == True`, and clean working tree diff on the skill path vs `HEAD`. Refuse with `rule=skill-unattested` if absent, malformed, or drifted.
+  2. In `cmd_check`, when `docs_only` is true and core paths include `skills/**/SKILL.md`, verify a valid `relay_attest` record (`.git/relay-attest/*.json`) using unpacked `record, error = relay_attest.load(...)` (asserting `record is not None` and `record["status"] == "Approved"`) and unpacked `ok, reason = relay_attest.candidate_ok(record, head_sha, root)` (asserting `ok is True`), plus clean working tree diff on the skill path vs `HEAD`. Refuse with `rule=skill-unattested` if absent, malformed, unapproved, or drifted.
   3. Exempt `relay-system/*.md` transcripts from insertion and file bounds in `insertions()` and `is_doc_path()`.
   4. Update `skills/2-daily/express/SKILL.md` to reflect that the driver now admits attested skill documentation.
   5. Add test coverage in `test/gh267-express-skill.sh` exercising both positive admission and negative refusals.
@@ -105,9 +105,9 @@ phases: 1
    -> expect non-execution-authority skill files and transcripts to pass docs-only path qualification, and execution-authority skills to refuse docs-only.
 
 2. **Add attestation verification in `utils/py/express.py`:**
-   - Implement `find_valid_skill_attestation(root, skill_paths)` using `relay_attest.git_common_dir`, `relay_attest.load(..., any_reviewer=True)`, `relay_attest.candidate_ok(record, head, root)`, and working-tree cleanliness checks.
+   - Implement `find_valid_skill_attestation(root, skill_paths)` using `relay_attest.git_common_dir`, unpacking `record, error = relay_attest.load(...)` and explicitly requiring non-null record and `record["status"] == "Approved"`, and unpacking `ok, reason = relay_attest.candidate_ok(record, head_sha, root)` and explicitly requiring `ok is True`. Also assert clean working-tree diff on each skill path vs `HEAD`.
    - In `cmd_check()`, if `docs_only` and any `skill_paths` are present, invoke `find_valid_skill_attestation()` and fail closed with `refuse(root, "skill-unattested", ...)` on any failure.
-   -> expect unreviewed or post-review drifted skill edits to refuse with `skill-unattested`, and approved reviewed edits to pass.
+   -> expect unreviewed, malformed, or post-review drifted skill edits to refuse with `skill-unattested`, and approved reviewed edits to pass.
 
 3. **Update documentation in `skills/2-daily/express/SKILL.md`:**
    - Update the "Current driver compatibility" section to document the active support for non-execution-authority skill updates backed by relay attestation.
@@ -117,7 +117,7 @@ phases: 1
    - Add negative control: unattested skill edit under `--docs-only` refuses `skill-unattested`.
    - Add negative control: execution-authority skill edit under `--docs-only` refuses `docs-only`.
    - Add negative control: skill edit modified after attested revision refuses `skill-unattested`.
-   - Add positive control: non-execution-authority skill edit with valid approved attestation passes `check --docs-only`.
+   - Add positive control: non-execution-authority skill edit committed to branch, reviewed via isolated target-tree review without seeded `--artifact`, within the 2-commit budget, with a valid `Approved` attestation record passing `check --docs-only`.
    -> expect all controls in `bash test/gh267-express-skill.sh` to pass.
 
 ## Acceptance Criteria
@@ -125,7 +125,7 @@ phases: 1
 - [ ] `utils/py/express.py` refuses `skills/2-daily/express/SKILL.md` and other execution-authority skills under `--docs-only` with `rule=docs-only`.
 - [ ] `utils/py/express.py` refuses non-execution-authority `skills/**/SKILL.md` under `--docs-only` when no valid Approved `relay_attest` receipt exists with `rule=skill-unattested`.
 - [ ] `utils/py/express.py` refuses non-execution-authority `skills/**/SKILL.md` under `--docs-only` when the skill file has drifted from the attested revision with `rule=skill-unattested`.
-- [ ] `utils/py/express.py` passes `check --docs-only` when a non-execution-authority `skills/**/SKILL.md` is accompanied by a valid Approved `relay_attest` receipt for `HEAD`.
+- [ ] `utils/py/express.py` passes `check --docs-only` when a non-execution-authority `skills/**/SKILL.md` is committed to branch within the 2-commit budget and accompanied by a valid Approved target-tree `relay_attest` receipt for `HEAD` (without seeded `--artifact`).
 - [ ] `test/gh267-express-skill.sh` passes green with zero regressions.
 - [ ] `skills/2-daily/express/SKILL.md` accurately documents the verified driver behavior.
 
@@ -136,7 +136,7 @@ phases: 1
 - Definition of Done:
   1. **Surgical & DRY:** Extends existing `utils/py/express.py` and `utils/py/relay_attest.py` with zero parallel machinery, speculative abstractions, or new test suites (GH-831).
   2. **Strict containment:** All execution-authority skills (`express`, `merge-cleanup`, `start-marathon`, `start-task`, `relay*`, `jog`), non-`SKILL.md` scripts/executables, and policy docs (`AGENTS.md`, `CLAUDE.md`) remain hard-blocked under `--docs-only`.
-  3. **Airtight attestation verification:** Requires a valid `relay_attest` record (`.git/relay-attest/*.json`) with `status == 'Approved'`, `candidate_ok(record, HEAD, root) == True` (ensuring no non-transcript commits post-review), and clean working tree diff on the skill path vs `HEAD`.
+  3. **Airtight attestation verification:** Requires a valid `relay_attest` record (`.git/relay-attest/*.json`), explicitly unpacking `record, error = relay_attest.load(...)` (requiring non-null and `record["status"] == "Approved"`) and unpacking `ok, reason = relay_attest.candidate_ok(record, head_sha, root)` (requiring `ok is True`), plus clean working tree diff on the skill path vs `HEAD`.
   4. **Falsifiable controls:** Specifies negative controls (unattested skill, execution-authority skill, drifted skill) and positive controls in `test/gh267-express-skill.sh`.
   5. **Operational envelope:** Commensurate complexity for an internal agent harness utility; reject out-of-scope enterprise multi-tenant threat models.
 
@@ -166,5 +166,14 @@ swept file: yes
 - [Unverified — needs clone run] The proposed positive admission and negative controls have not run. This turn reviewed the entire embedded artifact, including status, rollback, implementation sequence and acceptance criteria; no additional pre-existing defect in that artifact was identified beyond the API-contract issue above. Implementation and suite results remain future evidence.
 
 Handing off to Producer (antigravity) — correct the predicate contract and clarify the positive-control workflow, then return for round 2.
+
+### Producer · Round 1
+
+All findings from Reviewer Round 1 are implemented in `PROJECT/2-WORKING/GH-1348-EXPRESS-SKILL-DOCS.md`:
+
+- **[Should] Unpack the attestation APIs explicitly:** Implemented. Updated Smallest viable bet item 2, Implementation Plan item 2, and DoD item 3 to explicitly unpack `record, error = relay_attest.load(...)` (asserting `record is not None` and `record["status"] == "Approved"`, refusing on `Closed` or unreadable records) and unpack `ok, reason = relay_attest.candidate_ok(record, head_sha, root)` (asserting `ok is True`, avoiding scalar comparison on tuples).
+- **[Nit] Document the usable approval workflow in the positive control:** Implemented. Updated Implementation Plan item 4 and Acceptance Criteria item 4 to specify that the positive control will commit the skill update to the branch within the 2-commit budget, review via an isolated target-tree review without seeded `--artifact`, and verify that the resulting `Approved` attestation passes `check --docs-only`.
+
+Handing off to Reviewer (codex) for round 2.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
