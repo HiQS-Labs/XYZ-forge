@@ -1,7 +1,7 @@
-initialized /tmp/gh267-express.ivd4hh/repo/releases.db (slug 'H/H', enforcement=lenient, generation 1); canonical dump at /tmp/gh267-express.ivd4hh/repo/releases.sql
-added roadmap entry rmi-01M6QGQSENYVDKVZ4JMD1W98RA for GH-999
-added roadmap entry rmi-01M6QGQSER7D2NVMQ5AJT2199K for GH-998
-added roadmap entry rmi-01M6QGQSEV9YXW5YMPDGAVR70B for GH-997
+initialized /tmp/gh267-express.9tVocL/repo/releases.db (slug 'H/H', enforcement=lenient, generation 1); canonical dump at /tmp/gh267-express.9tVocL/repo/releases.sql
+added roadmap entry rmi-01M6QH1Q0GZ4NRHKH5XVANRBMV for GH-999
+added roadmap entry rmi-01M6QH1Q0KMCNEC1QG8TNYRPVV for GH-998
+added roadmap entry rmi-01M6QH1Q0N673XXVN0F5QRQ5CQ for GH-997
 fixture ready
 == refusals ==
   pass: task-branch refusal
@@ -106,18 +106,18 @@ fixture ready
   pass: unrelated SHA error reported
   pass: auto-resolution for GH-99 does not match GH-999
   pass: neighboring issue 99 reported unresolved
-express-resume: resolved landing commit df34c4878be9 for GH-999
+express-resume: resolved landing commit 5cf5f006d718 for GH-999
   pass: control (iii): resume refuses a landing with no valid receipt
   pass: control (iii): refusal carries the recovery recipe incl. identity snapshot
   pass: control (iii): issue #999 still OPEN — refused before close
-express-resume: resolved landing commit df34c4878be9 for GH-999
+express-resume: resolved landing commit 5cf5f006d718 for GH-999
   pass: control (iv): rc=1 / wrong-suite / wrong-issue / malformed records are not evidence
   pass: control (vi): ignored receipt leaves porcelain clean (the guard alone would not catch it)
-express-resume: resolved landing commit df34c4878be9 for GH-999
+express-resume: resolved landing commit 5cf5f006d718 for GH-999
   pass: control (vi): uncommitted (ignored-path) valid receipt is refused — evidence is read from HEAD
-express-resume: resolved landing commit df34c4878be9 for GH-999
+express-resume: resolved landing commit 5cf5f006d718 for GH-999
   pass: control (vii): a record carrying an explicit pr field is not express evidence (matches the real matcher's conflict rule)
-express-resume: resolved landing commit df34c4878be9 for GH-999
+express-resume: resolved landing commit 5cf5f006d718 for GH-999
   pass: control (viii): a committed symlinked provenance.jsonl is not evidence for resume
 TESTS-RESULTS/2026-11-06+GH-999-express/provenance.jsonl
   pass: express resume exits 0 on valid landing
@@ -138,9 +138,9 @@ TESTS-RESULTS/2026-11-06+GH-998-express/provenance.jsonl
   pass: resume after ship commit succeeds without --sha
   pass: post-ship resume reconciled doc to 3-COMPLETED
 TESTS-RESULTS/2026-11-06+GH-997-express/provenance.jsonl
-express-resume: committed receipt TESTS-RESULTS/2026-11-06+GH-997-express/provenance.jsonl attributes commit f216f06b24d5
+express-resume: committed receipt TESTS-RESULTS/2026-11-06+GH-997-express/provenance.jsonl attributes commit d974359f383e
 express-resume: closed issue #997
-express-resume: manifest item already shipped for issue #997 against rel-01M6QGQSEMWAZ8KXNQAB78BDC8
+express-resume: manifest item already shipped for issue #997 against rel-01M6QH1Q0FR04X3NEK3F5FC1ZP
   pass: resume fails when reconciliation fails (falsifiable)
   pass: central telemetry mirrored to ~/.config/xyz/events
 == source audit (direct landing) ==
