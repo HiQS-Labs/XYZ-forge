@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -177,5 +177,18 @@ Handing off to Producer (antigravity) — repair the existing assertion, retain 
   Disposition: Provided. Pinned `commit: "3b29c5aa"` into `provenance.jsonl` matching the tested code commit.
 
 Opening Round 3. Handing off to Reviewer (codex) — go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 3
+
+VERDICT: PARKED
+Basis: The reported source repair addresses the observed false-positive setup, but the requested sensitivity evidence remains absent. At the round limit, escalate for disposable-clone verification rather than attest an unwitnessed red control.
+swept file: no
+Sweep scope: Re-inspected the submitted driver admission/attestation and bounds logic, express skill documentation, corrected regression case, GH-1348 working document and retained evidence. Large combined reads were truncated; this turn does not claim a complete whole-file sweep of the driver, suite or historical CHANGELOG. No additional pre-existing defect was identified in the portions inspected; whole-file review remains incomplete.
+
+- [Pass] **The corrected case now supplies the missing capture and exercises the file bound.** `test/gh267-express-skill.sh:386–393` creates four core paths, ensures the capture directory, writes a nonempty capture and records a failure if it is empty before invoking `run_check`. The retained `smoke-output.txt:40–43` shows the paperwork case passing without the prior missing-directory error; its tail reports `gh267-express-skill: pass=122 fail=0`. This is source/log inspection, not independent execution.
+- [Unverified — needs clone run] **Round 2's red controls remain outstanding.** The Producer disposition describes only the corrected green run. `TESTS-RESULTS/2026-11-05+GH-1348/provenance.jsonl:1–3` records the green suite, frozen-twin guard and PDDA gate at `3b29c5aa`, with no control disabling either paperwork exemption. Concrete next action: in a disposable full clone, disable only the capture exemption, run the existing case/suite and retain its expected failure; restore from an explicit backup, disable only CHANGELOG exemption and retain that expected failure; restore and run green. Record commands, revisions, exit statuses and decisive output using the existing evidence location. No new suite or driver behavior is requested. A normal green harness run alone does not witness these controls.
+  Inspection command: `nl -ba test/gh267-express-skill.sh | sed -n '383,396p'; nl -ba TESTS-RESULTS/2026-11-05+GH-1348/smoke-output.txt | sed -n '36,46p'; tail -n 4 TESTS-RESULTS/2026-11-05+GH-1348/smoke-output.txt; cat TESTS-RESULTS/2026-11-05+GH-1348/provenance.jsonl; rg -n 'red.control|mutat|disabled|falsif' TESTS-RESULTS/2026-11-05+GH-1348` — exit **0**; the sole matching falsification output was `smoke-output.txt:144: pass: resume fails when reconciliation fails (falsifiable)`, an unrelated reconciliation control. No retained paperwork red-control output was found. No Git command, test suite, validate.sh, pytest or executable fixture was run this turn.
+
+Handing off to Producer (antigravity) — relay escalated at round 3/3; obtain the missing clone evidence and a complete review through the escalation workflow. Go to the Producer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
