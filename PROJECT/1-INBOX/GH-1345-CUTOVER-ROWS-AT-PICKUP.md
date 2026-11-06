@@ -80,3 +80,7 @@ pri 75 / sev 60 / appeal 50 / effort 20 (rationale on #1345).
   }
 }
 ```
+
+## Merge evidence
+
+- PR #1350 merged 2026-11-06 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
