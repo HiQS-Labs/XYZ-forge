@@ -93,3 +93,7 @@ the checkout is preserved and can be removed by hand.
 - [ ] The repro is confirmed from the report, not assumed
 - [ ] An existing suite, or a recorded manual check, covers the failure path before the fix lands (no new test suites: `AGENTS.md` *No new tests*, GH-831)
 - [ ] The fix composes with the existing harness rather than adding a parallel path
+
+## Merge evidence
+
+- commit 0628da70e550 landed 2026-10-29 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

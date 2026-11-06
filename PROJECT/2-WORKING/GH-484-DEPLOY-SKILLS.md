@@ -262,3 +262,7 @@ Round 1: Agy requested explicit five-consumer verification; implemented in Phase
 ## Merge evidence
 
 - PR #1282 merged 2026-10-31 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1304 merged 2026-10-31 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

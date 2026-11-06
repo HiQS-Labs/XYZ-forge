@@ -68,3 +68,7 @@ The Phase 0 spike (#1225) showed that landing stalls first, then intake becomes 
 - At least three candidates evaluated.
 - A recommendation per layer: reuse X, borrow ideas from X, or build it in XYZ.
 - Operator decision recorded. Follow-up issues filed only once that decision is made.
+
+## Merge evidence
+
+- commit 835254712a06 landed 2026-10-29 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

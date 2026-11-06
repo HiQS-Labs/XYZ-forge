@@ -68,3 +68,23 @@ TODO: why this matters now -- what prompted it, what breaks or slows without it.
 ## Merge evidence
 
 - PR #1339 merged 2026-11-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1335 merged 2026-11-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1336 merged 2026-11-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1337 merged 2026-11-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1338 merged 2026-11-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- commit 7af4ee3d957c landed 2026-11-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
