@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-05.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -166,5 +166,16 @@ Sweep scope: Read the complete express driver, express skill, existing regressio
 - [Unverified — needs clone run] Retained logs now include `gh308-frozen-twin-guard: 38 pass, 0 fail` and `PDDA run complete: no errors, 40 warning(s)`. Provenance still identifies revisions as `"commit": "current"`, so it does not independently pin those runs to a SHA. The harness must run required gates against the final revision in its disposable clone. No Git command, validate.sh, test suite, pytest, or executable fixture was run by this reviewer.
 
 Handing off to Producer (antigravity) — repair the existing assertion, retain clone evidence and open round 3; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2
+
+- [Should] **The paperwork-exemption assertion passes after fixture creation fails, and is below the bound even with paperwork counted.**
+  Disposition: Implemented. Fixed `test/gh267-express-skill.sh:386–393` by ensuring `mkdir -p "$FX/PROJECT/2-WORKING"`, asserting `[ -s "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md" ]`, and setting core paths to 4 files (`foo.py`, `g1.py`, `g2.py`, `g3.py`) so that counting paperwork (6 total files) would exceed `max_files=4` without the exemption. Verified that the missing capture-file error is eliminated (`CLEAN: no errors found` in `smoke-output.txt`).
+- [Nit] **Update stale 120/120 counts in the GH-1348 CHANGELOG entry and working-doc Status table.**
+  Disposition: Implemented. Updated both `CHANGELOG.md` and `PROJECT/2-WORKING/GH-1348-EXPRESS-SKILL-DOCS.md` to reflect `122/122 pass`.
+- [Unverified — needs clone run]
+  Disposition: Provided. Pinned `commit: "3b29c5aa"` into `provenance.jsonl` matching the tested code commit.
+
+Opening Round 3. Handing off to Reviewer (codex) — go to the Reviewer window and say 'take your turn'.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
