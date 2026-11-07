@@ -2,6 +2,7 @@
 title: merge-cleanup treats a local tag that origin already holds as unpushed, so published task clones are never retired
 status: Proposed (1-INBOX — not yet active)
 created: 2026-10-28
+updated: 2026-11-07
 owner: noelsaw1
 gh_issue: 1247
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1247
@@ -10,7 +11,7 @@ complexity: 2
 risk: 2
 effort: 2
 phases: 1
-ratings_provisional: true
+ratings_provisional: false
 reported_from: LTVera-Pandas
 harness_commit: 93f41cb8
 non_goals:
@@ -97,3 +98,51 @@ the checkout is preserved and can be removed by hand.
 ## Merge evidence
 
 - commit 0628da70e550 landed 2026-10-29 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Base reproduction and scanner recon for #1247/#1362 | Independent Codex plan QA |
+
+## Shared plan — #1247, #1362, coordinating #1359
+
+Base `3bf02f73ce0cb11a82f970357209980f808ccb3c`. Clone `XYZ-forge-gh1247-retire-remote-tags-2026-11-07`, branch `fix/XYZ-forge-gh1247-retire-remote-tags-2026-11-07`. One implementation PR, not yet created. This is the canonical shared plan; other captures point here.
+
+| Issue | Scope / acceptance | Dependencies | Rating and rationale | State |
+|---|---|---|---|---|
+| [#1247](https://github.com/HiQS-Labs/XYZ-forge/issues/1247) | Exact origin tag-object equality permits classification; local-only/different/query-failure preserve | None | 75/60/50/80: recurring retention, recoverable operator burden, neutral appeal, narrow fix | Plan QA |
+| [#1362](https://github.com/HiQS-Labs/XYZ-forge/issues/1362) | Deployed scanner resolves trusted configured tick, unknown claims preserve | Same scanner | 75/60/50/85: deployed closeout blocked, workaround exists, neutral appeal, small extension | Plan QA |
+| [#1359](https://github.com/HiQS-Labs/XYZ-forge/issues/1359) | Research/coordination only, bounded transition map and remaining gaps | Findings from both fixes | 70/45/50/45: retain issue proposal, recurring burden, no loss observed, neutral appeal, bounded audit | Broader work remains open |
+
+### Recon, solution-fit and blast radius
+
+`scan_clones.py::inspect_checkout` consumes `classify_local_refs` and `inspect_tick_claims`; failed queries become PRESERVE_UNVERIFIED_QUERY, unknown claims become PRESERVE_UNVERIFIED_SESSION. `merge_cleanup.py::retire_published_checkouts` reuses inspection and fresh teardown. No removal code changes. The graph excludes these scripts, so direct source reads were necessary.
+
+Base reproduction in separate full clone: origin-identical lightweight and annotated tags off development are unlanded. A deployed-path scanner with empty PATH resolves neither XYZ_HARNESS nor device config. A differing tag aimed at development is accepted by ancestry: tag object/name equality must precede ancestry. Existing gh436 suite includes gh534_phase_a_tests.py with provenance and claim coverage.
+
+Outcome: remove false preservation while preserving unique work. Smallest viable bet: two function extensions, existing run_git and disposition propagation. The full relay locator discovers the caller's vendored harness, inappropriate for an auditor; reuse its explicit configuration contract instead, not its cwd discovery. No parallel resolver framework, dependency or new CLI.
+
+Costly: a false safe verdict can permit downstream retirement. Source rollback is one commit; stop on any false-safe control before deployment. No user-checkout disposal during verification. Deployment remains a separate post-merge Skills Army step.
+
+### Ordered implementation
+
+1. For tags, query `git ls-remote --refs --tags origin` once and compare exact full ref names and unpeeled object IDs before ancestry. Missing/different tags remain unlanded, even if commit targets are reachable. Failed/malformed query uses existing failed_query. Branch/detached rules unchanged. -> identical lightweight/annotated pass; local-only/differing target or annotation preserve; failed query preserves.
+2. Extend `_tick_binary` retaining explicit MERGE_CLEANUP_TICK_BIN and own-harness/PATH behavior. Add XYZ_HARNESS and the existing XDG_CONFIG_HOME/HOME xyz/harness config; configured root must identify canonical Forge origin and executable tick. Never discover from audited cwd or its vendored tree. -> deployed-path env/config resolution; absent/broken candidates and active claims preserve; override precedence stays deterministic.
+3. Record #1359's real LTVera PR #960 completion→retirement invocation→two preservation causes from issue evidence. Map start-task, Express, Jog/Marathon, helper and T3 boundaries with owner, supported command/API, witness/refusal, failure disposition and next reconciliation. Unknown ownership stays UNKNOWN. No schedules, broad cleanup, #748 implementation or installed deployment.
+4. Existing `test/gh436-merge-cleanup.sh` plus manual red/green probes in a disposable full clone. Main-path and adjacent retry/negative smoke exercises actual classifier and claims entry points. Record commands, logs, provenance under TESTS-RESULTS/2026-11-07+GH-1247. No new suites, registry entries, gate machinery or fuzzers.
+5. Final independent QA, one final classified gate, ready PR to development; #1359 stays open. Retire only workflow-owned published clones if normal fresh checks permit.
+
+### Acceptance and QA
+- [ ] Plan independent Codex QA approved before production edits.
+- [ ] Both issues reproduced on base; fixed main path and adjacent/negative controls verified.
+- [ ] Local-only/different tags, query failures, unknown/active claims remain preserved.
+- [ ] Existing suite, final independent QA and classified gate pass; receipts retained.
+
+### Recurrence and rating evidence
+
+2026-10-25–11-07 versus 2026-10-11–24: #1247 names Oct 28 PR #855 and Nov 7 PR #960 as two distinct incidents; #1362 is another failure on the same Nov 7 run, not a third tag incident. Previous-window trend unknown. No observed loss. Existing #1247 rating/ovr were null; other rows absent. Persist each score through PRS and read back before QA.
+
+### Review questions
+
+Compare requirements of all three issues against this plan. Are tag object identity, failure propagation and trusted tick lookup sufficient? Are any requirements missing? Are rollback and falsifiable controls adequate without extra machinery? Local developer cleanup tool, no speculative enterprise threat model. Reviewer writes only relay receipt and runs no tests in relay worktree.
