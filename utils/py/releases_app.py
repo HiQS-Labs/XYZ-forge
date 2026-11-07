@@ -3358,7 +3358,10 @@ def parse_prs_proposal(text):
     if any(not (1 <= v <= 100) for v in vals) or all(v <= 5 for v in vals):
         return None
     if vals == [50, 50, 50, 50]:
-        if any(len(r) < 25 or "TODO" in r or "rationale" in r.lower() for _, r in prs.values()):
+        rationales = [r for _, r in prs.values()]
+        if any(len(r) < 25 or "TODO" in r or "rationale" in r.lower() for r in rationales):
+            return None
+        if len(set(r.strip().lower() for r in rationales)) < 4:
             return None
     return {
         "pri": prs["pri"][0],
@@ -3885,7 +3888,7 @@ def cmd_roadmap_pickup(args):
                 issue_url = m_src.group(1).strip()
 
         # Query gh issue view if needed
-        if not title or not issue_url:
+        if not title or not issue_url or not getattr(args, "rated", None):
             try:
                 proc = subprocess.run(
                     ["gh", "issue", "view", str(args.issue_num), "--json", "url,title,body"],
@@ -3896,14 +3899,20 @@ def cmd_roadmap_pickup(args):
                     title = meta.get("title")
                 if not issue_url:
                     issue_url = meta.get("url")
-                issue_body = meta.get("body") or ""
+                if not issue_body:
+                    issue_body = meta.get("body") or ""
             except Exception:
                 pass
 
         if not title:
             title = "GH-%d" % args.issue_num
         if not issue_url:
-            issue_url = "https://github.com/HiQS-Labs/XYZ-forge/issues/%d" % args.issue_num
+            slug = _github_slug_from_origin(root)
+            if not slug:
+                refuse("roadmap-issue-url", "cannot resolve the issue URL for GH-%d; pass --issue-url" % args.issue_num)
+            issue_url = "https://github.com/%s/issues/%d" % (slug, args.issue_num)
+
+        validate_issue_identity(issue_url, args.issue_num)
 
         # Resolve real rating (Task 11)
         rated_str = getattr(args, "rated", None)

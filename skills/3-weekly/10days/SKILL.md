@@ -316,11 +316,10 @@ For each `INCLUDE` verdict:
   ```
   ```
 
-  **Persist ratings to releases.db**:
+  **Persist ratings to releases.db at pickup**:
   ```bash
-  python3 "$HARNESS/utils/py/releases_app.py" roadmap rate --issue-num <N> \
-    --rated <P>/<S>/<A>/<E> [--ovr <O>] [--force]
-  ```
+  python3 "$HARNESS/utils/py/releases_app.py" roadmap pickup --issue-num <N> \
+    --rated <P>/<S>/<A>/<E> [--ovr <O>]
   ```
 
   **`source:` is always the tracking issue (GH-425).** It must name this repository and the

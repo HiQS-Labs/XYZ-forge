@@ -893,6 +893,13 @@ goal: >
 
 - (recorded at landing by the /express driver)
 
+## PRS proposal
+
+- pri 70: express hotfix critical path priority
+- sev 60: express lane bounded fix severity
+- appeal 50: express lane neutral appeal default
+- effort 85: express lane cheap single-suite effort
+
 ## Lessons Learned (For Future Agents)
 
 - Landed via the /express fast lane (GH-267): the fix, its suite, this doc, and the
@@ -968,7 +975,7 @@ def qualified_roadmap_row(root, repo, number, dry_run=False):
 
 def cmd_ledger(args):
     root = args.root
-    iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state,title,url,createdAt"])
+    iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state,title,url,createdAt,body"])
     meta = json.loads(iv.stdout)
 
     if getattr(args, "dry_run", False):
@@ -1003,8 +1010,9 @@ def cmd_ledger(args):
             if prs:
                 rated_token = "%d/%d/%d/%d" % (prs["pri"], prs["sev"], prs["appeal"], prs["effort"])
             else:
-                # Express fast-lane hotfix default rating (pri=70, sev=60, appeal=50, effort=85)
-                rated_token = "70/60/50/85"
+                refuse(root, "rating-unrated",
+                       "no valid PRS proposal in issue #%d or %s; pass --rated P/S/A/E" % (args.issue, doc),
+                       issue=args.issue)
 
         raw = ("- **GH-%d · %s** 🆕 (rated %s) — [%s](%s) · [#%d](%s)" %
                (args.issue, meta["title"], rated_token, os.path.basename(doc), doc, args.issue, meta["url"]))
@@ -1559,6 +1567,7 @@ def main():
     p.add_argument("--doc-path")
     p.add_argument("--slug")
     p.add_argument("--summary")
+    p.add_argument("--rated")
     p.set_defaults(fn=cmd_run)
 
     args = ap.parse_args()

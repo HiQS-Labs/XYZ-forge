@@ -106,7 +106,6 @@ you are standing in.
    - Write `<intake repo>/PROJECT/1-INBOX/GH-<n>-<SHORT-SLUG>.md` (SCREAMING-KEBAB, ~2–4 words, no
      zero-padding). `<SHORT-SLUG>` is a *title* slug (e.g. `RELAY-DRIVE-EXIT6`) — do not confuse it
      with the locator's `XYZ_SLUG`, which is the `owner/repo` origin slug and contains a `/`.
-   - Park the ROADMAP pointer (Step 5).
    - **Do not commit and do not push.** See Guardrails — this is the rule most likely to bite.
 
 5. **Ledger row deferred to pickup (decision 6)** — Filing creates the issue and

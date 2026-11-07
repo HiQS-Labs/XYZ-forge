@@ -206,6 +206,7 @@ DOC="PROJECT/1-INBOX/GH-${NUM}-$(hq_slug "$TITLE" | tr '[:lower:]' '[:upper:]').
 # ratings_provisional: true. marathon-plan does not read that flag yet (GH-1333), so hold
 # provisional captures out of waves by hand.
 hq_render_capture "$NUM" "$URL" "$TITLE" "$CREATED" bugfix <project> <org>/<repo> "$BODY" > "$DOC"
+```
 
 Under decision D-b, Step 3 writes the capture doc. When an item is selected into an active wave
 or batch (work starts), create or reuse the row with its real rating via `roadmap pickup`:

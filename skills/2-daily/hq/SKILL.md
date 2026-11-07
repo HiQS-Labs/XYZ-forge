@@ -78,8 +78,8 @@ The skill drives `utils/hq/hq.sh` (or `$HQ_SH` from a foreign repo — see Preco
 
 1. Name given → `bash utils/hq/hq.sh status "<name>"`; relay the card. On **UNRESOLVED**, show the
    find-recipe and ask; on **AMBIGUOUS**, show the candidates and ask which — never guess a path.
-2. "For project X, do Y" → `hq.sh park "<X>" "<Y>"` (preview), show the exact issue/doc/roadmap, then
-   `--create` on the operator's go (creating a GH issue is outward-facing — confirm first).
+2. "For project X, do Y" → `hq.sh park "<X>" "<Y>"` (preview), show the exact issue/doc and future roadmap preview, then
+   `--create` on the operator's go (creates the issue and 1-INBOX capture doc; roadmap row is deferred to work pickup).
 3. "queue it" / "fire it" → the corresponding verb. `fire` stops at the gated hand-off: relay the
    emitted command and hand to the relay-xyz skill; do not auto-drive a marathon.
 4. "what can HQ see" / "list projects" → `hq.sh registries`.

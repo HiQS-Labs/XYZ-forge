@@ -159,9 +159,8 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
    The title must not match `parse_rating`'s token-presence rule, lowercase `rated` or `ovr`
    followed by whitespace and a digit (`releases_app.py:3299,3317`), in any form: `rated 80/55/50/65`,
    `rated 5/5`, `rated 70`, `ovr 200`. `hq_roadmap_line` interpolates the title into the ledger
-   line and `parse_rating` reads the whole line, so a complete token pre-rates the row and makes
-   Step 8's `roadmap rate` refuse, and a malformed one aborts `roadmap add` **after** the issue and
-   capture exist. Check it before previewing:
+   line and `parse_rating` reads the whole line, so a token in the title pollutes the future row when
+   picked up at work start. Check it before previewing:
 
    ```bash
    printf '%s' "$TITLE" | grep -Eiq '(^|[^[:alnum:]_])(rated|ovr)[[:space:]]+[0-9]' && { echo "refuse: rating token in title"; exit 1; }
@@ -190,7 +189,7 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
    its disposition, and the hash from Step 6.
 
 10. **Preflight the capture, refuse on any nonzero.** Spike tier: print
-    `NEEDS-SPIKE: issue <url>, doc <path>, row <gid>; no contract by design, not a build candidate`
+    `NEEDS-SPIKE: issue <url>, doc <path>; no contract by design, not a build candidate`
     and skip to Step 11. Otherwise:
 
     ```bash
@@ -198,31 +197,31 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
     ```
 
     `--project-doc` reads the fresh local capture directly (`--gh-issue` searches only `2-WORKING`);
-    the uncommitted capture and ledger are fine: dirty state is recorded, not a verdict condition
+    the uncommitted capture is fine: dirty state is recorded, not a verdict condition
     (`swarm_preflight.py:1312-1316,1640-1645`). `--dry-run` publishes nothing but **does** fetch and
     create/remove a detached worktree in the target. Exit 0 is READY. Anything else is reported by
     name, never as success: 3 contract missing/invalid, 4 STALE (a probe already satisfied at
     `target.ref`: either a wrong probe or already-delivered work; say which you found), 5 NOT-READY
     (an artifact missing at `target.ref` and absent from `artifacts_new`), 6 BLOCKED, 7 AMBIGUOUS.
-    By now the issue, the capture doc and the ledger row already exist (Step 8 ran first), so the
+    By now the issue and the capture doc exist (Step 8 ran first; ledger row is deferred to work pickup), so the
     report is exactly:
 
     ```
-    filed, not admission-ready: issue <url> · doc <path> · row <gid> · verdict <NAME> (exit <n>): <reason line from the log>
+    filed, not admission-ready: issue <url> · doc <path> · verdict <NAME> (exit <n>): <reason line from the log>
     ```
 
     Nothing is rolled back and nothing is admitted. Fix the body and the doc together, or leave it
     for the operator. The skill never invents a replacement probe to turn a verdict green.
 
-11. **Report** in five lines: the issue URL; the capture-doc path under `$TARGET` and the ledger row
-    id; the rating as read back; the preflight exit and verdict (or `NEEDS-SPIKE`); and that the
-    capture, `releases.db` and `releases.sql` are **uncommitted in `$TARGET`** on its current branch,
-    so the operator knows the one action left is theirs.
+11. **Report** in four lines: the issue URL; the capture-doc path under `$TARGET`; the proposed rating
+    from the PRS proposal; the preflight exit and verdict (or `NEEDS-SPIKE`); and that the
+    capture is **uncommitted in `$TARGET`** on its current branch, so the operator knows the one action
+    left is theirs.
 
 ## Guardrails
 
-- The only writers are `hq park --create`, `releases roadmap rate` and `gh issue comment`. No file
-  under `utils/`, no new flag, no new script, no test, no commit, no push.
+- The only writers are `hq park --create` and `gh issue comment`. No file under `utils/`, no new flag,
+  no new script, no test, no commit, no push.
 - Never write `approved`, `reviewed` or any admission marker. Never clear `ratings_provisional`.
 - Never retrofit an existing issue's body. Never file when prior art names an open match.
 - Trivial tier files nothing; spike tier files without a contract and reports `NEEDS-SPIKE`.

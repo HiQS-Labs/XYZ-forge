@@ -190,18 +190,19 @@ resolver (`utils/releases-merge-resolve.sh`).
 python3 utils/py/releases_app.py check          # trio consistency, receipt chain, crash recovery
 python3 utils/py/releases_app.py next           # the next unshipped release, by target date
 python3 utils/py/releases_app.py add|ship ...   # RELEASE writes — never hand-edit releases.sql
-python3 utils/py/releases_app.py roadmap add ... # GH-238: park one issue as a roadmap row (the intake write path)
-                                                #   GH-249: put `rated N/N/N/N [ovr N]` in --raw-text to score it
-python3 utils/py/releases_app.py roadmap rate ...# GH-253: score a row that is ALREADY parked (--force to re-score)
-python3 utils/py/releases_app.py roadmap list   # read the roadmap rows (--json for machine consumers)
-python3 utils/py/releases_app.py roadmap sync   # LEGACY-mode only (mirrors ROADMAP.md); a guarded no-op in this repo
+python3 utils/py/releases_app.py roadmap pickup ... # GH-1345: create rated row at work pickup (start-task, Jog, marathon)
+python3 utils/py/releases_app.py roadmap add ...    # low-level write path; puts row directly in roadmap
+                                                   #   GH-249: put `rated N/N/N/N [ovr N]` in --raw-text to score it
+python3 utils/py/releases_app.py roadmap rate ...   # GH-253: score a row that is ALREADY parked (--force to re-score)
+python3 utils/py/releases_app.py roadmap list      # read the roadmap rows (--json for machine consumers)
+python3 utils/py/releases_app.py roadmap sync      # LEGACY-mode only (mirrors ROADMAP.md); a guarded no-op in this repo
 ```
 
 **Subsystem 1 — releases** (GH-32 / GH-568): the release ledger. App-managed writes
 only; `releases.db` and the `releases` CLI (`releases list`, `releases show`) are the sole source of truth (`RELEASES.md` is retired per GH-568).
 **Subsystem 2 — the roadmap ledger** (GH-69 shadow → GH-238/GH-243 canonical → GH-269 retired ROADMAP.md → GH-567 retired ROADMAP-DASHBOARD.md): since the
-`ROADMAP_SOURCE=releases` flip, `roadmap_items` IS the ledger — write rows with
-`releases roadmap add` (or `hq park`), read with `roadmap list`.
+`ROADMAP_SOURCE=releases` flip, `roadmap_items` IS the ledger — write rows at pickup with
+`releases roadmap pickup` (or `roadmap add`), read with `roadmap list`. `hq park` creates captures without premature ledger rows.
 The legacy markdown roadmap files (ROADMAP and ROADMAP-DASHBOARD) have been retired. `roadmap sync` exists for legacy-mode repos only and
 no-ops here by design (it would delete `add`-parked rows). Pinned by `test/gh69-roadmap-shadow.sh`,
 `test/gh238-hq-releases-mode.sh`, `test/gh269-roadmap-retired.sh`, and `test/gh567-roadmap-dashboard-retired.sh`.
