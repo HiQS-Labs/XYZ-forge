@@ -210,7 +210,7 @@ no-ops here by design (it would delete `add`-parked rows). Pinned by `test/gh69-
 ## Routing hints
 
 - If the task is about current priorities or active work, start with `releases roadmap list`, then follow the linked `PROJECT/**` doc.
-- If the task changes the roadmap ledger, write through the CLI (`releases roadmap add` at pickup/start time; start paths route there automatically).
+- If the task changes the roadmap ledger, write through the CLI (`releases roadmap pickup` at pickup/start time; start paths route there automatically).
 - If the task touches `releases.db`, `releases.sql`, or a merge conflict on either, start in [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md); writes go through the CLI, never a hand-edit.
 - If the task is about fresh GitHub intake or duplicate-prevention, start in `PROJECT/1-INBOX/` and open issues (duplicate issue search + capture reuse), then inspect the roadmap ledger at pickup.
 - If the task is about document quality, active-doc lifecycle, roadmap sprawl, or automation policy, start in `PROJECT/PDDA.md`.

@@ -3355,14 +3355,8 @@ def parse_prs_proposal(text):
             else:
                 return None
     vals = [prs[k][0] for k in ("pri", "sev", "appeal", "effort")]
-    if any(not (1 <= v <= 100) for v in vals) or all(v <= 5 for v in vals):
+    if any(not (1 <= v <= 100) for v in vals) or all(v <= 5 for v in vals) or vals == [50, 50, 50, 50]:
         return None
-    if vals == [50, 50, 50, 50]:
-        rationales = [r for _, r in prs.values()]
-        if any(len(r) < 25 or "TODO" in r or "rationale" in r.lower() for r in rationales):
-            return None
-        if len(set(r.strip().lower() for r in rationales)) < 4:
-            return None
     return {
         "pri": prs["pri"][0],
         "sev": prs["sev"][0],
@@ -3846,10 +3840,22 @@ def cmd_roadmap_pickup(args):
         if row is not None:
             # Row already exists: idempotent pickup, preserve ovr and ratings
             if getattr(args, "doc_path", None) and row["doc_path"] != args.doc_path:
+                new = args.doc_path
+                if not os.path.isfile(os.path.join(root, new)):
+                    refuse("no-such-doc", "%s does not exist under %s — re-point to a real doc, never a "
+                                          "path that merely looks right" % (new, root))
+                old = row["doc_path"]
+                raw_text = row["raw_text"]
+                if old:
+                    raw_text = raw_text.replace(old, new)
+                    old_base = os.path.basename(old)
+                    new_base = os.path.basename(new)
+                    if old_base in raw_text:
+                        raw_text = raw_text.replace(old_base, new_base)
                 if not getattr(args, "dry_run", False):
                     def repoint_mutate(c):
-                        c.execute("UPDATE roadmap_items SET doc_path = ?, updated_at = ? WHERE global_id = ?",
-                                  (args.doc_path, now_iso(), row["global_id"]))
+                        c.execute("UPDATE roadmap_items SET doc_path = ?, raw_text = ?, updated_at = ? WHERE global_id = ?",
+                                  (new, raw_text, now_iso(), row["global_id"]))
                     perform_write(root, conn, "roadmap-repoint", row["global_id"], repoint_mutate)
             print("roadmap-pickup: GH-%d already parked (%s); preserved" % (args.issue_num, row["global_id"]))
             return

@@ -316,7 +316,8 @@ For each `INCLUDE` verdict:
   ```
   ```
 
-  **Persist ratings to releases.db at pickup**:
+  **Persist ratings to releases.db at survivor pickup/planning (Step 5)**:
+  When selecting survivor lanes for the marathon plan, admit each into the ledger with:
   ```bash
   python3 "$HARNESS/utils/py/releases_app.py" roadmap pickup --issue-num <N> \
     --rated <P>/<S>/<A>/<E> [--ovr <O>]

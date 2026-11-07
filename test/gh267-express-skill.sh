@@ -145,7 +145,7 @@ if a[:1] == ["next"]:
     c = canonical.connect("releases.db")
     print("NEXT: stub gid=" + c.execute("SELECT global_id FROM releases LIMIT 1").fetchone()[0])
     c.close()
-if a[:2] in (["roadmap", "add"], ["roadmap", "update"], ["manifest", "dial-in"], ["manifest", "ship"]):
+if a[:2] in (["roadmap", "add"], ["roadmap", "update"], ["roadmap", "pickup"], ["manifest", "dial-in"], ["manifest", "ship"]):
     c = canonical.connect("releases.db")
     before = canonical.get_generation(c)
     if a[:1] == ["roadmap"]:
@@ -639,6 +639,9 @@ new_task_branch; rm -f "$FX/PROJECT/2-WORKING/GH-999-DEMO-HOTFIX.md"; printf 'fi
 issue_json OPEN "Demo hotfix" 999
 python3 "$DRIVER" --root "$FX" check --issue 999 --suite test/gh999-demo.sh >/dev/null 2>"$ERR" || bad "standalone check failed: $(cat "$ERR")"
 python3 "$DRIVER" --root "$FX" docs --issue 999 --suite test/gh999-demo.sh --summary demo >/dev/null 2>"$ERR" || bad "standalone docs failed: $(cat "$ERR")"
+python3 "$DRIVER" --root "$FX" ledger --issue 999 --rated 50/50/50/50 >/dev/null 2>"$ERR" \
+  && bad "express ledger must refuse placeholder 50/50/50/50 rating" \
+  || { check_rule rating-placeholder "$ERR" && ok "express ledger refuses placeholder 50/50/50/50 rating" || bad "rating-placeholder rule: $(tail -1 "$ERR")"; }
 python3 "$DRIVER" --root "$FX" ledger --issue 999 >/dev/null 2>"$ERR" || bad "standalone ledger failed: $(cat "$ERR")"
 LANDOUT="$(python3 "$DRIVER" --root "$FX" land --issue 999 --suite test/gh999-demo.sh 2>"$ERR")"
 if grep -Eq "express-land: commit [0-9a-f]+ pushed to development" <<<"$LANDOUT"; then

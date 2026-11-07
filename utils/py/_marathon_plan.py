@@ -118,6 +118,123 @@ def _L(x):
     return n if 1 <= n <= 5 else None
 
 
+def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None = None,
+                         doc_text: str | None = None, engine=None, root=None) -> dict:
+    """A planner-shaped record for an open issue with no ledger row (GH-1261, GH-1340/GH-1345).
+    Judged on capture doc, Preflight Contract and rating proposal. When all three are valid,
+    its state is 'ready' and section is 'Queue / parked intake'."""
+    repo_root = Path(root) if root else (Path(engine.ROOT) if engine else Path("."))
+
+    if doc_rel is None:
+        cands = []
+        for folder in ("1-INBOX", "2-WORKING"):
+            fdir = repo_root / "PROJECT" / folder
+            if fdir.is_dir():
+                for p in sorted(fdir.glob("*.md")):
+                    if re.match(rf"^(?:GH-)?{issue}(?:-|\.md$)", p.name, re.I):
+                        cands.append(str(p.relative_to(repo_root)))
+        if cands:
+            doc_rel = cands[0]
+
+    if doc_rel and doc_text is None:
+        doc_path = repo_root / doc_rel
+        if doc_path.is_file():
+            doc_text = doc_path.read_text(encoding="utf-8", errors="replace")
+
+    if not title or title == f"GH-{issue}":
+        if doc_text:
+            fm_m = re.search(r"(?m)^title:\s*[\"']?(.*?)[\"']?$", doc_text)
+            if fm_m and fm_m.group(1).strip():
+                title = fm_m.group(1).strip()
+            else:
+                for line in doc_text.splitlines():
+                    m = re.match(r"^#\s+(?:GH-\d+[:\s-]*)?(.*)$", line)
+                    if m and m.group(1).strip():
+                        title = m.group(1).strip()
+                        break
+        if not title:
+            title = f"GH-{issue}"
+
+    deps = Engine._deps_of({"raw": f"{title}\n{body}"})
+    if doc_text:
+        doc_deps = Engine._deps_of({"raw": doc_text})
+        deps = sorted(set(deps) | set(doc_deps))
+
+    if engine is None:
+        today = "1970-01-01"
+        cfg = {"root": str(repo_root), "roadmap": str(repo_root / "ROADMAP.md"),
+               "queue_dir": str(repo_root / "PROJECT" / "2-WORKING"), "today": today, "now": today,
+               "policy": "quick-wins", "format": "text", "deep": False, "require_gh": False,
+               "gh_force": "off", "utils_dir": str(repo_root / "utils")}
+        engine = Engine(cfg)
+
+    contract = None
+    if doc_rel and (repo_root / doc_rel).is_file():
+        contract = engine._extract_contract(str(repo_root / doc_rel))
+    if not contract and body:
+        lines = body.splitlines()
+        h = next((j for j, l in enumerate(lines) if re.match(r"^#{1,6}\s+.*preflight\s+contract", l, re.I)), -1)
+        if h >= 0:
+            start = next((j + 1 for j in range(h + 1, len(lines)) if re.match(r"^```json\s*$", lines[j], re.I)), -1)
+            if start >= 0:
+                end = next((j for j in range(start, len(lines)) if re.match(r"^```\s*$", lines[j])), -1)
+                if end >= 0:
+                    try:
+                        contract = json.loads("\n".join(lines[start:end]))
+                    except ValueError:
+                        contract = None
+
+    from releases_app import parse_prs_proposal
+    proposal = parse_prs_proposal(body)
+    if not proposal and doc_text:
+        proposal = parse_prs_proposal(doc_text)
+
+    db_axes = None
+    db_rank = None
+    if proposal:
+        db_axes = (proposal["pri"], proposal["sev"], proposal["appeal"], proposal["effort"])
+        db_rank = proposal.get("ovr") or sum(db_axes)
+
+    writeset = []
+    zone = None
+    zone_rule = None
+    zone_inferred = False
+    if contract and isinstance(contract.get("artifacts"), list) and contract["artifacts"]:
+        writeset = list(contract["artifacts"])
+        z = engine._zone_of(contract, {"title": title, "raw": body})
+        zone = z["zone"]
+        zone_rule = z["zoneRule"]
+        zone_inferred = z["inferred"]
+
+    doc_exists = bool(doc_rel and (repo_root / doc_rel).is_file())
+    if not doc_exists:
+        state = "needs-doc"
+    elif not proposal:
+        state = "unrated"
+    elif not contract or not writeset:
+        state = "needs-contract"
+    else:
+        state = "ready"
+
+    slug = f"gh-{issue}"
+    suggested_branch = "marathon/%s-%s" % (slug, getattr(engine, "TODAY", "today"))
+    return {
+        "title": title, "section": "Queue / parked intake", "emoji": "⏸️",
+        "raw": f"- [ ] [GH-{issue}]({doc_rel}) {title}" if doc_rel else f"- [ ] GH-{issue} {title}",
+        "gh": issue, "gid": None, "docRel": doc_rel, "docExists": doc_exists,
+        "slug": slug, "ratings": {"complexity": None, "risk": None, "effort": None},
+        "rated": bool(proposal), "ratingsExempt": False,
+        "contract": contract, "zone": zone, "zoneInferred": zone_inferred,
+        "writeset": writeset, "zoneRule": zone_rule,
+        "deps": deps, "goGated": False,
+        "suggestedBranch": suggested_branch,
+        "flags": [], "signals": [], "state": state, "score": None,
+        "dbRank": db_rank, "dbAxes": db_axes,
+        "wave": None, "ghState": None,
+        "source": "unregistered",
+    }
+
+
 class Engine:
     def __init__(self, cfg):
         # cfg mirrors the QP_* env the Bash engine consumed.
@@ -877,6 +994,67 @@ class Engine:
                                    "pin a CONTRACT.md for the %s/ interface and point both lane prompts at it before launching" % spine)
         return contract_seams
 
+    def _discover_unregistered(self, registered_gh):
+        """Discover unstarted issues that have capture docs in PROJECT/1-INBOX (or 2-WORKING)
+        or are open on GitHub but have no ledger row yet (GH-1340/GH-1345)."""
+        discovered = []
+        seen = set(registered_gh)
+
+        # 1. Scan filesystem for capture docs
+        for folder in ("1-INBOX", "2-WORKING"):
+            fdir = os.path.join(self.ROOT, "PROJECT", folder)
+            if not os.path.isdir(fdir):
+                continue
+            for fname in sorted(os.listdir(fdir)):
+                if not fname.endswith(".md") or fname.startswith(("recon-", "MARATHON-PLAN-", "blank.md")):
+                    continue
+                m = re.match(r"^(?:GH-)?(\d+)(?:-|\.md$)", fname, re.I)
+                if not m:
+                    continue
+                issue_num = int(m.group(1))
+                if issue_num in seen:
+                    continue
+                seen.add(issue_num)
+                doc_rel = os.path.join("PROJECT", folder, fname)
+                doc_abs = os.path.join(self.ROOT, doc_rel)
+                doc_text = self._read_file_safe(doc_abs) or ""
+                rec = _unregistered_record(issue_num, "", "", doc_rel=doc_rel, doc_text=doc_text, engine=self, root=self.ROOT)
+                discovered.append(rec)
+
+        # 2. Check open issues in gh state if available
+        if self.GH_STATE:
+            for k, st in self.GH_STATE.items():
+                try:
+                    issue_num = int(k)
+                except ValueError:
+                    continue
+                if st == "OPEN" and issue_num not in seen:
+                    seen.add(issue_num)
+                    rec = _unregistered_record(issue_num, f"GH-{issue_num}", "", engine=self, root=self.ROOT)
+                    discovered.append(rec)
+        elif self.GH_MODE not in ("off", "stub"):
+            try:
+                proc = subprocess.run(
+                    ["gh", "issue", "list", "--state", "open", "--json", "number,title,body,labels", "--limit", "200"],
+                    cwd=self.ROOT, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15
+                )
+                if proc.returncode == 0:
+                    listed = json.loads(proc.stdout.decode("utf-8", "replace"))
+                    for d in listed:
+                        num = d["number"]
+                        if num in seen:
+                            continue
+                        labels = [l.get("name", "") if isinstance(l, dict) else str(l) for l in d.get("labels", [])]
+                        if "umbrella" in labels:
+                            continue
+                        seen.add(num)
+                        rec = _unregistered_record(num, d.get("title") or f"GH-{num}", d.get("body") or "", engine=self, root=self.ROOT)
+                        discovered.append(rec)
+            except Exception:
+                pass
+
+        return discovered
+
     # ── main compute ────────────────────────────────────────────────────────────
     def compute(self):
         """Parse → resolve → score → wave-pack. Returns the classified records and waves
@@ -962,6 +1140,11 @@ class Engine:
                 "dbRank": db_rank, "dbAxes": db_axes_item,
                 "wave": None, "ghState": None,
             })
+
+        if is_releases_mode and not explicit_roadmap_env:
+            registered_gh = set(r["gh"] for r in records if r["gh"] is not None)
+            discovered = self._discover_unregistered(registered_gh)
+            records.extend(discovered)
 
         # Dedup identical (gh, docRel) pairs — keep the first.
         seen = set()

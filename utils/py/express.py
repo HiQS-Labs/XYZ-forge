@@ -985,6 +985,19 @@ def cmd_ledger(args):
     db = os.path.join(root, "releases.db")
     if not os.path.isfile(db):
         die("no releases.db under %s — express requires the releases ledger" % root)
+
+    # Task 3 & Task 11: Create row at pickup with real rating
+    from releases_app import parse_prs_proposal, _RATED_RE
+    rated_token = getattr(args, "rated", None)
+    if rated_token:
+        token = "(rated %s)" % rated_token
+        m = _RATED_RE.search(token)
+        if not m:
+            refuse(root, "rating-shape", "malformed --rated %s" % rated_token, issue=args.issue)
+        vals = [int(g) for g in m.groups()]
+        if vals == [50, 50, 50, 50] or all(v <= 5 for v in vals):
+            refuse(root, "rating-placeholder", "express refuses placeholder rating %s (Task 11)" % rated_token, issue=args.issue)
+
     row = qualified_roadmap_row(root, args.repo, args.issue)
 
     if row is None:
@@ -996,8 +1009,6 @@ def cmd_ledger(args):
             if not cands:
                 refuse(root, "no-doc", "run `express docs` first (or pass --doc-path)", issue=args.issue)
             doc = "PROJECT/2-WORKING/" + cands[0]
-        # Task 3 & Task 11: Create row at pickup with real rating
-        rated_token = getattr(args, "rated", None)
         if not rated_token:
             issue_body = meta.get("body") or ""
             doc_body = ""
@@ -1005,7 +1016,6 @@ def cmd_ledger(args):
             if os.path.isfile(doc_file):
                 with open(doc_file, encoding="utf-8", errors="replace") as f:
                     doc_body = f.read()
-            from releases_app import parse_prs_proposal
             prs = parse_prs_proposal(issue_body) or parse_prs_proposal(doc_body)
             if prs:
                 rated_token = "%d/%d/%d/%d" % (prs["pri"], prs["sev"], prs["appeal"], prs["effort"])
@@ -1014,12 +1024,12 @@ def cmd_ledger(args):
                        "no valid PRS proposal in issue #%d or %s; pass --rated P/S/A/E" % (args.issue, doc),
                        issue=args.issue)
 
-        raw = ("- **GH-%d · %s** 🆕 (rated %s) — [%s](%s) · [#%d](%s)" %
-               (args.issue, meta["title"], rated_token, os.path.basename(doc), doc, args.issue, meta["url"]))
-        run_releases(root, "roadmap", "add",
-                     "--issue-num", str(args.issue), "--issue-url", meta["url"],
-                     "--title", meta["title"], "--created", (meta.get("createdAt") or "")[:10],
-                     "--doc-path", doc, "--raw-text", raw)
+        run_releases(root, "roadmap", "pickup",
+                     "--issue-num", str(args.issue),
+                     "--doc-path", doc,
+                     "--rated", rated_token,
+                     "--title", meta["title"],
+                     "--issue-url", meta["url"])
         print("express-ledger: parked roadmap row for GH-%d -> %s (rated %s)" % (args.issue, doc, rated_token))
     else:
         print("express-ledger: roadmap row already parked (%s)" % row["global_id"])
