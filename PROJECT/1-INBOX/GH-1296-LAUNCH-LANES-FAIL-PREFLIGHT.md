@@ -32,7 +32,7 @@ goal: >
 > **Note for plan writers:** apply the `/ponytail` lens — favor the laziest approach that actually
 > works over new infrastructure, and question whether new surface needs to exist at all.
 
-# factory-primitive launch packets: lanes fail preflight on a stale artifact path or missing Preflight Contract
+# factory-primitive launch packets: lanes fail preflight on a stale artifact path or missing lane contract
 
 ## Status
 
@@ -52,11 +52,36 @@ Found by the #1279 window: #722 (moved artifact path) and #1204, #216, #446 (no 
 
 ### Checklist
 
-- [ ] TODO: scope-specific checklist items for this idea's Phase 0 pass.
+- [ ] Inspect `utils/py/harness.py` launch packet generator (`_packet`) to identify preflight check point.
+- [ ] Determine whether packet generation should withhold failing lanes or flag preflight status in `brief.md`.
+- [ ] Verify that stale artifact paths (#722) and missing contracts (#1204, #216, #446) are flagged before launch packet emission.
 
 ### QA checklist — Phase 0
 
-- [ ] TODO: acceptance criteria for the Phase 0 pass above.
+- [ ] Lanes with failing preflight dry-runs are not presented as launchable without an explicit warning or refusal.
+- [ ] No new tests added (GH-831); verified against existing python layer suite.
+
+## Ratings rationale
+
+pri 50 / sev 40 / appeal 50 / effort 75 (low severity because preflight catches them before launch; caps usable loop lanes).
+
+## Preflight Contract
+
+```json
+{
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "python3 -m pytest test/test_python_layer.py && bash test/swarm-preflight.sh",
+  "fix_probes": [
+    { "type": "grep_absent", "path": "utils/py/harness.py", "pattern": "preflight_filter|withhold_unpreflighted",
+      "note": "pre-fix: harness.py packet builder does not filter lanes by preflight readiness" }
+  ],
+  "artifacts": [ "utils/py/harness.py" ],
+  "remediation": {
+    "source": "issue#1296",
+    "criteria": "Lanes that fail live preflight dry-run are either withheld or flagged in emitted launch packets; no new test file (GH-831)."
+  }
+}
+```
 
 ## Merge evidence
 
