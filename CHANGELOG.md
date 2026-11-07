@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-07 — GH-1332 Item 2: jog retry-gate accepts relay-receipt-only tail
+
+- `utils/py/jog_run.py`: `jog retry-gate` now accepts candidate heads whose only commits past the prior execution head touch the lane's relay file (`marathon-system/<lane>/RELAY.md`), transcripts (`relay-system/`), or phase records (`ESCALATION.md`, `PHASE-INTERRUPTED.md`), matching Phase 0 / GH-505 candidate-ok semantics.
+- Non-relay code edits and empty commits remain strictly refused before dispatch with exit code 2.
+- Gate retry dispatches and publishes the updated approved receipt for the new head, preventing unnecessary rebuilds after manual/out-of-band turn completions on stalled relays.
+- Existing suite `test/gh280-jog-marathon-adapter.sh` updated with K3, K3b, and K3c assertions (226/226 pass; zero new test suites added per GH-831).
+
 ## 2026-11-07 — GH-1345 cutover: rows at pickup, decoupled intake, rating contract, discovery of no-row issues
 
 - **Task 2 (Intake decoupled from row insertion):** `hq park` (`--create` and `--gh-issue`), `/file-xyz-bug`, and `/idea` no longer insert rows into `releases.db` (`roadmap_items`) at filing. Unstarted intake creates the GitHub issue and `PROJECT/1-INBOX/GH-<n>-*.md` capture doc only. `utils/pdda/pdda.sh` (`check_roadmap_coverage`) updated so unstarted `1-INBOX` issue docs without a ledger row pass with info, while active `2-WORKING` docs without a row still fail with `rc=1` (falsification verified).

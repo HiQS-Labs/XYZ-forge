@@ -1537,6 +1537,7 @@ def _extract_jog(conn, op, gid):
 
 WORK_EVENT_EXTRACTORS = {
     "roadmap-add":    _extract_roadmap_add,
+    "roadmap-pickup": _extract_roadmap_add,
     "roadmap-rate":   _extract_roadmap_rate,
     "roadmap-update": _extract_roadmap_update,
     "jog-lease":      _extract_jog,

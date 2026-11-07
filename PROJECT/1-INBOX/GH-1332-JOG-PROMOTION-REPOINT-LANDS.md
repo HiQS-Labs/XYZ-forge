@@ -46,6 +46,7 @@ Found while running the #1298 factory batch (agent-assisted, policy #1328) on 20
 ## 2. `jog retry-gate` refuses a relay-receipt-only tail
 After the relay hit its 5-turn cap (`cap-stalled`) one turn before the reviewer's approval, the review was completed by driving one more codex turn on the same relay. That adds two commits that change only `marathon-system/<lane>/RELAY.md`. `jog retry-gate` then refuses: "head is eb293bc5 but the execution ran on 5507c226 … use jog retry-build". A rebuild throws away an approved build.
 - Expected: retry-gate accepts a head whose only commits after the execution head touch the lane's relay file (the same "candidate + receipt-only tail" rule Phase 0 set for landing), and still refuses any other movement.
+- Implemented: `_is_relay_receipt_tail` in `utils/py/jog_run.py` validates candidate ancestry and restricts modified paths to `relay-system/`, the lane's relay file, and marathon's phase records (`ESCALATION.md`, `PHASE-INTERRUPTED.md`). Covered in `test/gh280-jog-marathon-adapter.sh` (K3, K3b, K3c).
 
 ## Related
 - `relay-drive` round cap counts turns, not review rounds; #1267's review was converging (R1 real bug fixed, R3 approved) when the cap fired.
