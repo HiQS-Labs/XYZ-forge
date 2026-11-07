@@ -135,3 +135,12 @@ Independent read-only verification (all commands exited 0; `PYTHONDONTWRITEBYTEC
 All three scoped acceptance criteria are satisfied by source inspection and replay. Full gate/live execution not run here per reviewer containment; the harness must run its disposable-clone gate after this turn. No pytest, shell suites, executable fixtures or git commands were run.
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-11-07T23:25:59Z
+task: MARATHON-GH-1287-FUZZ-NOVELTY-SIGNATURE-TURN
+reviewer: codex
+status: Approved
+reviewed-head: 99aa9e262701d9b0947c6ac49289cd9e5200ac9d
+added-range: 11375+2008
+added-sha256: 0fe0d091b579b9acab59a5380b88946c74dba453ce5b24691aeb6b9178d69f2e
+config-sha256: 8a6927568a73e96026d77b522e8fc85a75b3a1b58a6e6caf412d5b431ccc5aa0
