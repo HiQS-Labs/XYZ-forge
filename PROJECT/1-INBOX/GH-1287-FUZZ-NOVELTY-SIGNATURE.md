@@ -80,3 +80,10 @@ pri 50 / sev 40 / appeal 40 / effort 30 (prerequisite before stateful campaign).
 ## Merge evidence
 
 - PR #1290 merged 2026-10-31 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Acceptance
+
+- Re-scoring the retained long-run telemetry (`runs/long/telemetry.jsonl.gz`) with the new signature gives a small, stable set of usage signatures (tens, not thousands).
+- On that replayed stream, the no-new-signal streak reaches its configured limit before case 10,000, or the report states why it does not.
+- No harness or production code changes.
+
