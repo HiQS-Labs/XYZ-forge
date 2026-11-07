@@ -2,7 +2,7 @@
 gh_issue: 1345
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1345
 title: "GH-1340 item 2: the cutover, rows at pickup (Tasks 2, 3, 4, 6, 11, 5, 12)"
-status: proposed
+status: Complete
 created: 2026-11-04
 owner: unassigned
 doc_type: feature
@@ -20,7 +20,7 @@ related:
 goal: >
   Ledger rows are created when work starts, with a real rating, and never at filing; discovery
   finds fully specified no-row issues; duplicate guards still hold (decision 6, G6, P3).
-updated: 2026-11-04
+updated: 2026-11-07
 ---
 
 # GH-1340 item 2: the cutover, rows at pickup

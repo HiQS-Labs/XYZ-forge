@@ -105,3 +105,7 @@ Three runs were reported only inside their own issues. #1298 puts them side by s
 ## Merge evidence
 
 - commit 7af4ee3d957c landed 2026-11-04 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1351 merged 2026-11-07 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
