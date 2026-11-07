@@ -1,6 +1,6 @@
 ---
 title: merge-cleanup treats a local tag that origin already holds as unpushed, so published task clones are never retired
-status: Proposed (1-INBOX — not yet active)
+status: Active
 created: 2026-10-28
 updated: 2026-11-07
 owner: noelsaw1
@@ -132,9 +132,9 @@ Costly: a false safe verdict can permit downstream retirement. Source rollback i
 5. Final independent QA, one final classified gate, ready PR to development; #1359 stays open. Retire only workflow-owned published clones if normal fresh checks permit.
 
 ### Acceptance and QA
-- [ ] Plan independent Codex QA approved before production edits.
-- [ ] Both issues reproduced on base; fixed main path and adjacent/negative controls verified.
-- [ ] Local-only/different tags, query failures, unknown/active claims remain preserved.
+- [x] Plan independent Codex QA approved before production edits (relay-system/2026-11-07/gh1247-plan.codex.md).
+- [x] Both issues reproduced on base; fixed main path and adjacent/negative controls verified.
+- [x] Local-only/different tags, query failures, unknown/active claims remain preserved.
 - [ ] Existing suite, final independent QA and classified gate pass; receipts retained.
 
 ### Recurrence and rating evidence

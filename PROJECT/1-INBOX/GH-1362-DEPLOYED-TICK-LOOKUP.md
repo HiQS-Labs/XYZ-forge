@@ -11,6 +11,6 @@ goal: Trusted tick resolution from deployed merge-cleanup
 
 # GH-1362 — Trusted tick resolution from deployed merge-cleanup
 
-Canonical shared plan: [GH-1247](GH-1247-RETIRE-REMOTE-TAGS.md).
+Canonical shared plan: [GH-1247](../2-WORKING/GH-1247-RETIRE-REMOTE-TAGS.md).
 
 This issue's requirements remain in the linked GitHub issue. Resolve the trusted maintained harness without using the audited checkout; unknown claims preserve.

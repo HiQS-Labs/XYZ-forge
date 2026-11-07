@@ -11,7 +11,7 @@ goal: Clone retirement lifecycle research and coordination
 
 # GH-1359 — Clone retirement lifecycle research and coordination
 
-Canonical shared plan: [GH-1247](GH-1247-RETIRE-REMOTE-TAGS.md).
+Canonical shared plan: [GH-1247](../2-WORKING/GH-1247-RETIRE-REMOTE-TAGS.md).
 
 This issue's requirements remain in the linked GitHub issue. Research/coordination only; broader implementation, deletion and schedules remain unapproved.
 
