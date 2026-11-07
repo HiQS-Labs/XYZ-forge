@@ -1636,7 +1636,25 @@ def promote_contract_to_working(root, gh_num, doc_path, interactive=True, primar
         text=True,
     )
     if rp_res.returncode != 0:
-        print(f"jog: warning: roadmap repoint returned code {rp_res.returncode}: {rp_res.stderr.strip()}", file=sys.stderr)
+        # GH-1340 / GH-1345 Task 3: If no roadmap row exists at pickup, create it via roadmap pickup
+        pk_res = subprocess.run(
+            [
+                sys.executable,
+                os.path.join(ledger_root, "utils", "py", "releases_app.py"),
+                "--root", ledger_root,
+                "roadmap",
+                "pickup",
+                "--issue-num",
+                str(gh_num),
+                "--doc-path",
+                rel_new_path,
+            ],
+            cwd=ledger_root,
+            capture_output=True,
+            text=True,
+        )
+        if pk_res.returncode != 0:
+            print(f"jog: warning: roadmap repoint/pickup returned code {pk_res.returncode}: {pk_res.stderr.strip()}", file=sys.stderr)
 
     return new_doc_path, None
 

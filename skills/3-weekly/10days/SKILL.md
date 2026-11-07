@@ -316,11 +316,10 @@ For each `INCLUDE` verdict:
   ```
   ```
 
-  **Persist ratings to releases.db**:
+  **Persist ratings to releases.db at pickup**:
   ```bash
-  python3 "$HARNESS/utils/py/releases_app.py" roadmap rate --issue-num <N> \
-    --rated <P>/<S>/<A>/<E> [--ovr <O>] [--force]
-  ```
+  python3 "$HARNESS/utils/py/releases_app.py" roadmap pickup --issue-num <N> \
+    --rated <P>/<S>/<A>/<E> [--ovr <O>]
   ```
 
   **`source:` is always the tracking issue (GH-425).** It must name this repository and the
@@ -371,7 +370,7 @@ For each `INCLUDE` verdict:
   collision map can't be trusted at all; drop that issue back to `needs_contract` and
   exclude it from this run rather than firing on an untrustworthy guess.
 
-- Park intake via `python3 "$HARNESS/utils/py/releases_app.py" roadmap add` (the canonical roadmap ledger since GH-169/GH-269; for legacy repos using ROADMAP.md, append a pointer line) so `$HARNESS/utils/marathon-plan.sh` discovers it in Step 5.
+- Under decision D-b, create or reuse the row via `python3 "$HARNESS/utils/py/releases_app.py" roadmap pickup --issue-num <N>` (with its real rating) for the survivors it plans into the marathon, not for every swept issue. For legacy repos using ROADMAP.md, append a pointer line. This makes `$HARNESS/utils/marathon-plan.sh` discover it in Step 5.
 
 ### 5. Build and rank the marathon file
 

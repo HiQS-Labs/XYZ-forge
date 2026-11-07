@@ -13,7 +13,7 @@ When the operator speaks naturally:
 - `"jog GH-123"`:
   1. Validates the issue via `gh issue view 123`.
   2. Ensures a capture doc exists (in `PROJECT/1-INBOX/` or `PROJECT/2-WORKING/`).
-  3. Ensures the issue is parked in the roadmap ledger (`releases roadmap add`).
+  3. Ensures the issue has a roadmap ledger row created at pickup with real rating (`releases roadmap pickup --issue-num 123`).
   4. Enqueues the issue into `jog_queue` (`releases jog add GH-123`).
   5. Echoes: `jog: enqueued GH-123 at position N`.
 
@@ -21,7 +21,7 @@ When the operator speaks naturally:
   1. Extracts the immediate task/bug discussion from recent context.
   2. Creates the tracking GitHub issue via `gh issue create` (issue-first SOP).
   3. Writes the initial capture doc to `PROJECT/1-INBOX/GH-<num>-<title>.md`.
-  4. Parks the issue in the roadmap ledger (`releases roadmap add`).
+  4. Creates the roadmap row at pickup (`releases roadmap pickup --issue-num <num>`) with rating from the issue body/doc.
   5. Enqueues into `jog_queue` (`releases jog add <num>`).
   6. Confirms the newly created issue number and queue position with the operator.
 
