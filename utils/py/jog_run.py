@@ -804,6 +804,96 @@ def jog_retry_gate(root, gh_num, args):
         supervisor_lock.release()
 
 
+def _is_relay_receipt_tail(target_root, prior_head, curr_head, invocation, receipt):
+    """Determine whether curr_head is prior_head plus relay-receipt-only commits (GH-1332).
+
+    Follows the same candidate + receipt-only tail rule Phase 0 set for landing (GH-505):
+    1. prior_head must be an ancestor of curr_head.
+    2. Any commits between prior_head and curr_head must change content ONLY within
+       relay-system/, the lane's relay file (marathon-system/<lane>/RELAY.md),
+       and marathon's phase records beside it (ESCALATION.md, PHASE-INTERRUPTED.md).
+    3. If curr_head has no changes against prior_head (e.g. an empty commit),
+       it does not touch a relay file and is refused.
+    """
+    if not prior_head or not curr_head:
+        return False, "missing head SHA"
+    if prior_head == curr_head:
+        return True, None
+
+    anc = subprocess.run(
+        ["git", "-C", target_root, "merge-base", "--is-ancestor", prior_head, curr_head],
+        capture_output=True, text=True)
+    if anc.returncode != 0:
+        return False, f"head moved (execution ran on {prior_head[:8]}, head is {curr_head[:8]}; not an ancestor)"
+
+    diff_all = subprocess.run(
+        ["git", "-C", target_root, "diff", "--name-only", "-z", prior_head, curr_head],
+        capture_output=True, text=True)
+    if diff_all.returncode != 0:
+        return False, f"git diff failed: {diff_all.stderr.strip()}"
+    changed_paths = [p for p in diff_all.stdout.split("\0") if p]
+    if not changed_paths:
+        return False, "no changes recorded between heads"
+
+    lane = invocation.get("lane") or receipt.get("lane") or invocation.get("phase") or receipt.get("phase")
+    phases_dir = "marathon-system"
+    argv = invocation.get("argv") or []
+    if "--phases-dir" in argv:
+        try:
+            idx = argv.index("--phases-dir")
+            if idx + 1 < len(argv):
+                pdir = argv[idx + 1]
+                phases_dir = os.path.relpath(pdir, target_root) if os.path.isabs(pdir) else pdir
+        except (ValueError, IndexError):
+            pass
+
+    allowed_files = set()
+    if lane:
+        relay_rel = os.path.normpath(os.path.join(phases_dir, lane, "RELAY.md"))
+        allowed_files.add(relay_rel)
+        d = os.path.dirname(relay_rel)
+        for name in relay_attest.PHASE_RECORDS:
+            allowed_files.add(os.path.normpath(os.path.join(d, name)))
+
+    phase = invocation.get("phase") or receipt.get("phase")
+    if phase and phase != lane:
+        phase_rel = os.path.normpath(os.path.join(phases_dir, phase, "RELAY.md"))
+        allowed_files.add(phase_rel)
+        d = os.path.dirname(phase_rel)
+        for name in relay_attest.PHASE_RECORDS:
+            allowed_files.add(os.path.normpath(os.path.join(d, name)))
+
+    if receipt.get("relay_file_rel"):
+        r_rel = os.path.normpath(receipt["relay_file_rel"])
+        allowed_files.add(r_rel)
+        d = os.path.dirname(r_rel)
+        for name in relay_attest.PHASE_RECORDS:
+            allowed_files.add(os.path.normpath(os.path.join(d, name)))
+
+    if "--relay-file" in argv:
+        try:
+            idx = argv.index("--relay-file")
+            if idx + 1 < len(argv):
+                rf = argv[idx + 1]
+                rf_rel = os.path.relpath(rf, target_root) if os.path.isabs(rf) else rf
+                allowed_files.add(os.path.normpath(rf_rel))
+                d = os.path.dirname(rf_rel)
+                for name in relay_attest.PHASE_RECORDS:
+                    allowed_files.add(os.path.normpath(os.path.join(d, name)))
+        except (ValueError, IndexError):
+            pass
+
+    for path in changed_paths:
+        norm = os.path.normpath(path)
+        if norm.startswith(f"{relay_attest.TRANSCRIPT_DIR}/") or norm == relay_attest.TRANSCRIPT_DIR:
+            continue
+        if norm in allowed_files:
+            continue
+        return False, f"head moved (tail commit changes non-relay path: {path})"
+
+    return True, None
+
+
 def _jog_retry_gate_locked(root, gh_num, args):
     gid = jog_resolve_ledger_gid(root, gh_num)
     if not gid:
@@ -839,15 +929,22 @@ def _jog_retry_gate_locked(root, gh_num, args):
     # head is UNCHANGED between the execution and this retry — checked against the live repo
     # pre-dispatch, not against the post-run receipt (which would false-trip on the retry's
     # own transcript commit and burn a gate run to report it).
+    # GH-1332: accept a candidate head when all commits after prior_head touch only the lane's
+    # relay file or transcripts (the same candidate + receipt-only tail rule Phase 0 set).
     pre_head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=invocation["target_root"],
                               capture_output=True, text=True)
     if pre_head.returncode == 0 and pre_head.stdout.strip() != prior_head:
-        print(f"jog: refusing gate retry for GH-{gh_num} — head is {pre_head.stdout.strip()[:8]} "
-              f"but the execution ran on {str(prior_head or '')[:8]}; the head moved between "
-              f"runs (use jog retry-build)", file=sys.stderr)
-        sys.exit(2)
+        curr_head = pre_head.stdout.strip()
+        is_tail, tail_why = _is_relay_receipt_tail(
+            invocation["target_root"], prior_head, curr_head, invocation, receipt)
+        if not is_tail:
+            print(f"jog: refusing gate retry for GH-{gh_num} — head is {curr_head[:8]} "
+                  f"but the execution ran on {str(prior_head or '')[:8]}; the head moved between "
+                  f"runs (use jog retry-build)", file=sys.stderr)
+            sys.exit(2)
+        prior_head = curr_head
 
-    if published and receipt.get("outcome") == "approved":
+    if published == prior_head and receipt.get("outcome") == "approved":
         print("jog: approved gate receipt is already published; no gate retry needed")
         return 0
 
