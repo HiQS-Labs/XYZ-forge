@@ -425,10 +425,18 @@ check_roadmap_coverage() {
       continue
     fi
 
-    pdda_record_finding error "$CHECK_NAME" "$file" 1 \
-      "captured GH issue doc is not parked in $ledger_name ($rel) — $ledger_hint, or set roadmap_exempt: true" \
-      "add-roadmap-queue"
-    rc=1
+    # GH-1340 / GH-1345 decision 6: unstarted inbox captures do not require a roadmap ledger row at filing.
+    # The row is created when work starts (pickup), while active 2-WORKING docs still require a pointer.
+    if [ "$releases_mode" -eq 1 ] || [ ! -f "$PDDA_ROADMAP" ]; then
+      pdda_record_finding info "$CHECK_NAME" "$file" 1 \
+        "unstarted inbox capture has no ledger pointer (row deferred to pickup per decision 6) ($rel)" \
+        "deferred-pickup"
+    else
+      pdda_record_finding error "$CHECK_NAME" "$file" 1 \
+        "captured GH issue doc is not parked in $ledger_name ($rel) — $ledger_hint, or set roadmap_exempt: true" \
+        "add-roadmap-queue"
+      rc=1
+    fi
   done < <(pdda_list_inbox_issue_docs)
 
   pdda_emit_summary "$CHECK_NAME" "$rc"

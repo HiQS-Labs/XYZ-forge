@@ -288,13 +288,12 @@ Lifecycle:
 
 - The `GH-` inbox doc is the **capture**, not the active-work doc. It carries no `## Status` table while
   it sits in `1-INBOX` (the inbox is the rough/untriaged bucket).
-- **Today**, capture time also adds a **one-line `ROADMAP.md` queue pointer** linking that inbox doc. This is a
-  temporary parking slot: it makes fresh intake visible to humans and automation before promotion,
-  which is the duplicate-prevention guard.
-- **Decided, not yet implemented: the ledger row is created when work starts** (GH-1333 decision 6,
-  2026-11-04). Filing an issue no longer means a row. The row, and the PRS rating stored on it, appear
-  at pickup: `jog add`, `start-task`, or promotion to `2-WORKING`. Until then the rating proposal lives
-  in the issue body.
+- **The ledger row is created when work starts** (GH-1333 decision 6, implemented in GH-1340 / GH-1345).
+  Filing an issue does not insert a row in `releases.db`. The row, and the PRS rating stored on it,
+  appear at pickup/selection: `jog add`, `start-task`, `express`, `start-marathon`, or promotion to
+  `2-WORKING`. Until then the rating proposal lives in the issue body. Duplicate prevention is
+  enforced by open issue search at filing (`hq park --create`), capture doc reuse on `--gh-issue`
+  adoption, and `UNIQUE(repo_id, gh_number)` at row insertion.
   - **The PRS appeal axis stays neutral 50 unless the operator supplies a value** (GH-1333 decision 5,
     2026-11-04; unchanged practice). This is the 1-100 PRS rating stored on the ledger row
     (`rated P/S/A/E`), not the 1-5 `effort` / `complexity` / `risk` / `phases` triage fields in frontmatter.
@@ -304,16 +303,9 @@ Lifecycle:
   - **Existing rows stay** (decision D-a): the rows already in "Queue / parked intake" are proposals, not
     a sign that work started. They are not migrated; revisit about a month after the cutover. This
     exception covers only those rows.
-  - **Until the cutover lands** (#1340 Tasks 2, 3, 4, 6 and the Task 11 rating contract, as one change),
-    today's intake tools and the coverage check still write and require a row at capture. In that gap,
-    do not run row-writing intake (`hq park --create` / `--gh-issue`, `/file-xyz-bug`, `express`) for new
-    unstarted work: file the GitHub issue with its rating proposal in the body, and leave the capture
-    doc and row to pickup. Something else must take over the duplicate-prevention guard (#1340 Task 6).
 - When execution starts, **promote** it to `PROJECT/2-WORKING/` — keep the `GH-` prefix for provenance —
   and it must then satisfy the full active-doc contract (frontmatter, exact status table, QA gates if
-  phased), **carrying `gh_issue` forward**. The `ROADMAP.md` pointer is therefore required twice today:
-  first as a queued parking entry at capture, then as an active-work ledger entry after promotion
-  (after the decision-6 cutover it is created once, at pickup).
+  phased), **carrying `gh_issue` forward**. The pointer row is created once at pickup/selection.
   This is the concrete mechanism behind "GitHub issues are not a substitute for the local active-work
   doc once execution starts" (bug-fix stance above).
 - If a captured issue is never actioned it ages out of `1-INBOX` like any other untriaged note. If it is
@@ -1041,17 +1033,17 @@ Coverage rule:
   promoted on an execution branch counts as covered while the ledger still points at the same file name in
   `PROJECT/1-INBOX/` and that inbox file is gone (GH-1332, #1339): Jog writes no ledger on a lane branch, and
   the pointer is corrected when the issue is reconciled closed.
-- every captured GitHub issue doc in `PROJECT/1-INBOX/GH-*.md` must also be reflected here as a
-  one-line **queued / parked** pointer until it is promoted, deferred out, or closed, so intake cannot
-  quietly disappear and later be duplicated. GH-1333 decision 6 makes a capture without a row the normal
-  state of unstarted work; until the #1340 cutover changes this check, it still applies.
+- captured GitHub issue docs in `PROJECT/1-INBOX/GH-*.md` exist as unstarted capture docs without
+  requiring a ledger row at intake (GH-1333 decision 6, GH-1340 / GH-1345). The row is created once when
+  work starts (at pickup/selection: `start-task`, Jog, `start-marathon`, `10days`), while active `2-WORKING`
+  docs still require a pointer row in the ledger.
 
 How this is enforced (so it cannot quietly rot in either direction):
 - **deterministic (no leak in)** — `pdda.sh roadmap` errors on task checklists / `### Checklist` /
   `### QA checklist` headings and warns on size sprawl (runs hourly, free, no model needed)
-- **deterministic (no gap missing)** — `pdda.sh roadmap-coverage` errors when either an
-  active `PROJECT/2-WORKING` doc has no pointer here, or a captured `PROJECT/1-INBOX/GH-*.md` doc is
-  not parked here as a queue entry (honors `roadmap_exempt: true`)
+- **deterministic (no gap missing)** — `pdda.sh roadmap-coverage` errors when an
+  active `PROJECT/2-WORKING` doc has no pointer in the ledger (honors `roadmap_exempt: true`).
+  Captured `PROJECT/1-INBOX/GH-*.md` docs do not require a row until pickup.
 - **LLM** — `utils/pdda/pdda-doc-ready.sh` reviews `ROADMAP.md` against the full pointer contract for the
   fuzzier "this paragraph is really execution detail" cases (honors the carve-out)
 - the file itself carries a top banner restating the contract, so a human editing it sees the rule

@@ -29,7 +29,7 @@ updated: 2026-11-04
 
 | What was just completed | What's next |
 |---|---|
-| Split out of #1340 as Jog item 2 (operator, 2026-11-04). Task text and citations are in #1340 Tasks 2, 3, 4, 6, 11, 5, 12. | Runs after #1344 lands; re-ground the plan on that base first. Stops for operator review before merge. |
+| Implemented coordinated cutover across Tasks 2, 3, 4, 6, 11, 5, 12: intake decoupled from row writes, idempotent rated pickup writer, rating contract, discovery of no-row issues via extended unregistered path, duplicate guards preserved, and `/idea` sections emitted. Covering suites verified green. | Run cross-model Codex relay QA, commit with clean trailers, push branch, open PR, and stop for operator review before merge. |
 
 ## Plan
 
@@ -46,14 +46,14 @@ One PR (P3), in #1340's order. Re-check every citation at the base where #1344 h
 
 ## Acceptance
 
-- [ ] No filing path inserts a `roadmap_items` row (red/green), and an inbox capture with no row passes coverage while an active doc without one fails.
-- [ ] A fresh pickup yields one genuinely rated row; a retried pickup changes nothing.
-- [ ] An unstarted, fully specified no-row issue is found and admitted through the normal path, and its row appears only at pickup.
-- [ ] A matching open issue is still surfaced before a new one is filed; repeated capture reuses the existing one; two pickups yield one row.
-- [ ] A valid proposal admits a no-row issue and becomes its stored rating at pickup; placeholders stay held.
-- [ ] #1298's supply step creates no rows.
-- [ ] `hq park --create` and `/file-xyz-bug` emit the `/idea` sections.
-- [ ] Existing suites pass on the final commit. No new test (GH-831).
+- [x] No filing path inserts a `roadmap_items` row (red/green), and an inbox capture with no row passes coverage while an active doc without one fails.
+- [x] A fresh pickup yields one genuinely rated row; a retried pickup changes nothing.
+- [x] An unstarted, fully specified no-row issue is found and admitted through the normal path, and its row appears only at pickup.
+- [x] A matching open issue is still surfaced before a new one is filed; repeated capture reuses the existing one; two pickups yield one row.
+- [x] A valid proposal admits a no-row issue and becomes its stored rating at pickup; placeholders stay held.
+- [x] #1298's supply step creates no rows.
+- [x] `hq park --create` and `/file-xyz-bug` emit the `/idea` sections.
+- [x] Existing suites pass on the final commit. No new test (GH-831).
 
 ## Risk and rollback
 

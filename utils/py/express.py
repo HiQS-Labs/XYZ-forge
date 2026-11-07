@@ -893,6 +893,13 @@ goal: >
 
 - (recorded at landing by the /express driver)
 
+## PRS proposal
+
+- pri 70: express hotfix critical path priority
+- sev 60: express lane bounded fix severity
+- appeal 50: express lane neutral appeal default
+- effort 85: express lane cheap single-suite effort
+
 ## Lessons Learned (For Future Agents)
 
 - Landed via the /express fast lane (GH-267): the fix, its suite, this doc, and the
@@ -968,7 +975,7 @@ def qualified_roadmap_row(root, repo, number, dry_run=False):
 
 def cmd_ledger(args):
     root = args.root
-    iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state,title,url,createdAt"])
+    iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state,title,url,createdAt,body"])
     meta = json.loads(iv.stdout)
 
     if getattr(args, "dry_run", False):
@@ -978,6 +985,19 @@ def cmd_ledger(args):
     db = os.path.join(root, "releases.db")
     if not os.path.isfile(db):
         die("no releases.db under %s — express requires the releases ledger" % root)
+
+    # Task 3 & Task 11: Create row at pickup with real rating
+    from releases_app import parse_prs_proposal, _RATED_RE
+    rated_token = getattr(args, "rated", None)
+    if rated_token:
+        token = "(rated %s)" % rated_token
+        m = _RATED_RE.search(token)
+        if not m:
+            refuse(root, "rating-shape", "malformed --rated %s" % rated_token, issue=args.issue)
+        vals = [int(g) for g in m.groups()]
+        if vals == [50, 50, 50, 50] or all(v <= 5 for v in vals):
+            refuse(root, "rating-placeholder", "express refuses placeholder rating %s (Task 11)" % rated_token, issue=args.issue)
+
     row = qualified_roadmap_row(root, args.repo, args.issue)
 
     if row is None:
@@ -989,15 +1009,28 @@ def cmd_ledger(args):
             if not cands:
                 refuse(root, "no-doc", "run `express docs` first (or pass --doc-path)", issue=args.issue)
             doc = "PROJECT/2-WORKING/" + cands[0]
-        # No `rated` token: a hard-coded 2/2/2/2 put the 1-5 scale into the 1-100 PRS grammar and
-        # ranked as a real score (GH-1177, GH-1333). The row stays unrated until someone rates it.
-        raw = ("- **GH-%d · %s** 🆕 — [doc](%s) · [#%d](%s)" %
-               (args.issue, meta["title"], doc, args.issue, meta["url"]))
-        run_releases(root, "roadmap", "add",
-                     "--issue-num", str(args.issue), "--issue-url", meta["url"],
-                     "--title", meta["title"], "--created", (meta.get("createdAt") or "")[:10],
-                     "--doc-path", doc, "--raw-text", raw)
-        print("express-ledger: parked roadmap row for GH-%d -> %s" % (args.issue, doc))
+        if not rated_token:
+            issue_body = meta.get("body") or ""
+            doc_body = ""
+            doc_file = os.path.join(root, doc)
+            if os.path.isfile(doc_file):
+                with open(doc_file, encoding="utf-8", errors="replace") as f:
+                    doc_body = f.read()
+            prs = parse_prs_proposal(issue_body) or parse_prs_proposal(doc_body)
+            if prs:
+                rated_token = "%d/%d/%d/%d" % (prs["pri"], prs["sev"], prs["appeal"], prs["effort"])
+            else:
+                refuse(root, "rating-unrated",
+                       "no valid PRS proposal in issue #%d or %s; pass --rated P/S/A/E" % (args.issue, doc),
+                       issue=args.issue)
+
+        run_releases(root, "roadmap", "pickup",
+                     "--issue-num", str(args.issue),
+                     "--doc-path", doc,
+                     "--rated", rated_token,
+                     "--title", meta["title"],
+                     "--issue-url", meta["url"])
+        print("express-ledger: parked roadmap row for GH-%d -> %s (rated %s)" % (args.issue, doc, rated_token))
     else:
         print("express-ledger: roadmap row already parked (%s)" % row["global_id"])
 
@@ -1517,6 +1550,7 @@ def main():
     common(p)
     p.add_argument("--release")
     p.add_argument("--doc-path")
+    p.add_argument("--rated")
     p.set_defaults(fn=cmd_ledger)
 
     p = sub.add_parser("land", help="steps 7-11: suite, direct push to the base branch, ship, close, reconcile")
@@ -1543,6 +1577,7 @@ def main():
     p.add_argument("--doc-path")
     p.add_argument("--slug")
     p.add_argument("--summary")
+    p.add_argument("--rated")
     p.set_defaults(fn=cmd_run)
 
     args = ap.parse_args()
