@@ -83,4 +83,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Producer may proceed with the scoped implementation and disposable-clone verification; the harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-11-07T23:51:13Z
+task: RELAY-gh1247-plan
+reviewer: codex
+status: Approved
+reviewed-head: 954c3c61a417d26e13c6cf7165db0347d3d99bae
+added-range: 5869+3226
+added-sha256: a9a0f437ce2636031091e19814a7db9dd6944d0784430e55e0bdca08681167ac
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
