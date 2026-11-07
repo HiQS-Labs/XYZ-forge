@@ -30,9 +30,7 @@ goal: >
 
 # GH-1247 — merge-cleanup treats origin-held tags as unpushed
 
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
-> `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward
-> (`PROJECT/PDDA.md` → GitHub issue intake).
+> Original incident capture below; the shared plan and current Status table follow it.
 
 ## Symptom
 
@@ -67,9 +65,9 @@ refs/tags/archive/merge-group-2-2026-10-09 @ e87ed4fe37: not reachable from orig
 
 `git ls-remote --tags origin 'archive/*'` returns both tags at the identical object ids.
 
-## Cause (from reading the code, not yet confirmed in this repo)
+## Original cause hypothesis (confirmed by shared-plan reproduction)
 
-`checkout_ref_provenance` in `skills/2-daily/merge-cleanup/scripts/scan_clones.py` (around lines 540-555)
+`classify_local_refs` in `skills/2-daily/merge-cleanup/scripts/scan_clones.py` (around lines 540-555)
 collects every ref except `refs/remotes/*` and `refs/stash`, so cloned tags count as local refs. Each must then
 be an ancestor of `origin/<integration>`, inside the published PR head, or a merged PR's head. Nothing checks
 whether `origin` holds the same ref.
@@ -103,7 +101,7 @@ the checkout is preserved and can be removed by hand.
 
 | What was just completed | What's next |
 |---|---|
-| Base reproduction and scanner recon for #1247/#1362 | Independent Codex plan QA |
+| Codex plan QA Approved; both fixes implemented | Disposable-clone verification and final QA |
 
 ## Shared plan — #1247, #1362, coordinating #1359
 
