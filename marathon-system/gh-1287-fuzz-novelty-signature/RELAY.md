@@ -1,6 +1,6 @@
 # Marathon Phase gh-1287-fuzz-novelty-signature
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1287-FUZZ-NOVELTY-SIGNATURE-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -103,3 +103,18 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 1 · Builder · agy
+
+- **Files touched:** `TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py`, `marathon-system/gh-1287-fuzz-novelty-signature/RELAY.md`.
+- **Key decisions & changes:**
+  1. Added `argparse_error_kind(msg)` and `normalize_usage_signature(stderr)` in `TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py` and wired `signature(target, rc, cls, stderr)` to normalize `usage`-class signatures from the `<prog>: error: <kind>` line while stripping all echoed mutated tokens (including multiline tokens containing embedded newlines that previously split across `splitlines()[-1]`). Non-`usage` classes retain their existing signature logic unchanged.
+  2. Updated `--replay-telemetry` in `supervisor.py` to transparently read `.gz` streams (`gzip.open`) as well as plain `.jsonl` files, score the full telemetry stream, and report both the first stop boundary (`stop_reason`, `stopped_at_event`, `streak_at_stop`, `quiet_batches_at_stop`) and the per-case streak threshold crossing (`streak_stop_reason`, `streak_stop_at_event`, `max_streak`, `usage_signature_count`).
+- **Verification (`.relay-scratch/long-replay-report.json`):**
+  - Ran `PYTHONDONTWRITEBYTECODE=1 python3 TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py --contract TESTS-RESULTS/2026-10-30+GH-1280/contracts/contract-long.json --replay-telemetry TESTS-RESULTS/2026-10-30+GH-1280/runs/long/telemetry.jsonl.gz`.
+  - **Acceptance 1 (small, stable usage signature set):** Across all 10,000 events (`8,949` `usage` events), total unique signatures drop from `2,313` (`2,302` `usage`) to `34` total (`23` `usage` signatures + `11` non-`usage` signatures).
+  - **Acceptance 2 (no-new-signal stop before case 10,000):** On the replayed stream, the batch no-new-signal stop (`quiet_batch_stop = 3` consecutive 50-case batches) fires at event `500` (`streak_at_stop = 193`, `quiet_batches_at_stop = 3`), and the per-case no-new-signal streak reaches its configured limit (`streak_stop = 500` consecutive cases) at event `1,892` (reaching `max_streak = 7,387` over the 10,000-case stream).
+  - **Acceptance 3:** No harness or production code changes; no new test files.
+

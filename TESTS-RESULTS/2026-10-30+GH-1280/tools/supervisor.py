@@ -8,7 +8,7 @@ mutant runs in its own session, so a group kill alone misses it).
 
 usage: supervisor.py --contract contract.json [--replay-telemetry FILE]
 """
-import argparse, hashlib, json, os, re, signal, subprocess, sys, time
+import argparse, gzip, hashlib, json, os, re, signal, subprocess, sys, time
 
 EXPECTED = [  # (class, rc, stderr regex) — verified against utils/py/harness.py
     ("usage", 2, r"usage: harness\.py factory-primitive"),
@@ -33,7 +33,37 @@ def classify(rc, stderr):
     return "CANDIDATE:rc%d" % rc
 
 
+def argparse_error_kind(msg):
+    msg = msg.strip()
+    if msg.startswith("unrecognized arguments"):
+        return "unrecognized arguments"
+    if msg.startswith("ambiguous option"):
+        return "ambiguous option"
+    if msg.startswith("unexpected option string"):
+        return "unexpected option string"
+    if msg.startswith(("the following arguments are required:", "one of the arguments ")):
+        return msg.splitlines()[0]
+    m = re.match(
+        r"(argument [^:]+: (?:invalid [^:]+|expected [^\r\n:]+|not allowed with argument [^\r\n:]+|ignored explicit argument|can't open))",
+        msg,
+    )
+    if m:
+        return m.group(1)
+    first = (msg.splitlines() or [""])[0]
+    first = re.sub(r"'[^']*'|\"[^\"]*\"|/\S+", "P", first)
+    return re.sub(r"\d+", "N", first)[:120]
+
+
+def normalize_usage_signature(stderr):
+    m = re.search(r"^([^\r\n:]+): error: (.*)$", stderr.strip(), re.M | re.S)
+    if not m:
+        return "error"
+    return "%s: error: %s" % (m.group(1).strip(), argparse_error_kind(m.group(2)))
+
+
 def signature(target, rc, cls, stderr):
+    if cls == "usage":
+        return "%s|%d|%s|%s" % (target, rc, cls, normalize_usage_signature(stderr))
     last = (stderr.strip().splitlines() or [""])[-1]
     last = re.sub(r"'[^']*'|\"[^\"]*\"|/\S+", "P", last)
     last = re.sub(r"\d+", "N", last)[:160]
@@ -180,14 +210,29 @@ def main():
     report = {"contract_sha256": hashlib.sha256(open(a.contract, "rb").read()).hexdigest()}
 
     if a.replay_telemetry:
-        for i, l in enumerate(open(a.replay_telemetry)):
-            t.feed(json.loads(l))
-            r = t.stop_reason()
-            if r:
-                report.update(stop_reason=r, stopped_at_event=i + 1)
-                break
-        report.update(events=t.events, counts=t.counts, per_target=t.per_target, signatures=sorted(t.seen),
-                      candidates=t.candidates, streak_at_end=t.streak, gated_events=getattr(t, "gated", 0))
+        opener = (lambda p: gzip.open(p, "rt")) if a.replay_telemetry.endswith(".gz") else open
+        max_streak = 0
+        with opener(a.replay_telemetry) as fh:
+            for l in fh:
+                if not l.strip():
+                    continue
+                t.feed(json.loads(l))
+                if t.streak > max_streak:
+                    max_streak = t.streak
+                r = t.stop_reason()
+                if r and "stop_reason" not in report:
+                    report.update(stop_reason=r, stopped_at_event=t.events, streak_at_stop=t.streak,
+                                  quiet_batches_at_stop=t.quiet_batches)
+                if c.get("streak_stop") and t.streak >= c["streak_stop"] and "streak_stop_at_event" not in report:
+                    report.update(
+                        streak_stop_reason="no-new-signal: %d consecutive cases with no new signature" % t.streak,
+                        streak_stop_at_event=t.events,
+                    )
+        usage_sigs = sorted(s for s in t.seen if "|usage|" in s)
+        report.update(events=t.events, counts=t.counts, per_target=t.per_target,
+                      usage_signature_count=len(usage_sigs), signatures=sorted(t.seen),
+                      candidates=t.candidates, max_streak=max_streak, streak_at_end=t.streak,
+                      gated_events=getattr(t, "gated", 0))
         print(json.dumps(report, indent=1))
         return 0
 
