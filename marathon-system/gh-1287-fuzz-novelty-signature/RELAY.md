@@ -1,5 +1,5 @@
 # Marathon Phase gh-1287-fuzz-novelty-signature
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1287-FUZZ-NOVELTY-SIGNATURE-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -118,3 +118,20 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
   - **Acceptance 2 (no-new-signal stop before case 10,000):** On the replayed stream, the batch no-new-signal stop (`quiet_batch_stop = 3` consecutive 50-case batches) fires at event `500` (`streak_at_stop = 193`, `quiet_batches_at_stop = 3`), and the per-case no-new-signal streak reaches its configured limit (`streak_stop = 500` consecutive cases) at event `1,892` (reaching `max_streak = 7,387` over the 10,000-case stream).
   - **Acceptance 3:** No harness or production code changes; no new test files.
 
+
+### Round 1 · Reviewer · codex
+
+**Verdict:** Approved
+
+swept file: yes
+
+Ship. Reviewed the whole `TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py`, including classification, tracking, launch boundary, canaries, process shutdown and reporting. No concrete pre-existing defect found in this sweep. The change is Easy to reverse and confined to campaign tooling; usage normalization preserves parser/argument/error-kind distinctions while removing echoed values. Non-usage signature handling remains unchanged.
+
+Independent read-only verification (all commands exited 0; `PYTHONDONTWRITEBYTECODE=1`, `TMPDIR="$PWD/.relay-scratch/tmp"`):
+
+- Command: `python3 TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py --contract TESTS-RESULTS/2026-10-30+GH-1280/contracts/contract-long.json --replay-telemetry TESTS-RESULTS/2026-10-30+GH-1280/runs/long/telemetry.jsonl.gz > "$TMPDIR/reviewer-replay.json"`. Parsed the nonempty JSON report: 10,000 events, 8,949 usage events, 23 usage signatures, 34 total signatures, first batch stop at event 500, configured 500-case streak reached at event 1,892, maximum streak 7,387. These independently reproduce the builder's acceptance results.
+- Red control command: `python3 - <<'PY'` loaded the supervisor with `runpy.run_path`, replaced only the in-memory `signature` function with its prior last-line/quoted-token/path/digit normalization, then fed every row from the same gzip stream into `Tracker`. Decisive output: `legacy control: events=10000 signatures=2313 usage_signatures=2302 streak_limit_first=None`. No artifact or source was modified. This control demonstrates that the retained input exposes the original pseudo-novelty failure.
+
+All three scoped acceptance criteria are satisfied by source inspection and replay. Full gate/live execution not run here per reviewer containment; the harness must run its disposable-clone gate after this turn. No pytest, shell suites, executable fixtures or git commands were run.
+
+relay closed, no further turn needed
