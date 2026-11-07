@@ -25,15 +25,27 @@ deployed=w/'deployed/merge-cleanup/scripts/scan_clones.py';deployed.parent.mkdir
 h=w/'maintained';(h/'bin').mkdir(parents=True);(h/'bin/tick').write_text('#!/bin/sh\nprintf \'[]\\n\'\n');(h/'bin/tick').chmod(0o755)
 subprocess.run(['git','init','-q',str(h)],check=True); git(h,'remote','add','origin','https://github.com/HiQS-Labs/XYZ-forge.git')
 c=w/'config/xyz';c.mkdir(parents=True);(c/'harness').write_text(str(h)+'\n')
-with patch.object(s,'__file__',str(deployed)),patch.dict(os.environ,{'HOME':str(w/'home'),'XDG_CONFIG_HOME':str(w/'config'),'PATH':'','XYZ_HARNESS':str(h)},clear=True):
+with patch.object(s,'__file__',str(deployed)),patch.object(s.shutil,'which',return_value=None),patch.dict(os.environ,{'HOME':str(w/'home'),'XDG_CONFIG_HOME':str(w/'config'),'PATH':os.defpath,'XYZ_HARNESS':str(h)},clear=True):
  env_tick=s._tick_binary(); print('tick-env',env_tick); os.environ.pop('XYZ_HARNESS')
- with patch.object(s,'run_git',side_effect=lambda p,a,**kw: subprocess.CompletedProcess(a,0,'https://github.com/HiQS-Labs/XYZ-forge.git\n','')):
-  config_tick=s._tick_binary(); print('tick-config',config_tick)
+ config_tick=s._tick_binary(); print('tick-config',config_tick)
+ (r/'.tick').mkdir()
+ (h/'bin/tick').write_text('#!/bin/sh\nprintf \'{"claimed":[]}\\n\'\n')
+ idle=s.inspect_tick_claims(r); print('idle-claims',json.dumps(idle))
+ (h/'bin/tick').write_text('#!/bin/sh\nprintf \'{"claimed":[{"task":"live","agent":"peer"}]}\\n\'\n')
+ active=s.inspect_tick_claims(r); print('active-claims',json.dumps(active))
+ git(h,'remote','set-url','origin','https://github.com/Other/Project.git')
+ foreign=s._tick_binary(); print('foreign-config',foreign)
  (c/'harness').unlink(); missing=s._tick_binary(); print('tick-missing',missing)
+ unknown=s.inspect_tick_claims(r); print('unknown-claims',json.dumps(unknown))
+ os.environ['MERGE_CLEANUP_TICK_BIN']=str(w/'missing-tick')
+ broken=s.inspect_tick_claims(r); print('broken-override',json.dumps(broken))
 if '--expect-fixed' in sys.argv:
  assert good['ok'] and not good['unlanded'] and len(good['landed']) == 3, good
  assert local['ok'] and len(local['unlanded']) == 1 and 'local-only' in local['unlanded'][0], local
  assert different['ok'] and len(different['unlanded']) == 1 and 'archive/light' in different['unlanded'][0], different
  assert not failed['ok'] and failed['failed_query'], failed
- assert env_tick == config_tick == str(h/'bin/tick') and missing is None
+ assert env_tick == config_tick == str(h/'bin/tick') and missing is None and foreign is None
+ assert idle['verified'] and not idle['has_claims']
+ assert active['verified'] and active['has_claims']
+ assert not unknown['verified'] and not broken['verified']
  print('ALL FIXED CONTROLS PASS')
