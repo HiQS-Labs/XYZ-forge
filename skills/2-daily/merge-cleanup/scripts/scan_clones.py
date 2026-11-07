@@ -274,7 +274,10 @@ def _tick_binary() -> Optional[str]:
         tick = harness / "bin" / "tick"
         if configured and harness.is_absolute() and tick.is_file() and os.access(tick, os.X_OK):
             origin = run_git(harness, ["remote", "get-url", "origin"])
-            if origin.returncode == 0 and _normalize_remote(origin.stdout) == "hiqs-labs/xyz-forge":
+            if origin.returncode == 0 and re.fullmatch(
+                r"(?:https://github\.com/|git@github\.com:|ssh://git@github\.com/)"
+                r"HiQS-Labs/XYZ-forge(?:\.git)?/?", origin.stdout.strip(), re.I
+            ):
                 return str(tick)
     except (OSError, IndexError, ValueError):
         pass
