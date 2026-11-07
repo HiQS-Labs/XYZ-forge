@@ -205,7 +205,7 @@ Validate that the proposed minimal solution complies with the repository's found
    - Ensure terms, patterns, and architectural conventions match the active codebase state rather than legacy/superseded patterns.
 5. **PDDA & Releases Ledger Intake:**
    - *Tracking Doc:* For non-trivial tasks, confirm a capture doc exists under the applicable lifecycle contract (e.g. `PROJECT/1-INBOX/` with `status: proposed` / `status: draft`, or `PROJECT/2-WORKING/` with `status: active`).
-   - *Releases DB / Roadmap:* For repos using the releases ledger, verify the issue is registered in `releases.db` via canonical roadmap commands (`python3 utils/py/releases_app.py roadmap add --issue-num N --issue-url U --title T --created YYYY-MM-DD --doc-path P` with flags per `ROUTER.md:38`). Serial task queueing (`releases jog add`) is a separate optional enqueueing step, not an alternative to roadmap registration.
+   - *Releases DB / Roadmap:* Under decision D-b (work starts when workhorse takes on the task), create or reuse the row via `python3 utils/py/releases_app.py roadmap pickup --issue-num N --doc-path P` (with real rating per Task 11). Serial task queueing (`releases jog add`) is a separate optional enqueueing step, not an alternative to roadmap registration.
 
 ---
 

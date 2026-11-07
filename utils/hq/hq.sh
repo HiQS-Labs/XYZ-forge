@@ -258,15 +258,15 @@ cmd_park(){
         return 1
         ;;
     esac
-    local existing_doc="" d
+    local existing_doc="" d reuse_doc=""
     for d in "$path/PROJECT/1-INBOX" "$path/PROJECT/2-WORKING"; do
       [ -d "$d" ] || continue
       existing_doc="$(find "$d" -maxdepth 1 -name "GH-${issue}-*.md" 2>/dev/null | sort | head -1)"
       [ -n "$existing_doc" ] && break
     done
     if [ -n "$existing_doc" ]; then
-      echo "hq park: #$issue is already registered (${existing_doc#"$path/"}) — refusing." >&2
-      return 1
+      # GH-1340 / GH-1345 Task 6: repeating capture for the same issue must reuse the existing capture
+      reuse_doc="$existing_doc"
     fi
     if [ "$tier" = C ]; then
       echo "hq park: $repo is Tier C (no PDDA) — no PDDA lifecycle to register #$issue into." >&2
@@ -333,8 +333,32 @@ sys.stdout.write(url + "\n" + title + "\n" + body)
     echo   '  (no PDDA rails here — not writing a capture doc or ROADMAP pointer)'
     echo   "  suggestion:   install PDDA to unlock full intake — see install.sh / utils/pdda"
     if [ "$create" = 1 ]; then
+      local issue_body="$request"
+      if ! printf '%s' "$issue_body" | grep -qE '^## (Observed|Acceptance)'; then
+        issue_body="$(cat <<EOF
+$request
+
+## Observed
+| Claim | Command | Observed |
+|---|---|---|
+| Request captured via HQ intake | \`hq park\` | $title |
+
+## Acceptance
+- [ ] Implement requested changes and verify against existing covering suites
+
+## Preflight Contract
+<!-- Preflight contract to be specified at pickup/planning -->
+
+## PRS proposal
+- pri 50: Initial intake proposal for $title
+- sev 50: Standard triage priority
+- appeal 50: Default neutral operator appeal
+- effort 50: Estimated medium implementation effort
+EOF
+)"
+      fi
       local out url
-      out="$(cd "$path" && "$HQ_GH_BIN" issue create --title "$title" --body "$request" 2>&1)" || {
+      out="$(cd "$path" && "$HQ_GH_BIN" issue create --title "$title" --body "$issue_body" 2>&1)" || {
         echo "  gh issue create failed: $out" >&2; return 1; }
       url="$(printf '%s\n' "$out" | grep -oE 'https?://[^ ]+/issues/[0-9]+' | tail -1)"
       printf '  ✓ issue created: %s\n' "${url:-$out}"
@@ -354,7 +378,7 @@ sys.stdout.write(url + "\n" + title + "\n" + body)
     printf '  GitHub issue: %s\n' "$title"
     printf '  capture doc:  %s\n' "$relpath"
     if [ "$is_releases" = "1" ]; then
-      printf '  ROADMAP sink: releases roadmap add (DB row, not ROADMAP.md text)\n'
+      printf '  ROADMAP sink: releases roadmap add deferred to pickup (decision 6; DB row created when work starts)\n'
     fi
     # Both sinks store the SAME rendered line (releases-mode passes it via --raw-text), so the
     # preview shows it unconditionally — what you see is byte-for-byte what either sink records.
@@ -382,40 +406,61 @@ sys.stdout.write(url + "\n" + title + "\n" + body)
       echo "    (refine the request or file manually if this is genuinely new)" >&2
       return 1
     fi
+    # Task 12: render /idea's body sections if not already structured
+    local issue_body="$request"
+    if ! printf '%s' "$issue_body" | grep -qE '^## (Observed|Acceptance)'; then
+      issue_body="$(cat <<EOF
+$request
+
+## Observed
+| Claim | Command | Observed |
+|---|---|---|
+| Request captured via HQ intake | \`hq park\` | $title |
+
+## Acceptance
+- [ ] Implement requested changes and verify against existing covering suites
+
+## Preflight Contract
+<!-- Preflight contract to be specified at pickup/planning -->
+
+## PRS proposal
+- pri 50: Initial intake proposal for $title
+- sev 50: Standard triage priority
+- appeal 50: Default neutral operator appeal
+- effort 50: Estimated medium implementation effort
+EOF
+)"
+    fi
     local out
-    out="$(cd "$path" && "$HQ_GH_BIN" issue create --title "$title" --body "$request" 2>&1)" || {
+    out="$(cd "$path" && "$HQ_GH_BIN" issue create --title "$title" --body "$issue_body" 2>&1)" || {
       echo "  gh issue create failed: $out" >&2; return 1; }
     url="$(printf '%s\n' "$out" | grep -oE 'https?://[^ ]+/issues/[0-9]+' | tail -1)"
     num="$(printf '%s' "$url" | grep -oE '[0-9]+$')"
     [ -n "$num" ] || { echo "  could not parse issue number from: $out" >&2; return 1; }
     src="$url"
   fi
-  docname="GH-${num}-${slug}.md"; relpath="PROJECT/1-INBOX/$docname"
 
-  mkdir -p "$path/PROJECT/1-INBOX"
-  hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
-    "$p_complexity" "$p_risk" "$p_effort" "$p_phases" "$p_why" "$p_kc" "$p_ng" "$p_rel" "$p_goal" \
-    > "$path/$relpath"
-  printf '  ✓ issue:   %s\n' "$url"
-  printf '  ✓ capture: %s\n' "$relpath"
+  # Task 6: Duplicate capture guard for --gh-issue adoption (reusing existing capture doc if present)
+  if [ -n "${reuse_doc:-}" ] && [ -f "$reuse_doc" ]; then
+    relpath="${reuse_doc#$path/}"
+    docname="$(basename "$reuse_doc")"
+    printf '  ✓ issue:   %s\n' "$url"
+    printf '  ✓ capture: %s (reusing existing capture)\n' "$relpath"
+  else
+    docname="GH-${num}-${slug}.md"; relpath="PROJECT/1-INBOX/$docname"
+    mkdir -p "$path/PROJECT/1-INBOX"
+    hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
+      "$p_complexity" "$p_risk" "$p_effort" "$p_phases" "$p_why" "$p_kc" "$p_ng" "$p_rel" "$p_goal" \
+      > "$path/$relpath"
+    printf '  ✓ issue:   %s\n' "$url"
+    printf '  ✓ capture: %s\n' "$relpath"
+  fi
 
   local r_bin=""
   if [ "$is_releases" = "1" ]; then
-    # No fallback to ROADMAP.md here on purpose: in releases-mode the text file is not the
-    # source of truth, so failing loudly beats silently parking where nothing reads.
-    if ! r_bin="$(hq_releases_bin "$path")"; then
-      echo "  ! releases roadmap add failed: no releases_app.py under $path (utils/py/ or .xyz/utils/py/)" >&2
-      echo "    intake is half-complete (issue + capture doc exist, no queue pointer) — install the CLI, then run 'releases roadmap add' there manually." >&2
-      return 1
-    fi
-    local db_out
-    if db_out="$(cd "$path" && python3 "$r_bin" roadmap add --issue-num "$num" --issue-url "$url" --title "$title" --created "$created" --doc-path "$relpath" --raw-text "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "$url")" 2>&1)"; then
-      printf '  ✓ DB: pointer added via releases CLI\n'
-    else
-      echo "  ! releases roadmap add failed: $db_out" >&2
-      echo "    intake is half-complete (issue + capture doc exist, no queue pointer) — fix the DB, then run 'releases roadmap add' there manually." >&2
-      return 1
-    fi
+    # GH-1340 / GH-1345 decision 6: rows are created when work starts, not at filing.
+    # Filing paths create the issue and 1-INBOX capture doc; releases.db row insertion is deferred to pickup.
+    printf '  ✓ ledger:  row creation deferred to pickup (decision 6)\n'
   else
     if [ -f "$roadmap" ]; then
       local where

@@ -198,8 +198,8 @@ local change.
 - **The RELEASES DB is two subsystems behind one CLI** (`utils/py/releases_app.py`; it is the
   Product Release System, [PRS](HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first)): the GH-32
   release ledger and the roadmap ledger (`roadmap_items`). Since the `ROADMAP_SOURCE=releases`
-  flip (GH-169/GH-238/GH-243) and ROADMAP.md retirement (GH-269), the DB is the roadmap's source of truth in THIS repo: park intake
-  with `releases roadmap add` (or `hq park`), and read with `releases roadmap list` (or `python3 utils/py/releases_app.py roadmap list`).
+  flip (GH-169/GH-238/GH-243) and ROADMAP.md retirement (GH-269), the DB is the roadmap's source of truth in THIS repo: rows are created when work starts with
+  `releases roadmap add` (at pickup/selection; start paths route there automatically per decision 6), and read with `releases roadmap list` (or `python3 utils/py/releases_app.py roadmap list`).
   `roadmap sync` is for legacy-mode repos only and no-ops here — it mirrors markdown and would delete
   `add`-parked rows. Never hand-edit `releases.sql` or `releases.db`. Merge conflicts on the dump have
   a one-command resolver (`utils/releases-merge-resolve.sh`). The whole contract, including what a real

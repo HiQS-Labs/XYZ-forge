@@ -58,16 +58,16 @@ The skill drives `utils/hq/hq.sh` (or `$HQ_SH` from a foreign repo — see Preco
   (1 highest) with each one's resolved HQ capability tier (A dispatch-eligible / B / C / unresolved),
   answering "what should I pick up next across my repos?" Read-only.
 - `hq.sh park [--create] [--title T] <project> <request…>` — **issue-first intake** in the target
-  repo (GH issue → `1-INBOX` capture → ROADMAP parking → dashboard regen if present → target
+  repo (GH issue → `1-INBOX` capture; ledger row creation deferred to pickup per decision 6 → target
   `pdda.sh`). Previews unless `--create`. The capture doc renders the full PDDA skeleton (ratings,
   `non_goals`/`related`/`goal`, Key Concepts/Idea/Why/Phase 0 checklist) with TODO stubs by default;
-  a synthesis front end (e.g. a future `/idea` skill) can fill the judgment-heavy fields in by
+  a synthesis front end (e.g. `/idea`) can fill the judgment-heavy fields in by
   exporting `HQ_PARK_WHY` / `HQ_PARK_KEY_CONCEPTS` / `HQ_PARK_NON_GOALS` / `HQ_PARK_RELATED` /
   `HQ_PARK_COMPLEXITY` / `HQ_PARK_RISK` / `HQ_PARK_EFFORT` / `HQ_PARK_PHASES` / `HQ_PARK_GOAL` before calling
   `--create` — bare `hq.sh park` needs none of these (GH-164 Phase 1, GH-1264).
 - `hq park [--create] --gh-issue N <project> [request…]` — **adopt an existing issue**: fetch `#N`
-  via `gh issue view` and register its `1-INBOX` capture + ROADMAP/releases-DB pointer without
-  creating a new GitHub issue (GH-1267).
+  via `gh issue view` and register its `1-INBOX` capture without creating a ledger row (deferred to
+  pickup per decision 6, GH-1267, GH-1345). Repeating capture reuses the existing capture doc.
 - `hq.sh queue [--create] [--gh-issue N] <project> <request…>` — append an **HQ-queued lane** to the
   target's newest Marathon Plan (non-destructive appendix). Previews unless `--create`.
 - `hq.sh fire --gh-issue N [--risk 1-5] <project>` — **gated prepare-and-hand-off**: resolve + gate

@@ -171,20 +171,18 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
    and the ledger line together, and get **one** confirmation. `hq park` refuses a title that
    matches an open issue (`hq.sh:306`); that is the dedupe, do not work around it.
 
-8. **File, rate, read back.** Run un-sandboxed (`gh` needs the keychain):
+8. **File and verify capture.** Run un-sandboxed (`gh` needs the keychain):
 
    ```bash
    … bash "$HQ_SH" park --create --title "<title>" <project> "$(cat body.md)"     # prints "✓ issue: <url>"; N is its trailing number
-   python3 "$HQ_ROOT/utils/py/releases_app.py" --root "$TARGET" roadmap rate --issue-num N --rated P/S/A/E --dry-run
-   python3 "$HQ_ROOT/utils/py/releases_app.py" --root "$TARGET" roadmap rate --issue-num N --rated P/S/A/E
-   python3 "$HQ_ROOT/utils/py/releases_app.py" --root "$TARGET" roadmap list --json | python3 -c 'import json,sys;print([r for r in json.load(sys.stdin) if r.get("gh_number")==N])'
    ```
 
-   `hq park` drops the rating (`hq_roadmap_line` carries no `rated` token), so `roadmap rate` is the
-   writer. Never pass `--force`: a second `roadmap rate` on the same row refuses (`already-rated`,
-   exit 3) and that refusal is correct. Never clear `ratings_provisional` in the doc. The capture
-   doc embeds the body verbatim under `## Idea`, so the Acceptance checkboxes and the Preflight
-   Contract reach the doc with no HQ change.
+   Under GH-1340 / GH-1345 decision 6, filing creates the issue and `1-INBOX` capture doc without
+   inserting a `roadmap_items` row. The `PRS proposal` in the issue body serves as the proposed
+   rating until work starts. When work is selected/started (`start-task`, Jog, `start-marathon`), the
+   start path creates the row and records the rating from the proposal. Never clear
+   `ratings_provisional` in the doc. The capture doc embeds the body verbatim under `## Idea`, so
+   the Acceptance checkboxes and the Preflight Contract reach the doc with no HQ change.
 
 9. **Post the dispositions:** `gh issue comment "$ISSUE_URL" --body-file dispositions.md`, where
    `$ISSUE_URL` is the `✓ issue:` URL from Step 8 (the URL pins the target repo; `gh` accepts

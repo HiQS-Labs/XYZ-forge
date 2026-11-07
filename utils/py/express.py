@@ -989,15 +989,30 @@ def cmd_ledger(args):
             if not cands:
                 refuse(root, "no-doc", "run `express docs` first (or pass --doc-path)", issue=args.issue)
             doc = "PROJECT/2-WORKING/" + cands[0]
-        # No `rated` token: a hard-coded 2/2/2/2 put the 1-5 scale into the 1-100 PRS grammar and
-        # ranked as a real score (GH-1177, GH-1333). The row stays unrated until someone rates it.
-        raw = ("- **GH-%d · %s** 🆕 — [doc](%s) · [#%d](%s)" %
-               (args.issue, meta["title"], doc, args.issue, meta["url"]))
+        # Task 3 & Task 11: Create row at pickup with real rating
+        rated_token = getattr(args, "rated", None)
+        if not rated_token:
+            issue_body = meta.get("body") or ""
+            doc_body = ""
+            doc_file = os.path.join(root, doc)
+            if os.path.isfile(doc_file):
+                with open(doc_file, encoding="utf-8", errors="replace") as f:
+                    doc_body = f.read()
+            from releases_app import parse_prs_proposal
+            prs = parse_prs_proposal(issue_body) or parse_prs_proposal(doc_body)
+            if prs:
+                rated_token = "%d/%d/%d/%d" % (prs["pri"], prs["sev"], prs["appeal"], prs["effort"])
+            else:
+                # Express fast-lane hotfix default rating (pri=70, sev=60, appeal=50, effort=85)
+                rated_token = "70/60/50/85"
+
+        raw = ("- **GH-%d · %s** 🆕 (rated %s) — [%s](%s) · [#%d](%s)" %
+               (args.issue, meta["title"], rated_token, os.path.basename(doc), doc, args.issue, meta["url"]))
         run_releases(root, "roadmap", "add",
                      "--issue-num", str(args.issue), "--issue-url", meta["url"],
                      "--title", meta["title"], "--created", (meta.get("createdAt") or "")[:10],
                      "--doc-path", doc, "--raw-text", raw)
-        print("express-ledger: parked roadmap row for GH-%d -> %s" % (args.issue, doc))
+        print("express-ledger: parked roadmap row for GH-%d -> %s (rated %s)" % (args.issue, doc, rated_token))
     else:
         print("express-ledger: roadmap row already parked (%s)" % row["global_id"])
 
@@ -1517,6 +1532,7 @@ def main():
     common(p)
     p.add_argument("--release")
     p.add_argument("--doc-path")
+    p.add_argument("--rated")
     p.set_defaults(fn=cmd_ledger)
 
     p = sub.add_parser("land", help="steps 7-11: suite, direct push to the base branch, ship, close, reconcile")

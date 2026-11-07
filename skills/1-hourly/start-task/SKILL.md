@@ -387,16 +387,17 @@ the task report. Repos without RELEASES use their existing task record; do not
 install the ledger merely to score work.
 
 In XYZ Forge, read `RELEASES-DB-FAQS.md` → "Roadmap Rating Vocabulary & Grammar"
-and the current CLI help before writing. After parking an unrated issue, use
-`python3 utils/py/releases_app.py roadmap rate --issue-num N --rated P/S/A/E`
-(substitute actual values); `--dry-run` previews it. Read the existing rating and
-its provenance first. Re-scoring uses `--force` only deliberately with a recorded
-reason, never as an automatic response to an "already rated" refusal. Preserve
-explicit user appeal/priority choices and any existing operator `ovr`; when
-re-scoring, pass the retained `--ovr` explicitly because omitting it replaces it
-with no override. New rank overrides are the user's choice, not an LLM shortcut.
-The existing rank is the four-axis sum unless operator `ovr` replaces it; do not
-change that algorithm or distort cheapness/appeal to manufacture urgency.
+and the current CLI help before writing. Under GH-1340 / GH-1345 decision 6, the row is created
+at pickup/selection: use `python3 utils/py/releases_app.py roadmap pickup --issue-num N [--rated P/S/A/E]`
+(creates the row if absent, validates real rating per Task 11, or reuses an existing row idempotently
+preserving any prior operator `ovr`). If re-scoring an already rated row, use
+`python3 utils/py/releases_app.py roadmap rate --issue-num N --rated P/S/A/E` (substitute actual values);
+`--dry-run` previews it. Read the existing rating and its provenance first. Re-scoring uses `--force`
+only deliberately with a recorded reason, never as an automatic response to an "already rated" refusal.
+Preserve explicit user appeal/priority choices and any existing operator `ovr`; when re-scoring, pass
+the retained `--ovr` explicitly because omitting it replaces it with no override. New rank overrides
+are the user's choice, not an LLM shortcut. The existing rank is the four-axis sum unless operator `ovr`
+replaces it; do not change that algorithm or distort cheapness/appeal to manufacture urgency.
 Regenerate the repo's required views and read back the rating and rationale.
 Use one addressable issue row per tracked task; do not hide a batch behind one
 aggregate score. A legacy grouped row requires deliberate per-issue intake
