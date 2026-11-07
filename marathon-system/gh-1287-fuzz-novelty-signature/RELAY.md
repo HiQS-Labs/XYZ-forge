@@ -42,8 +42,8 @@ criterion here reads as a fragment, that is the source text, not a truncation.*
 ```bash
 XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-1287-fuzz-novelty-signature RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh \
   --phase-brief <packet>/packet.md \
-  --reviewer agy \
-  --builder codex \
+  --reviewer codex \
+  --builder agy \
   --artifact TESTS-RESULTS/2026-10-30+GH-1280/tools/supervisor.py \
   --pre-advance-cmd 'python3 -m pytest test/test_python_layer.py' \
   --require-clean

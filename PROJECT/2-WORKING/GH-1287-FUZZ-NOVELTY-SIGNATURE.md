@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured via HQ (`/hq park`) for project **XYZ-forge** → repo `XYZ-forge`. The GitHub issue is the signal stream; this doc is the in-repo capture and back-reference. | Run Phase 0 check on `supervisor.py` signature generation before promoting. |
+| Normalization independently reviewed; CLI replay verified 10,000 events, 23 usage signatures, first hypothetical stop at 500 and streak threshold at 1,892. Evidence: `TESTS-RESULTS/2026-11-07+GH-1356/REPLAY-PROCEDURE.md`. | Complete PR #1361 review and authorized landing; reconcile #1287 acceptance after merge. |
 
 ## Idea
 
