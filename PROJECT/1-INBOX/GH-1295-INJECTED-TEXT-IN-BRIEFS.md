@@ -51,11 +51,37 @@ Found by the #1279 window: injection-canary lanes passed the structure and Marat
 
 ### Checklist
 
-- [ ] TODO: scope-specific checklist items for this idea's Phase 0 pass.
+- [ ] Inspect `_sections` and `render_brief` in `utils/py/harness.py`.
+- [ ] Evaluate fencing options: wrap sourced scope in explicit Markdown code fence or quote block with untrusted data disclaimer.
+- [ ] Evaluate pattern filter for common override strings (`IGNORE ALL PREVIOUS INSTRUCTIONS`, `SYSTEM OVERRIDE`).
 
 ### QA checklist — Phase 0
 
-- [ ] TODO: acceptance criteria for the Phase 0 pass above.
+- [ ] Sourced issue body instructions cannot be read as instructions by builder prompts in generated briefs.
+- [ ] Normal issue bodies render unchanged without regression.
+- [ ] No new test files (GH-831).
+
+## Ratings rationale
+
+pri 60 / sev 60 / appeal 50 / effort 70 (deferred by operator until factory-primitive generated packets are run live; preparation unblocks evaluation).
+
+## Preflight Contract
+
+```json
+{
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "python3 -m pytest test/test_python_layer.py && bash test/synthetic/gh94-containment-invariants.sh",
+  "fix_probes": [
+    { "type": "grep_absent", "path": "utils/py/harness.py", "pattern": "untrusted_issue_text|sanitize_brief_scope",
+      "note": "pre-fix: harness.py does not fence untrusted scope text in briefs" }
+  ],
+  "artifacts": [ "utils/py/harness.py" ],
+  "remediation": {
+    "source": "issue#1295",
+    "criteria": "Render sourced issue scope inside explicit untrusted fences or hold brief when instruction patterns match; no new tests (GH-831)."
+  }
+}
+```
 
 ## Merge evidence
 
