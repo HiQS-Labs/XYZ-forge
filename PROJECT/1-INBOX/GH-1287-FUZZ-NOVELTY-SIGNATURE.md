@@ -83,7 +83,13 @@ pri 50 / sev 40 / appeal 40 / effort 30 (prerequisite before stateful campaign).
 
 ## Acceptance
 
-- Re-scoring the retained long-run telemetry (`runs/long/telemetry.jsonl.gz`) with the new signature gives a small, stable set of usage signatures (tens, not thousands).
-- On that replayed stream, the no-new-signal streak reaches its configured limit before case 10,000, or the report states why it does not.
-- No harness or production code changes.
+- [ ] Re-scoring the retained long-run telemetry (`runs/long/telemetry.jsonl.gz`) with the new signature gives a small, stable set of usage signatures (tens, not thousands).
+- [ ] On that replayed stream, the no-new-signal streak reaches its configured limit before case 10,000, or the report states why it does not.
+- [ ] No harness or production code changes.
 
+
+## Acceptance — deviations from the issue
+
+- [added] Re-scoring the retained long-run telemetry (`runs/long/telemetry.jsonl.gz`) with the new signature gives a small, stable set of usage signatures (tens, not thousands). — reason: Verbatim issue bullet made machine-readable as a checklist; no semantic change.
+- [added] On that replayed stream, the no-new-signal streak reaches its configured limit before case 10,000, or the report states why it does not. — reason: Verbatim issue bullet made machine-readable as a checklist; no semantic change.
+- [added] No harness or production code changes. — reason: Verbatim issue bullet made machine-readable as a checklist; no semantic change.
