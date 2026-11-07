@@ -3369,7 +3369,7 @@ def parse_prs_proposal(text):
     }
 
 
-def parse_rating(raw, title, allow_placeholder=False):
+def parse_rating(raw, title, allow_placeholder=True):
     """Parse the rating tokens out of one ROADMAP entry. Returns the five column values."""
     blank = dict.fromkeys(RATING_COLUMNS)
     rated_tokens = _RATED_TOKEN_RE.findall(raw)
