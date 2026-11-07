@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -67,5 +67,20 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Approve the bounded implementation plan against its stated goal and acceptance list (artifact lines 26–28, 136–140). This approves planning, not runtime behavior or checkout deletion. Whole artifact swept; no additional blocking pre-existing plan defects found.
+swept file: yes
+
+- [Pass] Tag handling is sufficiently precise: artifact line 130 requires exact full ref names and unpeeled object IDs **before ancestry**, with missing/different tags preserved even when their targets are reachable. This covers annotated-tag identity rather than only peeled commits. The current ancestry-first loop is visible in `skills/2-daily/merge-cleanup/scripts/scan_clones.py:611`; the plan expressly replaces that ordering for tags without changing branch/detached rules.
+- [Pass] Trusted lookup extends the existing owner rather than importing caller-tree discovery: artifact lines 124 and 131 name `_tick_binary`, explicit configuration, canonical Forge origin and executable validation, while retaining override behavior. The configuration paths exist in `skills/1-hourly/relay-xyz/find-harness.sh:122–125`. Existing claim inspection pins TICK_REPO_ROOT and fails closed (`scan_clones.py:305–329`); the disposition consumer preserves unknown claims (`scan_clones.py:1091–1099`). No new resolver framework is needed.
+- [Pass] Safety and verification are scoped adequately for a plan: artifact lines 126 and 133 require stopping on false-safe controls before deployment, no user-checkout disposal during verification, existing-suite/manual red-green checks in a separate full clone, and retained provenance. Artifact lines 132 and 134 explicitly limit #1359 to research and keep it open; implementation does not claim to solve the broader lifecycle.
+- [Nit] Historical capture text is stale beside the shared plan: artifact lines 33–35 say no Status table exists, lines 70–75 name `checkout_ref_provenance` as unconfirmed, while lines 102–122 supply the table and updated recon. On promotion, label the old material historical or reconcile it with the shared plan. This does not invalidate the ordered implementation.
+- [Unverified — needs clone run] Base reproductions and runtime acceptance remain producer claims, not independently executed here. No validate.sh, test/*.sh, pytest, executable fixtures, or git commands were run. Carry the required clone evidence into final QA; plan approval is not an attestation that those checks passed.
+- [Unverified — source access] Full live #1359/#1362 requirement comparison was unavailable. Read-only commands `gh issue view 1362 --repo HiQS-Labs/XYZ-forge --json body` and the equivalent for 1359 each exited 1: "error connecting to api.github.com". Review used the seeded artifact and local issue captures; recheck the live issue bodies before final QA. Graph discovery was attempted with search_graph and denied by the runtime ("approval policy is never"); direct reads were used. No claim of live issue completeness or PRS persistence is made.
+
+Relay closed (Approved), no further turn needed. Producer may proceed with the scoped implementation and disposable-clone verification; the harness owns the relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
