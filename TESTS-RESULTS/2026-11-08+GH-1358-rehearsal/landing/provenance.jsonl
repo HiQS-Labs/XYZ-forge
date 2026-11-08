@@ -54,3 +54,6 @@
 {"recorded_at": "2026-11-08T18:52:10.348513+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/clock-final-gate.plist", "sha256": "af609d15914fb70745a8c99f804036324b39396071aef73174303630542bf2dc"}
 {"recorded_at": "2026-11-08T18:52:10.348534+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/clock-repair.stdout.log", "sha256": "30b062f2481503e3bfb321d9f15d648c2848d9c25c26c3c8e3d323bce71699a9"}
 {"recorded_at": "2026-11-08T18:52:10.348556+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/clock-repair.stderr.log", "sha256": "6c3d8a1ee692177ed325f4b0069a6ba67ae62bf712dcd95cee8dc8c6805889c9"}
+{"recorded_at": "2026-11-08T18:55:16.592945+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/README.md", "sha256": "e1f898746d5921480e20b6eb6c494f2b0218dcfa5d300c9386f86443c984073d"}
+{"recorded_at": "2026-11-08T18:55:16.593095+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/gate-retry2.stdout.log", "sha256": "f11380cbce994742c53edb466f39eafad495cd6f336a9aeaac33cb2f9056292a"}
+{"recorded_at": "2026-11-08T18:55:16.593120+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/gate-retry2.stderr.log", "sha256": "de3f92eaadb7ee0195308a83711e993b7be002a3ca79c6821883b4c51d1d9708"}
