@@ -1,0 +1,5 @@
+{"items":27,"scenario_sha256":"bed30bb1ac9ffe5f6ff5283b21b84eb2eb8630402ba78f13152157736963bf70","stage":"init","status":"ok","tick_id":null,"ts":"2026-11-08T05:01:45.822060+00:00"}
+{"fault":null,"slot":1,"stage":"tick.started","status":"ok","tick_id":"slot_001","ts":"2026-11-08T05:01:45.878433+00:00"}
+{"agent_called":true,"stage":"evaluate","status":"ok","tick_id":"slot_001","ts":"2026-11-08T05:01:45.879434+00:00"}
+{"rejection":null,"stage":"validate","status":"raw-valid","tick_id":"slot_001","ts":"2026-11-08T05:01:45.879754+00:00"}
+{"decision_status":"raw-valid","output_sha256":"5e81fd0d8f114a04e5671b09ea70578e0ee2881a285456d496664a20ebb00431","stage":"tick.completed","status":"completed","tick_id":"slot_001","tool":"note","ts":"2026-11-08T05:01:45.943841+00:00"}
