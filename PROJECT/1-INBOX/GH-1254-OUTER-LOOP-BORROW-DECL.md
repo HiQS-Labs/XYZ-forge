@@ -109,3 +109,15 @@ Blast radius: factory scenario validation, snapshots, adapter telemetry, tick re
 
 Plan/final review cap: three rounds each; blocker repair rounds: zero at plan creation.
 No #1344/#1345 attempts, no #1358 run.
+
+### Plan QA round 1 disposition
+
+Accepted: cache eligibility is not execution. N bounds cache-imposed withholding, not arbitrary
+backlog execution. Two simultaneous notes and one action per tick falsify unconditional deadline
+execution; Codex can also select idle. Keep stronger acceptance OPEN, never call eligibility execution.
+Within existing dispatch, order deadline-expired deferred items first and use existing rules_decide
+for their selection, so a feasible single due item runs now rather than being skipped by the model.
+Do not add a scheduler: a saturated two-note deadline is explicitly reported as unmet; tool failure,
+pause and budget exhaustion also prevent execution and remain visible. Test single due item,
+same-deadline contention, urgent work, rerun, and skipped-call warmth. This is a deterministic
+selection fallback using the existing evaluator, not a new queue or dispatch mechanism.
