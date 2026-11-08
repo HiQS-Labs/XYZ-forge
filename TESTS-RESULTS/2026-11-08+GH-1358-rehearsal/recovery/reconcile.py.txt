@@ -1,0 +1,66 @@
+import datetime,hashlib,json,os,signal,subprocess,sys,time
+from pathlib import Path
+primary=Path('/Users/noelsaw/Documents/GitHub/XYZ-forge')
+source=Path('/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54')
+base=Path('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg')
+evidence=source/'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery'
+sys.path.insert(0,str(source/'utils/py'))
+from jog_run import JogSupervisorLock,JogCheckpoint,jog_load_state,jog_save_state,load_marathon_result,jog_resume,_jog_latest_receipt
+
+def git(*args):return subprocess.check_output(['git','-C',str(primary),*args],text=True).strip()
+assert datetime.datetime.now(datetime.timezone.utc)<datetime.datetime.fromisoformat('2026-11-08T21:35:42.553636+00:00')
+assert not git('status','--porcelain')
+assert git('rev-parse','HEAD')=='7da2f34ed043f860ad5014c3a5e206fba2fe1843'
+assert git('ls-remote','origin','refs/heads/development').split()[0]==git('rev-parse','HEAD')
+process=subprocess.check_output(['ps','-p','1992','-o','pid=,ppid=,state=,command='],text=True)
+assert process.split()[2]=='T' and '_jog_retry_gate_locked' in process and '19:06:18' in process
+children=subprocess.run(['pgrep','-P','1992'],capture_output=True,text=True)
+assert children.returncode==1 and not children.stdout.strip()
+receipt_path=primary/'.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec2/gate-retry-1/marathon-result.json'
+receipt=load_marathon_result(str(receipt_path))
+assert receipt['execution_id']=='gh1254-exec2-gateretry1' and receipt['reason']=='gate-killed'
+assert receipt['head_sha']=='8d541d012cee48dbf453f3a638aeaf62617ebf42'
+assert receipt_path.read_bytes()==(evidence/'retained-result.json').read_bytes()
+lock=JogSupervisorLock(str(primary));lock.acquire()
+try:
+ # Fence the already-stopped, childless old writer without executing its stale finally block.
+ os.kill(1992,signal.SIGKILL)
+ for _ in range(20):
+  remaining=subprocess.run(['ps','-p','1992','-o','state='],capture_output=True,text=True)
+  if remaining.returncode!=0 or remaining.stdout.strip()=='Z':break
+  time.sleep(0.1)
+ else:raise RuntimeError('old writer still live after fence')
+ checkpoint=JogCheckpoint(str(primary),str(base/'publisher'))
+ assert json.loads(checkpoint.journal.read_text())==json.loads((evidence/'prior-checkpoint.json').read_text())
+ preserved=base/'recovery-preservation-2008/old-checkpoint.json'
+ assert not preserved.exists()
+ checkpoint.journal.rename(preserved)
+ assert checkpoint.begin()
+ gid='jog-01M6Y67FAWQFFXC8VQZ1J7HRNH'
+ state=jog_load_state(str(primary),gid)
+ assert state==json.loads((evidence/'prior-execution-state.json').read_text())
+ assert state['schema']=='jog/execution-state@1' and state['gid']==gid
+ assert _jog_latest_receipt(str(primary),gid,outcomes=('approved',))==(None,None)
+ entry=state['executions'][-1];assert entry['execution_id']=='gh1254-exec2'
+ retries=entry.setdefault('gate_retries',[])
+ assert not retries
+ retries.append({'execution_id':receipt['execution_id'],'attempt':1,'status':receipt['outcome'],'result_path':str(receipt_path)})
+ jog_save_state(str(primary),gid,state)
+ assert _jog_latest_receipt(str(primary),gid)[1]['execution_id']==receipt['execution_id']
+ jog_resume(str(primary),1254)
+ checkpoint.finish()
+ after=jog_load_state(str(primary),gid)
+ prior=json.loads((evidence/'prior-execution-state.json').read_text())
+ assert after['executions'][:-1]==prior['executions'][:-1]
+ for k,v in prior['executions'][-1].items():
+  if k not in ('status','projected_reason'):assert after['executions'][-1][k]==v
+ (evidence/'reconciled-execution-state.json').write_text(json.dumps(after,indent=2)+'\n')
+ for ancestor in ['7da2f34ed043f860ad5014c3a5e206fba2fe1843','6ff39b48f42e09ff8943224c6cfcc25e36a520f3','bfa094f5009c5c605bccb975841f830174dfe17a']:
+  subprocess.run(['git','-C',str(primary),'merge-base','--is-ancestor',ancestor,'HEAD'],check=True)
+ assert not git('status','--porcelain')
+ assert git('ls-remote','origin','refs/heads/development').split()[0]==git('rev-parse','HEAD')
+ assert receipt_path.read_bytes()==(evidence/'retained-result.json').read_bytes()
+ result={'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'primary_head':git('rev-parse','HEAD'),'peer_landings_preserved':True,'clean_published':True,'retained_receipt_registered':receipt['execution_id'],'old_writer':'1992 terminated without resume','attempts':receipt['attempt'],'checkpoint':checkpoint.state}
+ (evidence/'reconciliation.json').write_text(json.dumps(result,indent=2)+'\n')
+ print(json.dumps(result),flush=True)
+finally:lock.release()

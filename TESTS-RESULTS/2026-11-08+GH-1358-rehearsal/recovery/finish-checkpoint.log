@@ -1,0 +1,2 @@
+jog: published primary checkpoint ee6a5ab9a8a90e0666aae3625dccd96b09a91ac2
+{"at": "2026-11-08T20:28:17.602464+00:00", "repair_round": 1, "cause": "existing complete_phase_success calls lane_attempt_reset, deleting success history; recovery assertion caught it before checkpoint.finish", "restored_sha256": "d2565905a3f76fb1f98294f476b29515b3a671d28e6e27ac75c4f8924cd6aff2", "builder_attempts": 2, "checkpoint": {"base": "2361edc130048a825376f7e94d1e39b6e6a4e420", "phase": "published", "commit": "ee6a5ab9a8a90e0666aae3625dccd96b09a91ac2"}, "no_new_dispatch": true}

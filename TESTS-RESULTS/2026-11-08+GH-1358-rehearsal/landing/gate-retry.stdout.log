@@ -1,0 +1,173 @@
+jog: gate-only retry for GH-1254 against head e86d59ea11c1034cbf85adbb49a0ca12752a7960 (no builder turn; satisfied-lane path)
+marathon-drive: phase gh-1254-outer-loop-borrow-decl already reached a terminal relay (STATUS: Approved, token done) — skipping render/reseed, re-running only the pre-advance gate
+marathon-drive: relay approved — running pre-advance gate: python3 -c 'import os,sys,subprocess,tempfile,pathlib,shutil,json,datetime,re
+deadline=datetime.datetime.fromisoformat('"'"'2026-11-08T19:06:18+00:00'"'"').timestamp()
+gate_started=datetime.datetime.now(datetime.timezone.utc).timestamp()
+assert deadline-gate_started>=1200, '"'"'fixed preparation deadline leaves less than reduced 1200s gate cap; preserve candidate without starting gate'"'"'
+root=pathlib.Path.cwd().resolve()
+assert root==pathlib.Path(os.environ['"'"'MARATHON_ROOT'"'"']).resolve()
+env={k:v for k,v in os.environ.items() if k in ('"'"'PATH'"'"','"'"'HOME'"'"','"'"'USER'"'"','"'"'LOGNAME'"'"','"'"'SHELL'"'"','"'"'TMPDIR'"'"','"'"'LANG'"'"','"'"'LC_ALL'"'"','"'"'TERM'"'"','"'"'SSH_AUTH_SOCK'"'"','"'"'GH_TOKEN'"'"','"'"'GITHUB_TOKEN'"'"')}
+def git(where,*args):return subprocess.check_output(['"'"'git'"'"','"'"'-C'"'"',str(where),*args],text=True,env=env).strip()
+sha=git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"');branch=git(root,'"'"'symbolic-ref'"'"','"'"'--short'"'"','"'"'HEAD'"'"');origin=git(root,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')
+assert branch.startswith('"'"'marathon/'"'"') and origin=='"'"'https://github.com/HiQS-Labs/XYZ-forge.git'"'"'
+clone=pathlib.Path(tempfile.mkdtemp(prefix='"'"'gh1358-lane-gate-'"'"')).resolve()
+print('"'"'GH1358 isolated existing gate/push:'"'"',clone,'"'"'candidate'"'"',sha,flush=True)
+def run(args):subprocess.run(args,cwd=clone,env=env,check=True)
+run(['"'"'git'"'"','"'"'clone'"'"','"'"'--no-local'"'"','"'"'--no-hardlinks'"'"',str(root),str(clone)])
+run(['"'"'git'"'"','"'"'remote'"'"','"'"'set-url'"'"','"'"'origin'"'"',origin]);run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"']);run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"','"'"'--check'"'"'])
+run(['"'"'python3'"'"','"'"'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/controls.py'"'"','"'"'utils/py/marathon_drive.py'"'"'])
+run(['"'"'bash'"'"','"'"'test/gh390-gate-guard.sh'"'"'])
+run(['"'"'bash'"'"','"'"'test/gh280-jog-marathon-adapter.sh'"'"'])
+assert git(clone,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha and git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')==origin
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'--push'"'"','"'"'--all'"'"','"'"'origin'"'"')==origin
+assert git(clone,'"'"'config'"'"','"'"'--get'"'"','"'"'core.bare'"'"')=='"'"'false'"'"' and not git(clone,'"'"'status'"'"','"'"'--porcelain'"'"')
+run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"','"'"'--check'"'"'])
+live=subprocess.check_output(['"'"'ps'"'"','"'"'-axo'"'"','"'"'pid=,command='"'"'],text=True)
+other_gates=[line for line in live.splitlines() if re.match(r'"'"'^\s*\d+\s+(?:/\S*/)?bash\s+(?:\S*/)?(?:validate|ci-local)\.sh(?:\s|$)'"'"',line)]
+print('"'"'pre-push live host gate check:'"'"',other_gates,flush=True)
+assert not other_gates, '"'"'another host full gate is active; no peer was stopped'"'"'
+assert datetime.datetime.now(datetime.timezone.utc).timestamp()<deadline, '"'"'fixed preparation deadline reached before push'"'"'
+run(['"'"'git'"'"','"'"'push'"'"','"'"'--set-upstream'"'"','"'"'origin'"'"','"'"'HEAD:refs/heads/'"'"'+branch])
+assert git(clone,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha and git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')==origin and git(clone,'"'"'config'"'"','"'"'--get'"'"','"'"'core.bare'"'"')=='"'"'false'"'"'
+assert not git(clone,'"'"'status'"'"','"'"'--porcelain'"'"')
+receipt=clone/'"'"'.xyz/receipts'"'"'/f'"'"'{sha}.json'"'"';data=json.loads(receipt.read_text())
+assert data['"'"'sha'"'"']==sha and data['"'"'exit_code'"'"']==0 and data.get('"'"'scope'"'"')=='"'"'full'"'"'
+dest=root/'"'"'.xyz/receipts'"'"';dest.mkdir(parents=True,exist_ok=True);shutil.copy2(receipt,dest/receipt.name)
+print('"'"'GH1358 normal gated candidate publication complete; final transcript tail uses normal docs push'"'"',flush=True)
+'
+GH1358 isolated existing gate/push: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc candidate e86d59ea11c1034cbf85adbb49a0ca12752a7960
+githooks: installed — /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/.git/hooks/pre-push
+  It runs the gate before any push, on EVERY branch in this clone (and its worktrees),
+  including branches with no githooks/ directory (GH-549).
+  Bypass: git push --no-verify   or   XYZ_SKIP_PREPUSH=1 git push
+  Verify: bash githooks/install.sh --check
+githooks: INSTALLED — /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-q6xsejzc/.git/hooks/pre-push is the gate stub (executable)
+[
+  {
+    "case": "normal-success",
+    "exit": 0,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 0 after 1s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "green",
+      "gate_exit": 0
+    },
+    "expected": 0,
+    "pass": true
+  },
+  {
+    "case": "genuine-red",
+    "exit": 7,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 7 after 1s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "red",
+      "gate_exit": 7
+    },
+    "expected": 7,
+    "pass": true
+  },
+  {
+    "case": "sleep-running",
+    "exit": 108,
+    "kills": [
+      "wall clock 20s >= cap 10s"
+    ],
+    "log": [
+      "gate-guard: gate exit 108 after 20s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "red",
+      "gate_exit": 108
+    },
+    "expected": 108,
+    "pass": true
+  },
+  {
+    "case": "sleep-child-already-exited",
+    "exit": 108,
+    "kills": [],
+    "log": [
+      "gate-guard: refusing completed gate \u2014 wall clock 20s >= cap 10s",
+      "gate-guard: gate exit 108 after 20s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "red",
+      "gate_exit": 108
+    },
+    "expected": 108,
+    "pass": true
+  },
+  {
+    "case": "backward-wall-monotonic-expiry",
+    "exit": 108,
+    "kills": [],
+    "log": [
+      "gate-guard: refusing completed gate \u2014 wall clock 11s >= cap 10s",
+      "gate-guard: gate exit 108 after 11s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "red",
+      "gate_exit": 108
+    },
+    "expected": 108,
+    "pass": true
+  },
+  {
+    "case": "cap-disabled",
+    "exit": 0,
+    "kills": [],
+    "log": [
+      "gate-guard: gate exit 0 after 20s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 0s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "green",
+      "gate_exit": 0
+    },
+    "expected": 0,
+    "pass": true
+  },
+  {
+    "case": "group-missing-late-completion",
+    "exit": 108,
+    "kills": [],
+    "log": [
+      "gate-guard: refusing completed gate \u2014 wall clock 20s >= cap 10s",
+      "gate-guard: gate exit 108 after 20s \u2014 controlled RSS (tier manual; caps: RSS 0MB, wall 10s, CPU 0s)"
+    ],
+    "result": {
+      "gate_result": "red",
+      "gate_exit": 108
+    },
+    "expected": 108,
+    "pass": true
+  }
+]
+== test: gh390-gate-guard ==
+  workdir: /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/tick-gh390-gate-guard.XXXXXX.4kJ2TiwbVC
+  PASS: all CPU signal/Bash attribution shapes are covered through the module-level seam
+  PASS: an honest gate still passes under the guard (exit 0)
+  PASS: peak-RSS telemetry is logged on a passing run (the Phase 3 trip condition)
+  PASS: a runaway allocator halts the phase (exit 5) instead of the host
+  PASS: layer 3 killed the gate's whole process group
+  PASS: ESCALATION.md records reason: gate-killed (distinct from a red gate)
+  PASS: the kill landed promptly (4s), well before the hog's own 1 GB ceiling
+  PASS: a hanging gate is killed at the wall-clock cap (4s, exit 5)
+  PASS: the kill reason names the wall-clock cap
+  PASS: a CPU spin is killed by the kernel-enforced cap (3s, exit 5)
+  PASS: a SIGXCPU kill escalates as gate-killed, not as the gate finding a defect
+marathon-drive: gate-guard: gate exit 1 after 19s — peak group RSS 116MB (tier full; caps: RSS 8192MB, wall 1200s, CPU 1200s)
+marathon-drive: pre-advance gate FAILED (exit 1) — escalating
+marathon-drive: transcript saved: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/relay-system/2026-11-08/marathon-gh-1254-outer-loop-borrow-decl-184120.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1254-outer-loop-borrow-decl-escalated boundary — compressor=835MB, swap_free=1023MB
+marathon-drive: escalation written: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1254-outer-loop-borrow-decl/ESCALATION.md (reason: pre-advance-failed)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec1/gate-retry-1/marathon-result.json (outcome: escalated, exit 5)
+jog: gate retry result: escalated → queue failed — marathon escalated: pre-advance-failed (exit 5) [gh1254-exec1-gateretry1; result: gh1254-exec1/gate-retry-1/marathon-result.json]
+jog: published primary checkpoint f009ade92141836d1aee6b5a9662649d3cba0bd0
