@@ -1,0 +1,376 @@
+# RELAY · GH-1340 Task 1 final QA: decisions 4-6 in PDDA.md, policy only
+<!--
+  Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
+  Scaffolded by relay-automation/new-relay.sh on 2026-11-04.
+-->
+
+NEXT: Producer
+STATUS: Approved
+ROUND: 2 / 4
+
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
+1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are bound to it and the
+   last Log block isn't already yours. If not → STOP and reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact named in Setup:
+   - **Reviewer:** review vs the Definition of Done → graded findings
+     (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a concrete fix → set a **VERDICT**
+     (exactly PASS, FAIL, or PARKED) and a **Basis** (explanation). **Review the whole file, not just the diff** (GH-268):
+     a beta test had this loop reach `Approved` in two rounds while an independent audit of the same
+     branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the
+     change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN
+     SCOPE; if you find none, say so explicitly rather than leaving it unstated.
+     **Declare it: every review block must contain a literal `swept file: yes` or `swept file: no`
+     line.** Without it a reviewer that skipped the sweep is indistinguishable in the transcript from
+     one that did it and found nothing — which is how the original 20 issues stayed invisible.
+     Any `[Pass]` or "verified"/"confirmed" finding MUST
+     carry a quoted span or a `file:line` citation — an uncited one is mechanically downgraded to
+     `[Unverified — no citation]` (GH-173 B3). Do **not** edit the artifact; only append findings here.
+     **A finding that asks for a behaviour change is a generalization unless you can paste the concrete
+     input — a row, a value, a `file:line` — that fails under the current code** (GH-681: the gh673
+     final QA relay generalized one late-error observation into "or a later invalid identity", the
+     Producer implemented it, the same seat `[Pass]`ed it next round, and one historical NULL-URL
+     ledger row then blanked every issue). Every `[Blocker]` or `[Should]` requesting a behaviour
+     change MUST carry three lines: `Observed input:` (the failing input you saw), `Affected scope:`
+     (the input predicate the change would govern), `Falsifier:` (the fixture or data that would show
+     the change unnecessary or wrong, and its expected result).
+     A `[Blocker]` must cite an observed failure. This is a protocol rule, not a mechanical check —
+     the Producer may disposition a request lacking these as `Declined — unproven generalization`.
+   - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why,
+     including `Declined — unproven generalization` for a behaviour-change request that carries no
+     `Observed input:` / `Affected scope:` / `Falsifier:`), make the change, then add new work.
+4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
+   Reviewer headings may be `### Reviewer · Round N`, `### Round N · Reviewer · <agent>`, `### Reviewer (<agent>)` (optionally followed by `— rN`), or `### Reviewer — Round N` (optionally followed by `(<agent>)`); follow the heading with a non-empty review body.
+5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
+   the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
+   set `STATUS: Escalated`.
+6. **Commit only the relay file** (`relay(gh1340-task1-final-qa): <role> r<N>`); no push. **Stop** and report one line.
+7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
+   next and what they should do: *"handing off to <other role> — go to the <other> window and say
+   'take your turn'"*, or *"relay closed (Approved), no further turn needed"*. The beta report singled
+   this out: the Reviewer turn never told the user to return to the Producer window, so a relay that
+   was merely waiting looked stalled. A turn that ends without this line is not finished.
+
+## Setup
+- Artifact under review: **task1-qa.md** (embedded below — read it here).
+- Reviewer: codex   ·   Producer: claude-a
+- Started: 2026-11-04
+
+### Artifact — task1-qa.md
+````
+## Diff (229e1be9..HEAD, excluding the rules relay thread)
+
+```diff
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index a147daca..e38ec409 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,12 @@
+ # Changelog
+ 
++## 2026-11-04 — GH-1340 Task 1: GH-1333 decisions 4-6 written into the rules (policy only)
++
++- `PROJECT/PDDA.md` now records that the merge step closes an issue only under two conditions (a reviewed whole-issue assertion, or a non-empty Acceptance checklist fully checked), and otherwise leaves it open with one reason comment.
++- It records that a ledger row is created when work starts, not at filing: selection into an actual batch counts as starting (D-b), and the existing "Queue / parked intake" rows stay as proposals (D-a). Until the #1340 cutover lands, row-writing intake is not used for new unstarted work.
++- Corrects the Lifecycle sentence that sent a closed, never-actioned capture to `4-MISC` and removed its pointer; closed captures follow the `stateReason` sweep. Section H's "who closes" now points at decision 4, and the coverage rule mentions #1339's in-flight promotion case.
++- Policy only; no code changed. Decision record: `decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md`. Rule set with stable IDs: top of #1328. Rule-set review: Codex (GPT-6 Astra, medium), one round, nine findings accepted (`relay-system/2026-11-04/rules-sharpening-qa.md`).
++
+ ## 2026-11-04 — GH-1341 todo-list and start-task close the loop on GitHub issues
+ 
+ - `todo-list` has a new section 4, "Close the loop on GitHub". When a run ends, including on a halt or the 100-minute / 10-wake cap, it posts one comment to each issue the run touched. The comment covers what was done, the evidence, the decisions and why, what stays open, and the next step. A marker line (`<!-- todo-list closeout: <note-path> -->`) makes a rerun edit that comment instead of adding another. Tier A and B post with `gh` and record the URLs in the note; Tier C renders the text in chat to paste. A failed lookup or write is reported `unposted` or `unknown`, with no URL claimed. The step never closes or relabels an issue. Both run ends call it: section 3 step 4 and the watchdog wake prompt.
+diff --git a/PROJECT/PDDA.md b/PROJECT/PDDA.md
+index fd14f875..9c6f1ae1 100644
+--- a/PROJECT/PDDA.md
++++ b/PROJECT/PDDA.md
+@@ -256,7 +256,8 @@ stream lives in GitHub (machine-queryable state, labels, commit↔issue linkage)
+ surface of record stays in `PROJECT/**`. This is the **issue-first SOP**; the bug-fix stance above
+ states the principle, and this section owns the *format*. To prevent duplicate intake and forgotten
+ work, every captured `GH-*.md` doc is also **parked immediately in `ROADMAP.md`** as a one-line queue
+-entry until it is promoted, deferred, or closed.
++entry until it is promoted, deferred, or closed. **This is changing** (GH-1333 decision 6, 2026-11-04,
++policy only): the ledger row will be created when work starts, not at capture. See Lifecycle.
+ 
+ **Floor (what needs an issue).** The operational test is **lines of code touched**: any change
+ beyond a **2–3 line** fix opens a GitHub issue first, and its local plan doc is named after that
+@@ -285,18 +286,34 @@ Lifecycle:
+ 
+ - The `GH-` inbox doc is the **capture**, not the active-work doc. It carries no `## Status` table while
+   it sits in `1-INBOX` (the inbox is the rough/untriaged bucket).
+-- Capture time also adds a **one-line `ROADMAP.md` queue pointer** linking that inbox doc. This is a
++- **Today**, capture time also adds a **one-line `ROADMAP.md` queue pointer** linking that inbox doc. This is a
+   temporary parking slot: it makes fresh intake visible to humans and automation before promotion,
+   which is the duplicate-prevention guard.
++- **Decided, not yet implemented: the ledger row is created when work starts** (GH-1333 decision 6,
++  2026-11-04). Filing an issue no longer means a row. The row, and the PRS rating stored on it, appear
++  at pickup: `jog add`, `start-task`, or promotion to `2-WORKING`. Until then the rating proposal lives
++  in the issue body.
++  - **Selection counts as starting** (decision D-b): committing an issue to an actual execution batch or
++    marathon creates its row, on the primary checkout and before dispatch, or reuses an existing
++    proposal row and its rating. Ranking or shortlisting does not.
++  - **Existing rows stay** (decision D-a): the rows already in "Queue / parked intake" are proposals, not
++    a sign that work started. They are not migrated; revisit about a month after the cutover. This
++    exception covers only those rows.
++  - **Until the cutover lands** (#1340 Tasks 2, 3, 4, 6 and the Task 11 rating contract, as one change),
++    today's intake tools and the coverage check still write and require a row at capture. In that gap,
++    do not run row-writing intake (`hq park --create` / `--gh-issue`, `/file-xyz-bug`, `express`) for new
++    unstarted work: file the GitHub issue with its rating proposal in the body, and leave the capture
++    doc and row to pickup. Something else must take over the duplicate-prevention guard (#1340 Task 6).
+ - When execution starts, **promote** it to `PROJECT/2-WORKING/` — keep the `GH-` prefix for provenance —
+   and it must then satisfy the full active-doc contract (frontmatter, exact status table, QA gates if
+-  phased), **carrying `gh_issue` forward**. The `ROADMAP.md` pointer is therefore required twice:
+-  first as a queued parking entry at capture, then as an active-work ledger entry after promotion.
++  phased), **carrying `gh_issue` forward**. The `ROADMAP.md` pointer is therefore required twice today:
++  first as a queued parking entry at capture, then as an active-work ledger entry after promotion
++  (after the decision-6 cutover it is created once, at pickup).
+   This is the concrete mechanism behind "GitHub issues are not a substitute for the local active-work
+   doc once execution starts" (bug-fix stance above).
+-- If a captured issue is never actioned it ages out of `1-INBOX` like any other untriaged note; if it is
+-  closed without work, the completion sweep (next item) moves the doc to `PROJECT/4-MISC` and removes its
+-  queue pointer from `ROADMAP.md`.
++- If a captured issue is never actioned it ages out of `1-INBOX` like any other untriaged note. If it is
++  closed, the completion sweep (next item) places the doc by the issue's `stateReason`, whether or not work
++  started; an existing ledger pointer is repointed, not removed.
+ - **Completion moves come from one sweep, keyed on current issue state** (GH-1333). The sweep reads the
+   issue state of every `GH-<n>-` doc in `1-INBOX` and `2-WORKING`. The destination comes from the
+   closed issue's GitHub `stateReason`:
+@@ -311,6 +328,13 @@ Lifecycle:
+   `wave_reconcile.py --pr N`. It runs from the steps that already run: the merge-cleanup batch and
+   `start-marathon` Step 2. It never closes an issue. **Until it lands**, `wave_reconcile.py --pr N`
+   still moves docs on a closing-keyword merge, and `issue-doc-sync` (H) flags what that misses.
++- **Closing an issue at merge** (GH-1333 decision 4, 2026-11-04; decided, not yet implemented, #1340
++  Task 7). The merge step closes an issue only when **either** a recorded independent review assertion
++  says the delivered lane covers the whole issue, **or** the issue has a non-empty `## Acceptance`
++  checklist with every item checked. Otherwise it leaves the issue open with one comment, "delivered, left
++  open because <reason>". A mention is never authority to close. Closing text never uses a negated keyword:
++  "does not close #N" still closes #N, so write `Refs #N` and "leaves #N open". **Until Task 7 lands**, a PR
++  writes a closing keyword only when one of the two conditions holds.
+ 
+ A foreign-repo issue (not `origin`) is the rare exception: the `source:` URL disambiguates it, since the
+ bare `GH-<number>` only guarantees uniqueness within the canonical repo.
+@@ -502,7 +526,8 @@ Minimum behavior:
+     to avoid.
+   - **(c)** doc is in `3-COMPLETED` but the issue is **OPEN** -> `warn`. Since GH-1333 the issue's state,
+     not the folder, says whether work is done. So (c) means either the doc moved early or the issue was
+-    never closed after delivery. It is a prompt to whoever owns closing (still to be decided in #1333),
++    never closed after delivery. It is a prompt to whoever owns closing (the merge step, under the two
++    conditions of GH-1333 decision 4; see Lifecycle),
+     not evidence that the work is done; neither this check nor the sweep closes the issue.
+     A doc in `3-COMPLETED` with a **CLOSED** issue is the fully reconciled end state: no finding.
+ - `warn` (never `error` — does not block, even in `full`, mirroring `pdda.sh changelog`); **flag-only**,
+@@ -1006,10 +1031,14 @@ Coverage rule:
+ - every active doc in `PROJECT/2-WORKING` must be reflected here by a pointer (a one-line ledger entry
+   that links it), so the ledger never falls behind the working set. A working doc that legitimately
+   should not appear opts out with `roadmap_exempt: true` in its frontmatter. This is the inverse of the
+-  "no detail leaks in" rule above: nothing active goes *missing from* the roadmap either.
++  "no detail leaks in" rule above: nothing active goes *missing from* the roadmap either. A doc that Jog
++  promoted on an execution branch counts as covered while the ledger still points at the same file name in
++  `PROJECT/1-INBOX/` and that inbox file is gone (GH-1332, #1339): Jog writes no ledger on a lane branch, and
++  the pointer is corrected when the issue is reconciled closed.
+ - every captured GitHub issue doc in `PROJECT/1-INBOX/GH-*.md` must also be reflected here as a
+   one-line **queued / parked** pointer until it is promoted, deferred out, or closed, so intake cannot
+-  quietly disappear and later be duplicated.
++  quietly disappear and later be duplicated. GH-1333 decision 6 makes a capture without a row the normal
++  state of unstarted work; until the #1340 cutover changes this check, it still applies.
+ 
+ How this is enforced (so it cannot quietly rot in either direction):
+ - **deterministic (no leak in)** — `pdda.sh roadmap` errors on task checklists / `### Checklist` /
+diff --git a/decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md b/decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md
+new file mode 100644
+index 00000000..d81df02f
+--- /dev/null
++++ b/decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md
+@@ -0,0 +1,17 @@
++# Closing at merge, the appeal axis, and rows at work start — GH-1333 decisions 4-6
++
++Recorded 2026-11-04. The operator decided the three questions the 2026-11-03 record left open, plus two follow-ups raised by QA of #1340. The canonical rule text is in [PROJECT/PDDA.md](../PROJECT/PDDA.md), under "GitHub issue intake" (Lifecycle) and section H. The full operator-approved rule set, with stable IDs, is at the top of [#1328](https://github.com/HiQS-Labs/XYZ-forge/issues/1328) (G4, G5, G6, G6a, G6b and interim rules C1-C3).
++
++4. **The merge step closes an issue under two conditions** (rule G4): a recorded independent review assertion that the delivered lane covers the whole issue, or a non-empty `## Acceptance` checklist with every item checked. Otherwise it leaves the issue open with one "delivered, left open because <reason>" comment. A mention is never authority; never use a negated close keyword.
++5. **The appeal axis stays as it is** (rule G5): neutral 50 unless the operator supplies a value. 91 of 112 recent ratings are 50, so appeal adds a near-constant to the sum; that is accepted.
++6. **A ledger row is created when work starts, not at filing** (rule G6). Filing no longer means a row; the row and its stored rating appear at pickup (`jog add`, `start-task`, promotion to `2-WORKING`). Until then the rating proposal lives in the issue body.
++   - **D-b** (rule G6b): selection means committing an issue to an actual execution batch or marathon; its row is created on the primary before dispatch, or an existing proposal row is reused with its rating.
++   - **D-a** (rule G6a): the 69 existing "Queue / parked intake" rows stay as proposals; no migration now; revisit about a month after the cutover.
++
++Why: "a row exists" was standing in for "someone is working on this", and it was created at filing. 208 of 300 open issues had no row, so the backlog looked unregistered when it was simply unstarted, and admission rejected issues for a missing row instead of a missing plan. Ratings stored at filing were mostly placeholders.
++
++Status: **policy decided, not yet implemented.** Today's intake tools and the coverage check still write and require a row at capture. The change lands as one cutover (#1340 Tasks 2, 3, 4, 6 and the Task 11 rating contract, with Task 5 as the #1298 rollout instruction). Closing at merge is #1340 Task 7. Until they land, interim rules C1 (closing keywords) and C2 (no row-writing intake for new unstarted work) apply.
++
++Expected signal: after the cutover, new issues filed through intake have no row until pickup, the inbox coverage check stays green for them, and the admission census stops reporting "no ledger row" as a rejection reason. After Task 7, every merged lane either closes its issue under one of the two conditions or leaves exactly one reason comment. Revisit if issues go missing between filing and pickup, or duplicates appear.
++
++Rollback: the policy is text. Revert this record and the PDDA.md edits. Nothing in the code changed with this record.
+```
+````
+- Definition of Done (from #1340 Task 1): decisions 4-6, D-a and D-b are in `PROJECT/PDDA.md` (Lifecycle, the intake and ledger contract, section H), with a decision record under `decisions/` and a CHANGELOG entry, all marked policy-only; **no text claims behaviour the code does not yet have.**
+
+**Operational envelope.** Docs-only change in a local single-operator repo. Read the checkout (`origin/development` 229e1be9 plus this diff). The operator-approved rule set it implements is at the top of issue #1328 (G4, G5, G6, G6a, G6b, C1, C2); its text is also in `relay-system/2026-11-04/rules-sharpening-qa.md` (artifact plus the Producer turn). Run no git, no suites. Edit only this relay file.
+
+**Questions.**
+1. **Overclaims.** Does any added sentence state as current behaviour something the code does not do? Check against `utils/pdda/pdda.sh` (`check_roadmap_coverage`), `utils/hq/hq.sh` (park), `utils/py/wave_reconcile.py` (closing behaviour), `utils/py/jog_run.py` (promotion).
+2. **Fidelity.** Does the text match G4, G6, G6a, G6b, C1 and C2 as approved, without widening or narrowing them?
+3. **Contradictions inside PDDA.md.** Does any untouched sentence elsewhere in `PROJECT/PDDA.md` now contradict the new text (search for "parked", "queue pointer", "closes", "4-MISC")? Cite line numbers.
+4. **Anything missing** from Task 1's done condition.
+
+## Ground rules
+1. This file is the single source of truth. The agents never share memory — read the whole file.
+2. Take a turn only if `NEXT` names your role — otherwise reply "not my turn" and stop.
+3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns. Plain blank separators may be added or removed between sections; preserve every substantive line, indentation, and fenced/literal blank line. A historical FAIL→PASS edit or changed fenced example is forbidden.
+4. Stay tight — findings are bullets, not essays. Grade every finding.
+5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
+6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
+
+## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: FAIL
+Basis: Decision 5 is absent from the required canonical document, and the whole-file sweep found unresolved closure-policy and reader-rollout contradictions. The requested corrections are text-only; no runtime expansion is requested.
+swept file: yes
+
+Evidence boundary: read the entire embedded artifact and PROJECT/PDDA.md, the decision record, the new CHANGELOG entry, and the supplied rules relay including its Producer disposition. Inspected the four named implementation seams statically. Graph discovery returned "MCP tool call requires approval, but approval policy is never", so used direct source reads. No git, suites or executable fixtures ran. Runtime qualification is [Unverified — needs clone run]; the harness gate remains outstanding. The older CHANGELOG history was not audited as part of this task's embedded artifact.
+
+- [Should] **F1 — Put decision 5 in PDDA.md as required.** The decision record's item 5 says "neutral 50 unless the operator supplies a value", but PDDA contains no appeal rule. Its decision record also claims the canonical rule text is in PDDA, and the CHANGELOG title says decisions 4–6 are written into the rules. Add the unchanged appeal policy next to the PRS rating/pickup contract, explicitly distinguishing PRS appeal from the 1–5 frontmatter triage fields.
+  Observed input: `decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md:6` versus the missing decision in `PROJECT/PDDA.md`; read-only probe `rg -n -i 'appeal|neutral 50|decision 5|G5' PROJECT/PDDA.md` exited 1 with no output, corroborating the full-file read.
+  Affected scope: Task 1's explicit requirement that decisions 4–6 live in PDDA; no change to rating behavior.
+  Falsifier: a canonical PDDA sentence retaining appeal at neutral 50 unless the operator supplies a value would satisfy this finding; the decision record alone does not meet the stated DoD.
+
+- [Should] **F2 — Reconcile section H's old closure rationale with decision 4.** `PROJECT/PDDA.md:546-548` still says "closing an issue is a human judgment ... so no script does it" and "act only with a yes", while :329-336 assigns closure to the merge step under either of two conditions and :528-530 now points to that owner. Scope the rationale to the flag-only issue-doc-sync check; refer merge closure and its pending rollout to Lifecycle rather than retaining a blanket manual-approval requirement.
+  Observed input: the unconditional "no script does it" / "operator confirms" wording at :546-548 versus the new two-condition closure rule at :329-336.
+  Affected scope: readers deciding who may close an issue and whether an additional confirmation is required; preserve issue-doc-sync's no-close behavior.
+  Falsifier: H explicitly limits its no-action promise to the detector and delegates merge closure to decision 4, with no conflicting universal confirmation requirement.
+
+- [Should] **F3 — Mark the pre-existing identity-reader claim as pending.** `PROJECT/PDDA.md:49-51` promises readers resolve by issue identity, "never by a stored path, so moving a doc cannot break a reference". The new :1034-1037 fallback explicitly depends on the same basename. `utils/pdda/pdda.sh:357-360` matches stored path strings, and :389-390 requires the old inbox basename. Add the approved G2 qualification from the rules relay: this is decided policy pending reader rollout, not a statement that today's readers comply. Keep the accurate current fallback description.
+  Observed input: PDDA :49-51's universal claim versus the path-string coverage implementation at `utils/pdda/pdda.sh:357-360` and :389-390.
+  Affected scope: documentation of identity resolution during the pending rollout; no request to implement the reader fix in this policy-only task.
+  Falsifier: either an explicit pending-rollout qualification in the canonical identity rule or an identity-based implementation would remove this discrepancy; the latter belongs to the later implementation task.
+
+- [Pass] **The added current-behavior caveats and selection rules match the inspected seams.** PDDA :303-307 retains row-writing intake until cutover; `utils/hq/hq.sh:412` calls `roadmap add`, and `utils/pdda/pdda.sh:416-419` flags missing inbox coverage. PDDA :296-301 distinguishes actual batch commitment from shortlisting and preserves existing proposals/ratings, matching adopted G6b/G6a. PDDA :329-336 marks Task 7 pending and states the two alternatives without authorizing closure on mentions. No additional discrepancy found in these added rules; no fix requested.
+
+- [Pass] **The in-flight coverage addition describes the current implementation.** PDDA :1034-1037's same-name, absent-inbox condition matches `utils/pdda/pdda.sh:389-390`. `utils/py/jog_run.py:1524-1527` returns from the execution-clone branch before ledger repointing; `utils/py/wave_reconcile.py:2392-2397` preserves the open issue's active entry. This is source inspection, not runtime certification; no fix requested.
+
+- [Nit] **The sweep also found pre-existing duplicate CHANGELOG-contract prose.** PDDA :1060-1063, :1082-1083 and :1094-1097 repeat the preceding paragraphs, including a second sentence fragment beginning "updated" and "entry suffices". Remove those redundant tails while retaining the governing statements. This is not the reason for FAIL.
+
+Handing off to Producer (claude-a) — address F1–F3, disposition the nit, and return the policy text for review. STATUS remains Open.
+
+### Producer · Round 1 · claude-a
+
+All four accepted; text-only, no code.
+- **F1:** decision 5 added to `PROJECT/PDDA.md` under the row-at-start bullet, explicitly the 1-100 PRS appeal axis and not the 1-5 frontmatter triage fields.
+- **F2:** section H's rationale now describes the check as a detector and points closing at decision 4 (Lifecycle, pending Task 7); the blanket "no script closes / act only with a yes" wording is gone.
+- **F3:** the "readers find docs by number" rule now says it is decided policy not yet true of today's readers, with the roadmap coverage check as the example, changing in #1340 Task 10.
+- **Nit:** the three duplicated older paragraphs in the CHANGELOG contract are removed; the newer governing text stays.
+- CHANGELOG entry updated to match. `utils/pdda/pdda.sh run`: no errors.
+
+Round-2 diff (against round 1's head):
+
+```diff
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index e38ec409..362255da 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -4,7 +4,8 @@
+ 
+ - `PROJECT/PDDA.md` now records that the merge step closes an issue only under two conditions (a reviewed whole-issue assertion, or a non-empty Acceptance checklist fully checked), and otherwise leaves it open with one reason comment.
+ - It records that a ledger row is created when work starts, not at filing: selection into an actual batch counts as starting (D-b), and the existing "Queue / parked intake" rows stay as proposals (D-a). Until the #1340 cutover lands, row-writing intake is not used for new unstarted work.
+-- Corrects the Lifecycle sentence that sent a closed, never-actioned capture to `4-MISC` and removed its pointer; closed captures follow the `stateReason` sweep. Section H's "who closes" now points at decision 4, and the coverage rule mentions #1339's in-flight promotion case.
++- Decision 5 (the PRS appeal axis stays neutral 50 unless the operator sets it) is stated in PDDA.md, distinct from the 1-5 frontmatter triage fields.
++- Corrects the Lifecycle sentence that sent a closed, never-actioned capture to `4-MISC` and removed its pointer; closed captures follow the `stateReason` sweep. Section H is described as a detector, with closing pointed at decision 4. The "readers find docs by number" rule is marked as not yet true of today's readers (#1340 Task 10). The coverage rule mentions #1339's in-flight promotion case. Removes three duplicated older paragraphs in the CHANGELOG contract.
+ - Policy only; no code changed. Decision record: `decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md`. Rule set with stable IDs: top of #1328. Rule-set review: Codex (GPT-6 Astra, medium), one round, nine findings accepted (`relay-system/2026-11-04/rules-sharpening-qa.md`).
+ 
+ ## 2026-11-04 — GH-1341 todo-list and start-task close the loop on GitHub issues
+diff --git a/PROJECT/PDDA.md b/PROJECT/PDDA.md
+index 9c6f1ae1..130abcba 100644
+--- a/PROJECT/PDDA.md
++++ b/PROJECT/PDDA.md
+@@ -48,7 +48,9 @@ Within that model:
+   disagree, the issue wins and the view is corrected.
+ - **readers find a `GH-<n>-` doc by its issue number** (the `gh_issue` key, else the `GH-<n>-` filename
+   prefix), never by a stored path, so moving a doc cannot break a reference. A stored path, such as the
+-  ledger's `doc_path`, is a cache that the completion sweep (see Lifecycle) repoints.
++  ledger's `doc_path`, is a cache that the completion sweep (see Lifecycle) repoints. **Decided policy,
++  not yet true of today's readers:** several still match stored paths (for example the roadmap coverage
++  check). They change in #1340 Task 10.
+ - `blank.md` placeholders are scaffolding and should be ignored by PDDA checks
+ 
+ ## Required contract for active docs
+@@ -293,6 +295,9 @@ Lifecycle:
+   2026-11-04). Filing an issue no longer means a row. The row, and the PRS rating stored on it, appear
+   at pickup: `jog add`, `start-task`, or promotion to `2-WORKING`. Until then the rating proposal lives
+   in the issue body.
++  - **The PRS appeal axis stays neutral 50 unless the operator supplies a value** (GH-1333 decision 5,
++    2026-11-04; unchanged practice). This is the 1-100 PRS rating stored on the ledger row
++    (`rated P/S/A/E`), not the 1-5 `effort` / `complexity` / `risk` / `phases` triage fields in frontmatter.
+   - **Selection counts as starting** (decision D-b): committing an issue to an actual execution batch or
+     marathon creates its row, on the primary checkout and before dispatch, or reuses an existing
+     proposal row and its rating. Ranking or shortlisting does not.
+@@ -543,9 +548,10 @@ Why warn-only + flag-only:
+ - every drift class here is mechanical, so the check carries zero false-judgment risk; a false flag is
+   one ignorable warn line and a missed flag just leaves today's manual reconciliation — both cheap, so
+   warn-only never-blocks is the right calibration (same stance as `pdda.sh stale` and `pdda.sh changelog`)
+-- closing an issue is a **human judgment** about whether the work is genuinely done, so no script does it.
+-  The `Stop` hook names the wrap (`/pdda-eod`) when this check reports reconciliation drift; the skill
+-  proposes, the operator confirms. Detect deterministically, act only with a yes.
++- this check is a **detector**: it never moves a file and never closes an issue. Closing belongs to the
++  merge step under the two conditions of GH-1333 decision 4 (see Lifecycle; not yet implemented, #1340
++  Task 7); anything outside those conditions stays a person's judgment. The `Stop` hook names the wrap
++  (`/pdda-eod`) when this check reports reconciliation drift, and the skill proposes what to reconcile.
+ 
+ #### I. `pdda.sh governance`
+ 
+@@ -1057,10 +1063,6 @@ updated **at the end of each iteration**. It is the one narrative/provenance log
+ prescribes — if an adopting repo kept its own ad hoc recap or run-observation notes before adopting
+ PDDA, `CHANGELOG.md` supersedes them; PDDA does not require or name any such file itself (Principle #4 —
+ one canonical place per fact). Durable Costly / one-way-door bets still earn a `decisions/` record.
+-updated **at the end of each iteration**. It supersedes the retired RECAP convention as the running
+-provenance/narrative log, and it also absorbs the run-specific compliance findings the retired
+-REAL-AGENT-OBSERVATIONS convention used to collect. Durable Costly / one-way-door bets still earn a
+-`decisions/` record.
+ 
+ It should contain:
+ 
+@@ -1079,8 +1081,6 @@ Maintained append-only:
+   recommendation** — *especially* not when it turned out wrong. Correct a past entry by appending a
+   dated correction, not by editing history. This append-only guarantee is the whole point of having one
+   canonical narrative log instead of scattered ad hoc notes.
+-  dated correction, not by editing history. This is the provenance guarantee the retired RECAP
+-  convention used to carry.
+ 
+ Recording a bet (when a change is consequential):
+ 
+@@ -1091,10 +1091,6 @@ Recording a bet (when a change is consequential):
+   separate run-specific compliance-observations doc if that's useful to it, but that's a local
+   convention this contract neither requires nor names. (`AGENTS.md` principle #7 supplies the
+   behavioral trigger — *record the bet*; this contract owns the *where and how*.)
+-  entry suffices. Durable bets also earn a `decisions/` record; run-specific compliance findings go in
+-  the iteration's own `CHANGELOG.md` entry. (`AGENTS.md` principle #7 supplies the behavioral trigger —
+-  *record the bet*; this contract owns the *where and how*, so governance is not fragmented across the
+-  two files.)
+ 
+ How this is enforced (a nudge, not a gate):
+ - **deterministic** — `pdda.sh changelog` **warns** (never `error`, so it never blocks —
+```
+
+### Reviewer · Round 2 · codex
+
+VERDICT: PASS
+Basis: F1–F3 are resolved, and Task 1's policy-only definition of done is met. Decisions 4–6 and D-a/D-b are in PDDA, accompanied by the decision record and CHANGELOG entry. Implementation lag remains explicit. Two minor historical-prose inconsistencies below do not block this policy change.
+swept file: yes
+
+Evidence boundary: read the whole current PROJECT/PDDA.md, the complete embedded artifact and relay history, the decision record, the Task 1 CHANGELOG entry, and the supplied rules relay's rules and accepted replacements. Re-inspected the four named implementation seams statically. Graph search returned "MCP tool call requires approval, but approval policy is never"; used direct reads. No git, suites, executable fixtures, or runtime qualification ran. Runtime qualification is [Unverified — needs clone run]; the Producer's reported hygiene result is not independently reproduced here. Older CHANGELOG entries are outside this embedded artifact's review scope. This approval is for Task 1 text, not closure of aggregate #1340/#1333/#1329 or a distribution sync.
+
+- [Pass] **F1 resolved.** `PROJECT/PDDA.md:298-300` now states "The PRS appeal axis stays neutral 50 unless the operator supplies a value" and separates it from frontmatter triage. This matches G5 and decision-record item 5; no fix requested.
+- [Pass] **F2 and F3 resolved.** PDDA :551-554 limits the no-close promise to "this check" and points merge closure to decision 4, "not yet implemented, #1340 Task 7". PDDA :51-53 qualifies identity readers as "Decided policy, not yet true of today's readers". These remove the universal manual-approval and already-rolled-out claims; no fix requested.
+- [Pass] **Policy fidelity and current-behavior caveats retained.** PDDA :294-312 records pickup, actual batch commitment before dispatch, existing proposal reuse, and the interim avoidance of row-writing intake. PDDA :334-341 retains both independent-review and non-empty checked-Acceptance alternatives, the reason comment, and the interim closing-keyword restriction. The decision record's "policy decided, not yet implemented" and CHANGELOG's "Policy only; no code changed" keep the scope explicit. Source still writes intake rows (`utils/hq/hq.sh:412`) and requires inbox coverage (`utils/pdda/pdda.sh:416-419`); the same-basename fallback (:389-390), execution-branch return (`utils/py/jog_run.py:1524-1527`), and open-issue preservation (`utils/py/wave_reconcile.py:2392-2397`) support the documented current limitations. No fix requested.
+- [Pass] **Round-1 duplicate-prose nit resolved.** PDDA's CHANGELOG contract now retains one canonical narrative-log paragraph (:1062-1066), one append-only correction rule (:1080-1083), and one consequential-bet rule (:1087-1093). The supplied deletion diff removes redundant tails while preserving these obligations; no fix requested.
+- [Nit] **Residual historical note about the removed prose.** PDDA :619-623 still says its CHANGELOG section dead-references RECAP and REAL-AGENT-OBSERVATIONS and awaits a decision. That is stale after the duplicate-tail cleanup and conflicts with the earlier resolved explanation at :603-607. Replace this note with a pointer to that resolution or remove the stale note.
+- [Nit] **Pre-existing schedule rationale contradicts its own list.** PDDA :1145-1146 says issue-doc-sync runs last among deterministic checks and can yield an "info skip"; the numbered schedule places releases, governance and marathon-qa after it, and section H says unavailable state emits a warn. Update the rationale to match the list and H. This does not change the decisions under review. No other blocking pre-existing textual defect found in the full-file sweep.
+
+Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and subsequent gate.
+
+
+### Attestation · relay-drive — 2026-11-05T00:18:51Z
+task: RELAY-gh1340-task1-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: ac4c629b62f13bc8c553ff04384d2150ff0c1106
+added-range: 33701+3866
+added-sha256: 01e0ed50422534d3960e1c0f412b5a23b8d695f18ca9062195354883ee566647
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

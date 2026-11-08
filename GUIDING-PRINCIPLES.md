@@ -26,6 +26,17 @@ away: the most durable fix is often the least reversible, and collapsing two nea
 DRY win that can widen the blast radius. Name the trade and pick; do not split the difference by
 building both.
 
+**Rigor must earn its cost.** Strong technical rigor supports useful, reliable work; it is not
+an end in itself. Choose controls proportionate to the demonstrated risk, the task's scope and
+the cost of recovery. Count their operational burden too: time, repeated reviews, maintenance
+and interruptions. Prefer the simplest control that addresses the concrete failure, and simplify
+or remove a rule when its burden outweighs its benefit. Explain the tradeoff so the operator can
+choose; honor an explicit choice without quietly recreating the rejected restriction elsewhere.
+Keep evidence honest about what was reviewed, tested and delivered, including any gaps. A
+bookkeeping milestone need not repeat every quality gate: distinguish recording an outcome from
+certifying its quality. This principle calls for deliberate changes to specific controls, not a
+blanket bypass of containment, verification or protection against data loss.
+
 This section is canonical. `AGENTS.md` owns how it is applied to a given change — the reversibility
 scale (§3) and blast-radius sizing (§4) — and principles 6, 7, and 10 below are the build-time and
 done-time expressions of it. Where another doc restates this, that doc is the copy and this is the
@@ -151,6 +162,9 @@ right behavior without pattern-matching a downstream repo's prior drift:
 ## Appendix: AI Doc Review Heuristics
 
 When reviewing any repo doc (roadmap entries, plans, architecture notes, audits, task writeups), apply these. Priority: containment > coordination correctness > signal quality > implementation speed and operator friction.
+This ordering guides doc-review tie-breakers; it does not exempt a control from
+[the North Star](#the-north-star)’s proportionality assessment. Preserve containment while
+considering simpler controls that adequately address the concrete failure.
 
 **Heuristics**
 

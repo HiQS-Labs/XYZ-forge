@@ -1,0 +1,50 @@
+[
+  {
+    "sandbox": true,
+    "args": [
+      "init",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0"
+    ],
+    "rc": 2,
+    "stdout": "",
+    "stderr": "factory-primitive: run root must stay under /Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1356-1288-diagnosis/temp/factory-primitive\n"
+  },
+  {
+    "sandbox": true,
+    "args": [
+      "tick",
+      "--slot",
+      "1"
+    ],
+    "rc": 2,
+    "stdout": "",
+    "stderr": "factory-primitive: run root must stay under /Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1356-1288-diagnosis/temp/factory-primitive\n"
+  },
+  {
+    "sandbox": false,
+    "args": [
+      "init",
+      "--daily-cap",
+      "1",
+      "--max-call-cost",
+      "0"
+    ],
+    "rc": 2,
+    "stdout": "",
+    "stderr": "factory-primitive: run root must stay under /Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1356-1288-diagnosis/temp/factory-primitive\n"
+  },
+  {
+    "sandbox": false,
+    "args": [
+      "tick",
+      "--slot",
+      "1"
+    ],
+    "rc": 2,
+    "stdout": "",
+    "stderr": "factory-primitive: run root must stay under /Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1356-1288-diagnosis/temp/factory-primitive\n"
+  }
+]

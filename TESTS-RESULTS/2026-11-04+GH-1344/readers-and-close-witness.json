@@ -1,0 +1,45 @@
+{
+  "acceptance_1": {
+    "base_3a563a9f": {
+      "jog_run.find_issue_doc(1292)": null,
+      "wave_reconcile.find_active_doc_for_issue(1292)": null
+    },
+    "head": {
+      "jog_run.find_issue_doc(1292)": "PROJECT/2-WORKING/harness-recap-hooks.md",
+      "wave_reconcile.find_active_doc_for_issue(1292)": "PROJECT/2-WORKING/harness-recap-hooks.md"
+    }
+  },
+  "acceptance_5": {
+    "partial_no_proof": {
+      "closed": false,
+      "gh_calls": [
+        "issue view",
+        "issue comment"
+      ]
+    },
+    "checklist_complete": {
+      "closed": true,
+      "gh_calls": [
+        "issue view",
+        "issue close"
+      ]
+    },
+    "partial_with_coverage_proof": {
+      "closed": true,
+      "gh_calls": [
+        "issue view",
+        "issue close"
+      ]
+    },
+    "partial_marker_already_present": {
+      "closed": false,
+      "gh_calls": [
+        "issue view"
+      ]
+    },
+    "base_3a563a9f_lane_closes_issue": [
+      "508:    if invocation.get(\"issue\") and \"--lane-closes-issue\" not in argv:",
+      "509:        argv.append(\"--lane-closes-issue\")"
+    ]
+  }
+}
