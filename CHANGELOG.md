@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-08 — GH-1296 packet review repairs
+
+- Packet checks now handle malformed contract paths without aborting the wave, preserve preflight artifact exemptions, and reject changed selected capture identities before staging. Parent traversal and missing frozen identities are explicitly not launchable.
+- Manual red/green checks, a current-wave paired replay, and fresh dry-run output support the implementation; independent Codex QA approved candidate `a0f65126`. The original historical backlog is unavailable, so exact #1279 replay and issue-wide acceptance remain incomplete. No dispatch or issue closure. Full gate pending.
+
 ## 2026-11-07 — GH-1365 proportional Jog closeout
 
 - Jog post-merge completion records merged delivery without requiring exact approval ancestry. Original receipt validation, publication checks, merge identity/reachability and reconciliation remain; landing evidence distinguishes review, gate and delivered versions. GUIDING-PRINCIPLES and AGENTS require rigor proportionate to concrete risk and operational burden.

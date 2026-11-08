@@ -38,7 +38,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| `make_packet` flags lanes preflight would refuse (no Preflight Contract, or a contract artifact missing at the frozen ref) and drops their launch commands; checked against live `swarm-preflight --dry-run` on wave 1 (`TESTS-RESULTS/2026-11-03+GH-1296/`). | The contracts for #1204, #216, #446 are not authored (owner decisions on their own issues; #722 is closed). Re-check the frozen set under the #522 admission experiment. |
+| PR #1324 repairs malformed contract input, path comparison, and selected capture freshness. Current-wave paired replay and independent implementation QA are retained in `TESTS-RESULTS/2026-11-08+GH-1296-review/`; full gate is in progress. | Original #1279 frozen backlog is unavailable after bounded search and operator confirmation. Exact historical replay remains incomplete; current-wave evidence does not replace it. Leave #1296 open for outer inspection and final gate/publication. |
 
 ## Idea
 
