@@ -1,0 +1,6 @@
+relay-drive: GH-370 progress (main tree fallback: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner) changed-files=0
+agy-turn: worktree isolation ON (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.oOBB3Y)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.oOBB3Y) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.oOBB3Y) changed-files=0
+
+jog: interrupted by signal; cleaning up leases and locks.

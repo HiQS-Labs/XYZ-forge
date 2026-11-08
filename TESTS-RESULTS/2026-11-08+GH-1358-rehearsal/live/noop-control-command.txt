@@ -1,0 +1,20 @@
+import pathlib,sys,subprocess,importlib.util,shutil,json
+source=pathlib.Path.cwd();base=pathlib.Path((source/'temp/gh1358/control-root').read_text());root=base/'primary';pub=base/'publisher'
+sys.path.insert(0,str(source/'utils/py'))
+from jog_run import JogCheckpoint,JogSupervisorLock
+oldfile=source/'temp/gh1358/old_jog_run.py';oldfile.write_bytes(subprocess.check_output(['git','show','HEAD:utils/py/jog_run.py']))
+spec=importlib.util.spec_from_file_location('old_jog_run',oldfile);old=importlib.util.module_from_spec(spec);spec.loader.exec_module(old)
+hook=pub/'.git/hooks/pre-push';backup=source/'temp/gh1358/old-publication-hook';shutil.copy2(hook,backup)
+marker=pub/'.git/noop-push-count';marker.write_text('')
+hook.write_text('#!/usr/bin/env python3\nfrom pathlib import Path\np=Path(__file__).resolve().parent.parent/"noop-push-count"\nwith p.open("a") as f:f.write("push\\n")\n');hook.chmod(0o755)
+def count():return len(marker.read_text().splitlines())
+lock=JogSupervisorLock(str(root));lock.acquire()
+try:
+ c=old.JogCheckpoint(str(root),str(pub));assert c.begin();c.finish();assert count()==1;print('RED: old empty wake ran push hook once')
+ c=JogCheckpoint(str(root),str(pub));assert c.begin();c.finish();assert count()==1;print('PASS: repaired empty wake did not run push hook')
+ c=JogCheckpoint(str(root),str(pub));assert c.begin()
+ subprocess.run([sys.executable,str(source/'utils/py/releases_app.py'),'--root',str(root),'jog','skip','1344','--reason','isolated no-op repair main-path check; exhausted count retained'],check=True)
+ c.finish();assert count()==2;print('PASS: changed ledger ran normal push hook')
+ state=json.loads(c.journal.read_text());state['phase']='committed';c.journal.write_text(json.dumps(state))
+ c=JogCheckpoint(str(root),str(pub));assert c.begin() is False;assert count()==2;print('PASS: post-push crash recovery avoided duplicate gate and dispatch')
+finally:lock.release();shutil.copy2(backup,hook)

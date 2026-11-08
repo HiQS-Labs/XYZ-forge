@@ -1,0 +1,16 @@
+Exact deployed Python/PATH; Jog validator PASS; behavioral red rc1
+Traceback (most recent call last):
+  File "/dev/stdin", line 10, in <module>
+    assert rc==0 and "export AIDER_MODEL='openrouter/moonshotai/kimi-k3.1-pro'" in out,out
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: # resolve-profile: 'gh1216' -> tier 2 (profile 'gh1216')
+# resolve-profile: WARNING — aider harness selected, but its CLI 'aider' is NOT on PATH; this turn will not run on this machine
+export AIDER_AGENT='aider'
+export AIDER_MODEL='moonshotai/kimi-k3.1-pro'
+export AIDER_GATEWAY='openrouter'
+export RELAY_AGENT='aider'
+export RELAY_AGENT_CMD='relay-automation/aider-turn.sh'
+export HARNESS='/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner'
+export TICK='/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/bin/tick'
+export XYZ_MODEL_CATALOG_VERSION='1.3.0'
+

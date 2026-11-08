@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-08 — GH-1358 bounded Jog checkpoint integration
+
+- Opt-in one-task Jog wakes commit owned primary ledger changes and publish the exact checkpoint through a separate disposable full clone. Interrupted publication resumes before another dispatch; existing lock and cold-start recovery remain authoritative. No automatic merge or retry.
+- Bet: removing the manual Git step enables scheduled queue progression without adding another supervisor. Publication is Costly; disable the schedule and preserve journal/clones for rollback, never rewrite shared refs. Local-transport rehearsal and manual controls distinguish publication integration from full factory qualification; seven-transition and three-PR acceptance remain open. Evidence: TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/checkpoint/.
+
 ## 2026-11-08 — GH-1356 accounting and GH-1358 readiness
 
 - Recorded Batch 2 as agent-assisted partial/not qualified, retaining unmet criteria and repair history. Short Phase A readiness inspection stopped before deployed transitions: no established deployment/observer/workload/budget contract. All seven transitions remain unexercised; no overnight start. Independent QA approved accounting at 507765671; status-table finding corrected. Evidence: TESTS-RESULTS/2026-11-08+GH-1356-closeout/ and TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/.
