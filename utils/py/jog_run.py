@@ -2056,6 +2056,100 @@ def handle_landing_boundary(root, gh_num, auto_merge=False, reviewer=None, simul
     return True, "completed", None
 
 
+class JogCheckpoint:
+    """Opt-in publication around one existing Jog invocation (GH-1207/1358).
+
+    The primary owns only the two ledger artifacts. Push hooks run in a dedicated,
+    disposable full clone. A retained journal makes a failed push retry publication
+    before another queue effect; interrupted execution still uses Jog cold recovery.
+    """
+    paths = ("releases.db", "releases.sql")
+
+    def __init__(self, root, publication_root):
+        self.root = root
+        self.publication = os.path.realpath(publication_root)
+        self.journal = Path(root, ".tick", "jog", "checkpoint.json")
+        if (self.publication == os.path.realpath(root)
+                or not Path(self.publication, ".git").is_dir()
+                or primary_config_key(root) != primary_config_key(self.publication)):
+            raise ContractError("checkpoint root must be a separate full clone with the same origin")
+        self.state = None
+
+    def save(self):
+        self.journal.parent.mkdir(parents=True, exist_ok=True)
+        temporary = self.journal.with_suffix(".tmp")
+        temporary.write_text(json.dumps(self.state, indent=2) + "\n")
+        os.replace(temporary, self.journal)
+
+    def dirty(self, root):
+        # Porcelain -z avoids quoting/whitespace ambiguity. Renames are foreign too.
+        return _git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all").decode().split("\0")
+
+    def check_owned(self):
+        foreign = [r for r in self.dirty(self.root) if r and r[3:] not in self.paths]
+        if foreign:
+            raise ContractError("checkpoint refuses unrelated changes: " + repr(foreign))
+
+    def begin(self):
+        _require_jog_primary(self.root)
+        self.check_owned()
+        if self.journal.exists():
+            self.state = json.loads(self.journal.read_text())
+            if self.state.get("phase") != "published":
+                # Never dispatch a new task to recover an interrupted wake.
+                reconciled = jog_reconcile_orphan_leases(self.root)
+                jog_reconcile_cold_start(self.root, reconciled)
+                self.finish()
+                return False
+        if any(self.dirty(self.root)):
+            raise ContractError("checkpoint refuses pre-existing ledger changes without an active journal")
+        _git(self.root, "fetch", "origin", "development")
+        head = _git(self.root, "rev-parse", "HEAD").decode().strip()
+        remote = _git(self.root, "rev-parse", "origin/development").decode().strip()
+        if head != remote:
+            raise ContractError("checkpoint requires primary HEAD at published origin/development")
+        self.state = {"base": head, "phase": "running"}
+        self.save()
+        return True
+
+    def finish(self):
+        self.check_owned()
+        head = _git(self.root, "rev-parse", "HEAD").decode().strip()
+        expected = self.state.get("commit", self.state["base"])
+        if head != expected:
+            # A crash immediately after commit is recognized by its exact parent/message.
+            parent = _git(self.root, "rev-parse", "HEAD^").decode().strip()
+            message = _git(self.root, "log", "-1", "--format=%s").decode().strip()
+            if parent != self.state["base"] or message != self.message():
+                raise ContractError("checkpoint primary HEAD changed outside this wake")
+        if any(self.dirty(self.root)):
+            if self.state.get("commit"):
+                raise ContractError("checkpoint has new changes after its recorded commit")
+            _git(self.root, "add", "--", *self.paths)
+            _git(self.root, "commit", "-m", self.message(), "--", *self.paths)
+        self.state["commit"] = _git(self.root, "rev-parse", "HEAD").decode().strip()
+        self.state["phase"] = "committed"
+        self.save()
+        pub = self.publication
+        if any(self.dirty(pub)):
+            raise ContractError("checkpoint publication clone is dirty; preserve it before retry")
+        if _git(pub, "symbolic-ref", "--short", "HEAD").decode().strip() != "development":
+            raise ContractError("checkpoint publication clone must be on development")
+        _git(pub, "fetch", self.root, self.state["commit"])
+        _git(pub, "merge", "--ff-only", self.state["commit"])
+        if _git(pub, "rev-parse", "HEAD").decode().strip() != self.state["commit"]:
+            raise ContractError("publication clone contains commits beyond this checkpoint")
+        # Normal push: never bypass the clone's configured gate or force a ref.
+        _git(pub, "push", "origin", self.state["commit"] + ":refs/heads/development")
+        _git(self.root, "fetch", "origin", "development")
+        self.state["phase"] = "published"
+        self.save()
+        print("jog: published primary checkpoint " + self.state["commit"])
+
+    def message(self):
+        return "jog: publish wake checkpoint " + self.state["base"]
+
+
 def jog_run_main(args=None):
     """Main execution loop for jog supervisor."""
     if args is None:
@@ -2073,6 +2167,7 @@ def jog_run_main(args=None):
                                  "the reviewed one-phase driver via the structured contracts, "
                                  "requires --reviewer; 'relay' is the legacy rollback path kept "
                                  "for a documented compatibility window")
+        parser.add_argument("--checkpoint-root", help="dedicated disposable publication clone; one-task wake")
         parser.add_argument("--max-tasks", type=int, default=None, help="max tasks to process")
         parser.add_argument("--simulate", action="store_true", help="simulate drive execution (test mode)")
         parser.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")
@@ -2145,6 +2240,11 @@ def jog_run_main(args=None):
     except (ContractError, OSError, subprocess.CalledProcessError) as exc:
         print(f"jog: {exc}", file=sys.stderr)
         sys.exit(2)
+    checkpoint_root = getattr(args, "checkpoint_root", None)
+    if checkpoint_root and (args.max_tasks != 1 or simulate or executor != "marathon"):
+        raise ContractError("--checkpoint-root requires --max-tasks 1 and the real Marathon executor")
+    if checkpoint_root and os.path.realpath(checkpoint_root) == os.path.realpath(target):
+        raise ContractError("publication and execution clones must be distinct")
     supervisor_lock = JogSupervisorLock(root)
     supervisor_lock.acquire()
 
@@ -2155,13 +2255,18 @@ def jog_run_main(args=None):
 
     def _signal_handler(signum, frame):
         print("\njog: interrupted by signal; cleaning up leases and locks.", file=sys.stderr)
-        _cleanup()
         sys.exit(130)
 
     signal.signal(signal.SIGINT, _signal_handler)
     signal.signal(signal.SIGTERM, _signal_handler)
 
+    checkpoint = None
     try:
+        if checkpoint_root:
+            checkpoint = JogCheckpoint(root, checkpoint_root)
+            if not checkpoint.begin():
+                checkpoint = None
+                return
         # Reconcile orphan leases via perform_write on startup
         reconciled = jog_reconcile_orphan_leases(root)
         if reconciled:
@@ -2201,6 +2306,8 @@ def jog_run_main(args=None):
 
             # Acquire lease via perform_write
             jog_acquire_lease(root, gh_num, os.getpid())
+            if checkpoint:
+                tasks_processed += 1
 
             print(f"\n{'=' * 60}")
             print(f"jog: processing GH-{gh_num} (attempt {att}) at position {row['position']}")
@@ -2298,6 +2405,8 @@ def jog_run_main(args=None):
                 print("jog: advancing halted at landing boundary.")
                 break
 
+        if checkpoint:
+            checkpoint.finish()
     finally:
         _cleanup()
 
