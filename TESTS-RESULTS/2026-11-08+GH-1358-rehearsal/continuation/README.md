@@ -61,3 +61,17 @@ mode rather than deployed discovery. Its only unregistered ready item is GH1356,
 whose attempt is explicitly terminal; it is refused, not relaunched. GH1216's actual
 CLI routing defect was reproduced and scoped by independent plan QA, but admission
 and dispatch have not happened. No discovery or full seven-transition claim.
+
+Second wake outcome: GH1160 built and independently reviewed, then its existing
+PDDA gate failed because the runner snapshot predated the newly admitted primary
+row. Jog published failure checkpoint2743ca7d without rescue. Original pair is one
+successful PR wake plus one useful failed wake, NOT two successful PR-ready wakes.
+
+Repair round1 for this deployment-snapshot blocker: supported CLI requeues1160
+(count1 retained, only attempt2 remains) and admits live-preflight-ready1216.
+Published intakef3ff5e9d is merged normally into runner development and retained
+1160lane; old commits remain ancestors and attemptfile hash is unchanged. Existing
+coverage check witnesses red1error before and green0errors after. No ledger edits
+or SQL in runner, no PDDA exemption/override, no runtime change, no repeat409 gate
+for unchanged source. New frozen repair-window targets1160 then1216, same limits
+and12:30Z preparation stop; no automatic retry/merge.
