@@ -18,6 +18,7 @@ import argparse
 import subprocess
 import shutil
 import time
+import signal
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Set, Tuple
 
@@ -101,6 +102,7 @@ MERGEABLE_POLL_ATTEMPTS = 6   # UNKNOWN mergeability right after a landing: poll
 MERGEABLE_POLL_S = 15
 NET_TIMEOUT_S = 180           # bound for network git calls (_gh bounds its own subprocess)
 PUSH_GATE_TIMEOUT_S = 3600    # a push to the integration branch runs the pre-push hook, which can run a gate
+DEFAULT_CANARY_TIMEOUT_S = 300  # bound for intermediate canary execution in disposable clone
 
 # `execute_pr_merge` intentionally keeps its long-standing signature: Phase-A callers replace it
 # with a three-argument stub. Phase 5 records the exceptional PRs here before calling it.
@@ -163,6 +165,46 @@ def _retry_call(attempt_fn, describe: str):
                 f"retry {attempt + 2}/{RETRY_ATTEMPTS} in {wait}s")
             _sleep(wait)
     return result
+
+
+def run_command_in_session(cmd: str, cwd: Path, timeout: Optional[int] = None) -> Tuple[int, str, str]:
+    """Run a shell command in a new process session, terminating and reaping the entire process group on timeout or failure."""
+    try:
+        p = subprocess.Popen(
+            ["bash", "-c", cmd],
+            cwd=str(cwd),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            start_new_session=True,
+        )
+    except OSError as exc:
+        raise exc
+
+    try:
+        stdout, stderr = p.communicate(timeout=timeout)
+        return p.returncode, stdout, stderr
+    except subprocess.TimeoutExpired as exc:
+        try:
+            os.killpg(p.pid, signal.SIGTERM)
+        except (ProcessLookupError, OSError):
+            pass
+        try:
+            stdout, stderr = p.communicate(timeout=2)
+        except subprocess.TimeoutExpired:
+            try:
+                os.killpg(p.pid, signal.SIGKILL)
+            except (ProcessLookupError, OSError):
+                pass
+            stdout, stderr = p.communicate()
+        raise subprocess.TimeoutExpired(cmd, timeout, output=stdout, stderr=stderr)
+    except BaseException:
+        try:
+            os.killpg(p.pid, signal.SIGKILL)
+        except (ProcessLookupError, OSError):
+            pass
+        p.wait()
+        raise
 
 
 def log(msg: str):
@@ -973,31 +1015,34 @@ def run_post_merge_reconcile(pr_num: int, repo_path: Path,
 
 
 def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_branch: str,
-                                 is_intermediate: bool = False) -> bool:
+                                 is_intermediate: bool = False,
+                                 commit_msg: Optional[str] = None) -> bool:
     """Commit, push, and verify every primary-side write made after a PR lands."""
+    label = f"PR #{pr_num}" if pr_num else (commit_msg or "post-merge writes")
     status = run_git(repo_path, ["status", "--porcelain", "--untracked-files=all"])
     if status.returncode != 0:
-        log_err(f"PR #{pr_num}: cannot inspect post-merge writes: {status.stderr.strip()}")
+        log_err(f"{label}: cannot inspect post-merge writes: {status.stderr.strip()}")
         return False
 
     if status.stdout.strip():
         added = run_git(repo_path, ["add", "-A"])
         if added.returncode != 0:
-            log_err(f"PR #{pr_num}: could not stage post-merge writes: {added.stderr.strip()}")
+            log_err(f"{label}: could not stage post-merge writes: {added.stderr.strip()}")
             return False
         ci_tag = " [skip ci]" if is_intermediate else ""
-        committed = run_git(repo_path, ["commit", "-m", f"chore: reconcile after PR #{pr_num}{ci_tag}"])
+        msg = commit_msg if commit_msg is not None else f"chore: reconcile after PR #{pr_num}"
+        committed = run_git(repo_path, ["commit", "-m", f"{msg}{ci_tag}"])
         if committed.returncode != 0:
-            log_err(f"PR #{pr_num}: could not commit post-merge writes: {committed.stderr.strip()}")
+            log_err(f"{label}: could not commit post-merge writes: {committed.stderr.strip()}")
             return False
 
     pushed = _net_git(repo_path, ["push", "origin", f"HEAD:{integration_branch}"], timeout=PUSH_GATE_TIMEOUT_S)
     if pushed.returncode != 0:
-        log_err(f"PR #{pr_num}: could not push post-merge writes: {pushed.stderr.strip()}")
+        log_err(f"{label}: could not push post-merge writes: {pushed.stderr.strip()}")
         return False
     fetched = _net_git(repo_path, ["fetch", "origin", integration_branch])
     if fetched.returncode != 0:
-        log_err(f"PR #{pr_num}: could not verify pushed integration head: {fetched.stderr.strip()}")
+        log_err(f"{label}: could not verify pushed integration head: {fetched.stderr.strip()}")
         return False
 
     clean = run_git(repo_path, ["status", "--porcelain", "--untracked-files=all"])
@@ -1006,9 +1051,9 @@ def commit_and_push_phase5_writes(pr_num: int, repo_path: Path, integration_bran
     if (clean.returncode != 0 or clean.stdout.strip() or
             local.returncode != 0 or remote.returncode != 0 or
             local.stdout.strip() != remote.stdout.strip()):
-        log_err(f"PR #{pr_num}: post-merge durability check failed — primary must be clean and match origin/{integration_branch}")
+        log_err(f"{label}: post-merge durability check failed — primary must be clean and match origin/{integration_branch}")
         return False
-    log(f"✅ PR #{pr_num} post-merge writes committed; primary is clean at origin/{integration_branch}")
+    log(f"✅ {label} committed; primary is clean at origin/{integration_branch}")
     return True
 
 
@@ -1326,6 +1371,7 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
     # C: runtime map of predecessor outcomes. toposort only ORDERS; a dependent of a parked or
     # handed-off PR must not be attempted at all.
     failed: Dict[int, str] = {}
+    deferred_sync_pending = False
     if track is not None:
         track["failed"] = failed
     pending = {pr["number"] for pr in ordered_prs}
@@ -1672,37 +1718,56 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 return 2
             if track is not None:
                 track["reconciled"].add(p_num)
+            if is_intermediate:
+                deferred_sync_pending = True
+            else:
+                deferred_sync_pending = False
 
             # GH-1383: If an intermediate canary command is configured and there are more PRs to land, run it!
             if is_intermediate and not dry_run:
                 canary_cmd = (policy.get("qualification") or {}).get("canary_command")
                 if canary_cmd:
                     log(f"Running intermediate canary for PR #{p_num}: {canary_cmd}")
-                    c_res = subprocess.run(["bash", "-c", canary_cmd], cwd=str(primary_repo), capture_output=True, text=True)
-                    if c_res.returncode != 0:
-                        log_err(f"PR #{p_num}: intermediate canary FAILED (exit {c_res.returncode}) — stopping before the next PR")
-                        log_err(f"Canary output: {(c_res.stderr.strip() or c_res.stdout.strip())[-1000:]}")
+                    canary_dir = Path(tempfile.mkdtemp(prefix=f"canary-pr-{p_num}-", dir=str(workdir)))
+                    canary_dir.rmdir()
+                    clone_r = run_git(workdir, ["clone", "--quiet", "--shared", str(primary_repo), str(canary_dir)])
+                    if clone_r.returncode != 0:
+                        log_err(f"PR #{p_num}: could not create disposable clone for canary: {clone_r.stderr.strip()}")
                         return 2
-                    log(f"✅ PR #{p_num}: intermediate canary passed")
+                    try:
+                        c_rc, c_out, c_err = run_command_in_session(canary_cmd, cwd=canary_dir, timeout=DEFAULT_CANARY_TIMEOUT_S)
+                        if c_rc != 0:
+                            log_err(f"PR #{p_num}: intermediate canary FAILED (exit {c_rc}) — stopping before the next PR")
+                            log_err(f"Canary output: {(c_err.strip() or c_out.strip())[-1000:]}")
+                            return 2
+                        log(f"✅ PR #{p_num}: intermediate canary passed")
+                    except subprocess.TimeoutExpired as exc:
+                        log_err(f"PR #{p_num}: intermediate canary TIMED OUT after {DEFAULT_CANARY_TIMEOUT_S}s — stopping before the next PR")
+                        output = exc.output or exc.stdout or ""
+                        err = exc.stderr or ""
+                        log_err(f"Canary output: {(err.strip() or output.strip())[-1000:]}")
+                        return 2
+                    except OSError as exc:
+                        log_err(f"PR #{p_num}: intermediate canary failed to launch ({exc}) — stopping before the next PR")
+                        return 2
+                    finally:
+                        shutil.rmtree(canary_dir, ignore_errors=True)
         # GH-1383: If intermediate landings deferred pdda issue-doc-sync, run one final pass for the batch
-        if len(_MERGED_THIS_RUN) > 1 and not dry_run:
+        if deferred_sync_pending and not dry_run:
             pdda_sh = primary_repo / "utils" / "pdda" / "pdda.sh"
             if pdda_sh.exists():
                 log("Running batch finalization pdda issue-doc-sync...")
                 p_res = subprocess.run(["bash", str(pdda_sh), "issue-doc-sync"], cwd=str(primary_repo), capture_output=True, text=True, check=False)
-                if p_res.returncode == 0:
-                    log("✅ batch finalization pdda issue-doc-sync clean")
-                    status = run_git(primary_repo, ["status", "--porcelain", "--untracked-files=all"])
-                    if status.returncode == 0 and status.stdout.strip():
-                        run_git(primary_repo, ["add", "-A"])
-                        run_git(primary_repo, ["commit", "-m", "chore: batch finalization issue-doc-sync"])
-                        pushed = _net_git(primary_repo, ["push", "origin", f"HEAD:{branch}"], timeout=PUSH_GATE_TIMEOUT_S)
-                        if pushed.returncode != 0:
-                            log_err(f"batch finalization push failed: {pushed.stderr.strip()}")
-                            return 2
-                        _net_git(primary_repo, ["fetch", "origin", branch])
-                else:
-                    log_warn(f"batch finalization pdda issue-doc-sync reported issues: {(p_res.stdout.strip() or p_res.stderr.strip())[-400:]}")
+                if p_res.returncode != 0:
+                    log_err(f"batch finalization pdda issue-doc-sync FAILED (exit {p_res.returncode}): {(p_res.stdout.strip() or p_res.stderr.strip())[-400:]}")
+                    return 2
+                log("✅ batch finalization pdda issue-doc-sync clean")
+                if not commit_and_push_phase5_writes(
+                        0, primary_repo, branch, is_intermediate=False,
+                        commit_msg="chore: batch finalization issue-doc-sync"):
+                    log_err("batch finalization writes were not made durable — stopping")
+                    return 2
+                deferred_sync_pending = False
         # GH-623: deferrals count as non-landed outcomes too — a deferred PR blocks only its
         # HARD dependents; soft dependents were attempted above. Exit 3 keeps the shape
         # "the queue completed but not everything landed"; 2 remains a hard stop.
@@ -2346,8 +2411,7 @@ def run_auto_sweep(primary_repo: Path, batch: Dict[str, Any], command: str,
     if command.startswith("T=$(mktemp -d) && "):
         clean_cmd = f"T=$(mktemp -d); trap 'rm -rf \"$T\"' EXIT INT TERM; " + command[len("T=$(mktemp -d) && "):]
     try:
-        res = subprocess.run(["bash", "-c", clean_cmd], cwd=str(primary_repo), capture_output=True, text=True,
-                             timeout=timeout)
+        rc, stdout, stderr = run_command_in_session(clean_cmd, cwd=primary_repo, timeout=timeout)
     except subprocess.TimeoutExpired as exc:
         log_err(f"❌ Auto-executed post-merge QA sweep TIMED OUT after {timeout}s")
         output = exc.output or exc.stdout or ""
@@ -2369,9 +2433,9 @@ def run_auto_sweep(primary_repo: Path, batch: Dict[str, Any], command: str,
         batch_record.update(batch, _gh, primary_repo)
         return 4
 
-    if res.returncode == 0:
+    if rc == 0:
         log("✅ Auto-executed post-merge QA sweep passed.")
-        stdout_tail = (res.stdout.strip() or res.stderr.strip())[-1500:]
+        stdout_tail = (stdout.strip() or stderr.strip())[-1500:]
         verdict = f"verdict: clean\nAuto-executed post-merge sweep passed.\nCommand: `{command}`\n\n```\n{stdout_tail}\n```"
         ok, msg = batch_record.record_verdict(batch, verdict)
         if not ok:
@@ -2380,9 +2444,9 @@ def run_auto_sweep(primary_repo: Path, batch: Dict[str, Any], command: str,
         batch_record.update(batch, _gh, primary_repo)
         return 0
     else:
-        log_err(f"❌ Auto-executed post-merge QA sweep FAILED (exit {res.returncode})")
-        err_tail = (res.stderr.strip() or res.stdout.strip())[-2000:]
-        verdict = f"verdict: findings\n- [ ] Post-merge regression sweep failed with exit code {res.returncode}:\n\nCommand: `{command}`\n\n```\n{err_tail}\n```"
+        log_err(f"❌ Auto-executed post-merge QA sweep FAILED (exit {rc})")
+        err_tail = (stderr.strip() or stdout.strip())[-2000:]
+        verdict = f"verdict: findings\n- [ ] Post-merge regression sweep failed with exit code {rc}:\n\nCommand: `{command}`\n\n```\n{err_tail}\n```"
         ok, msg = batch_record.record_verdict(batch, verdict)
         if not ok:
             log_err(f"Could not record findings verdict: {msg}")

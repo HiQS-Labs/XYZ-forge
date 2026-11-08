@@ -814,8 +814,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         batch = self._seed_qa_pending_batch()
         batch["sweep_inputs"] = {"command": "echo 'all green'", "deferred": False}
         with mock.patch("merge_cleanup._gh") as m_gh, \
-             mock.patch("subprocess.run") as m_run:
-            m_run.return_value = subprocess.CompletedProcess(["bash", "-c", "..."], 0, stdout="all green\n", stderr="")
+             mock.patch("merge_cleanup.run_command_in_session", return_value=(0, "all green\n", "")) as m_run:
             rc = merge_cleanup.run_auto_sweep(Path(self.primary), batch, "echo 'all green'")
             self.assertEqual(rc, 0)
             loaded = json.loads(Path(batch["path"]).read_text())
@@ -826,8 +825,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         batch = self._seed_qa_pending_batch()
         batch["sweep_inputs"] = {"command": "echo 'failed' && exit 1", "deferred": False}
         with mock.patch("merge_cleanup._gh") as m_gh, \
-             mock.patch("subprocess.run") as m_run:
-            m_run.return_value = subprocess.CompletedProcess(["bash", "-c", "..."], 1, stdout="", stderr="failed\n")
+             mock.patch("merge_cleanup.run_command_in_session", return_value=(1, "", "failed\n")) as m_run:
             rc = merge_cleanup.run_auto_sweep(Path(self.primary), batch, "echo 'failed' && exit 1")
             self.assertEqual(rc, 4)
             loaded = json.loads(Path(batch["path"]).read_text())
@@ -876,7 +874,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
         batch_record.save(batch)
 
         with mock.patch("merge_cleanup._gh") as m_gh, \
-             mock.patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="sleep 100", timeout=5, output="test timeout", stderr="")):
+             mock.patch("merge_cleanup.run_command_in_session", side_effect=subprocess.TimeoutExpired(cmd="sleep 100", timeout=5, output="test timeout", stderr="")):
             rc = merge_cleanup.run_auto_sweep(Path(self.primary), batch, "sleep 100", timeout=5)
             self.assertEqual(rc, 4)
             loaded = json.loads(Path(batch["path"]).read_text())
@@ -911,8 +909,7 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             }
         }
         with mock.patch.object(merge_cleanup, "resolve_merge_policy", return_value=policy), \
-             mock.patch("subprocess.run") as m_run:
-            m_run.return_value = subprocess.CompletedProcess(["bash", "-c", "exit 1"], 1, stdout="", stderr="canary broken")
+             mock.patch("merge_cleanup.run_command_in_session", return_value=(1, "", "canary broken")):
             rc, _, merged, _, _ = self._drive_phase5(
                 ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
                 prs=[
@@ -923,6 +920,107 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
             self.assertEqual(rc, 2)
             # Only PR #7 was attempted/merged, PR #8 was stopped before execution
             self.assertEqual(merged.call_count, 1)
+
+    def test_intermediate_canary_runs_in_isolated_clone(self):
+        # GH-1383 Codex Sol QA P1: intermediate canary must run in disposable clone, not primary
+        policy = {
+            "preserve_commit_history": False,
+            "strategy": "squash",
+            "source": "test",
+            "qualification": {
+                "full_suite": "per_batch",
+                "canary_command": "echo canary"
+            }
+        }
+        canary_cwds = []
+        def fake_run_session(cmd, cwd, timeout=None):
+            canary_cwds.append(str(cwd))
+            return 0, "canary ok\n", ""
+
+        with mock.patch.object(merge_cleanup, "resolve_merge_policy", return_value=policy), \
+             mock.patch("merge_cleanup.run_command_in_session", side_effect=fake_run_session):
+            rc, _, merged, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+                prs=[
+                    {"number": 7, "baseRefName": "development", "title": "t1", "files": ["a"], "body": ""},
+                    {"number": 8, "baseRefName": "development", "title": "t2", "files": ["b"], "body": ""}
+                ])
+            # Exits 4 because QA is pending for the batch (no sweep command declared in test policy)
+            self.assertEqual(rc, 4)
+            self.assertEqual(len(canary_cwds), 1)
+            # Must NOT be primary repo
+            self.assertNotEqual(canary_cwds[0], str(self.primary))
+            self.assertIn("canary-pr-7", canary_cwds[0])
+
+    def test_batch_finalization_failure_returns_2(self):
+        # GH-1383 Codex Sol QA P1: batch finalization issue-doc-sync failure must return 2
+        pdda_sh = self.primary / "utils" / "pdda" / "pdda.sh"
+        pdda_sh.parent.mkdir(parents=True, exist_ok=True)
+        pdda_sh.write_text("#!/bin/bash\nexit 1\n")
+        pdda_sh.chmod(0o755)
+
+        def fake_refresh(n, repo):
+            if n == 7:
+                return {"number": 7, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40, "headRefName": "feat/x", "baseRefName": "development", "labels": [], "mergeCommit": None}
+            return {"number": 8, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "b" * 40, "headRefName": "feat/y", "baseRefName": "development", "labels": ["hold"], "title": "hold: t2", "mergeCommit": None}
+
+        with mock.patch("subprocess.run") as m_run:
+            m_run.return_value = subprocess.CompletedProcess(["bash", str(pdda_sh), "issue-doc-sync"], 1, stdout="", stderr="sync failed")
+            rc, _, merged, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+                prs=[
+                    {"number": 7, "baseRefName": "development", "title": "t1", "files": ["a"], "body": ""},
+                    {"number": 8, "baseRefName": "development", "title": "hold: t2", "files": ["b"], "body": ""}
+                ],
+                refresh_values=fake_refresh)
+            # Exits 2 because batch finalization failed
+            self.assertEqual(rc, 2)
+            # PR #7 merged, PR #8 held
+            self.assertEqual(merged.call_count, 1)
+
+    def test_batch_finalization_durability_failure_returns_2(self):
+        # GH-1383 Codex Sol QA P1: durability check failure during batch finalization returns 2
+        pdda_sh = self.primary / "utils" / "pdda" / "pdda.sh"
+        pdda_sh.parent.mkdir(parents=True, exist_ok=True)
+        pdda_sh.write_text("#!/bin/bash\nexit 0\n")
+        pdda_sh.chmod(0o755)
+
+        def fake_refresh(n, repo):
+            if n == 7:
+                return {"number": 7, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40, "headRefName": "feat/x", "baseRefName": "development", "labels": [], "mergeCommit": None}
+            return {"number": 8, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "b" * 40, "headRefName": "feat/y", "baseRefName": "development", "labels": ["hold"], "title": "hold: t2", "mergeCommit": None}
+
+        with mock.patch("subprocess.run") as m_run, \
+             mock.patch.object(merge_cleanup, "commit_and_push_phase5_writes", side_effect=[True, False]):
+            m_run.return_value = subprocess.CompletedProcess(["bash", str(pdda_sh), "issue-doc-sync"], 0, stdout="clean", stderr="")
+            rc, _, merged, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+                prs=[
+                    {"number": 7, "baseRefName": "development", "title": "t1", "files": ["a"], "body": ""},
+                    {"number": 8, "baseRefName": "development", "title": "hold: t2", "files": ["b"], "body": ""}
+                ],
+                refresh_values=fake_refresh)
+            # Exits 2 because batch finalization durability failed
+            self.assertEqual(rc, 2)
+
+    def test_run_command_in_session_kills_process_group_on_timeout(self):
+        # GH-1383 Codex Sol QA P1: run_command_in_session must terminate process group descendants on timeout
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "child.pid"
+            # Bash script that spawns a background child process and records its pid
+            cmd = f'sh -c "sleep 60 & echo \\$! > {pid_file}; wait"'
+            with self.assertRaises(subprocess.TimeoutExpired):
+                merge_cleanup.run_command_in_session(cmd, cwd=tmp_path, timeout=1)
+            self.assertTrue(pid_file.exists(), "child pid file was not created")
+            child_pid = int(pid_file.read_text().strip())
+            # Verify child process does not exist anymore (was terminated)
+            try:
+                os.kill(child_pid, 0)
+                alive = True
+            except (ProcessLookupError, OSError):
+                alive = False
+            self.assertFalse(alive, f"Descendant process {child_pid} was not killed on timeout")
 
 
     def _open(self, n, base="development", **over):
