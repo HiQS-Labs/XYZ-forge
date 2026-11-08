@@ -80,3 +80,32 @@ pri 60 / sev 40 / appeal 65 / effort 50 (extends factory-primitive resilience an
   }
 }
 ```
+
+## Implementation plan — 2026-11-07
+
+Agent-assisted GH-1356 lane. Owner: implementation agent; parent is outer reviewer.
+Base 938a96e60542e6bff1234d1e5fddfadec646c706. Selection row
+`rmi-01M6WTMK376C3R6EGNG4BG4HTH`, rated 60/40/50/50: moderate reliability/cost impact,
+user-selected batch priority; appeal neutral. Recurrence trend unknown; no new incident count inferred.
+
+Recon: harness.py owns init_instance, _snapshot, run_tick, AdapterResult and codex_decide.
+Existing inbox status and events provide durable dispatch state without a schema change.
+Each instance is one adapter arm. Codex calls are ephemeral; time-based warmth is a heuristic,
+not proof of cache reuse. Billing stays unknown absent reported accounting.
+GH-1248 plan and TESTS-RESULTS/2026-10-29+GH-1248/SUMMARY.md defer watchdog;
+the historical scheduler is a gitignored external driver. No restart command or launchd generator
+exists in the factory CLI. Parent explicitly chose truthful declaration receipts, no new scheduler.
+Restart acceptance remains OPEN, owned by GH-1248 scheduling follow-up and parent GH-1358 planning.
+
+Bet: bounded waiting may batch low-urgency work, but does not guarantee cache savings.
+Easy to revert: local additions to existing factory primitives; no schema migration or dispatch changes.
+Blast radius: factory scenario validation, snapshots, adapter telemetry, tick receipts; no make_packet changes.
+
+1. Report explicit FACTORY_SUPERVISED truth values in tick receipts, with restart_performed false and a reason; never infer supervisor existence or permission from process ancestry.
+2. Add nullable cache-read/create usage to AdapterResult and per-call telemetry; extract only reported Codex usage values, including failed calls where present.
+3. Configure positive cache TTL seconds and nonnegative maximum deferral slots at initialization, retaining values in config/run metadata. Read urgent booleans from the immutable scenario. Compare last actual call timestamp from events; no prior call is cold. Filter cold nonurgent items until arrival slot plus limit; urgent/deadline items remain eligible. Log deferred-cold IDs/deadlines, preserve pending inbox rows. Avoid an adapter call when all work is deferred. Warmth never implies known billing. Default zero deferral preserves existing runs.
+4. Record manual red/green controls and main/rerun smoke in a disposable full clone, with provenance. Compare identical scenario with deferral disabled/enabled using stub-reported accounting, clearly label modeled evidence; unknown live accounting means no observed savings claim. No new suites.
+5. Independent final QA, applicable existing gate, then PR to development leaving #1254 open for restart acceptance. No merge/watch or generated packet dispatch.
+
+Plan/final review cap: three rounds each; blocker repair rounds: zero at plan creation.
+No #1344/#1345 attempts, no #1358 run.
