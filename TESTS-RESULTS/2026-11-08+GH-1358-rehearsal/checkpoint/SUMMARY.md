@@ -11,7 +11,7 @@ recovers publication before new queue dispatch. Default invocation is unchanged.
   component integration evidence, not deployed-autonomy or build-throughput evidence.
 - Independent plan QA approved after two concrete implementation corrections; see
   `relay-system/2026-11-08/gh1358-checkpoint-plan.codex.md`.
-- Launchd main path and interrupted-run recovery published two checkpoints across three wakes; final classified gate pending. No whole-issue qualification.
+- Launchd main path and interrupted-run recovery published two checkpoints across three wakes; normal full pre-push gate passed 409/409 in 538 seconds at 7046047d6. No whole-issue qualification.
 
 Retain all disposable control/deployment clones; they contain local-only evidence. No reset,
 force push, production primary mutation, exhausted-counter reset or merge occurred.
@@ -65,3 +65,7 @@ counters. Retain the clones and isolated turn worktree; they contain local-only 
 Remaining integration belongs to the existing #1175/#1200 admission/composition, #1188
 observer, and #1208 landing owners. This PR provides the #1207 checkpoint connection without
 claiming those owners or the whole campaign are complete.
+
+Live planner discovery was also exercised: 607 items, 5 active, 217 held, GitHub live, exit 4 (drift). The report is retained; planner output alone is not proof of workload eligibility or scheduled admission.
+
+Ready partial-delivery PR: https://github.com/HiQS-Labs/XYZ-forge/pull/1370. Independent final QA approved the checkpoint feature; normal full gate passed 409/409 at 7046047d6. Subsequent documentation/evidence-only commits do not change the tested runtime.
