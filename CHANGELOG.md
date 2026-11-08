@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-08
+
+- GH-1254: record explicit supervision declarations without claiming restart capability; add nullable cache token telemetry and opt-in bounded cold-work withholding using existing inbox/events/evaluator. Due deferred work uses deterministic selection. Easy rollback, no schema/scheduler change. Focused manual 21/21 and Python 21/21 pass; full gate/final QA pending. Restart, unconditional overloaded deadlines, and live savings remain unproven. See TESTS-RESULTS/2026-11-08+GH-1254/.
+
 ## 2026-11-07 — GH-1365 proportional Jog closeout
 
 - Jog post-merge completion records merged delivery without requiring exact approval ancestry. Original receipt validation, publication checks, merge identity/reachability and reconciliation remain; landing evidence distinguishes review, gate and delivered versions. GUIDING-PRINCIPLES and AGENTS require rigor proportionate to concrete risk and operational burden.

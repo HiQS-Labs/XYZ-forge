@@ -1,0 +1,5 @@
+{"id": "pre-fix-control", "candidate": "47c3dc4a0", "result": "RED witnessed", "artifact": "red.json", "observation": "cold item consumed; supervision and cache token fields absent"}
+{"id": "manual-candidate", "candidate": "2e6f50939d0278745d2e1ab8249ae9597ebe9c8b", "result": "PASS 21 assertions", "artifact": "green.json", "commands": "MANUAL.md", "agent_assisted": true, "repair_rounds": {"initializer": 1}}
+{"id": "existing-python-layer", "candidate": "2e6f50939d0278745d2e1ab8249ae9597ebe9c8b", "result": "PASS 21/21", "command": "python -m pytest test/test_python_layer.py -q", "artifact": "python-layer.log"}
+{"id": "cli-main-rerun", "candidate": "2e6f50939d0278745d2e1ab8249ae9597ebe9c8b", "result": "PASS", "commands": "factory-primitive init; tick --slot 1; tick --slot 1", "observed": "initialized; completed; completed", "provider_calls": 0}
+{"id": "git-identity", "candidate": "2e6f50939d0278745d2e1ab8249ae9597ebe9c8b", "result": "PASS", "core_bare": false, "origin": "task clone (local disposable fixture)", "working_tree": "clean before/after"}

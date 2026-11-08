@@ -2,9 +2,9 @@
 gh_issue: 1254
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1254
 title: "Outer loop (#1248): borrow declared supervision and cache-warmth dispatch from clodex"
-status: Proposed (1-INBOX — not yet active)
+status: In progress — implementation verification
 created: 2026-10-29
-owner: unassigned
+owner: Codex
 doc_type: feature
 complexity: 2
 risk: 2
@@ -61,7 +61,7 @@ Improves reliability and token efficiency of long-running autonomous software fa
 
 ## Ratings rationale
 
-pri 60 / sev 40 / appeal 65 / effort 50 (extends factory-primitive resilience and cost efficiency).
+pri 60 / sev 40 / appeal 50 / effort 50 (extends factory-primitive resilience and cost efficiency).
 
 ## Preflight Contract
 
@@ -121,3 +121,7 @@ Do not add a scheduler: a saturated two-note deadline is explicitly reported as 
 pause and budget exhaustion also prevent execution and remain visible. Test single due item,
 same-deadline contention, urgent work, rerun, and skipped-call warmth. This is a deterministic
 selection fallback using the existing evaluator, not a new queue or dispatch mechanism.
+
+## Implementation checkpoint
+
+Runtime implemented; focused manual 21/21 and Python 21/21 pass. Evidence: TESTS-RESULTS/2026-11-08+GH-1254/. Independent final QA and applicable gate pending. Initializer defect repaired in one round; no other blocker budget consumed. Plan QA Approved round 2. Restart and overloaded execution-deadline acceptance remain OPEN. NO_ENTRY for lessons: modeled-only observation is insufficient for a durable generalization.
