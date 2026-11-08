@@ -2,9 +2,9 @@
 gh_issue: 1287
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1287
 title: "GH-1280 fuzz supervisor: no-new-signal stop never fires because usage signatures echo mutated tokens"
-status: Parked (1-INBOX — prerequisite for a stateful factory-primitive campaign)
+status: Active
 created: 2026-10-31
-updated: 2026-10-31
+updated: 2026-11-07
 owner: unassigned
 doc_type: feedback
 complexity: 1
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured via HQ (`/hq park`) for project **XYZ-forge** → repo `XYZ-forge`. The GitHub issue is the signal stream; this doc is the in-repo capture and back-reference. | Run Phase 0 check on `supervisor.py` signature generation before promoting. |
+| Normalization independently reviewed; CLI replay verified 10,000 events, 23 usage signatures, first hypothetical stop at 500 and streak threshold at 1,892. Evidence: `TESTS-RESULTS/2026-11-07+GH-1356/REPLAY-PROCEDURE.md`. | Complete PR #1361 review and authorized landing; reconcile #1287 acceptance after merge. |
 
 ## Idea
 
@@ -80,3 +80,16 @@ pri 50 / sev 40 / appeal 40 / effort 30 (prerequisite before stateful campaign).
 ## Merge evidence
 
 - PR #1290 merged 2026-10-31 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Acceptance
+
+- [ ] Re-scoring the retained long-run telemetry (`runs/long/telemetry.jsonl.gz`) with the new signature gives a small, stable set of usage signatures (tens, not thousands).
+- [ ] On that replayed stream, the no-new-signal streak reaches its configured limit before case 10,000, or the report states why it does not.
+- [ ] No harness or production code changes.
+
+
+## Acceptance — deviations from the issue
+
+- [added] Re-scoring the retained long-run telemetry (`runs/long/telemetry.jsonl.gz`) with the new signature gives a small, stable set of usage signatures (tens, not thousands). — reason: Verbatim issue bullet made machine-readable as a checklist; no semantic change.
+- [added] On that replayed stream, the no-new-signal streak reaches its configured limit before case 10,000, or the report states why it does not. — reason: Verbatim issue bullet made machine-readable as a checklist; no semantic change.
+- [added] No harness or production code changes. — reason: Verbatim issue bullet made machine-readable as a checklist; no semantic change.
