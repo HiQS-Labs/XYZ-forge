@@ -159,9 +159,8 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
    The title must not match `parse_rating`'s token-presence rule, lowercase `rated` or `ovr`
    followed by whitespace and a digit (`releases_app.py:3299,3317`), in any form: `rated 80/55/50/65`,
    `rated 5/5`, `rated 70`, `ovr 200`. `hq_roadmap_line` interpolates the title into the ledger
-   line and `parse_rating` reads the whole line, so a complete token pre-rates the row and makes
-   Step 8's `roadmap rate` refuse, and a malformed one aborts `roadmap add` **after** the issue and
-   capture exist. Check it before previewing:
+   line and `parse_rating` reads the whole line, so a token in the title pollutes the future row when
+   picked up at work start. Check it before previewing:
 
    ```bash
    printf '%s' "$TITLE" | grep -Eiq '(^|[^[:alnum:]_])(rated|ovr)[[:space:]]+[0-9]' && { echo "refuse: rating token in title"; exit 1; }
@@ -171,20 +170,18 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
    and the ledger line together, and get **one** confirmation. `hq park` refuses a title that
    matches an open issue (`hq.sh:306`); that is the dedupe, do not work around it.
 
-8. **File, rate, read back.** Run un-sandboxed (`gh` needs the keychain):
+8. **File and verify capture.** Run un-sandboxed (`gh` needs the keychain):
 
    ```bash
    … bash "$HQ_SH" park --create --title "<title>" <project> "$(cat body.md)"     # prints "✓ issue: <url>"; N is its trailing number
-   python3 "$HQ_ROOT/utils/py/releases_app.py" --root "$TARGET" roadmap rate --issue-num N --rated P/S/A/E --dry-run
-   python3 "$HQ_ROOT/utils/py/releases_app.py" --root "$TARGET" roadmap rate --issue-num N --rated P/S/A/E
-   python3 "$HQ_ROOT/utils/py/releases_app.py" --root "$TARGET" roadmap list --json | python3 -c 'import json,sys;print([r for r in json.load(sys.stdin) if r.get("gh_number")==N])'
    ```
 
-   `hq park` drops the rating (`hq_roadmap_line` carries no `rated` token), so `roadmap rate` is the
-   writer. Never pass `--force`: a second `roadmap rate` on the same row refuses (`already-rated`,
-   exit 3) and that refusal is correct. Never clear `ratings_provisional` in the doc. The capture
-   doc embeds the body verbatim under `## Idea`, so the Acceptance checkboxes and the Preflight
-   Contract reach the doc with no HQ change.
+   Under GH-1340 / GH-1345 decision 6, filing creates the issue and `1-INBOX` capture doc without
+   inserting a `roadmap_items` row. The `PRS proposal` in the issue body serves as the proposed
+   rating until work starts. When work is selected/started (`start-task`, Jog, `start-marathon`), the
+   start path creates the row and records the rating from the proposal. Never clear
+   `ratings_provisional` in the doc. The capture doc embeds the body verbatim under `## Idea`, so
+   the Acceptance checkboxes and the Preflight Contract reach the doc with no HQ change.
 
 9. **Post the dispositions:** `gh issue comment "$ISSUE_URL" --body-file dispositions.md`, where
    `$ISSUE_URL` is the `✓ issue:` URL from Step 8 (the URL pins the target repo; `gh` accepts
@@ -192,7 +189,7 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
    its disposition, and the hash from Step 6.
 
 10. **Preflight the capture, refuse on any nonzero.** Spike tier: print
-    `NEEDS-SPIKE: issue <url>, doc <path>, row <gid>; no contract by design, not a build candidate`
+    `NEEDS-SPIKE: issue <url>, doc <path>; no contract by design, not a build candidate`
     and skip to Step 11. Otherwise:
 
     ```bash
@@ -200,31 +197,31 @@ code, no tests (AGENTS.md *No new tests*, GH-831), and never commits.
     ```
 
     `--project-doc` reads the fresh local capture directly (`--gh-issue` searches only `2-WORKING`);
-    the uncommitted capture and ledger are fine: dirty state is recorded, not a verdict condition
+    the uncommitted capture is fine: dirty state is recorded, not a verdict condition
     (`swarm_preflight.py:1312-1316,1640-1645`). `--dry-run` publishes nothing but **does** fetch and
     create/remove a detached worktree in the target. Exit 0 is READY. Anything else is reported by
     name, never as success: 3 contract missing/invalid, 4 STALE (a probe already satisfied at
     `target.ref`: either a wrong probe or already-delivered work; say which you found), 5 NOT-READY
     (an artifact missing at `target.ref` and absent from `artifacts_new`), 6 BLOCKED, 7 AMBIGUOUS.
-    By now the issue, the capture doc and the ledger row already exist (Step 8 ran first), so the
+    By now the issue and the capture doc exist (Step 8 ran first; ledger row is deferred to work pickup), so the
     report is exactly:
 
     ```
-    filed, not admission-ready: issue <url> · doc <path> · row <gid> · verdict <NAME> (exit <n>): <reason line from the log>
+    filed, not admission-ready: issue <url> · doc <path> · verdict <NAME> (exit <n>): <reason line from the log>
     ```
 
     Nothing is rolled back and nothing is admitted. Fix the body and the doc together, or leave it
     for the operator. The skill never invents a replacement probe to turn a verdict green.
 
-11. **Report** in five lines: the issue URL; the capture-doc path under `$TARGET` and the ledger row
-    id; the rating as read back; the preflight exit and verdict (or `NEEDS-SPIKE`); and that the
-    capture, `releases.db` and `releases.sql` are **uncommitted in `$TARGET`** on its current branch,
-    so the operator knows the one action left is theirs.
+11. **Report** in four lines: the issue URL; the capture-doc path under `$TARGET`; the proposed rating
+    from the PRS proposal; the preflight exit and verdict (or `NEEDS-SPIKE`); and that the
+    capture is **uncommitted in `$TARGET`** on its current branch, so the operator knows the one action
+    left is theirs.
 
 ## Guardrails
 
-- The only writers are `hq park --create`, `releases roadmap rate` and `gh issue comment`. No file
-  under `utils/`, no new flag, no new script, no test, no commit, no push.
+- The only writers are `hq park --create` and `gh issue comment`. No file under `utils/`, no new flag,
+  no new script, no test, no commit, no push.
 - Never write `approved`, `reviewed` or any admission marker. Never clear `ratings_provisional`.
 - Never retrofit an existing issue's body. Never file when prior art names an open match.
 - Trivial tier files nothing; spike tier files without a contract and reports `NEEDS-SPIKE`.

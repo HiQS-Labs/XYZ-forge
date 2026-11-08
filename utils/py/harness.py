@@ -485,14 +485,14 @@ def _cited_paths(text: str, source: str, root: Path = REPO_ROOT, index: dict | N
     return out
 
 
-def _unregistered_record(issue: int, title: str, body: str) -> dict:
-    """A planner-shaped record for an open issue with no ledger row (GH-1261). Its state is
-    not a resolved one, so a dependency on it stays unmet until it is placed in a wave."""
-    import _marathon_plan
-    return {"gh": issue, "title": title, "raw": "", "slug": f"gh-{issue}", "docRel": None,
-            "deps": _marathon_plan.Engine._deps_of({"raw": f"{title}\n{body}"}), "state": "unregistered",
-            "contract": None, "flags": [], "signals": [], "dbAxes": None, "writeset": [],
-            "zone": None, "zoneRule": None, "zoneInferred": False}
+def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None = None,
+                         doc_text: str | None = None, engine=None) -> dict:
+    """A planner-shaped record for an open issue with no ledger row (GH-1261, GH-1340/GH-1345).
+    Judged on capture doc, Preflight Contract and rating proposal. When all three are valid,
+    its state is 'ready' and section is 'Queue / parked intake'."""
+    from _marathon_plan import _unregistered_record as plan_unregistered_record
+    return plan_unregistered_record(issue, title, body, doc_rel=doc_rel, doc_text=doc_text,
+                                    engine=engine, root=REPO_ROOT)
 
 
 def render_brief(b: dict) -> str:
@@ -574,7 +574,7 @@ def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, 
     # A reviewed brief that fails admission keeps a planner-ready lane out of the provisional view.
     refused = {b["issue"] for b in briefs if b["draft_status"] not in {"draft", "ready"}}
     # Every seeded issue with no ledger row is visible to dependency lookup, admitted or not (GH-1261).
-    lookup = {q["issue"]: _unregistered_record(q["issue"], q["title"], "")
+    lookup = {q["issue"]: _unregistered_record(q["issue"], q["title"], "", engine=engine)
               for q in manifest["requests"].values() if q.get("source") == "unregistered"}
     lanes, held = [], []
     for r in computed["active"]:
@@ -598,7 +598,7 @@ def _build_proposal(engine, computed: dict, briefs: list[dict], manifest: dict, 
             if reason:  # GH-1294: the second loop must hold delivered work too
                 held.append({"issue": b["issue"], "reason": reason})
                 continue
-            base = by_gh.get(b["issue"]) or {**_unregistered_record(b["issue"], b["title"], ""), "deps": b["deps"]}
+            base = by_gh.get(b["issue"]) or {**_unregistered_record(b["issue"], b["title"], "", engine=engine), "deps": b["deps"]}
             lane = copy.deepcopy(base)
             paths = [w["path"] for w in b["write_set"]]
             zone = engine._zone_of({"artifacts": paths}, lane)
@@ -663,7 +663,8 @@ def plan_draft(tick_id: str, out_dir: Path, args: dict, accepted: list[str], fau
     computed = engine.compute()
     rec = next((r for r in computed["deduped"] if r["gh"] == req["issue"]), None)
     if rec is None and req.get("source") == "unregistered":
-        rec = _unregistered_record(req["issue"], issue["title"], issue.get("body") or "")
+        rec = _unregistered_record(req["issue"], issue["title"], issue.get("body") or "",
+                                   doc_rel=req.get("doc_path"), doc_text=doc_text, engine=engine)
     if rec is None:
         raise ValueError("issue missing from the frozen ledger")
     index = _file_index((backlog / "base-files.txt").read_text(encoding="utf-8"))
@@ -860,9 +861,31 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
     def delivered_reason(n):
         return ("possibly delivered: closed by merged PR " + ", ".join(f"#{p}" for p in delivered[str(n)])
                 + "; issue still open")
-    computed = _planner(backlog, "stub").compute()
+    engine = _planner(backlog, "stub")
+    computed = engine.compute()
     canary_rows = _load_canaries(canaries, slots, miss) if canaries else []
     canary_real = {r["real_issue"] for r in canary_rows if "real_issue" in r}
+
+    # Discover open issues without rows (GH-1340/GH-1345 Task 4, decision 6)
+    registered = {r["gh"] for r in computed["deduped"] if r["gh"] is not None}
+    try:
+        listed_open = gh_json_all(
+            ["gh", "issue", "list", "--state", "open", "--json", "number,title,body,updatedAt,labels"],
+            "open issue list")
+    except Exception:
+        listed_open = []
+
+    for d in listed_open:
+        n = d["number"]
+        if n in registered or n in canary_real:
+            continue
+        labels = [l.get("name", "") if isinstance(l, dict) else str(l) for l in d.get("labels", [])]
+        if "umbrella" in labels:
+            continue
+        rec = _unregistered_record(n, d["title"], d.get("body") or "", engine=engine)
+        rec["source"] = "unregistered"
+        computed["deduped"].append(rec)
+
     pool = sorted((r for r in computed["deduped"] if r["section"] == "Queue / parked intake"
                    and r["state"] in {"ready", "needs-contract"} and r["gh"] is not None),
                   key=lambda r: (-(r["dbRank"] or 0), r["gh"]))
@@ -877,7 +900,7 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
             continue
         try:
             data = json.loads(subprocess.run(
-                ["gh", "issue", "view", str(r["gh"]), "--json", "number,state,title,body,updatedAt"],
+                ["gh", "issue", "view", str(r["gh"]), "--json", "number,state,title,body,updatedAt,labels"],
                 cwd=REPO_ROOT, capture_output=True, text=True, check=True, timeout=60).stdout)
         except (subprocess.SubprocessError, OSError, ValueError) as exc:
             excluded.append({"issue": r["gh"], "reason": f"issue read failed: {str(exc)[:120]}"})
@@ -885,32 +908,36 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
         if data.get("state") != "OPEN":
             excluded.append({"issue": r["gh"], "reason": f"issue is {data.get('state')}"})
             continue
+        labels = [l.get("name", "") if isinstance(l, dict) else str(l) for l in data.get("labels", [])]
+        if "umbrella" in labels:
+            excluded.append({"issue": r["gh"], "reason": "umbrella issue excluded from intake"})
+            continue
         issue_sha = sha_text(canonical({"title": data["title"], "body": data.get("body") or ""}))
         doc = REPO_ROOT / r["docRel"] if r["docRel"] else None
         request_id = f"gh-{r['gh']}-{issue_sha[:12]}"
         requests[request_id] = {"issue": r["gh"], "title": data["title"], "doc_path": r["docRel"],
                                 "doc_sha256": hashlib.sha256(doc.read_bytes()).hexdigest() if doc and doc.is_file() else None,
                                 "issue_sha256": issue_sha, "planner_state": r["state"], "slot": len(requests) + 1,
-                                "source": "ledger"}
+                                "source": r.get("source", "ledger")}
         issues[str(r["gh"])] = data
     if unregistered:
-        try:
-            listed = json.loads(subprocess.run(
-                ["gh", "issue", "list", "--state", "open", "--limit", "500", "--json", "number,title,body,updatedAt"],
-                cwd=REPO_ROOT, capture_output=True, text=True, check=True, timeout=120).stdout)
-        except (subprocess.SubprocessError, OSError, ValueError) as exc:
-            raise ValueError(f"open issue list failed: {str(exc)[:120]}") from exc
-        registered = {r["gh"] for r in computed["deduped"] if r["gh"] is not None}
-        fresh = sorted((d for d in listed if d["number"] not in registered and d["number"] not in canary_real),
+        req_issues = {q["issue"] for q in requests.values()}
+        fresh = sorted((d for d in listed_open if d["number"] not in registered and d["number"] not in canary_real and d["number"] not in req_issues),
                        key=lambda d: (d.get("updatedAt") or "", d["number"]), reverse=True)
         excluded += [{"issue": d["number"], "reason": delivered_reason(d["number"])}
                      for d in fresh[:unregistered] if str(d["number"]) in delivered]
         for d in [d for d in fresh if str(d["number"]) not in delivered][:unregistered]:
             data = {**d, "state": "OPEN"}
+            labels = [l.get("name", "") if isinstance(l, dict) else str(l) for l in data.get("labels", [])]
+            if "umbrella" in labels:
+                continue
+            rec = _unregistered_record(d["number"], data["title"], data.get("body") or "", engine=engine)
             issue_sha = sha_text(canonical({"title": data["title"], "body": data.get("body") or ""}))
+            doc = REPO_ROOT / rec["docRel"] if rec["docRel"] else None
             requests[f"gh-{d['number']}-{issue_sha[:12]}"] = {
-                "issue": d["number"], "title": data["title"], "doc_path": None, "doc_sha256": None,
-                "issue_sha256": issue_sha, "planner_state": "unregistered", "slot": len(requests) + 1,
+                "issue": d["number"], "title": data["title"], "doc_path": rec["docRel"],
+                "doc_sha256": hashlib.sha256(doc.read_bytes()).hexdigest() if doc and doc.is_file() else None,
+                "issue_sha256": issue_sha, "planner_state": rec["state"], "slot": len(requests) + 1,
                 "source": "unregistered"}
             issues[str(d["number"])] = data
     layout = None

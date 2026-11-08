@@ -1,0 +1,1 @@
+{"at": "2026-11-08T05:17:33.797019+00:00", "revision": "merge working state based on 73d610f27135b0d5d067f79f43c0add8a21c3d5d", "command": "canonical roadmap replay_ops; releases-merge-resolve.sh --root TASK", "result": "check clean; 0 failures, 10 warnings", "scope": "ledger integration, no runtime claim"}

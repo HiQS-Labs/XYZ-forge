@@ -1,0 +1,24 @@
+{
+  "baseline": {
+    "sha": "3bf02f73ce0cb11a82f970357209980f808ccb3c",
+    "events": 10000,
+    "usage_signatures": 2302,
+    "total_signatures": 2313,
+    "first_stop": {
+      "event": 10000,
+      "reason": "mutation budget reached (10000)"
+    },
+    "streak_threshold_event": null
+  },
+  "candidate": {
+    "sha": "c8ceac6ad5880eef6d64494845a6c4e26bc0c9d8",
+    "events": 10000,
+    "usage_signatures": 23,
+    "total_signatures": 34,
+    "first_stop": {
+      "event": 500,
+      "reason": "no-new-signal: 3 consecutive batches without a new signature"
+    },
+    "streak_threshold_event": 1892
+  }
+}

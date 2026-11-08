@@ -1,0 +1,3 @@
+{"kind": "manual_check", "name": "express-parse-rating-red-green", "commit": "693e9d22", "pr": 1334, "status": "pass", "qualification": "old line parses 2/2/2/2 (red); new line parses all NULL (green)", "receipt": "manual-check.md"}
+{"kind": "existing_suite", "name": "test/gh267-express-skill.sh", "commit": "693e9d22", "pr": 1334, "status": "pass", "qualification": "113 pass, 0 fail", "receipt": "manual-check.md"}
+{"kind": "gate", "name": "pre-push full gate", "commit": "693e9d22", "pr": 1334, "status": "pass", "qualification": "GREEN in 6939s; not promotion evidence", "receipt": "manual-check.md"}

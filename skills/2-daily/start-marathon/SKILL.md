@@ -203,20 +203,23 @@ CREATED="$(gh issue view "$NUM" --json createdAt --jq '.createdAt[0:10]')"
 DOC="PROJECT/1-INBOX/GH-${NUM}-$(hq_slug "$TITLE" | tr '[:lower:]' '[:upper:]').md"
 
 # <num> <src> <title> <created> <doc_type> <project> <repo> <request> — ratings default to
-# ratings_provisional: true, which marathon-plan already parks out of active waves.
+# ratings_provisional: true. marathon-plan does not read that flag yet (GH-1333), so hold
+# provisional captures out of waves by hand.
 hq_render_capture "$NUM" "$URL" "$TITLE" "$CREATED" bugfix <project> <org>/<repo> "$BODY" > "$DOC"
+```
 
-python3 "$HARNESS/utils/py/releases_app.py" roadmap add \
-  --issue-num "$NUM" --issue-url "$URL" --title "$TITLE" --created "$CREATED" --doc-path "$DOC" \
-  --raw-text "$(hq_roadmap_line "$NUM" "$TITLE" "$CREATED" "$DOC" "$(basename "$DOC")" "$URL")"
+Under decision D-b, Step 3 writes the capture doc. When an item is selected into an active wave
+or batch (work starts), create or reuse the row with its real rating via `roadmap pickup`:
+
+```bash
+python3 "$HARNESS/utils/py/releases_app.py" roadmap pickup \
+  --issue-num "$NUM" --issue-url "$URL" --title "$TITLE" --doc-path "$DOC"
 python3 "$HARNESS/utils/py/releases_app.py" roadmap list | grep "GH-$NUM"     # read the row back
 ```
 
 Use `feedback` instead of `bugfix` for a non-defect capture. A doc written here is a capture, not
 an active-work doc: it carries no `## Status` table until promotion. Record each `(issue, doc path,
-ledger gid)` for the report. If `roadmap add` fails, the intake is **half-complete** (doc exists, no
-row) — report it as such with the writer's error, never as success. `NOT-A-WORK-ITEM` issues get no capture and are listed with
-the reason.
+ledger gid)` for the report. `NOT-A-WORK-ITEM` issues get no capture and are listed with the reason.
 
 ### 4. Review contracts, draft plans, then compute
 
@@ -235,8 +238,10 @@ phases. Review an existing plan for freshness before rewriting it. Run independe
 verdict. A self-reviewed plan is not complete QA. Missing runtime capability becomes a separate
 parked dependency and holds its lane.
 
-Check RELEASES ratings and the PDDA risk gate. `ratings_provisional: true` and `risk > 2` prevent
-automatic selection. #443 owns the fuller Product Release System (PRS; [definition](https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first))
+Check RELEASES ratings and the PDDA risk gate. PDDA policy holds `ratings_provisional: true` and
+`risk > 2` out of automatic selection, but the planner enforces neither (GH-1333). It does not read
+`ratings_provisional`, and it uses `risk` only as a ranking weight. Exclude such items from the waves
+by hand. #443 owns the fuller Product Release System (PRS; [definition](https://github.com/HiQS-Labs/XYZ-forge/blob/development/HOW-TO-USE.md#glossary--the-five-terms-youll-hit-first))
 freshness gate; until it lands, inspect rating and
 issue update timestamps and hold uncertain ratings rather than claiming planner verification.
 
