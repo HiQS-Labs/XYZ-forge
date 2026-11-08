@@ -1,0 +1,18 @@
+[
+  {
+    "at": "2026-11-08T18:35:00+00:00",
+    "gate_allowed": true
+  },
+  {
+    "at": "2026-11-08T18:37:00+00:00",
+    "gate_allowed": false
+  },
+  {
+    "process_list": "123 /usr/bin/python unrelated.py",
+    "push_allowed": true
+  },
+  {
+    "process_list": "123 bash /a/disposable/validate.sh --parallel 4",
+    "push_allowed": false
+  }
+]
