@@ -57,9 +57,10 @@ kill "$stuck_pid" 2>/dev/null || true; wait "$stuck_pid" 2>/dev/null || true
 X_B="$WORK/b.json"; LOCK_B="$X_B.lock"
 # Children inherit the locked descriptor: ownership tokens move without an
 # unlocked gap that would let the writer acquire before progress is exercised.
+# Use positional writes: Linux pwrite on O_APPEND appends, then truncation discards new tokens.
 python3 - "$LOCK_B" "$WORK/b.ready" <<'PYMOVE' &
 import fcntl,os,sys,time,pathlib,uuid
-with open(sys.argv[1], 'a+') as f:
+with open(sys.argv[1], 'w+') as f:
     fcntl.flock(f, fcntl.LOCK_EX)
     for n in range(6):
         pid = os.fork()

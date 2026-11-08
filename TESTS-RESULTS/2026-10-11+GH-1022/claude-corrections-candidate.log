@@ -1,0 +1,42 @@
+refused: rule=baseline-already-set: release rel-01M4PMMZ4XGMXB7X4EBHD5ZP18 already has a write-once baseline; owner state preserved
+baseline for rel-01M4PMMYMSRF110V2N39NA5JZ5 captured at 1 (observed)
+[
+  {
+    "control": "S9-baseline",
+    "injected": false,
+    "rc": 0,
+    "baseline_count": 1,
+    "safe": true
+  },
+  {
+    "control": "S9-baseline",
+    "injected": true,
+    "rc": 3,
+    "baseline_count": 1,
+    "safe": true
+  },
+  {
+    "control": "S5-batch",
+    "rc": 2,
+    "message": "new issue title contains canonical rating tokens; explicit reconciliation required",
+    "new_rows": [],
+    "captures": [],
+    "safe": true
+  },
+  {
+    "control": "S4-case-and-S5-corrected-retry",
+    "url": "https://github.com/Fixture/Repo/issues/2",
+    "identity": "fixture/repo/issues/2",
+    "safe": true
+  },
+  {
+    "control": "S5-invalid-created-batch",
+    "safe": true
+  },
+  {
+    "control": "N2-no-arguments",
+    "rc": 2,
+    "stderr": "usage: intake_adapter.py {scan|find} [arguments...]",
+    "safe": true
+  }
+]

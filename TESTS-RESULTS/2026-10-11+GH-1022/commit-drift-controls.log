@@ -1,0 +1,2 @@
+{'boundary': 'staging', 'safe': True, 'reason': 'target/HEAD drift immediately before commit; preserve partial state', 'checkpoint_complete': None, 'commit_preserved': '06c8ea27d35c59a518bff9605aa849a36f63294c'}
+{'boundary': 'committed', 'safe': True, 'reason': 'committed accounting/branch drift; preserve commit without complete checkpoint', 'checkpoint_complete': None, 'commit_preserved': '5213fa4e71aa100bcae8b8c0f4376ec4c477b30d'}

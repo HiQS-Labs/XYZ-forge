@@ -1,0 +1,4 @@
+PREVIEW True ['Declared observations are not global quiescence, criterion delivery or dispatch approval.', 'No observer contexts declared for canonical; absence does not prove idle.', 'No observer contexts declared for predecessor; absence does not prove idle.']
+ACTUAL_PARENTS 30e98a52b96c4cd6f842105b2575658aea7b6a42 f32383e09e22dd008507c3eb78b7494a2ea18af6 78d3111325480e6548b8ab0822d3ffd7c982db3e
+FIRST controlled committed result lost
+RESULT preserved GIDs/current owner override/predecessor HEAD/tree, root /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-sieu5573/rollover/rolled

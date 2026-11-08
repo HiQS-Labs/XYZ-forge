@@ -1,0 +1,36 @@
+{
+  "head": "9eadca0aa74ac8e2a9040c308e38709392cd5d38",
+  "source_sha256": {
+    "utils/py/releases_app.py": "09384ac95c78fe2f33b2ca4b34f0eb443b5f14f6d752dc55d268486271c750cb",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "3d1b47e38a04fc51ba69ba84681c8ee8dd2b9180496fe147d8170bc687cb3e6f"
+  },
+  "controls": [
+    {
+      "control": "S9-baseline",
+      "injected": false,
+      "rc": 0,
+      "baseline_count": 1,
+      "safe": true
+    },
+    {
+      "control": "S9-baseline",
+      "injected": true,
+      "rc": 99,
+      "baseline_count": 1,
+      "safe": false
+    },
+    {
+      "control": "S5-batch",
+      "rc": 2,
+      "message": "new issue title contains canonical rating tokens; explicit reconciliation required",
+      "new_rows": [
+        2
+      ],
+      "captures": [
+        "PROJECT/1-INBOX/GH-2-WEEKLY-CAPTURE.md"
+      ],
+      "safe": false
+    }
+  ],
+  "local_effects": "independent temporary fixture repositories and canonical DB/dump/receipt writes; GH and remote reads stubbed; no live connector writes"
+}

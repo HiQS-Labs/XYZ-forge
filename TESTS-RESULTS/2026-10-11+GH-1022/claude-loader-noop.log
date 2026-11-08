@@ -1,0 +1,23 @@
+[
+  {
+    "control": "S1-stale-explicit-harness",
+    "rc": 2,
+    "stdout": "",
+    "stderr": "10days: selected harness lacks skills/3-weekly/weekly-planner/scripts/issue_intake.py; update the harness before using this adapter"
+  },
+  {
+    "control": "N1-invalid-explicit-harness",
+    "rc": 0,
+    "stdout": "{\"issue\":777,\"doc\":null,\"bucket\":null,\"has_contract\":false}",
+    "stderr": ""
+  },
+  {
+    "control": "S6-CI-rerun-bookkeeping",
+    "first_commit": "485b91307add49f500ebc360328200112b46ee55",
+    "second_commit": "c70f86fbd77df6fb221d0445483dd670f32cd853",
+    "changed": true,
+    "fresh_check_url": "https://example.invalid/check/2",
+    "dispatch_allowed": false,
+    "scope": "local accounting commits and fresh advisory observation; no freeze/approval/execution authority"
+  }
+]

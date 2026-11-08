@@ -1,0 +1,5 @@
+PREVIEW True ['Declared observations are not global quiescence, criterion delivery or dispatch approval.', 'No observer contexts declared for canonical; absence does not prove idle.', 'No observer contexts declared for predecessor; absence does not prove idle.']
+S4_UNKNOWN_COMMIT_REFUSED committed accounting/branch drift; preserve commit without complete checkpoint
+S4_RETRY_HELD caller unknown preparation commit result; preserve intent
+S4_RETRY_HELD prepare unknown preparation commit result; preserve intent
+S4_UNKNOWN_HEAD_INTENT_CHECKPOINT_AND_PREDECESSOR_PRESERVED hook

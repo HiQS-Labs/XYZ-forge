@@ -249,16 +249,114 @@ def observe(path):
         stopped.wait(min(0.25, max(0, start + (emitted + 1) * interval - time.monotonic())))
 
 
+def snapshot(args):
+    """One caller-declared read; liveness/receipt observations grant no authority."""
+    import contextlib
+    import hashlib
+    import io
+    answer = {"schema": "marathon/observer-snapshot@1", "status": "UNKNOWN",
+              "read_complete": False, "dispatch": False, "held_reasons": []}
+    try:
+        if not args.root or not args.product_root:
+            raise ValueError("snapshot requires declared --root and --product-root")
+        allowed = [Path(args.root).resolve(), Path(args.product_root).resolve()]
+        allowed.extend(Path(x).resolve() for x in args.metadata_root)
+        def owned(path):
+            if not isinstance(path, str) or not path:
+                raise ValueError("observer metadata path unavailable")
+            resolved = Path(path).resolve()
+            if not any(resolved == base or base in resolved.parents for base in allowed):
+                raise ValueError("observer metadata path outside declared roots")
+            return path
+        text = bounded_read(owned(str(args.context)))
+        if text is None:
+            raise ValueError("observer context unavailable")
+        answer["raw_metadata"] = {str(args.context): text}
+        context = json.loads(text)
+        if not isinstance(context, dict):
+            raise ValueError("observer context is not an object")
+        for key in ("run_id", "root", "product_root", "harness_root", "plan", "run_log",
+                    "heartbeat_file", "started_utc", "initial_head", "initial_origin"):
+            if not isinstance(context.get(key), str) or not context[key]:
+                raise ValueError("observer context field unavailable: " + key)
+        if not re.fullmatch(r"[0-9a-f]{32}", context["run_id"]):
+            raise ValueError("observer run identity unavailable")
+        started = datetime.fromisoformat(context["started_utc"].replace("Z", "+00:00"))
+        if started.tzinfo is None:
+            raise ValueError("observer start timestamp must be timezone-qualified")
+        for key in ("owner", "total", "returned_success", "verified_phases"):
+            if type(context.get(key)) is not int or context[key] < 0:
+                raise ValueError("observer context counter unavailable: " + key)
+        if context["owner"] <= 0 or context["total"] <= 0:
+            raise ValueError("observer owner/phase count unavailable")
+        if (Path(context["root"]).resolve() != Path(args.root).resolve()
+                or context["product_root"] != os.path.abspath(args.product_root)):
+            raise ValueError("foreign observer coordination/product ownership")
+        phase = context.get("phase", {})
+        if not isinstance(phase, dict):
+            raise ValueError("observer phase is not an object")
+        refs = [owned(str(args.context)), owned(context["heartbeat_file"])]
+        if phase:
+            for key in ("id", "lane", "token_family", "execution_id", "result_file", "relay_file"):
+                if not isinstance(phase.get(key), str) or not phase[key]:
+                    raise ValueError("observer phase field unavailable: " + key)
+            if type(phase.get("index")) is not int or phase["index"] <= 0:
+                raise ValueError("observer phase index unavailable")
+            if "driver_pid" in phase and (type(phase["driver_pid"]) is not int or phase["driver_pid"] <= 0):
+                raise ValueError("observer phase PID unavailable")
+            refs.extend((owned(phase["result_file"]), owned(phase["relay_file"])))
+        before = {path: bounded_read(path) for path in refs}
+        answer["raw_metadata"] = before
+        # Preserve missing raw facts visibly: a context is not proof of stopped descendants,
+        # an authentic peer receipt, completed criteria or global absence of execution.
+        missing = [path for path, value in before.items() if value is None]
+        receipt = matching_receipt(context) if phase else {}
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            emit(context, "snapshot")
+        report = json.loads(buffer.getvalue()[len("marathon-progress: "):].strip())
+        invalid = []
+        if phase:
+            if not receipt:
+                invalid.append("observer receipt malformed or foreign")
+            if report["heartbeat"].get("state") == "unknown":
+                invalid.append("observer heartbeat malformed or foreign")
+            roles = {"Builder", "Producer", "Reviewer"}
+            # Both shipped drivers declare actor IDs in this header; Python
+            # annotates NEXT with the role, while the frozen Bash driver does not.
+            actors = re.search(r"<!-- marathon-drive: task=(\S+) builder=(\S+) reviewer=(\S+) round-cap=([1-9][0-9]*) -->",
+                               before.get(phase["relay_file"]) or "")
+            if actors and (actors[1] == phase["token_family"] or actors[1].startswith(phase["token_family"] + "-")):
+                roles.update((actors[2], actors[3], actors[2] + " (Builder)", actors[3] + " (Reviewer)"))
+            if report["role"] not in roles or report["relay_status"] not in ("Open", "Approved", "Closed", "Escalated"):
+                invalid.append("observer relay role/status unsupported or empty")
+        if before != {path: bounded_read(path) for path in refs} or before[str(args.context)] != text:
+            raise ValueError("observer context/receipt/heartbeat changed during read")
+        answer.update(status="PASS" if not missing and not invalid else "UNKNOWN", read_complete=not missing and not invalid,
+                      context=context, observation=report, receipt=receipt,
+                      source_sha256={path: hashlib.sha256(value.encode()).hexdigest() if value is not None else None
+                                     for path, value in before.items()},
+                      held_reasons=["execution-not-authorized", "receipt-authenticity-and-criteria-not-verified"]
+                                   + (["observer metadata unavailable"] if missing else []) + invalid)
+    except (OSError, ValueError, TypeError, KeyError, AttributeError) as error:
+        answer["held_reasons"] = [str(error)]
+    print("marathon-progress: " + json.dumps(answer, sort_keys=True), flush=True)
+    return 0 if answer["read_complete"] else 2
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("init", "phase", "driver", "finish", "observe", "terminal"))
+    parser.add_argument("action", choices=("init", "phase", "driver", "finish", "observe", "terminal", "snapshot"))
     parser.add_argument("context", type=Path)
+    parser.add_argument("--metadata-root", action="append", default=[])
     for name in ("root", "product-root", "harness-root", "plan", "run-log", "phases-dir",
                  "heartbeat-file", "phase-id", "lane", "token-family", "execution-id", "result-file"):
         parser.add_argument("--" + name)
     for name in ("owner", "total", "interval", "count", "index", "exit-code", "driver-pid"):
         parser.add_argument("--" + name, type=int)
     args = parser.parse_args()
+    if args.action == "snapshot":
+        raise SystemExit(snapshot(args))
     if args.action == "observe":
         observe(args.context)
         return

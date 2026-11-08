@@ -1,0 +1,10 @@
+== test: gh360-dump-multiline-values ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh360-dump-multiline-values.XXXXXX.zSDoOTSKjo
+  PASS: fixture is real: the dump contains an INSERT whose value spans lines
+  PASS: check passes on a ledger holding a multi-line value
+  PASS: --rebuild accepts the dump the app itself wrote (rc=0)
+  PASS: no rule=dump-parse refusal
+  PASS: the rebuild preserved every release row (1)
+  PASS: the multi-line description round-tripped unchanged
+  PASS: check still passes after the rebuild
+  gh360-dump-multiline-values: 7 pass, 0 fail

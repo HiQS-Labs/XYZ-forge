@@ -1,0 +1,68 @@
+{
+  "repository": "hiqs-labs/xyz-forge",
+  "complete": true,
+  "status": "HELD",
+  "dispatch_allowed": false,
+  "observedAt": "2026-10-11T16:24:50.202201+00:00",
+  "since": "2026-10-11T15:00:00+00:00",
+  "pages": {
+    "issues": 1,
+    "prs": 1
+  },
+  "holds": [
+    "Branch ledger reconciliation, independent criterion review, readiness, immutable freeze and dispatch enforcement are not implemented.",
+    "Outline sequencing/audit are advisory; CI NONE, dependencies and completion heuristics are not readiness proof."
+  ],
+  "issues": [
+    {
+      "identity": "hiqs-labs/xyz-forge/issues/1022",
+      "number": 1022,
+      "state": "OPEN",
+      "updatedAt": "2026-10-11T15:41:28Z"
+    },
+    {
+      "identity": "hiqs-labs/xyz-forge/issues/1023",
+      "number": 1023,
+      "state": "OPEN",
+      "updatedAt": "2026-10-11T16:07:39Z"
+    }
+  ],
+  "prs": [
+    {
+      "identity": "hiqs-labs/xyz-forge/pull/930",
+      "number": 930,
+      "isDraft": true,
+      "headRefOid": "84a2717fb3b5be447d4f58845e4217cdea1ca82e",
+      "updatedAt": "2026-10-03T15:47:29Z",
+      "changedFiles": 41,
+      "collectedFiles": 41
+    },
+    {
+      "identity": "hiqs-labs/xyz-forge/pull/954",
+      "number": 954,
+      "isDraft": true,
+      "headRefOid": "738fde98d718014f6cc6f9ad5cb3e5f3762ed449",
+      "updatedAt": "2026-10-10T05:59:45Z",
+      "changedFiles": 49,
+      "collectedFiles": 49
+    },
+    {
+      "identity": "hiqs-labs/xyz-forge/pull/1017",
+      "number": 1017,
+      "isDraft": false,
+      "headRefOid": "dca2aa3fa60dfdf2ac8c38f8890d2a4d0032eb91",
+      "updatedAt": "2026-10-10T17:26:34Z",
+      "changedFiles": 38,
+      "collectedFiles": 38
+    },
+    {
+      "identity": "hiqs-labs/xyz-forge/pull/1019",
+      "number": 1019,
+      "isDraft": false,
+      "headRefOid": "74b871f41e54aa78b6f7a2cf4f0b7ec771c54fd5",
+      "updatedAt": "2026-10-10T18:39:52Z",
+      "changedFiles": 37,
+      "collectedFiles": 37
+    }
+  ]
+}

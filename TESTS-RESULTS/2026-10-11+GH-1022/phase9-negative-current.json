@@ -1,0 +1,33 @@
+{
+  "source_sha256": {
+    "utils/py/releases_app.py": "06b02c67ad6fc7f3c649ff13c61a0c9af41ed60a67a1167a87415b7fa81ecaf1",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "6755081ca5ae947e2e19dbf84ba23eeb454ae7afec7793c1c85c4975196433a5"
+  },
+  "controls": [
+    {
+      "control": "stale-source",
+      "held": "predecessor HEAD/owner edits changed"
+    },
+    {
+      "control": "malformed-owner",
+      "held": "malformed/symlinked predecessor private evidence"
+    },
+    {
+      "control": "malformed-receipt",
+      "held": "malformed/symlinked predecessor private evidence"
+    },
+    {
+      "control": "malformed-intake",
+      "held": "complete exact committed predecessor intake required"
+    },
+    {
+      "control": "dirty-source",
+      "held": "predecessor HEAD/owner edits changed"
+    },
+    {
+      "control": "existing-destination",
+      "held": "destination already exists without this handoff intent; preserve it"
+    }
+  ],
+  "effects": "owned local canonical/Git fixtures and invalid input edits; connectors0; no CI additions/production writes"
+}

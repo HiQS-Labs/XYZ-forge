@@ -1,0 +1,17 @@
+{
+  "source_revision": "1044969dcad23a08e19219e3fb195d58715187d4",
+  "refused": true,
+  "error": "['/opt/homebrew/opt/python@3.14/bin/python3.14', '/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/releases_app.py', '--root']: refused: rule=invalid-raw-text: malformed --raw-text '- **GH-3 \u00b7 Fix * retry** \ud83c\udd95 **captured 2026-10-11 via HQ** \u2014 [GH-3-WEEKLY-CAPTURE.md](PROJECT/1-INBOX/GH-3-WEEKLY-CAPTURE.md) \u00b7 [#3](https://github.com/fixture/repo/issues/3)': expected markdown bullet starting with '- **<title>**' (e.g. '- **GH-3 \u00b7 <title>** ...')\n",
+  "new_rows": [
+    2
+  ],
+  "captures": [
+    "PROJECT/1-INBOX/GH-2-WEEKLY-CAPTURE.md",
+    "PROJECT/1-INBOX/GH-3-WEEKLY-CAPTURE.md"
+  ],
+  "complete_commit": null,
+  "owner_row_preserved": true,
+  "owner_doc_preserved": true,
+  "dispatch_allowed": false,
+  "local_effects": "temporary full clone/canonical DB-dump/captures/private receipts;transportstubbed,connectorsoff,no push orreal execution"
+}

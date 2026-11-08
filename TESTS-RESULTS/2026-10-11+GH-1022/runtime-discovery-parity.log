@@ -1,0 +1,20 @@
+shared harness module resolved True
+paginated PR-filtered qualified ordered members and closed observation True
+complete PR files, draft metadata retained True
+preview makes no filesystem writes True
+preview dispatch held True
+foreign prior True
+incomplete prior True
+truncated malformed page True
+conflicting duplicates True
+missing PR files True
+foreign URL True
+offline cannot become complete True
+red control: removed PR file fails coverage assertion True
+legacy scan parity 1 True
+legacy scan parity 2 True
+legacy scan parity 3 True
+legacy scan parity 4 True
+legacy scan parity 5 True
+copied skill foreign cwd with harness override True
+core UNKNOWN nonzero and no scratch writes True

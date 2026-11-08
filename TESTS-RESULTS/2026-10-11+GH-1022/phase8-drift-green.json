@@ -1,0 +1,38 @@
+{
+  "source_sha256": "e64c273dabf2697c815e2afc68ab2827b49656d02501d8b12d66c2668b5ea004",
+  "method": "actual unmodified CLI crash/recovery plus sanctioned predating owner connection; ephemeral full local Git fixtures; connectors0; local fixture files/audit/journal writes only; no CI cases",
+  "controls": [
+    {
+      "boundary": "post-commit",
+      "owner_file": "dump",
+      "rc": 3,
+      "owner_bytes_preserved": true,
+      "intent_preserved": true,
+      "db_preserved": true,
+      "stdout": "",
+      "stderr": "refused: rule=merge-recovery-state: owner dump changed; preserve all evidence\n"
+    },
+    {
+      "boundary": "post-stage",
+      "owner_file": "staged_dump",
+      "rc": 3,
+      "owner_bytes_preserved": true,
+      "intent_preserved": true,
+      "db_preserved": true,
+      "stdout": "",
+      "stderr": "refused: rule=merge-recovery-stage: unknown or changed staged dump; preserve evidence\n"
+    },
+    {
+      "control": "writer-open-before-db-swap",
+      "old_generation": 1589,
+      "current_generation": 1590,
+      "result": {
+        "kind": "OperationalError",
+        "error": "attempt to write a readonly database"
+      },
+      "canonical_db_preserved": true,
+      "dump_preserved": true,
+      "pending_intent": null
+    }
+  ]
+}

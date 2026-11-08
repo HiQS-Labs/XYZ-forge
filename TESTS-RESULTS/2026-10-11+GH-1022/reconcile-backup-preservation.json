@@ -1,0 +1,7 @@
+{
+  "origin": "disposable canonical resolver backup",
+  "matches_original_parent_db": true,
+  "sha256": "f2988806f3efa7d7097cce3eac19547d20f4e3a4b71c6aead31605d5274fa085",
+  "preserved_at": "/tmp/gh1022-displaced-ledger-swk8jx6j/releases.db.bak",
+  "reason": "artifact check correctly rejects repair backups inside a qualification clone;preserved outside,no data deleted"
+}

@@ -1,0 +1,18 @@
+nested-preparation-refused-source-clean PASS
+dry-preview-no-clone PASS
+dry-enumerates-preserve-and-canonical-writes PASS
+full-clone-auto-branch PASS
+all-updated-closed-backfill-accounted PASS
+owner-row-gid-rating-override-preserved PASS
+owner-capture-bytes-preserved PASS
+new-rows-unrated-and-closed-not-delivered PASS
+renderer-does-not-evaluate-body PASS
+unchanged-does-not-rewrite-receipt FAIL
+Traceback (most recent call last):
+  File "/tmp/gh1022-noop-negative.py", line 79, in <module>
+    record('unchanged-does-not-rewrite-receipt',(receipt.read_bytes(),receipt.stat().st_mtime_ns)==receipt_before)
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/gh1022-noop-negative.py", line 18, in record
+    if not condition:raise AssertionError(name)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: unchanged-does-not-rewrite-receipt

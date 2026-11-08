@@ -1,0 +1,2 @@
+before-fix [{'revision': 'before-fix', 'control': 'title-rating', 'safe': False, 'held': False, 'registered_numbers': [1, 2, 3]}, {'revision': 'before-fix', 'control': 'staging-writer', 'safe': False, 'attempts': [{'rc': 0, 'refused': False}], 'live_override': 321, 'accounting_override': 320}]
+candidate [{'revision': 'candidate', 'control': 'title-rating', 'safe': True, 'held': True, 'registered_numbers': [1]}, {'revision': 'candidate', 'control': 'staging-writer', 'safe': True, 'attempts': [{'rc': 4, 'refused': True}], 'live_override': 320, 'accounting_override': 320}]

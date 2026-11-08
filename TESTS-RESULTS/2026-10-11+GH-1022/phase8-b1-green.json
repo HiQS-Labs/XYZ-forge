@@ -1,0 +1,23 @@
+{
+  "source_sha256": "e64c273dabf2697c815e2afc68ab2827b49656d02501d8b12d66c2668b5ea004",
+  "method": "actual pure selector; nonempty current canonical SQL and sanctioned init in owned temporary fixture; local DB/Git/audit writes only, no CI test additions",
+  "controls": [
+    {
+      "control": "both-deleted",
+      "held": "historical source is not append-only: work_events"
+    },
+    {
+      "control": "one-deleted",
+      "held": "historical source is not append-only: work_events"
+    },
+    {
+      "control": "unchanged",
+      "events": 713
+    },
+    {
+      "control": "legitimate-empty-history",
+      "supported": true,
+      "generation": 1
+    }
+  ]
+}

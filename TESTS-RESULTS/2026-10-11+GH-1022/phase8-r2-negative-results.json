@@ -1,0 +1,356 @@
+{
+  "source_sha256": "e64c273dabf2697c815e2afc68ab2827b49656d02501d8b12d66c2668b5ea004",
+  "heads": {
+    "base": "7fb00ab1ac4338b67b8f4e927ad6a928b0e0d020",
+    "ours": "8bdf3a32fe8c8c817216646771e469413df0e146",
+    "target": "e942a2cf3ac4d61764d78084841425048a3a537c"
+  },
+  "method": "ephemeral actual CLI controls; local fixture DB/Git/intent/audit/staged-file writes with connectors0; existing crash seams only; no CI tests",
+  "controls": [
+    {
+      "control": "prior-backup-preserved",
+      "rc": 0,
+      "result": {
+        "schema": "releases/ledger-merge@1",
+        "status": "HELD",
+        "complete": true,
+        "changed": true,
+        "dispatch": false,
+        "holds": [],
+        "owner_sha256": "e64c273dabf2697c815e2afc68ab2827b49656d02501d8b12d66c2668b5ea004",
+        "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase8-backup-w_z3db8g/clone",
+        "head": "8bdf3a32fe8c8c817216646771e469413df0e146",
+        "branch": "ours",
+        "merge_base": "7fb00ab1ac4338b67b8f4e927ad6a928b0e0d020",
+        "supplied_target": "e942a2cf3ac4d61764d78084841425048a3a537c",
+        "target_freshness": "not verified; supplied local commit only",
+        "source_generations": [
+          1588,
+          1589,
+          1589
+        ],
+        "changed_gids": [
+          "rmi-01M0DP23V8F0R5ET8B6T536Z81"
+        ],
+        "generation_floor": 1589,
+        "table_counts": {
+          "schema_migrations": 9,
+          "settings": 3,
+          "repos": 1,
+          "issue_refs": 101,
+          "marathons": 6,
+          "releases": 13,
+          "manifest_items": 98,
+          "manifest_state_events": 87,
+          "doc_lines": 86,
+          "legacy_lines": 28,
+          "grandfather_entries": 24,
+          "roadmap_items": 349,
+          "jog_queue": 18,
+          "op_receipts": 1776,
+          "work_events": 704
+        },
+        "selection_sha256": "e425ef319031a74b9a34bbdab9be07e4500598c500790fb758b5cf8c3c388285",
+        "generation": 1590,
+        "txn_id": "37073d7d57bf4fd0a4af75b0dee40771",
+        "effects": "local staged DB/dump/journal/lock audit and adopted views; no Git or connector writes"
+      },
+      "stderr": ""
+    },
+    {
+      "control": "connectors-required",
+      "rc": 2,
+      "result": {
+        "schema": "releases/ledger-merge@1",
+        "status": "UNKNOWN",
+        "complete": false,
+        "changed": false,
+        "dispatch": false,
+        "holds": [
+          "local projection apply requires explicit connectors0"
+        ],
+        "owner_sha256": "e64c273dabf2697c815e2afc68ab2827b49656d02501d8b12d66c2668b5ea004",
+        "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase8-connectors-v4of22h0/clone",
+        "head": "8bdf3a32fe8c8c817216646771e469413df0e146",
+        "branch": "ours",
+        "merge_base": "7fb00ab1ac4338b67b8f4e927ad6a928b0e0d020",
+        "supplied_target": "e942a2cf3ac4d61764d78084841425048a3a537c",
+        "target_freshness": "not verified; supplied local commit only",
+        "source_generations": [
+          1588,
+          1589,
+          1589
+        ],
+        "changed_gids": [
+          "rmi-01M0DP23V8F0R5ET8B6T536Z81"
+        ],
+        "generation_floor": 1589,
+        "table_counts": {
+          "schema_migrations": 9,
+          "settings": 3,
+          "repos": 1,
+          "issue_refs": 101,
+          "marathons": 6,
+          "releases": 13,
+          "manifest_items": 98,
+          "manifest_state_events": 87,
+          "doc_lines": 86,
+          "legacy_lines": 28,
+          "grandfather_entries": 24,
+          "roadmap_items": 349,
+          "jog_queue": 18,
+          "op_receipts": 1776,
+          "work_events": 704
+        },
+        "selection_sha256": "e425ef319031a74b9a34bbdab9be07e4500598c500790fb758b5cf8c3c388285"
+      },
+      "stderr": ""
+    },
+    {
+      "control": "owner-dump-preserved",
+      "rc": 2,
+      "result": {
+        "schema": "releases/ledger-merge@1",
+        "status": "UNKNOWN",
+        "complete": false,
+        "changed": false,
+        "dispatch": false,
+        "holds": [
+          "uncommitted or divergent owner dump; preserve it"
+        ],
+        "owner_sha256": "e64c273dabf2697c815e2afc68ab2827b49656d02501d8b12d66c2668b5ea004",
+        "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase8-owner-dump-jp7eo2a2/clone",
+        "head": "8bdf3a32fe8c8c817216646771e469413df0e146",
+        "branch": "ours",
+        "merge_base": "7fb00ab1ac4338b67b8f4e927ad6a928b0e0d020",
+        "supplied_target": "e942a2cf3ac4d61764d78084841425048a3a537c",
+        "target_freshness": "not verified; supplied local commit only",
+        "source_generations": [
+          1588,
+          1589,
+          1589
+        ],
+        "changed_gids": [
+          "rmi-01M0DP23V8F0R5ET8B6T536Z81"
+        ],
+        "generation_floor": 1589,
+        "table_counts": {
+          "schema_migrations": 9,
+          "settings": 3,
+          "repos": 1,
+          "issue_refs": 101,
+          "marathons": 6,
+          "releases": 13,
+          "manifest_items": 98,
+          "manifest_state_events": 87,
+          "doc_lines": 86,
+          "legacy_lines": 28,
+          "grandfather_entries": 24,
+          "roadmap_items": 349,
+          "jog_queue": 18,
+          "op_receipts": 1776,
+          "work_events": 704
+        },
+        "selection_sha256": "e425ef319031a74b9a34bbdab9be07e4500598c500790fb758b5cf8c3c388285"
+      },
+      "stderr": ""
+    },
+    {
+      "control": "lease-preserved",
+      "rc": 2,
+      "result": {
+        "schema": "releases/ledger-merge@1",
+        "status": "UNKNOWN",
+        "complete": false,
+        "changed": false,
+        "dispatch": false,
+        "holds": [
+          "device-local cursor/lease state not portable; preserve it"
+        ],
+        "owner_sha256": "e64c273dabf2697c815e2afc68ab2827b49656d02501d8b12d66c2668b5ea004",
+        "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase8-lease-omvm89k9/clone",
+        "head": "8bdf3a32fe8c8c817216646771e469413df0e146",
+        "branch": "ours",
+        "merge_base": "7fb00ab1ac4338b67b8f4e927ad6a928b0e0d020",
+        "supplied_target": "e942a2cf3ac4d61764d78084841425048a3a537c",
+        "target_freshness": "not verified; supplied local commit only",
+        "source_generations": [
+          1588,
+          1589,
+          1589
+        ],
+        "changed_gids": [
+          "rmi-01M0DP23V8F0R5ET8B6T536Z81"
+        ],
+        "generation_floor": 1589,
+        "table_counts": {
+          "schema_migrations": 9,
+          "settings": 3,
+          "repos": 1,
+          "issue_refs": 101,
+          "marathons": 6,
+          "releases": 13,
+          "manifest_items": 98,
+          "manifest_state_events": 87,
+          "doc_lines": 86,
+          "legacy_lines": 28,
+          "grandfather_entries": 24,
+          "roadmap_items": 349,
+          "jog_queue": 18,
+          "op_receipts": 1776,
+          "work_events": 704
+        },
+        "selection_sha256": "e425ef319031a74b9a34bbdab9be07e4500598c500790fb758b5cf8c3c388285"
+      },
+      "stderr": ""
+    },
+    {
+      "control": "unknown-sidecar-preserved",
+      "rc": 2,
+      "result": {
+        "schema": "releases/ledger-merge@1",
+        "status": "UNKNOWN",
+        "complete": false,
+        "changed": false,
+        "dispatch": false,
+        "holds": [
+          "canonical intent/SQLite ambiguity; use explicit existing recovery"
+        ],
+        "owner_sha256": "e64c273dabf2697c815e2afc68ab2827b49656d02501d8b12d66c2668b5ea004",
+        "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase8-sidecar-wj1zakku/clone",
+        "head": "8bdf3a32fe8c8c817216646771e469413df0e146",
+        "branch": "ours",
+        "merge_base": "7fb00ab1ac4338b67b8f4e927ad6a928b0e0d020",
+        "supplied_target": "e942a2cf3ac4d61764d78084841425048a3a537c",
+        "target_freshness": "not verified; supplied local commit only",
+        "source_generations": [
+          1588,
+          1589,
+          1589
+        ],
+        "changed_gids": [
+          "rmi-01M0DP23V8F0R5ET8B6T536Z81"
+        ],
+        "generation_floor": 1589,
+        "table_counts": {
+          "schema_migrations": 9,
+          "settings": 3,
+          "repos": 1,
+          "issue_refs": 101,
+          "marathons": 6,
+          "releases": 13,
+          "manifest_items": 98,
+          "manifest_state_events": 87,
+          "doc_lines": 86,
+          "legacy_lines": 28,
+          "grandfather_entries": 24,
+          "roadmap_items": 349,
+          "jog_queue": 18,
+          "op_receipts": 1776,
+          "work_events": 704
+        },
+        "selection_sha256": "e425ef319031a74b9a34bbdab9be07e4500598c500790fb758b5cf8c3c388285"
+      },
+      "stderr": ""
+    },
+    {
+      "control": "stale-head-held",
+      "rc": 2,
+      "result": {
+        "schema": "releases/ledger-merge@1",
+        "status": "UNKNOWN",
+        "complete": false,
+        "changed": false,
+        "dispatch": false,
+        "holds": [
+          "declared root HEAD changed"
+        ]
+      },
+      "stderr": ""
+    },
+    {
+      "control": "crash-pre-commit",
+      "rc": 70,
+      "result": {
+        "stdout": ""
+      },
+      "stderr": ""
+    },
+    {
+      "control": "recover-pre-commit",
+      "rc": 0,
+      "stdout": "RECOVERED: discarded crash (txn 6846176e773e) \u2014 the DB never changed; staged remnants discarded\nOK: crash recovery completed; continuing the consistency checks\nOK: foreign_keys pragma asserted per connection\nOK: generation trio consistent at 1589 (DB <-> dump)\nOK: receipt chain intact (1771 receipt(s), business-state digest matches, 179 merge fork(s) tolerated under the merge-rebuild receipt)\nwarn: rule=mig-ref-stale: MIG-F1CCB6 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D7D2C4 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D248B2 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-79F036 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-A993B3 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-751A4C is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-7AFFE1 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-AC68FA is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 16 day(s) past its target of 2026-09-26 \u2014 the plan has drifted from the calendar\ninfo: 24 grandfather_entries pending disposition (the strict flip requires none pending)\ncheck: clean (0 failures, 9 warning(s))\n",
+      "stderr": ""
+    },
+    {
+      "control": "crash-post-commit",
+      "rc": 70,
+      "result": {
+        "stdout": ""
+      },
+      "stderr": ""
+    },
+    {
+      "control": "recover-post-commit",
+      "rc": 0,
+      "stdout": "RECOVERED: completed crash (txn fb71e0726cdd) \u2014 the committed operation is preserved; dump/generated regenerated from the DB\nOK: crash recovery completed; continuing the consistency checks\nOK: foreign_keys pragma asserted per connection\nOK: generation trio consistent at 1590 (DB <-> dump)\nOK: receipt chain intact (1773 receipt(s), business-state digest matches, 180 merge fork(s) tolerated under the merge-rebuild receipt)\nwarn: rule=mig-ref-stale: MIG-F1CCB6 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D7D2C4 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D248B2 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-79F036 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-A993B3 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-751A4C is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-7AFFE1 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-AC68FA is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 16 day(s) past its target of 2026-09-26 \u2014 the plan has drifted from the calendar\ninfo: 24 grandfather_entries pending disposition (the strict flip requires none pending)\ncheck: clean (0 failures, 9 warning(s))\n",
+      "stderr": ""
+    },
+    {
+      "control": "crash-post-stage",
+      "rc": 70,
+      "result": {
+        "stdout": ""
+      },
+      "stderr": ""
+    },
+    {
+      "control": "recover-post-stage",
+      "rc": 0,
+      "stdout": "RECOVERED: completed crash (txn 5e49b7548b13) \u2014 the committed operation is preserved; dump/generated regenerated from the DB\nOK: crash recovery completed; continuing the consistency checks\nOK: foreign_keys pragma asserted per connection\nOK: generation trio consistent at 1590 (DB <-> dump)\nOK: receipt chain intact (1773 receipt(s), business-state digest matches, 180 merge fork(s) tolerated under the merge-rebuild receipt)\nwarn: rule=mig-ref-stale: MIG-F1CCB6 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D7D2C4 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D248B2 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-79F036 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-A993B3 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-751A4C is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-7AFFE1 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-AC68FA is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 16 day(s) past its target of 2026-09-26 \u2014 the plan has drifted from the calendar\ninfo: 24 grandfather_entries pending disposition (the strict flip requires none pending)\ncheck: clean (0 failures, 9 warning(s))\n",
+      "stderr": ""
+    },
+    {
+      "control": "crash-mid-rename",
+      "rc": 70,
+      "result": {
+        "stdout": ""
+      },
+      "stderr": ""
+    },
+    {
+      "control": "recover-mid-rename",
+      "rc": 0,
+      "stdout": "RECOVERED: completed crash (txn e3e555d8e8d4) \u2014 the committed operation is preserved; dump/generated regenerated from the DB\nOK: crash recovery completed; continuing the consistency checks\nOK: foreign_keys pragma asserted per connection\nOK: generation trio consistent at 1590 (DB <-> dump)\nOK: receipt chain intact (1773 receipt(s), business-state digest matches, 180 merge fork(s) tolerated under the merge-rebuild receipt)\nwarn: rule=mig-ref-stale: MIG-F1CCB6 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D7D2C4 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D248B2 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-79F036 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-A993B3 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-751A4C is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-7AFFE1 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-AC68FA is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 16 day(s) past its target of 2026-09-26 \u2014 the plan has drifted from the calendar\ninfo: 24 grandfather_entries pending disposition (the strict flip requires none pending)\ncheck: clean (0 failures, 9 warning(s))\n",
+      "stderr": ""
+    },
+    {
+      "control": "crash-post-rename",
+      "rc": 70,
+      "result": {
+        "stdout": ""
+      },
+      "stderr": ""
+    },
+    {
+      "control": "recover-post-rename",
+      "rc": 0,
+      "stdout": "RECOVERED: completed crash (txn cae3e05bed8b) \u2014 the committed operation is preserved; dump/generated regenerated from the DB\nOK: crash recovery completed; continuing the consistency checks\nOK: foreign_keys pragma asserted per connection\nOK: generation trio consistent at 1590 (DB <-> dump)\nOK: receipt chain intact (1773 receipt(s), business-state digest matches, 180 merge fork(s) tolerated under the merge-rebuild receipt)\nwarn: rule=mig-ref-stale: MIG-F1CCB6 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D7D2C4 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-D248B2 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-79F036 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-A993B3 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-751A4C is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-7AFFE1 is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=mig-ref-stale: MIG-AC68FA is 54 days old (> 7) \u2014 disposition the migration debt before the strict flip\nwarn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 16 day(s) past its target of 2026-09-26 \u2014 the plan has drifted from the calendar\ninfo: 24 grandfather_entries pending disposition (the strict flip requires none pending)\ncheck: clean (0 failures, 9 warning(s))\n",
+      "stderr": ""
+    },
+    {
+      "control": "crash-before-unknown",
+      "rc": 70,
+      "result": {
+        "stdout": ""
+      },
+      "stderr": ""
+    },
+    {
+      "control": "recovery-unknown-preserves-intent",
+      "rc": 3,
+      "stdout": "",
+      "stderr": "refused: rule=merge-recovery-state: DB matches neither exact before nor after; preserve evidence\n"
+    }
+  ]
+}

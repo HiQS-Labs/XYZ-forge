@@ -1,0 +1,8 @@
+refused: rule=release-update-stale: release changed after validation; owner state preserved; retry against current state
+updated release rel-01M4P2NKWSC2SA75H6KDBE8HFS
+{'revision': 'before-fix', 'injected': False, 'injection_count': 0, 'rc': 0, 'codename': 'old-owner', 'target_date': '2026-10-21', 'safe': True}
+updated release rel-01M4P2NM9HREK7WWPSP2TTX5B6
+{'revision': 'before-fix', 'injected': True, 'injection_count': 1, 'rc': 0, 'codename': 'old-owner', 'target_date': '2026-10-21', 'safe': False}
+updated release rel-01M4P2NMRZ5BPKKFXR6PVTPRBE
+{'revision': 'candidate', 'injected': False, 'injection_count': 0, 'rc': 0, 'codename': 'old-owner', 'target_date': '2026-10-21', 'safe': True}
+{'revision': 'candidate', 'injected': True, 'injection_count': 1, 'rc': 3, 'codename': 'new-owner', 'target_date': '2026-10-20', 'safe': True}

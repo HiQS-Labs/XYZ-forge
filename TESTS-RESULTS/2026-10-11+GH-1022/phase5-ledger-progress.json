@@ -1,0 +1,16 @@
+{
+  "global_id": "rmi-01M4NVEZG8FAM7BBS950TRBWH9",
+  "preserved_fields": {
+    "rating_pri": 70,
+    "rating_sev": 65,
+    "rating_appeal": 50,
+    "rating_effort": 25,
+    "rating_ovr": null,
+    "doc_path": "PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md",
+    "section": "In progress",
+    "status_marker": "\ud83d\udea7",
+    "status_label": "in-progress"
+  },
+  "raw_text": "- **GH-1022 \u00b7 Weekly branch-backed issue intake** \ud83d\udea7 Held accumulation and canonical Python owner-rank reader reviewed; draft PR #1024, full gate 409/409; required branch/global-work, readiness, freeze and shared safety remain active. (rated 70/65/50/25) \u2192 [GH-1022-WEEKLY-INTAKE.md](PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md) \u00b7 [#1022](https://github.com/HiQS-Labs/XYZ-forge/issues/1022)",
+  "local_effects": "sanctioned task-clone roadmap update only,connectors disabled,owner ratings/override/GID/status/doc pointer unchanged"
+}

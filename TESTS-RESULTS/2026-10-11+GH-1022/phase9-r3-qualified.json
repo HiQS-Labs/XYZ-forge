@@ -1,0 +1,67 @@
+{
+  "head": "d9e7d6a7deee6cb0d3c77d76a4c8149dc8cfa641",
+  "source_sha256": {
+    "utils/py/releases_app.py": "06b02c67ad6fc7f3c649ff13c61a0c9af41ed60a67a1167a87415b7fa81ecaf1",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "5e722fe28ee5772f1f4cee38c50b9cbf93f1851ca1866d38eb45a665aebcf8e6"
+  },
+  "controls": [
+    {
+      "control": "caller-manual",
+      "rc": 0
+    },
+    {
+      "control": "commit-loss",
+      "rc": 0
+    },
+    {
+      "control": "clone-loss",
+      "rc": 0
+    },
+    {
+      "control": "ancestry-loss",
+      "rc": 0
+    },
+    {
+      "control": "intent-pair-loss",
+      "rc": 0
+    },
+    {
+      "control": "new-writer-race",
+      "rc": 0
+    },
+    {
+      "control": "hook-installed",
+      "rc": 0
+    },
+    {
+      "control": "hook-refusal",
+      "rc": 0
+    },
+    {
+      "control": "hook-timeout",
+      "rc": 0
+    },
+    {
+      "control": "extra-tree-hold",
+      "rc": 0
+    },
+    {
+      "control": "negative-current",
+      "rc": 0
+    },
+    {
+      "control": "extra-parent-hold",
+      "rc": 0
+    },
+    {
+      "control": "nonempty-pr",
+      "rc": 0
+    },
+    {
+      "control": "same-date",
+      "rc": 0
+    }
+  ],
+  "effects": "owned temporary independent full clones/canonical/intent/capture/Git commits/localbare/installed fixture hooks/bounded children only; no live push/dispatch/CI cases",
+  "limits": "GH and clone routing injected; full normal gate/whole caller time and cost/older cached writer/exhaustive interleavings unqualified"
+}

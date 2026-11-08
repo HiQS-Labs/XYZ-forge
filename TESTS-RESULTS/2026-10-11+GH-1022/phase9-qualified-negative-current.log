@@ -1,0 +1,5 @@
+stale-source predecessor HEAD/owner edits changed
+malformed-owner malformed/symlinked predecessor private evidence
+malformed-receipt malformed/symlinked predecessor private evidence
+malformed-intake complete exact committed predecessor intake required
+dirty-source predecessor HEAD/owner edits changed

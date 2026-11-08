@@ -1,0 +1,197 @@
+{
+  "refs": [
+    "ff895c830f27b1b6cb29a733f9b2af9347446b6d",
+    "HEAD",
+    "MERGE_HEAD"
+  ],
+  "base_sha": "ff895c830f27b1b6cb29a733f9b2af9347446b6d",
+  "ours_sha": "a87ac64a9d6439cdae5baae5505779244cc983a7",
+  "target_sha": "d09b8f9dedd436be3e5f883f68deff985719fe1b",
+  "classification": {
+    "disjoint": true,
+    "reasons": [],
+    "ours": {
+      "roadmap_items": {
+        "rmi-01M4NVEZG8FAM7BBS950TRBWH9": "added"
+      }
+    },
+    "theirs": {
+      "roadmap_items": {
+        "rmi-01M4PWV1JYAM31K1YZW71MDY7T": "updated"
+      }
+    },
+    "keep": "theirs",
+    "replay": [
+      {
+        "op": "add",
+        "row": {
+          "global_id": "rmi-01M4NVEZG8FAM7BBS950TRBWH9",
+          "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+          "gh_number": "1022",
+          "title": "Weekly branch-backed issue intake and approval-bound planning",
+          "section": "In progress",
+          "position": "124",
+          "status_marker": "\ud83d\udea7",
+          "complexity": null,
+          "risk": null,
+          "effort": null,
+          "doc_path": "PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md",
+          "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1022",
+          "raw_text": "- **GH-1022 \u00b7 Weekly branch-backed issue intake** \ud83d\udea7 Draft PR #1024; corrective source1044969d reviewedR6 FAIL withoneMedium trackedGH1028,noCriticalHigh. Requirednormalgates/publication pending;W7\u2013W11 incomplete/held,Phase6paused. (rated 70/65/50/25) \u2192 [GH-1022-WEEKLY-INTAKE.md](PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md) \u00b7 [#1022](https://github.com/HiQS-Labs/XYZ-forge/issues/1022)",
+          "first_seen": "2026-10-11T16:06:48Z",
+          "updated_at": "2026-10-12T01:59:23Z",
+          "rating_pri": "70",
+          "rating_sev": "65",
+          "rating_appeal": "50",
+          "rating_effort": "25",
+          "rating_ovr": null,
+          "status_label": "in-progress"
+        }
+      }
+    ],
+    "gen": [
+      1587,
+      1588
+    ]
+  },
+  "generation": 1588,
+  "table_counts": {
+    "schema_migrations": {
+      "base": 9,
+      "ours": 9,
+      "current_target": 9,
+      "task_additions": 0,
+      "merged": 9
+    },
+    "settings": {
+      "base": 3,
+      "ours": 3,
+      "current_target": 3,
+      "task_additions": 1,
+      "merged": 3
+    },
+    "repos": {
+      "base": 1,
+      "ours": 1,
+      "current_target": 1,
+      "task_additions": 0,
+      "merged": 1
+    },
+    "issue_refs": {
+      "base": 101,
+      "ours": 101,
+      "current_target": 101,
+      "task_additions": 0,
+      "merged": 101
+    },
+    "marathons": {
+      "base": 6,
+      "ours": 6,
+      "current_target": 6,
+      "task_additions": 0,
+      "merged": 6
+    },
+    "releases": {
+      "base": 13,
+      "ours": 13,
+      "current_target": 13,
+      "task_additions": 0,
+      "merged": 13
+    },
+    "manifest_items": {
+      "base": 98,
+      "ours": 98,
+      "current_target": 98,
+      "task_additions": 0,
+      "merged": 98
+    },
+    "manifest_state_events": {
+      "base": 87,
+      "ours": 87,
+      "current_target": 87,
+      "task_additions": 0,
+      "merged": 87
+    },
+    "doc_lines": {
+      "base": 86,
+      "ours": 86,
+      "current_target": 86,
+      "task_additions": 0,
+      "merged": 86
+    },
+    "legacy_lines": {
+      "base": 28,
+      "ours": 28,
+      "current_target": 28,
+      "task_additions": 0,
+      "merged": 28
+    },
+    "grandfather_entries": {
+      "base": 24,
+      "ours": 24,
+      "current_target": 24,
+      "task_additions": 0,
+      "merged": 24
+    },
+    "roadmap_items": {
+      "base": 349,
+      "ours": 350,
+      "current_target": 349,
+      "task_additions": 1,
+      "merged": 350
+    },
+    "jog_queue": {
+      "base": 18,
+      "ours": 18,
+      "current_target": 18,
+      "task_additions": 0,
+      "merged": 18
+    },
+    "op_receipts": {
+      "base": 1772,
+      "ours": 1783,
+      "current_target": 1774,
+      "task_additions": 11,
+      "merged": 1785
+    },
+    "work_events": {
+      "base": 701,
+      "ours": 710,
+      "current_target": 702,
+      "task_additions": 9,
+      "merged": 711
+    }
+  },
+  "task_row": {
+    "global_id": "rmi-01M4NVEZG8FAM7BBS950TRBWH9",
+    "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+    "gh_number": "1022",
+    "title": "Weekly branch-backed issue intake and approval-bound planning",
+    "section": "In progress",
+    "position": "124",
+    "status_marker": "\ud83d\udea7",
+    "complexity": null,
+    "risk": null,
+    "effort": null,
+    "doc_path": "PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md",
+    "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1022",
+    "raw_text": "- **GH-1022 \u00b7 Weekly branch-backed issue intake** \ud83d\udea7 Draft PR #1024; corrective source1044969d reviewedR6 FAIL withoneMedium trackedGH1028,noCriticalHigh. Requirednormalgates/publication pending;W7\u2013W11 incomplete/held,Phase6paused. (rated 70/65/50/25) \u2192 [GH-1022-WEEKLY-INTAKE.md](PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md) \u00b7 [#1022](https://github.com/HiQS-Labs/XYZ-forge/issues/1022)",
+    "first_seen": "2026-10-11T16:06:48Z",
+    "updated_at": "2026-10-12T01:59:23Z",
+    "rating_pri": "70",
+    "rating_sev": "65",
+    "rating_appeal": "50",
+    "rating_effort": "25",
+    "rating_ovr": null,
+    "status_label": "in-progress"
+  },
+  "preservation": "all current target rows exact;only genuine task additions retained;local old base rows unchanged;settings3way/maxgeneration;no replay/remint;canonical parser/formatter/validator;rebuild pending",
+  "runtime_hashes": {
+    "skills/3-weekly/10days/intake_adapter.py": "9af8a575965c2a723e4245379165e24aae96e5b0dcc50126f2d138578df53737",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "d1b64d3056e0d380775b5780a8c11d1ce627d0a3c7984cf57ca4fd67a30f3cf5",
+    "skills/3-weekly/weekly-planner/scripts/issue_intake.py": "28b58fcee1cd4e23a6f844bddce4739ddcee3056be2223bdfafd427f3ee16b57",
+    "utils/py/releases_app.py": "77e99f1783313347ad8f672d31751759731f466af7c8fba6f62d98e2d5a46960",
+    "utils/py/proc_group.py": "e5dbc41b0e48ded0a9a30ce381f141a27be1322963ce8fd5a44a94adb5ef0130",
+    "utils/hq/hq-lib.sh": "3e199303241cf4933ce232ed8f374e6caf6e2236777416414f6711560059706d"
+  }
+}

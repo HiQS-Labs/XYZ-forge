@@ -1,0 +1,328 @@
+{
+  "source_hashes": {
+    "skills/3-weekly/weekly-planner/scripts/issue_intake.py": "303db323dc8b93a79bdf5769ad8006b963fb41c6ba387de2fec94efc64faa030",
+    "skills/3-weekly/10days/intake_adapter.py": "cae0244dc5627cfd2626e6c7277fdbabb7c41031c99bb169862249474b414668",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "86cab869023e520424377aa61fac2266362f62a3e4ddd2993f0e50dbe601c0d4"
+  },
+  "records": [
+    {
+      "name": "shared harness module resolved",
+      "passed": true,
+      "details": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/issue_intake.py"
+    },
+    {
+      "name": "paginated PR-filtered qualified ordered members and closed observation",
+      "passed": true,
+      "details": {
+        "repository": "example/repo",
+        "complete": true,
+        "status": "HELD",
+        "dispatch_allowed": false,
+        "observedAt": "2026-10-11T00:00:00+00:00",
+        "since": "2026-10-01T00:00:00+00:00",
+        "issues": [
+          {
+            "identity": "example/repo/issues/2",
+            "repository": "example/repo",
+            "kind": "issue",
+            "number": 2,
+            "url": "https://github.com/example/repo/issues/2",
+            "title": "Issue 2",
+            "state": "CLOSED",
+            "body": "",
+            "updatedAt": "2026-10-10T01:00:00Z",
+            "createdAt": "2026-10-01T00:00:00Z",
+            "closedAt": null,
+            "labels": []
+          },
+          {
+            "identity": "example/repo/issues/4",
+            "repository": "example/repo",
+            "kind": "issue",
+            "number": 4,
+            "url": "https://github.com/example/repo/issues/4",
+            "title": "Issue 4",
+            "state": "OPEN",
+            "body": "",
+            "updatedAt": "2026-10-10T01:00:00Z",
+            "createdAt": "2026-10-01T00:00:00Z",
+            "closedAt": null,
+            "labels": []
+          },
+          {
+            "identity": "example/repo/issues/9",
+            "repository": "example/repo",
+            "kind": "issue",
+            "number": 9,
+            "url": "https://github.com/example/repo/issues/9",
+            "title": "Issue 9",
+            "state": "OPEN",
+            "body": "",
+            "updatedAt": "2026-10-10T01:00:00Z",
+            "createdAt": "2026-10-01T00:00:00Z",
+            "closedAt": null,
+            "labels": []
+          }
+        ],
+        "prs": [
+          {
+            "number": 20,
+            "url": "https://github.com/example/repo/pull/20",
+            "title": "Issue 20",
+            "body": "",
+            "state": "OPEN",
+            "updatedAt": "2026-10-10T01:00:00Z",
+            "createdAt": "2026-10-01T00:00:00Z",
+            "closedAt": null,
+            "labels": [],
+            "changedFiles": 2,
+            "headRefName": "feature",
+            "baseRefName": "development",
+            "headRefOid": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "isDraft": true,
+            "mergeable": "MERGEABLE",
+            "reviewDecision": "",
+            "statusCheckRollup": [],
+            "author": {
+              "login": "owner"
+            },
+            "files": [
+              {
+                "path": "a.py"
+              },
+              {
+                "path": "b.py"
+              }
+            ],
+            "identity": "example/repo/pull/20"
+          }
+        ],
+        "pages": {
+          "issues": 2,
+          "prs": 1
+        },
+        "relevance": "updated-since plus explicit previous members; dependencies must be supplied",
+        "holds": [
+          "Branch ledger reconciliation, independent criterion review, readiness, immutable freeze and dispatch enforcement are not implemented."
+        ]
+      }
+    },
+    {
+      "name": "complete PR files, draft metadata retained",
+      "passed": true,
+      "details": [
+        [
+          "gh",
+          "api",
+          "--paginate",
+          "--slurp",
+          "repos/example/repo/issues?state=all&since=2026-10-01T00%3A00%3A00%2B00%3A00&sort=updated&direction=asc&per_page=100"
+        ],
+        [
+          "gh",
+          "api",
+          "repos/example/repo/issues/4"
+        ],
+        [
+          "gh",
+          "api",
+          "--paginate",
+          "--slurp",
+          "repos/example/repo/pulls?state=open&per_page=100"
+        ],
+        [
+          "gh",
+          "pr",
+          "view",
+          "20",
+          "-R",
+          "example/repo",
+          "--json",
+          "number,title,url,state,updatedAt,isDraft,headRefName,baseRefName,headRefOid,mergeable,reviewDecision,statusCheckRollup,body,author,changedFiles,labels,createdAt,closedAt"
+        ],
+        [
+          "gh",
+          "api",
+          "--paginate",
+          "--slurp",
+          "repos/example/repo/pulls/20/files?per_page=100"
+        ],
+        [
+          "gh",
+          "api",
+          "--paginate",
+          "--slurp",
+          "repos/example/repo/issues?state=all&since=2026-10-01T00%3A00%3A00%2B00%3A00&sort=updated&direction=asc&per_page=100"
+        ],
+        [
+          "gh",
+          "api",
+          "--paginate",
+          "--slurp",
+          "repos/example/repo/issues?state=all&since=2026-10-01T00%3A00%3A00%2B00%3A00&sort=updated&direction=asc&per_page=100"
+        ],
+        [
+          "gh",
+          "api",
+          "--paginate",
+          "--slurp",
+          "repos/example/repo/issues?state=all&since=2026-10-01T00%3A00%3A00%2B00%3A00&sort=updated&direction=asc&per_page=100"
+        ],
+        [
+          "gh",
+          "api",
+          "repos/example/repo/issues/4"
+        ],
+        [
+          "gh",
+          "api",
+          "--paginate",
+          "--slurp",
+          "repos/example/repo/pulls?state=open&per_page=100"
+        ],
+        [
+          "gh",
+          "pr",
+          "view",
+          "20",
+          "-R",
+          "example/repo",
+          "--json",
+          "number,title,url,state,updatedAt,isDraft,headRefName,baseRefName,headRefOid,mergeable,reviewDecision,statusCheckRollup,body,author,changedFiles,labels,createdAt,closedAt"
+        ],
+        [
+          "gh",
+          "api",
+          "--paginate",
+          "--slurp",
+          "repos/example/repo/pulls/20/files?per_page=100"
+        ],
+        [
+          "gh",
+          "api",
+          "--paginate",
+          "--slurp",
+          "repos/example/repo/issues?state=all&since=2026-10-01T00%3A00%3A00%2B00%3A00&sort=updated&direction=asc&per_page=100"
+        ]
+      ]
+    },
+    {
+      "name": "preview makes no filesystem writes",
+      "passed": true,
+      "details": "/tmp/gh1022-manual-tw127868"
+    },
+    {
+      "name": "preview dispatch held",
+      "passed": true,
+      "details": [
+        "Branch ledger reconciliation, independent criterion review, readiness, immutable freeze and dispatch enforcement are not implemented."
+      ]
+    },
+    {
+      "name": "foreign prior",
+      "passed": true,
+      "details": "previous intake must be complete and from the same repository"
+    },
+    {
+      "name": "incomplete prior",
+      "passed": true,
+      "details": "previous intake must be complete and from the same repository"
+    },
+    {
+      "name": "truncated malformed page",
+      "passed": true,
+      "details": "invalid paginated response: repos/example/repo/issues?state=all&since=2026-10-01T00%3A00%3A00%2B00%3A00&sort=updated&direction=asc&per_page=100"
+    },
+    {
+      "name": "conflicting duplicates",
+      "passed": true,
+      "details": "conflicting duplicate snapshot: example/repo/issues/9"
+    },
+    {
+      "name": "missing PR files",
+      "passed": true,
+      "details": "incomplete PR files: example/repo/pull/20"
+    },
+    {
+      "name": "foreign URL",
+      "passed": true,
+      "details": "foreign or invalid issue URL: https://github.com/other/repo/issues/9"
+    },
+    {
+      "name": "offline cannot become complete",
+      "passed": true,
+      "details": "offline fixture"
+    },
+    {
+      "name": "red control: removed PR file fails coverage assertion",
+      "passed": true,
+      "details": [
+        {
+          "path": "a.py"
+        }
+      ]
+    },
+    {
+      "name": "legacy scan parity 1",
+      "passed": true,
+      "details": {
+        "rc": 0,
+        "stdout": "{\"number\":2,\"title\":\"second\",\"labels\":[]}\n{\"number\":9,\"title\":\"ninth\",\"labels\":[]}\n",
+        "stderr": "[\"issue\", \"list\", \"--state\", \"open\", \"--search\", \"updated:>=2026-10-01\", \"--limit\", \"200\", \"--json\", \"number,title,createdAt,updatedAt,labels,url\", \"--jq\", \"sort_by(.number) | .[] | {number, title, createdAt, updatedAt, url, labels: [.labels[].name]}\"]\n"
+      }
+    },
+    {
+      "name": "legacy scan parity 2",
+      "passed": true,
+      "details": {
+        "rc": 0,
+        "stdout": "",
+        "stderr": "[\"issue\", \"list\", \"--state\", \"open\", \"--search\", \"updated:2026-09-27..2026-09-30\", \"--limit\", \"200\", \"--json\", \"number,title,createdAt,updatedAt,labels,url\", \"--jq\", \"sort_by(.number) | .[] | {number, title, createdAt, updatedAt, url, labels: [.labels[].name]}\"]\n"
+      }
+    },
+    {
+      "name": "legacy scan parity 3",
+      "passed": true,
+      "details": {
+        "rc": 2,
+        "stdout": "",
+        "stderr": "scan-issues.sh: MAX_DAYS (2) must be greater than MIN_DAYS (2)\n"
+      }
+    },
+    {
+      "name": "legacy scan parity 4",
+      "passed": true,
+      "details": {
+        "rc": 2,
+        "stdout": "",
+        "stderr": "usage: scan-issues.sh [MAX_DAYS] [MIN_DAYS]  (defaults: 10 0)\n"
+      }
+    },
+    {
+      "name": "legacy scan parity 5",
+      "passed": true,
+      "details": {
+        "rc": 7,
+        "stdout": "",
+        "stderr": "[\"issue\", \"list\", \"--state\", \"open\", \"--search\", \"updated:>=2026-10-01\", \"--limit\", \"200\", \"--json\", \"number,title,createdAt,updatedAt,labels,url\", \"--jq\", \"sort_by(.number) | .[] | {number, title, createdAt, updatedAt, url, labels: [.labels[].name]}\"]\n"
+      }
+    },
+    {
+      "name": "copied skill foreign cwd with harness override",
+      "passed": true,
+      "details": {
+        "rc": 0,
+        "stdout": "{\"issue\":99999,\"doc\":null,\"bucket\":null,\"has_contract\":false}\n",
+        "stderr": ""
+      }
+    },
+    {
+      "name": "core UNKNOWN nonzero and no scratch writes",
+      "passed": true,
+      "details": {
+        "rc": 2,
+        "stdout": "{\"complete\": false, \"status\": \"UNKNOWN\", \"dispatch_allowed\": false, \"error\": \"weekly-intake requires --gh-repo OWNER/REPO and --since with timezone\"}\n"
+      }
+    }
+  ]
+}

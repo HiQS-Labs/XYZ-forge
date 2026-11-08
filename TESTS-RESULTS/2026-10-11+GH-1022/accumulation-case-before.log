@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/tmp/gh1022-accumulation-probes.py", line 61, in <module>
+    args.apply=False;dry=core.prepare_weekly(args,src,runner);record('dry-preview-no-clone',not dest.exists() and dry['dispatch_allowed'] is False and len(dry['issues'])==3)
+                         ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/planner_core.py", line 931, in prepare_weekly
+    raise ValueError("ambiguous/foreign canonical identity in dry preparation")
+ValueError: ambiguous/foreign canonical identity in dry preparation

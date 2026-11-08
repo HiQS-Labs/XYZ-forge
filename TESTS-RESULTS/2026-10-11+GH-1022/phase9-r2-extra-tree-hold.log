@@ -1,0 +1,4 @@
+PREVIEW True ['Declared observations are not global quiescence, criterion delivery or dispatch approval.', 'No observer contexts declared for canonical; absence does not prove idle.', 'No observer contexts declared for predecessor; absence does not prove idle.']
+FIRST controlled committed result lost
+EXTRA_TREE_HELD unknown committed handoff state
+INTENT_AND_OWNER_WORK_PRESERVED

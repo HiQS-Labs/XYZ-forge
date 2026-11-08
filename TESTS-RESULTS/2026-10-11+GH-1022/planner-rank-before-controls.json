@@ -1,0 +1,58 @@
+{
+  "source_sha256": "e5cb5586d7276ce364c29438d201c6969bd8bb075ddbb93e89bae9dfe248c45b",
+  "method": "AST-extracted actual canonical reader with in-memory SQLite; no full engine invocation",
+  "controls": [
+    {
+      "name": "rated-no-override",
+      "axes": [
+        70,
+        65,
+        50,
+        25
+      ],
+      "override": null,
+      "expected": 210,
+      "actual": 210,
+      "matches_expected": true
+    },
+    {
+      "name": "rated-override",
+      "axes": [
+        70,
+        65,
+        50,
+        25
+      ],
+      "override": 320,
+      "expected": 320,
+      "actual": 210,
+      "matches_expected": false
+    },
+    {
+      "name": "unrated-override",
+      "axes": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "override": 320,
+      "expected": null,
+      "actual": null,
+      "matches_expected": true
+    },
+    {
+      "name": "doc-only-override",
+      "axes": [
+        70,
+        65,
+        50,
+        25
+      ],
+      "override": 320,
+      "expected": 320,
+      "actual": 210,
+      "matches_expected": false
+    }
+  ]
+}

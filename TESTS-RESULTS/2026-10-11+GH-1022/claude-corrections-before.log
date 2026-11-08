@@ -1,0 +1,30 @@
+baseline for rel-01M4PMH65JG1FDSAHYXFVCK440 captured at 1 (observed)
+IntegrityError releases.baseline_count is write-once
+[
+  {
+    "control": "S9-baseline",
+    "injected": false,
+    "rc": 0,
+    "baseline_count": 1,
+    "safe": true
+  },
+  {
+    "control": "S9-baseline",
+    "injected": true,
+    "rc": 99,
+    "baseline_count": 1,
+    "safe": false
+  },
+  {
+    "control": "S5-batch",
+    "rc": 2,
+    "message": "new issue title contains canonical rating tokens; explicit reconciliation required",
+    "new_rows": [
+      2
+    ],
+    "captures": [
+      "PROJECT/1-INBOX/GH-2-WEEKLY-CAPTURE.md"
+    ],
+    "safe": false
+  }
+]

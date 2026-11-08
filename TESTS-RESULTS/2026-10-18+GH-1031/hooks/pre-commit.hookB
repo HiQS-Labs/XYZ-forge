@@ -1,0 +1,4 @@
+#!/bin/sh
+# control (b): the ancestry merge commit acquires a third parent, tree unchanged
+GD=$(git rev-parse --git-dir); [ -f "$GD/MERGE_HEAD" ] || exit 0
+git rev-parse HEAD~1 >> "$GD/MERGE_HEAD"

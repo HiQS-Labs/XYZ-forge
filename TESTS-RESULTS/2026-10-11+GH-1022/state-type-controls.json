@@ -1,0 +1,163 @@
+{
+  "source_sha256": "fc0f9d6ae1b1b788dda74cb77e5221e1a05f1311b4516f0903b9b13239e78afd",
+  "records": [
+    {
+      "revision": "red-control-before-fix",
+      "state": "open",
+      "rc": 0,
+      "output": {
+        "repository": "example/repo",
+        "complete": true,
+        "status": "HELD",
+        "dispatch_allowed": false,
+        "observedAt": "2026-10-11T16:29:44.604079+00:00",
+        "since": "2026-10-01T00:00:00+00:00",
+        "issues": [
+          {
+            "identity": "example/repo/issues/1",
+            "repository": "example/repo",
+            "kind": "issue",
+            "number": 1,
+            "url": "https://github.com/example/repo/issues/1",
+            "title": "one",
+            "state": "OPEN",
+            "body": "",
+            "updatedAt": "2026-10-11T00:00:00Z",
+            "createdAt": null,
+            "closedAt": null,
+            "labels": []
+          }
+        ],
+        "prs": [],
+        "pages": {
+          "issues": 1,
+          "prs": 1
+        },
+        "relevance": "updated-since plus explicit previous members; dependencies must be supplied",
+        "holds": [
+          "Branch ledger reconciliation, independent criterion review, readiness, immutable freeze and dispatch enforcement are not implemented.",
+          "Outline sequencing/audit are advisory; CI NONE, dependencies and completion heuristics are not readiness proof."
+        ],
+        "advisory_merge_sequence": {
+          "status_phases": {
+            "ready_to_land": [],
+            "blockers_to_fix": [],
+            "needs_rebase": [],
+            "in_review_or_wip": []
+          },
+          "topological_merge_sequence": [],
+          "ready_to_land": [],
+          "blockers_to_fix": [],
+          "needs_rebase": [],
+          "in_review_or_wip": []
+        },
+        "advisory_audit": {
+          "passed": true,
+          "findings": []
+        }
+      },
+      "error": null,
+      "promised_contract_satisfied": true
+    },
+    {
+      "revision": "red-control-before-fix",
+      "state": null,
+      "rc": 1,
+      "output": null,
+      "error": "AttributeError: 'NoneType' object has no attribute 'upper'",
+      "promised_contract_satisfied": false
+    },
+    {
+      "revision": "red-control-before-fix",
+      "state": 7,
+      "rc": 1,
+      "output": null,
+      "error": "AttributeError: 'int' object has no attribute 'upper'",
+      "promised_contract_satisfied": false
+    },
+    {
+      "revision": "candidate",
+      "state": "open",
+      "rc": 0,
+      "output": {
+        "repository": "example/repo",
+        "complete": true,
+        "status": "HELD",
+        "dispatch_allowed": false,
+        "observedAt": "2026-10-11T16:29:44.629264+00:00",
+        "since": "2026-10-01T00:00:00+00:00",
+        "issues": [
+          {
+            "identity": "example/repo/issues/1",
+            "repository": "example/repo",
+            "kind": "issue",
+            "number": 1,
+            "url": "https://github.com/example/repo/issues/1",
+            "title": "one",
+            "state": "OPEN",
+            "body": "",
+            "updatedAt": "2026-10-11T00:00:00Z",
+            "createdAt": null,
+            "closedAt": null,
+            "labels": []
+          }
+        ],
+        "prs": [],
+        "pages": {
+          "issues": 1,
+          "prs": 1
+        },
+        "relevance": "updated-since plus explicit previous members; dependencies must be supplied",
+        "holds": [
+          "Branch ledger reconciliation, independent criterion review, readiness, immutable freeze and dispatch enforcement are not implemented.",
+          "Outline sequencing/audit are advisory; CI NONE, dependencies and completion heuristics are not readiness proof."
+        ],
+        "advisory_merge_sequence": {
+          "status_phases": {
+            "ready_to_land": [],
+            "blockers_to_fix": [],
+            "needs_rebase": [],
+            "in_review_or_wip": []
+          },
+          "topological_merge_sequence": [],
+          "ready_to_land": [],
+          "blockers_to_fix": [],
+          "needs_rebase": [],
+          "in_review_or_wip": []
+        },
+        "advisory_audit": {
+          "passed": true,
+          "findings": []
+        }
+      },
+      "error": null,
+      "promised_contract_satisfied": true
+    },
+    {
+      "revision": "candidate",
+      "state": null,
+      "rc": 2,
+      "output": {
+        "complete": false,
+        "status": "UNKNOWN",
+        "dispatch_allowed": false,
+        "error": "invalid state type: https://github.com/example/repo/issues/1"
+      },
+      "error": null,
+      "promised_contract_satisfied": true
+    },
+    {
+      "revision": "candidate",
+      "state": 7,
+      "rc": 2,
+      "output": {
+        "complete": false,
+        "status": "UNKNOWN",
+        "dispatch_allowed": false,
+        "error": "invalid state type: https://github.com/example/repo/issues/1"
+      },
+      "error": null,
+      "promised_contract_satisfied": true
+    }
+  ]
+}

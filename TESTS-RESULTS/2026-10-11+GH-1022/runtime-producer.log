@@ -1,0 +1,20 @@
+bundle-core-prefers-own-source-intake PASS
+bundle-adapter-with-stale-hint PASS
+invalid-explicit-hint-held PASS
+standalone-copy-uses-central-harness PASS
+old-selected-copy-fails-missing-helper PASS
+default-command-normal-canonical-preparation PASS
+runtime-paths-and-five-hashes PASS
+receipt-binds-runtime PASS
+slow-real-hook-times-out-held PASS
+owned-hook-group-not-running PASS
+weekly-lock-released-on-timeout PASS
+canonical-lock-released-on-timeout PASS
+timeout-retains-incomplete-receipt PASS
+same-input-retry-completes-once PASS
+remote-timeout-preserves-complete-state PASS
+renderer-drift-before-intent-refused PASS
+restored-exact-runtime-retry-safe PASS
+writer-drift-leaves-uncompleted-intent PASS
+exact-writer-restoration-adopts-once PASS
+RESULT 19 controls

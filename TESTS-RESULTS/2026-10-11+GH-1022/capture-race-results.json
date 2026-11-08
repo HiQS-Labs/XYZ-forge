@@ -1,0 +1,24 @@
+{
+  "source_sha256": "3413458de128271e5b080cc3799717b6c769389401ddeafb7541ac311b46758d",
+  "controls": [
+    {
+      "revision": "before-fix",
+      "safe": false,
+      "held": false,
+      "injected": true,
+      "edit_preserved": true,
+      "complete_commit": "414ca7457c338129edd4d781ff383fc137359353",
+      "reason": null
+    },
+    {
+      "revision": "candidate",
+      "safe": true,
+      "held": true,
+      "injected": true,
+      "edit_preserved": true,
+      "complete_commit": null,
+      "reason": "staged canonical accounting differs; preserve partial state"
+    }
+  ],
+  "local_effects": "temporary full fixture clones, canonical captures/ledger/commits, local audit/receipts; injected CRLF owner edit preserved; GitHub reads stubbed, no push/dispatch"
+}

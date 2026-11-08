@@ -1,0 +1,30 @@
+{
+  "all_parent_nonsettings_rows_exactly_preserved": true,
+  "task_gid_status_label_ratings_override_dates_doc_raw_preserved": true,
+  "original_task_row": {
+    "global_id": "rmi-01M4NVEZG8FAM7BBS950TRBWH9",
+    "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+    "gh_number": "1022",
+    "title": "Weekly branch-backed issue intake and approval-bound planning",
+    "section": "In progress",
+    "position": "124",
+    "status_marker": "🚧",
+    "complexity": null,
+    "risk": null,
+    "effort": null,
+    "doc_path": "PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md",
+    "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1022",
+    "raw_text": "- **GH-1022 · Weekly branch-backed issue intake** 🚧 Draft PR #1024; corrective source1044969d reviewedR6 FAIL withoneMedium trackedGH1028,noCriticalHigh. Requirednormalgates/publication pending;W7–W11 incomplete/held,Phase6paused. (rated 70/65/50/25) → [GH-1022-WEEKLY-INTAKE.md](PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md) · [#1022](https://github.com/HiQS-Labs/XYZ-forge/issues/1022)",
+    "first_seen": "2026-10-11T16:06:48Z",
+    "updated_at": "2026-10-12T01:59:23Z",
+    "rating_pri": "70",
+    "rating_sev": "65",
+    "rating_appeal": "50",
+    "rating_effort": "25",
+    "rating_ovr": null,
+    "status_label": "in-progress"
+  },
+  "all_six_reviewed_source_hashes_unchanged": true,
+  "resolved_development": "ff895c830f27b1b6cb29a733f9b2af9347446b6d",
+  "remaining_unmerged": ""
+}

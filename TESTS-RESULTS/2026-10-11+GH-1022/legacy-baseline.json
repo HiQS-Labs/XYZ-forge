@@ -1,0 +1,44 @@
+{
+  "source_sha": "22806e5f212bf64459ed60e8a790133aeccdca52",
+  "scan": [
+    {
+      "args": [],
+      "rc": 0,
+      "stdout": "{\"number\":2,\"title\":\"second\",\"labels\":[]}\n{\"number\":9,\"title\":\"ninth\",\"labels\":[]}\n",
+      "stderr": "[\"issue\", \"list\", \"--state\", \"open\", \"--search\", \"updated:>=2026-10-01\", \"--limit\", \"200\", \"--json\", \"number,title,createdAt,updatedAt,labels,url\", \"--jq\", \"sort_by(.number) | .[] | {number, title, createdAt, updatedAt, url, labels: [.labels[].name]}\"]\n"
+    },
+    {
+      "args": [
+        "14",
+        "11"
+      ],
+      "rc": 0,
+      "stdout": "",
+      "stderr": "[\"issue\", \"list\", \"--state\", \"open\", \"--search\", \"updated:2026-09-27..2026-09-30\", \"--limit\", \"200\", \"--json\", \"number,title,createdAt,updatedAt,labels,url\", \"--jq\", \"sort_by(.number) | .[] | {number, title, createdAt, updatedAt, url, labels: [.labels[].name]}\"]\n"
+    },
+    {
+      "args": [
+        "2",
+        "2"
+      ],
+      "rc": 2,
+      "stdout": "",
+      "stderr": "scan-issues.sh: MAX_DAYS (2) must be greater than MIN_DAYS (2)\n"
+    },
+    {
+      "args": [
+        "bad"
+      ],
+      "rc": 2,
+      "stdout": "",
+      "stderr": "usage: scan-issues.sh [MAX_DAYS] [MIN_DAYS]  (defaults: 10 0)\n"
+    },
+    {
+      "args": [],
+      "rc": 7,
+      "stdout": "",
+      "stderr": "[\"issue\", \"list\", \"--state\", \"open\", \"--search\", \"updated:>=2026-10-01\", \"--limit\", \"200\", \"--json\", \"number,title,createdAt,updatedAt,labels,url\", \"--jq\", \"sort_by(.number) | .[] | {number, title, createdAt, updatedAt, url, labels: [.labels[].name]}\"]\n"
+    }
+  ],
+  "scope": "ephemeral CLI characterization, not a CI test"
+}

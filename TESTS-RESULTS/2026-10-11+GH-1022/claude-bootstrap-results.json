@@ -1,0 +1,10 @@
+{
+  "control": "N3-loser-after-absent-check",
+  "held": true,
+  "error": "['git', 'clone', '--no-hardlinks']: fatal: destination path '/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-688kwb3x/claude-bootstrap/prepare' already exists and is not an empty directory.\n",
+  "winner_commit": "457fdaaa32fe028ebb2e504209192d4d7f2b3abd",
+  "final_head": "457fdaaa32fe028ebb2e504209192d4d7f2b3abd",
+  "receipt_complete_commit": "457fdaaa32fe028ebb2e504209192d4d7f2b3abd",
+  "safe": true,
+  "local_effects": "temporary independent full clone canonical init/add/rate captures receipts/commits; stubs for GH and target network; no connector writes"
+}

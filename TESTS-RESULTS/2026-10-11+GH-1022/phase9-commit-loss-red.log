@@ -1,0 +1,22 @@
+PREVIEW True ['Declared observations are not global quiescence, criterion delivery or dispatch approval.', 'No observer contexts declared for canonical; absence does not prove idle.', 'No observer contexts declared for predecessor; absence does not prove idle.']
+FIRST controlled committed result lost
+RESUME RuntimeError ['/opt/homebrew/opt/python@3.14/bin/python3.14', '/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/releases_app.py', '--root']: 
+ROOT /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-accumulation-uewtb92o/rollover/rolled HEAD 45d9800c069291806a80504c605a9948091bf7c8
+Traceback (most recent call last):
+  File "/tmp/gh1022-phase9-commit-loss.py", line 30, in <module>
+    try:result=core.reconcile_weekly(args,src,runner)
+               ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/planner_core.py", line 1579, in reconcile_weekly
+    reply = json.loads(owner(root, 'check', '--merge-base', common, '--merge-target', old_head,
+                       ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              '--expected-head', target, '--expected-branch', branch,
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                              '--merge-delta-parent', 'target', '--apply'))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/skills/3-weekly/weekly-planner/scripts/planner_core.py", line 1423, in owner
+    output = owner_command([sys.executable, str(harness / 'utils/py/releases_app.py'),
+                            '--root', str(directory), *argv], directory)
+  File "/tmp/gh1022-phase9-commit-loss.py", line 21, in runner
+    out=real(argv,cwd)
+  File "<string>", line 12, in real
+RuntimeError: ['/opt/homebrew/opt/python@3.14/bin/python3.14', '/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/utils/py/releases_app.py', '--root']: 

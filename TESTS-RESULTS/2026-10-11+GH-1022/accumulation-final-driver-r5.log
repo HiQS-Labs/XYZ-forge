@@ -1,0 +1,20 @@
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022) changed-files=0
+codex-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.0OkCCI)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.0OkCCI) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.0OkCCI) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.0OkCCI) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.0OkCCI) changed-files=0
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/relay-system/2026-10-11/gh1022-accumulation-final.codex.md
+codex-turn: committed codex turn (file-scoped, no push)
+relay-drive: attested Approved by codex — reviewed e016d29a4f79, 7707 bytes of review text, record /Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/.git/relay-attest/GH1022-ACCUMULATION-FINAL-R5.json
+relay-drive: review-once — reviewer approved/closed (STATUS: Approved, attested) after 1 turn
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/5 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 5h 44m
+per done-task: ≥0 tokens, 1h 8m wall-clock
+  turn peak RSS: codex: 282MB peak RSS
+

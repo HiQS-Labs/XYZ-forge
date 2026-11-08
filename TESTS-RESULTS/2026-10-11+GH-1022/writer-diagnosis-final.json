@@ -1,0 +1,82 @@
+{
+  "revision": "a0b484b5adaca6f959d30ebe6694d3d8d3905cfe",
+  "source_sha256": "09384ac95c78fe2f33b2ca4b34f0eb443b5f14f6d752dc55d268486271c750cb",
+  "checked_paths": [
+    {
+      "path": "utils/py/releases_app.py",
+      "function": "perform_write",
+      "start": 1657,
+      "end": 1771
+    },
+    {
+      "path": "utils/py/releases_app.py",
+      "function": "cmd_update",
+      "start": 2440,
+      "end": 2515
+    },
+    {
+      "path": "utils/py/releases_app.py",
+      "function": "cmd_roadmap_add",
+      "start": 3612,
+      "end": 3693
+    },
+    {
+      "path": "utils/py/releases_app.py",
+      "function": "cmd_roadmap_rate",
+      "start": 3695,
+      "end": 3773
+    },
+    {
+      "path": "utils/py/releases_app.py",
+      "function": "cmd_roadmap_repoint",
+      "start": 3776,
+      "end": 3827
+    },
+    {
+      "path": "utils/py/releases_app.py",
+      "function": "cmd_roadmap_update",
+      "start": 3913,
+      "end": 4060
+    },
+    {
+      "path": "utils/py/releases_app.py",
+      "function": "cmd_roadmap_move",
+      "start": 4063,
+      "end": 4065
+    },
+    {
+      "path": "utils/py/releases_app.py",
+      "function": "cmd_roadmap_reconcile_state",
+      "start": 4068,
+      "end": 4175
+    },
+    {
+      "path": "utils/py/releases_app.py",
+      "function": "cmd_roadmap_sync",
+      "start": 4178,
+      "end": 4343
+    },
+    {
+      "path": "utils/py/releases_app.py",
+      "function": "cmd_settings_set",
+      "start": 3830,
+      "end": 3870
+    }
+  ],
+  "findings": [
+    "release-update guard previously repaired",
+    "rate/repoint mutually erase pre-lock owner raw_text;both stale-row guards now present",
+    "add protected by unique repo_id,gh_number/transaction rollback;losing writer emits nonzero IntegrityError",
+    "marker/section updates write only explicit fields,preserve unrelated owner fields",
+    "accepted-start and reconcile-state have in-transaction fullrow checks;4 real local quiet/stale controls pass with native reads stubbed",
+    "legacy mirror sync skips releases-mode;not enabled or concurrency-repaired"
+  ],
+  "verification": "10 actual old/candidate writer-class controls;6 actual rating/repoint quiet/force controls;4 actual accepted/reconcile quiet/stale controls with native reads stubbed;36 accumulation controls;all source hashes match a0b484b5;final classified gate exit0,28/28 including24 release suites andPython21;gh36914/14,ledger clean0failures9warnings,inventory matches baseline",
+  "limits": [
+    "not a general all-CRUD race-free claim",
+    "release ship/manifest/import/rebuild and Jog execution outside planning write-set",
+    "explicit full raw_text caller updates intentionally replace caller-nominated content;not safe merge reconciliation",
+    "global clones/remote rollover and W7-W11 still unimplemented",
+    "same review Escalated4/4,no new round authorized"
+  ]
+}

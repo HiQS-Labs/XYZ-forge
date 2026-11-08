@@ -1,0 +1,38 @@
+{
+  "source_sha256": "ac72d6f83e75db54cb52ab7c5135a8a20fd358a1defbd32789bff8bdbf8bfad8",
+  "method": "actual renderer/parser with in-memory read tables and owned temp dump bytes; no DB/source/browser/connector writes or CI additions",
+  "controls": [
+    {
+      "case": "matching",
+      "parser_generation": 1,
+      "error": null,
+      "renders": true,
+      "stale": false,
+      "unavailable": false
+    },
+    {
+      "case": "different",
+      "parser_generation": 2,
+      "error": null,
+      "renders": true,
+      "stale": true,
+      "unavailable": false
+    },
+    {
+      "case": "no-header",
+      "parser_generation": null,
+      "error": "TypeError: %d format: a real number is required, not NoneType",
+      "renders": false,
+      "stale": false,
+      "unavailable": false
+    },
+    {
+      "case": "empty",
+      "parser_generation": null,
+      "error": "TypeError: %d format: a real number is required, not NoneType",
+      "renders": false,
+      "stale": false,
+      "unavailable": false
+    }
+  ]
+}

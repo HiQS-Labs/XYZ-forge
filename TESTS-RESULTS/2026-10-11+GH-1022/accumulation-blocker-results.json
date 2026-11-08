@@ -1,0 +1,54 @@
+{
+  "source_hashes": {
+    "planner_core.py": "86cab869023e520424377aa61fac2266362f62a3e4ddd2993f0e50dbe601c0d4"
+  },
+  "controls": [
+    {
+      "revision": "before-fix",
+      "control": "title-rating",
+      "safe": false,
+      "held": false,
+      "registered_numbers": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "revision": "before-fix",
+      "control": "staging-writer",
+      "safe": false,
+      "attempts": [
+        {
+          "rc": 0,
+          "refused": false
+        }
+      ],
+      "live_override": 321,
+      "accounting_override": 320
+    },
+    {
+      "revision": "candidate",
+      "control": "title-rating",
+      "safe": true,
+      "held": true,
+      "registered_numbers": [
+        1
+      ]
+    },
+    {
+      "revision": "candidate",
+      "control": "staging-writer",
+      "safe": true,
+      "attempts": [
+        {
+          "rc": 4,
+          "refused": true
+        }
+      ],
+      "live_override": 320,
+      "accounting_override": 320
+    }
+  ],
+  "local_effects": "temporary full fixture clones, canonical CLI captures/ledger/commits/lock audit; GitHub stubbed, no dispatch/push"
+}

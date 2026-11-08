@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-12T12:24:29.894505+00:00",
+  "phase": "phase9-r3-escalated-grounding",
+  "head": "0144826ab4af05c018951cbc56959a4c7977339d",
+  "source_sha256": {
+    "utils/py/releases_app.py": "06b02c67ad6fc7f3c649ff13c61a0c9af41ed60a67a1167a87415b7fa81ecaf1",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "5e722fe28ee5772f1f4cee38c50b9cbf93f1851ca1866d38eb45a665aebcf8e6"
+  },
+  "evidence": [
+    "phase9-s4-hook-red.log",
+    "phase9-s4-parent-red.log",
+    "phase9-older-cache-qualified.json"
+  ],
+  "results": "actual installed fixture pre-commit hook adds/stages README after intended staging; actual native unexpected two-parent preparation result; BOTH complete checkpoint wrongly certified; predecessor retained; older code imported before handoff and invoked after refuses ownership mismatch",
+  "effects": "owned temporary full-clone/Git/canonical/private receipt/hook writes only; no live push/dispatch/CI tests",
+  "limits": "S4 is UNFIXED; same Phase9 cap3 exhausted, no normal qualifying gate/publication; older proof is post-handoff invocation, not in-flight metadata cache; whole caller budget/exhaustive interleavings unqualified"
+}

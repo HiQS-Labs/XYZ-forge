@@ -1,0 +1,85 @@
+{
+  "source_sha256": {
+    "utils/py/releases_app.py": "b72df3ea23129102cda3102c1f319ddf047c51d28d9a68361b6061d3fa50ad43",
+    "skills/3-weekly/weekly-planner/scripts/issue_intake.py": "b2142a3cc5b878fb96e1a0c6c0a678a3ac7e07d3997d77c469dc22f129c9c6b8"
+  },
+  "method": "actual owner CLI and pure shared normalizer; owned canonical-schema fixture data/gitrepo/negative-control writes only; no builders, connectors or CI cases",
+  "count": 15,
+  "controls": [
+    {
+      "name": "actual canonical work CLI reads complete held facts",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "temporary tracking preserved without invented issue",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "NULL-gh event and malformed payload retained raw/held",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "quiet canonical read does not alter DB or SQLite sidecars",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "normalization holds without asserting idle",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "identical business facts dedup with both provenance sources",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "same GID differing work preserved as conflict/UNKNOWN",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "partial root failure keeps all raw sources and known facts",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "invalid generation becomes UNKNOWN",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "invalid git_head becomes UNKNOWN",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "invalid schema_version becomes UNKNOWN",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "empty authority observation not success-empty",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "existing driver lock observed/preserved without reaping",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "canonical journal UNKNOWN/nonzero/no recovery",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "name": "invalid generation UNKNOWN/nonzero",
+      "pass": true,
+      "detail": null
+    }
+  ]
+}

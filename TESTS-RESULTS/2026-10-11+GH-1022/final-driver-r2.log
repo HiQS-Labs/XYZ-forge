@@ -1,0 +1,17 @@
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022) changed-files=0
+codex-turn: worktree isolation ON (/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T//rtl-wt.WcP4b5)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.WcP4b5) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.WcP4b5) changed-files=0
+rtl: GH-654 allowlist: [] relay_file: /Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022/relay-system/2026-10-11/gh1022-final.codex.md
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: WARN relay STATUS not terminal and no RELAY_PEER set — token GH1022-FINAL-QA-R2 left as-is (set RELAY_PEER for auto-handoff)
+relay-drive: review-once — reviewer completed a turn (review block appended; STATUS: Open); non-approval handback, not a stall
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/2 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 15m 31s
+per done-task: ≥0 tokens, 7m 45s wall-clock
+  turn peak RSS: codex: 273MB peak RSS

@@ -1,0 +1,95 @@
+{
+  "head": "f18b051a98551b8da6c5adf5f8d3f87c99ab7a6a",
+  "source_sha256": {
+    "utils/py/releases_app.py": "06b02c67ad6fc7f3c649ff13c61a0c9af41ed60a67a1167a87415b7fa81ecaf1",
+    "skills/3-weekly/weekly-planner/scripts/planner_core.py": "7d27290e32010dc736107418387cad0f225df9c1ecd001f005e29a47ed0844e2"
+  },
+  "controls": [
+    {
+      "control": "caller-manual",
+      "rc": 0
+    },
+    {
+      "control": "commit-loss",
+      "rc": 0
+    },
+    {
+      "control": "clone-loss",
+      "rc": 0
+    },
+    {
+      "control": "ancestry-loss",
+      "rc": 0
+    },
+    {
+      "control": "intent-pair-loss",
+      "rc": 0
+    },
+    {
+      "control": "new-writer-race",
+      "rc": 0
+    },
+    {
+      "control": "hook-installed",
+      "rc": 0
+    },
+    {
+      "control": "hook-refusal",
+      "rc": 0
+    },
+    {
+      "control": "hook-timeout",
+      "rc": 0
+    },
+    {
+      "control": "extra-tree-hold",
+      "rc": 0
+    },
+    {
+      "control": "negative-current",
+      "rc": 0
+    },
+    {
+      "control": "extra-parent-hold",
+      "rc": 0
+    },
+    {
+      "control": "nonempty-pr",
+      "rc": 0
+    },
+    {
+      "control": "older-cache",
+      "rc": 0
+    },
+    {
+      "control": "final-prepare-loss",
+      "rc": 0
+    },
+    {
+      "control": "final-prepare-before",
+      "rc": 0
+    },
+    {
+      "control": "held-hook",
+      "rc": 0
+    },
+    {
+      "control": "held-parent",
+      "rc": 0
+    },
+    {
+      "control": "unbound-nochange",
+      "rc": 0
+    },
+    {
+      "control": "same-date",
+      "rc": 0
+    },
+    {
+      "control": "existing-accumulation-36",
+      "rc": 0
+    }
+  ],
+  "effects": "owned temporary full-clone/canonical/private receipt/capture/Git/hook/localbare/bounded-child writes only; no live actions or permanent CI additions",
+  "limits": "GH/clone routing injected; helper timeout is not whole-caller time/cost proof; older loaded code invoked after handoff not in-flight metadata cache; exhaustive interleavings unqualified"
+}

@@ -1,0 +1,163 @@
+{
+  "method": "actual CLI and canonical owner API in disposable full Git root; connectors0; local fixture DB/dump/Git/audit writes; no CI tests or connector writes",
+  "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase8-control-s6e_tmaf",
+  "source_sha256": "d7efd6d5e620c9518adf91ff78929c79bab2df9cb9d4f9a645dae3d5faf56694",
+  "heads": {
+    "base": "79b2991c67ed70c2488b3de62a29cc48f896ddc7",
+    "ours": "49c5b79430f0b3376ff5e0e9ad74b4baadc5e100",
+    "target": "731ec61cae1a57fb950ecf33d899d283bd5dac86"
+  },
+  "preserved_gids": [
+    "rmi-01M0DP23V8F0R5ET8B6T536Z81",
+    "rmi-01M0DP23V80KAQSQP9C3V07BS0"
+  ],
+  "controls": [
+    {
+      "control": "pure-preview",
+      "rc": 0,
+      "result": {
+        "schema": "releases/ledger-merge@1",
+        "status": "HELD",
+        "complete": true,
+        "changed": false,
+        "dispatch": false,
+        "holds": [],
+        "owner_sha256": "d7efd6d5e620c9518adf91ff78929c79bab2df9cb9d4f9a645dae3d5faf56694",
+        "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase8-control-s6e_tmaf",
+        "head": "49c5b79430f0b3376ff5e0e9ad74b4baadc5e100",
+        "branch": "ours",
+        "merge_base": "79b2991c67ed70c2488b3de62a29cc48f896ddc7",
+        "supplied_target": "731ec61cae1a57fb950ecf33d899d283bd5dac86",
+        "target_freshness": "not verified; supplied local commit only",
+        "source_generations": [
+          1588,
+          1589,
+          1589
+        ],
+        "changed_gids": [
+          "rmi-01M0DP23V8F0R5ET8B6T536Z81"
+        ],
+        "generation_floor": 1589,
+        "table_counts": {
+          "schema_migrations": 9,
+          "settings": 3,
+          "repos": 1,
+          "issue_refs": 101,
+          "marathons": 6,
+          "releases": 13,
+          "manifest_items": 98,
+          "manifest_state_events": 87,
+          "doc_lines": 86,
+          "legacy_lines": 28,
+          "grandfather_entries": 24,
+          "roadmap_items": 349,
+          "jog_queue": 18,
+          "op_receipts": 1776,
+          "work_events": 704
+        },
+        "selection_sha256": "34cae0fcca5726cba8a3852fb707c3ad696c4e410c19594a838102b4c7cd5d75",
+        "effects": "local Git reads and in-memory validation only"
+      },
+      "stderr": ""
+    },
+    {
+      "control": "apply",
+      "rc": 0,
+      "result": {
+        "schema": "releases/ledger-merge@1",
+        "status": "HELD",
+        "complete": true,
+        "changed": true,
+        "dispatch": false,
+        "holds": [],
+        "owner_sha256": "d7efd6d5e620c9518adf91ff78929c79bab2df9cb9d4f9a645dae3d5faf56694",
+        "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase8-control-s6e_tmaf",
+        "head": "49c5b79430f0b3376ff5e0e9ad74b4baadc5e100",
+        "branch": "ours",
+        "merge_base": "79b2991c67ed70c2488b3de62a29cc48f896ddc7",
+        "supplied_target": "731ec61cae1a57fb950ecf33d899d283bd5dac86",
+        "target_freshness": "not verified; supplied local commit only",
+        "source_generations": [
+          1588,
+          1589,
+          1589
+        ],
+        "changed_gids": [
+          "rmi-01M0DP23V8F0R5ET8B6T536Z81"
+        ],
+        "generation_floor": 1589,
+        "table_counts": {
+          "schema_migrations": 9,
+          "settings": 3,
+          "repos": 1,
+          "issue_refs": 101,
+          "marathons": 6,
+          "releases": 13,
+          "manifest_items": 98,
+          "manifest_state_events": 87,
+          "doc_lines": 86,
+          "legacy_lines": 28,
+          "grandfather_entries": 24,
+          "roadmap_items": 349,
+          "jog_queue": 18,
+          "op_receipts": 1776,
+          "work_events": 704
+        },
+        "selection_sha256": "34cae0fcca5726cba8a3852fb707c3ad696c4e410c19594a838102b4c7cd5d75",
+        "generation": 1590,
+        "txn_id": "b16d91e0099c41a091f5162f3aa4f107",
+        "effects": "local staged DB/dump/journal/lock audit and adopted views; no Git or connector writes"
+      },
+      "stderr": ""
+    },
+    {
+      "control": "repeat-noop",
+      "rc": 0,
+      "result": {
+        "schema": "releases/ledger-merge@1",
+        "status": "HELD",
+        "complete": true,
+        "changed": false,
+        "dispatch": false,
+        "holds": [],
+        "owner_sha256": "d7efd6d5e620c9518adf91ff78929c79bab2df9cb9d4f9a645dae3d5faf56694",
+        "root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase8-control-s6e_tmaf",
+        "head": "49c5b79430f0b3376ff5e0e9ad74b4baadc5e100",
+        "branch": "ours",
+        "merge_base": "79b2991c67ed70c2488b3de62a29cc48f896ddc7",
+        "supplied_target": "731ec61cae1a57fb950ecf33d899d283bd5dac86",
+        "target_freshness": "not verified; supplied local commit only",
+        "source_generations": [
+          1588,
+          1589,
+          1589
+        ],
+        "changed_gids": [
+          "rmi-01M0DP23V8F0R5ET8B6T536Z81"
+        ],
+        "generation_floor": 1589,
+        "table_counts": {
+          "schema_migrations": 9,
+          "settings": 3,
+          "repos": 1,
+          "issue_refs": 101,
+          "marathons": 6,
+          "releases": 13,
+          "manifest_items": 98,
+          "manifest_state_events": 87,
+          "doc_lines": 86,
+          "legacy_lines": 28,
+          "grandfather_entries": 24,
+          "roadmap_items": 349,
+          "jog_queue": 18,
+          "op_receipts": 1776,
+          "work_events": 704
+        },
+        "selection_sha256": "34cae0fcca5726cba8a3852fb707c3ad696c4e410c19594a838102b4c7cd5d75",
+        "generation": 1590,
+        "effects": "no data write; writer lock audit only"
+      },
+      "stderr": ""
+    }
+  ]
+}

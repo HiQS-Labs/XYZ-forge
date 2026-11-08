@@ -1,0 +1,6 @@
+PREVIEW True ['Declared observations are not global quiescence, criterion delivery or dispatch approval.', 'No observer contexts declared for canonical; absence does not prove idle.', 'No observer contexts declared for predecessor; absence does not prove idle.']
+ACTUAL_PREPARATION_EXTRA_PARENT 5ba70e96e25f9c7c6998ff0ea9fb706391b02b60 049c188f4b5ce079cc14cd9b9382beae371bbbf4 ff9ac6ed068f6ddf55f897e0f27d0eed17f9b1d5
+S4_UNKNOWN_COMMIT_REFUSED committed accounting/branch drift; preserve commit without complete checkpoint
+S4_RETRY_HELD caller unknown preparation commit result; preserve intent
+S4_RETRY_HELD prepare unknown preparation commit result; preserve intent
+S4_UNKNOWN_HEAD_INTENT_CHECKPOINT_AND_PREDECESSOR_PRESERVED parent

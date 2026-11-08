@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-12T17:10:21.918466+00:00",
+  "phase": "phase9-draft-normal-publication",
+  "published_head": "d43540dcdd6e675d4df3070060c8ee3b31a1ce16",
+  "target_head": "d09b8f9dedd436be3e5f883f68deff985719fe1b",
+  "source_head": "f18b051a98551b8da6c5adf5f8d3f87c99ab7a6a",
+  "reviewed_head": "def75ab1febf3c57c91aeab3ae8ccf92a4ae6063",
+  "review": "FAIL/Escalated4/4; S4 source passes; separate Medium S5/GH1031 unfixed, fresh full-scope sweep incomplete",
+  "normal_gate": "28/28 including selected RELEASES/PDDA/static/clone identity/Python21, GREEN346s, no bypass; PDDA0errors48warnings/LLMreadiness skipped",
+  "identity": "before/after exact clean independent disposable full clone",
+  "hosted": "38282016137 completedSUCCESS at exactd435; SmokeSUCCESS, macOSpromotionSKIPPED, UbuntuSKIPPED",
+  "effects": "normal push only feat/gh1022-weekly-intake; sanctioned follow-up metadata; no real planning branch/dispatch/merge/deploy/install/schedule/newCI tests",
+  "limits": "Tier2, not full registry/promotion; FAIL preserved, W8\u201311 incomplete; historical R6FAIL/1028 and unapproved1027 unchanged; final evidence-only publication pending"
+}

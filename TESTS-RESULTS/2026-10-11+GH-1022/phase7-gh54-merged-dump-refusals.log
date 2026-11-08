@@ -1,0 +1,22 @@
+== test: gh54-merged-dump-refusals ==
+  workdir: /var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/tick-gh54-merged-dump-refusals.XXXXXX.Yd7qFJ6j7E
+  PASS: fixture is real: a naive union of unequal-write branches produced 2 generation headers
+  PASS: two-header dump: refused (rc=3)
+  PASS: two-header dump: names rule=dump-multi-generation, so the operator knows which line to fix
+  PASS: two-header dump: no Python traceback — a refusal, not a crash
+  PASS: two-header dump: the live DB is untouched (1 rows before and after)
+  PASS: fixture is real: header-deduped union still left 4 settings rows
+  PASS: duplicate settings row: refused (rc=3)
+  PASS: duplicate settings row: names rule=dump-duplicate-setting, so the operator knows which line to fix
+  PASS: duplicate settings row: no Python traceback — a refusal, not a crash
+  PASS: duplicate settings row: the live DB is untouched (1 rows before and after)
+  PASS: fixture has a release to duplicate (rel-01M4QDCP5SXMDMX6S0VDP65V0N)
+  PASS: fixture is real: global_id rel-01M4QDCP5SXMDMX6S0VDP65V0N now appears 3 times, as a union of two edits would leave it
+  PASS: same global_id twice: refused (rc=3)
+  PASS: same global_id twice: names rule=dump-duplicate-gid, so the operator knows which line to fix
+  PASS: same global_id twice: no Python traceback — a refusal, not a crash
+  PASS: same global_id twice: the live DB is untouched (1 rows before and after)
+  PASS: the GID refusal explains it is a CONTENT conflict, not a mechanical one
+  PASS: POSITIVE CONTROL: a correctly merged dump still rebuilds (the refusals are not blanket)
+  PASS: POSITIVE CONTROL: both sides' releases survived (2 rows)
+  gh54-merged-dump-refusals: 19 pass, 0 fail

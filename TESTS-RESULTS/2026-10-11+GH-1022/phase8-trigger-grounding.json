@@ -1,0 +1,7 @@
+{
+  "source_sha256": "b72df3ea23129102cda3102c1f319ddf047c51d28d9a68361b6061d3fa50ad43",
+  "method": "actual current canonical migrations in in-memory SQLite; source-read plus tiny deterministic red control, no root files/test/fixture program/network/connectors",
+  "observation": "op_receipts is append-only",
+  "retained_rows": 1,
+  "meaning": "ordinary clear/reload cannot preserve append-only contract; use staged canonical builder with owner journal publication, no trigger weakening"
+}

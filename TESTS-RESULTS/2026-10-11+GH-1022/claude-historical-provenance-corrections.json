@@ -1,0 +1,120 @@
+{
+  "missing_revision_rows": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "artifact_hash_mismatches": [
+    {
+      "artifact": "TESTS-RESULTS/2026-10-11+GH-1022/manual-results.json",
+      "recorded_sha256": "5916fb03642e267c9a386061531fca9ad338a25192a22314b34e0e3015a436de",
+      "current_sha256": "184fe3058c1ba8dc9b6f4a30e1238cebb0399d00154c84788187388738f0fddd",
+      "matching_git_versions": [
+        "e642501a8d1c97a4abaaac274136df8224ae7111"
+      ],
+      "original_row": 4,
+      "immutable_storage_links": [
+        "https://github.com/HiQS-Labs/XYZ-forge/blob/e642501a8d1c97a4abaaac274136df8224ae7111/TESTS-RESULTS/2026-10-11%2BGH-1022/manual-results.json"
+      ]
+    },
+    {
+      "artifact": "TESTS-RESULTS/2026-10-11+GH-1022/plan-driver.log",
+      "recorded_sha256": "610a3be3a266e00938b48ef3db0d78fd5dd1117c315a56c7d1f2a1b1706984d9",
+      "current_sha256": "b3ee67147bf600bd385c706c52f0387d9f6b84b337376bb092f9ae15687a70e9",
+      "matching_git_versions": [
+        "e642501a8d1c97a4abaaac274136df8224ae7111"
+      ],
+      "original_row": 5,
+      "immutable_storage_links": [
+        "https://github.com/HiQS-Labs/XYZ-forge/blob/e642501a8d1c97a4abaaac274136df8224ae7111/TESTS-RESULTS/2026-10-11%2BGH-1022/plan-driver.log"
+      ]
+    },
+    {
+      "artifact": "TESTS-RESULTS/2026-10-11+GH-1022/manual-results.json",
+      "recorded_sha256": "d99851efd7d1c133980dd0bb95965cd1b92fb4d064b414d72e270037ffcaaca4",
+      "current_sha256": "184fe3058c1ba8dc9b6f4a30e1238cebb0399d00154c84788187388738f0fddd",
+      "matching_git_versions": [
+        "480e43259607bd7d37a56703ed478bb5c1afd643"
+      ],
+      "original_row": 6,
+      "immutable_storage_links": [
+        "https://github.com/HiQS-Labs/XYZ-forge/blob/480e43259607bd7d37a56703ed478bb5c1afd643/TESTS-RESULTS/2026-10-11%2BGH-1022/manual-results.json"
+      ]
+    },
+    {
+      "artifact": "TESTS-RESULTS/2026-10-11+GH-1022/plan-driver-r2.log",
+      "recorded_sha256": "544e0759fd08e295b741f862d466ab95c98e5aed199c1d1a0730c89a96d40a54",
+      "current_sha256": "fa7832633f8ebbeb93cd350129debcc610aa3aeeed571d2780ad3c8da5298f44",
+      "matching_git_versions": [
+        "d8bc18157ecd8476830e2bd4ed46c4171f799434"
+      ],
+      "original_row": 9,
+      "immutable_storage_links": [
+        "https://github.com/HiQS-Labs/XYZ-forge/blob/d8bc18157ecd8476830e2bd4ed46c4171f799434/TESTS-RESULTS/2026-10-11%2BGH-1022/plan-driver-r2.log"
+      ]
+    },
+    {
+      "artifact": "TESTS-RESULTS/2026-10-11+GH-1022/manual-results.json",
+      "recorded_sha256": "7003126d38e7c1eaf2d1c8d0e58e9f32ad8557ecd6d8b83b713ae31a2d0b4f4d",
+      "current_sha256": "184fe3058c1ba8dc9b6f4a30e1238cebb0399d00154c84788187388738f0fddd",
+      "matching_git_versions": [
+        "8a9d79e2ca4f09b9c68f462a6673189fad671c2d"
+      ],
+      "original_row": 11,
+      "immutable_storage_links": [
+        "https://github.com/HiQS-Labs/XYZ-forge/blob/8a9d79e2ca4f09b9c68f462a6673189fad671c2d/TESTS-RESULTS/2026-10-11%2BGH-1022/manual-results.json"
+      ]
+    },
+    {
+      "artifact": "TESTS-RESULTS/2026-10-11+GH-1022/final-driver-r1.log",
+      "recorded_sha256": "311b90a2be2fdccfa6635427684a8f6c28e501331e9b5cc49a16d5f71ec1d085",
+      "current_sha256": "6505f3d757b1d918e004ab954519786e3c2bde0864e6b0ae6742a674a71b0fdc",
+      "matching_git_versions": [],
+      "original_row": 13,
+      "immutable_storage_links": []
+    },
+    {
+      "artifact": "TESTS-RESULTS/2026-10-11+GH-1022/manual-results.json",
+      "recorded_sha256": "f026d643d222d100434da4b9c32fd1eedbc4a6005e2115351da8667dc0a218ab",
+      "current_sha256": "184fe3058c1ba8dc9b6f4a30e1238cebb0399d00154c84788187388738f0fddd",
+      "matching_git_versions": [
+        "ca4c9b5a2d06ac6f247cc6e0594ac9d68b049978"
+      ],
+      "original_row": 17,
+      "immutable_storage_links": [
+        "https://github.com/HiQS-Labs/XYZ-forge/blob/ca4c9b5a2d06ac6f247cc6e0594ac9d68b049978/TESTS-RESULTS/2026-10-11%2BGH-1022/manual-results.json"
+      ]
+    },
+    {
+      "artifact": "TESTS-RESULTS/2026-10-11+GH-1022/pr-metadata-controls.json",
+      "recorded_sha256": "ae6c068d5068f946bc424494590202831556be53a81be3a37a3223a443e8a981",
+      "current_sha256": "1ef7f03064498a0ef8c5d231d4db52b2cae9d1fa4ba3c78d582b44cc70210e1d",
+      "matching_git_versions": [
+        "ca4c9b5a2d06ac6f247cc6e0594ac9d68b049978"
+      ],
+      "original_row": 18,
+      "immutable_storage_links": [
+        "https://github.com/HiQS-Labs/XYZ-forge/blob/ca4c9b5a2d06ac6f247cc6e0594ac9d68b049978/TESTS-RESULTS/2026-10-11%2BGH-1022/pr-metadata-controls.json"
+      ]
+    }
+  ],
+  "scope": "read-only audit of current artifacts and reachable versioned blobs; matching storage revision is not proof of tested source revision",
+  "historical_record_count": 98,
+  "disposition": "Append-only correction index. Original rows remain unchanged. Current matching artifacts prove byte identity only; missing tested-source bindings are unqualified. Row13 original bytes are unavailable in reachable artifact history and its historic log claim is withdrawn. A stored Git blob is not itself a tested-source attestation."
+}

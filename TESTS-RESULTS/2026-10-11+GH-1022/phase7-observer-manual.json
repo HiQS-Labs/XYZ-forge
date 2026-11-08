@@ -1,0 +1,269 @@
+{
+  "source_sha256": "f1886529423f067b5e69ee84cdffa5554742001bb557ae1ac4e5c5a8d2d0f239",
+  "method": "actual owner one-shot CLI with owned temp metadata and logical symlink; read snapshots only,no observer loop/process/signals/connectors or CI addition",
+  "controls": [
+    {
+      "name": "logical product path and attributed facts",
+      "pass": true,
+      "rc": 0,
+      "response": {
+        "context": {
+          "harness_root": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022",
+          "heartbeat_file": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/driver-heartbeat.json",
+          "initial_head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "initial_origin": "https://github.com/acme/a.git",
+          "last_milestone": null,
+          "owner": 123,
+          "phase": {
+            "driver_pid": 456,
+            "execution_id": "exec",
+            "id": "p1",
+            "index": 1,
+            "lane": "lane",
+            "relay_file": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/RELAY.md",
+            "result_file": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/result.json",
+            "token_family": "TASK"
+          },
+          "plan": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/product/MARATHON.yaml",
+          "product_root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/logical",
+          "returned_success": 0,
+          "root": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord",
+          "run_id": "11111111111111111111111111111111",
+          "run_log": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/run.log",
+          "started_utc": "2026-10-12T06:15:31.824666+00:00",
+          "total": 1,
+          "verified_phases": 0
+        },
+        "dispatch": false,
+        "held_reasons": [
+          "execution-not-authorized",
+          "receipt-authenticity-and-criteria-not-verified"
+        ],
+        "observation": {
+          "coordination_root": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord",
+          "gate": {
+            "exit": 0,
+            "result": "green"
+          },
+          "harness_root": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022",
+          "heartbeat": {
+            "age_s": 0.1,
+            "pid": 456,
+            "state": "liveness only"
+          },
+          "initial_head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "initial_origin": "https://github.com/acme/a.git",
+          "kind": "snapshot",
+          "last_product_milestone": null,
+          "observed_at": "2026-10-12T06:15:31.878248+00:00",
+          "phase": "p1",
+          "phase_index": 1,
+          "plan": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/product/MARATHON.yaml",
+          "product_root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/logical",
+          "relay_file": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/RELAY.md",
+          "relay_status": "Approved",
+          "result_file": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/result.json",
+          "returned_success": 0,
+          "reviewed_candidate": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "role": "Builder",
+          "run_id": "11111111111111111111111111111111",
+          "run_log": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/run.log",
+          "total_phases": 1,
+          "verified_phases": 0
+        },
+        "read_complete": true,
+        "receipt": {
+          "attest_path": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/attest.json",
+          "execution_id": "exec",
+          "exit_code": 0,
+          "gate": {
+            "exit": 0,
+            "result": "green"
+          },
+          "lane": "lane",
+          "outcome": "approved",
+          "phase": "p1",
+          "reviewed_candidate": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "reviewed_head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "schema": "marathon-drive/result@1",
+          "target_repo": {
+            "path": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/logical"
+          },
+          "token": "TASK"
+        },
+        "schema": "marathon/observer-snapshot@1",
+        "source_sha256": {
+          "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/RELAY.md": "e8ec9b06e3c20e68afe8cf410804599dc1cd972c7e184ce487731b0933bb348f",
+          "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/driver-heartbeat.json": "49be14f8e165245c29c28391d7be6e6d8d34f223b8077ff6587d4daecb7857cb",
+          "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/result.json": "68428269df0ca1b7a68447f47072411f7be55f939013020d76c93a93c3e818b9",
+          "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/run.log.progress.json": "cd8aee58741eddd0c678efd3e7130330eb4261283eff7f283419acb388238499"
+        },
+        "status": "PASS"
+      }
+    },
+    {
+      "name": "physical spelling is foreign logical product",
+      "pass": true,
+      "rc": 2,
+      "response": {
+        "dispatch": false,
+        "held_reasons": [
+          "foreign observer coordination/product ownership"
+        ],
+        "read_complete": false,
+        "schema": "marathon/observer-snapshot@1",
+        "status": "UNKNOWN"
+      }
+    },
+    {
+      "name": "invalid owner",
+      "pass": true,
+      "rc": 2,
+      "response": {
+        "dispatch": false,
+        "held_reasons": [
+          "observer owner/phase count unavailable"
+        ],
+        "read_complete": false,
+        "schema": "marathon/observer-snapshot@1",
+        "status": "UNKNOWN"
+      }
+    },
+    {
+      "name": "naive time",
+      "pass": true,
+      "rc": 2,
+      "response": {
+        "dispatch": false,
+        "held_reasons": [
+          "observer start timestamp must be timezone-qualified"
+        ],
+        "read_complete": false,
+        "schema": "marathon/observer-snapshot@1",
+        "status": "UNKNOWN"
+      }
+    },
+    {
+      "name": "malformed phase",
+      "pass": true,
+      "rc": 2,
+      "response": {
+        "dispatch": false,
+        "held_reasons": [
+          "observer phase is not an object"
+        ],
+        "read_complete": false,
+        "schema": "marathon/observer-snapshot@1",
+        "status": "UNKNOWN"
+      }
+    },
+    {
+      "name": "missing optional receipt preserves context and unknown",
+      "pass": true,
+      "rc": 2,
+      "response": {
+        "context": {
+          "harness_root": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022",
+          "heartbeat_file": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/driver-heartbeat.json",
+          "initial_head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "initial_origin": "https://github.com/acme/a.git",
+          "last_milestone": null,
+          "owner": 123,
+          "phase": {
+            "driver_pid": 456,
+            "execution_id": "exec",
+            "id": "p1",
+            "index": 1,
+            "lane": "lane",
+            "relay_file": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/RELAY.md",
+            "result_file": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/result.json",
+            "token_family": "TASK"
+          },
+          "plan": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/product/MARATHON.yaml",
+          "product_root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/logical",
+          "returned_success": 0,
+          "root": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord",
+          "run_id": "11111111111111111111111111111111",
+          "run_log": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/run.log",
+          "started_utc": "2026-10-12T06:15:31.824666+00:00",
+          "total": 1,
+          "verified_phases": 0
+        },
+        "dispatch": false,
+        "held_reasons": [
+          "execution-not-authorized",
+          "receipt-authenticity-and-criteria-not-verified",
+          "observer metadata unavailable"
+        ],
+        "observation": {
+          "coordination_root": "/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord",
+          "gate": "unknown",
+          "harness_root": "/Users/noelsaw/Documents/Codex/2026-10-11/task/xyz-forge-1022",
+          "heartbeat": {
+            "age_s": 0.3,
+            "pid": 456,
+            "state": "liveness only"
+          },
+          "initial_head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "initial_origin": "https://github.com/acme/a.git",
+          "kind": "snapshot",
+          "last_product_milestone": null,
+          "observed_at": "2026-10-12T06:15:32.171028+00:00",
+          "phase": "p1",
+          "phase_index": 1,
+          "plan": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/product/MARATHON.yaml",
+          "product_root": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/logical",
+          "relay_file": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/RELAY.md",
+          "relay_status": "Approved",
+          "result_file": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/result.json",
+          "returned_success": 0,
+          "reviewed_candidate": "unknown",
+          "role": "Builder",
+          "run_id": "11111111111111111111111111111111",
+          "run_log": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/run.log",
+          "total_phases": 1,
+          "verified_phases": 0
+        },
+        "read_complete": false,
+        "receipt": {},
+        "schema": "marathon/observer-snapshot@1",
+        "source_sha256": {
+          "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/RELAY.md": "e8ec9b06e3c20e68afe8cf410804599dc1cd972c7e184ce487731b0933bb348f",
+          "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/driver-heartbeat.json": "49be14f8e165245c29c28391d7be6e6d8d34f223b8077ff6587d4daecb7857cb",
+          "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/result.json": null,
+          "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-phase7-observer-lcp8xidg/coord/run.log.progress.json": "cd8aee58741eddd0c678efd3e7130330eb4261283eff7f283419acb388238499"
+        },
+        "status": "UNKNOWN"
+      }
+    },
+    {
+      "name": "malformed context",
+      "pass": true,
+      "rc": 2,
+      "response": {
+        "dispatch": false,
+        "held_reasons": [
+          "observer context field unavailable: run_id"
+        ],
+        "read_complete": false,
+        "schema": "marathon/observer-snapshot@1",
+        "status": "UNKNOWN"
+      }
+    },
+    {
+      "name": "missing context",
+      "pass": true,
+      "rc": 2,
+      "response": {
+        "dispatch": false,
+        "held_reasons": [
+          "observer context unavailable"
+        ],
+        "read_complete": false,
+        "schema": "marathon/observer-snapshot@1",
+        "status": "UNKNOWN"
+      }
+    }
+  ],
+  "count": 8
+}

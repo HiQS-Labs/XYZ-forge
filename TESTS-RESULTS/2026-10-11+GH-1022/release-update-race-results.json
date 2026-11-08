@@ -1,0 +1,43 @@
+{
+  "source_sha256": "6e747d3c4c36ea169e80d6af5741e11f1a2863296e11b7ed0a274ae2963f16b9",
+  "before_revision": "d0bc939a",
+  "controls": [
+    {
+      "revision": "before-fix",
+      "injected": false,
+      "injection_count": 0,
+      "rc": 0,
+      "codename": "old-owner",
+      "target_date": "2026-10-21",
+      "safe": true
+    },
+    {
+      "revision": "before-fix",
+      "injected": true,
+      "injection_count": 1,
+      "rc": 0,
+      "codename": "old-owner",
+      "target_date": "2026-10-21",
+      "safe": false
+    },
+    {
+      "revision": "candidate",
+      "injected": false,
+      "injection_count": 0,
+      "rc": 0,
+      "codename": "old-owner",
+      "target_date": "2026-10-21",
+      "safe": true
+    },
+    {
+      "revision": "candidate",
+      "injected": true,
+      "injection_count": 1,
+      "rc": 3,
+      "codename": "new-owner",
+      "target_date": "2026-10-20",
+      "safe": true
+    }
+  ],
+  "local_effects": "temporary independent fixture Git repos and canonical init/add/update/check DB/dump/receipts; actual second-process owner update, no raw SQL writes, connectors disabled/no GH/push/dispatch"
+}

@@ -1,0 +1,32 @@
+{
+  "target_sha": "d09b8f9dedd436be3e5f883f68deff985719fe1b",
+  "task_row": {
+    "global_id": "rmi-01M4NVEZG8FAM7BBS950TRBWH9",
+    "repo_gid": "repo-01M0BTBRJ0PZF51EK6PCRJ20FS",
+    "gh_number": "1022",
+    "title": "Weekly branch-backed issue intake and approval-bound planning",
+    "section": "In progress",
+    "position": "124",
+    "status_marker": "\ud83d\udea7",
+    "complexity": null,
+    "risk": null,
+    "effort": null,
+    "doc_path": "PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md",
+    "issue_url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1022",
+    "raw_text": "- **GH-1022 \u00b7 Weekly branch-backed issue intake** \ud83d\udea7 Draft PR #1024; corrective source1044969d reviewedR6 FAIL withoneMedium trackedGH1028,noCriticalHigh. Requirednormalgates/publication pending;W7\u2013W11 incomplete/held,Phase6paused. (rated 70/65/50/25) \u2192 [GH-1022-WEEKLY-INTAKE.md](PROJECT/2-WORKING/GH-1022-WEEKLY-INTAKE.md) \u00b7 [#1022](https://github.com/HiQS-Labs/XYZ-forge/issues/1022)",
+    "first_seen": "2026-10-11T16:06:48Z",
+    "updated_at": "2026-10-12T01:59:23Z",
+    "rating_pri": "70",
+    "rating_sev": "65",
+    "rating_appeal": "50",
+    "rating_effort": "25",
+    "rating_ovr": null,
+    "status_label": "in-progress"
+  },
+  "current_target_rows_exact": true,
+  "task_additions_exact": true,
+  "runtime_hashes_unchanged": true,
+  "backup_preserved": "/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/gh1022-d09-displaced-ledger-rvwehv6z/releases.db.bak",
+  "backup_sha256": "e3909c55e2e2fc02ec0ed4741c670328e211824e12a92a6c83300c50e130a94b",
+  "final_sql_sha256": "197b22b5aa2eb7523d97cb62707036163cea67785651a899868530f339e9e9ef"
+}

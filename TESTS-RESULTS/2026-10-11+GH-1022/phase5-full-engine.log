@@ -1,0 +1,2 @@
+{'revision': 'before', 'rc': 0, 'order': [778, 777], 'owner_row': '| [#777] GH-777 · owner | db pri/sev/app/eff = —/—/—/— · rank 210 | independent | — | -210 | 1 |', 'report_sha256': 'a86923ee9cc28a7f44aff85fd5b6b98a43dfb3fefe0dfb02626acf7bbcffa0d7', 'ledger_unchanged': True}
+{'revision': 'candidate', 'rc': 0, 'order': [777, 778], 'owner_row': '| [#777] GH-777 · owner | db pri/sev/app/eff = —/—/—/— · rank 320 | independent | — | -320 | 1 |', 'report_sha256': '0420d920f54e897cae61797948057acd66d44fdd7629c21d961be93540e1a869', 'ledger_unchanged': True}

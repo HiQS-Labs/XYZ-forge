@@ -1,0 +1,7 @@
+{
+  "previous_evidence_head": "142a377ce5ddbfaa9da3aca8715d3fe0d34eb26a",
+  "history_body_sha256": "cd8f160bdf74e821f958d3309ffe58b4d008612bc6d06a4c57b600408094e6c7",
+  "r1_through_r5_setup_log_and_attestation_unchanged": true,
+  "header_change": "explicit 5/5 to6/6 authorization;actualFAIL/Escalated retained",
+  "source_revision": "1044969dcad23a08e19219e3fb195d58715187d4"
+}
