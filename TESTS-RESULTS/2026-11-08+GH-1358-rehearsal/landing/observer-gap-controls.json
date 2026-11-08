@@ -1,0 +1,58 @@
+[
+  {
+    "gap_s": 15,
+    "alarm": false,
+    "record": {
+      "observation_gap_s": 15.0,
+      "coverage_status": "CONTIGUOUS",
+      "operating_envelope": "awake-host only; no offhost/sleep-time detection"
+    }
+  },
+  {
+    "gap_s": 179,
+    "alarm": false,
+    "record": {
+      "observation_gap_s": 179.0,
+      "coverage_status": "CONTIGUOUS",
+      "operating_envelope": "awake-host only; no offhost/sleep-time detection"
+    }
+  },
+  {
+    "gap_s": 181,
+    "alarm": true,
+    "record": {
+      "observation_gap_s": 181.0,
+      "coverage_status": "GAP",
+      "operating_envelope": "awake-host only; no offhost/sleep-time detection",
+      "work_status": "ACTIVE_WITHIN_DEADLINE"
+    }
+  },
+  {
+    "gap_s": 982,
+    "alarm": true,
+    "record": {
+      "observation_gap_s": 982.0,
+      "coverage_status": "GAP",
+      "operating_envelope": "awake-host only; no offhost/sleep-time detection",
+      "work_status": "ACTIVE_WITHIN_DEADLINE"
+    }
+  },
+  {
+    "gap_s": -1,
+    "alarm": true,
+    "record": {
+      "observation_gap_s": -1.0,
+      "coverage_status": "GAP",
+      "operating_envelope": "awake-host only; no offhost/sleep-time detection",
+      "work_status": "ACTIVE_WITHIN_DEADLINE"
+    }
+  },
+  {
+    "control": "actual original observer decision AST, healthy owned process after982s sampling gap",
+    "alarm": false,
+    "status": "ACTIVE_WITHIN_DEADLINE",
+    "expected_alarm": true,
+    "red_witness": true,
+    "original_source_sha256": "92aca706f72755595fc29a06c3da3036f9af8aa55635519a8db38232870a1430"
+  }
+]
