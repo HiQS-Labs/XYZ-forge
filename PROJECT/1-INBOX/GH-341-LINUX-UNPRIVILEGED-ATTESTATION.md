@@ -64,3 +64,7 @@ it is what makes this a measurement problem before it is a portability problem.
 - #224 (Linux MVP RC umbrella — its Phase 3 "qualifying hosted run" hunt is satisfied and red)
 - `0.7.4 Linux-RC` — cancelled 2026-09-02; this issue was cut from its manifest and intentionally
   not re-homed
+
+## Merge evidence
+
+- PR #1187 merged 2026-10-24 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

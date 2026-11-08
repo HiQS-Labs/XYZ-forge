@@ -166,6 +166,20 @@ local repo/skill identity. Unlike `--migrate`, it permits different prior conten
 explain that difference and obtain that specific choice before apply. It still
 cannot replace a real directory, and records the old link text for rollback.
 
+A real directory in an app root (an older installer's copy; `--adopt`, `--migrate` and
+`--migrate-from` all refuse it) is replaced only by an explicit, archived migration: preview
+`sync.py --migrate-legacy SKILL --archive-legacy`, then repeat it with `--apply`. For each enabled
+target it requires a valid skill folder whose frontmatter name is the folder name, takes a verified
+ZIP in `backups/`, moves the folder to `.staging/<op>/retired` on the same filesystem (a cross-device
+move refuses with the archive retained), and creates the owned link in the same transaction. Unlike
+`--retire-trinity`, the folder's content may differ from the managed copy; the preview's
+`matches_managed` field says whether it does, so explain that difference and obtain the operator's
+specific choice before apply. A run that finds no real folder for the named skill refuses with
+"nothing to migrate". To undo, `unlink` the managed link in that app root and rename
+`.staging/<op>/retired` back, or restore from the ZIP as described above. A pending receipt written by
+this flow cannot be replayed by an older manager, so recover an interrupted run with the same
+manager version.
+
 ## Retiring skills-sync-trinity
 
 The replacement ships no old-name alias. If an old installation exists, keep its

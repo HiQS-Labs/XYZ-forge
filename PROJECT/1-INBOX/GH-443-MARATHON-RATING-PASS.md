@@ -47,3 +47,7 @@ driver either, although `marathon-drive.sh --dry-run` already exists (GH-238).
 ## Merge evidence
 
 - PR #726 merged 2026-09-21 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1176 merged 2026-10-22 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

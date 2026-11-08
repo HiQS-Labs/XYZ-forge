@@ -1,0 +1,20 @@
+{
+  "issue": 901,
+  "queue_gid": "jog-01M5RKS7MHVQ68VT63MGVG2KNQ",
+  "execution_id": "gh901-exec2",
+  "pr_number": 42,
+  "merged_sha": "6933f76f237a7f3e120a337444c6417ae99099c5",
+  "approved_head_sha": "0bcbbfef54204a7f0ee1f05f5a2a527f34a11794",
+  "landed_head_sha": "0238d5f1bb150087ee683d181673302fbb95b3d4",
+  "tail_proof": [
+    {
+      "commit": "0238d5f1bb150087ee683d181673302fbb95b3d4",
+      "kind": "receipt-publication"
+    }
+  ],
+  "hosted_reconcile": null,
+  "local_reconcile": {
+    "roadmap_gid": "rmi-01M5RKXFK1T9EH4JF8J8KXT3J6",
+    "raw_text": "- **GH-901 \u00b7 GH-901 fixture lane** \u2705 **SHIPPED 2026-08-28 (PR #42)** \u2014 [GH-901-FIXTURE-LANE.md](PROJECT/3-COMPLETED/GH-901-FIXTURE-LANE.md) \u00b7 [#901](https://github.com/example/example/issues/901)"
+  }
+}

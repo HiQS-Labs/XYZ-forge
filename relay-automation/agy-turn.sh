@@ -132,6 +132,11 @@ agy_validate_model() {
   return 1
 }
 
+# GH-445: answer -h/--help before the environment checks, byte for byte as utils/py/agy-turn.py does.
+for _arg in "$@"; do
+  case "$_arg" in -h|--help) printf 'Usage: agy-turn.py\nRequired environment variables: RELAY_AGENT, RELAY_FILE, RELAY_TASK\n'; exit 0 ;; esac
+done
+
 me="${RELAY_AGENT:-}"; f="${RELAY_FILE:-}"; t="${RELAY_TASK:-RELAY-TURN}"
 agy_agent="${AGY_AGENT:-}"
 [[ -n "$me" ]] || die "RELAY_AGENT required"

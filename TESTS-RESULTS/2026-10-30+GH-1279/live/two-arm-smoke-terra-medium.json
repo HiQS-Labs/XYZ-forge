@@ -1,0 +1,95 @@
+{
+ "digests_equal": true,
+ "rules": {
+  "config": {
+   "adapter": "rules",
+   "codex_model": null,
+   "codex_effort": null,
+   "adapter_timeout_s": null,
+   "prompt_sha256": "dcca67813bb107cbc3435d0c7c0de256cf73853042c8ebf8790805bbc0f3f1c3"
+  },
+  "slots": [
+   {
+    "slot": 1,
+    "normalized": "ok",
+    "decision": {
+     "status": "raw-valid",
+     "rejected_reason": null,
+     "validated_json": "{\"args\":{\"inbox_id\":\"gh-1201-794fcf69ac2c\"},\"confidence\":1.0,\"reason\":\"oldest plan request\",\"tool\":\"plan-draft\"}"
+    },
+    "reservation": {
+     "status": "reported",
+     "billing_status": "reported",
+     "actual_cost": 0.0
+    },
+    "agent_called": true,
+    "raw": "{\"args\":{\"inbox_id\":\"gh-1201-794fcf69ac2c\"},\"confidence\":1.0,\"reason\":\"oldest plan request\",\"tool\":\"plan-draft\"}"
+   },
+   {
+    "slot": 2,
+    "normalized": "ok",
+    "decision": {
+     "status": "raw-valid",
+     "rejected_reason": null,
+     "validated_json": "{\"args\":{\"inbox_id\":\"gh-1204-376b82298309\"},\"confidence\":1.0,\"reason\":\"oldest plan request\",\"tool\":\"plan-draft\"}"
+    },
+    "reservation": {
+     "status": "reported",
+     "billing_status": "reported",
+     "actual_cost": 0.0
+    },
+    "agent_called": true,
+    "raw": "{\"args\":{\"inbox_id\":\"gh-1204-376b82298309\"},\"confidence\":1.0,\"reason\":\"oldest plan request\",\"tool\":\"plan-draft\"}"
+   }
+  ],
+  "d1": "9400e0f9a0e94048938fdc163c2939993160e2a3109fa8600444d83cfbcdac77",
+  "d2": "b645a3effc56e36cfab14068d4b54fc8af4b6420f141c123aea38182b06d11c6",
+  "canary": "do-not-modify\n"
+ },
+ "codex": {
+  "config": {
+   "adapter": "codex",
+   "codex_model": "gpt-6.1-terra",
+   "codex_effort": "medium",
+   "adapter_timeout_s": 90.0,
+   "prompt_sha256": "1fe517ef45b840192daddfd0e5c38b8b952e85e7d07ddf561f33f6526e7f31c5"
+  },
+  "slots": [
+   {
+    "slot": 1,
+    "normalized": "ok",
+    "decision": {
+     "status": "raw-valid",
+     "rejected_reason": null,
+     "validated_json": "{\"args\":{\"inbox_id\":\"gh-1201-794fcf69ac2c\"},\"confidence\":1.0,\"reason\":\"The oldest actionable item is an eligible plan request.\",\"tool\":\"plan-draft\"}"
+    },
+    "reservation": {
+     "status": "held",
+     "billing_status": "unknown",
+     "actual_cost": null
+    },
+    "agent_called": true,
+    "raw": "{\"tool\":\"plan-draft\",\"args\":{\"inbox_id\":\"gh-1201-794fcf69ac2c\"},\"reason\":\"The oldest actionable item is an eligible plan request.\",\"confidence\":1.0}"
+   },
+   {
+    "slot": 2,
+    "normalized": "ok",
+    "decision": {
+     "status": "raw-valid",
+     "rejected_reason": null,
+     "validated_json": "{\"args\":{\"inbox_id\":\"gh-1204-376b82298309\"},\"confidence\":0.99,\"reason\":\"The oldest actionable item is an eligible plan request, and no suppression applies.\",\"tool\":\"plan-draft\"}"
+    },
+    "reservation": {
+     "status": "held",
+     "billing_status": "unknown",
+     "actual_cost": null
+    },
+    "agent_called": true,
+    "raw": "{\"tool\":\"plan-draft\",\"args\":{\"inbox_id\":\"gh-1204-376b82298309\"},\"reason\":\"The oldest actionable item is an eligible plan request, and no suppression applies.\",\"confidence\":0.99}"
+   }
+  ],
+  "d1": "9400e0f9a0e94048938fdc163c2939993160e2a3109fa8600444d83cfbcdac77",
+  "d2": "b645a3effc56e36cfab14068d4b54fc8af4b6420f141c123aea38182b06d11c6",
+  "canary": "do-not-modify\n"
+ }
+}

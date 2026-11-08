@@ -1,0 +1,24 @@
+swarm-preflight · gh-bundle · slug=gh-670-claude-reviewer
+  target-root : /Users/noelsaw/Documents/GitHub Repos/XYZ-forge (development @ 08c2a2fba)
+  branch      : suggested=marathon/gh-670-claude-reviewer-2026-10-27 branch_ready=false skip_branch_prompt=false
+  freshness   : fetch_ok=1 upstream=origin/development ahead=0 behind=0 dirty=0
+  ref-probed  : development @ 08c2a2fba (checkout matches)
+  candidate   : ready
+  inlined-acc : 6 criterion(a) from the acceptance-section
+  source-url  : ok — source: resolves to issue #670 (https://github.com/HiQS-Labs/XYZ-forge/issues/670)
+  acceptance  : unknown [cause: no-issue-section] — issue #670 has no '## Acceptance' section — nothing to copy from
+  manifest    : issue #670 is not a frozen manifest member — read from ballast-release.sh, litmus-release.sh, meter-release.sh, nightwatch-release.sh; unverified acceptance is advisory here
+  issue-state : OPEN — issue #670 is OPEN
+  readiness   : ready=1
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : ready (exit 0)
+
+DRY-RUN: ready, but packet not written. Would emit to: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/relay-system/preflight/2026-10-27/gh-670-claude-reviewer
+Would suggest:
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-670-claude-reviewer RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact bin/marathon-yaml,src/marathon-yaml.js,utils/py/marathon_drive.py,test/marathon-yaml.sh,test/marathon.sh,test/gh346-gateway-allowlists.sh,test/gh373-reviewer-validation.sh,test/gh670-claude-reviewer.sh,validate.sh,HARNESS-MODELS-REGISTRY.md,test/ballast-release.sh,test/ci-route.sh,test/ci-workflow.sh,test/gh-gen4-phase1-domain-oracles.sh,test/gh115-round-cap.sh,test/gh141-synthetic-registry.sh,test/gh182-healer-facade-safety.sh,test/gh205-gate-idempotency.sh,test/gh217-gate-env-plan-outside.sh,test/gh251-validate-pytest-skip.sh,test/gh256-target-root-guard-root.sh,test/gh267-express-skill.sh,test/gh268-relay-cue-and-target-checks.sh,test/gh273-marathon-root-audit-python-shape.sh,test/gh298-ate-gen4-ci-smoke.sh,test/gh306-registry-bidirectional.sh,test/gh307-gate-env-scrub.sh,test/gh319-gate-path-with-space.sh,test/gh322-runlog-python-lane.sh,test/gh342-sentinel-debug-log-python.sh,test/gh346-registry-view-freshness.sh,test/gh35-test-tiers.sh,test/gh365-driver-lane-registry.sh,test/gh365-runner-envelope.sh,test/gh365-validate-telemetry.sh,test/gh371-interrupt-snapshot.sh,test/gh372-escalation-log-tail.sh,test/gh376-relay-drive-lock-parity.sh,test/gh378-gate-requires-green-suite.sh,test/gh379-canary-uses-validate.sh,test/gh379-claude-builder-diagnosis.sh,test/gh382-marathon-memory-telemetry.sh,test/gh385-retry-token-satisfied.sh,test/gh390-gate-guard.sh,test/gh391-emit-marathon-yaml.sh,test/gh399-packet-acceptance-continuation.sh,test/gh4-ungated-clone-warning.sh,test/gh401-dry-run-no-mutation.sh,test/gh407-gate-ran-attribution.sh,test/gh419-gate-inventory.sh,test/gh438-acceptance-recheck.sh,test/gh438-removal-is-progress.sh,test/gh441-gate-env-contract.sh,test/gh457-gate-tiers.sh,test/gh467-index-only-lane-blocked.sh,test/gh484-phase-dir-default.sh,test/gh491-gate-only-refire.sh,test/gh520-default-reviewer-stub.sh,test/gh528-parallel-contention-retry.sh,test/gh544-parallel-default.sh,test/gh544-pre-push-gate.sh,test/gh642-consumer-fruit.sh,test/gh708-vendored-suite-skips.sh,test/gh732-l3-gate-summary.sh,test/litmus-release.sh,test/marathon-closeout.sh,test/marathon-drive.sh,test/marathon-root-audit.sh,test/meter-release.sh,test/nightwatch-release.sh,test/oracle-guard.sh,test/relay-self-sufficiency.sh,test/swarm-preflight.sh,test/xyz-harness-hooks.sh,test/baselines/GH-15-parallel-contention-negative-control.md,test/baselines/GH-4-negative-control.md,test/baselines/GH-402-negative-control.md,test/baselines/GH-509-phase4-negative-control.md,test/baselines/GH-514-negative-control.md,test/baselines/GH-544-negative-control.md,test/fixtures/gamma-poison/CANDIDATE.md,test/fixtures/gamma-poison/EXPECTED.md,test/fixtures/gamma-poison/README.md,test/fixtures/gamma-poison/verify-fixture.sh,test/_setup.sh,test/lib/fixture-guard.sh \
+  --pre-advance-cmd 'bash validate.sh --auto development' \
+  --require-clean

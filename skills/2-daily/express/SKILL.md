@@ -25,7 +25,7 @@ skill; the speed is a side effect.
 
 > **Express Discipline:**
 > 1. **Verify clone & pre-flight bounds (Phases 0–2).** Require a task clone off `origin/<base>` (the resolved integration branch; `development` in XYZ Forge) ($\le 2$ local commits, canonical pre-push gate installed via `githooks/install.sh --check`); enforce strict subsystem bounds ($\le 4$ files / $\le 150$ insertions) and hard refusals on kernel, coordination, or shared Bash surfaces.
-> 2. **Validate issue & verification lane (Phases 3–4).** Confirm the tracking issue is OPEN. Code hotfixes require an existing registered covering suite. Ordinary documentation text/images use `--docs-only`, which selects the existing registered PDDA docs suite; no critical-hotfix rationale or runtime behavior suite is required. Do not add a suite (GH-831).
+> 2. **Validate issue & verification lane (Phases 3–4).** Confirm the tracking issue is OPEN. Code hotfixes require an existing registered covering suite. Ordinary documentation text/images use `--docs-only`, which selects the existing registered PDDA docs suite; no critical-hotfix rationale or runtime behavior suite is required. Do not add a suite in this lane; an uncovered fix goes through `/start-task` under the host repo's own test policy (XYZ-forge: GH-831).
 > 3. **Generate born-complete docs & append changelog (Phase 5).** Scaffold capture doc in `PROJECT/2-WORKING/` with Status, Acceptance, Merge evidence, and Lessons Learned present from birth; append the entry to `CHANGELOG.md` in the same motion.
 > 4. **Execute qualified gate & dial-in releases ledger (Phases 6–7).** Register roadmap issue in `releases.db` and dial into active release (`releases next`); execute the selected existing suite green, prove tree identity, and re-snapshot tree to prevent drift.
 > 5. **Direct fast-forward landing & 3-push reconciliation (Phases 8–11).** Commit qualified paths (`Closes #N`), direct push fast-forward to `origin/<base>` (`XYZ_SKIP_PREPUSH=1`), verify remote issue closure, ship release evidence, and execute clean-tree `wave_reconcile --commit`.
@@ -62,6 +62,14 @@ runtime coverage. The full runtime suite is not required merely because text or 
 Before running, check content accuracy, relative links and image rendering as applicable, and put
 the concrete results in `--summary`. Do not claim a render or visual check that did not run.
 
+**Vendored hosts (GH-1169).** In a repo that uses the harness from a gitignored `.xyz/`, run
+`python3 .xyz/utils/py/express.py --root . … --repo <owner>/<name>`. The docs lane then runs the host's own
+PDDA install, `utils/pdda/pdda.sh run`, under `PDDA_MODE=full` (as in XYZ Forge; a host's `observe` mode never
+fails), and the receipt records `bash utils/pdda/pdda.sh run`. Gate wiring accepts the host's own pre-push hook,
+or reports that the host has none (the landing push bypasses pre-push by lane design). Harness tools come from
+`.xyz/`. Pass `--release` when the host's `releases next` is stale. Code hotfixes still need a `validate.sh` TESTS
+registry and refuse `suite-unregistered` without one.
+
 Judge documentation by the effect of the proposed change, not merely its filename or whether
 an agent reads it. Editorial wording, links, images and bounded documentation-only skill changes
 may use the lightweight hotfix path when explicitly requested and appropriately reviewed. Inspect
@@ -76,13 +84,15 @@ Keep the existing operator-tunable file/insertion bounds, issue traceability, cu
 repository identity checks, concurrency protection and safe fast-forward publication. Generated
 artifacts still use their canonical writers. No filename-based exemption bypasses those controls.
 
-**Current driver compatibility:** `express.py --docs-only` currently has a narrower path allowlist
-and rejects `SKILL.md`; its landing pushes also set `XYZ_SKIP_PREPUSH=1`. This policy wording does
-not change those executable checks or authorize ignoring them. When a requested docs hotfix cannot
-meet the driver's admission or the operator's required normal-hook publication, report the exact
-mismatch before executable changes. Until the driver supports these paths, manual hotfix
-handling requires explicit operator authorization for that exact change and procedure. Do not relabel
-a skill as a code hotfix merely to evade documentation admission, or silently skip a gate.
+**Driver support for skill documentation (GH-1348):** `express.py --docs-only` admits non-execution-authority
+`skills/**/SKILL.md` edits from a fresh task clone off `origin/<base>` when backed by a validated
+`relay-drive/attest@1` approval receipt (`.git/relay-attest/*.json`) proving independent cross-model
+review of `HEAD`. The skill edits must already be committed to the task branch and clean versus `HEAD`
+(uncommitted or post-review working-tree modifications refuse with `rule=skill-unattested`). Changes to
+execution-authority skills (`express`, `merge-cleanup`, `merge-cleanup-deep`, `start-marathon`,
+`marathon-cleanup`, `start-task`, `relay`, `relay-xyz`, `relay-automation`, `jog`), scripts, executables,
+or policy documents (`AGENTS.md`, `CLAUDE.md`) remain strictly refused under `--docs-only` and must
+follow the code-hotfix lane (if a covering suite exists) or the normal PR lane.
 
 ## Procedure
 
@@ -138,6 +148,12 @@ git add TESTS-RESULTS && git commit -m "chore(express): recovery receipt GH-$N (
 python3 utils/py/express.py resume --issue "$N" --suite "$SUITE" --sha "$SHA" --base "$BASE"                 # 7.
 ```
 
+In a vendored host (GH-1169) the recipe differs in four places: set `REPO=<owner>/<name>` (the host's slug; express's
+default is XYZ Forge's), run the suite as `PDDA_MODE=full PDDA_ACTIVITY_LOG=/dev/null bash utils/pdda/pdda.sh run`
+instead of `bash "$SUITE"` (with `SUITE='utils/pdda/pdda.sh run'`, the receipt spelling), import express from
+`.xyz/utils/py` in step 5, and resume with
+`python3 .xyz/utils/py/express.py --root . resume --issue "$N" --docs-only --sha "$SHA" --base "$BASE" --repo "$REPO"`.
+
 Before landing, `cmd_land` qualifies the change, resolves the exact owned full issue
 URL, and invokes `roadmap update --gid OWNED_ROW --accepted-start` (schema009 must
 already be deliberately installed). It then requalifies against the existing
@@ -157,10 +173,10 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
 1. **Bounds** — ≤ 4 core files / ≤ 150 insertions, single subsystem for code hotfixes (unless
    `--allow-multi-subsystem` is passed, or micro-diff tolerance applies: $\le 30$
    insertions across $\le 2$ files auto-passes, GH-516). Only the lane's OWN
-   paperwork (`CHANGELOG.md` and the current issue's capture doc resolved by
-   `capture_doc_path(root, issue)`) is exempt. Every other `PROJECT/**` path and
-   operator .md edit (README, governance, skills) COUNTS (a gateless merge never
-   rewrites policy unbounded).
+   paperwork (`CHANGELOG.md`, the current issue's capture doc resolved by
+   `capture_doc_path(root, issue)`, and review transcripts under `relay-system/*.md`)
+   is exempt. Every other `PROJECT/**` path and operator .md edit (README, governance, skills)
+   COUNTS (a gateless merge never rewrites policy unbounded).
    Defaults are operator-tunable via `--max-files` / `--max-insertions`; the
    refusals are never optional.
 2. **Hard refusals** — frozen twins and shared Bash runtime (GH-308), any
@@ -170,7 +186,8 @@ What each phase asserts (all refusals and fired runs write `.tick/express/*` —
    may already be landed; run the preflight probes instead of re-doing it.
 4. **Suite** — code hotfixes name an existing covering suite registered in
    `validate.sh` TESTS; `--docs-only` selects the existing PDDA docs suite above. Do not
-   add a new suite to get one (GH-831: no new tests); an uncovered code fix goes through `/start-task`.
+   add a new suite to get one; an uncovered code fix goes through `/start-task` under the host repo's own
+   test policy (in XYZ-forge: `AGENTS.md` *No new tests*, GH-831).
 5. **Docs born complete** — capture doc scaffolded in `2-WORKING` with Status,
    Acceptance, Merge evidence, and `## Lessons Learned (For Future Agents)`
    present from birth (highly recommended — since GH-693 the reconciler warns

@@ -205,7 +205,7 @@ Validate that the proposed minimal solution complies with the repository's found
    - Ensure terms, patterns, and architectural conventions match the active codebase state rather than legacy/superseded patterns.
 5. **PDDA & Releases Ledger Intake:**
    - *Tracking Doc:* For non-trivial tasks, confirm a capture doc exists under the applicable lifecycle contract (e.g. `PROJECT/1-INBOX/` with `status: proposed` / `status: draft`, or `PROJECT/2-WORKING/` with `status: active`).
-   - *Releases DB / Roadmap:* For repos using the releases ledger, verify the issue is registered in `releases.db` via canonical roadmap commands (`python3 utils/py/releases_app.py roadmap add --issue-num N --issue-url U --title T --created YYYY-MM-DD --doc-path P` with flags per `ROUTER.md:38`). Serial task queueing (`releases jog add`) is a separate optional enqueueing step, not an alternative to roadmap registration.
+   - *Releases DB / Roadmap:* Under decision D-b (work starts when workhorse takes on the task), create or reuse the row via `python3 utils/py/releases_app.py roadmap pickup --issue-num N --doc-path P` (with real rating per Task 11). Serial task queueing (`releases jog add`) is a separate optional enqueueing step, not an alternative to roadmap registration.
 
 ---
 
@@ -339,7 +339,9 @@ an incomplete report and run `/recon` per preservation-unproven clone before dis
      evidenced item outcome in the parent's attempt record (e.g. `attempt_record.py finish --outcome
      resolved|parked` for merge-cleanup), then immediately re-enter the parent by the mechanism that
      matches the item's actual state, never a universal resume:
-     - `merge-cleanup`: `python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <primary> --prefix <prefix> --execute --resume`
+     - `merge-cleanup`: `python3 skills/2-daily/merge-cleanup/scripts/merge_cleanup.py --primary <primary> --prefix <prefix> --prs <N,...> --execute --resume`
+       naming only the run's `--prs` PRs that are still open (GH-1226). If the repair pushed a new head,
+       first dry-run that narrowed list (the same command without `--execute`) to re-pin it.
      - `jog`: pick the Recovery Verb from `skills/2-daily/jog/SKILL.md` that fits what must be redone:
        `releases jog resume <GH-NUM>` only reconciles state and re-projects a valid terminal receipt after
        a crash/restart; `releases jog retry-gate <GH-NUM>` re-runs the gate on the same head when the fix

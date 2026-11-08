@@ -1,0 +1,19 @@
+BEFORE HEAD=f02bb9295747fb97e6ffac2dbd95e4f05de05996 bare=false origin=https://github.com/HiQS-Labs/XYZ-forge.git
+== python3 test/gh534_phase_a_tests.py
+Ran 42 tests in 32.102s
+
+OK
+exit=0
+== python3 test/gh534_phase_c_tests.py
+Ran 111 tests in 216.476s
+
+OK
+exit=0
+== bash test/gh436-merge-cleanup.sh
+Ran 188 tests in 232.362s
+
+OK
+exit=0
+== releases_app.py check
+check: clean (0 failures, 10 warning(s))
+AFTER HEAD=f02bb9295747fb97e6ffac2dbd95e4f05de05996 bare=false origin=https://github.com/HiQS-Labs/XYZ-forge.git

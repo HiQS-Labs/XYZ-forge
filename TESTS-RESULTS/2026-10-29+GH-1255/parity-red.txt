@@ -1,0 +1,1 @@
+Parity predicate accepts 15 matching files; rejects one altered SHA256 (in-memory red control). Source bytes unchanged.

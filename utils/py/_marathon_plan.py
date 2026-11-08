@@ -118,6 +118,123 @@ def _L(x):
     return n if 1 <= n <= 5 else None
 
 
+def _unregistered_record(issue: int, title: str, body: str, doc_rel: str | None = None,
+                         doc_text: str | None = None, engine=None, root=None) -> dict:
+    """A planner-shaped record for an open issue with no ledger row (GH-1261, GH-1340/GH-1345).
+    Judged on capture doc, Preflight Contract and rating proposal. When all three are valid,
+    its state is 'ready' and section is 'Queue / parked intake'."""
+    repo_root = Path(root) if root else (Path(engine.ROOT) if engine else Path("."))
+
+    if doc_rel is None:
+        cands = []
+        for folder in ("1-INBOX", "2-WORKING"):
+            fdir = repo_root / "PROJECT" / folder
+            if fdir.is_dir():
+                for p in sorted(fdir.glob("*.md")):
+                    if re.match(rf"^(?:GH-)?{issue}(?:-|\.md$)", p.name, re.I):
+                        cands.append(str(p.relative_to(repo_root)))
+        if cands:
+            doc_rel = cands[0]
+
+    if doc_rel and doc_text is None:
+        doc_path = repo_root / doc_rel
+        if doc_path.is_file():
+            doc_text = doc_path.read_text(encoding="utf-8", errors="replace")
+
+    if not title or title == f"GH-{issue}":
+        if doc_text:
+            fm_m = re.search(r"(?m)^title:\s*[\"']?(.*?)[\"']?$", doc_text)
+            if fm_m and fm_m.group(1).strip():
+                title = fm_m.group(1).strip()
+            else:
+                for line in doc_text.splitlines():
+                    m = re.match(r"^#\s+(?:GH-\d+[:\s-]*)?(.*)$", line)
+                    if m and m.group(1).strip():
+                        title = m.group(1).strip()
+                        break
+        if not title:
+            title = f"GH-{issue}"
+
+    deps = Engine._deps_of({"raw": f"{title}\n{body}"})
+    if doc_text:
+        doc_deps = Engine._deps_of({"raw": doc_text})
+        deps = sorted(set(deps) | set(doc_deps))
+
+    if engine is None:
+        today = "1970-01-01"
+        cfg = {"root": str(repo_root), "roadmap": str(repo_root / "ROADMAP.md"),
+               "queue_dir": str(repo_root / "PROJECT" / "2-WORKING"), "today": today, "now": today,
+               "policy": "quick-wins", "format": "text", "deep": False, "require_gh": False,
+               "gh_force": "off", "utils_dir": str(repo_root / "utils")}
+        engine = Engine(cfg)
+
+    contract = None
+    if doc_rel and (repo_root / doc_rel).is_file():
+        contract = engine._extract_contract(str(repo_root / doc_rel))
+    if not contract and body:
+        lines = body.splitlines()
+        h = next((j for j, l in enumerate(lines) if re.match(r"^#{1,6}\s+.*preflight\s+contract", l, re.I)), -1)
+        if h >= 0:
+            start = next((j + 1 for j in range(h + 1, len(lines)) if re.match(r"^```json\s*$", lines[j], re.I)), -1)
+            if start >= 0:
+                end = next((j for j in range(start, len(lines)) if re.match(r"^```\s*$", lines[j])), -1)
+                if end >= 0:
+                    try:
+                        contract = json.loads("\n".join(lines[start:end]))
+                    except ValueError:
+                        contract = None
+
+    from releases_app import parse_prs_proposal
+    proposal = parse_prs_proposal(body)
+    if not proposal and doc_text:
+        proposal = parse_prs_proposal(doc_text)
+
+    db_axes = None
+    db_rank = None
+    if proposal:
+        db_axes = (proposal["pri"], proposal["sev"], proposal["appeal"], proposal["effort"])
+        db_rank = proposal.get("ovr") or sum(db_axes)
+
+    writeset = []
+    zone = None
+    zone_rule = None
+    zone_inferred = False
+    if contract and isinstance(contract.get("artifacts"), list) and contract["artifacts"]:
+        writeset = list(contract["artifacts"])
+        z = engine._zone_of(contract, {"title": title, "raw": body})
+        zone = z["zone"]
+        zone_rule = z["zoneRule"]
+        zone_inferred = z["inferred"]
+
+    doc_exists = bool(doc_rel and (repo_root / doc_rel).is_file())
+    if not doc_exists:
+        state = "needs-doc"
+    elif not proposal:
+        state = "unrated"
+    elif not contract or not writeset:
+        state = "needs-contract"
+    else:
+        state = "ready"
+
+    slug = f"gh-{issue}"
+    suggested_branch = "marathon/%s-%s" % (slug, getattr(engine, "TODAY", "today"))
+    return {
+        "title": title, "section": "Queue / parked intake", "emoji": "⏸️",
+        "raw": f"- [ ] [GH-{issue}]({doc_rel}) {title}" if doc_rel else f"- [ ] GH-{issue} {title}",
+        "gh": issue, "gid": None, "docRel": doc_rel, "docExists": doc_exists,
+        "slug": slug, "ratings": {"complexity": None, "risk": None, "effort": None},
+        "rated": bool(proposal), "ratingsExempt": False,
+        "contract": contract, "zone": zone, "zoneInferred": zone_inferred,
+        "writeset": writeset, "zoneRule": zone_rule,
+        "deps": deps, "goGated": False,
+        "suggestedBranch": suggested_branch,
+        "flags": [], "signals": [], "state": state, "score": None,
+        "dbRank": db_rank, "dbAxes": db_axes,
+        "wave": None, "ghState": None,
+        "source": "unregistered",
+    }
+
+
 class Engine:
     def __init__(self, cfg):
         # cfg mirrors the QP_* env the Bash engine consumed.
@@ -142,6 +259,7 @@ class Engine:
         self.BRANCH_ENV = cfg.get("branch_env", "")  # GH-346: QUEUE_PLAN_BRANCH override / test seam
         self.GH_FORCE = cfg.get("gh_force", "")
         self.ZONES_FILE_ENV = cfg.get("zones_file_env", "")  # QUEUE_PLAN_ZONES_FILE
+        self.RELEASES_DB = cfg.get("releases_db", "")  # GH-1257: frozen copy; default ROOT/releases.db
 
         self.findings = []
         self._base_files = None
@@ -817,11 +935,140 @@ class Engine:
         except sqlite3.Error as exc:
             raise EngineExit(3, "marathon-plan: cannot read releases.db roadmap_items: %s" % exc) from exc
 
+    def _pack_waves(self, active, deduped, force_tail=True):
+        """Greedy write-set/zone/dependency wave packing over ``active`` (in order).
+        Returns ``(waves, unplaced)``: lanes a pass cannot place (dependency cycle, zero zone
+        cap) are never co-waved. With ``force_tail`` (the CLI's behaviour; the name predates
+        the hold rule) they are also marked ``unplaceable`` and flagged; without it they are
+        returned untouched for GH-1257 provisional packing over copied records."""
+        waves = []
+        placed_issue = {}
+        pending = active[:]
+        while pending:
+            wave = []
+            wave_writeset = set()
+            wave_zone_counts = {}
+            deferred = []
+            for r in pending:
+                dep_unmet = False
+                for d in r["deps"]:
+                    dep = self._find_by_gh(deduped, d)
+                    if not dep or dep["state"] in DEP_RESOLVED:
+                        continue
+                    if d not in placed_issue:
+                        dep_unmet = True
+                        break
+                collides = any(p in wave_writeset for p in r["writeset"])
+                cap = r["zoneRule"]["maxPerWave"] if (r["zoneRule"] and isinstance(r["zoneRule"]["maxPerWave"], int)) else None
+                zone_cap_clash = cap is not None and wave_zone_counts.get(r["zone"], 0) >= cap
+                inferred_zone_clash = bool(r["zoneRule"] and r["zoneRule"]["conservativeWhenInferred"]
+                                           and r["zoneInferred"] and any(w["zone"] == r["zone"] for w in wave))
+                if dep_unmet or collides or zone_cap_clash or inferred_zone_clash:
+                    deferred.append(r)
+                    continue
+                wave.append(r)
+                for p in r["writeset"]:
+                    wave_writeset.add(p)
+                wave_zone_counts[r["zone"]] = wave_zone_counts.get(r["zone"], 0) + 1
+            if len(wave) == 0:
+                if force_tail:
+                    for r in deferred:
+                        r["state"] = "unplaceable"
+                        self._flag("warn", "unplaceable", r,
+                                   "could not be placed in any wave (dependency cycle / zero zone cap) — hold, do not co-wave",
+                                   "break the dependency cycle or raise the zone cap")
+                return waves, deferred
+            waves.append(wave)
+            for r in wave:
+                if r["gh"] is not None:
+                    placed_issue[r["gh"]] = len(waves) - 1
+            pending = deferred
+        return waves, []
+
+    def _contract_seams(self, waves):
+        """Same-wave lane pairs sharing a write-set spine (GH-5); flags each as coupled-lanes."""
+        contract_seams = []
+        for wi, w in enumerate(waves):
+            for i in range(len(w)):
+                for j in range(i + 1, len(w)):
+                    a, b = w[i], w[j]
+                    if not a["writeset"] or not b["writeset"]:
+                        continue
+                    spine = self._shared_spine(a["writeset"], b["writeset"])
+                    if spine:
+                        contract_seams.append({"wave": a.get("wave") or wi + 1, "a": a, "b": b, "spine": spine})
+                        self._flag("warn", "coupled-lanes", a,
+                                   "same-wave lane shares the `%s/` spine with %s — write-disjoint but likely a shared contract seam"
+                                   % (spine, ("#" + str(b["gh"])) if b["gh"] else b["slug"]),
+                                   "pin a CONTRACT.md for the %s/ interface and point both lane prompts at it before launching" % spine)
+        return contract_seams
+
+    def _discover_unregistered(self, registered_gh):
+        """Discover unstarted issues that have capture docs in PROJECT/1-INBOX (or 2-WORKING)
+        or are open on GitHub but have no ledger row yet (GH-1340/GH-1345)."""
+        discovered = []
+        seen = set(registered_gh)
+
+        # 1. Scan filesystem for capture docs
+        for folder in ("1-INBOX", "2-WORKING"):
+            fdir = os.path.join(self.ROOT, "PROJECT", folder)
+            if not os.path.isdir(fdir):
+                continue
+            for fname in sorted(os.listdir(fdir)):
+                if not fname.endswith(".md") or fname.startswith(("recon-", "MARATHON-PLAN-", "blank.md")):
+                    continue
+                m = re.match(r"^(?:GH-)?(\d+)(?:-|\.md$)", fname, re.I)
+                if not m:
+                    continue
+                issue_num = int(m.group(1))
+                if issue_num in seen:
+                    continue
+                seen.add(issue_num)
+                doc_rel = os.path.join("PROJECT", folder, fname)
+                doc_abs = os.path.join(self.ROOT, doc_rel)
+                doc_text = self._read_file_safe(doc_abs) or ""
+                rec = _unregistered_record(issue_num, "", "", doc_rel=doc_rel, doc_text=doc_text, engine=self, root=self.ROOT)
+                discovered.append(rec)
+
+        # 2. Check open issues in gh state if available
+        if self.GH_STATE:
+            for k, st in self.GH_STATE.items():
+                try:
+                    issue_num = int(k)
+                except ValueError:
+                    continue
+                if st == "OPEN" and issue_num not in seen:
+                    seen.add(issue_num)
+                    rec = _unregistered_record(issue_num, f"GH-{issue_num}", "", engine=self, root=self.ROOT)
+                    discovered.append(rec)
+        elif self.GH_MODE not in ("off", "stub"):
+            try:
+                proc = subprocess.run(
+                    ["gh", "issue", "list", "--state", "open", "--json", "number,title,body,labels", "--limit", "200"],
+                    cwd=self.ROOT, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=15
+                )
+                if proc.returncode == 0:
+                    listed = json.loads(proc.stdout.decode("utf-8", "replace"))
+                    for d in listed:
+                        num = d["number"]
+                        if num in seen:
+                            continue
+                        labels = [l.get("name", "") if isinstance(l, dict) else str(l) for l in d.get("labels", [])]
+                        if "umbrella" in labels:
+                            continue
+                        seen.add(num)
+                        rec = _unregistered_record(num, d.get("title") or f"GH-{num}", d.get("body") or "", engine=self, root=self.ROOT)
+                        discovered.append(rec)
+            except Exception:
+                pass
+
+        return discovered
+
     # ── main compute ────────────────────────────────────────────────────────────
-    def run(self, render_out):
-        """Parse → resolve → score → wave-pack → render. Prints the report to stdout,
-        writes the rendered doc to ``render_out``, returns the exit code."""
-        db_path = os.path.join(self.ROOT, "releases.db")
+    def compute(self):
+        """Parse → resolve → score → wave-pack. Returns the classified records and waves
+        without rendering (GH-1257 reuses this read-only; ``run`` renders it)."""
+        db_path = getattr(self, "RELEASES_DB", "") or os.path.join(self.ROOT, "releases.db")
         explicit_roadmap_env = os.environ.get("QUEUE_PLAN_ROADMAP")
         is_releases_mode, mode_error = parse_pdda_mode(self.ROOT)
         if mode_error:
@@ -902,6 +1149,11 @@ class Engine:
                 "dbRank": db_rank, "dbAxes": db_axes_item,
                 "wave": None, "ghState": None,
             })
+
+        if is_releases_mode and not explicit_roadmap_env:
+            registered_gh = set(r["gh"] for r in records if r["gh"] is not None)
+            discovered = self._discover_unregistered(registered_gh)
+            records.extend(discovered)
 
         # Dedup identical (gh, docRel) pairs — keep the first.
         seen = set()
@@ -1041,7 +1293,12 @@ class Engine:
                     code = e.returncode or 1
                 except OSError:
                     code = 1
-                if code == 4:
+                if code == 3:
+                    r["state"] = "needs-contract"
+                    self._flag("info", "needs-contract", r,
+                               "swarm-preflight --dry-run → invalid contract (exit 3)",
+                               "fix the ## Swarm Preflight Contract json block")
+                elif code == 4:
                     r["state"] = "already-landed"
                     self._flag("warn", "already-landed", r,
                                "swarm-preflight --dry-run → stale (exit 4)",
@@ -1057,6 +1314,11 @@ class Engine:
                                "swarm-preflight --dry-run → %s (exit %d)"
                                % ("blocked" if code == 6 else "ambiguous", code),
                                "resolve target/contract before sequencing")
+                elif code != 0:
+                    r["state"] = "preflight-error"
+                    self._flag("warn", "preflight-error", r,
+                               "unknown/failed preflight exit %d — hold; rerun swarm-preflight directly" % code,
+                               "rerun swarm-preflight directly")
 
         # ── dependency resolution ──────────────────────────────────────────────
         for r in deduped:
@@ -1075,7 +1337,7 @@ class Engine:
                 blocked_by = []
                 for d in r["deps"]:
                     dep = self._find_by_gh(deduped, d)
-                    if not dep or dep["state"] in DEP_RESOLVED or dep["state"] == "ready":
+                    if dep and (dep["state"] in DEP_RESOLVED or dep["state"] == "ready"):
                         continue
                     blocked_by.append(d)
                 if blocked_by:
@@ -1139,72 +1401,20 @@ class Engine:
         active = sorted([r for r in deduped if r["state"] == "ready"],
                         key=functools.cmp_to_key(active_cmp))
 
-        waves = []
-        placed_issue = {}
-        pending = active[:]
-        guard = 0
-        while pending and guard < 100:
-            guard += 1
-            wave = []
-            wave_writeset = set()
-            wave_zone_counts = {}
-            deferred = []
-            for r in pending:
-                dep_unmet = False
-                for d in r["deps"]:
-                    dep = self._find_by_gh(deduped, d)
-                    if not dep or dep["state"] in DEP_RESOLVED:
-                        continue
-                    if d not in placed_issue:
-                        dep_unmet = True
-                        break
-                collides = any(p in wave_writeset for p in r["writeset"])
-                cap = r["zoneRule"]["maxPerWave"] if (r["zoneRule"] and isinstance(r["zoneRule"]["maxPerWave"], int)) else None
-                zone_cap_clash = cap is not None and wave_zone_counts.get(r["zone"], 0) >= cap
-                inferred_zone_clash = bool(r["zoneRule"] and r["zoneRule"]["conservativeWhenInferred"]
-                                           and r["zoneInferred"] and any(w["zone"] == r["zone"] for w in wave))
-                if dep_unmet or collides or zone_cap_clash or inferred_zone_clash:
-                    deferred.append(r)
-                    continue
-                wave.append(r)
-                for p in r["writeset"]:
-                    wave_writeset.add(p)
-                wave_zone_counts[r["zone"]] = wave_zone_counts.get(r["zone"], 0) + 1
-            if len(wave) == 0:
-                waves.append(deferred)
-                for r in deferred:
-                    if r["gh"] is not None:
-                        placed_issue[r["gh"]] = len(waves) - 1
-                break
-            waves.append(wave)
-            for r in wave:
-                if r["gh"] is not None:
-                    placed_issue[r["gh"]] = len(waves) - 1
-            pending = deferred
+        waves, _ = self._pack_waves(active, deduped)
         for i, w in enumerate(waves):
             for r in w:
                 r["wave"] = i + 1
+        active = [r for w in waves for r in w]
 
         # GH-5 contract seams
-        contract_seams = []
-        for w in waves:
-            for i in range(len(w)):
-                for j in range(i + 1, len(w)):
-                    a, b = w[i], w[j]
-                    if not a["writeset"] or not b["writeset"]:
-                        continue
-                    spine = self._shared_spine(a["writeset"], b["writeset"])
-                    if spine:
-                        contract_seams.append({"wave": a["wave"], "a": a, "b": b, "spine": spine})
-                        self._flag("warn", "coupled-lanes", a,
-                                   "same-wave lane shares the `%s/` spine with %s — write-disjoint but likely a shared contract seam"
-                                   % (spine, ("#" + str(b["gh"])) if b["gh"] else b["slug"]),
-                                   "pin a CONTRACT.md for the %s/ interface and point both lane prompts at it before launching" % spine)
+        contract_seams = self._contract_seams(waves)
 
         # ── exit code ───────────────────────────────────────────────────────────
         has_drift = any(r["state"] in ("already-landed", "already-closed") for r in deduped)
         held = [r for r in deduped if r["state"] in
-                ("unrated", "needs-doc", "needs-contract", "note-only", "not-ready", "blocked", "blocked-dep")]
+                ("unrated", "needs-doc", "needs-contract", "note-only", "not-ready", "blocked", "blocked-dep",
+                 "preflight-error", "unplaceable")]
         exit_code = 0
         if has_drift:
             exit_code = 4
@@ -1221,6 +1431,17 @@ class Engine:
         }
         weight_str = "eff:%d,cx:%d,risk:%d%s,dep:%d,zone:%d" % (
             W["eff"], W["cx"], risk_w, "(−)" if risk_sign < 0 else "", W["dep"], W["zone"])
+        return {"deduped": deduped, "active": active, "waves": waves, "held": held,
+                "contract_seams": contract_seams, "has_drift": has_drift, "exit_code": exit_code,
+                "counts": counts, "weight_str": weight_str}
+
+    def run(self, render_out):
+        """Parse → resolve → score → wave-pack → render. Prints the report to stdout,
+        writes the rendered doc to ``render_out``, returns the exit code."""
+        c = self.compute()
+        deduped, active, waves, held = c["deduped"], c["active"], c["waves"], c["held"]
+        contract_seams, has_drift, exit_code = c["contract_seams"], c["has_drift"], c["exit_code"]
+        counts, weight_str = c["counts"], c["weight_str"]
 
         report = self._render_report(deduped, active, waves, held, has_drift,
                                      exit_code, counts, weight_str)
@@ -1436,7 +1657,7 @@ class Engine:
             ("\U0001F527 Reconcile — undocumented partial completion", ["partial"]),
             ("⏸️ Gated on operator GO", ["gated"]),
             ("⚠️ Not yet sequenceable — rate / add doc / add contract",
-             ["unrated", "needs-doc", "needs-contract", "not-ready", "blocked"]),
+             ["unrated", "needs-doc", "needs-contract", "not-ready", "blocked", "preflight-error", "unplaceable"]),
             ("⛔ Blocked on a held dependency", ["blocked-dep"]),
             ("\U0001F6AB Rating-exempt (completed / hub / superseded)", ["exempt"]),
             ("\U0001F5D2️ Notes (no issue, no doc)", ["note-only"]),

@@ -116,3 +116,7 @@ Route work proceeds regardless; only the flip waits.
 ## Merge evidence
 
 - PR #526 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1217 merged 2026-10-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

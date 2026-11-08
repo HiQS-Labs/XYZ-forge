@@ -1,0 +1,15 @@
+2026-10-27T03:38:26Z
+ M LEADERBOARD.md
+ D PROJECT/2-WORKING/GH-416-DOC-TRUES-UP-BATCH.md
+ M releases.db
+ M releases.sql
+?? PROJECT/2-WORKING/MARATHON-PLAN-2026-10-27.md
+?? PROJECT/3-COMPLETED/GH-416-DOC-TRUES-UP-BATCH.md
+ LEADERBOARD.md                                 |   4 +-
+ PROJECT/2-WORKING/GH-416-DOC-TRUES-UP-BATCH.md |  95 -------------------------
+ releases.db                                    | Bin 1474560 -> 1474560 bytes
+ releases.sql                                   |  13 ++--
+ 4 files changed, 11 insertions(+), 101 deletions(-)
+parked awaiting-landing (PR #1225: https://github.com/HiQS-Labs/XYZ-forge/pull/1225)
+Completed PROJECT/3-COMPLETED/GH-416-DOC-TRUES-UP-BATCH.md - **GH-416 · Documentation trues-ups (narrowed to items 1 and 3) — acorn deps classification, CODEX_FLAGS default and dead escalation rung** ✅ **SHIPPED 2026-10-27 (PR #1225)** — acorn deps classifica
+{"closedAt":"2026-10-27T03:33:06Z","state":"CLOSED"}

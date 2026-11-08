@@ -1,0 +1,230 @@
+[
+  {
+    "probe": "unpinned active -> pin proposed",
+    "pass": true,
+    "detail": {
+      "rc": 0,
+      "pinned": [
+        {
+          "task_id": "local_a",
+          "title": "Fix bug",
+          "activity_at": "2026-10-24T18:30:32.230Z"
+        }
+      ]
+    }
+  },
+  {
+    "probe": "already pinned skipped; false/missing proposed",
+    "pass": true,
+    "detail": {
+      "pinned": [
+        "local_f",
+        "local_m"
+      ]
+    }
+  },
+  {
+    "probe": "running -> pin, no rename",
+    "pass": true,
+    "detail": {
+      "section": {
+        "swept": 0,
+        "renamed": [],
+        "pinned": [
+          {
+            "task_id": "local_r",
+            "title": "Live",
+            "activity_at": "2026-10-24T18:30:32.230Z"
+          }
+        ],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 1,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  },
+  {
+    "probe": "archived/self -> no pin, no rename",
+    "pass": true,
+    "detail": {
+      "section": {
+        "swept": 0,
+        "renamed": [],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 2,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  },
+  {
+    "probe": "outside pin window -> no pin",
+    "pass": true,
+    "detail": {
+      "section": {
+        "swept": 1,
+        "renamed": [
+          {
+            "task_id": "local_o",
+            "old": "T",
+            "new": "10-24 T",
+            "activity_at": "2026-10-24T10:30:32.230Z"
+          }
+        ],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 0,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  },
+  {
+    "probe": "--no-pin -> no pins",
+    "pass": true,
+    "detail": {
+      "section": {
+        "swept": 1,
+        "renamed": [
+          {
+            "task_id": "local_a",
+            "old": "T",
+            "new": "10-24 T",
+            "activity_at": "2026-10-24T18:30:32.230Z"
+          }
+        ],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 1,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  },
+  {
+    "probe": "--unpin-days refused",
+    "pass": true,
+    "detail": {
+      "rc": 2,
+      "stderr": "roup NAME] [--auto-pin]\ntask_sync.py: error: Claude Desktop plans only: apply titles/pins via native tools; --apply/--set-title/--unpin-days/--group unsupported"
+    }
+  },
+  {
+    "probe": "running row missing activity -> skipped, no error",
+    "pass": true,
+    "detail": {
+      "rc": 0,
+      "section": {
+        "swept": 0,
+        "renamed": [],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 1,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  },
+  {
+    "probe": "idle row invalid activity -> refused",
+    "pass": true,
+    "detail": {
+      "rc": 3,
+      "error": "claude-desktop lastActivityAt missing/invalid for local_i"
+    }
+  },
+  {
+    "probe": "isRunning absent -> skipped; false -> eligible",
+    "pass": true,
+    "detail": {
+      "absent": {
+        "swept": 0,
+        "renamed": [],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 1,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      },
+      "false": {
+        "swept": 1,
+        "renamed": [
+          {
+            "task_id": "local_flag",
+            "old": "B",
+            "new": "10-24 B",
+            "activity_at": "2026-10-24T18:30:32.230Z"
+          }
+        ],
+        "pinned": [
+          {
+            "task_id": "local_flag",
+            "title": "B",
+            "activity_at": "2026-10-24T18:30:32.230Z"
+          }
+        ],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 0,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  },
+  {
+    "probe": "isArchived absent -> skipped; false -> eligible",
+    "pass": true,
+    "detail": {
+      "absent": {
+        "swept": 0,
+        "renamed": [],
+        "pinned": [],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 1,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      },
+      "false": {
+        "swept": 1,
+        "renamed": [
+          {
+            "task_id": "local_arch_flag",
+            "old": "B",
+            "new": "10-24 B",
+            "activity_at": "2026-10-24T18:30:32.230Z"
+          }
+        ],
+        "pinned": [
+          {
+            "task_id": "local_arch_flag",
+            "title": "B",
+            "activity_at": "2026-10-24T18:30:32.230Z"
+          }
+        ],
+        "unpinned": [],
+        "needs_summary": [],
+        "skipped": 0,
+        "error": null,
+        "scope": "list_sessions inventory; the sweeping session is excluded by the tool",
+        "execution": "native-tools-required"
+      }
+    }
+  }
+]

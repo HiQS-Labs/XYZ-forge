@@ -1,0 +1,10 @@
+# resolve-profile: 'kimi k3.1 pro' -> tier 2 (profile 'kimi k3.1 pro')
+# resolve-profile: WARNING — kimi harness selected, but its CLI 'kimi' is NOT on PATH; this turn will not run on this machine
+export KIMI_AGENT='kimi'
+export KIMI_MODEL='kimi-code/k3.1-pro'
+# KIMI_GATEWAY: not set — kimi is its own router
+export RELAY_AGENT='kimi'
+export RELAY_AGENT_CMD='relay-automation/kimi-turn.sh'
+export HARNESS='~/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24'
+export TICK='~/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24/bin/tick'
+export XYZ_MODEL_CATALOG_VERSION='1.3.0'

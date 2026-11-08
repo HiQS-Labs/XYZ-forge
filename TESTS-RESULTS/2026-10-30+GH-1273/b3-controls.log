@@ -1,0 +1,6 @@
+b' \t' red= 24 candidate= None PASS
+b'  \t' red= 26 candidate= None PASS
+b'   \t' red= 28 candidate= None PASS
+b'    ' red= None candidate= None PASS
+b'\t' red= None candidate= None PASS
+b'' red= 20 candidate= 20 PASS

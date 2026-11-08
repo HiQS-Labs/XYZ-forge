@@ -1,0 +1,21 @@
+PASS setup: adopt-existing
+PASS setup: adopt-existing source points inside the collection
+PASS setup: catalog
+PASS setup: other has no recorded source
+PASS preview exits 0
+PASS preview does not say Unchanged
+PASS preview says will RECORD
+PASS preview leaves receipt without source
+  apply stdout: {   "operation": "update",   "apply": true,   "name": "other",   "source": "$TMPDIR/gh1306-smoke-1kijv1mq/source repo/skills/other",   "before": "bfce09d9b9a95b063acca4df20f173e3a52ae69fecbc91397da254e97e585789",   "after": "bfce09d9b9a95b063acca4df20
+  apply stderr: 
+PASS apply exits 0
+PASS apply records source
+PASS apply records commit
+PASS payload bytes unchanged
+PASS no backup archive written
+PASS no blocked-pulse WARN
+PASS no Pulse commit for receipt-only update
+PASS adopt-existing receipt re-points to the owning repo
+PASS rerun prints Unchanged
+PASS changed payload copies
+ALL PASS

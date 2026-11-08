@@ -1,0 +1,28 @@
+== guard present: 7f6f0995
+PASS: release --to done exits non-zero (rc=1)
+PASS: diagnostic names the right verb for --to done
+PASS: diagnostic explains --to done
+PASS: no event written for --to done (15)
+PASS: token still claimed by codex after --to done
+PASS: release --to Approved exits non-zero (rc=1)
+PASS: diagnostic names the right verb for --to Approved
+PASS: diagnostic explains --to Approved
+PASS: no event written for --to Approved (15)
+PASS: token still claimed by codex after --to Approved
+PASS: release --to Closed exits non-zero (rc=1)
+PASS: diagnostic names the right verb for --to Closed
+PASS: diagnostic explains --to Closed
+PASS: no event written for --to Closed (15)
+PASS: token still claimed by codex after --to Closed
+PASS: control: release --to claude-a succeeds
+PASS: control: exactly one event for --to claude-a
+PASS: control: bare release (no --to) succeeds
+PASS: control: exactly one event for bare release
+PASS: after the refused misfire, tick done by the same agent succeeds (what rtl_enforce step 4 runs)
+PASS: token RELAY-gh1020-check1b-075603 is done
+== red control: src/scope.js from origin/development
+PASS: RED: without the guard, release --to done succeeds (rc=0, 'released:')
+PASS: RED: tick done fails after release --to done (ownership lost — the close-mismatch state)
+PASS: RED: tick info shows handoff-to: done
+PASS: guard restored (tree clean)
+== summary: 25 pass, 0 fail

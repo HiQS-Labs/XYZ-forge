@@ -1,0 +1,16 @@
+START 2026-10-26T03:22:12Z
+
+============================================================
+jog: processing GH-416 (attempt 2) at position 1
+============================================================
+jog: marathon execution gh416-exec1 for GH-416 (packet: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.tick/jog/jog-01M5V2Q6CK5GW0B5V25KFQQ1XE/gh416-exec1/preflight)
+jog: dispatching marathon-drive (/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0/relay-automation/marathon-drive.sh)
+marathon-drive: branch guard: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0 was on its trunk branch 'development' — cut 'marathon/gh-416-doc-trues-up-batch-2026-10-25' and continuing (GH-561)
+marathon-drive:   this lane's commits land there; a green phase opens a PR back into 'development' (--allow-trunk-commit to commit on 'development' instead)
+marathon-drive: relay file committed: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0/marathon-system/gh-416-doc-trues-up-batch/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-416-DOC-TRUES-UP-BATCH-TURN → agy
+marathon-drive: memory-telemetry: phase gh-416-doc-trues-up-batch-start boundary — compressor=2862MB, swap_free=1164MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+relay-drive: GH-370 progress (main tree fallback: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0) changed-files=0
+agy-turn: worktree isolation ON (/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//rtl-wt.6YDYAC)
+EXIT 137 2026-10-26T03:22:37Z

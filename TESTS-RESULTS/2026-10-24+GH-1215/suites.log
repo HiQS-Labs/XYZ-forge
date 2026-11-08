@@ -1,0 +1,407 @@
+===== find-harness
+find-harness (GH-70 Phase 2):
+  PASS: skill front door searches the user install root
+  PASS: skill front door does not prescribe the CWD-relative command
+  PASS: harness clone: --check exits 0
+  PASS: harness clone: no concurrency warning
+  PASS: foreign no-.xyz: --check still exits 0 (fail-open)
+  PASS: foreign no-.xyz: emits the concurrency warning
+  PASS: foreign no-.xyz: points at xyz-vendor.sh
+  PASS: foreign no-.xyz: hint omits the bogus vendor subcommand
+  PASS: vendored .xyz: --check exits 0
+  PASS: vendored .xyz: no concurrency warning
+  PASS: vendored .xyz: resolves to the local .xyz
+  PASS: case-collision: --check still exits 0 (fail-open)
+  PASS: case-collision: emits the advisory warning
+  PASS: case-collision: names both colliding paths
+  PASS: case-collision: explains the exit-6 risk + git mv remedy
+  PASS: vendored collision: --check exits 0
+  PASS: vendored collision: emits the case-collision warning
+  PASS: vendored collision: names both colliding paths
+  PASS: vendored collision: stays scoped to caller repo
+  PASS: no-collision: --check exits 0
+  PASS: no-collision: case-collision warning absent
+  PASS: ignorecase=false collision: --check exits 0
+  PASS: ignorecase=false collision: warning absent
+  PASS: copied skill gives an actionable no-candidate failure
+  PASS: similarly named task clone cannot win discovery
+  PASS: wrong-origin XYZ-forge cannot win discovery
+  PASS: no-candidate diagnostic lists /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Documents/GH Repos/XYZ-forge
+  PASS: copied skill searches /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Documents/GH Repos/XYZ-forge
+  PASS: no-candidate diagnostic lists /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Documents/GitHub/XYZ-forge
+  PASS: copied skill searches /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Documents/GitHub/XYZ-forge
+  PASS: no-candidate diagnostic lists /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Documents/GitHub Repos/XYZ-forge
+  PASS: copied skill searches /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Documents/GitHub Repos/XYZ-forge
+  PASS: no-candidate diagnostic lists /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Documents/GitHub-Repos/XYZ-forge
+  PASS: copied skill searches /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Documents/GitHub-Repos/XYZ-forge
+  PASS: no-candidate diagnostic lists /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Documents/Github/XYZ-forge
+  PASS: copied skill searches /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Documents/Github/XYZ-forge
+  PASS: no-candidate diagnostic lists /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/XYZ-forge
+  PASS: copied skill searches /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/XYZ-forge
+  PASS: no-candidate diagnostic lists /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Developer/XYZ-forge
+  PASS: copied skill searches /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Developer/XYZ-forge
+  PASS: equally qualified clones cause a named refusal
+  PASS: unique development clone wins
+find-harness: HARNESS=/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Documents/GH Repos/XYZ-forge REPO_ROOT=/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/find-harness.PIgKTp/gh856-home/Documents/GH Repos/XYZ-forge vendored=0 via=override
+  PASS: --check config hint writes the chosen path
+  PASS: copied skill resolves the saved config
+  PASS: copied skill --env exports usable harness, repo root, and tick
+  PASS: copied skill warns on a non-development branch
+  PASS: invalid config falls through to canonical search
+  PASS: copied skill reports held lock and cached-upstream lag
+  PASS: dead holder is reported as a stale lock
+  PASS: copied skill compares vendored drift with configured live harness
+  find-harness: 50 pass, 0 fail
+===== gh346-gateway-allowlists
+== test: gh346-gateway-allowlists ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh346-gateway-allowlists.XXXXXX.80jmUtUNrC
+== test: gh346-gateway-allowlists ==
+  derived lanes from route_agent(): claude codex agy aider pi smallcode commandcode deepseek kimi
+  PASS: #3 dispatcher routes 'claude' -> claude-turn.sh
+  PASS: #3 dispatcher routes 'codex' -> codex-turn.sh
+  PASS: #3 dispatcher routes 'agy' -> agy-turn.sh
+  PASS: #3 dispatcher routes 'aider' -> aider-turn.sh
+  PASS: #3 dispatcher routes 'pi' -> pi-turn.sh
+  PASS: #3 dispatcher routes 'smallcode' -> smallcode-turn.sh
+  PASS: #3 dispatcher routes 'commandcode' -> commandcode-turn.sh
+  PASS: #3 dispatcher routes 'deepseek' -> deepseek-turn.sh
+  PASS: #3 dispatcher routes 'kimi' -> kimi-turn.sh
+  PASS: #3 dispatcher rejects an unknown id with exit 2 and names it
+  PASS: #3 dispatcher refuses a lane whose *_AGENT var is unset (exit 2)
+  PASS: #2 route_agent rejects an unknown builder id with exit 2
+  PASS: #2 rejection message names 'claude'
+  PASS: #2 rejection message names 'codex'
+  PASS: #2 rejection message names 'agy'
+  PASS: #2 rejection message names 'aider'
+  PASS: #2 rejection message names 'pi'
+  PASS: #2 rejection message names 'smallcode'
+  PASS: #2 rejection message names 'commandcode'
+  PASS: #2 rejection message names 'deepseek'
+  PASS: #2 rejection message names 'kimi'
+  PASS: #2/#4 'commandcode' passes routing and binary preflight (rc=0)
+  SKIP: 'deepseek' tooling not installed on this host (preflight fired, which is correct)
+  PASS: #2/#4 'kimi' passes routing and binary preflight (rc=0)
+  PASS: #4 _probe_bin_or_file accepts an off-PATH file entrypoint
+  PASS: #4 _probe_bin_or_file fails closed when nothing resolves
+  PASS: #4 DEEPSEEK_DEFAULT_BIN still matches deepseek-turn.py's own default
+  PASS: #4 SMALLCODE_DEFAULT_BIN matches smallcode-turn.sh's default in full
+  PASS: #5 'claude' has a CLAUDE_TURN_ROOT guard root
+  PASS: #5 'codex' has a CODEX_TURN_ROOT guard root
+  PASS: #5 'agy' has a AGY_TURN_ROOT guard root
+  PASS: #5 'aider' has a AIDER_TURN_ROOT guard root
+  PASS: #5 'pi' has a PI_TURN_ROOT guard root
+  PASS: #5 'smallcode' has a SMALLCODE_TURN_ROOT guard root
+  PASS: #5 'commandcode' has a COMMANDCODE_TURN_ROOT guard root
+  PASS: #5 'deepseek' has a DEEPSEEK_TURN_ROOT guard root
+  PASS: #5 'kimi' has a KIMI_TURN_ROOT guard root
+  PASS: #8 gate_env.py classifies COMMANDCODE_AGENT
+  PASS: #9 COMMANDCODE_AGENT is reset before routing (a stale value cannot route a turn)
+  PASS: #8 gate_env.py classifies DEEPSEEK_AGENT
+  PASS: #9 DEEPSEEK_AGENT is reset before routing (a stale value cannot route a turn)
+  PASS: #8 gate_env.py classifies KIMI_AGENT
+  PASS: #9 KIMI_AGENT is reset before routing (a stale value cannot route a turn)
+  PASS: #10 GATE_SCRUBBED_ENV includes CLAUDE_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes CODEX_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes AGY_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes AIDER_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes PI_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes SMALLCODE_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes COMMANDCODE_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes DEEPSEEK_AGENT
+  PASS: #10 GATE_SCRUBBED_ENV includes KIMI_AGENT
+  PASS: #6 bin/marathon-yaml no longer admits the phantom 'gemini' reviewer
+  PASS: #6 src/marathon-yaml.js no longer admits the phantom 'gemini' reviewer
+  PASS: #6 no gemini shim exists, so removing it from the gates lost no capability
+  PASS: #6 python reviewer gate agrees with the JS gates (codex/agy)
+  PASS: #1 frozen bash twin still accepts only claude/codex/agy/aider (recorded GH-308 divergence)
+  PASS: 2.10 unrecognized id exits 2
+  PASS: 2.10 no tick event written before the refusal (0 events, unchanged)
+  PASS: 2.10 no worktree created before the refusal
+  PASS: 2.7 find-harness.sh reports RELAY_HAS_COMMANDCODE
+  PASS: 2.7 find-harness.sh reports RELAY_HAS_DEEPSEEK
+  PASS: 2.7 --env actually emits the new flags
+  PASS: 2.8 relay-xyz SKILL.md documents the deepseek worker
+  gh346-gateway-allowlists: 63 pass, 0 fail
+===== gh346-resolver-fallback
+== test: gh346-resolver-fallback ==
+  PASS: alias hit resolves: 'GLM 5.2' -> 'z-ai/glm-5.2' (want 'z-ai/glm-5.2')
+  PASS: fuzzy hit resolves: 'deepseek v4 pro' -> 'deepseek/deepseek-v4-pro' (want 'deepseek/deepseek-v4-pro')
+  PASS: canonical passthru: 'deepseek/deepseek-v4-pro' -> 'deepseek/deepseek-v4-pro' (want 'deepseek/deepseek-v4-pro')
+  PASS: miss falls through: 'totally-unknown-model-xyz' -> 'totally-unknown-model-xyz' (want 'totally-unknown-model-xyz')
+  PASS: empty stays empty: '' -> '' (want '')
+  PASS: missing resolver script -> 'GLM 5.2'
+  PASS: timeout falls back -> 'GLM 5.2'
+  PASS: deepseek-turn.py routes DEEPSEEK_MODEL through resolve_model_slug
+  PASS: deepseek-turn.py keeps its literal fallback under the resolver
+  PASS: review_xyz.py consumes the shared helper instead of its own copy
+  PASS: resolve-model-alias.sh still exits 1 with no output on a miss (contract Phase 1 depends on)
+  gh346-resolver-fallback: 11 pass, 0 fail
+===== gh393-deepseek-readiness
+gh393 deepseek readiness parity:
+  PASS: control: oracle reads the shim's rule (existing→1, missing→0)
+  PASS: ambient: RELAY_HAS_DEEPSEEK=0 matches shim rule + key
+  PASS: binary on PATH, no API key: flag is 0
+  PASS: control: hardcoded-path leg neutralised in the shim copy
+  PASS: control: PATH stripped + hardcoded leg removed → the shim's rule resolves nothing
+  PASS: key present, no resolvable binary: flag is 0
+  PASS: control: shim rule + key say 1 for an explicit DEEPSEEK_BIN
+  PASS: explicit DEEPSEEK_BIN + key: flag is 1
+  PASS: explicit DEEPSEEK_BIN, no key: flag is 0
+  gh393-deepseek-readiness: 9 pass, 0 fail
+===== gh396-find-harness-roots
+gh396 find-harness two-roots contract:
+  PASS: plain .xyz: auto-discovery resolves TICK_REPO_ROOT to the consumer repo
+  PASS: plain .xyz: XYZ_HARNESS override agrees with auto-discovery (#395)
+  PASS: plain .xyz: override still selects the harness it names
+  PASS: plain .xyz (python): is_vendored('/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh396-roots.Q2S0Y0/a-plain/.xyz') is True
+  PASS: plain .xyz (python): is_vendored() with override is True
+  PASS: plain .xyz (python): repo_root() with override matches consumer repo
+  PASS: linked worktree, override=main .xyz: auto-discovery resolves TICK_REPO_ROOT to the consumer repo
+  PASS: linked worktree, override=main .xyz: XYZ_HARNESS override agrees with auto-discovery (#395)
+  PASS: linked worktree, override=main .xyz: override still selects the harness it names
+  PASS: linked worktree, override=main .xyz (python): is_vendored('/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh396-roots.Q2S0Y0/b-main/.xyz') is True
+  PASS: linked worktree, override=main .xyz (python): is_vendored() with override is True
+  PASS: linked worktree, override=main .xyz (python): repo_root() with override matches consumer repo
+  PASS: symlink inside repo: auto-discovery resolves TICK_REPO_ROOT to the consumer repo
+  PASS: symlink inside repo: XYZ_HARNESS override agrees with auto-discovery (#395)
+  PASS: symlink inside repo: override still selects the harness it names
+  PASS: symlink inside repo (python): is_vendored('/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh396-roots.Q2S0Y0/c-inside/.xyz') is True
+  PASS: symlink inside repo (python): is_vendored() with override is True
+  PASS: symlink inside repo (python): repo_root() with override matches consumer repo
+  PASS: symlink outside repo: auto-discovery resolves TICK_REPO_ROOT to the consumer repo
+  PASS: symlink outside repo: XYZ_HARNESS override agrees with auto-discovery (#395)
+  PASS: symlink outside repo: override still selects the harness it names
+  PASS: symlink outside repo (python): is_vendored('/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh396-roots.Q2S0Y0/d-outside/.xyz') is True
+  PASS: symlink outside repo (python): is_vendored() with override is True
+  PASS: symlink outside repo (python): repo_root() with override matches consumer repo
+  PASS: symlink outside repo: control — git cannot resolve the link target, so the fallback is load-bearing
+  PASS: precedence step 1: valid XYZ_HARNESS override wins over local .xyz
+  PASS: precedence step 1: invalid override falls through to local .xyz
+  PASS: precedence step 2: local .xyz selected with no override
+  PASS: precedence step 3: delegated to gh292-worktree-vendored-discovery.sh (linked worktree, no override)
+  PASS: precedence step 4: harness clone resolves to itself
+  PASS: precedence step 5: foreign repo falls back to the script's own harness
+  PASS: #394: auto-discovery warns that the vendored copy is behind
+  PASS: #394: the warning still fires when XYZ_HARNESS points at the stale .xyz
+  PASS: #394: the printed remedy is runnable as printed (bash /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh396-roots.Q2S0Y0/live-harness/relay-automation/xyz-sync.sh update /private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh396-roots.Q2S0Y0/f-stale)
+  PASS: --quiet: accepted (exit 0)
+  PASS: --quiet: no find-harness: announcement on stderr
+  PASS: --quiet: exported names and values are identical to the loud form
+  PASS: file-symlinked locator: resolves root correctly via file symlink
+  PASS: harness-paths.sh: xyz_harness_home matches harness directory
+  PASS: harness-paths.sh: xyz_harness_tool resolves tool
+  PASS: harness-paths.sh: xyz_emit_env_exports emits correct format
+  PASS: GH-1001: running vendored script resolves its own .xyz and consumer root despite a foreign XYZ_HARNESS
+  gh396-find-harness-roots: 42 pass, 0 fail
+===== gh441-gate-env-contract
+== test: gh441-gate-env-contract ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh441-gate-env-contract.XXXXXX.Jq61P02Swn
+  PASS: the contract module exists at utils/py/gate_env.py
+  PASS: C1a found driver exports to check (25 names)
+  PASS: C1b every variable the drivers export is classified scrub-or-pass
+  PASS: C2a ALLOW_PATHS is scrubbed (the variable that flipped oracle-guard)
+  PASS: C2b RELAY_DRIVER_LOCKED SURVIVES — nested drivers need it; scrubbing it was reverted
+  PASS: C2c an unrelated variable is untouched (the contract is not a blanket wipe)
+  PASS: C3a the shell helper's list is generated from the same registry as the driver's
+  PASS: C3b gate-env.sh does not hardcode variable names (single source of truth)
+  PASS: C3c gate-env.sh applies the list without eval (GH-64 eval-unsanitized)
+  PASS: C3d the driver's literal is EXACTLY the registry (the two copies cannot drift)
+  PASS: C4a a custom gate sourcing the helper sees a CLEAN environment
+  PASS: C4b NEGATIVE CONTROL: the same gate without the helper IS contaminated
+  PASS: C5a the helper FAILS (rc=1) when it cannot resolve the registry
+  PASS: C5b the failure names the contract so it is diagnosable in one read
+  PASS: C6a validate.sh sources the shared helper
+  PASS: C6b validate.sh no longer hardcodes its own prologue
+  PASS: C7a ci-local.sh sources the shared helper
+  PASS: C8a the helper exports PYTHONDONTWRITEBYTECODE=1 and does not clobber a caller's _src/_hp_lib
+  gh441-gate-env-contract: 18 pass, 0 fail
+===== marathon-drive
+== test: marathon-drive ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-marathon-drive.XXXXXX.AOcihKlwYk
+  PASS: dry-run exits 0
+  PASS: dry-run emits the rendered relay on stdout
+  PASS: the emitted render is the real relay body, not just a banner
+  PASS: dry-run writes nothing to disk (GH-401)
+  PASS: dry-run makes no staged changes
+  PASS: dry-run makes no commits
+  PASS: relay file has builder TAKE YOUR TURN section
+  PASS: relay file has reviewer TAKE YOUR TURN section
+  PASS: relay file has STATUS: Open
+  PASS: phase brief text baked into relay file
+  PASS: MARATHON-P1-TURN tick task created (event file present)
+  PASS: seeded the leaked open handoff fixture
+  PASS: driver reconciles leaked handoff and re-seeds cleanly
+  PASS: driver avoids the old 'task ... is open' collision
+  PASS: driver re-seeds the token back to the builder handoff (builder claimed it, reviewer completed it)
+  PASS: live claim blocks re-seed instead of being reaped
+  PASS: live-claim refusal is explicit
+  PASS: live claude claim survives the failed re-seed
+  PASS: relay-drive called with --relay-file
+  PASS: relay-drive called with --relay-task
+  PASS: relay-drive called with --round-cap
+  PASS: relay-drive called with --agent-cmd
+  PASS: happy path exits 0 (relay approved + gate passed)
+  PASS: transcript saved under relay-system/<date>/
+  PASS: marathon.phase.approved event emitted
+  PASS: GH-307: gate cannot see XYZ_HARNESS_CONTEXT
+  PASS: GH-307: gate cannot see XYZ_SESSION_ID
+  PASS: GH-307: gate cannot see MARATHON_LANE_NS
+  PASS: GH-307: scrub is narrow — MARATHON_ROOT preserved
+  PASS: GH-307: scrub is narrow — TICK_REPO_ROOT preserved
+  PASS: pre-advance failure exits 5
+  PASS: ESCALATION.md written on gate failure
+  PASS: ESCALATION.md records pre-advance-failed reason
+  PASS: H4: post-approve source commit → exit 4 (approval not bound to the final candidate)
+  PASS: H4: escalation names candidate-drifted-from-reviewed-head
+  PASS: H4: control — the hook really committed source (the SECOND bind is what refused)
+  PASS: H4: the refusal came from the post-approve bind, after the approved event
+  PASS: H4: receipt is not approved and carries no validated candidate
+  PASS: H4: no green completion was emitted
+  PASS: GH-273: XYZ_PYTHON=0 help documents --post-approve-cmd
+  PASS: GH-273: XYZ_PYTHON=0 omitted hook preserves the existing happy path
+  PASS: GH-273: XYZ_PYTHON=0 passing hook runs exactly once after approval
+  PASS: GH-273: XYZ_PYTHON=0 failing hook exits 9
+  PASS: GH-273: XYZ_PYTHON=0 failing hook still runs exactly once after approval
+  PASS: GH-273: XYZ_PYTHON=0 failing hook records post-approve-failed
+  PASS: GH-273: XYZ_PYTHON=0 approval remains logged when closeout fails
+  PASS: GH-273: XYZ_PYTHON=1 help documents --post-approve-cmd
+  PASS: GH-273: XYZ_PYTHON=1 omitted hook preserves the existing happy path
+  PASS: GH-273: XYZ_PYTHON=1 passing hook runs exactly once after approval
+  PASS: GH-273: XYZ_PYTHON=1 failing hook exits 9
+  PASS: GH-273: XYZ_PYTHON=1 failing hook still runs exactly once after approval
+  PASS: GH-273: XYZ_PYTHON=1 failing hook records post-approve-failed
+  PASS: GH-273: XYZ_PYTHON=1 approval remains logged when closeout fails
+  PASS: relay cap escalation exits 4
+  PASS: ESCALATION.md written on relay cap
+  PASS: ESCALATION.md records relay-drive-exit: 4
+  PASS: relay no-progress exits 3
+  PASS: ESCALATION.md written on no-progress
+  PASS: containment violation escalation exits 6 (not 'unexpected')
+  PASS: ESCALATION.md written on containment violation
+  PASS: ESCALATION.md records containment-violation reason
+  PASS: MARATHON_BUILDER/MARATHON_REVIEWER wired (no dispatcher errors in happy path)
+  PASS: --round-cap 9 passed to relay-drive
+  PASS: agent-cmd path with spaces survives relay-drive dispatch
+  PASS: artifact path baked into relay template
+  PASS: tick claim --paths includes relay + artifact
+  PASS: ALLOW_PATHS exported to the turn-taker env
+  PASS: relay-only phase clears inherited ALLOW_PATHS (no extra write surface)
+  PASS: GH-207: plan-a namespaced lane exits with the stubbed relay cap
+  PASS: GH-207: phase render lives under the namespaced lane path for plan-a
+  PASS: GH-207: plan-a attempt state is keyed by the namespaced lane id
+  PASS: GH-207: plan-b namespaced lane also runs independently
+  PASS: GH-207: phase render lives under the namespaced lane path for plan-b
+  PASS: GH-207: plan-b attempt state is separate from plan-a despite the shared bare lane id
+  PASS: GH-207: namespaced runs do not fall back to a bare p1 attempt file
+  PASS: GH-207: first namespaced render fires (unattested stub, exit 4)
+  PASS: GH-207: identical re-render does not HALT on the render (unattested stub, exit 4)
+  PASS: GH-207: identical re-render is explicitly treated as unchanged
+  PASS: GH-207: identical re-render avoids the old nothing-to-commit halt
+  PASS: GH-207: prebuilt gate-green lane reaches satisfied instead of no-progress
+  PASS: GH-207: already-satisfied recovery re-enters relay-drive once for reviewer approval
+  PASS: GH-207: reviewer approval lands in the namespaced relay file
+  PASS: GH-207: satisfied path is explicitly marked lane_already_satisfied
+  PASS: GH-207: red gate stalled lane still exits no-progress
+  PASS: GH-207: red gate does not route a stalled lane into reviewer recovery
+  PASS: GH-207: stalled red-gate lane still records the ordinary no-progress escalation
+  PASS: GH-279: zero-byte declared artifact remains no-progress
+  PASS: GH-279: zero-byte artifact does not route a reviewer recovery
+  PASS: GH-279: unchanged declared artifact remains no-progress
+  PASS: GH-279: unchanged artifact does not route a reviewer recovery
+  PASS: GH-274: relay approves but a flaky gate still escalates (exit 5)
+  PASS: GH-274: RELAY.md already shows STATUS: Approved after the gate-failed escalation
+  PASS: GH-274: tick token is already done after the gate-failed escalation
+  PASS: GH-274: retrying after the gate is fixed exits 0
+  PASS: GH-274: retry explicitly takes the satisfied-lane short-circuit
+  PASS: GH-274: RELAY.md is byte-identical after the retry (not clobbered)
+  PASS: GH-274: RELAY.md never regresses to STATUS: Open on retry
+  PASS: --require-clean passes on a clean workspace
+  PASS: --require-clean fixture uses a linked worktree (.git file)
+  PASS: --require-clean passes inside a linked worktree (no self-trip on the driver lock)
+  PASS: linked worktree run does not report the driver's own lock as dirt
+  PASS: linked worktree + --require-clean still seeds the phase
+  PASS: --require-clean hard-stops (exit 2) on a dirty workspace
+  PASS: dirty + --require-clean does not seed the phase
+  PASS: dirty workspace only WARNS without --require-clean (still runs)
+  PASS: GH-238: missing default gate exits before dispatch
+  PASS: GH-238: missing default gate names the fail-fast condition
+  PASS: GH-238: missing default gate names the override remedy
+  PASS: GH-238: missing default gate never renders turn 1 relay
+  PASS: GH-238: missing default gate never dispatches relay-drive turn 1
+  PASS: GH-238: missing default gate never seeds a tick task
+  PASS: GH-117: missing builder binary exits 2
+  PASS: GH-117: missing builder error names the missing binary
+  PASS: GH-117: missing builder — relay file never rendered
+  PASS: GH-117: missing builder — no tick task created (no spent token)
+  PASS: GH-117: missing reviewer binary exits 2
+  PASS: GH-117: missing reviewer error names the missing binary
+  PASS: GH-117: missing reviewer — relay file never rendered
+  PASS: GH-117: missing reviewer — no tick task created (no spent token)
+  PASS: GH-117: both binaries present — dry-run still exits 0
+  PASS: GH-117: both-present — relay still rendered
+  PASS: GH-171: vendored full chain advances twice and exits on cap, not no-progress
+  PASS: GH-171: final handoff stays in the consumer repo tick log
+  PASS: GH-171: codex claim event lands in the consumer repo .tick
+  PASS: GH-171: reviewer claim event lands in the consumer repo .tick
+  PASS: GH-171: vendored .xyz does not grow a stray .tick event log
+  PASS: vendored seed byte-unchanged after case 17 (GH-171 vendored chain) (containment)
+  PASS: GH-172: vendored XYZ_PYTHON=1 full chain advances twice and exits on cap, not no-progress
+  PASS: GH-172: XYZ_PYTHON=1 final handoff stays in the consumer repo tick log
+  PASS: GH-172: XYZ_PYTHON=1 codex claim event lands in the consumer repo .tick
+  PASS: GH-172: XYZ_PYTHON=1 reviewer claim event lands in the consumer repo .tick
+  PASS: GH-172: vendored XYZ_PYTHON=1 run does not grow a stray .xyz .tick event log
+  PASS: GH-174: agy claim event lands in the consumer repo .tick under XYZ_PYTHON=1
+  PASS: vendored seed byte-unchanged after cases 18/18a (GH-172/GH-174 vendored XYZ_PYTHON=1 chain) (containment)
+  PASS: GH-172: vendored Bash approval path exits 0 after reviewer approval
+  PASS: GH-172: vendored Bash approval path closes the consumer repo token
+  PASS: GH-172: vendored Bash approval path creates the task in the consumer repo .tick
+  PASS: GH-172: vendored Bash approval path claims builder in the consumer repo .tick
+  PASS: GH-172: vendored Bash approval path releases builder to reviewer in the consumer repo .tick
+  PASS: GH-172: vendored Bash approval path claims reviewer in the consumer repo .tick
+  PASS: GH-172: vendored Bash approval path records reviewer done in the consumer repo .tick
+  PASS: GH-172: vendored Bash approval path does not grow a stray .xyz .tick event log
+  PASS: vendored seed byte-unchanged after case 18b (GH-172 vendored Bash approval chain) (containment)
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path exits 0 after reviewer approval
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path closes the consumer repo token
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path creates the task in the consumer repo .tick
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path claims builder in the consumer repo .tick
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path releases builder to reviewer in the consumer repo .tick
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path claims reviewer in the consumer repo .tick
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path records reviewer done in the consumer repo .tick
+  PASS: GH-172: vendored XYZ_PYTHON=1 approval path does not grow a stray .xyz .tick event log
+  PASS: vendored seed byte-unchanged after case 18c (GH-172 vendored XYZ_PYTHON=1 approval chain) (containment)
+  PASS: GH-212: default builder (no --builder flag) runs with no claude binary present
+  PASS: GH-212: default builder identity rendered in the relay file is codex
+  PASS: GH-414: --builder pi is accepted by the default (Python) router and completes a phase
+  PASS: GH-414: the pi builder identity is what actually reaches the relay file
+  PASS: GH-414 control: the frozen Bash driver REJECTS --builder pi (divergence is real, not assumed)
+  PASS: GH-414 control: the Bash rejection names the agent set that omits pi
+  PASS: GH-451: missing Pi builder binary exits 2
+  PASS: GH-451: missing Pi builder error names the missing binary
+  PASS: GH-451: missing Pi builder — relay file never rendered
+  PASS: GH-451: missing Pi builder — no tick task created (no spent token)
+  marathon-drive: 162 pass, 0 fail
+===== path-integrity
+== test: path-integrity ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-path-integrity.XXXXXX.Hm8kqCKkJZ
+  PASS: make-pkg.sh source list matches the committed tarball (18 files)
+  PASS: all referenced relay/script/doc paths resolve (scanned 627 scripts + curated docs)
+  checked 227 cross-folder skill links
+  PASS: cross-folder skill Markdown links resolve
+  path-integrity: 3 pass, 0 fail
+===== relay-xyz-skill-guard
+== test: relay-xyz-skill-guard ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-relay-xyz-skill-guard.XXXXXX.ad7v6lg747
+  PASS: cold relay-drive.sh is blocked (exit 2)
+  PASS: Skill(relay-xyz) event is allowed and records the session
+  PASS: post-skill relay-drive.sh is allowed (marker honored)
+  PASS: find-harness.sh event is allowed and records the session
+  PASS: post-locator poll.sh is allowed
+  PASS: marker is session-scoped (a different cold session still blocks)
+  PASS: test/marathon-drive.sh is not treated as driving
+  PASS: reading a harness file (cat) is not blocked
+  PASS: syntax-check (bash -n) of a shim is not blocked
+  PASS: unrelated command (git status) is allowed
+  PASS: driver path used only as an argument is allowed
+  PASS: malformed event fails open (exit 0)
+  relay-xyz-skill-guard: 12 pass, 0 fail

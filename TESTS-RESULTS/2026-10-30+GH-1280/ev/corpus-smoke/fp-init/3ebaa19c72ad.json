@@ -1,0 +1,1 @@
+{"added_at": 1793412688.028599, "added_tick": 10, "argv": ["--run-roo", "temp/factory-primitive/fz", "init", "--daily-cap", "1", "--max-call-cost", "0"], "env": {}, "family": "slice", "id": "3ebaa19c72ad", "signature": "1a822481fb23143f", "size": 73, "vector": [2, 0, "21aaae4bb9057c38", "fast_<1s"], "verdict": "anomaly"}

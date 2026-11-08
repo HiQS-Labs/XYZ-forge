@@ -1,0 +1,275 @@
+# RELAY · GH-1257 final QA
+<!--
+  Single source of truth for this two-agent relay. Read the ENTIRE file before acting.
+  Scaffolded by relay-automation/new-relay.sh on 2026-10-29.
+-->
+
+NEXT: Producer
+STATUS: Approved
+ROUND: 3 / 3
+
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
+1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are bound to it and the
+   last Log block isn't already yours. If not → STOP and reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact named in Setup:
+   - **Reviewer:** review vs the Definition of Done → graded findings
+     (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a concrete fix → set a **VERDICT**
+     (exactly PASS, FAIL, or PARKED) and a **Basis** (explanation). **Review the whole file, not just the diff** (GH-268):
+     a beta test had this loop reach `Approved` in two rounds while an independent audit of the same
+     branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the
+     change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN
+     SCOPE; if you find none, say so explicitly rather than leaving it unstated.
+     **Declare it: every review block must contain a literal `swept file: yes` or `swept file: no`
+     line.** Without it a reviewer that skipped the sweep is indistinguishable in the transcript from
+     one that did it and found nothing — which is how the original 20 issues stayed invisible.
+     Any `[Pass]` or "verified"/"confirmed" finding MUST
+     carry a quoted span or a `file:line` citation — an uncited one is mechanically downgraded to
+     `[Unverified — no citation]` (GH-173 B3). Do **not** edit the artifact; only append findings here.
+     **A finding that asks for a behaviour change is a generalization unless you can paste the concrete
+     input — a row, a value, a `file:line` — that fails under the current code** (GH-681: the gh673
+     final QA relay generalized one late-error observation into "or a later invalid identity", the
+     Producer implemented it, the same seat `[Pass]`ed it next round, and one historical NULL-URL
+     ledger row then blanked every issue). Every `[Blocker]` or `[Should]` requesting a behaviour
+     change MUST carry three lines: `Observed input:` (the failing input you saw), `Affected scope:`
+     (the input predicate the change would govern), `Falsifier:` (the fixture or data that would show
+     the change unnecessary or wrong, and its expected result).
+     A `[Blocker]` must cite an observed failure. This is a protocol rule, not a mechanical check —
+     the Producer may disposition a request lacking these as `Declined — unproven generalization`.
+   - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why,
+     including `Declined — unproven generalization` for a behaviour-change request that carries no
+     `Observed input:` / `Affected scope:` / `Falsifier:`), make the change, then add new work.
+4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns.
+   Reviewer headings may be `### Reviewer · Round N`, `### Round N · Reviewer · <agent>`, `### Reviewer (<agent>)` (optionally followed by `— rN`), or `### Reviewer — Round N` (optionally followed by `(<agent>)`); follow the heading with a non-empty review body.
+5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
+   the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
+   set `STATUS: Escalated`.
+6. **Commit only the relay file** (`relay(gh1257-final-qa): <role> r<N>`); no push. **Stop** and report one line.
+7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
+   next and what they should do: *"handing off to <other role> — go to the <other> window and say
+   'take your turn'"*, or *"relay closed (Approved), no further turn needed"*. The beta report singled
+   this out: the Reviewer turn never told the user to return to the Producer window, so a relay that
+   was merely waiting looked stalled. A turn that ends without this line is not finished.
+
+## Setup
+- Artifact under review: `utils/py/harness.py`
+- Also review: utils/py/_marathon_plan.py (the compute/render split, _pack_waves, _contract_seams, releases_db cfg); the diff `git diff 89e1af53..HEAD -- utils/`; the approved plan PROJECT/2-WORKING/GH-1257-BACKLOG-WAVE-PILOT.md (plan QA: relay-system/2026-10-29/gh1257-plan-qa.md, Approved round 3); the evidence TESTS-RESULTS/2026-10-29+GH-1257/ (SUMMARY.md, provenance.jsonl, controls.txt, suites.txt, pilot-1/, the two control scripts); issue #1257.
+- Reviewer: codex   ·   Producer: claude-a
+- Started: 2026-10-29
+- Operational envelope: a local, single-operator, read-only experiment on an unmerged spike branch. Grade against the approved plan and its acceptance criteria with commensurate complexity; do not demand multi-tenant or enterprise machinery. XYZ-forge forbids new test suites (AGENTS.md, GH-831): a new `test/` suite or validate.sh entry would itself be a finding; verification is existing suites plus recorded manual controls.
+- Definition of Done: each plan step 1–5 and acceptance criterion 1–6 is implemented as approved and substantiated by the evidence; the planner split is behaviour-preserving; no second planner, writer or suite slipped in; the tool stays read-only and offline; the ambiguity handling matches the plan; the evidence is honest about what it shows (including the #216 under-count); the 60/35/50/45 rating still fits.
+- Questions:
+  1. Does the code match plan steps 1–5 (including the F1–F6 dispositions)? Cite any divergence with file:line.
+  2. Is the `Engine` split truly behaviour-preserving, including `_pack_waves(force_tail=True)` and `_contract_seams` (wave numbering), and is the recorded parity check adequate?
+  3. Are there correctness bugs in `plan_draft`, `_build_proposal`, `_verify_plan_draft`, `init_from_prs`, the new `run_tick` branch, `_accepted_briefs` or `status`? Consider copied-vs-shared records, request consumption, reconciliation of a crashed plan-draft tick, and the synthetic tools' unchanged behaviour.
+  4. Does the evidence substantiate every acceptance criterion, and is anything claimed that the evidence does not show?
+  5. Anything over- or under-built for this pilot?
+- Note: the full repository gate (`validate.sh`, route=full per `utils/ci-route.sh`) has not run yet; it runs once on the final approved commit in a disposable clone. Grade it `[Unverified — needs clone run]`, not as a code finding.
+
+## Ground rules
+1. This file is the single source of truth. The agents never share memory — read the whole file.
+2. Take a turn only if `NEXT` names your role — otherwise reply "not my turn" and stop.
+3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns.
+4. Stay tight — findings are bullets, not essays. Grade every finding.
+5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
+6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
+
+## Log
+
+### Reviewer · Round 1 · codex
+
+**VERDICT: FAIL**
+
+**Basis:** Two small implementation corrections remain in sourced-scope extraction/admission. The architecture and rating remain proportionate to this local read-only pilot; no new planner, validator subsystem or suite is needed. Full-gate readiness remains outstanding.
+
+swept file: yes
+
+Read all 1,148 lines of `utils/py/harness.py` and all 1,516 lines of `utils/py/_marathon_plan.py`, the approved plan and plan-QA history, evidence summary/provenance/controls/scripts and retained pilot outputs. Compared the three draft issues (#1201, #216, #478) with their capture docs through read-only source reads and GitHub connector fetches. The pre-existing rating-rendering defect below was found during the sweep; no other material pre-existing defect is asserted. Graph project enumeration has no index for this worktree; used direct source fallback, without an indexed-generation or exhaustive graph claim.
+
+- **[Should] F1 — Folded YAML goals become a literal scope of `>` (`harness.py:440–444`).** The retained #478 draft's *only* scope is `{"heading":"frontmatter goal","source":"PROJECT/2-WORKING/GH-478-ATE-RUNAWAY-GUARD.md:L16","text":">"}` (`TESTS-RESULTS/2026-10-29+GH-1257/pilot-1/slot_007.json`). Its actual goal starts on the next line, “No ATE invocation can hang past a bounded timeout inside a suite…”. This fails plan step 3's sourced scope requirement, yet the brief is `draft` and enters provisional packing. #216 also contains this marker as a second scope entry. Decode the frontmatter goal's scalar content, preserving source provenance; an unsupported/empty scalar must not count as scope. Correct the affected retained briefs/proposal and hand-inspection conclusions when rerunning evidence.
+  Observed input: #478's capture doc `goal: >` at line 16 followed by substantive indented lines; retained `slot_007.json.scope[0].text == ">"`.
+  Affected scope: frontmatter goal extraction, especially folded/literal multiline scalars; ordinary inline goals and headed scope must continue to work.
+  Falsifier: the #478 input must yield the actual goal text, while an empty goal/block marker alone must yield no sourced scope and remain held if no other scope exists; an inline goal must still be extracted.
+  Probe (exit 0): `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'` with `import json,re; from pathlib import Path; b=json.loads(Path('TESTS-RESULTS/2026-10-29+GH-1257/pilot-1/slot_007.json').read_text()); doc=Path(b['doc_path']).read_text(); print(b['scope']); print(re.search(r'^goal:\s*(.+)$',doc.split('\n---',1)[0],re.M).group(1)); print(doc.splitlines()[16])`. Decisive output: scope text `'>'`; extracted goal `>`; next line `  No ATE invocation can hang past a bounded timeout inside a suite, and no ATE child's`.
+
+- **[Should] F2 — Apply the brief admission predicate to planner-ready requests too (`harness.py:365–378,454–463`).** `plan_draft` declares a ready record ready before checking scope, and `_build_proposal` preloads every active lane then ignores ready briefs. Thus an accepted ready brief with no sourced scope remains in provisional waves without a held reason. Plan `PROJECT/2-WORKING/GH-1257-BACKLOG-WAVE-PILOT.md:83` explicitly requires *both* sourced scope and write set for brief admission. Preserve the actual planner waves, but ensure a reviewed request failing this predicate cannot survive through the preloaded lane in the provisional view. Record the paired ready-brief control alongside the existing needs-contract control.
+  Observed input: in-memory copy of retained `slot_001.json` (#418, `draft_status="ready"`, nonempty existing-contract write set) with only `scope=[]`; provisional packing still contains #418 and `held=[]`.
+  Affected scope: provisional admission of reviewed/accepted briefs, including planner-ready requests; the actual planner view must remain unchanged.
+  Falsifier: identical ready brief with sourced scope stays eligible; empty-scope version is held as `missing-scope` and absent from provisional waves, while #418 stays in the actual planner view in both cases.
+  Probe (exit 0; no files written): `PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'`:
+  ```python
+import sys,json,copy
+from pathlib import Path
+sys.path.insert(0,'utils/py')
+import harness as h
+from _marathon_plan import Engine
+d=Path('TESTS-RESULTS/2026-10-29+GH-1257/pilot-1')
+b=json.loads((d/'slot_001.json').read_text())
+m=json.loads((d/'backlog-manifest.json').read_text())
+e=Engine.__new__(Engine); e.findings=[]
+r={'gh':418,'title':b['title'],'docRel':b['doc_path'],'deps':[],
+   'state':'ready','writeset':[x['path'] for x in b['write_set']],
+   'zone':'probe','zoneRule':{'maxPerWave':None,'conservativeWhenInferred':False},
+   'zoneInferred':False,'wave':1}
+c={'active':[r],'deduped':[r],'waves':[[r]],'contract_seams':[]}
+for missing in [False,True]:
+    brief=copy.deepcopy(b)
+    if missing: brief['scope']=[]
+    p=h._build_proposal(e,c,[brief],m,'probe',brief['request_id'])
+    print(bool(brief['scope']),
+          any(x['issue']==418 for w in p['provisional']['waves'] for x in w),
+          p['held'])
+  ```
+  Decisive output: `True True []`, then `False True []`. This is a narrow admission probe, not an end-to-end tick run.
+
+- **[Pass] F1–F5 from plan QA are otherwise substantially implemented by inspection.** Transactional consumption is at `harness.py:128–135,997–1007`; scoped nonzero/timeout/verification ambiguity at `:967–990`; crash reconciliation and completed-only accepted-brief selection at `:797–829`; frozen backup/Queue selection/exclusions at `:527–569`; four-file identity, render and hash verification at `:494–518`. The producer and tightened verifier ship together, consistent with `LESSONS-LEARNED.md:38–43`. Recorded controls in `controls.txt` show uncertain/quarantine for wrong hash, missing key, Markdown mismatch, missing file, post-output failure and missing receipt. Synthetic tools retain their failure branch at `:969–974`; this is source evidence, not a fresh synthetic soak.
+
+- **[Pass] Planner reuse and copied provisional records fit the plan.** `_marathon_plan.py:812–861` retains forced-tail packing by default and returns unplaced lanes with `False`; `:863–879,1203–1209` preserve one-based seam numbering. `harness.py:366–367,371–375` copies lane records, and `:381–405` separates actual and provisional results. A narrow in-memory query of `Engine._pack_waves` on two ready records with reciprocal dependencies exited 0: `force_tail=False -> waves [], held [1,2]`; `True -> waves [[1,2]], held []`. The admission probe also left its input wave equal to 1. The retained parity receipt (`provenance.jsonl`, id `planner-split-parity`) reports equal exit codes and byte-identical report/render in five modes; this supports the claimed sample, not complete equivalence.
+
+- **[Pass] Retained output attribution is consistent for the artifacts inspected.** Read-only SHA-256/render queries exited 0: `slot_001.json` hash `61c9e556…` and `slot_001.md` hash `054a9b11…` match slot 1's receipt; final proposal hashes `13ce15c0…` / `65781267…` match slot 10's receipt in `pilot-1/run.txt`. All four retained briefs and the final proposal match their Markdown renderers. Source hashes equal the provenance receipt: harness `fc728466…`, planner `f0bd8233…`. Earlier cumulative proposal versions are not retained; their receipts attest historical hashes, not today's shared-path bytes.
+
+- **[Pass] #216's under-count is honestly reported, and the rating/scope remain reasonable.** `pilot-1/slot_004.json` has only `PROJECT/PDDA.md` in its write set; the actual issue names vendored planner paths and bare filenames. `SUMMARY.md` “Hand inspection” and plan `:110` explicitly describe the unsafe direction. Keep this limit visible; resolving bare names or validating stale readiness is separate design work. No demand for dispatch, adapters, a watchdog or a new suite. The 60/35/50/45 rationale at the plan's “Rating rationale” remains appropriate.
+
+- **[Nit] Pre-existing DB-rating rendering uses the obsolete five-point formatter.** `_marathon_plan.py:104–108,1403–1407` renders retained #418's valid `88/78/80/75` axes as `—/—/—/—` while still showing its rank. A read-only call `'/'.join(_rating_num(a) for a in [88,78,80,75])` exited 0 with that output. This predates the split; record it as a follow-up rather than silently changing behavior in a parity-only refactor.
+
+- **[Unverified — needs clone run] Remaining acceptance evidence.** The eight focused suite receipts/logs are retained (`suites.txt`), but this turn ran no suite or executable control script. The supplied evidence does not record `releases_app.py check`, frozen-twin staged check or PDDA outcomes required by AC1/AC6. Complete and retain those with the planned final full gate in a disposable clone. The parity receipt gives a descriptive candidate revision and no raw base/candidate report/render pair; retain exact revisions and comparison output on the corrective run. AC3's dependency/collision/absence accounting also needs an explicit evidence disposition: #418's retained brief has dependency #423; the three draft briefs have none; the final proposal has shared-spine seams but no explicit dependency field. Identify what was exercised and what was absent rather than implying every case ran. No local git command was run; the connector compare `89e1af53..0fcda47f` returned HTTP 404, so the requested baseline diff could not be independently inspected here.
+
+Root cause: scope extraction accepts a YAML syntax marker as evidence, and provisional admission trusts planner readiness before applying the brief's scope predicate; Fix site: existing goal extraction and provisional admission in harness.py; Why not upstream/downstream: actual planner semantics should remain behavior-preserving, and renderer/verifier-only changes would preserve the wrong admission decision.
+
+Handing off to Producer (claude-a) — address or disposition F1–F2, refresh the affected evidence and open round 2; go to the Producer window and say 'take your turn'.
+
+### Producer · Round 2 · claude-a
+
+Both findings reproduced from the cited inputs and fixed in `030db02d`; evidence rerun and refreshed in `TESTS-RESULTS/2026-10-29+GH-1257/`.
+
+- **F1 — Implemented.** New `_frontmatter_goal` (harness.py) reads only the YAML frontmatter, decodes `>`/`|` block scalars from their indented lines, and returns nothing for an empty or bare-marker goal. Controls (`controls.txt`, `gh1257-controls3.py`): #478's folded goal → its real text at L16; inline and literal goals decode; a bare `goal: >` and a heading-only doc yield no scope. The rerun `pilot-2/slot_007.json` carries the real goal; `pilot-1/` (with the `>` scope) was removed and the SUMMARY records why.
+- **F2 — Implemented.** `plan_draft` applies the same predicate to planner-ready records (no write set → `needs-recon`, no scope → `missing-scope`), and `_build_proposal` drops a planner-ready lane from the provisional view when its reviewed brief failed admission, leaving the planner view untouched. Paired control: #418 with scope → in both views; without → planner view only, held `missing-scope`.
+- **Nit (`_rating_num`) — Recorded as a follow-up** in SUMMARY; unchanged in this parity-only split.
+- **Evidence gaps — Addressed.** `checks.txt`: `releases_app.py check` clean, `pdda.sh run` no errors, `gh308` frozen-twin staged check clean. `parity.txt` now names exact revisions (base `f369773b`, candidate `030db02d`) with per-mode sizes/hashes, plus the retained mode-1 report. AC3 now has an explicit disposition in SUMMARY: disjoint lanes, the `validate.sh` collision (#478/#670), the `kernel` zone cap, seams, the #418→#423 dependency resolved as `already-landed`, and a recorded two-lane cycle control (held under provisional packing, still forced under the CLI). The full `validate.sh` gate is running now on `030db02d` in the disposable verify clone; its result will be added as `gate.txt` (receipt-only commit).
+
+Handing off to Reviewer (codex) — round 2 of 3; go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 2 · codex
+
+**VERDICT: PASS**
+
+**Basis:** Approve the implementation for the stated read-only pilot. Round-1 F1 and F2 are addressed, and the refreshed evidence supports the approved plan within its documented limits. This closes code QA; it does not attest the outstanding full gate or authorize landing.
+
+swept file: yes
+
+Re-read both complete source files (`utils/py/harness.py`, `utils/py/_marathon_plan.py`), the approved plan and plan-QA dispositions, retained evidence and all three control scripts. Fetched live issue #1257 read-only. No additional material pre-existing defect found beyond round 1's recorded rating-rendering nit. Graph tools are unavailable in this session, so direct source reads are the fallback; no indexed completeness claim. The only tracked edit this turn is this relay file.
+
+- **[Pass] F1 — real goal content replaces the YAML marker.** `harness.py:294–315,468–471` decodes the folded/literal scalar before adding scope. A non-mutating in-memory probe exited 0: retained #478's goal equals the freshly extracted doc goal, at line 16, beginning `No ATE invocation can hang past a bounded timeout inside a suite`. Empty `goal: >` returned `None`; inline and literal controls returned their text. The refreshed `pilot-2/slot_007.json` carries that goal, consistent with `controls.txt`'s `CONTROL goal-folded (#478 doc)`.
+- **[Pass] F2 — admission now covers ready briefs.** `harness.py:481–488` applies the same scope/write-set predicate to ready and needs-contract records; `:388–406` omits refused ready lanes from provisional packing and records their held reason. Paired in-memory query on retained #418 exited 0: with scope, actual/provisional lane counts `1/1`; marked missing-scope, `1/0`, held `missing-scope: no sourced scope`; the computed input remained equal to its deep copy. This query exercises packing admission, while the classification branch is source-inspected; it is not a new end-to-end tick run.
+- **[Pass] Planner reuse and lifecycle remain consistent with the approved contract.** `_marathon_plan.py:812–861,863–879,1203–1232` retains default forced-tail packing and one-based seams, while `harness.py:394–413` packs copied provisional records with `force_tail=False`. `parity.txt` identifies base `f369773b` and candidate `030db02d277d40ede69f5644b211337c047d67ce`, with five report comparisons, equal exit codes and matching rendered-doc hash. This is recorded sample parity, not exhaustive equivalence proof. Consumption remains in `finish`'s transaction (`harness.py:128–135,1023–1035`); accepted paths require completed ticks (`:852–856`); ambiguity stays scoped to plan-draft (`:994–1017`). The brief producer and verifier ship together (`:490–543`), consistent with `LESSONS-LEARNED.md:38–43`.
+- **[Pass] Retained output attribution matches the rerun.** Non-mutating render/SHA queries exited 0 for all **four retained** brief pairs (#418/#1201/#216/#478) and the final proposal pair, matching their receipts in `pilot-2/run.txt`. Final counts are `requests=10`, `accepted_briefs=10`, statuses `ready=3,draft=3,needs-recon=4`, actual `6/2`, provisional `9/4`, held `4` (`pilot-2/wave-proposal.json`). The ten completions and two idles are recorded in `run.txt`; six brief bodies and historical cumulative proposals are not retained, so their present bytes were not independently checked. My first query asserted ten retained briefs and exited 1; correcting that erroneous retention assumption yielded the four-pair result above.
+- **[Pass] Evidence limitations and scope are now explicit.** SUMMARY's “AC3 cases on real data” identifies the #478/#670 `validate.sh` collision, kernel cap, seams and resolved #418→#423 dependency; `controls.txt` records the cycle held with `False` and forced with `True`. SUMMARY states CLOSED/unreadable exclusions were absent. `checks.txt` records clean releases, no PDDA errors (39 warnings), and frozen-twin checks; `suites.txt` and provenance correctly attribute focused suites to the earlier revision. SUMMARY's “Hand inspection” preserves the unsafe #216 under-count, and its follow-up section records the rating nit. No broader writer, planner, dispatch system or suite is warranted; the 60/35/50/45 rating still fits the plan's “Rating rationale”.
+
+Probe reproduction for the corrective admission measurement (exit 0; stdout `False 1 1 []`, then `True 1 0 [{'issue': 418, 'reason': 'missing-scope: no sourced scope'}]`; computed-input equality checked in the executed combined query):
+```python
+# Run via PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY' ... PY; no files written.
+import copy, json, sys
+from pathlib import Path
+sys.path.insert(0, 'utils/py')
+import harness as h
+from _marathon_plan import Engine
+p = Path('TESTS-RESULTS/2026-10-29+GH-1257/pilot-2')
+b = json.loads((p/'slot_001.json').read_text())
+m = json.loads((p/'backlog-manifest.json').read_text())
+r = dict(gh=418, title=b['title'], docRel=b['doc_path'], deps=[], state='ready',
+         writeset=[x['path'] for x in b['write_set']], zone='probe',
+         zoneRule=dict(maxPerWave=None, conservativeWhenInferred=False), zoneInferred=False, wave=1)
+c = dict(active=[r], deduped=[r], waves=[[r]], contract_seams=[])
+e = Engine.__new__(Engine); e.findings = []
+for missing in [False, True]:
+    brief = copy.deepcopy(b)
+    if missing:
+        brief.update(scope=[], draft_status='missing-scope', held_reason='no sourced scope')
+    o = h._build_proposal(e, c, [brief], m, 'probe', b['request_id'])
+    print(missing, sum(map(len, o['actual']['waves'])),
+          sum(map(len, o['provisional']['waves'])), o['held'])
+```
+
+**[Unverified — needs clone run]** `gate.txt` is absent in this seeded review tree, despite SUMMARY's forward reference. No validate, suite, executable control script or fixture was run here. The outer harness/disposable-clone final gate must complete and retain its exact-revision receipt before readiness is asserted. The connector comparison `89e1af53..030db02d277d40ede69f5644b211337c047d67ce` again returned HTTP 404, so the requested baseline diff could not be independently inspected; approval relies on whole-file source review, prior dispositions and the recorded parity evidence, not a claimed baseline diff check. Current source SHA-256: harness `adb1986c4a5a348c3eea37993d305a3a165e359d26f334ced7d6ab603309bef0`; planner `f0bd823394151379756a0f4c0148e816e474d78a1e41183436f499b0f2aaa226`.
+
+Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and final gate; no git command was run by this reviewer.
+
+
+### Attestation · relay-drive — 2026-10-30T03:35:36Z
+task: RELAY-gh1257-final-qa
+reviewer: codex
+status: Approved
+reviewed-head: 0f1e5de06c637e62e42348b85cd9066d3fafb7d9
+added-range: 19605+6611
+added-sha256: 5e1060452731772fec786f3f2c9bf1200b7a04111c025a1d0ae565fab2787889
+### Producer · Round 3 · claude-a
+
+Reopening for one post-approval change. The full gate on `030db02d` (874 s, disposable verify clone, identity unchanged) failed exactly one suite: `test/gh423-roadmap-render.sh`, `AttributeError: 'Engine' object has no attribute 'RELEASES_DB'`. That suite builds engines with `Engine.__new__` (test/gh423-roadmap-render.sh:60,90), skipping `__init__`, so the new `cfg["releases_db"]` attribute was absent. Fix `761389dd`: `compute()` reads `getattr(self, "RELEASES_DB", "")` (`_marathon_plan.py`, the `db_path` line). Verified on `761389dd`: gh423 OK (with its negative control), marathon-plan, gh698 and gh362 rc=0. The full gate is re-running on `761389dd` now; its receipt will be committed as `gate.txt`.
+
+Question: is this one-line fallback correct and sufficient, and does anything else in the split depend on `__init__`-only attributes that `__new__`-built engines (gh423) would lack?
+
+Handing off to Reviewer (codex) — round 3 of 3; go to the Reviewer window and say 'take your turn'.
+
+### Reviewer · Round 3 · codex
+
+**VERDICT: PASS**
+
+**Basis:** Approve the one-line compatibility correction. It restores the default database path for the existing gh423 reader seam without changing configured planner behavior. Final full-gate readiness remains outstanding.
+
+swept file: yes
+
+Re-read both complete source files, the approved plan, retained SUMMARY/checks/parity/provenance and the entire gh423 suite as read-only specifications. No additional material pre-existing defect found beyond the previously recorded rating-rendering nit. Project enumeration (84 entries, no further page) has no index for this worktree; the nearest XYZ-forge index belongs to another checkout, generation 2026-09-01T15:54:30Z. Its coverage metadata marks the planner changed and gh423 untracked. Used direct source fallback throughout; no current-generation graph claim. No git, suite, executable control script or fixture was run.
+
+- **[Pass] The fallback is correct and sufficient for the observed regression.** `utils/py/_marathon_plan.py:885` now uses `getattr(self, "RELEASES_DB", "") or os.path.join(self.ROOT, "releases.db")`. Missing and empty attributes select the old default; a nonempty override still selects the frozen database supplied by `harness.py:255–260`. The pure expression probe below exited 0, with the old direct access raising the expected AttributeError as its red control. No broader defaulting mechanism is needed.
+- **[Pass] No other new initialization dependency reaches the gh423 stopping point.** `test/gh423-roadmap-render.sh:90–106` supplies ROOT, ROADMAP and QUEUE_DIR, sets the explicit-roadmap environment seam and raises ReaderComplete from the first `_gh_issue_of` call. `_marathon_plan.py:885–917` reaches that call using those supplied attributes; SOURCE_NAME and SOURCE_LINK are assigned along the way. The intervening parser helpers (`:490–575`) read no instance data attributes. The suite's other `__new__` uses call only `_parse_ledger` (`test/gh423-roadmap-render.sh:60–71,171–173,186`). This establishes the existing partial-engine seam by inspection; arbitrary uninitialized engines are not promised to complete scheduling or rendering.
+- **[Pass] The approved split and pilot remain unchanged apart from this correction.** Replacing only the new expression with the former direct attribute expression **in memory** yields SHA-256 `f0bd823394151379756a0f4c0148e816e474d78a1e41183436f499b0f2aaa226`, exactly the round-2 approved planner hash. Current harness hash is still `adb1986c4a5a348c3eea37993d305a3a165e359d26f334ced7d6ab603309bef0`. Current planner hash is `aea2ce335ba1da89b552892570e133794a3a67e63d808fa89eb24fa616c73819`. This corroborates the bounded correction without claiming a git diff check. The earlier plan/evidence dispositions, including the #216 under-count and 60/35/50/45 rating, still apply (plan “Findings” / “Rating rationale”; SUMMARY “Hand inspection”).
+
+Reproduction command for the expression and one-line attribution probes (both executed probes exited 0; combined reproduction below; no source imports, fixtures or file writes):
+```bash
+export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"
+python3 - <<'PY'
+import ast, hashlib, os
+from pathlib import Path
+from types import SimpleNamespace
+raw = Path('utils/py/_marathon_plan.py').read_bytes()
+tree = ast.parse(raw)
+engine = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Engine')
+compute = next(n for n in engine.body if isinstance(n, ast.FunctionDef) and n.name == 'compute')
+expr = next(n.value for n in compute.body if isinstance(n, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == 'db_path' for t in n.targets))
+code = compile(ast.Expression(expr), '<db_path>', 'eval')
+for label, attrs in [('missing', {}), ('empty', {'RELEASES_DB': ''}),
+                     ('override', {'RELEASES_DB': '/frozen/releases.db'})]:
+    value = eval(code, {'os': os, 'self': SimpleNamespace(ROOT='/probe', **attrs)})
+    assert value == ('/frozen/releases.db' if label == 'override' else '/probe/releases.db')
+    print(label, '->', value)
+try:
+    eval('self.RELEASES_DB or os.path.join(self.ROOT, "releases.db")',
+         {'os': os, 'self': SimpleNamespace(ROOT='/probe')})
+except AttributeError as exc:
+    print('red control ->', type(exc).__name__, str(exc))
+else:
+    raise AssertionError('red control did not fail')
+new = b'getattr(self, "RELEASES_DB", "") or os.path.join(self.ROOT, "releases.db")'
+assert raw.count(new) == 1
+digest = hashlib.sha256(raw.replace(
+    new, b'self.RELEASES_DB or os.path.join(self.ROOT, "releases.db")')).hexdigest()
+assert digest == 'f0bd823394151379756a0f4c0148e816e474d78a1e41183436f499b0f2aaa226'
+print('one-line reversal matches round-2 approved planner sha256:', digest)
+PY
+```
+Decisive output from the executed probes: `missing -> /probe/releases.db`; `empty -> /probe/releases.db`; `override -> /frozen/releases.db`; `red control -> AttributeError 'types.SimpleNamespace' object has no attribute 'RELEASES_DB'`; one-line reversal matched the hash above.
+
+- **[Unverified — needs clone run] Final gate and corrective suite receipts.** `TESTS-RESULTS/2026-10-29+GH-1257/gate.txt` is absent in this seeded tree. Retained provenance still ends with evidence attributed to `030db02d`; it does not contain the newly reported `761389dd` focused reruns or the completed full rerun. The Producer's round-3 report is acknowledged, not independently attested here. The outer harness must complete the disposable-clone gate and retain exact-revision logs/provenance before asserting readiness. SUMMARY's forward reference to gate.txt remains a pending evidence obligation, not proof of a green gate.
+
+Relay closed (Approved), no further turn needed. The harness owns the file-scoped commit and final gate; this reviewer changed only this relay file and closes the token with `done`.
+
+
+### Attestation · relay-drive — 2026-10-30T03:47:33Z
+task: RELAY-gh1257-final-qa-r3
+reviewer: codex
+status: Approved
+reviewed-head: 9f0d0a4197b7d4b2e01e29518c753cbc2fa478e1
+added-range: 27526+5916
+added-sha256: 9709093c11202c23c08035eabd80aa6872463771a188b8cb15c1cb7d337e2061
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

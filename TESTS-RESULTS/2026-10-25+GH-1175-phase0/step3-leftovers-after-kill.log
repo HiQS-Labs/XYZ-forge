@@ -1,0 +1,31 @@
+## leftovers 2026-10-26T03:23:00Z
+total 72
+drwxr-xr-x@ 9 noelsaw  staff   288 Oct 25 20:22 .
+drwxr-xr-x@ 3 noelsaw  staff    96 Oct 25 20:22 ..
+-rw-r--r--@ 1 noelsaw  staff   755 Oct 25 20:22 freshness.json
+-rw-r--r--@ 1 noelsaw  staff  1487 Oct 25 20:22 lane-plan.json
+-rw-r--r--@ 1 noelsaw  staff  2469 Oct 25 20:22 marathon-invocation.json
+-rw-r--r--@ 1 noelsaw  staff   567 Oct 25 20:22 marathon-invocation.txt
+-rw-r--r--@ 1 noelsaw  staff  4505 Oct 25 20:22 packet.md
+-rw-r--r--@ 1 noelsaw  staff   822 Oct 25 20:22 readiness.json
+-rw-r--r--@ 1 noelsaw  staff  5491 Oct 25 20:22 run-candidate.json
+receipt:
+cat: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.tick/jog/jog-01M5V2Q6CK5GW0B5V25KFQQ1XE/gh416-exec1/preflight/marathon-result.json: No such file or directory
+primary lock pid: 30105
+relay-driver.lock
+releases-app-lock-audit.log
+releases-app.lock
+wave-reconcile.lock
+clone lock pid: 32725
+marathon/gh-416-doc-trues-up-batch-2026-10-25
+d2c379dc marathon: render phase gh-416-doc-trues-up-batch relay (MARATHON-GH-416-DOC-TRUES-UP-BATCH-TURN)
+1f5b0508 promote(gh416): 2-WORKING frontmatter (status Active, updated) and Status table
+709ffbf6 promote(gh416): 1-INBOX -> 2-WORKING by SOP Step 1b; jog add/park/retry ledger rows; GH-1175 Phase 0 step 2 evidence
+/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh416-phase0            d2c379dc [marathon/gh-416-doc-trues-up-batch-2026-10-25]
+/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/rtl-wt.6YDYAC  d2c379dc (detached HEAD)
+id:       MARATHON-GH-416-DOC-TRUES-UP-BATCH-TURN
+status:   claimed
+priority: 0
+paths:    marathon-system/gh-416-doc-trues-up-batch/RELAY.md, package.json, package-lock.json, skills/1-hourly/relay-xyz/SKILL.md, test/find-harness.sh, test/gh278-turn-timeout-parity.sh, test/gh346-gateway-allowlists.sh, test/gh617-relay-xyz-commensurate-review.sh, test/gh681-reviewer-probe-rules.sh, test/xyz-vendor.sh, test/_setup.sh
+claimer:  agy
+/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/rtl-wt.6YDYAC

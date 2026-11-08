@@ -1,0 +1,6 @@
+START 2026-10-26T03:24:44Z (first try exit 127: no timeout(1) on macOS, nothing ran)
+jog: reclaiming stale relay-driver.lock (holder pid 30105 not running).
+jog: reconciled orphan lease(s) for: GH-416
+jog: cold start GH-416: dispatched execution gh416-exec1 has no valid result — parked; never silently refire
+jog: queue complete (0 pending tasks).
+EXIT 0 2026-10-26T03:24:45Z

@@ -1,0 +1,40 @@
+{
+  "protocol": "protocol.json",
+  "timestamp": "2026-10-30T02:07:38.836953+00:00",
+  "candidate_revision": "f89758e36fc3038130eabbe61966bc2c6f1540a2",
+  "original_rollout_prefix_unchanged": true,
+  "installed_helper_hashes_unchanged": true,
+  "real_store_or_jobs_modified_by_trial": false,
+  "query_precision_note": "Rollout eligibility uses its precise timestamp; query lower bound is floored to canonical stored UTC-second precision. Initial subsecond query excluded an already-stored row and was corrected.",
+  "checks": [
+    {
+      "variant": "base",
+      "result": "EXPECTED RED",
+      "nonempty_source": true,
+      "captured_current_rows": 0,
+      "stdout": "clio-codex-tail: delivered=0 deferred_files=0",
+      "tailer_sha256": "fd7fe836599f00ae59862ee26eda375d45fb2db9531a25a560ccaf30499781dc"
+    },
+    {
+      "variant": "candidate",
+      "result": "PASS",
+      "nonempty_source": true,
+      "captured_current_rows": 1,
+      "stored_agent": "codex",
+      "jsonl_export_contains_prompt_once": true,
+      "markdown_export_contains_prompt": true,
+      "repo_context_matches": true,
+      "source_event_id_present": true,
+      "ordinary_rerun_no_duplicate": true,
+      "explicit_backfill_no_duplicate_for_current_prompt": true,
+      "stdout": "clio-codex-tail: delivered=1 deferred_files=0",
+      "rerun_stdout": "clio-codex-tail: delivered=0 deferred_files=0",
+      "backfill_stdout": "clio-codex-tail: delivered=3 deferred_files=0",
+      "tailer_sha256": "92f000593b1f9816ca84abf078ce3e15bdf8538a35561b088c0c8056f6c3e564",
+      "writer_sha256": "b574e70bc9313c4bd34ffdc285ea4fc70c566596745453d41135140f28a9cf12",
+      "source_snapshot_sha256": "fed47a8ea1219e5f087d55cb566ed02e22bef2dd7e3aaa57ade09da49f7c1eb5",
+      "normalized_prompt_matches_exactly": true
+    }
+  ],
+  "normalization_note": "The existing writer trims trailing whitespace; the Markdown preview HTML-escapes text. Match against normalized stored text and decode escaping only in the private verification assertion."
+}

@@ -15,7 +15,7 @@
   "keywords": [],
   "author": "",
   "license": "AGPL-3.0-only",
-  "dependencies": {
+  "devDependencies": {
     "acorn": "^8.17.0",
     "acorn-walk": "^8.3.5"
   }

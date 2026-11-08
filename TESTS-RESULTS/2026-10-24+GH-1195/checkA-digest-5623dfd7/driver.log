@@ -1,0 +1,10 @@
+== A=5623dfd7 B=80e67677 XYZ_HARNESS=B
+PASS: B digest extracted: 7912 files
+PASS: reverted: read B (rc=4, 120 rows) with A's DB absent
+PASS: fixed: rc=3 cannot read A's releases.db
+PASS: B content digests identical before/after (7912 files)
+== falsifier: mutate one byte in a protected B file with unchanged porcelain text class
+PASS: falsifier: digest comparison detects a one-byte change in B/releases.sql
+PASS: A restored to fixed code
+== summary: 6 pass, 0 fail
+exit=0

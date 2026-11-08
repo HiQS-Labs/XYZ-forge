@@ -50,6 +50,39 @@ DEFAULT_NEVER_DELETE = {
 }
 
 
+def sibling_root(primary: Path) -> Optional[Path]:
+    """GH-722: the primary's parent folder, where start-task's GH-970 rule puts task clones; None
+    when that parent is a NEVER_DELETE root, or contains one (GH-1308: a primary at /Users/X made
+    /Users, and so all of $HOME, a safe root), which must never become a scan or safe root."""
+    parent = primary.resolve().parent
+    never = {r.resolve() for r in DEFAULT_NEVER_DELETE if r.exists()}
+    if parent in never or any(_within(r, parent) for r in never):
+        return None
+    return parent
+
+
+def primary_safe_roots(primary: Path) -> List[Path]:
+    """GH-1193/GH-722: DEFAULT_SAFE_ROOTS plus the primary's parent folder (unless NEVER_DELETE).
+    inspect_checkout grants the parent only to checkouts with the primary's origin."""
+    parent = sibling_root(primary)
+    return DEFAULT_SAFE_ROOTS + [parent] if parent else list(DEFAULT_SAFE_ROOTS)
+
+
+def default_scan_roots(primary: Path) -> Tuple[List[Path], Optional[Path], str]:
+    """GH-722: roots for a scan without --root, the sibling root to origin-filter (None when it is
+    NEVER_DELETE or already a default root), and the header line naming what was scanned."""
+    parent = sibling_root(primary)
+    defaults = {r.resolve() for r in DEFAULT_SAFE_ROOTS if r.exists()}
+    sib = parent if parent and parent not in defaults else None
+    roots = DEFAULT_SAFE_ROOTS + ([sib] if sib else [])
+    line = "Scanned roots: " + ", ".join(str(r) for r in roots)
+    if sib:
+        line += f" (only checkouts with the primary's origin from {sib})"
+    elif parent is None:
+        line += f" (skipped {primary.resolve().parent}: NEVER_DELETE root)"
+    return roots, sib, line
+
+
 def _within(child: Path, parent: Path) -> bool:
     """True only if child is STRICTLY inside parent (rejects child == parent)."""
     if child == parent:
@@ -219,14 +252,35 @@ def coordination_root(repo_path: Path) -> Optional[Path]:
 
 
 def _tick_binary() -> Optional[str]:
-    """The harness's own `bin/tick`, then PATH. Never the audited checkout's copy."""
+    """Resolve trusted installation/configuration, never the audited checkout's cwd."""
     override = os.environ.get(TICK_BIN_ENV)
     if override:
         return override
+    explicit = os.environ.get("XYZ_HARNESS")
+    if explicit:
+        tick = Path(explicit).expanduser() / "bin" / "tick"
+        if tick.is_absolute() and tick.is_file() and os.access(tick, os.X_OK):
+            return str(tick)
     for parent in Path(__file__).resolve().parents:  # skills/<tier>/merge-cleanup/scripts/ (GH-744)
         own = parent / "bin" / "tick"
         if own.is_file() and os.access(own, os.X_OK):
             return str(own)
+    # Same per-device contract as relay-xyz/find-harness.sh, without its caller/vendored
+    # discovery: the audited tree must not supply the program judging its own claims.
+    config_home = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
+    try:
+        configured = (config_home / "xyz" / "harness").read_text().splitlines()[0]
+        harness = Path(configured)
+        tick = harness / "bin" / "tick"
+        if configured and harness.is_absolute() and tick.is_file() and os.access(tick, os.X_OK):
+            origin = run_git(harness, ["remote", "get-url", "origin"])
+            if origin.returncode == 0 and re.fullmatch(
+                r"(?:https://github\.com/|git@github\.com:|ssh://git@github\.com/)"
+                r"HiQS-Labs/XYZ-forge(?:\.git)?/?", origin.stdout.strip(), re.I
+            ):
+                return str(tick)
+    except (OSError, IndexError, ValueError):
+        pass
     return shutil.which("tick")
 
 
@@ -383,6 +437,18 @@ def _normalize_remote(url: str) -> str:
     return m.group(1).lower() if m else u
 
 
+def same_origin(a: Path, b: Path) -> bool:
+    """GH-722: both checkouts report a non-empty origin URL naming the same repository. Any failed
+    or empty lookup is "not the same" — absence of identity is never proof of identity."""
+    urls = []
+    for repo in (a, b):
+        r = run_git(repo, ["remote", "get-url", "origin"])
+        if r.returncode != 0 or not r.stdout.strip():
+            return False
+        urls.append(_normalize_remote(r.stdout))
+    return urls[0] == urls[1]
+
+
 def merged_pr_index(repo_path: Path, integration_branch: str) -> Dict[str, Any]:
     """Merged PRs of the repo `origin` points at, keyed by headRefOid. Cached per origin URL.
 
@@ -505,7 +571,8 @@ def classify_local_refs(repo_path: Path, integration_branch: str = "development"
                         published_pr: int = 0) -> Dict[str, Any]:
     """Every local ref tip is LANDED or UNLANDED, by provenance — or the query failed.
 
-    Rule 1: reachable from origin/<integration_branch> -> landed.
+    Tags: exact name and unpeeled object ID on origin -> recoverable; otherwise preserve.
+    Rule 1 (non-tags): reachable from origin/<integration_branch> -> landed.
     Rule 2: tip == headRefOid of a MERGED PR whose mergeCommit is reachable, AND the branch's
             aggregate raw diff (merge-base..tip) equals the merge commit's (parent..merge) —
             blob ids, modes, paths; whitespace is not normalised away -> landed.
@@ -551,8 +618,28 @@ def classify_local_refs(repo_path: Path, integration_branch: str = "development"
             return out
         tips.append(("HEAD (detached)", head.stdout.strip()))
 
+    remote_tags: Dict[str, str] = {}
+    if any(name.startswith("refs/tags/") for name, _ in tips):
+        advertised = run_git(repo_path, ["ls-remote", "--refs", "--tags", "origin"], timeout=180)
+        if advertised.returncode:
+            out["failed_query"] = f"git ls-remote --tags origin: {advertised.stderr.strip() or 'failed'}"
+            return out
+        for line in advertised.stdout.splitlines():
+            fields = line.split()
+            if (len(fields) != 2 or not re.fullmatch(r"[0-9a-f]{40,64}", fields[0])
+                    or not fields[1].startswith("refs/tags/") or fields[1] in remote_tags):
+                out["failed_query"] = "git ls-remote --tags origin: malformed tag advertisement"
+                return out
+            remote_tags[fields[1]] = fields[0]
+
     index: Optional[Dict[str, Any]] = None
     for name, sha in tips:
+        if name.startswith("refs/tags/"):
+            if remote_tags.get(name) == sha:
+                out["landed"].append(f"{name} @ {sha[:10]} (exact tag object recoverable from origin)")
+            else:
+                out["unlanded"].append(f"{name} @ {sha[:10]}: tag absent from origin or object differs")
+            continue
         anc = run_git(repo_path, ["merge-base", "--is-ancestor", sha, remote_ref])
         if anc.returncode == 0:
             out["landed"].append(f"{name} @ {sha[:10]} (reachable from {remote_ref})")
@@ -932,7 +1019,9 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
         res["checkout_type"] = "unusual"
 
     # Check deletable boundary
-    is_safe, safe_msg = is_safe_deletable_path(path)
+    # GH-722: the primary's parent folder counts only for a checkout of the primary's own repository.
+    roots = primary_safe_roots(primary_repo_path) if primary_repo_path and same_origin(path, primary_repo_path) else None
+    is_safe, safe_msg = is_safe_deletable_path(path, safe_roots=roots)
     res["safe_deletable"] = is_safe
     res["safe_deletable_reason"] = safe_msg
 
@@ -1119,8 +1208,9 @@ def inspect_checkout(repo_path: Path, primary_repo_path: Optional[Path] = None,
     return res
 
 
-def scan_directories(search_roots: List[Path], prefix_filter: Optional[str] = None, primary_repo: Optional[Path] = None, excludes: Optional[List[str]] = None, integration_branch: str = "development") -> List[Dict[str, Any]]:
-    """Scans root directories for candidate git checkouts."""
+def scan_directories(search_roots: List[Path], prefix_filter: Optional[str] = None, primary_repo: Optional[Path] = None, excludes: Optional[List[str]] = None, integration_branch: str = "development", sibling_root: Optional[Path] = None) -> List[Dict[str, Any]]:
+    """Scans root directories for candidate git checkouts. Under `sibling_root` (GH-722) only
+    checkouts with the primary's origin are inspected, so unrelated repos are never fetched."""
     results = []
     seen = set()
 
@@ -1138,6 +1228,8 @@ def scan_directories(search_roots: List[Path], prefix_filter: Optional[str] = No
                 if resolved in seen:
                     continue
                 seen.add(resolved)
+                if sibling_root and root == sibling_root and not (primary_repo and same_origin(resolved, primary_repo)):
+                    continue
 
                 info = inspect_checkout(resolved, primary_repo_path=primary_repo, exclude_patterns=excludes, integration_branch=integration_branch)
                 if info.get("is_git"):
@@ -1407,15 +1499,21 @@ def main():
 
     args = parser.parse_args()
 
-    search_roots = [Path(r).expanduser() for r in args.root] if args.root else DEFAULT_SAFE_ROOTS
     primary_repo = Path(args.primary).expanduser() if args.primary else Path.cwd()
+    if args.root:
+        search_roots, sib = [Path(r).expanduser() for r in args.root], None
+        roots_line = "Scanned roots: " + ", ".join(str(r) for r in search_roots)
+    else:
+        search_roots, sib, roots_line = default_scan_roots(primary_repo)
 
-    checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude, integration_branch=args.integration_branch)
+    checkouts = scan_directories(search_roots, prefix_filter=args.prefix, primary_repo=primary_repo, excludes=args.exclude, integration_branch=args.integration_branch, sibling_root=sib)
 
     if args.json:
+        print(roots_line, file=sys.stderr)  # stdout stays machine-readable
         print(json.dumps(checkouts, indent=2))
     else:
         print(f"### Git Checkout Audit ({len(checkouts)} found)\n")
+        print(roots_line + "\n")
         print(format_scan_table(checkouts) + "\n")
         summary = format_completion_and_followup_summary(checkouts)
         if summary:

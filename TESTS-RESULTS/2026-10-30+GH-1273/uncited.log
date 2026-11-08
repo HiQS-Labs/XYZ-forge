@@ -1,0 +1,19 @@
+== test: relay-uncited-findings ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-relay-uncited-findings.XXXXXX.HWUEYd962m
+  PASS: uncited [Pass] downgraded to [Unverified — no citation]
+  PASS: unrelated [Blocker] line left byte-for-byte untouched
+  PASS: [Pass] with an inline quote left untouched
+  PASS: [Pass] with a file:line citation on the next line left untouched
+  PASS: uncited prose 'verified' claim flagged
+  PASS: second pass over an already-downgraded line is a no-op (idempotent)
+  PASS: rtl_init sets RTL_WAS_REVIEWER_TURN=1 on a Reviewer turn
+  PASS: rtl_init sets RTL_WAS_REVIEWER_TURN=0 on a Producer turn
+  PASS: widened trigger vocabulary (looks good / no issues / LGTM) flags an uncited prose claim
+  PASS: unrelated [Should] line left untouched by the widened vocabulary
+  PASS: widened-vocabulary claim with a file:line citation left untouched
+  PASS: rtl_has_uncited_claim flags a later uncited claim despite an earlier unrelated citation
+  PASS: rtl_has_uncited_claim flags a transcript with zero citations anywhere
+  PASS: rtl_has_uncited_claim does not flag a transcript where every claim is cited near itself
+  PASS: a P/a/s-heavy non-claim line is left byte-for-byte untouched (no awk -v [Pass] corruption)
+  PASS: rtl_has_uncited_claim does not flag a P/a/s-heavy non-claim line (no awk -v [Pass] corruption)
+  relay-uncited-findings: 16 pass, 0 fail

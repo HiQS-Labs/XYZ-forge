@@ -19,8 +19,8 @@ relay-automation/hooks/security-scan.sh	credential-literal	password=/secret=/api
 relay-automation/hooks/security-scan.sh	credential-literal	api_key=realsecret`,
 relay-automation/hooks/security-scan.sh	credential-literal	password="pw secret"
 relay-automation/improve-loop.sh	eval-unsanitized	if ! eval "$ORACLE_CMD" >/dev/null 2>&1; then echo "improve-loop: baseline FAILS the oracle — refusing to optimize a broken artifact" >&2; exit 3; fi
-relay-automation/improve-loop.sh	eval-unsanitized	  eval "$BUILD_CMD" >/dev/null 2>&1 || true
-relay-automation/improve-loop.sh	eval-unsanitized	  op=1; eval "$ORACLE_CMD" >/dev/null 2>&1 || op=0
+relay-automation/improve-loop.sh	eval-unsanitized	    eval "$BUILD_CMD" >/dev/null 2>&1 || true
+relay-automation/improve-loop.sh	eval-unsanitized	    op=1; eval "$ORACLE_CMD" >/dev/null 2>&1 || op=0
 relay-automation/marathon-drive.sh	eval-unsanitized	    ( [[ -n "$TARGET_ROOT" ]] && cd "$TARGET_ROOT"; eval "$PRE_ADVANCE_CMD" ) || gate_exit=$?
 relay-automation/poll.sh	eval-unsanitized	# `eval "$RUNNER_CMD"` exec'd the wrong token, e.g. `/Users/.../GH: not found`.)
 relay-automation/poll.sh	eval-unsanitized	  if [[ -x "$1" ]]; then "$1"; else eval "$1"; fi

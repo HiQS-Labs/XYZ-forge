@@ -1,0 +1,29 @@
+# patched harness sha256: 040507f04e97add1
+## main path (GH-1280 D1 sequence)
+$ factory-primitive --run-root temp/factory-primitive/m1 status
+  rc=2 factory-primitive: instance not initialized; run init first 
+  state.db after: no
+$ factory-primitive --run-root temp/factory-primitive/m1 init --daily-cap 1 --max-call-cost 0
+  rc=0 {"instance":"/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1284-status-creates-state-2026-10-31-veri
+$ factory-primitive --run-root temp/factory-primitive/m1 status
+  rc=0 {   "heartbeat": null,   "last_receipt": null,   "lock": "free",   "paused": false,   "pending": 27,
+$ factory-primitive --run-root temp/factory-primitive/m1 tick --slot 1
+  rc=0 {"status":"completed","tick_id":"slot_001"} 
+## adjacent: tick or packet first on a fresh root, then init
+$ factory-primitive --run-root temp/factory-primitive/a1 tick --slot 1
+  rc=2 factory-primitive: instance not initialized; run init first 
+  state.db after: no
+$ factory-primitive --run-root temp/factory-primitive/a2 packet --wave 1 --reviewer codex
+  rc=2 factory-primitive: instance not initialized; run init first 
+  state.db after: no
+$ factory-primitive --run-root temp/factory-primitive/a1 init --daily-cap 1 --max-call-cost 0
+  rc=0 {"instance":"/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1284-status-creates-state-2026-10-31-veri
+## rerun: tick same slot again on initialized root
+$ factory-primitive --run-root temp/factory-primitive/m1 tick --slot 1
+  rc=0 {"status":"completed","tick_id":"slot_001"} 
+## red control: unpatched harness (origin/development)
+$ factory-primitive --run-root temp/factory-primitive/r1 status
+  rc=0 {   "heartbeat": null,   "last_receipt": null,   "lock": "free",   "paused": false,   "pending": 0, 
+  state.db after: yes
+$ factory-primitive --run-root temp/factory-primitive/r1 init --daily-cap 1 --max-call-cost 0
+  rc=2 factory-primitive: instance already initialized; use a new run root 

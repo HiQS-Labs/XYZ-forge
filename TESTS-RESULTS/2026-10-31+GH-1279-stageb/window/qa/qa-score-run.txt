@@ -1,0 +1,29 @@
+{
+ "arms": {
+  "rules": {
+   "items": 44,
+   "missing_verdicts": [],
+   "false_approvals_on_controls": [],
+   "controls_rejected": 8,
+   "real_plans_approved": 19,
+   "real_plans_rejected": 17,
+   "grounding_defects": 31
+  },
+  "codex": {
+   "items": 42,
+   "missing_verdicts": [],
+   "false_approvals_on_controls": [],
+   "controls_rejected": 8,
+   "real_plans_approved": 24,
+   "real_plans_rejected": 10,
+   "grounding_defects": 14
+  }
+ },
+ "false_approvals_on_seeded_flaws": 0,
+ "disagreement": {
+  "measured_on": 8,
+  "items_where_reviewers_differ": [],
+  "note": "only the seeded controls were shown to both reviewers; plan-level disagreement on other items is unmeasured"
+ },
+ "zero_false_approvals_on_seeded_flaws": true
+}

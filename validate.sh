@@ -1586,10 +1586,16 @@ if [ "${#FAILED[@]}" -gt 0 ]; then
   for t in "${FAILED[@]}"; do echo "  - $t"; done
   exit 1
 fi
-if [ "${TIER:-3}" -eq 3 ] && [ -z "${SUBSYSTEM:-}" ] && [ -z "$(git status --porcelain 2>/dev/null)" ]; then
-  _val_sha="$(git rev-parse --verify HEAD 2>/dev/null || true)"
+# GH-1308 #9: a green run always leaves a receipt (marathon-closeout accepts any passing one); only a
+# run with no skipped suite and no environment fault is stamped `--scope full`, which is what
+# pre-push reuse requires.
+if [ "${TIER:-3}" -eq 3 ] && [ -z "${SUBSYSTEM:-}" ] \
+  && _val_dirty="$(git -C "$HERE" status --porcelain 2>/dev/null)" && [ -z "$_val_dirty" ]; then
+  _val_sha="$(git -C "$HERE" rev-parse --verify HEAD 2>/dev/null || true)"
   if [ -n "$_val_sha" ] && [ -f "$HERE/utils/py/gate_receipt.py" ]; then
-    python3 "$HERE/utils/py/gate_receipt.py" write --repo "$HERE" --sha "$_val_sha" --gate "validate.sh" --mode "parallel" --exit-code 0 --passed "${#PASSED[@]}" --total "$TOTAL" >/dev/null 2>&1 || true
+    _val_scope="--scope full"
+    if [ "${#SKIPPED_SUITES[@]}" -gt 0 ] || [ -n "${XYZ_ENV_FAULTS:-}" ]; then _val_scope=""; fi
+    python3 "$HERE/utils/py/gate_receipt.py" write --repo "$HERE" --sha "$_val_sha" --gate "validate.sh" --mode "parallel" $_val_scope --exit-code 0 --passed "${#PASSED[@]}" --total "$TOTAL" >/dev/null 2>&1 || true
   fi
 fi
 exit 0

@@ -47,8 +47,8 @@ Orchestrate weekly sprint alignment and daily task execution across team members
    - **Mode B (Zero-Dependency Fallback):** Ingests open issues via `gh issue list`, executing a 2–3 pass scratch markdown process in `temp/planner/` to triage and sharpen tasks.
    - **Canonical Discovery (both modes):** `issue_intake.discover_weekly` ingests paginated, deduplicated, repository-qualified issues updated since the window and every open PR with diff metadata, without artificial ceilings. Open issues the roadmap does not know yet join the candidate list and pass through the same live grounding; a discovery failure refuses unless `--fallback` is explicit.
 7. **Shared Core Engine Architecture (Zero Skill Drift):**
-   - The weekly planner owns the primary data models, discovery intake, merge-sequencer, and adversarial checks in `scripts/`.
-   - The `daily-planner` skill imports and calls these shared routines to calculate its 24-hour pivot, ensuring that the daily and weekly cadence never contradict each other.
+   - The weekly planner owns the primary data models, discovery intake, merge-sequencer, and adversarial checks in `scripts/planner_core.py`.
+   - The `daily-planner` skill runs the same engine by subprocess (`planner_core.py --mode daily`, and `--mode stalled` for the GH-1184 Stalled & stale scan) rather than importing it, so the daily and weekly cadence never contradict each other.
 
 ---
 

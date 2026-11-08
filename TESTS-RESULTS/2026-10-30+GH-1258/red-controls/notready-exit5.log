@@ -1,0 +1,15 @@
+swarm-preflight · project-doc · slug=gh-1263-notready
+  target-root : <repos>/XYZ-forge (development @ e305cbf36)
+  branch      : suggested=marathon/gh-1263-notready-2026-10-30 branch_ready=false skip_branch_prompt=true
+  freshness   : fetch_ok=1 upstream=origin/development ahead=0 behind=0 dirty=1
+  ref-probed  : development @ e305cbf36 (checkout matches)
+  candidate   : ready
+  inlined-acc : 4 criterion(a) from the acceptance-section
+  source-url  : ok — source: resolves to issue #1263 (https://github.com/HiQS-Labs/XYZ-forge/issues/1263)
+  acceptance  : match — 4/4 criteria copied verbatim from issue #1263
+  issue-state : OPEN — issue #1263 is OPEN
+  readiness   : ready=0 — next: artifact path not found at target.ref: utils/hq/hq-title-guard.sh — fix the contract artifacts[] or push the file
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : NOT-READY (exit 5)
+
+No packet written — candidate is not preflight-ready (NOT-READY).

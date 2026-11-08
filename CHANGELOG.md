@@ -1,5 +1,420 @@
 # Changelog
 
+## 2026-11-07 — GH-1365 proportional Jog closeout
+
+- Jog post-merge completion records merged delivery without requiring exact approval ancestry. Original receipt validation, publication checks, merge identity/reachability and reconciliation remain; landing evidence distinguishes review, gate and delivered versions. GUIDING-PRINCIPLES and AGENTS require rigor proportionate to concrete risk and operational burden.
+- Operator-selected bet: repeating approval ancestry at bookkeeping costs more than it adds to existing review, CI and post-merge QA. Costly shared-policy change; revert the implementation to restore the old rule while retaining honest historical records. Verification is recorded in the GH-1365 plan/evidence; policy adoption alone is not proof.
+
+## 2026-11-07 — GH-1247 / GH-1362 retirement preservation fixes
+
+### Fixed
+- Merge-cleanup now compares exact origin tag objects before ancestry and resolves deployed tick from trusted explicit/device configuration. Local-only/differing tags, query failures and unknown claims remain preserved. Shared plan and controls: `PROJECT/2-WORKING/GH-1247-RETIRE-REMOTE-TAGS.md`, `TESTS-RESULTS/2026-11-07+GH-1247/`. GH-1359 remains research-only: producer ownership map recorded, no schedule or broad disposal introduced.
+- Bet: exact recoverability removes the reported false preservation without weakening safety. Costly boundary because a false safe classification can enable retirement; stop on any false-safe control and revert the source change before deployment. Candidate manual controls passed; focused suite/final QA and final classified gate are recorded separately when completed. Installed deployment remains post-merge.
+
+## 2026-11-07 — GH-1332 Item 2: jog retry-gate accepts relay-receipt-only tail
+
+- `utils/py/jog_run.py`: `jog retry-gate` now accepts candidate heads whose only commits past the prior execution head touch the lane's relay file (`marathon-system/<lane>/RELAY.md`), transcripts (`relay-system/`), or phase records (`ESCALATION.md`, `PHASE-INTERRUPTED.md`), matching Phase 0 / GH-505 candidate-ok semantics.
+- Non-relay code edits and empty commits remain strictly refused before dispatch with exit code 2.
+- Gate retry dispatches and publishes the updated approved receipt for the new head, preventing unnecessary rebuilds after manual/out-of-band turn completions on stalled relays.
+- Existing suite `test/gh280-jog-marathon-adapter.sh` updated with K3, K3b, and K3c assertions (226/226 pass; zero new test suites added per GH-831).
+
+## 2026-11-07 — GH-1345 cutover: rows at pickup, decoupled intake, rating contract, discovery of no-row issues
+
+- **Task 2 (Intake decoupled from row insertion):** `hq park` (`--create` and `--gh-issue`), `/file-xyz-bug`, and `/idea` no longer insert rows into `releases.db` (`roadmap_items`) at filing. Unstarted intake creates the GitHub issue and `PROJECT/1-INBOX/GH-<n>-*.md` capture doc only. `utils/pdda/pdda.sh` (`check_roadmap_coverage`) updated so unstarted `1-INBOX` issue docs without a ledger row pass with info, while active `2-WORKING` docs without a row still fail with `rc=1` (falsification verified).
+- **Task 3 & 11 (Idempotent pickup writer & rating contract):** Implemented `releases roadmap pickup --issue-num N [--doc-path P] [--rated P/S/A/E] [--ovr O]` in `utils/py/releases_app.py`. Creates the ledger row exactly once at work start with genuine 1–100 ratings, adopting pre-existing proposals (D-a) and refusing placeholder values (`50/50/50/50` without distinct rationale, or all <= 5). Retrying pickup is idempotent and preserves existing ratings and `ovr`. Integrated into `express.py` hotfix ledger step (with real 70/60/50/85 rating), `jog_run.py` promotion fallback, and start skills (`start-task`, `jog`, `start-marathon`, `10days`, `workhorse`).
+- **Task 4 (Readiness & factory discovery for unstarted no-row issues):** Extended `_unregistered_record` and `Engine.compute()` in `utils/py/_marathon_plan.py` to evaluate unstarted issues from `1-INBOX` (and `2-WORKING`) by capture doc, Preflight Contract artifacts/writeset/zone, and PRS proposals. Discovers and admits fully specified issues into factory candidate pools and marathon waves with `state = 'ready'` without needing premature ledger rows. Shared `_unregistered_record` eliminates duplication in `harness.py`.
+- **Review Remediation (PR #1351 reviews):**
+  - Ordinary planner integration: `Engine.compute()` in `_marathon_plan.py` directly executes unregistered discovery, so the admission census, ordinary planning, and factory pilots all see unstarted no-row work in `computed['deduped']`.
+  - Express placeholder rejection: `utils/py/express.py` routes through `roadmap pickup` with explicit validation against `parse_rating(..., allow_placeholder=False)`, refusing placeholder scores like `50/50/50/50` or `<= 5` before row creation. Added regression check in `test/gh267-express-skill.sh` (127/127 pass).
+  - Atomic repoint on row reuse: `cmd_roadmap_pickup` in `releases_app.py` validates target doc existence and atomically repoints both `doc_path` and `raw_text` via `perform_write` (`roadmap-repoint`), ensuring `roadmap_render()` links stay consistent.
+  - Consistent rating policy: `parse_prs_proposal` strictly rejects `50/50/50/50` as a placeholder, aligning discovery and pickup so uniform-50 proposals are held as `unrated` rather than accepted and then rejected at start.
+- **Task 6 (Duplicate prevention):** Maintained three independent duplicate guards: issue search before creation, capture doc reuse in `hq park --gh-issue`, and database unique constraints (`UNIQUE(repo_id, gh_number)`) at pickup. Reworded `PROJECT/PDDA.md` lifecycle documentation accordingly.
+- **Task 12 (Structured body formatting & umbrella metrics):** `hq park --create` and `/file-xyz-bug` render standard `/idea` sections (`## Observed`, `## Acceptance`, `## Preflight Contract`, `## PRS proposal`). Added `umbrella` label handling to exclude multiphase tracking containers from atomic intake queues and factory discovery.
+- **Task 5 (Rollout instructions):** Documented that #1298 backlog supply step prepares issue text, capture doc, and contract only, creating zero rows at intake.
+- **Bet & Reversibility:** Costly (touches intake and row-creation machinery across hq.sh, pdda.sh, releases_app.py, harness.py, and express.py). Bet: Decoupling filing from ledger row creation removes the primary bottleneck causing 200+ issues to drift without ledger pointers, shifting rating authority to work selection/pickup where actual effort and scope are known. Assumption: Start paths (`start-task`, `jog`, `start-marathon`, `10days`, `express`) reliably run `roadmap pickup` so all active work gets a rated row upon entry to `2-WORKING`. Rollback: The database schema is untouched; legacy `releases roadmap add` and mirror sync remain functional; reverting these commits restores row creation at filing.
+- **Verification:** Existing covering suites green (`test/gh238-hq-releases-mode.sh`, `test/hq-park.sh` 23/23, `test/hq-park-synthesis.sh` 35/35, `test/gh267-express-skill.sh` 126/126, `releases_app check`, `pdda.sh roadmap-coverage`, `pdda.sh run` 0 errors, `gh308-frozen-twin-guard.sh`). No new test suites added per GH-831.
+
+## 2026-11-05 — GH-1348 express admits non-execution-authority skill docs under --docs-only with relay attestation
+
+- `utils/py/express.py` now admits non-execution-authority `skills/**/SKILL.md` files under `--docs-only` when accompanied by a validated `Approved` attestation receipt (`.git/relay-attest/*.json`) proving independent cross-model review of `HEAD`.
+- Changes to execution-authority skills (`express`, `merge-cleanup`, `merge-cleanup-deep`, `start-marathon`, `marathon-cleanup`, `start-task`, `relay`, `relay-xyz`, `relay-automation`, `jog`), scripts, executables, or policy documents (`AGENTS.md`, `CLAUDE.md`) remain strictly refused under `--docs-only`.
+- Unattested, unapproved, malformed, or post-review drifted skill files refuse with `rule=skill-unattested`.
+- `skills/2-daily/express/SKILL.md` updated to document active driver support for attested skill documentation.
+- Existing regression suite `test/gh267-express-skill.sh` extended with positive and negative controls (126/126 pass; zero new suites per GH-831).
+
+## 2026-11-04 — GH-1340 Task 1: GH-1333 decisions 4-6 written into the rules (policy only)
+
+- `PROJECT/PDDA.md` now records that the merge step closes an issue only under two conditions (a reviewed whole-issue assertion, or a non-empty Acceptance checklist fully checked), and otherwise leaves it open with one reason comment.
+- It records that a ledger row is created when work starts, not at filing: selection into an actual batch counts as starting (D-b), and the existing "Queue / parked intake" rows stay as proposals (D-a). Until the #1340 cutover lands, row-writing intake is not used for new unstarted work.
+- Decision 5 (the PRS appeal axis stays neutral 50 unless the operator sets it) is stated in PDDA.md, distinct from the 1-5 frontmatter triage fields.
+- Corrects the Lifecycle sentence that sent a closed, never-actioned capture to `4-MISC` and removed its pointer; closed captures follow the `stateReason` sweep. Section H is described as a detector, with closing pointed at decision 4. The "readers find docs by number" rule is marked as not yet true of today's readers (#1340 Task 10). The coverage rule mentions #1339's in-flight promotion case. Removes three duplicated older paragraphs in the CHANGELOG contract.
+- Policy only; no code changed. Decision record: `decisions/2026-11-04-gh1333-closure-appeal-row-at-start.md`. Rule set with stable IDs: top of #1328. Rule-set review: Codex (GPT-6 Astra, medium), one round, nine findings accepted (`relay-system/2026-11-04/rules-sharpening-qa.md`).
+
+## 2026-11-04 — GH-1341 todo-list and start-task close the loop on GitHub issues
+
+- `todo-list` has a new section 4, "Close the loop on GitHub". When a run ends, including on a halt or the 100-minute / 10-wake cap, it posts one comment to each issue the run touched. The comment covers what was done, the evidence, the decisions and why, what stays open, and the next step. A marker line (`<!-- todo-list closeout: <note-path> -->`) makes a rerun edit that comment instead of adding another. Tier A and B post with `gh` and record the URLs in the note; Tier C renders the text in chat to paste. A failed lookup or write is reported `unposted` or `unknown`, with no URL claimed. The step never closes or relabels an issue. Both run ends call it: section 3 step 4 and the watchdog wake prompt.
+- `start-task` Step 9 reuses that procedure with its own marker (`<!-- start-task closeout: <branch> -->`). It says "awaiting merge" only for a verified ready PR. A group that stops at plan QA or a blocked gate posts its blocker and resume action at that stop (Step 6). A `todo-list` run that drove a `start-task` does not comment twice on the same issue.
+- Instruction text only, no new tests (GH-831). Docs gate: `utils/pdda/pdda.sh run`. Plan QA: Codex Approved in round 2 (`relay-system/2026-11-04/gh1341-plan-qa.md`). Receipts: `TESTS-RESULTS/2026-11-04+GH-1341/`.
+- Bet: later sessions resume from the issue comment instead of re-deriving findings. Revisit if comments duplicate on reruns or show up on issues a run did not touch. Reversible: revert the commit. Posted comments stay, and their marker identifies them.
+
+## 2026-11-03 — GH-1333 decisions: issue state is the authority for "done"; docs found by number; one completion sweep
+
+- `PROJECT/PDDA.md` now says the GitHub issue's state is the only authority for "done". A doc's folder and its ledger section are views of that state. Readers find a `GH-<n>-` doc by its issue number, not a stored path.
+- Completion moves are to come from one idempotent sweep, keyed on current issue state. It covers `1-INBOX` and `2-WORKING`, repoints the ledger row, runs from merge-cleanup and `start-marathon`, and never closes an issue. It replaces per-merge moves.
+- Policy only. The sweep and the reader changes are not built yet; until they land, `wave_reconcile.py --pr N` and `issue-doc-sync` behave as before. Decision record: `decisions/2026-11-03-gh1333-issue-state-authority.md`. #1333's other decisions (who closes issues, the appeal axis, when a ledger row is created) stay open.
+- #1333 Phase 1 fixes:
+  - `express` no longer writes `rated 2/2/2/2` into the rows it parks. That token put the 1-5 scale into the 1-100 grammar and ranked as a real score (#1177). Those rows now stay unrated until someone rates them.
+  - `PROJECT/PDDA.md` and the `start-marathon` skill no longer claim the planner enforces `ratings_provisional`. Only `sentinel-overlay/` reads it, so the hold is manual for now.
+  - `SOP.md` no longer says the hosted `wave-reconcile.yml` reconciles automatically. It has been dispatch-only since #1131, and local reconcile is the writer. The `AGENTS.md` copy is #1160, PR #1326.
+  - Neither the `ratings_provisional` hold nor the `risk > 2` hold is enforced by the planner, which uses risk only as a ranking weight. `PDDA.md` and `start-marathon` now say both holds are manual.
+- Verification:
+  - `express` red/green: `parse_rating` of the old line gives `2/2/2/2`; the new line gives all NULL.
+  - `test/gh267-express-skill.sh` passed 113/113.
+  - `utils/pdda/pdda.sh run`: 0 errors before and after. The CHANGELOG-freshness warning clears, and no warning comes from this diff.
+  - Pre-push gates were green: the documentation gate, then the full gate (6939 s).
+  - Codex (GPT-6 Astra, medium) QA was Approved in round 2: `relay-system/2026-11-03/gh1333-pr1334-final-qa.md`.
+  - Receipts: `TESTS-RESULTS/2026-11-03+GH-1333/`.
+- Bet:
+  - Expected signal: once the #1333 sweep runs, `issue-doc-sync` warning (a) stays at 0 across two merge-cleanup batches, and no ledger `doc_path` points at a missing file.
+  - Revisit if the sweep moves a doc whose issue was reopened, or if a reader still resolves by stored path.
+  - Reversible: the policy is text. Revert these commits; the `express` change is one line.
+
+## 2026-11-02 — GH-1308 decisions 9–13: receipt policy, teardown origin check, regression cases
+
+- `validate.sh` writes a gate receipt on every green tier-3 run of a clean tree again, as it did before #1253. Only a run with no skipped suite and no environment fault is stamped `--scope full`, which pre-push reuse still requires. `marathon-closeout.sh` therefore no longer refuses a host whose run skipped a suite.
+- merge-cleanup `teardown_checkout` takes the primary and re-checks origin itself for a path under the primary's parent folder and outside the default roots, so a forged or stale `SAFE_REMOVE` record cannot remove another project's checkout.
+- Existing suites gained cases: `gh534_phase_a_tests.py` `TestSiblingRoot` (sibling-root refusals, same-origin scan filter, teardown origin check) and `test_deploy_skills.py` (the GH-1306 receipt-only update). No new suite was registered.
+- The #1274 PR description no longer reads `refresh or close #418 and #1098`, which `wave_reconcile` took as a closing clause and so held #1098 as delivered. Finding 12 (relay separator rendering) is documentation only: the fallback guarantees byte integrity, not identical rendering.
+- Evidence: `TESTS-RESULTS/2026-11-02+GH-1308/`.
+
+## 2026-11-01 — GH-1309 skills-army-hq replaces a real legacy folder in an app root with the managed link
+
+- New `sync.py --migrate-legacy SKILL --archive-legacy` (preview first, then `--apply`). Until now `--adopt`, `--migrate` and `--migrate-from` refused any real directory in an app root, and `--archive-legacy` worked only for `--retire-trinity` with a matching source, so an installer-created folder (for example a stale `~/.claude/skills/xyz`) kept `sync.py --status` at exit 2 with no supported fix. For each enabled target holding such a folder it now requires a valid skill folder of that name, takes a verified ZIP, moves the folder to retained `.staging/<op>/retired`, and creates the owned link in one transaction. Its content may differ from the managed copy; the preview reports `matches_managed`. A run with nothing to migrate, an unknown skill, or no `--archive-legacy` refuses. Opt-in: no existing flow changes.
+- The `retire-directory` recovery action is no longer hard-coded to `skills-sync-trinity`: it now accepts a deployed skill's name too, every retirement root must lie outside the collection, and replaying a finished retirement after its link exists is a no-op. A pending receipt written by this flow cannot be replayed by an older manager. Documented in `references/recovery.md` and `SKILL.md`. Evidence: `TESTS-RESULTS/2026-11-01+GH-1309/`. Reversibility: Costly (it moves folders in app roots outside the repo); every moved folder stays recoverable from its ZIP and `.staging`.
+
+## 2026-11-01 — GH-1308 post-merge QA fixes for the 2026-10-29 → 11-01 merges
+
+- `harness.py factory-primitive init --from-prs` now reads every merged PR and issue (limit 10000) and refuses a snapshot that may be truncated. The old 300-PR window had dropped the delivered-holds for #384, #259 and #193, which broke the GH-1279 Stage B canary init (`canary-stale-05`).
+- `init --adapter codex` now requires `--max-call-cost > 0`. With the old default of 0, the per-call reservation never grew, so a Codex run had no call cap.
+- Re-running an unfinished tick now reports its reconciled status (for example `uncertain`), not the stale `started`.
+- The idea skill calls its repo tools through `$HQ_ROOT`, so it works outside an XYZ-forge checkout. It also stops when the project name does not resolve.
+- merge-cleanup `sibling_root` now refuses a parent folder that contains a NEVER_DELETE root. A primary at `/Users/X` had made all of `/Users` a safe root.
+- The merge-cleanup Jog-failure message no longer claims rows are untouched after a partial landing.
+- #1273 and #1280 are promoted to Completed, since both were missed by reconcile.
+- Verified with red/green manual checks (`TESTS-RESULTS/2026-11-01+GH-1308/checks-run-final.txt`); the fixed delivered map matches an independent recomputation over all 447 merged PRs; `gh534` 42 OK and `gh436` 201 OK; `releases_app check` is clean and `issue-doc-sync` no longer lists #1250, #1273 or #1280. The full `./validate.sh` gate finished 408/409; the sole failure is `relay-self-sufficiency.sh`, whose live agy call got `RESOURCE_EXHAUSTED (429)` (external; skipped by pre-push and CI per GH-836).
+
+## 2026-10-31 — GH-1306 skills-army-hq adopts a skill whose payload already matches its source
+
+- `intake.py update NAME --source PATH` no longer stops at `Unchanged` when the deployed bytes equal the source but the receipt has no source (a `catalog` entry), names another source (an `adopt-existing` self-reference) or carries a stale digest. It records the source receipt as a state-only transaction: preview prints `will RECORD source …`, nothing is copied or backed up, and no Pulse commit is attempted. `Unchanged` remains when the same source and digest are already recorded.
+
+## 2026-10-31 — GH-1299 ceremony audit folded into sanity-check; mode-before-skill rule
+
+- The plan-wide ceremony audit from GH-1286 (PR #1289) is now `sanity-check` **Plan mode**, carried over with its tested wording (a 35-line compression lost behaviour in a blind rerun; evidence below): same procedure (goal and open question with evidence, progress / proof / safety / ceremony labels with the deletion test and its qualifiers, real run over proxy, short verdict), with its triggers added to the `sanity-check` description. `skills/1-hourly/ceremony-audit/` and its Skills Index row are removed (the `1-hourly` heading now matches its 17 rows, which include `idea`). `skills/README.md` gains a **mode before skill** rule: a new skill needs a trigger and unit no existing skill can carry as a mode, and its plan names the skills checked. Evidence: `TESTS-RESULTS/2026-10-31+GH-1299/`. Reversibility: Easy.
+
+## 2026-10-31 — GH-1279 outer loop gains a bounded Codex decision adapter and Codex-authored plan content (Stages A and A2 of the planning soak)
+
+- `harness.py factory-primitive init --adapter codex --codex-model M [--adapter-timeout S]` freezes the route (model, timeout, flag list, prompt hash) in the instance config; the default stays `rules` and its prompt hash is unchanged. The adapter runs one tool-disabled, read-only, ephemeral `codex exec` per eligible slot with a 90 s process-group cap, no retry, raw output retained, and classifies `ok`, `invalid-output`, `timeout`, `rate-limited` or `adapter-error`; every real call is billed `unknown`, never zero, and an empty inbox makes no call (`agent_called=false`).
+- `_validate` no longer raises `TypeError` on non-string tool or ID values (a model can emit them; the rules arm cannot), so they end as a rejected decision and a safe idle instead of a failed tick.
+- `init --codex-authoring` (Stage A2) lets the Codex decision carry an `authored` object (scope, acceptance, open questions, write set) that the validator bounds and checks against the frozen tracked-file index; `plan_draft` merges it as labelled `codex-authored` entries after the sourced ones, never replacing them, and drops authored paths for planner-ready briefs. With the flag off, the validator rejects `authored` as before and briefs are byte-identical.
+- `init --canaries/--slots/--miss` (Stage B tooling) lays out frozen planning canaries, the missed slots and the real requests over a 96-slot budget, with a two-arm prepare, driver, dry-run and QA-pack helpers under `TESTS-RESULTS/2026-10-31+GH-1279-stageb/`; default `init` output is unchanged. Evidence: `TESTS-RESULTS/2026-10-31+GH-1279-stageb/SUMMARY.md`.
+- The 8-hour window ran on one machine (96 slots per arm): 90 Codex calls all classified ok at about 7.6 s, 3 validator rejections of untracked authored paths, crash recovery and identity checks held, 0 false approvals on 8 seeded flaws from two reviewers. It also measured existing behaviour: the proposal builder schedules delivered issues and the deterministic planner carries injected issue text into briefs and launch packets. An unplanned host suspension of about 71 minutes made slots 76-84 run as a catch-up. See `TESTS-RESULTS/2026-10-31+GH-1279-stageb/SUMMARY.md`. The deterministic planner still writes the plan content, so a Codex arm shows decision compliance and containment, not planning skill. Evidence: `TESTS-RESULTS/2026-10-30+GH-1279/SUMMARY.md`.
+
+## 2026-10-31 — GH-1284 outer loop: status no longer creates state on an uninitialized root
+
+- `harness.py factory-primitive status`, `tick` and `packet` now refuse a run root that was never initialized (rc 2, `instance not initialized; run init first`) instead of creating `state.db`, which made a later `init` refuse. Found by the GH-1280 ATE campaign (D1). Init paths are unchanged. Evidence: `TESTS-RESULTS/2026-10-31+GH-1284/SUMMARY.md`. Reversibility: Easy.
+
+## 2026-10-31 — GH-1286 ceremony-audit skill
+
+- New `skills/1-hourly/ceremony-audit/SKILL.md` (120 lines or fewer, no scripts, no tests). It names the goal and the one open question with the evidence that the rest is proven, labels every planned step progress / proof / safety / ceremony by asking whether deleting it would change the outcome or the next decision, prefers one real run over proxies, and returns a cut list, kept list, next step with its gate, and a parked count. Links `sanity-check`, `ponytail` and `worth-it` instead of restating them. `ARCHITECTURE.md` index row added; the `1-hourly` count now matches its rows (17). Evidence: `TESTS-RESULTS/2026-10-31+GH-1286/`. Reversibility: Easy.
+
+## 2026-10-30 — GH-1273 harmless relay separators
+
+- The reviewer-history check retains strict canonical comparison first, then tolerates empty separator-line count changes outside protected literal content with a warning. Canonical record coordinates and loader semantics are unchanged; substantive history and invalid approvals remain refused. Raw transcript remains intact. Reversibility: Costly shared approval boundary; rollback by reverting this change.
+- Mechanical verdict repair is deferred: a done token is spent on driver restart, so safe recovery needs separately reviewed state work. No recovery or approval bypass is introduced.
+
+## 2026-10-30 — GH-1270 outer loop writes marathon launch packets and stops packing closed or stale issues
+
+- `harness.py factory-primitive init --from-prs` now freezes real GitHub state for every issue, so the planner's own already-closed rule drops CLOSED rows (#1075 no longer sits in wave 1), and freezes merged PRs that close a still-open issue, which are excluded or held as possibly delivered.
+- A contract with any landed `fix_probes` is held as `stale-contract`, for briefed and unbriefed lanes alike; `command` probes are never run.
+- New `factory-primitive packet --wave N` writes one `MARATHON.yaml` + brief per lane under the run root, rendered by `marathon_yaml_emit` and validated by `bin/marathon-yaml`, only from a proposal that matches the last completed tick. Copying a folder into `PROJECT/2-WORKING/` is the approval; nothing launches. Evidence: `TESTS-RESULTS/2026-10-30+GH-1270/SUMMARY.md`.
+
+## 2026-10-30 — GH-1269 merge-cleanup B1 CHANGELOG repair keeps development's history byte-for-byte
+
+- B1's additive CHANGELOG resolution used to re-sort every new section from both sides by heading, so development's own same-date sections were reordered. The next B1 attempt then refused that output ("changelog preamble or existing history changed") and spent the PR's second repair slot (LTVera PR #874). It now prepends the PR's new sections in their own order, drops any already on development, and copies development's text verbatim after the preamble. Every existing refusal is unchanged. Evidence: `TESTS-RESULTS/2026-10-30+GH-1269/smoke.md`. Reversibility: Easy.
+
+## 2026-10-30 — GH-1261 outer loop drafts unregistered issues and resolves bare file names
+
+- `harness.py factory-primitive init --from-prs --unregistered N` adds N open issues that have no ledger row, read once at init. `plan-draft` gives them a planner-shaped record, and every seeded unregistered issue is visible to dependency lookup, so a dependent waits for its prerequisite.
+- Cited paths now map a vendored `.xyz/` path to the forge path and resolve a bare file name when exactly one tracked file has it; names with several matches are listed under a new `unresolved_names` brief field, never guessed. The 25-path write-set cap is gone.
+- On 20 real issues (10 ledger, 10 unregistered): every request produced a brief, the planner's waves are unchanged and the ledger is byte-identical; #216 now cites its real files and left wave 1. Evidence: `TESTS-RESULTS/2026-10-30+GH-1261/SUMMARY.md`.
+
+## 2026-10-29 — GH-1257 outer loop drafts marathon briefs from the real backlog, read-only
+
+- `harness.py factory-primitive init --from-prs` freezes a copy of `releases.db`, the git listings and one read-only issue read for up to N open Queue rows the planner classes ready or needs-contract. A new `plan-draft` tool then drafts one evidence-linked brief per tick (scope, acceptance, open questions and a write set, each with its source line, or marked missing) and refreshes a wave proposal that keeps the planner's waves unchanged and adds a provisional packing. Missing scope or write set holds an issue out of every wave. The tool runs offline inside the existing sandbox, and nothing is written to git, the ledger or GitHub. Reversibility: Easy.
+- `_marathon_plan.Engine.run` is split into `compute()` plus rendering, with `_pack_waves` and `_contract_seams` extracted; CLI output, JSON, `--check` and the rendered doc are byte-identical to before. `status` gains heartbeat age and stage, lock state, last receipt and quarantined IDs. A plan-draft attempt that fails, times out or fails verification after starting is `uncertain` and quarantined, never retried.
+- On 10 real issues: 3 ready, 3 drafts, 4 needs-recon; every control and eight focused existing suites pass. Hand inspection found one unsafe under-count (#216 names its file without a directory). Evidence: `TESTS-RESULTS/2026-10-29+GH-1257/`.
+
+## 2026-10-29 — GH-1248 rules-only loop runs 12 hours at protocol cadence
+
+- Ran slots 1–144 of the §8 schedule at real five-minute spacing with the rules arm on `9da920e4`. All 144 slots completed: 137 ticks completed, the slot-37 kill during act was reconciled to `uncertain` with no retry, slots 85–90 were skipped as the injected scheduler stop, and slot 91 resumed without catching up. No tick failed, spend stayed 0, the canary was unchanged and nothing escaped the sandbox. The one-hour gate passed, which completes Phase 1. A first run was stopped at slot 13 after the operator's shell wrote into the instance directory; it is kept as failed evidence. Evidence and provenance are under `TESTS-RESULTS/2026-10-29+GH-1248/`. No code changed. Reversibility: Easy.
+- This is not the 24-hour soak. The PAUSE, tool-failure and malformed-output windows (slots 145+) did not run, and quarantine was not exercised because all 27 scenario inputs arrive in slots 1–27. There is still no watchdog, so missed ticks appear only in the driver log, and `status` lacks several §7 fields.
+
+## 2026-10-28 — GH-1248 rules-only outer-loop checkpoint stays local and unmerged
+
+- Added the deterministic four-tool experiment behind `utils/py/harness.py factory-primitive`, preserving the registry fallback and using `releases_app.connect` for state. Prompts, schemas, and slot-indexed scenarios are tracked under `utils/py/factory_primitive/`; mutable state stays under gitignored `temp/factory-primitive/`. No Jog, scheduler, repository-execution, GitHub-write, deployment, or multi-repo behavior was added. Reversibility: Easy — retain or abandon the branch.
+- `checkpoint2` passed 17/17 recorded manual controls. Five focused existing suites passed on `833c87c8`: GH-777 inventory enforcement, GH-174 registry (8), GH-496 telemetry isolation (15), GH-788 path-space handling (11), and `agy-turn` (65). Evidence and provenance are under `TESTS-RESULTS/2026-10-28+GH-1248/`.
+- The initial full gate at `503a1ca5` was interrupted and remains incomplete; its layout failures were corrected, and the model-probe failure set passed sequentially on base and candidate. The active Python lacks `pytest`. The one-hour rules-only gate has not run, and watchdog/reporting, agent adapters, multi-arm runs, the 24-hour soak, and independent review remain unimplemented.
+
+## 2026-10-29
+
+Verify CLIO publication parity and track upstream Codex repair (GH-1255).
+
+- The 15-file published CLIO set matches Rebalance upstream and standalone bytes and Git modes. Forge has no separate CLIO runtime. Source parity does not establish installed capture health.
+- Capture repair belongs to Rebalance #368: modern submitted events, durable history replay and a diagnostic warning. Standalone publication and target-device acceptance follow reviewed upstream landing. Evidence: `TESTS-RESULTS/2026-10-29+GH-1255/`.
+
+## 2026-10-29 — merge-cleanup finds and retires the task clones beside the primary (GH-722)
+
+- **Default scan and Phase 6 accept the primary's parent folder.** Start-task puts task clones
+  beside the primary (GH-970); the default scan only walked the fixed `SAFE_ROOTS`, so on a Mac
+  whose repos live in `~/Documents/GitHub Repos` those clones were never listed or removed. Without
+  `--root`, the scan now also walks that folder, and Phase 6 accepts it as a safe root. #1198 had
+  done this for `--retire-published-pr` only.
+- **Same origin only.** The folder counts only for checkouts whose `origin` names the primary's
+  repository; a failed or empty origin lookup never matches. Other projects' checkouts there are
+  neither inspected by the default scan nor removable. A `NEVER_DELETE` parent (`~`, `~/Documents`,
+  `~/Desktop`) is never used and is reported as skipped. Checkouts inside a listed root are
+  unaffected, and `--root` scans walk exactly the roots given.
+- The Phase 1 header prints the roots scanned (on stderr with `scan_clones.py --json`).
+- `published_retirement_roots` is renamed `primary_safe_roots`. Two existing test doubles were
+  updated for the Phase 6 call; no new test (GH-831). Manual check under
+  `TESTS-RESULTS/2026-10-29+GH-722/`.
+
+## 2026-10-27 — next-steps-mod: Claude names the next steps every turn, nobody asks "what's next?" (GH-1240)
+
+- **New skill + mod `skills/2-daily/next-steps-mod/`.** A `prompt.compose` hook appends one
+  session-scope section so every main-loop answer ends with `Next: <one recommended step>` and up to
+  two `Also:` lines; a `turn.complete` hook parses them and offers the top one as the Tab prompt
+  suggestion; an `AbovePrompt` band draws them as one-press buttons (terminal and Desktop) with
+  **Ask what's next** when an answer carries none; `/next-steps` asks for a ranked list. Nothing is
+  auto-submitted. No `tool.call`, `tool.check`, `prompt.submit` or `session.append` hook.
+- **Auto-load through Skills Army HQ (GH-967 item 1).** The plugin manifest sits at the skill folder
+  root, so the HQ link `~/.claude/skills/next-steps-mod` is loaded and watched by Claude Code
+  (≥ 2.1.309) with no `--plugin-dir`. A nested `.gitignore` keeps the engine-written
+  `.claude-plugin/types/` out of the repo and the Pulse collection.
+- Recon of record (in the capture doc): the previous customization method is Output Styles (still
+  supported; built-ins Default, Concise, Explanatory, Learning, Proactive); there is no "Lean" style,
+  the engine's `lean` trait being the short system prompt.
+- Verification: `claude plugin validate` (2.1.309) passes with the hooks and calls above; `tsc` zero
+  errors; manual diagnostic recorded under `TESTS-RESULTS/2026-10-27+GH-1240/`.
+
+## 2026-10-27 — merge-cleanup lands only a pinned `--prs` allowlist, gated on required checks (#1226)
+
+- **Allowlist, not denylist.** A merging `--execute` now requires `--prs N[,N...]` and exits 2
+  without it; `--teardown-only`, `--scan-only`, `--prs-only` and `--reconcile-pr` are unchanged.
+  The dry run with `--prs` pins each listed PR's head under `.tick/merge-cleanup/<slug>/`.
+  `--execute` refuses before any mutation if a listed PR closed, went draft, moved off its pin, or
+  was never pinned. Unlisted open PRs log `not in --prs; not sequenced`. After Phase 5 the script
+  asserts merged ⊆ `--prs`, and the batch issue renders the list. `--exclude` filters checkouts only.
+- **Required checks gate.** Before each merge, `gh pr checks --required` must read green (or "no
+  required checks"). Pending or unreadable checks defer the PR; failing checks mean it is not merged.
+  A B1-repaired head no longer matches its pin, so it is deferred to a re-pinned run instead of
+  merging before its CI exists. This was the LTVera-Pandas #841 incident.
+- **Merged with #1231's approach.**
+  - An entry may carry its own pin as `--prs N@sha`, so it needs no dry-run record, and the dry run prints that line.
+  - Pending required checks are waited for (bounded by `MERGE_CLEANUP_CHECKS_WAIT_S`, default 1800 s) before the PR is deferred.
+  - Both merge-confirmation paths now share one pinned-head rule (Kimi K3 review). The merge call itself uses `--match-head-commit`.
+- Discovery now passes `gh pr list --limit 1000` and reads `headRefOid`. SKILL.md example 6 and the
+  drive loop are updated. The existing suites were edited only where they pinned the old denylist
+  or the same-run B1 landing.
+- Verification:
+  - Focused suite: 199 tests, 1 failure in the Linux cloud container (`test_iv_unreadable_event_log_preserves`; it needs a non-root user and fails the same way at `origin/development`). Agy's macOS run of the same suite had 0 failures.
+  - Manual smoke passed: `TESTS-RESULTS/2026-10-26+GH-1226/`.
+  - The qualifying macOS full-gate run is outstanding.
+
+## 2026-10-27 — task-sync Desktop titles stay current with no manual step (GH-1230)
+
+- **#1230.** Desktop sidebar stamps went stale in three ways, all fixed. `ClaudeDesktopAdapter.sweep`
+  now proposes titles for running sessions and drops the age window, so a wrong stamp is corrected
+  whatever the session's age (`--hours` no longer applies to claude-desktop titles; pins keep
+  `--pin-hours`). The SKILL procedure reads `list_sessions(limit=500)` and fails closed on a full
+  page, rechecks by activity date instead of exact timestamp, and archives the scheduled task's own
+  runs once they are a day old. A scheduled run cannot rename a title the operator typed, even in
+  bypass mode, so it forwards those to a pinned, interactive `task-sync sweeper` session with
+  `send_message`; the sweeper rechecks and renames. Probes showed `SendMessage` cannot reach it from
+  a scheduled run and a scheduled run cannot create sessions, so a missing sweeper is reported as
+  `forward_failed`. Verification: 8/8 new probes, red control, the GH-1191/GH-1196 batteries with
+  their by-design deltas, and a live run, in `TESTS-RESULTS/2026-10-26+GH-1230/`. No tests added (GH-831).
+
+## 2026-10-26 — Vendored copies keep the host repo's own test policy (GH-1228)
+
+- **#1228.** Three skill lines stated GH-831 ("no new tests") without naming XYZ-forge. Vendored
+  into BinoidCBD/LTVera-Pandas, that text read as LTVera's own test ban (LTVera #845). Each line now
+  names XYZ-forge and defers elsewhere to the host repo's own test policy: `express/SKILL.md` (the
+  recited discipline, step 2, and Phase 4), and `ci-suite-audit/SKILL.md`'s proposed authoring gate.
+  XYZ-forge's rule is unchanged. `utils/py/express.py:603` and `:639` stay as they are: express needs
+  an existing covering suite in every repo. `relay-automation/README.md:40` stays too, since it governs
+  harness code that hosts never edit. Verification: docs gate, recon grep red control and a
+  vendored-copy read-back in `TESTS-RESULTS/2026-10-26+GH-1228/`. No tests added (GH-831).
+
+## 2026-10-25 — lessons read-back, blind consult, config-pinned resume, improve-loop write check, manifest count (marathon #1214)
+
+Five fixes landed through one marathon chain (agy builder, codex reviewer, full gate per phase).
+
+- **#1218, lessons read-back.** `rtl_turn_prompt` now appends a warn-only list naming the newest
+  five non-superseded `LESSONS-LEARNED.md` entries (heading plus cue) to every relay and marathon
+  turn prompt, on the Python, Bash and SmallCode paths. It prints nothing when the file is absent.
+  `LESSONS-LEARNED.md` gains a structured entry format, and the #591 lesson is converted to it.
+  Writer prompts in `/start-task` step 9, `/marathon-cleanup` and `defect-campaign` (Phase 6a)
+  apply the admission rules: no entry without public evidence, edit verdicts, and ATE evidence only
+  after semantic replay. These are prompt rules only, with no new guard or suite (GH-831 D7).
+- **#1219, blind consult.** `consult.py` writes neutral, shuffled `answer-A/B.md` payloads plus
+  `key.json` after stamping. JSON-mode answers are reduced to the decoded `.response`. The consult
+  skill now settles disagreements blind, in a fixed criteria order. `consult.sh` is frozen
+  (GH-308) and unchanged; by default it already runs `consult.py`.
+- **#1220, config-pinned resume.** `marathon_drive` records `config_sha256` (the brief plus the
+  builder and reviewer and their resolved models) through `MARATHON_CONFIG_SHA256`. `relay_attest`
+  binds the hash into the `attest@1` trailer as an optional field, with no schema bump. Resume
+  rebuilds a phase when the hash differs, and reuses records that lack it, with a warning.
+- **#1221, improve-loop write check.** Before each build, the loop records a NUL-safe content
+  manifest and a byte snapshot of every pre-existing path outside `ALLOW`. Any change outside
+  `ALLOW` and the loop's own state dir, including ignored files, rejects the iteration and is
+  restored. Two re-indented trusted-config `eval` lines were re-baselined in `security-scan`.
+- **#1222, manifest count.** `_live_manifest_count` and the migration-004 backfill now use
+  `COUNT(DISTINCT issue_ref_id)`, so an issue that shipped and was redialed counts once.
+
+Plans were QA'd by Kimi K3.1 Pro (on #1214) and by Codex (three rounds, Approved). Each phase has a
+manual red/green receipt under `TESTS-RESULTS/2026-10-25+GH-<n>/`. The design ideas are adapted
+from Harness² (google-research/harness2, Apache-2.0; arXiv:2610.14224); no code was copied.
+Reversibility: easy. Each fix is one revertable diff, `attest@1` gains only an optional field
+(legacy records still load), and nothing migrates stored data, so these sit below PDDA's
+Costly/one-way bet threshold and need no `decisions/` record. #1214 stays open for Phase 6b. → [#1214](https://github.com/HiQS-Labs/XYZ-forge/issues/1214) · PR #1223
+
+## 2026-10-24 — relay harness: native kimi worker for the Kimi Code CLI (GH-1215)
+
+`relay-automation/kimi-turn.sh` (over `utils/py/kimi-turn.py`) drives Kimi K3.1 through
+`kimi -p … --output-format stream-json` on the operator's Kimi plan, alongside the Aider and
+OpenRouter route, whose whole-file edits once failed relay-block validation (XYZ-CLIO#12). It
+follows `muse-turn.py`: `KIMI_AGENT` gates dispatch; `KIMI_BIN`, `KIMI_MODEL` (default
+`kimi-code/k3.1-pro`), `KIMI_FLAGS` and `KIMI_LOG` are honoured; containment stays in
+`RelayTurnLib`. A turn with no assistant message or tool call exits 5. `find-harness.sh` reports
+`RELAY_HAS_KIMI` and a `kimi CLI` line, and falls back to `~/.kimi-code/bin/kimi`. `kimi` joins
+`route_agent()` as a builder lane, so `resolve-profile.sh` routes a `kimi` harness, and the
+agent-id allowlists `test/gh346-gateway-allowlists.sh` pins now include it; the marathon reviewer
+gate stays codex/agy. The first live turn (`--reviewer kimi --review-once`) was attested Approved.
+The GH-777 inventory ratchet baseline grows by this one adapter file (121 → 122), as #794 and
+#765 did. No new tests (GH-831); evidence in `TESTS-RESULTS/2026-10-24+GH-1215/`. Reversibility: **Easy**
+(revert; nothing dispatches to the shim unless `KIMI_AGENT` is set).
+
+## 2026-10-24 — task-sync: pin active Claude Desktop sessions (GH-1196)
+
+`--ide claude-desktop` now also proposes pins: a non-archived, non-self session with a literal
+boolean `isRunning`, `pinned` missing or `false`, and activity inside `--pin-hours` (default 24).
+A running session can be pinned; `--no-pin` turns pins off. The planner still never writes. The
+new step in `SKILL.md` rechecks with a fresh `list_sessions`, then calls `set_pinned` (a decline is
+a skip) and logs a receipt line. task-sync never unpins, because `pinned` does not record who set
+it. The live smoke found that a device's own hourly scheduled runs were pin candidates. Each run is
+a new session, so the pin step now skips any session whose `get_session` has a `scheduledTaskId`.
+Probes 11/11 on Python 3.9 and 3.14, the GH-1191 battery 17/17, and a red control (the
+already-pinned probe fails without its check). No new tests (GH-831). Plan QA: Codex, 4 rounds
+(the 4th authorized by the operator). Reversibility: **Easy**. Revert to stop new pins; existing
+pins stay until the operator unpins them.
+
+## 2026-10-24 — task-sync: one Claude Desktop scheduled task per device (GH-1191 step 4)
+
+The operator dropped the ZCode heartbeat for Claude Desktop. `SKILL.md`'s heartbeat section now
+names one hourly Claude Desktop scheduled task per Mac, created from a Desktop session.
+- Its self-contained, `$HOME`-relative prompt runs the GH-1191 native sweep against the
+  deployed copy; each Mac renames only its own sessions.
+- The first unattended run on one device (default permission mode) renamed an app-generated
+  title; a title the operator had set was declined, and the run carried on and reported it
+  (`declined=1`, not an error). Receipt:
+  `TESTS-RESULTS/2026-10-24+GH-1191/scheduled-run.md`.
+- The ZCode, Codex and cloud scheduler rules are unchanged.
+
+Reversibility: **Easy** (docs; disable the scheduled task per device).
+
+## 2026-10-24 — code-audit intake: five bounded maintainability plans (GH-1201–GH-1206)
+
+Filed and revised the umbrella code audit, then captured five rated follow-up plans for selective
+documentation compaction, a staged pure-Python runtime, logical SQLite ledger hygiene, large-module
+decomposition, and package drift. Parked all six inbox docs in the PRS ledger with their four-axis
+ratings. The review narrows the work: preserve historical evidence, avoid routine SQLite compaction,
+treat strict Python-only as a Costly compatibility program, execute the existing #768/#769 module
+audits, and bound npm package contents as well as metadata. Intake only; no runtime or package
+implementation changed. Reversibility: **Easy** — revert the docs and receipted ledger addition.
+Verification: `npm run test:unit` 14/14; `releases_app.py check` clean with ten existing warnings;
+`pdda.sh run` no errors with 37 existing repository warnings. Read-only SQLite inspection and
+`npm pack --dry-run --json` informed the plans; no publish or mutation-heavy full gate was run.
+
+## 2026-10-24 — task-sync: Claude Desktop sidebar titles (GH-1191)
+
+The Claude Desktop app keeps each Code session's sidebar title in its own session record,
+so `--ide claude`'s transcript append (GH-1105) never reached the Desktop sidebar. New
+`--ide claude-desktop` (`ClaudeDesktopAdapter` in `skills/3-weekly/task-sync/scripts/adapters/claude.py`,
+beside `ClaudeCloudAdapter`) is a read-only planner over a `list_sessions` snapshot
+(`--desktop-snapshot`). Activity is each row's own `lastActivityAt`. It skips archived,
+running, unflagged and own sessions, and an empty inventory is valid, because the tool
+never lists its caller. The app's `set_session_title` owns every write, through the new
+native procedure in `SKILL.md`: recheck every predicate, rename (a decline is a skip),
+re-read, and keep an undo line in `~/.cache/task-sync/claude-desktop-renames.jsonl`.
+
+The live smoke on one device showed that a native rename leaves `lastActivityAt` alone and
+marks the title `titleSource: tool`, not user-set. Whether an unattended run may re-stamp a
+`tool` title is still unwitnessed and is checked at #1191's scheduler step. The CLI-side
+`--ide claude` description no longer claims the desktop app. Probes 17/17 on Python 3.9 and
+3.14, plus a red control (2 probes fail when the `isRunning` skip is removed). No new tests
+(GH-831). Plan QA: Codex, Approved in round 2. Reversibility: **Easy**. The planner never
+writes, and each live rename is listed in the undo receipt.
+
+## 2026-10-22 — wave_reconcile repoints every row sharing a moved plan doc (GH-1178)
+
+When one PR closed several issues that share one plan doc, `utils/py/wave_reconcile.py` moved the
+doc but repointed only the row of the issue the doc is named after; the others kept a dangling
+`doc_path` (seen in HiQS-Labs/rebalanceOS#350). A new `repoint_moved_doc_rows` pass after the landing
+loop repoints every owned row still naming a doc moved this run, through the existing
+`roadmap repoint` writer. Verification: `TESTS-RESULTS/2026-10-22+GH-1178/` (red control on
+`f243ccfbf`, fixture green, tier-2 route + gh421/gh454/gh168 green; no new suite).
+
+## 2026-10-21 — prs-backfill: reviewed PRS rating backfill (GH-1175)
+
+New skill `skills/2-daily/prs-backfill/` (SKILL.md, locator `prs-backfill.sh`, `install.sh`) with
+implementation `skills/2-daily/prs-backfill/prs_backfill.py` (stdlib + `releases_app.connect`;
+moved out of `utils/py/` on 2026-10-22 because the GH-777 inventory ratchet — which the PR lane's
+smoke gate does not run — went red on development for a new loose script and a direct
+`sqlite3.connect`). Deterministic `scan` inventories open
+issues against `releases.db` (one list call; comments fetched only for the bounded packet set) and
+writes evidence packets; the agent proposes `pri/sev/appeal/effort` under the start-task rating
+policy; `validate` enforces appeal=50 unless operator-supplied, complete dated rationale, and an
+independent reviewer that agrees, then freezes a hashed plan; `apply --approve <sha>` writes only
+through `releases roadmap rate` (never `--force`, never `--ovr`), re-checks issue content and row
+state before each write, reads back after it, and stops on the first failure with exit 3 and a
+`write-failed` receipt that the next scan re-selects (a judgment hold is not re-selected; an
+infrastructure failure is). The rationale comment follows only a read-back-verified write; the
+`stale` report confirms on content hash, not `updatedAt`; the kill switch also covers `calibrate`;
+the lock no longer truncates the holder's pid when a contender loses. `calibrate` is the
+E0 blind comparison against already-rated rows; the first E0 pass (2026-10-21, n=15) found the
+packet leaking the capture doc's `rating:` frontmatter in 3 of 15 cases and 5 of 15 "truth" rows
+being placeholders (PDDA 1–5 trio in the 1–100 columns, or 50/50/50/50 — #1177), so packets now
+withhold `rating:` lines and calibration never samples placeholder rows. Registration stays with HQ / weekly-prepare
+(#1022). State and provenance receipts live under gitignored `.tick/prs-backfill/`. Kill switch
+`PRS_BACKFILL_DISABLE=1`; single-instance flock. No new tests (GH-831); exercised end-to-end on a
+disposable ledger copy against live issues. Reversibility: **Easy** — new files plus one Skills
+Index row; delete them.
+
+`comment --run <id> --approve <sha12> [--dry-run]` posts the dated rationale for ratings already applied
+without `--post-rationale` (the 14 ratings of 2026-10-21), under the same plan-hash approval as `apply`;
+it holds any issue whose ledger row no longer equals the planned rating, records a `commented` receipt per
+attempt so a re-run is idempotent, and exits 3 on a failed post.
+
+## 2026-10-21 — ATE/fuzzing documentation correction (GH-1174)
+
+Replace the ATE installation narrative with a concise entry-point/schema map and current runner,
+replay, synthesis and safety limits. Label GH-299 status/benchmarks as historical and remove its
+duplicated aspirational manual. Existing module headers/grid comments are explicitly superseded
+by the source-checked map; executable files remain unchanged. Manual express docs hotfix approved
+for normal-hook publication to development; independent review and docs-gate evidence accompany
+the landing under TESTS-RESULTS/2026-10-21+GH-1174/. No campaign or runtime benchmark run.
+
 ## 2026-10-18 — merge-cleanup: per-repo qualification setting (GH-1159)
 
 `.merge-cleanup.json` accepts an optional `qualification` key (`full_suite`:

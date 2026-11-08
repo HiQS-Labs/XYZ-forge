@@ -1,0 +1,11 @@
+== A1 NEVER_DELETE parent does not widen roots
+/Users/noelsaw/Documents/x -> DEFAULT only
+/Users/noelsaw/x -> DEFAULT only
+/Users/noelsaw/Desktop/x -> DEFAULT only
+/Users/noelsaw/Documents/GitHub-Repos/XYZ-forge -> DEFAULT + /Users/noelsaw/Documents/GitHub-Repos
+== A2 same-origin checkout outside defaults and outside primary's parent still refuses
+merge-cleanup: ERROR — Published retirement refused: Refusing: path is not strictly within SAFE_ROOTS (/private/tmp/claude-501/-Users-noelsaw-Documents-GitHub-Repos-universal-child-theme-oct-2024/a60cbc2d-d453-47f8-a3f5-7c57d52b46be/scratchpad/outside/XYZ-forge-stray)
+exit=2
+== A3 the primary itself is still refused
+merge-cleanup: ERROR — Published retirement refused: protected primary/ancestor or executing directory: /Users/noelsaw/Documents/GitHub-Repos/XYZ-forge
+exit=2

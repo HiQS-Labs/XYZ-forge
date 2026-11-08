@@ -1,0 +1,15 @@
+== test: gh788-python-path-space ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh788-python-path-space.XXXXXX.2BfeAoBent
+== test: gh788-python-path-space ==
+  PASS: launcher runs the exact ordinary interpreter with PATH='' and argv 'x y'
+  PASS: launcher runs the exact spaced interpreter with PATH='' and argv 'x y'
+  PASS: launcher refuses paths it cannot embed (quote, CR, backslash, empty)
+  PASS: red control — bare spaced shebang does not run (FileNotFoundError)
+  PASS: build_argv keeps a quoted spaced interpreter as one word
+  PASS: red control — an unquoted spaced interpreter splits
+  PASS: ratchet: no bare-shebang or unquoted-interpreter sites in test/ utils/ relay-automation/ skills/
+  PASS: ratchet red control: flags a planted bare shebang
+  PASS: ratchet red control: flags a planted unquoted interpreter
+  PASS: ratchet red control: flags a planted unquoted $PY fuzz target
+  PASS: ratchet ignores safe argv lists and quoted interpreters
+  gh788-python-path-space: 11 pass, 0 fail

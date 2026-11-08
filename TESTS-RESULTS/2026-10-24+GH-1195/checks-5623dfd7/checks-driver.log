@@ -1,0 +1,18 @@
+== A=/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1195-planner-root-leak-2026-10-24-verify @ 5623dfd7 (fixed)   B=/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1195-planner-root-leak-2026-10-24-verify-b @ 80e67677   XYZ_HARNESS=B
+== check A: missing local DB
+reverted rc=4; stderr: 
+PASS: reverted: ledger loaded from B (rc=4, nonempty report) with A's DB absent
+fixed rc=3; stderr: marathon-plan: cannot read releases.db roadmap_items: unable to open database file 
+PASS: fixed: rc=3 cannot read A's missing releases.db (reads THIS clone)
+PASS: B tree byte-identical across check A
+PASS: A restored to fixed code
+== check B: resolver probe (anchored vs unanchored; simulated vendored anchor)
+PASS: resolver probe: resolver assertions passed (vendored file existence simulated only)
+== smoke: distinguishable ledgers (sentinel row only in B) + override precedence
+PASS: main path: fixed, unpinned → report nonempty, sentinel ABSENT (read A) rc=4
+FAIL: red control: sentinel absent on reverted code (rc=4)
+FAIL: adjacent path: override not honoured (rc=4)
+PASS: A restored to fixed code (end)
+== provenance
+== summary: 7 pass, 2 fail
+checks exit=1

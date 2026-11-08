@@ -1,0 +1,21 @@
+{
+ "commit": "4c1d2e03331228ec4f11901803411dba4995da8e",
+ "pending_requests": 12,
+ "latency_s": 6.1,
+ "timeout_cap_s": 90.0,
+ "normalized": "ok",
+ "validator": null,
+ "prompt_chars": 78305,
+ "tool": "plan-draft",
+ "chosen": "gh-1201-794fcf69ac2c",
+ "authored_keys": [
+  "acceptance",
+  "open_questions",
+  "scope"
+ ],
+ "authored_write_set_all_tracked": true,
+ "billing": "unknown",
+ "model": "gpt-6.1-terra",
+ "effort": "medium",
+ "raw_head": "{\"tool\":\"plan-draft\",\"args\":{\"inbox_id\":\"gh-1201-794fcf69ac2c\",\"authored\":{\"scope\":[\"Coordinate evidence-backed follow-up plans for documentation, runtime, ledger hygiene, module decomposition, and packaging while preserving safety contracts.\",\"Keep implementation delegated to the linked issues; this umbrella does not authorize runtime changes, documentation deletion, ledger cleanup, or refactoring.\"],\"acceptance\":[\"Each follow-up plan has a bounded scope and explicit preservation contracts.\",\"P"
+}

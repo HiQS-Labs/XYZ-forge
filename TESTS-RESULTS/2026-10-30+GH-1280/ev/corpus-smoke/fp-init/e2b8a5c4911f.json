@@ -1,0 +1,1 @@
+{"added_at": 1793412685.4019258, "added_tick": 4, "argv": ["--run-root", "`true`", "init", "--daily-cap", "1", "--max-call-cost", "0"], "env": {}, "family": "boundary", "id": "e2b8a5c4911f", "signature": "1f7dd3ef37b7d920", "size": 55, "vector": [2, 0, "c0cfa89b249b9917", "fast_<1s"], "verdict": "anomaly"}

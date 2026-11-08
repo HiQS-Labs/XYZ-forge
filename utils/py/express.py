@@ -88,8 +88,137 @@ DOCS_SUITE = "test/pdda-repo-contract.sh"
 # replaces this once per run with resolve_base(). Library callers (the recovery recipe's
 # write_receipt) keep this default unless they pass a base explicitly.
 BASE = "development"
+# GH-1169: True when this driver runs from a vendored host's .xyz/ (set once in main()). The host
+# docs lane then uses the host's own PDDA install, forced to full mode as in XYZ Forge.
+VENDORED = False
+HOST_DOCS_SUITE = "utils/pdda/pdda.sh run"
+HOST_DOCS_ENV = {"PDDA_MODE": "full", "PDDA_ACTIVITY_LOG": "/dev/null"}
 BRANCH_NAME = re.compile(r"^[A-Za-z0-9._/-]+$")
 DOCS_IMAGES = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")
+
+
+EXECUTION_AUTHORITY_SKILLS = frozenset({
+    "express",
+    "merge-cleanup",
+    "merge-cleanup-deep",
+    "start-marathon",
+    "marathon-cleanup",
+    "start-task",
+    "relay",
+    "relay-xyz",
+    "relay-automation",
+    "jog",
+})
+
+
+def is_skill_path(path):
+    p = Path(path)
+    return len(p.parts) >= 2 and p.parts[0] == "skills" and p.name == "SKILL.md"
+
+
+def skill_name(path):
+    p = Path(path)
+    if is_skill_path(path):
+        return p.parent.name
+    return None
+
+
+def is_execution_authority_skill(path):
+    name = skill_name(path)
+    return name is not None and name in EXECUTION_AUTHORITY_SKILLS
+
+
+def _relay_attest():
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import relay_attest
+    return relay_attest
+
+
+def find_valid_skill_attestation(root, skill_paths):
+    """Find and validate an Approved relay-drive/attest@1 record covering the skill changes.
+
+    Requirements:
+    1. An attestation record exists in <git-common-dir>/relay-attest/*.json.
+    2. record, error = relay_attest.load(...) returns a non-null record.
+    3. record["status"] == "Approved".
+    4. ok, reason = relay_attest.candidate_ok(record, head_sha, root) returns ok is True.
+    5. Each skill path has no uncommitted working-tree modifications vs HEAD.
+    """
+    ra = _relay_attest()
+    try:
+        attest_dir = os.path.join(ra.git_common_dir(root), "relay-attest")
+    except Exception as exc:
+        return None, "cannot resolve relay-attest directory: %s" % exc
+
+    if not os.path.isdir(attest_dir):
+        return None, "no relay-attest directory at %s (run /relay-xyz review first)" % attest_dir
+
+    records = [os.path.join(attest_dir, f) for f in os.listdir(attest_dir) if f.endswith(".json")]
+    if not records:
+        return None, "no attestation records found in %s (run /relay-xyz review first)" % attest_dir
+
+    head_res = git(root, "rev-parse", "HEAD", check=False)
+    if head_res.returncode != 0:
+        return None, "cannot resolve HEAD commit: %s" % head_res.stderr.strip()
+    head_sha = head_res.stdout.strip()
+
+    records.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+
+    rejection_reasons = []
+    for r_path in records:
+        try:
+            with open(r_path, "r", encoding="utf-8") as rf:
+                raw_data = json.load(rf)
+        except Exception as e:
+            rejection_reasons.append("%s unreadable (%s)" % (os.path.basename(r_path), e))
+            continue
+
+        if not isinstance(raw_data, dict):
+            rejection_reasons.append("%s not a JSON object" % os.path.basename(r_path))
+            continue
+
+        task_id = raw_data.get("task")
+        relay_file = raw_data.get("relay_file")
+        if not task_id:
+            rejection_reasons.append("%s missing task" % os.path.basename(r_path))
+            continue
+
+        record, err = ra.load(task_id, expected_reviewer=None, relay_file=relay_file,
+                              target_repo=root, path=r_path, any_reviewer=True)
+        if not record:
+            rejection_reasons.append("%s invalid: %s" % (os.path.basename(r_path), err))
+            continue
+
+        if record.get("status") != "Approved":
+            rejection_reasons.append("%s status is %s (must be Approved)" %
+                                     (os.path.basename(r_path), record.get("status")))
+            continue
+
+        ok, reason = ra.candidate_ok(record, head_sha, root)
+        if not ok:
+            rejection_reasons.append("%s candidate check failed for HEAD %s: %s" %
+                                     (os.path.basename(r_path), head_sha[:12], reason))
+            continue
+
+        dirty_skills = []
+        for sp in skill_paths:
+            diff_res = git(root, "diff", "--quiet", "HEAD", "--", sp, check=False)
+            if diff_res.returncode != 0:
+                dirty_skills.append("%s has uncommitted working-tree diff vs HEAD %s" % (sp, head_sha[:12]))
+                continue
+            status_res = git(root, "status", "--porcelain=v1", "-uall", "--", sp, check=False).stdout.strip()
+            if status_res:
+                dirty_skills.append("%s is dirty in working tree vs HEAD %s" % (sp, head_sha[:12]))
+                continue
+
+        if dirty_skills:
+            return None, "; ".join(dirty_skills)
+
+        return record, None
+
+    return None, "; ".join(rejection_reasons) or "no matching attestation record for HEAD %s" % head_sha[:12]
 
 
 def is_documentation_update(root, path):
@@ -97,11 +226,14 @@ def is_documentation_update(root, path):
     p = Path(path)
     ordinary = (path in ("README.md", "CHANGELOG.md")
                 or path.startswith(("docs/", "PROJECT/1-INBOX/", "PROJECT/2-WORKING/",
-                                    "PROJECT/3-COMPLETED/", "PROJECT/4-MISC/"))
-                or (path.startswith("assets/") and p.suffix.lower() in DOCS_IMAGES))
+                                    "PROJECT/3-COMPLETED/", "PROJECT/4-MISC/", "relay-system/"))
+                or (path.startswith("assets/") and p.suffix.lower() in DOCS_IMAGES)
+                or (is_skill_path(path) and not is_execution_authority_skill(path)))
     if not ordinary or p.suffix.lower() not in (".md", ".txt", ".rst") + DOCS_IMAGES:
         return False
-    if p.name in ("AGENTS.md", "CLAUDE.md", "SKILL.md") or p.name.endswith(".generated.md"):
+    if p.name in ("AGENTS.md", "CLAUDE.md") or p.name.endswith(".generated.md"):
+        return False
+    if is_execution_authority_skill(path):
         return False
     full = Path(root, path)
     # Check the old mode too: deleting/renaming an executable is still a code change.
@@ -132,6 +264,35 @@ def resolve_base(root, repo, explicit=None):
                 git(root, "rev-parse", "--verify", "--quiet", "refs/remotes/origin/" + name, check=False).returncode == 0:
             return name
     return None
+
+
+def _harness_paths():
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import harness_paths
+    return harness_paths
+
+
+def harness_tool(root, rel):
+    """A harness tool for this run: the vendored .xyz/ copy in a host (never a same-named host
+    file, GH-1169), else the repository's own copy (canonical layout, unchanged)."""
+    if VENDORED:
+        home = _harness_paths().harness_home(anchor_file=os.path.abspath(__file__))
+        if os.path.isfile(os.path.join(home, rel)):
+            return os.path.join(home, rel)
+    return os.path.join(root, rel)
+
+
+def suite_file(suite):
+    """The file a suite spelling runs: the host PDDA script for HOST_DOCS_SUITE, else the suite path."""
+    return "utils/pdda/pdda.sh" if suite == HOST_DOCS_SUITE else suite
+
+
+def suite_argv(root, suite):
+    if suite == HOST_DOCS_SUITE:
+        return ["bash", os.path.join(root, "utils", "pdda", "pdda.sh"), "run"]
+    return ["bash", os.path.join(root, suite)]
 
 
 def now_iso():
@@ -220,7 +381,7 @@ def gh(args, check=True):
 
 
 def releases_app(root):
-    app = os.path.join(root, "utils", "py", "releases_app.py")
+    app = harness_tool(root, os.path.join("utils", "py", "releases_app.py"))
     if not os.path.isfile(app):
         die("releases_app.py not found under %s — express requires a canonical-repo layout" % root)
     return app
@@ -249,6 +410,8 @@ def normalize_suite(suite):
     """One spelling for the registered suite everywhere it is compared: landing,
     receipt `command`, and resume's expectation (GH-592 I4)."""
     suite = suite.strip()
+    if suite == HOST_DOCS_SUITE:
+        return suite
     if not suite.startswith("test/"):
         suite = "test/" + suite
     return suite
@@ -360,20 +523,34 @@ RECOVERY_RECIPE = (
     "evidence. Recover in a FRESH disposable full clone with the script in skills/2-daily/express/SKILL.md "
     "(section 'Recovery recipe'): it checks out %s, requires a clean baseline via git diff-index/ls-files "
     "(each inspection fails closed), snapshots HEAD + porcelain + remotes + local-config hash to a log "
-    "OUTSIDE the tree, runs `bash %s` recording rc immediately, re-snapshots, and VOIDs on any difference. "
-    "Only then, from clean %s: python3 -c 'import sys; sys.path.insert(0,\"utils/py\"); import express; "
+    "OUTSIDE the tree, runs `%s` recording rc immediately, re-snapshots, and VOIDs on any difference. "
+    "Only then, from clean %s: python3 -c 'import sys; sys.path.insert(0,\"%s\"); import express; "
     "print(express.write_receipt(\".\", \"%s\", %d, \"%s\", <rc>, base=\"%s\"))'; commit receipt + recovery-run.log under "
     "TESTS-RESULTS/*+GH-%d-express/, push to %s, re-run resume --base %s."
 )
 
 
 def recovery_recipe(sha, issue, suite):
-    return RECOVERY_RECIPE % (sha[:12], issue, suite, sha, suite, BASE, sha, issue, suite, BASE, issue, BASE, BASE)
+    # GH-1169: a vendored host runs its PDDA gate in full mode, and its driver lives under .xyz/.
+    run = (" ".join("%s=%s" % kv for kv in HOST_DOCS_ENV.items()) + " bash " + suite) if suite == HOST_DOCS_SUITE \
+        else "bash %s" % suite
+    py = ".xyz/utils/py" if VENDORED else "utils/py"
+    return RECOVERY_RECIPE % (sha[:12], issue, suite, sha, run, BASE, py, sha, issue, suite, BASE, issue, BASE, BASE)
 
 
 def gate_check(root):
     installer = os.path.join(root, "githooks", "install.sh")
     if not os.path.isfile(installer):
+        if VENDORED:
+            # GH-1169: a vendored host has no Forge gate stub. Accept its own pre-push hook (the
+            # effective path honours core.hooksPath), or say plainly that it has none; express's
+            # own landing push bypasses pre-push by lane design either way.
+            hook = git(root, "rev-parse", "--git-path", "hooks/pre-push", check=False).stdout.strip()
+            hook = hook if os.path.isabs(hook) else os.path.join(root, hook)
+            if hook and os.path.isfile(hook) and os.access(hook, os.X_OK):
+                return True, "host pre-push hook %s" % hook
+            return True, ("none — this host has no pre-push hook (the landing push bypasses pre-push "
+                          "by lane design)")
         return False, "githooks/install.sh is missing"
     r = subprocess.run(["bash", installer, "--check"], cwd=root,
                        capture_output=True, text=True)
@@ -450,7 +627,13 @@ def core_paths(root, issue, paths):
 
 def is_doc_path(root, issue, p):
     """Only express-owned paperwork for this issue is outside size bounds."""
-    return p == "CHANGELOG.md" or p == capture_doc_path(root, issue)
+    if p == "CHANGELOG.md" or p == capture_doc_path(root, issue):
+        return True
+    if p.startswith("relay-system/") and p.endswith(".md"):
+        # Match dated review transcripts (relay-system/YYYY-MM-DD/*.md), not root docs
+        rel = p[len("relay-system/"):]
+        return "/" in rel and not rel.startswith("/")
+    return False
 
 
 def insertions(root, issue, paths, expect_driver=frozenset(), docs_only=False):
@@ -509,6 +692,7 @@ def cmd_check(args, expect_driver=frozenset()):
     # (XYZ_SKIP_PREPUSH=1, lane design); this check keeps the clone's ordinary
     # pushes gated so the lane cannot be used from an ungated clone.
     wired, detail = gate_check(root)
+    gate_detail = detail if VENDORED and not os.path.isfile(os.path.join(root, "githooks", "install.sh")) else "canonical pre-push stub"
     if not wired:
         refuse(root, "gate-unwired",
                "`bash githooks/install.sh --check` did not prove the canonical gate stub; "
@@ -531,6 +715,7 @@ def cmd_check(args, expect_driver=frozenset()):
 
     core = [p for p in paths if not is_doc_path(root, args.issue, p) and p not in expect_driver]
     docs_only = getattr(args, "docs_only", False)
+    attest_rec = None
     if docs_only:
         # Paperwork is exempt from size bounds, not from docs eligibility.
         generated = set(expect_driver) & driver_projection_paths(root)
@@ -540,6 +725,15 @@ def cmd_check(args, expect_driver=frozenset()):
             if not is_documentation_update(root, p):
                 refuse(root, "docs-only", "%s is not an ordinary documentation text/image update; "
                        "use the normal PR or code hotfix lane" % p, issue=args.issue)
+        skill_paths = [p for p in core if is_skill_path(p)]
+        if skill_paths:
+            attest_rec, attest_err = find_valid_skill_attestation(root, skill_paths)
+            if not attest_rec:
+                refuse(root, "skill-unattested",
+                       "skill file(s) [%s] under --docs-only require an Approved relay attestation receipt "
+                       "in .git/relay-attest/ (run /relay-xyz QA first): %s" %
+                       (", ".join(skill_paths), attest_err),
+                       issue=args.issue)
 
     # Step 2 — hard refusals. Frozen twins, kernel surfaces, containment.
     for p in core:
@@ -599,12 +793,21 @@ def cmd_check(args, expect_driver=frozenset()):
     # Step 4 — the fix names the existing suite that covers it, registered in validate.sh (GH-831:
     # no new suites; a fix no existing suite covers goes through /start-task instead).
     suite = normalize_suite(args.suite)
-    if not os.path.isfile(os.path.join(root, suite)):
+    # Only the docs lane maps the host PDDA command to its script; outside it the spelling is not
+    # a suite file and refuses suite-missing (GH-1169 plan QA: no docs bypass by spelling).
+    if not os.path.isfile(os.path.join(root, suite_file(suite) if docs_only else suite)):
         refuse(root, "suite-missing", "%s does not exist — name the existing suite that covers the fix (GH-831: no new suites)" % suite, issue=args.issue)
+    host_docs = docs_only and VENDORED and suite == HOST_DOCS_SUITE  # bound to the lane, not the spelling
     validate = os.path.join(root, "validate.sh")
-    with open(validate, encoding="utf-8", errors="replace") as f:
-        vbody = f.read()
-    if ('"%s"' % os.path.basename(suite)) not in vbody:
+    if not host_docs and not os.path.isfile(validate):
+        refuse(root, "suite-unregistered",
+               "no validate.sh TESTS registry in this repo — code hotfixes need a registered suite (GH-1169)",
+               issue=args.issue)
+    vbody = ""
+    if not host_docs:
+        with open(validate, encoding="utf-8", errors="replace") as f:
+            vbody = f.read()
+    if not host_docs and ('"%s"' % os.path.basename(suite)) not in vbody:
         refuse(root, "suite-unregistered",
                "%s is not registered in validate.sh TESTS — an unregistered suite never runs in the gate" % suite,
                issue=args.issue)
@@ -612,7 +815,13 @@ def cmd_check(args, expect_driver=frozenset()):
     print("express-check%s: PASS" % (" [dry-run]" if getattr(args, "dry_run", False) else ""))
     print("  issue   : #%s %s" % (args.issue, meta.get("title", "")))
     print("  files   : %d core, %d insertions (bounds %d/%d)" % (len(core), ins, args.max_files, args.max_insertions))
-    print("  suite   : %s (%s)" % (suite, "registered docs gate; no runtime coverage claim" if docs_only else "registered"))
+    print("  suite   : %s (%s)" % (suite, "host PDDA gate, PDDA_MODE=full; no runtime coverage claim" if host_docs
+                                    else "registered docs gate; no runtime coverage claim" if docs_only else "registered"))
+    if docs_only and attest_rec is not None:
+        print("  attest  : Approved (%s by %s, reviewed %s)" %
+              (attest_rec["task"], attest_rec["reviewer"], attest_rec["reviewed_head"][:12]))
+    if VENDORED:  # canonical output stays exactly as before GH-1169
+        print("  gate    : %s" % gate_detail)
     print("  changes : %s" % ", ".join(paths))
     return dict(issue=args.issue, title=meta.get("title", ""), paths=paths, suite=suite,
                 insertions=ins, branch=branch)
@@ -683,6 +892,13 @@ goal: >
 ## Merge evidence
 
 - (recorded at landing by the /express driver)
+
+## PRS proposal
+
+- pri 70: express hotfix critical path priority
+- sev 60: express lane bounded fix severity
+- appeal 50: express lane neutral appeal default
+- effort 85: express lane cheap single-suite effort
 
 ## Lessons Learned (For Future Agents)
 
@@ -759,7 +975,7 @@ def qualified_roadmap_row(root, repo, number, dry_run=False):
 
 def cmd_ledger(args):
     root = args.root
-    iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state,title,url,createdAt"])
+    iv = gh(["issue", "view", str(args.issue), "-R", args.repo, "--json", "state,title,url,createdAt,body"])
     meta = json.loads(iv.stdout)
 
     if getattr(args, "dry_run", False):
@@ -769,6 +985,19 @@ def cmd_ledger(args):
     db = os.path.join(root, "releases.db")
     if not os.path.isfile(db):
         die("no releases.db under %s — express requires the releases ledger" % root)
+
+    # Task 3 & Task 11: Create row at pickup with real rating
+    from releases_app import parse_prs_proposal, _RATED_RE
+    rated_token = getattr(args, "rated", None)
+    if rated_token:
+        token = "(rated %s)" % rated_token
+        m = _RATED_RE.search(token)
+        if not m:
+            refuse(root, "rating-shape", "malformed --rated %s" % rated_token, issue=args.issue)
+        vals = [int(g) for g in m.groups()]
+        if vals == [50, 50, 50, 50] or all(v <= 5 for v in vals):
+            refuse(root, "rating-placeholder", "express refuses placeholder rating %s (Task 11)" % rated_token, issue=args.issue)
+
     row = qualified_roadmap_row(root, args.repo, args.issue)
 
     if row is None:
@@ -780,13 +1009,28 @@ def cmd_ledger(args):
             if not cands:
                 refuse(root, "no-doc", "run `express docs` first (or pass --doc-path)", issue=args.issue)
             doc = "PROJECT/2-WORKING/" + cands[0]
-        raw = ("- **GH-%d · %s** 🆕 rated 2/2/2/2 — [doc](%s) · [#%d](%s)" %
-               (args.issue, meta["title"], doc, args.issue, meta["url"]))
-        run_releases(root, "roadmap", "add",
-                     "--issue-num", str(args.issue), "--issue-url", meta["url"],
-                     "--title", meta["title"], "--created", (meta.get("createdAt") or "")[:10],
-                     "--doc-path", doc, "--raw-text", raw)
-        print("express-ledger: parked roadmap row for GH-%d -> %s" % (args.issue, doc))
+        if not rated_token:
+            issue_body = meta.get("body") or ""
+            doc_body = ""
+            doc_file = os.path.join(root, doc)
+            if os.path.isfile(doc_file):
+                with open(doc_file, encoding="utf-8", errors="replace") as f:
+                    doc_body = f.read()
+            prs = parse_prs_proposal(issue_body) or parse_prs_proposal(doc_body)
+            if prs:
+                rated_token = "%d/%d/%d/%d" % (prs["pri"], prs["sev"], prs["appeal"], prs["effort"])
+            else:
+                refuse(root, "rating-unrated",
+                       "no valid PRS proposal in issue #%d or %s; pass --rated P/S/A/E" % (args.issue, doc),
+                       issue=args.issue)
+
+        run_releases(root, "roadmap", "pickup",
+                     "--issue-num", str(args.issue),
+                     "--doc-path", doc,
+                     "--rated", rated_token,
+                     "--title", meta["title"],
+                     "--issue-url", meta["url"])
+        print("express-ledger: parked roadmap row for GH-%d -> %s (rated %s)" % (args.issue, doc, rated_token))
     else:
         print("express-ledger: roadmap row already parked (%s)" % row["global_id"])
 
@@ -839,7 +1083,8 @@ def cmd_land(args):
     if getattr(args, "dry_run", False):
         print("express-land [dry-run]: would run suite %s" % suite)
     else:
-        r = subprocess.run(["bash", os.path.join(root, suite)], cwd=root)
+        env = dict(os.environ, **HOST_DOCS_ENV) if suite == HOST_DOCS_SUITE else None
+        r = subprocess.run(suite_argv(root, suite), cwd=root, env=env)
         if r.returncode != 0:
             refuse(root, "suite-red", "%s exited %d — no red suite rides the express lane" % (suite, r.returncode),
                    issue=args.issue)
@@ -967,7 +1212,7 @@ def closeout(root, args, sha, suite, state):
 def reconcile_gated(root, sha):
     """wave_reconcile --commit <sha> --base <base> --gate from the clean base branch; print its
     stdout so the gate outcome is visible in the landing output."""
-    wr = os.path.join(root, "utils", "py", "wave_reconcile.py")
+    wr = harness_tool(root, os.path.join("utils", "py", "wave_reconcile.py"))
     if not os.path.isfile(wr):
         die("wave_reconcile.py missing under %s — cannot reconcile commit %s" % (root, sha))
     cmd = [sys.executable, wr, "--commit", sha, "--root", root, "--base", BASE, "--gate"]
@@ -1305,6 +1550,7 @@ def main():
     common(p)
     p.add_argument("--release")
     p.add_argument("--doc-path")
+    p.add_argument("--rated")
     p.set_defaults(fn=cmd_ledger)
 
     p = sub.add_parser("land", help="steps 7-11: suite, direct push to the base branch, ship, close, reconcile")
@@ -1331,13 +1577,17 @@ def main():
     p.add_argument("--doc-path")
     p.add_argument("--slug")
     p.add_argument("--summary")
+    p.add_argument("--rated")
     p.set_defaults(fn=cmd_run)
 
     args = ap.parse_args()
+    global VENDORED
+    VENDORED = _harness_paths().is_vendored(os.path.abspath(__file__))
     if getattr(args, "docs_only", False):
-        if args.suite and normalize_suite(args.suite) != DOCS_SUITE:
-            ap.error("--docs-only uses %s; do not substitute a runtime suite" % DOCS_SUITE)
-        args.suite = DOCS_SUITE
+        docs_suite = HOST_DOCS_SUITE if VENDORED else DOCS_SUITE
+        if args.suite and normalize_suite(args.suite) != docs_suite:
+            ap.error("--docs-only uses %s; do not substitute a runtime suite" % docs_suite)
+        args.suite = docs_suite
     if getattr(args, "suite", None) is None and args.cmd in ("check", "land", "run", "resume"):
         ap.error("--suite is required for %s (a hotfix without its regression suite is a claim, not a fix)" % args.cmd)
     global BASE

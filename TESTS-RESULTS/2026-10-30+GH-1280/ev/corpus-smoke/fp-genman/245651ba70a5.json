@@ -1,0 +1,1 @@
+{"added_at": 1793412706.995538, "added_tick": 16, "argv": ["generate-manifest", "{}", "--output", "temp/factory-primitive/ate-smoke/manifest.json"], "env": {}, "family": "structure", "id": "245651ba70a5", "signature": "ee78ae03732ea917", "size": 77, "vector": [2, 0, "ca2b5e9df16748d1", "fast_<1s"], "verdict": "fail"}

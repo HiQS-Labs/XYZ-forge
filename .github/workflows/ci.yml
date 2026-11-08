@@ -539,6 +539,13 @@ jobs:
           git config --global user.email "ci@runner.invalid"
           git config --global user.name "CI Runner"
 
+      # GH-777 / #1182: the inventory ratchet (a new loose script under utils/, scripts/ or bin/, or
+      # a new sqlite3.connect outside the canonical gateway) used to run only in the full gate, so
+      # #1176 merged green here and then turned development's wave-reconcile RED. It is a one-second
+      # read-only check; running it on every PR catches that class before merge.
+      - name: Inventory ratchet (GH-777, #1182)
+        run: python3 utils/pdda/check_inventory_ratchet.py --check
+
       - name: Verify automatic wave reconciliation (GH-421)
         run: bash test/gh421-auto-wave-reconcile.sh
       # GH-308 / GH-459: Frozen Bash twin guard runs on PRs against the PR base SHA.

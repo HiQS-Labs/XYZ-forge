@@ -447,7 +447,11 @@ def ledger_semantic_check(clone: Path, integration_branch: str = "development") 
 
 
 def union_changelog(base: str, ours: str, theirs: str) -> str:
-    """Resolve only complete prepended dated blocks; historical bytes are never rewritten."""
+    """Resolve only complete prepended dated blocks; historical bytes are never rewritten.
+
+    ours is the PR head and theirs the integration tip (the landing merges origin/<integration>
+    into the PR clone). The PR's new blocks are prepended in their own order and theirs is kept
+    verbatim after the preamble, so the next attempt's history check accepts this output (GH-1269)."""
     if not all((base, ours, theirs)) or any(re.search(r"(?m)^(?:<{7}|={7}|>{7}|\|{7})(?: |$)", t)
                                           for t in (base, ours, theirs)):
         raise ValueError("empty changelog or conflict markers")
@@ -457,6 +461,7 @@ def union_changelog(base: str, ours: str, theirs: str) -> str:
     preamble, history = base[:first.start()], base[first.start():]
     historical_headings = set(re.findall(r"(?m)^## [^\r\n]+", history))
     blocks = {}
+    ordered = []
     for text in (ours, theirs):
         if not text.startswith(preamble) or not text.endswith(history):
             raise ValueError("changelog preamble or existing history changed")
@@ -469,6 +474,7 @@ def union_changelog(base: str, ours: str, theirs: str) -> str:
         if additions and (not starts or starts[0].start() != 0):
             raise ValueError("additions are not complete sections")
         seen = set()
+        ordered.append([])
         for i, match in enumerate(starts):
             block = additions[match.start():starts[i + 1].start() if i + 1 < len(starts) else len(additions)]
             heading, newline, body = block.partition("\n")
@@ -485,9 +491,10 @@ def union_changelog(base: str, ours: str, theirs: str) -> str:
             if heading in blocks and blocks[heading] != block:
                 raise ValueError("different additions share the same heading")
             blocks[heading] = block
+            ordered[-1].append(block)
     if not blocks:
         raise ValueError("no additive sections extracted")
-    return preamble + "".join(blocks[h] for h in sorted(blocks, reverse=True)) + history
+    return preamble + "".join(b for b in ordered[0] if b not in ordered[1]) + theirs[len(preamble):]
 
 
 def read_changelog_union(clone: Path) -> str:

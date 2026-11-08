@@ -1,0 +1,12 @@
+[FAIL] main: LTVera #874 shape keeps development's same-date order
+       integration same-date order in output: ['GH-867 heartbeat', 'GH-867 QA follow-up', 'GH-866 typing', 'GH-866 store', 'GH-866 resumed', 'GH-776 klaviyo']
+[FAIL] adjacent: attempt 2 on the repaired head does not refuse its own output
+       raised ValueError: changelog preamble or existing history changed
+[FAIL] adjacent: attempt 2 after development gained a section
+       raised ValueError: changelog preamble or existing history changed
+[FAIL] adjacent: block already present on both sides is kept once
+       no duplicate blocks
+[PASS] guard: different bodies under one heading still hand off
+       ValueError: different additions share the same heading
+loaded: skills/2-daily/merge-cleanup/scripts/ledger_merge.py
+result: FAIL (4)

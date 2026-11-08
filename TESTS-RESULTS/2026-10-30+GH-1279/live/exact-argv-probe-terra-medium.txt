@@ -1,0 +1,4 @@
+argv(flags)=['-s', 'read-only', '--ephemeral', '--ignore-user-config', '--ignore-rules', '--skip-git-repo-check', '--disable', 'shell_tool', '--disable', 'unified_exec', '--disable', 'view_image', '--disable', 'image_generation', '--disable', 'apps', '--disable', 'plugins', '--disable', 'hooks', '--disable', 'skill_search', '-c', 'web_search=disabled', '--json'] -m gpt-6.1-terra -c model_reasoning_effort=medium
+rc=0 timed_out=False wall=12.8s
+events={"('thread.started', None)": 1, "('turn.started', None)": 1, "('item.completed', 'agent_message')": 2, "('turn.completed', None)": 1}
+answer={"tool":"idle","args":{},"reason":"NO TOOL","confidence":1}

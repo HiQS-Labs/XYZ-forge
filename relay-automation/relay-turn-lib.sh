@@ -1057,6 +1057,13 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
     # evidence must be quoted in the finding. The first and last sentences are asserted by
     # test/gh397 and test/gh505 respectively — keep them verbatim.
     verify_note=''
+    # GH-1020: the REVIEWER's handoff sentence names the TERMINAL verb. On approval the thread sets
+    # `NEXT: done`, so "release --to the role named by NEXT" was read as `tick release --to done` (Agy
+    # and Codex, #763/#1020): the token went to nobody, the shim's deterministic `tick done` (rtl_enforce
+    # step 4) then failed ownership, and relay-drive exited 4 close-mismatch. `done` is a verb, never a
+    # --to target; tick refuses it too (src/scope.js). Reviewer-only: a builder never closes the relay,
+    # and test/gh505 case G pins that the builder prompt never mentions Approved.
+    handoff="if you set STATUS: Approved or Closed, close the token with: done ${task} --agent ${agent} (never release --to done — done is a verb, not an agent); otherwise ${handoff}"
     role_note=' You are the REVIEWER this turn: do NOT edit or create any artifact or source file; the relay file is the only tracked file you may change. You MAY run narrow, non-mutating probes and queries against the seeded artifact to measure a claim. Put probe output and temp files under .relay-scratch/ or $TMPDIR, never elsewhere in the tree: export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR". Scratch is discarded after your turn, so quote the command, exit status and decisive output in the finding itself. Do NOT run validate.sh, test/*.sh, pytest, or executable fixtures here — those belong in a disposable full clone; a claim that can only be measured that way is graded [Unverified — needs clone run], and the harness gate runs after your turn. Any other change to the tree is reverted and fails your turn. When approving, hand the token off with done and set STATUS: Approved.'
   fi
   # GH-31 / #15: point the reviewer at the seeded read-only artifact (worktree-relative; it is NOT a
@@ -1070,8 +1077,100 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   if [[ "${XYZ_TOOL_MODE:-${RELAY_TOOL_MODE:-}}" == "programmatic" ]]; then
     prog_note=" Programmatic tool mode is enabled: diagnostic Python scripts may be executed via script_runner.py with output directed to .relay-scratch/."
   fi
-  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s. Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token.%s%s%s' \
-    "$agent" "$f_rel" "$task" "$tickroot" "$tickbin" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note" "$verify_note" "$scratch_note" "$prog_note"
+  # GH-1218: append warn-only pointer list of the newest 5 non-superseded lessons from LESSONS-LEARNED.md.
+  # Design adapted from Harness² (google-research/harness2, Apache-2.0).
+  local lessons_note="" _lroot="${RTL_ROOT:-}"
+  if [[ -z "$_lroot" ]]; then
+    _lroot="$(git -C "$(dirname "$f")" rev-parse --show-toplevel 2>/dev/null || git rev-parse --show-toplevel 2>/dev/null || true)"
+  fi
+  if [[ -n "$_lroot" && -f "$_lroot/LESSONS-LEARNED.md" && -r "$_lroot/LESSONS-LEARNED.md" ]]; then
+    local _line _in_fence=0 _lin_body=0 _ltitle="" _lcue="" _lsup="" _ldate="" _lval _lsup_lc
+    local _lftick _lfence_ch="" _lfence_re='^ {0,3}(`{3,}|~{3,})' _lfence_close_re='^ {0,3}(`+|~+)[[:space:]]*$'
+    local -a _lessons=() _ldates=()
+    while IFS= read -r _line || [[ -n "$_line" ]]; do
+      _line="${_line%$'\r'}"
+      # GH-1218: CommonMark fences (``` or ~~~, up to 3 leading spaces). A fence closes only on a bare
+      # run of the SAME character at least as long as its opener.
+      if [[ "$_line" =~ $_lfence_re ]]; then
+        _lftick="${BASH_REMATCH[1]}"
+        if ((_in_fence == 0)); then
+          _in_fence=${#_lftick}; _lfence_ch="${_lftick:0:1}"; continue
+        elif [[ "${_lftick:0:1}" == "$_lfence_ch" ]] && ((${#_lftick} >= _in_fence)) && [[ "$_line" =~ $_lfence_close_re ]]; then
+          _in_fence=0; continue
+        fi
+      fi
+      ((_in_fence)) && continue
+      if [[ "$_line" == '## '* ]]; then
+        if [[ -n "$_ltitle" && -n "$_lcue" && -z "$_lsup" ]]; then
+          _lessons+=("- ${_ltitle} — cue: ${_lcue}")
+          _ldates+=("${_ldate:-0000-00-00}")
+        fi
+        _ltitle="${_line#\#\# }"
+        _ltitle="${_ltitle#"${_ltitle%%[![:space:]]*}"}"
+        _ltitle="${_ltitle%"${_ltitle##*[![:space:]]}"}"
+        _lcue=""; _lsup=""; _ldate=""; _lin_body=0
+      elif [[ "$_line" == '### '* ]]; then
+        _lin_body=1
+      elif ((!_lin_body)) && [[ -n "$_ltitle" ]]; then
+        if [[ -z "$_lcue" && "$_line" == '- **cue**:'* ]]; then
+          _lval="${_line#- \*\*cue\*\*:}"
+          _lval="${_lval#"${_lval%%[![:space:]]*}"}"
+          _lval="${_lval%"${_lval##*[![:space:]]}"}"
+          _lcue="$_lval"
+        elif [[ "$_line" == '- **superseded-by**:'* ]]; then
+          _lval="${_line#- \*\*superseded-by\*\*:}"
+          _lval="${_lval#"${_lval%%[![:space:]]*}"}"
+          _lval="${_lval%"${_lval##*[![:space:]]}"}"
+          _lsup_lc="$(printf '%s' "$_lval" | tr '[:upper:]' '[:lower:]')"
+          case "$_lsup_lc" in
+            ""|none|null|-|"~"|n/a|no|false) _lsup="" ;;
+            *) _lsup="$_lval" ;;
+          esac
+        elif [[ -z "$_ldate" && "$_line" == '- **date**:'* ]]; then
+          _lval="${_line#- \*\*date\*\*:}"
+          _lval="${_lval#"${_lval%%[![:space:]]*}"}"
+          _lval="${_lval%"${_lval##*[![:space:]]}"}"
+          _ldate="$_lval"
+        fi
+      fi
+    done < "$_lroot/LESSONS-LEARNED.md"
+    if [[ -n "$_ltitle" && -n "$_lcue" && -z "$_lsup" ]]; then
+      _lessons+=("- ${_ltitle} — cue: ${_lcue}")
+      _ldates+=("${_ldate:-0000-00-00}")
+    fi
+    local _ln=${#_lessons[@]}
+    if ((_ln > 0)); then
+      local -a _lsel=()
+      local _li _lk _best _best_d
+      if ((_ln <= 5)); then
+        for ((_li=0; _li<_ln; _li++)); do _lsel+=("$_li"); done
+      else
+        local -a _lpicked=()
+        for ((_lk=0; _lk<5; _lk++)); do
+          _best=-1; _best_d=""
+          for ((_li=0; _li<_ln; _li++)); do
+            [[ -n "${_lpicked[$_li]:-}" ]] && continue
+            if ((_best < 0)) || [[ "${_ldates[$_li]}" > "$_best_d" ]] || [[ "${_ldates[$_li]}" == "$_best_d" && $_li -gt $_best ]]; then
+              _best=$_li; _best_d="${_ldates[$_li]}"
+            fi
+          done
+          ((_best >= 0)) && _lpicked[$_best]=1
+        done
+        for ((_li=0; _li<_ln; _li++)); do
+          [[ -n "${_lpicked[$_li]:-}" ]] && _lsel+=("$_li")
+        done
+      fi
+      lessons_note=$'\n[lessons learned (LESSONS-LEARNED.md) — informational, warn-only; inspect LESSONS-LEARNED.md when a cue matches your task]'
+      for _li in "${_lsel[@]}"; do
+        lessons_note+=$'\n'"${_lessons[$_li]}"
+      done
+      if ((_ln > 5)); then
+        lessons_note+=$'\n'"+$((_ln - 5)) earlier lesson(s) omitted — see LESSONS-LEARNED.md for full history."
+      fi
+    fi
+  fi
+  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s. Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token.%s%s%s%s' \
+    "$agent" "$f_rel" "$task" "$tickroot" "$tickbin" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note" "$verify_note" "$scratch_note" "$prog_note" "$lessons_note"
 }
 
 rtl_before() {

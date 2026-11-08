@@ -1,0 +1,17 @@
+relay-drive: GH-370 progress (main tree fallback: ~/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24-verify) changed-files=0
+kimi-turn: worktree isolation ON (/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//rtl-wt.KI27q5)
+rtl: GH-654 allowlist: [] relay_file: ~/Documents/GitHub Repos/XYZ-forge-gh1215-kimi-relay-worker-2026-10-24-verify/relay-system/2026-10-25/gh1215-smoke-empty2.md
+kimi-turn: kimi exited 0 but produced NO model output (only CLI meta events) — failing the turn.
+kimi-turn: relay block structural validation failed (exit 8):
+VERDICT: line is missing
+kimi-turn: released the claim on RELAY-gh1215-smoke-empty2 that this turn would otherwise have left held — the turn ended without reaching its own token handoff (GH-409)
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 18h 18m
+per done-task: n/a (0 tasks done)
+  turn peak RSS: kimi: 149MB peak RSS
+

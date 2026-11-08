@@ -5,8 +5,9 @@ description: >-
   repo-governed intake, grounded recon, surgical DRY planning, Codex relay plan QA,
   execution, verification, final relay QA, and ready PRs. Use for /start-task,
   "start these issues", or requests to clone, register, execute, QA, and make a PR.
-  Works across repos. For diagnosis alone use workhorse; for landing existing PRs
-  and retiring clones use merge-cleanup.
+  Works across repos, and leaves a closeout comment on each tracked issue. For
+  diagnosis alone use workhorse; for landing existing PRs and retiring clones use
+  merge-cleanup.
 ---
 
 # Start task
@@ -73,6 +74,7 @@ Then begin work.
    Follow the target repo's branch and governance contracts. Missing PDDA or
    RELEASES infrastructure is not permission to install it or invent a substitute.
    Record which local equivalent applies or that the repo has none.
+   Read relevant entries in `LESSONS-LEARNED.md` (when present at the repo root) whose `cue` matches the task.
 
 2. **Group and order the work.** For multiple issues, keep a compact table in the
    canonical plan: issue URL, scope, dependencies, clone/branch, plan location,
@@ -209,7 +211,8 @@ Then begin work.
    disposition, revise, and re-review until Approved within the relay's configured
    cap (default three review rounds for this workflow). Unresolved blockers,
    unavailable reviewers, containment failures or exhausted caps stop that group's
-   implementation; record the exact failure and next action. Do not silently
+   implementation; record the exact failure and next action, and post the Step 9
+   issue closeout for that group. Do not silently
    substitute a self-review or consult. A simple change may skip this stage with
    a brief reason; final QA still applies.
 
@@ -298,7 +301,26 @@ Then begin work.
    authorized, but cannot be reported ready. Keep issue/doc/ledger state truthful:
    "PR ready; awaiting merge" is not "shipped" or "completed" when governance
    requires landing first. Do not close issues or run post-merge reconciliation
-   prematurely. Report each issue/group's PR or blocker and QA/gate result. Then
+   prematurely. Before handoff, read the task doc's own `## Lessons Learned`
+   section (if present) as the candidate lesson, apply the `LESSONS-LEARNED.md`
+   writer rules below, and either append one structured entry (`## <short title>`
+   with `- **cue**:`, `- **lesson**:`, `- **evidence**:`, `- **confidence**:`,
+   `- **area**:` [`relay | marathon | pdda | gate | skills | releases`],
+   `- **source**:`, `- **date**:`, and optional `- **superseded-by**:`) to
+   `LESSONS-LEARNED.md` in the PR or explicitly state `NO_ENTRY` in the handoff:
+   - **Admission:** refuse an entry whose `cue`, `lesson` or `evidence` is empty. Adoption or a merge alone is not evidence. Writing `NO_ENTRY` is a valid outcome.
+   - **Edit verdicts:** before drafting, write one row per changed component: `helped` / `hurt` / `no observed effect` / `confounded`. Use `confounded` when several things changed at once or a single run is the only support. A lesson resting only on `confounded` rows is refused.
+   - **Public evidence:** use repo-relative paths to committed `TESTS-RESULTS/` receipts, stable IDs, or public issue/PR/commit links. Never paste DB narratives, transcripts, credentials, hostnames or absolute paths.
+   - **ATE/fuzz evidence (Phase 6a):** it counts only after semantic replay, and the cited record must show the predicate and the clean/failing controls. A raw cluster, or a replay matched only by digest or exit code, is `confounded`.
+   Report each issue/group's PR or blocker and QA/gate result.
+   **Close the loop on each tracked issue** with one comment, using the procedure in
+   [`todo-list` §4](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/2-daily/todo-list/SKILL.md#4-close-the-loop-on-github)
+   (`skills/2-daily/todo-list/SKILL.md` here) with marker `<!-- start-task closeout: <branch> -->`:
+   PR and head SHA, plan/final QA verdicts, gate and smoke results, plan decisions and why,
+   what stays open. The next step is "awaiting merge" only for a verified ready PR. A group
+   that stops earlier (plan QA unresolved, gate blocked, deferred) posts at that stop with
+   its actual blocker and resume action. Never close or relabel here. Put the comment URL
+   (or `unposted`) in the handoff. Then
    complete automatic published-checkout retirement (GH-1059), rather than ending
    with a reminder (GH-690):
    - Retain required plans, code, review receipts and verification evidence in the PR;
@@ -365,16 +387,17 @@ the task report. Repos without RELEASES use their existing task record; do not
 install the ledger merely to score work.
 
 In XYZ Forge, read `RELEASES-DB-FAQS.md` → "Roadmap Rating Vocabulary & Grammar"
-and the current CLI help before writing. After parking an unrated issue, use
-`python3 utils/py/releases_app.py roadmap rate --issue-num N --rated P/S/A/E`
-(substitute actual values); `--dry-run` previews it. Read the existing rating and
-its provenance first. Re-scoring uses `--force` only deliberately with a recorded
-reason, never as an automatic response to an "already rated" refusal. Preserve
-explicit user appeal/priority choices and any existing operator `ovr`; when
-re-scoring, pass the retained `--ovr` explicitly because omitting it replaces it
-with no override. New rank overrides are the user's choice, not an LLM shortcut.
-The existing rank is the four-axis sum unless operator `ovr` replaces it; do not
-change that algorithm or distort cheapness/appeal to manufacture urgency.
+and the current CLI help before writing. Under GH-1340 / GH-1345 decision 6, the row is created
+at pickup/selection: use `python3 utils/py/releases_app.py roadmap pickup --issue-num N [--rated P/S/A/E]`
+(creates the row if absent, validates real rating per Task 11, or reuses an existing row idempotently
+preserving any prior operator `ovr`). If re-scoring an already rated row, use
+`python3 utils/py/releases_app.py roadmap rate --issue-num N --rated P/S/A/E` (substitute actual values);
+`--dry-run` previews it. Read the existing rating and its provenance first. Re-scoring uses `--force`
+only deliberately with a recorded reason, never as an automatic response to an "already rated" refusal.
+Preserve explicit user appeal/priority choices and any existing operator `ovr`; when re-scoring, pass
+the retained `--ovr` explicitly because omitting it replaces it with no override. New rank overrides
+are the user's choice, not an LLM shortcut. The existing rank is the four-axis sum unless operator `ovr`
+replaces it; do not change that algorithm or distort cheapness/appeal to manufacture urgency.
 Regenerate the repo's required views and read back the rating and rationale.
 Use one addressable issue row per tracked task; do not hide a batch behind one
 aggregate score. A legacy grouped row requires deliberate per-issue intake

@@ -1,0 +1,24 @@
+== clean control: fresh root, init
+{"instance":"/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-ctl/clone/temp/factory-primitive/gh1280/cand-clean/instances/C","status":"initialized"}
+rc=0
+== failing case: status first, then init
+{
+  "heartbeat": null,
+  "last_receipt": null,
+  "lock": "free",
+  "paused": false,
+  "pending": 0,
+  "quarantined": 0,
+  "quarantined_ids": [],
+  "spent_or_reserved": 0,
+  "ticks": {},
+  "unknown_cost": false
+}
+status rc=0
+1F 1D:
+
+instances/C/ state.db
+factory-primitive: instance already initialized; use a new run root
+init rc=2
+{"status":"failed","tick_id":"slot_001"}
+tick rc=1

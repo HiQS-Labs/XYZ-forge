@@ -1,0 +1,1 @@
+{"added_at": 1793412676.029922, "added_tick": 4, "argv": ["--run-root", "1", "status"], "env": {}, "family": "boundary", "id": "d1723227f804", "signature": "1f7dd3ef37b7d920", "size": 20, "vector": [2, 0, "c0cfa89b249b9917", "fast_<1s"], "verdict": "anomaly"}

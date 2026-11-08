@@ -1,0 +1,436 @@
+{
+ "rules": [
+  {
+   "item_id": "QA-00e568c87b",
+   "kind": "plan",
+   "source_sha256": "1881d709dd3ccb10e7ad31a10deb6950a5079e74a16ec298228dde78a5233dd2"
+  },
+  {
+   "item_id": "QA-04c1c1419b",
+   "kind": "plan",
+   "source_sha256": "56695d1f0cf43152190a9cce324809483316ddf3f48a1157d613d4ba153da703"
+  },
+  {
+   "item_id": "QA-0ce00907bf",
+   "kind": "safety-critical",
+   "source_sha256": "7c1e2dba5355c74eedae38db049b9c700874f586f07c56f4cb3b1320abe710ac"
+  },
+  {
+   "item_id": "QA-15b36eadb8",
+   "kind": "safety-critical",
+   "source_sha256": "8e65f2a66ad9359609ba34affcaef7318986f4e207706b0bab92f735480e93ed"
+  },
+  {
+   "item_id": "QA-17783046d5",
+   "kind": "plan",
+   "source_sha256": "c27791975adda602fa6e3f688d1ed6ff460a1a3040d9e37df1bfecb3b4a46776"
+  },
+  {
+   "item_id": "QA-1f48da2b1e",
+   "kind": "safety-critical",
+   "source_sha256": "e6b497a9f6656c7068ff5d389ab2886fe4d86e402f5f49d351bf7884f41a470d"
+  },
+  {
+   "item_id": "QA-1f69f40680",
+   "kind": "plan",
+   "source_sha256": "366e17c444a2578df8294b7032dcecf28b572c90cd77fe3609863d30ede1c7b5"
+  },
+  {
+   "item_id": "QA-1f8d44a0b9",
+   "kind": "plan",
+   "source_sha256": "95442e51fc2b83cc5ea9c7d59adadf51793163f5c35b7869ad8f7b0b7c14f7d9"
+  },
+  {
+   "item_id": "QA-30032604f4",
+   "kind": "safety-critical",
+   "source_sha256": "2cb6ef85e954ce0966f82d9bb9a38f80ae82a4017a19ceda7b6820ba8d7d8732"
+  },
+  {
+   "item_id": "QA-336e844aeb",
+   "kind": "safety-critical",
+   "source_sha256": "676823c03c9549a5bd00639fe0fd45e9ce39c86a89a21b73f4b5fb3510c7d015"
+  },
+  {
+   "item_id": "QA-349a6c422f",
+   "kind": "safety-critical",
+   "source_sha256": "ba19130069f5274827475cbffabcb3376c64c122c8a99fcbd87291646a1706b1"
+  },
+  {
+   "item_id": "QA-37379f410e",
+   "kind": "safety-critical",
+   "source_sha256": "ff9612db70e8d1eaee395535cd9ef3e762151202d8c7692488e0d51bd2dd92cd"
+  },
+  {
+   "item_id": "QA-3c501e5f8a",
+   "kind": "safety-critical",
+   "source_sha256": "24b79b917d779c3690e30c8fe21a9b605d6292f4a5bd102fea4e9a679f94886f"
+  },
+  {
+   "item_id": "QA-480b68bddb",
+   "kind": "plan",
+   "source_sha256": "97e1fea96b5498e4cfa03ac943b429d8d3729ab9b25a11861d07a4d837966e8a"
+  },
+  {
+   "item_id": "QA-49aaf203e4",
+   "kind": "plan",
+   "source_sha256": "47807c171fd9c6634721521ec75db025e47d04478d623a8dc6837b40d532ea7a"
+  },
+  {
+   "item_id": "QA-5384ba66fc",
+   "kind": "plan",
+   "source_sha256": "1c25d470becfdf54f7d1c3ecf896ad5a17345c95664b71fb081c20e2d6983b8d"
+  },
+  {
+   "item_id": "QA-55e72fc958",
+   "kind": "safety-critical",
+   "source_sha256": "6703fa08689028924309ad05bc1a59b45e6d0eae0f95a1289e1da532b5ab8b4c"
+  },
+  {
+   "item_id": "QA-596a7ac332",
+   "kind": "plan",
+   "source_sha256": "7b4cc486f042c7eec0b77fccb508f73a1b2438f6a061fccdd2d92f06d924bde5"
+  },
+  {
+   "item_id": "QA-5a52a383c2",
+   "kind": "plan",
+   "source_sha256": "c079859a15b34c13a5944043694cfc1cb86b853dc3206bc7466c78ed92d91d3c"
+  },
+  {
+   "item_id": "QA-5dd59482c1",
+   "kind": "plan",
+   "source_sha256": "375ddcafa8633bab0c4ddab5de7c351135bd437d0070a0df3c8bc6e81fe09df6"
+  },
+  {
+   "item_id": "QA-63c27894c2",
+   "kind": "safety-critical",
+   "source_sha256": "53ec897e0dd1a4a6ac4eaac6172a5116bf3420d13cb83a0e9836a2266a69436d"
+  },
+  {
+   "item_id": "QA-66b4af35e6",
+   "kind": "safety-critical",
+   "source_sha256": "e46189d7d97d278f17ddbc9f1cf1e522ec222be5d6c62a98fa076f332cb8559f"
+  },
+  {
+   "item_id": "QA-69e4630a58",
+   "kind": "plan",
+   "source_sha256": "4866e3b4c05db5a5bf46de0086331381d61cddf95115827a1db5449913430b74"
+  },
+  {
+   "item_id": "QA-70d4cb2bfe",
+   "kind": "plan",
+   "source_sha256": "49c66e71b204b2ea5b59c0bdbd0b94f1955ba58f568e07dc32897f39c3c62040"
+  },
+  {
+   "item_id": "QA-7d54f4254b",
+   "kind": "safety-critical",
+   "source_sha256": "99087c3695b82dc00c4748774494ce157536fc41bb8472b225e5e79104b09842"
+  },
+  {
+   "item_id": "QA-88217eb238",
+   "kind": "plan",
+   "source_sha256": "8c630cc0ff97e109f3f116c7579c6cc0b31e6cbbae4507bc80eb99dc8e90aa9f"
+  },
+  {
+   "item_id": "QA-88308d510f",
+   "kind": "safety-critical",
+   "source_sha256": "a68e93b68d8f8907e841a696fc8643eb4b0a03a86934b7e9579bc64dca7d7bc5"
+  },
+  {
+   "item_id": "QA-97c2409478",
+   "kind": "safety-critical",
+   "source_sha256": "ce780cb3d3b175474aa31b369a8357b608eb5dfbf235d559c0ff51b5f5cffd0e"
+  },
+  {
+   "item_id": "QA-98c96046cd",
+   "kind": "safety-critical",
+   "source_sha256": "21a4ce7a212e2d8db2b646280cef65cafdeacfc8c2defe9881020121cdf26362"
+  },
+  {
+   "item_id": "QA-a0f9cad57c",
+   "kind": "safety-critical",
+   "source_sha256": "d543d35e9219ec992197e1d3351212a32782980b5c9f0a11dc64373c98826bfd"
+  },
+  {
+   "item_id": "QA-a354c10729",
+   "kind": "safety-critical",
+   "source_sha256": "152de41a8c2a1caf3864e7dc92a8306a495a758d4d0d34f15360226e2ef131d3"
+  },
+  {
+   "item_id": "QA-aececf8b8c",
+   "kind": "plan",
+   "source_sha256": "e16edf3d90422ac22e1f59d3f60b645a2a165728d5f975f1dbbeb9acddff3844"
+  },
+  {
+   "item_id": "QA-b8b307d864",
+   "kind": "plan",
+   "source_sha256": "54a41d87817607c536be4a04737881d3ef6865a431e2e0f036ab2377976355fd"
+  },
+  {
+   "item_id": "QA-b95c339a52",
+   "kind": "safety-critical",
+   "source_sha256": "3f730e1944cde74d66af5a5c33db7d5d4c5e2fad0108d5e7679fda2681447317"
+  },
+  {
+   "item_id": "QA-ba160b7212",
+   "kind": "plan",
+   "source_sha256": "050e43d8b5df1c69dbd79078e801f0f24b0ce3019d6c79fb93c0765929b39858"
+  },
+  {
+   "item_id": "QA-bc0e9ac534",
+   "kind": "plan",
+   "source_sha256": "eb08a20caabf43f7ae45f610d60aa2bec123b205325b885efe4b0d7f2d871560"
+  },
+  {
+   "item_id": "QA-bef8640848",
+   "kind": "plan",
+   "source_sha256": "629221fcc58791d56ce01647c1e90a670f71c6ecfc0eaf80facaf58269ff3811"
+  },
+  {
+   "item_id": "QA-ceb9771355",
+   "kind": "safety-critical",
+   "source_sha256": "7aace8a792b0180576ef573b57f0c07e2f75c0f9b48155dc0211ca92cf67a568"
+  },
+  {
+   "item_id": "QA-d32afa9739",
+   "kind": "plan",
+   "source_sha256": "3ef3f788487dcc5a46a02cb33dd30686ae33964453fb02a6a640e3304954518c"
+  },
+  {
+   "item_id": "QA-d9b888da32",
+   "kind": "safety-critical",
+   "source_sha256": "defb59b44fcfae524254a8ddfbce79a7d67179d3303f6de6e95219650849074f"
+  },
+  {
+   "item_id": "QA-db2cb91e9a",
+   "kind": "safety-critical",
+   "source_sha256": "28cb4e0e4c4a854efd7b887a4ca7a9cea2e8c10cea547deb587e8735f955fc90"
+  },
+  {
+   "item_id": "QA-ef97d840b1",
+   "kind": "safety-critical",
+   "source_sha256": "35284d635555ec09c3247ecc6d50f9ab16a9ca4d610f58cc0282faa4d58ae6b6"
+  },
+  {
+   "item_id": "QA-f8b28537a5",
+   "kind": "safety-critical",
+   "source_sha256": "5f9a9af5cd4287423d42d268db0e2ddfc4a017735ebb630dad2eadd88c586ce9"
+  },
+  {
+   "item_id": "QA-f8fe02f5f9",
+   "kind": "safety-critical",
+   "source_sha256": "2d58f21d78d4f55fdc05706e9ec764620ed40c56a0f75d33bce3d29d517d0499"
+  }
+ ],
+ "codex": [
+  {
+   "item_id": "QA-039875d2e5",
+   "kind": "safety-critical",
+   "source_sha256": "fbc6a083250adbe536cf807790a0a7e5dba6013e606525895c7e92123dabf2ae"
+  },
+  {
+   "item_id": "QA-05115d0af0",
+   "kind": "safety-critical",
+   "source_sha256": "552a4c4b9bb6fb1c716841b8c63be5eabd46d6d694b88e809fd4eefa938066e4"
+  },
+  {
+   "item_id": "QA-119136ffce",
+   "kind": "safety-critical",
+   "source_sha256": "9321eef8ecbb099c4b201cfda978ad21d10941af41b937e4ea111bec73ac05d6"
+  },
+  {
+   "item_id": "QA-14ff9e1d9d",
+   "kind": "safety-critical",
+   "source_sha256": "ef2bc8b96da2c1500d21a63bf8b38e25a8e65962e31165f54ce95e6e43261277"
+  },
+  {
+   "item_id": "QA-17783046d5",
+   "kind": "plan",
+   "source_sha256": "c27791975adda602fa6e3f688d1ed6ff460a1a3040d9e37df1bfecb3b4a46776"
+  },
+  {
+   "item_id": "QA-1f69f40680",
+   "kind": "plan",
+   "source_sha256": "366e17c444a2578df8294b7032dcecf28b572c90cd77fe3609863d30ede1c7b5"
+  },
+  {
+   "item_id": "QA-20d20952b1",
+   "kind": "plan",
+   "source_sha256": "f0ece612d8fbd1c5c0c7ee913784ecd3c07071f9a1a9701bbc77fa877fffe502"
+  },
+  {
+   "item_id": "QA-2ba464032a",
+   "kind": "safety-critical",
+   "source_sha256": "4e1601b173f5d2d76587c697e958468aedb057e534e544f02e65aa41e6bbec2c"
+  },
+  {
+   "item_id": "QA-33510b7838",
+   "kind": "plan",
+   "source_sha256": "4fb1742c451c0873c38174798ecd40dd1cb3822dbf562ded844c6fb2bbe57461"
+  },
+  {
+   "item_id": "QA-347c739a38",
+   "kind": "safety-critical",
+   "source_sha256": "74a12deaf720bc1eb6c1b21412946a14c64556f8ee0d365f0f282eaac42b7e5f"
+  },
+  {
+   "item_id": "QA-35bc760ef8",
+   "kind": "safety-critical",
+   "source_sha256": "27fd2329f49b9348217dd5be82c83bb84494e3acfceb4293f2a94998c6ccf218"
+  },
+  {
+   "item_id": "QA-412ec11b23",
+   "kind": "safety-critical",
+   "source_sha256": "5b3d5c1d9e155366ce0355d1b777df234d008aae2acb63458acc8392c8a19814"
+  },
+  {
+   "item_id": "QA-41f8d4d7d3",
+   "kind": "safety-critical",
+   "source_sha256": "34a418fc6b66b27f5810a074270e330eba865a72b1cae444dca6933fe8a486b9"
+  },
+  {
+   "item_id": "QA-42039c26e4",
+   "kind": "plan",
+   "source_sha256": "dcdcf9344d591294b86739a0d80a7b5cb16f5b8fdb173d1e85dbb202b76af4c5"
+  },
+  {
+   "item_id": "QA-46a121cca5",
+   "kind": "safety-critical",
+   "source_sha256": "35b943df84a367353efd979089d293cf6fbc0eaff8d573593f83c6dd400677a1"
+  },
+  {
+   "item_id": "QA-480b68bddb",
+   "kind": "plan",
+   "source_sha256": "97e1fea96b5498e4cfa03ac943b429d8d3729ab9b25a11861d07a4d837966e8a"
+  },
+  {
+   "item_id": "QA-56126ce1a0",
+   "kind": "plan",
+   "source_sha256": "622cbc2097243fca1ee0560a11b6f59652bc55e8ce4e906baefd7d9533e259f4"
+  },
+  {
+   "item_id": "QA-5ba336fe46",
+   "kind": "safety-critical",
+   "source_sha256": "5a05e9bca8b91fed8620083bb00b0fbb2c8ef1bc4fea67d09eaab691ec3f30d1"
+  },
+  {
+   "item_id": "QA-70d4cb2bfe",
+   "kind": "plan",
+   "source_sha256": "49c66e71b204b2ea5b59c0bdbd0b94f1955ba58f568e07dc32897f39c3c62040"
+  },
+  {
+   "item_id": "QA-72340bba43",
+   "kind": "plan",
+   "source_sha256": "726691a14fb4b365c37f54ea4fa5896eb5f64f7bb9c580a2df74ad8cc4dc4581"
+  },
+  {
+   "item_id": "QA-790b66cf0a",
+   "kind": "safety-critical",
+   "source_sha256": "1613eeebfcde6b157d6cfa0a1ed248b249ed248baa71082c77a87d3e4ea51275"
+  },
+  {
+   "item_id": "QA-7939baf565",
+   "kind": "safety-critical",
+   "source_sha256": "fae8e41318a9ec58593bbf61fb8bbcfca7ba4a8071bf0d7ce6531cc4e5b677d8"
+  },
+  {
+   "item_id": "QA-815d6c344a",
+   "kind": "plan",
+   "source_sha256": "a8df984c1c21f7da19b7db85e0a63c6fdb631c1921310490d8dcedf876a0f48b"
+  },
+  {
+   "item_id": "QA-88217eb238",
+   "kind": "plan",
+   "source_sha256": "8c630cc0ff97e109f3f116c7579c6cc0b31e6cbbae4507bc80eb99dc8e90aa9f"
+  },
+  {
+   "item_id": "QA-8d15f15003",
+   "kind": "plan",
+   "source_sha256": "287187a986f865bad0b5207fe0eb2065aa246c87ebb0a77034103ae878ab88c6"
+  },
+  {
+   "item_id": "QA-992d4800b8",
+   "kind": "safety-critical",
+   "source_sha256": "675dcb80f62daec518bf737f1d254ce73271eb9eabc1c6ab46a7d81cf5907a32"
+  },
+  {
+   "item_id": "QA-9babae6b28",
+   "kind": "safety-critical",
+   "source_sha256": "a5c255a02f13a450dc4c4ea97689fa477a2ac8fe149db9821b452e85653a09bc"
+  },
+  {
+   "item_id": "QA-a92a545a22",
+   "kind": "safety-critical",
+   "source_sha256": "47d7d183b3810171030bbcfcdb5fff59ed4b44a47fff1795e4939b33c7410ec6"
+  },
+  {
+   "item_id": "QA-aececf8b8c",
+   "kind": "plan",
+   "source_sha256": "e16edf3d90422ac22e1f59d3f60b645a2a165728d5f975f1dbbeb9acddff3844"
+  },
+  {
+   "item_id": "QA-b43e290f23",
+   "kind": "plan",
+   "source_sha256": "a7596f4c113baec71547455e3feacd7dd374a79f3f33dd3ad24f270ca72e93ad"
+  },
+  {
+   "item_id": "QA-b5f4d3750b",
+   "kind": "plan",
+   "source_sha256": "1d420afee185a3fbb133e2f390eb8f8a9f2a97c2e9349e9fa2746d3d80428ac2"
+  },
+  {
+   "item_id": "QA-ba160b7212",
+   "kind": "plan",
+   "source_sha256": "050e43d8b5df1c69dbd79078e801f0f24b0ce3019d6c79fb93c0765929b39858"
+  },
+  {
+   "item_id": "QA-ba5c06ce63",
+   "kind": "safety-critical",
+   "source_sha256": "61c6d9364c2f6154386c2fda13caf05d2c27bb2ed9cb4c9231c17786d8003aaa"
+  },
+  {
+   "item_id": "QA-bef8640848",
+   "kind": "plan",
+   "source_sha256": "629221fcc58791d56ce01647c1e90a670f71c6ecfc0eaf80facaf58269ff3811"
+  },
+  {
+   "item_id": "QA-c1f4c3154b",
+   "kind": "safety-critical",
+   "source_sha256": "4d5a9966bb424744d5c61148a6de657715dcb592dd449b7602c1763f138cca9d"
+  },
+  {
+   "item_id": "QA-c8bf6b8b88",
+   "kind": "plan",
+   "source_sha256": "9ed7a025ea423b078e5bfb442465725ea0a0fa1eaac45f9cf039939db2487386"
+  },
+  {
+   "item_id": "QA-c9ba8aba50",
+   "kind": "safety-critical",
+   "source_sha256": "7727d126c98256bf3831baed3c1ab3b38db544a31088f24a1e8ba79535479f8f"
+  },
+  {
+   "item_id": "QA-cd5ed4d3fd",
+   "kind": "plan",
+   "source_sha256": "6fab51e4d4333caa33c81f600129691de76ebce58c61c43779357717fd740e78"
+  },
+  {
+   "item_id": "QA-db1807a3ba",
+   "kind": "safety-critical",
+   "source_sha256": "3fcad97f366058b3315e0fe108680702a6126951e2d714c81a4509967b59919f"
+  },
+  {
+   "item_id": "QA-e00545805e",
+   "kind": "plan",
+   "source_sha256": "fd3e94e3e3bc418bf1df90c08fd53e6328535ced1bf123e7f561f122dcae19e1"
+  },
+  {
+   "item_id": "QA-f9033c7033",
+   "kind": "safety-critical",
+   "source_sha256": "9e383dc22814c4262a129da43b9fbead8f6881bd1f49742c72cb808ccdfdfd0d"
+  },
+  {
+   "item_id": "QA-fd78230ae2",
+   "kind": "safety-critical",
+   "source_sha256": "2e6c57e974f3d0ecaea85b05654d0123637c77e8321fbecc15fbcf550ad18ec2"
+  }
+ ]
+}

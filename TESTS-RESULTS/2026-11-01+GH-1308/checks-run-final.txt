@@ -1,0 +1,130 @@
+# GH-1308 checks
+head=00314c988142052399021f4a577b5c6ef0340837 origin=https://github.com/HiQS-Labs/XYZ-forge.git clean_files=0
+red=cb1bf933ca2ae7ef02f9631eff900fbd29718595 date=2026-11-01T15:23:27Z python=Python 3.14.7
+
+## 1. Stage B canary init: red control on cb1bf933, then this revision
+$ cd '<tmp>/gh1308/red2' && rm -rf temp/factory-primitive/r1 && python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/r1 init --from-prs --limit 33 --unregistered 33 --canaries utils/py/factory_primitive/scenarios/gh1279-canaries.jsonl --miss 85-90
+factory-primitive: canary canary-stale-05: issue #384 is not in the expected frozen state (held-delivered)
+rc=2
+
+$ rm -rf temp/factory-primitive/g1 && python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/g1 init --from-prs --limit 33 --unregistered 33 --canaries utils/py/factory_primitive/scenarios/gh1279-canaries.jsonl --miss 85-90
+{"excluded":3,"instance":"<tmp>/gh1308/v3/temp/factory-primitive/g1/instances/C","layout":{"canaries":{"canary-instruction-override-01":3,"canary-instruction-override-02":6,"canary-instruction-override-03":9,"canary-instruction-override-04":13,"canary-instruction-override-05":17,"canary-instruction-override-06":21,"canary-nonexistent-target-01":44,"canary-nonexistent-target-02":48,"canary-nonexistent-target-03":52,"canary-nonexistent-target-04":56,"canary-output-format-01":60,"canary-output-format-02":64,"canary-output-format-03":68,"canary-output-format-04":72,"canary-stale-01":76,"canary-stale-02":80,"canary-stale-03":83,"canary-stale-04":91,"canary-stale-05":94,"canary-stale-06":96,"canary-unknown-action-01":25,"canary-unknown-action-02":29,"canary-unknown-action-03":33,"canary-unknown-action-04":40},"idle":0,"miss":[85,90],"real":66,"slots":96},"requests":90,"status":"initialized"}
+rc=0
+
+$ python3 -c "import json;m=json.load(open('temp/factory-primitive/g1/instances/C/backlog/manifest.json'));print('requests',len(m['requests']),'excluded',len(m['excluded']));print('delivered',json.dumps(m['delivered'],sort_keys=True))"
+requests 90 excluded 3
+delivered {"1012": [1036, 1039], "1098": [1274], "1157": [1161], "1298": [1301], "193": [196, 200], "259": [261, 268], "384": [386], "484": [486], "777": [783], "800": [803], "879": [895]}
+rc=0
+
+## 1b. independent all-PR recomputation of the delivered map (not via harness.py)
+$ python3 - 'temp/factory-primitive/g1/instances/C/backlog/manifest.json' <<'PY'
+import json,subprocess,sys
+sys.path.insert(0,'utils/py'); import wave_reconcile as w
+slug=w.github_slug_from_origin('.')
+prs=json.loads(subprocess.run(['gh','pr','list','--state','merged','--limit','5000','--json','number,title,body'],capture_output=True,text=True,check=True).stdout)
+iss=json.loads(subprocess.run(['gh','issue','list','--state','all','--limit','5000','--json','number,state'],capture_output=True,text=True,check=True).stdout)
+st={str(i['number']):i['state'] for i in iss}; d={}
+for pr in prs:
+    for n in w.extract_linked_issues(pr,slug)[0]:
+        if st.get(str(n))=='OPEN': d.setdefault(str(n),set()).add(pr['number'])
+d={k:sorted(v) for k,v in d.items()}
+m=json.load(open(sys.argv[1]))['delivered']
+print('merged_prs',len(prs),'issues',len(iss))
+print('independent',json.dumps(d,sort_keys=True))
+print('EQUAL' if d==m else 'DIFFERENT')
+sys.exit(0 if d==m else 1)
+PY
+merged_prs 447 issues 812
+independent {"1012": [1036, 1039], "1098": [1274], "1157": [1161], "1298": [1301], "193": [196, 200], "259": [261, 268], "384": [386], "484": [486], "777": [783], "800": [803], "879": [895]}
+EQUAL
+rc=0
+
+## 2. Codex call cap
+$ python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/c0 init --adapter codex --codex-model m
+factory-primitive: --adapter codex requires --max-call-cost > 0
+rc=2
+
+$ python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/c1 init --adapter codex --codex-model m --max-call-cost 0.01
+{"instance":"<tmp>/gh1308/v3/temp/factory-primitive/c1/instances/C","status":"initialized"}
+rc=0
+
+$ python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/c2 init
+{"instance":"<tmp>/gh1308/v3/temp/factory-primitive/c2/instances/C","status":"initialized"}
+rc=0
+
+## 3. re-tick after crash-act: red then this revision
+$ cd '<tmp>/gh1308/red2' && rm -rf temp/factory-primitive/tk && python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/tk init >/dev/null && { python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/tk tick --slot 1 --fault crash-act >/dev/null 2>&1; echo crash-rc=$?; } && python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/tk tick --slot 1
+crash-rc=70
+{"status":"started","tick_id":"slot_001"}
+rc=1
+
+$ cd '<tmp>/gh1308/v3' && rm -rf temp/factory-primitive/tk && python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/tk init >/dev/null && { python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/tk tick --slot 1 --fault crash-act >/dev/null 2>&1; echo crash-rc=$?; } && python3 utils/py/harness.py factory-primitive --run-root temp/factory-primitive/tk tick --slot 1
+crash-rc=70
+{"status":"uncertain","tick_id":"slot_001"}
+rc=0
+
+## 4. idea skill tool paths from a foreign repo, and the empty-TARGET guard
+$ cd '<tmp>/tmp.6sMFJFodTs' && python3 utils/py/releases_app.py --help
+/opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python: can't open file '<tmp>/tmp.6sMFJFodTs/utils/py/releases_app.py': [Errno 2] No such file or directory
+rc=2
+
+$ cd '<tmp>/tmp.6sMFJFodTs' && python3 '<repos>/XYZ-forge/utils/py/releases_app.py' --root '<tmp>/gh1308/v3' roadmap list --json >/dev/null
+
+rc=0
+
+$ cd '<tmp>/tmp.6sMFJFodTs' && python3 '<repos>/XYZ-forge/utils/py/prior_art_recon.py' --help >/dev/null && bash '<repos>/XYZ-forge/utils/swarm-preflight.sh' --help >/dev/null
+
+rc=0
+
+$ TARGET=$(bash '<repos>/XYZ-forge/utils/hq/hq.sh' resolve no-such-project-zz | sed -n 's/^REPO_PATH=//p'); [ -n "$TARGET" ] || { echo 'idea: project did not resolve'; exit 1; }
+idea: project did not resolve
+rc=1
+
+## 5. sibling_root
+$ cd skills/2-daily/merge-cleanup/scripts && python3 -c "
+from pathlib import Path; import scan_clones as s; h=Path.home()
+for p in ['/Users/XYZ-forge', h/'Documents/GH Repos/XYZ-forge', h/'Documents/XYZ-forge', h/'XYZ-forge', '/XYZ-forge', '/opt/work/XYZ-forge']: print(p,'->',s.sibling_root(Path(p)))
+print(s.is_safe_deletable_path(Path('/Users/someone/Desktop/old/XYZ-forge-task'), s.primary_safe_roots(Path('/Users/XYZ-forge'))))"
+/Users/XYZ-forge -> None
+<repos>/XYZ-forge -> /Users/noelsaw/Documents/GH Repos
+/Users/noelsaw/Documents/XYZ-forge -> None
+/Users/noelsaw/XYZ-forge -> None
+/XYZ-forge -> None
+/opt/work/XYZ-forge -> /opt/work
+(False, 'Refusing: path is not strictly within SAFE_ROOTS (/Users/someone/Desktop/old/XYZ-forge-task)')
+rc=0
+
+$ cd '<tmp>/gh1308/red2/skills/2-daily/merge-cleanup/scripts' && python3 -c "
+from pathlib import Path; import scan_clones as s
+print('red /Users/XYZ-forge ->', s.sibling_root(Path('/Users/XYZ-forge')))"
+red /Users/XYZ-forge -> /Users
+rc=0
+
+## 6/suites. existing merge-cleanup suites (fake HOME)
+$ HOME='<tmp>/gh1308/fakehome' python3 test/gh534_phase_a_tests.py 2>&1 | grep -E '^(Ran|OK|FAILED)'
+Ran 42 tests in 52.409s
+OK
+rc=0
+
+$ HOME='<tmp>/gh1308/fakehome' python3 test/gh436-merge-cleanup.py 2>&1 | grep -E '^(Ran|OK|FAILED)'
+Ran 201 tests in 322.708s
+OK
+rc=0
+
+## 7. governance
+$ python3 utils/py/releases_app.py check
+warn: rule=release-target-passed: 0.8.0 Sundown is still a draft and 15 day(s) past its target of 2026-10-17 — the plan has drifted from the calendar
+info: 24 grandfather_entries pending disposition (the strict flip requires none pending)
+check: clean (0 failures, 10 warning(s))
+rc=0
+
+$ python3 utils/py/releases_app.py roadmap list --json | python3 -c "import json,sys;[print(r['gh_number'],r['section'],r['status_marker'],r['doc_path']) for r in json.load(sys.stdin) if r.get('gh_number') in (1273,1280,1308)]"
+1280 Completed ✅ PROJECT/3-COMPLETED/GH-1280-OUTER-LOOP-ATE-CAMPAIGN.md
+1273 Completed ✅ PROJECT/3-COMPLETED/GH-1273-RELAY-SEPARATORS.md
+1308 In progress 🚧 PROJECT/2-WORKING/GH-1308-POSTMERGE-QA-FIXES.md
+rc=0
+
+$ bash utils/pdda/pdda.sh run 2>&1 | grep -E 'issue-doc-sync.*(1250|1273|1280)|SUMMARY \[pdda-check-issue-doc-sync\]'
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=28 info=0
+rc=0
+

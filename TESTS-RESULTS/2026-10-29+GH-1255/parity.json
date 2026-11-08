@@ -1,0 +1,143 @@
+{
+  "standalone_revision": "83af59668c2e1ad58c56ef2c9db1794dcc4891b2",
+  "upstream_revision": "f10764f6db909b9c3b770a05213bd43285452589",
+  "forge_revision": "835254712a0696c08d3dae94054bc62a09f3fde6",
+  "forge_runtime_files": 0,
+  "files": [
+    {
+      "path": "test/clio-agy-tail.sh",
+      "manifest_sha256": "affd42fa3d2379e43d2e6515f9972d6a0be584e68e1bd31c42ce7e5b22109d99",
+      "standalone_sha256": "affd42fa3d2379e43d2e6515f9972d6a0be584e68e1bd31c42ce7e5b22109d99",
+      "upstream_sha256": "affd42fa3d2379e43d2e6515f9972d6a0be584e68e1bd31c42ce7e5b22109d99",
+      "match": true,
+      "standalone_mode": "100755",
+      "upstream_mode": "100755"
+    },
+    {
+      "path": "test/clio-capture.sh",
+      "manifest_sha256": "6d3ac0a686067307e13bfdff47e8ebceb16c641e369e1fa18af4e234cbb3f256",
+      "standalone_sha256": "6d3ac0a686067307e13bfdff47e8ebceb16c641e369e1fa18af4e234cbb3f256",
+      "upstream_sha256": "6d3ac0a686067307e13bfdff47e8ebceb16c641e369e1fa18af4e234cbb3f256",
+      "match": true,
+      "standalone_mode": "100755",
+      "upstream_mode": "100755"
+    },
+    {
+      "path": "test/clio-codex-tail.sh",
+      "manifest_sha256": "63917307c140e64918e9abd59cd1a13168caa3b7337f2836f468487d35c3c3c0",
+      "standalone_sha256": "63917307c140e64918e9abd59cd1a13168caa3b7337f2836f468487d35c3c3c0",
+      "upstream_sha256": "63917307c140e64918e9abd59cd1a13168caa3b7337f2836f468487d35c3c3c0",
+      "match": true,
+      "standalone_mode": "100755",
+      "upstream_mode": "100755"
+    },
+    {
+      "path": "test/clio-exporter.sh",
+      "manifest_sha256": "b5ba3caf4dd803d2476e22d2593be6bf1fdc087103b7aa9b80b385662da5b622",
+      "standalone_sha256": "b5ba3caf4dd803d2476e22d2593be6bf1fdc087103b7aa9b80b385662da5b622",
+      "upstream_sha256": "b5ba3caf4dd803d2476e22d2593be6bf1fdc087103b7aa9b80b385662da5b622",
+      "match": true,
+      "standalone_mode": "100755",
+      "upstream_mode": "100755"
+    },
+    {
+      "path": "test/clio-runtime.sh",
+      "manifest_sha256": "89874c5b2034cdc4d0d26d49ae9d868020d965b73732d4df613a40f9a8a2ab80",
+      "standalone_sha256": "89874c5b2034cdc4d0d26d49ae9d868020d965b73732d4df613a40f9a8a2ab80",
+      "upstream_sha256": "89874c5b2034cdc4d0d26d49ae9d868020d965b73732d4df613a40f9a8a2ab80",
+      "match": true,
+      "standalone_mode": "100755",
+      "upstream_mode": "100755"
+    },
+    {
+      "path": "test/clio-store.py",
+      "manifest_sha256": "3499925a4c493fc5839a511625db7c61d432300c34af90bd8d71c15ff36a473d",
+      "standalone_sha256": "3499925a4c493fc5839a511625db7c61d432300c34af90bd8d71c15ff36a473d",
+      "upstream_sha256": "3499925a4c493fc5839a511625db7c61d432300c34af90bd8d71c15ff36a473d",
+      "match": true,
+      "standalone_mode": "100644",
+      "upstream_mode": "100644"
+    },
+    {
+      "path": "test/fixtures/clio/agy-transcript.jsonl",
+      "manifest_sha256": "fbf586a7e22d1f771a9617ce33b6f5d11790b954b5858139efcfbefb629f0984",
+      "standalone_sha256": "fbf586a7e22d1f771a9617ce33b6f5d11790b954b5858139efcfbefb629f0984",
+      "upstream_sha256": "fbf586a7e22d1f771a9617ce33b6f5d11790b954b5858139efcfbefb629f0984",
+      "match": true,
+      "standalone_mode": "100644",
+      "upstream_mode": "100644"
+    },
+    {
+      "path": "test/fixtures/clio/codex-rollout.jsonl",
+      "manifest_sha256": "117614da8141bd213b3f16bf2746c14e9ed7cf54b9472fb63c253fa0e58d5399",
+      "standalone_sha256": "117614da8141bd213b3f16bf2746c14e9ed7cf54b9472fb63c253fa0e58d5399",
+      "upstream_sha256": "117614da8141bd213b3f16bf2746c14e9ed7cf54b9472fb63c253fa0e58d5399",
+      "match": true,
+      "standalone_mode": "100644",
+      "upstream_mode": "100644"
+    },
+    {
+      "path": "utils/clio-capture/INSTALL.md",
+      "manifest_sha256": "4ee8742e0ebb2306f836eb029e601378d93adafb2f8af3bfdf1f7933ba870c12",
+      "standalone_sha256": "4ee8742e0ebb2306f836eb029e601378d93adafb2f8af3bfdf1f7933ba870c12",
+      "upstream_sha256": "4ee8742e0ebb2306f836eb029e601378d93adafb2f8af3bfdf1f7933ba870c12",
+      "match": true,
+      "standalone_mode": "100644",
+      "upstream_mode": "100644"
+    },
+    {
+      "path": "utils/clio-capture/SKILL.md",
+      "manifest_sha256": "e044d5274cdf8ed96dbc69e9b09fb15734f0c601e8cfa8390df874b60d568f42",
+      "standalone_sha256": "e044d5274cdf8ed96dbc69e9b09fb15734f0c601e8cfa8390df874b60d568f42",
+      "upstream_sha256": "e044d5274cdf8ed96dbc69e9b09fb15734f0c601e8cfa8390df874b60d568f42",
+      "match": true,
+      "standalone_mode": "100644",
+      "upstream_mode": "100644"
+    },
+    {
+      "path": "utils/clio-capture/clio-agy-tail.sh",
+      "manifest_sha256": "1b1b8f4c2aadf111c79d70b0aa3b769736eebbc1bb166aca8e0ae6ee9d98e0ba",
+      "standalone_sha256": "1b1b8f4c2aadf111c79d70b0aa3b769736eebbc1bb166aca8e0ae6ee9d98e0ba",
+      "upstream_sha256": "1b1b8f4c2aadf111c79d70b0aa3b769736eebbc1bb166aca8e0ae6ee9d98e0ba",
+      "match": true,
+      "standalone_mode": "100755",
+      "upstream_mode": "100755"
+    },
+    {
+      "path": "utils/clio-capture/clio-codex-tail.sh",
+      "manifest_sha256": "fd7fe836599f00ae59862ee26eda375d45fb2db9531a25a560ccaf30499781dc",
+      "standalone_sha256": "fd7fe836599f00ae59862ee26eda375d45fb2db9531a25a560ccaf30499781dc",
+      "upstream_sha256": "fd7fe836599f00ae59862ee26eda375d45fb2db9531a25a560ccaf30499781dc",
+      "match": true,
+      "standalone_mode": "100755",
+      "upstream_mode": "100755"
+    },
+    {
+      "path": "utils/clio-capture/clio-runtime.sh",
+      "manifest_sha256": "d0f116fadd149b9d98523711ee8b2959cf0ca0e4118b9b28fa45049586ff27c2",
+      "standalone_sha256": "d0f116fadd149b9d98523711ee8b2959cf0ca0e4118b9b28fa45049586ff27c2",
+      "upstream_sha256": "d0f116fadd149b9d98523711ee8b2959cf0ca0e4118b9b28fa45049586ff27c2",
+      "match": true,
+      "standalone_mode": "100755",
+      "upstream_mode": "100755"
+    },
+    {
+      "path": "utils/clio-capture/clio-store.py",
+      "manifest_sha256": "8c3040cbc3595670597df249f10e394731a31d138d830c29160b221ab02c3c5b",
+      "standalone_sha256": "8c3040cbc3595670597df249f10e394731a31d138d830c29160b221ab02c3c5b",
+      "upstream_sha256": "8c3040cbc3595670597df249f10e394731a31d138d830c29160b221ab02c3c5b",
+      "match": true,
+      "standalone_mode": "100644",
+      "upstream_mode": "100644"
+    },
+    {
+      "path": "utils/clio-capture/prompt-log-to-md.sh",
+      "manifest_sha256": "66c5cb55f7b2eb27855722f9d4103a8c235e89bc17c6d6f3377ef95002467b6f",
+      "standalone_sha256": "66c5cb55f7b2eb27855722f9d4103a8c235e89bc17c6d6f3377ef95002467b6f",
+      "upstream_sha256": "66c5cb55f7b2eb27855722f9d4103a8c235e89bc17c6d6f3377ef95002467b6f",
+      "match": true,
+      "standalone_mode": "100755",
+      "upstream_mode": "100755"
+    }
+  ]
+}

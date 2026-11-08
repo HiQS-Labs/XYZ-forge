@@ -1,0 +1,1 @@
+{"actual_cost":null,"billing_status":"unknown","normalized":"ok","raw":"{\"tool\":\"plan-draft\",\"args\":{\"inbox_id\":\"gh-900016-63b57eb6cd6b\",\"authored\":{\"open_questions\":[\"What outcome should issue #900016 achieve?\"]}},\"reason\":\"This is the oldest eligible plan request; its body provides no actionable planning details.\",\"confidence\":0.99}"}

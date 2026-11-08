@@ -1,0 +1,144 @@
+---
+gh_issue: 418
+source: https://github.com/HiQS-Labs/XYZ-forge/issues/418
+title: "GH-418: the marathon planner reads the frozen ROADMAP.md — adopt the releases DB"
+status: Complete
+created: 2026-09-03
+updated: 2026-10-30
+owner: unassigned
+goal: "marathon-plan ranks lanes from releases.db (via the rendered ledger), with zero DB-parked items invisible"
+doc_type: bugfix
+complexity: 2
+risk: 3
+effort: 2
+phases: 2
+marathon: gh-490
+related:
+  - "https://github.com/HiQS-Labs/XYZ-forge/issues/490 — marathon umbrella"
+---
+
+
+## Status
+
+| What was just completed | What's next |
+| --- | --- |
+| Promoted from 1-INBOX with a swarm-preflight contract; lane of marathon gh-490 | Implement per the contract; lane brief in PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md |
+
+# GH-418: the planner reads a file the repo froze
+
+
+## The finding, and the correction that produced it
+
+An earlier claim in this arc — *"the marathon planner cannot see DB-parked items"* — was **too
+broad and was corrected by measurement**. The planner is not blind in general: 69 of 106
+`roadmap_items` rows are also in `ROADMAP.md`, and recent marathons used those. The precise defect
+is narrower and worse.
+
+`.pdda-mode` sets `ROADMAP_SOURCE=releases` (commit `c97f6176`, 2026-08-25) and states the DB is
+the planning source of truth. `router_audit.py:597-660` enforces the same framing in prose:
+*"ROADMAP.md is the frozen legacy file — do not read it for current state or edit it."*
+
+`marathon_plan.py:126` reads `ROADMAP.md`. `git grep -c 'pdda-mode\|ROADMAP_SOURCE'` against
+`marathon_plan.py` and `_marathon_plan.py` returns **0 in both**. The planner never learned about
+the flip.
+
+## Why nobody noticed
+
+Two independent masks:
+
+1. **The 69-item overlap.** Every marathon happened to use items present in both sources.
+2. **The planner was not producing the work.** Every `MARATHON.yaml` on disk is hand-authored —
+   `marathon_yaml_emit.py` has emitted none. GH-314 and GH-107 were marathoned while DB-only.
+   The planner's one recommendation in the 08-27 → 09-01 window (`#123`) was cancelled, never built.
+
+So "marathons work" and "the planner is stale" are both true and not in tension. The executor works
+on hand-curated input; the planner that should remove that curation is wired to a frozen file.
+
+## Proof it parses the stale file
+
+`MARATHON-PLAN-2026-09-01.md` and `-09-02.md` surface `#349` and `#351`.
+`select count(*) from roadmap_items where gh_number in (349,351)` → **0**. Those ids exist only in
+`ROADMAP.md`. The planner could not have obtained them from the DB.
+
+## Phases
+
+1. **Source resolution.** Read `.pdda-mode` with the same resolver `releases_app.py` uses —
+   releases-mode reads `roadmap_items`, legacy reads `ROADMAP.md`. Share the resolver; do not copy
+   it. Keep `QUEUE_PLAN_ROADMAP` as a test-only override. Correct the generated header/footer,
+   which currently hard-code *"Generated from ROADMAP.md (source of truth)"* — a false claim that
+   is itself part of why this stayed invisible.
+2. **Make it un-reintroducible.** Red control: an item parked only via `releases roadmap add` must
+   appear in a fresh plan, and must fail against pre-fix code. Parity check: in releases-mode,
+   fail if any shipped script reads `ROADMAP.md` for current state.
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target": {
+    "repo": ".",
+    "ref": "development"
+  },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    {
+      "type": "grep_present",
+      "path": "utils/py/marathon_plan.py",
+      "pattern": "ROADMAP.md",
+      "note": "bug evidence \u2014 must fire unfixed at pre-work time"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/gh418-planner-ledger-source.sh",
+      "note": "new lane artifact \u2014 must not exist yet"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/baselines/GH-418-negative-control.md",
+      "note": "new lane artifact \u2014 must not exist yet"
+    }
+  ],
+  "artifacts": [
+    "utils/py/marathon_plan.py",
+    "utils/py/_marathon_plan.py",
+    "test/gh418-planner-ledger-source.sh",
+    "test/baselines/GH-418-negative-control.md"
+  ],
+  "remediation": {
+    "source": "issue#418",
+    "criteria": "marathon-plan ranks the DB-parked queue (rendered ledger markdown) without reading ROADMAP.md; repo-wide grep pins no live ROADMAP.md read in the planner"
+  },
+  "lanes": {
+    "agy_safe": [
+      "utils/py/",
+      "utils/timeline/",
+      "test/"
+    ],
+    "orchestrator_only": []
+  },
+  "artifacts_new": [
+    "test/baselines/GH-418-negative-control.md",
+    "test/gh418-planner-ledger-source.sh"
+  ]
+}
+```
+
+## Acceptance
+
+- [ ] In releases-mode, `marathon-plan.sh` sources items from `roadmap_items`; zero DB-parked items are invisible to it.
+- [ ] In legacy mode the behaviour is unchanged, asserted by a test.
+- [ ] The generated plan doc names its real source.
+- [ ] Red control witnessed and recorded in `test/baselines/`: a DB-only item is absent from a pre-fix plan and present in a post-fix one.
+- [ ] A deterministic check fails if a shipped script reads `ROADMAP.md` for current state while `ROADMAP_SOURCE=releases`.
+
+## Merge evidence
+
+- PR #495 merged 2026-09-10 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #726 merged 2026-09-21 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1044 merged 2026-10-14 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

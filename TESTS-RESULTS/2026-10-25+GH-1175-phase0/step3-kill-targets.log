@@ -1,0 +1,7 @@
+30101 74561 30101       00:25 /bin/zsh -c source /Users/noelsaw/.claude/shell-snapshots/snapshot-zsh-1792983100817-qo0zlk.sh 2>/dev/null || true && setopt NO_EX
+30105 30101 30101       00:25 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python utils
+32725 30105 30101       00:20 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /User
+33466 32725 30101       00:18 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /User
+33550 33466 33550       00:17 /opt/homebrew/Cellar/python@3.14/3.14.7/Frameworks/Python.framework/Versions/3.14/Resources/Python.app/Contents/MacOS/Python /User
+35417 33550 35417       00:13 agy --dangerously-skip-permissions --print-timeout 900s -p SCRATCH DISCIPLINE (hard requirement, GH-113): every probe script, test
+KILLED -9 at 2026-10-26T03:22:37Z: 30105 32725 33466 33550 35417

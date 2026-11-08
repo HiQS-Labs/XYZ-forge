@@ -1,0 +1,11 @@
+# GH-1270 smoke (2026-10-30T17:36:36Z), HEAD 52406394
+packet run 1 (README now names --builder) tree digest: 2b94df4012396f1aef226a60811860916473d282cf566855727374b1d9845d34
+$ packet --wave 1 (rerun): {"dir":"<clone>/temp/factory-primitive/pilot-2c/instances/C/out/launch-packet/wave-1","emitted":[722,670,1204,216,446],"skipped":[],"wave":1} rc=0
+packet rerun tree digest:                       2b94df4012396f1aef226a60811860916473d282cf566855727374b1d9845d34
+$ packet --wave 9: factory-primitive: --wave must be in 1..4 rc=2
+$ marathon.sh --plan PROJECT/2-WORKING/GH-216-LAUNCH/MARATHON.yaml --builder agy --dry-run: marathon: dry-run complete: 1 phase(s) would run in order rc=0
+$ node bin/marathon-yaml GH-1204-LAUNCH/MARATHON.yaml: rc=0
+$ node bin/marathon-yaml GH-216-LAUNCH/MARATHON.yaml: rc=0
+$ node bin/marathon-yaml GH-446-LAUNCH/MARATHON.yaml: rc=0
+$ node bin/marathon-yaml GH-670-LAUNCH/MARATHON.yaml: rc=0
+$ node bin/marathon-yaml GH-722-LAUNCH/MARATHON.yaml: rc=0

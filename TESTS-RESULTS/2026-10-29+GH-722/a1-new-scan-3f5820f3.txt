@@ -1,0 +1,25 @@
+merge-cleanup: Merge policy: preserve_commit_history=False; strategy=squash; source=legacy default (no .merge-cleanup.json)
+merge-cleanup: Operating on primary repo: <HOME>/sib/proj
+merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: <HOME>/sib/proj
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (2 found)
+================================================================================
+
+Scanned roots: <HOME>/Documents/GH Repos, <HOME>/agent-workspaces, <HOME>/Documents/agent-workspaces, <HOME>/marathon-clones, <HOME>/sib (only checkouts with the primary's origin from <HOME>/sib)
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `proj` | standalone_clone | `development` | ✅ | 🔥 Active (1 in 10m) | 0 | 0 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+| `proj-task` | standalone_clone | `development` | ✅ | 🔥 Active (1 in 10m) | 0 | 0 | **SAFE_REMOVE_CLONE** | 100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees) |
+

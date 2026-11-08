@@ -1,0 +1,6 @@
+{"kind": "manual_check", "name": "worked-example-1279", "round": 1, "commit": "2bccfb9c", "pr": 1289, "status": "fail", "receipt": "round1-draft-2bccfb9c.md"}
+{"kind": "manual_check", "name": "counter-example-1186", "round": 1, "commit": "2bccfb9c", "pr": 1289, "status": "fail", "receipt": "round1-draft-2bccfb9c.md"}
+{"kind": "manual_check", "name": "worked-example-1279", "round": 2, "commit": "95f82e98", "pr": 1289, "status": "fail", "receipt": "round2-draft-95f82e98.md"}
+{"kind": "manual_check", "name": "counter-example-1186", "round": 2, "commit": "95f82e98", "pr": 1289, "status": "pass", "receipt": "round2-draft-95f82e98.md"}
+{"kind": "manual_check", "name": "worked-example-1279", "round": 3, "commit": "f09f8105", "pr": 1289, "status": "fail", "qualification": "partial: 4 of 6 rule parts met", "receipt": "round3-final-f09f8105.md"}
+{"kind": "manual_check", "name": "counter-example-1186", "round": 3, "commit": "f09f8105", "pr": 1289, "status": "pass", "receipt": "round3-final-f09f8105.md"}

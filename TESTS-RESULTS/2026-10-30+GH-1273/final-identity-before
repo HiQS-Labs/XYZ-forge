@@ -1,0 +1,11 @@
+195c253cef12fa3d16eae6f20c44fd4482ee137b
+core.repositoryformatversion=0
+core.filemode=true
+core.bare=false
+core.logallrefupdates=true
+core.ignorecase=true
+core.precomposeunicode=true
+remote.origin.url=https://github.com/HiQS-Labs/XYZ-forge.git
+remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+branch.fix/XYZ-forge-gh1273-relay-separators-2026-10-30.remote=origin
+branch.fix/XYZ-forge-gh1273-relay-separators-2026-10-30.merge=refs/heads/fix/XYZ-forge-gh1273-relay-separators-2026-10-30

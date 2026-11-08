@@ -286,6 +286,28 @@ elif [ "$_route" = "fast" ] && [ "$_tier" = "2" ] && [ -n "$_t2tests" ]; then
   fi
   # An unusable paths file falls through to the full gate below — fail closed, never open.
 else
+  if [ "${#_real_ref_pairs[@]}" -gt 0 ] && [ -f "$REPO/utils/py/gate_receipt.py" ] && command -v python3 >/dev/null 2>&1; then
+    _reuse_ok=1
+    _reuse_shas=()
+    for _pair in "${_real_ref_pairs[@]}"; do
+      _lsha="${_pair%%|*}"
+      if [ -z "$_lsha" ] || ! python3 "$REPO/utils/py/gate_receipt.py" check --repo "$REPO" --sha "$_lsha" --require-full-gate >/dev/null 2>&1; then
+        _reuse_ok=0
+        break
+      fi
+      _already=0
+      for _seen in ${_reuse_shas[@]+"${_reuse_shas[@]}"}; do
+        [ "$_seen" = "$_lsha" ] && { _already=1; break; }
+      done
+      [ "$_already" -eq 0 ] && _reuse_shas+=("$_lsha")
+    done
+    if [ "$_reuse_ok" -eq 1 ] && [ "${#_reuse_shas[@]}" -gt 0 ]; then
+      for _lsha in "${_reuse_shas[@]}"; do
+        echo "pre-push: reusing the passing full-gate receipt for ${_lsha:0:8} (validate.sh, scope full) — the full gate already ran on this exact commit."
+      done
+      exit 0
+    fi
+  fi
   echo "pre-push: running the full gate before this push reaches the remote (GH-544)."
   echo "pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden."
   "$REPO/validate.sh" --print-mode 2>&1 | sed 's/^/pre-push:   /'

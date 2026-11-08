@@ -1,0 +1,24 @@
+swarm-preflight · project-doc · slug=gh-1263-hq-park-rating-grammar
+  target-root : <repos>/XYZ-forge (development @ e305cbf36)
+  branch      : suggested=marathon/gh-1263-hq-park-rating-grammar-2026-10-30 branch_ready=false skip_branch_prompt=true
+  freshness   : fetch_ok=1 upstream=origin/development ahead=0 behind=0 dirty=1
+  ref-probed  : development @ e305cbf36 (checkout matches)
+  candidate   : ready
+  inlined-acc : 4 criterion(a) from the acceptance-section
+  source-url  : ok — source: resolves to issue #1263 (https://github.com/HiQS-Labs/XYZ-forge/issues/1263)
+  acceptance  : match — 4/4 criteria copied verbatim from issue #1263
+  issue-state : OPEN — issue #1263 is OPEN
+  readiness   : ready=1
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : ready (exit 0)
+
+DRY-RUN: ready, but packet not written. Would emit to: <repos>/XYZ-forge-gh1258-idea-skill-2026-10-30/relay-system/preflight/2026-10-30/gh-1263-hq-park-rating-grammar
+Would suggest:
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-1263-hq-park-rating-grammar RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact utils/hq/hq.sh,test/ci-route.sh,test/gh238-hq-releases-mode.sh,test/gh239-hq-status-releases-mode.sh,test/gh35-test-tiers.sh,test/gh365-runner-envelope.sh,test/gh365-validate-telemetry.sh,test/gh544-pre-push-gate.sh,test/hq-dispatch.sh,test/hq-hardening.sh,test/hq-locator.sh,test/hq-next.sh,test/hq-park-synthesis.sh,test/hq-park.sh,test/hq-promote.sh,test/hq.sh,test/_setup.sh \
+  --target-root <repos>/XYZ-forge \
+  --pre-advance-cmd 'bash test/hq-park.sh' \
+  --require-clean

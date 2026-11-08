@@ -1,0 +1,9 @@
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge-gh809-jsonl-line-reader-2026-10-24` | standalone_clone | `fix/XYZ-forge-gh809-jsonl-line-reader-2026-10-24` | ✅ | 💤 Dormant | 0 | 0 | **ACTIVE_PROCESS** | Open file handles inside the checkout: PID 94945 (claude) (Dormant handle: 0 files modified in >60m) |
+merge-cleanup: Skipping XYZ-forge-gh809-jsonl-line-reader-2026-10-24: disposition is ACTIVE_PROCESS (Open file handles inside the checkout: PID 94945 (claude) (Dormant handle: 0 files modified in >60m))
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge-gh809-jsonl-line-reader-2026-10-24-gate` | standalone_clone | `fix/XYZ-forge-gh809-jsonl-line-reader-2026-10-24` | ✅ | 💤 Dormant | 0 | 0 | **SAFE_REMOVE_CLONE** | 100% clean standalone clone (0 dirty, 0 stashes, 0 unpushed, 0 dependent worktrees) |
+merge-cleanup: [DRY RUN] Would remove verified standalone clone: /Users/noelsaw/Documents/GitHub-Repos/XYZ-forge-gh809-jsonl-line-reader-2026-10-24-gate
+exit=1

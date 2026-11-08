@@ -1,0 +1,88 @@
+{
+ "elapsed_s": 118.5,
+ "checks": [
+  {
+   "check": "F1 real run reaches budget, watcher reports and sweeps",
+   "pass": true,
+   "detail": {
+    "rc": 0,
+    "stderr": "",
+    "report": {
+     "stop_reason": "mutation budget reached (100)",
+     "events": 100,
+     "gen4_rc": -15,
+     "swept_pids": [],
+     "survivors_after_sweep": [],
+     "canaries_moved": [],
+     "per_target": {
+      "fp-help": {
+       "usage": 17,
+       "pass": 8
+      },
+      "fp-genman": {
+       "usage": 22,
+       "pass": 3
+      },
+      "fp-status": {
+       "usage": 19,
+       "run-root-guard": 6
+      },
+      "fp-init": {
+       "pass": 3,
+       "usage": 18,
+       "run-root-guard": 3,
+       "state-guard": 1
+      }
+     }
+    }
+   },
+   "t": 44.9
+  },
+  {
+   "check": "F3 invalid baseline refuses launch",
+   "pass": true,
+   "detail": {
+    "rc": 3,
+    "stderr": "refusing: invalid canary baseline: {'missing_dep': 'INVALID:rc=1'}\n"
+   },
+   "t": 45.2
+  },
+  {
+   "check": "F3 invalid mid-run observation stops the run",
+   "pass": true,
+   "detail": {
+    "events_at_removal": 10,
+    "executed_after": 0,
+    "report": {
+     "stop_reason": "CANARY VIOLATION: ['flag_present']",
+     "events": 10,
+     "gated_events": 3,
+     "survivors_after_sweep": []
+    }
+   },
+   "t": 53.5
+  },
+  {
+   "check": "F2 slow canary: discovery ends before its deadline",
+   "pass": true,
+   "detail": {
+    "stop_reason": "discovery deadline reserve reached (wall 75s, reserve 30s)",
+    "events": 5,
+    "gated": 0,
+    "ended_minus_deadline_s": -27.7,
+    "watcher_stop_minus_launch_s": 45.0,
+    "survivors": []
+   },
+   "t": 118.5
+  },
+  {
+   "check": "F2 replay refused inside the total-deadline reserve",
+   "pass": true,
+   "detail": {
+    "rc": 125,
+    "stderr": "gh1280-gate: stopped: total deadline reserve reached (replay)\n"
+   },
+   "t": 118.5
+  }
+ ]
+}

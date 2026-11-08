@@ -1,0 +1,12 @@
+Base 0628da70 (origin/development), disposable gate clone, same interpreter /opt/homebrew/bin/python3 3.14.7 (no pytest, requests, pyyaml)
+== gh544-parallel-default.sh
+  FAIL: the sequential header does NOT carry that disclaimer (it is the qualifying form)
+  gh544-parallel-default: 28 pass, 1 fail
+== gh142-ate-exit-contract.sh
+  FAIL: ATE prerequisite missing: Python module requests (install requests pyyaml for this interpreter)
+== gh425-gate-provenance-pr.sh
+wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+test_bounded_runner_timeout_refuses_receipts (__main__.Qualification.test_bounded_runner_timeout_refuses_receipts) ... wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['git', 'clone', '--no-local', '--quiet', '/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/gh591-qualification-19_j5u6n/source', '/private/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/wave-qualification-1jwn7rqo/repo']' returned non-zero exit status 124.
+wave-reconcile: ERROR — Qualification failed; no receipt produced: Command '['python3', '-c', 'import pytest']' returned non-zero exit status 1.
+== gh-gen4-phase2-adaptive-ate.sh
+adaptive_ate: invalid --grid: Expecting value: line 1 column 1 (char 0)

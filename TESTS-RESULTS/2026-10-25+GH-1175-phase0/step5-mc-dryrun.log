@@ -1,0 +1,78 @@
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.merge-cleanup.json
+merge-cleanup: Operating on primary repo: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge
+merge-cleanup: Running in SAFE DRY-RUN mode. Pass --execute to apply changes.
+
+================================================================================
+PHASE 0: PRIMARY ON-DISK CHECKOUT
+================================================================================
+
+Primary checkout: /Users/noelsaw/Documents/GitHub Repos/XYZ-forge
+  branch: development  (integration: development)
+  clean: yes
+  landing: READY
+
+
+================================================================================
+PHASE 1-3: CHECKOUT AUDIT & SAFETY STATUS (1 found)
+================================================================================
+
+| Directory | Type | Branch | Clean | Activity | Stashes | Unpushed | Disposition | Reason |
+|---|---|---|:---:|:---:|:---:|:---:|---|---|
+| `XYZ-forge` | standalone_clone | `development` | ✅ | 🔥 Active (2 in 10m) | 0 | 0 | **PRIMARY_CHECKOUT** | This is the active primary repository checkout |
+
+### 📋 In-Flight Checkouts & Follow-up Guidance
+
+#### `XYZ-forge` (Linked Issue: GH-#1225)
+- **Completion Status**: Open task checklists (167 remaining); code incomplete
+- **Actionable Next Step**: Follow up with last author (noelsaw1) in `XYZ-forge` to close or finish remaining tasks.
+
+merge-cleanup: PR #1227: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #1217: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #1213: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #1211: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #1209: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #1198: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #1190: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #1180: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #1173: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #1172: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #1170: excluded by --exclude; not sequenced this run
+merge-cleanup: PR #1024: excluded by --exclude; not sequenced this run
+================================================================================
+PHASE 4: TOPOLOGICAL PR SEQUENCE (1 open PRs)
+================================================================================
+
+| Seq | PR # | Title | Branch | Base | Draft | Checks | Mergeable | Files |
+|:---:|:---:|---|---|---|:---:|:---:|:---:|:---:|
+| 1 | [#1225](https://github.com/HiQS-Labs/XYZ-forge/pull/1225) | Marathon lane gh-416-doc-trues-up-batch | `marathon/gh-416-doc-trues-up-batch-2026-10-25` | `development` | no | PASS | MERGEABLE | 9 |
+
+================================================================================
+PHASE 5: EXECUTING PR MERGES & RECONCILIATION
+================================================================================
+
+merge-cleanup: Merge policy: preserve_commit_history=True; strategy=merge; source=/Users/noelsaw/Documents/GitHub Repos/XYZ-forge/.merge-cleanup.json
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-F1CCB6 is 69 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-D7D2C4 is 69 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-D248B2 is 69 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-79F036 is 69 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-A993B3 is 69 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-751A4C is 69 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-7AFFE1 is 69 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=mig-ref-stale: MIG-AC68FA is 69 days old (> 7) — disposition the migration debt before the strict flip
+merge-cleanup:   gate: releases check: warn: rule=release-target-passed: 0.6.0 Front-Door is still a draft and 31 day(s) past its target of 2026-09-26 — the plan has drifted from the calendar
+merge-cleanup:   gate: releases check: warn: rule=release-target-passed: 0.8.0 Sundown is still a draft and 10 day(s) past its target of 2026-10-17 — the plan has drifted from the calendar
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-255: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-938: In progress -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-1075: Queue / parked intake -> Completed
+merge-cleanup:   gate: roadmap reconcile-state --dry-run: would move GH-1087: Queue / parked intake -> Completed
+merge-cleanup: PR #1225: pre-merge ledger gate green on b8733346e2 + origin/development
+merge-cleanup: [DRY RUN] Would merge PR #1225 via `gh pr merge 1225 --merge --delete-branch`
+================================================================================
+PHASE 6: SAFE TEARDOWN & RECOVERY PRUNING
+================================================================================
+
+merge-cleanup: Re-inspecting every non-exempt checkout before teardown...
+merge-cleanup: No candidate checkouts qualify for safe removal (all are preserved or active).
+
+================================================================================
+merge-cleanup: Merge cleanup run complete.

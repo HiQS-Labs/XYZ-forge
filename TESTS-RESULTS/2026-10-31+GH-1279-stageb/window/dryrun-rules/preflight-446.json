@@ -1,0 +1,14 @@
+CONTRACT ERROR (/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun/PROJECT/1-INBOX/GH-446-MARATHON-PLAN-WRITE-GUARD.md): see message above. The planner fails loud rather than guessing from prose.
+
+  To fix, add a minimal valid contract in /Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun/PROJECT/1-INBOX/GH-446-MARATHON-PLAN-WRITE-GUARD.md
+  (copy relay-automation/CONTRACT.example.md for a detailed example):
+
+  ## Swarm Preflight Contract
+  ```json
+  {
+    "target":      { "repo": ".", "ref": "main" },
+    "gate":        "bash validate.sh",
+    "fix_probes":  [ { "type": "path_absent", "path": "new-file.txt" } ],
+    "artifacts":   [ "new-file.txt" ]
+  }
+  ```

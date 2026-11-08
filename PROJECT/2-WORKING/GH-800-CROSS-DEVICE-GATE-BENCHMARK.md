@@ -70,3 +70,7 @@ Compute medians and ranges from completed matched trials, separate refused runs 
 ## Merge evidence
 
 - PR #803 merged 2026-09-27 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1274 merged 2026-10-30 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

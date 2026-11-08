@@ -1,0 +1,4 @@
+BASELINE (origin/development b81f4205):
+{"scheduled": [384, 777], "held": []}
+FIXED (task clone):
+{"scheduled": [777], "held": [{"issue": 384, "reason": "possibly delivered: closed by merged PR #386; issue still open"}]}

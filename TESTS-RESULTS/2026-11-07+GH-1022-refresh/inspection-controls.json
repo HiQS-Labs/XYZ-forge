@@ -1,0 +1,37 @@
+{
+  "scope": "extracted real inspect_members with real canonical dry-run; not complete prepare/apply runtime",
+  "results": [
+    {
+      "version": "before",
+      "second_title": "Fix retry",
+      "status": "accepted",
+      "preview_calls": 0,
+      "ledger_unchanged": true,
+      "no_captures_created": true
+    },
+    {
+      "version": "before",
+      "second_title": "Fix * retry",
+      "status": "accepted",
+      "preview_calls": 0,
+      "ledger_unchanged": true,
+      "no_captures_created": true
+    },
+    {
+      "version": "after",
+      "second_title": "Fix retry",
+      "status": "accepted",
+      "preview_calls": 2,
+      "ledger_unchanged": true,
+      "no_captures_created": true
+    },
+    {
+      "version": "after",
+      "second_title": "Fix * retry",
+      "status": "refused",
+      "preview_calls": 2,
+      "ledger_unchanged": true,
+      "no_captures_created": true
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+HEAD 0fcda47f39bf2282479f94a613ca038fd439d754 bare=false origin=https://github.com/HiQS-Labs/XYZ-forge.git email=none
+test/marathon-plan.sh rc=0 6s   SKIP: V: bash↔python render parity intentionally diverged (GH-698 ratings column) [GH-346/GH-348]    marathon-plan: 70 passed, 0 failed, 2 skipped 
+test/gh698-planner-db-ratings.sh rc=0 0s   PASS: GH-710: gid-rated NULL-gh row never flagged unrated   PASS: GH-710: g105 (230) orders before GH-103 (220) — DB rank applies to NULL-gh rows too gh698-
+test/gh362-marathon-plan-link-bullets.sh rc=0 2s   PASS: bash/node engine: '- [ ]' / '- [x]' task-list items are still not ledger entries   PASS: bold bullets still parse — the fix widened the grammar, it di
+test/gh777-inventory-ratchet.sh rc=0 1s inventory_ratchet: clean (matches baseline, 0 new scripts/connects) Testing ratchet rejection of growth... PASS: inventory ratchet enforcement and negative cont
+test/gh174-harness-registry.sh rc=0 0s   PASS: harness_app.py log automatically derives lab name for novel model IDs   PASS: Negative control: tracked harnesses.db, harnesses.sql, and docs remain 100
+test/gh496-telemetry-isolation.sh rc=0 4s   PASS: Negative control: tracked root files remain 100% byte-identical   PASS: WAL-switch retry: locks retried to success (4), other errors raised at once (1),
+test/gh788-python-path-space.sh rc=0 1s   PASS: ratchet red control: flags a planted unquoted $PY fuzz target   PASS: ratchet ignores safe argv lists and quoted interpreters   gh788-python-path-space:
+test/agy-turn.sh rc=0 65s   PASS: .tick writes exempted when host doesn't gitignore .tick (turn succeeds)   PASS: .tick state dir preserved (not rm-rf'd)   agy-turn: 65 pass, 0 fail 
+HEAD-after 0fcda47f39bf2282479f94a613ca038fd439d754 bare=false origin=https://github.com/HiQS-Labs/XYZ-forge.git email=none
+

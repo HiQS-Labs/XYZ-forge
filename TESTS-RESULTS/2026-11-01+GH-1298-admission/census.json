@@ -1,0 +1,2413 @@
+[
+ {
+  "issue": 5,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 9,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 11,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 12,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 13,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 17,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-17-SOP-HARNESS-MODEL-EVAL.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 25,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 26,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 27,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 28,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-28-RELEASES-LEDGER-DISCIPLINE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 30,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 32,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 48,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 49,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 56,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 58,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 59,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 61,
+  "stage": "needs-doc",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 62,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 63,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 64,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 65,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 67,
+  "stage": "needs-doc",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 68,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 69,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 75,
+  "stage": "needs-doc",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 88,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 98,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 120,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 141,
+  "stage": "already-landed",
+  "doc": "PROJECT/2-WORKING/GH-141-FUZZ-ATE-UTILITY.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 143,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 152,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 169,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 177,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 186,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 187,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 189,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 190,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 191,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 192,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 193,
+  "stage": "completed-ref",
+  "doc": "PROJECT/2-WORKING/GH-193-AGENTCHORUS-GEN2.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 201,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-201-GEN35-FOLLOWUPS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 203,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 207,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 216,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 223,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-223-GATE-PUSH-DOUBLE-APPLY.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 224,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 225,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 227,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 229,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 237,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 248,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 252,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 254,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-254-PREVIEW-DRAFT-SORT.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 256,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-256-ARTIFACT-REACHABILITY-PREFLIGHT.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 259,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-259-JOG-SERIAL-QUEUE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 260,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 275,
+  "stage": "already-landed",
+  "doc": "PROJECT/2-WORKING/GH-275-WRITE-OPS-LOGGING.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 277,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 279,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 293,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 294,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 295,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 298,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 299,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-299-GEN4-FUZZING-ATE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 307,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 310,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 313,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 341,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-341-LINUX-UNPRIVILEGED-ATTESTATION.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 342,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 344,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 345,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-345-SLEEP-READINESS-AUDIT.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 346,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-346-HARNESS-GATEWAY-MODEL-RESOLUTION.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 355,
+  "stage": "ready",
+  "doc": "PROJECT/2-WORKING/GH-355-UPDATED-AT-MIGRATION.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "preflight_rc": 4,
+  "admissible": false
+ },
+ {
+  "issue": 381,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 382,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 384,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-384-AGENTCHORUS-CLOUDFLARE-BRIDGE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 391,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 398,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 399,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-399-PROFILE-CARRIES-THE-ROUTE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 402,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-402-BOARD-SYNC.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 406,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-406-RUSS-EXTERNAL-REVIEW.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 417,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 423,
+  "stage": "already-landed",
+  "doc": "PROJECT/2-WORKING/GH-423-ROADMAP-RENDER.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 435,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 442,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 443,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-443-MARATHON-RATING-PASS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 444,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 446,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-446-MARATHON-PLAN-WRITE-GUARD.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 452,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-452-RELEASE-TAGS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 453,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-453-GOVERNANCE-IDENTITY-AUDIT.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 460,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-460-ATE-FUZZ-RESOLVER-CAMPAIGN.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 462,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 467,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 468,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 469,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 472,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 477,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 478,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-478-ATE-RUNAWAY-GUARD.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 481,
+  "stage": "needs-doc",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 482,
+  "stage": "needs-doc",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 484,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS.md",
+  "open_pr": [],
+  "delivered_by": [
+   486
+  ],
+  "admissible": false
+ },
+ {
+  "issue": 490,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 492,
+  "stage": "already-landed",
+  "doc": "PROJECT/2-WORKING/GH-492-ROADMAP-STATE-SWEEP.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 497,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 507,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 512,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 514,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-514-KEEL-SKILL.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 518,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-518-MUSE-SPARK-HARNESS-ROUTE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 522,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-522-ISSUE-ADMISSION.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 544,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 551,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 552,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 562,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 571,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 572,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 575,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 579,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-579-HIQS-CONSUMER.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 582,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 591,
+  "stage": "completed-ref",
+  "doc": "PROJECT/2-WORKING/GH-591-RECONCILER-LIFECYCLE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 621,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 670,
+  "stage": "ready",
+  "doc": "PROJECT/2-WORKING/GH-670-CLAUDE-REVIEWER.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "preflight_rc": 0,
+  "admissible": true
+ },
+ {
+  "issue": 709,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 715,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 717,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 718,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 727,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 732,
+  "stage": "deferred",
+  "doc": "PROJECT/2-WORKING/GH-732-MID-SEPTEMBER-CICD-OPTIMIZATIONS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 748,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 749,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 752,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 757,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 758,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 760,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-760-AGENT-CHORUS-BRIDGE-READY-POLL.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 767,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-767-REGENERATE-ARCHITECTURE-DIAGRAMS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 768,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-768-RELEASES-APP-AUDIT.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 769,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-769-MARATHON-DRIVE-AUDIT.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 772,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-772-MARATHON-DRIVE-MEMORY-COMPRESSOR.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 775,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-775-UMBRELLA-BROKEN-OR-FRAGILE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 777,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [
+   783
+  ],
+  "admissible": false
+ },
+ {
+  "issue": 785,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 786,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 792,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 796,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-796-INTEGRATION-REVIEW.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 800,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-800-CROSS-DEVICE-GATE-BENCHMARK.md",
+  "open_pr": [],
+  "delivered_by": [
+   803
+  ],
+  "admissible": false
+ },
+ {
+  "issue": 802,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 805,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 815,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 816,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 817,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 819,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 836,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-836-GATE-HOTSPOTS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 841,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 843,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 845,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 849,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 853,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 854,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-854-GATE-DISPOSITIONS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 855,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 859,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 868,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 879,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-879-CI-SUITE-AUDIT-FIXES.md",
+  "open_pr": [],
+  "delivered_by": [
+   895
+  ],
+  "admissible": false
+ },
+ {
+  "issue": 884,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 885,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 887,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 897,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 899,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 916,
+  "stage": "deferred",
+  "doc": "PROJECT/1-INBOX/GH-916-LIVE-RELAY-DEFERRED.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 917,
+  "stage": "deferred",
+  "doc": "PROJECT/1-INBOX/GH-917-INSTALL-REGISTRY-DEFERRED.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 918,
+  "stage": "deferred",
+  "doc": "PROJECT/1-INBOX/GH-918-GEN4-ORACLE-DEFERRED.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 920,
+  "stage": "deferred",
+  "doc": "PROJECT/1-INBOX/GH-920-UNGATED-FIXTURE-DEFERRED.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 926,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 928,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 931,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-931-SANITY-CHECK-CROSS-LINKS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 937,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-937-UMBRELLA-CLIO-FLEET-COMPLETION.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 940,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 945,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-945-RADAR-VERIFY-ASSET-RECO.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 947,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 957,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 958,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-958-SKILLS-ARMY-HQ-REPLICATE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 959,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-959-SKILLS-ARMY-LINK-DRIFT.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 961,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-961-SKILLS-ARMY-ANY-DEVICE-PUBLISHER.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 963,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 964,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-964-CLAUDE-CODE-MODS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 967,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-967-MODS-FOLLOW-UPS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 968,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 974,
+  "stage": "deferred",
+  "doc": "PROJECT/1-INBOX/GH-974-REVISIT-ADVISORY-JEV-SCREENING.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 977,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 980,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 991,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 996,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 997,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1000,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1003,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1006,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-1006-BOUNDED-RECOVERY.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1008,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1011,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1012,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [
+   1039,
+   1036
+  ],
+  "admissible": false
+ },
+ {
+  "issue": 1013,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1021,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1022,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [
+   1024
+  ],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1023,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1027,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1028,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1029,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1030,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1032,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1040,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1041,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1048,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1049,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1050,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1052,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1052-RECON-VENDOR-CONTRACTS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1063,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1070,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1071,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1073,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1076,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1084,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1086,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1092,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1094,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1095,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1096,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1098,
+  "stage": "ready",
+  "doc": "PROJECT/2-WORKING/GH-1098-SHIFT-PHASE3.md",
+  "open_pr": [],
+  "delivered_by": [
+   1274
+  ],
+  "preflight_rc": 7,
+  "admissible": false
+ },
+ {
+  "issue": 1103,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1110,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1111,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1112,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-1112-CI-QUICK-WINS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1113,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1121,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1124,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1129,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1130,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1131,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1133,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1135,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1137,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1138,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1145,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1149,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1154,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1155,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1156,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1157,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-1157-SKILLS-ARMY-HARD-RULES.md",
+  "open_pr": [],
+  "delivered_by": [
+   1161
+  ],
+  "admissible": false
+ },
+ {
+  "issue": 1160,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1166,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1167,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1168,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1171,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1175,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1177,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1188,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1189,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1191,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-1191-TASK-SYNC-CLAUDE-DESKTOP.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1200,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1201,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1201-CODE-AUDIT.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1202,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1202-DOC-COMPACTION.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1203,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1203-PURE-PYTHON.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1204,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1204-LEDGER-HYGIENE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1205,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1205-MODULE-DECOMPOSITION.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1206,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1206-PACKAGING-DRIFT.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1207,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1210,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1214,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1216,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1224,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1242,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1243,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1244,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1247,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1247-RETIRE-REMOTE-TAGS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1248,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-1248-OUTER-LOOP-PRIMITIVE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1252,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1252-FACTORY-OSS-CANDIDATES.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1254,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1258,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1258-IDEA-SKILL.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1263,
+  "stage": "ready",
+  "doc": "PROJECT/1-INBOX/GH-1263-HQ-PARK-RATING-GRAMMAR.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "preflight_rc": 0,
+  "admissible": true
+ },
+ {
+  "issue": 1264,
+  "stage": "ready",
+  "doc": "PROJECT/1-INBOX/GH-1264-HQ-PARK-GOAL-PASSTHROUGH.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "preflight_rc": 0,
+  "admissible": true
+ },
+ {
+  "issue": 1265,
+  "stage": "ready",
+  "doc": "PROJECT/1-INBOX/GH-1265-CONSULT-INSTALLED-KIMI-CMD.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "preflight_rc": 0,
+  "admissible": true
+ },
+ {
+  "issue": 1266,
+  "stage": "ready",
+  "doc": "PROJECT/1-INBOX/GH-1266-ARCHITECTURE-MD-SKILLS-INDEX.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "preflight_rc": 0,
+  "admissible": true
+ },
+ {
+  "issue": 1267,
+  "stage": "ready",
+  "doc": "PROJECT/1-INBOX/GH-1267-HQ-PARK-GH-ISSUE.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "preflight_rc": 0,
+  "admissible": true
+ },
+ {
+  "issue": 1276,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1281,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1285,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1287,
+  "stage": "needs-doc",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1288,
+  "stage": "needs-doc",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1291,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1292,
+  "stage": "unrated",
+  "doc": "PROJECT/1-INBOX/GH-1292-HARNESS-RECAP-HOOKS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1293,
+  "stage": "unrated",
+  "doc": "PROJECT/1-INBOX/GH-1293-HQ-NATIVE-HOOK-REGISTRATION.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1295,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1295-INJECTED-TEXT-IN-BRIEFS.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1296,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1296-LAUNCH-LANES-FAIL-PREFLIGHT.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1297,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1298,
+  "stage": "needs-contract",
+  "doc": "PROJECT/1-INBOX/GH-1298-FLYWHEEL-ARC.md",
+  "open_pr": [],
+  "delivered_by": [
+   1301
+  ],
+  "admissible": false
+ },
+ {
+  "issue": 1308,
+  "stage": "needs-contract",
+  "doc": "PROJECT/2-WORKING/GH-1308-POSTMERGE-QA-FIXES.md",
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1310,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1313,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1314,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1315,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ },
+ {
+  "issue": 1317,
+  "stage": "no-ledger-row",
+  "doc": null,
+  "open_pr": [],
+  "delivered_by": [],
+  "admissible": false
+ }
+]

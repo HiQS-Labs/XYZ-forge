@@ -1,0 +1,118 @@
+"""GH-1178 manual fixture check (not a suite). Usage: python3 gh1178_probe.py <forge_root> <wave_reconcile.py>
+
+Mirrors test/gh421-auto-wave-reconcile.sh's in-process harness: no git, no network.
+"""
+import contextlib, importlib.util, io, json, sqlite3, sys, tempfile
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+
+source, wave_path = Path(sys.argv[1]), Path(sys.argv[2])
+sys.path.insert(0, str(source / 'utils/py'))
+
+
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+app = load('gh1178_app', source / 'utils/py/releases_app.py')
+wave = load('gh1178_wave', wave_path)
+OTHER = 'PROJECT/2-WORKING/GH-500-unmoved.md'
+
+
+def scenario(DOC, dry_run=False):
+    closes = 'Closes #421\nCloses #422'  # wave_reconcile sorts closers: #421 is always processed first
+    tmp = tempfile.TemporaryDirectory(prefix='gh1178-')
+    root = Path(tmp.name)
+    (root / '.git').mkdir()
+    (root / '.pdda-mode').write_text('ROADMAP_SOURCE=releases\n')
+
+    def cli(*args):
+        with patch.object(sys, 'argv', ['releases', '--root', str(root), *args]), \
+             contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            app.main()
+
+    def rows():
+        with contextlib.closing(sqlite3.connect(root / 'releases.db')) as c:
+            return {n: (d, t) for n, d, t in c.execute(
+                'SELECT gh_number, doc_path, raw_text FROM roadmap_items ORDER BY gh_number')}
+
+    cli('init', '--slug', 'test/repo')
+    (root / 'PROJECT/2-WORKING').mkdir(parents=True)
+    for d in (DOC, OTHER):
+        (root / d).write_text('---\nstatus: 2-WORKING\nupdated: 2026-09-01\n---\n## Lessons Learned\nFixture.\n')
+    for n, d in ((421, DOC), (422, DOC), (500, OTHER)):
+        cli('roadmap', 'add', '--issue-num', str(n), '--title', f'fixture {n}', '--created', '2026-09-01',
+            '--issue-url', f'https://github.com/test/repo/issues/{n}', '--doc-path', d)
+    pr = dict(number=42, state='MERGED', baseRefName='development', title='fixture',
+              body=closes, mergedAt='2026-09-08T00:00:00Z', mergeCommit={'oid': 'a' * 40})
+    offline = {'prs': [pr], 'issues': [{'number': n, 'state': 'CLOSED'} for n in (421, 422, 500)]}
+    (root / 'offline.json').write_text(json.dumps(offline))
+    (root / 'TESTS-RESULTS').mkdir()
+    (root / 'TESTS-RESULTS/provenance.jsonl').write_text('{"pr":42}\n')
+
+    def run_command(cmd, **kw):
+        if 'releases_app.py' in cmd[1]:
+            args = cmd[2:]
+            if args[:1] == ['--root']:
+                args = args[2:]
+            cli(*args)
+        elif 'marathon-plan.sh' in cmd[1] or 'pdda' in cmd[1] or '--dry-run' in cmd:
+            pass
+        else:
+            raise AssertionError(f'unexpected subprocess: {cmd}')
+        return SimpleNamespace(returncode=0, stdout='', stderr='')
+
+    def apply():
+        argv = ['wave', '--root', str(root), '--pr', '42', '--offline', str(root / 'offline.json'),
+                '--skip-pull', '--skip-branch-check', '--gate'] + (['--dry-run'] if dry_run else [])
+        out = io.StringIO()
+        with patch.object(sys, 'argv', argv), \
+             patch.object(wave, 'check_porcelain_cleanliness', return_value=''), \
+             patch.object(wave, 'verify_rollback_completeness'), \
+             patch.object(wave, 'github_slug_from_origin', return_value='test/repo'), \
+             patch.object(wave, 'harness_tool', side_effect=lambda r, p: str(source / p)), \
+             patch.object(wave.subprocess, 'run', side_effect=run_command), \
+             contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+            wave.main()
+        return out.getvalue()
+
+    first = apply()
+    after = rows()
+    second = '' if dry_run else apply()
+    tmp.cleanup()
+    return first, after, second
+
+
+ok = True
+# Owner first: doc named after #421. Sibling first: doc named after #422, so sibling #421 runs
+# before the doc has moved.
+for label, DOC in (('owner-first', 'PROJECT/2-WORKING/GH-421-fixture.md'),
+                   ('sibling-first', 'PROJECT/2-WORKING/GH-422-fixture.md')):
+    first, r, second = scenario(DOC)
+    done = DOC.replace('2-WORKING', '3-COMPLETED')
+    order = [l for l in first.splitlines() if 'Found active doc' in l or 'No active doc' in l]
+    both = r[421][0] == done and r[422][0] == done
+    text = all(done in r[n][1] and DOC not in r[n][1] for n in (421, 422))
+    unmoved = r[500][0] == OTHER and OTHER in r[500][1]
+    rerun_quiet = '"repoint"' not in second
+    print(f'[{label}] doc={DOC}')
+    print(f'  traversal: {order}')
+    print(f'  421 doc_path={r[421][0]}\n  421 raw_text={r[421][1]}')
+    print(f'  422 doc_path={r[422][0]}\n  422 raw_text={r[422][1]}')
+    print(f'  500 doc_path={r[500][0]}')
+    print(f'  A1 both doc_paths moved: {both} · A1 both raw_text carry destination, not source: {text}'
+          f' · A3 unmoved row kept: {unmoved} · A4 rerun has no repoint: {rerun_quiet}')
+    ok &= both and text and unmoved and rerun_quiet
+
+DOC = 'PROJECT/2-WORKING/GH-421-fixture.md'
+first, r, _ = scenario(DOC, dry_run=True)
+dry_ok = r[422][0] == DOC and r[421][0] == DOC
+print(f'[dry-run] ledger unchanged: {dry_ok} · transitions: '
+      f'{[l for l in first.splitlines() if l.startswith("TRANSITION") and "repoint" in l]}')
+ok &= dry_ok
+print('VERDICT:', 'PASS' if ok else 'FAIL')
+sys.exit(0 if ok else 1)

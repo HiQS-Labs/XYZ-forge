@@ -52,6 +52,16 @@ if [ "${1:-}" = "pr" ] && [ "${2:-}" = "view" ]; then
   fi
   exit 1
 fi
+# GH-1344: jog land reads the issue for whole-issue proof before closing it. The fixture issue's
+# Acceptance is fully checked, so the proof holds; `issue close` flips the stub to CLOSED/COMPLETED.
+if [ "${1:-}" = "issue" ] && [ "${2:-}" = "view" ] && case " $* " in *" state,stateReason,body,comments "*|*" state "*|*" state,stateReason "*) true;; *) false;; esac; then
+  if [ -f "${GH_STUB_LOG}.issue-closed" ]; then state=CLOSED reason=COMPLETED; else state=OPEN reason=null; fi
+  [ "$reason" = null ] || reason="\"$reason\""
+  printf '{"state":"%s","stateReason":%s,"body":"## Acceptance\\n- [x] fixture delivered\\n","comments":[]}\n' "$state" "$reason"
+  exit 0
+fi
+if [ "${1:-}" = "issue" ] && [ "${2:-}" = "close" ]; then : > "${GH_STUB_LOG}.issue-closed"; exit 0; fi
+if [ "${1:-}" = "issue" ] && [ "${2:-}" = "comment" ]; then exit 0; fi
 if [ "${1:-}" = "pr" ] && [ "${2:-}" = "create" ]; then
   if [ "${GH_STUB_CREATE_FAIL:-0}" = "1" ]; then exit 1; fi
   echo "https://example.invalid/pr/created-by-stub"
@@ -613,7 +623,7 @@ G4_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
   env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-jog-lane" \
   PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
   python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" \
-    --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+    --executor marathon --builder codex --reviewer agy < /dev/null 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "G4 marathon executor queue run exits 0" || fail "G4 queue run exit=$rc: $G4_OUT"
 has "$(queue_status "$FR")" "parked|awaiting-landing (PR #42" \
   && pass "G4 row parked awaiting-landing with receipt PR identity" || fail "G4 row: $(queue_status "$FR")"
@@ -632,7 +642,7 @@ prepare_execution_target "$FR" "$FT"
 G5_OUT="$(env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-jog-lane-5" \
   PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy-refuse" \
   python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" \
-    --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+    --executor marathon --builder codex --reviewer agy < /dev/null 2>&1)"; rc=$?
 QS="$(queue_status "$FR")"
 case "$QS" in
   failed\|marathon\ escalated:*) pass "G5 refusing reviewer → row failed with marathon escalation" ;;
@@ -861,7 +871,7 @@ prepare_execution_target "$FR" "$FT"
 K1_OUT="$(env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-k-lane" \
   PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
   python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" \
-    --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+    --executor marathon --builder codex --reviewer agy < /dev/null 2>&1)"; rc=$?
 QS="$(queue_status "$FR")"
 case "$QS" in
   failed\|marathon\ escalated:\ pre-advance-failed*) pass "K1 red-gate execution fails the row (relay approved, gate red)" ;;
@@ -874,32 +884,52 @@ K1_RES="$(ledger_latest_result "$FR/.tick/jog/$GID/state.json")"
 K1_HEAD="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["head_sha"])' "$K1_RES")"
 K1_TASK_COUNT="$(grep -h -c '"type":"task.created"' "$FT"/.tick/events/*MARATHON-GH-901* 2>/dev/null | awk '{s+=$1} END {print s+0}')"
 
-touch "$GATE_MARKER"
-K2_OUT="$(jog_verb retry-gate 901 --reviewer agy --builder codex 2>&1)"; rc=$?
-[ "$rc" -eq 0 ] && pass "K2 gate-only retry exits 0" || fail "K2 rc=$rc: $K2_OUT"
-has "$(queue_status "$FR")" "parked|awaiting-landing" \
-  && pass "K2 row parked awaiting-landing after green gate retry" || fail "K2 row: $(queue_status "$FR")"
-K2_RES="$FR/.tick/jog/$GID/gh901-exec1/gate-retry-1/marathon-result.json"
-jassert "$K2_RES" 'd["outcome"]=="approved" and d["reason"]=="already-satisfied"' "K2 retry receipt approved via satisfied-lane path"
-K2_HEAD="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["head_sha"])' "$K2_RES")"
-[ "$(git -C "$FT" rev-parse "$K2_HEAD^" 2>/dev/null)" = "$K1_HEAD" ] \
-  && pass "K2 only marathon's own transcript commit advanced the head (work head preserved)" \
-  || fail "K2 head moved by more than the transcript commit: $K1_HEAD -> $K2_HEAD"
-K2_TASK_COUNT="$(grep -h -c '"type":"task.created"' "$FT"/.tick/events/*MARATHON-GH-901* 2>/dev/null | awk '{s+=$1} END {print s+0}')"
-[ "$K2_TASK_COUNT" = "$K1_TASK_COUNT" ] \
-  && pass "K2 gate retry spent no new tick token ($K2_TASK_COUNT task.created)" \
-  || fail "K2 token re-seeded: before=$K1_TASK_COUNT after=$K2_TASK_COUNT"
-
 # K3: head moved under the retry → refused BEFORE dispatch (needs retry-build, not a gate check)
 git -C "$FT" checkout -q -b gh280-k3-temp
 git -C "$FT" commit -q --allow-empty -m "move head under the gate retry"
 K3_OUT="$(jog_verb retry-gate 901 --reviewer agy --builder codex 2>&1)"; rc=$?
 [ "$rc" -eq 2 ] && has "$K3_OUT" "head moved" \
-  && pass "K3 gate retry refuses when the head SHA moved" || fail "K3 rc=$rc: $K3_OUT"
-[ ! -d "$FR/.tick/jog/$GID/gh901-exec1/gate-retry-2" ] \
+  && pass "K3 gate retry refuses when the head SHA moved (empty commit)" || fail "K3 rc=$rc: $K3_OUT"
+[ ! -d "$FR/.tick/jog/$GID/gh901-exec1/gate-retry-1" ] \
   && pass "K3 refusal dispatched no gate run" || fail "K3 dispatch happened despite refusal"
 git -C "$FT" checkout -q marathon/gh280-k-lane
 git -C "$FT" branch -q -D gh280-k3-temp >/dev/null 2>&1 || true
+
+# K3b: head moved to non-relay code modification → refused BEFORE dispatch
+git -C "$FT" checkout -q -b gh280-k3-code-temp
+printf '// non-relay edit\n' >> "$FT/src/feature.js"
+git -C "$FT" commit -qm "code edit under gate retry" "$FT/src/feature.js"
+K3_CODE_OUT="$(jog_verb retry-gate 901 --reviewer agy --builder codex 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && has "$K3_CODE_OUT" "head moved" \
+  && pass "K3b gate retry refuses when head moved to non-relay code" || fail "K3b non-relay rc=$rc: $K3_CODE_OUT"
+[ ! -d "$FR/.tick/jog/$GID/gh901-exec1/gate-retry-1" ] \
+  && pass "K3b refusal dispatched no gate run" || fail "K3b dispatch happened despite refusal"
+git -C "$FT" checkout -q marathon/gh280-k-lane
+git -C "$FT" branch -q -D gh280-k3-code-temp >/dev/null 2>&1 || true
+
+# K3c (GH-1332): candidate head whose only commits after execution touch marathon-system/<lane>/RELAY.md is ACCEPTED
+K3C_RELAY="$(find "$FT/marathon-system" -name RELAY.md -type f | head -1)"
+[ -f "$K3C_RELAY" ] && pass "K3c found relay file in execution target" || fail "K3c relay file not found"
+printf '\n<!-- additional review turn comment -->\n' >> "$K3C_RELAY"
+git -C "$FT" add "$K3C_RELAY"
+git -C "$FT" commit -qm "extra review turn on relay"
+K3C_HEAD="$(git -C "$FT" rev-parse HEAD)"
+
+touch "$GATE_MARKER"
+K2_OUT="$(jog_verb retry-gate 901 --reviewer agy --builder codex 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "K2 gate-only retry accepts a relay-receipt-only tail and exits 0 (GH-1332)" || fail "K2 rc=$rc: $K2_OUT"
+has "$(queue_status "$FR")" "parked|awaiting-landing" \
+  && pass "K2 row parked awaiting-landing after green gate retry" || fail "K2 row: $(queue_status "$FR")"
+K2_RES="$FR/.tick/jog/$GID/gh901-exec1/gate-retry-1/marathon-result.json"
+jassert "$K2_RES" 'd["outcome"]=="approved" and d["reason"]=="already-satisfied"' "K2 retry receipt approved via satisfied-lane path"
+K2_HEAD="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["head_sha"])' "$K2_RES")"
+[ "$(git -C "$FT" rev-parse "$K2_HEAD^" 2>/dev/null)" = "$K3C_HEAD" ] \
+  && pass "K2 only marathon's own transcript commit advanced the head past the relay tail" \
+  || fail "K2 head check failed: expected parent $K3C_HEAD, got $(git -C "$FT" rev-parse "$K2_HEAD^" 2>/dev/null)"
+K2_TASK_COUNT="$(grep -h -c '"type":"task.created"' "$FT"/.tick/events/*MARATHON-GH-901* 2>/dev/null | awk '{s+=$1} END {print s+0}')"
+[ "$K2_TASK_COUNT" = "$K1_TASK_COUNT" ] \
+  && pass "K2 gate retry spent no new tick token ($K2_TASK_COUNT task.created)" \
+  || fail "K2 token re-seeded: before=$K1_TASK_COUNT after=$K2_TASK_COUNT"
 
 # K4: retry-build — a FRESH execution on a FRESH suffixed token, prior history intact
 K4_OUT="$( cd "$FR" && PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
@@ -915,6 +945,11 @@ grep -q "MARATHON-GH-901-FIXTURE-LANE-TURN$\|MARATHON-GH-901-FIXTURE-LANE-TURN-"
   && pass "K4 prior token history and execution records preserved" || fail "K4 prior history damaged"
 
 # ═══ L. Phase 3: jog land / jog reconcile — verify, project, delegate, replay ═════════════════
+# GH-1365: final PR edits need not preserve the approved tail policy for queue completion.
+# Keep this existing landing scenario representative of the observed post-review edit.
+printf 'Post-review delivery note\n' > "$FT/delivery-note.md"
+git -C "$FT" add delivery-note.md
+git -C "$FT" commit -qm "fixture final PR edit after approval"
 # Real merge: the lane branch is genuinely merged into development so reachability holds.
 git -C "$FR" fetch -q "$FT" marathon/gh280-k-lane:refs/heads/marathon/gh280-k-lane
 git -C "$FR" checkout -q development
@@ -1017,6 +1052,7 @@ has "$(queue_status "$FR")" "completed|landed via PR #42" \
 grep -q "SHIPPED.*PR #42" "$FR/ROADMAP.md" \
   && pass "L5 ROADMAP entry archived with the shipping badge" || fail "L5 ROADMAP not archived"
 jassert "$FR/$LAND_BUNDLE_REL/landing.json" 'd["merged_sha"]=="'"$MERGE_SHA"'"' "L5 landing evidence records verified merge"
+jassert "$FR/$LAND_BUNDLE_REL/landing.json" 'd["completion_policy"]=="merged-pr" and d["tested_head_sha"]==d["approved_head_sha"] and d["tested_head_sha"]!=d["landed_head_sha"] and "tail_proof" not in d and "reviewed_head_sha" in d and "reviewed_candidate_sha" in d' "L5 completion retains historical attribution without final-head approval"
 SHIP_STATE="$(sqlite3 "$FR/releases.db" "SELECT state FROM manifest_items WHERE release_id=(SELECT id FROM releases WHERE global_id='$REL_GID');")"
 [ "$SHIP_STATE" = shipped ] && pass "L5 real reconciler ships owned dialed-in member" || fail "L5 manifest state: $SHIP_STATE"
 SHIP_EVIDENCE="$(sqlite3 "$FR/releases.db" "SELECT e.reason FROM manifest_state_events e JOIN manifest_items m ON m.id=e.item_id JOIN releases r ON r.id=m.release_id WHERE r.global_id='$REL_GID' AND e.to_state='shipped';")"
@@ -1098,7 +1134,7 @@ M_OUT="$(GH_STUB_PR_JSON="$CANNED_PR" \
   env -u MARATHON_ALLOW_TRUNK_COMMIT SP_SUGGESTED_BRANCH="marathon/gh280-m-lane" \
   PATH="$JOG_AGENTS:$PATH" CODEX_BIN="$JOG_AGENTS/codex" AGY_BIN="$JOG_AGENTS/agy" \
   python3 "$FR/utils/py/releases_app.py" --root "$FR" jog run --target-root "$FT" \
-    --executor marathon --builder codex --reviewer agy 2>&1)"; rc=$?
+    --executor marathon --builder codex --reviewer agy < /dev/null 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "M0 promoted executor run exits 0" || fail "M0 exit=$rc: $M_OUT"
 
 # M1 (GH-567): dashboard is retired; jog does not create ROADMAP-DASHBOARD.md

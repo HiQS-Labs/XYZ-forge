@@ -1,0 +1,75 @@
+$ merge_cleanup.py --execute   # 1. merging --execute without --prs
+rc=2
+  merge-cleanup: ERROR — REFUSING to execute: a merging run needs --prs N[,N...] (the PRs you vetted in the dry run). --teardown-only, --scan-only, --prs-only and --reconcile-pr run without it.
+
+$ merge_cleanup.py --prs 1   # 2. dry run pins the vetted list
+rc=0
+  merge-cleanup: --prs pinned for --execute (<fixture>/primary/.tick/merge-cleanup/gh534b.fii10ffx-origin/selection-development.json): #1 @ 4f1ed31066
+  merge-cleanup: Pinned for --execute: --prs 1@4f1ed3106651ba854e05a15d1570335ab5033aa7
+  merge-cleanup: PR #2: not in --prs; not sequenced
+  merge-cleanup: PR #1: required checks: no required checks
+  merge-cleanup: [DRY RUN] Would merge PR #1 via `gh pr merge 1 --squash --delete-branch`
+
+$ merge_cleanup.py --prs 1,3 --execute   # 3. --execute naming a PR the dry run did not pin
+rc=2
+  merge-cleanup: ERROR — REFUSING to merge: the --prs selection no longer matches the dry run:
+  merge-cleanup: ERROR —   - #3 was not in the dry run's --prs
+  merge-cleanup: ERROR — Re-run the dry run to re-pin (drop merged or closed PRs from --prs), then --execute.
+
+$ merge_cleanup.py --prs 1 --execute   # 4. MAIN PATH: execute the pinned list; #3 opened after the dry run
+rc=0
+  merge-cleanup: PR #2: not in --prs; not sequenced
+  merge-cleanup: PR #3: not in --prs; not sequenced
+  merge-cleanup: PR #1: required checks: no required checks
+  merge-cleanup: Merged set ⊆ --prs: #1 within #1
+
+$ merge_cleanup.py --prs 2   # 5. dry run pins #2
+rc=0
+  merge-cleanup: --prs pinned for --execute (<fixture>/primary/.tick/merge-cleanup/gh534b.fii10ffx-origin/selection-development.json): #2 @ 854f19f8e4
+  merge-cleanup: Pinned for --execute: --prs 2@854f19f8e4ed1f265b31acd5f2d4d660a21356f5
+  merge-cleanup: PR #3: not in --prs; not sequenced
+  merge-cleanup: PR #2: required checks: no required checks
+  merge-cleanup: [DRY RUN] Would merge PR #2 via `gh pr merge 2 --squash --delete-branch`
+
+$ merge_cleanup.py --prs 2 --execute   # 6. head moved after the dry run
+rc=2
+  merge-cleanup: ERROR — REFUSING to merge: the --prs selection no longer matches the dry run:
+  merge-cleanup: ERROR —   - #2 head moved 854f19f8e4 -> b6ca2afb44
+  merge-cleanup: ERROR — Re-run the dry run to re-pin (drop merged or closed PRs from --prs), then --execute.
+
+$ merge_cleanup.py --prs 2   # 7. re-pin #2
+rc=0
+  merge-cleanup: --prs pinned for --execute (<fixture>/primary/.tick/merge-cleanup/gh534b.fii10ffx-origin/selection-development.json): #2 @ b6ca2afb44
+  merge-cleanup: Pinned for --execute: --prs 2@b6ca2afb44652fc838864dc16a8764c5cb02e9ce
+  merge-cleanup: PR #3: not in --prs; not sequenced
+  merge-cleanup: PR #2: required checks: no required checks
+  merge-cleanup: [DRY RUN] Would merge PR #2 via `gh pr merge 2 --squash --delete-branch`
+
+$ merge_cleanup.py --prs 2 --execute   # 8. required check pending
+rc=3
+  merge-cleanup: PR #3: not in --prs; not sequenced
+  merge-cleanup: ERROR — PR #2: DEFERRED — required checks pending (pytest db fast)
+  merge-cleanup: ERROR — 1 PR(s) did not land (0 deferred by network, 1 awaiting checks or a re-pin, 0 parked on resume, 0 handed off or parked): #2 (deferred: required checks pending (pytest db fast))
+
+$ merge_cleanup.py --prs 2 --resume --execute   # 9. rerun once the check passed (same pin)
+rc=0
+  merge-cleanup: PR #3: not in --prs; not sequenced
+  merge-cleanup: PR #2: required checks: 1 required check(s) green
+  merge-cleanup: Merged set ⊆ --prs: #2 within #2
+
+# 10a. dry run --prs 3 printed: --prs 3@111810e05f2cf42ba9edbbfee5d2db9bb4cc0b24
+$ merge_cleanup.py --prs 3@111810e05f2cf42ba9edbbfee5d2db9bb4cc0b24 --execute   # 10. execute the printed N@sha line with no dry-run record
+rc=0
+  merge-cleanup: PR #3: required checks: no required checks
+  merge-cleanup: Merged set ⊆ --prs: #3 within #3
+
+{
+ "execute_without_prs_refused": true,
+ "dry_run_pins": true,
+ "unpinned_pr_refused": true,
+ "main_path_lands_only_listed": true,
+ "moved_head_refused": true,
+ "pending_check_defers": true,
+ "green_check_lands": true,
+ "inline_pin_line_lands_without_record": true
+}

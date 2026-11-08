@@ -1,0 +1,3 @@
+proj-task: same_origin=True safe_deletable=True (OK) disposition=SAFE_REMOVE_CLONE
+other: same_origin=False safe_deletable=False (Refusing: path is not strictly within SAFE_ROOTS (<HOME>/sib/other)) disposition=PRESERVE_UNSAFE_ROOT
+proj-noorigin: same_origin=False safe_deletable=False (Refusing: path is not strictly within SAFE_ROOTS (<HOME>/sib/proj-noorigin)) disposition=PRESERVE_UNVERIFIED_QUERY

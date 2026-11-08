@@ -1,0 +1,16 @@
+First full gate, ./validate.sh (route=full), at 66f7f9c7 in the verify clone: rc=1, 406/409.
+- relay-pkg-freshness: relay-pkg.tar.gz still packaged the old shims. Caused by this branch;
+  fixed in ca7bc009 (regenerated with skills/1-hourly/relay-automation/make-pkg.sh).
+- pdda-repo-contract (pdda-check-status-table): the promoted doc lacked ## Status. Caused by
+  this branch; fixed in ca7bc009.
+- relay-self-sufficiency: agy quota (external).
+
+Final full gate, ./validate.sh (route=full), at ca7bc009 in the verify clone: rc=1 in 883s,
+passed 408 / 409. HEAD, origin and clean status were identical before and after.
+- Only failure: relay-self-sufficiency.sh. Its live agy call got "RESOURCE_EXHAUSTED (code 429):
+  Individual quota reached ... Resets in 48h31m33s" from agy's service, and the gate's serial
+  rerun failed the same way.
+- The suite runs the default (Python) path and reaches the agy service. This branch changes
+  only the -h/--help branch of the Bash fallbacks. The pre-push gate, CI and hosted reconcile
+  skip this suite by design (GH-836).
+Later commits on the branch are evidence/relay files only.

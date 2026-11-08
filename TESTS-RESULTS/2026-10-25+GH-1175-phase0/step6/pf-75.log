@@ -1,0 +1,16 @@
+swarm-preflight · gh-bundle · slug=gh-75-releases-roadmap-dashboard
+  target-root : /Users/noelsaw/Documents/GitHub Repos/XYZ-forge (development @ 08c2a2fba)
+  branch      : suggested=marathon/gh-75-releases-roadmap-dashboard-2026-10-27 branch_ready=false skip_branch_prompt=false
+  freshness   : fetch_ok=1 upstream=origin/development ahead=0 behind=0 dirty=0
+  ref-probed  : development @ 08c2a2fba (checkout matches)
+  candidate   : stale
+  inlined-acc : 0 criterion(a) from the whole-document
+  source-url  : ok — source: resolves to issue #75 (https://github.com/HiQS-Labs/XYZ-forge/issues/75)
+  acceptance  : unknown [cause: no-issue-section] — issue #75 has no '## Acceptance' section — nothing to copy from
+  manifest    : issue #75 is not a frozen manifest member — read from ballast-release.sh, litmus-release.sh, meter-release.sh, nightwatch-release.sh; unverified acceptance is advisory here
+  issue-state : OPEN — issue #75 is OPEN
+  readiness   : ready=1
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : STALE (exit 4)
+
+No packet written — candidate is not preflight-ready (STALE).

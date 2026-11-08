@@ -39,8 +39,8 @@ Before presenting a status change, recheck current sources and the latest explic
 
 ### Step 3: Re-Sequence & Promote Unblocked Work
 
-- Open PRs are re-sorted topologically into the 5 phases (Ready to Land, Ready Pending Undraft, Needs Rebase, In Review, and Held Drafts & Evidence Carriers) with CI status check validation (`statusCheckRollup`).
-- Held drafts and evidence carriers (e.g. test qualification receipts, held spikes) are cleanly isolated in Phase 5 with reason annotations so the daily runner does not mistake them for actionable blockers or merges.
+- Open PRs are classified by the shared engine into the phases Ready to Land, Ready Pending Undraft, Blockers to Fix, Needs Rebase, In Review/WIP, and Held Drafts & Evidence Carriers, with CI status check validation (`statusCheckRollup`). The daily Markdown renders the ready sequence and the top blocker; the full phase lists are in the JSON (`merge_sequence.status_phases`).
+- Held drafts and evidence carriers (e.g. test qualification receipts, held spikes) are isolated in `evidence_carriers_or_held` with reason annotations so the daily runner does not mistake them for actionable blockers or merges — and so the Stalled & stale step (Step 6) never calls them stalled.
 - Newly unblocked dependent tasks are promoted to the top of today's operator queue.
 - If a task is waiting on a business decision, the **Provisional Decision Protocol** is applied (fallback default + record on canonical tracking issue).
 
@@ -56,7 +56,65 @@ Before presenting the pivoted day plan, the engine executes the 2nd-Pass Adversa
 Emits both machine-readable `temp/planner/daily-pivot-<date>.json` and human-readable `temp/planner/DAILY-PIVOT-<date>.md`:
 1. **Accomplished Yesterday:** Include only updates evidenced within the stated calendar day and cite their dates/sources; keep older context separate, even when the ingestion window spans 24–36 hours.
 2. **Today's Immediate P0 Blocker:** The single item the operator should clear first.
-3. **Today's Teammate Action Queues:** Focused tasks for each member.
-4. **Active Merge Sequence:** Live status of the PR queue with passing CI requirements.
+3. **Active Merge Sequence:** Live status of the PR queue with passing CI requirements.
+4. **Adversarial Audit Findings.**
+5. **Stalled & stale** (Step 6 below).
+
+Teammate action queues come from the weekly plan's assignments (`teammate_assignments` in the weekly JSON); the daily
+engine does not re-derive them.
 
 Apply the weekly planner's Step 5 calibration checks to the daily queue, using fresh per-owner and per-applicable-tenant evidence rather than carrying forward an old success count.
+
+### Step 6: Stalled & stale (read-only; GH-1184)
+
+The daily run ends with a **Stalled & stale** section so the operator sees what they started and left hanging,
+across GitHub and the Mac the run is on. It is a log, not a planning surface: actionable follow-ups still go to
+their owning issue or the weekly issue body.
+
+What it collects (every source is wrapped; a failed or capped lookup is a **coverage gap**, printed first, and an
+empty Stalled list under a gap renders *coverage incomplete*, never "nothing stalled"):
+
+- **GitHub** (the data the engine already pulled plus one `gh issue list` and one `gh pr list --state all`):
+  open non-draft PRs idle ≥ `--stale-days` (default 3); drafts idle ≥ `--draft-stale-days` (default 7); open issues
+  assigned to the operator (`gh api user`, override `--operator`) or labelled `in progress`/`🚧`, idle ≥ `--stale-days`.
+  "Idle" is GitHub's `updatedAt` age — a proxy: label churn and bot comments count as activity, so a human stall after
+  such activity can be missed; the section says so.
+- **Held, never Stalled:** the engine's held/evidence-carrier PRs (title `HOLD`, `leave unmerged`, `not an authorized
+  merge`, `prerequisites required`/`live-pilot`, `review authority limit`, evidence-carrier phrasing), anything
+  labelled `hold`/`parked`, and a body line `Owner decision: hold`. Comment-only holds are **not** read; the coverage
+  block states the recognised set.
+- **This device only, read-only:** for every checkout under `--local-roots` (repeatable, globs allowed; the default
+  is `--repo-root` plus `~/marathon-clones/*`, and passing the flag **replaces** that default) whose `origin` is this
+  repo (one hop through a local-path origin; an unresolved origin is a visible gap): branches with no upstream or
+  `ahead N` (regardless of age — forgotten work is the point; `ahead` is *as of last fetch*, this scan never fetches),
+  uncommitted changes (count only, via `git --no-optional-locks status --porcelain`), and branches whose name matches
+  a merged/closed PR head — reported as **`retire? name match — verify with /merge-cleanup`**, never "safe to retire"
+  (names get reused, forks share names, local commits may exist). Integration branches (`development`, `main`,
+  `master`) never get a retirement or no-upstream hint; an `ahead N` on them is still reported.
+  Open session notes: dated `PARKED/YYYY-MM-DD-*.md` not marked `Resolved:`/`Promoted:`/`Closed:` and relay threads
+  whose `STATUS:` is not Approved/Closed, when their last **commit** (or an uncommitted edit) is inside the window —
+  path, date and status only, never contents; a note's `check`/`close` fields are never executed.
+- Rendering caps local rows at 10 per checkout (newest first; the JSON keeps all).
+
+**Comment on the weekly issue (`--team-issue <n>`):** the section is posted as one comment per device per day,
+headed `Stalled & stale — <device> — <date>` with a hidden marker `<!-- planner-stalled:<device>:<date> -->`.
+A same-day re-run **edits that device's own comment**; another Mac posts its own; the coverage block lists every
+device seen in prior markers with `no report from <device> since <date>` when it has none today. The device id is
+`--device-id` or `device_config.json`'s `device_id`, lowercased with `.local` stripped. Without `--team-issue`
+nothing is posted. If the comment listing fails the run does not post blind; a failed listing or write exits 3.
+
+**Headless entry point (for the #1168 scheduler — not enabled here):**
+
+```bash
+python3 "$PLANNER_ENGINE" --repo-root "$PLANNER_REPO" --mode stalled --team-issue <weekly issue>
+```
+
+runs only the scan and the comment (no weekly baseline needed), writes `temp/planner/stalled-<UTC date>.json` and
+`temp/planner/STALLED-<UTC date>.md` (file names use the engine's UTC date like every other planner file; the comment
+header and marker use the device's local date), and is non-interactive. If the open-PR lookup itself fails, the
+report is still produced with `open PRs` as a `failed` coverage entry (daily mode does the same; the other modes keep
+failing closed as before). Enabling a scheduled job is a separate operator approval under #1168. The scan writes nothing
+but `temp/planner/*` and that one comment; it never fetches, prunes, deletes, or touches `releases.db`.
+
+This change is forge-only: XYZ-mini's copies of both planner skills are `adapted` (`utils/py/xyz_mini_sync.py`)
+and are not refreshed from here.

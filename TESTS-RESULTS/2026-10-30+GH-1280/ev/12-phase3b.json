@@ -1,0 +1,86 @@
+{
+ "a_genman_12994": [
+  {
+   "argv": [
+    "generate-manifest",
+    "--output",
+    "temp"
+   ],
+   "sandbox": true,
+   "rc": 0,
+   "stdout": "",
+   "stderr": ""
+  },
+  {
+   "argv": [
+    "generate-manifest",
+    "--output",
+    "temp/factory-primitive/ate-smoke/man\u2028ifest.json"
+   ],
+   "sandbox": true,
+   "rc": 2,
+   "stdout": "",
+   "stderr": "factory-primitive: [Errno 20] Not a directory: 'temp/factory-primitive/ate-smoke'\n"
+  }
+ ],
+ "b_tick_sandbox_True": [
+  {
+   "argv": [
+    "--run-root",
+    "temp/factory-primitive/tk",
+    "init",
+    "--daily-cap",
+    "1",
+    "--max-call-cost",
+    "0"
+   ],
+   "sandbox": true,
+   "rc": 0,
+   "stdout": "{\"instance\":\"/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-long/clone/temp/factory-primitive/tk/instances/C\",\"status\":\"initialized\"}\n",
+   "stderr": ""
+  },
+  {
+   "argv": [
+    "--run-root",
+    "temp/factory-primitive/tk",
+    "tick",
+    "--slot",
+    "1"
+   ],
+   "sandbox": true,
+   "rc": 1,
+   "stdout": "{\"status\":\"failed\",\"tick_id\":\"slot_001\"}\n",
+   "stderr": ""
+  }
+ ],
+ "b_tick_sandbox_False": [
+  {
+   "argv": [
+    "--run-root",
+    "temp/factory-primitive/tk",
+    "init",
+    "--daily-cap",
+    "1",
+    "--max-call-cost",
+    "0"
+   ],
+   "sandbox": false,
+   "rc": 0,
+   "stdout": "{\"instance\":\"/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-long/clone/temp/factory-primitive/tk/instances/C\",\"status\":\"initialized\"}\n",
+   "stderr": ""
+  },
+  {
+   "argv": [
+    "--run-root",
+    "temp/factory-primitive/tk",
+    "tick",
+    "--slot",
+    "1"
+   ],
+   "sandbox": false,
+   "rc": 0,
+   "stdout": "{\"status\":\"completed\",\"tick_id\":\"slot_001\"}\n",
+   "stderr": ""
+  }
+ ]
+}

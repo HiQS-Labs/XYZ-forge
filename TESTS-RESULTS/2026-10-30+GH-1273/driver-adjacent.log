@@ -1,0 +1,24 @@
+== test: gh505-separator-smoke ==
+  workdir: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh505-separator-smoke.XXXXXX.rf3kb9GiSg
+relay-drive: GH-370 progress (main tree fallback: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh505-separator-smoke.XXXXXX.rf3kb9GiSg/agent-a) changed-files=0
+codex-turn: worktree isolation ON (/var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T//rtl-wt.UoIcft)
+rtl: GH-654 off-lane candidate: relay.md
+rtl: GH-654 allowlist: [] relay_file: /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh505-separator-smoke.XXXXXX.rf3kb9GiSg/agent-a/relay.md
+codex-turn: committed rev turn (file-scoped, no push)
+codex-turn: dependency.drift — rev changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — rev changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — rev changed src/events.js (0 lines); signalled for the next turn
+relay-drive: WARNING — harmless blank separators changed in review history; raw transcript retained
+relay-drive: attested Approved by rev — reviewed 26d373682215, 56 bytes of review text, record /var/folders/z0/92pfvhnn06z2_7hnpdb4kkbw0000gn/T/tick-gh505-separator-smoke.XXXXXX.rf3kb9GiSg/agent-a/.git/relay-attest/T-SEP.json
+relay-drive: relay terminated (STATUS: Approved, token done, attested by rev) after 1 turn(s)
+
+relay-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 1s
+per done-task: ≥0 tokens, 1s wall-clock
+  turn peak RSS: rev: 44MB peak RSS
+
+driver separator approval and real loader PASS

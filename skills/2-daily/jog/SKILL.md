@@ -13,7 +13,7 @@ When the operator speaks naturally:
 - `"jog GH-123"`:
   1. Validates the issue via `gh issue view 123`.
   2. Ensures a capture doc exists (in `PROJECT/1-INBOX/` or `PROJECT/2-WORKING/`).
-  3. Ensures the issue is parked in the roadmap ledger (`releases roadmap add`).
+  3. Ensures the issue has a roadmap ledger row created at pickup with real rating (`releases roadmap pickup --issue-num 123`).
   4. Enqueues the issue into `jog_queue` (`releases jog add GH-123`).
   5. Echoes: `jog: enqueued GH-123 at position N`.
 
@@ -21,7 +21,7 @@ When the operator speaks naturally:
   1. Extracts the immediate task/bug discussion from recent context.
   2. Creates the tracking GitHub issue via `gh issue create` (issue-first SOP).
   3. Writes the initial capture doc to `PROJECT/1-INBOX/GH-<num>-<title>.md`.
-  4. Parks the issue in the roadmap ledger (`releases roadmap add`).
+  4. Creates the roadmap row at pickup (`releases roadmap pickup --issue-num <num>`) with rating from the issue body/doc.
   5. Enqueues into `jog_queue` (`releases jog add <num>`).
   6. Confirms the newly created issue number and queue position with the operator.
 
@@ -64,7 +64,7 @@ releases jog retry-build <GH-NUM> --target-root <disposable-full-clone>
     Fresh Marathon attempt on a fresh execution id (history preserved).
 
 releases jog land <GH-NUM> [--pr N]
-    Verify committed delivery after hosted reconciliation and complete the primary queue row.
+    Verify committed delivery after hosted or local reconciliation and complete the primary queue row.
 
 releases jog reconcile <GH-NUM>
     Idempotent replay entry for jog land (same verification and steps).
@@ -91,6 +91,7 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
    If a task's capture doc is in `PROJECT/1-INBOX/`, `jog run` promotes it to `PROJECT/2-WORKING/`, formats the status table, and lints its `fix_probes`:
    - Rejects trivial or dummy probe patterns (e.g. `exit 0`, `true`).
    - Requires referenced probe scripts/globs to resolve to actual files.
+   - With no frontmatter `fix_probes`, accepts the `## Swarm Preflight Contract` JSON `fix_probes` when every entry is well-formed (known `type`; non-empty `path`, grep `pattern`, or a `command` `cmd` that passes the same lint). Promotion evaluates no probe: preflight judges "unfixed" next, in its ref-pinned worktree (GH-1232).
    - In interactive mode, prompts operator to approve drafted probes before running preflight.
    - In unattended mode, unreviewed auto-scaffolding without verified probes is parked with `unreviewed-probe-contract` to prevent false-green runs.
 
@@ -114,7 +115,7 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
 7. **Receipt-Backed Landing & `--auto-merge`:**
    A row is never marked `completed` on a self-report. `jog land` verifies GitHub truth first —
    merged state, merge-SHA reachability, PR identity (repo, base, head, head SHA), and qualifying
-   gate evidence after hosted `wave_reconcile` has completed issue/doc lifecycle — then completes
+   gate evidence after hosted or local `wave_reconcile` has recorded reconciliation — then completes
    the primary row and records its landing proof.
    - **Default (Interactive):** Pauses at each landing boundary for human confirmation. On confirm: merges PR into `development` and re-anchors the checkout. On decline: marks row `parked` (`awaiting-landing`) so unmerged tasks are never misrepresented as `completed`.
    - **Unattended without `--auto-merge`:** Parks row as `parked` (`awaiting-landing (unattended run without --auto-merge)`) and halts advance.
@@ -161,19 +162,18 @@ published, fast-forward-ready primary. Unrelated changes, divergence or rejected
 preserve state for reconciliation; do not bypass Phase 0. The automatic direct-push/rebuild
 path is a separate PR so it can be reverted independently. `--auto-merge` on native Jog dispatch/retry refuses before leasing during this interim;
 it cannot skip the publication checkpoint. Use merge-cleanup for actual landing;
-its mapped Jog hook runs after hosted reconciliation and before the existing final post-merge
+its mapped Jog hook runs after hosted or local reconciliation and before the existing final post-merge
 commit/push. A direct `jog land` call likewise needs that final publication checkpoint.
 
-Landing requires merged GitHub truth, a green gate on the original approved SHA, clean
-`releases check`, green hosted reconciliation and merge reachability from freshly fetched
-`origin/<integration>`. A moved head may contain the exact validated receipt publication,
-ledger-only changes in B1's six-path set, or mechanically proven upstream merges. For each
-upstream merge, both parent trees and the recorded tree have those six paths stripped; a
-conflict-free `git merge-tree --write-tree` must reproduce exactly the recorded stripped tree.
-Any remaining conflict or extra/missing blob refuses. The committed `landing.json` records
-both approved/delivery heads, tree IDs, exclusions and hosted run. No manual override or broad
-document-directory exception exists. Replay uses canonical queue truth and emits no duplicate
-completion transition.
+Landing requires merged GitHub truth, a validated green gate on the original approved SHA,
+clean `releases check`, hosted or local reconciliation evidence, and merge reachability from
+freshly fetched `origin/<integration>` and primary HEAD. A moved head must match this PR's
+fetched head; queue completion does not require exact approval ancestry or a permitted-file
+tail. It records delivery, not approval or test coverage of later edits. `landing.json` records
+`completion_policy: merged-pr`, the original approved/tested SHA, reported review head/candidate
+(null when absent), landed PR head, merge SHA and reconciliation evidence. Publication and
+retry-gate admission retain their existing checks. Replay uses canonical queue truth and emits
+no duplicate completion transition.
 
 ## Recovery Verbs
 
@@ -187,3 +187,16 @@ After an interrupted or failed item, pick the verb that matches what actually ne
   intake-hygiene fixes).
 - `jog retry-build <GH-NUM>` — the real rebuild: a fresh Marathon attempt on a fresh execution id
   when the build itself must be redone; all prior Tick history and execution records are preserved.
+
+### Crash leftovers
+
+Keep the verb order above: run `resume` first (spends no token), then `retry-gate` (approved build, failed gate), then `retry-build` (real rebuild). When a crashed run parks on cold-start (`cold-start-paused` / no valid result receipt), the crashed target clone may still hold four leftovers. For each, separate **"no process owns it"** from **"no unique work remains"**, and preserve on any uncertainty:
+
+1. **Isolation worktree (`rtl-wt.*`):** inspect `git worktree list` and confirm no live process holds the path (`lsof`). A worktree with no live owner can still hold unpublished edits, so check `git -C <wt> status` to confirm no unique work remains before removing it (`git worktree remove`).
+2. **Claimed tick token (`MARATHON-…-TURN`):** `tick info <token>` names an agent, not a pid. Establish the owning execution from the driver lock and the Jog row's `lease_pid` (`kill -0`). The token only clears once that execution is confirmed dead.
+3. **Clone driver lock (`.git/relay-driver.lock`):** confirm the pid in it is not alive (`kill -0`). Once no process owns it, the driver reclaims a stale lock itself on the next run.
+4. **Unpushed local marathon branch (`marathon/gh-…`):** this is evidence to **preserve**, never proof that removal is safe.
+
+Before anything is cleared, rely on `/merge-cleanup`'s existing checks — dirty files, unpublished refs, dependent worktrees, and live handles — rather than repeating them by hand.
+
+**Fresh-clone rule for `retry-build`:** after a cold-start park, `jog retry-build --target-root <clone>` targets a **fresh disposable full clone**, never the crashed one. The crashed clone is retired through `/merge-cleanup`, which preserves an unpushed branch until the operator says it is disposable.

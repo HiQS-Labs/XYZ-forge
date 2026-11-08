@@ -1,0 +1,9 @@
+2026-10-26T03:06:46Z
+{'id': 22, 'global_id': 'jog-01M5V2Q6CK5GW0B5V25KFQQ1XE', 'gh_number': 416, 'position': 1, 'status': 'parked', 'attempt_count': 1, 'lease_pid': None, 'failure_reason': 'unreviewed-probe-contract (no valid probes in unattended mode)', 'created_at': '2026-10-26T03:05:31Z', 'updated_at': '2026-10-26T03:05:56Z', 'title': 'four documentation trues-ups', 'doc_path': 'PROJECT/1-INBOX/GH-416-DOC-TRUES-UP-BATCH.md', 'issue_url': 'https://github.com/HiQS-Labs/XYZ-forge/issues/416'}
+ M releases.db
+ M releases.sql
+dc812539 intake(gh416): narrow to items 1 and 3, refresh Preflight Contract; GH-1175 Phase 0 step 1 evidence
+a3450a2c chore: reconcile after PR #1223
+e2069063 Merge pull request #1223 from HiQS-Labs/feat/gh1214-lessons-readback
+clone:
+dc812539 intake(gh416): narrow to items 1 and 3, refresh Preflight Contract; GH-1175 Phase 0 step 1 evidence

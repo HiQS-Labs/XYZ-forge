@@ -1,0 +1,186 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-10-31T15:01:02Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-1267-hq-park-gh-issue"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun/PROJECT/1-INBOX/GH-1267-HQ-PARK-GH-ISSUE.md"
+    ],
+    "issues": [],
+    "target_root": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1279-read-only-planning-soak-2026-10-30-dryrun",
+    "branch": "(detached)",
+    "commit": "28ebacd02d972d24f9e1ae07415dee2643702aec",
+    "suggested_branch": "marathon/gh-1267-hq-park-gh-issue-2026-10-31",
+    "branch_ready": false,
+    "skip_branch_prompt": true
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "development"
+    },
+    "gate": "bash test/hq-park.sh",
+    "fix_probes": [
+      {
+        "type": "grep_absent",
+        "path": "utils/hq/hq.sh",
+        "pattern": "issue view",
+        "note": "pre-fix: cmd_park never calls gh issue view (0 matches at development); landed when the adopt branch does"
+      }
+    ],
+    "artifacts": [
+      "utils/hq/hq.sh",
+      "skills/2-daily/hq/SKILL.md"
+    ],
+    "artifacts_new": [],
+    "remediation": {
+      "source": "issue#<this>",
+      "criteria": "park accepts --gh-issue N; with it, cmd_park refuses an already-registered issue, fetches url/title/body with gh issue view, skips dup guard and gh issue create, and reuses the unchanged capture + roadmap add path. No bulk mode, no rating, no new test (GH-831)."
+    },
+    "lanes": {}
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": null,
+    "ahead": 0,
+    "behind": 0,
+    "dirty": true,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "development",
+    "evaluated_ref_commit": "7cd97db47679c90d26610d3eb15450406f41428a",
+    "checkout_matches_ref": false,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "grep_absent",
+        "path": "utils/hq/hq.sh",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "OPEN",
+      "closed_at": null,
+      "detail": "issue #1267 is OPEN"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "match",
+      "cause": null,
+      "detail": "4/4 criteria copied verbatim from issue #1267",
+      "issue": "1267",
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "source_url": {
+      "status": "ok",
+      "detail": "source: resolves to issue #1267 (https://github.com/HiQS-Labs/XYZ-forge/issues/1267)",
+      "issue": "1267",
+      "url": "https://github.com/HiQS-Labs/XYZ-forge/issues/1267",
+      "slug": "HiQS-Labs/XYZ-forge"
+    },
+    "acceptance_inline": {
+      "criteria": 4,
+      "scope": "acceptance-section",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "utils/hq/hq.sh",
+      "skills/2-daily/hq/SKILL.md",
+      "test/ci-route.sh",
+      "test/gh238-hq-releases-mode.sh",
+      "test/gh239-hq-status-releases-mode.sh",
+      "test/gh35-test-tiers.sh",
+      "test/gh365-runner-envelope.sh",
+      "test/gh365-validate-telemetry.sh",
+      "test/gh544-pre-push-gate.sh",
+      "test/hq-dispatch.sh",
+      "test/hq-hardening.sh",
+      "test/hq-locator.sh",
+      "test/hq-next.sh",
+      "test/hq-park-synthesis.sh",
+      "test/hq-park.sh",
+      "test/hq-promote.sh",
+      "test/hq.sh",
+      "test/_setup.sh"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "utils/hq/hq.sh",
+      "skills/2-daily/hq/SKILL.md",
+      "test/ci-route.sh",
+      "test/gh238-hq-releases-mode.sh",
+      "test/gh239-hq-status-releases-mode.sh",
+      "test/gh35-test-tiers.sh",
+      "test/gh365-runner-envelope.sh",
+      "test/gh365-validate-telemetry.sh",
+      "test/gh544-pre-push-gate.sh",
+      "test/hq-dispatch.sh",
+      "test/hq-hardening.sh",
+      "test/hq-locator.sh",
+      "test/hq-next.sh",
+      "test/hq-park-synthesis.sh",
+      "test/hq-park.sh",
+      "test/hq-promote.sh",
+      "test/hq.sh",
+      "test/_setup.sh"
+    ],
+    "inferred_test_artifacts": [
+      "test/ci-route.sh",
+      "test/gh238-hq-releases-mode.sh",
+      "test/gh239-hq-status-releases-mode.sh",
+      "test/gh35-test-tiers.sh",
+      "test/gh365-runner-envelope.sh",
+      "test/gh365-validate-telemetry.sh",
+      "test/gh544-pre-push-gate.sh",
+      "test/hq-dispatch.sh",
+      "test/hq-hardening.sh",
+      "test/hq-locator.sh",
+      "test/hq-next.sh",
+      "test/hq-park-synthesis.sh",
+      "test/hq-park.sh",
+      "test/hq-promote.sh",
+      "test/hq.sh"
+    ],
+    "inferred_test_helpers": [
+      "test/_setup.sh"
+    ],
+    "fs_touching_tests": [
+      "test/ci-route.sh",
+      "test/gh238-hq-releases-mode.sh",
+      "test/gh239-hq-status-releases-mode.sh",
+      "test/gh35-test-tiers.sh",
+      "test/gh365-runner-envelope.sh",
+      "test/gh365-validate-telemetry.sh",
+      "test/gh544-pre-push-gate.sh",
+      "test/hq-dispatch.sh",
+      "test/hq-hardening.sh",
+      "test/hq-locator.sh",
+      "test/hq-next.sh",
+      "test/hq-park-synthesis.sh",
+      "test/hq-park.sh",
+      "test/hq-promote.sh",
+      "test/hq.sh",
+      "test/_setup.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

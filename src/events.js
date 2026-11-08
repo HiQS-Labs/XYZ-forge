@@ -196,20 +196,30 @@ function appendEvent(repoRoot, {
 }
 
 /**
- * Reads every event in the log, sorted by filename (which encodes ISO timestamp),
- * so callers see events in chronological arrival order.
+ * Reads events in filename order, then physical line order. Blank lines are
+ * ignored; malformed lines are skipped with a warning.
+ * Pass opts.strict to throw on malformed lines instead.
  * @param {string} repoRoot - absolute path to the repo root
  * @returns {Object[]} parsed event objects, each carrying a `_file` provenance field
  */
-function readAllEvents(repoRoot) {
+function readAllEvents(repoRoot, opts = {}) {
   const dir = eventsDir(repoRoot);
   if (!fs.existsSync(dir)) return [];
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.jsonl')).sort();
-  return files.map(f => {
-    const raw = fs.readFileSync(path.join(dir, f), 'utf8').trim();
-    const ev = JSON.parse(raw);
-    ev._file = f;
-    return ev;
+  return files.flatMap(f => {
+    const raw = fs.readFileSync(path.join(dir, f), 'utf8');
+    return raw.split(/\r?\n/).flatMap((line, i) => {
+      if (!line.trim()) return [];
+      try {
+        const ev = JSON.parse(line);
+        ev._file = f;
+        return [ev];
+      } catch (err) {
+        if (opts.strict) throw new Error(`${f}:${i + 1}: ${err.message}`);
+        process.stderr.write(`tick: warning: skipping invalid JSON in ${f}:${i + 1}: ${err.message}\n`);
+        return [];
+      }
+    });
   });
 }
 

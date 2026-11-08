@@ -22,6 +22,10 @@ The per-skill index with a one-line purpose for each is `ARCHITECTURE.md` → "S
   Skills Index and any `skills/<old>/<name>` literal (`grep -rn "skills/<old>/<name>"`). This includes paths in code and tests.
 - **Add a skill:** create it under the tier you expect it to be used at; `4-occasional/` is the
   default when unsure. The Skills Index row is part of the change.
+- **Mode before skill (GH-1299).** Add a new skill only when its trigger and the unit it judges
+  cannot be added as a mode or section of an existing skill. The plan names the existing skills
+  checked and why each could not carry it. Example: the plan-wide ceremony audit is `sanity-check`
+  Plan mode, not a separate skill, because it asks that skill's question of every step.
 - **Refresh only your installed skills and configured app targets after a move.**
   Skills Army HQ app links point at its flat collection and remain valid; refresh each moved
   skill's source receipt with `intake.py --apply update <name> --source <forge>/skills/<tier>/<name>`.

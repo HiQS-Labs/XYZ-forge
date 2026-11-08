@@ -1,0 +1,175 @@
+{
+  "started_at": "2026-10-30T19:21:46-0700",
+  "repo": "/Users/noelsaw/Documents/GH Repos/XYZ-forge-gh1280-outer-loop-ate-campaign-2026-10-30",
+  "sandbox": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-v5/clone",
+  "duration_s": 300.0,
+  "targets": [
+    "fp-help",
+    "fp-genman",
+    "fp-status",
+    "fp-init"
+  ],
+  "batches": 4,
+  "mutations": 100,
+  "counts": {
+    "pass": 14,
+    "fail": 76,
+    "anomaly": 10
+  },
+  "handled_rejections": 76,
+  "counterexamples": 10,
+  "parity_divergences": 0,
+  "contamination_events": [
+    {
+      "round": 2,
+      "target": "fp-genman",
+      "seed": 1282,
+      "changed": [
+        "?? \" \""
+      ]
+    }
+  ],
+  "host_violations": [],
+  "per_target": {
+    "fp-help": {
+      "batches": 1,
+      "mutations": 25,
+      "counterexamples": 0,
+      "parity_divergences": 0
+    },
+    "fp-genman": {
+      "batches": 1,
+      "mutations": 25,
+      "counterexamples": 0,
+      "parity_divergences": 0
+    },
+    "fp-status": {
+      "batches": 1,
+      "mutations": 25,
+      "counterexamples": 6,
+      "parity_divergences": 0
+    },
+    "fp-init": {
+      "batches": 1,
+      "mutations": 25,
+      "counterexamples": 4,
+      "parity_divergences": 0
+    }
+  },
+  "errors": [],
+  "elapsed_s": 40.3,
+  "mutations_per_min": 148.9,
+  "telemetry": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/out-v5/telemetry.jsonl",
+  "telemetry_valid": true,
+  "clusters": [
+    {
+      "digest": "c0cfa89b249b9917",
+      "members": 9,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "anomaly"
+      ],
+      "reasons": [
+        "rc=2 with unclassified stderr"
+      ],
+      "representative": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-v5.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-v5.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "--run-root",
+        "1",
+        "status"
+      ],
+      "rep_size": 533,
+      "exit_code": 2,
+      "signal": 0,
+      "cwd": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-v5/clone",
+      "stderr_head": "factory-primitive: run root must stay under /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-v5/clone/temp/factory-primitiv"
+    },
+    {
+      "digest": "21aaae4bb9057c38",
+      "members": 1,
+      "phases": [
+        "fuzz"
+      ],
+      "verdicts": [
+        "anomaly"
+      ],
+      "reasons": [
+        "rc=2 with unclassified stderr"
+      ],
+      "representative": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-v5.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-v5.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "--run-roo",
+        "temp/factory-primitive/fz",
+        "init",
+        "--daily-cap",
+        "1",
+        "--max-call-cost",
+        "0"
+      ],
+      "rep_size": 586,
+      "exit_code": 2,
+      "signal": 0,
+      "cwd": "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/sb-v5/clone",
+      "stderr_head": "factory-primitive: instance already initialized; use a new run root\n"
+    }
+  ],
+  "false_positives": [
+    {
+      "digest": "21aaae4bb9057c38",
+      "members": 1,
+      "argv": [
+        "/usr/bin/sandbox-exec",
+        "-f",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/profile-v5.sb",
+        "/opt/homebrew/bin/python3",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/supervisor.py",
+        "--gate",
+        "/private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-XYZ-forge/3b1ff090-fa64-4928-a8ed-121f037d42bd/scratchpad/gh1280/contract-v5.json",
+        "--",
+        "utils/py/harness.py",
+        "factory-primitive",
+        "--run-roo",
+        "temp/factory-primitive/fz",
+        "init",
+        "--daily-cap",
+        "1",
+        "--max-call-cost",
+        "0"
+      ],
+      "replay_rc": 0,
+      "recorded_rc": 2
+    }
+  ],
+  "synthesized": {
+    "emitted": [],
+    "skipped": []
+  },
+  "verdict": {
+    "zero_host_violations": true,
+    "zero_sandbox_contamination": false,
+    "zero_host_contamination": false,
+    "zero_false_positives": false,
+    "telemetry_line_valid": true
+  },
+  "finished_at": "2026-10-30T19:22:27-0700"
+}

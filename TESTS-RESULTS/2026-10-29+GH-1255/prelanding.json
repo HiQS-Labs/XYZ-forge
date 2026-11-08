@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-10-30T02:58:51.567917+00:00",
+  "kind": "prelanding-doc-review",
+  "source_head": "dd8c558321781e7d381d207348b947faf0721fdf",
+  "runtime_and_existing_suites_unchanged_from": "f89758e36fc3038130eabbe61966bc2c6f1540a2",
+  "changed_runtime_paths": [],
+  "review_receipt": {
+    "added_len": 5956,
+    "added_sha256": "a4b55d051851a9f4f84ce7e6bb14b0ecc3a52ae70fc680b55192ea7192cf18f7",
+    "added_start": 11930,
+    "artifact_sha256": "8bd7208852de9c33de1b1a09e11a1963cb213df7a4b130d934fe27cf42dccbb4",
+    "attested_at": "2026-10-30T02:56:43Z",
+    "driver_pid": 97004,
+    "isolated": true,
+    "relay_file": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1255-codex-capture-2026-10-29/relay-system/2026-10-29/gh1255-prelanding.codex.md",
+    "relay_file_rel": "relay-system/2026-10-29/gh1255-prelanding.codex.md",
+    "reviewed_head": "d893dc8af5006d51e2eeb4193c2f388f9a694aff",
+    "reviewer": "codex",
+    "schema": "relay-drive/attest@1",
+    "status": "Approved",
+    "target_repo": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1255-codex-capture-2026-10-29",
+    "task": "RELAY-gh1255-prelanding",
+    "trailer_sha256": "736be4623f085a910a4314a5b4ff4fcfef2f482292e6dc327e382455651eef0c",
+    "transcript_repo": "/Users/noelsaw/Documents/GitHub Repos/XYZ-forge-gh1255-codex-capture-2026-10-29"
+  },
+  "ratings_preserved": [
+    85,
+    85,
+    50,
+    65
+  ]
+}
