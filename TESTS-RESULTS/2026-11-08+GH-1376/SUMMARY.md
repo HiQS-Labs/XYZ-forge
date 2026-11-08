@@ -6,7 +6,7 @@ Documentation-only addition of `skills/2-daily/flywheel/SKILL.md`, its Skills In
 
 - Implementation commit: `b35f931ce36f84cefdfdc1ccfd25d0baeffd8900`.
 - Integrated commit after merging `origin/development`: `681809230bec851f4fa11748d9f5c6993f3804e4`.
-- PRS row after supported merge replay: `rmi-01M6Y7RZVY3P9970XQQ13XGD8Q`, rated `80/45/50/80`, accepted start and In progress read back. The original unpublished row `rmi-01M6Y72BPK27QN223B7MFV3DHK` was reminted by replaying the same issue/rating/doc through `roadmap pickup` after the ledger-base merge; no SQL or DB hand edit.
+- Final PRS row after supported base-merge replays: `rmi-01M6Y8AYYZR9S66FGD540Z0X3M`, rated `80/45/50/80`, accepted start and In progress read back. The successive unpublished IDs `rmi-01M6Y72BPK27QN223B7MFV3DHK` and `rmi-01M6Y7RZVY3P9970XQQ13XGD8Q` were reminted by replaying the same issue/rating/doc through `roadmap pickup` after ledger-base merges. No SQL or DB hand edit; the supported resolver reported `releases check` clean.
 
 ## Independent plan QA
 
