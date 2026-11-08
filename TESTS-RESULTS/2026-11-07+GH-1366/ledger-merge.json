@@ -1,0 +1,15 @@
+{
+  "integration": "cf5bfe6881ef3bd66bc062727e49ef99969311b3",
+  "jog_rows_preserved": 31,
+  "task_row": [
+    [
+      1366,
+      "rmi-01M6WRA7H35N01X2B3EA0V9W6J",
+      65,
+      35,
+      50,
+      90
+    ]
+  ],
+  "method": "read-only SQLite compare of complete nonempty jog_queue against integration DB; supported writer replay of own roadmap row"
+}
