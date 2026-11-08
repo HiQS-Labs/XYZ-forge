@@ -16,3 +16,7 @@ Final acceptance replay, a freshly generated README receipt, and the full gate r
 
 PR https://github.com/HiQS-Labs/XYZ-forge/pull/1324, head feaea399335a2a4ee36386b13e423ee3cfbe066f, checks and reviews pending.
 
+
+## Publisher source-link addendum
+
+Historical reviewer text above is preserved. Accessible sources at its exact candidate: [harness.py:1317](https://github.com/HiQS-Labs/XYZ-forge/blob/feaea399335a2a4ee36386b13e423ee3cfbe066f/utils/py/harness.py#L1317), [harness.py:1355](https://github.com/HiQS-Labs/XYZ-forge/blob/feaea399335a2a4ee36386b13e423ee3cfbe066f/utils/py/harness.py#L1355), [preflight:1371](https://github.com/HiQS-Labs/XYZ-forge/blob/feaea399335a2a4ee36386b13e423ee3cfbe066f/utils/py/swarm_preflight.py#L1371), [planner:998](https://github.com/HiQS-Labs/XYZ-forge/blob/feaea399335a2a4ee36386b13e423ee3cfbe066f/utils/py/_marathon_plan.py#L998).

@@ -1304,6 +1304,17 @@ def _preflight_blockers(rec: dict, files: set) -> list[str]:
         return ["no Preflight Contract (the capture doc has none, or there is no capture doc)"]
     if not isinstance(contract, dict):
         return ["Preflight Contract must be an object"]
+    target = contract.get("target")
+    if not isinstance(target, dict):
+        return ["Preflight Contract missing required field: target"]
+    for field in ("repo", "ref"):
+        if not isinstance(target.get(field), str):
+            return [f"Preflight Contract missing required field: target.{field}"]
+    if not isinstance(contract.get("gate"), str):
+        return ["Preflight Contract missing required field: gate"]
+    probes = contract.get("fix_probes")
+    if not isinstance(probes, list) or not probes:
+        return ["Preflight Contract needs at least one fix_probes entry"]
     artifacts = contract.get("artifacts")
     raw_new = contract.get("artifacts_new")
     if raw_new is None:
@@ -1314,6 +1325,10 @@ def _preflight_blockers(rec: dict, files: set) -> list[str]:
         return ["artifacts_new must be an array of path strings"]
     if any(a not in artifacts for a in raw_new):
         return ["artifacts_new entry not present in artifacts[]"]
+    for artifact in raw_new:
+        if not any(isinstance(p, dict) and p.get("type") == "path_absent"
+                   and p.get("path") == artifact for p in probes):
+            return [f"artifacts_new entry has no matching path_absent probe: {artifact}"]
     blockers = []
     for artifact in artifacts:
         a = artifact.strip()
