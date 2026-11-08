@@ -3,3 +3,11 @@
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/prior-execution-state.json", "sha256": "f8311c575b88760b312030a640c85debdc8531b15f8d1f3e20ef27909bf9bf90", "recorded_at": "2026-11-08T20:06:02.788407+00:00"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/budget.json", "sha256": "637e64ca5510e7846d8deb0a779e7feec1fc4741c5e633e332b3fd22ce15472f", "recorded_at": "2026-11-08T20:06:02.788407+00:00"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/retained-result.json", "sha256": "9997616be15806c692a2d5ad8cda8786294fed352652d13741106637b0fb32db", "recorded_at": "2026-11-08T20:06:02.788407+00:00"}
+{"at": "2026-11-08T20:13:07.361528+00:00", "action": "preserve-recovery-configuration", "artifact": "old-invocation.json", "sha256": "ce5b3eb2c2727eead57dcfc17d57f39d34da1144741876503643ad21b5e4415d"}
+{"at": "2026-11-08T20:13:07.361661+00:00", "action": "preserve-recovery-configuration", "artifact": "recovery-invocation.json", "sha256": "337e68919738223ed923c1269718951093827c9f52fe3a3b0104fa21269f29b4"}
+{"at": "2026-11-08T20:13:07.361690+00:00", "action": "preserve-recovery-configuration", "artifact": "receipt-storage.json", "sha256": "7e7615769f86a4bc953727b22dfeae47558aad56b4802aff073de4ed47f22150"}
+{"at": "2026-11-08T20:14:15.354332+00:00", "action": "W1-canonical-recovery", "artifact": "reconciliation.json", "sha256": "086ca45f2ced11892e814a5edce3513e63640bd0ac6096ae803d6c00ab58155f"}
+{"at": "2026-11-08T20:14:15.354458+00:00", "action": "W1-canonical-recovery", "artifact": "reconciled-execution-state.json", "sha256": "7a88479b069dded4e6ea0d96a6bef8ff9ae5c27d486f6d2e981048e822174c69"}
+{"at": "2026-11-08T20:14:15.354488+00:00", "action": "W1-canonical-recovery", "artifact": "reconcile.log", "sha256": "17aedeb223447d1bb8225850e96dee78293327e41a3fe661afe6d1d7cee49d17"}
+{"at": "2026-11-08T20:14:15.354508+00:00", "action": "W1-canonical-recovery", "artifact": "reconcile.py.txt", "sha256": "eab8459e1882fc658617476296f97ddde965d27110acdb3cf631e1936d504a77"}
+{"at": "2026-11-08T20:14:15.354528+00:00", "action": "W1-canonical-recovery", "artifact": "retry-gate.py.txt", "sha256": "8fbb63bcd206dc55dbe0a7d525fcf33b4dc813549473260c210402134c2723fe"}

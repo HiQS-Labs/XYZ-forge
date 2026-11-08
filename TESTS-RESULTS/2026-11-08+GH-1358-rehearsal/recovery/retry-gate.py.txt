@@ -1,0 +1,37 @@
+import argparse,datetime,hashlib,json,os,subprocess,sys
+from pathlib import Path
+primary=Path('/Users/noelsaw/Documents/GitHub/XYZ-forge')
+source=Path('/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54')
+base=Path('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg')
+evidence=source/'TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery'
+sys.path.insert(0,str(source/'utils/py'))
+from jog_run import JogSupervisorLock,JogCheckpoint,_jog_retry_gate_locked,_jog_latest_receipt,_marathon_env_from_invocation,load_marathon_invocation
+cutoff=datetime.datetime.fromisoformat('2026-11-08T21:35:42.553636+00:00')
+assert (cutoff-datetime.datetime.now(datetime.timezone.utc)).total_seconds()>=1800
+assert os.environ['MARATHON_GATE_WALL_S']=='1800' and os.environ['LANE_MAX_ATTEMPTS']=='2'
+invocation=primary/'.tick/jog/jog-01M6Y67FAWQFFXC8VQZ1J7HRNH/gh1254-exec2/preflight/marathon-invocation.json'
+replacement=evidence/'recovery-invocation.json'
+data=load_marathon_invocation(str(replacement))
+assert hashlib.sha256(invocation.read_bytes()).hexdigest()==data['configuration_recovery']['prior_sha256']
+effective=_marathon_env_from_invocation(data)
+assert effective['MARATHON_GATE_WALL_S']=='1800'
+assert effective['LANE_MAX_ATTEMPTS']=='2' and effective['RELAY_TURN_TIMEOUT_S']=='900' and effective['RELAY_TURN_IDLE_S']=='900'
+gid='jog-01M6Y67FAWQFFXC8VQZ1J7HRNH'
+assert _jog_latest_receipt(str(primary),gid,outcomes=('approved',))==(None,None)
+record,receipt=_jog_latest_receipt(str(primary),gid,outcomes=('escalated',))
+assert record['execution_id']=='gh1254-exec2' and receipt['execution_id']=='gh1254-exec2-gateretry1'
+attempts=base/'runner/.tick/attempts/gh-1254-outer-loop-borrow-decl'
+assert attempts.is_file(),list((base/'runner/.tick/attempts').iterdir())
+attempt_bytes=attempts.read_bytes();assert len(attempt_bytes.splitlines())==2
+lock=JogSupervisorLock(str(primary));lock.acquire()
+try:
+ checkpoint=JogCheckpoint(str(primary),str(base/'publisher'))
+ if not checkpoint.begin():raise SystemExit('checkpoint recovered only; no dispatch')
+ invocation.write_bytes(replacement.read_bytes())
+ (evidence/'effective-caps.json').write_text(json.dumps({k:effective[k] for k in ['MARATHON_GATE_WALL_S','LANE_MAX_ATTEMPTS','RELAY_TURN_TIMEOUT_S','RELAY_TURN_IDLE_S','CODEX_REASONING_EFFORT']},indent=2)+'\n')
+ try:rc=_jog_retry_gate_locked(str(primary),1254,argparse.Namespace(builder='codex',reviewer='agy',auto_merge=False))
+ finally:
+  assert attempts.read_bytes()==attempt_bytes,'attempt history changed during gate-only recovery'
+  checkpoint.finish()
+finally:lock.release()
+raise SystemExit(rc)
