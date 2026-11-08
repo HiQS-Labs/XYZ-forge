@@ -8,7 +8,7 @@ Baseline RED: success exit 0, live file absent, zero archives, receipt count nul
 
 Adjacent controls: 14/14 across both actual nested reset/gate implementations extracted via AST. Nested counted reset no-op; exact-byte archival; repeated no-live reset creates no archive; first new fire counts one; failed fresh executions accumulate and third parks at cap two; second success preserves first archive; injected rename failure retains live bytes. These are function-level controls, not a standalone Relay end-to-end claim.
 
-Manual commands are retained as `manual-replay.txt` and `adjacent-replay.txt`; they are evidence, not registered suites. Execute only in disposable storage. Manual fixtures and verification clone are preserved. Focused suites: GH491 passed; GH280 running at this checkpoint. Full gate and final independent QA still pending.
+Manual commands are retained as `manual-replay.txt` and `adjacent-replay.txt`; they are evidence, not registered suites. Execute only in disposable storage. Manual fixtures and verification clone are preserved. Focused suites: GH491 passed; GH280 227/227 passed. Independent final QA Approved at 3e0e2f1ea. Full gate pending.
 
 Initial `/usr/bin/python3` lacks requests; selected existing `~/.cache/gh805-test-venv/bin/python3`, verified imports requests/yaml/pytest. No packages installed. Focused clone identity snapshot was captured during the focused run, not before; a strict bracket is required for the full gate. No primary working-tree/index/config/hooks/peer-ref changes. Normal task-branch object writes explicitly authorized by parent.
 

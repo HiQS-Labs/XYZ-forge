@@ -16,7 +16,7 @@ doc_type: bugfix
 
 | What was just completed | What's next |
 |---|---|
-| Live trace and independent plan QA approved with accepted conditions | Implement, replay and independently verify |
+| Exact-byte baseline RED/fixed GREEN, adjacent controls, focused suites and independent final QA Approved | Reserved full gate and ready PR; parent inspects before merge |
 
 Marathon and standalone relay success currently unlink `.tick/attempts/<lane>`. GH1254 gate-only recovery lost exactly two records (SHA256 d2565905a3f76fb1f98294f476b29515b3a671d28e6e27ac75c4f8924cd6aff2); the supervisor restored them before checkpoint publication. Merged evidence: TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/recovery/success-counter-repair.json and gate-start.json.
 
