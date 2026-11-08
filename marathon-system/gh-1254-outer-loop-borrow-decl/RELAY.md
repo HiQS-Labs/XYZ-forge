@@ -248,3 +248,12 @@ Reviewed `utils/py/marathon_drive.py`, `test/gh390-gate-guard.sh`, `validate.sh`
 - **Criterion 4 (controls + gh390/gh280 + full push gate in disposable clone; no new suite/gate machinery; non-Small timing-flake retirement):** `gh390-gate-guard.sh` is absent from `SUBSYSTEM_TESTS_small` in `utils/ci-route.sh`, removed from `TESTS` in `validate.sh`, and listed in `EXEMPT` in `test/gh306-registry-bidirectional.sh` (line 48) with its reason; `bash -n validate.sh test/gh390-gate-guard.sh test/gh306-registry-bidirectional.sh` exited `0`, and `git apply --check test/fixtures/gamma-poison/poison.patch` exited `0`. Execution of `gh390-gate-guard.sh`, `gh280-jog-marathon-adapter.sh`, and the full push gate is graded `[Unverified — needs clone run]` for the harness pre-advance gate in a disposable full clone.
 
 **Verdict:** Approved
+
+### Attestation · relay-drive — 2026-11-08T18:51:32Z
+task: MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2
+reviewer: agy
+status: Approved
+reviewed-head: bd4b0462ce5995ccf790152e9a7b77a07fb63871
+added-range: 45680+2275
+added-sha256: 9f0f8555ffd5bc1e42cd83da7a775df2ccfcb4cc0354c8c0eb1899835bf60e03
+config-sha256: 8ac69e0dc0f4f8b7a8bfe97d6fd8c37d229d1f2c4b2da558973181e652208ebb
