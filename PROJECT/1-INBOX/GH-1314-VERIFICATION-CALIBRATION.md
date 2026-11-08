@@ -75,3 +75,7 @@ Documentation/evidence draft PR into development with this pointer and normal qu
 bookkeeping. Preserve useful unit/integration tests and GH-831/GH-1131. No reusable
 executable runner or CI gate. Follow current publication hooks and documented WIP
 draft conditions; no silent gate bypass.
+
+## Merge evidence
+
+- PR #1316 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

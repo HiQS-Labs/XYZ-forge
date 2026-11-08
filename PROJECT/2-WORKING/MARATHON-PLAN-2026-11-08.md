@@ -170,6 +170,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1298 GH-1298 · Factory flywheel arc: Phase 0 spike (#1175), planning soak (#1279) and ATE campaign (#1280): what each showed, where they converge, next experiment — `needs-contract`
 - #1332 GH-1332 · jog: promotion repoint lands in the primary's ledger, and retry-gate refuses a relay-receipt-only tail — `needs-contract`
 - #1344 GH-1344 · GH-1340 item 1: finishing work (Tasks 10, 9, 8, 7) — `needs-doc`
+- #1314 GH-1314 · Explore independent verification loops: manual GH-1284 calibration — `needs-contract`
 - #1353 Next-gen flywheel recommendations: instrument the loop and close the no-row discovery seam — `unrated`
 - #1360 Task-agnostic supervisor with LTVera monitor pilot — `needs-contract`
 - #544 Local-gate-before-push: retire hosted CI for the private phase, enforce the gate at the push boundary — `unrated`
@@ -185,7 +186,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1323 Merge batch 2026-11-03 — HiQS-Labs-XYZ-forge — #1320, #1321 — `needs-doc`
 - #1322 AGENTS.md: auto-fix ladder — when an agent may enable PR Auto-fix without asking — `needs-doc`
 - #1315 skills-army-hq: --migrate-legacy preview passes but apply refuses 'Invalid retirement' for an unadopted skill — `needs-doc`
-- #1314 Explore independent verification loops: manual GH-1284 calibration — `needs-doc`
 - #1313 Merge batch 2026-11-01 — HiQS-Labs-XYZ-forge — #1311, #1312 — `needs-doc`
 - #1310 Publish a per-device skills health verdict via Git Pulse (Phase 0 spike first; DeployHQ dropped) — `needs-doc`
 - #1297 Marathon: harness recap hooks and HQ deployment — `needs-doc`
