@@ -2,3 +2,5 @@
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/docs1372.log", "sha256": "8923a9962b618e2cbb54d8d1cd774507415eb28f842924517a9e5d12898d4983", "kind": "landing-repair-observation"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/document-repair-controls.json", "sha256": "334067d45cb49f73360cfcf8f98112ea7d3c2708573f376b75bef19d3e80418a", "kind": "landing-repair-observation"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stopped-retained-runner-push.log", "sha256": "a5b686b0d83ae96106f4f658e317cf80f80050de1f32631d868f202a09c12374", "kind": "landing-repair-observation"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stale-landing.plist", "sha256": "2608c24d6537c8cdae1caa82b091ff9f3198fbaba1f49cb85eb942f3bc5c6b02", "kind": "prelaunch configuration; not executed"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stale-landing-plan.md", "sha256": "28059461b530da8640ac8ecae5be67d72e51a36545d18266c6983caffb602518", "kind": "prelaunch configuration; not executed"}
