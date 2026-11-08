@@ -4,3 +4,7 @@
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stopped-retained-runner-push.log", "sha256": "a5b686b0d83ae96106f4f658e317cf80f80050de1f32631d868f202a09c12374", "kind": "landing-repair-observation"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stale-landing.plist", "sha256": "2608c24d6537c8cdae1caa82b091ff9f3198fbaba1f49cb85eb942f3bc5c6b02", "kind": "prelaunch configuration; not executed"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stale-landing-plan.md", "sha256": "28059461b530da8640ac8ecae5be67d72e51a36545d18266c6983caffb602518", "kind": "prelaunch configuration; not executed"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stale-landing.stdout.log", "sha256": "696a170062db442616f968d3e651caed00cbcf2bd1a7bc43f8540a9cc19ea1bd", "kind": "scheduled real-PR stale-head refusal"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stale-landing.stderr.log", "sha256": "43726e38d2bf41af3f0c595ec27a5236f7ea68c1136e292f1179b89c6303f3a5", "kind": "scheduled real-PR stale-head refusal"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stale-landing-launchctl.txt", "sha256": "b6afd8cfb939939e5f234ea9045d67cfcdca95519b51975b4e76922cb06d07d7", "kind": "scheduled real-PR stale-head refusal"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stale-landing-result.json", "sha256": "4208f45beee1ef727e3bd420fb05c7c5d4be492280f0f825ce260ca27260f632", "kind": "scheduled real-PR stale-head refusal"}
