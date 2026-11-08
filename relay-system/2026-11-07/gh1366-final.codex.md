@@ -94,4 +94,12 @@ Verification boundary: read-only source/evidence inspection; no Git, executable 
 
 Relay closed (Approved), no further turn needed.
 
+
+### Attestation · relay-drive — 2026-11-08T04:56:09Z
+task: gh1366-final
+reviewer: codex
+status: Approved
+reviewed-head: aed9cdfd022b491140e920a4d35b230456f49d46
+added-range: 6549+3047
+added-sha256: 0b94562f8ab15ea5cc7e3a1b31aec2ea7f31c64d8aeb206e395e9aba30a708cc
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
