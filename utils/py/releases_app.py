@@ -7092,6 +7092,7 @@ def build_parser():
                               "reviewed one-phase driver via the structured contracts, requires "
                               "--reviewer; 'relay' is the legacy rollback path kept for a "
                               "documented compatibility window")
+    sp_jrun.add_argument("--checkpoint-root", help="dedicated disposable publication clone; requires --max-tasks 1")
     sp_jrun.add_argument("--max-tasks", type=int, default=None, help="maximum tasks to process in this run")
     sp_jrun.add_argument("--simulate", action="store_true", help="simulate drive execution in test environments")
     sp_jrun.add_argument("--dry-run", action="store_true", help="simulate queue run without mutations")

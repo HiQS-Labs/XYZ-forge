@@ -1,0 +1,49 @@
+{
+  "frozen_at": "2026-11-08T10:25:38.476584+00:00",
+  "source": "/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54",
+  "source_commit": "5f76f28bc481bcdefb5b5e1a0640a3177c4af551",
+  "runtime_sha256": {
+    "utils/py/jog_run.py": "bb02dc5fd4608f4ab917db2ab81a4e1f0e9b0e73142ced6f779b6e7f77b9ba47",
+    "utils/py/releases_app.py": "f25db05bc8d696532af895c3e90017fd4319201b16040c7ed6e242ebf7db39aa"
+  },
+  "primary": "/Users/noelsaw/Documents/GitHub/XYZ-forge",
+  "primary_checkpoint": "f3ff5e9d8c2527a19b661377c5bebbaff4e51924",
+  "runner": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner",
+  "prepared_runner_development": "1276bb4d52494545fbe1130f27d19a2533826fa9",
+  "publisher": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/publisher",
+  "workload_order": [
+    1160,
+    1216
+  ],
+  "builder": "codex",
+  "configured_codex_model": "gpt-6.1-sol",
+  "codex_reasoning_effort": "low (matches local account configuration; adapter default high explicitly not used)",
+  "reviewer": "agy (configured account default)",
+  "worker_wall_s": 900,
+  "worker_idle_s": 900,
+  "relay_base_rounds": 5,
+  "relay_progress_extension_hard_max": 10,
+  "marathon_lane_attempt_max": 2,
+  "prior_1295_attempts": 1,
+  "automatic_retries": false,
+  "gate_wall_s": 1800,
+  "preparation_hard_stop_utc": "2026-11-08T12:30:00Z",
+  "cadence_s": 60,
+  "merge_authority": "none; per-PR approval retained",
+  "coverage": "new agent-assisted candidate window; previous successful1295 and failed1160 windows retained separately",
+  "primary_intake": "GH1160 new row via CLI with branch-local capture contract; pointer reconciled on landing; no source file mutation in primary",
+  "held_exclusions": [
+    670,
+    1295,
+    1296,
+    1344,
+    1356
+  ],
+  "plan_qa": "gh1358-scheduled-retry-plan.codex.md and gh1358-runner-progression-plan.codex.md",
+  "final_qa": "corresponding final.codex.md receipts",
+  "retry_branch_head": "c23b66bd0a31023873351365d9f2ab846a6e51a3",
+  "prior_1160_attempts": 1,
+  "additional_1160_attempts": 1,
+  "window_1216_attempts": 1,
+  "repair": "round1: published intake ledger was missing from runner snapshot. Non-destructive merge of canonical published primary into development and retained1160lane. Red coverage1error -> green0errors; prior lane commit remains ancestor; attemptfile unchanged. Re-review uses remaining attempt2 because base changed."
+}
