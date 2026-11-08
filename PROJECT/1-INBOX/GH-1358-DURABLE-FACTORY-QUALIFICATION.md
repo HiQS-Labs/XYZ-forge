@@ -105,3 +105,18 @@ which uses a fresh token in the same lane family. First dispatch stays unchanged
 cold-start interrupted work still parks. Switch second GH1295 builder to Codex
 and reviewer to Agy, preserving the runner's lane attempt file, prior result and
 queue identity. No auto-merge, force, cap raise or new full clone to erase budget.
+
+
+Continuation deployed 2026-11-08T09:54:45Z after the runner-progression full gate
+passed409/409 in511s. Frozen manifest/configuration/evidence commit f5c75268a; primary
+admission checkpoint4c7f7d3c; prepared runner e9d676e42. Exact command and conservative
+12:30Z cutoff are in continuation/manifest.json. GH1295 attempt2 entered Codex,
+produced ad7661299 and handed to Agy review; outcome still pending. GH1160 is queued
+independently. No parent Git/chat rescue between scheduled wakes.
+
+The existing preadvance command now performs mutation-heavy verification in a
+disposable full clone and normal gated candidate push there, then the normal
+Marathon docs-tail push/PR. Independent configuration QA required post-test HEAD,
+origin fetch/push URL, clean-tree, bare and hook verification before push; applied.
+No new runtime gate/supervisor. This preparation is agent-assisted; no merge,
+unattended, independent-observer or full-qualification claim.

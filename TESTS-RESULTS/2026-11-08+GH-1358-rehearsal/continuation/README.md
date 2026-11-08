@@ -40,3 +40,24 @@ Budget correction from source: relay base5 can extend to hardmax10 only for
 qualifying progress (relay_drive.py), not an absolute5 cap. Worker wall/idle900,
 Marathon lane max2 unchanged; GH1295 count1 retained. Preparation earliest recorded
 receipt 06:55:50Z implies latest ceiling12:55:50Z; the ceiling is not reset.
+
+First successful useful wake: GH1295 attempt2 (09:54:48–10:10:37Z Marathon)
+produced PR1371, then Jog published receipt tail1c235e38a and primary checkpoint
+838aded2 without parent Git/chat rescue. Full gate409/409 in529s, preadvance total
+544s including focused checks/clone/push; normal transcript-tail docs gate71s.
+Agy independent review witnessed six-canary green and pre-fix red. Outcome approved;
+prior timeout and count2/max2 retained. Token/cost totals UNKNOWN: the existing
+summary's zero-instrumented floor is not measured zero; its1h24 window includes
+older retained history, not this attempt's duration.
+
+Next launchd wake selected GH1160, promoted its contract and cut its independent
+Marathon branch while GH1295 remained awaiting landing. Outcome pending at this
+checkpoint. No manual work between wakes; source evidence recording is independent
+of deployment. PR1371 outer sanity passes development base, focused runtime/test
+diff and normal gate evidence; parent retains landing approval.
+
+Read-only planner census uses a complete live840-issue snapshot, labeled snapshot
+mode rather than deployed discovery. Its only unregistered ready item is GH1356,
+whose attempt is explicitly terminal; it is refused, not relaunched. GH1216's actual
+CLI routing defect was reproduced and scoped by independent plan QA, but admission
+and dispatch have not happened. No discovery or full seven-transition claim.
