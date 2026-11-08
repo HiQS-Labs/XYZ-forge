@@ -2,8 +2,9 @@
 gh_issue: 1254
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1254
 title: "Outer loop (#1248): borrow declared supervision and cache-warmth dispatch from clodex"
-status: PR ready for inspection — acceptance gaps remain
+status: Partial implementation merged — acceptance gaps remain
 created: 2026-10-29
+updated: 2026-11-08
 owner: Codex
 doc_type: feature
 complexity: 2
@@ -32,7 +33,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| PR1369 published; independent QA Approved, integrated full gate 409/409. | Parent outer review and per-PR merge decision; restart and unconditional deadlines stay open. |
+| PR1369 merged with user approval; independent QA Approved, integrated full gate 409/409, reconciliation published. | GH1254 remains OPEN: restart verification, overloaded deadlines and observed live savings require follow-up. |
 
 ## Idea
 
@@ -122,7 +123,11 @@ pause and budget exhaustion also prevent execution and remain visible. Test sing
 same-deadline contention, urgent work, rerun, and skipped-call warmth. This is a deterministic
 selection fallback using the existing evaluator, not a new queue or dispatch mechanism.
 
-## Implementation checkpoint
+## Historical implementation checkpoints
+
+The checkpoints below record the sequence and are superseded by the merge evidence at the end.
+
+### Implementation checkpoint
 
 Runtime implemented; focused manual 21/21 and Python 21/21 pass. Evidence: TESTS-RESULTS/2026-11-08+GH-1254/. Independent final QA and applicable gate pending. Initializer defect repaired in one round; no other blocker budget consumed. Plan QA Approved round 2. Restart and overloaded execution-deadline acceptance remain OPEN. NO_ENTRY for lessons: modeled-only observation is insufficient for a durable generalization.
 
@@ -163,3 +168,24 @@ No merge/watch; parent retains outer-review and user per-PR approval boundary.
 ## Merge evidence
 
 - PR #1369 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+### Authorized landing and active lifecycle
+
+PR1369 merged at e6fcbbc3616b26e63560e7c6df4e967882a4c7fe; normal reconciliation
+published at 95deeea37b721f007736ebcf52bf047bf9afde31. The issue stays OPEN.
+This document is promoted to 2-WORKING and existing row
+`rmi-01M6WTMK376C3R6EGNG4BG4HTH` repointed through the supported CLI.
+No new runtime changes or full gate: code gate remains 79c735156907e98be2572bf70f6585af5e33e8e1 (409/409);
+final reviewed PR head 91214d29fd7802a9608f305fdfc95dd0e12bcc8d adds docs/evidence only, hosted smoke SUCCESS.
+
+Open acceptance owners: GH1248/parent GH1358 planning for an actual supervised restart;
+GH1254 for overloaded deadline behavior and live accounting/cost evidence. No restart or live
+savings is claimed. Parent owns the GH1356 partial/not-qualified terminal outcome; no GH1358
+execution or GH1344 retry occurred. Repair counters: initializer 1, publication environment 1,
+landing clone-preservation recovery 1, lifecycle staging repair 1; plan QA 2, final QA 1. Cleanup interpreted an exclusion
+as a literal substring rather than a glob and moved two clones to Trash; both full clones were
+restored intact to their original paths. No data was discarded and no peer process stopped.
+
+The initial lifecycle commit recorded only the rename after a stale old-path staging argument
+failed. Remaining owned status/ledger/evidence changes were preserved and published in a
+follow-up commit; no reset or history rewrite. Final publication re-runs the normal docs gate.
