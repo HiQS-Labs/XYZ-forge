@@ -59,3 +59,5 @@
 {"recorded_at": "2026-11-08T18:55:16.593120+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/gate-retry2.stderr.log", "sha256": "de3f92eaadb7ee0195308a83711e993b7be002a3ca79c6821883b4c51d1d9708"}
 {"recorded_at": "2026-11-08T18:57:12.400270+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/clock-main-adjacent.log", "sha256": "f2f67ef05db7d789d941c0364fb87528d5fe5ffd037dab30b71a57e07019d422"}
 {"recorded_at": "2026-11-08T18:57:12.400708+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/clock-main-adjacent.json", "sha256": "7264209e59642417f67961108cbf3098c0cd8cb8d6287748396074618bb146b1"}
+{"recorded_at": "2026-11-08T18:58:42.683087+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/observer-active-load-analysis.json", "sha256": "de425c2403e28a8598dc4cbd70bf23b207ee318bb1f283efb68ec813a5c2a118"}
+{"recorded_at": "2026-11-08T18:58:42.683255+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/observer-active-load.jsonl", "sha256": "8cc11575bab911509bbc9cccfddcf3eafb1506b4604b2aedf0f45e2c4d4d23a0"}
