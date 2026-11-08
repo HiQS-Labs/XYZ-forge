@@ -2,7 +2,7 @@
 gh_issue: 1376
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1376
 title: "Add flywheel skill for adaptive Jog orchestration"
-status: Active — plan QA pending
+status: Active — final verification pending
 created: 2026-11-08
 updated: 2026-11-08
 owner: parent orchestrator
@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Created #1376, provisioned a fresh full clone, verified its hooks and remote, registered rating 80/45/50/80, and traced the existing Jog/relay/marathon/continuation/landing skill owners. | Obtain independent Codex plan QA on the documentation-only flywheel routing plan, then author and verify the skill. |
+| Codex plan QA Approved in `relay-system/2026-11-08/gh1376-flywheel-plan.codex.md`; authored the flywheel skill and index row. Consumer smoke passed 12/12 required segments and 8/8 owner links. | Run the classified documentation gate and final independent Codex QA, then publish the development PR. |
 
 ## Idea
 
