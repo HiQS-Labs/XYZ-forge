@@ -1,5 +1,5 @@
 # Marathon Phase gh-1254-outer-loop-borrow-decl
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -63,7 +63,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 ## Acceptance criteria — the build is DONE when these hold
 *Inlined verbatim from `/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/PROJECT/2-WORKING/GH-1254-OUTER-LOOP-BORROW-DECL.md` (its `## Acceptance` section, 4 criterion(a)). Continuation lines included; if a
 criterion here reads as a fragment, that is the source text, not a truncation.*
-*Verified against [issue #1254](https://github.com/HiQS-Labs/XYZ-forge/issues/1254) — 4/4 criteria copied verbatim from issue #1254.*
+*Verified against [issue #1254](https://github.com/HiQS-Labs/XYZ-forge/issues/1254) — 4/4 criteria copied verbatim from issue #1254.*  [Unverified — no citation]
 - [ ] The existing Marathon gate counts sleep-inclusive wall elapsed without subtracting monotonic elapsed after a backward clock adjustment.
 - [ ] Late running or completed children are refused with exit 108 before accepting success; a reaped child is never signalled.
 - [ ] Normal success, genuine non-expired failure, disabled wall caps and existing CPU/RSS behavior are preserved.
@@ -224,6 +224,26 @@ Implemented the bounded GH1358 clock correction only in `utils/py/marathon_drive
 
 Verification: ran the existing pure manual control script `TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/controls.py` against the original source with `--expect-old-red`, then against the modified source normally. Original code failed four expiry cases (sleep-running, sleep-child-already-exited, backward-wall-monotonic-expiry, group-missing-late-completion); modified code passed all seven cases. Running expiry recorded one kill; completed expiry cases recorded zero kills. Normal success returned 0, genuine nonexpired failure returned 7, disabled wall cap returned 0. Both commands exited 0 under their respective expectations. Ephemeral outputs are `.relay-scratch/clock-old.json` and `.relay-scratch/clock-new.json`; these are not committed evidence or gate receipts.
 
-No Git commands or shell suites/full gates run. Required disposable-clone gh390/gh280 and normal push gate remain the harness's responsibility; acceptance is not yet fully verified. Only the artifact and this relay file changed. The required NEXT metadata line is updated; all other prior relay content is preserved.
+No Git commands or shell suites/full gates run. Required disposable-clone gh390/gh280 and normal push gate remain the harness's responsibility; acceptance is not yet fully verified. Only the artifact and this relay file changed. The required NEXT metadata line is updated; all other prior relay content is preserved.  [Unverified — no citation]
 
 handing off to agy — agy, take your turn.
+
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+Reviewed `utils/py/marathon_drive.py` in full (all 3,802 lines) alongside the bounded GH-1358 clock correction in `run_pre_advance_gate`, the capture doc `PROJECT/2-WORKING/GH-1254-OUTER-LOOP-BORROW-DECL.md`, `TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/controls.py`, and covering specs `test/gh390-gate-guard.sh` and `test/gh280-jog-marathon-adapter.sh`. No pre-existing defects found in `utils/py/marathon_drive.py`.
+
+#### Acceptance Criteria Verification
+- **Sleep-inclusive wall elapsed without subtracting monotonic elapsed after backward clock adjustment:** Verified. `gate_elapsed()` at `utils/py/marathon_drive.py:2472-2475` computes `max(0.0, time.monotonic() - started, time.time() - wall_started)` and uses it both for wall-cap enforcement (`2491-2492`) and for the summary duration log (`2543`).
+- **Late running or completed children refused with exit 108 before accepting success; reaped child never signalled:** Verified. `elapsed = gate_elapsed()` is checked after both `proc.poll()` and the `group-missing` recheck poll (`2481-2499`). When `cfg["wall_s"] > 0 and elapsed >= cfg["wall_s"]`, `_gate_kill_group` is only called if `rc is None and proc.poll() is None`; otherwise it logs `gate-guard: refusing completed gate` without signalling the reaped process/group, and sets `rc = GATE_GUARD_KILL_EXIT` (108) before breaking out of the loop and bypassing baseline allowance (`2550`).
+- **Normal success, genuine non-expired failure, disabled wall caps and existing CPU/RSS behavior preserved:** Verified by inspection of `run_pre_advance_gate` (`2424-2562`) and confirmed with the pure manual control probe:
+  - Command: `export PYTHONDONTWRITEBYTECODE=1 TMPDIR="$PWD/.relay-scratch/tmp"; mkdir -p "$TMPDIR"; python3 TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/clock/controls.py utils/py/marathon_drive.py`
+  - Exit status: `0`
+  - Decisive output: all 7 cases (`normal-success` -> 0, `genuine-red` -> 7, `sleep-running` -> 108 with 1 kill, `sleep-child-already-exited` -> 108 with 0 kills, `backward-wall-monotonic-expiry` -> 108, `cap-disabled` -> 0, `group-missing-late-completion` -> 108 with 0 kills) passed (`"pass": true`).
+- **Disposable full-clone controls, `gh390`/`gh280`, and normal full push gate:** `[Unverified — needs clone run]` (per turn rules, executable shell suites and disposable-clone gates run in the post-turn harness gate).
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
