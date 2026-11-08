@@ -247,3 +247,12 @@ Reviewed `utils/py/marathon_drive.py` in full (all 3,802 lines) alongside the bo
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-11-08T18:37:20Z
+task: MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN
+reviewer: agy
+status: Approved
+reviewed-head: 18a737311cca3927d8cb06ec8d8d1087aa06ee80
+added-range: 33183+2485
+added-sha256: feaaad6fa296d1a1cfc287238592aa4e5b9a9503913c179b061009a82a4634fc
+config-sha256: 0ea3cbeb5ee6e2bb8fc0ab0ce56713ea60280df30ef8d1cd38389316511941a6
