@@ -1,0 +1,5 @@
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/preservation.json", "sha256": "db2cd5bf9615f17655e68a2f4e11a12df70d705f2e29b8ee0123049d8a4f8c94", "recorded_at": "2026-11-08T20:06:02.788407+00:00"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/prior-checkpoint.json", "sha256": "795fb0d574d0689d6a820e0a962f6c89dcf3afaccc1cc4862a795433216f10c9", "recorded_at": "2026-11-08T20:06:02.788407+00:00"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/prior-execution-state.json", "sha256": "f8311c575b88760b312030a640c85debdc8531b15f8d1f3e20ef27909bf9bf90", "recorded_at": "2026-11-08T20:06:02.788407+00:00"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/budget.json", "sha256": "637e64ca5510e7846d8deb0a779e7feec1fc4741c5e633e332b3fd22ce15472f", "recorded_at": "2026-11-08T20:06:02.788407+00:00"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/retained-result.json", "sha256": "9997616be15806c692a2d5ad8cda8786294fed352652d13741106637b0fb32db", "recorded_at": "2026-11-08T20:06:02.788407+00:00"}

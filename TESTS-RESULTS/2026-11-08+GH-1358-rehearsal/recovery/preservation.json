@@ -1,0 +1,17 @@
+{
+  "at": "2026-11-08T20:06:02.788407+00:00",
+  "primary_head": "7da2f34ed043f860ad5014c3a5e206fba2fe1843",
+  "remote_head": "7da2f34ed043f860ad5014c3a5e206fba2fe1843",
+  "primary_clean": true,
+  "peer_merges_ancestors": true,
+  "old_supervisor_children": [],
+  "ledger_hashes": {
+    "releases.db": "30f94c15776616c99bc4406e610b4caf107951e9f955adc2d349367277299e1c",
+    "releases.sql": "5e44f2ad74245064776c1ceaa16bb6bfe4717db24ca749dae205481749f7a3cb"
+  },
+  "rollback": "preserve backups; never restore ledger over intervening peer writes; fresh checkpoint additive only",
+  "operation_id": "gh1358-recovery-20261108-w1",
+  "target": "HiQS-Labs/XYZ-forge GH1254 queue via canonical writer",
+  "idempotency": "exact retained execution gh1254-exec2-gateretry1; append only if absent; resume reprojects terminal",
+  "old_writer": "1992 remains stopped pending QA"
+}
