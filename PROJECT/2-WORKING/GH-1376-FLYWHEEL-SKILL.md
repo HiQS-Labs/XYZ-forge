@@ -157,3 +157,7 @@ The plan fails if the new file is absent, its frontmatter or index link is inval
 4. Is the scope limited to the minimum documentation files and existing manual/classified verification, with no new tests or machinery?
 5. Are any required companion skills, non-goals, dependencies, rollback considerations or consumer smoke checks missing?
 
+
+## Scope addendum — operator-requested GP/AGENTS text
+
+After the hosted-green flywheel delivery, the operator explicitly requested inclusion in the same PR of a short `GUIDING-PRINCIPLES.md` section on adaptive work and continuous handoff, plus an `AGENTS.md` pointer to it. The operational rubrics and ladder remain only in the flywheel skill; no code or full-rubric duplicate is added. The operator will override approval for this text-only extension.

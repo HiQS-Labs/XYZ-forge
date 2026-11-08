@@ -67,6 +67,14 @@ Every agent turn is a signal. A turn is high-quality only when it is all four:
 
 Fail a pillar, and the turn, feature, or relay review isn't done.
 
+## Adaptive work and continuous handoff
+
+For semi-autonomous work, choose the operating mode before execution: formal unattended work or setup/repair work. Judge proposed work by meaningful capability gain, a discriminating real-world test, and decision value for its cost. These are work-selection and continuation rules, not a reason to halt for every routine problem.
+
+Bounded autonomous repair is normal operation. Recover through an existing supported path, make the smallest authorized repair and verify it, keep independent eligible work moving, and escalate only genuine authority, safety, spending, access, destructive-action or control-bypass boundaries. Record repairs, changed running versions and human assistance without reopening routine authorization in each session.
+
+A handoff preserves the current objective, selected mode, observed baseline, budgets, repair history, evidence and next owner. The operational rubrics and standing authorization ladder live in [flywheel](skills/2-daily/flywheel/SKILL.md); this section owns the product principle and does not duplicate that workflow.
+
 ## How it's built
 
 1. **Coordination is local-transport only.** `.tick/events/` is the shared bus; claims resolve from there, not from a remote. No per-event push/fetch; no remote dependency at runtime. A coordination primitive that reaches out is a coordination primitive that can fail or leak.

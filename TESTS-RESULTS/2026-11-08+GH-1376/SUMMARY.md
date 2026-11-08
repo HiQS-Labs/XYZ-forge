@@ -2,11 +2,11 @@
 
 ## Scope
 
-Documentation-only addition of `skills/2-daily/flywheel/SKILL.md`, its Skills Index row, the governed issue plan/ledger row, and independent review receipts. No executable, new test suite, gate machinery, deployed-skill copy, app link, automatic merge or marathon dispatch.
+Documentation-only addition of `skills/2-daily/flywheel/SKILL.md`, its Skills Index row, the governed issue plan/ledger row, and independent review receipts. The operator-requested text extension adds the adaptive-work principle to `GUIDING-PRINCIPLES.md` and a pointer from `AGENTS.md`, while leaving the operational rubrics in the skill. No executable, new test suite, gate machinery, deployed-skill copy, app link, automatic merge or marathon dispatch.
 
 - Implementation commit: `b35f931ce36f84cefdfdc1ccfd25d0baeffd8900`.
 - Integrated commit after merging `origin/development`: `681809230bec851f4fa11748d9f5c6993f3804e4`.
-- Final PRS row after supported base-merge replays: `rmi-01M6Y8AYYZR9S66FGD540Z0X3M`, rated `80/45/50/80`, accepted start and In progress read back. The successive unpublished IDs `rmi-01M6Y72BPK27QN223B7MFV3DHK` and `rmi-01M6Y7RZVY3P9970XQQ13XGD8Q` were reminted by replaying the same issue/rating/doc through `roadmap pickup` after ledger-base merges. No SQL or DB hand edit; the supported resolver reported `releases check` clean.
+- Final PRS row after supported base-merge replays: `rmi-01M6YBKN6MRJEYV3269DYE32ZP`, rated `80/45/50/80`, accepted start and In progress read back. The successive unpublished IDs `rmi-01M6Y72BPK27QN223B7MFV3DHK`, `rmi-01M6Y7RZVY3P9970XQQ13XGD8Q` and `rmi-01M6Y8AYYZR9S66FGD540Z0X3M` were reminted by replaying the same issue/rating/doc through `roadmap pickup` after ledger-base merges. No SQL or DB hand edit; the supported resolver reported `releases check` clean.
 
 ## Independent plan QA
 
