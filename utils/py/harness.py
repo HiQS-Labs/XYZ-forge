@@ -1275,9 +1275,24 @@ def _preflight_blockers(rec: dict, files: set) -> list[str]:
     contract = rec.get("contract")
     if not contract:
         return ["no Preflight Contract (the capture doc has none, or there is no capture doc)"]
-    new = set(contract.get("artifacts_new") or [])
-    return [f"artifact path not found at target.ref: {a}" for a in contract.get("artifacts") or []
-            if a not in new and a not in files and not any(f.startswith(a.rstrip("/") + "/") for f in files)]
+    if not isinstance(contract, dict):
+        return ["Preflight Contract must be an object"]
+    artifacts = contract.get("artifacts")
+    raw_new = contract.get("artifacts_new")
+    if raw_new is None:
+        raw_new = []
+    if not isinstance(artifacts, list) or not artifacts or not all(isinstance(a, str) for a in artifacts):
+        return ["artifacts must be a nonempty array of path strings"]
+    if not isinstance(raw_new, list) or not all(isinstance(a, str) for a in raw_new):
+        return ["artifacts_new must be an array of path strings"]
+    if any(a not in artifacts for a in raw_new):
+        return ["artifacts_new entry not present in artifacts[]"]
+    normalize = lambda a: os.path.normpath(a.strip())
+    new = {normalize(a) for a in raw_new}
+    files = {normalize(a) for a in files}
+    return [f"artifact path not found at target.ref: {a}" for a in artifacts
+            if normalize(a) not in new and normalize(a) not in files
+            and not any(f.startswith(normalize(a).rstrip("/") + "/") for f in files)]
 
 
 def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
@@ -1309,6 +1324,12 @@ def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
     for p in brief_paths:
         b = json.loads(Path(p).read_text(encoding="utf-8"))
         briefs[b["issue"]] = (b, Path(p).with_suffix(".md"))
+    manifest = json.loads((instance / "backlog" / "manifest.json").read_text(encoding="utf-8"))
+    for req in manifest["requests"].values():
+        doc = REPO_ROOT / req["doc_path"] if req.get("doc_path") else None
+        current_sha = hashlib.sha256(doc.read_bytes()).hexdigest() if doc and doc.is_file() else None
+        if current_sha != req.get("doc_sha256"):
+            raise ValueError("capture doc changed since init; create a new snapshot and proposal before packet")
     records = {r["gh"]: r for r in _planner(instance / "backlog", "stub").compute()["deduped"] if r["gh"] is not None}
     files = _file_index((instance / "backlog" / "base-files.txt").read_text(encoding="utf-8"))["files"]
     dest = out.parent / "launch-packet" / f"wave-{wave}"
