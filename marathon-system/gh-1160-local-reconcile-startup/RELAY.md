@@ -1,6 +1,6 @@
 # Marathon Phase gh-1160-local-reconcile-startup
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1160-LOCAL-RECONCILE-STARTUP-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -102,3 +102,13 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Updated only the contradictory startup paragraph in `AGENTS.md`: merge-cleanup runs local reconciliation after development merges; hosted reconciliation is dispatch-only before promotion.
+- Preserved the routine-view restriction, hosted-in-flight refusal, explicit override, and issue-doc-sync drift check; linked the existing Promotion procedure.
+- Read the workflow dispatch declaration and local-writer safeguards as supporting evidence. Left all four allowed test files unchanged because this is a documentation correction.
+- Verification: no tests or gates executed, as required by the phase scope lock. Harness `pdda.sh run` remains pending; no passing gate claimed.
+- Updated NEXT for the reviewer as explicitly required by the handoff instruction; all other prior relay content retained.
+
+Handing off to agy — agy, take your turn.
