@@ -176,8 +176,8 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1344 GH-1344 · GH-1340 item 1: finishing work (Tasks 10, 9, 8, 7) — `needs-doc`
 - #1353 Next-gen flywheel recommendations: instrument the loop and close the no-row discovery seam — `unrated`
 - #1358 Durable factory qualification after Batch 2 — `needs-contract`
+- #1360 Task-agnostic supervisor with LTVera monitor pilot — `needs-contract`
 - #544 Local-gate-before-push: retire hosted CI for the private phase, enforce the gate at the push boundary — `unrated`
-- #1360 Task-agnostic supervisor: scope a deterministic scheduled-task replacement for paid Grok Bot jobs — `needs-doc`
 - #1352 Radar 2026-11-07: work is landing, but unreliable handoffs still require human rescue — `needs-doc`
 - #1340 Tracking: #1333 follow-up tasks 1-13 (issue state as the authority for done; rows at pickup; closing at merge) — `needs-doc`
 - #1333 Governance gaps audit: doc lifecycle, issue closure, PRS ratings and intake detail — measured, with root causes — `needs-doc`
