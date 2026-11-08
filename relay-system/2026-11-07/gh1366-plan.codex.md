@@ -93,4 +93,12 @@ Verification boundary: source inspection only; no executable fixtures, suites, o
 
 Relay closed (Approved), no further turn needed. Producer may proceed with the approved plan outside this closed plan-QA relay.
 
+
+### Attestation · relay-drive — 2026-11-08T04:53:11Z
+task: gh1366-plan
+reviewer: codex
+status: Approved
+reviewed-head: ab8558aa4298291b724a31b2512b824a915156e1
+added-range: 6163+2785
+added-sha256: 1c23215c37a5d34e37ea278f1820ad50b3f6181b539b8d778d3406cbab267747
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
