@@ -190,3 +190,9 @@ are verification, not deployed autonomy. Any new PR remains unmerged pending sep
 ## Merge evidence
 
 - PR #1370 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Landing continuation checkpoint — 18:47Z
+
+All four individually authorized PRs1370–1373 are merged/reconciled; exactSHAs and committed receipts in landing/README.md. Actual scheduled stale-pin refusal and approved1373merge→reconcile→land→GH1254dispatch witnessed. Firstthree merges assisted; fourth scheduled afterassistedpreparation. Admission remainsassisted/no-rowdiscoveryunmet. Observer gap reporting and ownedretry recognition repaired with red/greencontrols; awake/on-resume envelopeonly.
+
+Clock source implemented/independentlyapproved, manual7/7. Initial1800s reserve refused; reviewed1200s gate-only repair preservedcandidate/attestation/counters but twicefoundexistinggh390fixture timingrace. Diagnosticrerunpassed, originalfailuresretained. Finalbuilderattempt2/2 addressesfinitefixturepacing and mandatednon-tier registrydisable while retainingexplicitmain/adjacentverification. Gatecap900s, latestentry18:51:18Z, fixeddeadline19:06:18Z. Fullgate/readyclockPR stillpending, notclaimed. Originalunmettasksremainvisible; noPhaseB/newmergeauthorization.
