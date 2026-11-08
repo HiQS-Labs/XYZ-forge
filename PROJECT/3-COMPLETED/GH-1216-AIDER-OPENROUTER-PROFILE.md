@@ -2,7 +2,7 @@
 gh_issue: 1216
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1216
 title: "Normalize named Aider OpenRouter profile exports"
-status: Active
+status: Complete
 created: 2026-11-08
 updated: 2026-11-08
 owner: noelsaw1
