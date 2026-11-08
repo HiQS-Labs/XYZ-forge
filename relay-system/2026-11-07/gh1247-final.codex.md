@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -67,5 +67,22 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: PASS
+Basis: Ship with the already-planned final classified gate outstanding. Reviewed the base-to-HEAD change inventory using read-only libgit2 object/tree access (no git command), the entire changed production file, seeded artifact, captures, plan receipt, ratings and retained evidence. No blocking scoped defect or additional blocking pre-existing defect found in scan_clones.py. This approves implementation review, not deployment, deletion or merge readiness.
+swept file: yes
+
+- [Pass] Exact tag recovery is checked before ancestry: `skills/2-daily/merge-cleanup/scripts/scan_clones.py:621` requests `ls-remote --refs --tags origin`; lines 638–644 compare full names and unpeeled IDs and preserve mismatches. Failure/malformed advertisements return through failed_query (lines 624–634), consumed as PRESERVE_UNVERIFIED_QUERY (lines 1165–1169). One advertisement serves all local tags. Branch/detached provenance remains unchanged.
+- [Pass] Independent narrow probe imported the production module with PYTHONDONTWRITEBYTECODE=1 and patched only run_git; no subprocess or fixture executable ran. Command: `python3 - <<'PY'` calling `classify_local_refs(Path('/not-used'))` for local `refs/tags/ann` at `'a'*40`, advertisements of the same ID, `'b'*40`, empty output, `broken\n`, and exit 1; the mock raised if a tag reached merge-base. Exit 0; decisive output: `exact ... landed`, `different-annotation ... unlanded`, `empty-origin ... unlanded`, `malformed ... ok: False`, `query-failure ... ok: False`, and `5 non-mutating classifier controls PASS; no subprocess launched`. Each case made one ls-remote call. This is a controlled classifier probe, not a real Git/retirement integration run.
+- [Pass] Deployed lookup extends the existing owner: `scan_clones.py:254–287` retains explicit override, own installation and PATH, adds operator XYZ_HARNESS and canonical-origin-checked device configuration, and does not search the audited CWD. Explicit environment is treated as operator authority in this local-tool scope. `inspect_tick_claims` still pins TICK_REPO_ROOT and preserves unavailable/malformed responses (lines 330–357); active/unknown claims remain binding at lines 1123–1133. Retained `candidate.log` records idle, active, foreign-config, missing and broken-override outcomes; no audited-checkout executable is newly selected by discovery.
+- [Pass] Production changes are confined to these two existing functions; no new suite, dependency, gate, scheduler or teardown path. Existing downstream fresh reinspection is retained at `merge_cleanup.py:1013–1029,1743–1749`. `TESTS-RESULTS/2026-11-07+GH-1247/provenance.jsonl` identifies base/candidate, mocks and separate-clone scope; `gh436.log:4265–4267` records “Ran 205 tests” / “OK”. The baseline log witnesses the reported false preservation and ancestry false-safe control; candidate.log records corrected outcomes. These are inspected producer receipts, not tests rerun by this reviewer.
+- [Pass] SQLite read-only query `select gh_number,rating_pri,rating_sev,rating_appeal,rating_effort,status_label from roadmap_items where gh_number in ('1247','1359','1362')` exited 0 and returned 1247=75/60/50/80, 1362=75/60/50/85, 1359=70/45/50/45, all in-progress. Research boundaries are explicit in `PROJECT/1-INBOX/GH-1359-CLONE-RETIREMENT-GAPS.md:20–37`: unknown T3 ownership, remaining terminal receipts, no schedule, no research-driven purge, and no closure of #1359. The source map agrees with Express's reminder at `utils/py/express.py:1207–1209` and Marathon's cost-summary reminder at `utils/py/marathon_drive.py:1812–1841`.
+- [Nit] The active artifact's Phase 0 checklists remain unchecked and its status/issue rows still describe verification or “Plan QA” as next despite retained focused evidence. Update those bookkeeping cells during normal closeout after the final gate; preserve the historical incident section.
+- [Unverified — needs clone run] No validate.sh, test/*.sh, pytest or executable fixtures were run here. SUMMARY.md explicitly leaves the classified gate pending; run that gate in the disposable full clone against the final committed state before claiming readiness.
+- [Unverified — source access] Live `gh issue view N --repo HiQS-Labs/XYZ-forge --json body,state` for N=1362,1359,1247 each failed with “error connecting to api.github.com” (combined command exit 1). Live issue completeness/state is not attested; review uses local captures and the scoped Definition of Done. Graph search also returned “MCP tool call requires approval, but approval policy is never”; direct reads were the fallback.
+
+Relay closed (Approved), no further turn needed. The producer/harness owns the final gate and relay-file commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
