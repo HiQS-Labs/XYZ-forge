@@ -12,7 +12,7 @@ doc_type: experiment
 
 | What was just completed | What's next |
 |---|---|
-| Bounded readiness inspection completed: Phase A NOT READY; seven composition transitions NOT EXERCISED. | Identify deployed composition, observer, meaningful workload and numeric dispatch budgets under existing owners; no Phase B. |
+| Implemented opt-in primary checkpoint publication; manual controls and existing 227-assertion adapter pass; launchd rehearsal entered publication and interruption recovery. | Finish scheduled evidence and final gate/QA; remaining discovery, observer, eligible-work and approved-landing transitions stay open. |
 
 ## Scope
 
@@ -20,7 +20,7 @@ The live issue owns the bounded qualification of durable decisions and recovery 
 
 ## Ratings proposal
 
-pri 75 / sev 35 / appeal 50 / effort 65, as proposed in the issue; not stored in PRS until committed selection.
+pri 75 / sev 35 / appeal 50 / effort 65, stored through `roadmap pickup` in task-branch row `rmi-01M6X3FB974B9FC3Y2DWEHQ2TT`, followed by `roadmap update --accepted-start`. Primary checkout remains untouched. Registration occurred during resumed implementation, not before the first source edit.
 
 ## Merge evidence
 
@@ -66,10 +66,23 @@ not remote development. No primary ownership is taken by this implementation.
 
 Budgets: preparation maximum six hours across this attempt, maximum three repair rounds per
 blocker across sessions, one task per wake, no automatic retries, builder agy/reviewer codex
-subscription tools only, 900 seconds per turn, three review rounds. Phase B is not scheduled.
+subscription tools only, 900 seconds per turn, three independent QA rounds. Phase B is not scheduled.
 First publication controls consume zero model turns. Scheduled real execution is limited to
 three task dispatches before reassessment; no unapproved merge or new spend.
 
 Investment: removes demonstrated manual ledger publication between wakes; real queue changes
 and failed-push recovery discriminate it from the assisted baseline. Short transition evidence
 can falsify the design immediately; idle soak adds no decision value.
+
+### Rehearsal correction
+
+Local launchd invoked the real Jog/Marathon path at 60-second cadence (no idle soak).
+GH1344 was parked before scheduling with its existing attempt counter preserved.
+GH1345 parked on missing active contract and published through the installed normal hook.
+GH1296 was mistakenly labeled held: its current contract actually passed preflight and
+started agy with the existing Marathon default `--round-cap 5` (not the three-round QA cap).
+Because its residual acceptance depends on the unavailable original backlog, the owned
+attempt was stopped by explicit PID ancestry before accepting it as useful build work.
+This is one workload-selection repair, agent-assisted; no held-refusal or throughput claim.
+The third scheduled wake completed cold-start park and publication at 26543a0018, without a manual Git/CLI
+recovery. The deployment was disabled and booted out after that wake finished. Keep all local-only lane/deployment state. Full issue acceptance remains open.

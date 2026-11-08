@@ -1,0 +1,81 @@
+gui/501/com.xyz-forge.gh1358-checkpoint-rehearsal = {
+	active count = 0
+	path = /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/rehearsal.plist
+	type = LaunchAgent
+	state = not running
+
+	program = /Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python
+	arguments = {
+		/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python
+		/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary/utils/py/releases_app.py
+		--root
+		/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary
+		jog
+		run
+		--max-tasks
+		1
+		--builder
+		agy
+		--reviewer
+		codex
+		--target-root
+		/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner
+		--checkpoint-root
+		/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/publisher
+	}
+
+	working directory = /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary
+
+	stdout path = /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/scheduled.stdout.log
+	stderr path = /var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/scheduled.stderr.log
+	inherited environment = {
+		SSH_AUTH_SOCK => /var/run/com.apple.launchd.9uplH66u1I/Listeners
+	}
+
+	default environment = {
+		PATH => /usr/bin:/bin:/usr/sbin:/sbin
+	}
+
+	environment = {
+		OSLogRateLimit => 64
+		PATH => /Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin:/Users/noelsaw/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+		RELAY_TURN_TIMEOUT_S => 900
+		RELAY_TURN_IDLE_S => 900
+		XPC_SERVICE_NAME => com.xyz-forge.gh1358-checkpoint-rehearsal
+	}
+
+	domain = gui/501 [100062]
+	asid = 100062
+	minimum runtime = 10
+	exit timeout = 5
+	runs = 3
+	last exit code = 0
+
+	resource coalition = {
+		ID = 17059
+		type = resource
+		state = active
+		active count = 1
+		name = com.xyz-forge.gh1358-checkpoint-rehearsal
+	}
+
+	jetsam coalition = {
+		ID = 17060
+		type = jetsam
+		state = active
+		active count = 1
+		name = com.xyz-forge.gh1358-checkpoint-rehearsal
+	}
+
+	spawn type = daemon (3)
+	jetsam priority = 40
+	jetsam memory limit (active) = (unlimited)
+	jetsam memory limit (inactive) = (unlimited)
+	jetsamproperties category = daemon
+	jetsam thread limit = 32
+	cpumon = default
+	run interval = 60 seconds
+	sanitizer flags = 0x0
+
+	properties = runatload | inferred program
+}
