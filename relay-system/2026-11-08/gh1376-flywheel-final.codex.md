@@ -95,4 +95,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. The harness owns the one-file commit; the Producer may continue normal gated publication under existing task authorization.
 
+
+### Attestation · relay-drive — 2026-11-08T18:52:39Z
+task: RELAY-gh1376-flywheel-final
+reviewer: codex
+status: Approved
+reviewed-head: 9be787e6d99467b6950376d2664a2953bcaf5ee3
+added-range: 8030+3845
+added-sha256: f9ca082e17ea59b59a5d31c0a37b9062085681daa1824fefa220b3ea81502e8a
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
