@@ -7,6 +7,7 @@ import copy
 import fcntl
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -131,6 +132,11 @@ def set_stage(conn, tick_id: str, stage: str) -> None:
 def finish(conn, instance: Path, tick_id: str, status: str,
            details: dict, consumed: list[str] | None = None) -> None:
     ts = utcnow()
+    declared = os.environ.get("FACTORY_SUPERVISED", "").strip().lower() in {"1", "true", "yes", "on"}
+    details = {**details, "supervision": {
+        "declared": declared, "restart_performed": False,
+        "reason": ("supervisor declared; this tick has no self-restart mechanism" if declared else
+                   "supervisor undeclared; no restart promised or performed")}}
     payload = canonical(details)
     with conn:
         if consumed:
@@ -158,6 +164,8 @@ class AdapterResult:
     actual_cost: float | None
     billing_status: str
     called: bool = True
+    cache_read_tokens: int | None = None
+    cache_creation_tokens: int | None = None
 
 
 def _decision(tool: str, args: dict, reason: str) -> dict:
@@ -222,7 +230,7 @@ def rules_decide(snapshot: dict) -> AdapterResult:
             result = _decision("probe", {"target": snapshot["probe_targets"][0]}, "periodic local probe")
         if result is None:
             result = _decision("idle", {}, "no actionable input")
-    return AdapterResult(canonical(result), "ok", result, 0.0, "reported")
+    return AdapterResult(canonical(result), "ok", result, 0.0, "reported", called=False)
 
 
 def _request_material(snapshot: dict, config: dict) -> str:
@@ -278,12 +286,31 @@ def codex_decide(snapshot: dict, config: dict) -> AdapterResult:
             res = run_bounded(argv, cwd=str(d), env=env, timeout=config["adapter_timeout_s"])
         except OSError:
             return AdapterResult("", "adapter-error", None, 0.0, "unbilled", called=False)
+        usage = {"cache_read_tokens": None, "cache_creation_tokens": None}
+        for line in (res.stdout or "").splitlines():
+            try:
+                event = json.loads(line)
+            except (ValueError, TypeError):
+                continue
+            if not isinstance(event, dict) or event.get("type") != "turn.completed":
+                continue
+            reported = event.get("usage")
+            if not isinstance(reported, dict):
+                continue
+            for field, key in (("cache_read_tokens", "cached_input_tokens"),
+                               ("cache_creation_tokens", "cache_creation_input_tokens")):
+                value = reported.get(key)
+                usage[field] = value if type(value) is int and value >= 0 else None
+
+        def accounted(raw, normalized, decision, cost, billing):
+            return AdapterResult(raw, normalized, decision, cost, billing, **usage)
+
         if res.timed_out:
-            return AdapterResult((res.stdout or "")[-2000:], "timeout", None, None, "unknown")
+            return accounted((res.stdout or "")[-2000:], "timeout", None, None, "unknown")
         text = (res.stdout or "") + (res.stderr or "")
         if res.rc != 0:
             normalized = "rate-limited" if re.search(r"429|rate.?limit|usage.?limit|quota", text, re.I) else "adapter-error"
-            return AdapterResult(text[-2000:], normalized, None, None, "unknown")
+            return accounted(text[-2000:], normalized, None, None, "unknown")
         for line in (res.stdout or "").splitlines():
             line = line.strip()
             if not line:
@@ -295,7 +322,7 @@ def codex_decide(snapshot: dict, config: dict) -> AdapterResult:
             if isinstance(ev, dict) and ev.get("type") in ("item.started", "item.completed"):
                 item = ev.get("item")
                 if not isinstance(item, dict) or item.get("type") not in ("agent_message", "reasoning"):
-                    return AdapterResult((res.stdout or "")[-2000:], "adapter-error", None, None, "unknown")
+                    return accounted((res.stdout or "")[-2000:], "adapter-error", None, None, "unknown")
         raw = ""
         if out_file.exists():
             try:
@@ -303,14 +330,14 @@ def codex_decide(snapshot: dict, config: dict) -> AdapterResult:
             except Exception:
                 raw = ""
         if not raw:
-            return AdapterResult(raw, "invalid-output", None, None, "unknown")
+            return accounted(raw, "invalid-output", None, None, "unknown")
         try:
             parsed = json.loads(raw)
         except Exception:
-            return AdapterResult(raw, "invalid-output", None, None, "unknown")
+            return accounted(raw, "invalid-output", None, None, "unknown")
         if not isinstance(parsed, dict):
-            return AdapterResult(raw, "invalid-output", None, None, "unknown")
-        return AdapterResult(raw, "ok", parsed, None, "unknown")
+            return accounted(raw, "invalid-output", None, None, "unknown")
+        return accounted(raw, "ok", parsed, None, "unknown")
 
 
 def _write(path: Path, content: str) -> str:
@@ -1005,6 +1032,8 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
                   "manifest_path": str(manifest_path),
                   "prompt_sha256": sha_text((PACKAGE / "prompts" / "evaluator.v1.md").read_text(encoding="utf-8"))}
         config.update(adapter_cfg or adapter_config("rules", None, 90.0))
+        config.setdefault("cache_ttl_s", 300.0)
+        config.setdefault("max_cold_deferral_slots", 0)
         (instance / "config.json").write_text(json.dumps(config, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         emit(conn, instance, None, "init", "ok", items=len(requests), excluded=len(excluded), source="prs")
     finally:
@@ -1022,6 +1051,8 @@ def load_scenario(path: Path) -> tuple[str, list[dict]]:
                 raise ValueError("scenario contains a non-inbox or id-less record")
             if not 1 <= int(item["available_at_slot"]) <= 288:
                 raise ValueError("scenario slot outside 1..288")
+            if type(item.get("urgent", False)) is not bool:
+                raise ValueError("scenario urgent must be a boolean")
             items.append(item)
     ids = [item["id"] for item in items]
     if len(ids) != len(set(ids)) or not ids:
@@ -1091,6 +1122,9 @@ def init_instance(instance: Path, scenario: Path, manifest_path: Path,
                   "probe_targets": manifest["probe_targets"], "scenario_sha256": scenario_sha,
                   "scenario_path": str(scenario), "manifest_path": str(manifest_path), "prompt_sha256": prompt_sha}
         config.update(adapter_cfg or adapter_config("rules", None, 90.0))
+        config.setdefault("cache_ttl_s", 300.0)
+        config.setdefault("max_cold_deferral_slots", 0)
+        config["urgent_ids"] = [i["id"] for i in items if i.get("urgent", False)]
         (instance / "config.json").write_text(json.dumps(config, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         emit(conn, instance, None, "init", "ok", items=len(items), scenario_sha256=scenario_sha)
     finally:
@@ -1214,7 +1248,8 @@ def _snapshot(conn, config: dict, slot: int) -> tuple[dict, str]:
     rows = conn.execute(
         "SELECT * FROM inbox_items WHERE available_at_slot<=? AND status='pending' ORDER BY created_at,id", (slot,)).fetchall()
     inbox = [{"id": r["id"], "created_at": r["created_at"], "kind": r["kind"],
-              "body": r["body"], "target": r["target"]} for r in rows]
+              "body": r["body"], "target": r["target"], "available_at_slot": r["available_at_slot"],
+              "urgent": r["id"] in config.get("urgent_ids", [])} for r in rows]
     recent = [dict(row) for row in conn.execute(
         "SELECT i.tick_id,i.tool,i.args_json AS args,i.input_fingerprint,t.status,t.error "
         "FROM intents i JOIN tool_runs t USING(tick_id) ORDER BY i.persisted_at DESC LIMIT 10")]
@@ -1231,6 +1266,38 @@ def _snapshot(conn, config: dict, slot: int) -> tuple[dict, str]:
                 "flags": {"paused": False, "degraded": False, "injected_faults_enabled": False}}
     payload = canonical(snapshot)
     return snapshot, payload
+
+
+def _cache_dispatch(conn, instance: Path, snapshot: dict, config: dict, slot: int) -> list[dict]:
+    """Filter cache-cold work; existing events retain deferrals across ticks/restarts."""
+    ttl, limit = config.get("cache_ttl_s", 300.0), config.get("max_cold_deferral_slots", 0)
+    last_call = None
+    deadlines = {}
+    for row in conn.execute("SELECT ts,stage,json FROM events WHERE stage IN ('evaluate','deferred-cold') ORDER BY id"):
+        event = json.loads(row["json"])
+        if row["stage"] == "evaluate" and event.get("agent_called"):
+            last_call = row["ts"]
+        elif row["stage"] == "deferred-cold":
+            deadlines.update(event.get("deadlines", {}))
+    age = None if last_call is None else (datetime.fromisoformat(snapshot["now"]) - datetime.fromisoformat(last_call)).total_seconds()
+    cold = age is None or age < 0 or age >= ttl
+    deferred, eligible, due = {}, [], []
+    for item in snapshot["inbox"]:
+        deadline = deadlines.get(item["id"], min(288, item["available_at_slot"] + limit))
+        if limit and cold and not item["urgent"] and slot < deadline:
+            deferred[item["id"]] = deadline
+        else:
+            eligible.append(item)
+            if limit and item["id"] in deadlines and slot >= deadline:
+                due.append(item)
+    due.sort(key=lambda i: (deadlines[i["id"]], i["created_at"], i["id"]))
+    due_ids = {i["id"] for i in due}
+    snapshot["inbox"] = due + [i for i in eligible if i["id"] not in due_ids]
+    snapshot["cache"] = {"ttl_s": ttl, "max_deferral_slots": limit, "last_call_at": last_call,
+                         "cold": cold, "deferred": deferred, "due_ids": [i["id"] for i in due]}
+    if deferred:
+        emit(conn, instance, snapshot["tick_id"], "deferred-cold", "pending", deadlines=deferred)
+    return due
 
 
 def _adapter(snapshot: dict, fault: str, config: dict) -> AdapterResult:
@@ -1529,6 +1596,8 @@ def run_tick(instance: Path, slot: int, fault: str = "") -> str:
             set_stage(conn, tick_id, "observe")
             heartbeat.stage("observe")
             snapshot, payload = _snapshot(conn, config, slot)
+            due = _cache_dispatch(conn, instance, snapshot, config, slot)
+            payload = canonical(snapshot)
             with conn:
                 conn.execute("INSERT INTO snapshots(tick_id,json,sha256) VALUES(?,?,?)",
                              (tick_id, payload, sha_text(payload)))
@@ -1538,11 +1607,20 @@ def run_tick(instance: Path, slot: int, fault: str = "") -> str:
                 (instance / "PAUSE").touch()
                 result = AdapterResult("", "budget-exhausted", None, 0.0, "unbilled")
                 emit(conn, instance, tick_id, "evaluate", "budget-exhausted", agent_called=False)
+            elif due or (snapshot["cache"]["deferred"] and not snapshot["inbox"]):
+                if due:
+                    result = rules_decide({**snapshot, "inbox": due})
+                else:
+                    decision = _safe_idle("deferred-cold; pending work retained")
+                    result = AdapterResult(canonical(decision), "deferred-cold", decision, 0.0, "unbilled", called=False)
+                emit(conn, instance, tick_id, "evaluate", result.normalized, agent_called=False,
+                     cache_read_tokens=None, cache_creation_tokens=None)
             else:
                 _reserve(conn, tick_id, config["max_call_cost"])
                 result = _adapter(snapshot, fault, config)
                 _settle(conn, tick_id, result)
-                emit(conn, instance, tick_id, "evaluate", result.normalized, agent_called=result.called)
+                emit(conn, instance, tick_id, "evaluate", result.normalized, agent_called=result.called,
+                     cache_read_tokens=result.cache_read_tokens, cache_creation_tokens=result.cache_creation_tokens)
                 spent = conn.execute(
                     "SELECT COALESCE(SUM(CASE WHEN billing_status='unknown' THEN amount ELSE actual_cost END),0) "
                     "FROM reservations").fetchone()[0]
@@ -1552,7 +1630,9 @@ def run_tick(instance: Path, slot: int, fault: str = "") -> str:
             transcripts.mkdir(parents=True, exist_ok=True)
             (transcripts / f"{tick_id}.json").write_text(canonical({
                 "normalized": result.normalized, "raw": result.raw,
-                "billing_status": result.billing_status, "actual_cost": result.actual_cost}), encoding="utf-8")
+                "billing_status": result.billing_status, "actual_cost": result.actual_cost,
+                "cache_read_tokens": result.cache_read_tokens,
+                "cache_creation_tokens": result.cache_creation_tokens}), encoding="utf-8")
             if result.decision is None:
                 decision = _safe_idle(f"adapter {result.normalized}")
                 decision_status = result.normalized
@@ -1634,6 +1714,8 @@ def run_tick(instance: Path, slot: int, fault: str = "") -> str:
                 consumed = [item["id"] for item in snapshot["inbox"]
                             if item["kind"] == "probe" and item["target"] == decision["args"]["target"]]
             details = {"tool": decision["tool"], "decision_status": decision_status, "output_sha256": output_sha}
+            remaining_due = [i["id"] for i in due if i["id"] not in consumed]
+            details["cache"] = {**snapshot["cache"], "deadline_unexecuted_ids": remaining_due}
             if output_files:
                 details["output_files"] = output_files
             finish(conn, instance, tick_id, "completed", details, consumed)
@@ -1719,6 +1801,9 @@ def factory_parser() -> argparse.ArgumentParser:
     init.add_argument("--codex-effort", choices=["low", "medium", "high", "xhigh"], default="medium")
     init.add_argument("--adapter-timeout", type=float, default=90.0)
     init.add_argument("--codex-authoring", action="store_true")
+    init.add_argument("--cache-ttl", type=float, default=300.0, help="cache warmth heuristic TTL in seconds")
+    init.add_argument("--max-cold-deferral-slots", type=int, default=0,
+                      help="maximum cache-imposed withholding (0 disables); not a backlog SLA")
     manifest = sub.add_parser("generate-manifest")
     manifest.add_argument("--scenario", type=Path, default=PACKAGE / "scenarios" / "soak-v1.jsonl")
     manifest.add_argument("--output", type=Path, default=PACKAGE / "scenarios" / "soak-v1.manifest.json")
@@ -1771,6 +1856,9 @@ def factory_main(argv: list[str]) -> int:
             if args.adapter_timeout <= 0:
                 raise ValueError("--adapter-timeout must be positive")
             cfg = adapter_config(args.adapter, args.codex_model, args.adapter_timeout, args.codex_effort, args.codex_authoring)
+            if not math.isfinite(args.cache_ttl) or args.cache_ttl <= 0 or not 0 <= args.max_cold_deferral_slots <= 287:
+                raise ValueError("cache TTL must be finite and positive; deferral slots must be in 0..287")
+            cfg.update(cache_ttl_s=args.cache_ttl, max_cold_deferral_slots=args.max_cold_deferral_slots)
             if args.from_prs:
                 if not 1 <= args.limit <= 50:
                     raise ValueError("--limit must be in 1..50")

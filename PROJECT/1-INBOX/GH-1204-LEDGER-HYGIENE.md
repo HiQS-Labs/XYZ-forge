@@ -54,3 +54,7 @@ No automatic retention purge, routine `VACUUM`, direct hand edits, second ledger
 ## Merge evidence
 
 - PR #1209 merged 2026-10-28 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1324 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
