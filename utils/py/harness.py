@@ -1026,11 +1026,8 @@ def init_from_prs(instance: Path, limit: int, daily_cap: float, max_call_cost: f
                   "manifest_path": str(manifest_path),
                   "prompt_sha256": sha_text((PACKAGE / "prompts" / "evaluator.v1.md").read_text(encoding="utf-8"))}
         config.update(adapter_cfg or adapter_config("rules", None, 90.0))
-        ttl = config.setdefault("cache_ttl_s", 300.0)
-        limit = config.setdefault("max_cold_deferral_slots", 0)
-        if not math.isfinite(ttl) or ttl <= 0 or type(limit) is not int or not 0 <= limit <= 287:
-            raise ValueError("cache TTL must be finite and positive; deferral slots must be in 0..287")
-        config["urgent_ids"] = [i["id"] for i in items if i.get("urgent", False)]
+        config.setdefault("cache_ttl_s", 300.0)
+        config.setdefault("max_cold_deferral_slots", 0)
         (instance / "config.json").write_text(json.dumps(config, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         emit(conn, instance, None, "init", "ok", items=len(requests), excluded=len(excluded), source="prs")
     finally:
@@ -1119,6 +1116,9 @@ def init_instance(instance: Path, scenario: Path, manifest_path: Path,
                   "probe_targets": manifest["probe_targets"], "scenario_sha256": scenario_sha,
                   "scenario_path": str(scenario), "manifest_path": str(manifest_path), "prompt_sha256": prompt_sha}
         config.update(adapter_cfg or adapter_config("rules", None, 90.0))
+        config.setdefault("cache_ttl_s", 300.0)
+        config.setdefault("max_cold_deferral_slots", 0)
+        config["urgent_ids"] = [i["id"] for i in items if i.get("urgent", False)]
         (instance / "config.json").write_text(json.dumps(config, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         emit(conn, instance, None, "init", "ok", items=len(items), scenario_sha256=scenario_sha)
     finally:
