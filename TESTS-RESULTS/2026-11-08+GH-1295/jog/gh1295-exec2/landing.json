@@ -1,0 +1,18 @@
+{
+  "issue": 1295,
+  "queue_gid": "jog-01M6X4GEMDS11PQ30QA8A52XZA",
+  "execution_id": "gh1295-exec2",
+  "pr_number": 1371,
+  "merged_sha": "85ebee37839131a4cbd821d331866394fdfba228",
+  "approved_head_sha": "23e86c85eef8db55fae5034948640aca87020101",
+  "landed_head_sha": "1c235e38a9b671d54cdec4bdee6b4651a5aeea1e",
+  "reviewed_head_sha": "ad766129929551169116e9592261c5af8905054a",
+  "reviewed_candidate_sha": "23e86c85eef8db55fae5034948640aca87020101",
+  "tested_head_sha": "23e86c85eef8db55fae5034948640aca87020101",
+  "completion_policy": "merged-pr",
+  "hosted_reconcile": null,
+  "local_reconcile": {
+    "doc_path": "PROJECT/2-WORKING/GH-1295-INJECTED-TEXT-IN-BRIEFS.md",
+    "pr_number": 1371
+  }
+}

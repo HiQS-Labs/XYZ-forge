@@ -121,3 +121,7 @@ retained), with builder codex/reviewer agy, worker wall/idle900 seconds and rela
 round cap5 unchanged. No force, budget reset, new suite or automated merge.
 The first Agy attempt spent its cap without a patch; do not repeat broad regex
 tuning across unrelated documents. Verification scratch belongs outside the tree.
+
+## Merge evidence
+
+- PR #1371 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
