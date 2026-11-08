@@ -75,3 +75,14 @@ Umbrella stays open after this slice lands.
 ## Lessons Learned (For Future Agents)
 
 NO_ENTRY: both changed components have no observed effect on workflow cost yet; manual textual acceptance is not evidence of reduced friction.
+
+## Integration refresh
+
+Development advanced to cf5bfe6881ef3bd66bc062727e49ef99969311b3 after final source QA.
+Conflict involved only the ledger. The automatic higher-generation-side resolver could not
+replay Jog state; instead retained integration ledger verbatim and replayed only GH-1366
+through roadmap add/update/accepted-start, then the supported merge resolver. No SQL hand edits.
+New row rmi-01M6WRA7H35N01X2B3EA0V9W6J replaces branch-local rmi-01M6WQYMR70QVK9E4YRGPN89BB;
+its admission time is replay time, not the original start. Original registration/admission
+remain in branch history. Ratings/path/status preserved, all integration Jog rows compared
+equal. Evidence: TESTS-RESULTS/2026-11-07+GH-1366/ledger-merge.json. Policy content unchanged.
