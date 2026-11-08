@@ -33,7 +33,7 @@ No blanket Markdown exception, supplemental approval framework, new writer, CLI 
 
 Base: cff1d0a16c2c9a6eb073b99ef259d3658aea1430. Entry releases_app.py jog land/reconcile -> jog_run.jog_land -> _committed_jog_receipt -> GitHub merge verification -> reconciliation -> _close_delivered_issue -> jog_set_status -> landing.json. The existing status writer remains sole queue writer. Whole-issue closure has separate coverage checks and stays unchanged.
 
-_committed_jog_receipt validates committed bundle hashes, repository/issue/execution identity and green gate at receipt.head_sha. _landing_tail_proof enforces exact ancestry and permitted tail paths both in jog_land and _publish_jog_receipt. Remove its use ONLY in post-merge jog_land. Keep the helper and its publication caller. Retry-gate uses _is_relay_receipt_tail and is outside this change.
+_committed_jog_receipt validates committed bundle hashes, repository/issue/execution identity and green gate at receipt.head_sha. _landing_tail_proof enforces exact ancestry and permitted tail paths both in jog_land and publish_jog_receipt. Remove its use ONLY in post-merge jog_land. Keep the helper and its publication caller. Retry-gate uses _is_relay_receipt_tail and is outside this change.
 
 Retain checks for merged PR, expected base/head branch, original receipt identity, merge reachability on origin and primary HEAD, clean releases ledger and reconciliation. Fetch the actual PR head and verify it equals GitHub headRefOid when it differs from the receipt; this checks PR identity, NOT ancestry to approval. Missing/mismatched heads still refuse. No comparison of reviewed/approved ancestry to landed head.
 
@@ -48,7 +48,7 @@ Ratings readback: 75/35/50/70 (pri/sev/appeal/effort). Priority follows explicit
 ## Ordered implementation and acceptance
 
 1. Independent Codex plan QA -> expect Approved before production writes; record accepted-start through RELEASES CLI.
-2. Edit jog_land only at the approval-tail boundary and landing metadata; update existing landing scenario and MACHINE-CONTRACTS -> expect nonledger changes and rebased approved history can complete, while invalid receipt/PR/merge checks remain effective.
+2. Edit jog_land only at the approval-tail boundary and landing metadata; update existing landing scenario, MACHINE-CONTRACTS and skills/2-daily/jog/SKILL.md landing guidance -> expect nonledger changes and rebased approved history can complete, while invalid receipt/PR/merge checks remain effective.
 3. Add canonical proportionality paragraph to GUIDING-PRINCIPLES North Star and concise AGENTS application: justify controls by concrete risk and operational cost, honor explicit operator tradeoffs and retain honest evidence -> expect no blanket permission to bypass unrelated safety/verification rules.
 4. In disposable full clone run existing gh280 suite and main/adjacent manual land/rerun. Record baseline refusal as red control, successful completion, exact version attribution, negative controls and idempotence under TESTS-RESULTS with committed provenance. Bracket clone identity. No new suites/registry or speculative framework.
 5. Final independent QA -> applicable classified final gate -> ready PR against development. Update issue and retain evidence; no merge claimed.

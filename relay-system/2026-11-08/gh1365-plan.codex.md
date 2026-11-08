@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-07.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -43,7 +43,7 @@ ROUND: 1 / 3
    Reviewer headings may be `### Reviewer · Round N`, `### Round N · Reviewer · <agent>`, `### Reviewer (<agent>)` (optionally followed by `— rN`), or `### Reviewer — Round N` (optionally followed by `(<agent>)`); follow the heading with a non-empty review body.
 5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes — Reviewer only; else `Open`);
    the Producer bumps `ROUND` when opening a new cycle. If the max `ROUND` ends without `Approved`,
-   set `STATUS: Escalated`.
+   set `STATUS: Open`.
 6. **Commit only the relay file** (`relay(gh-1365-plan-qa): <role> r<N>`); no push. **Stop** and report one line.
 7. **Hand off explicitly — EVERY turn, not just the first** (GH-268). End your turn by naming who acts
    next and what they should do: *"handing off to <other role> — go to the <other> window and say
@@ -92,5 +92,9 @@ swept file: yes
 - [Nit] Plan line 36 calls the publisher `_publish_jog_receipt`; its actual name is `publish_jog_receipt` (`utils/py/jog_run.py:1077`). Correct the source pointer while revising.
 
 Handing off to Producer (task-parent) — add the missed Jog guidance update, then return for plan QA.
+
+### Producer · Round 1
+
+Disposition: Implemented. Added skills/2-daily/jog/SKILL.md landing paragraph to step 2; source confirms this exact consumer must change. Corrected publish_jog_receipt symbol spelling. No scope expansion or extra mechanism. Please recheck revised plan and approve if fit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
