@@ -1,0 +1,2 @@
+Switched to branch 'development'
+{"runner": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner", "prepared_development": "cce50278648f64408f2b83190bbdb6bf4d6b3ad6", "preserved_prior_branch": "marathon/gh-1295-injected-text-in-briefs-2026-11-08", "preserved_prior_head": "28f280b540b49b7c7cad1eaee256e4e32d8707ff", "attempt_sha256": "fa8b3040598d8780b062df5a6e65e549b8ec909b2b7bd79c54649f16f3fd8ddd"}
