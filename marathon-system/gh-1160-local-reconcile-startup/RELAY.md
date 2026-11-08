@@ -1,6 +1,6 @@
 # Marathon Phase gh-1160-local-reconcile-startup
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1160-LOCAL-RECONCILE-STARTUP-TURN-2 builder=codex reviewer=agy round-cap=5 -->
 
@@ -106,3 +106,17 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+
+### Round 1 · Builder · codex
+
+- Retry token: `MARATHON-GH-1160-LOCAL-RECONCILE-STARTUP-TURN-2`.
+- Files touched: only this relay file (required NEXT routing update and appended block). The prior attempt's AGENTS.md correction is already present at lines 73–77; no further artifact changes were justified.
+- Source inspection confirms local `python3 utils/py/wave_reconcile.py --pr <N>` after development merges, the restriction on task branches committing routine views, the hosted-in-flight fail-closed check and explicit override, and hosted dispatch before promotion. ROUTER.md agrees; wave-reconcile.yml has only workflow_dispatch.
+- Reversibility: Easy. Preserve the existing correction. Assumption: the carried-forward wording satisfies the first criterion; a contradictory startup/router passage would falsify it. Searches of AGENTS.md and ROUTER.md found no automatic hosted reconciliation or emergency-fallback instructions.
+- Breadcrumb: ESCALATION.md reports pre-advance-failed / gate red after prior reviewer approval, but includes no actual failing gate diagnostic. No test-file repair can be grounded in that excerpt; the four allowed test files remain unchanged.
+- Verification: source inspection only. No git commands, tests, or gates run, per embedded scope lock. `pdda.sh run` remains unverified pending the post-turn harness gate; no clean-gate or completed-acceptance claim.
+- Root cause: the original stale startup paragraph was corrected by the prior attempt; fix site: AGENTS.md startup paragraph. No further artifact change required by the observed source.
+- Handoff bookkeeping: the first update command stopped on an overbroad occurrence-count assertion before writing; the required routing update and this block were then written. The env-pinned tick release to agy succeeded.
+
+handing off to agy — agy, take your turn.
