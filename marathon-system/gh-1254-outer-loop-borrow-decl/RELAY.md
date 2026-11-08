@@ -1,6 +1,6 @@
 # Marathon Phase gh-1254-outer-loop-borrow-decl
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2 builder=codex reviewer=agy round-cap=5 -->
 
@@ -217,3 +217,22 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented the current bounded 18:45Z repair in the owning GH-1254 document.
+
+- Preserved `utils/py/marathon_drive.py` unchanged: the approved wall/monotonic clock correction and late-child refusal already exist.
+- `test/gh390-gate-guard.sh`: imported time in embedded MOCK_HOG and sleep 0.01s every 1,000 calls. Preserved 500,000-call safety ceiling, 96MB threshold and all guard-kill assertions. The deliberate sleeps total roughly five seconds; actual fixture execution also includes MagicMock work.
+- `validate.sh`: removed only gh390-gate-guard.sh from TESTS. `test/gh306-registry-bidirectional.sh`: added its explicit exemption with the observed non-Small timing-flake reason; file retained for required explicit gate checks. Confirmed it is absent from SUBSYSTEM_TESTS_small.
+- Root cause: the self-limiting fixture can outrun one-second RSS sampling; fix site: existing fixture pacing; no runtime guard or safety-ceiling relaxation. Easy rollback of three local file edits; no new suite or gate machinery.
+
+Verification performed without Git, driver execution or mutation-heavy shell suites:
+- Existing pure manual clock controls: all seven pass; output `.relay-scratch/clock-controls.json`.
+- Extracted actual MOCK_HOG run directly with no watchdog: exit 1 with `fixture safety ceiling reached before the guard fired`, elapsed 21.109s. This witnesses the disabled-watchdog red: it cannot satisfy existing group-kill/exit108 assertions. Output `.relay-scratch/fixture-controls.json`.
+- `bash -n` on all three changed shell files passed. Static extraction confirms 405 shell registry entries and the retained gh390 exemption. Expected full total is 408 including identity, Python and gamma checks (was 409); this is a coverage reduction under the explicit flaky-nontier rule, not a full-gate pass.
+- Initial manual probe incorrectly asserted 408 shell entries and failed after the fixture reached its expected ceiling; corrected the tally to distinguish 405 shell entries from the expected 408 full total. No production change resulted from that probe error.
+
+Not run: gh390/gh280 or the full gate; these remain required in the harness-owned disposable full clone. Scratch outputs are transient and are not claimed as committed provenance. No Git commands, commits or publication performed.
+
+NEXT handoff: agy reviews these three file edits and the preserved clock implementation.
