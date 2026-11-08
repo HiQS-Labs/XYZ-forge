@@ -1,5 +1,5 @@
 # Marathon Phase gh-1160-local-reconcile-startup
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1160-LOCAL-RECONCILE-STARTUP-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -112,3 +112,25 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 - Updated NEXT for the reviewer as explicitly required by the handoff instruction; all other prior relay content retained.
 
 Handing off to agy — agy, take your turn.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+- **Whole-file sweep:** Read `AGENTS.md` (511 lines), `ROUTER.md` (230 lines), and all four auto-included covering test files (`test/gh527-destructive-git-guard.sh`, `test/gh649-pdda-migration.sh`, `test/hq.sh`, `test/pdda-install-startup-docs.sh`) in full, plus `.github/workflows/wave-reconcile.yml` and `utils/py/wave_reconcile.py`. Found no pre-existing defects in the touched or scoped files.
+- **Criterion 1 (`No startup or router text describes automatic hosted reconciliation after a development merge`):** Verified via read-only probe:
+  - Command: `grep -nE 'automatically reconciles docs, ledger, and views|serves as an emergency fallback' AGENTS.md ROUTER.md || echo "rc=$? (0 matches)"; grep -n 'wave_reconcile.py --pr' AGENTS.md ROUTER.md`
+  - Exit status: `0` (first grep exited `1` with 0 matches)
+  - Decisive output:
+    ```
+    rc=1 (0 matches)
+    AGENTS.md:74:(`LEADERBOARD.md`) locally via `python3 utils/py/wave_reconcile.py --pr <N>`. Task
+    AGENTS.md:236:    After a merge, merge-cleanup reconciles the ledger locally (`wave_reconcile.py --pr N`); no hosted
+    ROUTER.md:119:(merge-cleanup → `wave_reconcile.py --pr N`). `wave-reconcile.yml` is dispatch-only; before each promotion
+    ```
+  - `AGENTS.md` lines 73–78 now match `AGENTS.md` lines 235–241, `ROUTER.md` lines 118–122, `.github/workflows/wave-reconcile.yml` (`on: workflow_dispatch`), and `utils/py/wave_reconcile.py` (`check_hosted_reconciler_in_flight`), while preserving the routine-view restriction (`LEADERBOARD.md`), hosted-in-flight fail-closed check + `--force-local-reconcile` override, Promotion reference, and `pdda.sh issue-doc-sync` drift check.
+- **Criterion 2 (`pdda.sh run` is clean):** [Unverified — needs clone run] — deferred to the post-turn harness gate (`bash utils/pdda/pdda.sh run`) per worktree containment rules.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
