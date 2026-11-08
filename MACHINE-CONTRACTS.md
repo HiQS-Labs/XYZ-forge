@@ -106,8 +106,14 @@ ONE revision the driver validated against the reviewer's attestation and the onl
 consumer may merge — `head_sha` stays the observational receipt-time HEAD), `reviewed_head`
 (the revision the reviewer read), `added_sha256` (digest of the review text the reviewer
 added), and `attest_path` (the `relay-drive/attest@1` record; `utils/py/relay_attest.py` is
-its one writer and validating reader). Jog's landing refuses an `approved` receipt whose
-binding is null.
+its one writer and validating reader). Merge admission validates that binding. Post-merge
+`jog land` instead records delivered work from its validated committed receipt, merged PR and
+reconciliation evidence; it does not require the final head to preserve approval ancestry.
+Its `landing.json` retains `approved_head_sha` and `landed_head_sha`, records
+`reviewed_head_sha` / `reviewed_candidate_sha` as reported (null if absent), and
+`tested_head_sha` as the SHA bound by the validated green gate. `merged_sha` identifies the
+integration commit; `completion_policy: merged-pr` replaces the former `tail_proof` field.
+Completion does not certify later changes as reviewed or tested. Publication checks are unchanged.
 
 Ownership split (GH-280 authority model): Marathon exclusively owns everything in this
 receipt — execution attempts, Tick history, builder/reviewer turns, acceptance, gates,

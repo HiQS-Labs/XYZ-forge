@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 — GH-1365 proportional Jog closeout
+
+- Jog post-merge completion records merged delivery without requiring exact approval ancestry. Original receipt validation, publication checks, merge identity/reachability and reconciliation remain; landing evidence distinguishes review, gate and delivered versions. GUIDING-PRINCIPLES and AGENTS require rigor proportionate to concrete risk and operational burden.
+- Operator-selected bet: repeating approval ancestry at bookkeeping costs more than it adds to existing review, CI and post-merge QA. Costly shared-policy change; revert the implementation to restore the old rule while retaining honest historical records. Verification is recorded in the GH-1365 plan/evidence; policy adoption alone is not proof.
+
 ## 2026-11-07 — GH-1247 / GH-1362 retirement preservation fixes
 
 ### Fixed

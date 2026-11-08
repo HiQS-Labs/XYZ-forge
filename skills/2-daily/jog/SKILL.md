@@ -64,7 +64,7 @@ releases jog retry-build <GH-NUM> --target-root <disposable-full-clone>
     Fresh Marathon attempt on a fresh execution id (history preserved).
 
 releases jog land <GH-NUM> [--pr N]
-    Verify committed delivery after hosted reconciliation and complete the primary queue row.
+    Verify committed delivery after hosted or local reconciliation and complete the primary queue row.
 
 releases jog reconcile <GH-NUM>
     Idempotent replay entry for jog land (same verification and steps).
@@ -115,7 +115,7 @@ releases jog run --target-root <disposable-full-clone> [--executor relay|maratho
 7. **Receipt-Backed Landing & `--auto-merge`:**
    A row is never marked `completed` on a self-report. `jog land` verifies GitHub truth first —
    merged state, merge-SHA reachability, PR identity (repo, base, head, head SHA), and qualifying
-   gate evidence after hosted `wave_reconcile` has completed issue/doc lifecycle — then completes
+   gate evidence after hosted or local `wave_reconcile` has recorded reconciliation — then completes
    the primary row and records its landing proof.
    - **Default (Interactive):** Pauses at each landing boundary for human confirmation. On confirm: merges PR into `development` and re-anchors the checkout. On decline: marks row `parked` (`awaiting-landing`) so unmerged tasks are never misrepresented as `completed`.
    - **Unattended without `--auto-merge`:** Parks row as `parked` (`awaiting-landing (unattended run without --auto-merge)`) and halts advance.
@@ -162,19 +162,18 @@ published, fast-forward-ready primary. Unrelated changes, divergence or rejected
 preserve state for reconciliation; do not bypass Phase 0. The automatic direct-push/rebuild
 path is a separate PR so it can be reverted independently. `--auto-merge` on native Jog dispatch/retry refuses before leasing during this interim;
 it cannot skip the publication checkpoint. Use merge-cleanup for actual landing;
-its mapped Jog hook runs after hosted reconciliation and before the existing final post-merge
+its mapped Jog hook runs after hosted or local reconciliation and before the existing final post-merge
 commit/push. A direct `jog land` call likewise needs that final publication checkpoint.
 
-Landing requires merged GitHub truth, a green gate on the original approved SHA, clean
-`releases check`, green hosted reconciliation and merge reachability from freshly fetched
-`origin/<integration>`. A moved head may contain the exact validated receipt publication,
-ledger-only changes in B1's six-path set, or mechanically proven upstream merges. For each
-upstream merge, both parent trees and the recorded tree have those six paths stripped; a
-conflict-free `git merge-tree --write-tree` must reproduce exactly the recorded stripped tree.
-Any remaining conflict or extra/missing blob refuses. The committed `landing.json` records
-both approved/delivery heads, tree IDs, exclusions and hosted run. No manual override or broad
-document-directory exception exists. Replay uses canonical queue truth and emits no duplicate
-completion transition.
+Landing requires merged GitHub truth, a validated green gate on the original approved SHA,
+clean `releases check`, hosted or local reconciliation evidence, and merge reachability from
+freshly fetched `origin/<integration>` and primary HEAD. A moved head must match this PR's
+fetched head; queue completion does not require exact approval ancestry or a permitted-file
+tail. It records delivery, not approval or test coverage of later edits. `landing.json` records
+`completion_policy: merged-pr`, the original approved/tested SHA, reported review head/candidate
+(null when absent), landed PR head, merge SHA and reconciliation evidence. Publication and
+retry-gate admission retain their existing checks. Replay uses canonical queue truth and emits
+no duplicate completion transition.
 
 ## Recovery Verbs
 
