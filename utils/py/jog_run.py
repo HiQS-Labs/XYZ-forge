@@ -2139,8 +2139,13 @@ class JogCheckpoint:
         _git(pub, "merge", "--ff-only", self.state["commit"])
         if _git(pub, "rev-parse", "HEAD").decode().strip() != self.state["commit"]:
             raise ContractError("publication clone contains commits beyond this checkpoint")
-        # Normal push: never bypass the clone's configured gate or force a ref.
-        _git(pub, "push", "origin", self.state["commit"] + ":refs/heads/development")
+        # An empty wake or a crash after successful push needs no second push gate.
+        # Read the live ref, not a potentially stale local tracking ref.
+        published = _git(pub, "ls-remote", "--exit-code", "origin",
+                         "refs/heads/development").decode().split()[0]
+        if published != self.state["commit"]:
+            # Normal push: never bypass the clone's configured gate or force a ref.
+            _git(pub, "push", "origin", self.state["commit"] + ":refs/heads/development")
         _git(self.root, "fetch", "origin", "development")
         self.state["phase"] = "published"
         self.save()

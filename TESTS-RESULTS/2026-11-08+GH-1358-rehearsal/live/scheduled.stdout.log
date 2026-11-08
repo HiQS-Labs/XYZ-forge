@@ -1,0 +1,38 @@
+
+============================================================
+jog: processing GH-1295 (attempt 1) at position 1
+============================================================
+jog: promoting 1-INBOX contract for GH-1295 to 2-WORKING...
+jog: marathon execution gh1295-exec1 for GH-1295 (packet: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6X4GEMDS11PQ30QA8A52XZA/gh1295-exec1/preflight)
+jog: dispatching marathon-drive (/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/relay-automation/marathon-drive.sh)
+marathon-drive: branch guard: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner was on its trunk branch 'development' — cut 'marathon/gh-1295-injected-text-in-briefs-2026-11-08' and continuing (GH-561)
+marathon-drive:   this lane's commits land there; a green phase opens a PR back into 'development' (--allow-trunk-commit to commit on 'development' instead)
+marathon-drive: relay file committed: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1295-injected-text-in-briefs/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-1295-INJECTED-TEXT-IN-BRIEFS-TURN → agy
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1295-injected-text-in-briefs-start boundary — compressor=1398MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+agy-turn: agy turn produced no tracked changes (token-only move?)
+agy-turn: handed off token MARATHON-GH-1295-INJECTED-TEXT-IN-BRIEFS-TURN → codex (tick release --to)
+marathon-drive: relay timed out (exit 7) before any declared artifact landed — treating it as a real hang
+marathon-drive: relay escalated: timeout / hang (relay-drive exit 7)
+marathon-drive: transcript saved: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/relay-system/2026-11-08/marathon-gh-1295-injected-text-in-briefs-085055.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1295-injected-text-in-briefs-escalated boundary — compressor=1368MB, swap_free=1023MB
+marathon-drive: escalation written: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1295-injected-text-in-briefs/ESCALATION.md (reason: timeout-no-artifact)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6X4GEMDS11PQ30QA8A52XZA/gh1295-exec1/preflight/marathon-result.json (outcome: escalated, exit 7)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 15m 12s
+per done-task: n/a (0 tasks done)
+memory: compressor peak: 1398MB, swap free min: 1023MB
+  turn peak RSS: agy: 206MB peak RSS
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
+jog: stopping queue execution on task failure.
+jog: published primary checkpoint 632a2a5d8bd21bb08fcb49473c5f931eb72dc4c0
+jog: queue complete (0 pending tasks).

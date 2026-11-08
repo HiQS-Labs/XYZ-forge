@@ -20,7 +20,7 @@ The live issue owns the bounded qualification of durable decisions and recovery 
 
 ## Ratings proposal
 
-pri 75 / sev 35 / appeal 50 / effort 65, stored through `roadmap pickup` in task-branch row `rmi-01M6X4NNDP24RCVFZEHSKJ2NHX`, followed by `roadmap update --accepted-start`. Primary checkout remains untouched. Registration occurred during resumed implementation, not before the first source edit.
+pri 75 / sev 35 / appeal 50 / effort 65, stored through `roadmap pickup` in task-branch row `rmi-01M6X64H52SE44FD98KJPZ8BTZ`, followed by `roadmap update --accepted-start`. Initial registration was task-local; the subsequent authorized live rehearsal mutated only primary ledger state through supported CLI/checkpoint publication. Registration occurred during resumed implementation, not before the first source edit.
 
 ## Merge evidence
 
@@ -88,3 +88,5 @@ The third scheduled wake completed cold-start park and publication at 26543a0018
 recovery. The deployment was disabled and booted out after that wake finished. Keep all local-only lane/deployment state. Full issue acceptance remains open.
 
 Ledger integration: after the canonical primary queue checkpoints landed, selected the clean primary ledger snapshot and reapplied this task-only row through `roadmap pickup`/`--accepted-start`, then ran `releases-merge-resolve.sh` (check clean). Original task-row identity remains in 7046047d6 history; live GH1344/GH1345/GH1295 queue states and counters were preserved. No SQL statements were authored. Routine generated view changes were restored from the pre-merge copy and excluded.
+
+Live continuation: GH1295 passed real OPEN preflight, then first Agy turn timed out at 900 seconds without artifact (Marathon exit 7). Scheduled Jog published primary failure state at 632a2a5d8bd21bb08fcb49473c5f931eb72dc4c0 without parent Git rescue. Attempt 1 retained; usage unknown. Empty next wake exposed redundant same-SHA push gate; minimal live-ref check repaired, old-code red and new main/adjacent controls recorded, independent Codex QA approved. See live/README.md. Full qualification remains unmet; no workload PR/merge or Phase B.

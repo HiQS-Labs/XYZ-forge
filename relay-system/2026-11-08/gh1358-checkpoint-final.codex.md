@@ -45,3 +45,17 @@ This conditional verdict is not rewritten as unconditional whole-issue approval.
 > needed for those factual updates.
 
 Disposition: stale sentences updated; bootout readback retained separately. Source unchanged.
+
+## Live empty-wake repair — independent Codex QA
+
+Reviewer: native `/root/noop_checkpoint_qa`, 2026-11-08. Read-only review of the
+seven-line live-ref shortcut in JogCheckpoint.finish after the live deployment
+showed an unchanged checkpoint rerunning the normal full push gate.
+Verdict: Approved, no blocking findings. Publication clone clean/branch/exact-HEAD
+checks remain before the shortcut. A differing live ref retains non-forced normal
+push; a failed lookup leaves the committed journal for recovery. Default execution
+is unchanged. Remote advancement after observation is a pre-existing race; the
+next begin fetch refuses a divergent primary. `git diff --check` passed.
+Reviewer required manual evidence of no-op/recovery skipping push and changed
+checkpoint invoking the hook. Implementer recorded all three, plus old-code red
+witness, in `live/noop-control.log`. Reviewer ran no suites.
