@@ -1314,12 +1314,20 @@ def _preflight_blockers(rec: dict, files: set) -> list[str]:
         return ["artifacts_new must be an array of path strings"]
     if any(a not in artifacts for a in raw_new):
         return ["artifacts_new entry not present in artifacts[]"]
-    normalize = lambda a: os.path.normpath(a.strip())
-    new = {normalize(a) for a in raw_new}
-    files = {normalize(a) for a in files}
-    return [f"artifact path not found at target.ref: {a}" for a in artifacts
-            if normalize(a) not in new and normalize(a) not in files
-            and not any(f.startswith(normalize(a).rstrip("/") + "/") for f in files)]
+    blockers = []
+    for artifact in artifacts:
+        a = artifact.strip()
+        if not a or a in raw_new:
+            continue
+        # Only remove harmless dot components; parent traversal needs filesystem evidence.
+        if ".." in a.split("/"):
+            blockers.append(f"artifact parent traversal requires preflight verification: {a}")
+            continue
+        a = os.path.normpath(a)
+        if a not in files and not any(f.startswith(a.rstrip("/") + "/") for f in files):
+            blockers.append(f"artifact path not found at target.ref: {artifact}")
+    return blockers
+
 
 
 def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
@@ -1352,12 +1360,15 @@ def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
         b = json.loads(Path(p).read_text(encoding="utf-8"))
         briefs[b["issue"]] = (b, Path(p).with_suffix(".md"))
     manifest = json.loads((instance / "backlog" / "manifest.json").read_text(encoding="utf-8"))
-    for req in manifest["requests"].values():
-        doc = REPO_ROOT / req["doc_path"] if req.get("doc_path") else None
-        current_sha = hashlib.sha256(doc.read_bytes()).hexdigest() if doc and doc.is_file() else None
-        if current_sha != req.get("doc_sha256"):
-            raise ValueError("capture doc changed since init; create a new snapshot and proposal before packet")
     records = {r["gh"]: r for r in _planner(instance / "backlog", "stub").compute()["deduped"] if r["gh"] is not None}
+    requests = {r["issue"]: r for r in manifest["requests"].values()}
+    for lane in waves[wave - 1]:
+        rec, req = records.get(lane["issue"], {}), requests.get(lane["issue"])
+        if req:
+            doc = REPO_ROOT / rec["docRel"] if rec.get("docRel") else None
+            current_sha = hashlib.sha256(doc.read_bytes()).hexdigest() if doc and doc.is_file() else None
+            if rec.get("docRel") != req.get("doc_path") or current_sha != req.get("doc_sha256"):
+                raise ValueError("selected capture doc changed since init; create a new snapshot and proposal before packet")
     files = _file_index((instance / "backlog" / "base-files.txt").read_text(encoding="utf-8"))["files"]
     dest = out.parent / "launch-packet" / f"wave-{wave}"
     staging = dest.with_name(dest.name + ".tmp")
@@ -1396,7 +1407,8 @@ def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
             skipped.append({"issue": n, "reason": f"bin/marathon-yaml rejected it: {check.stderr.strip()[:160]}"})
             continue
         emitted.append({"issue": n, "folder": slug, "provisional": lane["provisional"],
-                        "blockers": _preflight_blockers(rec, files)})
+                        "blockers": _preflight_blockers(rec, files) if n in requests else
+                        ["no frozen capture identity; create a new snapshot and proposal before packet"]})
     builder = "agy" if reviewer == "codex" else "codex"  # marathon-drive refuses builder == reviewer
     readme = [f"# Launch packet: wave {wave} ({proposal['tick_id']})", "", f"> {DRAFT_LABEL}", "",
               "Nothing here has been launched. Each folder is one marathon for one lane; lanes in a wave are",
