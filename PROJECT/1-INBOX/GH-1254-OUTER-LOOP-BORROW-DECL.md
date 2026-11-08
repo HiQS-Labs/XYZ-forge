@@ -2,7 +2,7 @@
 gh_issue: 1254
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1254
 title: "Outer loop (#1248): borrow declared supervision and cache-warmth dispatch from clodex"
-status: In progress — implementation verification
+status: PR ready for inspection — acceptance gaps remain
 created: 2026-10-29
 owner: Codex
 doc_type: feature
@@ -32,7 +32,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Scoped implementation and focused evidence complete; independent final QA Approved at 7366edcd3. | Run final full gate after parent releases host, then publish PR; restart and unconditional deadlines stay open. |
+| PR1369 published; independent QA Approved, integrated full gate 409/409. | Parent outer review and per-PR merge decision; restart and unconditional deadlines stay open. |
 
 ## Idea
 
@@ -150,3 +150,12 @@ Original full gate passed 409/409 at 522155356. PR1324 and reconciliation throug
 are now included. Combined focused manual21/Python21/packet9 checks pass. Code QA remains
 applicable to unchanged GH1254 runtime; upstream packet changes carry their independent receipts.
 Combined-SHA publication gate pending; peer PR1316 currently occupies the host. No bypass.
+
+### Published scoped implementation
+
+PR: https://github.com/HiQS-Labs/XYZ-forge/pull/1369. Code-gate SHA
+79c735156907e98be2572bf70f6585af5e33e8e1; full409/409. Final evidence-only
+commits do not change runtime. Independent QA approved GH1254 runtime; merged GH1296
+packet changes carry their separate review and gate evidence. One width-environment
+publication failure repaired without code changes; controls and failed log retained.
+No merge/watch; parent retains outer-review and user per-PR approval boundary.

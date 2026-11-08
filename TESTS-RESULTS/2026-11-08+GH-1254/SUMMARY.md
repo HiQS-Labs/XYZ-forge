@@ -24,3 +24,15 @@ PR1324 landed while that gate ran; safely merged runtime 2bed0a59b and reconcili
 Only changelog conflict; retained both entries. Runtime overlap is packet validation, not cache/supervision.
 Combined candidate 0cee95e21 passes repeated manual21, Python21 and inherited packet9 controls.
 Normal combined-SHA push gate pending host availability; no reuse of a receipt for another SHA.
+
+## Final publication
+
+PR1369 published combined candidate `79c735156907e98be2572bf70f6585af5e33e8e1`.
+Normal push full gate passed **409/409** (Python21/21); exact-SHA receipt and full log retained.
+One failed invocation is also retained: caller-supplied XYZ_VALIDATE_MAX_JOBS=4 polluted
+the mode-selection suite, producing 408/409. Removing that override with the verified
+Python environment passed the existing suite 29/29 and the full gate. No source or gate
+acceptance change. Initial diagnostic probes lacked the venv and are labeled separately.
+Initializer repair1 and environment repair1 resolved; no inherited blocker counters reset.
+Final evidence-only publication does not change runtime. Hosted checks are reported live
+in the PR, not inferred from these local results. Parent outer review remains required.

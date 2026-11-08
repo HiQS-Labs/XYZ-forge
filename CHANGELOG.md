@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-08 — GH-1254 publication evidence
+
+- Scoped factory changes published in PR1369; independent final QA Approved and combined full gate 409/409 at 79c735156. One caller-width environment failure retained and resolved by removing the override (no source or gate change). Restart and overloaded deadline acceptance remain open; no live savings claim. Evidence: TESTS-RESULTS/2026-11-08+GH-1254/.
+
 ## 2026-11-08
 
 - GH-1254: record explicit supervision declarations without claiming restart capability; add nullable cache token telemetry and opt-in bounded cold-work withholding using existing inbox/events/evaluator. Due deferred work uses deterministic selection. Easy rollback, no schema/scheduler change. Focused manual 21/21 and Python 21/21 pass; full gate/final QA pending. Restart, unconditional overloaded deadlines, and live savings remain unproven. See TESTS-RESULTS/2026-11-08+GH-1254/.
