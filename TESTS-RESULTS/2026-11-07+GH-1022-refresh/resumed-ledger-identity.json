@@ -1,0 +1,18 @@
+{
+  "integration": "bc2d79398",
+  "method": "read-only SQLite all rows, complete JOG and all non-task roadmap rows; sorted canonical JSON SHA256",
+  "result": {
+    "jog_queue": {
+      "rows": 31,
+      "integration_sha256": "416c43c1de5df4c4bc5dad175aa4349009103ccaceef1514a956b040840a220f",
+      "candidate_sha256": "416c43c1de5df4c4bc5dad175aa4349009103ccaceef1514a956b040840a220f",
+      "equal": true
+    },
+    "roadmap_items": {
+      "rows": 463,
+      "integration_sha256": "a372e5e1851eef28f2bc6a3a2a9855d9fe8d76b171f6177b578c0aec48439120",
+      "candidate_sha256": "a372e5e1851eef28f2bc6a3a2a9855d9fe8d76b171f6177b578c0aec48439120",
+      "equal": true
+    }
+  }
+}
