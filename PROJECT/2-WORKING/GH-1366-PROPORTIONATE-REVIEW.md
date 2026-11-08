@@ -1,6 +1,6 @@
 ---
 title: "GH-1366: proportionate review wording"
-status: "Proposed"
+status: "Working"
 created: 2026-11-07
 updated: 2026-11-07
 owner: Codex
