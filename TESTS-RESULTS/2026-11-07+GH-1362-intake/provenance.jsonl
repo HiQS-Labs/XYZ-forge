@@ -1,0 +1,1 @@
+{"commit": "8ab7d15655edde2be63818033746da5da966f65a", "command": "pre-push documentation gate (utils/pdda/pdda.sh run)", "rc": 0, "result": "GREEN in 115s; existing repository warnings; intake-only, no runtime test claim"}
