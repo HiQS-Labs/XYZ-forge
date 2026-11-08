@@ -86,3 +86,7 @@ New row rmi-01M6WRA7H35N01X2B3EA0V9W6J replaces branch-local rmi-01M6WQYMR70QVK9
 its admission time is replay time, not the original start. Original registration/admission
 remain in branch history. Ratings/path/status preserved, all integration Jog rows compared
 equal. Evidence: TESTS-RESULTS/2026-11-07+GH-1366/ledger-merge.json. Policy content unchanged.
+
+## Merge evidence
+
+- PR #1368 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
