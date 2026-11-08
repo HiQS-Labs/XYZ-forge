@@ -145,3 +145,7 @@ Independent final Codex QA supports a scoped agent-assisted PARTIAL outcome afte
 GH1216 PR1373 finalheadc50b7616fbe5fabc56705e7894dc9a6cf5b13d6d is independently reviewed, focused56/56 andfull409/409 (one parallelfailure passed existingserialretry). Primarycheckpoint661d08cad249b7815aac21269fb581a18eaaea09 published autonomously, cleanprimary. Bothownedlaunchdjobs disabled/unloaded12:12:33Z, beforefixed12:30Zcutoff; retainedallclones/branches/evidence. Queue1295/1160/1216parkedawaitinglanding,2attemptseach;1344unchanged.
 
 Power-management logs now establish naturalSleep/DarkWake continuation, including465s and979s sleeps corresponding toobservergaps. This supersedes earlierUNKNOWNcause only wherecorrelated; itdoesnotestablishrestart/offhostdetection orcontinuousboundcompliance. Fullgate reports3403s elapsed versusmonotonicguard859s underunchanged1800scap: realelapsedwalltime compliance failed. Existingowner1254deadline and1188observation gaps remainopen. FinalCodexQAapproves meaningfulagent-assistedPARTIAL, notqualification. See continuation/FINAL-RESULTS.md, final-state.json, observer-final-analysis.json andcommittedprovenance.
+
+## Merge evidence
+
+- PR #1370 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
