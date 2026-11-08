@@ -32,7 +32,7 @@ from the live open issue backlog, not a fabricated workload.
 Copied from the live issue.
 
 - [ ] No startup or router text describes automatic hosted reconciliation after a development merge.
-- [ ] pdda.sh run is clean.
+- [ ] `pdda.sh run` is clean.
 
 ## Preflight Contract
 
