@@ -1,0 +1,8 @@
+{"command": "bash temp/gh1387-manual.sh", "case": "success", "mode": "candidate", "source": "0ae5e01c3", "exit": 0, "elapsed_seconds": 1.8891420364379883}
+{"command": "bash temp/gh1387-manual.sh", "case": "failed-gate", "mode": "candidate", "source": "0ae5e01c3", "exit": 0, "elapsed_seconds": 1.7819058895111084}
+{"command": "bash temp/gh1387-manual.sh", "case": "post-failure", "mode": "candidate", "source": "0ae5e01c3", "exit": 0, "elapsed_seconds": 1.9184930324554443}
+{"command": "bash temp/gh1387-manual.sh", "case": "archive-failure", "mode": "candidate", "source": "0ae5e01c3", "exit": 0, "elapsed_seconds": 1.7809820175170898}
+{"command": "bash test/gh491-gate-only-refire.sh", "source": "0ae5e01c3", "exit": 0, "elapsed_seconds": 5.847650051116943}
+{"command": "bash temp/gh1387-manual.sh", "mode": "baseline", "source": "1c2bd89eb7e4176f8333d338a74d2113bb581a32", "exit": 0, "result": "RED: both records lost; count null", "payload_sha256": "d2565905a3f76fb1f98294f476b29515b3a671d28e6e27ac75c4f8924cd6aff2"}
+{"command": "python3 temp/attempt-history/adjacent-replay.py VERIFY_CLONE", "source": "0ae5e01c3", "exit": 0, "result": "14/14 adjacent function controls", "limitations": "AST extraction of actual nested functions; driver main path covered separately"}
+{"command": "bash test/gh280-jog-marathon-adapter.sh", "source": "0ae5e01c3", "exit": 0, "elapsed_seconds": 92.80589008331299}

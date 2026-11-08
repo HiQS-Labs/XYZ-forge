@@ -1,0 +1,41 @@
+import ast, contextlib, hashlib, io, json, os, pathlib, re, subprocess, sys, tempfile
+from unittest.mock import patch
+root=pathlib.Path(sys.argv[1]); sys.path.insert(0,str(root/'utils/py'))
+from rtl import archive_lane_attempts
+payload=b'2026-11-08T18:33:00Z fire\n2026-11-08T18:46:02Z fire\n'
+results=[]
+for driver in ['marathon_drive.py','relay_drive.py']:
+ tree=ast.parse((root/'utils/py'/driver).read_text())
+ names=['_lane_key','lane_attempt_gate','lane_attempt_reset','debug_mantra_prior_attempts']
+ funcs=[n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name in names]
+ env=dict(os=os,re=re,sys=sys,subprocess=subprocess,archive_lane_attempts=archive_lane_attempts,
+          get_env=os.environ.get,eprint=lambda *a,**kw:print(*a,**kw),_RESULT={},
+          die=lambda msg:(_ for _ in ()).throw(RuntimeError(msg)),xyz_debug_log_append=lambda *a,**k:None,
+          args=type('Args',(),dict(target_root=None,phase_id='p1'))(),relay_task='TEST',root=str(root))
+ exec(compile(ast.Module(body=funcs,type_ignores=[]),str(root/'utils/py'/driver),'exec'),env)
+ work=pathlib.Path(tempfile.mkdtemp(prefix='gh1387-adjacent-')); live=work/'.tick/attempts/p1'; live.parent.mkdir(parents=True)
+ reset=env['lane_attempt_reset']; gate=env['lane_attempt_gate']
+ with patch.dict(os.environ,{'LANE_MAX_ATTEMPTS':'2'}):
+  os.environ.pop('LANE_ATTEMPT_COUNTED',None)
+  live.write_bytes(payload)
+  with patch.dict(os.environ,{'LANE_ATTEMPT_COUNTED':'1'}): reset(str(work),'p1')
+  assert live.read_bytes()==payload and not (work/'.tick/attempt-history').exists()
+  reset(str(work),'p1'); archives=list((work/'.tick/attempt-history').glob('*/attempts'))
+  assert len(archives)==1 and archives[0].read_bytes()==payload and not live.exists()
+  reset(str(work),'p1'); assert list((work/'.tick/attempt-history').glob('*/attempts'))==archives
+  gate(str(work),'p1',False); assert len(live.read_bytes().splitlines())==1
+  gate(str(work),'p1',False); before=live.read_bytes()
+  try: gate(str(work),'p1',False)
+  except SystemExit as e: assert e.code==8
+  else: raise AssertionError('third failed execution did not hit cap')
+  assert live.read_bytes()==before
+  reset(str(work),'p1'); archives2=list((work/'.tick/attempt-history').glob('*/attempts'))
+  assert len(archives2)==2 and archives[0].read_bytes()==payload
+  live.write_bytes(payload)
+  with patch('rtl.os.rename',side_effect=OSError('controlled rename failure')):
+   try:reset(str(work),'p1')
+   except RuntimeError as e:assert 'cannot preserve lane attempts' in str(e)
+   else:raise AssertionError('archive error hidden')
+  assert live.read_bytes()==payload
+ results.append(dict(driver=driver,checks=['nested-no-reset','exact-bytes','missing-no-empty-archive','fresh-fire-count-one','failed-executions-cap-two','repeated-archives','rename-failure-retains-live'],passed=7,fixture=str(work)))
+print(json.dumps(results,indent=2))
