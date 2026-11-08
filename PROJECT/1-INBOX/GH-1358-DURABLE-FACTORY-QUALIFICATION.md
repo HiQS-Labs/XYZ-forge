@@ -12,7 +12,7 @@ doc_type: experiment
 
 | What was just completed | What's next |
 |---|---|
-| Captured the operator-requested post-Batch-2 proposal from #1358. No selection, ledger row or execution. | Finish #1356; reconcile existing owners and freeze reviewed scope before any selection. |
+| Bounded readiness inspection completed: Phase A NOT READY; seven composition transitions NOT EXERCISED. | Identify deployed composition, observer, meaningful workload and numeric dispatch budgets under existing owners; no Phase B. |
 
 ## Scope
 

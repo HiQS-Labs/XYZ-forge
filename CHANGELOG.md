@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-08 — GH-1356 accounting and GH-1358 readiness
+
+- Recorded Batch 2 as agent-assisted partial/not qualified, retaining unmet criteria and repair history. Short Phase A readiness inspection stopped before deployed transitions: no established deployment/observer/workload/budget contract. All seven transitions remain unexercised; no overnight start. Independent QA approved accounting at 507765671; status-table finding corrected. Evidence: TESTS-RESULTS/2026-11-08+GH-1356-closeout/ and TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/.
+
 ## 2026-11-08 — GH-1254 publication evidence
 
 - Scoped factory changes published in PR1369; independent final QA Approved and combined full gate 409/409 at 79c735156. One caller-width environment failure retained and resolved by removing the override (no source or gate change). Restart and overloaded deadline acceptance remain open; no live savings claim. Evidence: TESTS-RESULTS/2026-11-08+GH-1254/.
