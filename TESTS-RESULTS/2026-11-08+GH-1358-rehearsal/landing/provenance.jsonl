@@ -8,3 +8,5 @@
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stale-landing.stderr.log", "sha256": "43726e38d2bf41af3f0c595ec27a5236f7ea68c1136e292f1179b89c6303f3a5", "kind": "scheduled real-PR stale-head refusal"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stale-landing-launchctl.txt", "sha256": "b6afd8cfb939939e5f234ea9045d67cfcdca95519b51975b4e76922cb06d07d7", "kind": "scheduled real-PR stale-head refusal"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stale-landing-result.json", "sha256": "4208f45beee1ef727e3bd420fb05c7c5d4be492280f0f825ce260ca27260f632", "kind": "scheduled real-PR stale-head refusal"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/1372-full-push.log", "sha256": "9f46c9940b058933a81e11b5ee14eff910a3159db48c4207bb67f6e9e7c456d2", "kind": "normal combined-head gate in disposable full clone"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/1372-full-receipt.json", "sha256": "b89123b51aa37d37d75a25dc18dcbab802efc9c96c752a6ce14da6607a1c9582", "kind": "normal combined-head gate in disposable full clone"}
