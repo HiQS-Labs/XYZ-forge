@@ -2,7 +2,7 @@
 gh_issue: 1287
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1287
 title: "GH-1280 fuzz supervisor: no-new-signal stop never fires because usage signatures echo mutated tokens"
-status: Active
+status: Complete
 created: 2026-10-31
 updated: 2026-11-07
 owner: unassigned
