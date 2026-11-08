@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin:/Users/noelsaw/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+		<key>RELAY_TURN_IDLE_S</key>
+		<string>900</string>
+		<key>RELAY_TURN_TIMEOUT_S</key>
+		<string>900</string>
+	</dict>
+	<key>Label</key>
+	<string>com.xyz-forge.gh1358-checkpoint-rehearsal</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python</string>
+		<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary/utils/py/releases_app.py</string>
+		<string>--root</string>
+		<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary</string>
+		<string>jog</string>
+		<string>run</string>
+		<string>--max-tasks</string>
+		<string>1</string>
+		<string>--builder</string>
+		<string>agy</string>
+		<string>--reviewer</string>
+		<string>codex</string>
+		<string>--target-root</string>
+		<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/runner</string>
+		<string>--checkpoint-root</string>
+		<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/publisher</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/scheduled.stderr.log</string>
+	<key>StandardOutPath</key>
+	<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/scheduled.stdout.log</string>
+	<key>StartInterval</key>
+	<integer>60</integer>
+	<key>WorkingDirectory</key>
+	<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-checkpoint-controls-xu35i6yq/primary</string>
+</dict>
+</plist>

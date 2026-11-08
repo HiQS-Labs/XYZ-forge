@@ -1,0 +1,1589 @@
+
+============================================================
+jog: processing GH-1295 (attempt 2) at position 1
+============================================================
+jog: marathon execution gh1295-exec2 for GH-1295 (packet: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6X4GEMDS11PQ30QA8A52XZA/gh1295-exec2/preflight)
+jog: dispatching marathon-drive (/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/relay-automation/marathon-drive.sh)
+marathon-drive: branch guard: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner was on its trunk branch 'development' — switched to 'marathon/gh-1295-injected-text-in-briefs-2026-11-08' and continuing (GH-561)
+marathon-drive:   this lane's commits land there; a green phase opens a PR back into 'development' (--allow-trunk-commit to commit on 'development' instead)
+marathon-drive: relay file committed: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1295-injected-text-in-briefs/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-1295-INJECTED-TEXT-IN-BRIEFS-TURN-2 → codex
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1295-injected-text-in-briefs-start boundary — compressor=1362MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+codex-turn: committed codex turn (file-scoped, no push)
+agy-turn: committed agy turn (file-scoped, no push)
+relay-drive: attested Approved by agy — reviewed ad7661299295, 2462 bytes of review text, record /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/.git/relay-attest/MARATHON-GH-1295-INJECTED-TEXT-IN-BRIEFS-TURN-2.json
+relay-drive: relay terminated (STATUS: Approved, token done, attested by agy) after 2 turn(s)
+marathon-drive: relay approved — running pre-advance gate: python3 -c 'import os,sys,subprocess,tempfile,pathlib,shutil,json
+root=pathlib.Path.cwd().resolve()
+assert root==pathlib.Path('"'"'/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner'"'"').resolve()
+env={k:v for k,v in os.environ.items() if k in ('"'"'PATH'"'"','"'"'HOME'"'"','"'"'USER'"'"','"'"'LOGNAME'"'"','"'"'SHELL'"'"','"'"'TMPDIR'"'"','"'"'LANG'"'"','"'"'LC_ALL'"'"','"'"'TERM'"'"','"'"'SSH_AUTH_SOCK'"'"','"'"'GH_TOKEN'"'"','"'"'GITHUB_TOKEN'"'"')}
+def git(where,*args):return subprocess.check_output(['"'"'git'"'"','"'"'-C'"'"',str(where),*args],text=True,env=env).strip()
+sha=git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"');branch=git(root,'"'"'symbolic-ref'"'"','"'"'--short'"'"','"'"'HEAD'"'"');origin=git(root,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')
+assert branch.startswith('"'"'marathon/'"'"') and origin=='"'"'https://github.com/HiQS-Labs/XYZ-forge.git'"'"'
+clone=pathlib.Path(tempfile.mkdtemp(prefix='"'"'gh1358-lane-gate-'"'"')).resolve()
+print('"'"'GH1358 isolated existing gate/push:'"'"',clone,'"'"'candidate'"'"',sha,flush=True)
+def run(args):subprocess.run(args,cwd=clone,env=env,check=True)
+run(['"'"'git'"'"','"'"'clone'"'"','"'"'--no-local'"'"','"'"'--no-hardlinks'"'"',str(root),str(clone)])
+run(['"'"'git'"'"','"'"'remote'"'"','"'"'set-url'"'"','"'"'origin'"'"',origin]);run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"']);run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"','"'"'--check'"'"'])
+run([sys.executable,'"'"'-m'"'"','"'"'pytest'"'"','"'"'test/test_python_layer.py'"'"']);run(['"'"'bash'"'"','"'"'test/synthetic/gh94-containment-invariants.sh'"'"'])
+assert git(clone,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha and git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')==origin
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'--push'"'"','"'"'--all'"'"','"'"'origin'"'"')==origin
+assert git(clone,'"'"'config'"'"','"'"'--get'"'"','"'"'core.bare'"'"')=='"'"'false'"'"' and not git(clone,'"'"'status'"'"','"'"'--porcelain'"'"')
+run(['"'"'bash'"'"','"'"'githooks/install.sh'"'"','"'"'--check'"'"'])
+run(['"'"'git'"'"','"'"'push'"'"','"'"'--set-upstream'"'"','"'"'origin'"'"','"'"'HEAD:refs/heads/'"'"'+branch])
+assert git(clone,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha and git(root,'"'"'rev-parse'"'"','"'"'HEAD'"'"')==sha
+assert git(clone,'"'"'remote'"'"','"'"'get-url'"'"','"'"'origin'"'"')==origin and git(clone,'"'"'config'"'"','"'"'--get'"'"','"'"'core.bare'"'"')=='"'"'false'"'"'
+assert not git(clone,'"'"'status'"'"','"'"'--porcelain'"'"')
+receipt=clone/'"'"'.xyz/receipts'"'"'/f'"'"'{sha}.json'"'"';data=json.loads(receipt.read_text())
+assert data['"'"'sha'"'"']==sha and data['"'"'exit_code'"'"']==0 and data.get('"'"'scope'"'"')=='"'"'full'"'"'
+dest=root/'"'"'.xyz/receipts'"'"';dest.mkdir(parents=True,exist_ok=True);shutil.copy2(receipt,dest/receipt.name)
+print('"'"'GH1358 normal gated candidate publication complete; final transcript tail uses normal docs push'"'"',flush=True)
+'
+GH1358 isolated existing gate/push: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-rqgv75mc candidate 8d48182f9fc4011477fabc4c16a1ebcac65463a9
+githooks: installed — /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-rqgv75mc/.git/hooks/pre-push
+  It runs the gate before any push, on EVERY branch in this clone (and its worktrees),
+  including branches with no githooks/ directory (GH-549).
+  Bypass: git push --no-verify   or   XYZ_SKIP_PREPUSH=1 git push
+  Verify: bash githooks/install.sh --check
+githooks: INSTALLED — /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-rqgv75mc/.git/hooks/pre-push is the gate stub (executable)
+============================= test session starts ==============================
+platform darwin -- Python 3.13.15, pytest-9.2.0, pluggy-1.7.0 -- /Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-rqgv75mc
+configfile: pytest.ini
+collecting ... collected 21 items
+
+test/test_python_layer.py::test_deploy_skills_behavioral_suite PASSED    [  4%]
+test/test_python_layer.py::test_rtl_module_load PASSED                   [  9%]
+test/test_python_layer.py::test_poll_module_load PASSED                  [ 14%]
+test/test_python_layer.py::test_consult_module_load PASSED               [ 19%]
+test/test_python_layer.py::test_marathon_drive_module_load PASSED        [ 23%]
+test/test_python_layer.py::test_swarm_preflight_module_load PASSED       [ 28%]
+test/test_python_layer.py::test_marathon_plan_module_load PASSED         [ 33%]
+test/test_python_layer.py::test_codex_turn_default_flags_match_bash_default PASSED [ 38%]
+test/test_python_layer.py::test_pi_turn_module_load PASSED               [ 42%]
+test/test_python_layer.py::test_pi_turn_parse_usage_keeps_last_event_gh295 PASSED [ 47%]
+test/test_python_layer.py::test_pi_turn_parse_usage_missing_file_returns_zero PASSED [ 52%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_builder_binary_missing PASSED [ 57%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_pi_builder_binary_missing PASSED [ 61%]
+test/test_python_layer.py::test_swarm_preflight_gh108_bundle_helpers PASSED [ 66%]
+test/test_python_layer.py::test_swarm_preflight_default_root_gh267 PASSED [ 71%]
+test/test_python_layer.py::test_rtl_bridge_honors_containment_ignore_in_python_mode PASSED [ 76%]
+test/test_python_layer.py::test_rtl_run_rtl_returns_code_without_exiting PASSED [ 80%]
+test/test_python_layer.py::test_rtl_run_checked_fails_fast PASSED        [ 85%]
+test/test_python_layer.py::test_poll_relay_field PASSED                  [ 90%]
+test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137 PASSED [ 95%]
+test/test_python_layer.py::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated PASSED [100%]
+
+============================== 21 passed in 8.10s ==============================
+PASS: gh94-containment-invariants
+githooks: INSTALLED — /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-rqgv75mc/.git/hooks/pre-push is the gate stub (executable)
+pre-push: running the full gate before this push reaches the remote (GH-544).
+pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden.
+pre-push:   validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+pre-push:   validate.sh: PARALLEL mode 4-wide — auto-detected 12 cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)
+pre-push:     NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+runner-envelope: validate.sh — harness registry at scratch (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//runner-envelope.L0K9b4/harnesses.db), envelope state captured
+validate.sh: PARALLEL mode 4-wide — auto-detected 12 cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)
+  390 pooled suites + 16 in the sequential driver-lock lane (GH-528)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+[parallel] gh732-l3-gate-summary.sh rc=0
+[parallel] projection-idempotent.sh rc=0
+[parallel] concurrent-claim.sh rc=0
+[parallel] chaos-stale-writer.sh rc=0
+[parallel] chaos-concurrent-pollers.sh rc=0
+[parallel] chaos-midturn-kill.sh rc=0
+[parallel] path-overlap.sh rc=0
+[parallel] poll-relay.sh rc=0
+[parallel] scope-change.sh rc=0
+[parallel] tick-foreign-cwd.sh rc=0
+[parallel] gh411-tick-log-foreign-cwd.sh rc=0
+[parallel] gh346-gateway-allowlists.sh rc=0
+[parallel] gh391-emit-marathon-yaml.sh rc=0
+[parallel] gh554-tick-unknown-flags.sh rc=0
+[parallel] gh322-unknown-arg-rejection.sh rc=0
+[parallel] gh589-xyz-mini-sync.sh rc=0
+[parallel] gh412-transient-claim-exit.sh rc=0
+[parallel] gh331-cost-summary.sh rc=0
+[parallel] relay-target-root.sh rc=0
+[parallel] relay-target-root-paths.sh rc=0
+[parallel] relay-target-root-relayfile.sh rc=0
+[parallel] relay-target-root-newfile.sh rc=0
+[parallel] gh289-target-root-build-turn.sh rc=0
+[parallel] relay-token-collision.sh rc=0
+[parallel] relay-escalation-not-stall.sh rc=0
+[parallel] relay-untracked-file-warn.sh rc=0
+[parallel] relay-review-once.sh rc=0
+[parallel] relay-artifact-file.sh rc=0
+[parallel] relay-xyz-skill-guard.sh rc=0
+[parallel] gh413-launch-artifact-destination-guard.sh rc=0
+[parallel] gh414-comment-reference-check.sh rc=0
+[parallel] gh415-guard-hook-entrypoints.sh rc=0
+[parallel] handoff.sh rc=0
+[parallel] handoff-exclusive.sh rc=0
+[parallel] circuit-break.sh rc=0
+[parallel] terminality-seal.sh rc=0
+[parallel] write-ops-log.sh rc=0
+[parallel] auto-sync.sh rc=0
+[parallel] analyze.sh rc=0
+[parallel] workstealing-verdict.sh rc=0
+[parallel] verdict-edge.sh rc=0
+[parallel] claim-cap.sh rc=0
+[parallel] reap.sh rc=0
+[parallel] heartbeat.sh rc=0
+[parallel] cost.sh rc=0
+[parallel] take.sh rc=0
+[parallel] watchdog-liveness.sh rc=0
+[parallel] gh251-validate-pytest-skip.sh rc=0
+[parallel] runner-loop.sh rc=0
+[parallel] poll-driver.sh rc=0
+[parallel] watchdog-relay.sh rc=0
+[parallel] relay-loop.sh rc=0
+[parallel] codex-turn.sh rc=0
+[parallel] pi-turn.sh rc=0
+[parallel] relay-turn-trace.sh rc=0
+[parallel] aider-turn.sh rc=0
+[parallel] gh280-jog-marathon-adapter.sh rc=0
+[parallel] gh278-turn-timeout-parity.sh rc=0
+[parallel] gh245-agy-probe-verb-invariant.sh rc=0
+[parallel] gh308-frozen-twin-guard.sh rc=0
+[parallel] gh788-python-path-space.sh rc=0
+[parallel] gh777-start-task-prior-art.sh rc=0
+[parallel] gh777-inventory-ratchet.sh rc=0
+[parallel] gh609-sdlc-agent-gaps.sh rc=0
+[parallel] ate-run-variations.sh rc=0
+[parallel] agy-turn.sh rc=0
+[parallel] gh267-express-skill.sh rc=0
+[parallel] model-alias.sh rc=0
+[parallel] gh450-model-catalog-pin.sh rc=0
+[parallel] gh346-model-telemetry-honesty.sh rc=0
+[parallel] gh460-fuzz-resolver-smoke.sh rc=0
+[parallel] gh478-runaway-guard.sh rc=0
+[parallel] gh346-resolver-fallback.sh rc=0
+[parallel] gh346-telemetry-row-written.sh rc=0
+[parallel] gh518-muse-model-policy.sh rc=0
+[parallel] gh346-registry-view-freshness.sh rc=0
+[parallel] gh518-muse-adapter-containment.sh rc=0
+[parallel] gh368-same-lane-routing.sh rc=0
+[parallel] gh373-reviewer-validation.sh rc=0
+[parallel] gh496-telemetry-isolation.sh rc=0
+[parallel] gh346-profile-resolve.sh rc=0
+[parallel] gh371-interrupt-snapshot.sh rc=0
+[parallel] gh436-merge-cleanup.sh rc=0
+[parallel] gh374-drift-path-filter.sh rc=0
+[parallel] gh369-group-kill.sh rc=0
+[parallel] swe-diagram.sh rc=0
+[parallel] gh648-l8-zero-output-handback.sh rc=0
+[parallel] gh372-escalation-log-tail.sh rc=0
+[parallel] gh370-progress-telemetry.sh rc=0
+[parallel] gh698-planner-db-ratings.sh rc=0
+[parallel] gh708-vendored-suite-skips.sh rc=0
+[parallel] gh648-l9-369-regression.sh rc=0
+[parallel] commandcode-turn.sh rc=0
+[parallel] claude-turn.sh rc=0
+[parallel] marathon-yaml.sh rc=0
+[parallel] worktree-isolation.sh rc=0
+[parallel] gh284-runlog-heartbeat.sh rc=0
+[parallel] gh115-round-cap.sh rc=0
+[parallel] gh307-gate-env-scrub.sh rc=0
+[parallel] gh319-gate-path-with-space.sh rc=0
+[parallel] gh320-twin-timeout-parity.sh rc=0
+[parallel] shim-worktree.sh rc=0
+[parallel] gh322-runlog-python-lane.sh rc=0
+[parallel] gh308-swarm-gate-path.sh rc=0
+[parallel] gh308-poll-guards.sh rc=0
+[parallel] gh343-gate-program-target-root.sh rc=0
+[parallel] gh308-turn-shim-parity.sh rc=0
+[parallel] gh342-sentinel-debug-log-python.sh rc=0
+[parallel] gh369-find-doc-root-resolution.sh rc=0
+[parallel] gh400-acceptance-fidelity.sh rc=0
+[parallel] gh610-claude-subscription.sh rc=0
+[parallel] gh557-unknown-blocks-manifest.sh rc=0
+[parallel] gh419-gate-inventory.sh rc=0
+[parallel] gh400-source-url.sh rc=0
+[parallel] gh418-issue-state-frozen.sh rc=0
+[parallel] gh422-backfill-source-url.sh rc=0
+[parallel] gh308-consult-guards.sh rc=0
+[parallel] litmus-release.sh rc=0
+[parallel] gh425-source-url-slug.sh rc=0
+[parallel] gh410-relay-block-driven-path.sh rc=0
+[parallel] gh399-packet-acceptance-continuation.sh rc=0
+[parallel] gh410-containment-advisory.sh rc=0
+[parallel] gh90-allowlist-directory.sh rc=0
+[parallel] gh417-turn-root-symlink-prefix.sh rc=0
+[parallel] gh457-gate-tiers.sh rc=0
+[parallel] gh407-gate-ran-attribution.sh rc=0
+[parallel] gh387-gate-not-first-executor.sh rc=0
+[parallel] gh390-timeout-attribution.sh rc=0
+[parallel] gh441-gate-env-contract.sh rc=0
+[parallel] gh432-failed-turn-persist.sh rc=0
+[parallel] gh218-synthetic-nested-driver-lock.sh rc=0
+[parallel] gh448-driver-lock-resolver.sh rc=0
+[parallel] gh376-relay-drive-lock-parity.sh rc=0
+[parallel] gh217-gate-env-plan-outside.sh rc=0
+[parallel] gh397-reviewer-turn-role.sh rc=0
+[parallel] gh401-dry-run-no-mutation.sh rc=0
+[parallel] gh375-agy-auth-preflight.sh rc=0
+[parallel] gh390-gate-guard.sh rc=0
+[parallel] gh375-auth-timeout-verdict.sh rc=0
+[parallel] gh408-tick-failure-visibility.sh rc=0
+[parallel] nightwatch-release.sh rc=0
+[parallel] gh378-gate-requires-green-suite.sh rc=0
+[parallel] gh385-retry-token-satisfied.sh rc=0
+[parallel] gh380-claude-trust.sh rc=0
+[parallel] gh505-relay-attest.sh rc=0
+[parallel] gh379-claude-builder-diagnosis.sh rc=0
+[parallel] gh551-resolver-refuses.sh rc=0
+[parallel] meter-release.sh rc=0
+[parallel] gh382-marathon-memory-telemetry.sh rc=0
+[parallel] marathon-drive.sh rc=0
+[parallel] gh386-turn-budget-honesty.sh rc=0
+[parallel] ballast-release.sh rc=0
+[parallel] gh255-remedy-ordering.sh rc=0
+[parallel] gh256-target-root-guard-root.sh rc=0
+[parallel] gh491-gate-only-refire.sh rc=0
+[parallel] gh426-worktree-leak.sh rc=0
+[parallel] gh384-crash-recovery.sh rc=0
+[parallel] gh514-write-set-trackable.sh rc=0
+[parallel] gh388-run-log-durability.sh rc=0
+[parallel] gh409-claim-leak.sh rc=0
+[parallel] gh438-removal-is-progress.sh rc=0
+[parallel] gh467-index-only-lane-blocked.sh rc=0
+[parallel] hq-marathon-live.sh rc=0
+[parallel] lane-attempt-cap.sh rc=0
+[parallel] debug-mantra.sh rc=0
+[parallel] driver-lock.sh rc=0
+[parallel] measure.sh rc=0
+[parallel] loop-stop.sh rc=0
+[parallel] champion.sh rc=0
+[parallel] oracle-guard.sh rc=0
+[parallel] loop-cost.sh rc=0
+[parallel] heldout-check.sh rc=0
+[parallel] gh438-acceptance-recheck.sh rc=0
+[parallel] improve-loop-dogfood.sh rc=0
+[parallel] gh430-state-dir-tracked-default.sh rc=0
+[parallel] improve-loop.sh rc=0
+[parallel] gh536-evidence-detail.sh rc=0
+[parallel] improve-loop-qa.sh rc=0
+[parallel] gh402-board-sync.sh rc=0
+[parallel] gh405-mock-board-harness.sh rc=0
+[parallel] gh544-parallel-default.sh rc=0
+[parallel] gh379-canary-uses-validate.sh rc=0
+[parallel] gh646-status-label.sh rc=0
+[parallel] gh35-test-tiers.sh rc=0
+[parallel] gh544-pre-push-gate.sh rc=0
+[parallel] gh365-runner-envelope.sh rc=0
+[parallel] gh365-validate-telemetry.sh rc=0
+[parallel] gh365-driver-lane-registry.sh rc=0
+[parallel] gh402-branch-enforcement.sh rc=0
+[parallel] gh365-shellcheck-parallel.sh rc=0
+[parallel] gh1-fixture-guard.sh rc=0
+[parallel] gh1-adoption-guard.sh rc=0
+[parallel] gh314-transcript-writeset.sh rc=0
+[parallel] gh520-default-reviewer-stub.sh rc=0
+[parallel] gh527-destructive-git-guard.sh rc=0
+[parallel] gh50-sandboxed-git-guard.sh rc=0
+[parallel] marathon.sh rc=0
+[parallel] marathon-closeout.sh rc=0
+[parallel] gh484-phase-dir-default.sh rc=0
+[parallel] marathon-root-audit.sh rc=0
+[parallel] rtl-orphan-backup.sh rc=0
+[parallel] gh2-orphan-backup-repro.sh rc=0
+[parallel] gh91-relay-scratch.sh rc=0
+[parallel] gh113-headless-scratch.sh rc=0
+[parallel] gh114-headless-tty.sh rc=0
+[parallel] gh124-closeout.sh rc=0
+[parallel] gh129-relay-tick-root.sh rc=0
+[parallel] gh130-agy-auth-whoami.sh rc=0
+[parallel] gh131-marathon-target-root.sh rc=0
+[parallel] gh549-work-events.sh rc=0
+[parallel] gh139-pipe-grep-guard.sh rc=0
+[parallel] synthetic/gh101-relay-programmatic-stress.sh rc=0
+[parallel] synthetic/gh102-telemetry-schema.sh rc=0
+[parallel] synthetic/gh94-containment-invariants.sh rc=0
+[parallel] synthetic/gh101-consult-programmatic.sh rc=0
+[parallel] synthetic/synthetic-claude-target-root.sh rc=0
+[parallel] synthetic/synthetic-marathon-env-leak.sh rc=0
+[parallel] synthetic/synthetic-marathon-worktree-guard.sh rc=0
+[parallel] synthetic/synthetic-pi-model-unset.sh rc=0
+[parallel] synthetic/synthetic-pi-provider-unsupported.sh rc=0
+[parallel] synthetic/gh94-script-serialization.sh rc=0
+[parallel] gh141-fuzz-inputs.sh rc=0
+[parallel] gh141-synthetic-registry.sh rc=0
+[parallel] gh148-deepseek-turn.sh rc=0
+[parallel] gh365-pdda-gov-scan.sh rc=0
+[parallel] gh608-deepseek-effort.sh rc=0
+[parallel] gh142-ate-exit-contract.sh rc=0
+[parallel] gh648-l7-checkout-aftermath.sh rc=0
+[parallel] gh648-l5-gh237-repro.sh rc=0
+[parallel] gh648-l3-consult-cap.sh rc=0
+[parallel] gh648-l6-muse-attribution.sh rc=0
+[parallel] gh648-l1-turn-termination.sh rc=0
+[parallel] gh654-offlane-log.sh rc=0
+[parallel] gh660-skill-drift.sh rc=0
+[parallel] gh156-turn-shims-help.sh rc=0
+[parallel] gh155-phase1-metamorphic-invariants.sh rc=0
+[parallel] gh648-l4-285-revalidate.sh rc=0
+[parallel] gh155-phase3-repro-builder.sh rc=0
+[parallel] gh648-l2-token-aftermath.sh rc=0
+[parallel] gh155-phase4-self-healer.sh rc=0
+[parallel] gh155-phase5-active-explorer.sh rc=0
+[parallel] gh168-wave-reconcile-scope.sh rc=0
+[parallel] gh174-harness-registry.sh rc=0
+[parallel] gh180-repro-timeout-crash.sh rc=0
+[parallel] gh181-repro-adapter-fidelity.sh rc=0
+[parallel] gh183-explorer-env-soundness.sh rc=0
+[parallel] gh184-no-tracked-scratch.sh rc=0
+[parallel] gh182-healer-facade-safety.sh rc=0
+[parallel] gh232-wave-reconcile-multiphase.sh rc=0
+[parallel] gh202-wave-reconcile-issue-state.sh rc=0
+[parallel] deep-research.sh rc=0
+[parallel] relay-pkg-freshness.sh rc=0
+[parallel] skill-extract.sh rc=0
+[parallel] gh155-phase2-differential-oracle.sh rc=0
+[parallel] releases-skill.sh rc=0
+[parallel] gh75-dashboard.sh rc=0
+[parallel] gh103-timeline-exporter.sh rc=0
+[parallel] gh525-unshipped-version-tokens.sh rc=0
+[parallel] gh32-releases-artifacts.sh rc=0
+[parallel] gh53-releases-merge-resolve.sh rc=0
+[parallel] gh54-merged-dump-refusals.sh rc=0
+[parallel] gh360-dump-multiline-values.sh rc=0
+[parallel] gh32-releases-app.sh rc=0
+[parallel] gh57-releases-fuzz.sh rc=0
+[parallel] gh57-live-merge-resolve.sh rc=0
+[parallel] gh69-roadmap-shadow.sh rc=0
+[parallel] gh351-manifest-unship.sh rc=0
+[parallel] gh349-releases-roadmap-vendored.sh rc=0
+[parallel] gh360-scoped-receipt-chain-rebuild.sh rc=0
+[parallel] gh429-wave-reconcile-vendored-observe.sh rc=0
+[parallel] gh358-wave-reconcile-vendored-paths.sh rc=0
+[parallel] gh362-marathon-plan-link-bullets.sh rc=0
+[parallel] gh32-release-target-advisory.sh rc=0
+[parallel] gh39-releases-project-sync.sh rc=0
+[parallel] path-integrity.sh rc=0
+[parallel] consult.sh rc=0
+[parallel] archive-root.sh rc=0
+[parallel] archive-writers.sh rc=0
+[parallel] archive-commit.sh rc=0
+[parallel] relay-turn-timeout.sh rc=0
+[parallel] relay-file-seeding-visibility.sh rc=0
+[parallel] archive-telemetry.sh rc=0
+[parallel] gh304-vendored-relay-path.sh rc=0
+[parallel] relay-turn-handoff.sh rc=0
+[parallel] relay-dep-drift.sh rc=0
+[parallel] new-relay.sh rc=0
+[parallel] gh678-installer-live-links.sh rc=0
+[parallel] gh77-standup-triage.sh rc=0
+[parallel] skills-army-hq.sh rc=0
+[parallel] agent-chorus.sh rc=0
+[parallel] gh620-skills-army-mini-sync.sh rc=0
+[parallel] gh233-agent-chorus-concurrency.sh rc=0
+[parallel] agent-chorus-bridge.sh rc=0
+[parallel] xyz-sync-check.sh rc=0
+[parallel] gh293-vendored-guard-drift.sh rc=0
+[parallel] relay-concurrent-commit.sh rc=0
+[parallel] relay-commit-pathspec.sh rc=0
+[parallel] relay-case-insensitive.sh rc=0
+[parallel] find-harness.sh rc=0
+[parallel] gh292-worktree-vendored-discovery.sh rc=0
+[parallel] gh642-consumer-fruit.sh rc=0
+[parallel] pdda-changelog.sh rc=0
+[parallel] xyz-vendor.sh rc=0
+[parallel] pdda-roadmap-coverage.sh rc=0
+[parallel] gh365-tier-fail-closed.sh rc=0
+[parallel] gh649-pdda-migration.sh rc=0
+[parallel] gh784-marathon-qa-gate.sh rc=0
+[parallel] pdda-local-checks.sh rc=0
+[parallel] gh460-pipe-buffer-sigpipe.sh rc=0
+[parallel] gh284-p3-release-milestone.sh rc=0
+[parallel] gh284-p4-release-lanes.sh rc=0
+[parallel] ci-workflow.sh rc=0
+[parallel] ci-route.sh rc=0
+[parallel] gh509-gate-evidence.sh rc=0
+[parallel] swarm-preflight.sh rc=0
+[parallel] xyz-completion.sh rc=0
+[parallel] gh358-lock-instrumentation.sh rc=0
+[parallel] gh123-lock-progress-bound.sh rc=0
+[parallel] gh14-atomic-append.sh rc=0
+[parallel] gh23-path-overlap-enforcement.sh rc=0
+[parallel] gh528-parallel-contention-retry.sh rc=0
+[parallel] pdda-install-startup-docs.sh rc=0
+[parallel] marathon-plan.sh rc=0
+[parallel] hq.sh rc=0
+[parallel] hq-park.sh rc=0
+[parallel] hq-park-synthesis.sh rc=0
+[parallel] hq-dispatch.sh rc=0
+[parallel] hq-next.sh rc=0
+[parallel] hq-locator.sh rc=0
+[parallel] hq-hardening.sh rc=0
+[parallel] hq-promote.sh rc=0
+[parallel] xyz-harness-hooks.sh rc=0
+[parallel] preflight-docs.sh rc=0
+[parallel] hq-marathon-scan.sh rc=0
+[parallel] gh238-hq-releases-mode.sh rc=0
+[parallel] hq-rollup.sh rc=0
+[parallel] gh567-roadmap-dashboard-retired.sh rc=0
+[parallel] mktemp-trap-guard.sh rc=0
+[parallel] gh703-raw-text-asterisk.sh rc=0
+[parallel] gh239-hq-status-releases-mode.sh rc=0
+[parallel] gh257-roadmap-ledger-fixes.sh rc=0
+[parallel] gh423-roadmap-render.sh rc=0
+[parallel] gh454-reconciler-defects.sh rc=0
+[parallel] gh424-roadmap-status-marker.sh rc=0
+[parallel] gh568-releases-md-retired.sh rc=0
+[parallel] gh418-planner-ledger-source.sh rc=0
+[parallel] gh421-auto-wave-reconcile.sh rc=0
+[parallel] gh425-gate-provenance-pr.sh rc=0
+[parallel] gh684-hosted-lane-report.sh rc=0
+[parallel] pdda-repo-contract.sh rc=0
+[parallel] gh740-hosted-lane-publish.sh rc=0
+[parallel] gh492-roadmap-state-sweep.sh rc=0
+[parallel] gh605-work-state.sh rc=0
+[parallel] gh645-merge-cleanup-xyz-tools.sh rc=0
+[parallel] gh674-merge-cleanup-hosted-lookup.sh rc=0
+[parallel] gh605-board-policy.sh rc=0
+[parallel] gh491-roadmap-section-validation.sh rc=0
+[parallel] gh681-reviewer-probe-rules.sh rc=0
+[parallel] gh527-issue-url-repair.sh rc=0
+[parallel] jog-queue.sh rc=0
+[parallel] gh291-contract-goldens.sh rc=0
+[parallel] gh205-gate-idempotency.sh rc=0
+[parallel] gh353-vendored-router-audit.sh rc=0
+[parallel] gh204-sed-portability.sh rc=0
+[parallel] gh153-releases-sidebar-rollup.sh rc=0
+[parallel] transcript-audit.sh rc=0
+[parallel] sentinel-tier1.sh rc=0
+[parallel] sentinel-network-guard.sh rc=0
+[parallel] sentinel-driver-hooks.sh rc=0
+[parallel] gh290-ate-variation-grid.sh rc=0
+[parallel] checkjs.sh rc=0
+[parallel] acorn-extract.sh rc=0
+[parallel] marathon-monitor.sh rc=0
+[parallel] gh269-roadmap-retired.sh rc=0
+[parallel] signal-triage.sh rc=0
+[parallel] fixtures/canary-token-reuse/verify-fixture.sh rc=0
+[parallel] fixtures/canary-peer-orphan/verify-fixture.sh rc=0
+[parallel] fixtures/canary-reviewer-overstep/verify-fixture.sh rc=0
+[parallel] relay-self-sufficiency.sh rc=0
+[parallel] phase3-signoff-guard.sh rc=0
+[parallel] agy-tui-takeover-verdict.sh rc=0
+[parallel] gh107-timeline-json-seam.sh rc=0
+[parallel] gh105-vendor-releases-addon.sh rc=0
+[parallel] gh165-governance-canonical-paths-guard.sh rc=0
+[parallel] security-scan.sh rc=0
+[parallel] gh273-marathon-root-audit-python-shape.sh rc=0
+[parallel] gh312-vendor-preserves-state.sh rc=0
+[parallel] relay-uncited-findings.sh rc=0
+[parallel] sentinel-overlay.sh rc=0
+[parallel] wave-reconcile.sh rc=0
+[parallel] gh132-review-xyz-skill.sh rc=0
+[parallel] gh693-lessons-learned-advisory.sh rc=0
+[parallel] gh306-registry-bidirectional.sh rc=0
+[parallel] gh197-vendor-tier-split.sh rc=0
+[parallel] gh496-phase2-reconciliation-views.sh rc=0
+[parallel] gh298-ate-gen4-ci-smoke.sh rc=0
+[parallel] gh-gen4-phase2-adaptive-ate.sh rc=0
+[parallel] gh712-jev-triage.sh rc=0
+[parallel] gh396-find-harness-roots.sh rc=0
+[parallel] gh393-deepseek-readiness.sh rc=0
+[parallel] gh591-prepush-commit-boundary.sh rc=0
+[parallel] gh589-consult-no-tick.sh rc=0
+[parallel] gh589-skill-viewer.sh rc=0
+[parallel] gh-gen4-phase4-repro-synth.sh rc=0
+[parallel] gh-gen4-phase5-campaign.sh rc=0
+[parallel] gh-gen4-phase3-fuzz-engine.sh rc=0
+
+===============================
+Running python3 -m pytest test/test_python_layer.py
+===============================
+============================= test session starts ==============================
+platform darwin -- Python 3.13.15, pytest-9.2.0, pluggy-1.7.0 -- /Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-rqgv75mc
+configfile: pytest.ini
+collecting ... collected 21 items
+
+test/test_python_layer.py::test_deploy_skills_behavioral_suite PASSED    [  4%]
+test/test_python_layer.py::test_rtl_module_load PASSED                   [  9%]
+test/test_python_layer.py::test_poll_module_load PASSED                  [ 14%]
+test/test_python_layer.py::test_consult_module_load PASSED               [ 19%]
+test/test_python_layer.py::test_marathon_drive_module_load PASSED        [ 23%]
+test/test_python_layer.py::test_swarm_preflight_module_load PASSED       [ 28%]
+test/test_python_layer.py::test_marathon_plan_module_load PASSED         [ 33%]
+test/test_python_layer.py::test_codex_turn_default_flags_match_bash_default PASSED [ 38%]
+test/test_python_layer.py::test_pi_turn_module_load PASSED               [ 42%]
+test/test_python_layer.py::test_pi_turn_parse_usage_keeps_last_event_gh295 PASSED [ 47%]
+test/test_python_layer.py::test_pi_turn_parse_usage_missing_file_returns_zero PASSED [ 52%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_builder_binary_missing PASSED [ 57%]
+test/test_python_layer.py::test_marathon_drive_fails_before_tick_state_when_pi_builder_binary_missing PASSED [ 61%]
+test/test_python_layer.py::test_swarm_preflight_gh108_bundle_helpers PASSED [ 66%]
+test/test_python_layer.py::test_swarm_preflight_default_root_gh267 PASSED [ 71%]
+test/test_python_layer.py::test_rtl_bridge_honors_containment_ignore_in_python_mode PASSED [ 76%]
+test/test_python_layer.py::test_rtl_run_rtl_returns_code_without_exiting PASSED [ 80%]
+test/test_python_layer.py::test_rtl_run_checked_fails_fast PASSED        [ 85%]
+test/test_python_layer.py::test_poll_relay_field PASSED                  [ 90%]
+test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137 PASSED [ 95%]
+test/test_python_layer.py::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated PASSED [100%]
+
+============================== 21 passed in 7.25s ==============================
+
+===============================
+Running clone-identity invariant (GH-1)
+===============================
+runner-envelope: clean — identity, tracked tree, worktrees, and driver lock unchanged under validate.sh
+
+===============================
+Running gamma-poison fixture staleness probe
+===============================
+
+===============================
+Summary
+===============================
+telemetry: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-rqgv75mc/.tick/telemetry/validate-parallel-1794132027779-13203.jsonl (408 suite events, 406 registered)
+10 slowest suites:
+  name  duration_s  rc
+  gh365-tier-fail-closed.sh  149.955  0
+  gh436-merge-cleanup.sh  138.547  0
+  gh280-jog-marathon-adapter.sh  101.258  0
+  marathon-drive.sh  78.483  0
+  pdda-repo-contract.sh  72.918  0
+  gh549-work-events.sh  56.543  0
+  pdda-install-startup-docs.sh  56.082  0
+  agy-turn.sh  54.343  0
+  gh365-pdda-gov-scan.sh  51.082  0
+  gh251-validate-pytest-skip.sh  47.385  0
+re-run ladder: 0 suite(s), 0.000s total
+passed: 409 / 409
+  + gh732-l3-gate-summary.sh
+  + projection-idempotent.sh
+  + concurrent-claim.sh
+  + chaos-stale-writer.sh
+  + chaos-concurrent-pollers.sh
+  + chaos-midturn-kill.sh
+  + path-overlap.sh
+  + poll-relay.sh
+  + scope-change.sh
+  + tick-foreign-cwd.sh
+  + gh411-tick-log-foreign-cwd.sh
+  + gh346-gateway-allowlists.sh
+  + gh391-emit-marathon-yaml.sh
+  + gh554-tick-unknown-flags.sh
+  + gh322-unknown-arg-rejection.sh
+  + gh589-xyz-mini-sync.sh
+  + gh412-transient-claim-exit.sh
+  + gh331-cost-summary.sh
+  + relay-target-root.sh
+  + relay-target-root-paths.sh
+  + relay-target-root-relayfile.sh
+  + relay-target-root-newfile.sh
+  + gh289-target-root-build-turn.sh
+  + relay-token-collision.sh
+  + relay-escalation-not-stall.sh
+  + relay-untracked-file-warn.sh
+  + relay-review-once.sh
+  + relay-artifact-file.sh
+  + relay-xyz-skill-guard.sh
+  + gh413-launch-artifact-destination-guard.sh
+  + gh414-comment-reference-check.sh
+  + gh415-guard-hook-entrypoints.sh
+  + handoff.sh
+  + handoff-exclusive.sh
+  + circuit-break.sh
+  + terminality-seal.sh
+  + write-ops-log.sh
+  + auto-sync.sh
+  + analyze.sh
+  + workstealing-verdict.sh
+  + verdict-edge.sh
+  + claim-cap.sh
+  + reap.sh
+  + heartbeat.sh
+  + cost.sh
+  + take.sh
+  + watchdog-liveness.sh
+  + gh251-validate-pytest-skip.sh
+  + runner-loop.sh
+  + poll-driver.sh
+  + watchdog-relay.sh
+  + relay-loop.sh
+  + codex-turn.sh
+  + pi-turn.sh
+  + relay-turn-trace.sh
+  + aider-turn.sh
+  + gh280-jog-marathon-adapter.sh
+  + gh278-turn-timeout-parity.sh
+  + gh245-agy-probe-verb-invariant.sh
+  + gh308-frozen-twin-guard.sh
+  + gh788-python-path-space.sh
+  + gh777-start-task-prior-art.sh
+  + gh777-inventory-ratchet.sh
+  + gh609-sdlc-agent-gaps.sh
+  + ate-run-variations.sh
+  + agy-turn.sh
+  + gh267-express-skill.sh
+  + model-alias.sh
+  + gh450-model-catalog-pin.sh
+  + gh346-model-telemetry-honesty.sh
+  + gh460-fuzz-resolver-smoke.sh
+  + gh478-runaway-guard.sh
+  + gh346-resolver-fallback.sh
+  + gh346-telemetry-row-written.sh
+  + gh518-muse-model-policy.sh
+  + gh346-registry-view-freshness.sh
+  + gh518-muse-adapter-containment.sh
+  + gh368-same-lane-routing.sh
+  + gh373-reviewer-validation.sh
+  + gh496-telemetry-isolation.sh
+  + gh346-profile-resolve.sh
+  + gh371-interrupt-snapshot.sh
+  + gh436-merge-cleanup.sh
+  + gh374-drift-path-filter.sh
+  + gh369-group-kill.sh
+  + swe-diagram.sh
+  + gh648-l8-zero-output-handback.sh
+  + gh372-escalation-log-tail.sh
+  + gh370-progress-telemetry.sh
+  + gh698-planner-db-ratings.sh
+  + gh708-vendored-suite-skips.sh
+  + gh648-l9-369-regression.sh
+  + commandcode-turn.sh
+  + claude-turn.sh
+  + marathon-yaml.sh
+  + worktree-isolation.sh
+  + gh284-runlog-heartbeat.sh
+  + gh115-round-cap.sh
+  + gh307-gate-env-scrub.sh
+  + gh319-gate-path-with-space.sh
+  + gh320-twin-timeout-parity.sh
+  + shim-worktree.sh
+  + gh322-runlog-python-lane.sh
+  + gh308-swarm-gate-path.sh
+  + gh308-poll-guards.sh
+  + gh343-gate-program-target-root.sh
+  + gh308-turn-shim-parity.sh
+  + gh342-sentinel-debug-log-python.sh
+  + gh369-find-doc-root-resolution.sh
+  + gh400-acceptance-fidelity.sh
+  + gh610-claude-subscription.sh
+  + gh557-unknown-blocks-manifest.sh
+  + gh419-gate-inventory.sh
+  + gh400-source-url.sh
+  + gh418-issue-state-frozen.sh
+  + gh422-backfill-source-url.sh
+  + gh308-consult-guards.sh
+  + litmus-release.sh
+  + gh425-source-url-slug.sh
+  + gh410-relay-block-driven-path.sh
+  + gh399-packet-acceptance-continuation.sh
+  + gh410-containment-advisory.sh
+  + gh90-allowlist-directory.sh
+  + gh417-turn-root-symlink-prefix.sh
+  + gh457-gate-tiers.sh
+  + gh407-gate-ran-attribution.sh
+  + gh387-gate-not-first-executor.sh
+  + gh390-timeout-attribution.sh
+  + gh441-gate-env-contract.sh
+  + gh432-failed-turn-persist.sh
+  + gh218-synthetic-nested-driver-lock.sh
+  + gh448-driver-lock-resolver.sh
+  + gh376-relay-drive-lock-parity.sh
+  + gh217-gate-env-plan-outside.sh
+  + gh397-reviewer-turn-role.sh
+  + gh401-dry-run-no-mutation.sh
+  + gh375-agy-auth-preflight.sh
+  + gh390-gate-guard.sh
+  + gh375-auth-timeout-verdict.sh
+  + gh408-tick-failure-visibility.sh
+  + nightwatch-release.sh
+  + gh378-gate-requires-green-suite.sh
+  + gh385-retry-token-satisfied.sh
+  + gh380-claude-trust.sh
+  + gh505-relay-attest.sh
+  + gh379-claude-builder-diagnosis.sh
+  + gh551-resolver-refuses.sh
+  + meter-release.sh
+  + gh382-marathon-memory-telemetry.sh
+  + marathon-drive.sh
+  + gh386-turn-budget-honesty.sh
+  + ballast-release.sh
+  + gh255-remedy-ordering.sh
+  + gh256-target-root-guard-root.sh
+  + gh491-gate-only-refire.sh
+  + gh426-worktree-leak.sh
+  + gh384-crash-recovery.sh
+  + gh514-write-set-trackable.sh
+  + gh388-run-log-durability.sh
+  + gh409-claim-leak.sh
+  + gh438-removal-is-progress.sh
+  + gh467-index-only-lane-blocked.sh
+  + hq-marathon-live.sh
+  + lane-attempt-cap.sh
+  + debug-mantra.sh
+  + driver-lock.sh
+  + measure.sh
+  + loop-stop.sh
+  + champion.sh
+  + oracle-guard.sh
+  + loop-cost.sh
+  + heldout-check.sh
+  + gh438-acceptance-recheck.sh
+  + improve-loop-dogfood.sh
+  + gh430-state-dir-tracked-default.sh
+  + improve-loop.sh
+  + gh536-evidence-detail.sh
+  + improve-loop-qa.sh
+  + gh402-board-sync.sh
+  + gh405-mock-board-harness.sh
+  + gh544-parallel-default.sh
+  + gh379-canary-uses-validate.sh
+  + gh646-status-label.sh
+  + gh35-test-tiers.sh
+  + gh544-pre-push-gate.sh
+  + gh365-runner-envelope.sh
+  + gh365-validate-telemetry.sh
+  + gh365-driver-lane-registry.sh
+  + gh402-branch-enforcement.sh
+  + gh365-shellcheck-parallel.sh
+  + gh1-fixture-guard.sh
+  + gh1-adoption-guard.sh
+  + gh314-transcript-writeset.sh
+  + gh520-default-reviewer-stub.sh
+  + gh527-destructive-git-guard.sh
+  + gh50-sandboxed-git-guard.sh
+  + marathon.sh
+  + marathon-closeout.sh
+  + gh484-phase-dir-default.sh
+  + marathon-root-audit.sh
+  + rtl-orphan-backup.sh
+  + gh2-orphan-backup-repro.sh
+  + gh91-relay-scratch.sh
+  + gh113-headless-scratch.sh
+  + gh114-headless-tty.sh
+  + gh124-closeout.sh
+  + gh129-relay-tick-root.sh
+  + gh130-agy-auth-whoami.sh
+  + gh131-marathon-target-root.sh
+  + gh549-work-events.sh
+  + gh139-pipe-grep-guard.sh
+  + synthetic/gh101-relay-programmatic-stress.sh
+  + synthetic/gh102-telemetry-schema.sh
+  + synthetic/gh94-containment-invariants.sh
+  + synthetic/gh101-consult-programmatic.sh
+  + synthetic/synthetic-claude-target-root.sh
+  + synthetic/synthetic-marathon-env-leak.sh
+  + synthetic/synthetic-marathon-worktree-guard.sh
+  + synthetic/synthetic-pi-model-unset.sh
+  + synthetic/synthetic-pi-provider-unsupported.sh
+  + synthetic/gh94-script-serialization.sh
+  + gh141-fuzz-inputs.sh
+  + gh141-synthetic-registry.sh
+  + gh148-deepseek-turn.sh
+  + gh365-pdda-gov-scan.sh
+  + gh608-deepseek-effort.sh
+  + gh142-ate-exit-contract.sh
+  + gh648-l7-checkout-aftermath.sh
+  + gh648-l5-gh237-repro.sh
+  + gh648-l3-consult-cap.sh
+  + gh648-l6-muse-attribution.sh
+  + gh648-l1-turn-termination.sh
+  + gh654-offlane-log.sh
+  + gh660-skill-drift.sh
+  + gh156-turn-shims-help.sh
+  + gh155-phase1-metamorphic-invariants.sh
+  + gh648-l4-285-revalidate.sh
+  + gh155-phase3-repro-builder.sh
+  + gh648-l2-token-aftermath.sh
+  + gh155-phase4-self-healer.sh
+  + gh155-phase5-active-explorer.sh
+  + gh168-wave-reconcile-scope.sh
+  + gh174-harness-registry.sh
+  + gh180-repro-timeout-crash.sh
+  + gh181-repro-adapter-fidelity.sh
+  + gh183-explorer-env-soundness.sh
+  + gh184-no-tracked-scratch.sh
+  + gh182-healer-facade-safety.sh
+  + gh232-wave-reconcile-multiphase.sh
+  + gh202-wave-reconcile-issue-state.sh
+  + deep-research.sh
+  + relay-pkg-freshness.sh
+  + skill-extract.sh
+  + gh155-phase2-differential-oracle.sh
+  + releases-skill.sh
+  + gh75-dashboard.sh
+  + gh103-timeline-exporter.sh
+  + gh525-unshipped-version-tokens.sh
+  + gh32-releases-artifacts.sh
+  + gh53-releases-merge-resolve.sh
+  + gh54-merged-dump-refusals.sh
+  + gh360-dump-multiline-values.sh
+  + gh32-releases-app.sh
+  + gh57-releases-fuzz.sh
+  + gh57-live-merge-resolve.sh
+  + gh69-roadmap-shadow.sh
+  + gh351-manifest-unship.sh
+  + gh349-releases-roadmap-vendored.sh
+  + gh360-scoped-receipt-chain-rebuild.sh
+  + gh429-wave-reconcile-vendored-observe.sh
+  + gh358-wave-reconcile-vendored-paths.sh
+  + gh362-marathon-plan-link-bullets.sh
+  + gh32-release-target-advisory.sh
+  + gh39-releases-project-sync.sh
+  + path-integrity.sh
+  + consult.sh
+  + archive-root.sh
+  + archive-writers.sh
+  + archive-commit.sh
+  + relay-turn-timeout.sh
+  + relay-file-seeding-visibility.sh
+  + archive-telemetry.sh
+  + gh304-vendored-relay-path.sh
+  + relay-turn-handoff.sh
+  + relay-dep-drift.sh
+  + new-relay.sh
+  + gh678-installer-live-links.sh
+  + gh77-standup-triage.sh
+  + skills-army-hq.sh
+  + agent-chorus.sh
+  + gh620-skills-army-mini-sync.sh
+  + gh233-agent-chorus-concurrency.sh
+  + agent-chorus-bridge.sh
+  + xyz-sync-check.sh
+  + gh293-vendored-guard-drift.sh
+  + relay-concurrent-commit.sh
+  + relay-commit-pathspec.sh
+  + relay-case-insensitive.sh
+  + find-harness.sh
+  + gh292-worktree-vendored-discovery.sh
+  + gh642-consumer-fruit.sh
+  + pdda-changelog.sh
+  + xyz-vendor.sh
+  + pdda-roadmap-coverage.sh
+  + gh365-tier-fail-closed.sh
+  + gh649-pdda-migration.sh
+  + gh784-marathon-qa-gate.sh
+  + pdda-local-checks.sh
+  + gh460-pipe-buffer-sigpipe.sh
+  + gh284-p3-release-milestone.sh
+  + gh284-p4-release-lanes.sh
+  + ci-workflow.sh
+  + ci-route.sh
+  + gh509-gate-evidence.sh
+  + swarm-preflight.sh
+  + xyz-completion.sh
+  + gh358-lock-instrumentation.sh
+  + gh123-lock-progress-bound.sh
+  + gh14-atomic-append.sh
+  + gh23-path-overlap-enforcement.sh
+  + gh528-parallel-contention-retry.sh
+  + pdda-install-startup-docs.sh
+  + marathon-plan.sh
+  + hq.sh
+  + hq-park.sh
+  + hq-park-synthesis.sh
+  + hq-dispatch.sh
+  + hq-next.sh
+  + hq-locator.sh
+  + hq-hardening.sh
+  + hq-promote.sh
+  + xyz-harness-hooks.sh
+  + preflight-docs.sh
+  + hq-marathon-scan.sh
+  + gh238-hq-releases-mode.sh
+  + hq-rollup.sh
+  + gh567-roadmap-dashboard-retired.sh
+  + mktemp-trap-guard.sh
+  + gh703-raw-text-asterisk.sh
+  + gh239-hq-status-releases-mode.sh
+  + gh257-roadmap-ledger-fixes.sh
+  + gh423-roadmap-render.sh
+  + gh454-reconciler-defects.sh
+  + gh424-roadmap-status-marker.sh
+  + gh568-releases-md-retired.sh
+  + gh418-planner-ledger-source.sh
+  + gh421-auto-wave-reconcile.sh
+  + gh425-gate-provenance-pr.sh
+  + gh684-hosted-lane-report.sh
+  + pdda-repo-contract.sh
+  + gh740-hosted-lane-publish.sh
+  + gh492-roadmap-state-sweep.sh
+  + gh605-work-state.sh
+  + gh645-merge-cleanup-xyz-tools.sh
+  + gh674-merge-cleanup-hosted-lookup.sh
+  + gh605-board-policy.sh
+  + gh491-roadmap-section-validation.sh
+  + gh681-reviewer-probe-rules.sh
+  + gh527-issue-url-repair.sh
+  + jog-queue.sh
+  + gh291-contract-goldens.sh
+  + gh205-gate-idempotency.sh
+  + gh353-vendored-router-audit.sh
+  + gh204-sed-portability.sh
+  + gh153-releases-sidebar-rollup.sh
+  + transcript-audit.sh
+  + sentinel-tier1.sh
+  + sentinel-network-guard.sh
+  + sentinel-driver-hooks.sh
+  + gh290-ate-variation-grid.sh
+  + checkjs.sh
+  + acorn-extract.sh
+  + marathon-monitor.sh
+  + gh269-roadmap-retired.sh
+  + signal-triage.sh
+  + fixtures/canary-token-reuse/verify-fixture.sh
+  + fixtures/canary-peer-orphan/verify-fixture.sh
+  + fixtures/canary-reviewer-overstep/verify-fixture.sh
+  + relay-self-sufficiency.sh
+  + phase3-signoff-guard.sh
+  + agy-tui-takeover-verdict.sh
+  + gh107-timeline-json-seam.sh
+  + gh105-vendor-releases-addon.sh
+  + gh165-governance-canonical-paths-guard.sh
+  + security-scan.sh
+  + gh273-marathon-root-audit-python-shape.sh
+  + gh312-vendor-preserves-state.sh
+  + relay-uncited-findings.sh
+  + sentinel-overlay.sh
+  + wave-reconcile.sh
+  + gh132-review-xyz-skill.sh
+  + gh693-lessons-learned-advisory.sh
+  + gh306-registry-bidirectional.sh
+  + gh197-vendor-tier-split.sh
+  + gh496-phase2-reconciliation-views.sh
+  + gh298-ate-gen4-ci-smoke.sh
+  + gh-gen4-phase2-adaptive-ate.sh
+  + gh712-jev-triage.sh
+  + gh396-find-harness-roots.sh
+  + gh393-deepseek-readiness.sh
+  + gh591-prepush-commit-boundary.sh
+  + gh589-consult-no-tick.sh
+  + gh589-skill-viewer.sh
+  + gh-gen4-phase4-repro-synth.sh
+  + gh-gen4-phase5-campaign.sh
+  + gh-gen4-phase3-fuzz-engine.sh
+  + python:test_python_layer.py
+  + clone-identity-invariant
+  + gamma-poison-staleness-probe
+pre-push: full gate GREEN in 529s — pushing.
+branch 'marathon/gh-1295-injected-text-in-briefs-2026-11-08' set up to track 'origin/marathon/gh-1295-injected-text-in-briefs-2026-11-08'.
+GH1358 normal gated candidate publication complete; final transcript tail uses normal docs push
+marathon-drive: gate-guard: gate exit 0 after 544s — peak group RSS 1156MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: transcript saved: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/relay-system/2026-11-08/marathon-gh-1295-injected-text-in-briefs-100919.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1295-injected-text-in-briefs-complete boundary — compressor=1431MB, swap_free=1023MB
+marathon-drive: phase gh-1295-injected-text-in-briefs complete — STATUS: Approved, gate passed
+marathon-drive: lane PR: marathon-closeout.sh: --no-commit; pushing the branch as committed
+marathon-drive: lane PR: pre-push: docs-only update — running the documentation gate, not validate.sh.
+marathon-drive: lane PR: PDDA run starting — mode: full (on rails; errors block with a non-zero exit)
+marathon-drive: lane PR: == pdda-check-frontmatter ==
+marathon-drive: lane PR: SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+marathon-drive: lane PR: == pdda-check-status-table ==
+marathon-drive: lane PR: SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+marathon-drive: lane PR: == pdda-check-hardcoded-paths ==
+marathon-drive: lane PR: SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+marathon-drive: lane PR: == pdda-check-roadmap ==
+marathon-drive: lane PR: INFO [pdda-check-roadmap] ROADMAP.md ROADMAP.md not found; nothing to check
+marathon-drive: lane PR: SUMMARY [pdda-check-roadmap] errors=0 warns=0 info=1
+marathon-drive: lane PR: == pdda-check-roadmap-coverage ==
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/README.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p1-routing-validation.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p2-turn-supervision.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p3-incident-records.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p4-drift-filter.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-1015-OBSERVER-PATH/recon-observer.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-1214-LESSONS-READBACK/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS/recon-deploy-skills.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L1-oracle.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L2-token-aftermath.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L3-consult-cap.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L4-285-revalidate.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L5-gh237-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L6-muse-attribution.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L7-checkout-aftermath.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L8-zero-output-handback.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L9-369-regression.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L1-review-once-heading.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L2-measure-c1-d2.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L3-timing-claims-and-summary.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L4-named-environment-faults.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh168-wave-reconcile-scope.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh2-orphan-backup-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh50-sandboxed-git-guard.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-29.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-02.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-03.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-04.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-06.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-07.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-10.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-11.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-12.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-13.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-14.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-15.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-17.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-18.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-19.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-21.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-22.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-30.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-02.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-03.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-04.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-05.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-06.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-07.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-08.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-09.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-10.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-11.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-12.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-13.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-14.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-15.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-17.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-18.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-19.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-21.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-30.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-31.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-02.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-03.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-04.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-06.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-07.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-08.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-agy-model-probe.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-closeout-evidence.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-end-of-week.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh1080-express-docs.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh1100-jog-target-root.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh796-integration.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh949-ate-remediation.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh981-paperclip-dashboard.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-install-sh-link-steal.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-phase-recovery.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-1353-NEXTGEN-FLYWHEEL.md:1 unstarted inbox capture has no ledger pointer (row deferred to pickup per decision 6) (PROJECT/1-INBOX/GH-1353-NEXTGEN-FLYWHEEL.md)
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-1356-FLYWHEEL-BATCH2-SUPERVISOR-RUN.md:1 unstarted inbox capture has no ledger pointer (row deferred to pickup per decision 6) (PROJECT/1-INBOX/GH-1356-FLYWHEEL-BATCH2-SUPERVISOR-RUN.md)
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-1358-DURABLE-FACTORY-QUALIFICATION.md:1 unstarted inbox capture has no ledger pointer (row deferred to pickup per decision 6) (PROJECT/1-INBOX/GH-1358-DURABLE-FACTORY-QUALIFICATION.md)
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-1360-GENERIC-MONITOR-SUPERVISOR.md:1 unstarted inbox capture has no ledger pointer (row deferred to pickup per decision 6) (PROJECT/1-INBOX/GH-1360-GENERIC-MONITOR-SUPERVISOR.md)
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-346-PHASE-3-SPEC.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-406-RADAR-CROSSWALK.md:1 roadmap coverage check skipped because roadmap_exempt=true
+marathon-drive: lane PR: SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=120
+marathon-drive: lane PR: == pdda-check-changelog ==
+marathon-drive: lane PR: SUMMARY [pdda-check-changelog] errors=0 warns=0 info=0
+marathon-drive: lane PR: == pdda-stale-working-docs ==
+marathon-drive: lane PR: SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+marathon-drive: lane PR: == pdda-check-issue-doc-sync ==
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-1075-BATCH-RESUME-STALE-FILES.md:1 issue #1075 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-1075-BATCH-RESUME-STALE-FILES.md PROJECT/3-COMPLETED/GH-1075-BATCH-RESUME-STALE-FILES.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-1087-GH1051-RECORD-SPACING.md:1 issue #1087 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-1087-GH1051-RECORD-SPACING.md PROJECT/3-COMPLETED/GH-1087-GH1051-RECORD-SPACING.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-1108-JOG-LAND-RECEIPTS.md:1 issue #1108 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-1108-JOG-LAND-RECEIPTS.md PROJECT/3-COMPLETED/GH-1108-JOG-LAND-RECEIPTS.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md:1 issue #325 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md PROJECT/3-COMPLETED/GH-325-CANONICAL-SKILLS-HOME.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-396-HARNESS-ROOT-RESOLVER.md:1 issue #396 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-396-HARNESS-ROOT-RESOLVER.md PROJECT/3-COMPLETED/GH-396-HARNESS-ROOT-RESOLVER.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-421-AUTO-WAVE-RECONCILE.md:1 issue #421 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-421-AUTO-WAVE-RECONCILE.md PROJECT/3-COMPLETED/GH-421-AUTO-WAVE-RECONCILE.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-424-ROADMAP-STATUS-MARKER-WRITER.md:1 issue #424 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-424-ROADMAP-STATUS-MARKER-WRITER.md PROJECT/3-COMPLETED/GH-424-ROADMAP-STATUS-MARKER-WRITER.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-425-GATE-PROVENANCE-CHECK.md:1 issue #425 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-425-GATE-PROVENANCE-CHECK.md PROJECT/3-COMPLETED/GH-425-GATE-PROVENANCE-CHECK.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-454-RECONCILE-GATE-DEFECTS.md:1 issue #454 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-454-RECONCILE-GATE-DEFECTS.md PROJECT/3-COMPLETED/GH-454-RECONCILE-GATE-DEFECTS.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-491-ROADMAP-SECTION-VALIDATION.md:1 issue #491 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-491-ROADMAP-SECTION-VALIDATION.md PROJECT/3-COMPLETED/GH-491-ROADMAP-SECTION-VALIDATION.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 issue #648 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md PROJECT/3-COMPLETED/CAPTURE.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md:1 issue #807 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md PROJECT/3-COMPLETED/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-886-LINUX-PORTABILITY-CANARY.md:1 issue #886 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-886-LINUX-PORTABILITY-CANARY.md PROJECT/3-COMPLETED/GH-886-LINUX-PORTABILITY-CANARY.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-904-EMPTY-RELEASES-LEDGER.md:1 issue #904 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-904-EMPTY-RELEASES-LEDGER.md PROJECT/3-COMPLETED/GH-904-EMPTY-RELEASES-LEDGER.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-905-RELEASES-ONLY-INSTALL.md:1 issue #905 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-905-RELEASES-ONLY-INSTALL.md PROJECT/3-COMPLETED/GH-905-RELEASES-ONLY-INSTALL.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-906-OPTIONAL-SKILL-INSTALL.md:1 issue #906 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-906-OPTIONAL-SKILL-INSTALL.md PROJECT/3-COMPLETED/GH-906-OPTIONAL-SKILL-INSTALL.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-907-VENDORED-ROUTER-HINT.md:1 issue #907 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-907-VENDORED-ROUTER-HINT.md PROJECT/3-COMPLETED/GH-907-VENDORED-ROUTER-HINT.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 issue #494 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-consumer.md PROJECT/3-COMPLETED/recon-flightdeck-consumer.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 issue #494 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md PROJECT/3-COMPLETED/recon-flightdeck-issue-visibility.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 issue #494 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-session-context.md PROJECT/3-COMPLETED/recon-flightdeck-session-context.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 issue #496 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md PROJECT/3-COMPLETED/recon-gh496-merge-churn-and-telemetry.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-gh981-paperclip-dashboard.md:1 issue #981 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/recon-gh981-paperclip-dashboard.md PROJECT/3-COMPLETED/recon-gh981-paperclip-dashboard.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-18-COMMANDCODE-EVAL.md:1 issue #18 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-18-COMMANDCODE-EVAL.md PROJECT/3-COMPLETED/GH-18-COMMANDCODE-EVAL.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-215-RECONCILER-VENDOR-PATHS.md:1 issue #215 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-215-RECONCILER-VENDOR-PATHS.md PROJECT/3-COMPLETED/GH-215-RECONCILER-VENDOR-PATHS.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md:1 issue #216 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md PROJECT/3-COMPLETED/GH-216-LEDGER-BULLET-FORMAT.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md:1 issue #255 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md PROJECT/3-COMPLETED/GH-255-ARCHIVE-ROOT-REMEDY.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-589-XYZ-MINI-SYNC.md:1 issue #589 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-589-XYZ-MINI-SYNC.md PROJECT/3-COMPLETED/GH-589-XYZ-MINI-SYNC.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-644-VENDOR-IGNORE-STATE.md:1 issue #644 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-644-VENDOR-IGNORE-STATE.md PROJECT/3-COMPLETED/GH-644-VENDOR-IGNORE-STATE.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-767-REGENERATE-ARCHITECTURE-DIAGRAMS.md:1 doc status reads 'complete' (done) but issue #767 is still OPEN — close the issue or correct the status
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-770-RELEASES-JOG-RESUME-LAND.md:1 issue #770 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-770-RELEASES-JOG-RESUME-LAND.md PROJECT/3-COMPLETED/GH-770-RELEASES-JOG-RESUME-LAND.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-771-JOG-ACCEPTS-REMOVED-GEMINI.md:1 issue #771 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-771-JOG-ACCEPTS-REMOVED-GEMINI.md PROJECT/3-COMPLETED/GH-771-JOG-ACCEPTS-REMOVED-GEMINI.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/recon-gh424-status-marker.md:1 issue #424 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/recon-gh424-status-marker.md PROJECT/3-COMPLETED/recon-gh424-status-marker.md
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #216 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #255 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #1075 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #1087 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #35 cached doc_path 'PROJECT/2-WORKING/GH-35-TEST-TIER-ROUTING.md' differs from PROJECT/3-COMPLETED/GH-35-TEST-TIER-ROUTING.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #42 cached doc_path 'PROJECT/2-WORKING/GH-42-COMMANDCODE-TURN.md' differs from PROJECT/3-COMPLETED/GH-42-COMMANDCODE-TURN.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #10 cached doc_path 'PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md' differs from PROJECT/3-COMPLETED/GH-10-REQUIRE-FIXTURE-ADOPTION.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #1 cached doc_path 'PROJECT/2-WORKING/GH-1-SUITE-CONTAINMENT-GATE.md' differs from PROJECT/3-COMPLETED/GH-1-SUITE-CONTAINMENT-GATE.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #77 cached doc_path 'PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md' differs from PROJECT/3-COMPLETED/GH-77-STANDUP-SESSION-TRIAGE.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #124 cached doc_path 'PROJECT/2-WORKING/GH-124-CLOSEOUT-AUTOMATION.md' differs from PROJECT/3-COMPLETED/GH-124-CLOSEOUT-AUTOMATION.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #170 cached doc_path 'PROJECT/2-WORKING/GH-170-AGENT2AGENT-GLITCHES.md' differs from PROJECT/3-COMPLETED/GH-170-AGENT2AGENT-GLITCHES.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #113 cached doc_path 'PROJECT/2-WORKING/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md' differs from PROJECT/3-COMPLETED/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #114 cached doc_path 'PROJECT/2-WORKING/GH-114-HEADLESS-TTY-IDLE-HANG.md' differs from PROJECT/3-COMPLETED/GH-114-HEADLESS-TTY-IDLE-HANG.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #168 cached doc_path 'PROJECT/2-WORKING/GH-168-WAVE-RECONCILE-SCOPE.md' differs from PROJECT/3-COMPLETED/GH-168-WAVE-RECONCILE-SCOPE.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #2 cached doc_path 'PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md' differs from PROJECT/3-COMPLETED/GH-2-ORPHAN-BACKUP-RELOCATION.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #50 cached doc_path 'PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md' differs from PROJECT/3-COMPLETED/GH-50-SANDBOXED-GIT-HALF-APPLY.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #202 cached doc_path 'PROJECT/2-WORKING/GH-202-WAVE-RECONCILER-STATE.md' differs from PROJECT/3-COMPLETED/GH-202-WAVE-RECONCILER-STATE.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #221 cached doc_path 'PROJECT/1-INBOX/GH-221-AGY-WHOAMI-PREFLIGHT.md' differs from PROJECT/3-COMPLETED/GH-221-AGY-WHOAMI-PREFLIGHT.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #123 cached doc_path 'PROJECT/2-WORKING/GH-123-LINUX-CANARY-REMAINDER.md' differs from PROJECT/3-COMPLETED/GH-123-LINUX-CANARY-REMAINDER.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #243 cached doc_path 'PROJECT/1-INBOX/GH-243-ROADMAP-REPOINT-STALENESS-GUARD.md' differs from PROJECT/3-COMPLETED/GH-243-ROADMAP-REPOINT-STALENESS-GUARD.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #246 cached doc_path 'PROJECT/1-INBOX/GH-246-RELAY-XYZ-QA-TEMPLATE.md' differs from PROJECT/3-COMPLETED/GH-246-RELAY-XYZ-QA-TEMPLATE.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #249 cached doc_path 'PROJECT/2-WORKING/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md' differs from PROJECT/3-COMPLETED/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #251 cached doc_path 'PROJECT/2-WORKING/GH-251-VALIDATE-PYTEST-SKIP.md' differs from PROJECT/3-COMPLETED/GH-251-VALIDATE-PYTEST-SKIP.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #271 cached doc_path 'PROJECT/2-WORKING/GH-271-WAVE-RECONCILE-LINKED-ISSUES.md' differs from PROJECT/3-COMPLETED/GH-271-WAVE-RECONCILE-LINKED-ISSUES.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #272 cached doc_path 'PROJECT/2-WORKING/GH-272-MERGE-RESOLVE-VIEWS.md' differs from PROJECT/3-COMPLETED/GH-272-MERGE-RESOLVE-VIEWS.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #273 cached doc_path 'PROJECT/2-WORKING/GH-273-AUDIT-PYTHON-SPELLINGS.md' differs from PROJECT/3-COMPLETED/GH-273-AUDIT-PYTHON-SPELLINGS.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #269 cached doc_path 'PROJECT/2-WORKING/GH-269-RELEASES-DB-SWITCHOVER.md' differs from PROJECT/3-COMPLETED/GH-269-RELEASES-DB-SWITCHOVER.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #280 cached doc_path 'PROJECT/2-WORKING/GH-280-JOG-MARATHON-RECALIBRATION.md' differs from PROJECT/3-COMPLETED/GH-280-JOG-MARATHON-RECALIBRATION.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #314 cached doc_path 'PROJECT/2-WORKING/GH-314-ARCHIVE-TEMPLATE-MANGLE.md' differs from PROJECT/3-COMPLETED/GH-314-ARCHIVE-TEMPLATE-MANGLE.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #358 cached doc_path 'PROJECT/2-WORKING/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md' differs from PROJECT/3-COMPLETED/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #353 cached doc_path 'PROJECT/2-WORKING/GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md' differs from PROJECT/3-COMPLETED/GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #360 cached doc_path 'PROJECT/2-WORKING/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md' differs from PROJECT/3-COMPLETED/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #410 cached doc_path 'PROJECT/2-WORKING/GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md' differs from PROJECT/3-COMPLETED/GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #419 cached doc_path 'PROJECT/1-INBOX/GH-419-MARATHON-RULE-ENFORCEMENT.md' differs from PROJECT/3-COMPLETED/GH-419-MARATHON-RULE-ENFORCEMENT.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #349 cached doc_path 'PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md' differs from PROJECT/3-COMPLETED/GH-349-RELEASES-ROADMAP-VENDORED.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #351 cached doc_path 'PROJECT/2-WORKING/GH-351-MANIFEST-UNSHIP.md' differs from PROJECT/3-COMPLETED/GH-351-MANIFEST-UNSHIP.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #436 cached doc_path 'PROJECT/2-WORKING/GH-436-MERGE-CLEANUP-SKILL.md' differs from PROJECT/3-COMPLETED/GH-436-MERGE-CLEANUP-SKILL.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #447 cached doc_path 'PROJECT/2-WORKING/GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md' differs from PROJECT/3-COMPLETED/GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #450 cached doc_path 'PROJECT/2-WORKING/GH-450-MODEL-CATALOG-CONSUME.md' differs from PROJECT/3-COMPLETED/GH-450-MODEL-CATALOG-CONSUME.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #473 cached doc_path 'PROJECT/2-WORKING/GH-473-UNSTUCK-SKILL.md' differs from PROJECT/3-COMPLETED/GH-473-UNSTUCK-SKILL.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #474 cached doc_path 'PROJECT/2-WORKING/GH-474-DASHBOARD-DROPPED-ROW-SIGNAL.md' differs from PROJECT/3-COMPLETED/GH-474-DASHBOARD-DROPPED-ROW-SIGNAL.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #487 cached doc_path 'PROJECT/2-WORKING/GH-487-BOUNDED-GATES.md' differs from PROJECT/3-COMPLETED/GH-487-BOUNDED-GATES.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #508 cached doc_path 'PROJECT/2-WORKING/GH-508-GIT-PULSE-SKILLS.md' differs from PROJECT/3-COMPLETED/GH-508-GIT-PULSE-SKILLS.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #516 cached doc_path 'PROJECT/2-WORKING/GH-516-EXPRESS-TRUE-DIRECT-PUSH-PLAN.md' differs from PROJECT/3-COMPLETED/GH-516-EXPRESS-TRUE-DIRECT-PUSH-PLAN.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #608 cached doc_path 'PROJECT/2-WORKING/GH-608-FIX-RELAY-HONOR-QWEN-DEEPSEEK-REASONING-EFFORT-AND-CORRECT-F.md' differs from PROJECT/3-COMPLETED/GH-608-FIX-RELAY-HONOR-QWEN-DEEPSEEK-REASONING-EFFORT-AND-CORRECT-F.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #654 cached doc_path 'PROJECT/2-WORKING/GH-654-MARATHON-CONTAINMENT-EXIT-6-DISCARDS-COMPLETED-BUILDER-WORK-.md' differs from PROJECT/3-COMPLETED/GH-654-MARATHON-CONTAINMENT-EXIT-6-DISCARDS-COMPLETED-BUILDER-WORK-.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #659 cached doc_path 'PROJECT/2-WORKING/GH-659-RTL-INIT-SPLITS-ALLOW-CSV-WITH-BARE-IFS-NO-TRIM-SO-EVERY-ART.md' differs from PROJECT/3-COMPLETED/GH-659-RTL-INIT-SPLITS-ALLOW-CSV-WITH-BARE-IFS-NO-TRIM-SO-EVERY-ART.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #663 cached doc_path 'PROJECT/2-WORKING/GH-663-QA-FINDINGS-AGY-RELAY-REVIEW-ON-THE-GH-654-658-659-660-HOTFI.md' differs from PROJECT/3-COMPLETED/GH-663-QA-FINDINGS-AGY-RELAY-REVIEW-ON-THE-GH-654-658-659-660-HOTFI.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #712 cached doc_path 'PROJECT/2-WORKING/GH-712-JEV-ATE-TRIAGE.md' differs from PROJECT/3-COMPLETED/GH-712-JEV-ATE-TRIAGE.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #1295 cached doc_path 'PROJECT/1-INBOX/GH-1295-INJECTED-TEXT-IN-BRIEFS.md' differs from PROJECT/2-WORKING/GH-1295-INJECTED-TEXT-IN-BRIEFS.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: WARN [pdda-check-issue-doc-sync] releases.db issue #1344 cached doc_path 'PROJECT/1-INBOX/GH-1344-FINISHING-WORK-READERS-SWEEP-CLOSE.md' differs from PROJECT/2-WORKING/GH-1344-FINISHING-WORK-READERS-SWEEP-CLOSE.md — run: issue-doc-sync --fix
+marathon-drive: lane PR: SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=83 info=0
+marathon-drive: lane PR: == pdda-check-releases ==
+marathon-drive: lane PR: INFO [pdda-check-releases] RELEASES.md RELEASES.md not found — nothing to check
+marathon-drive: lane PR: SUMMARY [pdda-check-releases] errors=0 warns=0 info=1
+marathon-drive: lane PR: == pdda-check-governance ==
+marathon-drive: lane PR: WARN [pdda-check-governance] PROJECT/PDDA.md:54 dead reference 'blank.md' — no file at blank.md
+marathon-drive: lane PR: WARN [pdda-check-governance] PROJECT/PDDA.md:484 dead reference 'blank.md' — no file at blank.md
+marathon-drive: lane PR: WARN [pdda-check-governance] PROJECT/PDDA.md:561 dead reference 'blank.md' — no file at blank.md
+marathon-drive: lane PR: WARN [pdda-check-governance] CLAUDE.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+marathon-drive: lane PR: WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+marathon-drive: lane PR: SUMMARY [pdda-check-governance] errors=0 warns=5 info=0
+marathon-drive: lane PR: == pdda-check-marathon-qa ==
+marathon-drive: lane PR: WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:78 Wave 1 item pending verification: 'Wave 1 Proof of Done Test Suite Green (record runnable command and passing output)'
+marathon-drive: lane PR: WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:79 Wave 1 Post-Build Codex QA Relay item has no receipt citation
+marathon-drive: lane PR: WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:79 Wave 1 item pending verification: 'Wave 1 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)'
+marathon-drive: lane PR: WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:80 Wave 1 item pending verification: 'Wave 1 CodeRabbit / Peer Review findings adjudicated'
+marathon-drive: lane PR: WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:83 Wave 2 item pending verification: 'Wave 2 Proof of Done Test Suite Green (record runnable command and passing output)'
+marathon-drive: lane PR: WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:84 Wave 2 Post-Build Codex QA Relay item has no receipt citation
+marathon-drive: lane PR: WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:84 Wave 2 item pending verification: 'Wave 2 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)'
+marathon-drive: lane PR: WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:85 Wave 2 item pending verification: 'Wave 2 CodeRabbit / Peer Review findings adjudicated'
+marathon-drive: lane PR: WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 missing '## Acceptance & Quality Checklist' section
+marathon-drive: lane PR: SUMMARY [pdda-check-marathon-qa] errors=0 warns=9 info=0
+marathon-drive: lane PR: == pdda-doc-ready ==
+marathon-drive: lane PR: INFO [pdda-doc-ready] . LLM readiness review skipped (set PDDA_LLM_BIN to a model CLI such as agy/codex/claude to enable)
+marathon-drive: lane PR: SUMMARY [pdda-doc-ready] errors=0 warns=0 info=1
+marathon-drive: lane PR: PDDA run complete: no errors, 97 warning(s) to review — pdda-check-issue-doc-sync pdda-check-governance pdda-check-marathon-qa
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-1-SUITE-CONTAINMENT-GATE.md:1 doc is in 3-COMPLETED (issue #1) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-10-REQUIRE-FIXTURE-ADOPTION.md:1 doc is in 3-COMPLETED (issue #10) but frontmatter status still reads 'cut' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-115-ROUND-CAP-ESCALATION.md:1 doc is in 3-COMPLETED (issue #115) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-123-LINUX-CANARY-REMAINDER.md:1 doc is in 3-COMPLETED (issue #123) but frontmatter status still reads 'deferred' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-124-CLOSEOUT-AUTOMATION.md:1 doc is in 3-COMPLETED (issue #124) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-132-REVIEW-XYZ-SKILL.md:1 doc is in 3-COMPLETED (issue #132) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-135-CONSULT-AGY-PREFLIGHT.md:1 doc is in 3-COMPLETED (issue #135) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-136-ATTEMPTS-GATE-ROOT.md:1 doc is in 3-COMPLETED (issue #136) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-137-SUITE-REGISTRATION.md:1 doc is in 3-COMPLETED (issue #137) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-138-TWIN-DIVERGENCE-RECORD.md:1 doc is in 3-COMPLETED (issue #138) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-139-SIGPIPE-SWEEP-GUARD.md:1 doc is in 3-COMPLETED (issue #139) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-14-ATOMIC-EVENT-APPEND.md:1 doc is in 3-COMPLETED (issue #14) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-140-UTCNOW-DEPRECATION.md:1 doc is in 3-COMPLETED (issue #140) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-144-AGENT2AGENT-3PLUS-UX.md:1 doc is in 3-COMPLETED (issue #144) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-148-DEEPSEEK-HARNESS.md:1 doc is in 3-COMPLETED (issue #148) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md:1 doc is in 3-COMPLETED (issue #15) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-153-RELEASES-SIDEBAR-ROLLUP.md:1 doc is in 3-COMPLETED (issue #153) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-170-AGENT2AGENT-GLITCHES.md:1 doc is in 3-COMPLETED (issue #170) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-180-REPRO-TIMEOUT-CRASH.md:1 doc is in 3-COMPLETED (issue #180) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-181-REPRO-ADAPTER-FIDELITY.md:1 doc is in 3-COMPLETED (issue #181) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-183-EXPLORER-ENV-SOUNDNESS.md:1 doc is in 3-COMPLETED (issue #183) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-184-TRACKED-SCRATCH-ARTIFACT.md:1 doc is in 3-COMPLETED (issue #184) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-23-KERNEL-OVERLAP-ENFORCEMENT.md:1 doc is in 3-COMPLETED (issue #23) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-3-IMPROVE-LOOP-STATE-DIR.md:1 doc is in 3-COMPLETED (issue #3) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-35-TEST-TIER-ROUTING.md:1 doc is in 3-COMPLETED (issue #35) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-39-RELEASES-PROJECT-SYNC.md:1 doc is in 3-COMPLETED (issue #39) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-4-GATE-TRAVELS-WITH-CLONES.md:1 doc is in 3-COMPLETED (issue #4) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-42-COMMANDCODE-TURN.md:1 doc is in 3-COMPLETED (issue #42) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-45-WORKTREE-GATE-REFUSAL.md:1 doc is in 3-COMPLETED (issue #45) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-57-RELEASES-SQLITE-FUZZING.md:1 doc is in 3-COMPLETED (issue #57) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-77-STANDUP-SESSION-TRIAGE.md:1 doc is in 3-COMPLETED (issue #77) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-8-KERNEL-BOUNDARY-HARDENING.md:1 doc is in 3-COMPLETED (issue #8) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: WARN [pdda-local-check-completed-status] PROJECT/3-COMPLETED/GH-91-RELAY-SCRATCH-DIR.md:1 doc is in 3-COMPLETED (issue #91) but frontmatter status still reads 'active' (non-terminal) — reconcile the status or move the doc back to 2-WORKING
+marathon-drive: lane PR: SUMMARY [pdda-local-check-completed-status] errors=0 warns=33 info=0
+marathon-drive: lane PR: INFO [pdda-local-check-roadmap-issue-state] ROADMAP.md ROADMAP.md not found; nothing to check
+marathon-drive: lane PR: SUMMARY [pdda-local-check-roadmap-issue-state] errors=0 warns=0 info=1
+marathon-drive: lane PR: INFO [pdda-local-check-roadmap-section-duplicates] ROADMAP.md ROADMAP.md not found; nothing to check
+marathon-drive: lane PR: SUMMARY [pdda-local-check-roadmap-section-duplicates] errors=0 warns=0 info=1
+marathon-drive: lane PR: SUMMARY [pdda-local-check-release-milestone] errors=0 warns=0 info=0
+marathon-drive: lane PR: pre-push: documentation gate GREEN in 71s — pushing.
+marathon-drive: lane PR: branch 'marathon/gh-1295-injected-text-in-briefs-2026-11-08' set up to track 'origin/marathon/gh-1295-injected-text-in-briefs-2026-11-08'.
+marathon-drive: lane PR: marathon-closeout.sh: open PR ready at https://github.com/HiQS-Labs/XYZ-forge/pull/1371
+marathon-drive: lane PR: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/utils/pdda/pdda.sh: line 665: printf: write error: Broken pipe
+marathon-drive: lane PR: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/utils/pdda/pdda.sh: line 665: printf: write error: Broken pipe
+marathon-drive: lane PR: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/utils/pdda/pdda.sh: line 665: printf: write error: Broken pipe
+marathon-drive: lane PR: To https://github.com/HiQS-Labs/XYZ-forge.git
+marathon-drive: lane PR: 8d48182f9..23e86c85e  marathon/gh-1295-injected-text-in-briefs-2026-11-08 -> marathon/gh-1295-injected-text-in-briefs-2026-11-08
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6X4GEMDS11PQ30QA8A52XZA/gh1295-exec2/preflight/marathon-result.json (outcome: approved, exit 0)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 1h 24m
+per done-task: ≥0 tokens, 1h 24m wall-clock
+memory: compressor peak: 1431MB, swap free min: 1023MB
+  turn peak RSS: agy: 209MB peak RSS, codex: 295MB peak RSS
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
+jog: advancing halted at landing boundary.
+jog: published primary checkpoint 838aded2b6a7a8c4d5df4694b623fc040ca17f1f
+
+============================================================
+jog: processing GH-1160 (attempt 1) at position 1
+============================================================
+jog: promoting 1-INBOX contract for GH-1160 to 2-WORKING...
+jog: marathon execution gh1160-exec1 for GH-1160 (packet: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6X8FJA6VWWJDMXJ9BF5A1A4/gh1160-exec1/preflight)
+jog: dispatching marathon-drive (/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/relay-automation/marathon-drive.sh)
+marathon-drive: branch guard: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner was on its trunk branch 'development' — cut 'marathon/gh-1160-local-reconcile-startup-2026-11-08' and continuing (GH-561)
+marathon-drive:   this lane's commits land there; a green phase opens a PR back into 'development' (--allow-trunk-commit to commit on 'development' instead)
+marathon-drive: relay file committed: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1160-local-reconcile-startup/RELAY.md
+marathon-drive: tick token seeded: MARATHON-GH-1160-LOCAL-RECONCILE-STARTUP-TURN → codex
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1160-local-reconcile-startup-start boundary — compressor=1426MB, swap_free=1023MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+codex-turn: committed codex turn (file-scoped, no push)
+agy-turn: committed agy turn (file-scoped, no push)
+relay-drive: attested Approved by agy — reviewed 171bb7293bc2, 1953 bytes of review text, record /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/.git/relay-attest/MARATHON-GH-1160-LOCAL-RECONCILE-STARTUP-TURN.json
+relay-drive: relay terminated (STATUS: Approved, token done, attested by agy) after 2 turn(s)
+marathon-drive: relay approved — running pre-advance gate: bash utils/pdda/pdda.sh run
+PDDA run starting — mode: full (on rails; errors block with a non-zero exit)
+
+== pdda-check-frontmatter ==
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+
+== pdda-check-status-table ==
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+
+== pdda-check-hardcoded-paths ==
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+
+== pdda-check-roadmap ==
+INFO [pdda-check-roadmap] ROADMAP.md ROADMAP.md not found; nothing to check
+SUMMARY [pdda-check-roadmap] errors=0 warns=0 info=1
+
+== pdda-check-roadmap-coverage ==
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/README.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p1-routing-validation.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p2-turn-supervision.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p3-incident-records.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/2026-09-01-xyz-harness-quickwins/phases-briefs/p4-drift-filter.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-1015-OBSERVER-PATH/recon-observer.md:1 roadmap coverage check skipped because roadmap_exempt=true
+ERROR [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-1160-LOCAL-RECONCILE-STARTUP.md:1 active working doc has no pointer in releases.db (PROJECT/2-WORKING/GH-1160-LOCAL-RECONCILE-STARTUP.md) — park it with releases roadmap add, or set roadmap_exempt: true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-1214-LESSONS-READBACK/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-484-DEPLOY-SKILLS/recon-deploy-skills.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L1-oracle.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L2-token-aftermath.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L3-consult-cap.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L4-285-revalidate.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L5-gh237-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L6-muse-attribution.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L7-checkout-aftermath.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L8-zero-output-handback.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/briefs/L9-369-regression.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/CAPTURE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L1-review-once-heading.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L2-measure-c1-d2.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L3-timing-claims-and-summary.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/GH-749-RELAY-GATE-COST/briefs/L4-named-environment-faults.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh168-wave-reconcile-scope.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh2-orphan-backup-repro.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-2026-08-24-GH2-50-168/brief-gh50-sandboxed-git-guard.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-08-29.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-02.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-03.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-04.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-06.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-07.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-08.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-10.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-11.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-12.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-13.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-14.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-15.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-17.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-18.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-19.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-20.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-21.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-22.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-30.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-02.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-03.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-04.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-05.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-06.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-07.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-08.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-09.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-10.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-11.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-12.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-13.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-14.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-15.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-16.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-17.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-18.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-19.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-21.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-23.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-24.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-25.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-26.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-27.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-28.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-30.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-10-31.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-01.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-02.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-03.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-04.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-06.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-07.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-2026-11-08.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-agy-model-probe.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-closeout-evidence.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-end-of-week.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh1080-express-docs.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh1100-jog-target-root.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh796-integration.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh949-ate-remediation.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-gh981-paperclip-dashboard.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-install-sh-link-steal.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/2-WORKING/recon-phase-recovery.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-1353-NEXTGEN-FLYWHEEL.md:1 unstarted inbox capture has no ledger pointer (row deferred to pickup per decision 6) (PROJECT/1-INBOX/GH-1353-NEXTGEN-FLYWHEEL.md)
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-1356-FLYWHEEL-BATCH2-SUPERVISOR-RUN.md:1 unstarted inbox capture has no ledger pointer (row deferred to pickup per decision 6) (PROJECT/1-INBOX/GH-1356-FLYWHEEL-BATCH2-SUPERVISOR-RUN.md)
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-1358-DURABLE-FACTORY-QUALIFICATION.md:1 unstarted inbox capture has no ledger pointer (row deferred to pickup per decision 6) (PROJECT/1-INBOX/GH-1358-DURABLE-FACTORY-QUALIFICATION.md)
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-1360-GENERIC-MONITOR-SUPERVISOR.md:1 unstarted inbox capture has no ledger pointer (row deferred to pickup per decision 6) (PROJECT/1-INBOX/GH-1360-GENERIC-MONITOR-SUPERVISOR.md)
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-346-PHASE-3-SPEC.md:1 roadmap coverage check skipped because roadmap_exempt=true
+INFO [pdda-check-roadmap-coverage] PROJECT/1-INBOX/GH-406-RADAR-CROSSWALK.md:1 roadmap coverage check skipped because roadmap_exempt=true
+SUMMARY [pdda-check-roadmap-coverage] errors=1 warns=0 info=120
+
+== pdda-check-changelog ==
+SUMMARY [pdda-check-changelog] errors=0 warns=0 info=0
+
+== pdda-stale-working-docs ==
+SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+
+== pdda-check-issue-doc-sync ==
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-1075-BATCH-RESUME-STALE-FILES.md:1 issue #1075 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-1075-BATCH-RESUME-STALE-FILES.md PROJECT/3-COMPLETED/GH-1075-BATCH-RESUME-STALE-FILES.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-1087-GH1051-RECORD-SPACING.md:1 issue #1087 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-1087-GH1051-RECORD-SPACING.md PROJECT/3-COMPLETED/GH-1087-GH1051-RECORD-SPACING.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-1108-JOG-LAND-RECEIPTS.md:1 issue #1108 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-1108-JOG-LAND-RECEIPTS.md PROJECT/3-COMPLETED/GH-1108-JOG-LAND-RECEIPTS.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md:1 issue #325 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-325-CANONICAL-SKILLS-HOME.md PROJECT/3-COMPLETED/GH-325-CANONICAL-SKILLS-HOME.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-396-HARNESS-ROOT-RESOLVER.md:1 issue #396 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-396-HARNESS-ROOT-RESOLVER.md PROJECT/3-COMPLETED/GH-396-HARNESS-ROOT-RESOLVER.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-421-AUTO-WAVE-RECONCILE.md:1 issue #421 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-421-AUTO-WAVE-RECONCILE.md PROJECT/3-COMPLETED/GH-421-AUTO-WAVE-RECONCILE.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-424-ROADMAP-STATUS-MARKER-WRITER.md:1 issue #424 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-424-ROADMAP-STATUS-MARKER-WRITER.md PROJECT/3-COMPLETED/GH-424-ROADMAP-STATUS-MARKER-WRITER.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-425-GATE-PROVENANCE-CHECK.md:1 issue #425 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-425-GATE-PROVENANCE-CHECK.md PROJECT/3-COMPLETED/GH-425-GATE-PROVENANCE-CHECK.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-454-RECONCILE-GATE-DEFECTS.md:1 issue #454 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-454-RECONCILE-GATE-DEFECTS.md PROJECT/3-COMPLETED/GH-454-RECONCILE-GATE-DEFECTS.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-491-ROADMAP-SECTION-VALIDATION.md:1 issue #491 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-491-ROADMAP-SECTION-VALIDATION.md PROJECT/3-COMPLETED/GH-491-ROADMAP-SECTION-VALIDATION.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md:1 issue #648 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-648-HEADLESS-TURN-TIMEOUT/CAPTURE.md PROJECT/3-COMPLETED/CAPTURE.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md:1 issue #807 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md PROJECT/3-COMPLETED/GH-807-SIGNAL-TRIAGE-QUIET-GREP.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-886-LINUX-PORTABILITY-CANARY.md:1 issue #886 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-886-LINUX-PORTABILITY-CANARY.md PROJECT/3-COMPLETED/GH-886-LINUX-PORTABILITY-CANARY.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-904-EMPTY-RELEASES-LEDGER.md:1 issue #904 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-904-EMPTY-RELEASES-LEDGER.md PROJECT/3-COMPLETED/GH-904-EMPTY-RELEASES-LEDGER.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-905-RELEASES-ONLY-INSTALL.md:1 issue #905 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-905-RELEASES-ONLY-INSTALL.md PROJECT/3-COMPLETED/GH-905-RELEASES-ONLY-INSTALL.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-906-OPTIONAL-SKILL-INSTALL.md:1 issue #906 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-906-OPTIONAL-SKILL-INSTALL.md PROJECT/3-COMPLETED/GH-906-OPTIONAL-SKILL-INSTALL.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/GH-907-VENDORED-ROUTER-HINT.md:1 issue #907 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/GH-907-VENDORED-ROUTER-HINT.md PROJECT/3-COMPLETED/GH-907-VENDORED-ROUTER-HINT.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-consumer.md:1 issue #494 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-consumer.md PROJECT/3-COMPLETED/recon-flightdeck-consumer.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md:1 issue #494 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-issue-visibility.md PROJECT/3-COMPLETED/recon-flightdeck-issue-visibility.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-flightdeck-session-context.md:1 issue #494 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/recon-flightdeck-session-context.md PROJECT/3-COMPLETED/recon-flightdeck-session-context.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md:1 issue #496 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/recon-gh496-merge-churn-and-telemetry.md PROJECT/3-COMPLETED/recon-gh496-merge-churn-and-telemetry.md
+WARN [pdda-check-issue-doc-sync] PROJECT/2-WORKING/recon-gh981-paperclip-dashboard.md:1 issue #981 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/2-WORKING/recon-gh981-paperclip-dashboard.md PROJECT/3-COMPLETED/recon-gh981-paperclip-dashboard.md
+WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-18-COMMANDCODE-EVAL.md:1 issue #18 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-18-COMMANDCODE-EVAL.md PROJECT/3-COMPLETED/GH-18-COMMANDCODE-EVAL.md
+WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-215-RECONCILER-VENDOR-PATHS.md:1 issue #215 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-215-RECONCILER-VENDOR-PATHS.md PROJECT/3-COMPLETED/GH-215-RECONCILER-VENDOR-PATHS.md
+WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md:1 issue #216 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-216-LEDGER-BULLET-FORMAT.md PROJECT/3-COMPLETED/GH-216-LEDGER-BULLET-FORMAT.md
+WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md:1 issue #255 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-255-ARCHIVE-ROOT-REMEDY.md PROJECT/3-COMPLETED/GH-255-ARCHIVE-ROOT-REMEDY.md
+WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-589-XYZ-MINI-SYNC.md:1 issue #589 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-589-XYZ-MINI-SYNC.md PROJECT/3-COMPLETED/GH-589-XYZ-MINI-SYNC.md
+WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-644-VENDOR-IGNORE-STATE.md:1 issue #644 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-644-VENDOR-IGNORE-STATE.md PROJECT/3-COMPLETED/GH-644-VENDOR-IGNORE-STATE.md
+WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-767-REGENERATE-ARCHITECTURE-DIAGRAMS.md:1 doc status reads 'complete' (done) but issue #767 is still OPEN — close the issue or correct the status
+WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-770-RELEASES-JOG-RESUME-LAND.md:1 issue #770 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-770-RELEASES-JOG-RESUME-LAND.md PROJECT/3-COMPLETED/GH-770-RELEASES-JOG-RESUME-LAND.md
+WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/GH-771-JOG-ACCEPTS-REMOVED-GEMINI.md:1 issue #771 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/GH-771-JOG-ACCEPTS-REMOVED-GEMINI.md PROJECT/3-COMPLETED/GH-771-JOG-ACCEPTS-REMOVED-GEMINI.md
+WARN [pdda-check-issue-doc-sync] PROJECT/1-INBOX/recon-gh424-status-marker.md:1 issue #424 is CLOSED but the doc is still in an active folder — recommend: git mv PROJECT/1-INBOX/recon-gh424-status-marker.md PROJECT/3-COMPLETED/recon-gh424-status-marker.md
+WARN [pdda-check-issue-doc-sync] releases.db issue #216 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #255 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #1075 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #1087 is CLOSED but roadmap section is 'Queue / parked intake' — review: releases roadmap reconcile-state --dry-run
+WARN [pdda-check-issue-doc-sync] releases.db issue #35 cached doc_path 'PROJECT/2-WORKING/GH-35-TEST-TIER-ROUTING.md' differs from PROJECT/3-COMPLETED/GH-35-TEST-TIER-ROUTING.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #42 cached doc_path 'PROJECT/2-WORKING/GH-42-COMMANDCODE-TURN.md' differs from PROJECT/3-COMPLETED/GH-42-COMMANDCODE-TURN.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #10 cached doc_path 'PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md' differs from PROJECT/3-COMPLETED/GH-10-REQUIRE-FIXTURE-ADOPTION.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #1 cached doc_path 'PROJECT/2-WORKING/GH-1-SUITE-CONTAINMENT-GATE.md' differs from PROJECT/3-COMPLETED/GH-1-SUITE-CONTAINMENT-GATE.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #77 cached doc_path 'PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md' differs from PROJECT/3-COMPLETED/GH-77-STANDUP-SESSION-TRIAGE.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #124 cached doc_path 'PROJECT/2-WORKING/GH-124-CLOSEOUT-AUTOMATION.md' differs from PROJECT/3-COMPLETED/GH-124-CLOSEOUT-AUTOMATION.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #170 cached doc_path 'PROJECT/2-WORKING/GH-170-AGENT2AGENT-GLITCHES.md' differs from PROJECT/3-COMPLETED/GH-170-AGENT2AGENT-GLITCHES.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #113 cached doc_path 'PROJECT/2-WORKING/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md' differs from PROJECT/3-COMPLETED/GH-113-HEADLESS-SCRATCH-CONTAINMENT.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #114 cached doc_path 'PROJECT/2-WORKING/GH-114-HEADLESS-TTY-IDLE-HANG.md' differs from PROJECT/3-COMPLETED/GH-114-HEADLESS-TTY-IDLE-HANG.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #168 cached doc_path 'PROJECT/2-WORKING/GH-168-WAVE-RECONCILE-SCOPE.md' differs from PROJECT/3-COMPLETED/GH-168-WAVE-RECONCILE-SCOPE.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #2 cached doc_path 'PROJECT/2-WORKING/GH-2-ORPHAN-BACKUP-RELOCATION.md' differs from PROJECT/3-COMPLETED/GH-2-ORPHAN-BACKUP-RELOCATION.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #50 cached doc_path 'PROJECT/2-WORKING/GH-50-SANDBOXED-GIT-HALF-APPLY.md' differs from PROJECT/3-COMPLETED/GH-50-SANDBOXED-GIT-HALF-APPLY.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #202 cached doc_path 'PROJECT/2-WORKING/GH-202-WAVE-RECONCILER-STATE.md' differs from PROJECT/3-COMPLETED/GH-202-WAVE-RECONCILER-STATE.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #221 cached doc_path 'PROJECT/1-INBOX/GH-221-AGY-WHOAMI-PREFLIGHT.md' differs from PROJECT/3-COMPLETED/GH-221-AGY-WHOAMI-PREFLIGHT.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #123 cached doc_path 'PROJECT/2-WORKING/GH-123-LINUX-CANARY-REMAINDER.md' differs from PROJECT/3-COMPLETED/GH-123-LINUX-CANARY-REMAINDER.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #243 cached doc_path 'PROJECT/1-INBOX/GH-243-ROADMAP-REPOINT-STALENESS-GUARD.md' differs from PROJECT/3-COMPLETED/GH-243-ROADMAP-REPOINT-STALENESS-GUARD.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #246 cached doc_path 'PROJECT/1-INBOX/GH-246-RELAY-XYZ-QA-TEMPLATE.md' differs from PROJECT/3-COMPLETED/GH-246-RELAY-XYZ-QA-TEMPLATE.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #249 cached doc_path 'PROJECT/2-WORKING/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md' differs from PROJECT/3-COMPLETED/GH-249-CANARY-EUID-ROOT-ASSERTIONS.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #251 cached doc_path 'PROJECT/2-WORKING/GH-251-VALIDATE-PYTEST-SKIP.md' differs from PROJECT/3-COMPLETED/GH-251-VALIDATE-PYTEST-SKIP.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #271 cached doc_path 'PROJECT/2-WORKING/GH-271-WAVE-RECONCILE-LINKED-ISSUES.md' differs from PROJECT/3-COMPLETED/GH-271-WAVE-RECONCILE-LINKED-ISSUES.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #272 cached doc_path 'PROJECT/2-WORKING/GH-272-MERGE-RESOLVE-VIEWS.md' differs from PROJECT/3-COMPLETED/GH-272-MERGE-RESOLVE-VIEWS.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #273 cached doc_path 'PROJECT/2-WORKING/GH-273-AUDIT-PYTHON-SPELLINGS.md' differs from PROJECT/3-COMPLETED/GH-273-AUDIT-PYTHON-SPELLINGS.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #269 cached doc_path 'PROJECT/2-WORKING/GH-269-RELEASES-DB-SWITCHOVER.md' differs from PROJECT/3-COMPLETED/GH-269-RELEASES-DB-SWITCHOVER.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #280 cached doc_path 'PROJECT/2-WORKING/GH-280-JOG-MARATHON-RECALIBRATION.md' differs from PROJECT/3-COMPLETED/GH-280-JOG-MARATHON-RECALIBRATION.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #314 cached doc_path 'PROJECT/2-WORKING/GH-314-ARCHIVE-TEMPLATE-MANGLE.md' differs from PROJECT/3-COMPLETED/GH-314-ARCHIVE-TEMPLATE-MANGLE.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #358 cached doc_path 'PROJECT/2-WORKING/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md' differs from PROJECT/3-COMPLETED/GH-358-WAVE-RECONCILE-VENDORED-PATHS.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #353 cached doc_path 'PROJECT/2-WORKING/GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md' differs from PROJECT/3-COMPLETED/GH-353-VENDORED-ROUTER-ROADMAP-AUDIT.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #360 cached doc_path 'PROJECT/2-WORKING/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md' differs from PROJECT/3-COMPLETED/GH-360-SCOPED-RECEIPT-CHAIN-REBUILD.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #410 cached doc_path 'PROJECT/2-WORKING/GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md' differs from PROJECT/3-COMPLETED/GH-410-RELAY-BLOCK-VALIDATOR-DRIVEN-PATH.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #419 cached doc_path 'PROJECT/1-INBOX/GH-419-MARATHON-RULE-ENFORCEMENT.md' differs from PROJECT/3-COMPLETED/GH-419-MARATHON-RULE-ENFORCEMENT.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #349 cached doc_path 'PROJECT/2-WORKING/GH-349-RELEASES-ROADMAP-VENDORED.md' differs from PROJECT/3-COMPLETED/GH-349-RELEASES-ROADMAP-VENDORED.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #351 cached doc_path 'PROJECT/2-WORKING/GH-351-MANIFEST-UNSHIP.md' differs from PROJECT/3-COMPLETED/GH-351-MANIFEST-UNSHIP.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #436 cached doc_path 'PROJECT/2-WORKING/GH-436-MERGE-CLEANUP-SKILL.md' differs from PROJECT/3-COMPLETED/GH-436-MERGE-CLEANUP-SKILL.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #447 cached doc_path 'PROJECT/2-WORKING/GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md' differs from PROJECT/3-COMPLETED/GH-447-LAUNCH-GUARD-SOURCE-FIXTURE.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #450 cached doc_path 'PROJECT/2-WORKING/GH-450-MODEL-CATALOG-CONSUME.md' differs from PROJECT/3-COMPLETED/GH-450-MODEL-CATALOG-CONSUME.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #473 cached doc_path 'PROJECT/2-WORKING/GH-473-UNSTUCK-SKILL.md' differs from PROJECT/3-COMPLETED/GH-473-UNSTUCK-SKILL.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #474 cached doc_path 'PROJECT/2-WORKING/GH-474-DASHBOARD-DROPPED-ROW-SIGNAL.md' differs from PROJECT/3-COMPLETED/GH-474-DASHBOARD-DROPPED-ROW-SIGNAL.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #487 cached doc_path 'PROJECT/2-WORKING/GH-487-BOUNDED-GATES.md' differs from PROJECT/3-COMPLETED/GH-487-BOUNDED-GATES.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #508 cached doc_path 'PROJECT/2-WORKING/GH-508-GIT-PULSE-SKILLS.md' differs from PROJECT/3-COMPLETED/GH-508-GIT-PULSE-SKILLS.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #516 cached doc_path 'PROJECT/2-WORKING/GH-516-EXPRESS-TRUE-DIRECT-PUSH-PLAN.md' differs from PROJECT/3-COMPLETED/GH-516-EXPRESS-TRUE-DIRECT-PUSH-PLAN.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #608 cached doc_path 'PROJECT/2-WORKING/GH-608-FIX-RELAY-HONOR-QWEN-DEEPSEEK-REASONING-EFFORT-AND-CORRECT-F.md' differs from PROJECT/3-COMPLETED/GH-608-FIX-RELAY-HONOR-QWEN-DEEPSEEK-REASONING-EFFORT-AND-CORRECT-F.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #654 cached doc_path 'PROJECT/2-WORKING/GH-654-MARATHON-CONTAINMENT-EXIT-6-DISCARDS-COMPLETED-BUILDER-WORK-.md' differs from PROJECT/3-COMPLETED/GH-654-MARATHON-CONTAINMENT-EXIT-6-DISCARDS-COMPLETED-BUILDER-WORK-.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #659 cached doc_path 'PROJECT/2-WORKING/GH-659-RTL-INIT-SPLITS-ALLOW-CSV-WITH-BARE-IFS-NO-TRIM-SO-EVERY-ART.md' differs from PROJECT/3-COMPLETED/GH-659-RTL-INIT-SPLITS-ALLOW-CSV-WITH-BARE-IFS-NO-TRIM-SO-EVERY-ART.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #663 cached doc_path 'PROJECT/2-WORKING/GH-663-QA-FINDINGS-AGY-RELAY-REVIEW-ON-THE-GH-654-658-659-660-HOTFI.md' differs from PROJECT/3-COMPLETED/GH-663-QA-FINDINGS-AGY-RELAY-REVIEW-ON-THE-GH-654-658-659-660-HOTFI.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #712 cached doc_path 'PROJECT/2-WORKING/GH-712-JEV-ATE-TRIAGE.md' differs from PROJECT/3-COMPLETED/GH-712-JEV-ATE-TRIAGE.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #1295 cached doc_path 'PROJECT/1-INBOX/GH-1295-INJECTED-TEXT-IN-BRIEFS.md' differs from PROJECT/2-WORKING/GH-1295-INJECTED-TEXT-IN-BRIEFS.md — run: issue-doc-sync --fix
+WARN [pdda-check-issue-doc-sync] releases.db issue #1344 cached doc_path 'PROJECT/1-INBOX/GH-1344-FINISHING-WORK-READERS-SWEEP-CLOSE.md' differs from PROJECT/2-WORKING/GH-1344-FINISHING-WORK-READERS-SWEEP-CLOSE.md — run: issue-doc-sync --fix
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=83 info=0
+
+== pdda-check-releases ==
+INFO [pdda-check-releases] RELEASES.md RELEASES.md not found — nothing to check
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=1
+
+== pdda-check-governance ==
+WARN [pdda-check-governance] PROJECT/PDDA.md:54 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:484 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] PROJECT/PDDA.md:561 dead reference 'blank.md' — no file at blank.md
+WARN [pdda-check-governance] CLAUDE.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+WARN [pdda-check-governance] utils/pdda/PDDA-INSTALL.md:1 governance doc is not referenced anywhere in ROUTER.md — a cold agent following its read order won't discover it
+SUMMARY [pdda-check-governance] errors=0 warns=5 info=0
+
+== pdda-check-marathon-qa ==
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:78 Wave 1 item pending verification: 'Wave 1 Proof of Done Test Suite Green (record runnable command and passing output)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:79 Wave 1 Post-Build Codex QA Relay item has no receipt citation
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:79 Wave 1 item pending verification: 'Wave 1 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:80 Wave 1 item pending verification: 'Wave 1 CodeRabbit / Peer Review findings adjudicated'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:83 Wave 2 item pending verification: 'Wave 2 Proof of Done Test Suite Green (record runnable command and passing output)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:84 Wave 2 Post-Build Codex QA Relay item has no receipt citation
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:84 Wave 2 item pending verification: 'Wave 2 Post-Build Codex QA Relay executed (record a committed relay-system receipt after independent review)'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-2026-09-24-XYZ-FORGE.md:85 Wave 2 item pending verification: 'Wave 2 CodeRabbit / Peer Review findings adjudicated'
+WARN [pdda-check-marathon-qa] PROJECT/2-WORKING/MARATHON-PLAN-GH-497-LEDGER-TRUST.md:1 missing '## Acceptance & Quality Checklist' section
+SUMMARY [pdda-check-marathon-qa] errors=0 warns=9 info=0
+
+== pdda-doc-ready ==
+skipped pdda-doc-ready — fix the deterministic findings above first ( pdda-check-roadmap-coverage)
+
+PDDA run complete: failures: pdda-check-roadmap-coverage
+marathon-drive: gate-guard: gate exit 1 after 60s — peak group RSS 62MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+marathon-drive: pre-advance gate FAILED (exit 1) — escalating
+marathon-drive: transcript saved: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/relay-system/2026-11-08/marathon-gh-1160-local-reconcile-startup-101823.md
+marathon-drive: warn: host free swap is critically low (1023MB < 1024MB)
+marathon-drive: memory-telemetry: phase gh-1160-local-reconcile-startup-escalated boundary — compressor=1416MB, swap_free=1023MB
+marathon-drive: escalation written: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1160-local-reconcile-startup/ESCALATION.md (reason: pre-advance-failed)
+marathon-drive: result receipt written: /Users/noelsaw/Documents/GitHub/XYZ-forge/.tick/jog/jog-01M6X8FJA6VWWJDMXJ9BF5A1A4/gh1160-exec1/preflight/marathon-result.json (outcome: escalated, exit 5)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/2 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 1h 41m
+per done-task: ≥0 tokens, 50m 40s wall-clock
+memory: compressor peak: 1431MB, swap free min: 1023MB
+  turn peak RSS: agy: 209MB peak RSS, codex: 297MB peak RSS
+
+clone retirement: this campaign clone can be retired via /merge-cleanup (merge-cleanup skill) once its landings are verified
+jog: stopping queue execution on task failure.
+jog: published primary checkpoint 2743ca7d21aa21f386bc69e70cb89e4195a2d4e6
+jog: queue complete (0 pending tasks).
+jog: published primary checkpoint 2743ca7d21aa21f386bc69e70cb89e4195a2d4e6

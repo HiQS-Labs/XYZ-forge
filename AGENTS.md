@@ -70,11 +70,12 @@ radius, planning shape, and proof.
 Do not restate routing, roadmap, changelog, or active-doc contracts here. Those live in
 `ROUTER.md` and `PROJECT/PDDA.md`.
 
-After a PR merges into `development`, the hosted reconciliation workflow (`wave-reconcile.yml`)
-automatically reconciles docs, ledger, and views (`LEADERBOARD.md`). Task
-branches do not commit routine views. Local reconciliation via `python3 utils/py/wave_reconcile.py --pr <N>`
-serves as an emergency fallback (failing closed if a hosted reconciler is in-flight; pass `--force-local-reconcile`
-to override); `pdda.sh issue-doc-sync` is the deterministic drift detector when in doubt.
+After a PR merges into `development`, merge-cleanup reconciles docs, ledger, and views
+(`LEADERBOARD.md`) locally via `python3 utils/py/wave_reconcile.py --pr <N>`. Task
+branches do not commit routine views. The local writer fails closed if a hosted reconciler is
+in-flight (pass `--force-local-reconcile` to override). The hosted `wave-reconcile.yml` is
+dispatch-only and runs before promotion to qualify the development tip; see **Promotion** below.
+`pdda.sh issue-doc-sync` is the deterministic drift detector when in doubt.
 
 Maintainer-only workflow defaults (branch discipline, express-to-development, fresh-clone-per-task)
 live in `SOP.md` → "Opinionated SOPs" — optional for downstream users, binding for us. That section

@@ -1,0 +1,52 @@
+{
+  "schema": "marathon-drive/result@1",
+  "execution_id": "gh1160-exec1",
+  "generated_at": "2026-11-08T10:18:24Z",
+  "outcome": "escalated",
+  "reason": "pre-advance-failed",
+  "exit_code": 5,
+  "approval_preserved": false,
+  "issue": "1160",
+  "phase": "gh-1160-local-reconcile-startup",
+  "lane": "gh-1160-local-reconcile-startup",
+  "token": "MARATHON-GH-1160-LOCAL-RECONCILE-STARTUP-TURN",
+  "attempt": {
+    "count": 1,
+    "max": 2
+  },
+  "builder": "codex",
+  "reviewer": "agy",
+  "target_repo": {
+    "path": "/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner",
+    "origin_url": "https://github.com/HiQS-Labs/XYZ-forge.git"
+  },
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1160-local-reconcile-startup-2026-11-08",
+  "head_sha": "93164d488b8150b6a7c84df576fe8c6cd019e7d4",
+  "reviewed_candidate": null,
+  "reviewed_head": null,
+  "added_sha256": null,
+  "attest_path": null,
+  "branch_redirect": true,
+  "gate": {
+    "cmd": "bash utils/pdda/pdda.sh run",
+    "result": "red",
+    "exit": 1,
+    "receipt_path": null
+  },
+  "acceptance": {
+    "checked": false,
+    "unmet_count": 0
+  },
+  "pr": {
+    "number": null,
+    "url": null,
+    "state": null
+  },
+  "pr_note": null,
+  "relay_status": "Approved",
+  "timestamps": {
+    "started_at": "2026-11-08T10:14:07Z",
+    "finished_at": "2026-11-08T10:18:24Z"
+  }
+}

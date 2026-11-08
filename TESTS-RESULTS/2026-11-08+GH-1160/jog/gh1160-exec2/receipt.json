@@ -1,0 +1,16 @@
+{
+  "schema": "jog/receipt-bundle@1",
+  "issue": 1160,
+  "execution_id": "gh1160-exec2",
+  "repository": "xyz.primary.repo-7640ec7706729605e696547d",
+  "base_branch": "development",
+  "head_branch": "marathon/gh-1160-local-reconcile-startup-2026-11-08",
+  "pr_number": 1372,
+  "result": "marathon-result.json",
+  "gate_receipt": "gate-receipt.json",
+  "files": {
+    "marathon-result.json": "2e82df1dc587cf1f8ea7c8b05e973bab5910ff27fb56c641ab7908c335746df2",
+    "gate-receipt.json": "4c195ac650edadf215d6230dc542412c97369f9f6c4196245e2ffc3810ea66ee",
+    "provenance.jsonl": "6b117d33da9dc9f90077c6f75810d6fb382fbc8ab81ef63c1efb09ad2ec45594"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "at": "2026-11-08T10:00:48.520064+00:00",
+  "source": "existing Engine.compute with complete live GitHub issue-state snapshot; read-only, not deployed discovery",
+  "snapshot_rows": 840,
+  "snapshot_sha256": "d0fb601bd6faf0a2d2c99fdd1de200fe1e668682af6eceedffc48bec9ac04c7c",
+  "active_order": [
+    1356,
+    1295,
+    670,
+    1296,
+    355
+  ],
+  "unregistered_ready": [
+    {
+      "gh": 1356,
+      "gid": null,
+      "source": "unregistered",
+      "state": "ready",
+      "docRel": "PROJECT/1-INBOX/GH-1356-FLYWHEEL-BATCH2-SUPERVISOR-RUN.md",
+      "dbAxes": [
+        90,
+        80,
+        85,
+        50
+      ],
+      "deps": [],
+      "flags": [],
+      "writeset": [
+        "TESTS-RESULTS/2026-11-07+GH-1356/SUMMARY.md"
+      ]
+    }
+  ],
+  "disposition": {
+    "1356": "REFUSE: retained terminal agent-assisted PARTIAL attempt; open issue is not re-dispatch authorization",
+    "1295": "already active attempt2; no duplicate",
+    "670": "REFUSE: retained exhausted attempts and explicit defer in live comments",
+    "1296": "REFUSE: missing original backlog; prior mistaken-selection interruption retained",
+    "355": "not selected: broad nine-table migration outside bounded continuation"
+  }
+}

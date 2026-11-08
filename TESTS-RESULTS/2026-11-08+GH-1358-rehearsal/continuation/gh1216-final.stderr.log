@@ -1,0 +1,19 @@
+relay-drive: GH-370 progress (main tree fallback: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner) changed-files=0
+codex-turn: worktree isolation ON (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.1dxJNJ)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.1dxJNJ) changed-files=2
+rtl: GH-654 off-lane candidate: marathon-system/gh-1216-aider-openrouter-profile/RELAY.md
+rtl: GH-654 allowlist: [utils/py/profile_resolve.py, test/gh346-profile-resolve.sh, test/gh450-model-catalog-pin.sh, test/_setup.sh] relay_file: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1216-aider-openrouter-profile/RELAY.md
+relay-drive: GH-370 progress (main tree fallback: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner) changed-files=0
+agy-turn: worktree isolation ON (/var/folders/55/4ncr895946v1jymn1561yy340000gn/T//rtl-wt.bAVj8k)
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.bAVj8k) changed-files=0
+relay-drive: GH-370 progress (turn worktree: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/rtl-wt.bAVj8k) changed-files=1
+rtl: GH-654 off-lane candidate: marathon-system/gh-1216-aider-openrouter-profile/RELAY.md
+rtl: GH-654 allowlist: [utils/py/profile_resolve.py, test/gh346-profile-resolve.sh, test/gh450-model-catalog-pin.sh, test/_setup.sh] relay_file: /private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/runner/marathon-system/gh-1216-aider-openrouter-profile/RELAY.md
+Cloning into '/private/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-lane-gate-xin15_k0'...
+pre-push: no fresh merge-base with origin's integration branch (tracking ref stale or absent — fetch and retry, or take the full gate).
+remote: 
+remote: Create a pull request for 'marathon/gh-1216-aider-openrouter-profile-2026-11-08' on GitHub by visiting:        
+remote:      https://github.com/HiQS-Labs/XYZ-forge/pull/new/marathon/gh-1216-aider-openrouter-profile-2026-11-08        
+remote: 
+To https://github.com/HiQS-Labs/XYZ-forge.git
+ * [new branch]        HEAD -> marathon/gh-1216-aider-openrouter-profile-2026-11-08
