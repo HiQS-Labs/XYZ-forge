@@ -2340,6 +2340,7 @@ def jog_run_main(args=None):
                 action, reason = run_marathon_phase(
                     root, gh_num, ledger_gid,
                     builder=args.builder, reviewer=args.reviewer,
+                    mode="retry-build" if row["attempt_count"] else "run",
                     auto_merge=getattr(args, "auto_merge", False), target_root=target)
                 jog_set_status(root, gh_num, action, failure_reason=reason)
                 if action == "completed":

@@ -90,3 +90,18 @@ recovery. The deployment was disabled and booted out after that wake finished. K
 Ledger integration: after the canonical primary queue checkpoints landed, selected the clean primary ledger snapshot and reapplied this task-only row through `roadmap pickup`/`--accepted-start`, then ran `releases-merge-resolve.sh` (check clean). Original task-row identity remains in 7046047d6 history; live GH1344/GH1345/GH1295 queue states and counters were preserved. No SQL statements were authored. Routine generated view changes were restored from the pre-merge copy and excluded.
 
 Live continuation: GH1295 passed real OPEN preflight, then first Agy turn timed out at 900 seconds without artifact (Marathon exit 7). Scheduled Jog published primary failure state at 632a2a5d8bd21bb08fcb49473c5f931eb72dc4c0 without parent Git rescue. Attempt 1 retained; usage unknown. Empty next wake exposed redundant same-SHA push gate; minimal live-ref check repaired, old-code red and new main/adjacent controls recorded, independent Codex QA approved. See live/README.md. Full qualification remains unmet; no workload PR/merge or Phase B.
+
+## Continued isolated rehearsal after parent review
+
+Parent accepted PR1370 head5f98fe6 scope/gates for continued isolated execution,
+not merge. Provider-local log shows GH1295 Agy evaluating local regex checks near
+the 900s timeout; lock-stall attribution remains unsupported. One of two Marathon
+lane attempts is spent; five relay rounds and 900s worker wall/idle caps remain.
+Three blocker-repair rounds are a separate task limit, not those lane/QA caps.
+
+Minimal reviewed connection: explicit `jog retry` retains its count, and the next
+scheduled `jog run` now routes prior attempts through existing `retry-build` mode,
+which uses a fresh token in the same lane family. First dispatch stays unchanged;
+cold-start interrupted work still parks. Switch second GH1295 builder to Codex
+and reviewer to Agy, preserving the runner's lane attempt file, prior result and
+queue identity. No auto-merge, force, cap raise or new full clone to erase budget.
