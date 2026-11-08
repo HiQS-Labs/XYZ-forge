@@ -1,6 +1,6 @@
 ---
 title: Jog queue completion with honest version attribution
-status: Implementing
+status: Verification
 created: 2026-11-07
 updated: 2026-11-07
 owner: codex
@@ -18,7 +18,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA Approved (round 2); accepted-start recorded; implementation drafted | Isolated focused verification, historical replay and final QA |
+| Implementation and isolated 227-check suite plus 9-case manual replay passed | Final independent QA and classified full gate, then publication |
 
 ## Decision and requirements
 
@@ -60,3 +60,7 @@ Leave parked: no implementation, but fails the requested queue outcome. Bounded 
 ## Lessons Learned
 
 Pending observed implementation results; no lesson claimed from policy adoption alone.
+
+## Verification results
+
+Evidence: `TESTS-RESULTS/2026-11-08+GH-1365/`. Main and adjacent CLI paths pass, original code fails on the actual historical tail, and non-ancestor fixture completes without special approval. Invalid inputs leave ledger unchanged. Code/doc changes are a full tier-3 route; final gate follows QA. NO_ENTRY for shared lessons pending evidence of broader operational effect.

@@ -1,0 +1,168 @@
+diff --git a/AGENTS.md b/AGENTS.md
+index c3cdbcf7..077bca06 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -146,6 +146,14 @@ goes with it.
+ 
+ **Establish blocker necessity before investing in repair.** An in-flight failing test or unexpected error is not automatically an urgent blocker. When an obstacle's necessity or user consequence is unclear, or after two investigation attempts yield no new evidence, run `sanity-check` (`skills/1-hourly/sanity-check/SKILL.md`) to evaluate whether to fix now, simplify, defer via PRS, or dismiss, before sinking hours into tracing the fail path.
+ 
++**Apply proportionate rigor.** Follow `GUIDING-PRINCIPLES.md` → "The North Star": before
++adding or retaining a blocking control, name the concrete failure it prevents and weigh that
++benefit against operator time, maintenance and recovery cost. Prefer the simplest adequate
++check; recommend simplifying a rule whose burden exceeds its value. Honor an explicit operator
++tradeoff within its stated scope, record it, and keep reviewed, tested and delivered versions
++truthful. Do not reintroduce a rejected restriction under a different name or treat the decision
++as permission to bypass unrelated controls.
++
+ ### 7. Record only consequential bets
+ 
+ If a change is Costly, One-way door, or assumption-heavy, record the bet in `CHANGELOG.md` per
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index cc8d353c..a857b8fc 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -1,5 +1,10 @@
+ # Changelog
+ 
++## 2026-11-07 — GH-1365 proportional Jog closeout
++
++- Jog post-merge completion records merged delivery without requiring exact approval ancestry. Original receipt validation, publication checks, merge identity/reachability and reconciliation remain; landing evidence distinguishes review, gate and delivered versions. GUIDING-PRINCIPLES and AGENTS require rigor proportionate to concrete risk and operational burden.
++- Operator-selected bet: repeating approval ancestry at bookkeeping costs more than it adds to existing review, CI and post-merge QA. Costly shared-policy change; revert the implementation to restore the old rule while retaining honest historical records. Verification is recorded in the GH-1365 plan/evidence; policy adoption alone is not proof.
++
+ ## 2026-11-07 — GH-1247 / GH-1362 retirement preservation fixes
+ 
+ ### Fixed
+diff --git a/GUIDING-PRINCIPLES.md b/GUIDING-PRINCIPLES.md
+index 61e7b0ed..4467d034 100644
+--- a/GUIDING-PRINCIPLES.md
++++ b/GUIDING-PRINCIPLES.md
+@@ -26,6 +26,17 @@ away: the most durable fix is often the least reversible, and collapsing two nea
+ DRY win that can widen the blast radius. Name the trade and pick; do not split the difference by
+ building both.
+ 
++**Rigor must earn its cost.** Strong technical rigor supports useful, reliable work; it is not
++an end in itself. Choose controls proportionate to the demonstrated risk, the task's scope and
++the cost of recovery. Count their operational burden too: time, repeated reviews, maintenance
++and interruptions. Prefer the simplest control that addresses the concrete failure, and simplify
++or remove a rule when its burden outweighs its benefit. Explain the tradeoff so the operator can
++choose; honor an explicit choice without quietly recreating the rejected restriction elsewhere.
++Keep evidence honest about what was reviewed, tested and delivered, including any gaps. A
++bookkeeping milestone need not repeat every quality gate: distinguish recording an outcome from
++certifying its quality. This principle calls for deliberate changes to specific controls, not a
++blanket bypass of containment, verification or protection against data loss.
++
+ This section is canonical. `AGENTS.md` owns how it is applied to a given change — the reversibility
+ scale (§3) and blast-radius sizing (§4) — and principles 6, 7, and 10 below are the build-time and
+ done-time expressions of it. Where another doc restates this, that doc is the copy and this is the
+diff --git a/MACHINE-CONTRACTS.md b/MACHINE-CONTRACTS.md
+index 33ce9c78..889d5aab 100644
+--- a/MACHINE-CONTRACTS.md
++++ b/MACHINE-CONTRACTS.md
+@@ -106,8 +106,14 @@ ONE revision the driver validated against the reviewer's attestation and the onl
+ consumer may merge — `head_sha` stays the observational receipt-time HEAD), `reviewed_head`
+ (the revision the reviewer read), `added_sha256` (digest of the review text the reviewer
+ added), and `attest_path` (the `relay-drive/attest@1` record; `utils/py/relay_attest.py` is
+-its one writer and validating reader). Jog's landing refuses an `approved` receipt whose
+-binding is null.
++its one writer and validating reader). Merge admission validates that binding. Post-merge
++`jog land` instead records delivered work from its validated committed receipt, merged PR and
++reconciliation evidence; it does not require the final head to preserve approval ancestry.
++Its `landing.json` retains `approved_head_sha` and `landed_head_sha`, records
++`reviewed_head_sha` / `reviewed_candidate_sha` as reported (null if absent), and
++`tested_head_sha` as the SHA bound by the validated green gate. `merged_sha` identifies the
++integration commit; `completion_policy: merged-pr` replaces the former `tail_proof` field.
++Completion does not certify later changes as reviewed or tested. Publication checks are unchanged.
+ 
+ Ownership split (GH-280 authority model): Marathon exclusively owns everything in this
+ receipt — execution attempts, Tick history, builder/reviewer turns, acceptance, gates,
+diff --git a/skills/2-daily/jog/SKILL.md b/skills/2-daily/jog/SKILL.md
+index c4a87a9e..23da1423 100644
+--- a/skills/2-daily/jog/SKILL.md
++++ b/skills/2-daily/jog/SKILL.md
+@@ -165,16 +165,15 @@ it cannot skip the publication checkpoint. Use merge-cleanup for actual landing;
+ its mapped Jog hook runs after hosted reconciliation and before the existing final post-merge
+ commit/push. A direct `jog land` call likewise needs that final publication checkpoint.
+ 
+-Landing requires merged GitHub truth, a green gate on the original approved SHA, clean
+-`releases check`, green hosted reconciliation and merge reachability from freshly fetched
+-`origin/<integration>`. A moved head may contain the exact validated receipt publication,
+-ledger-only changes in B1's six-path set, or mechanically proven upstream merges. For each
+-upstream merge, both parent trees and the recorded tree have those six paths stripped; a
+-conflict-free `git merge-tree --write-tree` must reproduce exactly the recorded stripped tree.
+-Any remaining conflict or extra/missing blob refuses. The committed `landing.json` records
+-both approved/delivery heads, tree IDs, exclusions and hosted run. No manual override or broad
+-document-directory exception exists. Replay uses canonical queue truth and emits no duplicate
+-completion transition.
++Landing requires merged GitHub truth, a validated green gate on the original approved SHA,
++clean `releases check`, hosted or local reconciliation evidence, and merge reachability from
++freshly fetched `origin/<integration>` and primary HEAD. A moved head must match this PR's
++fetched head; queue completion does not require exact approval ancestry or a permitted-file
++tail. It records delivery, not approval or test coverage of later edits. `landing.json` records
++`completion_policy: merged-pr`, the original approved/tested SHA, reported review head/candidate
++(null when absent), landed PR head, merge SHA and reconciliation evidence. Publication and
++retry-gate admission retain their existing checks. Replay uses canonical queue truth and emits
++no duplicate completion transition.
+ 
+ ## Recovery Verbs
+ 
+diff --git a/test/gh280-jog-marathon-adapter.sh b/test/gh280-jog-marathon-adapter.sh
+index 824eda84..d2bbe5c0 100644
+--- a/test/gh280-jog-marathon-adapter.sh
++++ b/test/gh280-jog-marathon-adapter.sh
+@@ -945,6 +945,11 @@ grep -q "MARATHON-GH-901-FIXTURE-LANE-TURN$\|MARATHON-GH-901-FIXTURE-LANE-TURN-"
+   && pass "K4 prior token history and execution records preserved" || fail "K4 prior history damaged"
+ 
+ # ═══ L. Phase 3: jog land / jog reconcile — verify, project, delegate, replay ═════════════════
++# GH-1365: final PR edits need not preserve the approved tail policy for queue completion.
++# Keep this existing landing scenario representative of the observed post-review edit.
++printf 'Post-review delivery note\n' > "$FT/delivery-note.md"
++git -C "$FT" add delivery-note.md
++git -C "$FT" commit -qm "fixture final PR edit after approval"
+ # Real merge: the lane branch is genuinely merged into development so reachability holds.
+ git -C "$FR" fetch -q "$FT" marathon/gh280-k-lane:refs/heads/marathon/gh280-k-lane
+ git -C "$FR" checkout -q development
+@@ -1047,6 +1052,7 @@ has "$(queue_status "$FR")" "completed|landed via PR #42" \
+ grep -q "SHIPPED.*PR #42" "$FR/ROADMAP.md" \
+   && pass "L5 ROADMAP entry archived with the shipping badge" || fail "L5 ROADMAP not archived"
+ jassert "$FR/$LAND_BUNDLE_REL/landing.json" 'd["merged_sha"]=="'"$MERGE_SHA"'"' "L5 landing evidence records verified merge"
++jassert "$FR/$LAND_BUNDLE_REL/landing.json" 'd["completion_policy"]=="merged-pr" and d["tested_head_sha"]==d["approved_head_sha"] and d["tested_head_sha"]!=d["landed_head_sha"] and "tail_proof" not in d and "reviewed_head_sha" in d and "reviewed_candidate_sha" in d' "L5 completion retains historical attribution without final-head approval"
+ SHIP_STATE="$(sqlite3 "$FR/releases.db" "SELECT state FROM manifest_items WHERE release_id=(SELECT id FROM releases WHERE global_id='$REL_GID');")"
+ [ "$SHIP_STATE" = shipped ] && pass "L5 real reconciler ships owned dialed-in member" || fail "L5 manifest state: $SHIP_STATE"
+ SHIP_EVIDENCE="$(sqlite3 "$FR/releases.db" "SELECT e.reason FROM manifest_state_events e JOIN manifest_items m ON m.id=e.item_id JOIN releases r ON r.id=m.release_id WHERE r.global_id='$REL_GID' AND e.to_state='shipped';")"
+diff --git a/utils/py/jog_run.py b/utils/py/jog_run.py
+index d90fd2c4..4b4e1f5f 100755
+--- a/utils/py/jog_run.py
++++ b/utils/py/jog_run.py
+@@ -1337,13 +1337,13 @@ def jog_land(root, gh_num, pr_arg=None):
+         except ContractError as exc:
+             raise ContractError(f"merge commit {merged[:8]} not reachable from {integration}") from exc
+         _git(root, "merge-base", "--is-ancestor", merged, "HEAD")
++        # Completion records delivery, not approval of the final PR head (GH-1365).
++        # Bind a moved head to this PR without requiring ancestry to the historical approval.
+         if receipt.get("head_sha") != head:
+-            _git(root, "fetch", "--no-tags", "origin",
+-                 f"+refs/pull/{int(pr_number)}/head:refs/remotes/origin/jog-pr-{int(pr_number)}")
+-        try:
+-            proof = _landing_tail_proof(root, receipt.get("head_sha"), head, integration, bundle)
+-        except ContractError as exc:
+-            raise ContractError(f"head SHA {receipt.get('head_sha')} not preserved: {exc}") from exc
++            pr_ref = f"refs/remotes/origin/jog-pr-{int(pr_number)}"
++            _git(root, "fetch", "--no-tags", "origin", f"+refs/pull/{int(pr_number)}/head:{pr_ref}")
++            if _git(root, "rev-parse", f"{pr_ref}^{{commit}}").decode().strip() != head:
++                raise ContractError("head SHA differs from the fetched PR head")
+         # A gate receipt on the approved candidate does not qualify a repaired ledger.
+         checked = subprocess.run([sys.executable, resolve_tool(root, "utils/py/releases_app.py"),
+                                   "--root", root, "check"], cwd=root, capture_output=True, text=True)
+@@ -1434,7 +1434,11 @@ def jog_land(root, gh_num, pr_arg=None):
+     landing = {"issue": gh_num, "queue_gid": gid, "execution_id": receipt["execution_id"],
+                "pr_number": int(pr_number), "merged_sha": merged,
+                "approved_head_sha": receipt["head_sha"], "landed_head_sha": head,
+-               "tail_proof": proof, "hosted_reconcile": matching[0] if hosted_green else None,
++               "reviewed_head_sha": receipt.get("reviewed_head"),
++               "reviewed_candidate_sha": receipt.get("reviewed_candidate"),
++               "tested_head_sha": receipt["head_sha"],  # validated gate binding
++               "completion_policy": "merged-pr",
++               "hosted_reconcile": matching[0] if hosted_green else None,
+                "local_reconcile": local_reconcile}
+     path = os.path.join(root, bundle, "landing.json")
+     encoded = json.dumps(landing, indent=2) + "\n"
