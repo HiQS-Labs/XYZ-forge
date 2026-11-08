@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -77,5 +77,43 @@ Operator explicitly chose to stop exact approval ancestry requirements for QUEUE
 Write findings only in relay. Do not run mutation-heavy tests. Approve when requirements are met; full gate is next publication step.
 
 ## Log
+
+### Reviewer · Round 1 · codex
+
+VERDICT: PASS
+Basis: The implementation meets the operator-selected queue-completion policy without adding an approval mechanism or changing publication/retry admission. Approval is final QA of the seeded artifact; the classified full gate remains the next publication step, not a completed claim.
+swept file: yes
+
+- [Pass] Completion boundary: `utils/py/jog_run.py:1291`–`1449` retains committed bundle validation, PR branch/identity checks, merge reachability, releases check, reconciliation and canonical-row checks. The moved PR head is fetched and compared at `:1343`; historical approval ancestry is no longer required here. Publication still calls `_landing_tail_proof` at `:1129`, and retry admission still uses `_is_relay_receipt_tail`. No blocking pre-existing source defect was identified in the whole-file sweep of `jog_run.py` and the existing adapter suite.
+- [Pass] Attribution is factual: `utils/py/jog_run.py:1434` records original approved/tested, reported review head/candidate, landed head and merge separately; missing review fields stay null. `TESTS-RESULTS/2026-11-08+GH-1365/manual-results.json:276` records distinct historical identities and `completion_policy: merged-pr`; it does not upgrade final-head review or test coverage.
+- [Pass] Evidence is proportionate and falsifiable: `TESTS-RESULTS/2026-11-08+GH-1365/manual-results.json:7` records baseline exit 2 for the actual nonledger tail, `:187` candidate exit 0, `:217` stable replay, and `:247` successful explicitly constructed non-ancestor control. Five invalid-input cases also return 2 without queue/count changes. `focused.log:230` reports `227 pass, 0 fail`; the runner and SUMMARY explicitly describe local GitHub transport fixtures and the synthetic non-ancestor limit. These are inspected saved clone-run receipts, not suites rerun in this worktree.
+- [Pass] Canonical proportionality guidance at `GUIDING-PRINCIPLES.md:29` and `AGENTS.md:149` weighs concrete risk against operational cost while retaining honest evidence and unrelated protections. `MACHINE-CONTRACTS.md:109` and `skills/2-daily/jog/SKILL.md:168` distinguish delivery from approval. No additional landing-metadata consumer requiring migration was found in the inspected runtime/skill references.
+- [Nit] Pre-existing wording in `skills/2-daily/jog/SKILL.md:67`, `:118` and `:165` still says “after hosted reconciliation,” while the updated landing paragraph correctly permits local reconciliation. Optional cleanup: make these summaries say “hosted or local reconciliation” or point to the landing paragraph. This does not block the implemented policy or its evidence.
+
+Read-only probe (exit 0), run with `PYTHONDONTWRITEBYTECODE=1` and `TMPDIR="$PWD/.relay-scratch/tmp"`; no production function, fixture, suite or Git command was executed:
+
+```python
+import ast, hashlib, json
+from pathlib import Path
+p = Path('TESTS-RESULTS/2026-11-08+GH-1365')
+r = json.loads((p/'manual-results.json').read_text())
+assert len(r['cases']) == 9
+assert [c['rc'] for c in r['cases']] == [2,2,2,2,2,2,0,0,0]
+assert all(c['before'] == c['after'] for c in r['cases'] if c['rc'])
+assert r['cases'][6]['after'] == r['cases'][7]['after']
+prov = [json.loads(s) for s in (p/'provenance.jsonl').read_text().splitlines()]
+h = hashlib.sha256((p/'manual-replay.py').read_bytes()).hexdigest()
+assert h == prov[-1]['runner_sha256']
+t = ast.parse(Path('utils/py/jog_run.py').read_text())
+callers = [f.name for f in t.body if isinstance(f, ast.FunctionDef)
+           and any(isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+                   and n.func.id == '_landing_tail_proof' for n in ast.walk(f))]
+assert callers == ['publish_jog_receipt']
+assert '227 pass, 0 fail' in (p/'focused.log').read_text()
+```
+
+Command: `python3 - <<'PY'` with the above body and closing `PY`. Decisive output from the same checks: `9 saved cases; 6 refusal controls unchanged; replay counts stable; runner SHA256 f57e70c3579ee9ce34f99182ecf1a7048729c608bc7014f730a4745c278b4b60 matches provenance; focused log: 227 pass, 0 fail; tail-proof callers: ['publish_jog_receipt']`.
+
+Relay closed (Approved), no further turn needed. Producer/harness proceeds to the classified gate before publication.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
