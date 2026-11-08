@@ -94,4 +94,12 @@ swept file: yes
 
 Relay closed (Approved), no further turn needed. Producer may implement the approved plan under its existing task authorization; the harness owns the relay-file commit.
 
+
+### Attestation · relay-drive — 2026-11-08T18:40:35Z
+task: RELAY-gh1376-flywheel-plan
+reviewer: codex
+status: Approved
+reviewed-head: 627070dada97e1597a8ddfd0d82171b0a2e277c6
+added-range: 7714+3556
+added-sha256: 286be53bed13ea67d5eebfdf0d492654d4720e361c0c08729402441e014070ef
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
