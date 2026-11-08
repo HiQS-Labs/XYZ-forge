@@ -1,0 +1,9 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.15, pytest-9.2.0, pluggy-1.7.0
+rootdir: /Users/noelsaw/Documents/GitHub/XYZ-forge-gh1254-outer-loop-borrow-decl-2026-11-07-gate
+configfile: pytest.ini
+collected 21 items
+
+test/test_python_layer.py .....................                          [100%]
+
+============================= 21 passed in 12.90s ==============================
