@@ -20,7 +20,7 @@ The live issue owns the bounded qualification of durable decisions and recovery 
 
 ## Ratings proposal
 
-pri 75 / sev 35 / appeal 50 / effort 65, stored through `roadmap pickup` in task-branch row `rmi-01M6X3FB974B9FC3Y2DWEHQ2TT`, followed by `roadmap update --accepted-start`. Primary checkout remains untouched. Registration occurred during resumed implementation, not before the first source edit.
+pri 75 / sev 35 / appeal 50 / effort 65, stored through `roadmap pickup` in task-branch row `rmi-01M6X4NNDP24RCVFZEHSKJ2NHX`, followed by `roadmap update --accepted-start`. Primary checkout remains untouched. Registration occurred during resumed implementation, not before the first source edit.
 
 ## Merge evidence
 
@@ -86,3 +86,5 @@ attempt was stopped by explicit PID ancestry before accepting it as useful build
 This is one workload-selection repair, agent-assisted; no held-refusal or throughput claim.
 The third scheduled wake completed cold-start park and publication at 26543a0018, without a manual Git/CLI
 recovery. The deployment was disabled and booted out after that wake finished. Keep all local-only lane/deployment state. Full issue acceptance remains open.
+
+Ledger integration: after the canonical primary queue checkpoints landed, selected the clean primary ledger snapshot and reapplied this task-only row through `roadmap pickup`/`--accepted-start`, then ran `releases-merge-resolve.sh` (check clean). Original task-row identity remains in 7046047d6 history; live GH1344/GH1345/GH1295 queue states and counters were preserved. No SQL statements were authored. Routine generated view changes were restored from the pre-merge copy and excluded.
