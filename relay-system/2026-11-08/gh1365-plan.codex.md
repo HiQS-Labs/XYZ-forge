@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-07.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -76,5 +76,21 @@ Read the plan, utils/py/jog_run.py (especially jog_land, _committed_jog_receipt,
 Write findings only in this relay; no tests or implementation. Return Approved if fit; keep findings concrete and scoped.
 
 ## Log
+
+### Reviewer · Round 1
+
+VERDICT: FAIL
+Basis: The selected policy and bounded implementation are fit; add the concrete missed operator guidance consumer before implementation. No additional approval ancestry or supplemental attestation is requested.
+swept file: yes
+
+- [Pass] Whole plan swept, including pre-existing sections; no other plan defect found. The operator request is explicit (plan line 26), publication/retry checks remain intact (lines 30, 36), and original review/test attribution is separate from delivery (line 40). Source agrees: `utils/py/jog_run.py:1129` is the publication tail-proof caller, `:1344` is the landing caller, and `:1178` validates the gate against the original receipt head. Existing status ownership remains at `:1431`.
+- [Should] Include `skills/2-daily/jog/SKILL.md:168-177` in same-PR guidance updates. It currently says a moved landing head may contain only receipt publication, ledger changes or proven upstream merges, that other blobs refuse, and that landing.json records tree IDs/exclusions. Those instructions would contradict both the new queue policy and removed tail_proof metadata. Cheapest fix: add this existing skill paragraph to implementation step 2, replacing only the landing description with merged/reconciled delivery plus explicit historical reviewed/tested/landed attribution; keep publication requirements distinct.
+  Observed input: `skills/2-daily/jog/SKILL.md:170-176`: “A moved head may contain the exact validated receipt publication, ledger-only changes ... or mechanically proven upstream merges” and “Any remaining conflict or extra/missing blob refuses.” Plan steps 2-3 name MACHINE-CONTRACTS, GUIDING-PRINCIPLES and AGENTS, but omit this consumer.
+  Affected scope: Operator/agent instructions for post-merge `jog land` and its landing.json description; no publication or retry admission change.
+  Falsifier: If that paragraph described publication alone, or the plan already included its update, this finding would be unnecessary. Read-only command `sed -n '145,185p' skills/2-daily/jog/SKILL.md` exited 0 and printed the quoted landing instructions; `nl -ba PROJECT/2-WORKING/GH-1365-JOG-MARKDOWN-TAIL-EXEMPTION.md` exited 0 and showed the consumer absent from steps 2-3.
+- [Unverified — needs clone run] Runtime outcomes, historical replay and red controls are implementation acceptance work, not established by this source-only plan review. No suite, fixture, Git operation or live queue mutation was run.
+- [Nit] Plan line 36 calls the publisher `_publish_jog_receipt`; its actual name is `publish_jog_receipt` (`utils/py/jog_run.py:1077`). Correct the source pointer while revising.
+
+Handing off to Producer (task-parent) — add the missed Jog guidance update, then return for plan QA.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
