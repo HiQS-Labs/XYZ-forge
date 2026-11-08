@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-11-07.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -75,5 +75,23 @@ will rerun docs checks at final head. No runtime validation or friction improvem
 The umbrella remains open; this is not all eight audit recommendations.
 
 ## Log
+
+### Reviewer · Round 1
+
+Ship — approved for the bounded documentation change.
+
+VERDICT: PASS
+Basis: The final prose meets the three ordered plan steps' textual acceptance criteria; evidence accurately limits its claims to source review and the recorded docs gate. Approval is final source QA, not runtime validation or publication/merge readiness.
+swept file: yes
+
+- [Pass] Changed gates retain the red-control requirement: AGENTS.md says "For every new or materially changed decision gate, witness a failure before treating its passing result as evidence" and "Rerunning unchanged coverage does not require a fresh mutation." Its existing-suite/manual routes and all three hollow-check examples remain. This matches GUIDING-PRINCIPLES.md principle 13's "Every new or materially changed decision gate" scope. No correction needed.
+- [Pass] Appendix priority remains subject to proportionality: GUIDING-PRINCIPLES.md says "This ordering guides doc-review tie-breakers; it does not exempt a control from" the linked North Star assessment and "Preserve containment". Principle 3 still says "Containment is non-negotiable"; the North Star still excludes a "blanket bypass of containment, verification or protection against data loss." No new bypass or execution authority follows.
+- [Pass] GH-831 policy is retained: AGENTS.md's "No new tests" rail still prohibits new suites, registry entries and gate machinery, while allowing existing-suite/manual evidence with provenance. The plan's non-goals explicitly say "Do not amend GH-831". No additional machinery is needed for these prose edits.
+- [Pass] Evidence is proportionate and candid: TESTS-RESULTS/2026-11-07+GH-1366/SUMMARY.md says "These are manual textual verdicts, not measured reductions in friction or runtime tests." provenance.jsonl records docs command exit 0 at revision 6ea98fb2400a918fbeb512316c839cb21e74c039 and separately labels final whitespace-only source review. pdda.log:260 reports "no errors, 97 warning(s)". The request discloses the two later formatting edits and final publication rerun; this review does not relabel the earlier gate as a final-head run. No runtime smoke or destructive mutation is warranted.
+- [Nit] Whole-file sweep retains the already identified pre-existing reconciliation contradiction: AGENTS.md's ownership section says hosted reconciliation happens "automatically", while its GH-1127 rail says "Development merges reconcile locally". PARKED/2026-11-07-reconciliation-wording.md already records the separate scoped correction against workflow/caller evidence. Keep that disposition; no additional pre-existing defect identified in the complete AGENTS.md, GUIDING-PRINCIPLES.md and active plan textual sweep.
+
+Verification boundary: read-only source/evidence inspection; no Git, executable fixtures, runtime suites, or gate rerun performed. Recorded PDDA results were inspected, not independently re-executed. Publication must obtain its own required final-head check as stated in the request.
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
