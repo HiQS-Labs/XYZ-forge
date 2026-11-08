@@ -12,7 +12,7 @@ doc_type: experiment
 
 | What was just completed | What's next |
 |---|---|
-| Scheduled GH1295 produced reviewed PR1371 and published its primary checkpoint. Independent GH1160 exposed a stale runner-ledger snapshot; red/green repair preserved its failure and counters. | Repaired scheduled window runs GH1160 final attempt then GH1216; parent owns per-PR landing approval. Discovery, observer and all-seven qualification remain open. |
+| Three real workloads produced reviewed PR1371/1372/1373; scheduled final checkpoint661d08ca published, primary clean. Natural sleep continuation and deadline/observer limitations are retained. | Both owned jobs stopped12:12Z before12:30Z cutoff. Parent/user per-PR landing approval is the next external boundary; no-row admission, stale-approval and full qualification remain open. |
 
 ## Scope
 
@@ -26,7 +26,7 @@ pri 75 / sev 35 / appeal 50 / effort 65, stored through `roadmap pickup` in task
 
 - PR #1324 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
 
-## Short attempt outcome
+## Initial inspection outcome (historical; superseded by implementation below)
 
 Phase A NOT READY: bounded manual controls only; all seven deployed composition transitions NOT EXERCISED. See `TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/SUMMARY.md`. No Phase B start. Next: identify deployment, observer, workload and numeric dispatch budgets through existing owners.
 
@@ -137,3 +137,11 @@ GH1160 attempt2 created PR1372 and published primary checkpoint da2bc3de. Outer 
 A queued wake ran before launchd bootout and refused GH1216 promotion: python3 -c was parsed as missing file -c. Queue attempt1 is retained; no builder started. Shutdown interrupted checkpoint681ab30 publication; a recovery-only scheduled Jog wake published that exact checkpoint. Corrected same behavioral probe uses Python stdin file input under the deployment Python3.13 PATH; validator passes and actual unprefixed export fails the assertion. A bounded second dispatch remains within queue cap2; no third dispatch.
 
 The independent read-only launchd observer (15s interval,120s silence,1800s publication/10800s active ceiling, absolute12:30Z preparation bound) detected the absent supervisor and then active recovery. Initial system-Python deployment could not read Documents (TCC); use of the already-authorized deployment Python repaired observation. This is local process/scheduler observation only, with no host-loss/offhost-delivery claim. Independent QA required journal reread and best-effort supplemental heartbeat; both are applied.
+
+Independent final Codex QA supports a scoped agent-assisted PARTIAL outcome after final receipts settle. Observer samples contain an unexplained469.4s gap10:47:34.880→10:55:24.299; retain UNKNOWN, not host sleep. One135.1s silence detection and recovery is witnessed, but global bounds/slot accounting are unproven. No-row admission and stale-approval coverage remain unfinished; only per-PR approved landing is the present authority boundary.
+
+## Final bounded outcome
+
+GH1216 PR1373 finalheadc50b7616fbe5fabc56705e7894dc9a6cf5b13d6d is independently reviewed, focused56/56 andfull409/409 (one parallelfailure passed existingserialretry). Primarycheckpoint661d08cad249b7815aac21269fb581a18eaaea09 published autonomously, cleanprimary. Bothownedlaunchdjobs disabled/unloaded12:12:33Z, beforefixed12:30Zcutoff; retainedallclones/branches/evidence. Queue1295/1160/1216parkedawaitinglanding,2attemptseach;1344unchanged.
+
+Power-management logs now establish naturalSleep/DarkWake continuation, including465s and979s sleeps corresponding toobservergaps. This supersedes earlierUNKNOWNcause only wherecorrelated; itdoesnotestablishrestart/offhostdetection orcontinuousboundcompliance. Fullgate reports3403s elapsed versusmonotonicguard859s underunchanged1800scap: realelapsedwalltime compliance failed. Existingowner1254deadline and1188observation gaps remainopen. FinalCodexQAapproves meaningfulagent-assistedPARTIAL, notqualification. See continuation/FINAL-RESULTS.md, final-state.json, observer-final-analysis.json andcommittedprovenance.
