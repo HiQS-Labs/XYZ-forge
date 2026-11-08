@@ -11,3 +11,5 @@ Review accepts published sanitized historical evidence, not local-only raw origi
 Frozen attempt01/attempt02 summaries, outcomes, protocols, launch metadata and manifests remain unchanged. Their parent-acceptance-pending text describes the original execution checkpoint; this dated addendum records later acceptance. Original PROPOSAL is also hash-bound, so its historical language is annotated here and in INDEX rather than rewriting its frozen bytes.
 
 Development ledger retained; only GH1314 row replayed through canonical writers. GID/time reminted; original history retained in ancestry. Ledger check0fail10warnings. No runtime code, new gate/test, actor repair, scheduling, merge or deployment.
+
+Normal push qualification on954b5c51bb12acc5bd38500315d1ec6c597f3935 passed the full local gate in a separate disposable clone and published that commit. An earlier push was stopped after its hook selected a full gate in the task clone; no remote update or passing claim from that interrupted attempt. This evidence-only follow-up uses the normal documentation hook. Hosted results remain separate; no promotion or merge claim.
