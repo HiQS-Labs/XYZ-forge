@@ -209,3 +209,12 @@ swept file: yes
 **Verdict:** Approved
 
 relay closed, no further turn needed
+
+### Attestation · relay-drive — 2026-11-08T11:08:13Z
+task: MARATHON-GH-1216-AIDER-OPENROUTER-PROFILE-TURN
+reviewer: agy
+status: Approved
+reviewed-head: a821fc55fd2a3a55916037972cc50fb32046a65b
+added-range: 20410+1901
+added-sha256: 7eda3a7257246159973c1879daff6f232754ed09deb5c815ddb00c02592b44a6
+config-sha256: 286494c5350a0d37ad87e2b7a45e822c803721311d85008beff97d5d455b553f
