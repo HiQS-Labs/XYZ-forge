@@ -9,3 +9,5 @@ Independent Codex conditional recovery review addressed; Agy produced no answer 
 Known existing resume limitation: selected retry outcome is correct, but queue failure text names the original execution receipt path. Exact selected retry identity/path/hash are retained in receipt-storage.json and reconciled-execution-state.json. No historical receipt was rewritten.
 
 W2 publishes the original terminal evidence0e503ac12 and this inventory. W3 will use existing retry-gate, explicit effective1800s cap and remaining-time admission under this separate window, with prior invocation retained. Same reviewed code and main/adjacent evidence reused. No full-pass claim until actual receipt exists. Remaining1358 no-row admission, consecutive successful wakes, continuous observation/slot accounting and broader1254 acceptance remain open.
+
+Final outcome: see FINAL-OUTCOME.md. Full408/408 passed536s; PR1379 published18e5df165. Counter restoration, docs-gate isolation deviation, approved-tail landing limit and finalprimarya71a1d5a are disclosed there.

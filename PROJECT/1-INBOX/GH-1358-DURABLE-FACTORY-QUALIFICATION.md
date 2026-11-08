@@ -12,7 +12,7 @@ doc_type: experiment
 
 | What was just completed | What's next |
 |---|---|
-| Three real workloads produced reviewed PR1371/1372/1373; scheduled final checkpoint661d08ca published, primary clean. Natural sleep continuation and deadline/observer limitations are retained. | Both owned jobs stopped12:12Z before12:30Z cutoff. Parent/user per-PR landing approval is the next external boundary; no-row admission, stale-approval and full qualification remain open. |
+| PR1370–1373 merged and reconciled. Scheduled stale-approval refusal and approved landing → next dispatch witnessed. Retained timeout recovered onto peer base at published checkpoint2361edc13. | Separate recovery delivered PR1379 after full408/408; finalprimarya71a1d5a published clean. Review/merge decision remains with parent/user. No schedules, builders, PhaseB or merges; original qualification gaps remain open. |
 
 ## Scope
 
@@ -198,3 +198,16 @@ All four individually authorized PRs1370–1373 are merged/reconciled; exactSHAs
 Clock source implemented/independentlyapproved, manual7/7. Initial1800s reserve refused; reviewed1200s gate-only repair preservedcandidate/attestation/counters but twicefoundexistinggh390fixture timingrace. Diagnosticrerunpassed, originalfailuresretained. Finalbuilderattempt2/2 addressesfinitefixturepacing and mandatednon-tier registrydisable while retainingexplicitmain/adjacentverification. Gatecap900s, latestentry18:51:18Z, fixeddeadline19:06:18Z. Fullgate/readyclockPR stillpending, notclaimed. Originalunmettasksremainvisible; noPhaseB/newmergeauthorization.
 
 18:53Z update: finalbuilder2/2 and Agy/Codex approvedfixture/registrydelta.900s reserve refusedafterreview; preservedreceipt. Final existing gate-only retry lowersactualcap/reserve720s, latestentry18:54:18Z, same19:06:18Zcutoff. No morebuilder. Actualmanual7/7 and repairedRSSfixturepositivepassed; remaininggh280/fullgate inprogress. Ready docs/evidencePR1377; no newmergeauthority.
+
+
+## Controlled recovery after peer landings
+
+The new workhorse window20:05:42–21:35:42Z is separate from the expired19:06:18Z rehearsal. Original720s gate timeout and builder2/2 history remain unchanged. Primary peer base7da2f34e and both1318/1316 merge ancestors were verified before recovery. Stopped childless supervisor1992 was permanently fenced withoutSIGCONT; archived journal and exact retained result were preserved, then existing Jog state/resume/checkpoint paths published2361edc13. No raw SQL or history rewrite. This is agent-assisted recovery.
+
+Codex conditional recovery review findings were applied. Agy returned no answer before its idle timeout; no cross-model consensus is claimed. Existing resume selects the retry outcome but puts the original receipt path in the failure text; exact selected identity/hash are in recovery evidence.
+
+PR1377 evidence head322026791 passed the normal docs gate70s. Existing gate-only retry now uses the unchanged independently reviewed clock candidate, explicit1800s cap and remaining-time admission, preserving prior invocation and two-attempt log. The full gate runs in a separate disposable full clone; prior manual7/7, gh39023/23 and adjacent227/227 evidence is reused. No builder, schedule, PhaseB or merge is authorized by this window.
+
+Evidence and exact commands: `TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/recovery/`. Remaining original acceptance: normal no-row admission, two successive successful PR-ready wakes, continuous observation bounds/slot accounting, broader1254 restart/overload/live-cost proof and full qualification.
+
+Recovery outcome: PR1379 head18e5df165, full408/408 in536s, finaldocs67s. Finalprimarya71a1d5a published clean with peerlandings intact and actual PR pointer. Both schedulesdisabled/unloaded. Success-path counter deletion was caught and exact2/2 file restored; originaltimeout retained. Automatic receipt docs-onlygate in retainedrunner missed the all-gates-disposable instruction; no heavy suite ran there, finaldocs used disposableclone. NewclockPR docs/evidence tail requires applicable approval binding before automaticJoglanding; no merge approved. See recovery/FINAL-OUTCOME.md for scope, repairs and remainingacceptance.
