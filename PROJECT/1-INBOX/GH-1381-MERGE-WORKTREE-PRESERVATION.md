@@ -17,7 +17,7 @@ Incident batch: https://github.com/HiQS-Labs/XYZ-forge/issues/1380
 
 | What was just completed | What's next |
 |---|---|
-| Independent plan QA approved; minimal fix and controlled red/green complete | Focused verification, final QA, bounded gated publication |
+| Independent plan QA approved; minimal fix and controlled red/green complete | Bounded normal gated publication; final code QA Approved |
 
 ## Problem and evidence
 
@@ -65,3 +65,5 @@ Flywheel routing: step 1 reused incident capture; steps 2–3 selected start-tas
 CLI trace: execute_pr_merge has no public delete_branch parameter; the local boolean and suppression set were internal only. The single production caller is _land_prs_loop; direct test callers retain the unchanged signature. Both dry-run strings now omit deletion. Explicit scoped Phase 6 teardown is unchanged. gh capture_output=True plus explicit --strategy prevents interactive deletion prompting. No other merge-cleanup documented invocation requests the flag.
 
 Environment repair: system python lacks requests; existing ~/.cache/xyz-forge-test-venv toolchain imports requests/yaml/pytest. Use that supported PATH for verification/publication; no new installation or access.
+
+21:54Z corrected-revision focused suite passed 205 tests; final native code QA Approved, no blockers. Existing test virtualenv used. NO_ENTRY for lessons ledger: single workflow trial is confounded; command evidence supports the fix, not general factory qualification.
