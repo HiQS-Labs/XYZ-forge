@@ -16,7 +16,7 @@ doc_type: enhancement
 
 | What was just completed | What's next |
 |---|---|
-| Plan QA approved; both scoped wording changes implemented | Final verification and independent QA |
+| Plan QA approved; both scoped wording changes implemented | Independent final QA and PR publication |
 
 ## Scope and recon
 
@@ -69,9 +69,9 @@ these remaining exact paragraphs. No override score.
 
 ## Review and evidence
 
-Plan QA Approved: `relay-system/2026-11-07/gh1366-plan.codex.md` (driver exit 0, one reviewer turn). Final QA and gate/consumer evidence pending.
+Plan QA Approved: `relay-system/2026-11-07/gh1366-plan.codex.md` (driver exit 0, one reviewer turn). PDDA gate passed (exit 0, 97 warnings); manual consumer cases passed. Evidence: `TESTS-RESULTS/2026-11-07+GH-1366/`. Final QA is recorded in `relay-system/2026-11-07/gh1366-final.codex.md`; see its final verdict rather than inferring approval here.
 Umbrella stays open after this slice lands.
 
 ## Lessons Learned (For Future Agents)
 
-NO_ENTRY: no observed workflow outcome yet; textual clarification alone does not prove reduced friction.
+NO_ENTRY: both changed components have no observed effect on workflow cost yet; manual textual acceptance is not evidence of reduced friction.

@@ -124,7 +124,8 @@ you merely ran and can no longer show counts as no claim at all.
 witness a failure before treating its passing result as evidence: replay the pre-fix behavior,
 mutate the thing it guards, or supply controlled bad input, and watch it go red. Rerunning unchanged
 coverage does not require a fresh mutation. If a new or materially changed gate cannot fail,
-it is decorative, and it is worse than nothing because it reports confidence it never earned. Witness the failure on an existing suite or record it as a manual check.
+it is decorative, and it is worse than nothing because it reports confidence it never earned.
+Witness the failure on an existing suite or record it as a manual check.
 Never add a suite to do it; see the *No new tests* rail. This is the precise way this principle fails while looking
 satisfied: you *did* verify, and the verification was hollow. Three examples from GH-377/GH-379, all
 of which passed cleanly before they were mutated — an `awk` range that terminated on its own first

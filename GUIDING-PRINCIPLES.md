@@ -161,7 +161,7 @@ right behavior without pattern-matching a downstream repo's prior drift:
 
 ## Appendix: AI Doc Review Heuristics
 
-When reviewing any repo doc (roadmap entries, plans, architecture notes, audits, task writeups), apply these. Priority: containment > coordination correctness > signal quality > implementation speed and operator friction. 
+When reviewing any repo doc (roadmap entries, plans, architecture notes, audits, task writeups), apply these. Priority: containment > coordination correctness > signal quality > implementation speed and operator friction.
 This ordering guides doc-review tie-breakers; it does not exempt a control from
 [the North Star](#the-north-star)’s proportionality assessment. Preserve containment while
 considering simpler controls that adequately address the concrete failure.

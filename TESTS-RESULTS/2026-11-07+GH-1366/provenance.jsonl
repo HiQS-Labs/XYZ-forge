@@ -1,0 +1,2 @@
+{"time": "2026-11-08T04:54:49.212352+00:00", "revision": "6ea98fb2400a918fbeb512316c839cb21e74c039", "command": "bash utils/pdda/pdda.sh run", "exit_code": 0, "output": "pdda.log"}
+{"time": "2026-11-08T04:55:16.464416+00:00", "revision": "6ea98fb2400a918fbeb512316c839cb21e74c039", "method": "manual source review with final whitespace-only working changes", "inputs": ["ROUTER.md", "AGENTS.md", "GUIDING-PRINCIPLES.md"], "result": "PASS: changed gate needs failure; unchanged rerun no fresh mutation; containment retained", "output": "SUMMARY.md"}
