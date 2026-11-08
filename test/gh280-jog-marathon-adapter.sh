@@ -945,6 +945,11 @@ grep -q "MARATHON-GH-901-FIXTURE-LANE-TURN$\|MARATHON-GH-901-FIXTURE-LANE-TURN-"
   && pass "K4 prior token history and execution records preserved" || fail "K4 prior history damaged"
 
 # ═══ L. Phase 3: jog land / jog reconcile — verify, project, delegate, replay ═════════════════
+# GH-1365: final PR edits need not preserve the approved tail policy for queue completion.
+# Keep this existing landing scenario representative of the observed post-review edit.
+printf 'Post-review delivery note\n' > "$FT/delivery-note.md"
+git -C "$FT" add delivery-note.md
+git -C "$FT" commit -qm "fixture final PR edit after approval"
 # Real merge: the lane branch is genuinely merged into development so reachability holds.
 git -C "$FR" fetch -q "$FT" marathon/gh280-k-lane:refs/heads/marathon/gh280-k-lane
 git -C "$FR" checkout -q development
@@ -1047,6 +1052,7 @@ has "$(queue_status "$FR")" "completed|landed via PR #42" \
 grep -q "SHIPPED.*PR #42" "$FR/ROADMAP.md" \
   && pass "L5 ROADMAP entry archived with the shipping badge" || fail "L5 ROADMAP not archived"
 jassert "$FR/$LAND_BUNDLE_REL/landing.json" 'd["merged_sha"]=="'"$MERGE_SHA"'"' "L5 landing evidence records verified merge"
+jassert "$FR/$LAND_BUNDLE_REL/landing.json" 'd["completion_policy"]=="merged-pr" and d["tested_head_sha"]==d["approved_head_sha"] and d["tested_head_sha"]!=d["landed_head_sha"] and "tail_proof" not in d and "reviewed_head_sha" in d and "reviewed_candidate_sha" in d' "L5 completion retains historical attribution without final-head approval"
 SHIP_STATE="$(sqlite3 "$FR/releases.db" "SELECT state FROM manifest_items WHERE release_id=(SELECT id FROM releases WHERE global_id='$REL_GID');")"
 [ "$SHIP_STATE" = shipped ] && pass "L5 real reconciler ships owned dialed-in member" || fail "L5 manifest state: $SHIP_STATE"
 SHIP_EVIDENCE="$(sqlite3 "$FR/releases.db" "SELECT e.reason FROM manifest_state_events e JOIN manifest_items m ON m.id=e.item_id JOIN releases r ON r.id=m.release_id WHERE r.global_id='$REL_GID' AND e.to_state='shipped';")"

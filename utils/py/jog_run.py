@@ -1337,13 +1337,13 @@ def jog_land(root, gh_num, pr_arg=None):
         except ContractError as exc:
             raise ContractError(f"merge commit {merged[:8]} not reachable from {integration}") from exc
         _git(root, "merge-base", "--is-ancestor", merged, "HEAD")
+        # Completion records delivery, not approval of the final PR head (GH-1365).
+        # Bind a moved head to this PR without requiring ancestry to the historical approval.
         if receipt.get("head_sha") != head:
-            _git(root, "fetch", "--no-tags", "origin",
-                 f"+refs/pull/{int(pr_number)}/head:refs/remotes/origin/jog-pr-{int(pr_number)}")
-        try:
-            proof = _landing_tail_proof(root, receipt.get("head_sha"), head, integration, bundle)
-        except ContractError as exc:
-            raise ContractError(f"head SHA {receipt.get('head_sha')} not preserved: {exc}") from exc
+            pr_ref = f"refs/remotes/origin/jog-pr-{int(pr_number)}"
+            _git(root, "fetch", "--no-tags", "origin", f"+refs/pull/{int(pr_number)}/head:{pr_ref}")
+            if _git(root, "rev-parse", f"{pr_ref}^{{commit}}").decode().strip() != head:
+                raise ContractError("head SHA differs from the fetched PR head")
         # A gate receipt on the approved candidate does not qualify a repaired ledger.
         checked = subprocess.run([sys.executable, resolve_tool(root, "utils/py/releases_app.py"),
                                   "--root", root, "check"], cwd=root, capture_output=True, text=True)
@@ -1434,7 +1434,11 @@ def jog_land(root, gh_num, pr_arg=None):
     landing = {"issue": gh_num, "queue_gid": gid, "execution_id": receipt["execution_id"],
                "pr_number": int(pr_number), "merged_sha": merged,
                "approved_head_sha": receipt["head_sha"], "landed_head_sha": head,
-               "tail_proof": proof, "hosted_reconcile": matching[0] if hosted_green else None,
+               "reviewed_head_sha": receipt.get("reviewed_head"),
+               "reviewed_candidate_sha": receipt.get("reviewed_candidate"),
+               "tested_head_sha": receipt["head_sha"],  # validated gate binding
+               "completion_policy": "merged-pr",
+               "hosted_reconcile": matching[0] if hosted_green else None,
                "local_reconcile": local_reconcile}
     path = os.path.join(root, bundle, "landing.json")
     encoded = json.dumps(landing, indent=2) + "\n"

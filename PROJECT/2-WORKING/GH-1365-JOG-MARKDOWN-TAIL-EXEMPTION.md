@@ -1,6 +1,6 @@
 ---
 title: Jog queue completion with honest version attribution
-status: Planning
+status: Implementing
 created: 2026-11-07
 updated: 2026-11-07
 owner: codex
@@ -18,7 +18,7 @@ phases: 1
 
 | What was just completed | What's next |
 |---|---|
-| Operator selected simpler policy; source recon and rated pickup complete | Independent plan QA, implement, focused verification and final QA |
+| Plan QA Approved (round 2); accepted-start recorded; implementation drafted | Isolated focused verification, historical replay and final QA |
 
 ## Decision and requirements
 

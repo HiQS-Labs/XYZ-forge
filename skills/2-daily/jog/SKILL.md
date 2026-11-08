@@ -165,16 +165,15 @@ it cannot skip the publication checkpoint. Use merge-cleanup for actual landing;
 its mapped Jog hook runs after hosted reconciliation and before the existing final post-merge
 commit/push. A direct `jog land` call likewise needs that final publication checkpoint.
 
-Landing requires merged GitHub truth, a green gate on the original approved SHA, clean
-`releases check`, green hosted reconciliation and merge reachability from freshly fetched
-`origin/<integration>`. A moved head may contain the exact validated receipt publication,
-ledger-only changes in B1's six-path set, or mechanically proven upstream merges. For each
-upstream merge, both parent trees and the recorded tree have those six paths stripped; a
-conflict-free `git merge-tree --write-tree` must reproduce exactly the recorded stripped tree.
-Any remaining conflict or extra/missing blob refuses. The committed `landing.json` records
-both approved/delivery heads, tree IDs, exclusions and hosted run. No manual override or broad
-document-directory exception exists. Replay uses canonical queue truth and emits no duplicate
-completion transition.
+Landing requires merged GitHub truth, a validated green gate on the original approved SHA,
+clean `releases check`, hosted or local reconciliation evidence, and merge reachability from
+freshly fetched `origin/<integration>` and primary HEAD. A moved head must match this PR's
+fetched head; queue completion does not require exact approval ancestry or a permitted-file
+tail. It records delivery, not approval or test coverage of later edits. `landing.json` records
+`completion_policy: merged-pr`, the original approved/tested SHA, reported review head/candidate
+(null when absent), landed PR head, merge SHA and reconciliation evidence. Publication and
+retry-gate admission retain their existing checks. Replay uses canonical queue truth and emits
+no duplicate completion transition.
 
 ## Recovery Verbs
 

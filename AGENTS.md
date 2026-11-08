@@ -146,6 +146,14 @@ goes with it.
 
 **Establish blocker necessity before investing in repair.** An in-flight failing test or unexpected error is not automatically an urgent blocker. When an obstacle's necessity or user consequence is unclear, or after two investigation attempts yield no new evidence, run `sanity-check` (`skills/1-hourly/sanity-check/SKILL.md`) to evaluate whether to fix now, simplify, defer via PRS, or dismiss, before sinking hours into tracing the fail path.
 
+**Apply proportionate rigor.** Follow `GUIDING-PRINCIPLES.md` → "The North Star": before
+adding or retaining a blocking control, name the concrete failure it prevents and weigh that
+benefit against operator time, maintenance and recovery cost. Prefer the simplest adequate
+check; recommend simplifying a rule whose burden exceeds its value. Honor an explicit operator
+tradeoff within its stated scope, record it, and keep reviewed, tested and delivered versions
+truthful. Do not reintroduce a rejected restriction under a different name or treat the decision
+as permission to bypass unrelated controls.
+
 ### 7. Record only consequential bets
 
 If a change is Costly, One-way door, or assumption-heavy, record the bet in `CHANGELOG.md` per
