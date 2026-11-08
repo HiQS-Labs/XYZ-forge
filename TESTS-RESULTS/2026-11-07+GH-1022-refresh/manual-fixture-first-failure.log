@@ -1,0 +1,7 @@
+{"case": "existingFalse-badFalse-applyFalse", "status": "accepted", "error": "", "added": [], "complete": true, "dispatch_allowed": false, "existing_capture_preserved": true}
+{"case": "existingFalse-badFalse-applyTrue", "status": "accepted", "error": "", "added": [999981, 999982], "complete": true, "dispatch_allowed": null, "existing_capture_preserved": true}
+Traceback (most recent call last):
+  File "/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1028-full-controls.py", line 40, in <module>
+    elif apply:assert set(added)=={999981,999982} and value['dispatch_allowed'] is False,rows
+                                                      ~~~~~^^^^^^^^^^^^^^^^^^^^
+KeyError: 'dispatch_allowed'
