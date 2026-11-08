@@ -51,7 +51,7 @@ No provider/Aider execution, no paid route, no new suite, and no merge.
   "fix_probes": [
     {
       "type": "command",
-      "cmd": "python3 -c 'import os,sys\nsys.path.insert(0,'\"'\"'utils/py'\"'\"')\nimport profile_resolve as p\nroot=os.getcwd()\nfor spec in p.lanes(root).values():\n for key in ('\"'\"'agent_var'\"'\"','\"'\"'model_var'\"'\"'):os.environ.pop(spec[key],None)\np.load_profiles=lambda: {'\"'\"'gh1216'\"'\"':{'\"'\"'harness'\"'\"':'\"'\"'aider'\"'\"','\"'\"'gateway'\"'\"':'\"'\"'openrouter'\"'\"','\"'\"'model'\"'\"':'\"'\"'moonshotai/kimi-k3.1-pro'\"'\"'}}\nr=p.resolve('\"'\"'gh1216'\"'\"',root)\nout,rc=p.emit_env(r,root)\nassert rc==0 and \"export AIDER_MODEL='\"'\"'openrouter/moonshotai/kimi-k3.1-pro'\"'\"'\" in out,out\n'",
+      "cmd": "python3 /dev/stdin <<'GH1216_PROBE'\nimport os,sys\nsys.path.insert(0,'utils/py')\nimport profile_resolve as p\nroot=os.getcwd()\nfor spec in p.lanes(root).values():\n for key in ('agent_var','model_var'):os.environ.pop(spec[key],None)\np.load_profiles=lambda: {'gh1216':{'harness':'aider','gateway':'openrouter','model':'moonshotai/kimi-k3.1-pro'}}\nr=p.resolve('gh1216',root)\nout,rc=p.emit_env(r,root)\nassert rc==0 and \"export AIDER_MODEL='openrouter/moonshotai/kimi-k3.1-pro'\" in out,out\n\nGH1216_PROBE",
       "expect_nonzero": true
     }
   ],
@@ -68,7 +68,7 @@ No provider/Aider execution, no paid route, no new suite, and no merge.
 
 ## Budget
 
-One scheduled dispatch in this window; Codex builder/Agy reviewer. Worker wall/idle
+Second bounded dispatch after attempt1 promotion refusal (no builder started); queue cap2 retained; Codex builder/Agy reviewer. Worker wall/idle
 900s; existing relay base5/hardmax10 for qualifying progress, Marathon cap2 unchanged.
 No automatic retry. Existing preadvance gate wall1800s. Preparation hard stop12:30Z
 2026-11-08. Admission and scope preparation are agent-assisted, not a no-row
