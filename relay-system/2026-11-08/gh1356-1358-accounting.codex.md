@@ -13,4 +13,3 @@ Approved for accounting only at HEAD `507765671`, with one nonblocking documenta
 Read-only inspection only; no tests, edits, delegation, or publication.
 
 Implementer follow-up: corrected the two status tables and GH1356 status metadata; no claim scope expanded.
-
