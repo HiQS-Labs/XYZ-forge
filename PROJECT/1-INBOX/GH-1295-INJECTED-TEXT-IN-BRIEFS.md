@@ -90,3 +90,7 @@ pri 60 / sev 60 / appeal 50 / effort 70 (deferred by operator until factory-prim
 ## Merge evidence
 
 - PR #1304 merged 2026-10-31 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1324 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

@@ -40,7 +40,7 @@ caps are respected. Current caps: kernel≤1/wave.
 |---|---|---|
 | kernel | ❌ serialize — one at a time | #670, #355 |
 | shim | ✅ one lane per file (serialize when inferred) | — |
-| independent | ✅ one lane per file | #1356, #1295, #1254, #1296 |
+| independent | ✅ one lane per file | #1356, #1295, #1296, #1254 |
 
 ## Per-item scoring
 
@@ -51,9 +51,9 @@ Every input is shown so the ordering is verifiable by hand (lower score = earlie
 | [#1356] Flywheel Batch 2: autonomous supervisor outerloop run across critical targets (#1296, #1288, #1287, #1254, #1344) | db pri/sev/app/eff = —/—/—/— · rank 305 | independent | — | -305 | 1 |
 | [#1295] GH-1295 · factory-primitive plan-draft: injected instruction text in an issue body is carried into briefs and launch packets | db pri/sev/app/eff = —/—/—/— · rank 240 | independent | — | -240 | 1 |
 | [#670] GH-670 · Marathon: support explicitly selected Claude CLI reviewers instead of Codex/Agy-only restriction | db pri/sev/app/eff = —/—/—/— · rank 230 | kernel | — | -228 | 1 |
-| [#1254] Outer loop (#1248): borrow declared supervision and cache-warmth dispatch from clodex | db pri/sev/app/eff = —/—/—/— · rank 215 | independent | — | -215 | 2 |
+| [#1296] GH-1296 · factory-primitive launch packets: lanes fail preflight on a stale artifact path or missing Preflight Contract | db pri/sev/app/eff = —/—/—/— · rank 215 | independent | — | -215 | 2 |
 | [#355] GH-355 · Migration 007: updated_at across all releases.db tables, so consumers can detect what changed | db pri/sev/app/eff = —/—/—/— · rank 135 | kernel | — | -133 | 2 |
-| [#1296] GH-1296 · factory-primitive launch packets: lanes fail preflight on a stale artifact path or missing Preflight Contract | db pri/sev/app/eff = —/—/—/— · rank 215 | independent | — | -215 | 3 |
+| [#1254] GH-1254 · Declared supervision and cache-warmth dispatch | db pri/sev/app/eff = —/—/—/— · rank 200 | independent | — | -200 | 3 |
 
 `*` = zone inferred from keywords (no preflight contract write-set to prove it).
 
@@ -65,14 +65,14 @@ Every input is shown so the ordering is verifiable by hand (lower score = earlie
 - #1295 → suggested_branch: `marathon/gh-1295-injected-text-in-briefs-2026-11-08`
 - #670 → suggested_branch: `marathon/gh-670-claude-reviewer-2026-11-08`
 
-**Wave 2:** #1254 ‖ #355
-
-- #1254 → suggested_branch: `marathon/gh-1254-2026-11-08`
-- #355 → suggested_branch: `marathon/gh-355-updated-at-migration-2026-11-08`
-
-**Wave 3:** #1296
+**Wave 2:** #1296 ‖ #355
 
 - #1296 → suggested_branch: `marathon/gh-1296-launch-lanes-fail-preflight-2026-11-08`
+- #355 → suggested_branch: `marathon/gh-355-updated-at-migration-2026-11-08`
+
+**Wave 3:** #1254
+
+- #1254 → suggested_branch: `marathon/gh-1254-outer-loop-borrow-decl-2026-11-08`
 
 ## Contract seams — pin a contract before launching (GH-5)
 
@@ -82,7 +82,7 @@ an interface (a not-yet-built module/schema). xyz is not for tightly-coupled wor
 the other lane's source), or the split can stall when the consumer waits on the producer's handoff.
 
 - **Wave 1:** #1295 ‖ #670 share `utils/py/` → pin a contract for that seam.
-- **Wave 2:** #1254 ‖ #355 share `utils/py/` → pin a contract for that seam.
+- **Wave 2:** #1296 ‖ #355 share `utils/py/` → pin a contract for that seam.
 
 ## Held / flagged — excluded from active waves
 
@@ -95,8 +95,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #492 GH-492 · Nothing reconciles roadmap_items against issues closed outside a merged PR — `already-landed`
 - #1075 GH-1075 · merge-cleanup batch record keeps stale per-PR file lists on resume — `already-closed`
 - #1087 GH-1087 · docs: restore spacing in the GH-1051 work record — `already-closed`
-- #1287 GH-1287 · fuzz supervisor no-new-signal stop never fires — `already-closed`
-- #1288 GH-1288 · factory-primitive tick fails under the campaign sandbox profile — `already-closed`
 
 ### 🔧 Reconcile — undocumented partial completion
 - #14 GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files — `partial`
