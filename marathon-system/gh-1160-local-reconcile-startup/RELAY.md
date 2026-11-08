@@ -1,5 +1,5 @@
 # Marathon Phase gh-1160-local-reconcile-startup
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH-1160-LOCAL-RECONCILE-STARTUP-TURN-2 builder=codex reviewer=agy round-cap=5 -->
@@ -120,3 +120,29 @@ APPEND-ONLY FILE (GH-529 attestation): add your block at the END and never delet
 - Handoff bookkeeping: the first update command stopped on an overbroad occurrence-count assertion before writing; the required routing update and this block were then written. The env-pinned tick release to agy succeeded.
 
 handing off to agy — agy, take your turn.
+
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+- **Sweep & Pre-existing Defect Audit:** Read `AGENTS.md` (511 lines), `ROUTER.md` (230 lines), `test/gh527-destructive-git-guard.sh` (153 lines), `test/gh649-pdda-migration.sh` (165 lines), `test/hq.sh` (131 lines), and `test/pdda-install-startup-docs.sh` (293 lines) in full. Found no pre-existing defects in `AGENTS.md` or the four scoped test files.
+- **Acceptance Criterion 1 (No startup or router text describes automatic hosted reconciliation after a development merge):**
+  - `AGENTS.md:73-78` states: *"After a PR merges into `development`, merge-cleanup reconciles docs, ledger, and views (`LEADERBOARD.md`) locally via `python3 utils/py/wave_reconcile.py --pr <N>`. Task branches do not commit routine views. The local writer fails closed if a hosted reconciler is in-flight (pass `--force-local-reconcile` to override). The hosted `wave-reconcile.yml` is dispatch-only and runs before promotion to qualify the development tip; see **Promotion** below. `pdda.sh issue-doc-sync` is the deterministic drift detector when in doubt."*
+  - Verified against `.github/workflows/wave-reconcile.yml:9-10` (`on: workflow_dispatch:`), `utils/py/wave_reconcile.py:84-150` (`check_hosted_reconciler_in_flight`), `AGENTS.md:235-241`, `AGENTS.md:458-472`, and `ROUTER.md:118-122`.
+  - Non-mutating probe for both preflight `fix_probes` patterns across `AGENTS.md` and `ROUTER.md`:
+    - Command: `python3 -c 'import pathlib, re; [print(f"{p} | {pat} -> count={len(re.findall(re.escape(pat), pathlib.Path(p).read_text()))}") for p in ("AGENTS.md", "ROUTER.md") for pat in ("automatically reconciles docs, ledger, and views", "serves as an emergency fallback")]'`
+    - Exit status: `0`
+    - Decisive output:
+      ```text
+      AGENTS.md | automatically reconciles docs, ledger, and views -> count=0
+      AGENTS.md | serves as an emergency fallback -> count=0
+      ROUTER.md | automatically reconciles docs, ledger, and views -> count=0
+      ROUTER.md | serves as an emergency fallback -> count=0
+      ```
+- **Acceptance Criterion 2 (`pdda.sh run` is clean):**
+  - Graded `[Unverified — needs clone run]` for the authoritative post-turn harness gate per reviewer constraints; non-mutating check with activity log and state cache redirected to `$TMPDIR` (`PDDA_ACTIVITY_LOG="$TMPDIR/act.jsonl" PDDA_GH_STATE_CACHE="$TMPDIR/gh.tsv" PDDA_ISSUE_SYNC_SOURCE=cache bash utils/pdda/pdda.sh run`) exited `0` with `errors=0` across all 11 deterministic checks (`PDDA run complete: no errors, 646 warning(s) to review`).
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
