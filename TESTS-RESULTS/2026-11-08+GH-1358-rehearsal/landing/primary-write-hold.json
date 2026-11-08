@@ -8,5 +8,7 @@
   "lock": "owned lock directory preserved outside primary; primary lock released for peer",
   "result_redirect": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/held-gh1254-final-result",
   "warning": "Do not SIGCONT supervisor automatically: checkpoint in-memory base980afdb13 must be reconciled against peer changes before primary publication",
-  "verified_at": "2026-11-08T19:03:01.960196+00:00"
+  "verified_at": "2026-11-08T19:03:01.960196+00:00",
+  "future_wakes_disabled_at": "2026-11-08T19:04:52.635196+00:00",
+  "observer": "disabled/unloaded at explicitprimaryhold closeout; priorlogs preserved"
 }

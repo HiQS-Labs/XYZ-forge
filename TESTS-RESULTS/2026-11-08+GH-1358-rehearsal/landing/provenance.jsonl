@@ -65,3 +65,8 @@
 {"recorded_at": "2026-11-08T19:04:01.123738+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/primary-write-hold.json", "sha256": "9689a16e4435ee656d53111e6c8401e8bfe21dde6b6f9bf666546a5352903059"}
 {"recorded_at": "2026-11-08T19:04:01.123896+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/PRIMARY-HOLD.md", "sha256": "52240f71e29fc455985701d55d5735abed3510f4636b368a208ef9674a85530b"}
 {"recorded_at": "2026-11-08T19:04:01.123920+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/completed-item-closeouts.json", "sha256": "4775bfd0ccd0755789e2cc66015d1151a210821b14b5bc3cbabb723f16a0c9ec"}
+{"recorded_at": "2026-11-08T19:05:51.064746+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/clock-final-gate.stdout.log", "sha256": "129e9dc1d408e43cb6b80f42a78561a200a93b266e387a235fc491af1cad7cad"}
+{"recorded_at": "2026-11-08T19:05:51.064939+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/clock-final-gate.stderr.log", "sha256": "83aa3ded4aa8bb8a3cc5c43865e21ed1a4dad37c7d3ed18b91d77fbea388764b"}
+{"recorded_at": "2026-11-08T19:05:51.064981+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/primary-write-hold.json", "sha256": "f2146f46239677633b6091b83b6994a1fa8434f5b54c5648624ef13799cdf8bb"}
+{"recorded_at": "2026-11-08T19:05:51.065006+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/clock-final-result.json", "sha256": "9997616be15806c692a2d5ad8cda8786294fed352652d13741106637b0fb32db"}
+{"recorded_at": "2026-11-08T19:05:51.065029+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/FINAL-BOUNDARY.md", "sha256": "1e47db81a0f1875829cb8d5fd588a2c703308aacf2eba6201de8fe109def503b"}
