@@ -35,3 +35,7 @@ The November 7 LTVera-Pandas PR #960 incident reached an actual retirement invoc
 The two scanner fixes address false preservation only. They do not prove other producers omit cleanup. #748 still owns retained landing clones. Installed drift must be resolved through Skills Army HQ after a reviewed source merge; no deployed payload was edited. Periodic reconciliation remains unjustified until event-driven corrections leave measured residual misses. Unchanged scans are not additional incidents.
 
 Remaining #1359 work: source actual terminal-job receipts for Express/Jog/Marathon, establish T3 ownership/API, inspect safely bounded device inventory with dispositions, and assess residual misses. This PR does not close #1359 or activate its proposed pilot. Workspace-vs-Trash counts: no research-driven retirement or purge performed.
+
+## Merge evidence
+
+- PR #1364 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

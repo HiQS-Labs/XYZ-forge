@@ -1,8 +1,8 @@
 ---
 title: merge-cleanup deployed copy never finds tick, so published retirement preserves every checkout
-status: Active (shared plan GH-1247)
+status: Complete
 created: 2026-11-07
-updated: 2026-11-07
+updated: 2026-11-08
 owner: noelsaw1
 gh_issue: 1362
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1362

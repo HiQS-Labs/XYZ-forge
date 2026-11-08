@@ -1,8 +1,8 @@
 ---
 title: merge-cleanup treats a local tag that origin already holds as unpushed, so published task clones are never retired
-status: Active
+status: Complete
 created: 2026-10-28
-updated: 2026-11-07
+updated: 2026-11-08
 owner: noelsaw1
 gh_issue: 1247
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1247
