@@ -38,7 +38,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured via HQ (`/hq park`) for project **XYZ-forge** → repo `XYZ-forge`. The GitHub issue is the signal stream; this doc is the in-repo capture and back-reference. | Fill in Why/Key Concepts, correct the provisional ratings above, and run a Phase 0 explore pass before promoting to `2-WORKING`. |
+| PR #1324 repairs malformed contract input, path comparison, and selected capture freshness. Current-wave paired replay and independent implementation QA are retained in `TESTS-RESULTS/2026-11-08+GH-1296-review/`; full `validate.sh` passed 409/409 on reviewed runtime `a0f65126`. | Original #1279 frozen backlog is unavailable after bounded search and operator confirmation. Exact historical replay remains incomplete; current-wave evidence does not replace it. Leave #1296 open for outer inspection and final gate/publication. |
 
 ## Idea
 

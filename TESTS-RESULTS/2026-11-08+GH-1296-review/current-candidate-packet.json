@@ -1,0 +1,25 @@
+{
+  "wave": 1,
+  "dir": "/Users/noelsaw/Documents/GitHub/XYZ-forge-gh1296-packet-2026-11-07/temp/factory-primitive/gh1296-current-paired/instances/C/out/launch-packet/wave-1",
+  "emitted": [
+    1295,
+    670,
+    1204,
+    446
+  ],
+  "skipped": [],
+  "not_launchable": {
+    "1295": [
+      "no frozen capture identity; create a new snapshot and proposal before packet"
+    ],
+    "670": [
+      "no frozen capture identity; create a new snapshot and proposal before packet"
+    ],
+    "1204": [
+      "no Preflight Contract (the capture doc has none, or there is no capture doc)"
+    ],
+    "446": [
+      "no Preflight Contract (the capture doc has none, or there is no capture doc)"
+    ]
+  }
+}
