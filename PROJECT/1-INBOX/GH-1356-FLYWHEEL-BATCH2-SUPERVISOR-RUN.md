@@ -98,3 +98,7 @@ pri 90 / sev 80 / appeal 85 / effort 50 (validates core product flywheel on live
 ## Merge evidence
 
 - PR #1361 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Merge evidence
+
+- PR #1324 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

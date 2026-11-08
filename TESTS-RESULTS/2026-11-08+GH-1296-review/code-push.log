@@ -1,0 +1,3 @@
+pre-push: reusing the passing full-gate receipt for a0f65126 (validate.sh, scope full) — the full gate already ran on this exact commit.
+To https://github.com/HiQS-Labs/XYZ-forge.git
+   08ff07de..a0f65126  HEAD -> fix/gh1296-packet-launchable-flag
