@@ -26,3 +26,7 @@ Primary reservation was released. Closed #1287/#1288 views were reconciled using
 ## Final hosted-review repair
 
 The artifacts-only contract returned no blockers on `24278437` despite preflight requiring target, gate and fix_probes. Required-field and new-artifact probe checks now reject it. `required-fields-controls.json` records that witnessed red control and nine candidate cases, including valid existing/new artifacts. This is focused helper evidence; prior full-gate and current-wave records retain their original revision coverage. Final changed-runtime validation remains required.
+
+### Raw preflight-output format
+
+`current-dryrun/preflight-1204.json` and `preflight-446.json` are retained verbatim tool stdout containing contract errors, not JSON documents. The `.json` suffix was produced by the existing stageb_dryrun collector; read these as text. They are not evidence of successful JSON extraction or ready lanes. Renaming/reformatting them would change the retained raw run, so the naming limitation is documented here; collector naming can be corrected separately under the still-open #1296.
