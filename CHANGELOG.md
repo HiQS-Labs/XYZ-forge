@@ -27,6 +27,15 @@
 - Lanes with missing contracts or artifacts remain visible with reasons and without launch commands. Required contract fields and new-artifact probes are checked before offering commands. Packet checks now handle malformed contract paths without aborting the wave, preserve preflight artifact exemptions, and reject changed selected capture identities before staging. Parent traversal and missing frozen identities are explicitly not launchable.
 - Manual red/green checks, a current-wave paired replay, and fresh dry-run output support the implementation; independent Codex QA approved candidate `a0f65126`. The original historical backlog is unavailable, so exact #1279 replay and issue-wide acceptance remain incomplete. No dispatch or issue closure. Full `validate.sh` passed 409/409 on `a0f65126`; normal code push reused its exact-SHA receipt.
 
+## 2026-11-01 — GH-1317 bounded actor repair
+
+- Separate Codex actor repaired both adapter defects in one attempt: configured probes now use the shared due predicate; v2/v3 prompt text must match its frozen hash before dispatch. No-call/refusal results use existing unbilled settlement.
+- Frozen real-CLI checks: base fails 3 defect cases/passes 4 controls; candidate passes all 7; independently removing prompt enforcement makes both prompt-mutation cases fail again. Existing worker checks: 43 pass/0 fail. Evidence and process deviations: `TESTS-RESULTS/2026-11-01+GH-1317/pilot/`. Final independent review and publication qualification remain separate.
+
+## 2026-11-01 — GH-1317 Codex adapter repair pilot intake
+
+- Opened separate issue/capture and queued, rated PRS intake for due-probe and frozen-prompt repairs through a bounded actor–verifier pilot. Refreshed current source; #1311 already owns the positive reservation-cap fix. Existing #1314/PR #1316 remain unchanged and are references, not prerequisites.
+- Draft preparation only: all eight proposed CLI verification cases await individual operator approval; no runtime changes, oracle implementation, actor repair, mutation, new tests or paid calls. Plan/final independent review and runtime verification remain pending. Documentation/intake checks are retained under `TESTS-RESULTS/2026-11-01+GH-1317/`.
 ## 2026-11-07 — GH-1365 proportional Jog closeout
 
 - Jog post-merge completion records merged delivery without requiring exact approval ancestry. Original receipt validation, publication checks, merge identity/reachability and reconciliation remain; landing evidence distinguishes review, gate and delivered versions. GUIDING-PRINCIPLES and AGENTS require rigor proportionate to concrete risk and operational burden.

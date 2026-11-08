@@ -112,6 +112,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1258 GH-1258 · idea skill (was file-issue): recon + debug-mantra plan in the GitHub issue at filing time, so issues enter the flywheel admissible (dogfood plan; ledger row at pickup) — `needs-contract`
 - #1366 GH-1366 · Proportionate review wording — `needs-doc`
 - #1358 GH-1358 · Durable factory qualification — `needs-contract`
+- #1317 GH-1317 · Codex adapter repair pilot: due probes and frozen prompts — `needs-contract`
 - #1359 GH-1359 · Clone retirement lifecycle research — `needs-contract`
 - #223 GH-223 — pre-push gate push double-applies through ref lock — `needs-contract`
 - #75 GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view — `needs-doc`
@@ -169,9 +170,11 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1298 GH-1298 · Factory flywheel arc: Phase 0 spike (#1175), planning soak (#1279) and ATE campaign (#1280): what each showed, where they converge, next experiment — `needs-contract`
 - #1332 GH-1332 · jog: promotion repoint lands in the primary's ledger, and retry-gate refuses a relay-receipt-only tail — `needs-contract`
 - #1344 GH-1344 · GH-1340 item 1: finishing work (Tasks 10, 9, 8, 7) — `needs-doc`
+- #1314 GH-1314 · Explore independent verification loops: manual GH-1284 calibration — `needs-contract`
 - #1353 Next-gen flywheel recommendations: instrument the loop and close the no-row discovery seam — `unrated`
 - #1360 Task-agnostic supervisor with LTVera monitor pilot — `needs-contract`
 - #544 Local-gate-before-push: retire hosted CI for the private phase, enforce the gate at the push boundary — `unrated`
+- #1376 Add flywheel skill for adaptive Jog orchestration — `needs-doc`
 - #1375 Merge batch 2026-11-08 — HiQS-Labs-XYZ-forge — #1316, #1318 — `needs-doc`
 - #1374 Merge batch 2026-11-08 — HiQS-Labs-XYZ-forge — #1370, #1371 — `needs-doc`
 - #1352 Radar 2026-11-07: work is landing, but unreliable handoffs still require human rescue — `needs-doc`
@@ -182,9 +185,7 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #1325 Umbrella: script the development → main promotion and auto-record the deferred sweep verdict (no per-batch dispatch) — `needs-doc`
 - #1323 Merge batch 2026-11-03 — HiQS-Labs-XYZ-forge — #1320, #1321 — `needs-doc`
 - #1322 AGENTS.md: auto-fix ladder — when an agent may enable PR Auto-fix without asking — `needs-doc`
-- #1317 Codex adapter repair pilot: due probes and frozen prompts through an actor–verifier loop — `needs-doc`
 - #1315 skills-army-hq: --migrate-legacy preview passes but apply refuses 'Invalid retirement' for an unadopted skill — `needs-doc`
-- #1314 Explore independent verification loops: manual GH-1284 calibration — `needs-doc`
 - #1313 Merge batch 2026-11-01 — HiQS-Labs-XYZ-forge — #1311, #1312 — `needs-doc`
 - #1310 Publish a per-device skills health verdict via Git Pulse (Phase 0 spike first; DeployHQ dropped) — `needs-doc`
 - #1297 Marathon: harness recap hooks and HQ deployment — `needs-doc`
@@ -311,7 +312,6 @@ the other lane's source), or the split can stall when the consumer waits on the 
 - #551 Relocated harness telemetry breaks the in-repo evidence chain: site_build bakes a frozen grades table, and `model add` stops editing the curated registry — `needs-doc`
 - #512 test/gh57-releases-fuzz.sh: union_dump() helper leaves a duplicate 'generation' settings row, tripping its own refusal rule — `needs-doc`
 - #507 test/marathon-drive.sh's vendored-fixture case pollutes the real clone when nested inside a live marathon-drive.sh process — `needs-doc`
-- #497 MARATHON umbrella: make the roadmap ledger's state trustworthy — write path, sweep, and change detection — `needs-doc`
 
 ## How to fire a lane
 
