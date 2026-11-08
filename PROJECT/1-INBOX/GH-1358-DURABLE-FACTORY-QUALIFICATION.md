@@ -187,3 +187,6 @@ retain full qualification's off-host/detection gaps, never call awake-only evide
 Review clock plan against this concrete defect/envelope and proportionality. No broad
 architecture, new tests, host-power changes, paid access or offhost deployment. Manual controls
 are verification, not deployed autonomy. Any new PR remains unmerged pending separate approval.
+## Merge evidence
+
+- PR #1370 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

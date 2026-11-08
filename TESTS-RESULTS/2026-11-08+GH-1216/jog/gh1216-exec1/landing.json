@@ -1,0 +1,18 @@
+{
+  "issue": 1216,
+  "queue_gid": "jog-01M6XAWG3E7Q7SD0HVKD8ZM9JN",
+  "execution_id": "gh1216-exec1",
+  "pr_number": 1373,
+  "merged_sha": "bf18d49a34fd4c993cb785aca354f889e68ac29d",
+  "approved_head_sha": "7e4d303ca7a4b7e1bb8d2bbf62912c36a87639a0",
+  "landed_head_sha": "d8a9167c24b47f55663f4d3bf718e455f287a4aa",
+  "reviewed_head_sha": "a821fc55fd2a3a55916037972cc50fb32046a65b",
+  "reviewed_candidate_sha": "7e4d303ca7a4b7e1bb8d2bbf62912c36a87639a0",
+  "tested_head_sha": "7e4d303ca7a4b7e1bb8d2bbf62912c36a87639a0",
+  "completion_policy": "merged-pr",
+  "hosted_reconcile": null,
+  "local_reconcile": {
+    "roadmap_gid": "rmi-01M6XAWFGNSCQMEF955M16CT28",
+    "raw_text": "- **GH-1216 \u00b7 Normalize named Aider OpenRouter profile exports** \u2705 **SHIPPED 2026-11-08 (PR #1373)** \u2014 [GH-1216-AIDER-OPENROUTER-PROFILE.md](PROJECT/3-COMPLETED/GH-1216-AIDER-OPENROUTER-PROFILE.md) \u00b7 [#1216](https://github.com/HiQS-Labs/XYZ-forge/issues/1216)"
+  }
+}

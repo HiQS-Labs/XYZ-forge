@@ -2,7 +2,7 @@
 gh_issue: 1295
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1295
 title: "factory-primitive plan-draft: injected instruction text in an issue body is carried into briefs and launch packets"
-status: Proposed (1-INBOX — not yet active)
+status: Active
 created: 2026-10-31
 owner: noelsaw1
 doc_type: feedback
@@ -20,6 +20,7 @@ related:
   - #1294
 goal: >
   Issue text reaches briefs and launch packets only as quoted data that a builder prompt cannot read as an instruction; a recorded manual round trip on the injection canaries shows it.
+updated: 2026-11-08
 ---
 
 ## Key concepts
@@ -94,3 +95,33 @@ pri 60 / sev 60 / appeal 50 / effort 70 (deferred by operator until factory-prim
 ## Merge evidence
 
 - PR #1324 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
+
+## Acceptance
+
+Copied from the live issue's explicit inline Acceptance paragraph (2026-11-08).
+The issue does have criteria despite the older preflight heading-only warning.
+
+- [ ] The six override canaries are held or fenced in both the proposal and emitted brief.md.
+- [ ] Ordinary issues render unchanged.
+- [ ] Verify with the recorded round-trip; no new test file or suite (GH-831).
+
+## Bounded retry implementation decision
+
+Use the issue's existing renderer-fencing option, restricted to recognized
+instruction-override text so ordinary briefs stay byte-for-byte unchanged. Keep
+the rule small in harness.py; do not build a general classifier or scan the whole
+backlog. The six recorded inputs are in
+utils/py/factory_primitive/scenarios/gh1279-canaries.jsonl; prior outputs under
+TESTS-RESULTS/2026-10-31+GH-1279-stageb/window/rules/. Existing missing-scope or
+needs-recon holds remain holds. Preserve sourced text as data; use a fence that
+cannot be closed by embedded backticks. A wrapper does not guarantee model safety.
+
+This is the second and final allowed Marathon lane attempt (cap2, prior fire
+retained), with builder codex/reviewer agy, worker wall/idle900 seconds and relay
+round cap5 unchanged. No force, budget reset, new suite or automated merge.
+The first Agy attempt spent its cap without a patch; do not repeat broad regex
+tuning across unrelated documents. Verification scratch belongs outside the tree.
+
+## Merge evidence
+
+- PR #1371 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).

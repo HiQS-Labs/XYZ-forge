@@ -393,11 +393,17 @@ def emit_env(res: Dict[str, Any], xyz_root: str) -> Tuple[str, int]:
         return ("", 1)
 
     spec = lane_map[harness]
+    model = res["model"]
+    # GH-1216: Aider needs the LiteLLM gateway prefix at dispatch time. Keep the
+    # stored profile/JSON and explicit tier-1 paths exactly as the operator wrote them.
+    if (res["tier"] == 2 and harness == "aider" and res["gateway"] == "openrouter"
+            and not model.startswith("openrouter/")):
+        model = "openrouter/" + model
     lines = [
         f"# resolve-profile: {res['query']!r} -> tier {res['tier']}"
         + (f" (profile {res['profile']!r})" if res["profile"] else ""),
         f"export {spec['agent_var']}={_sh_quote(harness)}",
-        f"export {spec['model_var']}={_sh_quote(res['model'])}",
+        f"export {spec['model_var']}={_sh_quote(model)}",
     ]
 
     # The gateway. Omitted for a self-routed harness on purpose: exporting the harness's own name
