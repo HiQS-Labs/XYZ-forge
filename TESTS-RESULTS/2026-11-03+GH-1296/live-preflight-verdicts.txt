@@ -1,0 +1,9 @@
+#670 live preflight rc=0 ready= True
+#1267 live preflight rc=0 ready= True
+#1265 live preflight rc=0 ready= True
+#1266 live preflight rc=0 ready= True
+#1204 live preflight rc=3: no '## ... Preflight Contract' heading in  (no Preflight Contract heading)
+#216 live preflight rc=3: no '## ... Preflight Contract' heading in  (no Preflight Contract heading)
+#446 live preflight rc=3: no '## ... Preflight Contract' heading in  (no Preflight Contract heading)
+#1265 moved-path control (GH-1265-moved-path-control.md) live preflight rc=5 ready=False: artifact path not found at target.ref: skills/consult/SKILL.md
+#1175 #1317 #1315: no capture doc in this checkout; live preflight not run

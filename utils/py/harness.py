@@ -1362,6 +1362,56 @@ def _accepted_briefs(conn) -> list[str]:
         "WHERE i.tool='plan-draft' AND r.status='ok' AND t.status='completed' ORDER BY t.slot")]
 
 
+def _preflight_blockers(rec: dict, files: set) -> list[str]:
+    """The two refusals swarm-preflight gave #1279's launch lanes, checked read-only (GH-1296): no
+    Preflight Contract, or a contract artifact that is not in the frozen file list
+    (artifacts_new are the lane's own creations, as in preflight)."""
+    contract = rec.get("contract")
+    if not contract:
+        return ["no Preflight Contract (the capture doc has none, or there is no capture doc)"]
+    if not isinstance(contract, dict):
+        return ["Preflight Contract must be an object"]
+    target = contract.get("target")
+    if not isinstance(target, dict):
+        return ["Preflight Contract missing required field: target"]
+    for field in ("repo", "ref"):
+        if not isinstance(target.get(field), str):
+            return [f"Preflight Contract missing required field: target.{field}"]
+    if not isinstance(contract.get("gate"), str):
+        return ["Preflight Contract missing required field: gate"]
+    probes = contract.get("fix_probes")
+    if not isinstance(probes, list) or not probes:
+        return ["Preflight Contract needs at least one fix_probes entry"]
+    artifacts = contract.get("artifacts")
+    raw_new = contract.get("artifacts_new")
+    if raw_new is None:
+        raw_new = []
+    if not isinstance(artifacts, list) or not artifacts or not all(isinstance(a, str) for a in artifacts):
+        return ["artifacts must be a nonempty array of path strings"]
+    if not isinstance(raw_new, list) or not all(isinstance(a, str) for a in raw_new):
+        return ["artifacts_new must be an array of path strings"]
+    if any(a not in artifacts for a in raw_new):
+        return ["artifacts_new entry not present in artifacts[]"]
+    for artifact in raw_new:
+        if not any(isinstance(p, dict) and p.get("type") == "path_absent"
+                   and p.get("path") == artifact for p in probes):
+            return [f"artifacts_new entry has no matching path_absent probe: {artifact}"]
+    blockers = []
+    for artifact in artifacts:
+        a = artifact.strip()
+        if not a or a in raw_new:
+            continue
+        # Only remove harmless dot components; parent traversal needs filesystem evidence.
+        if ".." in a.split("/"):
+            blockers.append(f"artifact parent traversal requires preflight verification: {a}")
+            continue
+        a = os.path.normpath(a)
+        if a not in files and not any(f.startswith(a.rstrip("/") + "/") for f in files):
+            blockers.append(f"artifact path not found at target.ref: {artifact}")
+    return blockers
+
+
+
 def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
     """GH-1270: one MARATHON.yaml + brief per lane of provisional wave `wave`, under the run root only.
     Copying a lane folder into PROJECT/2-WORKING/ is the operator's approval; nothing is launched."""
@@ -1391,7 +1441,17 @@ def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
     for p in brief_paths:
         b = json.loads(Path(p).read_text(encoding="utf-8"))
         briefs[b["issue"]] = (b, Path(p).with_suffix(".md"))
+    manifest = json.loads((instance / "backlog" / "manifest.json").read_text(encoding="utf-8"))
     records = {r["gh"]: r for r in _planner(instance / "backlog", "stub").compute()["deduped"] if r["gh"] is not None}
+    requests = {r["issue"]: r for r in manifest["requests"].values()}
+    for lane in waves[wave - 1]:
+        rec, req = records.get(lane["issue"], {}), requests.get(lane["issue"])
+        if req:
+            doc = REPO_ROOT / rec["docRel"] if rec.get("docRel") else None
+            current_sha = hashlib.sha256(doc.read_bytes()).hexdigest() if doc and doc.is_file() else None
+            if rec.get("docRel") != req.get("doc_path") or current_sha != req.get("doc_sha256"):
+                raise ValueError("selected capture doc changed since init; create a new snapshot and proposal before packet")
+    files = _file_index((instance / "backlog" / "base-files.txt").read_text(encoding="utf-8"))["files"]
     dest = out.parent / "launch-packet" / f"wave-{wave}"
     staging = dest.with_name(dest.name + ".tmp")
     shutil.rmtree(staging, ignore_errors=True)
@@ -1428,7 +1488,9 @@ def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
             shutil.rmtree(lane_dir)
             skipped.append({"issue": n, "reason": f"bin/marathon-yaml rejected it: {check.stderr.strip()[:160]}"})
             continue
-        emitted.append({"issue": n, "folder": slug, "provisional": lane["provisional"]})
+        emitted.append({"issue": n, "folder": slug, "provisional": lane["provisional"],
+                        "blockers": _preflight_blockers(rec, files) if n in requests else
+                        ["no frozen capture identity; create a new snapshot and proposal before packet"]})
     builder = "agy" if reviewer == "codex" else "codex"  # marathon-drive refuses builder == reviewer
     readme = [f"# Launch packet: wave {wave} ({proposal['tick_id']})", "", f"> {DRAFT_LABEL}", "",
               "Nothing here has been launched. Each folder is one marathon for one lane; lanes in a wave are",
@@ -1437,15 +1499,19 @@ def make_packet(instance: Path, wave: int, reviewer: str) -> dict:
               f"The builder must differ from the reviewer (`{reviewer}`), so the commands pass `--builder {builder}`.",
               "", "## Lanes", ""]
     for e in emitted:
-        readme += [f"- #{e['issue']}" + (" (provisional)" if e["provisional"] else "") + f": `{e['folder']}/`",
-                   f"  - `cp -R {e['folder']} <clone>/PROJECT/2-WORKING/`",
+        readme += [f"- #{e['issue']}" + (" (provisional)" if e["provisional"] else "") + f": `{e['folder']}/`"]
+        if e["blockers"]:
+            readme += ["  - **Not launchable yet** (preflight would refuse it): " + "; ".join(e["blockers"])]
+            continue
+        readme += [f"  - `cp -R {e['folder']} <clone>/PROJECT/2-WORKING/`",
                    f"  - `relay-automation/marathon.sh --plan PROJECT/2-WORKING/{e['folder']}/MARATHON.yaml "
                    f"--builder {builder} --dry-run`"]
     readme += ["", "## Skipped", ""] + ([f"- #{s['issue']}: {s['reason']}" for s in skipped] or ["- none"])
     (staging / "README.md").write_text("\n".join(readme) + "\n", encoding="utf-8")
     shutil.rmtree(dest, ignore_errors=True)
     os.replace(staging, dest)
-    return {"wave": wave, "dir": str(dest), "emitted": [e["issue"] for e in emitted], "skipped": skipped}
+    return {"wave": wave, "dir": str(dest), "emitted": [e["issue"] for e in emitted], "skipped": skipped,
+            "not_launchable": {e["issue"]: e["blockers"] for e in emitted if e["blockers"]}}
 
 
 def _run_tool(instance: Path, tick_id: str, decision: dict, items: list[dict], fault: str,
