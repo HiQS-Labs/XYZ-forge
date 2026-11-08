@@ -44,4 +44,4 @@ Codex final review through `relay-xyz` returned **Approved** in `relay-system/20
 
 ## Current state and next
 
-Source, consumer smoke, classified documentation gate and final independent QA pass. Publish through the normal pre-push gate and open the development PR, then verify its exact head and hosted checks. No deployment is requested or performed; Skills Army HQ status/list could not start because the resolved collection root `~/git-pulse-sync/Deployed Skills` is absent on this device. Source authoring and PR publication are unaffected.
+Source, consumer smoke, classified documentation gate and final independent QA pass. PR #1378 was published through the normal pre-push documentation gate (GREEN in 70s on `a16d51ca83bfe9ff6dd1bee43871cb2ebeb9c32c`). Hosted CI run `42512720415` completed **success** on that exact head, and GitHub reported the PR CLEAN / MERGEABLE. It remains open awaiting the operator's merge decision. No deployment is requested or performed; Skills Army HQ status/list could not start because the resolved collection root `~/git-pulse-sync/Deployed Skills` is absent on this device.
