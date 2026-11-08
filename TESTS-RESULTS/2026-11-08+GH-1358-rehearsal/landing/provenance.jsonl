@@ -10,3 +10,6 @@
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/stale-landing-result.json", "sha256": "4208f45beee1ef727e3bd420fb05c7c5d4be492280f0f825ce260ca27260f632", "kind": "scheduled real-PR stale-head refusal"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/1372-full-push.log", "sha256": "9f46c9940b058933a81e11b5ee14eff910a3159db48c4207bb67f6e9e7c456d2", "kind": "normal combined-head gate in disposable full clone"}
 {"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/1372-full-receipt.json", "sha256": "b89123b51aa37d37d75a25dc18dcbab802efc9c96c752a6ce14da6607a1c9582", "kind": "normal combined-head gate in disposable full clone"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/landing-next.plist", "sha256": "0b09ccf540aa411b27ac3efac9d995f4aeb6e016789825d0fc2fcbd39da9ff46", "kind": "prelaunch configuration; independent QA pending"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/gh1254-clock-contract.md", "sha256": "5984b5daf06b59c049bc0a1b149af1d47920f658dd59ede1178b4eda01835e25", "kind": "prelaunch configuration; independent QA pending"}
+{"path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/scheduled-landing-next-plan.md", "sha256": "5ecc38fdfd34c46b506f85a177b52205fb46307662cc5136f979faa66949cef2", "kind": "prelaunch configuration; independent QA pending"}

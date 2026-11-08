@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>CODEX_REASONING_EFFORT</key>
+		<string>low</string>
+		<key>LANE_MAX_ATTEMPTS</key>
+		<string>2</string>
+		<key>MARATHON_GATE_WALL_S</key>
+		<string>1800</string>
+		<key>PATH</key>
+		<string>/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin:/Users/noelsaw/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+		<key>PYTHONUNBUFFERED</key>
+		<string>1</string>
+		<key>RELAY_TURN_IDLE_S</key>
+		<string>900</string>
+		<key>RELAY_TURN_TIMEOUT_S</key>
+		<string>900</string>
+	</dict>
+	<key>Label</key>
+	<string>com.xyz-forge.gh1358-live-checkpoint</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/noelsaw/Documents/GitHub/XYZ-forge/temp/gh1365-merge-preserved/venv/bin/python</string>
+		<string>-c</string>
+		<string>import datetime,json,os,subprocess,sys
+from pathlib import Path
+primary=Path('/Users/noelsaw/Documents/GitHub/XYZ-forge');base=Path('/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg');source=Path('/Users/noelsaw/.t3/worktrees/XYZ-forge/t3-59b86d54')
+deadline=datetime.datetime.fromisoformat('2026-11-08T19:06:18+00:00')
+def within():
+ if datetime.datetime.now(datetime.timezone.utc)&gt;=deadline:raise SystemExit('fixed deadline reached; no new work')
+def output(argv,cwd=primary):return subprocess.check_output(argv,cwd=cwd,text=True).strip()
+within()
+cmd=[sys.executable,str(primary/'skills/2-daily/merge-cleanup/scripts/merge_cleanup.py'),'--primary',str(primary),'--root',str(primary/'temp'),'--exclude','/Users/noelsaw','--exclude','/private/var','--exclude','/var','--prs','1373@3a7b3d8aa09f5129ca1c976320c7438ed785caa8','--resume','--execute']
+rc=subprocess.run(cmd,cwd=primary).returncode
+if rc not in (0,4):raise SystemExit(rc)
+pr=json.loads(output(['gh','pr','view','1373','--repo','HiQS-Labs/XYZ-forge','--json','state,headRefOid,mergeCommit']))
+assert pr['state']=='MERGED' and pr['headRefOid']=='3a7b3d8aa09f5129ca1c976320c7438ed785caa8',pr
+cli=[sys.executable,str(source/'utils/py/releases_app.py'),'--root',str(primary)]
+queue=json.loads(output(cli+['jog','list','--all','--json']))
+assert any(r['gh_number']==1216 and r['status']=='completed' for r in queue),queue
+assert [r['gh_number'] for r in queue if r['status'] in ('pending','running')]==[1254],queue
+assert not output(['git','status','--porcelain'])
+assert output(['git','rev-parse','HEAD'])==output(['git','ls-remote','origin','refs/heads/development']).split()[0]
+within()
+runner=base/'runner';sys.path.insert(0,str(source/'utils/py'))
+from jog_run import JogSupervisorLock
+lock=JogSupervisorLock(str(runner));lock.acquire()
+try:
+ assert not output(['git','status','--porcelain'],runner)
+ assert output(['git','symbolic-ref','--short','HEAD'],runner)=='development'
+ subprocess.run(['git','fetch','origin','development'],cwd=runner,check=True)
+ subprocess.run(['git','merge','--no-edit','origin/development'],cwd=runner,check=True)
+ subprocess.run(['git','diff','--exit-code','origin/development','HEAD','--','releases.db','releases.sql'],cwd=runner,check=True)
+finally:lock.release()
+within()
+print(json.dumps({'transition':'approved-merge-reconcile-land-to-next','merge':pr['mergeCommit'],'next_issue':1254,'mode':'scheduled; prior admission assisted'}),flush=True)
+argv=cli+['jog','run','--max-tasks','1','--builder','codex','--reviewer','agy','--target-root',str(runner),'--checkpoint-root',str(base/'publisher')]
+os.execv(sys.executable,argv)
+</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/landing-next.stderr.log</string>
+	<key>StandardOutPath</key>
+	<string>/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/gh1358-live-deployment-dr61f_tg/landing-next.stdout.log</string>
+	<key>WorkingDirectory</key>
+	<string>/Users/noelsaw/Documents/GitHub/XYZ-forge</string>
+</dict>
+</plist>
