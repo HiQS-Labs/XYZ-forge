@@ -13,6 +13,11 @@ effort: 1
 phases: 1
 goal: Startup instructions match the existing local reconciliation and dispatch-only promotion workflow.
 ---
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Promoted to active working contract via jog | Execute implementation and verify probes |
 
 # GH1160 — correct startup reconciliation instructions
 
