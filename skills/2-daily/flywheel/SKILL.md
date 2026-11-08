@@ -96,7 +96,9 @@ campaigns' policies.
    a surgical plan or double-relay QA is needed, use
    [start-task](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/start-task/SKILL.md).
    Reuse its resume reconciliation instead of creating duplicate issues, clones,
-   branches or ledger rows.
+   branches or ledger rows. If start-task or existing state already supplies a
+   verified ready PR, go directly to step 6 for approval and landing; do not send
+   that issue back through Jog for another build.
 2. **Choose the existing execution engine.** Use
    [jog](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/2-daily/jog/SKILL.md)
    for immediate serial work. Use
@@ -104,13 +106,16 @@ campaigns' policies.
    only for genuinely marathon-shaped work that needs its preparation, lanes and dry-run.
    Marathon preparation never authorizes firing. A single task does not need a new
    marathon, queue or parallel executor.
-3. **Ready and dispatch through the owner.** Jog owns pickup-time ledger registration,
+3. **Ready and dispatch through the selected owner.** For a prepared multi-lane
+   marathon, retain start-marathon ownership and hand off to `/pre-marathon` only
+   after the operator confirms the exact dry-run-approved plan and order. Do not
+   route that arc into serial Jog dispatch. For the Jog route, Jog owns pickup-time ledger registration,
    admission, the primary writer, preflight, the driver lock and the separate full-clone
    runner. Preserve its explicit builder/reviewer split and existing attempt limits.
    Formal work verifies the selected deployment and observer before dispatch; setup and
    repair work fixes missing connections under the ladder instead of merely reporting
    them. Never improvise relay or Marathon driver invocations outside their skills.
-4. **Execute and independently review.** Let Jog and its Marathon executor own build
+4. **Execute and independently review.** Let the selected engine own build
    attempts, branches, gates, receipts and PR identity. Use
    [relay-xyz](https://github.com/HiQS-Labs/XYZ-forge/blob/development/skills/1-hourly/relay-xyz/SKILL.md)
    for required independent plan/final review and its locator, containment and receipt

@@ -40,7 +40,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| PR #1378 is open against `development`; final documentation push gate and hosted CI run `42512720415` passed on `a16d51ca83bfe9ff6dd1bee43871cb2ebeb9c32c`. Plan/final Codex QA and consumer smoke are Approved/pass; evidence is committed. | Await the operator's per-PR merge decision. Do not merge or deploy automatically. |
+| PR #1378 base conflict resolved at `29f41026`; normal documentation push gate passed. Direct takeover review corrected ready-PR and marathon routing; see TESTS-RESULTS/2026-11-08+GH-1376/takeover-review.md. Earlier independent QA receipts cover their recorded revisions. Final correction publication/checks are separate. | Await the operator's per-PR merge decision. Do not merge or deploy automatically. |
 
 ## Idea
 

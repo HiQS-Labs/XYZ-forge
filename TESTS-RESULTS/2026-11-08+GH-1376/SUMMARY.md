@@ -44,4 +44,8 @@ Codex final review through `relay-xyz` returned **Approved** in `relay-system/20
 
 ## Current state and next
 
-Source, consumer smoke, classified documentation gate and final independent QA pass. PR #1378 was published through the normal pre-push documentation gate (GREEN in 70s on `a16d51ca83bfe9ff6dd1bee43871cb2ebeb9c32c`). Hosted CI run `42512720415` completed **success** on that exact head, and GitHub reported the PR CLEAN / MERGEABLE. It remains open awaiting the operator's merge decision. No deployment is requested or performed; Skills Army HQ status/list could not start because the resolved collection root `~/git-pulse-sync/Deployed Skills` is absent on this device.
+Takeover merged published development at `a71a1d5a` into the task branch (`29f41026`), replayed only GH-1376 registration via supported writers, and passed the normal pre-push documentation gate. Final row: `rmi-01M6YGA74VK3VJ48AVECKS52R7`; older row IDs above are historical.
+
+The operator replaced the requested additional delegate review with direct review. That review verified and corrected two existing CodeRabbit routing findings; see `takeover-review.md`. Earlier independent plan/final receipts do not claim coverage of this later correction. GP/AGENTS text is included; the original docs-only classification above predates that extension. The merge publication hook classified its incremental update as docs-only. Historical full-gate success on `abae1cc4` was reported in the transcript, but its raw log is not committed here and is not used as new proof.
+
+PR #1378 remains open against development. No merge, deployment, promotion or factory qualification is claimed. Final correction push/check status must be inspected on its exact head.
