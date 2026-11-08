@@ -46,3 +46,4 @@
 {"recorded_at": "2026-11-08T18:46:45.047172+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/observer-before-retry-predicate.plist", "sha256": "bb242080522a249fe279419d2c19f5d9b1544ffaac08c04599ff2bce3495f6dd"}
 {"recorded_at": "2026-11-08T18:46:45.047335+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/observer-retry-aware.plist", "sha256": "a2b7e9cafcfdbe4a0529f53bf5459d53980a24b4c4a4b8a6e25968d78cf87474"}
 {"recorded_at": "2026-11-08T18:46:45.047363+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/observer-retry-controls.json", "sha256": "c89d973e6088f6e8330c4ceb1af36fc7b15955489ae9399dd3afbfac1cfd16fa"}
+{"recorded_at": "2026-11-08T18:48:01.337156+00:00", "path": "TESTS-RESULTS/2026-11-08+GH-1358-rehearsal/landing/README.md", "sha256": "3cbe3160109737d662958766b0dea42490e370ee9e56146ba772fed4c7840e64", "purpose": "current revised evidence; prior revisions retained in git"}
