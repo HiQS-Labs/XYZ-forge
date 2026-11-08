@@ -1,0 +1,12 @@
+{
+  "sha": "a0f65126abd56e388e2e929fda882c74bf778042",
+  "gate": "validate.sh",
+  "mode": "parallel",
+  "exit_code": 0,
+  "passed": 409,
+  "total": 409,
+  "duration_s": null,
+  "timestamp": "2026-11-08T05:29:54.162729+00:00",
+  "host": "Darwin 27.0.0",
+  "scope": "full"
+}

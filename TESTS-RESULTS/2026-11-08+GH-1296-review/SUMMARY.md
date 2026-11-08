@@ -7,7 +7,7 @@ Runtime scope: malformed contract input becomes a lane blocker; harmless dot pat
 - Manual helper red/green and controlled freshness-boundary checks: `manual-procedure.md`, `manual-output.jsonl`, and `provenance.jsonl`. These are not a replacement for live packet acceptance.
 - Current real snapshot: 10 rules planning ticks completed, no model dispatch. Paired `make_packet` on one unchanged snapshot emitted #1295, #670, #1204, #446 in both versions. Development baseline advertises commands for all four. Candidate flags #1204/#446 for absent contracts; #1295/#670 have no frozen request identity. Generated READMEs and JSON are retained separately.
 - Existing `stageb_dryrun.py --cap 4` on that current snapshot: #1204/#446 fail preflight; #1295/#670 have no capture named in emitted briefs. No lane is claimed ready. Disposable full clone clean afterwards.
-- Existing `test/gh174-harness-registry.sh`: 8 pass, 0 fail, including its negative controls. This suite does not exercise make_packet. Full gate remains pending.
+- Existing `test/gh174-harness-registry.sh`: 8 pass, 0 fail, including its negative controls. This suite does not exercise make_packet. Full `validate.sh` passed 409/409 on `a0f65126`; receipt and log are retained here.
 
 ## Review disposition
 
@@ -21,4 +21,4 @@ Runtime scope: malformed contract input becomes a lane blocker; harmless dot pat
 
 The original #1279 run root points to an absent `Documents/GitHub Repos/XYZ-forge-gh1279-stageb-window-2026-10-31` checkout. Committed tables/config/briefs omit its frozen backlog. Bounded checks of known retained locations and backup manifests found no copy. Parent has no verified alternate; operator confirmed they do not know the root location. No reconstructed input is claimed original. Current-wave evidence does not silently replace issue #1296 historical acceptance; #1296 remains open.
 
-Primary is reserved for the parent. Merged #1368 (`3c4925cb85`) into candidate `a0f65126`; full gate is running in a disposable full clone. Parent reconciliation is still in progress. No merge, factory packet dispatch, #1356 completion, or #1358 rehearsal is claimed. Repair round 2; unrelated prior repair counters preserved.
+Primary is reserved for the parent. Merged #1368 (`3c4925cb85`) into candidate `a0f65126`; full gate passed 409/409 in a disposable full clone. Reconciled baseline `8ecb894cc` was merged afterward; runtime code is unchanged. No merge, factory packet dispatch, #1356 completion, or #1358 rehearsal is claimed. Repair round 2; unrelated prior repair counters preserved.
