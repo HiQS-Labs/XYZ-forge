@@ -1,0 +1,12 @@
+{
+  "cwd": "/var/folders/55/4ncr895946v1jymn1561yy340000gn/T/merge-cleanup-xzll1o56/pr-1316-0cf2f5bd-q4gfl_fk",
+  "head": "8d178d97cde4e84965ee08433cb38976ba198974",
+  "argv": [
+    "git",
+    "push",
+    "origin",
+    "8d178d97cde4e84965ee08433cb38976ba198974:refs/heads/docs/XYZ-forge-gh1314-verification-calibration-2026-11-01"
+  ],
+  "timeout_s": 3600,
+  "started": "2026-11-08T19:22:41.467999+00:00"
+}
