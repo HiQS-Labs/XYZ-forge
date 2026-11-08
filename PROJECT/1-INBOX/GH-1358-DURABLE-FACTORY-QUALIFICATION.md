@@ -21,3 +21,7 @@ The live issue owns the proposed 48-hour qualification of durable decisions and 
 ## Ratings proposal
 
 pri 75 / sev 35 / appeal 50 / effort 65, as proposed in the issue; not stored in PRS until committed selection.
+
+## Merge evidence
+
+- PR #1324 merged 2026-11-08 — linked issue still OPEN; doc stays active by design (GH-202: promotion requires the issue to be closed).
