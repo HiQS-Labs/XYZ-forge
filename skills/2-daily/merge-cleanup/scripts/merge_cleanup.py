@@ -205,15 +205,18 @@ def resolve_merge_policy(repo_path: Path, strategy: Optional[str] = None) -> Dic
     # GH-1159: the repo's own batch-sweep cadence; absent means no sweep command is printed.
     qual = data.get("qualification")
     if qual is not None:
-        if (not isinstance(qual, dict) or set(qual) - {"full_suite", "sweep_command"}
+        if (not isinstance(qual, dict) or set(qual) - {"full_suite", "sweep_command", "canary_command"}
                 or qual.get("full_suite") not in ("promotion", "per_batch", "none")):
             raise ValueError(f"{policy_path}: qualification must be an object with full_suite "
-                             "promotion|per_batch|none and an optional sweep_command")
+                             "promotion|per_batch|none and optional sweep_command / canary_command")
         cmd = qual.get("sweep_command")
         if cmd is not None and (not isinstance(cmd, str) or not cmd.strip()
                                 or qual["full_suite"] == "none"):
             raise ValueError(f"{policy_path}: qualification.sweep_command must be a non-empty "
                              "string, and is not allowed with full_suite none")
+        canary = qual.get("canary_command")
+        if canary is not None and (not isinstance(canary, str) or not canary.strip()):
+            raise ValueError(f"{policy_path}: qualification.canary_command must be a non-empty string")
     if strategy not in (None, "merge", "squash", "rebase"):
         raise ValueError(f"unsupported merge strategy: {strategy!r}")
     if preserve and strategy not in (None, "merge"):
@@ -1669,6 +1672,18 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 return 2
             if track is not None:
                 track["reconciled"].add(p_num)
+
+            # GH-1383: If an intermediate canary command is configured and there are more PRs to land, run it!
+            if is_intermediate and not dry_run:
+                canary_cmd = (policy.get("qualification") or {}).get("canary_command")
+                if canary_cmd:
+                    log(f"Running intermediate canary for PR #{p_num}: {canary_cmd}")
+                    c_res = subprocess.run(["bash", "-c", canary_cmd], cwd=str(primary_repo), capture_output=True, text=True)
+                    if c_res.returncode != 0:
+                        log_err(f"PR #{p_num}: intermediate canary FAILED (exit {c_res.returncode}) — stopping before the next PR")
+                        log_err(f"Canary output: {(c_res.stderr.strip() or c_res.stdout.strip())[-1000:]}")
+                        return 2
+                    log(f"✅ PR #{p_num}: intermediate canary passed")
         # GH-1383: If intermediate landings deferred pdda issue-doc-sync, run one final pass for the batch
         if len(_MERGED_THIS_RUN) > 1 and not dry_run:
             pdda_sh = primary_repo / "utils" / "pdda" / "pdda.sh"
@@ -1677,6 +1692,15 @@ def _land_prs_loop(ordered_prs: List[Dict[str, Any]], primary_repo: Path, args, 
                 p_res = subprocess.run(["bash", str(pdda_sh), "issue-doc-sync"], cwd=str(primary_repo), capture_output=True, text=True, check=False)
                 if p_res.returncode == 0:
                     log("✅ batch finalization pdda issue-doc-sync clean")
+                    status = run_git(primary_repo, ["status", "--porcelain", "--untracked-files=all"])
+                    if status.returncode == 0 and status.stdout.strip():
+                        run_git(primary_repo, ["add", "-A"])
+                        run_git(primary_repo, ["commit", "-m", "chore: batch finalization issue-doc-sync"])
+                        pushed = _net_git(primary_repo, ["push", "origin", f"HEAD:{branch}"], timeout=PUSH_GATE_TIMEOUT_S)
+                        if pushed.returncode != 0:
+                            log_err(f"batch finalization push failed: {pushed.stderr.strip()}")
+                            return 2
+                        _net_git(primary_repo, ["fetch", "origin", branch])
                 else:
                     log_warn(f"batch finalization pdda issue-doc-sync reported issues: {(p_res.stdout.strip() or p_res.stderr.strip())[-400:]}")
         # GH-623: deferrals count as non-landed outcomes too — a deferred PR blocks only its
@@ -2310,14 +2334,41 @@ def select_batch(primary_repo: Path, args, ordered_prs: List[Dict[str, Any]]) ->
     return batch
 
 
-def run_auto_sweep(primary_repo: Path, batch: Dict[str, Any], command: str) -> int:
+DEFAULT_SWEEP_TIMEOUT_S = 900  # 15 minutes max for post-merge automated QA sweep
+
+
+def run_auto_sweep(primary_repo: Path, batch: Dict[str, Any], command: str,
+                   timeout: int = DEFAULT_SWEEP_TIMEOUT_S) -> int:
     """GH-1383: execute the batch regression sweep command in a throwaway clone and record the verdict."""
     log("Auto-executing post-merge QA regression sweep...")
     log(f"  Command: {command}")
     clean_cmd = command
     if command.startswith("T=$(mktemp -d) && "):
         clean_cmd = f"T=$(mktemp -d); trap 'rm -rf \"$T\"' EXIT INT TERM; " + command[len("T=$(mktemp -d) && "):]
-    res = subprocess.run(["bash", "-c", clean_cmd], cwd=str(primary_repo), capture_output=True, text=True)
+    try:
+        res = subprocess.run(["bash", "-c", clean_cmd], cwd=str(primary_repo), capture_output=True, text=True,
+                             timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        log_err(f"❌ Auto-executed post-merge QA sweep TIMED OUT after {timeout}s")
+        output = exc.output or exc.stdout or ""
+        stdout_tail = output[-1500:] if isinstance(output, str) else ""
+        stderr_tail = (exc.stderr or "")[-1500:] if isinstance(exc.stderr, str) else ""
+        err_tail = stderr_tail or stdout_tail or f"Command timed out after {timeout}s"
+        verdict = f"verdict: findings\n- [ ] Post-merge regression sweep timed out after {timeout}s:\n\nCommand: `{command}`\n\n```\n{err_tail}\n```"
+        ok, msg = batch_record.record_verdict(batch, verdict)
+        if not ok:
+            log_err(f"Could not record timeout verdict: {msg}")
+        batch_record.update(batch, _gh, primary_repo)
+        return 4
+    except OSError as exc:
+        log_err(f"❌ Auto-executed post-merge QA sweep failed to launch: {exc}")
+        verdict = f"verdict: findings\n- [ ] Post-merge regression sweep failed to execute ({exc}):\n\nCommand: `{command}`"
+        ok, msg = batch_record.record_verdict(batch, verdict)
+        if not ok:
+            log_err(f"Could not record launch failure verdict: {msg}")
+        batch_record.update(batch, _gh, primary_repo)
+        return 4
+
     if res.returncode == 0:
         log("✅ Auto-executed post-merge QA sweep passed.")
         stdout_tail = (res.stdout.strip() or res.stderr.strip())[-1500:]

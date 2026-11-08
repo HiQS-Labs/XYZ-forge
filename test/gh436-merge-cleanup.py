@@ -867,6 +867,63 @@ class TestMergeCleanupOrchestration(unittest.TestCase):
                 self.assertIn("chore: reconcile after PR #43", msg2)
                 self.assertNotIn("[skip ci]", msg2)
 
+    def test_run_auto_sweep_timeout(self):
+        # GH-1383: Subprocess timeout in run_auto_sweep records findings verdict and exits 4
+        batch = self._seed_qa_pending_batch()
+        batch["sweep_inputs"] = {"command": "sleep 100", "deferred": False}
+        batch["_sweep_touched"] = True
+        import batch_record
+        batch_record.save(batch)
+
+        with mock.patch("merge_cleanup._gh") as m_gh, \
+             mock.patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="sleep 100", timeout=5, output="test timeout", stderr="")):
+            rc = merge_cleanup.run_auto_sweep(Path(self.primary), batch, "sleep 100", timeout=5)
+            self.assertEqual(rc, 4)
+            loaded = json.loads(Path(batch["path"]).read_text())
+            self.assertEqual(loaded.get("verdict", {}).get("value"), "findings")
+            self.assertIn("timed out after 5s", loaded.get("verdict", {}).get("body", ""))
+
+    def test_resolve_merge_policy_accepts_canary_command(self):
+        # GH-1383: resolve_merge_policy accepts optional qualification.canary_command
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            policy_file = repo / ".merge-cleanup.json"
+            policy_file.write_text(json.dumps({
+                "preserve_commit_history": False,
+                "qualification": {
+                    "full_suite": "per_batch",
+                    "sweep_command": "echo 'sweep'",
+                    "canary_command": "echo 'canary'"
+                }
+            }))
+            policy = merge_cleanup.resolve_merge_policy(repo)
+            self.assertEqual(policy["qualification"]["canary_command"], "echo 'canary'")
+
+    def test_intermediate_canary_failure_stops_batch(self):
+        # GH-1383: A failing intermediate canary stops the batch with exit 2 before next PR
+        policy = {
+            "preserve_commit_history": False,
+            "strategy": "squash",
+            "source": "test",
+            "qualification": {
+                "full_suite": "per_batch",
+                "canary_command": "exit 1"
+            }
+        }
+        with mock.patch.object(merge_cleanup, "resolve_merge_policy", return_value=policy), \
+             mock.patch("subprocess.run") as m_run:
+            m_run.return_value = subprocess.CompletedProcess(["bash", "-c", "exit 1"], 1, stdout="", stderr="canary broken")
+            rc, _, merged, _, _ = self._drive_phase5(
+                ["--primary", str(self.primary), "--integration-branch", "development", "--execute"],
+                prs=[
+                    {"number": 7, "baseRefName": "development", "title": "t1", "files": ["a"], "body": ""},
+                    {"number": 8, "baseRefName": "development", "title": "t2", "files": ["b"], "body": ""}
+                ])
+            # Exits 2 because intermediate canary failed on PR #7
+            self.assertEqual(rc, 2)
+            # Only PR #7 was attempted/merged, PR #8 was stopped before execution
+            self.assertEqual(merged.call_count, 1)
+
 
     def _open(self, n, base="development", **over):
         d = {"number": n, "state": "OPEN", "mergeable": "MERGEABLE", "headRefOid": "a" * 40,

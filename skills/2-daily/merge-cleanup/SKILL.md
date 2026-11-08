@@ -73,11 +73,12 @@ Historical squash provenance and all dirty/stash/session/teardown checks remain 
 change future behavior, review and commit the project setting; never rewrite old history.
 
 The same file declares the repo's batch-sweep cadence (GH-1159) as an optional key:
-`"qualification": {"full_suite": "promotion"|"per_batch"|"none", "sweep_command": "<command>"}`.
+`"qualification": {"full_suite": "promotion"|"per_batch"|"none", "sweep_command": "<command>", "canary_command": "<command>"}`.
 With `promotion`, Forge's classifier picks the gate and a full sweep is deferred to
 `sweep_command`. With `per_batch`, `sweep_command` runs in a throwaway clone. With `none`, the
-batch issue says the repo has no full suite. `sweep_command` is printed verbatim. Without the key,
-the issue says no sweep command is declared and shows no Forge gate or workflow. An invalid value
+batch issue says the repo has no full suite. `sweep_command` is printed verbatim. An optional
+`canary_command` specifies a fast local test command to execute between intermediate batch merges (GH-1383).
+Without the key, the issue says no sweep command is declared and shows no Forge gate or workflow. An invalid value
 fails closed, and `--show-merge-policy` prints the key. A merge-cleanup older than this key refuses
 the file ("expected an object with only preserve_commit_history"): update the harness. The globally
 deployed skill is a physical copy (Skills Army HQ), not a link to a checkout, so it does not follow
