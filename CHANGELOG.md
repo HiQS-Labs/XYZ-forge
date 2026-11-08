@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-08 — GH-1376 flywheel composition skill
+
+- Add `flywheel` as a documentation-only route across start-task, Jog, Marathon preparation, relay QA, handsfree continuation, unstuck recovery, authorized merge-cleanup landing and explicitly requested Skills Army HQ deployment. Carry #1358's two work modes, three rubrics and standing authorization ladder; bounded autonomous repairs are recorded and continued rather than treated as a special stop.
+- Easy rollback: remove the skill and index row; no runtime, queue, scheduler, schema, deployed copy or permission changes. Codex plan QA Approved; consumer smoke passed 12/12 required segments and 8/8 owner links; classified PDDA gate passed with zero errors on integrated commit `681809230`. Final independent QA is pending. Evidence: `TESTS-RESULTS/2026-11-08+GH-1376/`.
+
 ## 2026-11-08 — GH-1358 bounded Jog checkpoint integration
 
 - Opt-in one-task Jog wakes commit owned primary ledger changes and publish the exact checkpoint through a separate disposable full clone. Interrupted publication resumes before another dispatch; existing lock and cold-start recovery remain authoritative. No automatic merge or retry.
