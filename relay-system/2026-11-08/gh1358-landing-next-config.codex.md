@@ -11,3 +11,5 @@ singlepending1254, existingrunnerlock/normalupstreammerge, unchangedcaps/deadlin
 no automatic merge of clockPR, no secondqueue/supervisor. Smallreviewfinding repaired
 without another delegate. Pin updated to docs-onlyd8a9167c after1373minorrootpathfix;
 codegate3a7b3d8aa unchanged. No fullqualification claim.
+
+Correction verified using actual preflight: ready=1, candidate ready, issue OPEN,4/4 criteria copied verbatim; packet contains current clock acceptance only. No new review round needed for the narrow finding.
