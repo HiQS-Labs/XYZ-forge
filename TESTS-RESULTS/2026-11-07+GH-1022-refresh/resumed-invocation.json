@@ -1,0 +1,1 @@
+{"sha": "e31cb92fa0fa9b34e80cfd42009e2a929cbb6dac", "command": ["git", "push", "origin", "HEAD:feat/gh1022-weekly-intake"], "python": "/Users/noelsaw/.cache/xyz-forge-test-venv/bin/python3", "start": "2026-11-08T07:54:57.141000+00:00", "scope": "normal full prepush in disposable clone; no merge"}
