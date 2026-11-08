@@ -2,7 +2,7 @@
 gh_issue: 1160
 source: https://github.com/HiQS-Labs/XYZ-forge/issues/1160
 title: "Correct startup reconciliation instructions"
-status: Active
+status: Complete
 created: 2026-11-08
 updated: 2026-11-08
 owner: noelsaw1
