@@ -1,9 +1,9 @@
 # ESCALATION — Marathon Phase gh-1254-outer-loop-borrow-decl
 
 phase: gh-1254-outer-loop-borrow-decl
-task: MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN-2
+task: MARATHON-GH-1254-OUTER-LOOP-BORROW-DECL-TURN
 relay-drive-exit: 0
-reason: pre-advance-failed
+reason: gate-killed
 gate: red
 relay-file: marathon-system/gh-1254-outer-loop-borrow-decl/RELAY.md
 
