@@ -36,3 +36,4 @@ clone retirement: this campaign clone can be retired via /merge-cleanup (merge-c
 jog: stopping queue execution on task failure.
 jog: published primary checkpoint 632a2a5d8bd21bb08fcb49473c5f931eb72dc4c0
 jog: queue complete (0 pending tasks).
+jog: published primary checkpoint 632a2a5d8bd21bb08fcb49473c5f931eb72dc4c0

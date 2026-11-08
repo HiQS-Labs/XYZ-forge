@@ -34,3 +34,29 @@ The original live run used the preceding source, not this repair.
 All seven transition and two-useful-successive-work-wake requirements remain
 unqualified. No independent observer, approved landing, three-PR outcome or Phase B.
 Retain deployment clones and local-only evidence. This result is agent-assisted.
+
+The two-wake live window finished with published journal and exit 0; launchd was
+disabled and unloaded. The repaired source 450dec8e2 then ran a separate one-shot
+launchd empty wake (RunAtLoad, no repeat interval): one run, exit 0, same published
+SHA, no new ledger changes or build attempt. It too was disabled and unloaded.
+Both primary and publisher were clean at 632a2a5d; stop/identity receipts retained.
+This empty-wake check verifies the repair, not useful work progression.
+
+Scheduling deviation: the old empty-wake full gate overlapped the final source full
+gate in separate disposable clones. This violated the issue plan's one-full-gate-per-host
+constraint. Do not interpret wall times as comparable performance data. No shared
+primary test execution occurred; final clone identities were checked.
+
+Manual repair command context: `HEAD` in the preserved command transcript was
+0df8c46fb (before the live-ref repair); the imported working source became commit
+450dec8e2. To replay the old-code red witness later, pin `git show` to 0df8c46fb.
+A supplemental adapter rerun tried to advance the old disposable adapter clone but
+its merge refused because retained fixture source was dirty. That run is not cited
+as final-candidate evidence; the final normal full gate includes the existing adapter
+suite at 450dec8e2, and the original 227/227 receipt remains historical evidence.
+
+Final repaired source 450dec8e2f7b8f9061e82c82ae7fb66edc105872 passed the
+normal full pre-push gate: 409/409, 540 seconds, exit 0, successful non-forced push.
+Publication gate clone remained clean, non-bare, canonical origin, unchanged HEAD.
+Primary supervisor lock was absent after stop. Later evidence-only commits do not
+change this runtime. Full-gate log and exact-source receipt are retained here.
